@@ -130,6 +130,9 @@ if(GRIDKIT_ENABLE_SUNDIALS)
   find_package(SUNDIALS 7.0.0 REQUIRED CONFIG 
                PATHS ${SUNDIALS_DIR}
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
+  if("${SUNDIALS_VERSION}" VERSION_LESS "5.5.0")
+    message(FATAL_ERROR "GridKit requires SUNDIALS >= 5.5.0, got ${SUNDIALS_VERSION}")
+  endif()
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
