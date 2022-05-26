@@ -9,9 +9,14 @@ int dsquare(int x) {
   return __enzyme_autodiff(square, x);
 }
 
-int main() {
+int sq  = square(5);
+int dsq = dsquare(5);
+
+int main()
+{
   int fail = 0;
-  if (dsquare(5) != 25)
+  std::cout << "x = 5, x^2 = " << sq << ", d(x^2)/dx = " << __enzyme_autodiff(square, 5) << "\n"; 
+  if (dsq != 10)
     fail++;
   return fail;
 }
