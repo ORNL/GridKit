@@ -69,3 +69,5 @@ add_subdirectory(Generator4Governor)
 add_subdirectory(Generator4Param)
 add_subdirectory(Load)
 add_subdirectory(MiniGrid)
+add_subdirectory(PowerElectronicsComponents)
+
