@@ -62,7 +62,7 @@
 
 #include <cassert>
 #include "BaseBus.hpp"
-#include <PowerSystemData.hpp>
+#include <Utilities/MatPowerUtils.hpp>
 
 namespace ModelLib
 {
@@ -87,11 +87,11 @@ namespace ModelLib
         using BaseBus<ScalarT, IdxT>::tag_;
 
     public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        using BusData = GridKit::MatPowerUtils::BusRow<IdxT, ScalarT>;
 
         BusPV();
-        BusPV(ScalarT V, ScalarT theta0);
+        BusPV(ScalarT V, ScalarT theta0, ScalarT P);
         BusPV(BusData& data);
         virtual ~BusPV();
 
@@ -193,7 +193,7 @@ namespace ModelLib
 
         virtual const int BusType() const
         {
-            return BaseBus<ScalarT, IdxT>::BusType::PV;
+            return 2;
         }
 
     private:

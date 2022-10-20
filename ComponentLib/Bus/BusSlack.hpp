@@ -61,7 +61,7 @@
 #define _BUS_SLACK_HPP_
 
 #include "BaseBus.hpp"
-#include <PowerSystemData.hpp>
+#include <Utilities/MatPowerUtils.hpp>
 
 namespace ModelLib
 {
@@ -86,11 +86,12 @@ namespace ModelLib
         using BaseBus<ScalarT, IdxT>::rtol_;
 
     public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        using BusData = GridKit::MatPowerUtils::BusRow<IdxT, ScalarT>;
 
         BusSlack();
         BusSlack(ScalarT V, ScalarT theta);
+        BusSlack(BusData& data);
         BusSlack(BusData& data);
         virtual ~BusSlack();
         virtual int evaluateResidual();
@@ -182,7 +183,7 @@ namespace ModelLib
 
         virtual const int BusType() const
         {
-            return BaseBus<ScalarT, IdxT>::BusType::Slack;
+            return 3;
         }
 
     private:

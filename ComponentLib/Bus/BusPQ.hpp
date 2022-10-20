@@ -61,7 +61,7 @@
 #define _BUS_PQ_HPP_
 
 #include "BaseBus.hpp"
-#include <PowerSystemData.hpp>
+#include <Utilities/MatPowerUtils.hpp>
 
 namespace ModelLib
 {
@@ -86,8 +86,8 @@ namespace ModelLib
         using BaseBus<ScalarT, IdxT>::tag_;
 
     public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        using BusData = GridKit::MatPowerUtils::BusRow<IdxT, ScalarT>;
 
         BusPQ();
         BusPQ(ScalarT V, ScalarT theta);
@@ -183,7 +183,7 @@ namespace ModelLib
 
         virtual const int BusType() const
         {
-            return BaseBus<ScalarT, IdxT>::BusType::PQ;
+            return 1;
         }
 
     private:

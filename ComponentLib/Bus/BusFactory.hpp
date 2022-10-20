@@ -59,35 +59,30 @@
 
 #pragma once
 
-#include <PowerSystemData.hpp>
-#include <ComponentLib/Bus/BusPQ.hpp>
-#include <ComponentLib/Bus/BusPV.hpp>
-#include <ComponentLib/Bus/BusSlack.hpp>
+#include <Utilities/MatPowerUtils.hpp>
+#include <ComponentLib/Bus/BaseBus.hpp>
 
 namespace ModelLib {
 
-    template <typename ScalarT = double, typename IdxT = int>
+    template <typename ScalarT = double, typename IntT = int>
     class BusFactory
     {
     public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+        using BusData = GridKit::MatPowerUtils::BusRow<IntT, ScalarT>;
 
-        BusFactory() = delete;
-
-        static BaseBus<ScalarT, IdxT>* create(BusData& data)
+        BaseBus<ScalarT, IntT>* create(BusData& data)
         {
-            BaseBus<ScalarT, IdxT>* bus = nullptr;
+            BaseBus<ScalarT, IntT>* bus = nullptr;
             switch(data.type)
             {
                 case 1:
-                bus = new BusPQ<ScalarT, IdxT>(data);
+                bus = new BusPQ<ScalarT, IntT>(data);
                 break;
                 case 2:
-                bus = new BusPV<ScalarT, IdxT>(data);
+                bus = new BusPV<ScalarT, IntT>(data);
                 break;
                 case 3:
-                bus = new BusSlack<ScalarT, IdxT>(data);
+                bus = new BusSlack<ScalarT, IntT>(data);
                 break;
                 default:
                 // Throw exception
@@ -95,6 +90,8 @@ namespace ModelLib {
             }
             return bus;
         }
+    private:
+        BusFactory(){}
     };
 
-} // namespace ModelLib
+}
