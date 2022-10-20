@@ -252,6 +252,12 @@ namespace ModelLib
             return gB_;
         }
 
+        //@todo Fix ID naming
+        IdxT getIDcomponent()
+        {
+            return idc_;
+        }
+
 
 
     protected:
@@ -280,6 +286,8 @@ namespace ModelLib
 
         real_type rtol_;
         real_type atol_;
+
+        IdxT idc_;
 
     };
 
