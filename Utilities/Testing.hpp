@@ -178,8 +178,8 @@ inline bool isEqual(MatPowerUtils::LoadRow<IntT, RealT> a,
   fail += !isEqual(a.Qd, b.Qd, tol);
   if (fail) {
     errs() << "bus_i: a=" << a.bus_i << ", b=" << b.bus_i << "\n"
-           << "Pd: a=" << a.Pd << ", b=" << b.Pd << "\n"
-           << "Qd: a=" << a.Qd << ", b=" << b.Qd << "\n";
+           << "Pd: a="    << a.Pd    << ", b=" << b.Pd    << "\n"
+           << "Qd: a="    << a.Qd    << ", b=" << b.Qd    << "\n";
   }
   return fail == 0;
 }
@@ -239,6 +239,7 @@ inline bool isEqual(MatPowerUtils::MatPower<IntT, RealT> a,
   fail += !isEqual(a.gen, b.gen);
   fail += !isEqual(a.gencost, b.gencost);
   fail += !isEqual(a.branch, b.branch);
+  fail += !isEqual(a.load, b.load);
   return fail == 0;
 }
 

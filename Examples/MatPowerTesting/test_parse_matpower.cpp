@@ -90,6 +90,7 @@ int main(int argc, char **argv) {
   using BranchRowT = BranchRow<IntT, RealT>;
   using GenCostRowT = GenCostRow<IntT, RealT>;
   using MatPowerT = MatPower<IntT, RealT>;
+  using LoadRowT = LoadRow<IntT, RealT>;
 
   // Create the struct of expected values
   std::vector<BranchRowT> branch_answer{
@@ -101,11 +102,11 @@ int main(int argc, char **argv) {
       {4, 5, 0.00297, 0.0297, 0.00674, 240, 240, 240, 0, 0, 1, -360, 360},
   };
   std::vector<BusRowT> bus_answer{
-      {1, 2, 0, 0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {2, 1, 300, 98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {3, 2, 300, 98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {1, 2,   0,      0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {2, 1, 300,  98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {3, 2, 300,  98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
       {4, 3, 400, 131.47, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {5, 2, 0, 0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.9},
+      {5, 2,   0,      0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.9},
   };
   std::vector<GenRowT> gen_answer{
       {1, 40, 0, 30, -30, 1, 100, 1, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -121,12 +122,21 @@ int main(int argc, char **argv) {
       {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
+  std::vector<LoadRow<IntT, RealT>> load_answer{
+      {1,   0,      0},
+      {2, 300,  98.61},
+      {3, 300,  98.61},
+      {4, 400, 131.47},
+      {5,   0,      0},
+  };
+
 
   MatPowerT mp_answer;
   mp_answer.gencost = gencost_answer;
   mp_answer.gen = gen_answer;
   mp_answer.bus = bus_answer;
   mp_answer.branch = branch_answer;
+  mp_answer.load = load_answer;
   mp_answer.version = "2";
   mp_answer.baseMVA = 100;
 
