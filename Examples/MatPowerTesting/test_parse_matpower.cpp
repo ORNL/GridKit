@@ -85,12 +85,12 @@ int main(int argc, char **argv) {
   int fail = 0;
 
   // All types will use the scalar types at the top of the file
-  using BusDataT = BusData<RealT, IdxT>;
-  using GenDataT = GenData<RealT, IdxT>;
-  using BranchDataT = BranchData<RealT, IdxT>;
-  using GenCostDataT = GenCostData<RealT, IdxT>;
-  using SystemModelDataT = SystemModelData<RealT, IdxT>;
-  using LoadDataT = LoadData<RealT, IdxT>;
+  using BusRowT = BusRow<IntT, RealT>;
+  using GenRowT = GenRow<IntT, RealT>;
+  using BranchRowT = BranchRow<IntT, RealT>;
+  using GenCostRowT = GenCostRow<IntT, RealT>;
+  using MatPowerT = MatPower<IntT, RealT>;
+  using LoadRowT = LoadRow<IntT, RealT>;
 
   // Create the struct of expected values
   std::vector<BranchDataT> branch_answer{
@@ -101,12 +101,12 @@ int main(int argc, char **argv) {
       {3, 4, 0.00297, 0.0297, 0.00674, 0, 0, 0, 0, 0, 1, -360, 360},
       {4, 5, 0.00297, 0.0297, 0.00674, 240, 240, 240, 0, 0, 1, -360, 360},
   };
-  std::vector<BusDataT> bus_answer{
-      {1, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {2, 1, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {3, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {4, 3, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
-      {5, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.9},
+  std::vector<BusRowT> bus_answer{
+      {1, 2,   0,      0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {2, 1, 300,  98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {3, 2, 300,  98.61, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {4, 3, 400, 131.47, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
+      {5, 2,   0,      0, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.9},
   };
   std::vector<GenDataT> gen_answer{
       {1, 40, 0, 30, -30, 1, 100, 1, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
       {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
-  std::vector<LoadDataT> load_answer{
+  std::vector<LoadRow<IntT, RealT>> load_answer{
       {1,   0,      0},
       {2, 300,  98.61},
       {3, 300,  98.61},
