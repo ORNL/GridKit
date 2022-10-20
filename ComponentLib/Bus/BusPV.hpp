@@ -62,6 +62,7 @@
 
 #include <cassert>
 #include "BaseBus.hpp"
+#include <Utilities/MatPowerUtils.hpp>
 
 namespace ModelLib
 {
@@ -87,9 +88,11 @@ namespace ModelLib
 
     public:
         typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        using BusData = GridKit::MatPowerUtils::BusRow<IdxT, ScalarT>;
 
         BusPV();
         BusPV(ScalarT V, ScalarT theta0, ScalarT P);
+        BusPV(BusData& data);
         virtual ~BusPV();
 
         virtual int allocate();
@@ -186,6 +189,11 @@ namespace ModelLib
         {
             assert(false);
             return QB_;
+        }
+
+        virtual const int BusType() const
+        {
+            return 2;
         }
 
     private:

@@ -104,6 +104,16 @@ BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0, ScalarT Pg)
 }
 
 template <class ScalarT, typename IdxT>
+BusPV<ScalarT, IdxT>::BusPV(BusData& data)
+  : V_(data.Vm), theta0_(data.Va) //, Pg_(Pg)
+{
+    //std::cout << "Create BusPV ..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
+
+    size_ = 1;
+}
+
+template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::~BusPV()
 {
     //std::cout << "Destroy Gen2..." << std::endl;

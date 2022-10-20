@@ -61,6 +61,7 @@
 #define _BASE_BUS_HPP_
 
 #include <ModelEvaluatorImpl.hpp>
+// #include <ComponentLib/Bus/BusFactory.hpp>
 
 namespace ModelLib
 {
@@ -138,6 +139,7 @@ namespace ModelLib
         virtual ScalarT& QB() = 0;
         virtual const ScalarT& QB() const = 0;
 
+        virtual const int BusType() const = 0;
     }; // class BaseBus
 
 } // namespace ModelLib
