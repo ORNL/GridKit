@@ -155,29 +155,22 @@ void checkEndOfMatrixRow(std::istream& is)
     throw std::runtime_error(matlab_syntax_error);
 }
 
-template <typename RealT = double, typename IdxT = int>
-void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadData<RealT, IdxT>& lr)
+template <typename IntT = int, typename RealT = double>
+// BusRow<IntT, RealT> 
+void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow<IntT, RealT>& lr)
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
-  is >> br.bus_i   // Bus ID
-     >> br.type    // Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
-     >> lr.Pd      // Active power demand [MW]
-     >> lr.Qd      // Reactive power demand [MVAr]
-     >> br.Gs      // Shunt conductance (MW demanded at V = 1.0 p.u.)
-     >> br.Bs      // Shunt susceptance (MVAr injected at V = 1.0 p.u.)
-     >> br.area    // Area number (>0)
-     >> br.Vm      // Voltage magnitude (p.u.)
-     >> br.Va      // Voltage phase (deg)
-     >> br.baseKV  // Base voltage [kV]
-     >> br.zone    // Loss zone number (>0)
-     >> br.Vmax    // Maximum voltage magnitude (p.u.)
-     >> br.Vmin;   // Minimum voltage magnitude (p.u.)
+  // BusRow<IntT, RealT> br;
+  // LoadRow<IntT, RealT> lr;
+  is >> br.bus_i >> br.type >> br.Pd >> br.Qd >> br.Gs >> br.Bs >> br.area
+     >> br.Vm >> br.Va >> br.baseKV >> br.zone >> br.Vmax >> br.Vmin;
 
   lr.bus_i = br.bus_i;
-
+  lr.Pd = br.Pd;
+  lr.Qd = br.Qd;
   // std::cout << br.str();
-  // logs() << "Read BusData with the following values:\n" << br.str();
+  // logs() << "Read BusRow with the following values:\n" << br.str();
   // return br;
 }
 
@@ -308,11 +301,11 @@ template <typename IdxT = int,
           std::size_t MaxLineSize = 1028>
 void readMatPower(SystemModelData<RealT, IdxT>& mp, std::istream& is)
 {
-  using BusDataT     = BusData<RealT, IdxT>;
-  using GenDataT     = GenData<RealT, IdxT>;
-  using BranchDataT  = BranchData<RealT, IdxT>;
-  using GenCostDataT = GenCostData<RealT, IdxT>;
-  using LoadDataT    = LoadData<RealT, IdxT>;
+  using BusRowT = BusRow<IntT, RealT>;
+  using GenRowT = GenRow<IntT, RealT>;
+  using BranchRowT = BranchRow<IntT, RealT>;
+  using GenCostRowT = GenCostRow<IntT, RealT>;
+  using LoadRowT = LoadRow<IntT, RealT>;
 
   for (std::string line; std::getline(is, line);) {
     // Trim whitespace and remove comments
@@ -335,8 +328,8 @@ void readMatPower(SystemModelData<RealT, IdxT>& mp, std::istream& is)
       if (component == "bus") {
         while (std::getline(is, line)) {
           if (line.find("];") != std::string::npos) break;
-          BusDataT br;
-          LoadDataT lr;
+          BusRowT br;
+          LoadRowT lr;
           readMatPowerBusRow(line, br, lr);
           mp.bus.push_back(std::move(br));
           mp.load.push_back(std::move(lr));
