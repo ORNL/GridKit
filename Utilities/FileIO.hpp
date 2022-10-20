@@ -130,9 +130,12 @@ std::string getMatPowerComponent(const std::string& line)
   std::regex pat("mpc.([a-zA-Z]+)\\s*=.+");
   std::smatch matches;
   std::string component;
-  if (std::regex_match(line, matches, pat)) {
+  if (std::regex_match(line, matches, pat))
+  {
     component = matches[1].str();
-  } else {
+  }
+  else
+  {
     throw std::runtime_error(matlab_syntax_error + "\nGot line " + line);
   }
   ltrim(component);
@@ -148,19 +151,27 @@ void checkEndOfMatrixRow(std::istream& is)
   is >> rest;
   ltrim(rest);
   rtrim(rest);
-  if (rest != ";") throw std::runtime_error(matlab_syntax_error);
+  if (rest != ";")
+    throw std::runtime_error(matlab_syntax_error);
 }
 
 template <typename IntT = int, typename RealT = double>
-BusRow<IntT, RealT> readMatPowerBusRow(std::string& row)
+// BusRow<IntT, RealT> 
+void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow<IntT, RealT>& lr)
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
-  BusRow<IntT, RealT> br;
+  // BusRow<IntT, RealT> br;
+  // LoadRow<IntT, RealT> lr;
   is >> br.bus_i >> br.type >> br.Pd >> br.Qd >> br.Gs >> br.Bs >> br.area
-      >> br.Vm >> br.Va >> br.baseKV >> br.zone >> br.Vmax >> br.Vmin;
-  logs() << "Read BusRow with the following values:\n" << br.str();
-  return br;
+     >> br.Vm >> br.Va >> br.baseKV >> br.zone >> br.Vmax >> br.Vmin;
+
+  lr.bus_i = br.bus_i;
+  lr.Pd = br.Pd;
+  lr.Qd = br.Qd;
+  // std::cout << br.str();
+  // logs() << "Read BusRow with the following values:\n" << br.str();
+  // return br;
 }
 
 template <typename IntT = int, typename RealT = double>
@@ -294,6 +305,7 @@ void readMatPower(MatPower<IntT, RealT>& mp, std::istream& is)
   using GenRowT = GenRow<IntT, RealT>;
   using BranchRowT = BranchRow<IntT, RealT>;
   using GenCostRowT = GenCostRow<IntT, RealT>;
+  using LoadRowT = LoadRow<IntT, RealT>;
 
   for (std::string line; std::getline(is, line);) {
     // Trim whitespace and remove comments
@@ -316,8 +328,11 @@ void readMatPower(MatPower<IntT, RealT>& mp, std::istream& is)
       if (component == "bus") {
         while (std::getline(is, line)) {
           if (line.find("];") != std::string::npos) break;
-          BusRowT br = readMatPowerBusRow(line);
+          BusRowT br;
+          LoadRowT lr;
+          readMatPowerBusRow(line, br, lr);
           mp.bus.push_back(std::move(br));
+          mp.load.push_back(std::move(lr));
         }
       } else if (component == "gen") {
         while (std::getline(is, line)) {

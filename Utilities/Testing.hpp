@@ -170,6 +170,21 @@ inline bool isEqual(MatPowerUtils::BusRow<IntT, RealT> a,
 }
 
 template <typename IntT = int, typename RealT = double>
+inline bool isEqual(MatPowerUtils::LoadRow<IntT, RealT> a,
+                    MatPowerUtils::LoadRow<IntT, RealT> b, RealT tol = tol_) {
+  int fail = 0;
+  fail += a.bus_i != b.bus_i;
+  fail += !isEqual(a.Pd, b.Pd, tol);
+  fail += !isEqual(a.Qd, b.Qd, tol);
+  if (fail) {
+    errs() << "bus_i: a=" << a.bus_i << ", b=" << b.bus_i << "\n"
+           << "Pd: a=" << a.Pd << ", b=" << b.Pd << "\n"
+           << "Qd: a=" << a.Qd << ", b=" << b.Qd << "\n";
+  }
+  return fail == 0;
+}
+
+template <typename IntT = int, typename RealT = double>
 inline bool isEqual(MatPowerUtils::BranchRow<IntT, RealT> a,
                     MatPowerUtils::BranchRow<IntT, RealT> b, RealT tol = tol_) {
   int fail = 0;

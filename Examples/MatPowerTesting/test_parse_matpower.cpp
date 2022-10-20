@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
     GridKit::readMatPower(mp, iss);
     if (!isEqual(mp, mp_answer))
       fail++;
-    std::cout << "After reading the gencost component, fail == " << fail
+    std::cout << "\n\nAfter reading the gencost component, fail == " << fail
               << "\n";
   }
 
