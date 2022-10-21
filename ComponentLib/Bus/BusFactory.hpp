@@ -59,7 +59,7 @@
 
 #pragma once
 
-#include <Utilities/MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 #include <ComponentLib/Bus/BaseBus.hpp>
 
 namespace ModelLib {
@@ -68,7 +68,7 @@ namespace ModelLib {
     class BusFactory
     {
     public:
-        using BusData = GridKit::PowerSystemData::BusRow<IntT, ScalarT>;
+        using BusData = GridKit::PowerSystemData::BusData<IntT, ScalarT>;
 
         BusFactory() = delete;
 

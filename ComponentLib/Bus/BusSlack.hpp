@@ -61,7 +61,7 @@
 #define _BUS_SLACK_HPP_
 
 #include "BaseBus.hpp"
-#include <Utilities/MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 
 namespace ModelLib
 {
@@ -87,7 +87,7 @@ namespace ModelLib
 
     public:
         typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-        using BusData = GridKit::PowerSystemData::BusRow<IdxT, ScalarT>;
+        using BusData = GridKit::PowerSystemData::BusData<IdxT, ScalarT>;
 
         BusSlack();
         BusSlack(ScalarT V, ScalarT theta);
