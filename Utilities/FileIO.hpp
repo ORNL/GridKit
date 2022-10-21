@@ -156,19 +156,26 @@ void checkEndOfMatrixRow(std::istream& is)
 }
 
 template <typename IntT = int, typename RealT = double>
-// BusRow<IntT, RealT> 
 void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow<IntT, RealT>& lr)
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
-  // BusRow<IntT, RealT> br;
-  // LoadRow<IntT, RealT> lr;
-  is >> br.bus_i >> br.type >> br.Pd >> br.Qd >> br.Gs >> br.Bs >> br.area
-     >> br.Vm >> br.Va >> br.baseKV >> br.zone >> br.Vmax >> br.Vmin;
+  is >> br.bus_i
+     >> br.type
+     >> lr.Pd
+     >> lr.Qd
+     >> br.Gs
+     >> br.Bs
+     >> br.area
+     >> br.Vm
+     >> br.Va
+     >> br.baseKV
+     >> br.zone
+     >> br.Vmax
+     >> br.Vmin;
 
   lr.bus_i = br.bus_i;
-  lr.Pd = br.Pd;
-  lr.Qd = br.Qd;
+
   // std::cout << br.str();
   // logs() << "Read BusRow with the following values:\n" << br.str();
   // return br;
@@ -180,9 +187,9 @@ void readMatPowerGenRow(GenRow<IntT, RealT>& gr, std::string& row)
   logs() << "Parsing MATPOWER gen row\n";
   std::stringstream is(row);
   is >> gr.bus >> gr.Pg >> gr.Qg >> gr.Qmax >> gr.Qmin >> gr.Vg >> gr.mBase
-      >> gr.status >> gr.Pmax >> gr.Pmin >> gr.Pc1 >> gr.Pc2 >> gr.Qc1min
-      >> gr.Qc1max >> gr.Qc2min >> gr.Qc2max >> gr.ramp_agc >> gr.ramp_10
-      >> gr.ramp_30 >> gr.ramp_q >> gr.apf;
+     >> gr.status >> gr.Pmax >> gr.Pmin >> gr.Pc1 >> gr.Pc2 >> gr.Qc1min
+     >> gr.Qc1max >> gr.Qc2min >> gr.Qc2max >> gr.ramp_agc >> gr.ramp_10
+     >> gr.ramp_30 >> gr.ramp_q >> gr.apf;
   checkEndOfMatrixRow(is);
 }
 
@@ -192,8 +199,8 @@ void readMatPowerBranchRow(BranchRow<IntT, RealT>& br, std::string& row)
   logs() << "Parsing MATPOWER branch row\n";
   std::stringstream is(row);
   is >> br.fbus >> br.tbus >> br.r >> br.x >> br.b >> br.rateA >> br.rateB
-      >> br.rateC >> br.ratio >> br.angle >> br.status >> br.angmin
-      >> br.angmax;
+     >> br.rateC >> br.ratio >> br.angle >> br.status >> br.angmin
+     >> br.angmax;
   checkEndOfMatrixRow(is);
 }
 
@@ -301,11 +308,11 @@ template <typename IntT = int,
           std::size_t MaxLineSize = 1028>
 void readMatPower(MatPower<IntT, RealT>& mp, std::istream& is)
 {
-  using BusRowT = BusRow<IntT, RealT>;
-  using GenRowT = GenRow<IntT, RealT>;
-  using BranchRowT = BranchRow<IntT, RealT>;
+  using BusRowT     = BusRow<IntT, RealT>;
+  using GenRowT     = GenRow<IntT, RealT>;
+  using BranchRowT  = BranchRow<IntT, RealT>;
   using GenCostRowT = GenCostRow<IntT, RealT>;
-  using LoadRowT = LoadRow<IntT, RealT>;
+  using LoadRowT    = LoadRow<IntT, RealT>;
 
   for (std::string line; std::getline(is, line);) {
     // Trim whitespace and remove comments

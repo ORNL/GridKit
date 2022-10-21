@@ -140,8 +140,6 @@ inline bool isEqual(MatPowerUtils::BusRow<IntT, RealT> a,
   int fail = 0;
   fail += a.bus_i != b.bus_i;
   fail += a.type != b.type;
-  fail += a.Pd != b.Pd;
-  fail += !isEqual(a.Qd, b.Qd, tol);
   fail += a.Gs != b.Gs;
   fail += a.Bs != b.Bs;
   fail += a.area != b.area;
@@ -154,8 +152,6 @@ inline bool isEqual(MatPowerUtils::BusRow<IntT, RealT> a,
   if (fail) {
     errs() << "bus_i: a=" << a.bus_i << ", b=" << b.bus_i << "\n"
            << "type: a=" << a.type << ", b=" << b.type << "\n"
-           << "Pd: a=" << a.Pd << ", b=" << b.Pd << "\n"
-           << "Qd: a=" << a.Qd << ", b=" << b.Qd << "\n"
            << "Gs: a=" << a.Gs << ", b=" << b.Gs << "\n"
            << "Bs: a=" << a.Bs << ", b=" << b.Bs << "\n"
            << "area: a=" << a.area << ", b=" << b.area << "\n"
