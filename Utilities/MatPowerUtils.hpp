@@ -17,21 +17,21 @@
 namespace GridKit
 {
 
-namespace MatPowerUtils
+namespace PowerSystemData
 {
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct BusRow 
   {
-    IntT  bus_i;  ///< Bus ID
-    IntT  type;   ///< Bust type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
+    IdxT  bus_i;  ///< Bus ID
+    IdxT  type;   ///< Bust type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
     RealT Gs;     ///< Shunt conductance (MW demanded at V = 1.0 p.u.)
     RealT Bs;     ///< Shunt susceptance (MVAr injected at V = 1.0 p.u.)
-    IntT  area;   ///< Area number (>0)
+    IdxT  area;   ///< Area number (>0)
     RealT Vm;     ///< Voltage magnitude (p.u.)
     RealT Va;     ///< Voltage phase (deg)
     RealT baseKV; ///< Base voltage [kV]
-    IntT  zone;   ///< Loss zone number (>0)
+    IdxT  zone;   ///< Loss zone number (>0)
     RealT Vmax;   ///< Maximum voltage magnitude (p.u.)
     RealT Vmin;   ///< Minimum voltage magnitude (p.u.)
 
@@ -54,10 +54,10 @@ namespace MatPowerUtils
     }
   };
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct LoadRow 
   {
-    IntT  bus_i;  ///< Bus ID
+    IdxT  bus_i;  ///< Bus ID
     RealT Pd;     ///< Active power demand [MW]
     RealT Qd;     ///< Reactive power demand [MVAr]
 
@@ -72,17 +72,17 @@ namespace MatPowerUtils
     }
   };
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct GenRow
   {
-    IntT  bus;      ///< Bus ID
+    IdxT  bus;      ///< Bus ID
     RealT Pg;       ///< Active power output [MW]
     RealT Qg;       ///< Reactive power output [MVAr]
     RealT Qmax;     ///< Maximum reactive power output [MVAr]
     RealT Qmin;     ///< Minimum reactive power output [MVAr]
     RealT Vg;       ///<
     RealT mBase;    ///< Total MVA base of machine
-    IntT  status;   ///< Service status (>0 in service, <=0 out of service) 
+    IdxT  status;   ///< Service status (>0 in service, <=0 out of service) 
     RealT Pmax;     ///< Maximum active power output [MVAr]
     RealT Pmin;     ///< Minimum active power output [MVAr]
     RealT Pc1;      ///<
@@ -126,11 +126,11 @@ namespace MatPowerUtils
     }
   };
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct BranchRow
   {
-    IntT  fbus;   ///< "From" bus ID
-    IntT  tbus;   ///< "To" bus ID
+    IdxT  fbus;   ///< "From" bus ID
+    IdxT  tbus;   ///< "To" bus ID
     RealT r;      ///< Resistance (p.u.)
     RealT x;      ///< Reactance (p.u.)
     RealT b;      ///< Total line charging susceptance (p.u.)
@@ -139,7 +139,7 @@ namespace MatPowerUtils
     RealT rateC;  ///< MVA rating C (emergency rating), 0=unlimited
     RealT ratio;  ///< Transformer off nominal turns ratio
     RealT angle;  ///< Transformer phase shift angle [deg], positive ⇒ delay
-    IntT  status; ///< Initial service status: 1=in-service, 0=out-of-service
+    IdxT  status; ///< Initial service status: 1=in-service, 0=out-of-service
     RealT angmin; ///< Minimum anngle difference af - at [deg]
     RealT angmax; ///< Maximum anngle difference af - at [deg]
 
@@ -164,13 +164,13 @@ namespace MatPowerUtils
     }
   };
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct GenCostRow
   {
-    IntT kind;
-    IntT startup;
-    IntT shutdown;
-    IntT n;
+    IdxT kind;
+    IdxT startup;
+    IdxT shutdown;
+    IdxT n;
     std::vector<RealT> rest;
 
     inline std::string str() const
@@ -187,16 +187,16 @@ namespace MatPowerUtils
     }
   };
 
-  template <typename IntT = int, typename RealT = double>
+  template <typename RealT = double, typename IdxT = int>
   struct MatPower {
-    using BusRowT = BusRow<IntT, RealT>;
-    using GenRowT = GenRow<IntT, RealT>;
-    using BranchRowT = BranchRow<IntT, RealT>;
-    using GenCostRowT = GenCostRow<IntT, RealT>;
-    using LoadRowT = LoadRow<IntT, RealT>;
+    using BusRowT = BusRow<RealT, IdxT>;
+    using GenRowT = GenRow<RealT, IdxT>;
+    using BranchRowT = BranchRow<RealT, IdxT>;
+    using GenCostRowT = GenCostRow<RealT, IdxT>;
+    using LoadRowT = LoadRow<RealT, IdxT>;
 
     std::string version;
-    IntT baseMVA;
+    IdxT baseMVA;
     std::vector<BusRowT> bus;
     std::vector<GenRowT> gen;
     std::vector<BranchRowT> branch;

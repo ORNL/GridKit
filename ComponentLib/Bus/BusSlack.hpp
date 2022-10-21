@@ -87,7 +87,7 @@ namespace ModelLib
 
     public:
         typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-        using BusData = GridKit::MatPowerUtils::BusRow<IdxT, ScalarT>;
+        using BusData = GridKit::PowerSystemData::BusRow<IdxT, ScalarT>;
 
         BusSlack();
         BusSlack(ScalarT V, ScalarT theta);
