@@ -156,19 +156,26 @@ void checkEndOfMatrixRow(std::istream& is)
 }
 
 template <typename IntT = int, typename RealT = double>
-// BusRow<IntT, RealT> 
 void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow<IntT, RealT>& lr)
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
-  // BusRow<IntT, RealT> br;
-  // LoadRow<IntT, RealT> lr;
-  is >> br.bus_i >> br.type >> br.Pd >> br.Qd >> br.Gs >> br.Bs >> br.area
-     >> br.Vm >> br.Va >> br.baseKV >> br.zone >> br.Vmax >> br.Vmin;
+  is >> br.bus_i
+     >> br.type
+     >> lr.Pd
+     >> lr.Qd
+     >> br.Gs
+     >> br.Bs
+     >> br.area
+     >> br.Vm
+     >> br.Va
+     >> br.baseKV
+     >> br.zone
+     >> br.Vmax
+     >> br.Vmin;
 
   lr.bus_i = br.bus_i;
-  lr.Pd = br.Pd;
-  lr.Qd = br.Qd;
+
   // std::cout << br.str();
   // logs() << "Read BusRow with the following values:\n" << br.str();
   // return br;
@@ -301,11 +308,11 @@ template <typename IdxT = int,
           std::size_t MaxLineSize = 1028>
 void readMatPower(SystemModelData<RealT, IdxT>& mp, std::istream& is)
 {
-  using BusRowT = BusRow<IntT, RealT>;
-  using GenRowT = GenRow<IntT, RealT>;
-  using BranchRowT = BranchRow<IntT, RealT>;
+  using BusRowT     = BusRow<IntT, RealT>;
+  using GenRowT     = GenRow<IntT, RealT>;
+  using BranchRowT  = BranchRow<IntT, RealT>;
   using GenCostRowT = GenCostRow<IntT, RealT>;
-  using LoadRowT = LoadRow<IntT, RealT>;
+  using LoadRowT    = LoadRow<IntT, RealT>;
 
   for (std::string line; std::getline(is, line);) {
     // Trim whitespace and remove comments

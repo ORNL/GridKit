@@ -25,8 +25,6 @@ namespace MatPowerUtils
   {
     IntT  bus_i;  ///< Bus ID
     IntT  type;   ///< Bust type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
-    RealT Pd;     ///< Active power demand [MW]
-    RealT Qd;     ///< Reactive power demand [MVAr]
     RealT Gs;     ///< Shunt conductance (MW demanded at V = 1.0 p.u.)
     RealT Bs;     ///< Shunt susceptance (MVAr injected at V = 1.0 p.u.)
     IntT  area;   ///< Area number (>0)
@@ -42,8 +40,6 @@ namespace MatPowerUtils
       std::stringstream ss;
       std::cerr << std::setw(10) << bus_i
                 << std::setw(10) << type 
-                << std::setw(10) << Pd 
-                << std::setw(10) << Qd
                 << std::setw(10) << Gs
                 << std::setw(10) << Bs
                 << std::setw(10) << area
@@ -180,8 +176,10 @@ namespace MatPowerUtils
     inline std::string str() const
     {
       std::stringstream ss;
-      ss << std::setw(10) << kind << std::setw(10) << startup << std::setw(10)
-         << shutdown << std::setw(10) << n;
+      ss << std::setw(10) << kind
+         << std::setw(10) << startup
+         << std::setw(10) << shutdown
+         << std::setw(10) << n;
       for (const auto& val : rest)
         ss << std::setw(10) << val;
       ss << "\n";
