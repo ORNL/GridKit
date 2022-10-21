@@ -1,5 +1,5 @@
 #include <FileIO.hpp>
-#include <MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 #include <Testing.hpp>
 #include <iostream>
 
@@ -30,7 +30,7 @@ mpc.gen = [
 
 int main(int argc, char **argv) {
   int fail = 0;
-  std::vector<GenRow<RealT, IdxT>> gen_answer{
+  std::vector<GenData<RealT, IdxT>> gen_answer{
       {1, 40, 0, 30, -30, 1, 100, 1, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {1, 170, 0, 127.5, -127.5, 1, 100, 1, 170, 0, 0,
        0, 0,   0, 0,     0,      0, 0,   0, 0,   0},
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
       {4, 0, 0, 150, -150, 1, 100, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {5, 466.51, 0, 450, -450, 1, 100, 1, 600, 0, 0,
        0, 0,      0, 0,   0,    0, 0,   0, 0,   0}};
-  MatPower<RealT, IdxT> mp;
+  SystemModelData<RealT, IdxT> mp;
 
   {
     std::istringstream iss(matpower_data);

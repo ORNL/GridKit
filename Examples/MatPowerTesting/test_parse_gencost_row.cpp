@@ -1,5 +1,5 @@
 #include <FileIO.hpp>
-#include <MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 #include <Testing.hpp>
 #include <iostream>
 
@@ -33,12 +33,12 @@ mpc.gencost = [
 
 int main(int argc, char **argv) {
   int fail = 0;
-  std::vector<GenCostRow<RealT, IdxT>> gencost_answer{
+  std::vector<GenCostData<RealT, IdxT>> gencost_answer{
       {2, 0, 0, 3, {0, 14, 0}}, {2, 0, 0, 3, {0, 15, 0}},
       {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
-  MatPower<RealT, IdxT> mp;
+  SystemModelData<RealT, IdxT> mp;
 
   {
     std::istringstream iss(matpower_data);

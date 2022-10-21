@@ -6,11 +6,11 @@
 
 /**
  *
- * @file Utilities/MatPowerUtils.hpp
+ * @file PowerSystemData.hpp
  * @author Asher Mancinelli <asher.mancinelli@pnnl.gov>
  *
  * @remark `std::stringstream` is preferred over `operator+(std::string, ...)`
- * due to stringstream's lack of reallocation on append.
+ * since stringstream does not reallocate on append.
  *
  */
 
@@ -21,7 +21,7 @@ namespace PowerSystemData
 {
 
   template <typename RealT = double, typename IdxT = int>
-  struct BusRow 
+  struct BusData 
   {
     IdxT  bus_i;  ///< Bus ID
     IdxT  type;   ///< Bust type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
@@ -55,7 +55,7 @@ namespace PowerSystemData
   };
 
   template <typename RealT = double, typename IdxT = int>
-  struct LoadRow 
+  struct LoadData 
   {
     IdxT  bus_i;  ///< Bus ID
     RealT Pd;     ///< Active power demand [MW]
@@ -73,7 +73,7 @@ namespace PowerSystemData
   };
 
   template <typename RealT = double, typename IdxT = int>
-  struct GenRow
+  struct GenData
   {
     IdxT  bus;      ///< Bus ID
     RealT Pg;       ///< Active power output [MW]
@@ -127,7 +127,7 @@ namespace PowerSystemData
   };
 
   template <typename RealT = double, typename IdxT = int>
-  struct BranchRow
+  struct BranchData
   {
     IdxT  fbus;   ///< "From" bus ID
     IdxT  tbus;   ///< "To" bus ID
@@ -165,7 +165,7 @@ namespace PowerSystemData
   };
 
   template <typename RealT = double, typename IdxT = int>
-  struct GenCostRow
+  struct GenCostData
   {
     IdxT kind;
     IdxT startup;
@@ -188,20 +188,21 @@ namespace PowerSystemData
   };
 
   template <typename RealT = double, typename IdxT = int>
-  struct MatPower {
-    using BusRowT = BusRow<RealT, IdxT>;
-    using GenRowT = GenRow<RealT, IdxT>;
-    using BranchRowT = BranchRow<RealT, IdxT>;
-    using GenCostRowT = GenCostRow<RealT, IdxT>;
-    using LoadRowT = LoadRow<RealT, IdxT>;
+  struct SystemModelData
+  {
+    using BusDataT = BusData<RealT, IdxT>;
+    using GenDataT = GenData<RealT, IdxT>;
+    using BranchDataT = BranchData<RealT, IdxT>;
+    using GenCostDataT = GenCostData<RealT, IdxT>;
+    using LoadDataT = LoadData<RealT, IdxT>;
 
     std::string version;
     IdxT baseMVA;
-    std::vector<BusRowT> bus;
-    std::vector<GenRowT> gen;
-    std::vector<BranchRowT> branch;
-    std::vector<GenCostRowT> gencost;
-    std::vector<LoadRowT> load;
+    std::vector<BusDataT> bus;
+    std::vector<GenDataT> gen;
+    std::vector<BranchDataT> branch;
+    std::vector<GenCostDataT> gencost;
+    std::vector<LoadDataT> load;
 
     // Not sure if these should be in this struct... Not all matpower files
     // I found contained them.
@@ -235,7 +236,7 @@ namespace PowerSystemData
 
       return ss.str();
     }
-  };
+  }; // struct SystemModelData
 
-}  // namespace MatPower
+}  // namespace PowerSystemData
 }  // namespace GridKit

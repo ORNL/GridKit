@@ -1,5 +1,5 @@
 #include <FileIO.hpp>
-#include <MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 #include <Testing.hpp>
 #include <iostream>
 
@@ -33,7 +33,7 @@ mpc.branch = [
 
 int main(int argc, char **argv) {
   int fail = 0;
-  std::vector<BranchRow<RealT, IdxT>> branch_answer{
+  std::vector<BranchData<RealT, IdxT>> branch_answer{
       {1, 2, 0.00281, 0.0281, 0.00712, 400, 400, 400, 0, 0, 1, -360, 360},
       {1, 4, 0.00304, 0.0304, 0.00658, 0, 0, 0, 0, 0, 1, -360, 360},
       {1, 5, 0.00064, 0.0064, 0.03126, 0, 0, 0, 0, 0, 1, -360, 360},
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
       {3, 4, 0.00297, 0.0297, 0.00674, 0, 0, 0, 0, 0, 1, -360, 360},
       {4, 5, 0.00297, 0.0297, 0.00674, 240, 240, 240, 0, 0, 1, -360, 360},
   };
-  MatPower<RealT, IdxT> mp;
+  SystemModelData<RealT, IdxT> mp;
 
   {
     std::istringstream iss(matpower_data);

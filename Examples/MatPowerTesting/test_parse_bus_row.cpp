@@ -1,5 +1,5 @@
 #include <FileIO.hpp>
-#include <MatPowerUtils.hpp>
+#include <PowerSystemData.hpp>
 #include <Testing.hpp>
 #include <iostream>
 
@@ -28,7 +28,7 @@ mpc.bus = [
 
 int main(int argc, char** argv) {
   int fail = 0;
-  std::vector<BusRow<RealT, IdxT>> bus_answer{
+  std::vector<BusData<RealT, IdxT>> bus_answer{
       {1, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
       {2, 1, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
       {3, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.0},
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
       {5, 2, 0, 0, 1, 1, 0, 230, 1, 1.1, 0.9},
   };
 
-  std::vector<LoadRow<RealT, IdxT>> load_answer{
+  std::vector<LoadData<RealT, IdxT>> load_answer{
       {1,   0,      0},
       {2, 300,  98.61},
       {3, 300,  98.61},
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   };
 
   {
-    MatPower<RealT, IdxT> mp;
+    SystemModelData<RealT, IdxT> mp;
     std::istringstream iss(matpower_data);
     GridKit::readMatPower(mp, iss);
     if (!isEqual(mp.bus, bus_answer)) fail++;
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   }
 
   {
-    MatPower<RealT, IdxT> mp;
+    SystemModelData<RealT, IdxT> mp;
     std::istringstream iss(matpower_data);
     GridKit::readMatPower(mp, iss);
     if (!isEqual(mp.load, load_answer)) fail++;
