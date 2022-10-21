@@ -5,11 +5,11 @@
 
 using namespace GridKit;
 using namespace GridKit::Testing;
-using namespace GridKit::MatPowerUtils;
+using namespace GridKit::PowerSystemData;
 
 namespace {
 
-using IntT = int;
+using IdxT = int;
 using RealT = double;
 
 static const std::string matpower_data{
@@ -33,7 +33,7 @@ mpc.branch = [
 
 int main(int argc, char **argv) {
   int fail = 0;
-  std::vector<BranchRow<IntT, RealT>> branch_answer{
+  std::vector<BranchRow<RealT, IdxT>> branch_answer{
       {1, 2, 0.00281, 0.0281, 0.00712, 400, 400, 400, 0, 0, 1, -360, 360},
       {1, 4, 0.00304, 0.0304, 0.00658, 0, 0, 0, 0, 0, 1, -360, 360},
       {1, 5, 0.00064, 0.0064, 0.03126, 0, 0, 0, 0, 0, 1, -360, 360},
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
       {3, 4, 0.00297, 0.0297, 0.00674, 0, 0, 0, 0, 0, 1, -360, 360},
       {4, 5, 0.00297, 0.0297, 0.00674, 240, 240, 240, 0, 0, 1, -360, 360},
   };
-  MatPower<IntT, RealT> mp;
+  MatPower<RealT, IdxT> mp;
 
   {
     std::istringstream iss(matpower_data);

@@ -80,7 +80,7 @@ namespace
 {
 
 using namespace GridKit;
-using namespace GridKit::MatPowerUtils;
+using namespace GridKit::PowerSystemData;
 
 static const std::string matlab_syntax_error{
     "Only a subset of Matlab syntax is supported."
@@ -155,8 +155,8 @@ void checkEndOfMatrixRow(std::istream& is)
     throw std::runtime_error(matlab_syntax_error);
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow<IntT, RealT>& lr)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerBusRow(const std::string& row, BusRow<RealT, IdxT>& br, LoadRow<RealT, IdxT>& lr)
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
@@ -181,8 +181,8 @@ void readMatPowerBusRow(const std::string& row, BusRow<IntT, RealT>& br, LoadRow
   // return br;
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerGenRow(GenRow<IntT, RealT>& gr, std::string& row)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerGenRow(GenRow<RealT, IdxT>& gr, std::string& row)
 {
   logs() << "Parsing MATPOWER gen row\n";
   std::stringstream is(row);
@@ -193,8 +193,8 @@ void readMatPowerGenRow(GenRow<IntT, RealT>& gr, std::string& row)
   checkEndOfMatrixRow(is);
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerBranchRow(BranchRow<IntT, RealT>& br, std::string& row)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerBranchRow(BranchRow<RealT, IdxT>& br, std::string& row)
 {
   logs() << "Parsing MATPOWER branch row\n";
   std::stringstream is(row);
@@ -204,8 +204,8 @@ void readMatPowerBranchRow(BranchRow<IntT, RealT>& br, std::string& row)
   checkEndOfMatrixRow(is);
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerGenCostRow(GenCostRow<IntT, RealT>& gcr, std::string& row)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerGenCostRow(GenCostRow<RealT, IdxT>& gcr, std::string& row)
 {
   logs() << "Parsing MATPOWER gen cost row\n";
   // Ensure last character is semicolon.
@@ -221,8 +221,8 @@ void readMatPowerGenCostRow(GenCostRow<IntT, RealT>& gcr, std::string& row)
   }
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerVersion(MatPower<IntT, RealT>& mp, std::string& line)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerVersion(MatPower<RealT, IdxT>& mp, std::string& line)
 {
   logs() << "Parsing matpower version\n";
   std::regex pat("mpc\\.version\\s*=\\s*'([0-9])';");
@@ -234,8 +234,8 @@ void readMatPowerVersion(MatPower<IntT, RealT>& mp, std::string& line)
   }
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerBaseMVA(MatPower<IntT, RealT>& mp, std::string& line)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerBaseMVA(MatPower<RealT, IdxT>& mp, std::string& line)
 {
   std::regex pat("mpc\\.baseMVA\\s*=\\s*([0-9]+);");
   std::smatch matches;
@@ -296,23 +296,23 @@ void printLookupTable(std::vector<std::vector<ScalarT>> const& table)
   }
 }
 
-template <typename IntT = int, typename RealT = double>
-void readMatPowerFile(MatPower<IntT, RealT>& mp, std::string& filename)
+template <typename RealT = double, typename IdxT = int>
+void readMatPowerFile(MatPower<RealT, IdxT>& mp, std::string& filename)
 {
   std::ifstream ifs{filename};
   readMatPower(mp, ifs);
 }
 
-template <typename IntT = int,
+template <typename IdxT = int,
           typename RealT = double,
           std::size_t MaxLineSize = 1028>
-void readMatPower(MatPower<IntT, RealT>& mp, std::istream& is)
+void readMatPower(MatPower<RealT, IdxT>& mp, std::istream& is)
 {
-  using BusRowT     = BusRow<IntT, RealT>;
-  using GenRowT     = GenRow<IntT, RealT>;
-  using BranchRowT  = BranchRow<IntT, RealT>;
-  using GenCostRowT = GenCostRow<IntT, RealT>;
-  using LoadRowT    = LoadRow<IntT, RealT>;
+  using BusRowT     = BusRow<RealT, IdxT>;
+  using GenRowT     = GenRow<RealT, IdxT>;
+  using BranchRowT  = BranchRow<RealT, IdxT>;
+  using GenCostRowT = GenCostRow<RealT, IdxT>;
+  using LoadRowT    = LoadRow<RealT, IdxT>;
 
   for (std::string line; std::getline(is, line);) {
     // Trim whitespace and remove comments

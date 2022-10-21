@@ -68,9 +68,11 @@ namespace ModelLib {
     class BusFactory
     {
     public:
-        using BusData = GridKit::MatPowerUtils::BusRow<IntT, ScalarT>;
+        using BusData = GridKit::PowerSystemData::BusRow<IntT, ScalarT>;
 
-        BaseBus<ScalarT, IntT>* create(BusData& data)
+        BusFactory() = delete;
+
+        static BaseBus<ScalarT, IntT>* create(BusData& data)
         {
             BaseBus<ScalarT, IntT>* bus = nullptr;
             switch(data.type)
@@ -90,8 +92,6 @@ namespace ModelLib {
             }
             return bus;
         }
-    private:
-        BusFactory(){}
     };
 
-}
+} // namespace ModelLib

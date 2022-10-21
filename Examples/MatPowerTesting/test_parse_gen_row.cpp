@@ -5,11 +5,11 @@
 
 using namespace GridKit;
 using namespace GridKit::Testing;
-using namespace GridKit::MatPowerUtils;
+using namespace GridKit::PowerSystemData;
 
 namespace {
 
-using IntT = int;
+using IdxT = int;
 using RealT = double;
 
 static const std::string matpower_data{
@@ -30,7 +30,7 @@ mpc.gen = [
 
 int main(int argc, char **argv) {
   int fail = 0;
-  std::vector<GenRow<IntT, RealT>> gen_answer{
+  std::vector<GenRow<RealT, IdxT>> gen_answer{
       {1, 40, 0, 30, -30, 1, 100, 1, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {1, 170, 0, 127.5, -127.5, 1, 100, 1, 170, 0, 0,
        0, 0,   0, 0,     0,      0, 0,   0, 0,   0},
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
       {4, 0, 0, 150, -150, 1, 100, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {5, 466.51, 0, 450, -450, 1, 100, 1, 600, 0, 0,
        0, 0,      0, 0,   0,    0, 0,   0, 0,   0}};
-  MatPower<IntT, RealT> mp;
+  MatPower<RealT, IdxT> mp;
 
   {
     std::istringstream iss(matpower_data);

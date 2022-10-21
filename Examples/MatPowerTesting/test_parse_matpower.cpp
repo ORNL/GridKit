@@ -5,11 +5,11 @@
 
 using namespace GridKit;
 using namespace GridKit::Testing;
-using namespace GridKit::MatPowerUtils;
+using namespace GridKit::PowerSystemData;
 
 namespace {
 
-using IntT = int;
+using IdxT = int;
 using RealT = double;
 
 static const std::string matpower_data{
@@ -85,12 +85,12 @@ int main(int argc, char **argv) {
   int fail = 0;
 
   // All types will use the scalar types at the top of the file
-  using BusRowT = BusRow<IntT, RealT>;
-  using GenRowT = GenRow<IntT, RealT>;
-  using BranchRowT = BranchRow<IntT, RealT>;
-  using GenCostRowT = GenCostRow<IntT, RealT>;
-  using MatPowerT = MatPower<IntT, RealT>;
-  using LoadRowT = LoadRow<IntT, RealT>;
+  using BusRowT = BusRow<RealT, IdxT>;
+  using GenRowT = GenRow<RealT, IdxT>;
+  using BranchRowT = BranchRow<RealT, IdxT>;
+  using GenCostRowT = GenCostRow<RealT, IdxT>;
+  using MatPowerT = MatPower<RealT, IdxT>;
+  using LoadRowT = LoadRow<RealT, IdxT>;
 
   // Create the struct of expected values
   std::vector<BranchRowT> branch_answer{
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
       {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
-  std::vector<LoadRow<IntT, RealT>> load_answer{
+  std::vector<LoadRow<RealT, IdxT>> load_answer{
       {1,   0,      0},
       {2, 300,  98.61},
       {3, 300,  98.61},
