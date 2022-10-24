@@ -64,27 +64,28 @@
 
 namespace ModelLib {
 
-    template <typename ScalarT = double, typename IntT = int>
+    template <typename ScalarT = double, typename IdxT = int>
     class BusFactory
     {
     public:
-        using BusData = GridKit::PowerSystemData::BusData<IntT, ScalarT>;
+        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
         BusFactory() = delete;
 
-        static BaseBus<ScalarT, IntT>* create(BusData& data)
+        static BaseBus<ScalarT, IdxT>* create(BusData& data)
         {
-            BaseBus<ScalarT, IntT>* bus = nullptr;
+            BaseBus<ScalarT, IdxT>* bus = nullptr;
             switch(data.type)
             {
                 case 1:
-                bus = new BusPQ<ScalarT, IntT>(data);
+                bus = new BusPQ<ScalarT, IdxT>(data);
                 break;
                 case 2:
-                bus = new BusPV<ScalarT, IntT>(data);
+                bus = new BusPV<ScalarT, IdxT>(data);
                 break;
                 case 3:
-                bus = new BusSlack<ScalarT, IntT>(data);
+                bus = new BusSlack<ScalarT, IdxT>(data);
                 break;
                 default:
                 // Throw exception
