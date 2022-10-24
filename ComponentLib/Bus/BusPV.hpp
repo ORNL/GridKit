@@ -87,8 +87,8 @@ namespace ModelLib
         using BaseBus<ScalarT, IdxT>::tag_;
 
     public:
-        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-        using BusData = GridKit::PowerSystemData::BusData<IdxT, ScalarT>;
+        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
         BusPV();
         BusPV(ScalarT V, ScalarT theta0, ScalarT P);
