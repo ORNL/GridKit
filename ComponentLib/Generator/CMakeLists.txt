@@ -63,8 +63,6 @@
 gridkit_add_library(generator
   SOURCES
     GeneratorSlack.cpp
-    GeneratorPV.cpp
-    GeneratorPQ.cpp
   OUTPUT_NAME
     gridkit_generator)
 

@@ -70,11 +70,9 @@ namespace ModelLib
 
 namespace ModelLib
 {
-    /**
-     * @brief Generator base class template
-     * 
-     * @tparam ScalarT - Scalar type
-     * @tparam IdxT    - Matrix and vector index type
+    /*!
+     * @brief Implementation of a power grid.
+     *
      */
     template  <class ScalarT, typename IdxT>
     class GeneratorBase : public ModelEvaluatorImpl<ScalarT, IdxT>
@@ -97,6 +95,9 @@ namespace ModelLib
 
         using bus_type = BaseBus<ScalarT, IdxT>;
         using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        // using BusData = GridKit::PowerSystemData::BusData<real_type, IntT>;
+        // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        // typedef BaseBus<ScalarT, IdxT> bus_type;
 
     public:
         GeneratorBase(){}
