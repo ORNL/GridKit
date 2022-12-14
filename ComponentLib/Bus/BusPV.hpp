@@ -193,7 +193,7 @@ namespace ModelLib
 
         virtual const int BusType() const
         {
-            return 2;
+            return BaseBus<ScalarT, IdxT>::BusType::PV;
         }
 
     private:

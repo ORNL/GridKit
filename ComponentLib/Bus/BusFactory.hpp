@@ -60,7 +60,9 @@
 #pragma once
 
 #include <PowerSystemData.hpp>
-#include <ComponentLib/Bus/BaseBus.hpp>
+#include <ComponentLib/Bus/BusPQ.hpp>
+#include <ComponentLib/Bus/BusPV.hpp>
+#include <ComponentLib/Bus/BusSlack.hpp>
 
 namespace ModelLib {
 

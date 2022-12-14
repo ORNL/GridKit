@@ -71,13 +71,13 @@
 #include <cmath>
 
 #include <ComponentLib/MiniGrid/MiniGrid.hpp>
-#include <ComponentLib/Bus/BusPQ.hpp>
-#include <ComponentLib/Bus/BusPV.hpp>
-#include <ComponentLib/Bus/BusSlack.hpp>
+#include <ComponentLib/Bus/BusFactory.hpp>
+#include <ComponentLib/Generator/GeneratorFactory.hpp>
 #include <ComponentLib/Branch/Branch.hpp>
 #include <ComponentLib/Load/Load.hpp>
 #include <SystemSteadyStateModel.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
+#include <PowerSystemData.hpp>
 
 #include <Utilities/Testing.hpp>
 
@@ -88,6 +88,7 @@ int main()
     using namespace AnalysisManager::Sundials;
     using namespace AnalysisManager;
     using namespace GridKit::Testing;
+    using namespace GridKit::PowerSystemData;
 
     std::cout << "\nSolving power flow for a 3-bus monolithic model ...\n\n";
     // Create a 3-bus model
@@ -137,15 +138,33 @@ int main()
     SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
 
     // Next create and add buses ...
-    // Create a slack bus, fix V=1, theta=0
-    BaseBus<double, size_t>* bus1 = new BusSlack<double, size_t>(1.0, 0.0);
+    // Create a slack bus, fix V=1, theta=0, bus ID = 1" << std::endl;
+    BusData<double, size_t> bd1;
+    bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
+    auto* bus1 = BusFactory<double, size_t>::create(bd1);
+    // BaseBus<double, size_t>* bus1 = new BusSlack<double, size_t>(bd1);
     sysmodel->addBus(bus1);
-    // Create a PQ bus, initialize V=1, theta=0
-    BaseBus<double, size_t>* bus2 = new BusPQ<double, size_t>(1.0, 0.0);
+    
+    // Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
+    BusData<double, size_t> bd2;
+    bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
+    auto* bus2 = BusFactory<double, size_t>::create(bd2);
+    // BaseBus<double, size_t>* bus2 = new BusPQ<double, size_t>(bd2);
     sysmodel->addBus(bus2);
-    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2
-    BaseBus<double, size_t>* bus3 = new BusPV<double, size_t>(1.1, 0.0, 2.0);
+
+    std::cout << "// Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
+    BusData<double, size_t> bd3;
+    bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
+    auto* bus3 = BusFactory<double, size_t>::create(bd3);
+    // BaseBus<double, size_t>* bus3 = new BusPV<double, size_t>(1.1, 0.0, 2.0);
     sysmodel->addBus(bus3);
+
+    // Create and add generators ...
+    std::cout << "// Set power injection to 2.0 for bus3" << std::endl;
+    GenData<double, size_t> gd3;
+    gd3.Pg = 2.0; gd3.bus = 3;
+    auto* gen3 = GeneratorFactory<double, size_t>::create(bus3, gd3);
+    sysmodel->addComponent(gen3);
 
     // Create and add branches ...
     Branch<double, size_t>* branch12 = new Branch<double, size_t>(bus1, bus2);

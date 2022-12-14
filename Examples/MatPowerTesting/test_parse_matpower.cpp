@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
       {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
-  std::vector<LoadData<RealT, IdxT>> load_answer{
+  std::vector<LoadDataT> load_answer{
       {1,   0,      0},
       {2, 300,  98.61},
       {3, 300,  98.61},

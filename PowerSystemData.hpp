@@ -24,7 +24,7 @@ namespace PowerSystemData
   struct BusData 
   {
     IdxT  bus_i;  ///< Bus ID
-    IdxT  type;   ///< Bust type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
+    IdxT  type;   ///< Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
     RealT Gs;     ///< Shunt conductance (MW demanded at V = 1.0 p.u.)
     RealT Bs;     ///< Shunt susceptance (MVAr injected at V = 1.0 p.u.)
     IdxT  area;   ///< Area number (>0)

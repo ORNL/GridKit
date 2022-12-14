@@ -102,6 +102,8 @@ namespace ModelLib
     public:
         typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
 
+        enum BusType{PQ=1, PV, Slack, Isolated};
+
         BaseBus(){}
         virtual ~BaseBus(){}
 

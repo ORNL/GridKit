@@ -65,7 +65,12 @@
 # install(TARGETS grid3bus RUNTIME DESTINATION bin)
 
 add_executable(grid3bus Grid3BusSys.cpp)
-target_link_libraries(grid3bus GRIDKIT::minigrid GRIDKIT::bus GRIDKIT::branch GRIDKIT::load GRIDKIT::solvers_steady)
+target_link_libraries(grid3bus GRIDKIT::minigrid 
+                               GRIDKIT::bus
+                               GRIDKIT::generator
+                               GRIDKIT::branch
+                               GRIDKIT::load
+                               GRIDKIT::solvers_steady)
 install(TARGETS grid3bus RUNTIME DESTINATION bin)
 
 add_test(NAME Grid3Bus    COMMAND $<TARGET_FILE:grid3bus>)
