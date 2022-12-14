@@ -160,19 +160,19 @@ void readMatPowerBusRow(const std::string& row, BusData<RealT, IdxT>& br, LoadDa
 {
   logs() << "Parsing MATPOWER bus row\n";
   std::stringstream is(row);
-  is >> br.bus_i
-     >> br.type
-     >> lr.Pd
-     >> lr.Qd
-     >> br.Gs
-     >> br.Bs
-     >> br.area
-     >> br.Vm
-     >> br.Va
-     >> br.baseKV
-     >> br.zone
-     >> br.Vmax
-     >> br.Vmin;
+  is >> br.bus_i   // Bus ID
+     >> br.type    // Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
+     >> lr.Pd      // Active power demand [MW]
+     >> lr.Qd      // Reactive power demand [MVAr]
+     >> br.Gs      // Shunt conductance (MW demanded at V = 1.0 p.u.)
+     >> br.Bs      // Shunt susceptance (MVAr injected at V = 1.0 p.u.)
+     >> br.area    // Area number (>0)
+     >> br.Vm      // Voltage magnitude (p.u.)
+     >> br.Va      // Voltage phase (deg)
+     >> br.baseKV  // Base voltage [kV]
+     >> br.zone    // Loss zone number (>0)
+     >> br.Vmax    // Maximum voltage magnitude (p.u.)
+     >> br.Vmin;   // Minimum voltage magnitude (p.u.)
 
   lr.bus_i = br.bus_i;
 

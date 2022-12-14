@@ -89,49 +89,13 @@ static const std::string BUS3_DATA_STRING = R"(
 function mpc = case5
 % Created by Reid Gomillion
 
-%   MATPOWER
-
-%% MATPOWER Case Format : Version 2
-mpc.version = '2';
-
-%%-----  Power Flow Data  -----%%
-%% system MVA base
-mpc.baseMVA = 100;
-
-%% bus data
-%	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
-mpc.bus = [
-	1	3	2.0	0.0	0	0	0	1	0.0	0	0	0	0.0;
-	2	1	2.5	-0.8	0	0	0	1	0.0	0	0	0	0.0;
-	3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
-];
-
-%% generator data
-%	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
-mpc.gen = [
-	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-	3	2.0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-];
-
-%% branch data
-%	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
-mpc.branch = [
-	1	2	0	0.1	0	0	0	0	0	0	0	0	0;
-	1	3	0	0.0666666	0	0	0	0	0	0	0	0	0;
-	2	3	0	0.0833333	0	0	0	0	0	0	0	0	0;
-];
-
-%%-----  OPF Data  -----%%
-%% generator cost data
-%	1	startup	shutdown	n	x1	y1	...	xn	yn
-%	2	startup	shutdown	n	c(n-1)	...	c0
-mpc.gencost = [
-	2	0	0	3	0   14	0;
-	2	0	0	3	0   15	0;
-	2	0	0	3	0   30	0;
-];
-
-)";
+int main()
+{
+    using namespace ModelLib;
+    using namespace AnalysisManager::Sundials;
+    using namespace AnalysisManager;
+    using namespace GridKit::Testing;
+    using namespace GridKit::PowerSystemData;
 
 
 using namespace ModelLib;
@@ -273,35 +237,32 @@ int hardwired_case()
     SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
 
     // Next create and add buses ...
-    // Create a slack bus, fix V=1, theta=0, bus ID = 1
+    // Create a slack bus, fix V=1, theta=0, bus ID = 1" << std::endl;
     BusData<double, size_t> bd1;
     bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
     auto* bus1 = BusFactory<double, size_t>::create(bd1);
+    // BaseBus<double, size_t>* bus1 = new BusSlack<double, size_t>(bd1);
     sysmodel->addBus(bus1);
     
-    //Create a PQ bus, initialize V=1, theta=0, bus ID = 2
+    // Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
     BusData<double, size_t> bd2;
     bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
     auto* bus2 = BusFactory<double, size_t>::create(bd2);
+    // BaseBus<double, size_t>* bus2 = new BusPQ<double, size_t>(bd2);
     sysmodel->addBus(bus2);
 
-    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2
+    std::cout << "// Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
     BusData<double, size_t> bd3;
     bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
     auto* bus3 = BusFactory<double, size_t>::create(bd3);
+    // BaseBus<double, size_t>* bus3 = new BusPV<double, size_t>(1.1, 0.0, 2.0);
     sysmodel->addBus(bus3);
 
     // Create and add generators ...
-    // Create and add slack generator connected to bus1
-    GenData<double, size_t> gd1;
-    gd1.bus = 1;
-    auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
-    sysmodel->addComponent(gen1);
-
-    // Create and add PV generator connected to bus3
+    std::cout << "// Set power injection to 2.0 for bus3" << std::endl;
     GenData<double, size_t> gd3;
     gd3.Pg = 2.0; gd3.bus = 3;
-    auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
+    auto* gen3 = GeneratorFactory<double, size_t>::create(bus3, gd3);
     sysmodel->addComponent(gen3);
 
     // Create and add branches ...

@@ -104,7 +104,7 @@ namespace ModelLib
 
         enum BusType{PQ=1, PV, Slack, Isolated};
 
-        BaseBus(IdxT id) : busID_(id) {}
+        BaseBus(){}
         virtual ~BaseBus(){}
 
         // Set defaults for ModelEvaluator methods
