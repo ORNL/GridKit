@@ -145,12 +145,12 @@ int monolithic_case()
     kinsol->printFinalStats();
 
     int retval1 = 0;
-    retval1 += !isEqual(th2, theta2_ref, 1e-4);
-    retval1 += !isEqual(V2,  V2_ref    , 1e-4);
-    retval1 += !isEqual(th3, theta3_ref, 1e-4);
+    retval1 += !isEqual(th2, -4.87979, 1e-4);
+    retval1 += !isEqual(V2,   1.08281, 1e-4);
+    retval1 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval1 == 0)
-        std::cout << "\nSuccess!\n\n\n";
+        std::cout << "\nSucess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 
@@ -241,28 +241,30 @@ int hardwired_case()
     BusData<double, size_t> bd1;
     bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
     auto* bus1 = BusFactory<double, size_t>::create(bd1);
-    // BaseBus<double, size_t>* bus1 = new BusSlack<double, size_t>(bd1);
     sysmodel->addBus(bus1);
     
     // Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
     BusData<double, size_t> bd2;
     bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
     auto* bus2 = BusFactory<double, size_t>::create(bd2);
-    // BaseBus<double, size_t>* bus2 = new BusPQ<double, size_t>(bd2);
     sysmodel->addBus(bus2);
 
-    std::cout << "// Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
+    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
     BusData<double, size_t> bd3;
     bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
     auto* bus3 = BusFactory<double, size_t>::create(bd3);
-    // BaseBus<double, size_t>* bus3 = new BusPV<double, size_t>(1.1, 0.0, 2.0);
     sysmodel->addBus(bus3);
 
     // Create and add generators ...
-    std::cout << "// Set power injection to 2.0 for bus3" << std::endl;
+    // Create and add slack generator connected to bus1
+    GenData<double, size_t> gd1;
+    gd1.bus = 1;
+    auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
+    sysmodel->addComponent(gen1);
+    // Create and add PV generator connected to bus3
     GenData<double, size_t> gd3;
     gd3.Pg = 2.0; gd3.bus = 3;
-    auto* gen3 = GeneratorFactory<double, size_t>::create(bus3, gd3);
+    auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
     sysmodel->addComponent(gen3);
 
     // Create and add branches ...
@@ -271,13 +273,11 @@ int hardwired_case()
     brd12.fbus = 1; brd12.tbus = 2; brd12.x = 1.0/10.0; brd12.r = 0.0; brd12.b = 0.0;
     Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
     sysmodel->addComponent(branch12);
-
     // Branch 1-3
     BranchData<double, size_t> brd13;
     brd13.fbus = 1; brd13.tbus = 3; brd13.x = 1.0/15.0; brd13.r = 0.0; brd13.b = 0.0;
     Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
     sysmodel->addComponent(branch13);
-
     // Branch 2-3
     BranchData<double, size_t> brd23;
     brd23.fbus = 2; brd23.tbus = 3; brd23.x = 1.0/12.0; brd23.r = 0.0; brd23.b = 0.0;
@@ -291,7 +291,6 @@ int hardwired_case()
     ld1.bus_i = 1; ld1.Pd = 2.0; ld1.Qd = 0.0;
     Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
     sysmodel->addComponent(load1);
-
     // Load on bus2
     LoadData<double, size_t> ld2;
     ld2.bus_i = 2; ld2.Pd = 2.5; ld2.Qd = -0.8;
@@ -327,12 +326,12 @@ int hardwired_case()
     kinsol->printFinalStats();
 
     int retval2 = 0;
-    retval2 += !isEqual(th2, theta2_ref, 1e-4);
-    retval2 += !isEqual(V2,  V2_ref    , 1e-4);
-    retval2 += !isEqual(th3, theta3_ref, 1e-4);
+    retval2 += !isEqual(th2, -4.87979, 1e-4);
+    retval2 += !isEqual(V2,   1.08281, 1e-4);
+    retval2 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval2 == 0)
-        std::cout << "\nSuccess!\n\n\n";
+        std::cout << "\nSucess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 

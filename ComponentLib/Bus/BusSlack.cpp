@@ -110,15 +110,6 @@ BusSlack<ScalarT, IdxT>::BusSlack(BusData& data)
 }
 
 template <class ScalarT, typename IdxT>
-BusSlack<ScalarT, IdxT>::BusSlack(BusData& data)
-    : V_(data.Vm), theta_(data.Va) //, P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
-{
-    //std::cout << "Create BusSlack..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-    size_ = 0;
-}
-
-template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::~BusSlack()
 {
 }

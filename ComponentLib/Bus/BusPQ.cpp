@@ -114,16 +114,6 @@ BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
 }
 
 template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
-  : V0_(data.Vm), theta0_(data.Va)
-{
-    //std::cout << "Create BusPQ..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-
-    size_ = 2;
-}
-
-template <class ScalarT, typename IdxT>
 BusPQ<ScalarT, IdxT>::~BusPQ()
 {
     //std::cout << "Destroy PQ bus ..." << std::endl;

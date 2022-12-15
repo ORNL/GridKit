@@ -104,7 +104,7 @@ namespace ModelLib
 
         enum BusType{PQ=1, PV, Slack, Isolated};
 
-        BaseBus(){}
+        BaseBus(IdxT id) : busID_(id) {}
         virtual ~BaseBus(){}
 
         // Set defaults for ModelEvaluator methods
@@ -141,6 +141,14 @@ namespace ModelLib
         virtual const ScalarT& QB() const = 0;
 
         virtual const int BusType() const = 0;
+
+        virtual const IdxT BusID() const
+        {
+            return busID_;
+        }
+
+    protected:
+        const IdxT busID_;
     }; // class BaseBus
 
 } // namespace ModelLib

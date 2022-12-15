@@ -93,7 +93,8 @@ template <typename T> bool isEqual(const T value, const T ref, const T tol)
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::GenCostData<RealT, IdxT> a,
                     PowerSystemData::GenCostData<RealT, IdxT> b,
-                    RealT tol = tol_) {
+                    RealT tol = tol_)
+{
   int fail = 0;
   fail += a.kind != b.kind;
   fail += a.startup != b.startup;
@@ -107,7 +108,9 @@ inline bool isEqual(PowerSystemData::GenCostData<RealT, IdxT> a,
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::GenData<RealT, IdxT> a,
-                    PowerSystemData::GenData<RealT, IdxT> b, RealT tol = tol_) {
+                    PowerSystemData::GenData<RealT, IdxT> b,
+                    RealT tol = tol_)
+{
   int fail = 0;
   fail += a.bus != b.bus;
   fail += !isEqual(a.Pg, b.Pg, tol);
@@ -138,7 +141,9 @@ inline bool isEqual(PowerSystemData::GenData<RealT, IdxT> a,
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::BusData<RealT, IdxT> a,
-                    PowerSystemData::BusData<RealT, IdxT> b, RealT tol = tol_) {
+                    PowerSystemData::BusData<RealT, IdxT> b,
+                    RealT tol = tol_)
+{
   int fail = 0;
   fail += a.bus_i != b.bus_i;
   fail += a.type != b.type;
@@ -169,7 +174,9 @@ inline bool isEqual(PowerSystemData::BusData<RealT, IdxT> a,
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::LoadData<RealT, IdxT> a,
-                    PowerSystemData::LoadData<RealT, IdxT> b, RealT tol = tol_) {
+                    PowerSystemData::LoadData<RealT, IdxT> b,
+                    RealT tol = tol_)
+{
   int fail = 0;
   fail += a.bus_i != b.bus_i;
   fail += !isEqual(a.Pd, b.Pd, tol);
@@ -184,7 +191,9 @@ inline bool isEqual(PowerSystemData::LoadData<RealT, IdxT> a,
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::BranchData<RealT, IdxT> a,
-                    PowerSystemData::BranchData<RealT, IdxT> b, RealT tol = tol_) {
+                    PowerSystemData::BranchData<RealT, IdxT> b,
+                    RealT tol = tol_)
+{
   int fail = 0;
   fail += a.fbus != b.fbus;
   fail += a.tbus != b.tbus;
@@ -230,7 +239,8 @@ inline bool isEqual(std::vector<T> a, std::vector<T> b, double tol = tol_)
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::SystemModelData<RealT, IdxT> a,
-                    PowerSystemData::SystemModelData<RealT, IdxT> b) {
+                    PowerSystemData::SystemModelData<RealT, IdxT> b)
+{
   int fail = 0;
   fail += a.version != b.version;
   fail += a.baseMVA != b.baseMVA;
