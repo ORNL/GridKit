@@ -74,7 +74,7 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack()
-    : V_(0.0), theta_(0.0), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta_(0.0), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
 {
     //std::cout << "Create BusSlack..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -93,7 +93,7 @@ BusSlack<ScalarT, IdxT>::BusSlack()
  */
 template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack(ScalarT V, ScalarT theta)
-    : V_(V), theta_(theta), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0), V_(V), theta_(theta), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
 {
     //std::cout << "Create BusSlack..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -102,7 +102,7 @@ BusSlack<ScalarT, IdxT>::BusSlack(ScalarT V, ScalarT theta)
 
 template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack(BusData& data)
-    : V_(data.Vm), theta_(data.Va) //, P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta_(data.Va)
 {
     //std::cout << "Create BusSlack..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;

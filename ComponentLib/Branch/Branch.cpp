@@ -60,6 +60,7 @@
 #include <iostream>
 #include <cmath>
 #include <ComponentLib/Bus/BaseBus.hpp>
+#include <PowerSystemData.hpp>
 
 #include "Branch.hpp"
 
@@ -81,6 +82,8 @@ Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
     X_(0.01),
     G_(0.0),
     B_(0.0),
+    fbusID_(0),
+    tbusID_(0),
     bus1_(bus1),
     bus2_(bus2)
 {
@@ -93,9 +96,25 @@ Branch<ScalarT, IdxT>::Branch(real_type R, real_type X, real_type G, real_type B
     X_(X),
     G_(G),
     B_(B),
+    fbusID_(0),
+    tbusID_(0),
     bus1_(bus1),
     bus2_(bus2)
 {
+}
+
+template <class ScalarT, typename IdxT>
+Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
+  : R_(data.r),
+    X_(data.x),
+    G_(0.0),
+    B_(data.b),
+    fbusID_(data.fbus),
+    tbusID_(data.tbus),
+    bus1_(bus1),
+    bus2_(bus2)
+{
+    size_ = 0;
 }
 
 

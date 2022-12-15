@@ -61,7 +61,7 @@
 #define _LOAD_HPP_
 
 #include <ModelEvaluatorImpl.hpp>
-#include <vector>
+#include <PowerSystemData.hpp>
 
 namespace ModelLib
 {
@@ -71,8 +71,8 @@ namespace ModelLib
 
 namespace ModelLib
 {
-     /*!
-     * @brief Implementation of a power grid.
+    /*!
+     * @brief Declaration of a passive load class.
      *
      */
     template  <class ScalarT, typename IdxT>
@@ -93,11 +93,15 @@ namespace ModelLib
         using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
         using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-        typedef BaseBus<ScalarT, IdxT> bus_type;
+        // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        // typedef BaseBus<ScalarT, IdxT> bus_type;
+        using bus_type   = BaseBus<ScalarT, IdxT>;
+        using real_type  = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using LoadData = GridKit::PowerSystemData::LoadData<real_type, IdxT>;
 
     public:
         Load(bus_type* bus, ScalarT P, ScalarT Q);
+        Load(bus_type* bus, LoadData& data);
         virtual ~Load();
 
         int allocate();
@@ -121,6 +125,7 @@ namespace ModelLib
     private:
         ScalarT P_;
         ScalarT Q_;
+        const IdxT busID_;
         bus_type* bus_;
     };
 }

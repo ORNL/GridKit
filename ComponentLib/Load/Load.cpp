@@ -76,6 +76,18 @@ template <class ScalarT, typename IdxT>
 Load<ScalarT, IdxT>::Load(bus_type* bus, ScalarT P, ScalarT Q)
   : P_(P),
     Q_(Q),
+    busID_(0),
+    bus_(bus)
+{
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    size_ = 0;
+}
+
+template <class ScalarT, typename IdxT>
+Load<ScalarT, IdxT>::Load(bus_type* bus, LoadData& data)
+  : P_(data.Pd),
+    Q_(data.Qd),
+    busID_(data.bus_i),
     bus_(bus)
 {
     //std::cout << "Create a load model with " << size_ << " variables ...\n";

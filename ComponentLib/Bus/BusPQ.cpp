@@ -74,7 +74,7 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 BusPQ<ScalarT, IdxT>::BusPQ()
-  : V0_(0.0), theta0_(0.0)
+  : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
 {
     //std::cout << "Create BusPQ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -95,7 +95,7 @@ BusPQ<ScalarT, IdxT>::BusPQ()
  */
 template <class ScalarT, typename IdxT>
 BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
-  : V0_(V), theta0_(theta)
+  : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
 {
     //std::cout << "Create BusPQ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -105,7 +105,7 @@ BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
 
 template <class ScalarT, typename IdxT>
 BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
-  : V0_(data.Vm), theta0_(data.Va)
+  : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
 {
     //std::cout << "Create BusPQ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;

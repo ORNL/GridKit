@@ -74,7 +74,7 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV()
-  : V_(0.0), theta0_(0.0), Pg_(0.0)
+  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0), Pg_(0.0)
 {
     //std::cout << "Create BusPV..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -95,7 +95,7 @@ BusPV<ScalarT, IdxT>::BusPV()
  */
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0, ScalarT Pg)
-  : V_(V), theta0_(theta0), Pg_(Pg)
+  : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0), Pg_(Pg)
 {
     //std::cout << "Create BusPV ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -105,7 +105,7 @@ BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0, ScalarT Pg)
 
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV(BusData& data)
-  : V_(data.Vm), theta0_(data.Va) //, Pg_(Pg)
+  : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta0_(data.Va)
 {
     //std::cout << "Create BusPV ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;

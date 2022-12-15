@@ -369,6 +369,13 @@ public:
         components_.push_back(component);
     }
 
+    bus_type* getBus(IdxT busid)
+    {
+        // Need to implement mapping of bus IDs to buses in the system model
+        assert( (buses_[busid - 1])->BusID() == busid );
+        return buses_[busid - 1];
+    }
+
 private:
     std::vector<bus_type*> buses_;
     std::vector<component_type*> components_;

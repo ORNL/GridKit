@@ -91,12 +91,14 @@ namespace ModelLib
         using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
         using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-        typedef BaseBus<ScalarT, IdxT> bus_type;
+        using bus_type   = BaseBus<ScalarT, IdxT>;
+        using real_type  = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
 
     public:
         Branch(bus_type* bus1, bus_type* bus2);
         Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2);
+        Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
         virtual ~Branch();
 
         int allocate();
@@ -183,6 +185,8 @@ namespace ModelLib
         real_type X_;
         real_type G_;
         real_type B_;
+        const IdxT fbusID_;
+        const IdxT tbusID_;
         bus_type* bus1_;
         bus_type* bus2_;
     };
