@@ -89,13 +89,54 @@ static const std::string BUS3_DATA_STRING = R"(
 function mpc = case5
 % Created by Reid Gomillion
 
-int main()
-{
-    using namespace ModelLib;
-    using namespace AnalysisManager::Sundials;
-    using namespace AnalysisManager;
-    using namespace GridKit::Testing;
-    using namespace GridKit::PowerSystemData;
+//Note: This was traced from the subsequent calls
+static const std::string BUS3_DATA_STRING = R"(
+function mpc = case5
+% Created by Reid Gomillion
+
+%   MATPOWER
+
+%% MATPOWER Case Format : Version 2
+mpc.version = '2';
+
+%%-----  Power Flow Data  -----%%
+%% system MVA base
+mpc.baseMVA = 100;
+
+%% bus data
+%	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
+mpc.bus = [
+	1	3	2.0	0.0	0	0	0	1	0.0	0	0	0	0.0;
+	2	1	2.5	-0.8	0	0	0	1	0.0	0	0	0	0.0;
+	3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
+];
+
+%% generator data
+%	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
+mpc.gen = [
+	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+	3	2.0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+];
+
+%% branch data
+%	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
+mpc.branch = [
+	1	2	0	0.1	0	0	0	0	0	0	0	0	0;
+	1	3	0	0.0666666	0	0	0	0	0	0	0	0	0;
+	2	3	0	0.0833333	0	0	0	0	0	0	0	0	0;
+];
+
+%%-----  OPF Data  -----%%
+%% generator cost data
+%	1	startup	shutdown	n	x1	y1	...	xn	yn
+%	2	startup	shutdown	n	c(n-1)	...	c0
+mpc.gencost = [
+	2	0	0	3	0   14	0;
+	2	0	0	3	0   15	0;
+	2	0	0	3	0   30	0;
+];
+
+)";
 
 
 using namespace ModelLib;
@@ -104,9 +145,6 @@ using namespace AnalysisManager;
 using namespace GridKit::Testing;
 using namespace GridKit::PowerSystemData;
 
-constexpr double theta2_ref = -4.87979; // [deg]
-constexpr double V2_ref     =  1.08281; // [p.u.]
-constexpr double theta3_ref =  1.46241; // [deg]
 
 /**
  * Testing the monlithic case via the class MiniGrid
@@ -199,20 +237,20 @@ int parser_case()
 
 
     std::cout << "Solution:\n";
-    std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
-    std::cout << "  V2     = " << V2  << " p.u., expected = " << V2_ref     << " p.u.\n";
-    std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
+    std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
+    std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
+    std::cout << "  theta3 = " << th3 << " deg,  expected = " << "  1.46241 deg\n\n";
 
     // Print solver performance statistics
     kinsol->printFinalStats();
 
     int retval2 = 0;
-    retval2 += !isEqual(th2, theta2_ref, 1e-4);
-    retval2 += !isEqual(V2,  V2_ref    , 1e-4);
-    retval2 += !isEqual(th3, theta3_ref, 1e-4);
+    retval2 += !isEqual(th2, -4.87979, 1e-4);
+    retval2 += !isEqual(V2,   1.08281, 1e-4);
+    retval2 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval2 == 0)
-        std::cout << "\nSuccess!\n\n\n";
+        std::cout << "\nSucess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 
@@ -243,7 +281,7 @@ int hardwired_case()
     auto* bus1 = BusFactory<double, size_t>::create(bd1);
     sysmodel->addBus(bus1);
     
-    // Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
+    //Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
     BusData<double, size_t> bd2;
     bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
     auto* bus2 = BusFactory<double, size_t>::create(bd2);
@@ -261,6 +299,7 @@ int hardwired_case()
     gd1.bus = 1;
     auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
     sysmodel->addComponent(gen1);
+
     // Create and add PV generator connected to bus3
     GenData<double, size_t> gd3;
     gd3.Pg = 2.0; gd3.bus = 3;
@@ -273,11 +312,13 @@ int hardwired_case()
     brd12.fbus = 1; brd12.tbus = 2; brd12.x = 1.0/10.0; brd12.r = 0.0; brd12.b = 0.0;
     Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
     sysmodel->addComponent(branch12);
+
     // Branch 1-3
     BranchData<double, size_t> brd13;
     brd13.fbus = 1; brd13.tbus = 3; brd13.x = 1.0/15.0; brd13.r = 0.0; brd13.b = 0.0;
     Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
     sysmodel->addComponent(branch13);
+
     // Branch 2-3
     BranchData<double, size_t> brd23;
     brd23.fbus = 2; brd23.tbus = 3; brd23.x = 1.0/12.0; brd23.r = 0.0; brd23.b = 0.0;
@@ -291,6 +332,7 @@ int hardwired_case()
     ld1.bus_i = 1; ld1.Pd = 2.0; ld1.Qd = 0.0;
     Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
     sysmodel->addComponent(load1);
+
     // Load on bus2
     LoadData<double, size_t> ld2;
     ld2.bus_i = 2; ld2.Pd = 2.5; ld2.Qd = -0.8;
@@ -346,6 +388,7 @@ int hardwired_case()
 int main()
 {
     //return the results of each case
+    //swapping orders of test causes memory error, specifically hardware <-> parser
     int resolve = 0;
     std::cout << std::string(32,'-') << std::endl;
     resolve += monolithic_case();
