@@ -2,3 +2,5 @@
 .directory
 *.orig
 .vscode/
+
+build/

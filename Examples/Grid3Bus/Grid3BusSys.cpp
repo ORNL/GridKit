@@ -69,6 +69,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <fstream>
+#include <filesystem>
 
 #include <ComponentLib/MiniGrid/MiniGrid.hpp>
 #include <ComponentLib/Bus/BusFactory.hpp>
@@ -79,18 +81,74 @@
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <PowerSystemData.hpp>
 
+#include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
 
 
-int main()
-{
-    using namespace ModelLib;
-    using namespace AnalysisManager::Sundials;
-    using namespace AnalysisManager;
-    using namespace GridKit::Testing;
-    using namespace GridKit::PowerSystemData;
+//Note: This was traced from the subsequent calls
+static const std::string BUS3_DATA_STRING = R"(
+function mpc = case5
+% Created by Reid Gomillion
 
-    std::cout << "\nSolving power flow for a 3-bus monolithic model ...\n\n";
+%   MATPOWER
+
+%% MATPOWER Case Format : Version 2
+mpc.version = '2';
+
+%%-----  Power Flow Data  -----%%
+%% system MVA base
+mpc.baseMVA = 100;
+
+%% bus data
+%	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
+mpc.bus = [
+	1	3	2.0	0.0	0	0	0	1	0.0	0	0	0	0.0;
+	2	1	2.5	-0.8	0	0	0	1	0.0	0	0	0	0.0;
+	3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
+];
+
+%% generator data
+%	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
+mpc.gen = [
+	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+	3	2.0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+];
+
+%% branch data
+%	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
+mpc.branch = [
+	1	2	0	0.1	0	0	0	0	0	0	0	0	0;
+	1	3	0	0.0666666	0	0	0	0	0	0	0	0	0;
+	2	3	0	0.0833333	0	0	0	0	0	0	0	0	0;
+];
+
+%%-----  OPF Data  -----%%
+%% generator cost data
+%	1	startup	shutdown	n	x1	y1	...	xn	yn
+%	2	startup	shutdown	n	c(n-1)	...	c0
+mpc.gencost = [
+	2	0	0	3	0   14	0;
+	2	0	0	3	0   15	0;
+	2	0	0	3	0   30	0;
+];
+
+)";
+
+
+using namespace ModelLib;
+using namespace AnalysisManager::Sundials;
+using namespace AnalysisManager;
+using namespace GridKit::Testing;
+using namespace GridKit::PowerSystemData;
+
+
+/**
+ * Testing the monlithic case via the class MiniGrid
+ * @return returns 0 if pass o.w. fails
+*/
+int monolithic_case()
+{
+     std::cout << "\nSolving power flow for a 3-bus monolithic model ...\n\n";
     // Create a 3-bus model
     MiniGrid<double, size_t>* model = new MiniGrid<double, size_t>();
 
@@ -133,71 +191,26 @@ int main()
     // Delete solver and model
     delete kinsol; kinsol = nullptr;
     delete model;  model  = nullptr;
+    return retval1;
+}
 
-    std::cout << "Solving same problem, but assembled from components ...\n\n";
+/**
+ * Run the Testing case for parser setup
+ * @return returns 0 if pass o.w. fail
+*/
+int parser_case()
+{
+    std::cout << "Solving same problem, but assembled from components via a parser ...\n\n";
 
-    // First, create an empty system model
-    SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
+    //Data File Reading
+    GridKit::PowerSystemData::SystemModelData<double, size_t> mp;
 
-    // Next create and add buses ...
-    // Create a slack bus, fix V=1, theta=0, bus ID = 1" << std::endl;
-    BusData<double, size_t> bd1;
-    bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
-    auto* bus1 = BusFactory<double, size_t>::create(bd1);
-    sysmodel->addBus(bus1);
+    std::istringstream iss(BUS3_DATA_STRING);
+    GridKit::readMatPower(mp, iss);
+
     
-    // Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
-    BusData<double, size_t> bd2;
-    bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
-    auto* bus2 = BusFactory<double, size_t>::create(bd2);
-    sysmodel->addBus(bus2);
-
-    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
-    BusData<double, size_t> bd3;
-    bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
-    auto* bus3 = BusFactory<double, size_t>::create(bd3);
-    sysmodel->addBus(bus3);
-
-    // Create and add generators ...
-    // Create and add slack generator connected to bus1
-    GenData<double, size_t> gd1;
-    gd1.bus = 1;
-    auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
-    sysmodel->addComponent(gen1);
-    // Create and add PV generator connected to bus3
-    GenData<double, size_t> gd3;
-    gd3.Pg = 2.0; gd3.bus = 3;
-    auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
-    sysmodel->addComponent(gen3);
-
-    // Create and add branches ...
-    // Branch 1-2
-    BranchData<double, size_t> brd12;
-    brd12.fbus = 1; brd12.tbus = 2; brd12.x = 1.0/10.0; brd12.r = 0.0; brd12.b = 0.0;
-    Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
-    sysmodel->addComponent(branch12);
-    // Branch 1-3
-    BranchData<double, size_t> brd13;
-    brd13.fbus = 1; brd13.tbus = 3; brd13.x = 1.0/15.0; brd13.r = 0.0; brd13.b = 0.0;
-    Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
-    sysmodel->addComponent(branch13);
-    // Branch 2-3
-    BranchData<double, size_t> brd23;
-    brd23.fbus = 2; brd23.tbus = 3; brd23.x = 1.0/12.0; brd23.r = 0.0; brd23.b = 0.0;
-    Branch<double, size_t>* branch23 = new Branch<double, size_t>(sysmodel->getBus(brd23.fbus), sysmodel->getBus(brd23.tbus), brd23);
-    sysmodel->addComponent(branch23);
-
-    // Create and add loads ...
-    // Load on bus1
-    LoadData<double, size_t> ld1;
-    ld1.bus_i = 1; ld1.Pd = 2.0; ld1.Qd = 0.0;
-    Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
-    sysmodel->addComponent(load1);
-    // Load on bus2
-    LoadData<double, size_t> ld2;
-    ld2.bus_i = 2; ld2.Pd = 2.5; ld2.Qd = -0.8;
-    Load<double, size_t>* load2 = new Load<double, size_t>(sysmodel->getBus(ld2.bus_i), ld2);
-    sysmodel->addComponent(load2);
+    // Create an empty system model and pass the system model data to it
+    SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>(mp);
 
     // allocate model
     sysmodel->allocate();
@@ -205,7 +218,7 @@ int main()
 
     // Create numerical solver and attach the model to it.
     // Here we use Kinsol solver from SUNDIALS library
-    kinsol = new Kinsol<double, size_t>(sysmodel);
+    Kinsol<double, size_t>* kinsol = new Kinsol<double, size_t>(sysmodel);
 
     // setup simulation
     kinsol->configureSimulation();
@@ -214,9 +227,11 @@ int main()
     // Compute solution
     kinsol->runSimulation();
     // Print solution
-    th2 = bus2->theta() * 180.0/M_PI; 
-    V2  = bus2->V();
-    th3 = bus3->theta() * 180.0/M_PI; 
+    double th2 = sysmodel->getBus(2)->theta() * 180.0/M_PI;
+    double V2 =  sysmodel->getBus(2)->V();
+    double th3 = sysmodel->getBus(3)->theta() * 180.0/M_PI;
+
+
     std::cout << "Solution:\n";
     std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
     std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
@@ -237,7 +252,145 @@ int main()
 
 
     // Delete solver and model
-    delete kinsol;
-    delete sysmodel;
-    return retval1 + retval2;
+    
+    delete kinsol; kinsol = nullptr;
+    delete sysmodel;  sysmodel  = nullptr;
+    
+    return retval2;
+}
+
+/**
+ * Hardwired Test Case
+ * @return 0 if pass otherwise fails
+*/
+int hardwired_case()
+{
+    std::cout << "Solving same problem, but assembled from components manually ...\n\n";
+
+    // First, create an empty system model
+    SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
+
+    // Next create and add buses ...
+    // Create a slack bus, fix V=1, theta=0, bus ID = 1" << std::endl;
+    BusData<double, size_t> bd1;
+    bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
+    auto* bus1 = BusFactory<double, size_t>::create(bd1);
+    sysmodel->addBus(bus1);
+    
+    //Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
+    BusData<double, size_t> bd2;
+    bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
+    auto* bus2 = BusFactory<double, size_t>::create(bd2);
+    sysmodel->addBus(bus2);
+
+    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
+    BusData<double, size_t> bd3;
+    bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
+    auto* bus3 = BusFactory<double, size_t>::create(bd3);
+    sysmodel->addBus(bus3);
+
+    // Create and add generators ...
+    // Create and add slack generator connected to bus1
+    GenData<double, size_t> gd1;
+    gd1.bus = 1;
+    auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
+    sysmodel->addComponent(gen1);
+
+    // Create and add PV generator connected to bus3
+    GenData<double, size_t> gd3;
+    gd3.Pg = 2.0; gd3.bus = 3;
+    auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
+    sysmodel->addComponent(gen3);
+
+    // Create and add branches ...
+    // Branch 1-2
+    BranchData<double, size_t> brd12;
+    brd12.fbus = 1; brd12.tbus = 2; brd12.x = 1.0/10.0; brd12.r = 0.0; brd12.b = 0.0;
+    Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
+    sysmodel->addComponent(branch12);
+
+    // Branch 1-3
+    BranchData<double, size_t> brd13;
+    brd13.fbus = 1; brd13.tbus = 3; brd13.x = 1.0/15.0; brd13.r = 0.0; brd13.b = 0.0;
+    Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
+    sysmodel->addComponent(branch13);
+
+    // Branch 2-3
+    BranchData<double, size_t> brd23;
+    brd23.fbus = 2; brd23.tbus = 3; brd23.x = 1.0/12.0; brd23.r = 0.0; brd23.b = 0.0;
+    Branch<double, size_t>* branch23 = new Branch<double, size_t>(sysmodel->getBus(brd23.fbus), sysmodel->getBus(brd23.tbus), brd23);
+    sysmodel->addComponent(branch23);
+    
+
+    // Create and add loads ...
+    // Load on bus1
+    LoadData<double, size_t> ld1;
+    ld1.bus_i = 1; ld1.Pd = 2.0; ld1.Qd = 0.0;
+    Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
+    sysmodel->addComponent(load1);
+
+    // Load on bus2
+    LoadData<double, size_t> ld2;
+    ld2.bus_i = 2; ld2.Pd = 2.5; ld2.Qd = -0.8;
+    Load<double, size_t>* load2 = new Load<double, size_t>(sysmodel->getBus(ld2.bus_i), ld2);
+    sysmodel->addComponent(load2);
+
+    // allocate model
+    sysmodel->allocate();
+    std::cout << "Model size: " << sysmodel->size() << "\n\n";
+
+    // Create numerical solver and attach the model to it.
+    // Here we use Kinsol solver from SUNDIALS library
+    Kinsol<double, size_t>* kinsol = new Kinsol<double, size_t>(sysmodel);
+
+    // setup simulation
+    kinsol->configureSimulation();
+    // initialize simulation with default initial guess 
+    kinsol->getDefaultInitialCondition();
+    // Compute solution
+    kinsol->runSimulation();
+    // Print solution
+    double th2 = bus2->theta() * 180.0/M_PI; 
+    double V2  = bus2->V();
+    double th3 = bus3->theta() * 180.0/M_PI; 
+
+
+    std::cout << "Solution:\n";
+    std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
+    std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
+    std::cout << "  theta3 = " << th3 << " deg,  expected = " << "  1.46241 deg\n\n";
+
+    // Print solver performance statistics
+    kinsol->printFinalStats();
+
+    int retval2 = 0;
+    retval2 += !isEqual(th2, -4.87979, 1e-4);
+    retval2 += !isEqual(V2,   1.08281, 1e-4);
+    retval2 += !isEqual(th3,  1.46241, 1e-4);
+
+    if(retval2 == 0)
+        std::cout << "\nSucess!\n\n\n";
+    else
+        std::cout << "\nFailed!\n\n\n";
+
+
+    // Delete solver and model
+    delete kinsol; kinsol = nullptr;
+    delete sysmodel;  sysmodel  = nullptr;
+    return retval2;
+}
+
+
+int main()
+{
+    //return the results of each case
+    //swapping orders of test causes memory error, specifically hardware <-> parser
+    int resolve = 0;
+    std::cout << std::string(32,'-') << std::endl;
+    resolve += monolithic_case();
+    std::cout << std::string(32,'-') << std::endl;
+    resolve += hardwired_case();
+    std::cout << std::string(32,'-') << std::endl;
+    resolve += parser_case();
+    return resolve;
 }
