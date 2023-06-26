@@ -169,6 +169,8 @@ public:
      */
     virtual ~SystemSteadyStateModel()
     {
+        for (auto comp : this->components_) delete comp;
+        for (auto bus : this->buses_) delete bus;
     }
 
     /**

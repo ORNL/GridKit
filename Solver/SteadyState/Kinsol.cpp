@@ -102,6 +102,16 @@ namespace Sundials
     Kinsol<ScalarT, IdxT>::~Kinsol()
     {
         SUNContext_Free(&context_);
+        KINFree(&solver_);
+
+        N_VDestroy_Serial(this->yy_);
+        N_VDestroy_Serial(this->yy0_);
+        N_VDestroy_Serial(this->scale_);
+
+        SUNMatDestroy(this->JacobianMat_);
+        SUNLinSolFree_Dense(this->linearSolver_);
+        
+        solver_ = 0;
     }
 
     template <class ScalarT, typename IdxT>
