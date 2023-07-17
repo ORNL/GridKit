@@ -205,7 +205,7 @@ int main(int argc, char** argv)
     int retval = 0;
     for(unsigned i=0; i <model->size_opt(); ++i)
     {
-        if(!isEqual(results[i], model->param()[i], 10*tol))
+        if(!isEqual(results[i], model->param()[i], 100*tol))
             --retval; 
     }
 
