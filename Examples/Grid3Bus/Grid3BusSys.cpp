@@ -60,6 +60,7 @@
 /**
  * @file Grid3BusSys.cpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
+ * @author Reid Gomillion <rjg18@vt.edu>
  * 
  * Simple 3-bus grid example. Two models are tested here -- a hard-wired model
  * and a model assembled using GridKit's system composer.
@@ -84,8 +85,6 @@
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
 
-
-//Note: This was traced from the subsequent calls
 static const std::string BUS3_DATA_STRING = R"(
 function mpc = case5
 % Created by Reid Gomillion
@@ -184,7 +183,7 @@ int monolithic_case()
     retval1 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval1 == 0)
-        std::cout << "\nSucess!\n\n\n";
+        std::cout << "\nSuccess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 
@@ -246,7 +245,7 @@ int parser_case()
     retval2 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval2 == 0)
-        std::cout << "\nSucess!\n\n\n";
+        std::cout << "\nSuccess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 
@@ -271,19 +270,19 @@ int hardwired_case()
     SystemSteadyStateModel<double, size_t>* sysmodel = new SystemSteadyStateModel<double, size_t>();
 
     // Next create and add buses ...
-    // Create a slack bus, fix V=1, theta=0, bus ID = 1" << std::endl;
+    // Create a slack bus, fix V=1, theta=0, bus ID = 1
     BusData<double, size_t> bd1;
     bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
     auto* bus1 = BusFactory<double, size_t>::create(bd1);
     sysmodel->addBus(bus1);
     
-    //Create a PQ bus, initialize V=1, theta=0, bus ID = 2" << std::endl;
+    //Create a PQ bus, initialize V=1, theta=0, bus ID = 2
     BusData<double, size_t> bd2;
     bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
     auto* bus2 = BusFactory<double, size_t>::create(bd2);
     sysmodel->addBus(bus2);
 
-    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2" << std::endl;
+    // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2
     BusData<double, size_t> bd3;
     bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
     auto* bus3 = BusFactory<double, size_t>::create(bd3);
@@ -369,7 +368,7 @@ int hardwired_case()
     retval2 += !isEqual(th3,  1.46241, 1e-4);
 
     if(retval2 == 0)
-        std::cout << "\nSucess!\n\n\n";
+        std::cout << "\nSuccess!\n\n\n";
     else
         std::cout << "\nFailed!\n\n\n";
 
@@ -384,7 +383,6 @@ int hardwired_case()
 int main()
 {
     //return the results of each case
-    //swapping orders of test causes memory error, specifically hardware <-> parser
     int resolve = 0;
     std::cout << std::string(32,'-') << std::endl;
     resolve += monolithic_case();

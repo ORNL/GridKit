@@ -127,40 +127,45 @@ public:
         atol_ = 1e-5;
     }
 
+    /**
+     * @brief Construct a new System Steady State Model object. Allows for simple allocation.
+     * 
+     * @param mp model data
+     */
     SystemSteadyStateModel(GridKit::PowerSystemData::SystemModelData<ScalarT, IdxT> mp) : ModelEvaluatorImpl<ScalarT, IdxT>(0,0,0)
     {
         rtol_ = 1e-5;
         atol_ = 1e-5;
 
-        //buses
+        //add buses
         for(auto busdata : mp.bus)
         {
             auto* bus = BusFactory<double, size_t>::create(busdata);
             this->addBus(bus);
         }
 
-        //generators
+        //add generators
         for (auto gendata : mp.gen)
         {
             auto* gen = GeneratorFactory<double,size_t>::create(this->getBus(gendata.bus),gendata);
             this->addComponent(gen);
         }
 
-        //branches
+        //add branches
         for (auto branchdata : mp.branch)
         {
             auto* branch = new Branch<double, size_t>(this->getBus(branchdata.fbus),this->getBus(branchdata.tbus),branchdata);
             this->addComponent(branch);
         }
 
-        //loads
+        //add loads
         for (auto loaddata : mp.load)
         {
             auto* loadm = new Load<double,size_t>(this->getBus(loaddata.bus_i),loaddata);
             this->addComponent(loadm);
         }
 
-        //There appears to not be a Generator Cost Object
+        //There is no Generator Cost Object
         //TODO: Implment for GenCost
     }
 
