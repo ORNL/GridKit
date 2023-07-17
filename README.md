@@ -18,7 +18,7 @@ You should have all of the following installed before installing GridKit™
 	- [Suitesparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) >= 5.x (optional)
 	- [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
 - [CMake](https://cmake.org/) >= 3.12
-- C++ 11 compiler
+- C++ 17 compliant compiler
 
 ### Installing
 
@@ -45,4 +45,4 @@ as functionality test and executed by running `ctest` in the build directory.
 ## Contributors
 
 GridKit™ is written by Slaven Peles (peless@ornl.gov) and has received contributions
-from Tamara Becejac, R. Cameron Rutherford and Asher J. Mancinelli, all from Pacific Northwest National Laboratory.
+from Tamara Becejac (Avangrid), R. Cameron Rutherford (PNNL), Asher J. Mancinelli (NVIDIA), and Reid Gomillion (Virginia Tech).
