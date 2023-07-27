@@ -12,39 +12,10 @@
 #include <ComponentLib/PowerElectronicsComponents/VoltageSource/VoltageSource.hpp>
 
 #include <PowerElectronicsModel.hpp>
-#include <Node.hpp>
 
 
 int main(int argc, char const *argv[])
 {
-	//Basic Circuit Setup
-	//@todo will want to eventually put components in the hyper graph instead of indicies
-
-	 std::unique_ptr<CircuitGraph<size_t, size_t>> cirg(new CircuitGraph<size_t,size_t>());
-	for (size_t i = 0; i < 3; i++)
-	{
-		cirg->addHyperEdge(i);
-	}
-	for (size_t i = 0; i < 5; i++)
-	{
-		cirg->addHyperNode(i);
-	}
-
-	//Create Connections of Nodes to edges sets
-	//External nodes
-	cirg->addConnection(0, 0);
-	cirg->addConnection(0, 2);
-	cirg->addConnection(2, 0);
-	cirg->addConnection(2, 1);
-	cirg->addConnection(3, 1);
-	cirg->addConnection(3, 2);
-
-	//Internal nodes
-	cirg->addConnection(1,0);
-	cirg->addConnection(4,2);
-
-
-	cirg->printBiPartiteGraph();
 	
 
 	//Create circuit model
@@ -80,7 +51,7 @@ int main(int argc, char const *argv[])
 
 
 	//Allocate with graph
-	sysmodel->allocate(*cirg);
+	sysmodel->allocate(5);
 
 	std::cout << sysmodel->y().size() << std::endl;
 
