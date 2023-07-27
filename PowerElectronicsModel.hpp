@@ -72,12 +72,18 @@ public:
         return 1;
     }
 
-    int allocate(CircuitGraph<IdxT, IdxT> cir)
+    /**
+     * @brief Allocate the vector data with size amount
+     * @todo Add capability to go through component model connection to get the size of the actual vector
+     * 
+     * @param s 
+     * @return int 
+     */
+    int allocate(IdxT s)
     {
-        this->graph = cir;
 
         // Allocate all components
-        this->size_ = cir.amountHyperNodes();
+        this->size_ = s;
         for(const auto& component : components_)
         {
             component->allocate();
@@ -202,15 +208,8 @@ public:
         this->components_.push_back(component);
     }
 
-    CircuitGraph<IdxT, IdxT> getGraph()
-    {
-        return this->graph;
-    }
-
 private:
     std::vector<component_type*> components_;
-
-    CircuitGraph<IdxT, IdxT> graph;
 
 }; // class PowerElectronicsModel
 

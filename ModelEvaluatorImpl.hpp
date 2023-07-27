@@ -90,6 +90,8 @@ namespace ModelLib
             yp_(size_),
             f_(size_),
             g_(size_quad_),
+            J_(size_quad^2),
+            M_(size_quad^2),
             yB_(size_),
             ypB_(size_),
             fB_(size_),
@@ -276,6 +278,9 @@ namespace ModelLib
         std::vector<ScalarT> ypB_;
         std::vector<ScalarT> fB_;
         std::vector<ScalarT> gB_;
+
+        std::vector<ScalarT> J_;
+        std::vector<ScalarT> M_;
 
         std::vector<ScalarT> param_;
         std::vector<ScalarT> param_up_;

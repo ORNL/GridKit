@@ -40,6 +40,8 @@ int Inductor<ScalarT, IdxT>::allocate()
     this->y_.resize(this->size_);
     this->yp_.resize(this->size_);
     this->f_.resize(this->size_);
+    this->J_.resize(this->size_^2);
+    this->M_.resize(this->size_^2);
     return 0;
 }
 
