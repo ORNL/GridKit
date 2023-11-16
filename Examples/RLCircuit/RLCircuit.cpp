@@ -80,6 +80,10 @@ int main(int argc, char const *argv[])
 	}
 	std::cout << "}\n";
 
+	induct->updateTime(0.0, 1.0);
+	induct->evaluateJacobian();
+	induct->getJacobian().printMatrix(true);
+
 
 	return 0;
 }

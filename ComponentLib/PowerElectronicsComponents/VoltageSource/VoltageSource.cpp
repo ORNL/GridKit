@@ -39,8 +39,7 @@ int VoltageSource<ScalarT, IdxT>::allocate()
     this->y_.resize(this->size_);
     this->yp_.resize(this->size_);
     this->f_.resize(this->size_);
-    this->J_.resize(this->size_^2);
-    this->M_.resize(this->size_^2);
+    
     return 0;
 }
 
@@ -81,6 +80,13 @@ int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
 {
+    
+    //Create dF/dy
+    std::vector<IdxT> rcord{0,1,2,2};
+    std::vector<IdxT> ccord{2,2,0,1};
+    std::vector<ScalarT> vals{1.0, -1.0, -1.0, 1.0};
+    this->J_.setValues(rcord, ccord, vals);
+
     return 0;
 }
 

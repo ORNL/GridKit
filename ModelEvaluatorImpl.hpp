@@ -62,6 +62,7 @@
 
 #include <vector>
 #include <ModelEvaluator.hpp>
+#include <SparseMatrix/COO_Matrix.hpp>
 
 namespace ModelLib
 {
@@ -90,16 +91,16 @@ namespace ModelLib
             yp_(size_),
             f_(size_),
             g_(size_quad_),
-            J_(size_quad^2),
-            M_(size_quad^2),
             yB_(size_),
             ypB_(size_),
             fB_(size_),
             gB_(size_opt_),
+            J_(COO_Matrix<ScalarT, IdxT>()),
             param_(size_opt_),
             param_up_(size_opt_),
             param_lo_(size_opt_)
-        {}
+        {
+        }
 
         virtual IdxT size()
         {
@@ -224,6 +225,16 @@ namespace ModelLib
             return f_;
         }
 
+        COO_Matrix<ScalarT, IdxT>& getJacobian()
+        {
+            return J_;
+        }
+
+        const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+        {
+            return J_;
+        }
+
         std::vector<ScalarT>& getIntegrand()
         {
             return g_;
@@ -279,8 +290,7 @@ namespace ModelLib
         std::vector<ScalarT> fB_;
         std::vector<ScalarT> gB_;
 
-        std::vector<ScalarT> J_;
-        std::vector<ScalarT> M_;
+        COO_Matrix<ScalarT, IdxT> J_;
 
         std::vector<ScalarT> param_;
         std::vector<ScalarT> param_up_;

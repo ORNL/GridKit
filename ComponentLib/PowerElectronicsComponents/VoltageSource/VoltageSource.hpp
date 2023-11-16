@@ -36,6 +36,7 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::ypB_;
         using CircuitComponent<ScalarT, IdxT>::fB_;
         using CircuitComponent<ScalarT, IdxT>::gB_;
+        using CircuitComponent<ScalarT, IdxT>::J_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
 
