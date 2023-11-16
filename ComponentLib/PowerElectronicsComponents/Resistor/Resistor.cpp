@@ -39,8 +39,7 @@ int Resistor<ScalarT, IdxT>::allocate()
     this->y_.resize(this->size_);
     this->yp_.resize(this->size_);
     this->f_.resize(this->size_);
-    this->J_.resize(this->size_^2);
-    this->M_.resize(this->size_^2);
+    
     return 0;
 }
 
@@ -79,6 +78,14 @@ int Resistor<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::evaluateJacobian()
 {
+    
+    //Create dF/dy
+    //does compiler make constant???
+    std::vector<IdxT> rcord{0,0,1,1};
+    std::vector<IdxT> ccord{0,1,0,1};
+    std::vector<ScalarT> vals{-1.0 / this->R_, 1.0 / this->R_, 1.0 / this->R_, -1.0 / this->R_};
+    this->J_.setValues(rcord, ccord, vals);
+
     return 0;
 }
 

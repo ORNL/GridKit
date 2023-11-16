@@ -34,6 +34,7 @@ class PowerElectronicsModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::J_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::rtol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::atol_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
@@ -153,6 +154,11 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Creates the Sparse COO Jacobian representing  \alpha dF/dy' + dF/dy
+     * 
+     * @return int 
+     */
     int evaluateJacobian()
 	{
 		return 0;
