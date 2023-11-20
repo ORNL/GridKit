@@ -237,7 +237,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
 
     //Perform dF/dy + \alpha dF/dy'
 
-    this->J_.AXPY(-this->alpha_, &Jacder);
+    this->J_.AXPY(-this->alpha_, Jacder);
 
     return 0;
 }
