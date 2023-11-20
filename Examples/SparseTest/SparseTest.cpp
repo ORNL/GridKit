@@ -10,9 +10,6 @@
 
 #include <SparseMatrix/COO_Matrix.hpp>
 
-
-
-
 int main(int argc, char const *argv[])
 {
 	std::vector<double> val{0.1, 0.2, 0.3, 0.4};
@@ -35,7 +32,7 @@ int main(int argc, char const *argv[])
 	}
 
 	std::cout << "A:\n"; 
-	A.printMatrix(true);
+	A.printMatrix();
 
 	std::vector<double> val2{0.5, 0.6, 0.7, 0.8, 1.0};
 	std::vector<size_t> x2{0,2,0,2,1};
@@ -43,13 +40,47 @@ int main(int argc, char const *argv[])
 	COO_Matrix<double, size_t> B = COO_Matrix<double, size_t>(x2,y2,val2,m,n);
 
 	std::cout << "B:\n";
-	B.printMatrix(true);
+	B.printMatrix();
 
-	A.AXPY(2.0, &B);
+	A.AXPY(2.0, B);
 
 	std::cout << "A + 2B:\n";
-	A.printMatrix(true);
+	A.printMatrix();
+
+	std::vector<size_t> r;
+	std::vector<size_t> c;
+	std::vector<double> v;
+	std::tie(r,c,v) = A.getDataToCSR();
+
+	for (size_t i = 0; i < r.size() - 1; i++)
+	{
+		std::cout << r[i] << std::endl;
+		size_t rdiff = r[i+1] - r[i];
+		for (size_t j = 0; j < rdiff; j++)
+		{
+			std::cout << c[j + r[i]] << ", " << v[j + r[i]] << std::endl;
+		}
+	}
+	std::cout << r[r.size()-1] << std::endl;
+
+	//Basic Verification test
+	std::vector<size_t> rtest = {0, 2, 4, 7, 8};
+	std::vector<size_t> ctest = {2,3,2,3,1,2,3,2};
+	std::vector<double> valtest = {1.4, 1.0, 0.4, 2.2, 0.1, 1.6, 1.2, 0.3};
+
+	assert(rtest.size() == r.size());
+	assert(ctest.size() == c.size());
+	assert(valtest.size() == v.size());
+
+	int failval = 0;
+	for (size_t i = 0; i < rtest.size(); i++) if (r[i] != rtest[i]) failval--; 
+	for (size_t i = 0; i < ctest.size(); i++)
+	{
+		double vdiff = v[i] - valtest[i];
+		if (c[i] != ctest[i] || -1e-14 > vdiff  || vdiff > 1e-14) failval--;
+	}
 	
-	
-	return 0;
+	std::cout << failval << std::endl;
+
+	return failval;
 }
