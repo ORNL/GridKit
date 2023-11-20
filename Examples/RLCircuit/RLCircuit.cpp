@@ -80,9 +80,12 @@ int main(int argc, char const *argv[])
 	}
 	std::cout << "}\n";
 
-	induct->updateTime(0.0, 1.0);
-	induct->evaluateJacobian();
-	induct->getJacobian().printMatrix(true);
+
+	sysmodel->updateTime(0.0, 1.0);
+	sysmodel->evaluateJacobian();
+	sysmodel->getJacobian().printMatrix();
+
+
 
 
 	return 0;

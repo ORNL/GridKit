@@ -23,8 +23,8 @@ class PowerElectronicsModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     // using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::size_opt_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
@@ -98,6 +98,11 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Set intial y and y' of each component
+     * 
+     * @return int 
+     */
     int initialize()
     {
 
@@ -106,7 +111,18 @@ public:
         {
             component->initialize();
         }
+        this->distributeVectors();
+        
+        return 0;
+    }
 
+    /**
+     * @brief Distribute y and y' to each component based of node connection graph
+     * 
+     * @return int 
+     */
+    int distributeVectors()
+    {
         for(const auto& component : components_)
         {
             for(IdxT j=0; j<component->size(); ++j)
@@ -123,6 +139,11 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Evaluate Residuals at each component then collect them
+     * 
+     * @return int 
+     */
     int evaluateResidual()
     {
         for (IdxT i = 0; i < this->f_.size(); i++)
@@ -130,16 +151,7 @@ public:
             f_[i] = 0;
         }
         
-        // Update variables
-        for(const auto& component : components_)
-        {
-            for(IdxT j=0; j<component->size(); ++j)
-            {
-                component->y()[j]  = y_[component->getNodeConnection(j)];
-				component->yp()[j] = yp_[component->getNodeConnection(j)];
-            }
-            component->evaluateResidual();
-        }
+        this->distributeVectors();
 
         // Update system residual vector
 
@@ -161,6 +173,25 @@ public:
      */
     int evaluateJacobian()
 	{
+        this->J_.zeroMatrix();
+        this->distributeVectors();
+
+        //Evaluate component jacs
+        for(const auto& component : components_)
+        {
+            component->evaluateJacobian();
+            std::vector<IdxT> r;
+            std::vector<IdxT> c;
+            std::vector<ScalarT> v;
+	        std::tie(r, c, v) = component->getJacobian().getEntrieCopies();
+            for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
+            {
+                r[i] = component->getNodeConnection(r[i]);
+                c[i] = component->getNodeConnection(c[i]);
+            }
+            this->J_.AXPY(1.0, r, c, v);
+        }
+        
 		return 0;
 	}
 
@@ -205,8 +236,18 @@ public:
         return 0;
     }
 
+    /**
+     * @brief Distribute time and time scaling for each component
+     * 
+     * @param t 
+     * @param a 
+     */
     void updateTime(ScalarT t, ScalarT a)
     {
+        for(const auto& component : components_)
+        {
+            component->updateTime(t, a);
+        }
     }
 
     void addComponent(component_type* component)
