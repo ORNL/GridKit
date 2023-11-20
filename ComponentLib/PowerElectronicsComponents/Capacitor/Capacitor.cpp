@@ -91,7 +91,7 @@ int Capacitor<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.AXPY(this->alpha_, &Jacder);
+    this->J_.AXPY(this->alpha_, Jacder);
 
     return 0;
 }
