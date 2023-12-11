@@ -71,20 +71,22 @@ int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 {
 	//Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
 	// for easier development
+    //input
     this->f_[0] = this->y_[2];
+    //ouput
     this->f_[1] = -this->y_[2];
-	this->f_[2] = this->y_[1] - this->y_[0] - this->V_;
+    //internal
+	this->f_[2] = -this->y_[1] + this->y_[0] + this->V_;
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
 {
-    
     //Create dF/dy
     std::vector<IdxT> rcord{0,1,2,2};
     std::vector<IdxT> ccord{2,2,0,1};
-    std::vector<ScalarT> vals{1.0, -1.0, -1.0, 1.0};
+    std::vector<ScalarT> vals{1.0, -1.0, 1.0, -1.0};
     this->J_.setValues(rcord, ccord, vals);
 
     return 0;

@@ -62,7 +62,6 @@
 
 #include <vector>
 #include <ModelEvaluator.hpp>
-#include <SparseMatrix/COO_Matrix.hpp>
 
 namespace ModelLib
 {
@@ -110,6 +109,11 @@ namespace ModelLib
         virtual IdxT nnz()
         {
             return nnz_;
+        }
+
+        virtual bool hasJacobian()
+        {
+            return false;
         }
 
         virtual IdxT size_quad()
