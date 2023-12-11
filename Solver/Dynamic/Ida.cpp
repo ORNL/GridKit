@@ -61,9 +61,12 @@
 #include <iostream>
 #include <iomanip>
 
-// #include <klu.h>
 #include <idas/idas_direct.h>              /* access to IDADls interface           */
 #include <idas/idas.h>
+
+//Sundials Sparse KLU
+#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunlinsol/sunlinsol_klu.h>   
 
 #include "ModelEvaluator.hpp"
 #include "Ida.hpp"
@@ -102,6 +105,9 @@ namespace Sundials
         checkAllocation((void*) yy_, "N_VNew_Serial");
         yp_ = N_VClone(yy_);
         checkAllocation((void*) yp_, "N_VClone");
+
+        //get intial conditions
+        this->getDefaultInitialCondition();
 
         // Create vectors to store restart initial condition
         yy0_ = N_VClone(yy_);
@@ -144,14 +150,7 @@ namespace Sundials
         }
 
         // Set up linear solver
-        JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
-        checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
-
-        linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-        checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
-
-        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
-        checkOutput(retval, "IDASetLinearSolver");
+        this->configureLinearSolver();
 
         return retval;
     }
@@ -160,16 +159,32 @@ namespace Sundials
     int Ida<ScalarT, IdxT>::configureLinearSolver()
     {
         int retval = 0;
+        if (model_->hasJacobian())
+        {
+            JacobianMat_ = SUNSparseMatrix(model_->size(), model_->size(), model_->size() * model_->size(), CSR_MAT, context_);
+            checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
 
-        // Set up linear solver
-        JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
-        checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+            linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
+            checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
 
-        linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-        checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
+            retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+            checkOutput(retval, "IDASetLinearSolver");
 
-        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
-        checkOutput(retval, "IDASetLinearSolver");
+            retval = IDASetJacFn(solver_, this->Jac);
+            checkOutput(retval, "IDASetJacFn");
+        }
+        else
+        {
+            JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
+            checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+
+            linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
+            checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
+
+            retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+            checkOutput(retval, "IDASetLinearSolver");
+
+        }
 
         return retval;
     }
@@ -525,8 +540,49 @@ namespace Sundials
         return 0;
     }
 
+	template <class ScalarT, typename IdxT>
+	int Ida<ScalarT, IdxT>::Jac(realtype t, realtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+	{
 
-    template <class ScalarT, typename IdxT>
+        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+
+
+        model->updateTime(t, cj);
+        copyVec(yy, model->y());
+        copyVec(yp, model->yp());
+
+        model->evaluateJacobian();
+        COO_Matrix<ScalarT, IdxT> Jac = model->getJacobian();
+        
+        //Get reference to the jacobian entries
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
+        const auto [r, c, val] = tpm;
+
+        //get the CSR row pointers from COO matrix
+        std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
+
+        SUNMatZero(J);
+
+        //Set row pointers
+        sunindextype *rowptrs = SUNSparseMatrix_IndexPointers(J);
+        for (unsigned int i = 0; i < csrrowdata.size() ; i++)
+        {
+            rowptrs[i] = csrrowdata[i];
+        }
+
+        sunindextype *colvals = SUNSparseMatrix_IndexValues(J);
+        realtype *data = SUNSparseMatrix_Data(J);
+        //Copy data from model jac to sundials
+        for (unsigned int i = 0; i < c.size(); i++ )
+        {
+            colvals[i] = c[i];
+            data[i] = val[i];
+        }
+
+		return 0;
+	}
+
+	template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(realtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);

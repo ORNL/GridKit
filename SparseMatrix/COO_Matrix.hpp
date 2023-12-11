@@ -40,8 +40,10 @@ public:
 	std::tuple<std::vector<Intdx>, std::vector<ScalarT>> getRowCopy(Intdx r);
 	std::tuple<std::vector<Intdx>&, std::vector<Intdx>&, std::vector<ScalarT>&> getEntries();
 	std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntrieCopies();
+	std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntrieCopiesSubMatrix(std::vector<Intdx> submap);
 
 	std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getDataToCSR();
+	std::vector<Intdx> getCSRRowData();
 
 	// BLAS. Will sort before running
 	void setValues(std::vector<Intdx> r, std::vector<Intdx> c, std::vector<ScalarT> v);
@@ -61,15 +63,19 @@ public:
 	//Resort values
 	void sortSparse();
 	bool isSorted();
+	Intdx nnz();
 
 	std::tuple<Intdx, Intdx> getDimensions();
 
 	void printMatrix();
 
+	
+	static void sortSparseCOO(std::vector<Intdx> &rows, std::vector<Intdx> &columns, std::vector<ScalarT> &values);
+
 private:
 	Intdx indexStartRow(const std::vector<Intdx> &rows, Intdx r);
 	Intdx sparseCordBinarySearch(const std::vector<Intdx> &rows, const std::vector<Intdx> &columns, Intdx ri, Intdx ci);
-	void sortSparseCOO(std::vector<Intdx> &rows, std::vector<Intdx> &columns, std::vector<ScalarT> &values);
+	bool checkIncreaseSize(Intdx r, Intdx c);
 
 };
 
@@ -165,6 +171,35 @@ inline std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> 
 }
 
 /**
+ * @brief Only creates the row data
+ * 
+ * @todo swap this with having the matrix store the data and updates. This can then be passed by reference
+ * 
+ * @todo fails, fix
+ * 
+ * @tparam ScalarT 
+ * @tparam Intdx 
+ * @return std::vector<Intdx> 
+ */
+template <class ScalarT, typename Intdx>
+inline std::vector<Intdx> COO_Matrix<ScalarT, Intdx>::getCSRRowData()
+{
+	if (!this->isSorted()) this->sortSparse();	
+	std::vector<Intdx> rowsizevec(this->rows_size + 1, 0);
+	Intdx counter = 0;
+	for (Intdx i = 0; i < static_cast<Intdx>(rowsizevec.size() - 1); i++)
+	{
+		rowsizevec[i + 1] = rowsizevec[i];
+		while (counter < static_cast<Intdx>(this->row_indexes.size()) && i == this->row_indexes[counter])
+		{
+			rowsizevec[i+1]++;
+			counter++;
+		}
+	}
+	return rowsizevec;
+}
+
+/**
  * @brief Given set of vector data it will set the values into the matrix
  * 
  * @tparam ScalarT 
@@ -191,6 +226,7 @@ inline void COO_Matrix<ScalarT, Intdx>::setValues(std::vector<Intdx> r, std::vec
 			this->row_indexes.push_back(r[aiter]);
 			this->column_indexes.push_back(c[aiter]);
 			this->values.push_back(v[aiter]);
+			this->checkIncreaseSize(r[aiter], c[aiter]);
 			aiter++;
 		}
 		if (aiter >= static_cast<Intdx>(r.size())) break;
@@ -208,6 +244,8 @@ inline void COO_Matrix<ScalarT, Intdx>::setValues(std::vector<Intdx> r, std::vec
 		this->row_indexes.push_back(r[i]);
 		this->column_indexes.push_back(c[i]);
 		this->values.push_back(v[i]);
+		
+		this->checkIncreaseSize(r[i], c[i]);
 	}
 	
 	this->sorted = false;
@@ -256,6 +294,8 @@ inline void COO_Matrix<ScalarT, Intdx>::AXPY(ScalarT alpha, COO_Matrix<ScalarT, 
 			this->column_indexes.push_back(c[aiter]);
 			this->values.push_back(alpha * val[aiter]);
 			aiter++;
+			
+			this->checkIncreaseSize(r[aiter], c[aiter]);
 		}
 		if (aiter >= static_cast<Intdx>(r.size())) break;
 		
@@ -272,6 +312,8 @@ inline void COO_Matrix<ScalarT, Intdx>::AXPY(ScalarT alpha, COO_Matrix<ScalarT, 
 		this->row_indexes.push_back(r[i]);
 		this->column_indexes.push_back(c[i]);
 		this->values.push_back(alpha * val[i]);
+		
+		this->checkIncreaseSize(r[i], c[i]);
 	}
 	
 	this->sorted = false;
@@ -310,6 +352,8 @@ inline void COO_Matrix<ScalarT, Intdx>::AXPY(ScalarT alpha, std::vector<Intdx> r
 			this->row_indexes.push_back(r[aiter]);
 			this->column_indexes.push_back(c[aiter]);
 			this->values.push_back(alpha * v[aiter]);
+			
+			this->checkIncreaseSize(r[aiter], c[aiter]);
 			aiter++;
 		}
 		if (aiter >= static_cast<Intdx>(r.size())) break;
@@ -327,6 +371,8 @@ inline void COO_Matrix<ScalarT, Intdx>::AXPY(ScalarT alpha, std::vector<Intdx> r
 		this->row_indexes.push_back(r[i]);
 		this->column_indexes.push_back(c[i]);
 		this->values.push_back(alpha * v[i]);
+		
+		this->checkIncreaseSize(r[i], c[i]);
 	}
 	
 	this->sorted = false;
@@ -453,6 +499,12 @@ inline bool COO_Matrix<ScalarT, Intdx>::isSorted()
 }
 
 template <class ScalarT, typename Intdx>
+inline Intdx COO_Matrix<ScalarT, Intdx>::nnz()
+{
+	return static_cast<Intdx>(this->values.size);
+}
+
+template <class ScalarT, typename Intdx>
 inline std::tuple<Intdx, Intdx> COO_Matrix<ScalarT, Intdx>::getDimensions()
 {
 	return std::tuple<Intdx, Intdx>(this->rows_size, this->columns_size);
@@ -574,10 +626,28 @@ inline Intdx COO_Matrix<ScalarT, Intdx>::sparseCordBinarySearch(const std::vecto
 	return m;
 }
 
+template <class ScalarT, typename Intdx>
+inline bool COO_Matrix<ScalarT, Intdx>::checkIncreaseSize(Intdx r, Intdx c)
+{
+	bool changed = false;
+	if (r + 1 > this->rows_size)
+	{
+		this->rows_size = r + 1;
+		changed = true;
+	}
+	if (c + 1 > this->columns_size)
+	{
+		this->columns_size = c + 1;
+		changed = true;
+	}
+	
+	return changed;
+}
+
 /**
  * @brief Sort a disoreded set of values. Assume nothing on order.
  * 
- * @todo simple setup. Should add better sorting since list are pre-sorted
+ * @todo simple setup. Should add stable sorting since list are pre-sorted
  * 
  * @tparam ScalarT 
  * @tparam Intdx 

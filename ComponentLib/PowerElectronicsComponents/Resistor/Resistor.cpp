@@ -69,9 +69,10 @@ int Resistor<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::evaluateResidual()
 {
-	
-    this->f_[0] = (this->y_[1] - this->y_[0])/this->R_ ;
-    this->f_[1] = (this->y_[0] - this->y_[1])/this->R_ ;
+	//input
+    this->f_[0] = (this->y_[0] - this->y_[1])/this->R_ ;
+    //ouput
+    this->f_[1] = (this->y_[1] - this->y_[0])/this->R_ ;
     return 0;
 }
 
@@ -83,7 +84,7 @@ int Resistor<ScalarT, IdxT>::evaluateJacobian()
     //does compiler make constant???
     std::vector<IdxT> rcord{0,0,1,1};
     std::vector<IdxT> ccord{0,1,0,1};
-    std::vector<ScalarT> vals{-1.0 / this->R_, 1.0 / this->R_, 1.0 / this->R_, -1.0 / this->R_};
+    std::vector<ScalarT> vals{1.0 / this->R_, -1.0 / this->R_, -1.0 / this->R_, 1.0 / this->R_};
     this->J_.setValues(rcord, ccord, vals);
 
     return 0;

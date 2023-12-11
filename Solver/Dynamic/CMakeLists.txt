@@ -66,6 +66,11 @@ gridkit_add_library(solvers_dyn
   LINK_LIBRARIES
     PUBLIC SUNDIALS::nvecserial
     PUBLIC SUNDIALS::idas
+    PUBLIC SUNDIALS::sunlinsolklu
+    PUBLIC suitesparseconfig
+    PUBLIC klu
+    PUBLIC amd
+    PUBLIC colamd
   OUTPUT_NAME
     gridkit_solvers_dyn)
 
