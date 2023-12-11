@@ -27,6 +27,8 @@ namespace ModelLib
             this->time_ = t;
             this->alpha_ = a;
         }
+		
+        bool hasJacobian() { return true;}
 
 		size_t getExternSize()
 		{
