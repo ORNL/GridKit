@@ -43,13 +43,27 @@ class PowerElectronicsModel : public ModelEvaluatorImpl<ScalarT, IdxT>
 
 public:
     /**
-     * @brief Constructor for the system model
+     * @brief Default constructor for the system model
      */
     PowerElectronicsModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-        // Set system model tolerances
-        rtol_ = 1e-5;
-        atol_ = 1e-5;
+        // Set system model tolerances as default
+        rtol_ = 1e-4;
+        atol_ = 1e-4;
+        // By default use jacobian
+        usejac_ = true;
+    }
+
+    /**
+     * @brief Constructor for the system model
+     */
+    PowerElectronicsModel(double rt, double at, bool ju) :  ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+    {
+        // Set system model tolerances from input
+        rtol_ = rt;
+        atol_ = at;
+        // Can choose not to use jacobain
+        usejac_ = ju;
     }
 
     /**
@@ -71,6 +85,28 @@ public:
     {
         
         return 1;
+    }
+
+    /**
+     * @brief Will check if each component has jacobian avalible. If one doesn't then jacobain is false.
+     * 
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool hasJacobian() 
+    {
+        if (!this->usejac_) return false;
+        
+        for(const auto& component : components_)
+        {
+            if (!component->hasJacobian())
+            {
+                return false;
+            }
+            
+        }
+        return true;
     }
 
     /**
@@ -127,8 +163,16 @@ public:
         {
             for(IdxT j=0; j<component->size(); ++j)
             {
-                component->y()[j] = y_[component->getNodeConnection(j)];
-                component->yp()[j] = yp_[component->getNodeConnection(j)];
+                if(component->getNodeConnection(j) != -1)
+                {
+                    component->y()[j] = y_[component->getNodeConnection(j)];
+                    component->yp()[j] = yp_[component->getNodeConnection(j)];
+                }
+                else
+                {
+                    component->y()[j] = 0.0;
+                    component->yp()[j] = 0.0;
+                }
             }
         }
         return 0;
@@ -148,7 +192,7 @@ public:
     {
         for (IdxT i = 0; i < this->f_.size(); i++)
         {
-            f_[i] = 0;
+            f_[i] = 0.0;
         }
         
         this->distributeVectors();
@@ -157,9 +201,16 @@ public:
 
         for(const auto& component : components_)
         {
+            //TODO:check return type
+            component->evaluateResidual();
             for(IdxT j=0; j<component->size(); ++j)
             {
-                f_[component->getNodeConnection(j)] += component->getResidual()[j];
+                //@todo should do a different grounding check
+                if (component->getNodeConnection(j) != -1)
+                {
+                    f_[component->getNodeConnection(j)] += component->getResidual()[j];
+                }
+                
             }
         }
 
@@ -180,16 +231,27 @@ public:
         for(const auto& component : components_)
         {
             component->evaluateJacobian();
-            std::vector<IdxT> r;
-            std::vector<IdxT> c;
-            std::vector<ScalarT> v;
-	        std::tie(r, c, v) = component->getJacobian().getEntrieCopies();
+
+            //get references to local jacobain
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
+	        const auto& [r, c, v] = tpm;
+
+            //Create copies of data to handle groundings
+            std::vector<IdxT> rgr;
+            std::vector<IdxT> cgr;
+            std::vector<ScalarT> vgr;
             for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
             {
-                r[i] = component->getNodeConnection(r[i]);
-                c[i] = component->getNodeConnection(c[i]);
+                if (component->getNodeConnection(r[i]) != -1 && component->getNodeConnection(c[i]) != -1)
+                {
+                   rgr.push_back(component->getNodeConnection(r[i]));
+                   cgr.push_back(component->getNodeConnection(c[i]));
+                   vgr.push_back(v[i]);
+                }
             }
-            this->J_.AXPY(1.0, r, c, v);
+            
+            //AXPY to Global Jacobian
+            this->J_.AXPY(1.0, rgr, cgr, vgr);
         }
         
 		return 0;
@@ -248,6 +310,8 @@ public:
         {
             component->updateTime(t, a);
         }
+        this->time_ = t;
+        this->alpha_ = a;
     }
 
     void addComponent(component_type* component)
@@ -257,6 +321,7 @@ public:
 
 private:
     std::vector<component_type*> components_;
+    bool usejac_;
 
 }; // class PowerElectronicsModel
 

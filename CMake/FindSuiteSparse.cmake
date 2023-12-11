@@ -69,11 +69,11 @@ Author(s):
 set(SUITESPARSE_MODULES
   amd
   colamd
-  klu)
+  klu
+  suitesparseconfig)
 
 find_library(SUITESPARSE_LIBRARY
   NAMES
-  suitesparseconfig
   ${SUITESPARSE_MODULES}
   PATHS
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR}
@@ -97,6 +97,7 @@ find_path(SUITESPARSE_INCLUDE_DIR
   amd.h
   colamd.h
   klu.h
+  SuiteSparse_config.h
   PATHS
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR} ${SUITESPARSE_LIBRARY_DIR}/..
   PATH_SUFFIXES

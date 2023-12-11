@@ -184,6 +184,17 @@ public:
     }
 
     /**
+     * @brief Assume that jacobian is not avalible
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool hasJacobian() 
+    {
+        return false;
+    }
+
+    /**
      * @brief Initialize buses first, then all the other components.
      *
      * @pre All buses and components must be allocated at this point.

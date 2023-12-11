@@ -65,7 +65,7 @@
 #include <exception>
 #include <nvector/nvector_serial.h>
 #include <sunmatrix/sunmatrix_sparse.h>    /* access to sparse SUNMatrix           */
-// #include <sunlinsol/sunlinsol_klu.h>       /* access to KLU linear solver          */
+#include <sunlinsol/sunlinsol_klu.h>       /* access to KLU linear solver          */
 #include <sunlinsol/sunlinsol_dense.h>     /* access to dense linear solver        */
 
 #include "ModelEvaluator.hpp"
@@ -165,6 +165,11 @@ namespace AnalysisManager
             static int Residual(realtype t,
                                 N_Vector yy, N_Vector yp,
                                 N_Vector rr, void *user_data);
+            
+            static int Jac(realtype t, realtype cj,
+               N_Vector yy, N_Vector yp, N_Vector resvec,
+               SUNMatrix J, void *user_data,
+               N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
             static int Integrand(realtype t,
                                  N_Vector yy,   N_Vector yp,
