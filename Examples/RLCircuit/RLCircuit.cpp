@@ -89,7 +89,6 @@ int main(int argc, char const *argv[])
 	sysmodel->yp()[2] = -vinit / linit; // i'_s
 	sysmodel->yp()[3] = -vinit / linit; // i'_L
 	
-
 	
 	sysmodel->initialize();
 	sysmodel->evaluateResidual();
