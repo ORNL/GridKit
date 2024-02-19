@@ -19,9 +19,9 @@
 
 int main(int argc, char const *argv[])
 {
-	double abstol = 1.0e-4;
-	double reltol = 1.0e-4;
-	bool usejac = true;
+	double abstol = 1.0e-8;
+	double reltol = 1.0e-8;
+	bool usejac = false;
 
 	//TODO:setup as named parameters
 	//Create circuit model
@@ -36,14 +36,14 @@ int main(int argc, char const *argv[])
 	parms1.wb = 2.0*M_PI*50.0;
 	parms1.wc = 31.41;
 	parms1.mp = 9.4e-5;
-	parms1.Vn = 380;
+	parms1.Vn = 380.0;
 	parms1.nq = 1.3e-3;
 	parms1.F = 0.75;
 	parms1.Kiv = 420.0;
 	parms1.Kpv = 0.1;
-	parms1.Kic = 20.0 * 1.0e3;
+	parms1.Kic = 2.0e4;
 	parms1.Kpc = 15.0;
-	parms1.Cf = 50.0e-6;
+	parms1.Cf = 5.0e-5;
 	parms1.rLf = 0.1;
 	parms1.Lf = 1.35e-3;
 	parms1.rLc = 0.03;
@@ -54,12 +54,12 @@ int main(int argc, char const *argv[])
 	parms2.wb = 2.0*M_PI*50.0;
 	parms2.wc = 31.41;
 	parms2.mp = 12.5e-5;
-	parms2.Vn = 380;
+	parms2.Vn = 380.0;
 	parms2.nq = 1.5e-3;
 	parms2.F = 0.75;
 	parms2.Kiv = 390.0;
 	parms2.Kpv = 0.05;
-	parms2.Kic = 16.0 * 1.0e3;
+	parms2.Kic = 16.0e3;
 	parms2.Kpc = 10.5;
 	parms2.Cf = 50.0e-6;
 	parms2.rLf = 0.1;
@@ -87,14 +87,14 @@ int main(int argc, char const *argv[])
 
 	//indexing sets
 	size_t Nsize = 2;
-	//							DGs	+			Lines +				Loads
-	size_t vec_size_internals = 13*(2*Nsize) + (2 + 4*(Nsize - 1)) + 2*Nsize;
+	//							DGs	+		- refframe	   Lines +				Loads
+	size_t vec_size_internals = 13*(2*Nsize) - 1 + (2 + 4*(Nsize - 1)) + 2*Nsize;
 	//							\omegaref + BusDQ
 	size_t vec_size_externals = 1 +	2*(2*Nsize);
-	size_t dqbus1 = vec_size_externals + 1;
-	size_t dqbus2 = vec_size_externals + 3;
-	size_t dqbus3 = vec_size_externals + 5;
-	size_t dqbus4 = vec_size_externals + 7;
+	size_t dqbus1 = vec_size_internals + 1;
+	size_t dqbus2 = vec_size_internals + 3;
+	size_t dqbus3 = vec_size_internals + 5;
+	size_t dqbus4 = vec_size_internals + 7;
 
 	size_t vec_size_total = vec_size_internals + vec_size_externals;
 
@@ -108,13 +108,15 @@ int main(int argc, char const *argv[])
 	//outputs
 	dg1->setExternalConnectionNodes(1,dqbus1);
 	dg1->setExternalConnectionNodes(2,dqbus1 + 1);
+	//"grounding" of the difference
+	dg1->setExternalConnectionNodes(3,-1);
 	//internal connections
-	for (size_t i = 0; i < 13; i++)
+	for (size_t i = 0; i < 12; i++)
 	{
 		
-		dg1->setExternalConnectionNodes(3 + i,indexv + i);
+		dg1->setExternalConnectionNodes(4 + i,indexv + i);
 	}
-	indexv += 13;
+	indexv += 12;
 	sysmodel->addComponent(dg1);
 
 	//dg 2
@@ -300,22 +302,22 @@ int main(int argc, char const *argv[])
 	}
 
 	// Create Intial derivatives specifics generated in MATLAB
-	//DGs
-	for (size_t i = 0; i < 2; i++)
-	{
-		sysmodel->yp()[13*i + 3] = parms1.Vn;
-		sysmodel->yp()[13*i + 5] = parms1.Kpv * parms1.Vn;
-		sysmodel->yp()[13*i + 7] = (parms1.Kpc * parms1.Kpv * parms1.Vn) / parms1.Lf;
-	}
+	//DGs 1
+	sysmodel->yp()[2] = parms1.Vn;
+	sysmodel->yp()[4] = parms1.Kpv * parms1.Vn;
+	sysmodel->yp()[6] = (parms1.Kpc * parms1.Kpv * parms1.Vn) / parms1.Lf;
+	sysmodel->yp()[12 + 3] = parms1.Vn;
+	sysmodel->yp()[12 + 5] = parms1.Kpv * parms1.Vn;
+	sysmodel->yp()[12 + 7] = (parms1.Kpc * parms1.Kpv * parms1.Vn) / parms1.Lf;
 	for (size_t i = 2; i < 4; i++)
 	{
-		sysmodel->yp()[13*i + 3] = parms2.Vn;
-		sysmodel->yp()[13*i + 5] = parms2.Kpv * parms2.Vn;
-		sysmodel->yp()[13*i + 7] = (parms2.Kpc * parms2.Kpv * parms2.Vn) / parms2.Lf;
+		sysmodel->yp()[13*i - 1 + 3] = parms2.Vn;
+		sysmodel->yp()[13*i - 1 + 5] = parms2.Kpv * parms2.Vn;
+		sysmodel->yp()[13*i - 1 + 7] = (parms2.Kpc * parms2.Kpv * parms2.Vn) / parms2.Lf;
 	}
 
 	//since the intial P_com = 0
-	sysmodel->y()[62] = parms1.wb;
+	sysmodel->y()[vec_size_internals] = parms1.wb;
 
 	
 
@@ -336,26 +338,106 @@ int main(int argc, char const *argv[])
 	// std::cout << sysmodel->getJacobian().frobnorm() << "\n";
 
 
-	// //Create numerical integrator and configure it for the generator model
-	// AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
+	//Create numerical integrator and configure it for the generator model
+	AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
 
-    // double t_init  = 0.0;
-    // double t_final = 1.0;
+    double t_init  = 0.0;
+    double t_final = 1.0;
 
-    // // setup simulation
-    // idas->configureSimulation();
-    // idas->getDefaultInitialCondition();
-    // idas->initializeSimulation(t_init);
+    // setup simulation
+    idas->configureSimulation();
+    idas->getDefaultInitialCondition();
+    idas->initializeSimulation(t_init);
 
-    // idas->runSimulation(t_final);
+    idas->runSimulation(t_final);
 
-	// std::vector<double>& yfinial = sysmodel->y(); 
+	std::vector<double>& yfinial = sysmodel->y(); 
 
-	// std::cout << "Final Vector y\n";
-	// for (size_t i = 0; i < yfinial.size(); i++)
-	// {
-	// 	std::cout << yfinial[i] << "\n";
-	// }
+	std::cout << "Final Vector y\n";
+	for (size_t i = 0; i < yfinial.size(); i++)
+	{
+		std::cout << yfinial[i] << "\n";
+	}
+
+	//Generate from MATLAB code ODE form with tolerances of 1e-12
+	std::vector<double>true_vec{
+	 2.297543153595780e+04,
+     1.275311524125022e+04,
+     3.763060183116022e-02,
+    -2.098153459325261e-02,
+     1.848285659119097e-02,
+    -1.563291404944864e-04,
+     6.321941907011718e+01,
+    -2.942264300846256e+01,
+     3.634209302905854e+02,
+    -2.668928293656362e-06,
+     6.321941919221522e+01,
+    -3.509200178595996e+01,
+    -7.555954467454730e-03,
+     2.297580486511343e+04,
+     8.742028429066131e+03,
+     3.710079564796484e-02,
+    -1.421122598056797e-02,
+     1.874079517807597e-02,
+    -9.891304812687215e-05,
+     6.232933298360234e+01,
+    -1.796494061423331e+01,
+     3.686353885026506e+02,
+     3.465673854181523e-05,
+     6.232933406188410e+01,
+    -2.371564475187742e+01,
+    -8.273939686941580e-02,
+     1.727775042678524e+04,
+     1.649365247247288e+04,
+     3.116555157570849e-02,
+    -2.985990066758010e-02,
+     2.250012115906506e-02,
+    -2.643873146501096e-04,
+     4.861823510250247e+01,
+    -4.088592755441309e+01,
+     3.552597163751238e+02,
+    -1.496407194199739e-04,
+     4.861823504694532e+01,
+    -4.642797132602495e+01,
+    -8.445727984408551e-02,
+     1.727723725566433e+04,
+     9.182386962936238e+03,
+     3.024959333190777e-02,
+    -1.617250828202081e-02,
+     2.318056864131751e-02,
+    -1.295918667730514e-04,
+     4.718938244522050e+01,
+    -1.935782085675469e+01,
+     3.662262287803608e+02,
+     1.076423957830039e-04,
+     4.718938116520511e+01,
+    -2.507094256286497e+01,
+    -1.881248349415025e+01,
+     2.114714832305742e+01,
+     4.329946674909793e+01,
+    -3.037887936225145e+00,
+    -4.487023117352992e+01,
+     2.895883729832657e+01,
+     8.199613345691378e+01,
+    -5.623856502948122e+01,
+     1.327498499660322e+02,
+    -8.228065162347022e+01,
+     3.119995747945993e+02,
+     3.576922945168803e+02,
+    -5.850795361581618e+00,
+     3.641193316268954e+02,
+    -8.846325267612976e+00,
+     3.472146752739036e+02,
+    -3.272400970143252e+01,
+     3.604108939430972e+02,
+    -3.492842627398574e+01
+	};
+
+	std::cout << "Test the Relative Error\n";
+	 for (size_t i = 0; i < true_vec.size(); i++)
+	 {
+		printf("%u : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
+	 }
 
 	return 0;
 }
