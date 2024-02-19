@@ -17,11 +17,11 @@ namespace ModelLib {
  */
 
 template <class ScalarT, typename IdxT>
-DiscreteGenerator<ScalarT, IdxT>::DiscreteGenerator(IdxT id, DiscreteGeneratorParameters<ScalarT,IdxT> parm)
-  :  wb_(parm.wb), wc_(parm.wc), mp_(parm.mp), refmp_(parm.refmp), Vn_(parm.Vn), nq_(parm.nq), F_(parm.F), Kiv_(parm.Kiv), Kpv_(parm.Kpv), Kic_(parm.Kic), Kpc_(parm.Kpc), Cf_(parm.Cf), rLf_(parm.rLf), Lf_(parm.Lf), rLc_(parm.rLc), Lc_(parm.Lc) 
+DiscreteGenerator<ScalarT, IdxT>::DiscreteGenerator(IdxT id, DiscreteGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame)
+  :  wb_(parm.wb), wc_(parm.wc), mp_(parm.mp), Vn_(parm.Vn), nq_(parm.nq), F_(parm.F), Kiv_(parm.Kiv), Kpv_(parm.Kpv), Kic_(parm.Kic), Kpc_(parm.Kpc), Cf_(parm.Cf), rLf_(parm.rLf), Lf_(parm.Lf), rLc_(parm.rLc), Lc_(parm.Lc), refframe_(reference_frame)
 {
-    // internals [delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
-    // externals [Pref, Pbus, QBus]
+    // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
+    // externals [\omega_ref, vba_out, vbb_out]
 	this->size_ = 16;
     this->n_intern = 13;
     this->n_extern = 3;
@@ -74,42 +74,64 @@ template <class ScalarT, typename IdxT>
 int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
 {
     //   ### Externals Componenets ###
-    //Reference P
-    ScalarT wcom = this->wb_ - this->refmp_ * this->y_[0];
 
-    this->f_[0] = 0;
-    this->f_[1] = 0;
-    this->f_[2] = 0;
+    ScalarT omega = wb_ - mp_ * y_[4];
+    //ref common ref motor angle
+    if (refframe_)
+    {
+        f_[0] = omega - y_[0];
+    }
+    else
+    {
+        f_[0] = 0.0;
+    }
+    
 
-    // ### Internal Componenets ##
-    f_[3] = -yp_[3] + wb_ - mp_ * y_[4] - wcom;
+    //output
+    //current transformed to common frame
+    f_[1] = cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15];
+    f_[2] = sin(y_[3]) * y_[14] + cos(y_[3]) * y_[15];
 
+    //Take incoming voltages to current rotator reference frame
+    ScalarT vbd_in = cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2];
+    ScalarT vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
+
+    // ### Internal Componenets ## 
+    // Rotator difference angle
+    f_[3] = -yp_[3] + omega - y_[0];
+
+    // P and Q equations
     f_[4] = -yp_[4] + wc_ * (y_[12] * y_[14] + y_[13] * y_[15] - y_[4]);
-    f_[5] =  -yp_[4] + wc_ * (-y_[12] * y_[15] + y_[13] * y_[14] - y_[5]);
+    f_[5] = -yp_[5] + wc_ * (-y_[12] * y_[15] + y_[13] * y_[14] - y_[5]);
 
+    //Voltage control
     ScalarT vod_star = Vn_ - nq_ * y_[5];
-    ScalarT voq_star = 0;
+    ScalarT voq_star = 0.0;
 
     f_[6] = -yp_[6] + vod_star - y_[12];
     f_[7] = -yp_[7] + voq_star - y_[13];
 
-    ScalarT ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6] ;
+
+    ScalarT ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6];
     ScalarT ilq_star = F_ * y_[15] + wb_ * Cf_ * y_[12] + Kpv_ * (voq_star - y_[13]) + Kiv_ * y_[7];
 
+    //Current control
     f_[8] = -yp_[8] + ild_star - y_[10];
     f_[9] = -yp_[9] + ilq_star - y_[11];
 
     ScalarT vid_star = -wb_ * Lf_ * y_[11] + Kpc_ * (ild_star - y_[10]) + Kic_ * y_[8];
     ScalarT viq_star = wb_ * Lf_ * y_[10] + Kpc_ * (ilq_star - y_[11]) + Kic_ * y_[9]; 
     
-    f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] + wcom * y_[11] + (1/Lf_) * (vid_star - y_[12]);
-    f_[11] = -yp_[11] - (rLf_ / Lf_) * y_[11] - wcom * y_[10] + (1/Lf_) * (viq_star - y_[13]);
+    //Output LC Filter 
+    f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] + omega * y_[11] +  (vid_star - y_[12]) / Lf_;
+    f_[11] = -yp_[11] - (rLf_ / Lf_) * y_[11] - omega * y_[10] +  (viq_star - y_[13]) / Lf_;
 
-    f_[12] = -yp_[12] + wcom * y_[13] + (1/Cf_) * (y_[10] - y_[14]);
-    f_[13] = -yp_[13] - wcom * y_[12] + (1/Cf_) * (y_[11] - y_[15]);
+    f_[12] = -yp_[12] + omega * y_[13] + (y_[10] - y_[14]) / Cf_;
+    f_[13] = -yp_[13] - omega * y_[12] + (y_[11] - y_[15]) / Cf_;
 
-    f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] + wcom * y_[15] + (1/Lc_)*(y_[12] - y_[1]);
-    f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - wcom * y_[14] + (1/Lc_)*(y_[13] - y_[2]);
+    //Output Connector
+    f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] + omega * y_[15] + (y_[12] - vbd_in) / Lc_;
+    f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - omega * y_[14] + (y_[13] - vbq_in) / Lc_;
     return 0;
 }
 
@@ -117,24 +139,24 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
  * @brief Compute the jacobian of the DiscreteGenerator for iteration. dF/dy - \alpha dF/dy'
  * 
  * The matrix dF/dy should be
- * [         0,     0,     0, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,             0,             0]
-[         0,     0,     0, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,             0,             0]
-[         0,     0,     0, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,             0,             0]
-[     mpref,     0,     0, 0, -mp,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,             0,             0]
-[         0,     0,     0, 0, -wc,                0,            0,            0,      0,      0,                 0,                 0,            wc*x15,            wc*x16,        wc*x13,        wc*x14]
-[         0,     0,     0, 0,   0,              -wc,            0,            0,      0,      0,                 0,                 0,           -wc*x16,            wc*x15,        wc*x14,       -wc*x13]
-[         0,     0,     0, 0,   0,              -nq,            0,            0,      0,      0,                 0,                 0,                -1,                 0,             0,             0]
-[         0,     0,     0, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                -1,             0,             0]
-[         0,     0,     0, 0,   0,          -Kpv*nq,          Kiv,            0,      0,      0,                -1,                 0,              -Kpv,            -Cf*wb,             F,             0]
-[         0,     0,     0, 0,   0,                0,            0,          Kiv,      0,      0,                 0,                -1,             Cf*wb,              -Kpv,             0,             F]
-[-mpref*x12,     0,     0, 0,   0, -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf - rLf/Lf,         -mpref*x1, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf,    (F*Kpc)/Lf,             0]
-[ mpref*x11,     0,     0, 0,   0,                0,            0, (Kiv*Kpc)/Lf,      0, Kic/Lf,          mpref*x1, - Kpc/Lf - rLf/Lf,    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,             0,    (F*Kpc)/Lf]
-[-mpref*x14,     0,     0, 0,   0,                0,            0,            0,      0,      0,              1/Cf,                 0,                 0,     wb - mpref*x1,         -1/Cf,             0]
-[ mpref*x13,     0,     0, 0,   0,                0,            0,            0,      0,      0,                 0,              1/Cf,     mpref*x1 - wb,                 0,             0,         -1/Cf]
-[-mpref*x16, -1/Lc,     0, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,              1/Lc,                 0,       -rLc/Lc, wb - mpref*x1]
-[ mpref*x15,     0, -1/Lc, 0,   0,                0,            0,            0,      0,      0,                 0,                 0,                 0,              1/Lc, mpref*x1 - wb,       -rLc/Lc]
+ *  
+[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+[-1,           0,           0,                             0,     -mp,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+[ 0,           0,           0,                             0,     -wc,                0,            0,            0,      0,      0,                 0,                 0,            wc*x15,            wc*x16,     wc*x13,     wc*x14]
+[ 0,           0,           0,                             0,       0,              -wc,            0,            0,      0,      0,                 0,                 0,           -wc*x16,            wc*x15,     wc*x14,    -wc*x13]
+[ 0,           0,           0,                             0,       0,              -nq,            0,            0,      0,      0,                 0,                 0,                -1,                 0,          0,          0]
+[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                -1,          0,          0]
+[ 0,           0,           0,                             0,       0,          -Kpv*nq,          Kiv,            0,      0,      0,                -1,                 0,              -Kpv,            -Cf*wb,          F,          0]
+[ 0,           0,           0,                             0,       0,                0,            0,          Kiv,      0,      0,                 0,                -1,             Cf*wb,              -Kpv,          0,          F]
+[ 0,           0,           0,                             0, -mp*x12, -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf - rLf/Lf,            -mp*x5, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf, (F*Kpc)/Lf,          0]
+[ 0,           0,           0,                             0,  mp*x11,                0,            0, (Kiv*Kpc)/Lf,      0, Kic/Lf,             mp*x5, - Kpc/Lf - rLf/Lf,    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,          0, (F*Kpc)/Lf]
+[ 0,           0,           0,                             0, -mp*x14,                0,            0,            0,      0,      0,              1/Cf,                 0,                 0,        wb - mp*x5,      -1/Cf,          0]
+[ 0,           0,           0,                             0,  mp*x13,                0,            0,            0,      0,      0,                 0,              1/Cf,        mp*x5 - wb,                 0,          0,      -1/Cf]
+[ 0, -cos(x4)/Lc, -sin(x4)/Lc, -(x3*cos(x4) - x2*sin(x4))/Lc, -mp*x16,                0,            0,            0,      0,      0,                 0,                 0,              1/Lc,                 0,    -rLc/Lc, wb - mp*x5]
+[ 0,  sin(x4)/Lc, -cos(x4)/Lc,  (x2*cos(x4) + x3*sin(x4))/Lc,  mp*x15,                0,            0,            0,      0,      0,                 0,                 0,                 0,              1/Lc, mp*x5 - wb,    -rLc/Lc]
  * 'Generated from MATLAB symbolic'
- * Jacobian is mostly constant besides reference and rows 4 & 5
  * 
  * @tparam ScalarT 
  * @tparam IdxT 
@@ -145,99 +167,146 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
 {
     //Create dF/dy'
     std::vector<IdxT> rcordder(13);
-    std::vector<ScalarT> valsder(13,1.0);
+    std::vector<ScalarT> valsder(13, -1.0);
     for (int i = 0; i < 13; i++)
     {
         rcordder[i] = i + 3;
     }
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, rcordder, valsder,16,16);
 
+    std::vector<IdxT> ctemp{};
+    std::vector<IdxT> rtemp{};
+    std::vector<ScalarT> valtemp{};
+
+
+
     //Create dF/dy
-    //r = 3
-    std::vector<IdxT> ctemp{0, 4};
-    std::vector<IdxT> rtemp(ctemp.size(),3);
-    std::vector<ScalarT> valtemp{this->refmp_, -this->mp_};
+    //r = 1
+
+    ctemp = {3, 14, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(1);
+    valtemp = { - sin(y_[3]) * y_[14] - cos(y_[3]) * y_[15], cos(y_[3]),sin(y_[3])};
     this->J_.setValues(rtemp, ctemp, valtemp);
+
+    //r = 2
+
+    ctemp = {3, 14, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(2);
+    valtemp = { - cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15], -sin(y_[3]),cos(y_[3])};
+    this->J_.setValues(rtemp, ctemp, valtemp);
+
+    //r = 3
+    
+    ctemp = {0, 4};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(3);
+    valtemp = {-1.0, -mp_};
+    this->J_.setValues(rtemp, ctemp, valtemp);
+    
+    //r = 0
+    if (refframe_)
+    {
+        ctemp = {0, 4};
+        rtemp.clear();
+        for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(0);
+        valtemp = {-1.0, -mp_};
+        this->J_.setValues(rtemp, ctemp, valtemp);
+    }
+    
 
     //r = 4
     ctemp = {4, 12, 13, 14, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 4);
-    valtemp = {-this->wc_, this->wc_*y_[14], this->wc_*y_[15], this->wc_*y_[12], this->wc_*y_[13]};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(4);
+    valtemp = {-wc_, wc_*y_[14], wc_*y_[15], wc_*y_[12], wc_*y_[13]};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 5
     ctemp = {5, 12, 13, 14, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 5);
-    valtemp = {-this->wc_, -this->wc_*y_[15], this->wc_*y_[14], this->wc_*y_[13], -this->wc_*y_[12]};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(5);
+    valtemp = {-wc_, -wc_*y_[15], wc_*y_[14], wc_*y_[13], -wc_*y_[12]};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 6
     ctemp = {5, 12};
-    std::fill(rtemp.begin(), rtemp.end(), 6);
-    valtemp = {-this->nq_, -1.0};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(6);
+    valtemp = {-nq_, -1.0};
     this->J_.setValues(rtemp, ctemp, valtemp);
     
     //r = 7
     ctemp = {13};
-    std::fill(rtemp.begin(), rtemp.end(), 7);
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(7);
     valtemp = {-1.0};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 8
     ctemp = {5,6,10,12,13,14};
-    std::fill(rtemp.begin(), rtemp.end(), 8);
-    valtemp = {-this->Kpv_*this->nq_, this->Kiv_, -1.0, -this->Kpv_, -this->Cf_*this->wb_, this->F_};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(8);
+    valtemp = {-Kpv_*nq_, Kiv_, -1.0, -Kpv_, -Cf_*wb_, F_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 9
     ctemp = {7, 11, 12, 13, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 9);
-    valtemp = {this->Kiv_, -1.0, this->Cf_*this->wb_,-this->Kpv_,this->F_};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(9);
+    valtemp = {Kiv_, -1.0, Cf_*wb_,-Kpv_,F_};
     this->J_.setValues(rtemp, ctemp, valtemp);
     
     //r = 10
-    ctemp = {0, 5, 6, 8, 10, 11, 12, 13, 14};
-    std::fill(rtemp.begin(), rtemp.end(), 10);
-    valtemp = {-this->refmp_ * y_[11], -(this->Kpc_ * this->Kpv_ * this->nq_) / this->Lf_, (this->Kpc_ * this->Kiv_) / this->Lf_, this->Kic_ / this->Lf_, -(this->Kpc_ + this->rLf_) / this->Lf_, -this->refmp_ * y_[0], -(this->Kpc_ * this->Kpv_ + 1.0) / this->Lf_, -(this->Cf_ * this->Kpc_ * this->wb_) / this->Lf_, (this->F_ * this->Kpc_) / this->Lf_};
+    ctemp = {4, 5, 6, 8, 10, 11, 12, 13, 14};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(10);
+    valtemp = {-mp_ * y_[11], -(Kpc_ * Kpv_ * nq_) / Lf_, (Kpc_ * Kiv_) / Lf_, Kic_ / Lf_, -(Kpc_ + rLf_) / Lf_, -mp_ * y_[4], -(Kpc_ * Kpv_ + 1.0) / Lf_, -(Cf_ * Kpc_ * wb_) / Lf_, (F_ * Kpc_) / Lf_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 11
-    ctemp = {0, 7, 9, 10, 11, 12, 13, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 11);
-    valtemp = {this->refmp_ * y_[10], (this->Kiv_ * this->Kpc_) / this->Lf_, this->Kic_ / this->Lf_, this->refmp_ * y_[0], -(this->Kpc_ + this->rLf_) / this->Lf_, (this->Cf_ * this->Kpc_ * this->wb_) / this->Lf_, -(this->Kpc_ * this->Kpv_ + 1.0) / this->Lf_, (this->F_ * this->Kpc_) / this->Lf_};
+    ctemp = {4, 7, 9, 10, 11, 12, 13, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(11);
+    valtemp = {mp_ * y_[10], (Kiv_ * Kpc_) / Lf_, Kic_ / Lf_, mp_ * y_[4], -(Kpc_ + rLf_) / Lf_, (Cf_ * Kpc_ * wb_) / Lf_, -(Kpc_ * Kpv_ + 1.0) / Lf_, (F_ * Kpc_) / Lf_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 12
-    ctemp = {0, 10, 13, 14};
-    std::fill(rtemp.begin(), rtemp.end(), 12);
-    valtemp = {-this->refmp_ * y_[13], 1.0 / this->Cf_, this->wb_ - this->refmp_ * y_[0], -1.0 / this->Cf_};
+    ctemp = {4, 10, 13, 14};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(12);
+    valtemp = {-mp_ * y_[13], 1.0 / Cf_, wb_ - mp_ * y_[4], -1.0 / Cf_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 13
-    ctemp = {0, 11, 12, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 13);
-    valtemp = {this->refmp_ * y_[12], 1.0 / this->Cf_, -this->wb_ + this->refmp_ * y_[0], -1.0 / this->Cf_};
+    ctemp = {4, 11, 12, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(13);
+    valtemp = {mp_ * y_[12], 1.0 / Cf_, -wb_ + mp_ * y_[4], -1.0 / Cf_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 14
-    ctemp = {0, 1, 12, 14, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 14);
-    valtemp = {-this->refmp_ * y_[15], -1.0 / this->Lc_, 1.0 / this->Lc_, -this->rLc_ / this->Lc_, this->wb_ - this->refmp_ * y_[0]};
+    ctemp = {1, 2, 3, 4, 12, 14, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(14);
+    valtemp = {(1.0/Lc_) * -cos(y_[3]) , (1.0/Lc_) * -sin(y_[3]) , (1.0/Lc_) * (sin(y_[3]) * y_[1] - cos(y_[3]) * y_[2]), -mp_ * y_[15], 1.0 / Lc_, -rLc_ / Lc_, wb_ - mp_ * y_[4]};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 15
-    ctemp = {0, 2, 13, 14, 15};
-    std::fill(rtemp.begin(), rtemp.end(), 15);
-    valtemp = {-this->refmp_ * y_[14], -1.0 / this->Lc_, 1.0 / this->Lc_, -this->wb_ + this->refmp_ * y_[0], -this->rLc_ / this->Lc_};
+    ctemp = {1, 2, 3, 4, 13, 14, 15};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(15);
+    valtemp = {(1.0/Lc_) * sin(y_[3]) , (1.0/Lc_) * -cos(y_[3]), (1.0/Lc_) * (cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2]), mp_ * y_[14], 1.0 / Lc_, -wb_ + mp_ * y_[4], -rLc_ / Lc_};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
 
     //Perform dF/dy + \alpha dF/dy'
 
-    this->J_.AXPY(-this->alpha_, Jacder);
+    this->J_.AXPY(this->alpha_, Jacder);
 
     return 0;
 }

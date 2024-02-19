@@ -18,8 +18,8 @@
 
 int main(int argc, char const *argv[])
 {
-	double abstol = 1e-8;
-	double reltol = 1e-8;
+	double abstol = 1.0e-8;
+	double reltol = 1.0e-8;
 	bool usejac = true;
 
 	//TODO:setup as named parameters
@@ -132,9 +132,9 @@ int main(int argc, char const *argv[])
 
 	//analytical solution to the circuit
 	yexact[0] = vinit;
-	yexact[2] = (-vinit / rinit) * (exp((rinit / linit) * t_final) - 1.0);
+	yexact[2] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
 	yexact[3] = yexact[2];
-	yexact[1] = vinit - rinit * yexact[2];
+	yexact[1] = vinit + rinit * yexact[2];
 	
 	std::cout << "Element-wise Relative error at t=" << t_final << "\n";
 	for (size_t i = 0; i < yfinial.size(); i++)
