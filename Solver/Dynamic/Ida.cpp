@@ -134,6 +134,10 @@ namespace Sundials
         retval = IDASStolerances(solver_, rtol, atol);
         checkOutput(retval, "IDASStolerances");
 
+        /// \todo Need to set max number of steps based on user input!
+        retval = IDASetMaxNumSteps(solver_, 5000);
+        checkOutput(retval, "IDASetMaxNumSteps");
+
         // Tag differential variables
         std::vector<bool>& tag = model_->tag();
         if (static_cast<IdxT>(tag.size()) == model_->size())
@@ -415,7 +419,7 @@ namespace Sundials
         checkOutput(retval, "IDASetUserDataB");
 
         /// \todo Need to set max number of steps based on user input!
-        retval = IDASetMaxNumStepsB(solver_, backwardID_, 2000);
+        retval = IDASetMaxNumStepsB(solver_, backwardID_, 200);
         checkOutput(retval, "IDASetMaxNumSteps");
 
         // Set up linear solver
