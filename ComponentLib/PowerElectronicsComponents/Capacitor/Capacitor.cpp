@@ -69,15 +69,20 @@ int Capacitor<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateResidual()
 {
-    this->f_[0] = this->yp_[2];
-    this->f_[1] = -this->yp_[2];
-    this->f_[2] =  -this->C_ * this->yp_[2] + this->y_[0] - this->y_[1] - this->y_[2];
+    //input
+    this->f_[0] = C_ * this->yp_[2];
+    //output
+    this->f_[1] = -C_ * this->yp_[2];
+
+    //internal
+    this->f_[2] =  -C_ * this->yp_[2] + this->y_[0] - this->y_[1] - this->y_[2];
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateJacobian()
 {
+    this->J_.zeroMatrix();
     //Create dF/dy
     std::vector<IdxT> rcord{2,2,2};
     std::vector<IdxT> ccord{0,1,2};
@@ -87,7 +92,7 @@ int Capacitor<ScalarT, IdxT>::evaluateJacobian()
     //Create -dF/dy'
     std::vector<IdxT> rcordder{0,1,2};
     std::vector<IdxT> ccordder{2,2,2};
-    std::vector<ScalarT> valsder{1.0, -1.0, -this->C_};
+    std::vector<ScalarT> valsder{C_, -C_, -this->C_};
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
