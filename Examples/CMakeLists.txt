@@ -57,6 +57,7 @@
 
 add_subdirectory(MatPowerTesting)
 add_subdirectory(RLCircuit)
+add_subdirectory(Microgrid)
 add_subdirectory(SparseTest)
 add_subdirectory(DiscreteGeneratorTest)
 
