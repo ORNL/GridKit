@@ -71,11 +71,11 @@ template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::evaluateResidual()
 {
     //input
-    this->f_[0] = this->y_[2];
+    this->f_[0] = -this->y_[2];
     //output
-    this->f_[1] = -this->y_[2];
+    this->f_[1] = this->y_[2];
     //internal
-    this->f_[2] = this->L_ * this->yp_[2] + this->y_[0] - this->y_[1] ;
+    this->f_[2] = -this->L_ * this->yp_[2] + this->y_[1] - this->y_[0] ;
     return 0;
 }
 
@@ -87,13 +87,13 @@ int Inductor<ScalarT, IdxT>::evaluateJacobian()
     //Create dF/dy
     std::vector<IdxT> rcord{0,1,2,2};
     std::vector<IdxT> ccord{2,2,0,1};
-    std::vector<ScalarT> vals{1.0, -1.0, 1.0, -1.0};
+    std::vector<ScalarT> vals{-1.0, 1.0, -1.0, 1.0};
     this->J_.setValues(rcord, ccord, vals);
 
     //Create dF/dy'
     std::vector<IdxT> rcordder{2};
     std::vector<IdxT> ccordder{2};
-    std::vector<ScalarT> valsder{this->L_};
+    std::vector<ScalarT> valsder{-this->L_};
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'

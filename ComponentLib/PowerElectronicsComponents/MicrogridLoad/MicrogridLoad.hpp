@@ -1,7 +1,7 @@
 
 
-#ifndef _CAP_HPP_
-#define _CAP_HPP_
+#ifndef _TRANLOAD_HPP_
+#define _TRANLOAD_HPP_
 
 #include <ModelEvaluatorImpl.hpp>
 #include <PowerSystemData.hpp>
@@ -11,37 +11,17 @@
 namespace ModelLib
 {
     template <class ScalarT, typename IdxT> class BaseBus;
-
-    template <class ScalarT, typename IdxT>
-    struct DiscreteGeneratorParameters
-    {
-        ScalarT wb;
-        ScalarT wc;
-        ScalarT mp;
-        ScalarT Vn;
-        ScalarT nq;
-        ScalarT F;
-        ScalarT Kiv;
-        ScalarT Kpv;
-        ScalarT Kic;
-        ScalarT Kpc;
-        ScalarT Cf;
-        ScalarT rLf;
-        ScalarT Lf;
-        ScalarT rLc;
-        ScalarT Lc;
-    };
 }
 
 
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive DiscreteGenerator class.
+     * @brief Declaration of a passive MicrogridLoad class.
      *
      */
     template  <class ScalarT, typename IdxT>
-    class DiscreteGenerator : public CircuitComponent<ScalarT, IdxT>
+    class MicrogridLoad : public CircuitComponent<ScalarT, IdxT>
     {
         using CircuitComponent<ScalarT, IdxT>::size_;
         using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -62,37 +42,25 @@ namespace ModelLib
 
 
     public:
-        DiscreteGenerator(IdxT id, DiscreteGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame);
-        virtual ~DiscreteGenerator();
+        MicrogridLoad(IdxT id, ScalarT R, ScalarT L);
+        virtual ~MicrogridLoad();
 
         int allocate();
         int initialize();
         int tagDifferentiable();
         int evaluateResidual();
-		int evaluateJacobian();
+        int evaluateJacobian();
         int evaluateIntegrand();
+
         int initializeAdjoint();
         int evaluateAdjointResidual();
         //int evaluateAdjointJacobian();
         int evaluateAdjointIntegrand();
+
         
     private:
-        ScalarT wb_;
-        ScalarT wc_;
-        ScalarT mp_;
-        ScalarT Vn_;
-        ScalarT nq_;
-        ScalarT F_;
-        ScalarT Kiv_;
-        ScalarT Kpv_;
-        ScalarT Kic_;
-        ScalarT Kpc_;
-        ScalarT Cf_;
-        ScalarT rLf_;
-        ScalarT Lf_;
-        ScalarT rLc_;
-        ScalarT Lc_;
-        bool refframe_;
+		ScalarT R_;
+        ScalarT L_;
     };
 }
 

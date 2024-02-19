@@ -50,6 +50,7 @@ public:
 	void AXPY(ScalarT alpha, COO_Matrix<ScalarT, Intdx>& a);
 	void AXPY(ScalarT alpha, std::vector<Intdx> r, std::vector<Intdx> c, std::vector<ScalarT> v);
 	void SCAL(ScalarT alpha);
+	ScalarT frobnorm();
 
 	// --- Permutation Operations ---
 	//No sorting is actually done. Only done when nesscary
@@ -389,6 +390,14 @@ template <class ScalarT, typename Intdx>
 inline void COO_Matrix<ScalarT, Intdx>::SCAL(ScalarT alpha)
 {
 	for (auto i = this->values.begin(); i < this->values.end(); i++) *i *= alpha;
+}
+
+template <class ScalarT, typename Intdx>
+inline ScalarT COO_Matrix<ScalarT, Intdx>::frobnorm()
+{
+	ScalarT totsum = 0.0;
+	for (auto i = this->values.begin(); i < this->values.end(); i++) totsum += abs(*i)^2;
+	return totsum;
 }
 
 /**
