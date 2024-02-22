@@ -133,9 +133,12 @@ namespace Sundials
         model_->setTolerances(rtol, atol); ///< \todo Function name should be "getTolerances"!
         retval = IDASStolerances(solver_, rtol, atol);
         checkOutput(retval, "IDASStolerances");
+        
+        IdxT msa;
+        model_->setMaxSteps(msa);
 
         /// \todo Need to set max number of steps based on user input!
-        retval = IDASetMaxNumSteps(solver_, 5000);
+        retval = IDASetMaxNumSteps(solver_, msa);
         checkOutput(retval, "IDASetMaxNumSteps");
 
         // Tag differential variables
