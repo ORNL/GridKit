@@ -165,6 +165,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
 {
+    this->J_.zeroMatrix();
     //Create dF/dy'
     std::vector<IdxT> rcordder(13);
     std::vector<ScalarT> valsder(13, -1.0);
@@ -186,7 +187,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
     ctemp = {3, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(1);
-    valtemp = { - sin(y_[3]) * y_[14] - cos(y_[3]) * y_[15], cos(y_[3]),sin(y_[3])};
+    valtemp = { - sin(y_[3]) * y_[14] - cos(y_[3]) * y_[15], cos(y_[3]),-sin(y_[3])};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 2
@@ -194,7 +195,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
     ctemp = {3, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(2);
-    valtemp = { - cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15], -sin(y_[3]),cos(y_[3])};
+    valtemp = { cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15], sin(y_[3]),cos(y_[3])};
     this->J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 3
