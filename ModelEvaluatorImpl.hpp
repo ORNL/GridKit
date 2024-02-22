@@ -139,6 +139,11 @@ namespace ModelLib
             atol = atol_;
         }
 
+        virtual void setMaxSteps(IdxT& msa) const
+        {
+            msa = max_steps_;
+        }
+
         std::vector<ScalarT>& y()
         {
             return y_;
@@ -305,6 +310,8 @@ namespace ModelLib
 
         real_type rtol_;
         real_type atol_;
+
+        IdxT max_steps_;
 
         IdxT idc_;
 

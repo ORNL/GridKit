@@ -107,6 +107,7 @@ namespace ModelLib
         virtual IdxT size_opt() = 0;
         virtual void updateTime(real_type t, real_type a) = 0;
         virtual void setTolerances(real_type& rtol, real_type& atol) const = 0;
+        virtual void setMaxSteps(IdxT& msa) const = 0;
 
         virtual std::vector<ScalarT>& y() = 0;
         virtual const std::vector<ScalarT>& y() const = 0;
