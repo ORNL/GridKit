@@ -50,18 +50,21 @@ public:
         // Set system model tolerances as default
         rtol_ = 1e-4;
         atol_ = 1e-4;
+        this->max_steps_ = 2000;
         // By default use jacobian
-        usejac_ = true;
+        usejac_ = false;
+
     }
 
     /**
      * @brief Constructor for the system model
      */
-    PowerElectronicsModel(double rt, double at, bool ju) :  ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+    PowerElectronicsModel(double rt=1e-4, double at=1e-4, bool ju=false, IdxT msa=2000) :  ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances from input
         rtol_ = rt;
         atol_ = at;
+        this->max_steps_ = msa;
         // Can choose not to use jacobain
         usejac_ = ju;
     }
