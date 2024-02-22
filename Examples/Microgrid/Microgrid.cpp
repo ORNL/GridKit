@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
 {
 	double abstol = 1.0e-8;
 	double reltol = 1.0e-8;
-	bool usejac = false;
+	bool usejac = true;
 
 	//TODO:setup as named parameters
 	//Create circuit model
