@@ -86,8 +86,8 @@ int main(int argc, char const *argv[])
 	std::vector<double> Lline_list(2*Nsize-1, 0.0);
 	for (size_t i = 0; i < rline_list.size(); i++)
 	{
-		rline_list[i] = (i % 2) ? rline1 : rline2;
-		Lline_list[i] = (i % 2) ? Lline1 : Lline2;
+		rline_list[i] = (i % 2) ? rline2 : rline1;
+		Lline_list[i] = (i % 2) ? Lline2 : Lline1;
 	}
 	
 
@@ -144,7 +144,7 @@ int main(int argc, char const *argv[])
 	{
 		
 		//current DG to add
-		ModelLib::DiscreteGenerator<double, size_t> *dg = new ModelLib::DiscreteGenerator<double, size_t>(model_id, DGParams_list[i], false);
+		ModelLib::DiscreteGenerator<double, size_t> *dg = new ModelLib::DiscreteGenerator<double, size_t>(model_id++, DGParams_list[i], false);
 		//ref motor
 		dg->setExternalConnectionNodes(0,vec_size_internals);
 		//outputs
@@ -158,14 +158,13 @@ int main(int argc, char const *argv[])
 		}
 		indexv += 13;
 		sysmodel->addComponent(dg);
-		model_id++;
 	}
 
 	// Load all the Line compoenents
 	for (size_t i = 0; i < 2*Nsize - 1; i++)
 	{
 		//line
-		ModelLib::MicrogridLine<double, size_t> *line_model = new ModelLib::MicrogridLine<double, size_t>(model_id, rline_list[i], Lline_list[i]);
+		ModelLib::MicrogridLine<double, size_t> *line_model = new ModelLib::MicrogridLine<double, size_t>(model_id++, rline_list[i], Lline_list[i]);
 		//ref motor
 		line_model->setExternalConnectionNodes(0,vec_size_internals);
 		//input connections
@@ -181,13 +180,12 @@ int main(int argc, char const *argv[])
 		}
 		indexv += 2;
 		sysmodel->addComponent(line_model);
-		model_id++;
 	}
 
 	//  Load all the Load components
 	for (size_t i = 0; i < Nsize; i++)
 	{
-		ModelLib::MicrogridLoad<double, size_t> *load_model = new ModelLib::MicrogridLoad<double, size_t>(model_id, rload_list[i], Lload_list[i]);
+		ModelLib::MicrogridLoad<double, size_t> *load_model = new ModelLib::MicrogridLoad<double, size_t>(model_id++, rload_list[i], Lload_list[i]);
 		//ref motor
 		load_model->setExternalConnectionNodes(0,vec_size_internals);
 		//input connections
@@ -201,20 +199,17 @@ int main(int argc, char const *argv[])
 		}
 		indexv += 2;
 		sysmodel->addComponent(load_model);
-		model_id++;
 	}
 
 	//Add all the microgrid Virtual DQ Buses
 	for (size_t i = 0; i < 2*Nsize; i++)
 	{
 		ModelLib::MicrogridBusDQ<double, size_t> *virDQbus_model = new ModelLib::MicrogridBusDQ<double, size_t>(
-		model_id, RN);
+		model_id++, RN);
 
 		virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
 		virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
 		sysmodel->addComponent(virDQbus_model);
-
-		model_id++;
 	}
 	
 	//allocate all the intial conditions
