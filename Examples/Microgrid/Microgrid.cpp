@@ -360,7 +360,7 @@ int main(int argc, char const *argv[])
 		std::cout << yfinial[i] << "\n";
 	}
 
-	//Generate from MATLAB code ODE form with tolerances of 1e-12
+	//Generate from MATLAB code ODE form with tolerances of 1e-14
 	std::vector<double>true_vec{
 	 2.297543153595780e+04,
      1.275311524125022e+04,
