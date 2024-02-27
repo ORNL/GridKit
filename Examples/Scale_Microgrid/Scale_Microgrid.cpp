@@ -29,7 +29,10 @@ int main(int argc, char const *argv[])
 
 	
 	//The amount of DG line load cobinations to generate for scale
-	size_t Nsize = 2;
+	size_t Nsize = 8;
+
+	//Set to false if the parameters choosen are not used to generate data files
+	bool orgparams = true;
 
 	//Modeled after the problem in the paper
 	// Every Bus has the same virtual resistance. This is due to the numerical stability as mentioned in the paper.
@@ -274,88 +277,58 @@ int main(int argc, char const *argv[])
 		std::cout << yfinial[i] << "\n";
 	}
 
-	if(Nsize == 2)
+	//if proper MATLAB results are avalible and model is using origional parameters
+	//All data generated with abstol=1e-12 and reltol=1e-12 with ode23tb
+	if (orgparams && (Nsize == 2 || Nsize == 4 || Nsize == 8))
 	{
-		//Generate from MATLAB code ODE form with tolerances of 1e-14
-		std::vector<double>true_vec{
-		2.297543153595780e+04,
-		1.275311524125022e+04,
-		3.763060183116022e-02,
-		-2.098153459325261e-02,
-		1.848285659119097e-02,
-		-1.563291404944864e-04,
-		6.321941907011718e+01,
-		-2.942264300846256e+01,
-		3.634209302905854e+02,
-		-2.668928293656362e-06,
-		6.321941919221522e+01,
-		-3.509200178595996e+01,
-		-7.555954467454730e-03,
-		2.297580486511343e+04,
-		8.742028429066131e+03,
-		3.710079564796484e-02,
-		-1.421122598056797e-02,
-		1.874079517807597e-02,
-		-9.891304812687215e-05,
-		6.232933298360234e+01,
-		-1.796494061423331e+01,
-		3.686353885026506e+02,
-		3.465673854181523e-05,
-		6.232933406188410e+01,
-		-2.371564475187742e+01,
-		-8.273939686941580e-02,
-		1.727775042678524e+04,
-		1.649365247247288e+04,
-		3.116555157570849e-02,
-		-2.985990066758010e-02,
-		2.250012115906506e-02,
-		-2.643873146501096e-04,
-		4.861823510250247e+01,
-		-4.088592755441309e+01,
-		3.552597163751238e+02,
-		-1.496407194199739e-04,
-		4.861823504694532e+01,
-		-4.642797132602495e+01,
-		-8.445727984408551e-02,
-		1.727723725566433e+04,
-		9.182386962936238e+03,
-		3.024959333190777e-02,
-		-1.617250828202081e-02,
-		2.318056864131751e-02,
-		-1.295918667730514e-04,
-		4.718938244522050e+01,
-		-1.935782085675469e+01,
-		3.662262287803608e+02,
-		1.076423957830039e-04,
-		4.718938116520511e+01,
-		-2.507094256286497e+01,
-		-1.881248349415025e+01,
-		2.114714832305742e+01,
-		4.329946674909793e+01,
-		-3.037887936225145e+00,
-		-4.487023117352992e+01,
-		2.895883729832657e+01,
-		8.199613345691378e+01,
-		-5.623856502948122e+01,
-		1.327498499660322e+02,
-		-8.228065162347022e+01,
-		3.119995747945993e+02,
-		3.576922945168803e+02,
-		-5.850795361581618e+00,
-		3.641193316268954e+02,
-		-8.846325267612976e+00,
-		3.472146752739036e+02,
-		-3.272400970143252e+01,
-		3.604108939430972e+02,
-		-3.492842627398574e+01
-		};
+		
+		//get relative path
+		std::string rel_path = std::filesystem::current_path();
 
+		const std::regex base_regex("(.+)\\/build.*");
+		std::smatch base_match;
+		std::regex_match(rel_path, base_match, base_regex);
+		std::string base_path = base_match[1].str();
+
+		base_path += "/Examples/Scale_Microgrid";
+
+		switch (Nsize)
+		{
+		case 2:
+			base_path += "/microgrid_N2.txt";
+			break;
+		case 4:
+			base_path += "/microgrid_N4.txt";
+			break;
+		case 8:
+			base_path += "/microgrid_N8.txt";
+			break;
+		default:
+			//shouldn't end up here bust just incase
+			assert(0==1);
+			break;
+		}
+		std::cout << base_path << std::endl;
+
+		//load vector from data file
+		std::vector<double> true_vec(vec_size_total, 0.0);
+		double val_cur = 0.0;
+		std::ifstream data_file(base_path);
+		size_t i = 0;
+		while (data_file >> val_cur && i < true_vec.size())
+		{
+			true_vec[i++] = val_cur;
+		}
+		data_file.close();
+
+		//check relative error
 		std::cout << "Test the Relative Error\n";
 		for (size_t i = 0; i < true_vec.size(); i++)
 		{
 			printf("%u : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
 		}
 	}
+	
 
 	return 0;
 }
