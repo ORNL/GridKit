@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "DiscreteGenerator.hpp"
+#include "DistributedGenerator.hpp"
 
 namespace ModelLib {
 
@@ -17,7 +17,7 @@ namespace ModelLib {
  */
 
 template <class ScalarT, typename IdxT>
-DiscreteGenerator<ScalarT, IdxT>::DiscreteGenerator(IdxT id, DiscreteGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame)
+DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT id, DistributedGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame)
   :  wb_(parm.wb), wc_(parm.wc), mp_(parm.mp), Vn_(parm.Vn), nq_(parm.nq), F_(parm.F), Kiv_(parm.Kiv), Kpv_(parm.Kpv), Kic_(parm.Kic), Kpc_(parm.Kpc), Cf_(parm.Cf), rLf_(parm.rLf), Lf_(parm.Lf), rLc_(parm.rLc), Lc_(parm.Lc), refframe_(reference_frame)
 {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
@@ -30,7 +30,7 @@ DiscreteGenerator<ScalarT, IdxT>::DiscreteGenerator(IdxT id, DiscreteGeneratorPa
 }
 
 template <class ScalarT, typename IdxT>
-DiscreteGenerator<ScalarT, IdxT>::~DiscreteGenerator()
+DistributedGenerator<ScalarT, IdxT>::~DistributedGenerator()
 {
 }
 
@@ -38,7 +38,7 @@ DiscreteGenerator<ScalarT, IdxT>::~DiscreteGenerator()
  * @brief allocate method computes sparsity pattern of the Jacobian.
  */
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::allocate()
+int DistributedGenerator<ScalarT, IdxT>::allocate()
 {
     this->y_.resize(this->size_);
     this->yp_.resize(this->size_);
@@ -51,7 +51,7 @@ int DiscreteGenerator<ScalarT, IdxT>::allocate()
  * Initialization of the grid model
  */
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::initialize()
+int DistributedGenerator<ScalarT, IdxT>::initialize()
 {
     return 0;
 }
@@ -60,7 +60,7 @@ int DiscreteGenerator<ScalarT, IdxT>::initialize()
  * \brief Identify differential variables
  */
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::tagDifferentiable()
+int DistributedGenerator<ScalarT, IdxT>::tagDifferentiable()
 {
     return 0;
 }
@@ -71,7 +71,7 @@ int DiscreteGenerator<ScalarT, IdxT>::tagDifferentiable()
  * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
+int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
 {
     //   ### Externals Componenets ###
 
@@ -136,7 +136,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
 }
 
 /**
- * @brief Compute the jacobian of the DiscreteGenerator for iteration. dF/dy - \alpha dF/dy'
+ * @brief Compute the jacobian of the DistributedGenerator for iteration. dF/dy - \alpha dF/dy'
  * 
  * The matrix dF/dy should be
  *  
@@ -163,7 +163,7 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateResidual()
  * @return int 
  */
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
+int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
 {
     this->J_.zeroMatrix();
     //Create dF/dy'
@@ -313,25 +313,25 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateJacobian()
 }
 
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::evaluateIntegrand()
+int DistributedGenerator<ScalarT, IdxT>::evaluateIntegrand()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::initializeAdjoint()
+int DistributedGenerator<ScalarT, IdxT>::initializeAdjoint()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::evaluateAdjointResidual()
+int DistributedGenerator<ScalarT, IdxT>::evaluateAdjointResidual()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int DiscreteGenerator<ScalarT, IdxT>::evaluateAdjointIntegrand()
+int DistributedGenerator<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     return 0;
 }
@@ -340,8 +340,8 @@ int DiscreteGenerator<ScalarT, IdxT>::evaluateAdjointIntegrand()
 
 
 // Available template instantiations
-template class DiscreteGenerator<double, long int>;
-template class DiscreteGenerator<double, size_t>;
+template class DistributedGenerator<double, long int>;
+template class DistributedGenerator<double, size_t>;
 
 
 } //namespace ModelLib

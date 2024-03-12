@@ -7,13 +7,13 @@
 #include <filesystem>
 #include <math.h>
 
-#include <ComponentLib/PowerElectronicsComponents/DiscreteGenerator/DiscreteGenerator.hpp>
+#include <ComponentLib/PowerElectronicsComponents/DistributedGenerator/DistributedGenerator.hpp>
 
 
 int main(int argc, char const *argv[])
 {
 	
-	ModelLib::DiscreteGeneratorParameters<double, size_t> parms;
+	ModelLib::DistributedGeneratorParameters<double, size_t> parms;
 	//Parameters from MATLAB Microgrid code for first DG
 	parms.wb = 2.0*M_PI*50.0;
 	parms.wc = 31.41;
@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
 	parms.rLc = 0.03;
 	parms.Lc = 0.35e-3;
 
-	ModelLib::DiscreteGenerator<double, size_t> *dg = new ModelLib::DiscreteGenerator<double, size_t>(0, parms, true);
+	ModelLib::DistributedGenerator<double, size_t> *dg = new ModelLib::DistributedGenerator<double, size_t>(0, parms, true);
 
 	std::vector<double> t1(16,0.0);
 	std::vector<double> t2{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5};
