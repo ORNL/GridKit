@@ -294,9 +294,9 @@ inline void COO_Matrix<ScalarT, Intdx>::AXPY(ScalarT alpha, COO_Matrix<ScalarT, 
 			this->row_indexes.push_back(r[aiter]);
 			this->column_indexes.push_back(c[aiter]);
 			this->values.push_back(alpha * val[aiter]);
-			aiter++;
 			
 			this->checkIncreaseSize(r[aiter], c[aiter]);
+			aiter++;
 		}
 		if (aiter >= static_cast<Intdx>(r.size())) break;
 		
