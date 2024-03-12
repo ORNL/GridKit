@@ -13,7 +13,7 @@ namespace ModelLib
     template <class ScalarT, typename IdxT> class BaseBus;
 
     template <class ScalarT, typename IdxT>
-    struct DiscreteGeneratorParameters
+    struct DistributedGeneratorParameters
     {
         ScalarT wb;
         ScalarT wc;
@@ -37,11 +37,11 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive DiscreteGenerator class.
+     * @brief Declaration of a passive DistributedGenerator class.
      *
      */
     template  <class ScalarT, typename IdxT>
-    class DiscreteGenerator : public CircuitComponent<ScalarT, IdxT>
+    class DistributedGenerator : public CircuitComponent<ScalarT, IdxT>
     {
         using CircuitComponent<ScalarT, IdxT>::size_;
         using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -62,8 +62,8 @@ namespace ModelLib
 
 
     public:
-        DiscreteGenerator(IdxT id, DiscreteGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame);
-        virtual ~DiscreteGenerator();
+        DistributedGenerator(IdxT id, DistributedGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame);
+        virtual ~DistributedGenerator();
 
         int allocate();
         int initialize();

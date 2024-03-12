@@ -8,5 +8,5 @@ target_link_libraries(dgtest GRIDKIT::powerelec_disgen
 								GRIDKIT::powerelec_microload
 								GRIDKIT::solvers_dyn)
 								
-add_test(NAME DiscreteGeneratorTest    COMMAND $<TARGET_FILE:dgtest>)
+add_test(NAME DistributedGeneratorTest    COMMAND $<TARGET_FILE:dgtest>)
 install(TARGETS dgtest RUNTIME DESTINATION bin)

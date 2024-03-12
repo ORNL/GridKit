@@ -7,12 +7,11 @@
 #include <PowerSystemData.hpp>
 #include <ComponentLib/PowerElectronicsComponents/CircuitComponent.hpp>
 
-
 namespace ModelLib
 {
-    template <class ScalarT, typename IdxT> class BaseBus;
+    template <class ScalarT, typename IdxT>
+    class BaseBus;
 }
-
 
 namespace ModelLib
 {
@@ -20,7 +19,7 @@ namespace ModelLib
      * @brief Declaration of a passive MicrogridLine class.
      *
      */
-    template  <class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     class MicrogridLine : public CircuitComponent<ScalarT, IdxT>
     {
         using CircuitComponent<ScalarT, IdxT>::size_;
@@ -40,7 +39,6 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
 
-
     public:
         MicrogridLine(IdxT id, ScalarT R, ScalarT L);
         virtual ~MicrogridLine();
@@ -54,12 +52,11 @@ namespace ModelLib
 
         int initializeAdjoint();
         int evaluateAdjointResidual();
-        //int evaluateAdjointJacobian();
+        // int evaluateAdjointJacobian();
         int evaluateAdjointIntegrand();
 
-        
     private:
-		ScalarT R_;
+        ScalarT R_;
         ScalarT L_;
     };
 }

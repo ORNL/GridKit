@@ -7,7 +7,7 @@
 #include <filesystem>
 
 
-#include <ComponentLib/PowerElectronicsComponents/DiscreteGenerator/DiscreteGenerator.hpp>
+#include <ComponentLib/PowerElectronicsComponents/DistributedGenerator/DistributedGenerator.hpp>
 #include <ComponentLib/PowerElectronicsComponents/MicrogridLine/MicrogridLine.hpp>
 #include <ComponentLib/PowerElectronicsComponents/MicrogridLoad/MicrogridLoad.hpp>
 #include <ComponentLib/PowerElectronicsComponents/MicrogridBusDQ/MicrogridBusDQ.hpp>
@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 
 	//DG Params
 	
-	ModelLib::DiscreteGeneratorParameters<double, size_t> parms1;
+	ModelLib::DistributedGeneratorParameters<double, size_t> parms1;
 	parms1.wb = 2.0*M_PI*50.0;
 	parms1.wc = 31.41;
 	parms1.mp = 9.4e-5;
@@ -50,7 +50,7 @@ int main(int argc, char const *argv[])
 	parms1.rLc = 0.03;
 	parms1.Lc = 0.35e-3;
 
-	ModelLib::DiscreteGeneratorParameters<double, size_t> parms2;
+	ModelLib::DistributedGeneratorParameters<double, size_t> parms2;
 	//Parameters from MATLAB Microgrid code for first DG
 	parms2.wb = 2.0*M_PI*50.0;
 	parms2.wc = 31.41;
@@ -103,7 +103,7 @@ int main(int argc, char const *argv[])
 	size_t indexv = 0;
 
 	//dg 1
-	ModelLib::DiscreteGenerator<double, size_t> *dg1 = new ModelLib::DiscreteGenerator<double, size_t>(0, parms1, true);
+	ModelLib::DistributedGenerator<double, size_t> *dg1 = new ModelLib::DistributedGenerator<double, size_t>(0, parms1, true);
 	//ref motor
 	dg1->setExternalConnectionNodes(0,vec_size_internals);
 	//outputs
@@ -121,7 +121,7 @@ int main(int argc, char const *argv[])
 	sysmodel->addComponent(dg1);
 
 	//dg 2
-	ModelLib::DiscreteGenerator<double, size_t> *dg2 = new ModelLib::DiscreteGenerator<double, size_t>(1, parms1, false);
+	ModelLib::DistributedGenerator<double, size_t> *dg2 = new ModelLib::DistributedGenerator<double, size_t>(1, parms1, false);
 	//ref motor
 	dg2->setExternalConnectionNodes(0,vec_size_internals);
 	//outputs
@@ -138,7 +138,7 @@ int main(int argc, char const *argv[])
 	
 
 	//dg 3
-	ModelLib::DiscreteGenerator<double, size_t> *dg3 = new ModelLib::DiscreteGenerator<double, size_t>(2, parms2, false);
+	ModelLib::DistributedGenerator<double, size_t> *dg3 = new ModelLib::DistributedGenerator<double, size_t>(2, parms2, false);
 	//ref motor
 	dg3->setExternalConnectionNodes(0,vec_size_internals);
 	//outputs
@@ -155,7 +155,7 @@ int main(int argc, char const *argv[])
 
 
 	//dg 4
-	ModelLib::DiscreteGenerator<double, size_t> *dg4 = new ModelLib::DiscreteGenerator<double, size_t>(3, parms2, false);
+	ModelLib::DistributedGenerator<double, size_t> *dg4 = new ModelLib::DistributedGenerator<double, size_t>(3, parms2, false);
 	//ref motor
 	dg4->setExternalConnectionNodes(0,vec_size_internals);
 	//outputs
