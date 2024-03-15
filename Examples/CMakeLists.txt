@@ -56,6 +56,10 @@
 #
 
 add_subdirectory(MatPowerTesting)
+add_subdirectory(RLCircuit)
+add_subdirectory(Microgrid)
+add_subdirectory(SparseTest)
+add_subdirectory(DistributedGeneratorTest)
 
 if(TARGET SUNDIALS::kinsol)
   add_subdirectory(Grid3Bus)

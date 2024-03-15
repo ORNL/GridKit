@@ -97,6 +97,8 @@ BusSlack<ScalarT, IdxT>::BusSlack(ScalarT V, ScalarT theta)
 {
     //std::cout << "Create BusSlack..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
+    P() = 0.0;
+    Q() = 0.0;
     size_ = 0;
 }
 
@@ -106,6 +108,8 @@ BusSlack<ScalarT, IdxT>::BusSlack(BusData& data)
 {
     //std::cout << "Create BusSlack..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
+    P() = 0.0;
+    Q() = 0.0;
     size_ = 0;
 }
 

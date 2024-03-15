@@ -101,8 +101,8 @@ mpc.baseMVA = 100;
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [
-	1	3	2.0	0.0	0	0	0	1	0.0	0	0	0	0.0;
-	2	1	2.5	-0.8	0	0	0	1	0.0	0	0	0	0.0;
+	1	3	2.0	0.0	0	0	0	1.0	0.0	0	0	0	0.0;
+	2	1	2.5	-0.8	0	0	0	1.0	0.0	0	0	0	0.0;
 	3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
 ];
 
@@ -153,6 +153,7 @@ int monolithic_case()
 
     // allocate model
     model->allocate();
+    model->initialize();
     std::cout << "Model size: " << model->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -213,6 +214,7 @@ int parser_case()
 
     // allocate model
     sysmodel->allocate();
+    sysmodel->initialize();
     std::cout << "Model size: " << sysmodel->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -336,6 +338,7 @@ int hardwired_case()
 
     // allocate model
     sysmodel->allocate();
+    sysmodel->initialize();
     std::cout << "Model size: " << sysmodel->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -351,7 +354,7 @@ int hardwired_case()
     // Print solution
     double th2 = bus2->theta() * 180.0/M_PI; 
     double V2  = bus2->V();
-    double th3 = bus3->theta() * 180.0/M_PI; 
+    double th3 = bus3->theta() * 180.0/M_PI;
 
 
     std::cout << "Solution:\n";
@@ -387,8 +390,19 @@ int main()
     std::cout << std::string(32,'-') << std::endl;
     resolve += monolithic_case();
     std::cout << std::string(32,'-') << std::endl;
-    resolve += hardwired_case();
-    std::cout << std::string(32,'-') << std::endl;
     resolve += parser_case();
+    std::cout << std::string(32,'-') << std::endl;
+    resolve += hardwired_case();
+
+    if (resolve)
+    {
+        std::cout << "Failure!\n";
+    }
+    else
+    {
+        std::cout << "Success!\n";
+    }
+    
+    
     return resolve;
 }

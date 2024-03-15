@@ -62,6 +62,7 @@
 
 #include <vector>
 #include <ScalarTraits.hpp>
+#include <SparseMatrix/COO_Matrix.hpp>
 
 namespace ModelLib
 {
@@ -88,15 +89,25 @@ namespace ModelLib
 
         virtual int initializeAdjoint() = 0;
         virtual int evaluateAdjointResidual() = 0;
-        //virtual int evaluateAdjointJacobian() = 0;
+        // virtual int evaluateAdjointJacobian() = 0;
         virtual int evaluateAdjointIntegrand() = 0;
 
         virtual IdxT size() = 0;
         virtual IdxT nnz() = 0;
+
+        /**
+         * @brief Is the Jacobian defined. Used in IDA to determine wether DQ is used or not
+         * 
+         * @return true 
+         * @return false 
+         */
+        virtual bool hasJacobian() = 0;
+        
         virtual IdxT size_quad() = 0;
         virtual IdxT size_opt() = 0;
         virtual void updateTime(real_type t, real_type a) = 0;
         virtual void setTolerances(real_type& rtol, real_type& atol) const = 0;
+        virtual void setMaxSteps(IdxT& msa) const = 0;
 
         virtual std::vector<ScalarT>& y() = 0;
         virtual const std::vector<ScalarT>& y() const = 0;
@@ -124,6 +135,10 @@ namespace ModelLib
 
         virtual std::vector<ScalarT>& getResidual() = 0;
         virtual const std::vector<ScalarT>& getResidual() const = 0;
+
+
+        virtual COO_Matrix<ScalarT, IdxT>& getJacobian() = 0;
+        virtual const COO_Matrix<ScalarT, IdxT>& getJacobian() const = 0;
 
         virtual std::vector<ScalarT>& getIntegrand() = 0;
         virtual const std::vector<ScalarT>& getIntegrand() const = 0;
