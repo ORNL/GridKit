@@ -153,6 +153,7 @@ int monolithic_case()
 
     // allocate model
     model->allocate();
+    model->initialize();
     std::cout << "Model size: " << model->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -272,51 +273,51 @@ int hardwired_case()
 
     // Next create and add buses ...
     // Create a slack bus, fix V=1, theta=0, bus ID = 1
-    BusData<double, size_t> bd1 = {};
+    BusData<double, size_t> bd1;
     bd1.bus_i = 1; bd1.type = 3; bd1.Vm = 1.0; bd1.Va = 0.0;
     auto* bus1 = BusFactory<double, size_t>::create(bd1);
     sysmodel->addBus(bus1);
     
     //Create a PQ bus, initialize V=1, theta=0, bus ID = 2
-    BusData<double, size_t> bd2 = {};
+    BusData<double, size_t> bd2;
     bd2.bus_i = 2; bd2.type = 1; bd2.Vm = 1.0; bd2.Va = 0.0;
     auto* bus2 = BusFactory<double, size_t>::create(bd2);
     sysmodel->addBus(bus2);
 
     // Create a PV bus, fix V=1.1, initialize theta=0, and set power injection Pg=2
-    BusData<double, size_t> bd3 = {};
+    BusData<double, size_t> bd3;
     bd3.bus_i = 3; bd3.type = 2; bd3.Vm = 1.1; bd3.Va = 0.0;
     auto* bus3 = BusFactory<double, size_t>::create(bd3);
     sysmodel->addBus(bus3);
 
     // Create and add generators ...
     // Create and add slack generator connected to bus1
-    GenData<double, size_t> gd1 = {};
+    GenData<double, size_t> gd1;
     gd1.bus = 1;
     auto* gen1 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd1.bus), gd1);
     sysmodel->addComponent(gen1);
 
     // Create and add PV generator connected to bus3
-    GenData<double, size_t> gd3 = {};
+    GenData<double, size_t> gd3;
     gd3.Pg = 2.0; gd3.bus = 3;
     auto* gen3 = GeneratorFactory<double, size_t>::create(sysmodel->getBus(gd3.bus), gd3);
     sysmodel->addComponent(gen3);
 
     // Create and add branches ...
     // Branch 1-2
-    BranchData<double, size_t> brd12 = {};
+    BranchData<double, size_t> brd12;
     brd12.fbus = 1; brd12.tbus = 2; brd12.x = 1.0/10.0; brd12.r = 0.0; brd12.b = 0.0;
     Branch<double, size_t>* branch12 = new Branch<double, size_t>(sysmodel->getBus(brd12.fbus), sysmodel->getBus(brd12.tbus), brd12);
     sysmodel->addComponent(branch12);
 
     // Branch 1-3
-    BranchData<double, size_t> brd13 = {};
+    BranchData<double, size_t> brd13;
     brd13.fbus = 1; brd13.tbus = 3; brd13.x = 1.0/15.0; brd13.r = 0.0; brd13.b = 0.0;
     Branch<double, size_t>* branch13 = new Branch<double, size_t>(sysmodel->getBus(brd13.fbus), sysmodel->getBus(brd13.tbus), brd13);
     sysmodel->addComponent(branch13);
 
     // Branch 2-3
-    BranchData<double, size_t> brd23 = {};
+    BranchData<double, size_t> brd23;
     brd23.fbus = 2; brd23.tbus = 3; brd23.x = 1.0/12.0; brd23.r = 0.0; brd23.b = 0.0;
     Branch<double, size_t>* branch23 = new Branch<double, size_t>(sysmodel->getBus(brd23.fbus), sysmodel->getBus(brd23.tbus), brd23);
     sysmodel->addComponent(branch23);
@@ -324,13 +325,13 @@ int hardwired_case()
 
     // Create and add loads ...
     // Load on bus1
-    LoadData<double, size_t> ld1 = {};
+    LoadData<double, size_t> ld1;
     ld1.bus_i = 1; ld1.Pd = 2.0; ld1.Qd = 0.0;
     Load<double, size_t>* load1 = new Load<double, size_t>(sysmodel->getBus(ld1.bus_i), ld1);
     sysmodel->addComponent(load1);
 
     // Load on bus2
-    LoadData<double, size_t> ld2 = {};
+    LoadData<double, size_t> ld2;
     ld2.bus_i = 2; ld2.Pd = 2.5; ld2.Qd = -0.8;
     Load<double, size_t>* load2 = new Load<double, size_t>(sysmodel->getBus(ld2.bus_i), ld2);
     sysmodel->addComponent(load2);
