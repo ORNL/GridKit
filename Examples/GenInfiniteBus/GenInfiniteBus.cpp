@@ -93,6 +93,7 @@ int main()
 
     // allocate model components
     model->allocate();
+    
 
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
