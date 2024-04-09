@@ -415,7 +415,7 @@ namespace AnalysisManager
             checkOutput(retval, "IDASetUserDataB");
 
             /// \todo Need to set max number of steps based on user input!
-            retval = IDASetMaxNumStepsB(solver_, backwardID_, 200);
+            retval = IDASetMaxNumStepsB(solver_, backwardID_, 2000);
             checkOutput(retval, "IDASetMaxNumSteps");
 
             // Set up linear solver
