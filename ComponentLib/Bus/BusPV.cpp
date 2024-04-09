@@ -74,30 +74,9 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV()
-  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0), Pg_(0.0)
+  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
 {
     //std::cout << "Create BusPV..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-
-    size_ = 1;
-}
-
-/*!
- * @brief BusPV constructor.
- *
- * This constructor sets initial values for voltage and phase angle.
- *
- * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
- * - Number of equations = 1 (size_)
- * - Number of variables = 1 (size_)
- * - Number of quadratures = 0
- * - Number of optimization parameters = 0
- */
-template <class ScalarT, typename IdxT>
-BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0, ScalarT Pg)
-  : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0), Pg_(Pg)
-{
-    //std::cout << "Create BusPV ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 1;
@@ -171,8 +150,8 @@ template <class ScalarT, typename IdxT>
 int BusPV<ScalarT, IdxT>::evaluateResidual()
 {
     // std::cout << "Evaluating residual of a PV bus ...\n";
-    P() = Pg_;
-    Q() = 0.0;
+    P() = 0.0; // <-- Residual P
+    Q() = 0.0; // <-- Output Qg, the reactive power generator needs to supply
 
     return 0;
 }

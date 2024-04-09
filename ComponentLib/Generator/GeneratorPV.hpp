@@ -124,14 +124,18 @@ namespace ModelLib
             return P_;
         }
 
+        /// @brief  Reactive power excess on PV bus
+        /// @return reference to negative PV generator reactive power
         virtual ScalarT& Q()
         {
-            return bus_->Q();
+            return (bus_->Q());
         }
 
+        /// @brief  Reactive power excess on PV bus
+        /// @return const reference to negative PV generator reactive power
         virtual const ScalarT& Q() const
         {
-            return bus_->Q();
+            return (bus_->Q());
         }
 
     private:

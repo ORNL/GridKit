@@ -140,6 +140,9 @@ using namespace AnalysisManager;
 using namespace GridKit::Testing;
 using namespace GridKit::PowerSystemData;
 
+constexpr double theta2_ref = -4.87979; // [deg]
+constexpr double V2_ref     =  1.08281; // [p.u.]
+constexpr double theta3_ref =  1.46241; // [deg]
 
 /**
  * Testing the monlithic case via the class MiniGrid
@@ -170,17 +173,17 @@ int monolithic_case()
     double V2  = model->V2();
     double th3 = model->th3() * 180.0/M_PI; 
     std::cout << "Solution:\n";
-    std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
-    std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
-    std::cout << "  theta3 = " << th3 << " deg,  expected = " << "  1.46241 deg\n\n";
+    std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
+    std::cout << "  V2     = " << V2  << " p.u., expected = " << V2_ref     << " p.u.\n";
+    std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
 
     // Print solver performance statistics
     kinsol->printFinalStats();
 
     int retval1 = 0;
-    retval1 += !isEqual(th2, -4.87979, 1e-4);
-    retval1 += !isEqual(V2,   1.08281, 1e-4);
-    retval1 += !isEqual(th3,  1.46241, 1e-4);
+    retval1 += !isEqual(th2, theta2_ref, 1e-4);
+    retval1 += !isEqual(V2,  V2_ref    , 1e-4);
+    retval1 += !isEqual(th3, theta3_ref, 1e-4);
 
     if(retval1 == 0)
         std::cout << "\nSuccess!\n\n\n";
@@ -232,17 +235,17 @@ int parser_case()
 
 
     std::cout << "Solution:\n";
-    std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
-    std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
-    std::cout << "  theta3 = " << th3 << " deg,  expected = " << "  1.46241 deg\n\n";
+    std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
+    std::cout << "  V2     = " << V2  << " p.u., expected = " << V2_ref     << " p.u.\n";
+    std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
 
     // Print solver performance statistics
     kinsol->printFinalStats();
 
     int retval2 = 0;
-    retval2 += !isEqual(th2, -4.87979, 1e-4);
-    retval2 += !isEqual(V2,   1.08281, 1e-4);
-    retval2 += !isEqual(th3,  1.46241, 1e-4);
+    retval2 += !isEqual(th2, theta2_ref, 1e-4);
+    retval2 += !isEqual(V2,  V2_ref    , 1e-4);
+    retval2 += !isEqual(th3, theta3_ref, 1e-4);
 
     if(retval2 == 0)
         std::cout << "\nSuccess!\n\n\n";
@@ -355,17 +358,17 @@ int hardwired_case()
 
 
     std::cout << "Solution:\n";
-    std::cout << "  theta2 = " << th2 << " deg,  expected = " << " -4.87979 deg\n";
-    std::cout << "  V2     = " << V2  << " p.u., expected = " << "  1.08281 p.u.\n";
-    std::cout << "  theta3 = " << th3 << " deg,  expected = " << "  1.46241 deg\n\n";
+    std::cout << "  theta2 = " << th2 << " deg,  expected = " << theta2_ref << " deg\n";
+    std::cout << "  V2     = " << V2  << " p.u., expected = " << V2_ref     << " p.u.\n";
+    std::cout << "  theta3 = " << th3 << " deg,  expected = " << theta3_ref << " deg\n\n";
 
     // Print solver performance statistics
     kinsol->printFinalStats();
 
     int retval2 = 0;
-    retval2 += !isEqual(th2, -4.87979, 1e-4);
-    retval2 += !isEqual(V2,   1.08281, 1e-4);
-    retval2 += !isEqual(th3,  1.46241, 1e-4);
+    retval2 += !isEqual(th2, theta2_ref, 1e-4);
+    retval2 += !isEqual(V2,  V2_ref    , 1e-4);
+    retval2 += !isEqual(th3, theta3_ref, 1e-4);
 
     if(retval2 == 0)
         std::cout << "\nSuccess!\n\n\n";
