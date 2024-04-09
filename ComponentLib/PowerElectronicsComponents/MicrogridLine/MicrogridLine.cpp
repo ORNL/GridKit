@@ -20,7 +20,7 @@ MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, ScalarT R,ScalarT L)
 {
     // internals [id, iq]
     // externals [\omegaref, vbd_in, vbq_in, vbd_out, vbq_out]
-	this->size_ = 7;
+    this->size_ = 7;
     this->n_intern = 2;
     this->n_extern = 5;
     this->extern_indices = {0,1,2,3,4};
@@ -74,7 +74,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
     //ref motor
     this->f_[0] = 0.0;
 
-	//input
+    //input
     this->f_[1] = -y_[5] ;
     this->f_[2] = -y_[6] ;
 

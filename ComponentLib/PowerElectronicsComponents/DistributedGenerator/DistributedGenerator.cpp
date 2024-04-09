@@ -22,7 +22,7 @@ DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT id, DistributedGe
 {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-	this->size_ = 16;
+    this->size_ = 16;
     this->n_intern = 13;
     this->n_extern = 3;
     this->extern_indices = {0,1,2};

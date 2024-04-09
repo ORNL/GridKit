@@ -18,7 +18,7 @@ template <class ScalarT, typename IdxT>
 Inductor<ScalarT, IdxT>::Inductor(IdxT id, ScalarT L)
   : L_(L)
 {
-	this->size_ = 3;
+    this->size_ = 3;
     this->n_intern = 1;
     this->n_extern = 2;
     this->extern_indices = {0,1};

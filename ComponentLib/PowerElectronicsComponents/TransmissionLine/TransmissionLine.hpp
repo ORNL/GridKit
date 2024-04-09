@@ -59,7 +59,7 @@ namespace ModelLib
 
         
     private:
-		ScalarT R_;
+        ScalarT R_;
         ScalarT X_;
         ScalarT B_;
         ScalarT YReMat_;

@@ -18,7 +18,7 @@ template <class ScalarT, typename IdxT>
 VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, ScalarT V)
   : V_(V)
 {
-	this->size_ = 3;
+    this->size_ = 3;
     this->n_intern = 1;
     this->n_extern = 2;
     this->extern_indices = {0,1};
@@ -69,14 +69,14 @@ int VoltageSource<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 {
-	//Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
-	// for easier development
+    //Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
+    // for easier development
     //input
     this->f_[0] = -this->y_[2];
     //ouput
     this->f_[1] = this->y_[2];
     //internal
-	this->f_[2] = this->y_[1] - this->y_[0] - this->V_;
+    this->f_[2] = this->y_[1] - this->y_[0] - this->V_;
     return 0;
 }
 
