@@ -57,19 +57,19 @@ namespace ModelLib
         int evaluateAdjointIntegrand();
         
     private:
-		ScalarT Lls_;
-		std::tuple<ScalarT,ScalarT> Llkq_;
-		ScalarT Llfd_;
-		ScalarT Llkd_;
-		ScalarT Lmq_;
-		ScalarT Lmd_;
-		ScalarT Rs_;
-		std::tuple<ScalarT,ScalarT> Rkq_;
-		ScalarT Rfd_;
-		ScalarT Rkd_;
-		ScalarT J_;
-		ScalarT P_;
-		ScalarT mub_;
+        ScalarT Lls_;
+        std::tuple<ScalarT,ScalarT> Llkq_;
+        ScalarT Llfd_;
+        ScalarT Llkd_;
+        ScalarT Lmq_;
+        ScalarT Lmd_;
+        ScalarT Rs_;
+        std::tuple<ScalarT,ScalarT> Rkq_;
+        ScalarT Rfd_;
+        ScalarT Rkd_;
+        ScalarT J_;
+        ScalarT P_;
+        ScalarT mub_;
     };
 }
 

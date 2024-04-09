@@ -21,7 +21,7 @@ TransmissionLine<ScalarT, IdxT>::TransmissionLine(IdxT id, ScalarT R,ScalarT X, 
 {
     // internals [Iret1, Iimt1, Iret2, Iimt2]
     // externals [Vre11, Vim11, Vre12, Vim12, Vre21, Vim21, Vre22, Vim22]
-	this->size_ = 12;
+    this->size_ = 12;
     this->n_intern = 4;
     this->n_extern = 8;
     this->extern_indices = {0,1,2,3,4,5,6,7};
@@ -90,7 +90,7 @@ int TransmissionLine<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int TransmissionLine<ScalarT, IdxT>::evaluateResidual()
 {
-	//input
+    //input
     this->f_[0] = y_[8] ;
     this->f_[1] = y_[9] ;
 

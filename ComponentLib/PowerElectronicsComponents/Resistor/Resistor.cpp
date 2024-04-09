@@ -18,7 +18,7 @@ template <class ScalarT, typename IdxT>
 Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
   : R_(R)
 {
-	this->size_ = 2;
+    this->size_ = 2;
     this->n_intern = 0;
     this->n_extern = 2;
     this->extern_indices = {0,1};
@@ -69,7 +69,7 @@ int Resistor<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::evaluateResidual()
 {
-	//input
+    //input
     this->f_[0] = (this->y_[0] - this->y_[1])/this->R_ ;
     //ouput
     this->f_[1] = (this->y_[1] - this->y_[0])/this->R_ ;

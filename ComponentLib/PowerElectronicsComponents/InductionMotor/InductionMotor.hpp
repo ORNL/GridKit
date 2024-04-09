@@ -56,13 +56,13 @@ namespace ModelLib
         int evaluateAdjointIntegrand();
         
     private:
-		ScalarT Lls_;
-		ScalarT Rs_;
-		ScalarT Llr_;
-		ScalarT Rr_;
-		ScalarT Lms_;
-		ScalarT J_;
-		ScalarT P_;
+        ScalarT Lls_;
+        ScalarT Rs_;
+        ScalarT Llr_;
+        ScalarT Rr_;
+        ScalarT Lms_;
+        ScalarT J_;
+        ScalarT P_;
     };
 }
 

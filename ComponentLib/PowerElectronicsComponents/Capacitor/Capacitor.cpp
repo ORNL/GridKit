@@ -18,7 +18,7 @@ template <class ScalarT, typename IdxT>
 Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, ScalarT C)
   :  C_(C)
 {
-	this->size_ = 3;
+    this->size_ = 3;
     this->n_intern = 1;
     this->n_extern = 2;
     this->extern_indices = {0,1};

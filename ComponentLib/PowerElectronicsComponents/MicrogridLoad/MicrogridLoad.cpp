@@ -21,7 +21,7 @@ MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, ScalarT R,ScalarT L)
 {
     // internals [id, iq]
     // externals [\omegaref, vbd_out, vbq_out]
-	this->size_ = 5;
+    this->size_ = 5;
     this->n_intern = 2;
     this->n_extern = 3;
     this->extern_indices = {0,1,2};
@@ -76,7 +76,7 @@ int MicrogridLoad<ScalarT, IdxT>::evaluateResidual()
 
     //only input for loads
 
-	//input
+    //input
     this->f_[1] = -y_[3] ;
     this->f_[2] = -y_[4] ;
 
