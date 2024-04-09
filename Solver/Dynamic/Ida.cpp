@@ -547,9 +547,9 @@ namespace Sundials
         return 0;
     }
 
-	template <class ScalarT, typename IdxT>
-	int Ida<ScalarT, IdxT>::Jac(realtype t, realtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-	{
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::Jac(realtype t, realtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+    {
 
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
@@ -586,10 +586,10 @@ namespace Sundials
             data[i] = val[i];
         }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	template <class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(realtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
