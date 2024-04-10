@@ -18,14 +18,14 @@ namespace ModelLib {
 
 template <class ScalarT, typename IdxT>
 DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT id, DistributedGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame)
-  :  wb_(parm.wb), wc_(parm.wc), mp_(parm.mp), Vn_(parm.Vn), nq_(parm.nq), F_(parm.F), Kiv_(parm.Kiv), Kpv_(parm.Kpv), Kic_(parm.Kic), Kpc_(parm.Kpc), Cf_(parm.Cf), rLf_(parm.rLf), Lf_(parm.Lf), rLc_(parm.rLc), Lc_(parm.Lc), refframe_(reference_frame)
+  :  wb_(parm.wb_), wc_(parm.wc_), mp_(parm.mp_), Vn_(parm.Vn_), nq_(parm.nq_), F_(parm.F_), Kiv_(parm.Kiv_), Kpv_(parm.Kpv_), Kic_(parm.Kic_), Kpc_(parm.Kpc_), Cf_(parm.Cf_), rLf_(parm.rLf_), Lf_(parm.Lf_), rLc_(parm.rLc_), Lc_(parm.Lc_), refframe_(reference_frame)
 {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
     this->size_ = 16;
-    this->n_intern = 13;
-    this->n_extern = 3;
-    this->extern_indices = {0,1,2};
+    this->n_intern_ = 13;
+    this->n_extern_ = 3;
+    this->extern_indices_ = {0,1,2};
     this->idc_ = id;
 }
 
@@ -77,6 +77,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
 
     ScalarT omega = wb_ - mp_ * y_[4];
     //ref common ref motor angle
+    /// @todo fix boolian conditional, unclear result
     if (refframe_)
     {
         f_[0] = omega - y_[0];
@@ -307,7 +308,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
 
     //Perform dF/dy + \alpha dF/dy'
 
-    this->J_.AXPY(this->alpha_, Jacder);
+    this->J_.axpy(this->alpha_, Jacder);
 
     return 0;
 }

@@ -28,9 +28,9 @@ InductionMotor<ScalarT, IdxT>::InductionMotor(IdxT id, ScalarT Lls, ScalarT Rs, 
     P_(P)
 {
     this->size_ = 10;
-    this->n_intern = 5;
-    this->n_extern = 5;
-    this->extern_indices = {0,1,2,3,4};
+    this->n_intern_ = 5;
+    this->n_extern_ = 5;
+    this->extern_indices_ = {0,1,2,3,4};
     this->idc_ = id;
 }
 

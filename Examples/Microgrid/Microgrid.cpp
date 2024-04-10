@@ -1,5 +1,6 @@
 
 
+
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -34,39 +35,39 @@ int main(int argc, char const *argv[])
     //DG Params
     
     ModelLib::DistributedGeneratorParameters<double, size_t> parms1;
-    parms1.wb = 2.0*M_PI*50.0;
-    parms1.wc = 31.41;
-    parms1.mp = 9.4e-5;
-    parms1.Vn = 380.0;
-    parms1.nq = 1.3e-3;
-    parms1.F = 0.75;
-    parms1.Kiv = 420.0;
-    parms1.Kpv = 0.1;
-    parms1.Kic = 2.0e4;
-    parms1.Kpc = 15.0;
-    parms1.Cf = 5.0e-5;
-    parms1.rLf = 0.1;
-    parms1.Lf = 1.35e-3;
-    parms1.rLc = 0.03;
-    parms1.Lc = 0.35e-3;
+    parms1.wb_ = 2.0*M_PI*50.0;
+    parms1.wc_ = 31.41;
+    parms1.mp_ = 9.4e-5;
+    parms1.Vn_ = 380.0;
+    parms1.nq_ = 1.3e-3;
+    parms1.F_ = 0.75;
+    parms1.Kiv_ = 420.0;
+    parms1.Kpv_ = 0.1;
+    parms1.Kic_ = 2.0e4;
+    parms1.Kpc_ = 15.0;
+    parms1.Cf_ = 5.0e-5;
+    parms1.rLf_ = 0.1;
+    parms1.Lf_ = 1.35e-3;
+    parms1.rLc_ = 0.03;
+    parms1.Lc_ = 0.35e-3;
 
     ModelLib::DistributedGeneratorParameters<double, size_t> parms2;
     //Parameters from MATLAB Microgrid code for first DG
-    parms2.wb = 2.0*M_PI*50.0;
-    parms2.wc = 31.41;
-    parms2.mp = 12.5e-5;
-    parms2.Vn = 380.0;
-    parms2.nq = 1.5e-3;
-    parms2.F = 0.75;
-    parms2.Kiv = 390.0;
-    parms2.Kpv = 0.05;
-    parms2.Kic = 16.0e3;
-    parms2.Kpc = 10.5;
-    parms2.Cf = 50.0e-6;
-    parms2.rLf = 0.1;
-    parms2.Lf = 1.35e-3;
-    parms2.rLc = 0.03;
-    parms2.Lc = 0.35e-3;
+    parms2.wb_ = 2.0*M_PI*50.0;
+    parms2.wc_ = 31.41;
+    parms2.mp_ = 12.5e-5;
+    parms2.Vn_ = 380.0;
+    parms2.nq_ = 1.5e-3;
+    parms2.F_ = 0.75;
+    parms2.Kiv_ = 390.0;
+    parms2.Kpv_ = 0.05;
+    parms2.Kic_ = 16.0e3;
+    parms2.Kpc_ = 10.5;
+    parms2.Cf_ = 50.0e-6;
+    parms2.rLf_ = 0.1;
+    parms2.Lf_ = 1.35e-3;
+    parms2.rLc_ = 0.03;
+    parms2.Lc_ = 0.35e-3;
 
     //Line params
     double rline1 = 0.23;
@@ -304,21 +305,21 @@ int main(int argc, char const *argv[])
 
     // Create Intial derivatives specifics generated in MATLAB
     //DGs 1
-    sysmodel->yp()[2] = parms1.Vn;
-    sysmodel->yp()[4] = parms1.Kpv * parms1.Vn;
-    sysmodel->yp()[6] = (parms1.Kpc * parms1.Kpv * parms1.Vn) / parms1.Lf;
-    sysmodel->yp()[12 + 3] = parms1.Vn;
-    sysmodel->yp()[12 + 5] = parms1.Kpv * parms1.Vn;
-    sysmodel->yp()[12 + 7] = (parms1.Kpc * parms1.Kpv * parms1.Vn) / parms1.Lf;
+    sysmodel->yp()[2] = parms1.Vn_;
+    sysmodel->yp()[4] = parms1.Kpv_ * parms1.Vn_;
+    sysmodel->yp()[6] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
+    sysmodel->yp()[12 + 3] = parms1.Vn_;
+    sysmodel->yp()[12 + 5] = parms1.Kpv_ * parms1.Vn_;
+    sysmodel->yp()[12 + 7] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
     for (size_t i = 2; i < 4; i++)
     {
-        sysmodel->yp()[13*i - 1 + 3] = parms2.Vn;
-        sysmodel->yp()[13*i - 1 + 5] = parms2.Kpv * parms2.Vn;
-        sysmodel->yp()[13*i - 1 + 7] = (parms2.Kpc * parms2.Kpv * parms2.Vn) / parms2.Lf;
+        sysmodel->yp()[13*i - 1 + 3] = parms2.Vn_;
+        sysmodel->yp()[13*i - 1 + 5] = parms2.Kpv_ * parms2.Vn_;
+        sysmodel->yp()[13*i - 1 + 7] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
     }
 
     //since the intial P_com = 0
-    sysmodel->y()[vec_size_internals] = parms1.wb;
+    sysmodel->y()[vec_size_internals] = parms1.wb_;
 
     
 
@@ -329,7 +330,7 @@ int main(int argc, char const *argv[])
     std::cout << "Verify Intial Resisdual is Zero: {\n";
     for (size_t i = 0; i < fres.size(); i++)
     {
-        printf("%u : %e \n", i, fres[i]);
+        printf("%lu : %e \n", i, fres[i]);
     }
     std::cout << "}\n";
 
@@ -435,10 +436,10 @@ int main(int argc, char const *argv[])
     };
 
     std::cout << "Test the Relative Error\n";
-     for (size_t i = 0; i < true_vec.size(); i++)
-     {
-        printf("%u : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
-     }
+    for (size_t i = 0; i < true_vec.size(); i++)
+    {
+    printf("%lu : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
+    }
 
     return 0;
 }

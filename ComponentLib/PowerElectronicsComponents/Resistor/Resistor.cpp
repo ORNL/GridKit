@@ -19,9 +19,9 @@ Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
   : R_(R)
 {
     this->size_ = 2;
-    this->n_intern = 0;
-    this->n_extern = 2;
-    this->extern_indices = {0,1};
+    this->n_intern_ = 0;
+    this->n_extern_ = 2;
+    this->extern_indices_ = {0,1};
     this->idc_ = id;
 }
 

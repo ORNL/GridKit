@@ -34,9 +34,9 @@ SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, ScalarT Lls, std:
     mub_(mub)
 {
     this->size_ = 13;
-    this->n_intern = 6;
-    this->n_extern = 7;
-    this->extern_indices = {0,1,2,3,4};
+    this->n_intern_ = 6;
+    this->n_extern_ = 7;
+    this->extern_indices_ = {0,1,2,3,4};
     this->idc_ = id;
 }
 

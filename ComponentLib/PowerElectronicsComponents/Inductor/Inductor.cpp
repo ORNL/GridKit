@@ -19,9 +19,9 @@ Inductor<ScalarT, IdxT>::Inductor(IdxT id, ScalarT L)
   : L_(L)
 {
     this->size_ = 3;
-    this->n_intern = 1;
-    this->n_extern = 2;
-    this->extern_indices = {0,1};
+    this->n_intern_ = 1;
+    this->n_extern_ = 2;
+    this->extern_indices_ = {0,1};
     this->idc_ = id;
 }
 
@@ -97,7 +97,7 @@ int Inductor<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.AXPY(this->alpha_, Jacder);
+    this->J_.axpy(this->alpha_, Jacder);
 
     return 0;
 }

@@ -166,7 +166,7 @@ namespace ModelLib
             {
                 for (IdxT j = 0; j < component->size(); ++j)
                 {
-                    if (component->getNodeConnection(j) != -1)
+                    if (component->getNodeConnection(j) != neg1_)
                     {
                         component->y()[j] = y_[component->getNodeConnection(j)];
                         component->yp()[j] = yp_[component->getNodeConnection(j)];
@@ -209,7 +209,7 @@ namespace ModelLib
                 for (IdxT j = 0; j < component->size(); ++j)
                 {
                     //@todo should do a different grounding check
-                    if (component->getNodeConnection(j) != -1)
+                    if (component->getNodeConnection(j) != neg1_)
                     {
                         f_[component->getNodeConnection(j)] += component->getResidual()[j];
                     }
@@ -244,7 +244,7 @@ namespace ModelLib
                 std::vector<ScalarT> vgr;
                 for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
                 {
-                    if (component->getNodeConnection(r[i]) != -1 && component->getNodeConnection(c[i]) != -1)
+                    if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
                     {
                         rgr.push_back(component->getNodeConnection(r[i]));
                         cgr.push_back(component->getNodeConnection(c[i]));
@@ -253,7 +253,7 @@ namespace ModelLib
                 }
 
                 // AXPY to Global Jacobian
-                this->J_.AXPY(1.0, rgr, cgr, vgr);
+                this->J_.axpy(1.0, rgr, cgr, vgr);
             }
 
             return 0;
@@ -321,6 +321,9 @@ namespace ModelLib
         }
 
     private:
+
+        static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
+
         std::vector<component_type *> components_;
         bool usejac_;
 

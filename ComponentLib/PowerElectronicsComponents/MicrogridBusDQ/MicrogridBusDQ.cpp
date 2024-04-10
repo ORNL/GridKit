@@ -20,9 +20,9 @@ MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN)
 {
     // externals [vbus_d, vbus_q]
     this->size_ = 2;
-    this->n_intern = 0;
-    this->n_extern = 2;
-    this->extern_indices = {0,1};
+    this->n_intern_ = 0;
+    this->n_extern_ = 2;
+    this->extern_indices_ = {0,1};
     this->idc_ = id;
 }
 

@@ -22,9 +22,9 @@ MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, ScalarT R,ScalarT L)
     // internals [id, iq]
     // externals [\omegaref, vbd_out, vbq_out]
     this->size_ = 5;
-    this->n_intern = 2;
-    this->n_extern = 3;
-    this->extern_indices = {0,1,2};
+    this->n_intern_ = 2;
+    this->n_extern_ = 3;
+    this->extern_indices_ = {0,1,2};
     this->idc_ = id;
 
 }
@@ -127,7 +127,7 @@ int MicrogridLoad<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,5,5);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.AXPY(this->alpha_, Jacder);
+    this->J_.axpy(this->alpha_, Jacder);
 
     return 0;
 }
