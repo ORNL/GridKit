@@ -79,6 +79,7 @@ int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
  * @brief Contributes to the bus residual.
  *
  * Must be connected to a PQ bus.
+ * @todo fix up
  */
 template <class ScalarT, typename IdxT>
 int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
