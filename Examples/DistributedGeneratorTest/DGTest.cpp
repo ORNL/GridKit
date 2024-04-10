@@ -15,21 +15,21 @@ int main(int argc, char const *argv[])
 	
 	ModelLib::DistributedGeneratorParameters<double, size_t> parms;
 	//Parameters from MATLAB Microgrid code for first DG
-	parms.wb = 2.0*M_PI*50.0;
-	parms.wc = 31.41;
-	parms.mp = 9.4e-5;
-	parms.Vn = 380;
-	parms.nq = 1.3e-3;
-	parms.F = 0.75;
-	parms.Kiv = 420.0;
-	parms.Kpv = 0.1;
-	parms.Kic = 20.0 * 1.0e3;
-	parms.Kpc = 15.0;
-	parms.Cf = 50.0e-6;
-	parms.rLf = 0.1;
-	parms.Lf = 1.35e-3;
-	parms.rLc = 0.03;
-	parms.Lc = 0.35e-3;
+	parms.wb_ = 2.0*M_PI*50.0;
+	parms.wc_ = 31.41;
+	parms.mp_ = 9.4e-5;
+	parms.Vn_ = 380;
+	parms.nq_ = 1.3e-3;
+	parms.F_ = 0.75;
+	parms.Kiv_ = 420.0;
+	parms.Kpv_ = 0.1;
+	parms.Kic_ = 20.0 * 1.0e3;
+	parms.Kpc_ = 15.0;
+	parms.Cf_ = 50.0e-6;
+	parms.rLf_ = 0.1;
+	parms.Lf_ = 1.35e-3;
+	parms.rLc_ = 0.03;
+	parms.Lc_ = 0.35e-3;
 
 	ModelLib::DistributedGenerator<double, size_t> *dg = new ModelLib::DistributedGenerator<double, size_t>(0, parms, true);
 

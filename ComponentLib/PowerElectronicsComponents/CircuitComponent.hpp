@@ -32,28 +32,28 @@ namespace ModelLib
 
         size_t getExternSize()
         {
-            return this->n_extern;
+            return this->n_extern_;
         }
         
         size_t getInternalSize()
         {
-            return this->n_intern;
+            return this->n_intern_;
         }
 
         std::set<size_t> getExternIndices()
         {
-            return this->extern_indices;
+            return this->extern_indices_;
         }
 
         bool setExternalConnectionNodes(size_t index, IdxT id)
         {
-            this->connection_nodes[index] = id;
+            this->connection_nodes_[index] = id;
             return true;
         }
 
         IdxT getNodeConnection(size_t index)
         {
-            return this->connection_nodes.at(index);
+            return this->connection_nodes_.at(index);
         }
 
         inline std::vector<ScalarT> parkTransformMatrix(ScalarT angle)
@@ -125,11 +125,11 @@ namespace ModelLib
         }
 
     protected:
-        size_t n_extern;
-        size_t n_intern;
-        std::set<size_t> extern_indices;
+        size_t n_extern_;
+        size_t n_intern_;
+        std::set<size_t> extern_indices_;
         //@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-        std::map<size_t, IdxT> connection_nodes;
+        std::map<size_t, IdxT> connection_nodes_;
 
     };
 

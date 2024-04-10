@@ -145,7 +145,7 @@ using namespace GridKit::PowerSystemData;
  * Testing the monlithic case via the class MiniGrid
  * @return returns 0 if pass o.w. fails
 */
-int monolithic_case()
+int monolithicCase()
 {
      std::cout << "\nSolving power flow for a 3-bus monolithic model ...\n\n";
     // Create a 3-bus model
@@ -198,7 +198,7 @@ int monolithic_case()
  * Run the Testing case for parser setup
  * @return returns 0 if pass o.w. fail
 */
-int parser_case()
+int parserCase()
 {
     std::cout << "Solving same problem, but assembled from components via a parser ...\n\n";
 
@@ -264,7 +264,7 @@ int parser_case()
  * Hardwired Test Case
  * @return 0 if pass otherwise fails
 */
-int hardwired_case()
+int hardwiredCase()
 {
     std::cout << "Solving same problem, but assembled from components manually ...\n\n";
 
@@ -388,11 +388,11 @@ int main()
     //return the results of each case
     int resolve = 0;
     std::cout << std::string(32,'-') << std::endl;
-    resolve += monolithic_case();
+    resolve |= monolithicCase();
     std::cout << std::string(32,'-') << std::endl;
-    resolve += parser_case();
+    resolve |= parserCase();
     std::cout << std::string(32,'-') << std::endl;
-    resolve += hardwired_case();
+    resolve |= hardwiredCase();
 
     if (resolve)
     {

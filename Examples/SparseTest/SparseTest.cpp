@@ -42,7 +42,7 @@ int main(int argc, char const *argv[])
     std::cout << "B:\n";
     B.printMatrix();
 
-    A.AXPY(2.0, B);
+    A.axpy(2.0, B);
 
     std::cout << "A + 2B:\n";
     A.printMatrix();
@@ -73,14 +73,30 @@ int main(int argc, char const *argv[])
     assert(valtest.size() == v.size());
 
     int failval = 0;
-    for (size_t i = 0; i < rtest.size(); i++) if (r[i] != rtest[i]) failval--; 
+    for (size_t i = 0; i < rtest.size(); i++)
+    {
+        if (r[i] != rtest[i])
+        {
+            failval--; 
+        }
+    }
     for (size_t i = 0; i < ctest.size(); i++)
     {
         double vdiff = v[i] - valtest[i];
-        if (c[i] != ctest[i] || -1e-14 > vdiff  || vdiff > 1e-14) failval--;
+        if (c[i] != ctest[i] || -1e-14 > vdiff  || vdiff > 1e-14)
+        {
+            failval--;
+        }
     }
     
-    std::cout << failval << std::endl;
+    if (failval == 0)
+    {
+        std::cout << "Success!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed!" << std::endl;
+    }
 
     return failval;
 }

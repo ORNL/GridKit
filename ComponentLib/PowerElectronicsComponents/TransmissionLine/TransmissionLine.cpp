@@ -22,9 +22,9 @@ TransmissionLine<ScalarT, IdxT>::TransmissionLine(IdxT id, ScalarT R,ScalarT X, 
     // internals [Iret1, Iimt1, Iret2, Iimt2]
     // externals [Vre11, Vim11, Vre12, Vim12, Vre21, Vim21, Vre22, Vim22]
     this->size_ = 12;
-    this->n_intern = 4;
-    this->n_extern = 8;
-    this->extern_indices = {0,1,2,3,4,5,6,7};
+    this->n_intern_ = 4;
+    this->n_extern_ = 8;
+    this->extern_indices_ = {0,1,2,3,4,5,6,7};
     this->idc_ = id;
 
     ScalarT magImpendence = 1 / (R_*R_ + X_*X_);

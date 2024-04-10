@@ -15,21 +15,21 @@ namespace ModelLib
     template <class ScalarT, typename IdxT>
     struct DistributedGeneratorParameters
     {
-        ScalarT wb;
-        ScalarT wc;
-        ScalarT mp;
-        ScalarT Vn;
-        ScalarT nq;
-        ScalarT F;
-        ScalarT Kiv;
-        ScalarT Kpv;
-        ScalarT Kic;
-        ScalarT Kpc;
-        ScalarT Cf;
-        ScalarT rLf;
-        ScalarT Lf;
-        ScalarT rLc;
-        ScalarT Lc;
+        ScalarT wb_;
+        ScalarT wc_;
+        ScalarT mp_;
+        ScalarT Vn_;
+        ScalarT nq_;
+        ScalarT F_;
+        ScalarT Kiv_;
+        ScalarT Kpv_;
+        ScalarT Kic_;
+        ScalarT Kpc_;
+        ScalarT Cf_;
+        ScalarT rLf_;
+        ScalarT Lf_;
+        ScalarT rLc_;
+        ScalarT Lc_;
     };
 }
 

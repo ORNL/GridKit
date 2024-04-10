@@ -21,9 +21,9 @@ MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, ScalarT R,ScalarT L)
     // internals [id, iq]
     // externals [\omegaref, vbd_in, vbq_in, vbd_out, vbq_out]
     this->size_ = 7;
-    this->n_intern = 2;
-    this->n_extern = 5;
-    this->extern_indices = {0,1,2,3,4};
+    this->n_intern_ = 2;
+    this->n_extern_ = 5;
+    this->extern_indices_ = {0,1,2,3,4};
     this->idc_ = id;
 }
 
@@ -129,7 +129,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,7,7);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.AXPY(this->alpha_, Jacder);
+    this->J_.axpy(this->alpha_, Jacder);
 
 
     return 0;
