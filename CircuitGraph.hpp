@@ -7,11 +7,17 @@
 #include <map>
 
 /**
- * @brief A very basic hypergraph setup for circuit representation. This forms the hypergraph as a bipartite graph. Doesn't allow removing. Can only grab sets of connections to nodes
+ * @brief A very basic hypergraph setup for circuit representation.
+ * This forms the hypergraph as a bipartite graph. Doesn't allow
+ * removing. Can only grab sets of connections to nodes
  * 
- * @todo should replace with something better and more efficent. Should replace with a libraries setup instead. This would allow fast and easy partitioning of circuits
+ * @todo should replace with something better and more efficent.
+ * Should replace with a libraries setup instead. This would allow
+ * fast and easy partitioning of circuits
  * 
- * @todo should replace N and E with Node and Component classes respectively
+ * @todo should replace N and E with Node and Component classes respectively.
+ * 
+ * @note Tested but currently not used in the rest of the code.
  * 
  * @tparam IdxT 
  * @tparam Label 

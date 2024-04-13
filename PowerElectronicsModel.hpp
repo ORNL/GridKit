@@ -51,7 +51,7 @@ namespace ModelLib
             rtol_ = 1e-4;
             atol_ = 1e-4;
             this->max_steps_ = 2000;
-            // By default use jacobian
+            // By default not use jacobian
             usejac_ = false;
         }
 
@@ -64,7 +64,7 @@ namespace ModelLib
             rtol_ = rt;
             atol_ = at;
             this->max_steps_ = msa;
-            // Can choose not to use jacobain
+            // Can choose if to use jacobain
             usejac_ = ju;
         }
 
@@ -123,7 +123,7 @@ namespace ModelLib
         {
 
             // Allocate all components
-            this->size_ = s;
+            size_ = s;
             for (const auto &component : components_)
             {
                 component->allocate();
@@ -226,8 +226,8 @@ namespace ModelLib
          */
         int evaluateJacobian()
         {
-            this->J_.zeroMatrix();
-            this->distributeVectors();
+            J_.zeroMatrix();
+            distributeVectors();
 
             // Evaluate component jacs
             for (const auto &component : components_)
@@ -235,8 +235,8 @@ namespace ModelLib
                 component->evaluateJacobian();
 
                 // get references to local jacobain
-                std::tuple<std::vector<IdxT> &, std::vector<IdxT> &, std::vector<ScalarT> &> tpm = component->getJacobian().getEntries();
-                const auto &[r, c, v] = tpm;
+                std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
+                const auto& [r, c, v] = tpm;
 
                 // Create copies of data to handle groundings
                 std::vector<IdxT> rgr;
@@ -253,7 +253,7 @@ namespace ModelLib
                 }
 
                 // AXPY to Global Jacobian
-                this->J_.axpy(1.0, rgr, cgr, vgr);
+                J_.axpy(1.0, rgr, cgr, vgr);
             }
 
             return 0;
@@ -311,20 +311,20 @@ namespace ModelLib
             {
                 component->updateTime(t, a);
             }
-            this->time_ = t;
-            this->alpha_ = a;
+            time_ = t;
+            alpha_ = a;
         }
 
         void addComponent(component_type *component)
         {
-            this->components_.push_back(component);
+            components_.push_back(component);
         }
 
     private:
 
         static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-        std::vector<component_type *> components_;
+        std::vector<component_type*> components_;
         bool usejac_;
 
     }; // class PowerElectronicsModel

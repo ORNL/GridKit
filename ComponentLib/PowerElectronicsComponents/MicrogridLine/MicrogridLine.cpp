@@ -11,7 +11,13 @@ namespace ModelLib {
  *
  * Calls default ModelEvaluatorImpl constructor.
  * 
+ * 
  * Each microgrid line has a virtual resistance RN
+ * Model is from paper: "
+    "Modeling, Analysis and Testing of Autonomous Operation of an Inverter-Based Microgrid" Nagaraju Pogaku, Milan Prodanovic, and Timothy C. Green"
+ * Section C
+ * 
+ * @todo Consider having \omegaref as a global constant, not a node variable.
  */
 
 template <class ScalarT, typename IdxT>

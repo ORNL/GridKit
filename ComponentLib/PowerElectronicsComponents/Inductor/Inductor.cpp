@@ -18,11 +18,11 @@ template <class ScalarT, typename IdxT>
 Inductor<ScalarT, IdxT>::Inductor(IdxT id, ScalarT L)
   : L_(L)
 {
-    this->size_ = 3;
+    size_ = 3;
     this->n_intern_ = 1;
     this->n_extern_ = 2;
     this->extern_indices_ = {0,1};
-    this->idc_ = id;
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>

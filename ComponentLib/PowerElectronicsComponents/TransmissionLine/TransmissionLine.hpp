@@ -19,6 +19,10 @@ namespace ModelLib
     /*!
      * @brief Declaration of a passive TransmissionLine class.
      *
+     * Model from Adam Birchfield paper (medium distances < 2km).
+     * See also textbooks "Power System Analysis" by Grainger and "Power System Dynamics and Stability" by Sauer & Pai
+     * 
+     * @note Not used in the Microgrid model.
      */
     template  <class ScalarT, typename IdxT>
     class TransmissionLine : public CircuitComponent<ScalarT, IdxT>

@@ -32,7 +32,7 @@ namespace ModelLib
 
         size_t getExternSize()
         {
-            return this->n_extern_;
+            return n_extern_;
         }
         
         size_t getInternalSize()
@@ -45,15 +45,30 @@ namespace ModelLib
             return this->extern_indices_;
         }
 
-        bool setExternalConnectionNodes(size_t index, IdxT id)
+        /**
+         * @brief Create the mappings from local to global indexes
+         * 
+         * @param local_index 
+         * @param global_index 
+         * @return int
+         */
+        int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
         {
-            this->connection_nodes_[index] = id;
-            return true;
+            connection_nodes_[local_index] = global_index;
+            return 0;
         }
 
-        IdxT getNodeConnection(size_t index)
+        /**
+         * @brief Given the location of value in the local vector map to global index
+         * 
+         * f(local_index) = global_index
+         *
+         * @param local_index index of local value in vector
+         * @return IdxT Index of the same value in the global vector
+         */
+        IdxT getNodeConnection(IdxT local_index)
         {
-            return this->connection_nodes_.at(index);
+            return connection_nodes_.at(local_index);
         }
 
         inline std::vector<ScalarT> parkTransformMatrix(ScalarT angle)
@@ -127,9 +142,9 @@ namespace ModelLib
     protected:
         size_t n_extern_;
         size_t n_intern_;
-        std::set<size_t> extern_indices_;
+        std::set<IdxT> extern_indices_;
         //@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-        std::map<size_t, IdxT> connection_nodes_;
+        std::map<IdxT, IdxT> connection_nodes_;
 
     };
 
