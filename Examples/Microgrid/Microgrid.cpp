@@ -20,20 +20,19 @@
 
 int main(int argc, char const *argv[])
 {
+	///@todo Needs to be modified. Some components are small relative to others thus there error is high (or could be matlab vector issue)
     double abstol = 1.0e-8;
     double reltol = 1.0e-8;
     size_t max_step_amount = 3000;
     bool usejac = true;
 
-    //TODO:setup as named parameters
-    //Create circuit model
+    //Create model
     ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac, max_step_amount);
 
     //Modeled after the problem in the paper
     double RN = 1.0e4;
 
     //DG Params
-    
     ModelLib::DistributedGeneratorParameters<double, size_t> parms1;
     parms1.wb_ = 2.0*M_PI*50.0;
     parms1.wc_ = 31.41;
@@ -440,6 +439,9 @@ int main(int argc, char const *argv[])
     {
     printf("%lu : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
     }
+
+	delete idas;
+	delete sysmodel;
 
     return 0;
 }

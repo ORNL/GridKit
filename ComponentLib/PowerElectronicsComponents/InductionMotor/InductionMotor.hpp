@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive InductionMotor class.
+     * @brief Declaration of a InductionMotor class.
      *
      */
     template  <class ScalarT, typename IdxT>

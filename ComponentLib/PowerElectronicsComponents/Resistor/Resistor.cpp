@@ -9,7 +9,7 @@
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a constant resistor model
+ * @brief Constructor for a resistor model
  *
  * Calls default ModelEvaluatorImpl constructor.
  */
@@ -62,9 +62,8 @@ int Resistor<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Computes the resistors resisdual
  *
- * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::evaluateResidual()

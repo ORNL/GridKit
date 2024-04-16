@@ -66,9 +66,8 @@ int DistributedGenerator<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Contributes to the resisdual of the Distributed Generator
  *
- * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
 int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()

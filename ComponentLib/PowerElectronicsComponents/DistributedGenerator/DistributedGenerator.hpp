@@ -37,7 +37,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive DistributedGenerator class.
+     * @brief Declaration of a DistributedGenerator class.
      *
      */
     template  <class ScalarT, typename IdxT>

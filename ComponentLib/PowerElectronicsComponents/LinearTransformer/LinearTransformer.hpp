@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive LinearTransformer class.
+     * @brief Declaration of a LinearTransformer class.
      *
      */
     template  <class ScalarT, typename IdxT>

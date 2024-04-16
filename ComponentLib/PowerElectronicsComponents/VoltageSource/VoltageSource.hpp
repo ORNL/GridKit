@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive VoltageSource class.
+     * @brief Declaration of a VoltageSource class.
      *
      */
     template  <class ScalarT, typename IdxT>

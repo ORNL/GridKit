@@ -9,9 +9,11 @@
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a constant LinearTransformer model
+ * @brief Constructor for a LinearTransformer model
  *
  * Calls default ModelEvaluatorImpl constructor.
+ * @todo Not tested in any model yet. Should be
+ * @todo Has not been tested for correctness
  */
 
 template <class ScalarT, typename IdxT>
@@ -65,15 +67,12 @@ int LinearTransformer<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
- *
- * Must be connected to a PQ bus.
+ * @brief Computes the component resisdual
+ * 
  */
 template <class ScalarT, typename IdxT>
 int LinearTransformer<ScalarT, IdxT>::evaluateResidual()
 {
-    //Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
-    // for easier development
     this->f_[0] = this->y_[2];
     this->f_[1] = this->y_[3];
     this->f_[2] = this->y_[0] - this->R1_ * this->y_[2] - this->L1_ * this->yp_[2] - this->M_ * this->yp_[3];

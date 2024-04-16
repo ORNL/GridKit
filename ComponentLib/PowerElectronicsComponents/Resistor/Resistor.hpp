@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive Resistor class.
+     * @brief Declaration of a Resistor class.
      *
      */
     template  <class ScalarT, typename IdxT>

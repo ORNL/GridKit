@@ -11,8 +11,10 @@ namespace ModelLib {
  *
  * Calls default ModelEvaluatorImpl constructor.
  * 
- * This is the Medium distance form with the use of the admittance matrix.
- * Since the line is of medium length then there is no real part for shunt admittance
+ * 
+ * Model is from paper: "
+    "Modeling, Analysis and Testing of Autonomous Operation of an Inverter-Based Microgrid" Nagaraju Pogaku, Milan Prodanovic, and Timothy C. Green"
+ * Section D
  */
 
 template <class ScalarT, typename IdxT>

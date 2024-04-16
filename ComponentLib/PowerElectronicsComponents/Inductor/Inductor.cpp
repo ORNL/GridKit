@@ -9,7 +9,7 @@
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a constant load model
+ * @brief Constructor for a inductor
  *
  * Calls default ModelEvaluatorImpl constructor.
  */
@@ -63,9 +63,8 @@ int Inductor<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Compute the resisdual of the component
  *
- * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::evaluateResidual()
@@ -79,6 +78,13 @@ int Inductor<ScalarT, IdxT>::evaluateResidual()
     return 0;
 }
 
+/**
+ * @brief Evaluate the jacobian of the component
+ * 
+ * @tparam ScalarT 
+ * @tparam IdxT 
+ * @return int 
+ */
 template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::evaluateJacobian()
 {

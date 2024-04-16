@@ -68,7 +68,7 @@ int MicrogridBusDQ<ScalarT, IdxT>::tagDifferentiable()
 
 /**
  * @brief Evaluate residual of microgrid line
- * This model has "Virtual resistors" on both ends with parameters RN1 and RN2
+ * This model has "Virtual resistors". This component represent sum of inductions on the bus 
  *
  */
 template <class ScalarT, typename IdxT>
@@ -82,7 +82,7 @@ int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
 }
 
 /**
- * @brief Generate Jacobian for Transmission Line
+ * @brief Generate Jacobian
  * 
  * @tparam ScalarT 
  * @tparam IdxT 

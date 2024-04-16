@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive MicrogridBusDQ class.
+     * @brief Declaration of a MicrogridBusDQ class.
      *
      */
     template  <class ScalarT, typename IdxT>

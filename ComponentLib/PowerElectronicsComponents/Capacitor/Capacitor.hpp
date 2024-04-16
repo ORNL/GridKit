@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive Capacitor class.
+     * @brief Declaration of a Capacitor class.
      *
      */
     template  <class ScalarT, typename IdxT>

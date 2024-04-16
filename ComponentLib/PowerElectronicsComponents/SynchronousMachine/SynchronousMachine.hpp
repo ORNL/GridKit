@@ -18,7 +18,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive SynchronousMachine class.
+     * @brief Declaration of a SynchronousMachine class.
      *
      */
     template  <class ScalarT, typename IdxT>

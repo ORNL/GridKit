@@ -62,15 +62,11 @@ int VoltageSource<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
- *
- * Must be connected to a PQ bus.
+ * @brief Evaluate resisdual of component
  */
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 {
-    //Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
-    // for easier development
     //input
     this->f_[0] = -this->y_[2];
     //ouput
@@ -115,9 +111,6 @@ int VoltageSource<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     return 0;
 }
-
-
-
 
 
 // Available template instantiations

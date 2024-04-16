@@ -7,12 +7,14 @@
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a constant TransmissionLine model
+ * @brief Constructor for a TransmissionLine model
  *
  * Calls default ModelEvaluatorImpl constructor.
  * 
  * This is the Medium distance form with the use of the admittance matrix.
  * Since the line is of medium length then there is no real part for shunt admittance
+ * @todo needs to used in a model
+ * @todo test for correctness
  */
 
 template <class ScalarT, typename IdxT>

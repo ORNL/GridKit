@@ -12,7 +12,6 @@ namespace ModelLib {
  * Calls default ModelEvaluatorImpl constructor.
  * 
  * 
- * Each microgrid line has a virtual resistance RN
  * Model is from paper: "
     "Modeling, Analysis and Testing of Autonomous Operation of an Inverter-Based Microgrid" Nagaraju Pogaku, Milan Prodanovic, and Timothy C. Green"
  * Section C
@@ -71,8 +70,7 @@ int MicrogridLine<ScalarT, IdxT>::tagDifferentiable()
 
 /**
  * @brief Evaluate residual of microgrid line
- * This model has "Virtual resistors" on both ends with parameters RN1 and RN2
- *
+ * 
  */
 template <class ScalarT, typename IdxT>
 int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
@@ -97,7 +95,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
 }
 
 /**
- * @brief Generate Jacobian for Transmission Line
+ * @brief Generate Jacobian for Microgrid Line
  * 
  * @tparam ScalarT 
  * @tparam IdxT 

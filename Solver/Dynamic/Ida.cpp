@@ -90,9 +90,35 @@ namespace Sundials
         tag_ = NULL;
     }
 
+    /**
+     * @brief Destroy the Ida< Scalar T,  Idx T>:: Ida object
+     * 
+     * @note if sysmodel is freed before this will fail. May want something agnostic to this
+     * 
+     * @tparam ScalarT 
+     * @tparam IdxT 
+     */
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::~Ida()
     {
+        N_VDestroy(yy_);
+        N_VDestroy(yp_);
+        N_VDestroy(yy0_);
+        N_VDestroy(yp0_);
+        if (model_->hasJacobian())
+        {
+            SUNLinSolFree_KLU(linearSolver_);
+            SUNMatDestroy_Sparse(JacobianMat_);
+        }
+        else
+        {
+            SUNLinSolFree_Dense(linearSolver_);
+            SUNMatDestroy_Dense(JacobianMat_);
+        }
+        ///@todo this free is needed but on geninfbus this seg faults
+        // IDAFree(&solver_);
+        SUNContext_Free(&context_);
+        
     }
 
     template <class ScalarT, typename IdxT>

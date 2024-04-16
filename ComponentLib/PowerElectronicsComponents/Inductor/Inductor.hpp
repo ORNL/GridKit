@@ -17,7 +17,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Declaration of a passive Inductor class.
+     * @brief Declaration of a Inductor class.
      *
      */
     template  <class ScalarT, typename IdxT>

@@ -15,6 +15,8 @@ namespace ModelLib {
  * @brief Constructor for a constant InductionMotor model
  *
  * Calls default ModelEvaluatorImpl constructor.
+ * @todo create a test case utilizing the component.
+ * @todo create a unit test to check correctness of component
  */
 
 template <class ScalarT, typename IdxT>
@@ -70,15 +72,13 @@ int InductionMotor<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Contributes to the resisdual
  *
- * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
 int InductionMotor<ScalarT, IdxT>::evaluateResidual()
 {
-    //Note this leaves induction lumped into y. Perhaps would be better to seperate volatge and induction into seperate vectors
-    // for easier development
+    
     this->f_[0] = y_[5] + y_[7];
     this->f_[1] = (-1.0/2.0) * y_[5] - (sqrt(3.0)/2.0)*y_[6] + y_[7];
     this->f_[2] = (-1.0/2.0) * y_[5] + (sqrt(3.0)/2.0)*y_[6] + y_[7];

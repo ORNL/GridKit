@@ -15,6 +15,8 @@ namespace ModelLib {
  * @brief Constructor for a constant SynchronousMachine model
  *
  * Calls default ModelEvaluatorImpl constructor.
+ * @todo This models equations are not finish
+ * @todo needs to be tested for correctness
  */
 
 template <class ScalarT, typename IdxT>
@@ -76,10 +78,9 @@ int SynchronousMachine<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Compute the resisdual of the component.
  *
- * Must be connected to a PQ bus.
- * @todo fix up
+ * @todo not finished
  */
 template <class ScalarT, typename IdxT>
 int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()

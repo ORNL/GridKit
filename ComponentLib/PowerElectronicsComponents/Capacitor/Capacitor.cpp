@@ -9,7 +9,9 @@
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a constant load model
+ * @brief Constructor for Capacitor
+ *
+ * @todo this needs to be tested on some circuit
  *
  * Calls default ModelEvaluatorImpl constructor.
  */
@@ -31,7 +33,7 @@ Capacitor<ScalarT, IdxT>::~Capacitor()
 }
 
 /*!
- * @brief allocate method computes sparsity pattern of the Jacobian.
+ * @brief allocate method creates memory for vectors
  */
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::allocate()
@@ -62,9 +64,8 @@ int Capacitor<ScalarT, IdxT>::tagDifferentiable()
 }
 
 /**
- * @brief Contributes to the bus residual.
+ * @brief Evaluate the resisdual of the Capcitor
  *
- * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateResidual()
@@ -79,6 +80,13 @@ int Capacitor<ScalarT, IdxT>::evaluateResidual()
     return 0;
 }
 
+/**
+ * @brief Compute the Jacobian dF/dy - a dF/dy'
+ * 
+ * @tparam ScalarT 
+ * @tparam IdxT 
+ * @return int 
+ */
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateJacobian()
 {
@@ -89,7 +97,7 @@ int Capacitor<ScalarT, IdxT>::evaluateJacobian()
     std::vector<ScalarT> vals{1.0, -1.0, -1.0};
     this->J_.setValues(rcord, ccord, vals);
 
-    //Create -dF/dy'
+    //Create dF/dy'
     std::vector<IdxT> rcordder{0,1,2};
     std::vector<IdxT> ccordder{2,2,2};
     std::vector<ScalarT> valsder{C_, -C_, -this->C_};

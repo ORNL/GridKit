@@ -10,6 +10,13 @@
 #include <ComponentLib/PowerElectronicsComponents/DistributedGenerator/DistributedGenerator.hpp>
 
 
+/**
+ * @brief Testing for the Distributed Generators outputs
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char const *argv[])
 {
 	
