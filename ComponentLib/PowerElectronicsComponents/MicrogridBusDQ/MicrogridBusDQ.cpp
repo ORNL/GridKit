@@ -23,11 +23,11 @@ MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN)
   : RN_(RN) 
 {
     // externals [vbus_d, vbus_q]
-    this->size_ = 2;
-    this->n_intern_ = 0;
-    this->n_extern_ = 2;
-    this->extern_indices_ = {0,1};
-    this->idc_ = id;
+    size_ = 2;
+    n_intern_ = 0;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -41,9 +41,9 @@ MicrogridBusDQ<ScalarT, IdxT>::~MicrogridBusDQ()
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -91,13 +91,13 @@ int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::evaluateJacobian()
 {
-    this->J_.zeroMatrix();
+    J_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rtemp{0,1};
     std::vector<IdxT> ctemp{0,1};
     std::vector<ScalarT> vals{-1.0 / RN_,-1.0 / RN_};
-    this->J_.setValues(rtemp, ctemp, vals);
+    J_.setValues(rtemp, ctemp, vals);
 
     return 0;
 }

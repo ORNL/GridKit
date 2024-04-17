@@ -19,9 +19,9 @@ Inductor<ScalarT, IdxT>::Inductor(IdxT id, ScalarT L)
   : L_(L)
 {
     size_ = 3;
-    this->n_intern_ = 1;
-    this->n_extern_ = 2;
-    this->extern_indices_ = {0,1};
+    n_intern_ = 1;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
     idc_ = id;
 }
 
@@ -37,9 +37,9 @@ template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::allocate()
 {
     
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -70,11 +70,11 @@ template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::evaluateResidual()
 {
     //input
-    this->f_[0] = -this->y_[2];
+    f_[0] = -y_[2];
     //output
-    this->f_[1] = this->y_[2];
+    f_[1] = y_[2];
     //internal
-    this->f_[2] = -this->L_ * this->yp_[2] + this->y_[1] - this->y_[0] ;
+    f_[2] = -L_ * yp_[2] + y_[1] - y_[0] ;
     return 0;
 }
 
@@ -88,22 +88,22 @@ int Inductor<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int Inductor<ScalarT, IdxT>::evaluateJacobian()
 {
-    this->J_.zeroMatrix();
+    J_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rcord{0,1,2,2};
     std::vector<IdxT> ccord{2,2,0,1};
     std::vector<ScalarT> vals{-1.0, 1.0, -1.0, 1.0};
-    this->J_.setValues(rcord, ccord, vals);
+    J_.setValues(rcord, ccord, vals);
 
     //Create dF/dy'
     std::vector<IdxT> rcordder{2};
     std::vector<IdxT> ccordder{2};
-    std::vector<ScalarT> valsder{-this->L_};
+    std::vector<ScalarT> valsder{-L_};
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.axpy(this->alpha_, Jacder);
+    J_.axpy(alpha_, Jacder);
 
     return 0;
 }

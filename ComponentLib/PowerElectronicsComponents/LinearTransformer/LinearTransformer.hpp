@@ -36,8 +36,13 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::ypB_;
         using CircuitComponent<ScalarT, IdxT>::fB_;
         using CircuitComponent<ScalarT, IdxT>::gB_;
+        using CircuitComponent<ScalarT, IdxT>::J_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
+
+        using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+        using CircuitComponent<ScalarT, IdxT>::n_extern_;
+        using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
     public:
         LinearTransformer(IdxT id, ScalarT L1, ScalarT L2, ScalarT R1, ScalarT R2, ScalarT M);

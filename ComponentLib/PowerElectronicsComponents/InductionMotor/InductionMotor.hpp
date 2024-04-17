@@ -36,11 +36,16 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::ypB_;
         using CircuitComponent<ScalarT, IdxT>::fB_;
         using CircuitComponent<ScalarT, IdxT>::gB_;
+        using CircuitComponent<ScalarT, IdxT>::J_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
+        
+        using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+        using CircuitComponent<ScalarT, IdxT>::n_extern_;
+        using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
     public:
-        InductionMotor(IdxT id, ScalarT Lls, ScalarT Rs, ScalarT Llr, ScalarT Rr, ScalarT Lms, ScalarT J, ScalarT P);
+        InductionMotor(IdxT id, ScalarT Lls, ScalarT Rs, ScalarT Llr, ScalarT Rr, ScalarT Lms, ScalarT RJ, ScalarT P);
         virtual ~InductionMotor();
 
         int allocate();
@@ -61,7 +66,7 @@ namespace ModelLib
         ScalarT Llr_;
         ScalarT Rr_;
         ScalarT Lms_;
-        ScalarT J_;
+        ScalarT RJ_;
         ScalarT P_;
     };
 }

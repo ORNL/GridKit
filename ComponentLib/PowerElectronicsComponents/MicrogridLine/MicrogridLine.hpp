@@ -38,6 +38,10 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::J_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
+        
+        using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+        using CircuitComponent<ScalarT, IdxT>::n_extern_;
+        using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
     public:
         MicrogridLine(IdxT id, ScalarT R, ScalarT L);

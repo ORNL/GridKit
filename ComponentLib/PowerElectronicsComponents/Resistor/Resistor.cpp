@@ -18,11 +18,11 @@ template <class ScalarT, typename IdxT>
 Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
   : R_(R)
 {
-    this->size_ = 2;
-    this->n_intern_ = 0;
-    this->n_extern_ = 2;
-    this->extern_indices_ = {0,1};
-    this->idc_ = id;
+    size_ = 2;
+    n_intern_ = 0;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -36,9 +36,9 @@ Resistor<ScalarT, IdxT>::~Resistor()
 template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -69,9 +69,9 @@ template <class ScalarT, typename IdxT>
 int Resistor<ScalarT, IdxT>::evaluateResidual()
 {
     //input
-    this->f_[0] = (this->y_[0] - this->y_[1])/this->R_ ;
+    f_[0] = (y_[0] - y_[1])/R_ ;
     //ouput
-    this->f_[1] = (this->y_[1] - this->y_[0])/this->R_ ;
+    f_[1] = (y_[1] - y_[0])/R_ ;
     return 0;
 }
 
@@ -83,8 +83,8 @@ int Resistor<ScalarT, IdxT>::evaluateJacobian()
     //does compiler make constant???
     std::vector<IdxT> rcord{0,0,1,1};
     std::vector<IdxT> ccord{0,1,0,1};
-    std::vector<ScalarT> vals{1.0 / this->R_, -1.0 / this->R_, -1.0 / this->R_, 1.0 / this->R_};
-    this->J_.setValues(rcord, ccord, vals);
+    std::vector<ScalarT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
+    J_.setValues(rcord, ccord, vals);
 
     return 0;
 }

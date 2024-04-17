@@ -18,15 +18,30 @@ namespace ModelLib {
 
 template <class ScalarT, typename IdxT>
 DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT id, DistributedGeneratorParameters<ScalarT,IdxT> parm, bool reference_frame)
-  :  wb_(parm.wb_), wc_(parm.wc_), mp_(parm.mp_), Vn_(parm.Vn_), nq_(parm.nq_), F_(parm.F_), Kiv_(parm.Kiv_), Kpv_(parm.Kpv_), Kic_(parm.Kic_), Kpc_(parm.Kpc_), Cf_(parm.Cf_), rLf_(parm.rLf_), Lf_(parm.Lf_), rLc_(parm.rLc_), Lc_(parm.Lc_), refframe_(reference_frame)
+  : wb_(parm.wb_),
+    wc_(parm.wc_),
+    mp_(parm.mp_),
+    Vn_(parm.Vn_), 
+    nq_(parm.nq_), 
+    F_(parm.F_), 
+    Kiv_(parm.Kiv_), 
+    Kpv_(parm.Kpv_), 
+    Kic_(parm.Kic_), 
+    Kpc_(parm.Kpc_), 
+    Cf_(parm.Cf_), 
+    rLf_(parm.rLf_), 
+    Lf_(parm.Lf_), 
+    rLc_(parm.rLc_), 
+    Lc_(parm.Lc_), 
+    refframe_(reference_frame)
 {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-    this->size_ = 16;
-    this->n_intern_ = 13;
-    this->n_extern_ = 3;
-    this->extern_indices_ = {0,1,2};
-    this->idc_ = id;
+    size_ = 16;
+    n_intern_ = 13;
+    n_extern_ = 3;
+    extern_indices_ = {0,1,2};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -40,9 +55,9 @@ DistributedGenerator<ScalarT, IdxT>::~DistributedGenerator()
 template <class ScalarT, typename IdxT>
 int DistributedGenerator<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -97,7 +112,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
     ScalarT vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
 
     // ### Internal Componenets ## 
-    // Rotator difference angle
+    // Rotor difference angle
     f_[3] = -yp_[3] + omega - y_[0];
 
     // P and Q equations
@@ -165,7 +180,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
 {
-    this->J_.zeroMatrix();
+    J_.zeroMatrix();
     //Create dF/dy'
     std::vector<IdxT> rcordder(13);
     std::vector<ScalarT> valsder(13, -1.0);
@@ -188,7 +203,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(1);
     valtemp = { - sin(y_[3]) * y_[14] - cos(y_[3]) * y_[15], cos(y_[3]),-sin(y_[3])};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 2
 
@@ -196,7 +211,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(2);
     valtemp = { cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15], sin(y_[3]),cos(y_[3])};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 3
     
@@ -204,7 +219,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(3);
     valtemp = {-1.0, -mp_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
     
     //r = 0
     if (refframe_)
@@ -213,7 +228,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
         rtemp.clear();
         for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(0);
         valtemp = {-1.0, -mp_};
-        this->J_.setValues(rtemp, ctemp, valtemp);
+        J_.setValues(rtemp, ctemp, valtemp);
     }
     
 
@@ -222,63 +237,63 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(4);
     valtemp = {-wc_, wc_*y_[14], wc_*y_[15], wc_*y_[12], wc_*y_[13]};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 5
     ctemp = {5, 12, 13, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(5);
     valtemp = {-wc_, -wc_*y_[15], wc_*y_[14], wc_*y_[13], -wc_*y_[12]};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 6
     ctemp = {5, 12};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(6);
     valtemp = {-nq_, -1.0};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
     
     //r = 7
     ctemp = {13};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(7);
     valtemp = {-1.0};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 8
     ctemp = {5,6,10,12,13,14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(8);
     valtemp = {-Kpv_*nq_, Kiv_, -1.0, -Kpv_, -Cf_*wb_, F_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 9
     ctemp = {7, 11, 12, 13, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(9);
     valtemp = {Kiv_, -1.0, Cf_*wb_,-Kpv_,F_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
     
     //r = 10
     ctemp = {4, 5, 6, 8, 10, 11, 12, 13, 14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(10);
     valtemp = {-mp_ * y_[11], -(Kpc_ * Kpv_ * nq_) / Lf_, (Kpc_ * Kiv_) / Lf_, Kic_ / Lf_, -(Kpc_ + rLf_) / Lf_, -mp_ * y_[4], -(Kpc_ * Kpv_ + 1.0) / Lf_, -(Cf_ * Kpc_ * wb_) / Lf_, (F_ * Kpc_) / Lf_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 11
     ctemp = {4, 7, 9, 10, 11, 12, 13, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(11);
     valtemp = {mp_ * y_[10], (Kiv_ * Kpc_) / Lf_, Kic_ / Lf_, mp_ * y_[4], -(Kpc_ + rLf_) / Lf_, (Cf_ * Kpc_ * wb_) / Lf_, -(Kpc_ * Kpv_ + 1.0) / Lf_, (F_ * Kpc_) / Lf_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     //r = 12
     ctemp = {4, 10, 13, 14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(12);
     valtemp = {-mp_ * y_[13], 1.0 / Cf_, wb_ - mp_ * y_[4], -1.0 / Cf_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 13
@@ -286,7 +301,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(13);
     valtemp = {mp_ * y_[12], 1.0 / Cf_, -wb_ + mp_ * y_[4], -1.0 / Cf_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 14
@@ -294,7 +309,7 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(14);
     valtemp = {(1.0/Lc_) * -cos(y_[3]) , (1.0/Lc_) * -sin(y_[3]) , (1.0/Lc_) * (sin(y_[3]) * y_[1] - cos(y_[3]) * y_[2]), -mp_ * y_[15], 1.0 / Lc_, -rLc_ / Lc_, wb_ - mp_ * y_[4]};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
     
     //r = 15
@@ -302,12 +317,12 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateJacobian()
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++) rtemp.push_back(15);
     valtemp = {(1.0/Lc_) * sin(y_[3]) , (1.0/Lc_) * -cos(y_[3]), (1.0/Lc_) * (cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2]), mp_ * y_[14], 1.0 / Lc_, -wb_ + mp_ * y_[4], -rLc_ / Lc_};
-    this->J_.setValues(rtemp, ctemp, valtemp);
+    J_.setValues(rtemp, ctemp, valtemp);
 
 
     //Perform dF/dy + \alpha dF/dy'
 
-    this->J_.axpy(this->alpha_, Jacder);
+    J_.axpy(alpha_, Jacder);
 
     return 0;
 }

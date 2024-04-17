@@ -18,11 +18,11 @@ template <class ScalarT, typename IdxT>
 VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, ScalarT V)
   : V_(V)
 {
-    this->size_ = 3;
-    this->n_intern_ = 1;
-    this->n_extern_ = 2;
-    this->extern_indices_ = {0,1};
-    this->idc_ = id;
+    size_ = 3;
+    n_intern_ = 1;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -36,9 +36,9 @@ VoltageSource<ScalarT, IdxT>::~VoltageSource()
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -68,11 +68,11 @@ template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 {
     //input
-    this->f_[0] = -this->y_[2];
+    f_[0] = -y_[2];
     //ouput
-    this->f_[1] = this->y_[2];
+    f_[1] = y_[2];
     //internal
-    this->f_[2] = this->y_[1] - this->y_[0] - this->V_;
+    f_[2] = y_[1] - y_[0] - V_;
     return 0;
 }
 
@@ -83,7 +83,7 @@ int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
     std::vector<IdxT> rcord{0,1,2,2};
     std::vector<IdxT> ccord{2,2,0,1};
     std::vector<ScalarT> vals{-1.0, 1.0, -1.0, 1.0};
-    this->J_.setValues(rcord, ccord, vals);
+    J_.setValues(rcord, ccord, vals);
 
     return 0;
 }

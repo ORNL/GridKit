@@ -21,15 +21,16 @@ namespace ModelLib {
 
 template <class ScalarT, typename IdxT>
 MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, ScalarT R,ScalarT L)
-  : R_(R), L_(L)
+  : R_(R),
+    L_(L)
 {
     // internals [id, iq]
     // externals [\omegaref, vbd_in, vbq_in, vbd_out, vbq_out]
-    this->size_ = 7;
-    this->n_intern_ = 2;
-    this->n_extern_ = 5;
-    this->extern_indices_ = {0,1,2,3,4};
-    this->idc_ = id;
+    size_ = 7;
+    n_intern_ = 2;
+    n_extern_ = 5;
+    extern_indices_ = {0,1,2,3,4};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -43,9 +44,9 @@ MicrogridLine<ScalarT, IdxT>::~MicrogridLine()
 template <class ScalarT, typename IdxT>
 int MicrogridLine<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -76,19 +77,19 @@ template <class ScalarT, typename IdxT>
 int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
 {
     //ref motor
-    this->f_[0] = 0.0;
+    f_[0] = 0.0;
 
     //input
-    this->f_[1] = -y_[5] ;
-    this->f_[2] = -y_[6] ;
+    f_[1] = -y_[5] ;
+    f_[2] = -y_[6] ;
 
     //output
-    this->f_[3] = y_[5] ;
-    this->f_[4] = y_[6] ;
+    f_[3] = y_[5] ;
+    f_[4] = y_[6] ;
 
     //Internal variables
-    this->f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0]*y_[6] +  (y_[1] - y_[3])/L_;
-    this->f_[6] = -yp_[6] - (R_ / L_) * y_[6] - y_[0]*y_[5] + (y_[2] - y_[4])/L_;
+    f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0]*y_[6] +  (y_[1] - y_[3])/L_;
+    f_[6] = -yp_[6] - (R_ / L_) * y_[6] - y_[0]*y_[5] + (y_[2] - y_[4])/L_;
 
 
     return 0;
@@ -104,26 +105,26 @@ int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
 {
-    this->J_.zeroMatrix();
+    J_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rtemp{1,2,3,4};
     std::vector<IdxT> ctemp{5,6,5,6};
     std::vector<ScalarT> vals{-1.0,-1.0,1.0,1.0};
-    this->J_.setValues(rtemp, ctemp, vals);
+    J_.setValues(rtemp, ctemp, vals);
 
     
     std::vector<IdxT> ccord{0, 1, 3, 5, 6};
 
     std::vector<IdxT> rcord(ccord.size(),5);
     vals = {y_[6], (1.0 / L_) , -(1.0 / L_),  - (R_ / L_) , y_[0]};
-    this->J_.setValues(rcord, ccord, vals);
+    J_.setValues(rcord, ccord, vals);
 
     
     std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
     std::fill(rcord.begin(), rcord.end(), 6);
     vals = {-y_[5], (1.0 / L_) , -(1.0 / L_), -y_[0], - (R_ / L_)};
-    this->J_.setValues(rcord, ccor2, vals);
+    J_.setValues(rcord, ccor2, vals);
 
 
     //Create -dF/dy'
@@ -133,7 +134,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,7,7);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.axpy(this->alpha_, Jacder);
+    J_.axpy(alpha_, Jacder);
 
 
     return 0;

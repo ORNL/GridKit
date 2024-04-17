@@ -37,11 +37,16 @@ namespace ModelLib
         using CircuitComponent<ScalarT, IdxT>::ypB_;
         using CircuitComponent<ScalarT, IdxT>::fB_;
         using CircuitComponent<ScalarT, IdxT>::gB_;
+        using CircuitComponent<ScalarT, IdxT>::J_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
 
+        using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+        using CircuitComponent<ScalarT, IdxT>::n_extern_;
+        using CircuitComponent<ScalarT, IdxT>::n_intern_;
+
     public:
-        SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT,ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT,ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT J, ScalarT P, ScalarT mub);
+        SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT,ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT,ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT RJ, ScalarT P, ScalarT mub);
         virtual ~SynchronousMachine();
 
         int allocate();
@@ -67,7 +72,7 @@ namespace ModelLib
         std::tuple<ScalarT,ScalarT> Rkq_;
         ScalarT Rfd_;
         ScalarT Rkd_;
-        ScalarT J_;
+        ScalarT RJ_;
         ScalarT P_;
         ScalarT mub_;
     };

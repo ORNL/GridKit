@@ -20,11 +20,11 @@ template <class ScalarT, typename IdxT>
 Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, ScalarT C)
   :  C_(C)
 {
-    this->size_ = 3;
-    this->n_intern_ = 1;
-    this->n_extern_ = 2;
-    this->extern_indices_ = {0,1};
-    this->idc_ = id;
+    size_ = 3;
+    n_intern_ = 1;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -38,9 +38,9 @@ Capacitor<ScalarT, IdxT>::~Capacitor()
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::allocate()
 {
-    this->y_.resize(this->size_);
-    this->yp_.resize(this->size_);
-    this->f_.resize(this->size_);
+    y_.resize(size_);
+    yp_.resize(size_);
+    f_.resize(size_);
     
     return 0;
 }
@@ -71,12 +71,12 @@ template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateResidual()
 {
     //input
-    this->f_[0] = C_ * this->yp_[2];
+    f_[0] = C_ * yp_[2];
     //output
-    this->f_[1] = -C_ * this->yp_[2];
+    f_[1] = -C_ * yp_[2];
 
     //internal
-    this->f_[2] =  -C_ * this->yp_[2] + this->y_[0] - this->y_[1] - this->y_[2];
+    f_[2] =  -C_ * yp_[2] + y_[0] - y_[1] - y_[2];
     return 0;
 }
 
@@ -90,21 +90,21 @@ int Capacitor<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateJacobian()
 {
-    this->J_.zeroMatrix();
+    J_.zeroMatrix();
     //Create dF/dy
     std::vector<IdxT> rcord{2,2,2};
     std::vector<IdxT> ccord{0,1,2};
     std::vector<ScalarT> vals{1.0, -1.0, -1.0};
-    this->J_.setValues(rcord, ccord, vals);
+    J_.setValues(rcord, ccord, vals);
 
     //Create dF/dy'
     std::vector<IdxT> rcordder{0,1,2};
     std::vector<IdxT> ccordder{2,2,2};
-    std::vector<ScalarT> valsder{C_, -C_, -this->C_};
+    std::vector<ScalarT> valsder{C_, -C_, -C_};
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
-    this->J_.axpy(this->alpha_, Jacder);
+    J_.axpy(alpha_, Jacder);
 
     return 0;
 }
