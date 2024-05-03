@@ -101,24 +101,24 @@ mpc.baseMVA = 100;
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [
-	1	3	2.0	0.0	0	0	0	1	0.0	0	0	0	0.0;
-	2	1	2.5	-0.8	0	0	0	1	0.0	0	0	0	0.0;
-	3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
+    1	3	2.0	0.0	0	0	0	1.0	0.0	0	0	0	0.0;
+    2	1	2.5	-0.8	0	0	0	1.0	0.0	0	0	0	0.0;
+    3	2	0	0	0	0	0	1.1	0.0	0	0	0	0.0;
 ];
 
 %% generator data
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
 mpc.gen = [
-	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
-	3	2.0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+    1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
+    3	2.0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0;
 ];
 
 %% branch data
 %	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
 mpc.branch = [
-	1	2	0	0.1	0	0	0	0	0	0	0	0	0;
-	1	3	0	0.0666666	0	0	0	0	0	0	0	0	0;
-	2	3	0	0.0833333	0	0	0	0	0	0	0	0	0;
+    1	2	0	0.1	0	0	0	0	0	0	0	0	0;
+    1	3	0	0.0666666	0	0	0	0	0	0	0	0	0;
+    2	3	0	0.0833333	0	0	0	0	0	0	0	0	0;
 ];
 
 %%-----  OPF Data  -----%%
@@ -126,9 +126,9 @@ mpc.branch = [
 %	1	startup	shutdown	n	x1	y1	...	xn	yn
 %	2	startup	shutdown	n	c(n-1)	...	c0
 mpc.gencost = [
-	2	0	0	3	0   14	0;
-	2	0	0	3	0   15	0;
-	2	0	0	3	0   30	0;
+    2	0	0	3	0   14	0;
+    2	0	0	3	0   15	0;
+    2	0	0	3	0   30	0;
 ];
 
 )";
@@ -148,7 +148,7 @@ constexpr double theta3_ref =  1.46241; // [deg]
  * Testing the monlithic case via the class MiniGrid
  * @return returns 0 if pass o.w. fails
 */
-int monolithic_case()
+int monolithicCase()
 {
      std::cout << "\nSolving power flow for a 3-bus monolithic model ...\n\n";
     // Create a 3-bus model
@@ -156,6 +156,7 @@ int monolithic_case()
 
     // allocate model
     model->allocate();
+    model->initialize();
     std::cout << "Model size: " << model->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -200,7 +201,7 @@ int monolithic_case()
  * Run the Testing case for parser setup
  * @return returns 0 if pass o.w. fail
 */
-int parser_case()
+int parserCase()
 {
     std::cout << "Solving same problem, but assembled from components via a parser ...\n\n";
 
@@ -216,6 +217,7 @@ int parser_case()
 
     // allocate model
     sysmodel->allocate();
+    sysmodel->initialize();
     std::cout << "Model size: " << sysmodel->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -265,7 +267,7 @@ int parser_case()
  * Hardwired Test Case
  * @return 0 if pass otherwise fails
 */
-int hardwired_case()
+int hardwiredCase()
 {
     std::cout << "Solving same problem, but assembled from components manually ...\n\n";
 
@@ -339,6 +341,7 @@ int hardwired_case()
 
     // allocate model
     sysmodel->allocate();
+    sysmodel->initialize();
     std::cout << "Model size: " << sysmodel->size() << "\n\n";
 
     // Create numerical solver and attach the model to it.
@@ -354,7 +357,7 @@ int hardwired_case()
     // Print solution
     double th2 = bus2->theta() * 180.0/M_PI; 
     double V2  = bus2->V();
-    double th3 = bus3->theta() * 180.0/M_PI; 
+    double th3 = bus3->theta() * 180.0/M_PI;
 
 
     std::cout << "Solution:\n";
@@ -388,10 +391,21 @@ int main()
     //return the results of each case
     int resolve = 0;
     std::cout << std::string(32,'-') << std::endl;
-    resolve += monolithic_case();
+    resolve |= monolithicCase();
     std::cout << std::string(32,'-') << std::endl;
-    resolve += hardwired_case();
+    resolve |= parserCase();
     std::cout << std::string(32,'-') << std::endl;
-    resolve += parser_case();
+    resolve |= hardwiredCase();
+
+    if (resolve)
+    {
+        std::cout << "Failure!\n";
+    }
+    else
+    {
+        std::cout << "Success!\n";
+    }
+    
+    
     return resolve;
 }

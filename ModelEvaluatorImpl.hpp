@@ -94,10 +94,12 @@ namespace ModelLib
             ypB_(size_),
             fB_(size_),
             gB_(size_opt_),
+            J_(COO_Matrix<ScalarT, IdxT>()),
             param_(size_opt_),
             param_up_(size_opt_),
             param_lo_(size_opt_)
-        {}
+        {
+        }
 
         virtual IdxT size()
         {
@@ -107,6 +109,11 @@ namespace ModelLib
         virtual IdxT nnz()
         {
             return nnz_;
+        }
+
+        virtual bool hasJacobian()
+        {
+            return false;
         }
 
         virtual IdxT size_quad()
@@ -130,6 +137,11 @@ namespace ModelLib
         {
             rtol = rtol_;
             atol = atol_;
+        }
+
+        virtual void setMaxSteps(IdxT& msa) const
+        {
+            msa = max_steps_;
         }
 
         std::vector<ScalarT>& y()
@@ -222,6 +234,16 @@ namespace ModelLib
             return f_;
         }
 
+        COO_Matrix<ScalarT, IdxT>& getJacobian()
+        {
+            return J_;
+        }
+
+        const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+        {
+            return J_;
+        }
+
         std::vector<ScalarT>& getIntegrand()
         {
             return g_;
@@ -252,6 +274,12 @@ namespace ModelLib
             return gB_;
         }
 
+        //@todo Fix ID naming
+        IdxT getIDcomponent()
+        {
+            return idc_;
+        }
+
 
 
     protected:
@@ -271,6 +299,8 @@ namespace ModelLib
         std::vector<ScalarT> fB_;
         std::vector<ScalarT> gB_;
 
+        COO_Matrix<ScalarT, IdxT> J_;
+
         std::vector<ScalarT> param_;
         std::vector<ScalarT> param_up_;
         std::vector<ScalarT> param_lo_;
@@ -280,6 +310,10 @@ namespace ModelLib
 
         real_type rtol_;
         real_type atol_;
+
+        IdxT max_steps_;
+
+        IdxT idc_;
 
     };
 

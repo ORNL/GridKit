@@ -117,6 +117,7 @@ public:
         // Set system model tolerances
         rtol_ = 1e-7;
         atol_ = 1e-9;
+        this->max_steps_=2000;
     }
 
     /**
@@ -181,6 +182,17 @@ public:
         assert(size_quad_ == 1 or size_quad_ == 0);
 
         return 0;
+    }
+
+    /**
+     * @brief Assume that jacobian is not avalible
+     * 
+     * @return true 
+     * @return false 
+     */
+    bool hasJacobian() 
+    {
+        return false;
     }
 
     /**
