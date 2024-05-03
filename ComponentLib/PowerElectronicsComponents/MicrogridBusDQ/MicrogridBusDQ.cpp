@@ -68,8 +68,11 @@ int MicrogridBusDQ<ScalarT, IdxT>::tagDifferentiable()
 
 /**
  * @brief Evaluate residual of microgrid line
- * This model has "Virtual resistors". This component represent sum of inductions on the bus 
+ * This model has "Virtual resistors". The voltage of the bus divided by its virtual resistance.
+ * The components are external to allow for outside components to add inductances to the terms.
  *
+ * refernce to equations in class header
+ * 
  */
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
