@@ -91,7 +91,7 @@ namespace ModelLib
         using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
         BusPV();
-        BusPV(ScalarT V, ScalarT theta0, ScalarT P);
+        BusPV(ScalarT V, ScalarT theta0);
         BusPV(BusData& data);
         virtual ~BusPV();
 

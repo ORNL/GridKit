@@ -92,7 +92,6 @@ namespace ModelLib
         BusSlack();
         BusSlack(ScalarT V, ScalarT theta);
         BusSlack(BusData& data);
-        BusSlack(BusData& data);
         virtual ~BusSlack();
         virtual int evaluateResidual();
         virtual int evaluateAdjointResidual();

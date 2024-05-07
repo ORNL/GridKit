@@ -145,6 +145,10 @@ using namespace AnalysisManager;
 using namespace GridKit::Testing;
 using namespace GridKit::PowerSystemData;
 
+constexpr double theta2_ref = -4.87979; // [deg]
+constexpr double V2_ref     =  1.08281; // [p.u.]
+constexpr double theta3_ref =  1.46241; // [deg]
+
 
 /**
  * Testing the monlithic case via the class MiniGrid

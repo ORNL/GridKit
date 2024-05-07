@@ -74,7 +74,7 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV()
-  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0), Pg_(0.0)
+  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
 {
     //std::cout << "Create BusPV..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -92,8 +92,8 @@ BusPV<ScalarT, IdxT>::BusPV()
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0, ScalarT Pg)
-  : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0), Pg_(Pg)
+BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0)
+  : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0)
 {
     //std::cout << "Create BusPV ..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
