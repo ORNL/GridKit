@@ -86,6 +86,9 @@ option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON
 
 set(CMAKE_MACOSX_RPATH 1)
 
+#Provide string to source
+add_compile_definitions("SOURCE_ROOT=${CMAKE_SOURCE_DIR}")
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
