@@ -88,6 +88,9 @@ set(CMAKE_MACOSX_RPATH 1)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
+# Add source directory to macros for file access
+add_compile_definitions("SOURCE_ROOT=${CMAKE_SOURCE_DIR}")
+
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
