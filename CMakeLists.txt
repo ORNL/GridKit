@@ -54,11 +54,12 @@
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
 #
-
+#
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
-#]]
+#    - Slaven Peles <peless@ornl.gov>
+# ]]
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -87,9 +88,6 @@ option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON
 set(CMAKE_MACOSX_RPATH 1)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
-
-# Add source directory to macros for file access
-add_compile_definitions("SOURCE_ROOT=${CMAKE_SOURCE_DIR}")
 
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 # use, i.e. don't skip the full RPATH for the build tree
