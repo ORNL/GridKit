@@ -19,7 +19,7 @@
 #include <Solver/Dynamic/DynamicSolver.hpp>
 
 
-static int test(size_t Nsize);
+static int test(size_t Nsize, bool debug_output = false);
 
 int main(int argc, char const *argv[])
 {
@@ -44,16 +44,16 @@ int main(int argc, char const *argv[])
  * @param Nsize - The number of DG line load cobinations to generate for scale
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(size_t Nsize)
+int test(size_t Nsize, bool debug_output)
 {
     double abstol = 1.0e-8;
     double reltol = 1.0e-8;
-    size_t max_step_amount = 3000;
+    size_t max_step_number = 3000;
     bool usejac = true;
 
     //TODO:setup as named parameters
     //Create circuit model
-    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac, max_step_amount);
+    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac, max_step_number);
 
     const std::vector<double>* true_vec = &answer_key_N8;
 
@@ -243,8 +243,7 @@ int test(size_t Nsize)
     //Add all the microgrid Virtual DQ Buses
     for (size_t i = 0; i < 2*Nsize; i++)
     {
-        ModelLib::MicrogridBusDQ<double, size_t>* virDQbus_model = new ModelLib::MicrogridBusDQ<double, size_t>(
-        model_id++, RN);
+        ModelLib::MicrogridBusDQ<double, size_t>* virDQbus_model = new ModelLib::MicrogridBusDQ<double, size_t>(model_id++, RN);
 
         virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
         virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
@@ -254,8 +253,11 @@ int test(size_t Nsize)
     //allocate all the intial conditions
     sysmodel->allocate(vec_size_total);
 
-    std::cout << sysmodel->y().size() << std::endl;
-    std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
+    if (debug_output)
+    {
+        std::cout << sysmodel->y().size() << std::endl;
+        std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
+    }
 
     //Create Intial points for states. Every state is to specified to the zero intially
     for (size_t i = 0; i < vec_size_total; i++)
@@ -278,17 +280,21 @@ int test(size_t Nsize)
     sysmodel->initialize();
     sysmodel->evaluateResidual();
 
-    std::vector<double>& fres = sysmodel->getResidual(); 
-    std::cout << "Verify Intial Resisdual is Zero: {\n";
-    for (size_t i = 0; i < fres.size(); i++)
+    std::vector<double>& fres = sysmodel->getResidual();
+    if (debug_output)
     {
-        printf("%lu : %.16e \n", i, fres[i]);
+        std::cout << "Verify Intial Resisdual is Zero: {\n";
+        for (size_t i = 0; i < fres.size(); i++)
+        {
+            std::cout << i << " : " << fres[i] << "\n";
+        }
+        std::cout << "}\n";
     }
-    std::cout << "}\n";
 
     sysmodel->updateTime(0.0, 1.0e-8);
     sysmodel->evaluateJacobian();
-    std::cout << "Intial Jacobian with alpha:\n";
+    if (debug_output)
+        std::cout << "Intial Jacobian with alpha:\n";
 
 
     //Create numerical integrator and configure it for the generator model
@@ -304,12 +310,15 @@ int test(size_t Nsize)
 
     idas->runSimulation(t_final);
 
-    std::vector<double>& yfinial = sysmodel->y(); 
+    std::vector<double>& yfinal = sysmodel->y(); 
 
-    std::cout << "Final Vector y\n";
-    for (size_t i = 0; i < yfinial.size(); i++)
+    if (debug_output)
     {
-        printf("%lu: % 2.16e\n", i, yfinial[i]);
+        std::cout << "Final Vector y\n";
+        for (size_t i = 0; i < yfinal.size(); i++)
+        {
+            std::cout << i << " : " << yfinal[i] << "\n";
+        }
     }
 
     bool test_pass = true;
@@ -319,8 +328,9 @@ int test(size_t Nsize)
     std::cout << "Test the Relative Error\n";
     for (size_t i = 0; i < true_vec->size(); i++)
     {
-        test_pass *= GridKit::Testing::isEqual(yfinial[i], true_vec->at(i), tol);
-        printf("%lu: % 2.16e\n", i, abs(true_vec->at(i) - yfinial[i]) / abs(true_vec->at(i)));
+        test_pass *= GridKit::Testing::isEqual(yfinal[i], true_vec->at(i), tol);
+        if (debug_output)
+            std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
     }
     
     delete idas;
