@@ -12,9 +12,9 @@ namespace ModelLib {
  * Calls default ModelEvaluatorImpl constructor.
  * 
  * 
- * Model is from paper: "
-    "Modeling, Analysis and Testing of Autonomous Operation of an Inverter-Based Microgrid" Nagaraju Pogaku, Milan Prodanovic, and Timothy C. Green"
- * Section C
+ * Model is from paper: "Modeling, Analysis and Testing of Autonomous Operation
+ * of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan Prodanovic, and
+ * Timothy C. Green, Section C
  * 
  * @todo Consider having \omegaref as a global constant, not a node variable.
  */
@@ -88,7 +88,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
     f_[4] = y_[6] ;
 
     //Internal variables
-    f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0]*y_[6] +  (y_[1] - y_[3])/L_;
+    f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0]*y_[6] + (y_[1] - y_[3])/L_;
     f_[6] = -yp_[6] - (R_ / L_) * y_[6] - y_[0]*y_[5] + (y_[2] - y_[4])/L_;
 
 
@@ -163,8 +163,6 @@ int MicrogridLine<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     return 0;
 }
-
-
 
 
 

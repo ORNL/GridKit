@@ -7,7 +7,6 @@
 #include <filesystem>
 
 #include <Utilities/Testing.hpp>
-#include "SolutionKeys.hpp"
 
 #include <ComponentLib/PowerElectronicsComponents/DistributedGenerator/DistributedGenerator.hpp>
 #include <ComponentLib/PowerElectronicsComponents/MicrogridLine/MicrogridLine.hpp>
@@ -20,6 +19,10 @@
 
 using index_type = size_t;
 using real_type = double;
+
+// Include solution keys for the three test cases here:
+#include "SolutionKeys.hpp"
+
 
 static int test(index_type Nsize, bool debug_output = false);
 
