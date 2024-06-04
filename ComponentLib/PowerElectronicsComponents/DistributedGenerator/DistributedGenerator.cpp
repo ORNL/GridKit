@@ -10,7 +10,7 @@ namespace ModelLib {
 
 
 /*!
- * @brief Constructor for a Discrete Generator
+ * @brief Constructor for a Distributed Generator
  * @todo Maybe have parameters be templated in. Variables cannot be changed and are unlikely to. Allows for compile time optimizations
  *
  * Calls default ModelEvaluatorImpl constructor.

@@ -56,8 +56,6 @@
 #
 
 add_subdirectory(MatPowerTesting)
-add_subdirectory(RLCircuit)
-add_subdirectory(Microgrid)
 add_subdirectory(SparseTest)
 add_subdirectory(DistributedGeneratorTest)
 
@@ -67,6 +65,9 @@ endif()
 
 if(TARGET SUNDIALS::idas)
   add_subdirectory(AdjointSensitivity)
+  add_subdirectory(RLCircuit)
+  add_subdirectory(Microgrid)
+  add_subdirectory(ScaleMicrogrid)
   if(GRIDKIT_ENABLE_IPOPT)
     add_subdirectory(DynamicConstrainedOpt)
     add_subdirectory(GenConstLoad)

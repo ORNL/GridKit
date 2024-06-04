@@ -13,11 +13,10 @@ namespace ModelLib {
  * 
  * In DQ space
  * Each microgrid line has a virtual resistance RN
- * Model is from paper: "
-    "Modeling, Analysis and Testing of Autonomous Operation of an Inverter-Based Microgrid" Nagaraju Pogaku, Milan Prodanovic, and Timothy C. Green"
- * Section E
+ * Model is from paper: "Modeling, Analysis and Testing of Autonomous Operation
+ * of an Inverter-Based Microgrid", Nagaraju Pogaku, Milan Prodanovic, and
+ * Timothy C. Green, Section E
  */
-
 template <class ScalarT, typename IdxT>
 MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN)
   : RN_(RN) 

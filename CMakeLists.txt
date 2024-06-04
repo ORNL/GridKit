@@ -54,11 +54,12 @@
 # Security, LLC, and shall not be used for advertising or product
 # endorsement purposes.
 #
-
+#
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
-#]]
+#    - Slaven Peles <peless@ornl.gov>
+# ]]
 
 cmake_minimum_required(VERSION 3.12)
 
