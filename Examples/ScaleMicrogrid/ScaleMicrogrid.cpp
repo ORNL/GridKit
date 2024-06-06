@@ -8,10 +8,10 @@
 
 #include <Utilities/Testing.hpp>
 
-#include <ComponentLib/PowerElectronicsComponents/DistributedGenerator/DistributedGenerator.hpp>
-#include <ComponentLib/PowerElectronicsComponents/MicrogridLine/MicrogridLine.hpp>
-#include <ComponentLib/PowerElectronicsComponents/MicrogridLoad/MicrogridLoad.hpp>
-#include <ComponentLib/PowerElectronicsComponents/MicrogridBusDQ/MicrogridBusDQ.hpp>
+#include <ComponentLib/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <ComponentLib/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
+#include <ComponentLib/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
+#include <ComponentLib/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 
 #include <PowerElectronicsModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
