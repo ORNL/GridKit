@@ -61,8 +61,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "GeneratorPV.hpp"
-#include <ComponentLib/Bus/BaseBus.hpp>
+#include "Load.hpp"
+#include <ComponentLib/PowerFlow/Bus/BaseBus.hpp>
 
 namespace ModelLib {
 
@@ -73,9 +73,10 @@ namespace ModelLib {
  */
 
 template <class ScalarT, typename IdxT>
-GeneratorPV<ScalarT, IdxT>::GeneratorPV(bus_type* bus, GenData& data)
-  : P_(data.Pg),
-    // Q_(data.Qg),
+Load<ScalarT, IdxT>::Load(bus_type* bus, ScalarT P, ScalarT Q)
+  : P_(P),
+    Q_(Q),
+    busID_(0),
     bus_(bus)
 {
     //std::cout << "Create a load model with " << size_ << " variables ...\n";
@@ -83,7 +84,18 @@ GeneratorPV<ScalarT, IdxT>::GeneratorPV(bus_type* bus, GenData& data)
 }
 
 template <class ScalarT, typename IdxT>
-GeneratorPV<ScalarT, IdxT>::~GeneratorPV()
+Load<ScalarT, IdxT>::Load(bus_type* bus, LoadData& data)
+  : P_(data.Pd),
+    Q_(data.Qd),
+    busID_(data.bus_i),
+    bus_(bus)
+{
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    size_ = 0;
+}
+
+template <class ScalarT, typename IdxT>
+Load<ScalarT, IdxT>::~Load()
 {
 }
 
@@ -91,7 +103,7 @@ GeneratorPV<ScalarT, IdxT>::~GeneratorPV()
  * @brief allocate method computes sparsity pattern of the Jacobian.
  */
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::allocate()
+int Load<ScalarT, IdxT>::allocate()
 {
     return 0;
 }
@@ -100,7 +112,7 @@ int GeneratorPV<ScalarT, IdxT>::allocate()
  * Initialization of the grid model
  */
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::initialize()
+int Load<ScalarT, IdxT>::initialize()
 {
     return 0;
 }
@@ -109,7 +121,7 @@ int GeneratorPV<ScalarT, IdxT>::initialize()
  * \brief Identify differential variables
  */
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::tagDifferentiable()
+int Load<ScalarT, IdxT>::tagDifferentiable()
 {
     return 0;
 }
@@ -120,48 +132,50 @@ int GeneratorPV<ScalarT, IdxT>::tagDifferentiable()
  * Must be connected to a PQ bus.
  */
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::evaluateResidual()
+int Load<ScalarT, IdxT>::evaluateResidual()
 {
     // std::cout << "Evaluating load residual ...\n";
-    bus_->P() += P_;
-    // bus_->Q() += Q_;
+    bus_->P() -= P_;
+    bus_->Q() -= Q_;
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::evaluateJacobian()
+int Load<ScalarT, IdxT>::evaluateJacobian()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::evaluateIntegrand()
+int Load<ScalarT, IdxT>::evaluateIntegrand()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::initializeAdjoint()
+int Load<ScalarT, IdxT>::initializeAdjoint()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::evaluateAdjointResidual()
+int Load<ScalarT, IdxT>::evaluateAdjointResidual()
 {
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int GeneratorPV<ScalarT, IdxT>::evaluateAdjointIntegrand()
+int Load<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     return 0;
 }
+
+
 
 
 // Available template instantiations
-template class GeneratorPV<double, long int>;
-template class GeneratorPV<double, size_t>;
+template class Load<double, long int>;
+template class Load<double, size_t>;
 
 
 } //namespace ModelLib

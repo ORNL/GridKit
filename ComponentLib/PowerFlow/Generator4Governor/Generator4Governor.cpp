@@ -61,7 +61,7 @@
 #include <iostream>
 #include <cmath>
 #include "Generator4Governor.hpp"
-#include "ComponentLib/Bus/BaseBus.hpp"
+#include "ComponentLib/PowerFlow/Bus/BaseBus.hpp"
 
 namespace ModelLib {
 

@@ -73,11 +73,11 @@
 #include <fstream>
 #include <filesystem>
 
-#include <ComponentLib/MiniGrid/MiniGrid.hpp>
-#include <ComponentLib/Bus/BusFactory.hpp>
-#include <ComponentLib/Generator/GeneratorFactory.hpp>
-#include <ComponentLib/Branch/Branch.hpp>
-#include <ComponentLib/Load/Load.hpp>
+#include <ComponentLib/PowerFlow/MiniGrid/MiniGrid.hpp>
+#include <ComponentLib/PowerFlow/Bus/BusFactory.hpp>
+#include <ComponentLib/PowerFlow/Generator/GeneratorFactory.hpp>
+#include <ComponentLib/PowerFlow/Branch/Branch.hpp>
+#include <ComponentLib/PowerFlow/Load/Load.hpp>
 #include <SystemSteadyStateModel.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <PowerSystemData.hpp>

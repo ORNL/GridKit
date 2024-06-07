@@ -60,8 +60,8 @@
 
 #include <iostream>
 #include <cmath>
-#include <ComponentLib/Bus/BaseBus.hpp>
-#include "Generator4.hpp"
+#include <ComponentLib/PowerFlow/Bus/BaseBus.hpp>
+#include "Generator4Param.hpp"
 
 namespace ModelLib {
 
@@ -71,11 +71,11 @@ namespace ModelLib {
  * Arguments passed to ModelEvaluatorImpl:
  * - Number of equations = 4 differential + 2 algebraic = 6
  * - Number of quadratures = 1
- * - Number of optimization parameters = 2
+ * - Number of optimization parameters = 1
  */
 template <class ScalarT, typename IdxT>
-Generator4<ScalarT, IdxT>::Generator4(bus_type* bus, ScalarT P0, ScalarT Q0)
-  : ModelEvaluatorImpl<ScalarT, IdxT>(6, 1, 2),
+Generator4Param<ScalarT, IdxT>::Generator4Param(bus_type* bus, ScalarT P0, ScalarT Q0)
+  : ModelEvaluatorImpl<ScalarT, IdxT>(6, 1, 1),
     H_(5.0),
     D_(0.04),
     Xq_(0.85),
@@ -89,10 +89,6 @@ Generator4<ScalarT, IdxT>::Generator4(bus_type* bus, ScalarT P0, ScalarT Q0)
     Pm_(1.0),
     omega_s_(1.0),
     omega_b_(2.0*60.0*M_PI),
-    omega_up_(omega_s_ + 0.0001),
-    omega_lo_(omega_s_ - 0.0001),
-    c_(10000.0),
-    beta_(2),
     P0_(P0),
     Q0_(Q0),
     bus_(bus)
@@ -100,7 +96,7 @@ Generator4<ScalarT, IdxT>::Generator4(bus_type* bus, ScalarT P0, ScalarT Q0)
 }
 
 template <class ScalarT, typename IdxT>
-Generator4<ScalarT, IdxT>::~Generator4()
+Generator4Param<ScalarT, IdxT>::~Generator4Param()
 {
 }
 
@@ -109,9 +105,9 @@ Generator4<ScalarT, IdxT>::~Generator4()
  *
  */
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::allocate()
+int Generator4Param<ScalarT, IdxT>::allocate()
 {
-    //std::cout << "Allocate Generator4..." << std::endl;
+    //std::cout << "Allocate Generator4Param..." << std::endl;
     tag_.resize(size_);
 
     return 0;
@@ -140,9 +136,9 @@ int Generator4<ScalarT, IdxT>::allocate()
  *
  */
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::initialize()
+int Generator4Param<ScalarT, IdxT>::initialize()
 {
-    // std::cout << "Initialize Generator4..." << std::endl;
+    // std::cout << "Initialize Generator4Param..." << std::endl;
 
     // Compute initial guess for the generator voltage phase
     const ScalarT delta = atan((Xq_*P0_ - Rs_*Q0_) / (V()*V() + Rs_*P0_ + Xq_*Q0_)) + theta();
@@ -174,13 +170,17 @@ int Generator4<ScalarT, IdxT>::initialize()
     Pm_ = Ed*Id + Eq*Iq + (Xdp_ - Xqp_)*Id*Iq; // <~ set to steady state value
 
     // Initialize optimization parameters
-    param_[0] = Pm_;
-    param_up_[0] = 1.5;
-    param_lo_[0] = 0.0;
+    param_[0] = H_;
+    param_up_[0] = 10.0;
+    param_lo_[0] =  2.0;
 
-    param_[1] = Ef_;
-    param_up_[1] = 1.7;
-    param_lo_[1] = 0.0;
+    // param_[0] = Pm_;
+    // param_up_[0] = 1.5;
+    // param_lo_[0] = 0.0;
+
+    // param_[1] = Ef_;
+    // param_up_[1] = 1.7;
+    // param_lo_[1] = 0.0;
 
     return 0;
 }
@@ -189,7 +189,7 @@ int Generator4<ScalarT, IdxT>::initialize()
  * \brief Identify differential variables.
  */
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::tagDifferentiable()
+int Generator4Param<ScalarT, IdxT>::tagDifferentiable()
 {
     tag_[0] = true;
     tag_[1] = true;
@@ -233,11 +233,11 @@ int Generator4<ScalarT, IdxT>::tagDifferentiable()
  *
  */
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::evaluateResidual()
+int Generator4Param<ScalarT, IdxT>::evaluateResidual()
 {
-    // std::cout << "Evaluate residual for Generator4..." << std::endl;
+    // std::cout << "Evaluate residual for Generator4Param..." << std::endl;
     f_[0] = dotDelta() -  omega_b_* (omega() - omega_s_);
-    f_[1] = (2.0*H_)/omega_s_*dotOmega() - Pm() + Eqp()*Iq() + Edp()*Id() + (- Xdp_ + Xqp_)*Id()*Iq() + D_*(omega() - omega_s_);
+    f_[1] = (2.0*H())/omega_s_*dotOmega() - Pm() + Eqp()*Iq() + Edp()*Id() + (- Xdp_ + Xqp_)*Id()*Iq() + D_*(omega() - omega_s_);
     f_[2] = Tq0p_*dotEdp() + Edp() - (Xq_ - Xqp_)*Iq();
     f_[3] = Td0p_*dotEqp() + Eqp() + (Xd_ - Xdp_)*Id() - Ef();
     f_[4] =  Rs_*Id() - Xqp_*Iq() + V()*sin(delta() - theta()) - Edp();
@@ -247,35 +247,39 @@ int Generator4<ScalarT, IdxT>::evaluateResidual()
     P() += Pg();
     Q() += Qg();
 
+    //std::cout << "Residual: t = " << time_ << std::endl;
+
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::evaluateJacobian()
+int Generator4Param<ScalarT, IdxT>::evaluateJacobian()
 {
-    std::cerr << "Evaluate Jacobian for Generator4..." << std::endl;
+    std::cerr << "Evaluate Jacobian for Generator4Param..." << std::endl;
     std::cerr << "Jacobian evaluation not implemented!" << std::endl;
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::evaluateIntegrand()
+int Generator4Param<ScalarT, IdxT>::evaluateIntegrand()
 {
-    // std::cout << "Evaluate Integrand for Generator4..." << std::endl;
-    g_[0] = frequencyPenalty(y_[1]);
+    // std::cout << "Evaluate Integrand for Generator4Param..." << std::endl;
+    g_[0] = trajectoryPenalty(time_);
     return 0;
 }
 
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::initializeAdjoint()
+int Generator4Param<ScalarT, IdxT>::initializeAdjoint()
 {
-    //std::cout << "Initialize adjoint for Generator4..." << std::endl;
+    //std::cout << "Initialize adjoint for Generator4Param..." << std::endl;
     for (IdxT i=0; i<size_; ++i)
     {
         yB_[i] = 0.0;
         ypB_[i] = 0.0;
     }
-    ypB_[1] = frequencyPenaltyDer(y_[1]);
+    //ypB_[1] = frequencyPenaltyDer(y_[1]);
+    ypB_[2] = -trajectoryPenaltyDerEdp(time_)/Tq0p_;
+    ypB_[3] = -trajectoryPenaltyDerEqp(time_)/Td0p_;
 
     return 0;
 }
@@ -296,17 +300,17 @@ int Generator4<ScalarT, IdxT>::initializeAdjoint()
  *
  */
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::evaluateAdjointResidual()
+int Generator4Param<ScalarT, IdxT>::evaluateAdjointResidual()
 {
-    // std::cout << "Evaluate adjoint residual for Generator4..." << std::endl;
+    // std::cout << "Evaluate adjoint residual for Generator4Param..." << std::endl;
     ScalarT sinPhi = sin(delta() - theta());
     ScalarT cosPhi = cos(delta() - theta());
 
     // Generator adjoint
     fB_[0] = ypB_[0] - yB_[4]*V()*cosPhi + yB_[5]*V()*sinPhi;
-    fB_[1] = 2.0*H_/omega_s_*ypB_[1] + yB_[0]*omega_b_ - yB_[1]*D_ + frequencyPenaltyDer(omega());
-    fB_[2] = Tq0p_*ypB_[2] - yB_[1]*Id() - yB_[2] + yB_[4];
-    fB_[3] = Td0p_*ypB_[3] - yB_[1]*Iq() - yB_[3] + yB_[5];
+    fB_[1] = 2.0*H()/omega_s_*ypB_[1] + yB_[0]*omega_b_ - yB_[1]*D_; //+ frequencyPenaltyDer(omega());
+    fB_[2] = Tq0p_*ypB_[2] - yB_[1]*Id() - yB_[2] + yB_[4] + trajectoryPenaltyDerEdp(time_);
+    fB_[3] = Td0p_*ypB_[3] - yB_[1]*Iq() - yB_[3] + yB_[5] + trajectoryPenaltyDerEqp(time_);
     fB_[4] = -yB_[1]*(Edp() + (Xqp_ - Xdp_)*Iq()) - yB_[3]*(Xd_ - Xdp_) - yB_[4]*Rs_ - yB_[5]*Xdp_;
     fB_[5] = -yB_[1]*(Eqp() + (Xqp_ - Xdp_)*Id()) + yB_[2]*(Xq_ - Xqp_) + yB_[4]*Xqp_ - yB_[5]*Rs_;
 
@@ -314,19 +318,18 @@ int Generator4<ScalarT, IdxT>::evaluateAdjointResidual()
 }
 
 // template <class ScalarT, typename IdxT>
-// int Generator4<ScalarT, IdxT>::evaluateAdjointJacobian()
+// int Generator4Param<ScalarT, IdxT>::evaluateAdjointJacobian()
 // {
-//     std::cout << "Evaluate adjoint Jacobian for Generator4..." << std::endl;
+//     std::cout << "Evaluate adjoint Jacobian for Generator4Param..." << std::endl;
 //     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
 //     return 0;
 // }
 
 template <class ScalarT, typename IdxT>
-int Generator4<ScalarT, IdxT>::evaluateAdjointIntegrand()
+int Generator4Param<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
-    // std::cout << "Evaluate adjoint Integrand for Generator4..." << std::endl;
-    gB_[0] = yB_[1];
-    gB_[1] = yB_[3];
+    // std::cout << "Evaluate adjoint Integrand for Generator4Param..." << std::endl;
+    gB_[0] = -2.0*yB_[1]*dotOmega()/omega_s_;
 
     return 0;
 }
@@ -343,7 +346,7 @@ int Generator4<ScalarT, IdxT>::evaluateAdjointIntegrand()
  *
  */
 template <class ScalarT, typename IdxT>
-ScalarT Generator4<ScalarT, IdxT>::Pg()
+ScalarT Generator4Param<ScalarT, IdxT>::Pg()
 {
     return y_[5]*V()*cos(theta() - y_[0]) + y_[4]*V()*sin(theta() - y_[0]);
 }
@@ -354,46 +357,118 @@ ScalarT Generator4<ScalarT, IdxT>::Pg()
  * \f[ Q_g = E_q' I_d - E_d' I_q - X_d' I_d^2 - X_q' I_q^2 \f]
  */
 template <class ScalarT, typename IdxT>
-ScalarT Generator4<ScalarT, IdxT>::Qg()
+ScalarT Generator4Param<ScalarT, IdxT>::Qg()
 {
     return y_[5]*V()*sin(theta() - y_[0]) - y_[4]*V()*cos(theta() - y_[0]);
 }
 
 /**
- * Frequency penalty is used as the objective function for the generator model.
+ * @brief Difference between computed system state and look-up table value.
+ * 
+ * @todo Look-up table should probably live outside the generator model.
  */
 template <class ScalarT, typename IdxT>
-ScalarT Generator4<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
+ScalarT Generator4Param<ScalarT, IdxT>::trajectoryPenalty(ScalarT t) const
 {
-    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
-}
+    size_t N = table_.size();
+    double ti = table_[0][0];
+    double tf = table_[N-1][0];
+    double dt = (tf - ti)/(N-1);
+    int n = std::trunc(t/tf*(N-1.0));
 
-/**
- * Derivative of frequency penalty cannot be written in terms of min/max functions.
- * Need to expand conditional statements instead.
- */
-template <class ScalarT, typename IdxT>
-ScalarT Generator4<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
-{
-    if (omega > omega_up_)
+    double Edp_est = 0.0;
+    double Eqp_est = 0.0;
+
+    if(t >= ti && t < tf)
     {
-        return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
-    }
-    else if (omega < omega_lo_)
-    {
-        return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
+        // Interpolate from look-up table
+        Edp_est = (table_[n+1][3] - table_[n][3])/(table_[n+1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][3];
+        Eqp_est = (table_[n+1][4] - table_[n][4])/(table_[n+1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][4];
     }
     else
     {
-        return 0.0;
+        if(tf <= t && t < tf + dt)
+        {
+            // Extrapolate from look-up table
+            Edp_est = (table_[n][3] - table_[n-1][3])/(table_[n][0] - table_[n-1][0]) * (t - table_[n-1][0]) + table_[n-1][3];
+            Eqp_est = (table_[n][4] - table_[n-1][4])/(table_[n][0] - table_[n-1][0]) * (t - table_[n-1][0]) + table_[n-1][4];
+        }
+        else
+        {
+            // Too far away to extrapolate
+            std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+            return -1.0;
+        }
     }
+    double d = (Edp() - Edp_est);
+    double q = (Eqp() - Eqp_est);
+    return (d*d + q*q);
 }
 
+template <class ScalarT, typename IdxT>
+ScalarT Generator4Param<ScalarT, IdxT>::trajectoryPenaltyDerEdp(ScalarT t) const
+{
+    size_t N = table_.size();
+    double ti = table_[0][0];
+    double tf = table_[N-1][0];
+    double dt = (tf - ti)/(N-1);
+    int n = std::trunc(t/tf*(N-1.0));
+    double Edp_est = 0.0;
 
+    if(t >= ti && t < tf)
+    {
+        Edp_est = (table_[n+1][3] - table_[n][3])/(table_[n+1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][3];
+    }
+    else
+    {
+        if(tf <= t && t < tf + dt)
+        {
+            Edp_est = (table_[n][3] - table_[n-1][3])/(table_[n][0] - table_[n-1][0]) * (t - table_[n-1][0]) + table_[n-1][3];
+        }
+        else
+        {
+            std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+            return -1.0;
+        }
+    }
+    double d = (Edp() - Edp_est);
 
-// Available template instantiations
-template class Generator4<double, long int>;
-template class Generator4<double, size_t>;
+    return 2.0*d;
+}
+
+template <class ScalarT, typename IdxT>
+ScalarT Generator4Param<ScalarT, IdxT>::trajectoryPenaltyDerEqp(ScalarT t) const
+{
+    size_t N = table_.size();
+    double ti = table_[0][0];
+    double tf = table_[N-1][0];
+    double dt = (tf - ti)/(N-1);
+    int n = std::trunc(t/tf*(N-1.0));
+    double Eqp_est = 0.0;
+
+    if(t >= ti && t < tf)
+    {
+        Eqp_est = (table_[n+1][4] - table_[n][4])/(table_[n+1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][4];
+    }
+    else
+    {
+        if(tf <= t && t < tf + dt)
+        {
+            Eqp_est = (table_[n][4] - table_[n-1][4])/(table_[n][0] - table_[n-1][0]) * (t - table_[n-1][0]) + table_[n-1][4];
+        }
+        else
+        {
+            std::cerr << "Trajectory penalty: Out of time bounds at time " << t << "\n";
+            return -1.0;
+        }
+    }
+    double q = (Eqp() - Eqp_est);
+
+    return 2.0*q;
+}
+
+template class Generator4Param<double, long int>;
+template class Generator4Param<double, size_t>;
 
 
 } // namespace ModelLib

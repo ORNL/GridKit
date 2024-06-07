@@ -61,9 +61,9 @@
 #include <iostream>
 #include <iomanip>
 
-#include <ComponentLib/Bus/BusPQ.hpp>
-#include <ComponentLib/Load/Load.hpp>
-#include <ComponentLib/Generator4Governor/Generator4Governor.hpp>
+#include <ComponentLib/PowerFlow/Bus/BusPQ.hpp>
+#include <ComponentLib/PowerFlow/Load/Load.hpp>
+#include <ComponentLib/PowerFlow/Generator4Governor/Generator4Governor.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <SystemModel.hpp>
 

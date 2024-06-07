@@ -59,7 +59,7 @@
 
 #include <iostream>
 #include <cmath>
-#include <ComponentLib/Bus/BaseBus.hpp>
+#include <ComponentLib/PowerFlow/Bus/BaseBus.hpp>
 #include <PowerSystemData.hpp>
 
 #include "Branch.hpp"

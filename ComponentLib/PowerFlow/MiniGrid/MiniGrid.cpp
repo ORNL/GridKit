@@ -57,42 +57,42 @@
  *
  */
 
+
 #include <iostream>
 #include <cmath>
-#include <ComponentLib/Bus/BusSlack.hpp>
-#include "Generator2.hpp"
+#include <vector>
+#include "MiniGrid.hpp"
+#include <ComponentLib/PowerFlow/Bus/BaseBus.hpp>
 
 namespace ModelLib {
 
 /*!
- * @brief Constructor for a simple generator model
+ * @brief Constructor for a constant load model
  *
- * Arguments passed to ModelEvaluatorImpl:
- * - Number of equations = 2
- * - Number of quadratures = 1
- * - Number of optimization parameters = 1
+ * Calls default ModelEvaluatorImpl constructor.
  */
+
 template <class ScalarT, typename IdxT>
-Generator2<ScalarT, IdxT>::Generator2(bus_type* bus)
-  : ModelEvaluatorImpl<ScalarT, IdxT>(2, 1, 1),
-    H_(5.0),
-    D_(0.005),
-    Pm_(0.7),
-    Xdp_(0.5),
-    Eqp_(0.93),
-    omega_s_(1.0),
-    omega_b_(2.0*60.0*M_PI),
-    omega_up_(omega_s_ + 0.0002),
-    omega_lo_(omega_s_ - 0.0002),
-    theta_s_(1.0),
-    c_(10000.0),
-    beta_(2),
-    bus_(bus)
+MiniGrid<ScalarT, IdxT>::MiniGrid()
+  : ModelEvaluatorImpl<ScalarT, IdxT>(3, 0, 0),
+    Pl2_(  2.5),
+    Ql2_( -0.8),
+    Pg3_(  2.0),
+    V1_ (  1.0),
+    th1_(  0.0),
+    V3_ (  1.1),
+    B12_( 10.0),
+    B13_( 15.0),
+    B22_(-22.0),
+    B23_( 12.0)
 {
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    rtol_ = 1e-5;
+    atol_ = 1e-5;
 }
 
 template <class ScalarT, typename IdxT>
-Generator2<ScalarT, IdxT>::~Generator2()
+MiniGrid<ScalarT, IdxT>::~MiniGrid()
 {
 }
 
@@ -100,134 +100,49 @@ Generator2<ScalarT, IdxT>::~Generator2()
  * @brief allocate method computes sparsity pattern of the Jacobian.
  */
 template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::allocate()
+int MiniGrid<ScalarT, IdxT>::allocate()
 {
-    tag_.resize(size_);
     return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::tagDifferentiable()
-{
-    tag_[0] = true;
-    tag_[1] = true;
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::initialize()
-{
-    // Set optimization parameter value and bounds
-    param_[0] = Pm_;
-    param_up_[0] = 1.5;
-    param_lo_[0] = 0.5;
-
-    y_[0] = asin((Pm_*Xdp_)/(Eqp_*V())) + theta(); // <~ asin(Pm/Pmax)
-    y_[1] = omega_s_;
-    yp_[0] = 0.0;
-    yp_[1] = 0.0;
-
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::evaluateResidual()
-{
-    f_[0] = -yp_[0] + omega_b_*(y_[1]-omega_s_);
-    f_[1] = -yp_[1] + omega_s_/(2.0*H_)*( param_[0] - Eqp_/Xdp_*V()*sin(y_[0] - theta()) - D_*(y_[1]-omega_s_) );
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::evaluateJacobian()
-{
-    std::cout << "Evaluate Jacobian for Gen2..." << std::endl;
-    std::cout << "Jacobian evaluation not implemented!" << std::endl;
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::evaluateIntegrand()
-{
-    g_[0] = frequencyPenalty(y_[1]);
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::initializeAdjoint()
-{
-    yB_[0] = 0.0;
-    yB_[1] = 0.0;
-    ypB_[0] = 0.0;
-    ypB_[1] = frequencyPenaltyDer(y_[1]);
-
-    return 0;
-}
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::evaluateAdjointResidual()
-{
-    fB_[0]  = -ypB_[0] + omega_s_/(2.0*H_)*Eqp_/Xdp_*V()*cos(y_[0] - theta()) * yB_[1];
-    fB_[1]  = -ypB_[1] + omega_s_/(2.0*H_)*D_ * yB_[1] - omega_b_*yB_[0] + frequencyPenaltyDer(y_[1]);
-    return 0;
-}
-
-// template <class ScalarT, typename IdxT>
-// int Generator2<ScalarT, IdxT>::evaluateAdjointJacobian()
-// {
-//     std::cout << "Evaluate adjoint Jacobian for Gen2..." << std::endl;
-//     std::cout << "Adjoint Jacobian evaluation not implemented!" << std::endl;
-//     return 0;
-// }
-
-template <class ScalarT, typename IdxT>
-int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
-{
-    // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
-    gB_[0] = -omega_s_/(2.0*H_) * yB_[1];
-    return 0;
-}
-
-
-//
-// Private functions
-//
-
-/**
- * Frequency penalty is used as the objective function for the generator model.
- */
-template <class ScalarT, typename IdxT>
-ScalarT Generator2<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
-{
-    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
 }
 
 /**
- * Derivative of frequency penalty cannot be written in terms of min/max functions.
- * Need to expand conditional statements instead.
+ * Initialization of the grid model
  */
 template <class ScalarT, typename IdxT>
-ScalarT Generator2<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
+int MiniGrid<ScalarT, IdxT>::initialize()
 {
-    if (omega > omega_up_)
-    {
-        return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
-    }
-    else if (omega < omega_lo_)
-    {
-        return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
-    }
-    else
-    {
-        return 0.0;
-    }
+    th2() = 0.0; // th2
+    V2()  = 1.0; // V2
+    th3() = 0.0; // th3
+    return 0;
 }
 
 
+/**
+ * @brief Contributes to the bus residual.
+ *
+ * Must be connected to a PQ bus.
+ */
+template <class ScalarT, typename IdxT>
+int MiniGrid<ScalarT, IdxT>::evaluateResidual()
+{
+    f_[0] = -Pl2_ - V2()*(V1_*B12_*sin(th2()-th1_) + V3_*B23_*sin(th2() - th3()));
+    f_[1] = -Ql2_ + V2()*(V1_*B12_*cos(th2()-th1_) + B22_*V2() + V3_*B23_*cos(th2() - th3()));
+    f_[2] =  Pg3_ - V3_ *(V1_*B13_*sin(th3()-th1_) + V2()*B23_*sin(th3() - th2()));
+
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int MiniGrid<ScalarT, IdxT>::evaluateJacobian()
+{
+    return 0;
+}
 
 // Available template instantiations
-template class Generator2<double, long int>;
-template class Generator2<double, size_t>;
+template class MiniGrid<double, long int>;
+template class MiniGrid<double, size_t>;
 
 
-} // namespace ModelLib
+} //namespace ModelLib
+

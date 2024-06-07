@@ -57,46 +57,112 @@
  *
  */
 
-#pragma once
 
-#include <PowerSystemData.hpp>
-#include <ComponentLib/Bus/BaseBus.hpp>
-#include <ComponentLib/Generator/GeneratorSlack.hpp>
-#include <ComponentLib/Generator/GeneratorPQ.hpp>
-#include <ComponentLib/Generator/GeneratorPV.hpp>
-
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include "GeneratorPV.hpp"
+#include <ComponentLib/PowerFlow/Bus/BaseBus.hpp>
 
 namespace ModelLib {
 
-    template <typename ScalarT = double, typename IdxT = int>
-    class GeneratorFactory
-    {
-    public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using GenData = GridKit::PowerSystemData::GenData<real_type, IdxT>;
+/*!
+ * @brief Constructor for a constant load model
+ *
+ * Calls default ModelEvaluatorImpl constructor.
+ */
 
-        GeneratorFactory() = delete;
+template <class ScalarT, typename IdxT>
+GeneratorPV<ScalarT, IdxT>::GeneratorPV(bus_type* bus, GenData& data)
+  : P_(data.Pg),
+    // Q_(data.Qg),
+    bus_(bus)
+{
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    size_ = 0;
+}
 
-        static GeneratorBase<ScalarT, IdxT>* create(BaseBus<ScalarT, IdxT>* bus, GenData& data)
-        {
-            GeneratorBase<ScalarT, IdxT>* gen = nullptr;
-            switch(bus->BusType())
-            {
-                case 1:
-                gen = new GeneratorPQ<ScalarT, IdxT>(bus, data);
-                break;
-                case 2:
-                gen = new GeneratorPV<ScalarT, IdxT>(bus, data);
-                break;
-                case 3:
-                gen = new GeneratorSlack<ScalarT, IdxT>(bus, data);
-                break;
-                default:
-                // Throw exception
-                std::cout << "Generator type " << bus->BusType() << " unrecognized.\n";
-            }
-            return gen;
-        }
-    };
+template <class ScalarT, typename IdxT>
+GeneratorPV<ScalarT, IdxT>::~GeneratorPV()
+{
+}
 
-} // namespace ModelLib
+/*!
+ * @brief allocate method computes sparsity pattern of the Jacobian.
+ */
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::allocate()
+{
+    return 0;
+}
+
+/**
+ * Initialization of the grid model
+ */
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::initialize()
+{
+    return 0;
+}
+
+/*
+ * \brief Identify differential variables
+ */
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::tagDifferentiable()
+{
+    return 0;
+}
+
+/**
+ * @brief Contributes to the bus residual.
+ *
+ * Must be connected to a PQ bus.
+ */
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::evaluateResidual()
+{
+    // std::cout << "Evaluating load residual ...\n";
+    bus_->P() += P_;
+    // bus_->Q() += Q_;
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::evaluateJacobian()
+{
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::evaluateIntegrand()
+{
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::initializeAdjoint()
+{
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::evaluateAdjointResidual()
+{
+    return 0;
+}
+
+template <class ScalarT, typename IdxT>
+int GeneratorPV<ScalarT, IdxT>::evaluateAdjointIntegrand()
+{
+    return 0;
+}
+
+
+// Available template instantiations
+template class GeneratorPV<double, long int>;
+template class GeneratorPV<double, size_t>;
+
+
+} //namespace ModelLib
+
