@@ -1,6 +1,7 @@
 ## Component Models
 
 GridKit™ provides component models for power flow and electromechanical transient simulations, as well as experimental component models for dynamic constrained optimal power flow analysis. GridKit™ assembles components into a grid model using power flow equations. 
+
 ## Network Equations
 
 The relation between all the bus current injections and bus voltage is given by the following node equation: 
