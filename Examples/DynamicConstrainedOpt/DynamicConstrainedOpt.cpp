@@ -61,8 +61,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include <ComponentLib/Bus/BusSlack.hpp>
-#include <ComponentLib/Generator2/Generator2.hpp>
+#include <ComponentLib/PowerFlow/Bus/BusSlack.hpp>
+#include <ComponentLib/PowerFlow/Generator2/Generator2.hpp>
 #include <SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
