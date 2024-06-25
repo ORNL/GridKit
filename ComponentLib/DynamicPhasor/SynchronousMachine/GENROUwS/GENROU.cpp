@@ -114,8 +114,8 @@ int GENROU<ScalarT, IdxT>::initialize()
     // Compute initial gueses for generator currents and potentials in d-q frame
     //const ScalarT Id = std::sqrt(P0_*P0_ + Q0_*Q0_)/V() * sin(phi);
     //const ScalarT Iq = std::sqrt(P0_*P0_ + Q0_*Q0_)/V() * cos(phi);
-    const ScalarT Id = 0.9909;
-    const ScalarT Iq = 0.3553;
+    //const ScalarT Id = 0.9909;
+    //const ScalarT Iq = 0.3553;
 
     //std::cout << "Initial Id & Iq: " << Id << " " << Iq << std::endl;
 
@@ -124,7 +124,7 @@ int GENROU<ScalarT, IdxT>::initialize()
 
     //std::cout << "Initial Vd & Vq: " << Vd << " " << Vq << std::endl;
 
-    const ScalarT Vr = 1.0723;
+    /*const ScalarT Vr = 1.0723;
     const ScalarT Vi = 0.22;
     const ScalarT Ir = 1;
     const ScalarT Ii = -0.3286;
@@ -140,7 +140,7 @@ int GENROU<ScalarT, IdxT>::initialize()
     const ScalarT Psipp = 1.2671;
     const ScalarT ksat = 1;
     const ScalarT Telec = 1;
-    const ScalarT Pmech = 0.9999;
+    const ScalarT Pmech = 0.9999;*/
 
 
     //y0 = [delta_init; omega_init; E_p_q_init; psi_p_d_init; psi_p_q_init; E_p_d_init; psi_pp_q_init; psi_pp_d_init; psi_pp_init; ksat_init; Vd_init; Vq_init ; Telec_init; Id_init; Iq_init; Vr_init; Vi_init; Ir_init; Ii_init;Pmech_init]
@@ -184,6 +184,26 @@ int GENROU<ScalarT, IdxT>::initialize()
     y_[17] =  1.0;
     y_[18] =  -0.3286;
     y_[19] =  1.0;
+    /*y_[0] =  0.9224;
+    y_[1] =  0.1765;
+    y_[2] =  1.2163;
+    y_[3] =  1.1554;
+    y_[4] =  -0.3907;
+    y_[5] =  0.0;
+    y_[6] =  0.3572;
+    y_[7] =  0.2676;
+    y_[8] =  0.4464;
+    y_[9] =  2.5613;
+    y_[10] =  -0.4203;
+    y_[11] =  0.3149;
+    y_[12] =  0.0;
+    y_[13] =  0.7872;
+    y_[14] =  1.0507;
+    y_[15] =  0.0797;
+    y_[16] =  0.2776;
+    y_[17] =  1.2620;
+    y_[18] =  0.3622;
+    y_[19] =  1.0;*/
     yp_[0] = 0.0;
     yp_[1] = 0.0;
     yp_[2] = 0.0;
@@ -287,7 +307,7 @@ int GENROU<ScalarT, IdxT>::evaluateResidual()
 
     //std::cout << "SA: " << SA << " SB: " << SB << std::endl;
     // std::cout << "Evaluate residual for GENROU..." << std::endl;
-    f_[0] = -yp_[0] + omega0_*(y_[1]-omega_s_); //f1 = -yp(1)+y(2)*w0_1;
+    f_[0] = -yp_[0] + omega0_*y_[1]; //f1 = -yp(1)+y(2)*w0_1;
     f_[1] = -yp_[1] + (1/(2*H_))*((Pm_ - D_*y_[1])/(1 + y_[1]) - y_[12]);  //f2 = -yp(2) + (1/(2*H_1))*((Pmech_init - D_1*y(2))/(1 + y(2)) - y(13));
     f_[2] = -yp_[2]*Td0p_ + Ef_ - (y_[2] + (Xd_-Xdp_)*y_[13]+((Xdp_-Xdpp_)/((Xdp_-Xl_)*(Xdp_-Xl_)))*(y_[2]-y_[3]-(Xdp_-Xl_)*y_[13])) + y_[7]*y_[9]; //f3 = -yp(3)*T_p_d0_1 + Efd - (y(3) + (Xd_1-X_p_d_1)*(y(14) + ((X_p_d_1-X_pp_d_1)/(X_p_d_1 - Xl_1)^2)*(y(3)-y(4)-(X_p_d_1-Xl_1)*y(14))) + y(8)*y(10));
     f_[3] = -yp_[3]+(1/Td0pp_)*(y_[2]-y_[3]-(Xdp_-Xl_)*y_[13]); //f4 = -yp(4)+(1/T_pp_d0_1)*(y(3)-y(4)-(X_p_d_1-Xl_1)*y(14));
@@ -305,8 +325,8 @@ int GENROU<ScalarT, IdxT>::evaluateResidual()
     f_[14] = -y_[14] + y_[17] * cos(y_[0]) + y_[18] * sin(y_[0]); //f15 = -y(15) + y(18) * cos(y(1)) + y(19) * sin(y(1)); % prev: -y(15) + Ireal * cos(y(1)) + Iimag * sin(y(1));
     f_[15] = -y_[10] + y_[15]*sin(y_[0]) - y_[16]*cos(y_[0])+y_[13]*Rs_ - y_[14]*Xqpp_; //f16 = -y(11) + y(16)*sin(y(1)) - y(17)*cos(y(1))+y(14)*Ra_1 - y(15)*X_pp_q_1;
     f_[16] = -y_[11] + y_[15]*cos(y_[0]) + y_[16]*sin(y_[0]) + y_[13]*Xqpp_ + y_[14]*Rs_;  //f17 = -y(12) + y(16)*cos(y(1)) + y(17)*sin(y(1)) + y(14)*X_pp_q_1 + y(15)*Ra_1;
-    f_[17] = -y_[17] + real_part; //f18 = -y(18)+real((y(16) + 1i * y(17))/(1i*X));
-    f_[18] = -y_[18] + imag_part; //f19 = -y(19)+imag((y(16) + 1i * y(17))/(1i*X));
+    f_[17] = -y_[17] + real_part;// y_[16]/X_; //f18 = -y(18)+real((y(16) + 1i * y(17))/(1i*X));
+    f_[18] = -y_[18] + imag_part;//y_[15]/X_; //f19 = -y(19)+imag((y(16) + 1i * y(17))/(1i*X));
     f_[19] = -Pm_ + y_[19]; //f20 = -Pmech_init + y(20);
 
     return 0;

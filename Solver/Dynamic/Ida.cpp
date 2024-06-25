@@ -284,7 +284,7 @@ namespace Sundials
         {
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
-            printOutput(tout); 
+            //printOutput(tout); 
             realtype *yval  = N_VGetArrayPointer_Serial(yy_);
             outFile << tout;
             for (size_t j = 0; j < model_->size(); j++) {
