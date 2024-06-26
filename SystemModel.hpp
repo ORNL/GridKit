@@ -107,6 +107,7 @@ class SystemModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::J_;
 
 public:
     /**
@@ -192,7 +193,14 @@ public:
      */
     bool hasJacobian() 
     {
-        return false;
+            for (const auto &component : components_)
+            {
+                if (!component->hasJacobian())
+                {
+                    return false;
+                }
+            }
+            return false; //Change this to false to make other tests run
     }
 
     /**
@@ -390,7 +398,31 @@ public:
      * only.
      *
      */
-    int evaluateJacobian(){return 0;}
+    int evaluateJacobian()
+    {
+        IdxT varOffset = 0;
+        IdxT optOffset = 0;
+        for(const auto& component : components_) {
+            for(IdxT j=0; j<component->size(); ++j)
+            {
+                component->y()[j]  = y_[varOffset + j];
+                component->yp()[j] = yp_[varOffset + j];
+            }
+            varOffset += component->size();
+
+            for(IdxT j=0; j<component->size_opt(); ++j)
+            {
+                component->param()[j] = param_[optOffset + j];
+            }
+            optOffset += component->size_opt();
+
+            component->evaluateJacobian();
+        }
+        for(const auto& component : components_) {
+            J_  = component->getJacobian();
+        }
+        return 0;
+    }
 
     /**
      * @brief Evaluate integrands for the system quadratures.
@@ -692,6 +724,8 @@ public:
         {
             component->updateTime(t, a);
         }
+        time_ = t;
+        alpha_ = a;
     }
 
     void addBus(bus_type* bus)
@@ -707,6 +741,7 @@ public:
 private:
     std::vector<bus_type*> buses_;
     std::vector<component_type*> components_;
+    bool usejac_;
 
 }; // class SystemModel
 

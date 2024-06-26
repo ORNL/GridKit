@@ -60,6 +60,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 #include <idas/idas_direct.h>              /* access to IDADls interface           */
 #include <idas/idas.h>
@@ -269,6 +270,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
     {
+        std::ofstream outFile("genrououtputjac.txt");
         int retval = 0;
         int iout = 0;
         real_type tret;
@@ -283,6 +285,12 @@ namespace Sundials
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
             //printOutput(tout); 
+            realtype *yval  = N_VGetArrayPointer_Serial(yy_);
+            outFile << tout;
+            for (size_t j = 0; j < model_->size(); j++) {
+                outFile << " " << yval[j];
+            }
+            outFile << "\n";
 
             if (retval == IDA_SUCCESS)
             {
@@ -290,6 +298,7 @@ namespace Sundials
                 tout += dt;
             }
         }
+        outFile.close();
         //std::cout << "\n";
         return retval;
     }

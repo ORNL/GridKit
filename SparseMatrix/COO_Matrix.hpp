@@ -563,7 +563,7 @@ inline void COO_Matrix<ScalarT, Intdx>::printMatrix()
     {
         std::cout << "(" << this->row_indexes_[i]
                   << ", " << this->column_indexes_[i]
-                  << ", " << this->values_[i] << ")\n";
+                  << ", " << this->values_[i] << "),\n";
     }
     std::cout << std::flush;
 }
