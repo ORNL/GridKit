@@ -286,11 +286,26 @@ namespace Sundials
             checkOutput(retval, "IDASolve");
             //printOutput(tout); 
             realtype *yval  = N_VGetArrayPointer_Serial(yy_);
+            realtype *ypval  = N_VGetArrayPointer_Serial(yp_);
+            /*yval[0] = fmod(yval[0], 2 * M_PI);
+            if (yval[0] < 0) {
+                yval[0] += 2 * M_PI;
+            }*/
             outFile << tout;
-            for (size_t j = 0; j < model_->size(); j++) {
+            for (size_t j = 1; j < model_->size(); j++) {
                 outFile << " " << yval[j];
             }
             outFile << "\n";
+            for (size_t j = 1; j < model_->size(); j++) {
+                if (yval[j] > 10) {
+                    std::cout << "yval " << j << " is too high at " << yval[j] << " at time " << tout << std::endl;
+                }
+            }
+
+            /*for (int i = 0; i < 6; i++) {
+                std::cout << ypval[i] << " ";
+            }
+            std::cout << std::endl;*/
 
             if (retval == IDA_SUCCESS)
             {
@@ -457,7 +472,7 @@ namespace Sundials
         checkOutput(retval, "IDASetUserDataB");
 
         /// \todo Need to set max number of steps based on user input!
-        retval = IDASetMaxNumStepsB(solver_, backwardID_, 2000);
+        retval = IDASetMaxNumStepsB(solver_, backwardID_, 20000);
         checkOutput(retval, "IDASetMaxNumSteps");
 
         // Set up linear solver

@@ -19,7 +19,7 @@ namespace ModelLib {
  */
 template <class ScalarT, typename IdxT>
 GENROU<ScalarT, IdxT>::GENROU(bus_type* bus, ScalarT P0, ScalarT Q0)
-  : ModelEvaluatorImpl<ScalarT, IdxT>(20, 1, 2),
+  : ModelEvaluatorImpl<ScalarT, IdxT>(20, 0, 0),
     H_(3.0),
     D_(0.0),
     Xq_(0.5),
@@ -34,7 +34,7 @@ GENROU<ScalarT, IdxT>::GENROU(bus_type* bus, ScalarT P0, ScalarT Q0)
     Tq0pp_(0.05), 
     Td0pp_(0.035), 
     Ef_(2.6904),
-    Pm_(1.0),
+    Pm_(0.998273),
     X_(0.22),
     Xl_(0.15),
     omega_s_(0.0),
@@ -45,8 +45,8 @@ GENROU<ScalarT, IdxT>::GENROU(bus_type* bus, ScalarT P0, ScalarT Q0)
     omega_lo_(omega_s_ - 0.0001),
     c_(10000.0),
     beta_(2),
-    P0_(P0),
-    Q0_(Q0),
+    P0_(1),
+    Q0_(0.5723),
     bus_(bus)
 {
 }
@@ -95,17 +95,17 @@ template <class ScalarT, typename IdxT>
 int GENROU<ScalarT, IdxT>::initialize()
 {
     // std::cout << "Initialize GENROU..." << std::endl;
-    //const ScalarT Vr = V()*cos(theta());
-    //const ScalarT Vi = V()*sin(theta());
-    //std::cout << "Initial Vr & Vi: " << Vr << " " << Vi << std::endl;
+    const ScalarT Vr = V()*cos(theta());
+    const ScalarT Vi = V()*sin(theta());
+    std::cout << "Initial Vr & Vi: " << Vr << " " << Vi << std::endl;
 
-    //const ScalarT Ir = (P0_*Vr + Q0_*Vi)/((Vr*Vr)+(Vi*Vi));
-    //const ScalarT Ii = -(Q0_*Vr - P0_*Vi)/((Vr*Vr)+(Vi*Vi));
-    //std::cout << "Initial Ir & Ii: " << Ir << " " << Ii << std::endl;
-
+    const ScalarT Ir = Vi/X_;
+    const ScalarT Ii = -0.3286;
+    std::cout << "Initial Ir & Ii: " << Ir << " " << Ii << std::endl;
+    //delta_init = atan((Xq_1*Ir_init + Vi_init)/(- Xq_1 * Ii_init + Vr_init));
     // Compute initial guess for the generator voltage phase
-    //const ScalarT delta = atan((Xq_*P0_ - Rs_*Q0_) / (V()*V() + Rs_*P0_ + Xq_*Q0_)) + theta();
-
+    const ScalarT delta = atan((Xq_*Ir + Vi) / (-Xq_*Ii + Vr));
+    std::cout << "Delta: " << delta << std::endl;
     // Compute initial guess for the generator current phase
     //const ScalarT phi   = theta() - delta - atan(Q0_/P0_);
 
@@ -114,37 +114,52 @@ int GENROU<ScalarT, IdxT>::initialize()
     // Compute initial gueses for generator currents and potentials in d-q frame
     //const ScalarT Id = std::sqrt(P0_*P0_ + Q0_*Q0_)/V() * sin(phi);
     //const ScalarT Iq = std::sqrt(P0_*P0_ + Q0_*Q0_)/V() * cos(phi);
-    //const ScalarT Id = 0.9909;
-    //const ScalarT Iq = 0.3553;
+    //Id_init = Ir_init * sin(delta_init) - Ii_init * cos(delta_init)
+    //Iq_init = Ir_init * cos(delta_init) + Ii_init * sin(delta_init)
+    const ScalarT Id = Ir * sin(delta) - Ii * cos(delta);
+    const ScalarT Iq = Ir * cos(delta) + Ii * sin(delta);
 
-    //std::cout << "Initial Id & Iq: " << Id << " " << Iq << std::endl;
+    std::cout << "Initial Id & Iq: " << Id << " " << Iq << std::endl;
 
-   // const ScalarT Vd = V()*sin(theta() - delta) + Rs_*Id + Xqp_*Iq;
-   // const ScalarT Vq = V()*cos(theta() - delta) + Rs_*Iq - Xdp_*Id;
+    //Vq_init = Vr_init * cos(delta_init) + Vi_init * sin(delta_init)
+    //Vd_init = Vr_init * sin(delta_init) - Vi_init * cos(delta_init)
 
-    //std::cout << "Initial Vd & Vq: " << Vd << " " << Vq << std::endl;
+    const ScalarT Vq = Vr * cos(delta) + Vi * sin(delta);
+    const ScalarT Vd = Vr * sin(delta) - Vi * cos(delta);
 
-    /*const ScalarT Vr = 1.0723;
-    const ScalarT Vi = 0.22;
-    const ScalarT Ir = 1;
-    const ScalarT Ii = -0.3286;
-    const ScalarT delta = 0.909;
-    const ScalarT Vd = 0.7107;
-    const ScalarT Vq = 0.8326;
-    const ScalarT Eqp = 1.1298;
-    const ScalarT Psidp = 0.9614;
-    const ScalarT Psiqp = 0.6645;
-    const ScalarT Edp = 0.533;
-    const ScalarT Psiqpp = -0.6111;
-    const ScalarT Psidpp = 1.110;
-    const ScalarT Psipp = 1.2671;
-    const ScalarT ksat = 1;
-    const ScalarT Telec = 1;
-    const ScalarT Pmech = 0.9999;*/
+    std::cout << "Initial Vq & Vd: " << Vq << " " << Vd << std::endl;
+
+    //psi_pp_q_init = -Vd_init - Id_init * Ra_1 + Iq_init * X_pp_q_1;
+    //psi_pp_d_init = Vq_init + Id_init * X_pp_q_1 + Iq_init * Ra_1;
+    const ScalarT Psiqpp = -Vd - Id*Rs_ + Iq*Xqpp_;
+    const ScalarT Psidpp = Vq + Id*Xqpp_ + Iq*Rs_;
+
+    std::cout << "Initial Psiqpp & Psidpp: " << Psiqpp << " " << Psidpp << std::endl;
+
+    //psi_pp_init = sqrt(psi_pp_q_init^2 + psi_pp_d_init^2);
+    const ScalarT Psipp = sqrt((Psiqpp*Psiqpp) + (Psidpp*Psidpp));
+    //ksat_init = 0;
+    const ScalarT ksat = 1.0;
+    //Telec_term1 = psi_pp_d_init + Id_init * X_pp_d_1
+    //Telec_term2 = psi_pp_q_init + Iq_init * X_pp_d_1
+    //Telec_init = Telec_term1 * Iq_init - Telec_term2 * Id_init;
+    //Pmech_init = Telec_init %1.0337
+    const ScalarT Telec = (Psidpp + Id*Xdpp_) * Iq - (Psiqpp + Iq*Xdpp_) * Id;
+    const ScalarT Pmech = Telec;
+
+    //psi_p_q_init = (1/(1+(X_p_q_1 - X_pp_q_1)/(X_pp_q_1 - Xl_1)))*(-psi_pp_q_init * (X_p_q_1 - Xl_1)/(X_pp_q_1 - Xl_1) + Iq_init * (X_p_q_1 - Xl_1))
+    const ScalarT Psiqp = (1.0/(1.0+(Xqp_ - Xqpp_)/(Xqpp_ - Xl_)))*(-Psiqpp * (Xqp_ - Xl_)/(Xqpp_ - Xl_) + Iq * (Xqp_ - Xl_));
+
+    //E_p_d_init = psi_p_q_init - Iq_init * (X_p_q_1 - Xl_1)
+    const ScalarT Edp = Psiqp - Iq*(Xqp_-Xl_);
+    //psi_p_d_init = -(1/(1+ (X_p_d_1 - X_pp_d_1)/(X_pp_d_1 - Xl_1))) * (Id_init*(X_p_d_1 - Xl_1)-psi_pp_d_init * (X_p_d_1 - Xl_1)/(X_pp_d_1 - Xl_1))
+    const ScalarT Psidp = -(1.0/(1.0+ (Xdp_ - Xdpp_)/(Xdpp_ - Xl_))) * (Id*(Xdp_ - Xl_)-Psidpp * (Xdp_ - Xl_)/(Xdpp_ - Xl_));
+    //E_p_q_init = psi_p_d_init + Id_init * (X_p_d_1 - Xl_1)
+    const ScalarT Eqp = Psidp + Id * (Xdp_-Xl_);
 
 
     //y0 = [delta_init; omega_init; E_p_q_init; psi_p_d_init; psi_p_q_init; E_p_d_init; psi_pp_q_init; psi_pp_d_init; psi_pp_init; ksat_init; Vd_init; Vq_init ; Telec_init; Id_init; Iq_init; Vr_init; Vi_init; Ir_init; Ii_init;Pmech_init]
-    /*y_[0] =  delta;
+    y_[0] =  delta;
     y_[1] =  omega_s_;
     y_[2] =  Eqp;
     y_[3] =  Psidp;
@@ -163,8 +178,8 @@ int GENROU<ScalarT, IdxT>::initialize()
     y_[16] =  Vi;
     y_[17] =  Ir;
     y_[18] =  Ii;
-    y_[19] =  Pmech;*/
-    y_[0] =  0.5273;
+    y_[19] =  Pmech;
+    /*y_[0] =  0.5273;
     y_[1] =  0.0;
     y_[2] =  1.1948;
     y_[3] =  1.1554;
@@ -183,26 +198,6 @@ int GENROU<ScalarT, IdxT>::initialize()
     y_[16] =  0.22;
     y_[17] =  1.0;
     y_[18] =  -0.3286;
-    y_[19] =  1.0;
-    /*y_[0] =  0.9224;
-    y_[1] =  0.1765;
-    y_[2] =  1.2163;
-    y_[3] =  1.1554;
-    y_[4] =  -0.3907;
-    y_[5] =  0.0;
-    y_[6] =  0.3572;
-    y_[7] =  0.2676;
-    y_[8] =  0.4464;
-    y_[9] =  2.5613;
-    y_[10] =  -0.4203;
-    y_[11] =  0.3149;
-    y_[12] =  0.0;
-    y_[13] =  0.7872;
-    y_[14] =  1.0507;
-    y_[15] =  0.0797;
-    y_[16] =  0.2776;
-    y_[17] =  1.2620;
-    y_[18] =  0.3622;
     y_[19] =  1.0;*/
     yp_[0] = 0.0;
     yp_[1] = 0.0;
@@ -225,10 +220,10 @@ int GENROU<ScalarT, IdxT>::initialize()
     yp_[18] = 0.0;
     yp_[19] = 0.0;
 
-    /*for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; i++) {
         std::cout << y_[i] << ", ";
     }
-    std::cout << std::endl;*/
+    std::cout << std::endl;
 
     return 0;
 }
@@ -295,12 +290,12 @@ int GENROU<ScalarT, IdxT>::evaluateResidual()
     double real_part = division_result.real();  // real part of (numerator / denominator)
     double imag_part = division_result.imag();  // imaginary part of (numerator / denominator)
     std::complex<double> i(0.0, 1.0); // imaginary unit
-
+    //std::cout << y_[17] << " " << y_[18] << std::endl;
 
     //std::cout << "SA: " << SA << " SB: " << SB << std::endl;
     // std::cout << "Evaluate residual for GENROU..." << std::endl;
     f_[0] = -yp_[0] + omega0_*y_[1]; //f1 = -yp(1)+y(2)*w0_1;
-    f_[1] = -yp_[1] + (1/(2*H_))*((Pm_ - D_*y_[1])/(1 + y_[1]) - y_[12]);  //f2 = -yp(2) + (1/(2*H_1))*((Pmech_init - D_1*y(2))/(1 + y(2)) - y(13));
+    f_[1] = -yp_[1] + (1/(2*H_))*((y_[19] - D_*y_[1])/(1 + y_[1]) - y_[12]);  //f2 = -yp(2) + (1/(2*H_1))*((Pmech_init - D_1*y(2))/(1 + y(2)) - y(13));
     f_[2] = -yp_[2]*Td0p_ + Ef_ - (y_[2] + (Xd_-Xdp_)*y_[13]+((Xdp_-Xdpp_)/((Xdp_-Xl_)*(Xdp_-Xl_)))*(y_[2]-y_[3]-(Xdp_-Xl_)*y_[13])) + y_[7]*y_[9]; //f3 = -yp(3)*T_p_d0_1 + Efd - (y(3) + (Xd_1-X_p_d_1)*(y(14) + ((X_p_d_1-X_pp_d_1)/(X_p_d_1 - Xl_1)^2)*(y(3)-y(4)-(X_p_d_1-Xl_1)*y(14))) + y(8)*y(10));
     f_[3] = -yp_[3]+(1/Td0pp_)*(y_[2]-y_[3]-(Xdp_-Xl_)*y_[13]); //f4 = -yp(4)+(1/T_pp_d0_1)*(y(3)-y(4)-(X_p_d_1-Xl_1)*y(14));
     f_[4] = -yp_[4]+(1/Tq0pp_)*(y_[5]-y_[4]+(Xqp_-Xl_)*y_[14]); //f5 = -yp(5)+(1/T_pp_q0_1)*(y(6)-y(5)+(X_p_q_1-Xl_1)*y(15));
@@ -308,7 +303,7 @@ int GENROU<ScalarT, IdxT>::evaluateResidual()
 
     f_[6] = -y_[6] - y_[4]*((Xqp_-Xqpp_)/(Xqp_-Xl_))-y_[5]*((Xqpp_-Xl_)/(Xqp_-Xl_)); //f7 = -y(7) - y(5)*((X_p_q_1-X_pp_q_1)/(X_p_q_1 - Xl_1))- y(6)*((X_pp_q_1 - Xl_1)/(X_p_q_1 - Xl_1));
     f_[7] = -y_[7] - y_[3]*((Xdp_-Xdpp_)/(Xdp_-Xl_))+y_[2]*((Xdpp_-Xl_)/(Xdp_-Xl_)); //f8 = -y(8) - y(4)*((X_p_d_1-X_pp_d_1)/(X_p_d_1 - Xl_1)) + y(3)*((X_pp_d_1 - Xl_1)/(X_p_d_1 - Xl_1));
-    f_[8] = -y_[8] + sqrt((y_[7]*y_[7])+(y_[6]*y_[6]));//f9 = -y(9) + sqrt(y(8)^2+y(7)^2);
+    f_[8] = -y_[8] + sqrt((y_[7]*y_[7])+(y_[6]*y_[6])); //f9 = -y(9) + sqrt(y(8)^2+y(7)^2);
     f_[9] = -y_[9] + SB*((y_[8]-SA)*(y_[8]-SA)); //f10 = -y(10) + SB * (y(9) - SA)^2;
     f_[10] = -y_[10] - y_[6] * (1+y_[1]); //f11 = -y(11) - y(7) * (1+y(2));
     f_[11] = -y_[11] + y_[7] * (1+y_[1]);  //f12 = -y(12) + y(8) * (1+y(2));
@@ -317,9 +312,13 @@ int GENROU<ScalarT, IdxT>::evaluateResidual()
     f_[14] = -y_[14] + y_[17] * cos(y_[0]) + y_[18] * sin(y_[0]); //f15 = -y(15) + y(18) * cos(y(1)) + y(19) * sin(y(1)); % prev: -y(15) + Ireal * cos(y(1)) + Iimag * sin(y(1));
     f_[15] = -y_[10] + y_[15] * sin(y_[0]) - y_[16]*cos(y_[0]) + y_[13]*Rs_ - y_[14]*Xqpp_; //f16 = -y(11) + y(16)*sin(y(1)) - y(17)*cos(y(1))+y(14)*Ra_1 - y(15)*X_pp_q_1;
     f_[16] = -y_[11] + y_[15] * cos(y_[0]) + y_[16]*sin(y_[0]) + y_[13]*Xqpp_ + y_[14]*Rs_;  //f17 = -y(12) + y(16)*cos(y(1)) + y(17)*sin(y(1)) + y(14)*X_pp_q_1 + y(15)*Ra_1;
-    f_[17] = -y_[17] + std::real((y_[15]+i*y_[16])/(i*X_));// y_[16]/X_; //f18 = -y(18)+real((y(16) + 1i * y(17))/(1i*X));
-    f_[18] = -y_[18] + std::imag((y_[15]+i*y_[16])/(i*X_));;// y_[15]/X_; //f19 = -y(19)+imag((y(16) + 1i * y(17))/(1i*X));
+    f_[17] = -y_[17] + std::real((y_[15]+i*y_[16])/(i*X_)); // y_[16]/X_; //f18 = -y(18)+real((y(16) + 1i * y(17))/(1i*X));
+    //std::cout << "f_[17]: " << f_[17] << " y17: " << -y_[17] << " y15: " << y_[15] << " y16: " << y_[16] << std::endl;
+    f_[18] = -y_[18] + std::imag((y_[15]+i*y_[16])/(i*X_)); // y_[15]/X_; //f19 = -y(19)+imag((y(16) + 1i * y(17))/(1i*X));
     f_[19] = -Pm_ + y_[19]; //f20 = -Pmech_init + y(20);
+
+    P() += Pg();
+    Q() += Qg();
 
     return 0;
 }
@@ -493,7 +492,7 @@ int GENROU<ScalarT, IdxT>::evaluateAdjointIntegrand()
 template <class ScalarT, typename IdxT>
 ScalarT GENROU<ScalarT, IdxT>::Pg()
 {
-    return 1;
+    return y_[14]*V()*cos(theta() - y_[0]) + y_[13]*V()*sin(theta() - y_[0]);
 }
 
 /**
@@ -504,7 +503,7 @@ ScalarT GENROU<ScalarT, IdxT>::Pg()
 template <class ScalarT, typename IdxT>
 ScalarT GENROU<ScalarT, IdxT>::Qg()
 {
-    return 1;
+    return y_[14]*V()*sin(theta() - y_[0]) - y_[13]*V()*cos(theta() - y_[0]);
 }
 
 /**
@@ -513,7 +512,7 @@ ScalarT GENROU<ScalarT, IdxT>::Qg()
 template <class ScalarT, typename IdxT>
 ScalarT GENROU<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
 {
-    return 0;
+    return c_ * pow(std::max(0.0, std::max(omega - omega_up_, omega_lo_ - omega)), beta_);
 }
 
 /**
@@ -523,7 +522,18 @@ ScalarT GENROU<ScalarT, IdxT>::frequencyPenalty(ScalarT omega)
 template <class ScalarT, typename IdxT>
 ScalarT GENROU<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
 {
-    return 0.0;
+    if (omega > omega_up_)
+    {
+        return beta_ * c_ * pow(omega - omega_up_, beta_ - 1.0);
+    }
+    else if (omega < omega_lo_)
+    {
+        return beta_ * c_ * pow(omega - omega_lo_, beta_ - 1.0);
+    }
+    else
+    {
+        return 0.0;
+    }
 }
 
 

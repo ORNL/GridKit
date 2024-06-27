@@ -116,9 +116,9 @@ public:
     SystemModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances
-        rtol_ = 1e-7;
-        atol_ = 1e-9;
-        this->max_steps_=2000;
+        rtol_ = 1e-12;
+        atol_ = 1e-12;
+        this->max_steps_=20000;
     }
 
     /**

@@ -27,7 +27,7 @@ int main()
     
 
     // Create an infinite bus
-    BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1, 0); // roughly 1.072+0.22j
+    BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0946, 0.202); // roughly 1.072+0.22j
 
     // Attach a generator to that bus
     GENROU<double, size_t>* gen = new GENROU<double, size_t>(bus);
@@ -53,45 +53,23 @@ int main()
     std::cout << "}\n";
 
 
-    model->updateTime(0.0, 1.0);
-    model->evaluateJacobian();
+    //model->updateTime(0.0, 1.0);
+    //model->evaluateJacobian();
     std::cout << "Intial Jacobian with alpha = 1:\n";
-    model->getJacobian().printMatrix();
+    //model->getJacobian().printMatrix();
     
 
     // Create numerical integrator and configure it for the generator model
     AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(model);
 
     double t_init  = 0.0;
-    double t_final = 1.0;
+    double t_final = 2.0;
     double t_timestep = 0.0001;
 
     idas->configureSimulation();
     idas->getDefaultInitialCondition();
     idas->initializeSimulation(t_init);
-    idas->runSimulation(t_final, t_final/t_timestep);
-
-    /*for (double i = t_init; i <= t_final; i += t_timestep) {
-        //idas->configureSimulation();
-        //idas->getDefaultInitialCondition();
-        //idas->initializeSimulation(i);
-
-        idas->runSimulation(i+t_timestep);
-
-        std::vector<double>& yfinial = model->y(); 
-
-        outFile << i;
-        for (size_t j = 0; j < yfinial.size(); j++) {
-            outFile << " " << yfinial[j];
-        }
-        outFile << "\n";
-
-        std::cout << "Final Vector y\n";
-        for (size_t j = 0; j < yfinial.size(); j++)
-        {
-            std::cout << yfinial[j] << "\n";
-        }
-    }*/
+    idas->runSimulation(t_final, 2000);
 
     delete idas;
     delete model;
