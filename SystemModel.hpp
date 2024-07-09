@@ -116,9 +116,9 @@ public:
     SystemModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances
-        rtol_ = 1e-12;
-        atol_ = 1e-12;
-        this->max_steps_=20000;
+        rtol_ = 1e-4;
+        atol_ = 1e-6;
+        this->max_steps_=50000;
     }
 
     /**
@@ -192,7 +192,7 @@ public:
      * @return false 
      */
     bool hasJacobian() 
-    {
+    { // do hasJac_ *= .......
             for (const auto &component : components_)
             {
                 if (!component->hasJacobian())

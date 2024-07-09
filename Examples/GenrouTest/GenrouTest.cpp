@@ -27,7 +27,7 @@ int main()
     
 
     // Create an infinite bus
-    BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0946, 0.202); // roughly 1.072+0.22j
+    BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0, 0.0); 
 
     // Attach a generator to that bus
     GENROU<double, size_t>* gen = new GENROU<double, size_t>(bus);
@@ -63,13 +63,13 @@ int main()
     AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(model);
 
     double t_init  = 0.0;
-    double t_final = 2.0;
+    double t_final = 5.0;
     double t_timestep = 0.0001;
 
     idas->configureSimulation();
     idas->getDefaultInitialCondition();
     idas->initializeSimulation(t_init);
-    idas->runSimulation(t_final, 2000);
+    idas->runSimulation(t_final, 50000);
 
     delete idas;
     delete model;

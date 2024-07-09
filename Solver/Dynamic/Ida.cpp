@@ -270,7 +270,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
     {
-        std::ofstream outFile("genrououtputjac.txt");
+        std::ofstream outFile("output.txt"); // Output file that data will be printed to
         int retval = 0;
         int iout = 0;
         real_type tret;
@@ -279,33 +279,18 @@ namespace Sundials
 
         /* In loop, call IDASolve, print results, and test for error.
          *     Break out of loop when NOUT preset output times have been reached. */
-        //printOutput(0.0);
         while(nout > iout)
         {
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
-            //printOutput(tout); 
             realtype *yval  = N_VGetArrayPointer_Serial(yy_);
-            realtype *ypval  = N_VGetArrayPointer_Serial(yp_);
-            /*yval[0] = fmod(yval[0], 2 * M_PI);
-            if (yval[0] < 0) {
-                yval[0] += 2 * M_PI;
-            }*/
-            outFile << tout;
-            for (size_t j = 1; j < model_->size(); j++) {
-                outFile << " " << yval[j];
-            }
-            outFile << "\n";
-            for (size_t j = 1; j < model_->size(); j++) {
-                if (yval[j] > 10) {
-                    std::cout << "yval " << j << " is too high at " << yval[j] << " at time " << tout << std::endl;
-                }
-            }
 
-            /*for (int i = 0; i < 6; i++) {
-                std::cout << ypval[i] << " ";
+            outFile << tout; // Output time first
+            for (size_t j = 0; j < model_->size(); j++) {
+                outFile << " " << yval[j]; // Each yval in the array
             }
-            std::cout << std::endl;*/
+            outFile << "\n"; // Newline after last yval is printed
+
 
             if (retval == IDA_SUCCESS)
             {
@@ -314,7 +299,6 @@ namespace Sundials
             }
         }
         outFile.close();
-        //std::cout << "\n";
         return retval;
     }
 
@@ -472,7 +456,7 @@ namespace Sundials
         checkOutput(retval, "IDASetUserDataB");
 
         /// \todo Need to set max number of steps based on user input!
-        retval = IDASetMaxNumStepsB(solver_, backwardID_, 20000);
+        retval = IDASetMaxNumStepsB(solver_, backwardID_, 50000);
         checkOutput(retval, "IDASetMaxNumSteps");
 
         // Set up linear solver

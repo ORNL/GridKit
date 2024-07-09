@@ -41,7 +41,7 @@ namespace ModelLib
         typedef BaseBus<ScalarT, IdxT> bus_type;
 
     public:
-        GENROU(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 0.999, ScalarT Q0 = 0.5723);
+        GENROU(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
         virtual ~GENROU();
 
         int allocate();
