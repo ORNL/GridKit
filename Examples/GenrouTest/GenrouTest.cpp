@@ -10,13 +10,26 @@
 #include <ComponentLib/DynamicPhasor/SynchronousMachine/GENROUwS/GENROU.hpp>
 #include <SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
+#include <Solver/Optimization/DynamicObjective.hpp>
+#include <Solver/Optimization/DynamicConstraint.hpp>
 
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/Testing.hpp>
 
+void printOutput(realtype time, const N_Vector yy)
+{
+    static std::ofstream outFile("output.txt");
+
+    realtype* yval = N_VGetArrayPointer_Serial(yy);
+
+    outFile << time;
+    for (size_t j = 0; j < N_VGetLength_Serial(yy); j++)
+    {
+        outFile << " " << yval[j];
+    }
+    outFile << "\n";
+}
 
 int main()
 {
@@ -45,17 +58,17 @@ int main()
     model->initialize();
     model->evaluateResidual();
 
-    std::cout << "Verify Intial Residual is Zero: {";
+    std::cout << "Verify Initial Residual is Zero: {";
     for (double i : model->getResidual())
     {
         std::cout << i << ", ";
     }
-    std::cout << "}\n";
+    std::cout << "}" << std::endl;
 
 
-    //model->updateTime(0.0, 1.0);
-    //model->evaluateJacobian();
-    std::cout << "Intial Jacobian with alpha = 1:\n";
+    model->updateTime(0.0, 1.0);
+    model->evaluateJacobian();
+    //std::cout << "Initial Jacobian with alpha = 1:\n";
     //model->getJacobian().printMatrix();
     
 
@@ -64,12 +77,14 @@ int main()
 
     double t_init  = 0.0;
     double t_final = 5.0;
-    double t_timestep = 0.0001;
+    double t_timestep = 0.001;
+
+    idas->setOutputCallback(printOutput);
 
     idas->configureSimulation();
     idas->getDefaultInitialCondition();
     idas->initializeSimulation(t_init);
-    idas->runSimulation(t_final, 50000);
+    idas->runSimulation(t_final, 5000);
 
     delete idas;
     delete model;

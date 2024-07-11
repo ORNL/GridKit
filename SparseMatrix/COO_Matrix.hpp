@@ -69,7 +69,7 @@ public:
     std::tuple<Intdx, Intdx> getDimensions();
 
     void printMatrix();
-
+    bool isEmpty();
     
     static void sortSparseCOO(std::vector<Intdx> &rows, std::vector<Intdx> &columns, std::vector<ScalarT> &vals);
 
@@ -724,6 +724,16 @@ inline void COO_Matrix<ScalarT, Intdx>::sortSparseCOO(std::vector<Intdx> &rows, 
         }
             
     }
+}
+
+/**
+ * @brief Return if there are no values, meaning that the matrix is empty.
+ * 
+ */
+template <class ScalarT, typename Intdx>
+inline bool COO_Matrix<ScalarT, Intdx>::isEmpty() 
+{
+    return values_.empty();
 }
 
 template <class ScalarT, typename Intdx>

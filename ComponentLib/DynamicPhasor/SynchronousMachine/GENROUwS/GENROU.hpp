@@ -13,7 +13,7 @@ namespace ModelLib
 namespace ModelLib
 {
     /*!
-     * @brief Implementation of a fourth order generator model.
+     * @brief Implementation of a GENROU synchronous machine model.
      *
      */
     template  <class ScalarT, typename IdxT>
@@ -49,11 +49,10 @@ namespace ModelLib
         int tagDifferentiable();
         int evaluateResidual();
         int evaluateJacobian();
-        int evaluateIntegrand();
 
+        int evaluateIntegrand();
         int initializeAdjoint();
         int evaluateAdjointResidual();
-        //int evaluateAdjointJacobian();
         int evaluateAdjointIntegrand();
 
         void updateTime(real_type t, real_type a)
@@ -83,33 +82,6 @@ namespace ModelLib
             return bus_->theta();
         }
 
-        ScalarT& P()
-        {
-            return bus_->P();
-        }
-
-        const ScalarT& P() const
-        {
-            return bus_->P();
-        }
-
-        ScalarT& Q()
-        {
-            return bus_->Q();
-        }
-
-        const ScalarT& Q() const
-        {
-            return bus_->Q();
-        }
-
-
-    private:
-        ScalarT Pg();
-        ScalarT Qg();
-        ScalarT frequencyPenalty(ScalarT omega);
-        ScalarT frequencyPenaltyDer(ScalarT omega);
-
     private:
         real_type omega0_;///< Nominal frequency (assume 2pi60 rad/s)
         real_type H_;     ///< Inertia constant [s]
@@ -133,10 +105,6 @@ namespace ModelLib
         real_type Ef_;
         real_type Pm_;
         real_type omega_s_;
-        real_type omega_up_;
-        real_type omega_lo_;
-        real_type c_;
-        real_type beta_;
 
         ScalarT P0_;
         ScalarT Q0_;

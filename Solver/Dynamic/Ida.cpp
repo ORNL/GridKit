@@ -60,7 +60,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 
 #include <idas/idas_direct.h>              /* access to IDADls interface           */
 #include <idas/idas.h>
@@ -270,7 +269,6 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
     {
-        std::ofstream outFile("output.txt"); // Output file that data will be printed to
         int retval = 0;
         int iout = 0;
         real_type tret;
@@ -279,18 +277,17 @@ namespace Sundials
 
         /* In loop, call IDASolve, print results, and test for error.
          *     Break out of loop when NOUT preset output times have been reached. */
+        //printOutput(0.0);
         while(nout > iout)
         {
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
-            realtype *yval  = N_VGetArrayPointer_Serial(yy_);
+            //printOutput(tout); 
 
-            outFile << tout; // Output time first
-            for (size_t j = 0; j < model_->size(); j++) {
-                outFile << " " << yval[j]; // Each yval in the array
+            if (outputCallback_)
+            {
+                outputCallback_(tret, yy_);
             }
-            outFile << "\n"; // Newline after last yval is printed
-
 
             if (retval == IDA_SUCCESS)
             {
@@ -298,7 +295,7 @@ namespace Sundials
                 tout += dt;
             }
         }
-        outFile.close();
+        //std::cout << "\n";
         return retval;
     }
 
@@ -798,6 +795,13 @@ namespace Sundials
             throw SundialsException();
         }
     }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setOutputCallback(std::function<void(realtype, const N_Vector)> callback)
+    {
+        outputCallback_ = callback;
+    }
+
 
     // Compiler will prevent building modules with data type incompatible with realtype
     template class Ida<realtype, long int>;

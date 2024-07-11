@@ -160,6 +160,7 @@ namespace AnalysisManager
             void printOutput(realtype t);
             void printSpecial(realtype t, N_Vector x);
             void printFinalStats();
+            void setOutputCallback(std::function<void(realtype, const N_Vector)> callback);
 
         private:
             static int Residual(realtype t,
@@ -192,6 +193,7 @@ namespace AnalysisManager
             SUNMatrix JacobianMatB_;
             SUNLinearSolver linearSolver_;
             SUNLinearSolver linearSolverB_;
+            std::function<void(realtype, const N_Vector)> outputCallback_;
 
             real_type t_init_;
             real_type t_final_;

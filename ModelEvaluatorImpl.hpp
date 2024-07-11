@@ -113,7 +113,7 @@ namespace ModelLib
 
         virtual bool hasJacobian()
         {
-            return false;
+            return !J_.isEmpty();
         }
 
         virtual IdxT size_quad()

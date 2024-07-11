@@ -116,9 +116,9 @@ public:
     SystemModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances
-        rtol_ = 1e-4;
-        atol_ = 1e-6;
-        this->max_steps_=50000;
+        rtol_ = 1e-7;
+        atol_ = 1e-9;
+        this->max_steps_=5000;
     }
 
     /**
@@ -192,15 +192,13 @@ public:
      * @return false 
      */
     bool hasJacobian() 
-    { // do hasJac_ *= .......
-            for (const auto &component : components_)
-            {
-                if (!component->hasJacobian())
-                {
-                    return false;
-                }
-            }
-            return false; //Change this to false to make other tests run
+    {
+        bool hasJac;
+        for (const auto &component : components_)
+        {
+            hasJac *= component->hasJacobian();
+        }
+        return hasJac;
     }
 
     /**
@@ -393,9 +391,6 @@ public:
     /**
      * @brief Evaluate system Jacobian.
      *
-     * @todo Need to implement Jacobian. For now, using finite difference
-     * approximation provided by IDA. This works for dense Jacobian matrix
-     * only.
      *
      */
     int evaluateJacobian()
@@ -724,8 +719,6 @@ public:
         {
             component->updateTime(t, a);
         }
-        time_ = t;
-        alpha_ = a;
     }
 
     void addBus(bus_type* bus)
@@ -741,7 +734,6 @@ public:
 private:
     std::vector<bus_type*> buses_;
     std::vector<component_type*> components_;
-    bool usejac_;
 
 }; // class SystemModel
 
