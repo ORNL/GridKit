@@ -200,7 +200,7 @@ bool DynamicObjective<ScalarT, IdxT>::eval_grad_f(Index n, const Number* x, bool
 template <class ScalarT, typename IdxT>
 bool DynamicObjective<ScalarT, IdxT>::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
 {
-    return false;
+    return true;
 }
 
 
@@ -209,7 +209,7 @@ bool DynamicObjective<ScalarT, IdxT>::eval_jac_g(Index n, const Number* x, bool 
                                                  Index m, Index nele_jac, Index* iRow, Index *jCol,
                                                  Number* values)
 {
-    return false;
+    return true;
 }
 
 
@@ -219,7 +219,7 @@ bool DynamicObjective<ScalarT, IdxT>::eval_h(Index n, const Number* x, bool new_
                                              bool new_lambda, Index nele_hess, Index* iRow,
                                              Index* jCol, Number* values)
 {
-    return false;
+    return true;
 }
 
 

@@ -279,7 +279,7 @@ bool DynamicConstraint<ScalarT, IdxT>::eval_h(Index n, const Number* x, bool new
                                               bool new_lambda, Index nele_hess, Index* iRow,
                                               Index* jCol, Number* values)
 {
-    return false;
+    return true;
 }
 
 
