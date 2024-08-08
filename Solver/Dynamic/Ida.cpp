@@ -284,6 +284,10 @@ namespace Sundials
             checkOutput(retval, "IDASolve");
             //printOutput(tout); 
 
+            if (outputCallback_)
+            {
+                outputCallback_(tret, yy_);
+            }
             if (retval == IDA_SUCCESS)
             {
                 ++iout;
@@ -789,6 +793,12 @@ namespace Sundials
             std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
             throw SundialsException();
         }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setOutputCallback(std::function<void(realtype, const N_Vector)> callback)
+    {
+        outputCallback_ = callback;
     }
 
     // Compiler will prevent building modules with data type incompatible with realtype
