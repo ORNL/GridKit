@@ -256,8 +256,8 @@ namespace Sundials
         {
             int initType = IDA_Y_INIT;
 
-            if (tag_)
-                initType = IDA_YA_YDP_INIT;
+            /*if (tag_)
+                initType = IDA_YA_YDP_INIT;*/
 
             retval = IDACalcIC(solver_, initType, 0.1);
             checkOutput(retval, "IDACalcIC");

@@ -157,6 +157,7 @@ int Generator4Governor<ScalarT, IdxT>::initialize()
 
     // Compute generator voltage phase
     const ScalarT delta = atan((Xq_*P0_ - Rs_*Q0_) / (V()*V() + Rs_*P0_ + Xq_*Q0_)) + theta();
+    std::cout << delta << std::endl;
 
     // Compute generator current phase
     const ScalarT phi   = delta - theta() + atan(Q0_/P0_);
@@ -169,7 +170,7 @@ int Generator4Governor<ScalarT, IdxT>::initialize()
 
     // Initialize generator
     y_[offsetGen_ + 0] =  delta;
-    y_[offsetGen_ + 1] =  omega_s_ + 0.2; // <~ this is hack to perturb omega
+    y_[offsetGen_ + 1] =  omega_s_; // <~ this is hack to perturb omega
     y_[offsetGen_ + 2] =  Edp;
     y_[offsetGen_ + 3] =  Eqp;
     y_[offsetGen_ + 4] =  Id;

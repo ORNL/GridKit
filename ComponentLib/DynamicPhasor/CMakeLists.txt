@@ -1,2 +1,3 @@
 add_subdirectory(SynchronousMachine)
+add_subdirectory(Governor)
 add_subdirectory(Bus)

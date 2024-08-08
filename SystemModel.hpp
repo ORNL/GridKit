@@ -198,7 +198,7 @@ public:
         {
             hasJac *= component->hasJacobian();
         }
-        return hasJac;
+        return false; //return hasJac;
     }
 
     /**

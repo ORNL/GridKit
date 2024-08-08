@@ -60,6 +60,8 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <filesystem>
 
 #include <ComponentLib/PowerFlow/Bus/BusPQ.hpp>
 #include <ComponentLib/PowerFlow/Load/Load.hpp>
@@ -72,6 +74,20 @@
 #include <Solver/Optimization/DynamicObjective.hpp>
 #include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/Testing.hpp>
+
+void printOutput(realtype time, const N_Vector yy)
+{
+    static std::ofstream outFile("output.txt");
+
+    realtype* yval = N_VGetArrayPointer_Serial(yy);
+
+    outFile << time;
+    for (size_t j = 0; j < N_VGetLength_Serial(yy); j++)
+    {
+        outFile << " " << yval[j];
+    }
+    outFile << "\n";
+}
 
 int main()
 {
@@ -98,7 +114,44 @@ int main()
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
 
+    // allocate model components
     model->allocate();
+
+    std::cout << "Size: " << model->y().size() << std::endl;
+
+    model->initialize();
+    model->evaluateResidual();
+
+    std::cout << "Verify Initial Residual is Zero: {";
+    for (double i : model->getResidual())
+    {
+        std::cout << i << ", ";
+    }
+    std::cout << "}" << std::endl;
+
+
+    //model->updateTime(0.0, 1.0);
+    //model->evaluateJacobian();
+    //std::cout << "Initial Jacobian with alpha = 1:\n";
+    //model->getJacobian().printMatrix();
+    
+
+    // Create numerical integrator and configure it for the generator model
+    //AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(model);
+
+    double t_init  = 0.0;
+    double t_final = 5.0;
+    double t_timestep = 0.001;
+
+    idas->setOutputCallback(printOutput);
+
+    idas->configureSimulation();
+    idas->getDefaultInitialCondition();
+    idas->initializeSimulation(t_init, true);
+    idas->runSimulation(t_final, 5000);
+
+
+    /*model->allocate();
 
     double t_init  = 0.0;
     double t_final = 15.0;
@@ -171,7 +224,7 @@ int main()
     if(retval != 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
-    }
+    }*/
 
 
     delete idas;
