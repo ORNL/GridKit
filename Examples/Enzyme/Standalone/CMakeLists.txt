@@ -1,6 +1,6 @@
 enzyme_add_executable(
-  NAME StandaloneEnzymeCheck
+  NAME EnzymeStandaloneCheck
   SOURCES main.cpp
   )
 
-  add_test(NAME "standalonecheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/StandaloneEnzymeCheck)
+add_test(NAME "EnzymeStandaloneCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneCheck)
