@@ -73,6 +73,10 @@ endif()
 
 find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   NAMES
+  LLVMEnzyme-19.so
+  LLVMEnzyme-18.so
+  LLVMEnzyme-17.so
+  LLVMEnzyme-16.so
   LLVMEnzyme-15.so
   LLVMEnzyme-14.so
   LLVMEnzyme-13.so
@@ -88,6 +92,10 @@ find_library(ENZYME_LLVM_PLUGIN_LIBRARY
 
 find_library(ENZYME_CLANG_PLUGIN_LIBRARY
   NAMES
+  ClangEnzyme-19.so
+  ClangEnzyme-18.so
+  ClangEnzyme-17.so
+  ClangEnzyme-16.so
   ClangEnzyme-15.so
   ClangEnzyme-14.so
   ClangEnzyme-13.so
