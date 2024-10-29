@@ -1,23 +1,20 @@
 #include <iostream>
+#include <limits>
 #include "library.hpp"
 
-int __enzyme_autodiff(int (*)(int), ...);
+double __enzyme_autodiff(double (*)(double), ...);
 
 int main() {
   int fail = 0;
-  int sq = square(5);
-  int dersq = __enzyme_autodiff(square, 5);
+  double sq = square(5.0);
+  double dsq = __enzyme_autodiff(square, 5.0);
 
-  std::cout << "x = 5, x^2 = " << sq << ", d(x^2)/dx = " << dersq << "\n"; 
-  if (__enzyme_autodiff(square, 5) != 10)
+  std::cout << "x = 5, x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n"; 
+  if (std::abs(dsq - 10.0) > std::numeric_limits<double>::epsilon())
   {
-    --fail;
-    // std::cout << "Incorrect result\n";
+    fail++;
+    std::cout << "Result incorrect\n";
   }
-  if(fail < 0)
-    std::cout << "Result incorrect\n\n";
-  else
-    std::cout << "Bingo!!\n\n";
-  std:: cout << fail << "\n";
+  std::cout << "Status: " << fail << "\n";
   return fail;
 }

@@ -1,22 +1,27 @@
 #include <iostream>
+#include <limits>
 
-int square(int x) {
+double square(double x) {
   return x * x;
 }
 
-int __enzyme_autodiff(int(*)(int), ...);
-int dsquare(int x) {
+double __enzyme_autodiff(double(*)(double), ...);
+double dsquare(double x) {
   return __enzyme_autodiff(square, x);
 }
 
-int sq  = square(5);
-int dsq = dsquare(5);
+double sq  = square(5.0);
+double dsq = dsquare(5.0);
 
 int main()
 {
   int fail = 0;
-  std::cout << "x = 5, x^2 = " << sq << ", d(x^2)/dx = " << __enzyme_autodiff(square, 5) << "\n"; 
-  if (dsq != 10)
+  std::cout << "x = 5, x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n"; 
+  if (std::abs(dsq - 10.0) > std::numeric_limits<double>::epsilon())
+  {
     fail++;
+    std::cout << "Result incorrect\n";
+  }
+  std::cout << "Status: " << fail << "\n";
   return fail;
 }
