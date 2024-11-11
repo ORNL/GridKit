@@ -15,8 +15,15 @@ If an output is needed (for example, a warning needs to be displayed), use `std:
 std::cout << "index out of bounds. Row " << i << " starts at: " << start << " and ends at " << end << std::endl;
 ```
 
+### Local variables naming
 
-### Member variable naming
+Local variable names should use C-style name format.
+```c++
+double local_variable; // Yes
+double localVariable;  // No, using lowercase camel instead of C-style name format
+```
+
+### Member variables naming
 
 Member variable names should use C-style name format and end with trailing underscore `_`.
 ```c++
@@ -50,12 +57,14 @@ Always define `enum`s inside `GridKit` namespace. Type names should be capitaliz
 
 ### Constants
 
-If a constant is used in more than one file, define it in `Common.h`. Constants names should be capitalized.
+If a constant is used in more than one file, define it in `Common.h`. For
+constants with long names, use underscores to separate words in the constant
+name. Use all caps (screaming snake case).
 
 ```c++
-   constexpr double Pi = 3.1415; // No, it should be all caps
-   constexpr double SQRT_TWO = 1.4142 // No, there is an underscore
-   constexpr double SQRTTWO_ = 1.4142 // No, there is an underscore
+   constexpr double Pi = 3.1415; // No, the constant name should be all caps
+   constexpr double SQRT_TWO = 1.4142 // Yes
+   constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore
    constexpr double EXP = 2.7183 // Yes   
 ```
 
