@@ -66,7 +66,7 @@ void dsquare(int N, double* x, double* y, double* dy) {
 int main()
 {
   // Vector declarations
-  constexpr int N = 2;
+  constexpr int N = 10;
   std::vector<double> x(N);
   std::vector<double> sq(N);
   std::vector<double> dsq(N*N);
