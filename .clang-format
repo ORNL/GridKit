@@ -2,10 +2,12 @@
 Language:        Cpp
 BasedOnStyle:  LLVM
 
+ColumnLimit:     120
 IndentWidth: 4                   # 4 spaces per indent
+AccessModifierOffset: -4
 IndentAccessModifiers: false     # Align access modifiers to braces
 BreakBeforeBraces: Allman        # Braces on their own lines
-SpaceBeforeParens: SBPO_ControlStatementsExceptControlMacros
+SpaceBeforeParens: ControlStatementsExceptControlMacros
 SpaceAfterCStyleCast: true
 SeparateDefinitionBlocks: Always # Separate definitions (functions etc.) with an empty line
 IncludeBlocks: Merge             # Regroup includes based on config
