@@ -13,10 +13,17 @@ ColumnLimit:     120
 BreakBeforeBraces: Allman         # Braces on their own lines
 SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line
 AlwaysBreakTemplateDeclarations: true # Put template on their own lines
+AllowShortBlocksOnASingleLine: Never
+# On a newer version of clang-format, replace with BinPackArguments: OnePerLine
+BinPackArguments: false           # Don't allow multiple function arguments on the same line unless they all fit
+BinPackParameters: false          # Same but for parameters
+PackConstructorInitializers: NextLine
+AllowShortFunctionsOnASingleLine: None
 
 # Spaces
 SpaceBeforeParens: ControlStatementsExceptControlMacros
 SpaceAfterCStyleCast: true
+PointerAlignment: Left
 
 # Includes
 IncludeBlocks: Regroup            # Regroup includes based on config
