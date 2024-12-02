@@ -8,6 +8,29 @@ AccessModifierOffset: -4
 IndentAccessModifiers: false      # Align access modifiers to braces
 NamespaceIndentation: Inner       # Indent namspace contents
 
+# Alignment
+AlignConsecutiveAssignments:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+  AlignCompound:    true
+  PadOperators:     true
+AlignConsecutiveBitFields:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+AlignConsecutiveDeclarations:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+  # For future versions of clang-format
+  # AlignFunctionDeclarations: false
+  # AlignFunctionPointers: false
+AlignConsecutiveMacros:
+  Enabled:          true
+  AcrossEmptyLines: false
+  AcrossComments:   true
+
 # Newlines
 ColumnLimit:     120
 BreakBeforeBraces: Allman         # Braces on their own lines
