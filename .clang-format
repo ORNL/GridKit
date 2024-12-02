@@ -3,24 +3,25 @@ Language:        Cpp
 BasedOnStyle:  LLVM
 
 ColumnLimit:     120
-IndentWidth: 4                   # 4 spaces per indent
+IndentWidth: 4                    # 4 spaces per indent
 AccessModifierOffset: -4
-IndentAccessModifiers: false     # Align access modifiers to braces
-BreakBeforeBraces: Allman        # Braces on their own lines
+IndentAccessModifiers: false      # Align access modifiers to braces
+BreakBeforeBraces: Allman         # Braces on their own lines
 SpaceBeforeParens: ControlStatementsExceptControlMacros
 SpaceAfterCStyleCast: true
-SeparateDefinitionBlocks: Always # Separate definitions (functions etc.) with an empty line
-IncludeBlocks: Merge             # Regroup includes based on config
+SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line
+BreakTemplateDeclarations: Always # Put template on their own lines
+IncludeBlocks: Merge              # Regroup includes based on config
 IncludeCategories:
-  - Regex:           '^"'        # 'local' includes
+  - Regex:           '^"'         # 'local' includes
     Priority:        2
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '/'         # Library includes
+  - Regex:           '/'          # Library includes
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '.*'        # Everything else
+  - Regex:           '.*'         # Everything else
     Priority:        1
     SortPriority:    0
     CaseSensitive:   false
