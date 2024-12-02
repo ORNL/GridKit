@@ -6,6 +6,7 @@ BasedOnStyle:  LLVM
 IndentWidth: 4                    # 4 spaces per indent
 AccessModifierOffset: -4
 IndentAccessModifiers: false      # Align access modifiers to braces
+NamespaceIndentation: All         # Indent namspace contents
 
 # Newlines
 ColumnLimit:     120
