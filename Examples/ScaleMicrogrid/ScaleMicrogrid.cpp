@@ -56,6 +56,11 @@ int test(index_type Nsize, bool debug_output)
     index_type max_step_number = 3000;
     bool usejac = true;
 
+    real_type t_init  = 0.0;
+    real_type t_final = 1.0;
+
+    real_type error_tol = 8e-4;
+
     //TODO:setup as named parameters
     //Create circuit model
     ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(reltol, abstol, usejac, max_step_number);
@@ -305,9 +310,6 @@ int test(index_type Nsize, bool debug_output)
     //Create numerical integrator and configure it for the generator model
     AnalysisManager::Sundials::Ida<real_type, index_type>* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
 
-    real_type t_init  = 0.0;
-    real_type t_final = 1.0;
-
     // setup simulation
     idas->configureSimulation();
     idas->getDefaultInitialCondition();
@@ -327,16 +329,27 @@ int test(index_type Nsize, bool debug_output)
     }
 
     bool test_pass = true;
-    real_type tol = 3e-3;
+
+    real_type sumtop = 0.0;
+    real_type sumbottom = 0.0;
 
     // check relative error
-    std::cout << "Test the Relative Error\n";
+    std::cout << "Test the Relative Error for N = " << Nsize << "\n";
     for (index_type i = 0; i < true_vec->size(); i++)
     {
-        test_pass *= GridKit::Testing::isEqual(yfinal[i], true_vec->at(i), tol);
+        // test_pass *= GridKit::Testing::isEqual(yfinal[i], true_vec->at(i), error_tol);
+        //Produces the Elementwise Relative Error
         if (debug_output)
             std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
+
+        sumtop += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
+        sumbottom += (true_vec->at(i) * true_vec->at(i));
     }
+
+    real_type norm2error =  sqrt(sumtop) / sqrt(sumbottom);
+    std::cout << "2-Norm Relative Error: " << norm2error << std::endl; 
+    test_pass = norm2error < error_tol;
+
     
     delete idas;
     delete sysmodel; 
