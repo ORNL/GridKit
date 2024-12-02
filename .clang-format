@@ -19,14 +19,14 @@ SpaceBeforeParens: ControlStatementsExceptControlMacros
 SpaceAfterCStyleCast: true
 
 # Includes
-IncludeBlocks: Merge              # Regroup includes based on config
+IncludeBlocks: Regroup            # Regroup includes based on config
 IncludeCategories:
-  - Regex:           '^"'         # 'local' includes
-    Priority:        2
+  - Regex:           '(^"|\.hpp)'  # 'local' includes
+    Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-  - Regex:           '/'          # Library includes
-    Priority:        3
+  - Regex:           '\/'         # Library includes
+    Priority:        2
     SortPriority:    0
     CaseSensitive:   false
   - Regex:           '.*'         # Everything else
