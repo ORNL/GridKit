@@ -24,14 +24,19 @@ using real_type = double;
 #include "SolutionKeys.hpp"
 
 
-static int test(index_type Nsize, bool debug_output = false);
+static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false, bool use_DAE_keys = false);
 
 int main(int argc, char const *argv[])
 {
     int retval = 0;
-    retval += test(2);
-    retval += test(4);
-    retval += test(8);
+    bool debug_out = false;
+    bool DAE_keys = false;
+
+    real_type error_tol = 8e-5;
+
+    retval += test(2, error_tol, debug_out, DAE_keys);
+    retval += test(4, error_tol, debug_out, DAE_keys);
+    retval += test(8, error_tol, debug_out, DAE_keys);
     if (retval > 0)
     {
         std::cout << "Some tests fail!!\n";
@@ -49,31 +54,31 @@ int main(int argc, char const *argv[])
  * @param Nsize - The number of DG line load cobinations to generate for scale
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(index_type Nsize, bool debug_output)
+int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_keys)
 {
-    real_type abstol = 1.0e-8;
-    real_type reltol = 1.0e-8;
+    real_type abstol = 1.0e-7;
+    real_type reltol = 1.0e-7;
     index_type max_step_number = 3000;
     bool usejac = true;
 
     real_type t_init  = 0.0;
     real_type t_final = 1.0;
 
-    real_type error_tol = 8e-4;
-
     //TODO:setup as named parameters
     //Create circuit model
     ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(reltol, abstol, usejac, max_step_number);
 
-    const std::vector<real_type>* true_vec = &answer_key_N8;
+
+
+    const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
 
     switch (Nsize)
     {
         case 2:
-            true_vec = &answer_key_N2;
+            true_vec = use_DAE_keys ? &answer_key_N2_DAE : &answer_key_N2;
             break;
         case 4:
-            true_vec = &answer_key_N4;
+            true_vec = use_DAE_keys ? &answer_key_N4_DAE : &answer_key_N4;
             break;
         case 8:
             // true_vec = &answer_key_N8;
