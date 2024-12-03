@@ -20,7 +20,7 @@ You should have all of the following installed before installing GridKit™
 - [CMake](https://cmake.org/) >= 3.12
 - C++ 17 compliant compiler
 
-## Developer Dependencies
+#### Developer Dependencies
 - `clang-format`, which can be obtained through most linux distribution package managers, or through the [LLVM project](https://github.com/llvm/llvm-project) >= 15.0.0
 
 ### Installing
