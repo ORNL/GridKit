@@ -163,22 +163,22 @@ namespace AnalysisManager
             // }
 
             void printOutput();
-            void printSpecial(realtype t, N_Vector x);
+            void printSpecial(sunrealtype t, N_Vector x);
             void printFinalStats();
 
         private:
             static int Residual(N_Vector yy, N_Vector rr, void *user_data);
 
-            // static int Integrand(realtype t,
+            // static int Integrand(sunrealtype t,
             //                      N_Vector yy,   N_Vector yp,
             //                      N_Vector rhsQ, void *user_data);
 
-            // static int adjointResidual(realtype t,
+            // static int adjointResidual(sunrealtype t,
             //                            N_Vector yy,  N_Vector yp,
             //                            N_Vector yyB, N_Vector ypB,
             //                            N_Vector rrB, void *user_data);
 
-            // static int adjointIntegrand(realtype t,
+            // static int adjointIntegrand(sunrealtype t,
             //                             N_Vector yy,  N_Vector yp,
             //                             N_Vector yyB, N_Vector ypB,
             //                             N_Vector rhsQB, void *user_data);
