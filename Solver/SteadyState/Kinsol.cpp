@@ -91,7 +91,7 @@ namespace Sundials
         int retval = 0;
 
         // Create the SUNDIALS context that all SUNDIALS objects require
-        retval = SUNContext_Create(NULL, &context_);
+        retval = SUNContext_Create(SUN_COMM_NULL, &context_);
         checkOutput(retval, "SUNContext");
 
         solver_ = KINCreate(context_);
@@ -139,13 +139,9 @@ namespace Sundials
         retval = KINSetUserData(solver_, model_);
         checkOutput(retval, "KINSetUserData");
 
-        // Set output verbosity level
-        retval = KINSetPrintLevel(solver_, 0);
-        checkOutput(retval, "KINSetPrintLevel");
-
         // Set tolerances
-        realtype fnormtol;  ///< Residual tolerance
-        realtype scsteptol; ///< Scaled step tolerance
+        sunrealtype fnormtol;  ///< Residual tolerance
+        sunrealtype scsteptol; ///< Scaled step tolerance
 
         model_->setTolerances(fnormtol, scsteptol); ///< \todo Function name should be "getTolerances"!
         retval = KINSetFuncNormTol(solver_, fnormtol);
@@ -270,7 +266,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printOutput()
     {
-        realtype *yval  = N_VGetArrayPointer_Serial(yy_);
+        sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
 
         std::cout << std::setprecision(5) << std::setw(7);
         for (IdxT i = 0; i < model_->size(); ++i)
@@ -281,9 +277,9 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printSpecial(realtype t, N_Vector y)
+    void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
     {
-        realtype *yval = N_VGetArrayPointer_Serial(y);
+        sunrealtype *yval = N_VGetArrayPointer_Serial(y);
         IdxT N = N_VGetLength_Serial(y);
         std::cout << "{";
         std::cout << std::setprecision(5) << std::setw(7) << t;
@@ -343,10 +339,10 @@ namespace Sundials
         }
     }
 
-    // Compiler will prevent building modules with data type incompatible with realtype
-    template class Kinsol<realtype, long int>;
-    template class Kinsol<realtype, int>;
-    template class Kinsol<realtype, size_t>;
+    // Compiler will prevent building modules with data type incompatible with sunrealtype
+    template class Kinsol<sunrealtype, long int>;
+    template class Kinsol<sunrealtype, int>;
+    template class Kinsol<sunrealtype, size_t>;
 
 } // namespace Sundials
 } // namespace AnalysisManager

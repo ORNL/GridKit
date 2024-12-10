@@ -157,30 +157,30 @@ namespace AnalysisManager
                 return NV_DATA_S(qB_);
             }
 
-            void printOutput(realtype t);
-            void printSpecial(realtype t, N_Vector x);
+            void printOutput(sunrealtype t);
+            void printSpecial(sunrealtype t, N_Vector x);
             void printFinalStats();
 
         private:
-            static int Residual(realtype t,
+            static int Residual(sunrealtype t,
                                 N_Vector yy, N_Vector yp,
                                 N_Vector rr, void *user_data);
             
-            static int Jac(realtype t, realtype cj,
+            static int Jac(sunrealtype t, sunrealtype cj,
                N_Vector yy, N_Vector yp, N_Vector resvec,
                SUNMatrix J, void *user_data,
                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-            static int Integrand(realtype t,
+            static int Integrand(sunrealtype t,
                                  N_Vector yy,   N_Vector yp,
                                  N_Vector rhsQ, void *user_data);
 
-            static int adjointResidual(realtype t,
+            static int adjointResidual(sunrealtype t,
                                        N_Vector yy,  N_Vector yp,
                                        N_Vector yyB, N_Vector ypB,
                                        N_Vector rrB, void *user_data);
 
-            static int adjointIntegrand(realtype t,
+            static int adjointIntegrand(sunrealtype t,
                                         N_Vector yy,  N_Vector yp,
                                         N_Vector yyB, N_Vector ypB,
                                         N_Vector rhsQB, void *user_data);

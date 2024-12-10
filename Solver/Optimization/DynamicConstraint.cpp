@@ -297,8 +297,8 @@ void DynamicConstraint<ScalarT, IdxT>::finalize_solution(SolverReturn status,
 
 
 
-template class DynamicConstraint<realtype, long int>;
-template class DynamicConstraint<realtype, size_t>;
+template class DynamicConstraint<sunrealtype, long int>;
+template class DynamicConstraint<sunrealtype, size_t>;
 
 } // namespace IpoptInterface
 } // namespace AnalysisManager
