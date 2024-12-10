@@ -61,12 +61,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include <idas/idas_direct.h>              /* access to IDADls interface           */
 #include <idas/idas.h>
-
-//Sundials Sparse KLU
-#include <sunmatrix/sunmatrix_sparse.h>
-#include <sunlinsol/sunlinsol_klu.h>   
+#include <idas/idas_ls.h>
 
 #include "ModelEvaluator.hpp"
 #include "Ida.hpp"
@@ -84,7 +80,7 @@ namespace Sundials
         int retval = 0;
 
         // Create the SUNDIALS context that all SUNDIALS objects require
-        retval = SUNContext_Create(NULL, &context_);
+        retval = SUNContext_Create(SUN_COMM_NULL, &context_);
         checkOutput(retval, "SUNContext");
         solver_ = IDACreate(context_);
         tag_ = NULL;
@@ -142,7 +138,7 @@ namespace Sundials
         checkAllocation((void*) yp0_, "N_VClone");
 
         // Dummy initial time; will be overridden.
-        const realtype t0 = RCONST(0.0);
+        const sunrealtype t0 = SUN_RCONST(0.0);
 
         // Allocate and initialize IDA workspace
         retval = IDAInit(solver_, this->Residual, t0, yy_, yp_);
@@ -153,8 +149,8 @@ namespace Sundials
         checkOutput(retval, "IDASetUserData");
 
         // Set tolerances
-        realtype rtol;
-        realtype atol;
+        sunrealtype rtol;
+        sunrealtype atol;
 
         model_->setTolerances(rtol, atol); ///< \todo Function name should be "getTolerances"!
         retval = IDASStolerances(solver_, rtol, atol);
@@ -340,7 +336,7 @@ namespace Sundials
         int retval = 0;
 
         // Set all quadratures to zero
-        N_VConst(RCONST(0.0), q_);
+        N_VConst(SUN_RCONST(0.0), q_);
 
         // Initialize quadratures
         retval = IDAQuadReInit(solver_, q_);
@@ -424,8 +420,8 @@ namespace Sundials
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
         int retval = 0;
-        realtype rtol;
-        realtype atol;
+        sunrealtype rtol;
+        sunrealtype atol;
 
         model_->initializeAdjoint();
 
@@ -558,7 +554,7 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(realtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
+    int Ida<ScalarT, IdxT>::Residual(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
@@ -574,7 +570,7 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(realtype t, realtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+    int Ida<ScalarT, IdxT>::Jac(sunrealtype t, sunrealtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
     {
 
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
@@ -604,7 +600,7 @@ namespace Sundials
         }
 
         sunindextype *colvals = SUNSparseMatrix_IndexValues(J);
-        realtype *data = SUNSparseMatrix_Data(J);
+        sunrealtype  *data = SUNSparseMatrix_Data(J);
         //Copy data from model jac to sundials
         for (unsigned int i = 0; i < c.size(); i++ )
         {
@@ -616,7 +612,7 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(realtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
+    int Ida<ScalarT, IdxT>::Integrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
@@ -632,7 +628,7 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(realtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void *user_data)
+    int Ida<ScalarT, IdxT>::adjointResidual(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
@@ -651,7 +647,7 @@ namespace Sundials
 
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(realtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void *user_data)
+    int Ida<ScalarT, IdxT>::adjointIntegrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void *user_data)
     {
         ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
@@ -705,10 +701,10 @@ namespace Sundials
 
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(realtype t)
+    void Ida<ScalarT, IdxT>::printOutput(sunrealtype t)
     {
-        realtype *yval  = N_VGetArrayPointer_Serial(yy_);
-        realtype *ypval = N_VGetArrayPointer_Serial(yp_);
+        sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
+        sunrealtype *ypval = N_VGetArrayPointer_Serial(yp_);
 
         std::cout << std::setprecision(5) << std::setw(7) << t << " ";
         for (IdxT i = 0; i < model_->size(); ++i)
@@ -723,9 +719,9 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(realtype t, N_Vector y)
+    void Ida<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
     {
-        realtype *yval = N_VGetArrayPointer_Serial(y);
+        sunrealtype *yval = N_VGetArrayPointer_Serial(y);
         IdxT N = static_cast<IdxT>(N_VGetLength_Serial(y));
         std::cout << "{";
         std::cout << std::setprecision(5) << std::setw(7) << t;
@@ -791,10 +787,10 @@ namespace Sundials
         }
     }
 
-    // Compiler will prevent building modules with data type incompatible with realtype
-    template class Ida<realtype, long int>;
-    template class Ida<realtype, int>;
-    template class Ida<realtype, size_t>;
+    // Compiler will prevent building modules with data type incompatible with sunrealtype
+    template class Ida<sunrealtype, long int>;
+    template class Ida<sunrealtype, int>;
+    template class Ida<sunrealtype, size_t>;
 
 } // namespace Sundials
 } // namespace AnalysisManager
