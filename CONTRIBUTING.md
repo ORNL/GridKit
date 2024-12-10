@@ -15,6 +15,22 @@ If an output is needed (for example, a warning needs to be displayed), use `std:
 std::cout << "index out of bounds. Row " << i << " starts at: " << start << " and ends at " << end << std::endl;
 ```
 
+### Including header files
+
+Header files should be included in 3 separate blocks: standard libraries,
+GridKit external dependencies, and GridKit header files. External libraries
+should use `<...>`, while GridKit headers should be included with `"..."`.
+
+```c++
+#include <iostream>    // Standard lib headers
+#include <cmath>
+
+#include <sundials.h>  // GridKit dependencies
+#include <idas.h>
+
+#include "Ida.hpp"     // GridKit internal header
+```
+
 ### Local variables naming
 
 Local variable names should use C-style name format.
