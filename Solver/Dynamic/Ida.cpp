@@ -61,7 +61,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <idas/idas.h>              /* access to IDADls interface           */
+#include <idas/idas.h>
 #include <idas/idas_ls.h>
 
 #include "ModelEvaluator.hpp"
