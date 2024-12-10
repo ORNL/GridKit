@@ -30,8 +30,9 @@ int main(int argc, char const *argv[])
 {
     int retval = 0;
     bool debug_out = false;
-    bool DAE_keys = false;
+    bool DAE_keys = true;
 
+    //Slightly above best error obtained on the N=8 microgrid
     real_type error_tol = 8e-5;
 
     retval += test(2, error_tol, debug_out, DAE_keys);
@@ -342,7 +343,6 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     std::cout << "Test the Relative Error for N = " << Nsize << "\n";
     for (index_type i = 0; i < true_vec->size(); i++)
     {
-        // test_pass *= GridKit::Testing::isEqual(yfinal[i], true_vec->at(i), error_tol);
         //Produces the Elementwise Relative Error
         if (debug_output)
             std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
@@ -351,7 +351,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
         sumbottom += (true_vec->at(i) * true_vec->at(i));
     }
 
-    real_type norm2error =  sqrt(sumtop) / sqrt(sumbottom);
+    real_type norm2error =  (sqrt(sumtop) / sqrt(sumbottom));
     std::cout << "2-Norm Relative Error: " << norm2error << std::endl; 
     test_pass = norm2error < error_tol;
 
