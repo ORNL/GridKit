@@ -91,7 +91,7 @@ namespace Sundials
         int retval = 0;
 
         // Create the SUNDIALS context that all SUNDIALS objects require
-        retval = SUNContext_Create(NULL, &context_);
+        retval = SUNContext_Create(SUN_COMM_NULL, &context_);
         checkOutput(retval, "SUNContext");
 
         solver_ = KINCreate(context_);
