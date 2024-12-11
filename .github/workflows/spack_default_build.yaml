@@ -141,7 +141,7 @@ jobs:
 
       # Remove before merging
       - name: Spack clean ipopt spec
-        run spack -e . clean ipopt
+        run: spack -e . clean ipopt
 
       - name: Concretize
         run: spack -e . concretize
