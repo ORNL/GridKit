@@ -1,0 +1,3 @@
+[submodule "Buildsystem/spack/spack"]
+	path = Buildsystem/spack/spack
+	url = https://github.com/spack/spack.git
