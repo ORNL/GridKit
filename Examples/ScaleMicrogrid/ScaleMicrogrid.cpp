@@ -20,18 +20,28 @@
 using index_type = size_t;
 using real_type = double;
 
-// Include solution keys for the three test cases here:
+// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
 #include "SolutionKeys.hpp"
 
 
-static int test(index_type Nsize, bool debug_output = false);
+static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false, bool use_DAE_keys = false);
 
+/**
+ * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness. 
+ * 
+ * @param argc unused
+ * @param argv unsued
+ * @return int 
+ */
 int main(int argc, char const *argv[])
 {
     int retval = 0;
-    retval += test(2);
-    retval += test(4);
-    retval += test(8);
+    bool debug_out = false;
+    real_type tol = SCALE_MICROGRID_ERROR_TOL;
+
+    retval += test(2, tol, debug_out, USE_DAE_KEYS);
+    retval += test(4, tol, debug_out, USE_DAE_KEYS);
+    retval += test(8, tol, debug_out, USE_DAE_KEYS);
     if (retval > 0)
     {
         std::cout << "Some tests fail!!\n";
@@ -47,28 +57,39 @@ int main(int argc, char const *argv[])
  * @brief Tests network of distributed generators.
  * 
  * @param Nsize - The number of DG line load cobinations to generate for scale
+ * @param error_tol - The tolerance for the model to meet to pass
+ * @param debug_output - Enable debug output
+ * @param use_DAE_keys - Choice between using DAE or ODE keys
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(index_type Nsize, bool debug_output)
+int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_keys)
 {
-    real_type abstol = 1.0e-8;
-    real_type reltol = 1.0e-8;
+    using namespace ModelLib;
+
     index_type max_step_number = 3000;
     bool usejac = true;
 
-    //TODO:setup as named parameters
-    //Create circuit model
-    ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(reltol, abstol, usejac, max_step_number);
+    real_type t_init  = 0.0;
+    real_type t_final = 1.0;
 
-    const std::vector<real_type>* true_vec = &answer_key_N8;
+    real_type reltol = SCALE_MICROGRID_REL_TOL;
+    real_type abstol = SCALE_MICROGRID_ABS_TOL;
+
+    // Create circuit model
+    auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
+                                                                      abstol,
+                                                                      usejac,
+                                                                      max_step_number);
+
+    const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
 
     switch (Nsize)
     {
         case 2:
-            true_vec = &answer_key_N2;
+            true_vec = use_DAE_keys ? &answer_key_N2_DAE : &answer_key_N2;
             break;
         case 4:
-            true_vec = &answer_key_N4;
+            true_vec = use_DAE_keys ? &answer_key_N4_DAE : &answer_key_N4;
             break;
         case 8:
             // true_vec = &answer_key_N8;
@@ -168,7 +189,9 @@ int test(index_type Nsize, bool debug_output)
 
 
     //Create the reference DG
-    ModelLib::DistributedGenerator<real_type, index_type>* dg_ref = new ModelLib::DistributedGenerator<real_type, index_type>(0, DGParams_list[0], true);
+    auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
+                                                                   DGParams_list[0],
+                                                                   true);
     //ref motor
     dg_ref->setExternalConnectionNodes(0, vec_size_internals);
     //outputs
@@ -190,7 +213,9 @@ int test(index_type Nsize, bool debug_output)
     for (index_type i = 1; i < 2*Nsize; i++)
     {
         //current DG to add
-        ModelLib::DistributedGenerator<real_type, index_type>* dg = new ModelLib::DistributedGenerator<real_type, index_type>(model_id++, DGParams_list[i], false);
+        auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
+                                                                   DGParams_list[i],
+                                                                   false);
         //ref motor
         dg->setExternalConnectionNodes(0,vec_size_internals);
         //outputs
@@ -209,7 +234,9 @@ int test(index_type Nsize, bool debug_output)
     for (index_type i = 0; i < 2*Nsize - 1; i++)
     {
         //line
-        ModelLib::MicrogridLine<real_type, index_type>* line_model = new ModelLib::MicrogridLine<real_type, index_type>(model_id++, rline_list[i], Lline_list[i]);
+        auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
+                                                                    rline_list[i],
+                                                                    Lline_list[i]);
         //ref motor
         line_model->setExternalConnectionNodes(0, vec_size_internals);
         //input connections
@@ -230,7 +257,9 @@ int test(index_type Nsize, bool debug_output)
     //  Load all the Load components
     for (index_type i = 0; i < Nsize; i++)
     {
-        ModelLib::MicrogridLoad<real_type, index_type>* load_model = new ModelLib::MicrogridLoad<real_type, index_type>(model_id++, rload_list[i], Lload_list[i]);
+        auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
+                                                                    rload_list[i],
+                                                                    Lload_list[i]);
         //ref motor
         load_model->setExternalConnectionNodes(0, vec_size_internals);
         //input connections
@@ -248,7 +277,7 @@ int test(index_type Nsize, bool debug_output)
     //Add all the microgrid Virtual DQ Buses
     for (index_type i = 0; i < 2*Nsize; i++)
     {
-        ModelLib::MicrogridBusDQ<real_type, index_type>* virDQbus_model = new ModelLib::MicrogridBusDQ<real_type, index_type>(model_id++, RN);
+        auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
 
         virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
         virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
@@ -303,10 +332,7 @@ int test(index_type Nsize, bool debug_output)
 
 
     //Create numerical integrator and configure it for the generator model
-    AnalysisManager::Sundials::Ida<real_type, index_type>* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
-
-    real_type t_init  = 0.0;
-    real_type t_final = 1.0;
+    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
 
     // setup simulation
     idas->configureSimulation();
@@ -327,16 +353,26 @@ int test(index_type Nsize, bool debug_output)
     }
 
     bool test_pass = true;
-    real_type tol = 3e-3;
+
+    real_type sumtop = 0.0;
+    real_type sumbottom = 0.0;
 
     // check relative error
-    std::cout << "Test the Relative Error\n";
+    std::cout << "Test the Relative Error for N = " << Nsize << "\n";
     for (index_type i = 0; i < true_vec->size(); i++)
     {
-        test_pass *= GridKit::Testing::isEqual(yfinal[i], true_vec->at(i), tol);
+        //Print the Elementwise Relative Error
         if (debug_output)
             std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
+
+        sumtop += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
+        sumbottom += (true_vec->at(i) * true_vec->at(i));
     }
+
+    real_type norm2error =  (sqrt(sumtop) / sqrt(sumbottom));
+    std::cout << "2-Norm Relative Error: " << norm2error << std::endl; 
+    test_pass = norm2error < error_tol;
+
     
     delete idas;
     delete sysmodel; 
