@@ -139,6 +139,10 @@ jobs:
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
 
+      # Remove before merging
+      - name: Spack clean ipopt spec
+        run spack -e . clean ipopt
+
       - name: Concretize
         run: spack -e . concretize
 
