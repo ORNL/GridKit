@@ -37,10 +37,11 @@ int main(int argc, char const *argv[])
 {
     int retval = 0;
     bool debug_out = false;
+    real_type tol = SCALE_MICROGRID_ERROR_TOL;
 
-    retval += test(2, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
-    retval += test(4, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
-    retval += test(8, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
+    retval += test(2, tol, debug_out, USE_DAE_KEYS);
+    retval += test(4, tol, debug_out, USE_DAE_KEYS);
+    retval += test(8, tol, debug_out, USE_DAE_KEYS);
     if (retval > 0)
     {
         std::cout << "Some tests fail!!\n";
@@ -63,15 +64,22 @@ int main(int argc, char const *argv[])
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_keys)
 {
+    using namespace ModelLib;
+
     index_type max_step_number = 3000;
     bool usejac = true;
 
     real_type t_init  = 0.0;
     real_type t_final = 1.0;
 
-    //TODO:setup as named parameters
-    //Create circuit model
-    ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(SCALE_MICROGRID_REL_TOL, SCALE_MICROGRID_ABS_TOL, usejac, max_step_number);
+    real_type reltol = SCALE_MICROGRID_REL_TOL;
+    real_type abstol = SCALE_MICROGRID_ABS_TOL;
+
+    // Create circuit model
+    auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
+                                                                      abstol,
+                                                                      usejac,
+                                                                      max_step_number);
 
     const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
 
@@ -181,7 +189,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
 
 
     //Create the reference DG
-    ModelLib::DistributedGenerator<real_type, index_type>* dg_ref = new ModelLib::DistributedGenerator<real_type, index_type>(0, DGParams_list[0], true);
+    auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
+                                                                   DGParams_list[0],
+                                                                   true);
     //ref motor
     dg_ref->setExternalConnectionNodes(0, vec_size_internals);
     //outputs
@@ -203,7 +213,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     for (index_type i = 1; i < 2*Nsize; i++)
     {
         //current DG to add
-        ModelLib::DistributedGenerator<real_type, index_type>* dg = new ModelLib::DistributedGenerator<real_type, index_type>(model_id++, DGParams_list[i], false);
+        auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
+                                                                   DGParams_list[i],
+                                                                   false);
         //ref motor
         dg->setExternalConnectionNodes(0,vec_size_internals);
         //outputs
@@ -222,7 +234,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     for (index_type i = 0; i < 2*Nsize - 1; i++)
     {
         //line
-        ModelLib::MicrogridLine<real_type, index_type>* line_model = new ModelLib::MicrogridLine<real_type, index_type>(model_id++, rline_list[i], Lline_list[i]);
+        auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
+                                                                    rline_list[i],
+                                                                    Lline_list[i]);
         //ref motor
         line_model->setExternalConnectionNodes(0, vec_size_internals);
         //input connections
@@ -243,7 +257,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     //  Load all the Load components
     for (index_type i = 0; i < Nsize; i++)
     {
-        ModelLib::MicrogridLoad<real_type, index_type>* load_model = new ModelLib::MicrogridLoad<real_type, index_type>(model_id++, rload_list[i], Lload_list[i]);
+        auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
+                                                                    rload_list[i],
+                                                                    Lload_list[i]);
         //ref motor
         load_model->setExternalConnectionNodes(0, vec_size_internals);
         //input connections
@@ -261,7 +277,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     //Add all the microgrid Virtual DQ Buses
     for (index_type i = 0; i < 2*Nsize; i++)
     {
-        ModelLib::MicrogridBusDQ<real_type, index_type>* virDQbus_model = new ModelLib::MicrogridBusDQ<real_type, index_type>(model_id++, RN);
+        auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
 
         virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
         virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
@@ -316,7 +332,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
 
 
     //Create numerical integrator and configure it for the generator model
-    AnalysisManager::Sundials::Ida<real_type, index_type>* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
+    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
 
     // setup simulation
     idas->configureSimulation();

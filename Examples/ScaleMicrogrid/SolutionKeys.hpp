@@ -29,9 +29,9 @@
  * 
  * ODE Keys gives similar results.
  */
-const real_type SCALE_MICROGRID_ERROR_TOL = 8.0e-5;
-const real_type SCALE_MICROGRID_REL_TOL = 1.0e-7;
-const real_type SCALE_MICROGRID_ABS_TOL = 1.0e-7;
+constexpr real_type SCALE_MICROGRID_ERROR_TOL = 8.0e-5;
+constexpr real_type SCALE_MICROGRID_REL_TOL = 1.0e-7;
+constexpr real_type SCALE_MICROGRID_ABS_TOL = 1.0e-7;
 const bool USE_DAE_KEYS = true;
 
 
