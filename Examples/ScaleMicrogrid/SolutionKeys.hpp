@@ -14,9 +14,26 @@
  * use anywhere else.
  */
 
-
-
 #include <vector>
+
+
+/// 
+/**
+ * The SCALE_MICROGRID_ERROR_TOL is slightly above best error obtained on the N=8 microgrid. The error "bottoms out" so any decrease in relative error yields no improvements (or increased error).
+ * REL_TOL and ABS_TOL determine the amount of error the problem produces. The tolerances given produce reasonable error results for N=8.
+ * 
+ * For DAE References keys on N=8:
+ * Abs/Rel tolerance = 1e-6 gives 2-Norm Relative Error: 4.38299e-05
+ * Abs/Rel tolerance = 1e-7 gives 2-Norm Relative Error: 1.72282e-05
+ * Abs/Rel tolerance = 1e-8 gives 2-Norm Relative Error: 4.98493e-05
+ * 
+ * ODE Keys gives similar results.
+ */
+const real_type SCALE_MICROGRID_ERROR_TOL = 8.0e-5;
+const real_type SCALE_MICROGRID_REL_TOL = 1.0e-7;
+const real_type SCALE_MICROGRID_ABS_TOL = 1.0e-7;
+const bool USE_DAE_KEYS = true;
+
 
 const std::vector<real_type> answer_key_N2 = {22975.4182636905,
                                               12753.1173017451,

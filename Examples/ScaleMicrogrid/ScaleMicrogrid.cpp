@@ -20,24 +20,27 @@
 using index_type = size_t;
 using real_type = double;
 
-// Include solution keys for the three test cases here:
+// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
 #include "SolutionKeys.hpp"
 
 
 static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false, bool use_DAE_keys = false);
 
+/**
+ * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness. 
+ * 
+ * @param argc unused
+ * @param argv unsued
+ * @return int 
+ */
 int main(int argc, char const *argv[])
 {
     int retval = 0;
     bool debug_out = false;
-    bool DAE_keys = true;
 
-    //Slightly above best error obtained on the N=8 microgrid
-    real_type error_tol = 8e-5;
-
-    retval += test(2, error_tol, debug_out, DAE_keys);
-    retval += test(4, error_tol, debug_out, DAE_keys);
-    retval += test(8, error_tol, debug_out, DAE_keys);
+    retval += test(2, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
+    retval += test(4, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
+    retval += test(8, SCALE_MICROGRID_ERROR_TOL, debug_out, USE_DAE_KEYS);
     if (retval > 0)
     {
         std::cout << "Some tests fail!!\n";
@@ -53,12 +56,13 @@ int main(int argc, char const *argv[])
  * @brief Tests network of distributed generators.
  * 
  * @param Nsize - The number of DG line load cobinations to generate for scale
+ * @param error_tol - The tolerance for the model to meet to pass
+ * @param debug_output - Enable debug output
+ * @param use_DAE_keys - Choice between using DAE or ODE keys
  * @return int returns 0 if successful, >0 otherwise
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_keys)
 {
-    real_type abstol = 1.0e-7;
-    real_type reltol = 1.0e-7;
     index_type max_step_number = 3000;
     bool usejac = true;
 
@@ -67,9 +71,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
 
     //TODO:setup as named parameters
     //Create circuit model
-    ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(reltol, abstol, usejac, max_step_number);
-
-
+    ModelLib::PowerElectronicsModel<real_type, index_type>* sysmodel = new ModelLib::PowerElectronicsModel<real_type, index_type>(SCALE_MICROGRID_REL_TOL, SCALE_MICROGRID_ABS_TOL, usejac, max_step_number);
 
     const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
 
@@ -343,7 +345,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     std::cout << "Test the Relative Error for N = " << Nsize << "\n";
     for (index_type i = 0; i < true_vec->size(); i++)
     {
-        //Produces the Elementwise Relative Error
+        //Print the Elementwise Relative Error
         if (debug_output)
             std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
 
