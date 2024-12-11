@@ -96,7 +96,7 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop ^ipopt+mumps~coinhsl
+          - gridkit@develop
 
     name: Build gridkit with Spack
     steps:
@@ -138,10 +138,6 @@ jobs:
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
-
-      # Remove before merging
-      - name: Spack clean ipopt spec
-        run: spack -e . clean ipopt
 
       - name: Concretize
         run: spack -e . concretize
