@@ -108,7 +108,7 @@ jobs:
           submodules: true
 
       - name: Setup Spack
-        run: echo "$PWD/buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
+        run: echo "$PWD/Buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
 
       - name: Create heredoc spack.yaml
         run: |
