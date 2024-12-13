@@ -3,32 +3,25 @@
 ## Code Style
 
 ### Existing non-compliant code
-The code that does not comply with these guidelines will be fixed in separate pull request(s). Any new contribution should follow closely these guidelines but should not change style in the existing GridKit code.
+The code that does not comply with these guidelines will be fixed in separate
+ pull request(s). Any new contribution should follow closely these guidelines
+ but should not change style in the existing GridKit code.
 
 ### Error handling
-Return values of member functions should be of type `int` and used for error handling. Functions return 0 if no error is encounter, return positive value for warnings and recoverable error, and negative value for irrecoverable errors.
+Return values of member functions should be of type `int` and used for error
+handling. Functions return 0 if no error is encounter, return positive value
+for warnings and recoverable error, and negative value for irrecoverable
+errors.
 
 ### Output
-If an output is needed (for example, a warning needs to be displayed), use `std::cout` and not `printf` as shown below. There should be a space before and after each `<<`.
+If an output is needed (for example, a warning needs to be displayed), use
+`std::cout` and not `printf` as shown below. There should be a space before
+and after each `<<`. If the line needs to be broken, the `<<` operators should
+be aligned:
 
 ```c++
-std::cout << "index out of bounds. Row " << i << " starts at: " << start << " and ends at " << end << std::endl;
-```
-
-### Including header files
-
-Header files should be included in 3 separate blocks: standard libraries,
-GridKit external dependencies, and GridKit header files. External libraries
-should use `<...>`, while GridKit headers should be included with `"..."`.
-
-```c++
-#include <iostream>    // Standard lib headers
-#include <cmath>
-
-#include <sundials.h>  // GridKit dependencies
-#include <idas.h>
-
-#include "Ida.hpp"     // GridKit internal header
+std::cout << "index out of bounds. Row " << i << " starts at: " << start 
+          << " and ends at " << end << std::endl;
 ```
 
 ### Local variables naming
@@ -59,11 +52,14 @@ int YetAnotherFunction(); // No, using uppercase camel name format
 
 ### Class names
 
-Class names should start with a capital letter. For instance, `Vector` and `Matrix` are valid class names, while `point` is not.
+Class names should start with a capital letter. For instance, `Vector` and
+`Matrix` are valid class names, while `point` is not.
 
 ### Enums (enumerated types)
 
-Always define `enum`s inside `GridKit` namespace. Type names should be capitalized and the constant names should be uppercase with underscores (but there is no underscore at the end!).
+Always define `enum`s inside `GridKit` namespace. Type names should be
+capitalized and the constant names should be uppercase with underscores
+(but there is no underscore at the end!).
 
 ```c++
   enum ExampleEnum { CONST_ONE = 0,
@@ -97,7 +93,9 @@ int & n;       // No, the reference symbol is a part of `int&` type
 ### Indentation
 Use only spaces for indentation, not tabs. Indent size is 4 spaces.
 
-When defining a class, the code blocks after `private`, `public` and `protected` should be aligned with opening/closing braces. There should be an empty line before each definition (except the first one). See example below.
+When defining a class, the code blocks after `private`, `public` and `protected`
+should be aligned with opening/closing braces. There should be an empty line
+before each definition (except the first one). See example below.
 ```c++
 class SomeClass
 {
@@ -127,7 +125,8 @@ ClassA::ClassA()
 {
 }
 ```
-Have opening brace at the next line following  `for`, `if`, or `while` statement. When using `else`, follow the example below. 
+Have opening brace at the next line following  `for`, `if`, or `while`
+statement. When using `else`, follow the example below. 
 ```c++
 if (cond == true)
 {
@@ -138,7 +137,8 @@ else
   // some other code
 }
  ```
-Have a space between keywords `for`, `while` and `if` and the parenthesis as shown here:
+Have a space between keywords `for`, `while` and `if` and the parenthesis as
+shown here:
 ```c++
 for (int i = 0; i < n; ++i)
 {
@@ -151,7 +151,7 @@ Do not use one-line `if`s and `for`s. Always use braces.
 ### Use of spaces and newlines
 There should be spaces between arithmetic operators. 
 ```c++
-x = c * (a + b);  //Yes
+x = c * (a + b);  // Yes
 x = c*(a+b).      // No, the clarity is better if there are spaces between binary operators and operands.
 ```
 When defining member functions, use one empty line between the functions.
@@ -179,7 +179,21 @@ int main()
 }
 ```
 
-Also, leave one empty line between `system` includes and `GridKit` includes, i.e.,
+Header files should be included in 3 separate blocks: standard libraries,
+GridKit external dependencies, and GridKit header files. There should be an
+empty line between the blocks. External libraries should use `<...>`, while
+GridKit headers should be included with `"..."`.
+
+```c++
+#include <iostream>    // Standard libs headers
+#include <cmath>
+
+#include <sundials.h>  // GridKit dependencies
+#include <idas.h>
+
+#include "Ida.hpp"     // GridKit internal header
+```
+
 ```c++
 #include <cstring>
 
@@ -193,8 +207,44 @@ int main()
 ```
 The `system` includes should always be listed first.
 
+### Long function names
+
+Function declarations and function calls should be written on a single line.
+If a function has large number of parameters, the function should be broken
+over multiple lines so that each function parameter is on a separate line.
+All parameters should be aligned with the first parameter in the function.
+
+```c++
+int myFunction(double x, double y); // Yes, function on a single line
+
+int myFunction(double x1,  // Yes, function parameters on a separate lines.
+               double x2,
+               double x3,
+               double x4,
+               double x5,
+               double x6,
+               double x7);
+
+int myFunction(double x1,  // No, function broken inconsistently.
+               double x2, double x3,
+               double x4,
+               double x5, double x6, double x7);
+
+int myFunction(
+  double x1,  // No, first parameter should follow the parenthesis.
+  double x2,
+  double x3,
+  double x4,
+  double x5,
+  double x6,
+  double x7
+);
+
+```
+
 ### Using namespaces
-All classes should be in namespace `GridKit`. If needed, define additional namespaces inside `GridKit`.
+All classes should be in namespace `GridKit`. If needed, define additional
+namespaces inside `GridKit`.
 ```c++
 namespace GridKit
 {
