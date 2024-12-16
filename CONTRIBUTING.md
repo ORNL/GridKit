@@ -4,8 +4,8 @@
 
 ### Existing non-compliant code
 The code that does not comply with these guidelines will be fixed in separate
- pull request(s). Any new contribution should follow closely these guidelines
- but should not change style in the existing GridKit code.
+pull request(s). Any new contribution should follow closely these guidelines
+but should not change style in the existing GridKit code.
 
 ### Error handling
 Return values of member functions should be of type `int` and used for error
@@ -23,6 +23,13 @@ be aligned:
 std::cout << "index out of bounds. Row " << i << " starts at: " << start 
           << " and ends at " << end << std::endl;
 ```
+
+### File names
+
+Each class should be implemented in a `*.cpp` and a `*.hpp` files with
+the same name. Files containing collection of standalone functions should
+have a descriptive name starting with lowercase character.
+
 
 ### Local variables naming
 
@@ -52,8 +59,25 @@ int YetAnotherFunction(); // No, using uppercase camel name format
 
 ### Class names
 
-Class names should start with a capital letter. For instance, `Vector` and
-`Matrix` are valid class names, while `point` is not.
+Class names should us uppercase camel name format.
+```c++
+class MyClass // Yes 
+{
+  ...
+}
+
+class Matrix // Yes
+{
+  ...
+}
+
+class My_Class // No, using underscore in class name
+{
+  ...
+}
+```
+
+
 
 ### Enums (enumerated types)
 
@@ -152,7 +176,8 @@ Do not use one-line `if`s and `for`s. Always use braces.
 There should be spaces between arithmetic operators. 
 ```c++
 x = c * (a + b);  // Yes
-x = c*(a+b).      // No, the clarity is better if there are spaces between binary operators and operands.
+x = c*(a+b).      // No, the clarity is better if there are spaces between
+                  // binary operators and operands.
 ```
 When defining member functions, use one empty line between the functions.
 ```c++
@@ -169,6 +194,9 @@ struct MyStruct
   }
 };
 ```
+
+### Include files
+
 Leave one empty line between all the includes and the first line of the actual code. 
 ```c++
 #include <iostream>
@@ -241,6 +269,33 @@ int myFunction(
 );
 
 ```
+
+### Initializer list in class constructor
+
+Short initializer list should follow the constructor on the same line with
+space around `:`. Long initializer lists should begin on the next line,
+indented and starting with `:`. Initializers should be aligned.
+```c++
+// Short initializer list
+MyClass(n, m) : n_(n), m_(m)
+{
+  // ...
+}
+
+// Long initializer list
+MyClass(n, m) 
+  : n_(n), 
+    m_(m),
+    pX_(nullptr),
+    pY_(nullptr),
+    pZ_(nullptr),
+    size_(0)
+{
+  // ...
+}
+```
+
+
 
 ### Using namespaces
 All classes should be in namespace `GridKit`. If needed, define additional
