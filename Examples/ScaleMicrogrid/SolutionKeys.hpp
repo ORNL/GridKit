@@ -19,15 +19,14 @@
 
 /// 
 /**
- * The SCALE_MICROGRID_ERROR_TOL is slightly above best error obtained on the N=8 microgrid. The error "bottoms out" so any decrease in relative error yields no improvements (or increased error).
- * REL_TOL and ABS_TOL determine the amount of error the problem produces. The tolerances given produce reasonable error results for N=8.
+ * The SCALE_MICROGRID_ERROR_TOL is a metric to determine if the error is good enough to pass the test.
+ * REL_TOL and ABS_TOL determine the amount of error the problem produces. As the tolerance decrease so does the error.
  * 
- * For DAE References keys on N=8:
- * Abs/Rel tolerance = 1e-6 gives 2-Norm Relative Error: 4.38299e-05
- * Abs/Rel tolerance = 1e-7 gives 2-Norm Relative Error: 1.72282e-05
- * Abs/Rel tolerance = 1e-8 gives 2-Norm Relative Error: 4.98493e-05
+ * For ODE References keys on N=8:
+ * 2-Norm Relative Error: 2.33318e-07  (rel/abs tol = 1e-6)
+ * 2-Norm Relative Error: 8.65796e-08  (rel/abs tol = 1e-7)
+ * 2-Norm Relative Error: 1.1618e-08   (rel/abs tol = 1e-8)
  * 
- * ODE Keys gives similar results.
  */
 constexpr real_type SCALE_MICROGRID_ERROR_TOL = 1.0e-6;
 constexpr real_type SCALE_MICROGRID_REL_TOL = 1.0e-8;
