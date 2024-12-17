@@ -66,7 +66,6 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
 {
     using namespace ModelLib;
 
-    index_type max_step_number = 3000;
     bool usejac = true;
 
     real_type t_init  = 0.0;
@@ -79,7 +78,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
                                                                       abstol,
                                                                       usejac,
-                                                                      max_step_number);
+                                                                      SCALE_MICROGRID_MAX_STEPS);
 
     const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
 

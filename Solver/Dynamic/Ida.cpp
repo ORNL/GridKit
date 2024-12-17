@@ -286,6 +286,11 @@ namespace Sundials
                 tout += dt;
             }
         }
+
+        model_->updateTime(tf, 0.0);
+        copyVec(yy_, model_->y());
+        copyVec(yp_, model_->yp());
+
         //std::cout << "\n";
         return retval;
     }

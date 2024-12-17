@@ -29,10 +29,11 @@
  * 
  * ODE Keys gives similar results.
  */
-constexpr real_type SCALE_MICROGRID_ERROR_TOL = 8.0e-5;
-constexpr real_type SCALE_MICROGRID_REL_TOL = 1.0e-7;
-constexpr real_type SCALE_MICROGRID_ABS_TOL = 1.0e-7;
-const bool USE_DAE_KEYS = true;
+constexpr real_type SCALE_MICROGRID_ERROR_TOL = 1.0e-6;
+constexpr real_type SCALE_MICROGRID_REL_TOL = 1.0e-8;
+constexpr real_type SCALE_MICROGRID_ABS_TOL = 1.0e-8;
+constexpr index_type SCALE_MICROGRID_MAX_STEPS = 10000;
+const bool USE_DAE_KEYS = false;
 
 
 const std::vector<real_type> answer_key_N2 = {22975.4182636905,
