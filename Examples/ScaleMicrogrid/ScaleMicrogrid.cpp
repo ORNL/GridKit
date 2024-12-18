@@ -24,7 +24,7 @@ using real_type = double;
 #include "SolutionKeys.hpp"
 
 
-static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false, bool use_DAE_keys = false);
+static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false);
 
 /**
  * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness. 
@@ -39,9 +39,9 @@ int main(int argc, char const *argv[])
     bool debug_out = false;
     real_type tol = SCALE_MICROGRID_ERROR_TOL;
 
-    retval += test(2, tol, debug_out, USE_DAE_KEYS);
-    retval += test(4, tol, debug_out, USE_DAE_KEYS);
-    retval += test(8, tol, debug_out, USE_DAE_KEYS);
+    retval += test(2, tol, debug_out);
+    retval += test(4, tol, debug_out);
+    retval += test(8, tol, debug_out);
     if (retval > 0)
     {
         std::cout << "Some tests fail!!\n";
@@ -62,11 +62,10 @@ int main(int argc, char const *argv[])
  * @param use_DAE_keys - Choice between using DAE or ODE keys
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_keys)
+int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
     using namespace ModelLib;
 
-    index_type max_step_number = 3000;
     bool usejac = true;
 
     real_type t_init  = 0.0;
@@ -79,17 +78,17 @@ int test(index_type Nsize, real_type error_tol, bool debug_output, bool use_DAE_
     auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
                                                                       abstol,
                                                                       usejac,
-                                                                      max_step_number);
+                                                                      SCALE_MICROGRID_MAX_STEPS);
 
-    const std::vector<real_type>* true_vec = use_DAE_keys ? &answer_key_N8_DAE : &answer_key_N8;
+    const std::vector<real_type>* true_vec = &answer_key_N8;
 
     switch (Nsize)
     {
         case 2:
-            true_vec = use_DAE_keys ? &answer_key_N2_DAE : &answer_key_N2;
+            true_vec = &answer_key_N2;
             break;
         case 4:
-            true_vec = use_DAE_keys ? &answer_key_N4_DAE : &answer_key_N4;
+            true_vec = &answer_key_N4;
             break;
         case 8:
             // true_vec = &answer_key_N8;
