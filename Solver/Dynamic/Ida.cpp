@@ -257,6 +257,9 @@ namespace Sundials
 
             retval = IDACalcIC(solver_, initType, 0.1);
             checkOutput(retval, "IDACalcIC");
+            
+            copyVec(yy_, model_->y());
+            copyVec(yp_, model_->yp());
         }
 
         return retval;
@@ -268,7 +271,7 @@ namespace Sundials
         int retval = 0;
         int iout = 0;
         real_type tret;
-        real_type dt = tf/nout;
+        real_type dt = tf / static_cast<real_type>(nout);
         real_type tout = dt;
 
         /* In loop, call IDASolve, print results, and test for error.
@@ -286,6 +289,12 @@ namespace Sundials
                 tout += dt;
             }
         }
+
+        //Final copy out. No gaurentee last residual evaluation is final step.
+        model_->updateTime(tf, 0.0);
+        copyVec(yy_, model_->y());
+        copyVec(yp_, model_->yp());
+
         //std::cout << "\n";
         return retval;
     }
@@ -354,7 +363,7 @@ namespace Sundials
 
         //std::cout << "Forward integration for initial value problem ... \n";
 
-        real_type dt = tf/nout;
+        real_type dt = tf / static_cast<real_type>(nout);
         real_type tout = dt;
         //printOutput(0.0);
         //printSpecial(0.0, yy_);
@@ -373,6 +382,11 @@ namespace Sundials
             retval = IDAGetQuad(solver_, &tret, q_);
             checkOutput(retval, "IDAGetQuad");
         }
+        
+        //Final copy out. No gaurentee last residual evaluation is final step.
+        model_->updateTime(tf, 0.0);
+        copyVec(yy_, model_->y());
+        copyVec(yp_, model_->yp());
 
         return retval;
     }
@@ -503,7 +517,7 @@ namespace Sundials
 
         //std::cout << "Forward integration for adjoint analysis ... \n";
 
-        real_type dt = tf/nout;
+        real_type dt = tf / static_cast<real_type>(nout);
         real_type tout = dt;
         for(int i = 0; i < nout; ++i)
         {
@@ -518,6 +532,11 @@ namespace Sundials
             retval = IDAGetQuad(solver_, &time, q_);
             checkOutput(retval, "IDASolve");
         }
+        
+        //Final copy out. No gaurentee last residual evaluation is final step.
+        model_->updateTime(tf, 0.0);
+        copyVec(yy_, model_->y());
+        copyVec(yp_, model_->yp());
 
         return retval;
     }
@@ -539,6 +558,10 @@ namespace Sundials
 
         retval = IDAGetB(solver_, backwardID_, &time, yyB_, ypB_);
         checkOutput(retval, "IDAGetB");
+
+        //Copy back into model
+        copyVec(yyB_, model_->yB());
+        copyVec(ypB_, model_->ypB());
 
         retval = IDAGetQuadB(solver_, backwardID_, &time, qB_);
         checkOutput(retval, "IDAGetQuadB");
