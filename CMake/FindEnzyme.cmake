@@ -170,7 +170,7 @@ macro(enzyme_add_executable)
   add_custom_command(
     DEPENDS ${PHASE2}
     OUTPUT ${PHASE3}
-    COMMAND ${GRIDKIT_OPT} ${PHASE2} --enable-new-pm=0 -load=${ENZYME_LLVM_PLUGIN_LIBRARY} -enzyme -o ${PHASE3} -S
+    COMMAND ${GRIDKIT_OPT} ${PHASE2} -load-pass-plugin=${ENZYME_LLVM_PLUGIN_LIBRARY} -passes=enzyme -o ${PHASE3} -S
     COMMENT "Running Enzyme opt pass on target ${enzyme_add_executable_NAME}"
     )
 
