@@ -75,3 +75,7 @@ if(TARGET SUNDIALS::idas)
     add_subdirectory(ParameterEstimation)
   endif()
 endif()
+
+if(GRIDKIT_ENABLE_ENZYME)
+  add_subdirectory(Enzyme)
+endif()
