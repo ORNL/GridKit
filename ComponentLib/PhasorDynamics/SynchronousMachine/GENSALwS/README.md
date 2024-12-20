@@ -8,7 +8,7 @@
 - $`T'_{q0}`$ is neglected
 
 <div align="center">
-   <img align="center" src="/Documentation/Figures/GENSAL.JPG">
+   <img align="center" src="../../../../Documentation/Figures/GENSAL.JPG">
    
    
   Figure 2: GENSAL. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
