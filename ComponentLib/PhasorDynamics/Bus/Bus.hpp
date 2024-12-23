@@ -112,82 +112,82 @@ namespace PhasorDynamics
         virtual int initializeAdjoint();
         virtual int evaluateAdjointResidual();
 
-        virtual ScalarT& Va()
-        {
-            return y_[0];
-        }
-
-        virtual const ScalarT& Va() const
-        {
-            return y_[0];
-        }
-
         virtual ScalarT& Vr()
         {
-            return y_[1];
+            return y_[0];
         }
 
         virtual const ScalarT& Vr() const
         {
+            return y_[0];
+        }
+
+        virtual ScalarT& Vi()
+        {
             return y_[1];
         }
 
-        virtual ScalarT& Ia()
+        virtual const ScalarT& Vi() const
         {
-            return f_[0];
-        }
-
-        virtual const ScalarT& Ia() const
-        {
-            return f_[0];
+            return y_[1];
         }
 
         virtual ScalarT& Ir()
         {
-            return f_[1];
+            return f_[0];
         }
 
         virtual const ScalarT& Ir() const
         {
+            return f_[0];
+        }
+
+        virtual ScalarT& Ii()
+        {
             return f_[1];
         }
 
-        virtual ScalarT& lambdaIa()
+        virtual const ScalarT& Ii() const
         {
-            return yB_[0];
-        }
-
-        virtual const ScalarT& lambdaIa() const
-        {
-            return yB_[0];
+            return f_[1];
         }
 
         virtual ScalarT& lambdaIr()
         {
-            return yB_[1];
+            return yB_[0];
         }
 
         virtual const ScalarT& lambdaIr() const
         {
+            return yB_[0];
+        }
+
+        virtual ScalarT& lambdaIi()
+        {
             return yB_[1];
         }
 
-        virtual ScalarT& IaB()
+        virtual const ScalarT& lambdaIi() const
         {
-            return fB_[0];
-        }
-
-        virtual const ScalarT& IaB() const
-        {
-            return fB_[0];
+            return yB_[1];
         }
 
         virtual ScalarT& IrB()
         {
-            return fB_[1];
+            return fB_[0];
         }
 
         virtual const ScalarT& IrB() const
+        {
+            return fB_[0];
+        }
+
+        virtual ScalarT& IiB()
+        {
+            return fB_[1];
+        }
+
+        virtual const ScalarT& IiB() const
         {
             return fB_[1];
         }

@@ -83,8 +83,8 @@ Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
     X_(0.01),
     G_(0.0),
     B_(0.0),
-    fbusID_(0),
-    tbusID_(0),
+    bus1ID_(0),
+    bus2ID_(0),
     bus1_(bus1),
     bus2_(bus2)
 {
@@ -92,13 +92,18 @@ Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
 }
 
 template <class ScalarT, typename IdxT>
-Branch<ScalarT, IdxT>::Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2)
+Branch<ScalarT, IdxT>::Branch(real_type R,
+                              real_type X,
+                              real_type G,
+                              real_type B,
+                              bus_type* bus1,
+                              bus_type* bus2)
   : R_(R),
     X_(X),
     G_(G),
     B_(B),
-    fbusID_(0),
-    tbusID_(0),
+    bus1ID_(0),
+    bus2ID_(0),
     bus1_(bus1),
     bus2_(bus2)
 {
@@ -110,8 +115,8 @@ Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
     X_(data.x),
     G_(0.0),
     B_(data.b),
-    fbusID_(data.fbus),
-    tbusID_(data.tbus),
+    bus1ID_(data.fbus),
+    bus2ID_(data.tbus),
     bus1_(bus1),
     bus2_(bus2)
 {
@@ -166,12 +171,11 @@ int Branch<ScalarT, IdxT>::evaluateResidual()
     // std::cout << "Evaluating branch residual ...\n";
     real_type b = -X_/(R_*R_ + X_*X_);
     real_type g =  R_/(R_*R_ + X_*X_);
-    ScalarT dtheta = theta1() - theta2();
 
-    P1() -= ( g + 0.5*G_)*V1()*V1() + V1()*V2()*(-g*cos(dtheta) - b*sin(dtheta));
-    Q1() -= (-b - 0.5*B_)*V1()*V1() + V1()*V2()*(-g*sin(dtheta) + b*cos(dtheta));
-    P2() -= ( g + 0.5*G_)*V2()*V2() + V1()*V2()*(-g*cos(dtheta) + b*sin(dtheta));
-    Q2() -= (-b - 0.5*B_)*V2()*V2() + V1()*V2()*( g*sin(dtheta) + b*cos(dtheta));
+    Ir1() += -(g + 0.5*G_)*Vr1() + (b + 0.5*B_)*Vi1() + g*Vr2() - b*Vi2();
+    Ii1() += -(b + 0.5*B_)*Vr1() - (g + 0.5*G_)*Vi1() + b*Vr2() + g*Vi2();
+    Ir2() +=  g*Vr1() - b*Vi1() - (g + 0.5*G_)*Vr2() + (b + 0.5*B_)*Vi2();
+    Ii2() +=  b*Vr1() + g*Vi1() - (b + 0.5*B_)*Vr2() - (g + 0.5*G_)*Vi2();
 
     return 0;
 }

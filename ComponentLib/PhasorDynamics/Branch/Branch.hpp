@@ -153,44 +153,44 @@ namespace PhasorDynamics
         }
 
     private:
-        ScalarT& V1()
+        ScalarT& Vr1()
         {
-            return bus1_->V();
+            return bus1_->Vr();
         }
 
-        ScalarT& theta1()
+        ScalarT& Vi1()
         {
-            return bus1_->theta();
+            return bus1_->Vi();
         }
 
-        ScalarT& P1()
+        ScalarT& Ir1()
         {
-            return bus1_->P();
+            return bus1_->Ir();
         }
 
-        ScalarT& Q1()
+        ScalarT& Ii1()
         {
-            return bus1_->Q();
+            return bus1_->Ii();
         }
 
-        ScalarT& V2()
+        ScalarT& Vr2()
         {
-            return bus2_->V();
+            return bus2_->Vr();
         }
 
-        ScalarT& theta2()
+        ScalarT& Vi2()
         {
-            return bus2_->theta();
+            return bus2_->Vi();
         }
 
-        ScalarT& P2()
+        ScalarT& Ir2()
         {
-            return bus2_->P();
+            return bus2_->Ir();
         }
 
-        ScalarT& Q2()
+        ScalarT& Ii2()
         {
-            return bus2_->Q();
+            return bus2_->Ii();
         }
 
     private:
@@ -198,8 +198,8 @@ namespace PhasorDynamics
         real_type X_;
         real_type G_;
         real_type B_;
-        const IdxT fbusID_;
-        const IdxT tbusID_;
+        const IdxT bus1ID_;
+        const IdxT bus2ID_;
         bus_type* bus1_;
         bus_type* bus2_;
     };
