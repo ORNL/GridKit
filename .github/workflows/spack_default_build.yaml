@@ -111,9 +111,6 @@ jobs:
       - name: Setup Spack
         run: echo "$PWD/Buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
 
-      - name: Clean Spack
-        run: spack -e . clean -a
-
       - name: Create heredoc spack.yaml
         run: |
           cat << EOF > spack.yaml
