@@ -134,7 +134,7 @@ jobs:
             packages:
               llvm:
                 externals:
-                - spec llvm@18
+                  - spec: llvm@18
                   prefix: $PWD/llvm
           EOF
 
