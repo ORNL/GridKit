@@ -105,7 +105,7 @@ jobs:
         run: df -h
 
       - name: Check Spack storage
-        run: du -h -max-depth=1 /opt/spack
+        run: du -h --max-depth=1 /opt/spack
 
       - name: Checkout
         uses: actions/checkout@v4
