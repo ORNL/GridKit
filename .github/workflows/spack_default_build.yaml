@@ -91,13 +91,13 @@ jobs:
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 500
 
     strategy:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme ^ llvm@18
+          - gridkit@develop +enzyme ^ llvm@19
 
     name: Build gridkit with Spack
     steps:
@@ -108,22 +108,11 @@ jobs:
           # Also need to change build script to use spack from base image
           submodules: true
 
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "18.1"
-
-      - name: Check LLVM install
-        run: ls $PWD/llvm
-
-      - name: Check LLVM install bin
-        run: ls $PWD/llvm/bin
-
-      - name: Check LLVM install lib
-        run: ls $PWD/llvm/lib
-
       - name: Setup Spack
         run: echo "$PWD/Buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
+
+      - name: Clean Spack
+        run: spack -e . clean -a
 
       - name: Create heredoc spack.yaml
         run: |
@@ -140,11 +129,6 @@ jobs:
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
               spack: https://binaries.spack.io/develop
-            packages:
-              llvm:
-                externals:
-                - spec: llvm@18
-                  prefix: $PWD/llvm
           EOF
 
       - name: Configure GHCR mirror
