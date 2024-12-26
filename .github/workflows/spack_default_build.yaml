@@ -135,7 +135,7 @@ jobs:
         run: spack -e . buildcache keys --install --trust
 
       - name: Check storage locations
-        run: du -h --max-depth=1 /
+        run: du -h --max-depth=1 /opt/
 
       - name: Find external packages
         run: spack -e . external find --all
