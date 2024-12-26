@@ -134,9 +134,6 @@ jobs:
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
 
-      - name: Check storage locations
-        run: du -h --max-depth=1 /opt/
-
       - name: Find external packages
         run: spack -e . external find --all
 
@@ -147,7 +144,7 @@ jobs:
         run: spack -e . concretize
 
       - name: Install dependencies
-        run: spack -e . install -j16 --no-check-signature --only dependencies
+        run: spack -e . install --no-check-signature --only dependencies
 
       - name: Install package
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
