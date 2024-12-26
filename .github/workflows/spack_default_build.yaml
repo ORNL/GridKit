@@ -101,17 +101,26 @@ jobs:
 
     name: Build gridkit with Spack
     steps:
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "18.1"
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           # Once we move submodule deps into spack, we can do some more builds
           # Also need to change build script to use spack from base image
           submodules: true
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18.1"
+
+      - name: Check LLVM install
+        run: ls $PWD/llvm
+
+      - name: Check LLVM install bin
+        run: ls $PWD/llvm/bin
+
+      - name: Check LLVM install lib
+        run: ls $PWD/llvm/lib
 
       - name: Setup Spack
         run: echo "$PWD/Buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
