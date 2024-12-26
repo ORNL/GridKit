@@ -101,12 +101,6 @@ jobs:
 
     name: Build gridkit with Spack
     steps:
-      - name: Check storage locations
-        run: df -h
-
-      - name: Check Spack storage
-        run: du -h --max-depth=1 /opt/spack
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -139,6 +133,12 @@ jobs:
 
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
+
+      - name: Check storage locations
+        run: df -h
+
+      - name: Check Spack storage
+        run: du -h --max-depth=1 /opt/spack
 
       - name: Find external packages
         run: spack -e . external find --all
