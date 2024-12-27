@@ -49,10 +49,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Need to build custom base image with gfortran
+      # For LLVM build setup, see https://github.com/EnzymeAD/enzyme-dev-docker/blob/main/Dockerfile
       - name: Create Dockerfile heredoc
         if: ${{ env.IMAGE_EXISTS == 'false' }}
         run: |
           cat << EOF > Dockerfile
+          ARG LLVM_VERSION=18
           FROM ubuntu:22.04
           RUN apt-get update && \
               apt-get install -y --no-install-recommends \
@@ -69,6 +71,8 @@ jobs:
           RUN apt-get update && \
               apt-get install -y --no-install-recommends wget && \
               wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+              apt-add-repository -y "deb http://apt.llvm.org/`lsb_release -cs`/ llvm-toolchain-`lsb_release -cs`-$LLVM_VERSION main" \
+              apt-get update && \
               apt-get install -y --no-install-recommends \
                 llvm-18 \
                 clang-18 \
