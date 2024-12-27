@@ -66,7 +66,8 @@ jobs:
                 gcc \
                 libstdc++6 \
               && rm -rf /var/lib/apt/lists/*
-          RUN apt-get install -y --no-install-recommends \
+          RUN apt-add-repository -y "deb http://apt.llvm.org/`lsb_release -cs`/ llvm-toolchain-`lsb_release -cs`-$LLVM_VERSION main" && \
+              apt-get install -y --no-install-recommends \
                 llvm-18 \
               && rm -rf /var/lib/apt/lists/*
           EOF
