@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-22.04-fortran-v0.1.0
+  BASE_VERSION: ubuntu-22.04-fortran-v0.2.0
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -66,6 +66,9 @@ jobs:
                 gcc \
                 libstdc++6 \
               && rm -rf /var/lib/apt/lists/*
+          RUN apt-get install -y --no-install-recommends \
+                llvm-18 \
+              && rm -rf /var/lib/apt/lists/*
           EOF
 
       - name: Extract metadata (tags, labels) for Docker
@@ -97,7 +100,7 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme ^ llvm@19
+          - gridkit@develop +enzyme ^ llvm@18
 
     name: Build gridkit with Spack
     steps:
