@@ -66,8 +66,7 @@ jobs:
                 gcc \
                 libstdc++6 \
               && rm -rf /var/lib/apt/lists/*
-          RUN apt-add-repository -y "deb http://apt.llvm.org/`lsb_release -cs`/ llvm-toolchain-`lsb_release -cs`-18 main" && \
-              apt-get update &&
+          RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - && \
               apt-get install -y --no-install-recommends \
                 llvm-18 \
                 clang-18 \
