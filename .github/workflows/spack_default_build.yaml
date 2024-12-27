@@ -66,7 +66,8 @@ jobs:
                 gcc \
                 libstdc++6 \
               && rm -rf /var/lib/apt/lists/*
-          RUN curl -fsSL - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - && \
+          RUN apt-get install -y --no-install-recommends wget && \
+              wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
               apt-get install -y --no-install-recommends \
                 llvm-18 \
                 clang-18 \
