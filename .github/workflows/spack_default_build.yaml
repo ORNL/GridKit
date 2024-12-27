@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-22.04-fortran-v0.2.0
+  BASE_VERSION: ubuntu-22.04-fortran-v0.2.1
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -74,7 +74,10 @@ jobs:
               apt-get update && \
               apt-get install -y --no-install-recommends \
                 llvm-18 \
-                clang-18 \
+                llvm-18-dev \
+                clang-18 \ 
+                libclang-18-dev \
+                libomp-18-dev \
               && rm -rf /var/lib/apt/lists/*
           EOF
 
@@ -107,7 +110,7 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme ^ llvm@18
+          - gridkit@develop +enzyme
 
     name: Build gridkit with Spack
     steps:
