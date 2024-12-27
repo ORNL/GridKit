@@ -66,7 +66,9 @@ jobs:
                 gcc \
                 libstdc++6 \
               && rm -rf /var/lib/apt/lists/*
-          RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+          RUN apt-get install -y --no-install-recommends \
+                llvm-18 \
+              && rm -rf /var/lib/apt/lists/*
           EOF
 
       - name: Extract metadata (tags, labels) for Docker
@@ -98,7 +100,7 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme
+          - gridkit@develop +enzyme ^ llvm@18
 
     name: Build gridkit with Spack
     steps:
