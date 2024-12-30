@@ -140,7 +140,7 @@ jobs:
         run: spack -e . buildcache keys --install --trust
 
       - name: Find external packages
-        run: spack -e . external find --all
+        run: spack -e . external find --all --exclude llvm
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
