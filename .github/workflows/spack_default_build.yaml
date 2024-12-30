@@ -126,10 +126,12 @@ jobs:
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
               spack: https://binaries.spack.io/develop
+            packages:
+              llvm:
+                externals:
+                - spec: llvm@18
+                  prefix: /usr/lib/llvm-18
           EOF
-
-      - name: Check /usr/lib/cmake/
-        run: ls -ltrh /usr/lib/cmake/
 
       - name: Configure GHCR mirror
         run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
