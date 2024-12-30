@@ -147,8 +147,8 @@ jobs:
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
 
-      - name: Check llvm
-        run: ls -ltrh /usr/lib/llvm*
+      - name: Check usr/bin
+        run: ls -ltrh /usr/bin/
 
       - name: Find external packages
         run: spack -e . external find --all
