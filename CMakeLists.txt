@@ -10,6 +10,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(gridkit)
 
+set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+
 set(PACKAGE_NAME "GRIDKIT")
 set(PACKAGE_STRING "GRIDKIT 0.1.0")
 set(PACKAGE_TARNAME "gridkit")
