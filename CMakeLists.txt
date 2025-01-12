@@ -122,6 +122,7 @@ option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
 
 if(GRIDKIT_ENABLE_IPOPT)
   include(FindIpopt)
+  enable_language(Fortran) # Needed for linking to HSL
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS)
   find_package(SUNDIALS 7.0.0 REQUIRED CONFIG 
