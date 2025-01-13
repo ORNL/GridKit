@@ -70,6 +70,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -251,6 +252,18 @@ void readMatPowerBaseMVA(SystemModelData<RealT, IdxT>& mp, std::string& line)
 
 namespace GridKit
 {
+
+/**
+ * @brief Reads a file in for tabulated data
+ *
+ * @todo needs to return int for file error codes
+ * 
+ * @tparam ScalarT 
+ * @param table 
+ * @param filename 
+ * @param ti 
+ * @param tf 
+ */
 template <typename ScalarT>
 void setLookupTable(std::vector<std::vector<ScalarT>>& table,
                     std::string filename,
@@ -258,6 +271,12 @@ void setLookupTable(std::vector<std::vector<ScalarT>>& table,
                     ScalarT& tf)
 {
   std::ifstream idata(filename);
+  if (!idata.is_open()) {
+    ///@todo swap with returing error codes instead of crashing.
+    std::cerr << "Error. Given file name \"" << filename<< "\" does not exsist." << std::endl;
+    abort();
+  }
+
   std::string line;
   int oldwordcount = -1;
   while (std::getline(idata, line)) {
@@ -281,6 +300,12 @@ void setLookupTable(std::vector<std::vector<ScalarT>>& table,
   }
 
   size_t N = table.size();
+  if (N < 2) {
+    ///@todo swap with returing error codes instead of crashing.
+    std::cerr << "Error. Only " << N << " data points found in file " << filename << std::endl;
+    abort();
+  }
+
   ti = table[0][0];
   tf = table[N - 1][0];
 }

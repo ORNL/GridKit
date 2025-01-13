@@ -60,6 +60,8 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
+add_compile_definitions("PARAMETER_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
+
 add_executable(paramest ParameterEstimation.cpp)
 target_link_libraries(paramest
   GRIDKIT::bus
