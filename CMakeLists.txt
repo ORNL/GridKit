@@ -76,7 +76,7 @@ set(PACKAGE_VERSION_PATCH "7")
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
 # Ipopt support is disabled by default
-option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" ON)
+option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is enabled by default
 option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
@@ -84,6 +84,8 @@ option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
 # Enable KLU
 option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON)
 
+# Enzyme support is disabled by default
+option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
 set(CMAKE_MACOSX_RPATH 1)
 
@@ -131,6 +133,10 @@ if(GRIDKIT_ENABLE_SUNDIALS)
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
   include(FindSuiteSparse)
+endif()
+
+if(${GRIDKIT_ENABLE_ENZYME})
+  include(FindEnzyme)
 endif()
 
 # Macro that adds libraries
