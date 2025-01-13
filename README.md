@@ -17,6 +17,8 @@ You should have all of the following installed before installing GridKit™
 	- [SUNDIALS](https://github.com/LLNL/sundials) >= 7.0.0
 	- [Suitesparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) >= 5.x (optional)
 	- [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
+    - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.131 (optional)
+        - [LLVM](https://github.com/llvm/llvm-project) >= 18.x 
 - [CMake](https://cmake.org/) >= 3.12
 - C++ 17 compliant compiler
 

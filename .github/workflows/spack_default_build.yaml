@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-22.04-fortran-v0.1.0
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.2
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -15,7 +15,7 @@ on: [pull_request]
 jobs:
   base_image_build:
     name: Build base image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -53,7 +53,7 @@ jobs:
         if: ${{ env.IMAGE_EXISTS == 'false' }}
         run: |
           cat << EOF > Dockerfile
-          FROM ubuntu:22.04
+          FROM ubuntu:24.04
           RUN apt-get update && \
               apt-get install -y --no-install-recommends \
                 software-properties-common \
@@ -87,16 +87,17 @@ jobs:
 
   gridkit_spack_builds:
     needs: base_image_build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: read
+    timeout-minutes: 30
 
     strategy:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop
+          - gridkit@develop +enzyme
 
     name: Build gridkit with Spack
     steps:
@@ -125,6 +126,11 @@ jobs:
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
               spack: https://binaries.spack.io/develop
+            packages:
+              llvm:
+                externals:
+                - spec: llvm@18
+                  prefix: /usr/lib/llvm-18
           EOF
 
       - name: Configure GHCR mirror
@@ -134,7 +140,7 @@ jobs:
         run: spack -e . buildcache keys --install --trust
 
       - name: Find external packages
-        run: spack -e . external find --all
+        run: spack -e . external find --all --exclude llvm
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
