@@ -101,7 +101,7 @@ namespace PhasorDynamics
         using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
         Bus();
-        Bus(ScalarT Va, ScalarT Vr);
+        Bus(ScalarT Vr, ScalarT Vi);
         Bus(BusData& data);
         virtual ~Bus();
 
@@ -199,8 +199,8 @@ namespace PhasorDynamics
 
     private:
         // Default initial values for voltage and phase on PQ bus
-        ScalarT Va0_{0.0};
         ScalarT Vr0_{0.0};
+        ScalarT Vi0_{0.0};
 
     };
 

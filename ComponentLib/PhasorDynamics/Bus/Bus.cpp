@@ -81,7 +81,7 @@ namespace PhasorDynamics
  */
 template <class ScalarT, typename IdxT>
 Bus<ScalarT, IdxT>::Bus()
-  : Va0_(0.0), Vr0_(0.0)
+  : Vr0_(0.0), Vi0_(0.0)
 {
     //std::cout << "Create Bus..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -101,8 +101,8 @@ Bus<ScalarT, IdxT>::Bus()
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-Bus<ScalarT, IdxT>::Bus(ScalarT Va, ScalarT Vr)
-  : Va0_(Va), Vr0_(Vr)
+Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
+  : Vr0_(Vr), Vi0_(Vi)
 {
     //std::cout << "Create Bus..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -119,7 +119,7 @@ Bus<ScalarT, IdxT>::Bus(ScalarT Va, ScalarT Vr)
  */
 template <class ScalarT, typename IdxT>
 Bus<ScalarT, IdxT>::Bus(BusData& data)
-  : Va0_(data.Vm * cos(data.Va)), Vr0_(data.Vm * sin(data.Va))
+  : Vr0_(data.Vm * cos(data.Va)), Vi0_(data.Vm * sin(data.Va))
 {
     //std::cout << "Create Bus..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
@@ -169,8 +169,8 @@ template <class ScalarT, typename IdxT>
 int Bus<ScalarT, IdxT>::initialize()
 {
     // std::cout << "Initialize Bus..." << std::endl;
-    y_[0] = Va0_;
-    y_[1] = Vr0_;
+    y_[0] = Vr0_;
+    y_[1] = Vi0_;
     yp_[0] = 0.0;
     yp_[1] = 0.0;
 
