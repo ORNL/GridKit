@@ -188,7 +188,7 @@ macro(enzyme_add_executable)
     )
 
   add_custom_target(
-    ${enzyme_add_executable_NAME} ALL
+    "${enzyme_add_executable_NAME}_target" ALL
     DEPENDS ${PHASE5}
     )
 endmacro()
