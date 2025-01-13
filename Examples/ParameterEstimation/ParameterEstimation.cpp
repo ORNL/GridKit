@@ -72,7 +72,10 @@
 #include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
+#include <string>
 
+#define STRING(x) #x
+#define XSTRING(x) STRING(x)
 
 int main(int argc, char** argv)
 {
@@ -98,7 +101,8 @@ int main(int argc, char** argv)
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
 
-    const std::string input_data = (argc == 2) ? argv[1] : "lookup_table.dat";
+    const std::string input_data = (argc == 2) ? argv[1] : std::string(XSTRING(PARAMETER_DIR)) + "/lookup_table.dat";
+
     double t_init  = -1.0;
     double t_final = -1.0;
 
