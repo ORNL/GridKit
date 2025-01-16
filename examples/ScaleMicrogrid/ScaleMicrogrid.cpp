@@ -66,7 +66,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
     using namespace GridKit;
 
-    bool usejac = true;
+    bool use_jac = true;
 
     real_type t_init  = 0.0;
     real_type t_final = 1.0;
@@ -77,7 +77,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     // Create circuit model
     auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
                                                                       abstol,
-                                                                      usejac,
+                                                                      use_jac,
                                                                       SCALE_MICROGRID_MAX_STEPS);
 
     const std::vector<real_type>* true_vec = &answer_key_N8;

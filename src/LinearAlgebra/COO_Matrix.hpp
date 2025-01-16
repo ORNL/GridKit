@@ -21,8 +21,8 @@ class COO_Matrix
 {
 private:
     std::vector<ScalarT> values_;
-    std::vector<Intdx> row_indexes_;
-    std::vector<Intdx> column_indexes_;
+    std::vector<Intdx> row_indices_;
+    std::vector<Intdx> column_indices_;
     Intdx rows_size_;
     Intdx columns_size_;
     bool sorted_;
@@ -39,8 +39,8 @@ public:
     // --- Functions which call sort ---
     std::tuple<std::vector<Intdx>, std::vector<ScalarT>> getRowCopy(Intdx r);
     std::tuple<std::vector<Intdx>&, std::vector<Intdx>&, std::vector<ScalarT>&> getEntries();
-    std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntrieCopies();
-    std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntrieCopiesSubMatrix(std::vector<Intdx> submap);
+    std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntryCopies();
+    std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getEntryCopiesSubMatrix(std::vector<Intdx> submap);
 
     std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> getDataToCSR();
     std::vector<Intdx> getCSRRowData();
@@ -53,7 +53,7 @@ public:
     ScalarT frobnorm();
 
     // --- Permutation Operations ---
-    //No sorting is actually done. Only done when nesscary
+    //No sorting is actually done. Only done when necessary
     void permutation(std::vector<Intdx> row_perm, std::vector<Intdx> col_perm);
     void permutationSizeMap(std::vector<Intdx> row_perm, std::vector<Intdx> col_perm, Intdx m, Intdx n);
 
@@ -107,13 +107,13 @@ inline std::tuple<std::vector<Intdx>, std::vector<ScalarT>> COO_Matrix<ScalarT, 
     do
     {
         rsize++;
-    } while (rsize < this->values_.size() && this->row_indexes_[rsize] == r);
+    } while (rsize < this->values_.size() && this->row_indices_[rsize] == r);
     
-    return {{this->column_indexes_.begin() + rowindex, this->column_indexes_.begin() + rsize},{this->values_.begin() + rowindex, this->values_.begin() + rsize}};
+    return {{this->column_indices_.begin() + rowindex, this->column_indices_.begin() + rsize},{this->values_.begin() + rowindex, this->values_.begin() + rsize}};
 }
 
 /**
- * @brief Get all Entries pointers. Will sort before returnings
+ * @brief Get all entry pointers. Will sort before returning
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -126,28 +126,28 @@ inline std::tuple<std::vector<Intdx>&, std::vector<Intdx>&, std::vector<ScalarT>
     {
         this->sortSparse();
     }
-    return {this->row_indexes_, this->column_indexes_, this->values_};
+    return {this->row_indices_, this->column_indices_, this->values_};
 }
 
 /**
- * @brief Get copies of the data. Sorted_ before returning
+ * @brief Sorts the data if it's not already sorted
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
  * @return std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> 
  */
 template <class ScalarT, typename Intdx>
-inline std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> COO_Matrix<ScalarT, Intdx>::getEntrieCopies()
+inline std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> COO_Matrix<ScalarT, Intdx>::getEntryCopies()
 {
     if (!this->sorted_)
     {
         this->sortSparse();
     }
-    return {this->row_indexes_, this->column_indexes_, this->values_};
+    return {this->row_indices_, this->column_indices_, this->values_};
 }
 
 /**
- * @brief Returns the data into CSR Format
+ * @brief Returns the data in CSR Format
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -162,13 +162,13 @@ inline std::tuple<std::vector<Intdx>, std::vector<Intdx>, std::vector<ScalarT>> 
     for (Intdx i = 0; i < static_cast<Intdx>(rowsizevec.size() - 1); i++)
     {
         rowsizevec[i + 1] = rowsizevec[i];
-        while (counter < static_cast<Intdx>(this->row_indexes_.size()) && i == this->row_indexes_[counter])
+        while (counter < static_cast<Intdx>(this->row_indices_.size()) && i == this->row_indices_[counter])
         {
             rowsizevec[i+1]++;
             counter++;
         }
     }
-    return {rowsizevec, this->column_indexes_, this->values_};
+    return {rowsizevec, this->column_indices_, this->values_};
 }
 
 /**
@@ -190,7 +190,7 @@ inline std::vector<Intdx> COO_Matrix<ScalarT, Intdx>::getCSRRowData()
     for (Intdx i = 0; i < static_cast<Intdx>(rowsizevec.size() - 1); i++)
     {
         rowsizevec[i + 1] = rowsizevec[i];
-        while (counter < static_cast<Intdx>(this->row_indexes_.size()) && i == this->row_indexes_[counter])
+        while (counter < static_cast<Intdx>(this->row_indices_.size()) && i == this->row_indices_[counter])
         {
             rowsizevec[i+1]++;
             counter++;
@@ -218,13 +218,13 @@ inline void COO_Matrix<ScalarT, Intdx>::setValues(std::vector<Intdx> r, std::vec
     //Duplicated with axpy. Could replace with function depdent on lambda expression
     Intdx aiter = 0;
     //iterate for all current values_ in matrix
-    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indexes_.size()); i++)
+    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indices_.size()); i++)
     {
         //pushback values_ when they are not in current matrix
-        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indexes_[i] || (r[aiter] == this->row_indexes_[i] && c[aiter] < this->column_indexes_[i])))
+        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indices_[i] || (r[aiter] == this->row_indices_[i] && c[aiter] < this->column_indices_[i])))
         {
-            this->row_indexes_.push_back(r[aiter]);
-            this->column_indexes_.push_back(c[aiter]);
+            this->row_indices_.push_back(r[aiter]);
+            this->column_indices_.push_back(c[aiter]);
             this->values_.push_back(v[aiter]);
             this->checkIncreaseSize(r[aiter], c[aiter]);
             aiter++;
@@ -235,7 +235,7 @@ inline void COO_Matrix<ScalarT, Intdx>::setValues(std::vector<Intdx> r, std::vec
         }
         
         
-        if (r[aiter] == this->row_indexes_[i] && c[aiter] == this->column_indexes_[i])
+        if (r[aiter] == this->row_indices_[i] && c[aiter] == this->column_indices_[i])
         {
             this->values_[i] = v[aiter];
             aiter++;
@@ -244,8 +244,8 @@ inline void COO_Matrix<ScalarT, Intdx>::setValues(std::vector<Intdx> r, std::vec
     //push back rest that was not found sorted
     for (Intdx i = aiter; i < static_cast<Intdx>(r.size()); i++)
     {
-        this->row_indexes_.push_back(r[i]);
-        this->column_indexes_.push_back(c[i]);
+        this->row_indices_.push_back(r[i]);
+        this->column_indices_.push_back(c[i]);
         this->values_.push_back(v[i]);
         
         this->checkIncreaseSize(r[i], c[i]);
@@ -285,19 +285,19 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, COO_Matrix<ScalarT, 
     const auto& [r, c, val] = tpm;
     std::tie(m,n) = a.getDimensions();
 
-    //Increase size as nesscary
+    //Increase size as necessary
     this->rows_size_ = this->rows_size_ > m ? this->rows_size_ : m;
     this->columns_size_ = this->columns_size_ > n ? this->columns_size_ : n;
 
     Intdx aiter = 0;
     //iterate for all current values_ in matrix
-    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indexes_.size()); i++)
+    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indices_.size()); i++)
     {
         //pushback values_ when they are not in current matrix
-        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indexes_[i] || (r[aiter] == this->row_indexes_[i] && c[aiter] < this->column_indexes_[i])))
+        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indices_[i] || (r[aiter] == this->row_indices_[i] && c[aiter] < this->column_indices_[i])))
         {
-            this->row_indexes_.push_back(r[aiter]);
-            this->column_indexes_.push_back(c[aiter]);
+            this->row_indices_.push_back(r[aiter]);
+            this->column_indices_.push_back(c[aiter]);
             this->values_.push_back(alpha * val[aiter]);
             
             this->checkIncreaseSize(r[aiter], c[aiter]);
@@ -309,7 +309,7 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, COO_Matrix<ScalarT, 
         }
         
         
-        if (r[aiter] == this->row_indexes_[i] && c[aiter] == this->column_indexes_[i])
+        if (r[aiter] == this->row_indices_[i] && c[aiter] == this->column_indices_[i])
         {
             this->values_[i] += alpha * val[aiter];
             aiter++;
@@ -318,8 +318,8 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, COO_Matrix<ScalarT, 
     //push back rest that was not found sorted_
     for (Intdx i = aiter; i < static_cast<Intdx>(r.size()); i++)
     {
-        this->row_indexes_.push_back(r[i]);
-        this->column_indexes_.push_back(c[i]);
+        this->row_indices_.push_back(r[i]);
+        this->column_indices_.push_back(c[i]);
         this->values_.push_back(alpha * val[i]);
         
         this->checkIncreaseSize(r[i], c[i]);
@@ -353,13 +353,13 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, std::vector<Intdx> r
 
     Intdx aiter = 0;
     //iterate for all current values_ in matrix
-    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indexes_.size()); i++)
+    for (Intdx i = 0; i < static_cast<Intdx>(this->row_indices_.size()); i++)
     {
         //pushback values_ when they are not in current matrix
-        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indexes_[i] || (r[aiter] == this->row_indexes_[i] && c[aiter] < this->column_indexes_[i])))
+        while(aiter < static_cast<Intdx>(r.size()) && (r[aiter] < this->row_indices_[i] || (r[aiter] == this->row_indices_[i] && c[aiter] < this->column_indices_[i])))
         {
-            this->row_indexes_.push_back(r[aiter]);
-            this->column_indexes_.push_back(c[aiter]);
+            this->row_indices_.push_back(r[aiter]);
+            this->column_indices_.push_back(c[aiter]);
             this->values_.push_back(alpha * v[aiter]);
             
             this->checkIncreaseSize(r[aiter], c[aiter]);
@@ -371,7 +371,7 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, std::vector<Intdx> r
         }
         
         
-        if (r[aiter] == this->row_indexes_[i] && c[aiter] == this->column_indexes_[i])
+        if (r[aiter] == this->row_indices_[i] && c[aiter] == this->column_indices_[i])
         {
             this->values_[i] += alpha * v[aiter];
             aiter++;
@@ -380,8 +380,8 @@ inline void COO_Matrix<ScalarT, Intdx>::axpy(ScalarT alpha, std::vector<Intdx> r
     //push back rest that was not found sorted_
     for (Intdx i = aiter; i < static_cast<Intdx>(r.size()); i++)
     {
-        this->row_indexes_.push_back(r[i]);
-        this->column_indexes_.push_back(c[i]);
+        this->row_indices_.push_back(r[i]);
+        this->column_indices_.push_back(c[i]);
         this->values_.push_back(alpha * v[i]);
         
         this->checkIncreaseSize(r[i], c[i]);
@@ -440,16 +440,16 @@ inline void COO_Matrix<ScalarT, Intdx>::permutation(std::vector<Intdx> row_perm,
 
     for (int i = 0; i < this->values_.size(); i++)
     {
-        this->row_indexes_[i] = row_perm[this->row_indexes_[i]];
-        this->column_indexes_[i] = col_perm[this->column_indexes_[i]];
+        this->row_indices_[i] = row_perm[this->row_indices_[i]];
+        this->column_indices_[i] = col_perm[this->column_indices_[i]];
     }
     this->sorted_ = false;
     //cycle sorting maybe useful since permutations are already known
 }
 
 /**
- * @brief Permutates the matrix and can change its size efficently
- * if size is shrinking and value is to be removed the negative one
+ * @brief Permutes the matrix and can change its size efficently
+ * if size is shrinking and value is to be removed, it's set to -1
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -469,21 +469,21 @@ inline void COO_Matrix<ScalarT, Intdx>::permutationSizeMap(std::vector<Intdx> ro
 
     for (int i = 0; i < this->values_.size(); i++)
     {
-        if (row_perm[this->row_indexes_[i]] == -1 || col_perm[this->column_indexes_[i]] == -1)
+        if (row_perm[this->row_indices_[i]] == -1 || col_perm[this->column_indices_[i]] == -1)
         {
             this->values_[i] = 0;
         }
         else
         {
-            this->row_indexes_[i] = row_perm[this->row_indexes_[i]];
-            this->column_indexes_[i] = col_perm[this->column_indexes_[i]];
+            this->row_indices_[i] = row_perm[this->row_indices_[i]];
+            this->column_indices_[i] = col_perm[this->column_indices_[i]];
         }
     }
     this->sorted_ = false;
 }
 
 /**
- * @brief Turn matrix into the zero matrix. Does not actual delete memory
+ * @brief Turn matrix into the zero matrix. Does not actually delete memory
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -492,8 +492,8 @@ template <class ScalarT, typename Intdx>
 inline void COO_Matrix<ScalarT, Intdx>::zeroMatrix()
 {
     //resize doesn't effect capacity if smaller
-    this->column_indexes_.resize(0);
-    this->row_indexes_.resize(0);
+    this->column_indices_.resize(0);
+    this->row_indices_.resize(0);
     this->values_.resize(0);
     this->sorted_ = true;
 }
@@ -505,8 +505,8 @@ inline void COO_Matrix<ScalarT, Intdx>::identityMatrix(Intdx n)
     this->zeroMatrix();
     for (Intdx i = 0; i < n; i++)
     {
-        this->column_indexes_[i] = i;
-        this->row_indexes_[i] = i;
+        this->column_indices_[i] = i;
+        this->row_indices_[i] = i;
         this->values_[i] = 1.0;
     }
     this->sorted_ = true;
@@ -521,7 +521,7 @@ inline void COO_Matrix<ScalarT, Intdx>::identityMatrix(Intdx n)
 template <class ScalarT, typename Intdx>
 inline void COO_Matrix<ScalarT, Intdx>::sortSparse()
 {
-    this->sortSparseCOO(this->row_indexes_, this->column_indexes_, this->values_);
+    this->sortSparseCOO(this->row_indices_, this->column_indices_, this->values_);
     this->sorted_ = true;
 }
 
@@ -544,7 +544,7 @@ inline std::tuple<Intdx, Intdx> COO_Matrix<ScalarT, Intdx>::getDimensions()
 }
 
 /**
- * @brief Print matrix that is sorted_
+ * @brief Print matrix in sorted order
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -561,17 +561,17 @@ inline void COO_Matrix<ScalarT, Intdx>::printMatrix()
     std::cout << "(x , y, value)\n";
     for (size_t i = 0; i < this->values_.size(); i++)
     {
-        std::cout << "(" << this->row_indexes_[i]
-                  << ", " << this->column_indexes_[i]
+        std::cout << "(" << this->row_indices_[i]
+                  << ", " << this->column_indices_[i]
                   << ", " << this->values_[i] << ")\n";
     }
     std::cout << std::flush;
 }
 
 /**
- * @brief Find the lowest row cordinate from set of provided cordinates
+ * @brief Find the lowest row cordinate from set of provided coordinates
  * 
- * Assumes rows and columns are sorted_
+ * Assumes rows and columns are sorted
  * @tparam ScalarT 
  * @tparam Intdx 
  * @param r 
@@ -679,9 +679,10 @@ inline bool COO_Matrix<ScalarT, Intdx>::checkIncreaseSize(Intdx r, Intdx c)
 }
 
 /**
- * @brief Sort a disoreded set of values_. Assume nothing on order.
+ * @brief Sort a disordered set of values_. Assume nothing on order.
  * 
- * @todo simple setup. Should add stable sorting since list are pre-sorted_
+ * @todo simple setup. Should add stable sorting since list are pre-sorted_ 
+ * SR: are we assuming something on the order, or not?
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -730,8 +731,8 @@ template <class ScalarT, typename Intdx>
 inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(std::vector<Intdx> r, std::vector<Intdx> c, std::vector<ScalarT> v, Intdx m, Intdx n)
 {
     this->values_ = v;
-    this->row_indexes_ = r;
-    this->column_indexes_ = c;
+    this->row_indices_ = r;
+    this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
     this->sorted_ = false;
@@ -743,8 +744,8 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(Intdx m, Intdx n)
     this->rows_size_ = m;
     this->columns_size_ = n;
     this->values_ = std::vector<ScalarT>();
-    this->row_indexes_ = std::vector<Intdx>();
-    this->column_indexes_ = std::vector<Intdx>();
+    this->row_indices_ = std::vector<Intdx>();
+    this->column_indices_ = std::vector<Intdx>();
     this->sorted_ = false;
 }
 
@@ -754,8 +755,8 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix()
     this->rows_size_ = 0;
     this->columns_size_ = 0;
     this->values_ = std::vector<ScalarT>();
-    this->row_indexes_ = std::vector<Intdx>();
-    this->column_indexes_ = std::vector<Intdx>();
+    this->row_indices_ = std::vector<Intdx>();
+    this->column_indices_ = std::vector<Intdx>();
     this->sorted_ = false;
 }
 

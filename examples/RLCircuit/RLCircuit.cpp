@@ -20,11 +20,11 @@ int main(int argc, char const *argv[])
 {
     double abstol = 1.0e-8;
     double reltol = 1.0e-8;
-    bool usejac = true;
+    bool use_jac = true;
 
     //TODO:setup as named parameters
     //Create circuit model
-    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac);
+    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, use_jac);
 
     size_t idoff = 0;
 

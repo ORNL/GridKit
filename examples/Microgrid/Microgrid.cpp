@@ -24,10 +24,10 @@ int main(int argc, char const *argv[])
     double abstol = 1.0e-8;
     double reltol = 1.0e-8;
     size_t max_step_amount = 3000;
-    bool usejac = true;
+    bool use_jac = true;
 
     //Create model
-    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac, max_step_amount);
+    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, use_jac, max_step_amount);
 
     //Modeled after the problem in the paper
     double RN = 1.0e4;

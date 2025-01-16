@@ -51,21 +51,21 @@ namespace GridKit
             rtol_ = 1e-4;
             atol_ = 1e-4;
             this->max_steps_ = 2000;
-            // By default not use jacobian
-            usejac_ = false;
+            // By default don't use the jacobian
+            use_jac_ = false;
         }
 
         /**
          * @brief Constructor for the system model
          */
-        PowerElectronicsModel(double rt = 1e-4, double at = 1e-4, bool ju = false, IdxT msa = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+        PowerElectronicsModel(double rtol = 1e-4, double atol = 1e-4, bool use_jac = false, IdxT max_steps = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
         {
             // Set system model tolerances from input
-            rtol_ = rt;
-            atol_ = at;
-            this->max_steps_ = msa;
-            // Can choose if to use jacobain
-            usejac_ = ju;
+            rtol_ = rtol;
+            atol_ = atol;
+            this->max_steps_ = max_steps;
+            // Can choose if to use jacobian
+            use_jac_ = use_jac;
         }
 
         /**
@@ -91,7 +91,7 @@ namespace GridKit
         }
 
         /**
-         * @brief Will check if each component has jacobian avalible. If one doesn't then jacobain is false.
+         * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
          *
          *
          * @return true
@@ -99,7 +99,7 @@ namespace GridKit
          */
         bool hasJacobian()
         {
-            if (!this->usejac_)
+            if (!this->use_jac_)
                 return false;
 
             for (const auto &component : components_)
@@ -234,7 +234,7 @@ namespace GridKit
             {
                 component->evaluateJacobian();
 
-                // get references to local jacobain
+                // get references to local jacobian
                 std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
                 const auto& [r, c, v] = tpm;
 
@@ -325,7 +325,7 @@ namespace GridKit
         static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
         std::vector<component_type*> components_;
-        bool usejac_;
+        bool use_jac_;
 
     }; // class PowerElectronicsModel
 
