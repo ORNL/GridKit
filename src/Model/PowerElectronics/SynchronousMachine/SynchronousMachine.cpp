@@ -31,7 +31,7 @@ SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, ScalarT Lls, std:
     Rkq_(Rkq),
     Rfd_(Rfd),
     Rkd_(Rkd),
-    RJ_(RJ),
+    Rjac_(RJ),
     P_(P),
     mub_(mub)
 {
@@ -100,7 +100,7 @@ int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
     f_[0] = y_[6]*cos1 + y_[7]*sin1 + y_[8];
     f_[1] = y_[6]*cos23m + y_[7]*sin23m + y_[8];
     f_[2] = y_[6]*cos23p + y_[7]*sin23p + y_[8];
-    f_[3] = RJ_ * yp_[4] - (3.0/4.0)*P_*(Lmd_ *y_[6]* (y_[7] + y_[11] + y_[12]) - Lmq_*y_[7]*(y_[6] + y_[9] + y_[0]));
+    f_[3] = Rjac_ * yp_[4] - (3.0/4.0)*P_*(Lmd_ *y_[6]* (y_[7] + y_[11] + y_[12]) - Lmq_*y_[7]*(y_[6] + y_[9] + y_[0]));
     f_[4] = yp_[5] - y_[4];
     f_[5] = (-2.0/3.0)*(y_[0]*cos1 +y_[1]*cos23m + y_[2]*cos23p) + Rs_*y_[6] + (Lls_ + Lmq_)*yp_[6] + Lmq_*yp_[9] + Lmq_*yp_[10] + y_[4]*(P_/2.0)*((Lls_ + Lmd_)*y_[7] + Lmd_*y_[11] + Lmd_*y_[12]);
     f_[6] = (-2.0/3.0)*(y_[0]*sin1 -y_[1]*sin23m - y_[2]*sin23p) + Rs_*y_[7] + (Lls_ + Lmd_)*yp_[7] + Lmd_*yp_[11] + Lmd_*yp_[12] - y_[4]*(P_/2.0)*((Lls_ + Lmq_)*y_[6] + Lmq_*y_[9] + Lmq_*y_[10]);

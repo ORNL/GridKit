@@ -105,26 +105,26 @@ int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
 {
-    J_.zeroMatrix();
+    jac_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rtemp{1,2,3,4};
     std::vector<IdxT> ctemp{5,6,5,6};
     std::vector<ScalarT> vals{-1.0,-1.0,1.0,1.0};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::vector<IdxT> ccord{0, 1, 3, 5, 6};
 
     std::vector<IdxT> rcord(ccord.size(),5);
     vals = {y_[6], (1.0 / L_) , -(1.0 / L_),  - (R_ / L_) , y_[0]};
-    J_.setValues(rcord, ccord, vals);
+    jac_.setValues(rcord, ccord, vals);
 
     
     std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
     std::fill(rcord.begin(), rcord.end(), 6);
     vals = {-y_[5], (1.0 / L_) , -(1.0 / L_), -y_[0], - (R_ / L_)};
-    J_.setValues(rcord, ccor2, vals);
+    jac_.setValues(rcord, ccor2, vals);
 
 
     //Create -dF/dy'
@@ -134,7 +134,7 @@ int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,7,7);
     
     //Perform dF/dy + \alpha dF/dy'
-    J_.axpy(alpha_, Jacder);
+    jac_.axpy(alpha_, Jacder);
 
 
     return 0;

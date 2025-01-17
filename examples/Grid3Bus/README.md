@@ -57,7 +57,7 @@ with variables $`\theta_2, |V_2|`$ and $`\theta_3`$.
 
 Nonlinear solver can approximate Jacobian numerically, however this is computationaly expensive and scales poorly with the size of the problem. Typically, one needs to provide Jacobian in addition to residual to the nonlinear solver. For nonlinear problem defined by (vector) function $`\mathbf{f}(\mathbf{x})=0`$, Jacobian matrix is defined as
 ```math
-J_{i,j}=\frac{\partial f_i}{\partial x_j}, ~~~ i,j=1,\ldots,N
+jac_{i,j}=\frac{\partial f_i}{\partial x_j}, ~~~ i,j=1,\ldots,N
 ```
 where $`N`$ is the size of vectors $`\mathbf{f}`$ and $`\mathbf{x}`$. Jacobian for our model is evaluated as
 ```math

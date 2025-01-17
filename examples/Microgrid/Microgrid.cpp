@@ -336,7 +336,7 @@ int main(int argc, char const *argv[])
     sysmodel->updateTime(0.0, 1.0e-8);
     sysmodel->evaluateJacobian();
     std::cout << "Intial Jacobian with alpha:\n";
-    // std::cout << sysmodel->getJacobian().frobnorm() << "\n";
+    // std::cout << sysmodel->getJacobian().frobNorm() << "\n";
 
 
     //Create numerical integrator and configure it for the generator model

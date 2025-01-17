@@ -101,26 +101,26 @@ int MicrogridLoad<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int MicrogridLoad<ScalarT, IdxT>::evaluateJacobian()
 {
-    J_.zeroMatrix();
+    jac_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rtemp{1,2};
     std::vector<IdxT> ctemp{3,4};
     std::vector<ScalarT> vals{-1.0,-1.0};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::vector<IdxT> ccord{0, 1, 3, 4};
 
     std::vector<IdxT> rcord(ccord.size(),3);
     vals = {y_[4], (1.0 / L_) , - (R_ / L_) , y_[0]};
-    J_.setValues(rcord, ccord, vals);
+    jac_.setValues(rcord, ccord, vals);
 
     
     std::vector<IdxT> ccor2{0, 2, 3, 4};
     std::fill(rcord.begin(), rcord.end(), 4);
     vals = {-y_[3], (1.0 / L_) , -y_[0], - (R_ / L_)};
-    J_.setValues(rcord, ccor2, vals);
+    jac_.setValues(rcord, ccor2, vals);
 
 
     //Create -dF/dy'
@@ -130,7 +130,7 @@ int MicrogridLoad<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,5,5);
     
     //Perform dF/dy + \alpha dF/dy'
-    J_.axpy(alpha_, Jacder);
+    jac_.axpy(alpha_, Jacder);
 
     return 0;
 }

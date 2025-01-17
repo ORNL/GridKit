@@ -37,7 +37,7 @@ namespace GridKit
         using CircuitComponent<ScalarT, IdxT>::ypB_;
         using CircuitComponent<ScalarT, IdxT>::fB_;
         using CircuitComponent<ScalarT, IdxT>::gB_;
-        using CircuitComponent<ScalarT, IdxT>::J_;
+        using CircuitComponent<ScalarT, IdxT>::jac_;
         using CircuitComponent<ScalarT, IdxT>::param_;
         using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -72,7 +72,7 @@ namespace GridKit
         std::tuple<ScalarT,ScalarT> Rkq_;
         ScalarT Rfd_;
         ScalarT Rkd_;
-        ScalarT RJ_;
+        ScalarT Rjac_;
         ScalarT P_;
         ScalarT mub_;
     };
