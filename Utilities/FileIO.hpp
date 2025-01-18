@@ -266,17 +266,10 @@ namespace GridKit
  */
 template <typename ScalarT>
 void setLookupTable(std::vector<std::vector<ScalarT>>& table,
-                    std::string filename,
+                    std::istream& idata,
                     ScalarT& ti,
                     ScalarT& tf)
 {
-  std::ifstream idata(filename);
-  if (!idata.is_open()) {
-    ///@todo swap with returing error codes instead of crashing.
-    std::cerr << "Error. Given file name \"" << filename<< "\" does not exsist." << std::endl;
-    abort();
-  }
-
   std::string line;
   int oldwordcount = -1;
   while (std::getline(idata, line)) {
@@ -300,14 +293,20 @@ void setLookupTable(std::vector<std::vector<ScalarT>>& table,
   }
 
   size_t N = table.size();
-  if (N < 2) {
-    ///@todo swap with returing error codes instead of crashing.
-    std::cerr << "Error. Only " << N << " data points found in file " << filename << std::endl;
-    abort();
+  if (N == 0)
+  {
+    // do nothing
   }
-
-  ti = table[0][0];
-  tf = table[N - 1][0];
+  else if (N == 1)
+  {
+    ti = table[0][0];
+    tf = table[0][0];
+  }
+  else
+  {
+      ti = table[0][0];
+      tf = table[N - 1][0];
+  }
 }
 
 template <typename ScalarT>

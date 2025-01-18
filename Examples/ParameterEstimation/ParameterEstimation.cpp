@@ -60,19 +60,20 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
 
+#include <IpIpoptApplication.hpp>
+#include <IpSolveStatistics.hpp>
+
+#include <Solver/Optimization/DynamicObjective.hpp>
+#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <ComponentLib/PowerFlow/Bus/BusSlack.hpp>
 #include <ComponentLib/PowerFlow/Generator4Param/Generator4Param.hpp>
 #include <SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
-#include <IpIpoptApplication.hpp>
-#include <IpSolveStatistics.hpp>
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
-#include <string>
 
 #define STRING(x) #x
 #define XSTRING(x) STRING(x)
@@ -101,12 +102,18 @@ int main(int argc, char** argv)
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
 
-    const std::string input_data = (argc == 2) ? argv[1] : std::string(XSTRING(PARAMETER_DIR)) + "/lookup_table.dat";
+    const std::string filename = (argc == 2) ? argv[1] : std::string(XSTRING(PARAMETER_DIR)) + "/lookup_table.dat";
 
     double t_init  = -1.0;
     double t_final = -1.0;
 
+    std::ifstream input_data(filename);
+    if (!input_data.is_open()) {
+      std::cerr << "File \"" << filename<< "\" not found." << std::endl;
+      return 1;
+    }
     GridKit::setLookupTable(gen->getLookupTable(), input_data, t_init, t_final);
+    input_data.close();
 
     std::cout << "Performing parameter estimation with respect to data\nfrom "
               << "t_init = " << t_init << " to t_final = " << t_final << "\n";
