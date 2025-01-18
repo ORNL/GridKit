@@ -61,8 +61,6 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-add_compile_definitions("PARAMETER_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
-
 add_executable(paramest ParameterEstimation.cpp)
 target_link_libraries(paramest
   GRIDKIT::bus
@@ -76,4 +74,4 @@ set_property(TARGET paramest PROPERTY LINKER_LANGUAGE Fortran)
 install(TARGETS paramest RUNTIME DESTINATION bin)
 install(FILES lookup_table.dat DESTINATION bin)
 
-add_test(NAME ParameterEst COMMAND $<TARGET_FILE:paramest> ${CMAKE_SOURCE_DIR}/Examples/ParameterEstimation/lookup_table.dat)
+add_test(NAME ParameterEst COMMAND $<TARGET_FILE:paramest>)
