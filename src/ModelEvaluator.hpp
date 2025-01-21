@@ -62,7 +62,7 @@
 
 #include <vector>
 #include <ScalarTraits.hpp>
-#include <SparseMatrix/COO_Matrix.hpp>
+#include <LinearAlgebra/COO_Matrix.hpp>
 
 namespace ModelLib
 {

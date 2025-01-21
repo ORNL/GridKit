@@ -8,7 +8,7 @@
 #include <vector>
 #include <tuple>
 
-#include <SparseMatrix/COO_Matrix.hpp>
+#include <LinearAlgebra/COO_Matrix.hpp>
 
 int main(int argc, char const *argv[])
 {
