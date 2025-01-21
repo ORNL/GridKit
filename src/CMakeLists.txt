@@ -1,5 +1,5 @@
 # Create component models
-add_subdirectory(ComponentLib)
+add_subdirectory(models)
 
 # General Utilities and File IO
 add_subdirectory(Utilities)

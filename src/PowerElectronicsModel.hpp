@@ -9,7 +9,7 @@
 #include <ScalarTraits.hpp>
 #include <ModelEvaluatorImpl.hpp>
 #include <CircuitGraph.hpp>
-#include <ComponentLib/PowerElectronics/CircuitComponent.hpp>
+#include <models/PowerElectronics/CircuitComponent.hpp>
 
 namespace ModelLib
 {

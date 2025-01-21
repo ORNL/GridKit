@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <math.h>
 
-#include <ComponentLib/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <models/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 
 
 /**
