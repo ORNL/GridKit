@@ -5,7 +5,7 @@ add_subdirectory(models)
 add_subdirectory(Utilities)
 
 #Local Sparse matrix operations
-add_subdirectory(SparseMatrix)
+add_subdirectory(LinearAlgebra)
 
 # Create solvers
 add_subdirectory(Solver)
