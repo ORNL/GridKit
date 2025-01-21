@@ -9,7 +9,7 @@
 
 
 <div align="center">
-   <img align="center" src="/Documentation/Figures/SM1.JPG">
+   <img align="center" src="../../../Documentation/Figures/SM1.JPG">
    
    
   Figure 1: Synchronous Machine. Figure courtesy of [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
@@ -107,7 +107,7 @@ T'_{q0}\dfrac{dE'_{d}}{dt}= -E'_{d}+(X_{q}-X'_{q})(I_{q}-\dfrac{X'_{q}-X''_{q}}{
 ```
 Previos equations can be used to model any machine, however ***SATURATION*** is missing.
 
-Saturation means increasingly large amounts of current are needed to increase the flux density. There are various methods to include the saturation (it is not standardized yet). We are going to use the approach implemented in PTI PSSS/E and PowerWorld Simulator (scaled quadratic). 
+Saturation means increasingly large amounts of current are needed to increase the flux density. There are various methods to include the saturation (it is not standardized yet). We are going to use the approach implemented in PTI PSS/E and PowerWorld Simulator (scaled quadratic). 
 
 ```math
 Sat(x) = \begin{cases}
@@ -117,6 +117,6 @@ Sat(x) = \begin{cases}
 ```
 There are two solutions, and one where $`A<1`$ should be chosen.
 
-Hint!
+#### Hint
 
 Negative values are not allowed.

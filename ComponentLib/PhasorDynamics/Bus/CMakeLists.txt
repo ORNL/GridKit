@@ -60,7 +60,9 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-add_subdirectory(PhasorDynamics)
-add_subdirectory(PowerFlow)
-add_subdirectory(PowerElectronics)
+gridkit_add_library(phasor_dynamics_bus
+  SOURCES
+    Bus.cpp
+  OUTPUT_NAME
+    gridkit_phasor_dynamics_bus)
 

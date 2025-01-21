@@ -4,7 +4,7 @@
 **Note: Exciter model not yet implemented**
 
 <div align="center">
-   <img align="center" src="/Documentation/Figures/EXDC1.JPG">
+   <img align="center" src="../../../Documentation/Figures/EXDC1.JPG">
    
    
   Figure 1: Exciter EXDC1 model. Fifure courtesy of [PoweWorld](https://www.powerworld.com/WebHelp/).
