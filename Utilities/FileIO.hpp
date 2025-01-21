@@ -254,15 +254,20 @@ namespace GridKit
 {
 
 /**
- * @brief Reads a file in for tabulated data
- *
+ * @brief Reads in an input stream of tabulated data
+ * 
  * @todo needs to return int for file error codes
  * 
  * @tparam ScalarT 
- * @param table 
- * @param filename 
- * @param ti 
- * @param tf 
+ * @param[out] table object in memory where the data from the input stream is
+ * @param[in] filename input stream to space and newline separated data
+ * @param[out] ti initial time returned
+ * @param[out] tf final time returned
+ * 
+ * @pre Input stream should read space separated data. Rows are separated
+ * by new line. Each row od data must have the same number of entries. The
+ * first column of the data represents time and other columns time dependent
+ * variables.
  */
 template <typename ScalarT>
 void setLookupTable(std::vector<std::vector<ScalarT>>& table,
