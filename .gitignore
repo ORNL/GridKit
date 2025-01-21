@@ -2,6 +2,6 @@
 .directory
 *.orig
 .vscode/
-
+*.DS_Store
 build/
 *.DS_Store

@@ -181,7 +181,7 @@ namespace ModelLib
             return fB_[1];
         }
 
-        virtual const int BusType() const
+        virtual int BusType() const
         {
             return BaseBus<ScalarT, IdxT>::BusType::PQ;
         }

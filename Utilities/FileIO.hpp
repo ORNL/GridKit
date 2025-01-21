@@ -70,6 +70,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <regex>
 #include <sstream>
 #include <vector>
@@ -251,13 +252,29 @@ void readMatPowerBaseMVA(SystemModelData<RealT, IdxT>& mp, std::string& line)
 
 namespace GridKit
 {
+
+/**
+ * @brief Reads in an input stream of tabulated data
+ * 
+ * @todo needs to return int for file error codes
+ * 
+ * @tparam ScalarT 
+ * @param[out] table object in memory where the data from the input stream is
+ * @param[in] filename input stream to space and newline separated data
+ * @param[out] ti initial time returned
+ * @param[out] tf final time returned
+ * 
+ * @pre Input stream should read space separated data. Rows are separated
+ * by new line. Each row od data must have the same number of entries. The
+ * first column of the data represents time and other columns time dependent
+ * variables.
+ */
 template <typename ScalarT>
 void setLookupTable(std::vector<std::vector<ScalarT>>& table,
-                    std::string filename,
+                    std::istream& idata,
                     ScalarT& ti,
                     ScalarT& tf)
 {
-  std::ifstream idata(filename);
   std::string line;
   int oldwordcount = -1;
   while (std::getline(idata, line)) {
@@ -281,8 +298,20 @@ void setLookupTable(std::vector<std::vector<ScalarT>>& table,
   }
 
   size_t N = table.size();
-  ti = table[0][0];
-  tf = table[N - 1][0];
+  if (N == 0)
+  {
+    // do nothing
+  }
+  else if (N == 1)
+  {
+    ti = table[0][0];
+    tf = table[0][0];
+  }
+  else
+  {
+      ti = table[0][0];
+      tf = table[N - 1][0];
+  }
 }
 
 template <typename ScalarT>
