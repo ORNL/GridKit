@@ -11,7 +11,7 @@
 #include <models/PowerElectronics/Resistor/Resistor.hpp>
 #include <models/PowerElectronics/VoltageSource/VoltageSource.hpp>
 
-#include <PowerElectronicsModel.hpp>
+#include <models/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Solver/Dynamic/DynamicSolver.hpp>
 

@@ -78,7 +78,7 @@
 #include <models/PowerFlow/Generator/GeneratorFactory.hpp>
 #include <models/PowerFlow/Branch/Branch.hpp>
 #include <models/PowerFlow/Load/Load.hpp>
-#include <SystemSteadyStateModel.hpp>
+#include <models/PowerFlow/SystemModelPowerFlow.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <PowerSystemData.hpp>
 

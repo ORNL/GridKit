@@ -13,7 +13,7 @@
 #include <models/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
 #include <models/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 
-#include <PowerElectronicsModel.hpp>
+#include <models/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Solver/Dynamic/DynamicSolver.hpp>
 
