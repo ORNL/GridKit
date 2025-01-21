@@ -117,7 +117,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
@@ -145,17 +145,7 @@ include(GridkitAddLibrary)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Create component models
-add_subdirectory(ComponentLib)
-
-# General Utilities and File IO
-add_subdirectory(Utilities)
-
-#Local Sparse matrix operations
-add_subdirectory(SparseMatrix)
-
-# Create solvers
-add_subdirectory(Solver)
+add_subdirectory(src)
 
 # Create examples and tests
 enable_testing()
