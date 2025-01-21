@@ -140,7 +140,7 @@ namespace ModelLib
         virtual ScalarT& QB() = 0;
         virtual const ScalarT& QB() const = 0;
 
-        virtual const int BusType() const = 0;
+        virtual int BusType() const = 0;
 
         virtual const IdxT BusID() const
         {

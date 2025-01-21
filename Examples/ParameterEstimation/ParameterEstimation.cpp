@@ -60,21 +60,25 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
 
+#include <IpIpoptApplication.hpp>
+#include <IpSolveStatistics.hpp>
+
+#include <Solver/Optimization/DynamicObjective.hpp>
+#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <ComponentLib/PowerFlow/Bus/BusSlack.hpp>
 #include <ComponentLib/PowerFlow/Generator4Param/Generator4Param.hpp>
 #include <SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
-#include <IpIpoptApplication.hpp>
-#include <IpSolveStatistics.hpp>
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
 
+#include "lookup_table.hpp"
 
-int main(int argc, char** argv)
+
+int main()
 {
     using namespace ModelLib;
     using namespace AnalysisManager::Sundials;
@@ -98,10 +102,10 @@ int main(int argc, char** argv)
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
 
-    const std::string input_data = (argc == 2) ? argv[1] : "lookup_table.dat";
     double t_init  = -1.0;
     double t_final = -1.0;
 
+    std::istringstream input_data(lookup_table);
     GridKit::setLookupTable(gen->getLookupTable(), input_data, t_init, t_final);
 
     std::cout << "Performing parameter estimation with respect to data\nfrom "
