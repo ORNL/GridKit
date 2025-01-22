@@ -89,7 +89,7 @@ option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
 set(CMAKE_MACOSX_RPATH 1)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 # use, i.e. don't skip the full RPATH for the build tree
@@ -168,7 +168,7 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion)
 
 # Generate config file that includes exports
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/Config.cmake.in
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfig.cmake
   INSTALL_DESTINATION share/cmake/gridkit
   NO_SET_AND_CHECK_MACRO
