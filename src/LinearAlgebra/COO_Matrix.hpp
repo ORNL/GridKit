@@ -820,7 +820,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(std::vector<Intdx> r, std::vector<
     this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
-    this->sorted_ = false; - //SR: Why is this assumed false?
+    this->sorted_ = false; //SR: Why is this assumed false?
 }
 
 /**
