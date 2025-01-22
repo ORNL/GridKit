@@ -13,7 +13,7 @@ sending to receiving bus. We decide to use this symmetric convention because it
 provides more flexibility for modeling.
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/branch_phasor_dynamics.png">
+   <img align="center" src="../../../docs/Figures/branch_phasor_dynamics.png">
 
   Figure 1: Transmission line $`\pi`$ equivalent circuit
 </div>
@@ -96,7 +96,7 @@ magnitude and $`\theta`$ is the phase shift angle and
 $`N = \tau e^{j \theta}`$.
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/transformer-branch.png">
+   <img align="center" src="../../../docs/Figures/transformer-branch.png">
    
    
   Figure 2: Branch equivalent circuit

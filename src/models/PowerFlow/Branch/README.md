@@ -7,7 +7,7 @@ Transmission lines and different types of transformers (traditional, Load Tap-Ch
 The most common circuit that is used to represent the transmission line model is $`\pi`$ circuit as shown in Figure 1. The nominal flow direction is from sending bus _s_ to receiving bus _r_.
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/TL.jpg">
+   <img align="center" src="../../../docs/Figures/TL.jpg">
    
    
   Figure 1: Transmission line $`\pi`$ equivalent circuit
@@ -108,7 +108,7 @@ These quantities are treated as _loads_ and are substracted from $`P`$ and $`Q`$
 The branch model can be created by adding the ideal transformer in series with the $`\pi`$ circuit as shown in Figure 2 where $`\tau`$ is a tap ratio magnitude and $`\theta_{shift}`$is the phase shift angle.
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/branch.jpg">
+   <img align="center" src="../../../docs/Figures/branch.jpg">
    
    
   Figure 2: Branch equivalent circuit

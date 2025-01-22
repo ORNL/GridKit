@@ -6,7 +6,7 @@
 - same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
 
 <div align="center">
-   <img align="center" src="../../../../Documentation/Figures/GENROU.JPG">
+   <img align="center" src="../../../../docs/Figures/GENROU.JPG">
    
    
   Figure 2: GENROU. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)

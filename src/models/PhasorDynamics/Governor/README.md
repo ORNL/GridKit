@@ -8,7 +8,7 @@
 Standard model of the stream turbine
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/TGOV1.JPG">
+   <img align="center" src="../../../docs/Figures/TGOV1.JPG">
    
    
   Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)

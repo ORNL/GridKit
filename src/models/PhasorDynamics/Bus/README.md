@@ -16,7 +16,7 @@ Current entering the bus has positive and current exiting the bus negative
 sign.
 
 <div align="center">
-   <img align="center" src="../../../Documentation/Figures/bus_variables.jpg">
+   <img align="center" src="../../../docs/Figures/bus_variables.jpg">
    
   Figure 1: Needs to be changed to represent current balance instead of power
   balance.
