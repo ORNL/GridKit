@@ -149,7 +149,7 @@ add_subdirectory(src)
 
 # Create examples and tests
 enable_testing()
-add_subdirectory(Examples)
+add_subdirectory(examples)
   
 export(EXPORT gridkit-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/GridKitTargets.cmake)
 
