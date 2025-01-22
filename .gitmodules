@@ -1,4 +1,4 @@
-[submodule "Buildsystem/spack/spack"]
-	path = Buildsystem/spack/spack
+[submodule "buildsystem/spack/spack"]
+	path = buildsystem/spack/spack
 	url = https://github.com/nkoukpaizan/spack.git
 	branch = Gridkit-package-dev+enzyme
