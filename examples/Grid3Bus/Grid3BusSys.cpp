@@ -73,12 +73,12 @@
 #include <fstream>
 #include <filesystem>
 
-#include <models/PowerFlow/MiniGrid/MiniGrid.hpp>
-#include <models/PowerFlow/Bus/BusFactory.hpp>
-#include <models/PowerFlow/Generator/GeneratorFactory.hpp>
-#include <models/PowerFlow/Branch/Branch.hpp>
-#include <models/PowerFlow/Load/Load.hpp>
-#include <models/PowerFlow/SystemModelPowerFlow.hpp>
+#include <Model/PowerFlow/MiniGrid/MiniGrid.hpp>
+#include <Model/PowerFlow/Bus/BusFactory.hpp>
+#include <Model/PowerFlow/Generator/GeneratorFactory.hpp>
+#include <Model/PowerFlow/Branch/Branch.hpp>
+#include <Model/PowerFlow/Load/Load.hpp>
+#include <Model/PowerFlow/SystemModelPowerFlow.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <PowerSystemData.hpp>
 

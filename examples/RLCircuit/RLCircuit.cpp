@@ -6,12 +6,12 @@
 #include <fstream>
 #include <filesystem>
 
-#include <models/PowerElectronics/Capacitor/Capacitor.hpp>
-#include <models/PowerElectronics/Inductor/Inductor.hpp>
-#include <models/PowerElectronics/Resistor/Resistor.hpp>
-#include <models/PowerElectronics/VoltageSource/VoltageSource.hpp>
+#include <Model/PowerElectronics/Capacitor/Capacitor.hpp>
+#include <Model/PowerElectronics/Inductor/Inductor.hpp>
+#include <Model/PowerElectronics/Resistor/Resistor.hpp>
+#include <Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
 
-#include <models/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Solver/Dynamic/DynamicSolver.hpp>
 
