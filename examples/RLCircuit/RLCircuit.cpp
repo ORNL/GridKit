@@ -18,13 +18,13 @@
 
 int main(int argc, char const *argv[])
 {
-    double abstol = 1.0e-8;
-    double reltol = 1.0e-8;
+    double abs_tol = 1.0e-8;
+    double rel_tol = 1.0e-8;
     bool use_jac = true;
 
     //TODO:setup as named parameters
     //Create circuit model
-    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, use_jac);
+    auto* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
 
     size_t idoff = 0;
 

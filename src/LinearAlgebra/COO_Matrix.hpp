@@ -200,7 +200,9 @@ inline std::vector<Intdx> COO_Matrix<ScalarT, Intdx>::getCSRRowData()
 }
 
 /**
- * @brief Set coordinates and values of the matrix. Will sort before returning
+ * @brief Set coordinates and values of the matrix. 
+ * 
+ * Matrix entries will be sorted in row-major order before the method returns.
  * 
  * @tparam ScalarT 
  * @tparam Intdx 
@@ -746,10 +748,12 @@ inline bool COO_Matrix<ScalarT, Intdx>::checkIncreaseSize(Intdx r, Intdx c)
 }
 
 /**
- * @brief Sort a disordered set of values. Assume nothing on order.
+ * @brief Sorts unordered COO matrix
+ * 
+ * Matrix entries can appear in arbitrary order and will be sorted in 
+ * row-major order before the method returns.
  * 
  * @todo simple setup. Should add stable sorting since lists are pre-sorted_ 
- * SR: are we assuming something on the order, or not?
  * 
  * @tparam ScalarT 
  * @tparam Intdx 

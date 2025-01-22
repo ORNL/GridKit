@@ -71,12 +71,12 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     real_type t_init  = 0.0;
     real_type t_final = 1.0;
 
-    real_type reltol = SCALE_MICROGRID_REL_TOL;
-    real_type abstol = SCALE_MICROGRID_ABS_TOL;
+    real_type rel_tol = SCALE_MICROGRID_REL_TOL;
+    real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
     // Create circuit model
-    auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(reltol,
-                                                                      abstol,
+    auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(rel_tol,
+                                                                      abs_tol,
                                                                       use_jac,
                                                                       SCALE_MICROGRID_MAX_STEPS);
 

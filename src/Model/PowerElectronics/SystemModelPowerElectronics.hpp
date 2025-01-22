@@ -67,7 +67,10 @@ namespace GridKit
          * 
          * @post System model parameters set as input
          */
-        PowerElectronicsModel(double rel_tol = 1e-4, double abs_tol = 1e-4, bool use_jac = false, IdxT max_steps = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+        PowerElectronicsModel(double rel_tol = 1e-4, 
+                              double abs_tol = 1e-4, 
+                              bool use_jac = false, 
+                              IdxT max_steps = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
         {
             // Set system model tolerances from input
             rel_tol_ = rel_tol;
