@@ -72,6 +72,5 @@ target_link_libraries(paramest
 # Fortran linker needed to link to HSL solvers
 set_property(TARGET paramest PROPERTY LINKER_LANGUAGE Fortran)
 install(TARGETS paramest RUNTIME DESTINATION bin)
-install(FILES lookup_table.dat DESTINATION bin)
 
 add_test(NAME ParameterEst COMMAND $<TARGET_FILE:paramest>)

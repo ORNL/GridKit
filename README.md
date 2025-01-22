@@ -18,7 +18,8 @@ You should have all of the following installed before installing GridKit™
 	- [Suitesparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) >= 5.x (optional)
 	- [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
     - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.131 (optional)
-        - [LLVM](https://github.com/llvm/llvm-project) >= 18.x 
+        - [LLVM](https://github.com/llvm/llvm-project) >= 15.x. GridKit is
+          currently tested with LLVM 16. 
 - [CMake](https://cmake.org/) >= 3.12
 - C++ 17 compliant compiler
 
