@@ -89,7 +89,7 @@ option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
 set(CMAKE_MACOSX_RPATH 1)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 # use, i.e. don't skip the full RPATH for the build tree
@@ -117,7 +117,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
@@ -145,21 +145,11 @@ include(GridkitAddLibrary)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Create component models
-add_subdirectory(ComponentLib)
-
-# General Utilities and File IO
-add_subdirectory(Utilities)
-
-#Local Sparse matrix operations
-add_subdirectory(SparseMatrix)
-
-# Create solvers
-add_subdirectory(Solver)
+add_subdirectory(src)
 
 # Create examples and tests
 enable_testing()
-add_subdirectory(Examples)
+add_subdirectory(examples)
   
 export(EXPORT gridkit-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/GridKitTargets.cmake)
 
@@ -178,7 +168,7 @@ write_basic_package_version_file(
   COMPATIBILITY SameMajorVersion)
 
 # Generate config file that includes exports
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/Config.cmake.in
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/GridKitConfig.cmake
   INSTALL_DESTINATION share/cmake/gridkit
   NO_SET_AND_CHECK_MACRO
