@@ -824,7 +824,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(std::vector<Intdx> r, std::vector<
     this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
-    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
+    this->sorted_ = false; //Any new entry can assume that the matrix is sorted when being added.
 }
 
 /**
