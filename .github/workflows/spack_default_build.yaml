@@ -129,8 +129,8 @@ jobs:
             packages:
               llvm:
                 externals:
-                - spec: llvm@18
-                  prefix: /usr/lib/llvm-18
+                - spec: llvm@16
+                  prefix: /usr/lib/llvm-16
           EOF
 
       - name: Configure GHCR mirror
