@@ -824,7 +824,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(std::vector<Intdx> r, std::vector<
     this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
-    this->sorted_ = false; //SR: Why is this assumed false?
+    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
 }
 
 /**
@@ -847,7 +847,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(Intdx m, Intdx n)
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<Intdx>();
     this->column_indices_ = std::vector<Intdx>();
-    this->sorted_ = false; //SR: I think this would be true, since it's empty.
+    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
 }
 
 /**
@@ -867,7 +867,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix()
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<Intdx>();
     this->column_indices_ = std::vector<Intdx>();
-    this->sorted_ = false; //SR: I think this would be true, since it's empty.
+    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
 }
 
 template <class ScalarT, typename Intdx>
