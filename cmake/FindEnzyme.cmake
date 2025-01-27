@@ -64,73 +64,36 @@ User may set:
 
 Author(s):
 - Asher Mancinelli <ashermancinelli@gmail.com>
+- Nicholson Koukpaizan <koukpaizannk@ornl.gov>
 
 ]]
 
-if(NOT ${CMAKE_C_COMPILER_ID} STREQUAL "Clang" OR NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  message(FATAL_ERROR "Enzyme may only be enabled if building with Clang")
-endif()
+find_package(Enzyme REQUIRED CONFIG 
+             PATHS 
+             ${ENZYME_DIR}
+             ${ENZYME_DIR}/lib/cmake/Enzyme)
+message(STATUS "Enzyme configuration found: ${Enzyme_CONFIG}")
 
 find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   NAMES
-  LLVMEnzyme-19.so
-  LLVMEnzyme-18.so
-  LLVMEnzyme-17.so
-  LLVMEnzyme-16.so
-  LLVMEnzyme-15.so
-  LLVMEnzyme-14.so
-  LLVMEnzyme-13.so
-  LLVMEnzyme-12.so
-  LLVMEnzyme-11.so
-  LLVMEnzyme-10.so
-  LLVMEnzyme-9.so
+  LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so
   PATHS
-  ${ENZYME_DIR} $ENV{ENZYME_DIR}
-  ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
+  ${ENZYME_DIR}
+  ENV LD_LIBRARY_PATH 
+  ENV DYLD_LIBRARY_PATH
   PATH_SUFFIXES
   lib64 lib)
+message(STATUS "Enzyme LLVM plugin library: ${ENZYME_LLVM_PLUGIN_LIBRARY}")
 
-find_library(ENZYME_CLANG_PLUGIN_LIBRARY
-  NAMES
-  ClangEnzyme-19.so
-  ClangEnzyme-18.so
-  ClangEnzyme-17.so
-  ClangEnzyme-16.so
-  ClangEnzyme-15.so
-  ClangEnzyme-14.so
-  ClangEnzyme-13.so
-  ClangEnzyme-12.so
-  ClangEnzyme-11.so
-  ClangEnzyme-10.so
-  ClangEnzyme-9.so
-  PATHS
-  ${ENZYME_DIR} $ENV{ENZYME_DIR}
-  ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
-  PATH_SUFFIXES
-  lib64 lib)
+find_program(GRIDKIT_LLVM_LINK llvm-link
+             PATHS ${Enzyme_LLVM_BINARY_DIR}
+             REQUIRED)
+message(STATUS "llvm-link: ${GRIDKIT_LLVM_LINK}")
 
-find_program(GRIDKIT_LLVM_LINK llvm-link)
-find_program(GRIDKIT_OPT opt)
-
-if("${GRIDKIT_LLVM_LINK}" STREQUAL "GRIDKIT_LLVM_LINK-NOTFOUND")
-  message(FATAL_ERROR "Could not find llvm-link! Will not be able to build Enzyme targets.")
-endif()
-
-if("${GRIDKIT_OPT}" STREQUAL "GRIDKIT_OPT-NOTFOUND")
-  message(FATAL_ERROR "Could not find opt! Will not be able to build Enzyme targets.")
-endif()
-
-message(STATUS "${ENZYME_CLANG_PLUGIN_LIBRARY};${ENZYME_LLVM_PLUGIN_LIBRARY}")
-if((NOT ${ENZYME_LLVM_PLUGIN_LIBRARY}) OR (NOT ${ENZYME_CLANG_PLUGIN_LIBRARY}))
-  set(ENZYME_CLANG_PLUGIN_LIBRARY CACHE FILEPATH "Path to Enzyme Clang plugin library")
-  set(ENZYME_LLVM_PLUGIN_LIBRARY CACHE FILEPATH "Path to Enzyme LLVM plugin library")
-  message(STATUS "Found Enzyme clang plugin: ${ENZYME_CLANG_PLUGIN_LIBRARY}")
-  message(STATUS "Found Enzyme LLVM plugin: ${ENZYME_LLVM_PLUGIN_LIBRARY}")
-  get_filename_component(ENZYME_LIBRARY_DIR ${ENZYME_CLANG_PLUGIN_LIBRARY} DIRECTORY CACHE "Enzyme library directory")
-else()
-  message(FATAL_ERROR "Enzyme library not found!"
-    " Set ENZYME_DIR to Enzyme's installation prefix.")
-endif()
+find_program(GRIDKIT_OPT opt
+             PATHS ${Enzyme_LLVM_BINARY_DIR}
+             REQUIRED)
+message(STATUS "opt: ${GRIDKIT_OPT}")
 
 macro(enzyme_add_executable)
   set(options)
