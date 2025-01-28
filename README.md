@@ -14,7 +14,7 @@ Before installing GridKit™ make sure you have all needed dependencies.
 ### Dependencies
 You should have all of the following installed before installing GridKit™
 - A version of
-	- [SUNDIALS](https://github.com/LLNL/sundials) >= 7.0.0
+	- [SUNDIALS](https://github.com/LLNL/sundials) >= 7.0.0 built with [KLU support](https://sundials.readthedocs.io/en/latest/sundials/Install_link.html#cmakeoption-ENABLE_KLU)
 	- [Suitesparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) >= 5.x (optional)
 	- [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
     - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.131 (optional)
