@@ -82,7 +82,8 @@ find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   ENV LD_LIBRARY_PATH 
   ENV DYLD_LIBRARY_PATH
   PATH_SUFFIXES
-  lib64 lib)
+  lib64 lib
+  REQUIRED)
 message(STATUS "Enzyme LLVM plugin library: ${ENZYME_LLVM_PLUGIN_LIBRARY}")
 
 find_program(GRIDKIT_LLVM_LINK llvm-link
