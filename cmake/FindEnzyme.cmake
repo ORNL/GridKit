@@ -77,6 +77,8 @@ message(STATUS "Enzyme configuration found: ${Enzyme_CONFIG}")
 find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   NAMES
   LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so
+  LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
+  LLVMEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dll
   PATHS
   ${ENZYME_DIR}
   ENV LD_LIBRARY_PATH 
