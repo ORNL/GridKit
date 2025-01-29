@@ -4,7 +4,7 @@
 
 
 <div align="center">
-   <img align="center" src="../../../docs/Figures/PSS1A.JPG">
+   <img align="center" src="../../../../docs/Figures/PSS1A.JPG">
    
    
   Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
