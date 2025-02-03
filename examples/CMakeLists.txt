@@ -56,7 +56,7 @@
 #
 
 add_subdirectory(MatPowerTesting)
-add_subdirectory(SparseTest)
+add_subdirectory(LinearAlgebra)
 add_subdirectory(DistributedGeneratorTest)
 
 if(TARGET SUNDIALS::kinsol)
