@@ -12,16 +12,16 @@ double dsquare(double x) {
 
 int main()
 {
-  int fail = 0;
-  double var = 5.0;
-  double sq  = square(var);
-  double dsq = dsquare(var);
-  std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n"; 
-  if (std::abs(dsq - 2.0*var) > std::numeric_limits<double>::epsilon())
-  {
-    fail++;
-    std::cout << "Result incorrect\n";
-  }
-  std::cout << "Status: " << fail << "\n";
-  return fail;
+    int fail = 0;
+    double var = 5.0;
+    double sq  = square(var);
+    double dsq = dsquare(var);
+    std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n"; 
+    if (std::abs(dsq - 2.0*var) > std::numeric_limits<double>::epsilon())
+    {
+        fail++;
+        std::cout << "Result incorrect\n";
+    }
+    std::cout << "Status: " << fail << "\n";
+    return fail;
 }

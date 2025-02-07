@@ -13,6 +13,6 @@ return_type __enzyme_autodiff(return_type*, int, T* ... );
 
 template <typename return_type, typename T>
 return_type wrapper(T* obj) {
-  obj->evalFunction();
-  return obj->getFunctionValue();
+    obj->evalFunction();
+    return obj->getFunctionValue();
 }
