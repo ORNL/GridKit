@@ -63,7 +63,7 @@ DenseMatrix<ScalarT, Intdx>::DenseMatrix(const Intdx rows_size, const Intdx colu
 template <class ScalarT, typename Intdx>
 inline ScalarT DenseMatrix<ScalarT, Intdx>::getValue(const Intdx i, const Intdx j) const
 {
-    assert(i < this->colums_size_);
+    assert(i < this->columns_size_);
     assert(j < this->rows_size_);
     return this->values_[j*rows_size_+i];
 }
@@ -77,7 +77,7 @@ inline ScalarT DenseMatrix<ScalarT, Intdx>::getValue(const Intdx i, const Intdx 
 template <class ScalarT, typename Intdx>
 inline void DenseMatrix<ScalarT, Intdx>::setValue(const Intdx i, const Intdx j, const ScalarT value)
 {
-    assert(i < this->colums_size_);
+    assert(i < this->columns_size_);
     assert(j < this->rows_size_);
     this->values_[j*rows_size_+i] = value;
 }
