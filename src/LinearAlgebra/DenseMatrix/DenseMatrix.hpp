@@ -31,9 +31,10 @@ public:
     // Getters and setters
     ScalarT getValue(const Intdx i, const Intdx j) const;
     void setValue(const Intdx i, const Intdx j, const ScalarT value);
+    std::vector<ScalarT>* getValues();
 
     // Utilities
-    void printMatrix();
+    void printMatrix(std::string name="");
 
     // Purposefully not defining BLAS operations. This class should not be used
     // for compute.
@@ -83,15 +84,27 @@ inline void DenseMatrix<ScalarT, Intdx>::setValue(const Intdx i, const Intdx j, 
 }
 
 /**
+ * @brief DenseMatrix single value setter
+ *
+ * @tparam ScalarT 
+ * @tparam Intdx 
+ */
+template <class ScalarT, typename Intdx>
+inline std::vector<ScalarT>* DenseMatrix<ScalarT, Intdx>::getValues()
+{
+    return &(this->values_);
+}
+
+/**
  * @brief Print matrix
  *
  * @tparam ScalarT 
  * @tparam Intdx 
  */
 template <class ScalarT, typename Intdx>
-inline void DenseMatrix<ScalarT, Intdx>::printMatrix()
+inline void DenseMatrix<ScalarT, Intdx>::printMatrix(std::string name)
 {
-    std::cout << "Dense matrix\n";
+    std::cout << "Dense matrix: " << name << "\n";
     for (size_t i = 0; i < this->rows_size_; ++i)
     {
         for (size_t j = 0; j < this->columns_size_; ++j)

@@ -3,6 +3,7 @@
 #include <vector>
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
+using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 int enzyme_dupnoneed;
 int enzyme_dup;
 int enzyme_const;
@@ -66,12 +67,12 @@ void dsquare(int N, double* x, double* y, double* dy) {
 
 int main()
 {
-    // Vector declarations
+    // Vector and matrix declarations
     constexpr int N = 10;
     std::vector<double> x(N);
     std::vector<double> sq(N);
-    std::vector<double> dsq(N*N);
-    std::vector<double> dsq_ref(N*N);
+    DenseMatrix dsq = DenseMatrix(N, N);
+    DenseMatrix dsq_ref = DenseMatrix(N, N);
   
     // Random input values
     srand(time(NULL));
@@ -84,29 +85,33 @@ int main()
     square(x.size(), x.data(), sq.data());
   
     // Reference Jacobian
-    dsquare_ref(x.size(), x.data(), sq.data(), dsq_ref.data());
+    dsquare_ref(x.size(), x.data(), sq.data(), (dsq_ref.getValues())->data());
   
     // Enzyme Jacobian
-    dsquare(x.size(), x.data(), sq.data(), dsq.data());
+    dsquare(x.size(), x.data(), sq.data(), (dsq.getValues())->data());
   
     // Check
     int fail = 0;
-    bool verbose = false;
+    bool verbose = true;
     for (int idy = 0; idy < sq.size(); ++idy)
     {
         for (int idx = 0; idx < x.size(); ++idx)
         {
-            int idxy = idy*x.size()+idx;
-            if (std::abs(dsq[idxy] - dsq_ref[idxy]) > std::numeric_limits<double>::epsilon())
+            if (std::abs(dsq.getValue(idx, idy) - dsq_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
             {
                 fail++;
                 if (verbose)
                 {
                     std::cout << "Result incorrect at line = " << idy << ", column = " << idx << "\n";
-                    std::cout << "x = " << x[idx] << ", x^2 = " << sq[idx] << ", d(x^2)/dx = " << dsq[idxy] << "\n"; 
+                    std::cout << "x = " << x[idx] << ", x^2 = " << sq[idx] << ", d(x^2)/dx = " << dsq.getValue(idx, idy) << "\n"; 
                 }
             }
         }
+    }
+    if (verbose)
+    {
+        dsq.printMatrix("Autodiff Jacobian");
+        dsq_ref.printMatrix("Reference Jacobian");
     }
     std::cout << "Status: " << fail << "\n";
     return fail;

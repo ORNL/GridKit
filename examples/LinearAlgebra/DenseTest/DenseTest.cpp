@@ -19,6 +19,7 @@ int main()
             val += 1.0;
         }
     }
+    std::cout << "Dense matrix test output\n";
     A.printMatrix();
 
     return fail;
