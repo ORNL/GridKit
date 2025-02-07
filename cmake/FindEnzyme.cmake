@@ -135,7 +135,7 @@ endif()
 macro(enzyme_add_executable)
   set(options)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES LINK_LIBRARIES)
+  set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES)
   cmake_parse_arguments(enzyme_add_executable "${options}" "${oneValueArgs}"
     "${multiValueArgs}" ${ARGN})
 
@@ -145,14 +145,25 @@ macro(enzyme_add_executable)
   set(PHASE5 "${CMAKE_CURRENT_BINARY_DIR}/${enzyme_add_executable_NAME}")
 
   set(OBJS "")
+  set(includes "${enzyme_add_executable_INCLUDE_DIRECTORIES}")
+
+  foreach(lib ${enzyme_add_executable_LINK_LIBRARIES})
+    get_target_property(include ${lib} INCLUDE_DIRECTORIES)
+    set(includes "${includes}" ${include})
+  endforeach()
+
+  foreach(dir ${includes})
+    list(APPEND INCLUDE_COMPILER_LIST "-I${dir}")
+    break()
+  endforeach()
 
   foreach(SRC ${enzyme_add_executable_SOURCES})
     set(PHASE0 "${CMAKE_CURRENT_SOURCE_DIR}/${SRC}")
     set(PHASE1 "${CMAKE_CURRENT_BINARY_DIR}/${enzyme_add_executable_NAME}_${SRC}_compile.o")
     add_custom_command(
-      DEPENDS ${PHASE0}
+      DEPENDS ${PHASE0} 
       OUTPUT ${PHASE1}
-      COMMAND ${CMAKE_CXX_COMPILER} -flto -c ${PHASE0} -O2 -fno-vectorize -ffast-math -fno-unroll-loops -o ${PHASE1}
+      COMMAND ${CMAKE_CXX_COMPILER} -flto -c ${PHASE0} ${INCLUDE_COMPILER_LIST} -O2 -fno-vectorize -ffast-math -fno-unroll-loops -o ${PHASE1}
       COMMENT "Compiling ${SRC} to object file for target ${enzyme_add_executable_NAME}"
       )
     set(OBJS "${OBJS} ${PHASE1}")

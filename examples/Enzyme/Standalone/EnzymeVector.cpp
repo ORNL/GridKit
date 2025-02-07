@@ -1,6 +1,7 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
 int enzyme_dupnoneed;
 int enzyme_dup;
