@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <assert.h>
+#include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 
 /**
  * @brief Class to provide dense matrices. 
@@ -15,25 +16,29 @@ namespace GridKit
 {
 namespace LinearAlgebra
 {
-template <class ScalarT, typename Intdx>
+template <class ScalarT, typename IdxT>
 class DenseMatrix
 {
 private:
-    Intdx rows_size_;
-    Intdx columns_size_;
+    IdxT rows_size_;
+    IdxT columns_size_;
     std::vector<ScalarT> values_;
-
+    COO_Matrix<ScalarT, IdxT> values_COO_;
+    bool values_changed_ = false;
+    bool sparsified_ = false;
 public:
     // Constructors and destructors
-    DenseMatrix(const Intdx rows_size, const Intdx columns_size);
+    DenseMatrix(const IdxT rows_size, const IdxT columns_size);
     ~DenseMatrix();
   
     // Getters and setters
-    ScalarT getValue(const Intdx i, const Intdx j) const;
-    void setValue(const Intdx i, const Intdx j, const ScalarT value);
+    ScalarT getValue(const IdxT i, const IdxT j) const;
+    void setValue(const IdxT i, const IdxT j, const ScalarT value);
     std::vector<ScalarT>* getValues();
+    COO_Matrix<ScalarT, IdxT>* getValuesCOO();
 
     // Utilities
+    void toCOO();
     void printMatrix(std::string name="");
 
     // Purposefully not defining BLAS operations. This class should not be used
@@ -44,13 +49,14 @@ public:
  * @brief DenseMatrix constructor
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-DenseMatrix<ScalarT, Intdx>::DenseMatrix(const Intdx rows_size, const Intdx columns_size) :
+template <class ScalarT, typename IdxT>
+DenseMatrix<ScalarT, IdxT>::DenseMatrix(const IdxT rows_size, const IdxT columns_size) :
     rows_size_(rows_size),
     columns_size_(columns_size),
-    values_(rows_size*columns_size, 0)
+    values_(rows_size*columns_size, 0),
+    values_COO_(rows_size, columns_size)
 {
 
 }
@@ -59,10 +65,10 @@ DenseMatrix<ScalarT, Intdx>::DenseMatrix(const Intdx rows_size, const Intdx colu
  * @brief DenseMatrix single value getter
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-inline ScalarT DenseMatrix<ScalarT, Intdx>::getValue(const Intdx i, const Intdx j) const
+template <class ScalarT, typename IdxT>
+inline ScalarT DenseMatrix<ScalarT, IdxT>::getValue(const IdxT i, const IdxT j) const
 {
     assert(i < this->columns_size_);
     assert(j < this->rows_size_);
@@ -73,41 +79,93 @@ inline ScalarT DenseMatrix<ScalarT, Intdx>::getValue(const Intdx i, const Intdx 
  * @brief DenseMatrix single value setter
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-inline void DenseMatrix<ScalarT, Intdx>::setValue(const Intdx i, const Intdx j, const ScalarT value)
+template <class ScalarT, typename IdxT>
+inline void DenseMatrix<ScalarT, IdxT>::setValue(const IdxT i, const IdxT j, const ScalarT value)
 {
     assert(i < this->columns_size_);
     assert(j < this->rows_size_);
     this->values_[j*rows_size_+i] = value;
+    values_changed_ = true;
 }
 
 /**
- * @brief DenseMatrix single value setter
+ * @brief DenseMatrix getter for all values stored as a vector
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-inline std::vector<ScalarT>* DenseMatrix<ScalarT, Intdx>::getValues()
+template <class ScalarT, typename IdxT>
+inline std::vector<ScalarT>* DenseMatrix<ScalarT, IdxT>::getValues()
 {
     return &(this->values_);
+}
+
+/**
+ * @brief DenseMatrix getter for all values stored as a COO sparse matrix
+ *
+ * @tparam ScalarT 
+ * @tparam IdxT 
+ */
+template <class ScalarT, typename IdxT>
+inline COO_Matrix<ScalarT, IdxT>* DenseMatrix<ScalarT, IdxT>::getValuesCOO()
+{
+    if (!sparsified_ || values_changed_)
+    {
+        this->toCOO();
+    }
+    return &(this->values_COO_);
+}
+
+/**
+ * @brief Dense matrix conversion to COO form
+ *
+ * @tparam ScalarT 
+ * @tparam IdxT 
+ */
+template <class ScalarT, typename IdxT>
+inline void DenseMatrix<ScalarT, IdxT>::toCOO()
+{
+    if (!sparsified_ || values_changed_)
+    {
+        IdxT nnz = 0;
+        std::vector<IdxT> rcord;
+        std::vector<IdxT> ccord;
+        std::vector<ScalarT> vals;
+        for (IdxT j = 0; j < this->columns_size_; ++j)
+        {
+            for (IdxT i = 0; i < this->rows_size_; ++i)
+            {
+                ScalarT value = this->values_[j*rows_size_+i];
+                if (value > std::numeric_limits<double>::epsilon())
+                {
+                    nnz++;
+                    rcord.push_back(i); 
+                    ccord.push_back(j); 
+                    vals.push_back(value); 
+                }
+            }
+        }
+        values_COO_.setValues(rcord, ccord, vals);
+        sparsified_ = true;
+        values_changed_ = false;
+    }
 }
 
 /**
  * @brief Print matrix
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-inline void DenseMatrix<ScalarT, Intdx>::printMatrix(std::string name)
+template <class ScalarT, typename IdxT>
+inline void DenseMatrix<ScalarT, IdxT>::printMatrix(std::string name)
 {
     std::cout << "Dense matrix: " << name << "\n";
-    for (size_t i = 0; i < this->rows_size_; ++i)
+    for (IdxT i = 0; i < this->rows_size_; ++i)
     {
-        for (size_t j = 0; j < this->columns_size_; ++j)
+        for (IdxT j = 0; j < this->columns_size_; ++j)
         {
           std::cout << this->values_[j*rows_size_+i] << " ";
         }
@@ -119,10 +177,10 @@ inline void DenseMatrix<ScalarT, Intdx>::printMatrix(std::string name)
  * @brief DenseMatrix destructor
  *
  * @tparam ScalarT 
- * @tparam Intdx 
+ * @tparam IdxT 
  */
-template <class ScalarT, typename Intdx>
-DenseMatrix<ScalarT, Intdx>::~DenseMatrix()
+template <class ScalarT, typename IdxT>
+DenseMatrix<ScalarT, IdxT>::~DenseMatrix()
 {
     
 }

@@ -19,8 +19,8 @@ int main()
             val += 1.0;
         }
     }
-    std::cout << "Dense matrix test output\n";
-    A.printMatrix();
+    A.printMatrix("Dense matrix test output");
+    (A.getValuesCOO())->printMatrix();
 
     return fail;
 }
