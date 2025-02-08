@@ -6,7 +6,7 @@
 #include <vector>
 #include "LinearTransformer.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a LinearTransformer model
@@ -119,5 +119,5 @@ template class LinearTransformer<double, long int>;
 template class LinearTransformer<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

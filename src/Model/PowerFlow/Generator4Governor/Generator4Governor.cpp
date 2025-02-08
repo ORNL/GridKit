@@ -63,7 +63,7 @@
 #include "Generator4Governor.hpp"
 #include "Model/PowerFlow/Bus/BaseBus.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 
 /*!
@@ -501,4 +501,4 @@ template class Generator4Governor<double, long int>;
 template class Generator4Governor<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit

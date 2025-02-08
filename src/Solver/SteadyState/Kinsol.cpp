@@ -85,7 +85,7 @@ namespace Sundials
 {
 
     template <class ScalarT, typename IdxT>
-    Kinsol<ScalarT, IdxT>::Kinsol(ModelLib::ModelEvaluator<ScalarT, IdxT>* model) 
+    Kinsol<ScalarT, IdxT>::Kinsol(GridKit::ModelEvaluator<ScalarT, IdxT>* model) 
         : SteadyStateSolver<ScalarT, IdxT>(model)
     {
         int retval = 0;
@@ -216,8 +216,8 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Kinsol<ScalarT, IdxT>::Residual(N_Vector yy, N_Vector rr, void *user_data)
     {
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = 
-            static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = 
+            static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
         copyVec(yy, model->y());
 

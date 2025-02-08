@@ -6,7 +6,7 @@
 #include <vector>
 #include "DistributedGenerator.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 
 /*!
@@ -359,5 +359,5 @@ template class DistributedGenerator<double, long int>;
 template class DistributedGenerator<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

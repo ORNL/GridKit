@@ -6,7 +6,7 @@
 #include <vector>
 #include "Inductor.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a inductor
@@ -140,5 +140,5 @@ template class Inductor<double, long int>;
 template class Inductor<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

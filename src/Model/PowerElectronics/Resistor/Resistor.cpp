@@ -6,7 +6,7 @@
 #include <vector>
 #include "Resistor.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a resistor model
@@ -122,5 +122,5 @@ template class Resistor<double, long int>;
 template class Resistor<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

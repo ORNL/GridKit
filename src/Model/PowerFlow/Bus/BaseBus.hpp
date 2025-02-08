@@ -62,7 +62,7 @@
 
 #include <ModelEvaluatorImpl.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Base class for all power flow buses.
@@ -151,7 +151,7 @@ namespace ModelLib
         const IdxT busID_;
     }; // class BaseBus
 
-} // namespace ModelLib
+} // namespace GridKit
 
 
 #endif // _BASE_BUS_HPP_

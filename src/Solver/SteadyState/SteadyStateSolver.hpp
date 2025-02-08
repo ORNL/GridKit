@@ -66,18 +66,18 @@ namespace AnalysisManager
     class SteadyStateSolver
     {
     public:
-        SteadyStateSolver(ModelLib::ModelEvaluator<ScalarT, IdxT>* model) : model_(model)
+        SteadyStateSolver(GridKit::ModelEvaluator<ScalarT, IdxT>* model) : model_(model)
         {
         }
         virtual ~SteadyStateSolver(){}
         
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* getModel()
+        GridKit::ModelEvaluator<ScalarT, IdxT>* getModel()
         {
             return model_;
         }
         
     protected:
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model_;
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model_;
     };
 
 }

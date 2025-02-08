@@ -4,7 +4,7 @@
 #include <vector>
 #include "MicrogridBusDQ.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant MicrogridBusDQ model
@@ -134,5 +134,5 @@ template class MicrogridBusDQ<double, long int>;
 template class MicrogridBusDQ<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

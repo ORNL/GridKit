@@ -62,12 +62,12 @@
 
 #include <ModelEvaluatorImpl.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     template <class ScalarT, typename IdxT> class BaseBus;
 }
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Implementation of a pi-model branch between two buses.

@@ -63,7 +63,7 @@
 #include "BaseBus.hpp"
 #include <PowerSystemData.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Implementation of a PQ bus.
@@ -193,7 +193,7 @@ namespace ModelLib
 
     };
 
-} // namespace ModelLib
+} // namespace GridKit
 
 
 #endif // _BUS_PQ_HPP_

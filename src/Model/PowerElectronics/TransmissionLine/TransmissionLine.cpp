@@ -4,7 +4,7 @@
 #include <vector>
 #include "TransmissionLine.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a TransmissionLine model
@@ -201,5 +201,5 @@ template class TransmissionLine<double, long int>;
 template class TransmissionLine<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

@@ -4,7 +4,7 @@
 #include <vector>
 #include "MicrogridLine.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant MicrogridLine model
@@ -171,5 +171,5 @@ template class MicrogridLine<double, long int>;
 template class MicrogridLine<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 
