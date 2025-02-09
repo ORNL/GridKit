@@ -8,6 +8,14 @@ AccessModifierOffset: -4
 IndentAccessModifiers: false      # Align access modifiers to braces
 NamespaceIndentation: Inner       # Indent namspace contents
 
+# Comments get a little more leeway to go over the column limit (about 100 characters)
+PenaltyBreakComment: 80000
+PenaltyExcessCharacter: 1000
+
+# Comments which match this regex will be unformatted (and therefore can be longer or have more whitespace than other comments)
+CommentPragmas: '^\*\*'
+
+
 # Alignment
 AlignConsecutiveAssignments:
   Enabled:          true
