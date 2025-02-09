@@ -1,4 +1,4 @@
-Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cppcoreguidelines-*,readability-*,-*-magic-numbers,-bugprone-easily-swappable-parameters'
+Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cppcoreguidelines-*,readability-*,-bugprone-easily-swappable-parameters'
 # Checks: '-*,readability-identifier-naming'
 HeaderFilterRegex: '.*' # Makes certain to check header files (by default ignores them)
 CheckOptions:
@@ -9,3 +9,4 @@ CheckOptions:
   readability-identifier-naming.ClassCase: 'CamelCase'
   readability-identifier-naming.EnumCase: 'UPPER_CASE'
   readability-identifier-naming.ConstexprVariableCase: 'UPPER_CASE'
+  readability-magic-numbers.IgnoredFloatingPointValues: '1.0; 2.0; 0.5'
