@@ -59,7 +59,7 @@
 
 #pragma once
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PhasorDynamics/BusBase.hpp>
 
 
 // Forward declaration of BusData structure
@@ -85,19 +85,19 @@ namespace PhasorDynamics
      *
      */
     template  <class ScalarT, typename IdxT>
-    class Bus : public ModelEvaluatorImpl<ScalarT, IdxT>
+    class Bus : public BusBase<ScalarT, IdxT>
     {
-        using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+        using BusBase<ScalarT, IdxT>::size_;
+        using BusBase<ScalarT, IdxT>::y_;
+        using BusBase<ScalarT, IdxT>::yp_;
+        using BusBase<ScalarT, IdxT>::yB_;
+        using BusBase<ScalarT, IdxT>::ypB_;
+        using BusBase<ScalarT, IdxT>::f_;
+        using BusBase<ScalarT, IdxT>::fB_;
+        using BusBase<ScalarT, IdxT>::tag_;
 
     public:
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using real_type = typename BusBase<ScalarT, IdxT>::real_type;
         using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
         Bus();
@@ -152,22 +152,22 @@ namespace PhasorDynamics
             return f_[1];
         }
 
-        virtual ScalarT& lambdaIr()
+        virtual ScalarT& VrB()
         {
             return yB_[0];
         }
 
-        virtual const ScalarT& lambdaIr() const
+        virtual const ScalarT& VrB() const
         {
             return yB_[0];
         }
 
-        virtual ScalarT& lambdaIi()
+        virtual ScalarT& ViB()
         {
             return yB_[1];
         }
 
-        virtual const ScalarT& lambdaIi() const
+        virtual const ScalarT& ViB() const
         {
             return yB_[1];
         }
@@ -197,8 +197,14 @@ namespace PhasorDynamics
         //     return BaseBus<ScalarT, IdxT>::BusType::PQ;
         // }
 
+        // virtual const IdxT BusID() const
+        // {
+        //     return busID_;
+        // }
+
     private:
         // Default initial values for voltage and phase on PQ bus
+        // const IdxT busID_{static_cast<IdxT>(-1)};
         ScalarT Vr0_{0.0};
         ScalarT Vi0_{0.0};
 

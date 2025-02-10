@@ -59,7 +59,7 @@
 
 #pragma once
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PhasorDynamics/Component.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -87,25 +87,25 @@ namespace PhasorDynamics
      *
      */
     template  <class ScalarT, typename IdxT>
-    class Branch : public ModelEvaluatorImpl<ScalarT, IdxT>
+    class Branch : public Component<ScalarT, IdxT>
     {
-        using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
+        using Component<ScalarT, IdxT>::size_;
+        using Component<ScalarT, IdxT>::nnz_;
+        using Component<ScalarT, IdxT>::time_;
+        using Component<ScalarT, IdxT>::alpha_;
+        using Component<ScalarT, IdxT>::y_;
+        using Component<ScalarT, IdxT>::yp_;
+        using Component<ScalarT, IdxT>::tag_;
+        using Component<ScalarT, IdxT>::f_;
+        using Component<ScalarT, IdxT>::g_;
+        using Component<ScalarT, IdxT>::yB_;
+        using Component<ScalarT, IdxT>::ypB_;
+        using Component<ScalarT, IdxT>::fB_;
+        using Component<ScalarT, IdxT>::gB_;
+        using Component<ScalarT, IdxT>::param_;
 
         using bus_type   = Bus<ScalarT, IdxT>;
-        using real_type  = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using real_type  = typename Component<ScalarT, IdxT>::real_type;
         using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
 
     public:
@@ -126,7 +126,7 @@ namespace PhasorDynamics
         //int evaluateAdjointJacobian();
         int evaluateAdjointIntegrand();
 
-        void updateTime(real_type t, real_type a)
+        void updateTime(real_type /* t */, real_type /* a */)
         {
         }
 

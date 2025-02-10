@@ -83,8 +83,8 @@ namespace GridKit
 template <class ScalarT, typename IdxT>
 class SystemModel : public ModelEvaluatorImpl<ScalarT, IdxT>
 {
-    typedef BaseBus<ScalarT, IdxT> bus_type;
-    typedef ModelEvaluatorImpl<ScalarT, IdxT> component_type;
+    typedef ModelEvaluator<ScalarT, IdxT> bus_type;
+    typedef ModelEvaluator<ScalarT, IdxT> component_type;
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
