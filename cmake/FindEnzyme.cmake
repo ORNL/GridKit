@@ -68,11 +68,49 @@ Author(s):
 
 ]]
 
+# Get all propreties that cmake supports
+if(NOT CMAKE_PROPERTY_LIST)
+    execute_process(COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)
+    
+    # Convert command output into a CMake list
+    string(REGEX REPLACE ";" "\\\\;" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
+    string(REGEX REPLACE "\n" ";" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
+    list(REMOVE_DUPLICATES CMAKE_PROPERTY_LIST)
+endif()
+    
+function(print_properties)
+    message("CMAKE_PROPERTY_LIST = ${CMAKE_PROPERTY_LIST}")
+endfunction()
+    
+function(print_target_properties target)
+    if(NOT TARGET ${target})
+      message(STATUS "There is no target named '${target}'")
+      return()
+    endif()
+
+    foreach(property ${CMAKE_PROPERTY_LIST})
+        string(REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" property ${property})
+
+        # Fix https://stackoverflow.com/questions/32197663/how-can-i-remove-the-the-location-property-may-not-be-read-from-target-error-i
+        if(property STREQUAL "LOCATION" OR property MATCHES "^LOCATION_" OR property MATCHES "_LOCATION$")
+            continue()
+        endif()
+
+        get_property(was_set TARGET ${target} PROPERTY ${property} SET)
+        if(was_set)
+            get_target_property(value ${target} ${property})
+            message("${target} ${property} = ${value}")
+        endif()
+    endforeach()
+endfunction()
+
 find_package(Enzyme REQUIRED CONFIG 
              PATHS 
              ${ENZYME_DIR}
              ${ENZYME_DIR}/lib/cmake/Enzyme)
 message(STATUS "Enzyme configuration found: ${Enzyme_CONFIG}")
+print_target_properties(ClangEnzymeFlags)
+print_target_properties(LLDEnzymeFlags)
 
 find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   NAMES
@@ -112,17 +150,32 @@ macro(enzyme_add_executable)
 
   set(OBJS "")
   set(includes "${enzyme_add_executable_INCLUDE_DIRECTORIES}")
+  set(lib_sources "")
 
   foreach(lib ${enzyme_add_executable_LINK_LIBRARIES})
     get_target_property(include ${lib} INCLUDE_DIRECTORIES)
     set(includes "${includes}" ${include})
+    get_target_property(lib_source ${lib} SOURCES)
+    print_target_properties(${lib})
+    string(FIND "${lib_source}" "TARGET" found)
+    if(NOT(${found} EQUAL -1))
+      set(lib_sources "${lib_sources}" ${lib_source})
+    endif()
   endforeach()
+  message(STATUS "Library sources: ${lib_sources}")
 
   foreach(dir ${includes})
     if(EXISTS ${dir})
       list(APPEND INCLUDE_COMPILER_LIST "-I${dir}")
     endif()
   endforeach()
+
+  foreach(lib_source ${lib_sources})
+    #if(TARGET ${lib_source})
+      list(APPEND LINKER_FLAGS "-Wl,${lib_source}")
+    #endif()
+  endforeach()
+  message(STATUS "Linker flags: ${LINKER_FLAGS}")
 
   foreach(SRC ${enzyme_add_executable_SOURCES})
     set(PHASE0 "${CMAKE_CURRENT_SOURCE_DIR}/${SRC}")
@@ -160,9 +213,9 @@ macro(enzyme_add_executable)
     )
 
   add_custom_command(
-    DEPENDS ${PHASE4}
+    DEPENDS ${PHASE4} ${lib_sources}
     OUTPUT ${PHASE5}
-    COMMAND ${CMAKE_CXX_COMPILER} ${PHASE4} -o ${PHASE5}
+    COMMAND ${CMAKE_CXX_COMPILER} ${LINKER_FLAGS} ${PHASE4} -o ${PHASE5}
     )
 
   add_custom_target(
