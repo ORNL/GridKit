@@ -1,2 +1,3 @@
 add_subdirectory(Standalone)
 add_subdirectory(Library)
+add_subdirectory(PowerElectronics)
