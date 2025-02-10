@@ -153,8 +153,9 @@ macro(enzyme_add_executable)
   endforeach()
 
   foreach(dir ${includes})
-    list(APPEND INCLUDE_COMPILER_LIST "-I${dir}")
-    break()
+    if(EXISTS ${dir})
+      list(APPEND INCLUDE_COMPILER_LIST "-I${dir}")
+    endif()
   endforeach()
 
   foreach(SRC ${enzyme_add_executable_SOURCES})
