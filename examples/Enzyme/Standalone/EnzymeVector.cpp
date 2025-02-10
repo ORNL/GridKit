@@ -26,19 +26,20 @@ void square(int N, double* x, double* y) {
     }
 }
 
-void dsquare_ref(int N, double* x, double* y, double* dy) {
+void dsquare_ref(int N, double* x, double* y, DenseMatrix& dy) {
     for (int idy = 0; idy < N; ++idy)
     {
         for (int idx = 0; idx < N; ++idx)
         {
-            dy[idy*N+idx] = 0.0;
+            dy.setValue(idx, idy, 0.0); // For clarity, but unnecessary. The DenseMatrix 
+                                         // constructor initializes all values to 0
             if (idx == idy) 
-                dy[idy*N+idx] = dsquare_ref_scalar(x[idx]);
+                dy.setValue(idx, idy, dsquare_ref_scalar(x[idx]));
         }
     }
 }
 
-void dsquare(int N, double* x, double* y, double* dy) {
+void dsquare(int N, double* x, double* y, DenseMatrix& dy) {
     double* v = new double[N];
     double* d_y = new double[N];
     for (int idy = 0; idy < N; ++idy)
@@ -58,7 +59,7 @@ void dsquare(int N, double* x, double* y, double* dy) {
         // Store result
         for (int idx = 0; idx < N; ++idx)
         {
-            dy[idy*N+idx] = d_y[idx];
+            dy.setValue(idx, idy, d_y[idx]);
         }
     }
     delete[] v;
@@ -85,10 +86,10 @@ int main()
     square(x.size(), x.data(), sq.data());
   
     // Reference Jacobian
-    dsquare_ref(x.size(), x.data(), sq.data(), (dsq_ref.getValues())->data());
+    dsquare_ref(x.size(), x.data(), sq.data(), dsq_ref);
   
     // Enzyme Jacobian
-    dsquare(x.size(), x.data(), sq.data(), (dsq.getValues())->data());
+    dsquare(x.size(), x.data(), sq.data(), dsq);
   
     // Check
     int fail = 0;
