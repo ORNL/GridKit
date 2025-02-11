@@ -9,51 +9,50 @@ using SparseMatrix = COO_Matrix<double, size_t>;
 using DG = ModelLib::DistributedGenerator<double, size_t>;
 using DGParameters = ModelLib::DistributedGeneratorParameters<double, size_t>;
 
-//int enzyme_dupnoneed;
-//int enzyme_dup;
-//int enzyme_const;
-//void __enzyme_fwddiff(void*, ...);
-//
-//template <typename T>
-//void wrapper(T* obj, double* res) {
-//    obj->evaluateResidual();
-//    res = (obj->getResidual()).data();
-//}
-//
-//template <typename T>
-//SparseMatrix* EnzymeModelJacobian(T* model) {
-//    int N = model->size();
-//    DenseMatrix Jac(N, N);
-//    double* v = new double[N];
-//    double* res = new double[N];
-//    double* d_res = new double[N];
-//    for (int idy = 0; idy < N; ++idy)
-//    {
-//        // Elementary vector for Jacobian-vector product
-//        for (int idx = 0; idx < N; ++idx)
-//        {
-//            v[idx] = 0.0;
-//        }
-//        v[idy] = 1.0;
-//  
-//        // Autodiff
-//        __enzyme_fwddiff((void*)wrapper<T>, 
-//                         enzyme_dup, model, v,
-//                         enzyme_dupnoneed, res, d_res);
-//  
-//        // Store result
-//        for (int idx = 0; idx < N; ++idx)
-//        {
-//            Jac.setValue(idx, idy, d_res[idx]);
-//        }
-//    }
-//
-//    delete[] v;
-//    delete[] res;
-//    delete[] d_res;
-//
-//    return Jac.getValuesCOO();
-//}
+int enzyme_dupnoneed;
+int enzyme_dup;
+int enzyme_const;
+
+template <typename T>
+void __enzyme_fwddiff(void*, int, T*, double*, int, T*, double*);
+
+template <typename T>
+void wrapper(T* model, double* res) {
+    model->evaluateResidual();
+    res = (model->getResidual()).data();
+}
+
+template <typename T>
+void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
+    int N = model->size();
+    T d_model(*model);
+    double* v = new double[N];
+    double* d_res = new double[N];
+    for (int idy = 0; idy < N; ++idy)
+    {
+        // Elementary vector for Jacobian-vector product
+        for (int idx = 0; idx < N; ++idx)
+        {
+            v[idx] = 0.0;
+        }
+        v[idy] = 1.0;
+  
+        //// Autodiff
+        //__enzyme_fwddiff<T>((void*)wrapper<T>, 
+        //                    enzyme_dup, model, v,
+        //                    enzyme_dupnoneed, &d_model, d_res);
+  
+        // Store result
+        for (int idx = 0; idx < N; ++idx)
+        {
+            //std::cout << "i = " << idx << ", j = " << idy << ", d_res = " << d_res[idx] << "\n";
+            jac.setValue(idx, idy, d_res[idx]);
+        }
+    }
+
+    delete[] v;
+    delete[] d_res;
+}
 
 int main() {
     // Model
@@ -81,20 +80,29 @@ int main() {
     // Residual evaluation and reference Jacobian
     dg->evaluateResidual();
     dg->evaluateJacobian();
-    SparseMatrix Jacobian_ref = dg->getJacobian();
+    std::vector<double> y = dg->y();
+    std::vector<double> yp = dg->yp();
+    std::vector<double> res = dg->getResidual();
+    SparseMatrix jac_ref = dg->getJacobian();
   
-    //// Enzyme Jacobian
-    //SparseMatrix* Jacobian = EnzymeModelJacobian<DG>(dg);
+    // Enzyme Jacobian
+    DenseMatrix jac_autodiff(dg->size(), dg->size());
+    EnzymeModelJacobian<DG>(dg, jac_autodiff);
+    SparseMatrix* jac_COO = jac_autodiff.getValuesCOO();
   
     // Check
     int fail = 0;
     bool verbose = true;
     if (verbose)
     {
-        //std::cout << "Autodiff Jacobian\n"; 
-        //Jacobian->printMatrix();
+        for (int idx = 0; idx < dg->size(); ++idx)
+        {
+            std::cout << "i = " << idx << ", y = " << y[idx] << ", yp = " << yp[idx] << ", res = " << res[idx] <<"\n";
+        }
+        std::cout << "Autodiff Jacobian\n"; 
+        jac_COO->printMatrix();
         std::cout << "Reference Jacobian\n"; 
-        Jacobian_ref.printMatrix();
+        jac_ref.printMatrix();
     }
     std::cout << "Status: " << fail << "\n";
 
