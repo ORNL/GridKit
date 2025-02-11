@@ -68,7 +68,7 @@ public:
 
     std::tuple<IdxT, IdxT> getDimensions();
 
-    void printMatrix();
+    void printMatrix(std::string name="");
 
     
     static void sortSparseCOO(std::vector<IdxT> &rows, std::vector<IdxT> &columns, std::vector<ScalarT> &vals);
@@ -550,14 +550,14 @@ inline std::tuple<IdxT, IdxT> COO_Matrix<ScalarT, IdxT>::getDimensions()
  * @tparam IdxT 
  */
 template <class ScalarT, typename IdxT>
-inline void COO_Matrix<ScalarT, IdxT>::printMatrix()
+inline void COO_Matrix<ScalarT, IdxT>::printMatrix(std::string name)
 {
     if (this->sorted_ == false)
     {
         this->sortSparse();
     }
     
-    std::cout << "Sparse COO Matrix\n";
+    std::cout << "Sparse COO Matrix: " << name << "\n";
     std::cout << "(x , y, value)\n";
     for (size_t i = 0; i < this->values_.size(); i++)
     {
