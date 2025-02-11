@@ -9,13 +9,13 @@
 #include <tuple>
 
 
-namespace ModelLib
+namespace GridKit
 {
     template <class ScalarT, typename IdxT> class BaseBus;
 }
 
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Declaration of a SynchronousMachine class.

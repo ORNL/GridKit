@@ -9,7 +9,7 @@
 #include <set>
 
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Declaration of a CircuitComponent class.

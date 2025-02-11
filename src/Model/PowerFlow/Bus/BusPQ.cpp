@@ -61,7 +61,7 @@
 #include <cmath>
 #include "BusPQ.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a PQ bus
@@ -209,5 +209,5 @@ template class BusPQ<double, long int>;
 template class BusPQ<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit
 

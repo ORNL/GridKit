@@ -70,7 +70,7 @@ namespace PowerSystemData
 }
 }
 
-namespace ModelLib
+namespace GridKit
 {
 namespace PhasorDynamics
 {
@@ -78,7 +78,7 @@ namespace PhasorDynamics
 }
 }
 
-namespace ModelLib
+namespace GridKit
 {
 namespace PhasorDynamics
 {

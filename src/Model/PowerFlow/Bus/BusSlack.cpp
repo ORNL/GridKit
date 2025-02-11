@@ -61,7 +61,7 @@
 #include <cmath>
 #include "BusSlack.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a slack bus
@@ -141,5 +141,5 @@ template class BusSlack<double, long int>;
 template class BusSlack<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit
 

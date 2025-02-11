@@ -69,18 +69,18 @@ namespace AnalysisManager
     class DynamicSolver
     {
     public:
-        DynamicSolver(ModelLib::ModelEvaluator<ScalarT, IdxT>* model) : model_(model)
+        DynamicSolver(GridKit::ModelEvaluator<ScalarT, IdxT>* model) : model_(model)
         {
         }
         virtual ~DynamicSolver(){}
         
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* getModel()
+        GridKit::ModelEvaluator<ScalarT, IdxT>* getModel()
         {
             return model_;
         }
         
     protected:
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model_;
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model_;
     };
 
 }

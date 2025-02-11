@@ -7,7 +7,7 @@
 #include "InductionMotor.hpp"
 
 
-namespace ModelLib {
+namespace GridKit {
 
 
 
@@ -141,5 +141,5 @@ template class InductionMotor<double, long int>;
 template class InductionMotor<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

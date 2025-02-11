@@ -66,7 +66,7 @@
 #include <Model/PowerFlow/Generator/GeneratorPV.hpp>
 
 
-namespace ModelLib {
+namespace GridKit {
 
     template <typename ScalarT = double, typename IdxT = int>
     class GeneratorFactory
@@ -99,4 +99,4 @@ namespace ModelLib {
         }
     };
 
-} // namespace ModelLib
+} // namespace GridKit

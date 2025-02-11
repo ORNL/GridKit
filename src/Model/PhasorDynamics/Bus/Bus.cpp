@@ -63,7 +63,7 @@
 #include <PowerSystemData.hpp>
 #include "Bus.hpp"
 
-namespace ModelLib // change to GridKit
+namespace GridKit
 {
 namespace PhasorDynamics 
 {
@@ -223,5 +223,5 @@ template class Bus<double, long int>;
 template class Bus<double, size_t>;
 
 } // namespace PhasorDynamic
-} // namespace ModelLib
+} // namespace GridKit
 

@@ -61,7 +61,7 @@
 #include <ModelEvaluatorImpl.hpp>
 #include <vector>
 
-namespace ModelLib
+namespace GridKit
 {
      /*!
      * @brief Implementation of a power grid.

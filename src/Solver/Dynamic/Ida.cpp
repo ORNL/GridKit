@@ -75,7 +75,7 @@ namespace Sundials
 {
 
     template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::Ida(ModelLib::ModelEvaluator<ScalarT, IdxT>* model) : DynamicSolver<ScalarT, IdxT>(model)
+    Ida<ScalarT, IdxT>::Ida(GridKit::ModelEvaluator<ScalarT, IdxT>* model) : DynamicSolver<ScalarT, IdxT>(model)
     {
         int retval = 0;
 
@@ -579,7 +579,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
     {
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tres, 0.0);
         copyVec(yy, model->y());
@@ -596,7 +596,7 @@ namespace Sundials
     int Ida<ScalarT, IdxT>::Jac(sunrealtype t, sunrealtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
     {
 
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
 
         model->updateTime(t, cj);
@@ -637,7 +637,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
     {
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());
@@ -653,7 +653,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointResidual(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void *user_data)
     {
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());
@@ -672,7 +672,7 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointIntegrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void *user_data)
     {
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model = static_cast<ModelLib::ModelEvaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model = static_cast<GridKit::ModelEvaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());

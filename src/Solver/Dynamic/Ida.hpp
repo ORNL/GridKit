@@ -83,7 +83,7 @@ namespace AnalysisManager
             typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
         public:
-            Ida(ModelLib::ModelEvaluator<ScalarT, IdxT>* model);
+            Ida(GridKit::ModelEvaluator<ScalarT, IdxT>* model);
             ~Ida();
 
             int configureSimulation();

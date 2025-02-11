@@ -6,7 +6,7 @@
 #include <vector>
 #include "Capacitor.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for Capacitor
@@ -141,5 +141,5 @@ template class Capacitor<double, long int>;
 template class Capacitor<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

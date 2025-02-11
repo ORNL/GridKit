@@ -24,7 +24,7 @@ int main(int argc, char const *argv[])
 
     //TODO:setup as named parameters
     //Create circuit model
-    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac);
+    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac);
 
     size_t idoff = 0;
 
@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
 
 
     //inductor
-    ModelLib::Inductor<double, size_t>* induct = new ModelLib::Inductor(idoff,linit);
+    GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor(idoff,linit);
     //Form index to node uid realations
     // input
     induct->setExternalConnectionNodes(0,1);
@@ -49,7 +49,7 @@ int main(int argc, char const *argv[])
 
     //resistor
     idoff++;
-    ModelLib::Resistor<double, size_t>* resis = new ModelLib::Resistor(idoff, rinit);
+    GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor(idoff, rinit);
     //Form index to node uid realations
     //input
     resis->setExternalConnectionNodes(0,0);
@@ -60,7 +60,7 @@ int main(int argc, char const *argv[])
 
     //voltage source
     idoff++;
-    ModelLib::VoltageSource<double, size_t>* vsource = new ModelLib::VoltageSource(idoff, vinit);
+    GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource(idoff, vinit);
     //Form index to node uid realations
     //input
     vsource->setExternalConnectionNodes(0,-1);
