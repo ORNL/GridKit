@@ -12,11 +12,12 @@ using DGParameters = ModelLib::DistributedGeneratorParameters<double, size_t>;
 int enzyme_dupnoneed;
 int enzyme_dup;
 int enzyme_const;
-void __enzyme_fwddiff(void*, ...);
+void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>,
+                             int, std::vector<double>, std::vector<double>*);
 
 // Copy from DistributedGenerator<ScalarT, IdxT>::evaluateResidual
 // Need to find a way to differentiate the member function directly
-void evaluateResidual(double* y_, double* f_) 
+void evaluateResidual(std::vector<double> y_, std::vector<double> f_) 
 {
     constexpr double wb_ = 2.0*M_PI*50.0;
     constexpr double wc_ = 31.41;
@@ -86,10 +87,10 @@ void evaluateResidual(double* y_, double* f_)
 template <typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
     int N = model->size();
-    double* y = new double[N];
-    double* v = new double[N];
-    double* res = new double[N];
-    double* d_res = new double[N];
+    std::vector<double> y(N);
+    std::vector<double> v(N);
+    std::vector<double> res(N);
+    std::vector<double> d_res(N);
     for (int idy = 0; idy < N; ++idy)
     {
         // Elementary vector for Jacobian-vector product
@@ -104,7 +105,7 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
         // Autodiff
         __enzyme_fwddiff((void*)evaluateResidual, 
                          enzyme_dup, y, v,
-                         enzyme_dupnoneed, res, d_res);
+                         enzyme_dupnoneed, res, &d_res);
   
         // Store result
         for (int idx = 0; idx < N; ++idx)
@@ -112,11 +113,6 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
             jac.setValue(idx, idy, d_res[idx]);
         }
     }
-
-    delete[] y;
-    delete[] v;
-    delete[] res;
-    delete[] d_res;
 }
 
 int main() {
