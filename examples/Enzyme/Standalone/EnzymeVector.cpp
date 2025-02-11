@@ -7,7 +7,8 @@ using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 int enzyme_dupnoneed;
 int enzyme_dup;
 int enzyme_const;
-void __enzyme_fwddiff(void*, ...);
+void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>, 
+                             int, std::vector<double>, std::vector<double>*);
 
 inline
 double square_scalar(double x) {
@@ -19,17 +20,17 @@ double dsquare_ref_scalar(double x) {
     return 2.0 * x;
 }
 
-void square(int N, double* x, double* y) {
-    for (int idx = 0; idx < N; ++idx)
+void square(std::vector<double> x, std::vector<double> y) {
+    for (int idx = 0; idx < x.size(); ++idx)
     {
         y[idx] = square_scalar(x[idx]);
     }
 }
 
-void dsquare_ref(int N, double* x, double* y, DenseMatrix& dy) {
-    for (int idy = 0; idy < N; ++idy)
+void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
+    for (int idy = 0; idy < y.size(); ++idy)
     {
-        for (int idx = 0; idx < N; ++idx)
+        for (int idx = 0; idx < x.size(); ++idx)
         {
             dy.setValue(idx, idy, 0.0); // For clarity, but unnecessary. The DenseMatrix 
                                          // constructor initializes all values to 0
@@ -39,31 +40,28 @@ void dsquare_ref(int N, double* x, double* y, DenseMatrix& dy) {
     }
 }
 
-void dsquare(int N, double* x, double* y, DenseMatrix& dy) {
-    double* v = new double[N];
-    double* d_y = new double[N];
-    for (int idy = 0; idy < N; ++idy)
+void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
+    std::vector<double> v(x.size());
+    std::vector<double> d_y(y.size());
+    for (int idy = 0; idy < y.size(); ++idy)
     {
         // Elementary vector for Jacobian-vector product
-        for (int idx = 0; idx < N; ++idx)
+        for (int idx = 0; idx < x.size(); ++idx)
         {
             v[idx] = 0.0;
         }
         v[idy] = 1.0;
   
         // Autodiff
-        __enzyme_fwddiff((void*)square, enzyme_const, N, 
-                                        enzyme_dup, x, v,
-                                        enzyme_dupnoneed, y, d_y);
+        __enzyme_fwddiff((void*)square, enzyme_dup, x, v,
+                                        enzyme_dupnoneed, y, &d_y);
   
         // Store result
-        for (int idx = 0; idx < N; ++idx)
+        for (int idx = 0; idx < x.size(); ++idx)
         {
             dy.setValue(idx, idy, d_y[idx]);
         }
     }
-    delete[] v;
-    delete[] d_y;
 }
 
 int main()
@@ -83,13 +81,13 @@ int main()
     }
   
     // Function evaluation
-    square(x.size(), x.data(), sq.data());
+    square(x, sq);
   
     // Reference Jacobian
-    dsquare_ref(x.size(), x.data(), sq.data(), dsq_ref);
+    dsquare_ref(x, sq, dsq_ref);
   
     // Enzyme Jacobian
-    dsquare(x.size(), x.data(), sq.data(), dsq);
+    dsquare(x, sq, dsq);
   
     // Check
     int fail = 0;
