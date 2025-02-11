@@ -20,7 +20,7 @@ double dsquare_ref_scalar(double x) {
     return 2.0 * x;
 }
 
-void square(std::vector<double> x, std::vector<double> y) {
+void square(std::vector<double> x, std::vector<double>& y) {
     for (int idx = 0; idx < x.size(); ++idx)
     {
         y[idx] = square_scalar(x[idx]);
@@ -32,8 +32,6 @@ void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) 
     {
         for (int idx = 0; idx < x.size(); ++idx)
         {
-            dy.setValue(idx, idy, 0.0); // For clarity, but unnecessary. The DenseMatrix 
-                                         // constructor initializes all values to 0
             if (idx == idy) 
                 dy.setValue(idx, idy, dsquare_ref_scalar(x[idx]));
         }
