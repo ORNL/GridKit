@@ -534,7 +534,7 @@ inline bool COO_Matrix<ScalarT, IdxT>::isSorted()
 template <class ScalarT, typename IdxT>
 inline IdxT COO_Matrix<ScalarT, IdxT>::nnz()
 {
-    return static_cast<IdxT>(this->values_.size);
+    return static_cast<IdxT>(this->values_.size());
 }
 
 template <class ScalarT, typename IdxT>

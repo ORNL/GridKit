@@ -109,7 +109,6 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
         // Store result
         for (int idx = 0; idx < N; ++idx)
         {
-            //std::cout << "i = " << idx << ", j = " << idy << ", d_res = " << d_res[idx] << "\n";
             jac.setValue(idx, idy, d_res[idx]);
         }
     }
@@ -150,24 +149,20 @@ int main() {
     std::vector<double> yp = dg->yp();
     std::vector<double> res = dg->getResidual();
     SparseMatrix jac_ref = dg->getJacobian();
+    DenseMatrix jac_ref_dense(dg->size(), dg->size());
+    jac_ref_dense.setValues(jac_ref);
   
     // Enzyme Jacobian
     DenseMatrix jac_autodiff(dg->size(), dg->size());
     EnzymeModelJacobian<DG>(dg, jac_autodiff);
-    SparseMatrix* jac_COO = jac_autodiff.getValuesCOO();
   
     // Check
     int fail = 0;
     bool verbose = true;
     if (verbose)
     {
-        //for (int idx = 0; idx < dg->size(); ++idx)
-        //{
-        //    std::cout << "i = " << idx << ", y = " << y[idx] << ", yp = " << yp[idx] << ", res = " << res[idx] <<"\n";
-        //}
         jac_autodiff.printMatrix("Autodiff Jacobian");
-        jac_COO->printMatrix("Autodiff Jacobian");
-        jac_ref.printMatrix("Reference Jacobian");
+        jac_ref_dense.printMatrix("Reference Jacobian");
     }
     std::cout << "Status: " << fail << "\n";
 

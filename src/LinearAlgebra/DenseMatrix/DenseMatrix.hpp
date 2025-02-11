@@ -34,6 +34,7 @@ public:
     // Getters and setters
     ScalarT getValue(const IdxT i, const IdxT j) const;
     void setValue(const IdxT i, const IdxT j, const ScalarT value);
+    void setValues(COO_Matrix<ScalarT, IdxT> values_COO);
     std::vector<ScalarT>* getValues();
     COO_Matrix<ScalarT, IdxT>* getValuesCOO();
 
@@ -88,6 +89,23 @@ inline void DenseMatrix<ScalarT, IdxT>::setValue(const IdxT i, const IdxT j, con
     assert(j < this->rows_size_);
     this->values_[j*rows_size_+i] = value;
     values_changed_ = true;
+}
+
+/**
+ * @brief DenseMatrix value setter from COO
+ *
+ * @tparam ScalarT 
+ * @tparam IdxT 
+ */
+template <class ScalarT, typename IdxT>
+inline void DenseMatrix<ScalarT, IdxT>::setValues(COO_Matrix<ScalarT, IdxT> values_COO)
+{
+    std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> entries = values_COO.getEntries();
+    const auto [rcord, ccord, vals] = entries;
+    for (IdxT idx = 0; idx < values_COO.nnz(); ++idx)
+    {
+        this->setValue(rcord[idx], ccord[idx], vals[idx]);
+    }
 }
 
 /**
