@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
-    using namespace ModelLib;
+    using namespace GridKit;
 
     bool usejac = true;
 
@@ -105,7 +105,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
     // DG Params Vector
     // All DGs have the same set of parameters except for the first two.
-    ModelLib::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
+    GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
     DG_parms1.wb_ = 2.0*M_PI*50.0;
     DG_parms1.wc_ = 31.41;
     DG_parms1.mp_ = 9.4e-5;
@@ -122,7 +122,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     DG_parms1.rLc_ = 0.03;
     DG_parms1.Lc_ = 0.35e-3;
 
-    ModelLib::DistributedGeneratorParameters<real_type, index_type> DG_parms2;
+    GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms2;
     DG_parms2.wb_ = 2.0*M_PI*50.0;
     DG_parms2.wc_ = 31.41;
     DG_parms2.mp_ = 12.5e-5;
@@ -139,7 +139,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     DG_parms2.rLc_ = 0.03;
     DG_parms2.Lc_ = 0.35e-3;
 
-    std::vector<ModelLib::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2*Nsize, DG_parms2);
+    std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2*Nsize, DG_parms2);
 
     DGParams_list[0] = DG_parms1;
     DGParams_list[1] = DG_parms1;

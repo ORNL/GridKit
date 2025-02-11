@@ -83,7 +83,7 @@ namespace AnalysisManager
         virtual ~OptimizationSolver(){}
 
     protected:
-        ModelLib::ModelEvaluator<ScalarT, IdxT>* model_;
+        GridKit::ModelEvaluator<ScalarT, IdxT>* model_;
         Sundials::Ida<ScalarT, IdxT>* integrator_;
     };
 

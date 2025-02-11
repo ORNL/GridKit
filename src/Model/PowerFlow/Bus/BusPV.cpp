@@ -61,7 +61,7 @@
 #include <cmath>
 #include "BusPV.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a PV bus
@@ -202,5 +202,5 @@ template class BusPV<double, long int>;
 template class BusPV<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit
 

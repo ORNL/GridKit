@@ -63,7 +63,7 @@
 #include "BaseBus.hpp"
 #include <PowerSystemData.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Implementation of a slack bus.
@@ -198,7 +198,7 @@ namespace ModelLib
 
     }; // class BusSlack
 
-} // namespace ModelLib
+} // namespace GridKit
 
 
 #endif // _BUS_SLACK_HPP_

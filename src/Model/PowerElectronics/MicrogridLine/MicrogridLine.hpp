@@ -7,13 +7,13 @@
 #include <PowerSystemData.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     template <class ScalarT, typename IdxT>
     class BaseBus;
 }
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Declaration of a MicrogridLine class.

@@ -64,7 +64,7 @@
 #include <Model/PowerFlow/Bus/BusPV.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 
-namespace ModelLib {
+namespace GridKit {
 
     template <typename ScalarT = double, typename IdxT = int>
     class BusFactory
@@ -97,4 +97,4 @@ namespace ModelLib {
         }
     };
 
-} // namespace ModelLib
+} // namespace GridKit

@@ -64,7 +64,7 @@
 #include "GeneratorPV.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant load model
@@ -164,5 +164,5 @@ template class GeneratorPV<double, long int>;
 template class GeneratorPV<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

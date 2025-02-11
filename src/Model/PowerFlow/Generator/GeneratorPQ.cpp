@@ -64,7 +64,7 @@
 #include "GeneratorPQ.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant load model
@@ -164,5 +164,5 @@ template class GeneratorPQ<double, long int>;
 template class GeneratorPQ<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

@@ -64,7 +64,7 @@
 
 #include "Branch.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a pi-model branch
@@ -215,4 +215,4 @@ int Branch<ScalarT, IdxT>::evaluateAdjointIntegrand()
 template class Branch<double, long int>;
 template class Branch<double, size_t>;
 
-} //namespace ModelLib
+} //namespace GridKit

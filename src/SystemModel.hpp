@@ -67,7 +67,7 @@
 #include <ScalarTraits.hpp>
 #include <ModelEvaluatorImpl.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
 
 /**
@@ -710,6 +710,6 @@ private:
 
 }; // class SystemModel
 
-} // namespace ModelLib
+} // namespace GridKit
 
 #endif // _SYSTEM_MODEL_HPP_
