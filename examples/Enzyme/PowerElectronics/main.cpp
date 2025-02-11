@@ -159,6 +159,20 @@ int main() {
     // Check
     int fail = 0;
     bool verbose = true;
+    for (int idy = 0; idy < dg->size(); ++idy)
+    {
+        for (int idx = 0; idx < dg->size(); ++idx)
+        {
+            if (std::abs(jac_autodiff.getValue(idx, idy) - jac_ref_dense.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
+            {
+                fail++;
+                if (verbose)
+                {
+                    std::cout << "Result incorrect at line = " << idy << ", column = " << idx << "\n";
+                }
+            }
+        }
+    }
     if (verbose)
     {
         jac_autodiff.printMatrix("Autodiff Jacobian");
