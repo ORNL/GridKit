@@ -49,7 +49,10 @@ namespace PhasorDynamics
         virtual int tagDifferentiable() override;
         virtual int initialize() override;
         virtual int evaluateResidual() override;
+        virtual int evaluateIntegrand() override;
+        virtual int evaluateJacobian() override;
         virtual int initializeAdjoint() override;
+        virtual int evaluateAdjointIntegrand() override;
         virtual int evaluateAdjointResidual() override;
 
         virtual int BusType() const override

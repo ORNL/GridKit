@@ -125,6 +125,18 @@ int BusInfinite<ScalarT, IdxT>::evaluateResidual()
     return 0;
 }
 
+/**
+ * @brief Jacobian evaluation not implemented
+ * 
+ * @tparam ScalarT - data type for Jacobian elements
+ * @tparam IdxT    - data type for matrix indices
+ * @return int - error code
+ */
+template <class ScalarT, typename IdxT>
+int BusInfinite<ScalarT, IdxT>::evaluateJacobian()
+{
+    return 0;
+}
 
 /*!
  * @brief initialize method sets bus variables to stored initial values.
@@ -141,6 +153,13 @@ int BusInfinite<ScalarT, IdxT>::initializeAdjoint()
     return 0;
 }
 
+/**
+ * @brief BusInfinite only initializes adjoint residual elements to zero.
+ * 
+ * @tparam ScalarT - data type for the integrand
+ * @tparam IdxT    - data type for matrix/vector indices
+ * @return int - error code
+ */
 template <class ScalarT, typename IdxT>
 int BusInfinite<ScalarT, IdxT>::evaluateAdjointResidual()
 {
@@ -149,6 +168,33 @@ int BusInfinite<ScalarT, IdxT>::evaluateAdjointResidual()
 
     return 0;
 }
+
+/**
+ * @brief Quadrature evaluation not implemented
+ * 
+ * @tparam ScalarT - data type for the integrand
+ * @tparam IdxT    - data type for matrix/vector indices
+ * @return int - error code
+ */
+template <class ScalarT, typename IdxT>
+int BusInfinite<ScalarT, IdxT>::evaluateIntegrand()
+{
+    return 0;
+}
+
+/**
+ * @brief Adjoint quadrature evaluation not implemented
+ * 
+ * @tparam ScalarT - data type for the integrand
+ * @tparam IdxT    - data type for matrix/vector indices
+ * @return int - error code
+ */
+template <class ScalarT, typename IdxT>
+int BusInfinite<ScalarT, IdxT>::evaluateAdjointIntegrand()
+{
+    return 0;
+}
+
 
 // Available template instantiations
 template class BusInfinite<double, long int>;

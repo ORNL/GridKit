@@ -71,22 +71,20 @@ namespace PhasorDynamics
             return false;
         }
 
-        virtual IdxT sizeQuad()
+        virtual IdxT size_quad()
         {
             return size_quad_;
         }
 
-        virtual IdxT sizeParam()
+        virtual IdxT size_opt()
         {
             return size_param_;
         }
 
-        // virtual void updateTime(real_type t, real_type a)
-        // {
-        //     time_ = t;
-        //     alpha_ = a;
-        //     std::cout << "updateTime: t = " << time_ << "\n";
-        // }
+        virtual void updateTime(real_type /* t */, real_type /* a */)
+        {
+            // No time to update in bus models
+        }
 
         virtual void setTolerances(real_type& rtol, real_type& atol) const
         {
@@ -159,22 +157,22 @@ namespace PhasorDynamics
             return param_;
         }
 
-        std::vector<ScalarT>& paramUp()
+        std::vector<ScalarT>& param_up()
         {
             return param_up_;
         }
 
-        const std::vector<ScalarT>& paramUp() const
+        const std::vector<ScalarT>& param_up() const
         {
             return param_up_;
         }
 
-        std::vector<ScalarT>& paramLo()
+        std::vector<ScalarT>& param_lo()
         {
             return param_lo_;
         }
 
-        const std::vector<ScalarT>& paramLo() const
+        const std::vector<ScalarT>& param_lo() const
         {
             return param_lo_;
         }
