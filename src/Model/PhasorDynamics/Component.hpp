@@ -217,9 +217,9 @@ namespace PhasorDynamics
         }
 
         //@todo Fix ID naming
-        IdxT getIDcomponent()
+        IdxT getComponentID() const
         {
-            return idc_;
+            return component_id_;
         }
 
 
@@ -255,8 +255,7 @@ namespace PhasorDynamics
 
         IdxT max_steps_;
 
-        IdxT idc_;
-
+        IdxT component_id_;
     };
 
 } // namespace PhasorDynamics

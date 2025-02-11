@@ -1,12 +1,13 @@
+ 
 
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 # ]]
 
-gridkit_add_library(phasor_dynamics_branch
+gridkit_add_library(phasor_dynamics_load
   SOURCES
-    Branch.cpp
+    Load.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_branch)
+    gridkit_phasor_dynamics_load)
 

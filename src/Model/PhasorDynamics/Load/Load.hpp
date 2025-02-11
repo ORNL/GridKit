@@ -1,17 +1,10 @@
 
+
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
 
 // Forward declarations.
-namespace GridKit
-{
-namespace PowerSystemData
-{
-    template <typename RealT, typename IdxT> struct BranchData;
-}
-}
-
 namespace GridKit
 {
 namespace PhasorDynamics
@@ -25,11 +18,11 @@ namespace GridKit
 namespace PhasorDynamics
 {
     /*!
-     * @brief Implementation of a pi-model branch between two buses.
+     * @brief Implementation of a constant load.
      *
      */
     template  <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>
+    class Load : public Component<ScalarT, IdxT>
     {
         using Component<ScalarT, IdxT>::size_;
         using Component<ScalarT, IdxT>::nnz_;
@@ -45,16 +38,16 @@ namespace PhasorDynamics
         using Component<ScalarT, IdxT>::fB_;
         using Component<ScalarT, IdxT>::gB_;
         using Component<ScalarT, IdxT>::param_;
+        using Component<ScalarT, IdxT>::component_id_;
 
         using bus_type   = Bus<ScalarT, IdxT>;
         using real_type  = typename Component<ScalarT, IdxT>::real_type;
-        using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
 
     public:
-        Branch(bus_type* bus1, bus_type* bus2);
-        Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2);
-        Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
-        virtual ~Branch();
+        Load(bus_type* bus);
+        Load(bus_type* bus, real_type R, real_type X);
+        Load(bus_type* bus, IdxT component_id);
+        virtual ~Load();
 
         int allocate();
         int initialize();
@@ -84,66 +77,32 @@ namespace PhasorDynamics
             X_ = X;
         }
 
-        void setG(real_type G)
+    private:
+        ScalarT& Vr()
         {
-            G_ = G;
+            return bus_->Vr();
         }
 
-        void setB(real_type B)
+        ScalarT& Vi()
         {
-            B_ = B;
+            return bus_->Vi();
         }
+
+        ScalarT& Ir()
+        {
+            return bus_->Ir();
+        }
+
+        ScalarT& Ii()
+        {
+            return bus_->Ii();
+        }
+
 
     private:
-        ScalarT& Vr1()
-        {
-            return bus1_->Vr();
-        }
-
-        ScalarT& Vi1()
-        {
-            return bus1_->Vi();
-        }
-
-        ScalarT& Ir1()
-        {
-            return bus1_->Ir();
-        }
-
-        ScalarT& Ii1()
-        {
-            return bus1_->Ii();
-        }
-
-        ScalarT& Vr2()
-        {
-            return bus2_->Vr();
-        }
-
-        ScalarT& Vi2()
-        {
-            return bus2_->Vi();
-        }
-
-        ScalarT& Ir2()
-        {
-            return bus2_->Ir();
-        }
-
-        ScalarT& Ii2()
-        {
-            return bus2_->Ii();
-        }
-
-    private:
-        real_type R_;
-        real_type X_;
-        real_type G_;
-        real_type B_;
-        const IdxT bus1ID_;
-        const IdxT bus2ID_;
-        bus_type* bus1_;
-        bus_type* bus2_;
+        bus_type* bus_{nullptr};
+        real_type R_{0.1};
+        real_type X_{0.01};
     };
 
 } // namespace PhasorDynamics
