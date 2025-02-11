@@ -105,12 +105,17 @@ namespace PhasorDynamics
         Bus(BusData& data);
         virtual ~Bus();
 
-        virtual int allocate();
-        virtual int tagDifferentiable();
-        virtual int initialize();
-        virtual int evaluateResidual();
-        virtual int initializeAdjoint();
-        virtual int evaluateAdjointResidual();
+        virtual int allocate() override;
+        virtual int tagDifferentiable() override;
+        virtual int initialize() override;
+        virtual int evaluateResidual() override;
+        virtual int initializeAdjoint() override;
+        virtual int evaluateAdjointResidual() override;
+
+        virtual int BusType() const override
+        {
+            return BusBase<ScalarT, IdxT>::BusType::DEFAULT;
+        }
 
         virtual ScalarT& Vr()
         {
@@ -192,19 +197,7 @@ namespace PhasorDynamics
             return fB_[1];
         }
 
-        // virtual const int BusType() const
-        // {
-        //     return BaseBus<ScalarT, IdxT>::BusType::PQ;
-        // }
-
-        // virtual const IdxT BusID() const
-        // {
-        //     return busID_;
-        // }
-
     private:
-        // Default initial values for voltage and phase on PQ bus
-        // const IdxT busID_{static_cast<IdxT>(-1)};
         ScalarT Vr0_{0.0};
         ScalarT Vi0_{0.0};
 

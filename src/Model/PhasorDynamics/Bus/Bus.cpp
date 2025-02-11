@@ -119,7 +119,9 @@ Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
  */
 template <class ScalarT, typename IdxT>
 Bus<ScalarT, IdxT>::Bus(BusData& data)
-  : Vr0_(data.Vm * cos(data.Va)), Vi0_(data.Vm * sin(data.Va))
+  : BusBase<ScalarT, IdxT>(data.bus_i),
+    Vr0_(data.Vm * cos(data.Va)),
+    Vi0_(data.Vm * sin(data.Va))
 {
     //std::cout << "Create Bus..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;

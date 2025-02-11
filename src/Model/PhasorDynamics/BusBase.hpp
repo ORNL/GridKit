@@ -15,13 +15,20 @@ namespace PhasorDynamics
     class BusBase : public ModelEvaluator<ScalarT, IdxT>
     {
     public:
-        typedef typename ModelEvaluator<ScalarT, IdxT>::real_type real_type;
+        using real_type = typename ModelEvaluator<ScalarT, IdxT>::real_type;
+
+        enum BusType{DEFAULT=1, SLACK};
 
         BusBase()
           : size_(0),
             size_quad_(0),
             size_param_(0)
-        {}
+        {
+        }
+
+        BusBase(IdxT bus_id) : bus_id_(bus_id)
+        {
+        }
 
         BusBase(IdxT size, IdxT size_quad, IdxT size_opt)
           : size_(size),
@@ -42,6 +49,13 @@ namespace PhasorDynamics
         {
         }
 
+        virtual ~BusBase()
+        {
+        }
+
+        /// Pure virtual function, returns bus type (DEFAULT or SLACK).
+        virtual int BusType() const = 0;        
+
         virtual IdxT size()
         {
             return size_;
@@ -57,12 +71,12 @@ namespace PhasorDynamics
             return false;
         }
 
-        virtual IdxT size_quad()
+        virtual IdxT sizeQuad()
         {
             return size_quad_;
         }
 
-        virtual IdxT size_opt()
+        virtual IdxT sizeParam()
         {
             return size_param_;
         }
@@ -145,22 +159,22 @@ namespace PhasorDynamics
             return param_;
         }
 
-        std::vector<ScalarT>& param_up()
+        std::vector<ScalarT>& paramUp()
         {
             return param_up_;
         }
 
-        const std::vector<ScalarT>& param_up() const
+        const std::vector<ScalarT>& paramUp() const
         {
             return param_up_;
         }
 
-        std::vector<ScalarT>& param_lo()
+        std::vector<ScalarT>& paramLo()
         {
             return param_lo_;
         }
 
-        const std::vector<ScalarT>& param_lo() const
+        const std::vector<ScalarT>& paramLo() const
         {
             return param_lo_;
         }
@@ -215,26 +229,19 @@ namespace PhasorDynamics
             return gB_;
         }
 
-        //@todo Fix ID naming
-        IdxT getIDBusBase()
+        virtual const IdxT busID() const
         {
-            return idc_;
+            return bus_id_;
         }
-
 
 
     protected:
-        virtual const IdxT BusID() const
-        {
-            return busID_;
-        }
+        const IdxT bus_id_{static_cast<IdxT>(-1)};
 
-        const IdxT busID_{static_cast<IdxT>(-1)};
-
-        IdxT size_;
-        IdxT nnz_;
-        IdxT size_quad_;
-        IdxT size_param_;
+        IdxT size_{0};
+        IdxT nnz_{0};
+        IdxT size_quad_{0};
+        IdxT size_param_{0};
 
         std::vector<ScalarT> y_;
         std::vector<ScalarT> yp_;
@@ -260,9 +267,6 @@ namespace PhasorDynamics
         real_type atol_;
 
         IdxT max_steps_;
-
-        IdxT idc_;
-
     };
 
 } // namespace BusBase
