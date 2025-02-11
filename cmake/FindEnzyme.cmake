@@ -166,7 +166,7 @@ macro(enzyme_add_executable)
     )
 
   add_custom_command(
-    DEPENDS ${PHASE4} ${libsources}
+    DEPENDS ${PHASE4} ${enzyme_add_executable_LINK_LIBRARIES}
     OUTPUT ${PHASE5}
     COMMAND ${CMAKE_CXX_COMPILER} ${LINKER_FLAGS} ${PHASE4} -o ${PHASE5}
     )
