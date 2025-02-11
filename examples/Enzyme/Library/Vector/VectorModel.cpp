@@ -52,7 +52,6 @@ void VectorModel::evalJacobian() {
                                       enzyme_dup, this, &d_vector_model);
   
         // Store result
-        v = d_vector_model.getResidual();
         for (int idx = 0; idx < N; ++idx)
         {
             dfdx_.setValue(idx, idy, d_res[idx]);

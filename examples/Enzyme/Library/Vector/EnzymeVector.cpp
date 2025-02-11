@@ -37,9 +37,9 @@ int main() {
     vector_model->setVariable(var);
     vector_model->evalResidual();
     vector_model->evalJacobian();
-    std::vector<double>& var_temp = vector_model->getVariable();
-    std::vector<double>& res = vector_model->getResidual();
-    DenseMatrix& jac = vector_model->getJacobian();
+    std::vector<double> var_temp = vector_model->getVariable();
+    std::vector<double> res = vector_model->getResidual();
+    DenseMatrix jac = vector_model->getJacobian();
 
     // Reference Jacobian
     DenseMatrix jac_ref = dsquare_ref(var, res);
@@ -68,8 +68,9 @@ int main() {
         jac_ref.printMatrix("Reference Jacobian");
     }
     std::cout << "Status: " << fail << "\n";
-    return fail;
 
     // Cleanup
     delete vector_model;
+
+    return fail;
 }
