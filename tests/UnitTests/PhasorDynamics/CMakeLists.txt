@@ -1,9 +1,9 @@
 
 
-add_executable(test_phasor_bus TestBus.cpp)
+add_executable(test_phasor_bus runBusTests.cpp)
 target_link_libraries(test_phasor_bus GRIDKIT::phasor_dynamics_bus)
                                 
-add_executable(test_phasor_branch TestBus.cpp)
+add_executable(test_phasor_branch runBranchTests.cpp)
 target_link_libraries(test_phasor_branch GRIDKIT::phasor_dynamics_branch
                                          GRIDKIT::phasor_dynamics_bus)
                                 

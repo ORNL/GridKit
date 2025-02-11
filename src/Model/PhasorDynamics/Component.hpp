@@ -5,6 +5,8 @@
 
 namespace GridKit
 {
+namespace PhasorDynamics
+{
 
     /*!
      * @brief Component model implementation base class.
@@ -257,5 +259,5 @@ namespace GridKit
 
     };
 
-
+} // namespace PhasorDynamics
 } // namespace GridKit
