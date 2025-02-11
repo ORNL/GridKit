@@ -1,17 +1,17 @@
 #pragma once
 
-class Model {
+class ScalarModel {
 private:
     double x_, f_, dfdx_;
     inline double square(double);
 
 public:
-    Model() {};
+    ScalarModel() {};
     void setVariable(double);
     void evalFunction();
     void evalDerivative();
     double getVariable() const;
     double getFunctionValue() const;
     double getDerivativeValue() const;
-    ~Model() {};
+    ~ScalarModel() {};
 };
