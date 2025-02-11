@@ -138,7 +138,7 @@ inline void DenseMatrix<ScalarT, IdxT>::toCOO()
             for (IdxT i = 0; i < this->rows_size_; ++i)
             {
                 ScalarT value = this->values_[j*rows_size_+i];
-                if (value > std::numeric_limits<double>::epsilon())
+                if (std::abs(value) > std::numeric_limits<double>::epsilon())
                 {
                     nnz++;
                     rcord.push_back(i); 
