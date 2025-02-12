@@ -16,7 +16,7 @@ namespace PhasorDynamics
     class Component : public ModelEvaluator<ScalarT, IdxT>
     {
     public:
-        typedef typename ModelEvaluator<ScalarT, IdxT>::real_type real_type;
+        using real_type = typename ModelEvaluator<ScalarT, IdxT>::real_type;
 
         Component()
           : size_(0),

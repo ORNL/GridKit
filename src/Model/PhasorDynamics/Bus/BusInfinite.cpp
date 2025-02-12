@@ -150,10 +150,6 @@ template <class ScalarT, typename IdxT>
 int BusInfinite<ScalarT, IdxT>::initializeAdjoint()
 {
     // std::cout << "Initialize BusInfinite..." << std::endl;
-    yB_[0] = 0.0;
-    yB_[1] = 0.0;
-    ypB_[0] = 0.0;
-    ypB_[1] = 0.0;
 
     return 0;
 }
@@ -168,9 +164,6 @@ int BusInfinite<ScalarT, IdxT>::initializeAdjoint()
 template <class ScalarT, typename IdxT>
 int BusInfinite<ScalarT, IdxT>::evaluateAdjointResidual()
 {
-    fB_[0] = 0.0;
-    fB_[1] = 0.0;
-
     return 0;
 }
 

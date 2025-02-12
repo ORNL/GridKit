@@ -6,9 +6,10 @@ int main()
     using namespace GridKit::Testing;
 
     GridKit::Testing::TestingResults result; 
-    GridKit::Testing::LoadTests test;
+    GridKit::Testing::LoadTests<double, size_t> test;
 
-    result += test.smoke();
+    result += test.constructor();
+    result += test.residual();
 
     return result.summary();
 }
