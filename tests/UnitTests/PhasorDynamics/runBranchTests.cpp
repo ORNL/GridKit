@@ -8,7 +8,9 @@ int main()
     GridKit::Testing::TestingResults result; 
     GridKit::Testing::BranchTests<double, size_t> test;
 
-    result += test.smoke();
+    result += test.constructor();
+    result += test.accessors();
+    result += test.residual();
 
     return result.summary();
 }

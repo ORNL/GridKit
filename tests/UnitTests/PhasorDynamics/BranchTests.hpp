@@ -18,7 +18,7 @@ namespace Testing
         BranchTests() = default;
         ~BranchTests() = default;
 
-        TestOutcome smoke()
+        TestOutcome constructor()
         {
             TestStatus success = true;
         
@@ -43,44 +43,14 @@ namespace Testing
         TestOutcome accessors()
         {
             TestStatus success = true;
-        
-            auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-            auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
-
-            PhasorDynamics::Component<ScalarT, IdxT>* branch = 
-                new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
-
-            success *= (branch != nullptr);
-
-            if (branch)
-            {
-                delete branch;
-            }
-            delete bus1;
-            delete bus2;
-
+            success.skipTest();
             return success.report(__func__);
         }
 
         TestOutcome residual()
         {
             TestStatus success = true;
-        
-            auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-            auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
-
-            PhasorDynamics::Component<ScalarT, IdxT>* branch = 
-                new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
-
-            success *= (branch != nullptr);
-
-            if (branch)
-            {
-                delete branch;
-            }
-            delete bus1;
-            delete bus2;
-
+            success.skipTest();
             return success.report(__func__);
         }
     };

@@ -19,7 +19,6 @@ namespace PhasorDynamics
     * - Number of quadratures = 0
     * - Number of optimization parameters = 0
     */
-
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
     : bus1_(bus1),
