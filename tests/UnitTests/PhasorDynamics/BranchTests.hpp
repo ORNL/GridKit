@@ -11,6 +11,7 @@ namespace GridKit
 namespace Testing
 {
 
+    template<class ScalarT, typename IdxT>
     class BranchTests
     {
     public:
@@ -19,13 +20,57 @@ namespace Testing
 
         TestOutcome smoke()
         {
-            TestStatus success;
+            TestStatus success = true;
         
-            auto* bus1 = new PhasorDynamics::Bus<double, size_t>(1.0, 0.0);
-            auto* bus2 = new PhasorDynamics::Bus<double, size_t>(1.0, 0.1);
+            auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+            auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
 
-            PhasorDynamics::Component<double, size_t>* branch = 
-                new PhasorDynamics::Branch<double, size_t>(bus1, bus2);
+            PhasorDynamics::Component<ScalarT, IdxT>* branch = 
+                new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
+
+            success *= (branch != nullptr);
+
+            if (branch)
+            {
+                delete branch;
+            }
+            delete bus1;
+            delete bus2;
+
+            return success.report(__func__);
+        }
+        
+        TestOutcome accessors()
+        {
+            TestStatus success = true;
+        
+            auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+            auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
+
+            PhasorDynamics::Component<ScalarT, IdxT>* branch = 
+                new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
+
+            success *= (branch != nullptr);
+
+            if (branch)
+            {
+                delete branch;
+            }
+            delete bus1;
+            delete bus2;
+
+            return success.report(__func__);
+        }
+
+        TestOutcome residual()
+        {
+            TestStatus success = true;
+        
+            auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+            auto* bus2 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.1);
+
+            PhasorDynamics::Component<ScalarT, IdxT>* branch = 
+                new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, bus2);
 
             success *= (branch != nullptr);
 

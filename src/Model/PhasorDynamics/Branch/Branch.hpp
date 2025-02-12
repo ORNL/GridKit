@@ -52,7 +52,7 @@ namespace PhasorDynamics
 
     public:
         Branch(bus_type* bus1, bus_type* bus2);
-        Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2);
+        Branch(bus_type* bus1, bus_type* bus2, real_type R, real_type X, real_type G, real_type B);
         Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
         virtual ~Branch();
 
@@ -136,14 +136,14 @@ namespace PhasorDynamics
         }
 
     private:
+        bus_type* bus1_;
+        bus_type* bus2_;
         real_type R_;
         real_type X_;
         real_type G_;
         real_type B_;
         const IdxT bus1ID_;
         const IdxT bus2ID_;
-        bus_type* bus1_;
-        bus_type* bus2_;
     };
 
 } // namespace PhasorDynamics

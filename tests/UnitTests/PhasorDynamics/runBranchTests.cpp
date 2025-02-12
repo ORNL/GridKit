@@ -6,7 +6,7 @@ int main()
     using namespace GridKit::Testing;
 
     GridKit::Testing::TestingResults result; 
-    GridKit::Testing::BranchTests test;
+    GridKit::Testing::BranchTests<double, size_t> test;
 
     result += test.smoke();
 
