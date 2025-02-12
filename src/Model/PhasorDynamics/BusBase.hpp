@@ -97,6 +97,16 @@ namespace PhasorDynamics
             msa = max_steps_;
         }
 
+        virtual ScalarT& Vr() = 0;
+        virtual const ScalarT& Vr() const = 0;
+        virtual ScalarT& Vi() = 0;
+        virtual const ScalarT& Vi() const = 0;
+        virtual ScalarT& Ir() = 0;
+        virtual const ScalarT& Ir() const = 0;
+        virtual ScalarT& Ii() = 0;
+        virtual const ScalarT& Ii() const = 0;
+
+
         std::vector<ScalarT>& y()
         {
             return y_;

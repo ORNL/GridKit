@@ -110,7 +110,12 @@ int BusInfinite<ScalarT, IdxT>::initialize()
 }
 
 /*!
- * @brief PQ bus does not compute residuals, so here we just reset residual values.
+ * @brief Reset slack currents to zero.
+ *
+ * Infinite bus does not compute residuals, so here we just reset
+ * current values to zero. Components connected to the infinite bus
+ * will add their currents to Ir_ and Ii_. The resultant will be slack
+ * current that the infinite bus has to pick up.
  *
  * @warning This implementation assumes bus residuals are always evaluated
  * _before_ component model residuals.
@@ -120,8 +125,8 @@ template <class ScalarT, typename IdxT>
 int BusInfinite<ScalarT, IdxT>::evaluateResidual()
 {
     // std::cout << "Evaluating residual of a PQ bus ...\n";
-    f_[0] = 0.0;
-    f_[1] = 0.0;
+    Ir_ = 0.0;
+    Ii_ = 0.0;
     return 0;
 }
 

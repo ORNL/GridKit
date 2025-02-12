@@ -11,35 +11,88 @@ namespace GridKit
 {
 namespace Testing
 {
-
+    template<class ScalarT, typename IdxT>
     class BusTests
     {
     public:
         BusTests() = default;
         ~BusTests() = default;
 
-        TestOutcome smoke()
+        /// Constructor, allocation, and initialization checks
+        TestOutcome constructor()
         {
-            TestStatus success;
+            TestStatus success = true;
+
+            ScalarT Vr{1.0};
+            ScalarT Vi{2.0};
         
+            PhasorDynamics::BusBase<ScalarT, IdxT>* bus = nullptr;
+
             // Create an infinite bus
-            PhasorDynamics::BusBase<double, size_t>* bus1 =
-                new PhasorDynamics::BusInfinite<double, size_t>(1.0, 0.0);
-            success *= (bus1 != nullptr);
+            bus = new PhasorDynamics::BusInfinite<ScalarT, IdxT>();
+            success *= isEqual(bus->Vr(), 0.0);
+            success *= isEqual(bus->Vi(), 0.0);
+            delete bus;
+
+            bus = new PhasorDynamics::BusInfinite<ScalarT, IdxT>(Vr, Vi);
+            success *= isEqual(bus->Vr(), Vr);
+            success *= isEqual(bus->Vi(), Vi);
+            delete bus;
 
             // Create an default bus
-            PhasorDynamics::BusBase<double, size_t>* bus2 =
-                new PhasorDynamics::BusInfinite<double, size_t>(1.0, 0.0);
-            success *= (bus2 != nullptr);
+            bus = new PhasorDynamics::Bus<ScalarT, IdxT>();
+            bus->allocate();
+            bus->initialize();
+            success *= isEqual(bus->Vr(), 0.0);
+            success *= isEqual(bus->Vi(), 0.0);
+            delete bus;
 
-            if (bus1)
-            {
-                delete bus1;
-            }
-            if (bus2)
-            {
-                delete bus2;
-            }
+            bus = new PhasorDynamics::Bus<ScalarT, IdxT>(Vr, Vi);
+            bus->allocate();
+            bus->initialize();
+            success *= isEqual(bus->Vr(), Vr);
+            success *= isEqual(bus->Vi(), Vi);
+            delete bus;
+
+            bus = nullptr;
+
+            return success.report(__func__);
+        }
+
+        /// Accessor method tests
+        TestOutcome residual()
+        {
+            TestStatus success = true;
+
+            ScalarT Vr{1.0};
+            ScalarT Vi{2.0};
+            ScalarT Ir{1.0};
+            ScalarT Ii{2.0};
+
+            PhasorDynamics::BusInfinite<ScalarT, IdxT> bus_inf;
+            bus_inf.Ir() = Ir;
+            success *= isEqual(bus_inf.Ir(), Ir);
+            bus_inf.Ii() = Ii;
+            success *= isEqual(bus_inf.Ii(), Ii);
+
+            bus_inf.evaluateResidual();
+            success *= isEqual(bus_inf.Ir(), 0.0);
+            success *= isEqual(bus_inf.Ii(), 0.0);
+
+            PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr,Vi);
+            bus.allocate();
+            bus.initialize();
+            success *= isEqual(bus.Vr(), Vr);
+            success *= isEqual(bus.Vi(), Vi);
+
+            bus.Ir() = Ir;
+            success *= isEqual(bus.Ir(), Ir);
+            bus.Ii() = Ii;
+            success *= isEqual(bus.Ii(), Ii);
+
+            bus.evaluateResidual();
+            success *= isEqual(bus.Ir(), 0.0);
+            success *= isEqual(bus.Ii(), 0.0);
 
             return success.report(__func__);
         }

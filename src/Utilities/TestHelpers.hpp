@@ -41,6 +41,11 @@ namespace Testing
         {
         }
 
+        TestStatus(bool success)
+        : outcome_(success ? TestOutcome::PASS : TestOutcome::FAIL)
+        {
+        }
+
         TestStatus(const char* funcname) 
         : outcome_(TestOutcome::PASS),
           funcname_(funcname)

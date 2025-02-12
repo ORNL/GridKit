@@ -80,12 +80,12 @@ namespace PhasorDynamics
             return Vi_;
         }
 
-        virtual ScalarT& Ir()
+        virtual ScalarT& Ir() override
         {
             return Ir_;
         }
 
-        virtual const ScalarT& Ir() const
+        virtual const ScalarT& Ir() const override
         {
             return Ir_;
         }
