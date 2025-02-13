@@ -3,6 +3,7 @@ Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cp
 HeaderFilterRegex: '.*' # Makes certain to check header files (by default ignores them)
 UseColor: True
 CheckOptions:
+  readability-identifier-length.IgnoredVariableNames: '^_$' # Variables named '_' are ignored
   readability-identifier-naming.LocalVariableCase: 'lower_case'
   readability-identifier-naming.MemberCase: 'lower_case'
   readability-identifier-naming.MemberSuffix: '_'
