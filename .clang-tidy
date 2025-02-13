@@ -1,6 +1,7 @@
 Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cppcoreguidelines-*,readability-*,-bugprone-easily-swappable-parameters'
 # Checks: '-*,readability-identifier-naming'
 HeaderFilterRegex: '.*' # Makes certain to check header files (by default ignores them)
+UseColor: True
 CheckOptions:
   readability-identifier-naming.LocalVariableCase: 'lower_case'
   readability-identifier-naming.MemberCase: 'lower_case'
