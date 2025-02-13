@@ -62,7 +62,7 @@
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include "Generator2.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a simple generator model
@@ -230,4 +230,4 @@ template class Generator2<double, long int>;
 template class Generator2<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit

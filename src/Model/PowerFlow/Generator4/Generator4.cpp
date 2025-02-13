@@ -63,7 +63,7 @@
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 #include "Generator4.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a simple generator model
@@ -396,5 +396,5 @@ template class Generator4<double, long int>;
 template class Generator4<double, size_t>;
 
 
-} // namespace ModelLib
+} // namespace GridKit
 

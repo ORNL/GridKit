@@ -62,12 +62,12 @@
 
 #include <ModelEvaluatorImpl.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     template <class ScalarT, typename IdxT> class BaseBus;
 }
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Implementation of a fourth order generator model with
@@ -319,7 +319,7 @@ namespace ModelLib
         bus_type* bus_;
     };
 
-} // namespace ModelLib
+} // namespace GridKit
 
 
 #endif // _GENERATOR_4_GOVERNOR_B_HPP_

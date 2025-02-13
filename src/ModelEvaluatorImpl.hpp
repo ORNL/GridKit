@@ -63,7 +63,7 @@
 #include <vector>
 #include <ModelEvaluator.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
 
     /*!
@@ -318,6 +318,6 @@ namespace ModelLib
     };
 
 
-} // namespace ModelLib
+} // namespace GridKit
 
 #endif // _MODEL_EVALUATOR_IMPL_HPP_

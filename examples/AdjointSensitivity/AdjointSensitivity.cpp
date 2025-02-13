@@ -79,7 +79,7 @@
  */
 int main()
 {
-    using namespace ModelLib;
+    using namespace GridKit;
     using namespace AnalysisManager::Sundials;
     using namespace AnalysisManager;
     using namespace GridKit::Testing;

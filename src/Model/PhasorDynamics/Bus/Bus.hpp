@@ -72,7 +72,7 @@ namespace PowerSystemData
 }
 }
 
-namespace ModelLib // change to GridKit
+namespace GridKit
 {
 namespace PhasorDynamics
 {

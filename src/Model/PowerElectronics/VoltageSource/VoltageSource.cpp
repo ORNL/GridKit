@@ -6,7 +6,7 @@
 #include <vector>
 #include "VoltageSource.hpp"
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant VoltageSource model
@@ -118,5 +118,5 @@ template class VoltageSource<double, long int>;
 template class VoltageSource<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

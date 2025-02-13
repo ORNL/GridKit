@@ -64,7 +64,7 @@
 #include <ScalarTraits.hpp>
 #include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
 
     /*!
@@ -152,6 +152,6 @@ namespace ModelLib
     };
 
 
-} // namespace ModelLib
+} // namespace GridKit
 
 #endif // _MODEL_EVALUATOR_HPP_

@@ -64,7 +64,7 @@
 #include "MiniGrid.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace ModelLib {
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant load model
@@ -144,5 +144,5 @@ template class MiniGrid<double, long int>;
 template class MiniGrid<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 

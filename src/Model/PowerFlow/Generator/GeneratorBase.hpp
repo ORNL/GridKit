@@ -62,13 +62,13 @@
 #include <ModelEvaluatorImpl.hpp>
 #include <vector>
 
-namespace ModelLib
+namespace GridKit
 {
     template <class ScalarT, typename IdxT> class BaseBus;
 }
 
 
-namespace ModelLib
+namespace GridKit
 {
     /**
      * @brief Generator base class template

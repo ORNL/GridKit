@@ -11,7 +11,7 @@
 #include <CircuitGraph.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
 
     template <class ScalarT, typename IdxT>
@@ -329,4 +329,4 @@ namespace ModelLib
 
     }; // class PowerElectronicsModel
 
-} // namespace ModelLib
+} // namespace GridKit

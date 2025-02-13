@@ -64,7 +64,7 @@
 #include "BaseBus.hpp"
 #include <PowerSystemData.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
     /*!
      * @brief Implementation of a PV bus.
@@ -207,7 +207,7 @@ namespace ModelLib
         ScalarT QB_;
     };
 
-} // namespace ModelLib
+} // namespace GridKit
 
 
 #endif // _BUS_PV_HPP_

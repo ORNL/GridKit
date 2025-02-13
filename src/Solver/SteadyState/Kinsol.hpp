@@ -90,7 +90,7 @@ namespace AnalysisManager
             typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
         public:
-            Kinsol(ModelLib::ModelEvaluator<ScalarT, IdxT>* model);
+            Kinsol(GridKit::ModelEvaluator<ScalarT, IdxT>* model);
             ~Kinsol();
 
             int configureSimulation();

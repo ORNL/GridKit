@@ -73,7 +73,7 @@
 #include <ScalarTraits.hpp>
 #include <ModelEvaluatorImpl.hpp>
 
-namespace ModelLib
+namespace GridKit
 {
 
 /**
@@ -426,4 +426,4 @@ private:
 
 }; // class SystemSteadyStateModel
 
-} // namespace ModelLib
+} // namespace GridKit

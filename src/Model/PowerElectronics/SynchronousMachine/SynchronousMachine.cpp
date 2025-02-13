@@ -7,7 +7,7 @@
 #include "SynchronousMachine.hpp"
 
 
-namespace ModelLib {
+namespace GridKit {
 
 
 
@@ -149,5 +149,5 @@ template class SynchronousMachine<double, long int>;
 template class SynchronousMachine<double, size_t>;
 
 
-} //namespace ModelLib
+} //namespace GridKit
 
