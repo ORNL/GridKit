@@ -6,8 +6,8 @@
 
 using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 using SparseMatrix = COO_Matrix<double, size_t>;
-using DG = ModelLib::DistributedGenerator<double, size_t>;
-using DGParameters = ModelLib::DistributedGeneratorParameters<double, size_t>;
+using DG = GridKit::DistributedGenerator<double, size_t>;
+using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 
 int enzyme_dupnoneed;
 int enzyme_dup;
