@@ -11,4 +11,5 @@ CheckOptions:
   readability-identifier-naming.ClassCase: 'CamelCase'
   readability-identifier-naming.EnumCase: 'UPPER_CASE'
   readability-identifier-naming.ConstexprVariableCase: 'UPPER_CASE'
-  readability-magic-numbers.IgnoredFloatingPointValues: '1.0; 2.0; 0.5'
+  cppcoreguidelines-avoid-magic-numbers.IgnoredFloatingPointValues: '1.0;2.0;0.5'
+  readability-magic-numbers.IgnoredFloatingPointValues: '1.0;2.0;0.5'
