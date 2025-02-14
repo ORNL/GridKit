@@ -31,7 +31,7 @@ namespace GridKit {
  * @param[in] Rkd - damper resistance
  * @param[in] RJ - rotor moment of inertia
  * @param[in] P - number of poles
- * @param[in] mub - magnetic saturation coefficient
+ * @param[in] mub - rated frequency
  */
 
 template <class ScalarT, typename IdxT>
