@@ -20,17 +20,17 @@ namespace GridKit {
  * 
  * @param[in] id - unique identifier for the component
  * @param[in] Lls - stator leakage inductance
- * @param[in] Llkq - tuple of rotor leakage inductances
- * @param[in] Llfd - field leakage inductance
- * @param[in] Llkd - damper leakage inductance
- * @param[in] Lmq - quadrature axis magnetizing inductance
- * @param[in] Lmd - direct axis magnetizing inductance
+ * @param[in] Llkq - tuple of damper leakage reactances
+ * @param[in] Llfd - field leakage reactance
+ * @param[in] Llkd - damper leakage reactance
+ * @param[in] Lmq - quadrature axis magnetizing reactance
+ * @param[in] Lmd - direct axis magnetizing reactance
  * @param[in] Rs - stator resistance
- * @param[in] Rkq - tuple of rotor resistances
+ * @param[in] Rkq - tuple of damper resistances
  * @param[in] Rfd - field resistance
  * @param[in] Rkd - damper resistance
  * @param[in] RJ - rotor moment of inertia
- * @param[in] P - number of pole pairs
+ * @param[in] P - number of poles
  * @param[in] mub - magnetic saturation coefficient
  */
 
