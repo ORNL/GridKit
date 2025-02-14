@@ -17,6 +17,12 @@ namespace GridKit {
  * Calls default ModelEvaluatorImpl constructor.
  * @todo create a test case utilizing the component.
  * @todo create a unit test to check correctness of component
+ * 
+ * @tparam ScalarT - floating point type for the model
+ * @tparam IdxT - integer index type for the model
+ * 
+ * @param[in] id - unique identifier for the component
+ * @param[in] Lls - stator leakage inductance
  */
 
 template <class ScalarT, typename IdxT>
@@ -26,7 +32,7 @@ InductionMotor<ScalarT, IdxT>::InductionMotor(IdxT id, ScalarT Lls, ScalarT Rs, 
     Llr_(Llr),
     Rr_(Rr),
     Lms_(Lms),
-    Rjac_(RJ),
+    RJ_(RJ),
     P_(P)
 {
     size_ = 10;
@@ -82,7 +88,7 @@ int InductionMotor<ScalarT, IdxT>::evaluateResidual()
     f_[0] = y_[5] + y_[7];
     f_[1] = (-1.0/2.0) * y_[5] - (sqrt(3.0)/2.0)*y_[6] + y_[7];
     f_[2] = (-1.0/2.0) * y_[5] + (sqrt(3.0)/2.0)*y_[6] + y_[7];
-    f_[3] = Rjac_ * yp_[3] - (3.0/4.0)*P_*Lms_ * (y_[5]*y_[9] - y_[6]*y_[8]);
+    f_[3] = RJ_ * yp_[3] - (3.0/4.0)*P_*Lms_ * (y_[5]*y_[9] - y_[6]*y_[8]);
     f_[4] = yp_[4] - y_[3];
     f_[5] = (1.0/3.0)*(2.0* y_[0] - y_[1] - y_[2]) - Rs_*y_[5] - (Lls_ + Lms_) * yp_[5] - Lms_ * yp_[6];
     f_[6] = (1.0/sqrt(3.0))*(-y_[1] + y_[2]) - Rs_*y_[6] - (Lls_ + Lms_) * yp_[6] - Lms_ * yp_[5];

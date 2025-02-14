@@ -22,13 +22,13 @@ Problem variables are voltage magnitudes and phases; they are stored in bus obje
 
 **Bus 1**: Slack bus, does not store variables no residuals. Voltage and phase are set to $`V_1 \equiv 1`$p.u. and $`\theta_1 \equiv 0`$, respectively.
 
-**Bus 2**: PQ bus, stores variables $`V_2, \theta_2`$ and residuals $`P_2, Q_2`$. Load $`P_{L2} = 2.5`$p.u., $`Q_{L2} = -j0.8`$p.u. is attached to it. From the equations for [branch](../../src/Model/PowerFlow/Branch/README.md) and [load](../../src/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
+**Bus 2**: PQ bus, stores variables $`V_2, \theta_2`$ and residuals $`P_2, Q_2`$. Load $`P_{L1} = 2.5`$p.u., $`Q_{L1} = -j0.8`$p.u. is attached to it. From the equations for [branch](../../src/Model/PowerFlow/Branch/README.md) and [load](../../src/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
 ```math
 \begin{array}{rcll}
-P_2 & = &-P_{L2} &~~~\mathrm{(load ~2)} \\
+P_2 & = &-P_{L1} &~~~\mathrm{(load ~2)} \\
       &&+ b_{12}|V_1||V_2|\sin(\theta_2-\theta_1) &~~~\mathrm{(branch ~12)} \\
       &&+ b_{23}|V_2||V_3|\sin(\theta_2-\theta_3) &~~~\mathrm{(branch ~23)} \\
-Q_2 & = & -Q_{L2} &~~~\mathrm{(load ~2)} \\
+Q_2 & = & -Q_{L1} &~~~\mathrm{(load ~2)} \\
       &&+ b_{12}|V_2|^2 - b_{12}|V_1||V_2|\cos(\theta_2-\theta_1) &~~~\mathrm{(branch ~12)} \\
       &&+ b_{23}|V_2|^2 - b_{23}|V_2||V_3|\cos(\theta_2-\theta_3) &~~~\mathrm{(branch ~23)}
 \end{array}

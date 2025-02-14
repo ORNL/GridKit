@@ -72,7 +72,7 @@ namespace GridKit
         std::tuple<ScalarT,ScalarT> Rkq_;
         ScalarT Rfd_;
         ScalarT Rkd_;
-        ScalarT Rjac_;
+        ScalarT RJ_;
         ScalarT P_;
         ScalarT mub_;
     };

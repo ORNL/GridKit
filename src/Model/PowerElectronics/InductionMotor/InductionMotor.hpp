@@ -66,7 +66,7 @@ namespace GridKit
         ScalarT Llr_;
         ScalarT Rr_;
         ScalarT Lms_;
-        ScalarT Rjac_;
+        ScalarT RJ_;
         ScalarT P_;
     };
 }
