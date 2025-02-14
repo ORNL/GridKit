@@ -826,7 +826,7 @@ inline COO_Matrix<ScalarT, IdxT>::COO_Matrix(std::vector<IdxT> r, std::vector<Id
     this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
-    this->sorted_ = false; // An empty matrix is a sorted matrix.
+    this->sorted_ = false; // Set to false until explicitly sorted, though logically it is sorted.
 }
 
 /**
@@ -849,7 +849,7 @@ inline COO_Matrix<ScalarT, IdxT>::COO_Matrix(IdxT m, IdxT n)
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<IdxT>();
     this->column_indices_ = std::vector<IdxT>();
-    this->sorted_ = true; // An empty matrix is a sorted matrix.
+    this->sorted_ = false; // Set to false until explicitly sorted, though logically it is sorted.
 }
 
 /**
@@ -869,7 +869,7 @@ inline COO_Matrix<ScalarT, IdxT>::COO_Matrix()
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<IdxT>();
     this->column_indices_ = std::vector<IdxT>();
-    this->sorted_ = true; // An empty matrix is a sorted matrix.
+    this->sorted_ = false; // Set to false until explicitly sorted, though logically it is sorted.
 }
 
 template <class ScalarT, typename IdxT>
