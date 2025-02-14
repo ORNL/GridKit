@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include <iostream>
 #include <cmath>
@@ -508,8 +508,6 @@ inline void COO_Matrix<ScalarT, Intdx>::permutationSizeMap(std::vector<Intdx> ro
 /**
  * @brief Turn matrix into the zero matrix. Does not actually delete memory
  * 
- * @SR - If it's not deleteing memory, what's the point?
- * 
  * @tparam ScalarT 
  * @tparam Intdx 
  * 
@@ -534,7 +532,7 @@ inline void COO_Matrix<ScalarT, Intdx>::zeroMatrix()
  * 
  * @post this = I_n
  * 
- * @SR - it might be better to explicitly zero out the matrix and require to be so in preconditions
+ * @todo - it might be better to explicitly zero out the matrix and require to be so in preconditions
  */
 
 template <class ScalarT, typename Intdx>
@@ -752,6 +750,10 @@ inline bool COO_Matrix<ScalarT, Intdx>::checkIncreaseSize(Intdx r, Intdx c)
  * 
  * Matrix entries can appear in arbitrary order and will be sorted in 
  * row-major order before the method returns.
+ * Duplicate entries are not allowed and should be pre-summed.
+ * 
+ * @pre rows, columns, and values are of the same size and represent a COO matrix with no duplicates
+ * @post Matrix entries are sorted in row-major order
  * 
  * @todo simple setup. Should add stable sorting since lists are pre-sorted_ 
  * 
@@ -824,7 +826,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(std::vector<Intdx> r, std::vector<
     this->column_indices_ = c;
     this->rows_size_ = m;
     this->columns_size_ = n;
-    this->sorted_ = false; //Any new entry can assume that the matrix is sorted when being added.
+    this->sorted_ = false; // An empty matrix is a sorted matrix.
 }
 
 /**
@@ -847,7 +849,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix(Intdx m, Intdx n)
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<Intdx>();
     this->column_indices_ = std::vector<Intdx>();
-    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
+    this->sorted_ = true; // An empty matrix is a sorted matrix.
 }
 
 /**
@@ -867,7 +869,7 @@ inline COO_Matrix<ScalarT, Intdx>::COO_Matrix()
     this->values_ = std::vector<ScalarT>();
     this->row_indices_ = std::vector<Intdx>();
     this->column_indices_ = std::vector<Intdx>();
-    this->sorted_ = true; //Any new entry can assume that the matrix is sorted when being added.
+    this->sorted_ = true; // An empty matrix is a sorted matrix.
 }
 
 template <class ScalarT, typename Intdx>
