@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
     bool use_jac = true;
 
     //Create model
-    ModelLib::PowerElectronicsModel<double, size_t>* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_amount);
+    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_amount);
 
     //Modeled after the problem in the paper
     double RN = 1.0e4;

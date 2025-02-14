@@ -24,7 +24,7 @@ int main(int argc, char const *argv[])
 
     //TODO:setup as named parameters
     //Create circuit model
-    auto* sysmodel = new ModelLib::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
+    auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
 
     size_t idoff = 0;
 
