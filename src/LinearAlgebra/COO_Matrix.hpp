@@ -1,4 +1,5 @@
-#pragma once
+#ifndef COO_MATRIX_HPP
+#define COO_MATRIX_HPP
 
 #include <iostream>
 #include <cmath>
@@ -877,3 +878,5 @@ COO_Matrix<ScalarT, IdxT>::~COO_Matrix()
 {
     
 }
+
+#endif
