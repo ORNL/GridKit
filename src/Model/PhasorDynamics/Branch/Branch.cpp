@@ -1,3 +1,11 @@
+/**
+ * @file Branch.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Definition of a phasor dynamics branch model.
+ * 
+ * The model uses Cartesian coordinates.
+ * 
+ */
 
 #include <iostream>
 #include <cmath>
@@ -33,6 +41,18 @@ namespace PhasorDynamics
         size_ = 0;
     }
 
+    /**
+     * @brief Construct a new Branch
+     * 
+     * @tparam ScalarT - scalar type
+     * @tparam IdxT    - matrix/vector index type
+     * @param bus1 - pointer to bus-1
+     * @param bus2 - pointer to bus-2
+     * @param R - line series resistance
+     * @param X - line series reactance
+     * @param G - line shunt conductance
+     * @param B - line shunt charging
+     */
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1,
                                   bus_type* bus2,
@@ -65,7 +85,12 @@ namespace PhasorDynamics
         size_ = 0;
     }
 
-
+    /**
+     * @brief Destroy the Branch
+     * 
+     * @tparam ScalarT 
+     * @tparam IdxT 
+     */
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::~Branch()
     {
@@ -105,7 +130,6 @@ namespace PhasorDynamics
      * \brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      * 
-     * @todo Add and verify conductance to ground (B and G)
      */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateResidual()
@@ -122,6 +146,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Jacobian evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateJacobian()
     {
@@ -130,6 +161,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Integrand (objective) evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateIntegrand()
     {
@@ -137,6 +175,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint initialization not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::initializeAdjoint()
     {
@@ -144,6 +189,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint residual evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateAdjointResidual()
     {
@@ -151,6 +203,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint integrand (objective) evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {

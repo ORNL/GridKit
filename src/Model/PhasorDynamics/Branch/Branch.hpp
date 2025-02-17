@@ -1,4 +1,11 @@
-
+/**
+ * @file Branch.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Declaration of a phasor dynamics branch model.
+ * 
+ * The model uses Cartesian coordinates.
+ * 
+ */
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
@@ -24,8 +31,11 @@ namespace GridKit
 {
 namespace PhasorDynamics
 {
-    /*!
+    /**
      * @brief Implementation of a pi-model branch between two buses.
+     * 
+     * The model is implemented in Cartesian coordinates. Positive current
+     * direction is into the busses.
      *
      */
     template  <class ScalarT, typename IdxT>

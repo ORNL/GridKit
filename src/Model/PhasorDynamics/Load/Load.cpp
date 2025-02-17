@@ -98,6 +98,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Jacobian evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
@@ -106,6 +113,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Integrand (objective) evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateIntegrand()
     {
@@ -113,6 +127,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint initialization not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::initializeAdjoint()
     {
@@ -120,6 +141,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint residual evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateAdjointResidual()
     {
@@ -127,6 +155,13 @@ namespace PhasorDynamics
         return 0;
     }
 
+    /**
+     * @brief Adjoint integrand (objective) evaluation not implemented yet
+     * 
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {
