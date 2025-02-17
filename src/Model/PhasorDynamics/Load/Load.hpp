@@ -49,19 +49,19 @@ namespace PhasorDynamics
         Load(bus_type* bus, IdxT component_id);
         virtual ~Load();
 
-        int allocate();
-        int initialize();
-        int tagDifferentiable();
-        int evaluateResidual();
-        int evaluateJacobian();
-        int evaluateIntegrand();
+        virtual int allocate() override;
+        virtual int initialize() override;
+        virtual int tagDifferentiable() override;
+        virtual int evaluateResidual() override;
+        virtual int evaluateJacobian() override;
+        virtual int evaluateIntegrand() override;
 
-        int initializeAdjoint();
-        int evaluateAdjointResidual();
-        //int evaluateAdjointJacobian();
-        int evaluateAdjointIntegrand();
+        virtual int initializeAdjoint() override;
+        virtual int evaluateAdjointResidual() override;
+        // virtual int evaluateAdjointJacobian() override;
+        virtual int evaluateAdjointIntegrand() override;
 
-        void updateTime(real_type /* t */, real_type /* a */)
+        virtual void updateTime(real_type /* t */, real_type /* a */) override
         {
         }
 

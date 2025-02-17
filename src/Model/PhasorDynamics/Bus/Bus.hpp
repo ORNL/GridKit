@@ -63,85 +63,85 @@ namespace PhasorDynamics
             return BusBase<ScalarT, IdxT>::BusType::DEFAULT;
         }
 
-        virtual ScalarT& Vr()
+        virtual ScalarT& Vr() override
         {
             return y_[0];
         }
 
-        virtual const ScalarT& Vr() const
+        virtual const ScalarT& Vr() const override
         {
             return y_[0];
         }
 
-        virtual ScalarT& Vi()
+        virtual ScalarT& Vi() override
         {
             return y_[1];
         }
 
-        virtual const ScalarT& Vi() const
+        virtual const ScalarT& Vi() const override
         {
             return y_[1];
         }
 
-        virtual ScalarT& Ir()
+        virtual ScalarT& Ir() override
         {
             return f_[0];
         }
 
-        virtual const ScalarT& Ir() const
+        virtual const ScalarT& Ir() const override
         {
             return f_[0];
         }
 
-        virtual ScalarT& Ii()
+        virtual ScalarT& Ii() override
         {
             return f_[1];
         }
 
-        virtual const ScalarT& Ii() const
+        virtual const ScalarT& Ii() const override
         {
             return f_[1];
         }
 
-        virtual ScalarT& VrB()
-        {
-            return yB_[0];
-        }
+        // virtual ScalarT& VrB() override
+        // {
+        //     return yB_[0];
+        // }
 
-        virtual const ScalarT& VrB() const
-        {
-            return yB_[0];
-        }
+        // virtual const ScalarT& VrB() const override
+        // {
+        //     return yB_[0];
+        // }
 
-        virtual ScalarT& ViB()
-        {
-            return yB_[1];
-        }
+        // virtual ScalarT& ViB() override
+        // {
+        //     return yB_[1];
+        // }
 
-        virtual const ScalarT& ViB() const
-        {
-            return yB_[1];
-        }
+        // virtual const ScalarT& ViB() const override
+        // {
+        //     return yB_[1];
+        // }
 
-        virtual ScalarT& IrB()
-        {
-            return fB_[0];
-        }
+        // virtual ScalarT& IrB() override
+        // {
+        //     return fB_[0];
+        // }
 
-        virtual const ScalarT& IrB() const
-        {
-            return fB_[0];
-        }
+        // virtual const ScalarT& IrB() const override
+        // {
+        //     return fB_[0];
+        // }
 
-        virtual ScalarT& IiB()
-        {
-            return fB_[1];
-        }
+        // virtual ScalarT& IiB() override
+        // {
+        //     return fB_[1];
+        // }
 
-        virtual const ScalarT& IiB() const
-        {
-            return fB_[1];
-        }
+        // virtual const ScalarT& IiB() const override
+        // {
+        //     return fB_[1];
+        // }
 
     private:
         ScalarT Vr0_{0.0};
