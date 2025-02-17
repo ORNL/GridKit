@@ -46,7 +46,7 @@ namespace PhasorDynamics
         using Component<ScalarT, IdxT>::gB_;
         using Component<ScalarT, IdxT>::param_;
 
-        using bus_type   = Bus<ScalarT, IdxT>;
+        using bus_type   = BusBase<ScalarT, IdxT>;
         using real_type  = typename Component<ScalarT, IdxT>::real_type;
         using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
 
