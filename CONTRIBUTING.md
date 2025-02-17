@@ -321,4 +321,10 @@ class Matrix   // No, class is outside GridKit namespace
 {
   // matrix code
 };
+```
 
+## Developer tooling
+
+### Auto-formatting
+
+To help enforce the above code style guidelines, we use autoformatting provided by [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html), which is distributed as a part of `clang` and `llvm`. Pull-requests must be formatted using the version of `clang-format` distributed by the version of `llvm` required by development with Enzyme.
