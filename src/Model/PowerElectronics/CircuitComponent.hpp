@@ -46,7 +46,7 @@ namespace GridKit
         }
 
         /**
-         * @brief Create the mappings from local to global indexes
+         * @brief Create the mappings from local to global indices
          * 
          * @param local_index 
          * @param global_index 

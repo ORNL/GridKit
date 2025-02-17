@@ -82,8 +82,8 @@ namespace GridKit
         using BaseBus<ScalarT, IdxT>::yp_;
         using BaseBus<ScalarT, IdxT>::f_;
         using BaseBus<ScalarT, IdxT>::g_;
-        using BaseBus<ScalarT, IdxT>::atol_;
-        using BaseBus<ScalarT, IdxT>::rtol_;
+        using BaseBus<ScalarT, IdxT>::abs_tol_;
+        using BaseBus<ScalarT, IdxT>::rel_tol_;
 
     public:
         using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;

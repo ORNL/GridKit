@@ -102,8 +102,8 @@ class SystemModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::rtol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::atol_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -115,8 +115,8 @@ public:
     SystemModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances
-        rtol_ = 1e-7;
-        atol_ = 1e-9;
+        rel_tol_ = 1e-7;
+        abs_tol_ = 1e-9;
         this->max_steps_=2000;
     }
 

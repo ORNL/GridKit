@@ -149,11 +149,11 @@ namespace Sundials
         checkOutput(retval, "IDASetUserData");
 
         // Set tolerances
-        sunrealtype rtol;
-        sunrealtype atol;
+        sunrealtype rel_tol;
+        sunrealtype abs_tol;
 
-        model_->setTolerances(rtol, atol); ///< \todo Function name should be "getTolerances"!
-        retval = IDASStolerances(solver_, rtol, atol);
+        model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
+        retval = IDASStolerances(solver_, rel_tol, abs_tol);
         checkOutput(retval, "IDASStolerances");
         
         IdxT msa;
@@ -324,11 +324,11 @@ namespace Sundials
         checkOutput(retval, "IDAQuadInit");
 
         // Set tolerances and error control for quadratures
-        real_type rtol, atol;
-        model_->setTolerances(rtol, atol);
+        real_type rel_tol, abs_tol;
+        model_->setTolerances(rel_tol, abs_tol);
 
         // Set tolerances for quadrature stricter than for integration
-        retval = IDAQuadSStolerances(solver_, rtol*0.1, atol*0.1);
+        retval = IDAQuadSStolerances(solver_, rel_tol*0.1, abs_tol*0.1);
         checkOutput(retval, "IDAQuadSStolerances");
 
         // Include quadrature in eror checking
@@ -434,8 +434,8 @@ namespace Sundials
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
         int retval = 0;
-        sunrealtype rtol;
-        sunrealtype atol;
+        sunrealtype rel_tol;
+        sunrealtype abs_tol;
 
         model_->initializeAdjoint();
 
@@ -450,8 +450,8 @@ namespace Sundials
         retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
         checkOutput(retval, "IDAInitB");
 
-        model_->setTolerances(rtol, atol);
-        retval = IDASStolerancesB(solver_, backwardID_, rtol, atol);
+        model_->setTolerances(rel_tol, abs_tol);
+        retval = IDASStolerancesB(solver_, backwardID_, rel_tol, abs_tol);
         checkOutput(retval, "IDASStolerancesB");
 
         retval = IDASetUserDataB(solver_, backwardID_, model_);
@@ -476,8 +476,8 @@ namespace Sundials
         retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
         checkOutput(retval, "IDAQuadInitB");
 
-        //retval = IDAQuadSStolerancesB(solver_, backwardID_, rtol*1.1, atol*1.1);
-        retval = IDAQuadSStolerancesB(solver_, backwardID_, rtol*0.1, atol*0.1);
+        //retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*1.1, abs_tol*1.1);
+        retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*0.1, abs_tol*0.1);
         checkOutput(retval, "IDAQuadSStolerancesB");
 
         // Include quadratures in error control

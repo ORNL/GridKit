@@ -21,13 +21,13 @@
 int main(int argc, char const *argv[])
 {
 	///@todo Needs to be modified. Some components are small relative to others thus there error is high (or could be matlab vector issue)
-    double abstol = 1.0e-8;
-    double reltol = 1.0e-8;
+    double abs_tol = 1.0e-8;
+    double rel_tol = 1.0e-8;
     size_t max_step_amount = 3000;
-    bool usejac = true;
+    bool use_jac = true;
 
     //Create model
-    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(reltol, abstol, usejac, max_step_amount);
+    GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_amount);
 
     //Modeled after the problem in the paper
     double RN = 1.0e4;
@@ -336,8 +336,6 @@ int main(int argc, char const *argv[])
     sysmodel->updateTime(0.0, 1.0e-8);
     sysmodel->evaluateJacobian();
     std::cout << "Intial Jacobian with alpha:\n";
-    // std::cout << sysmodel->getJacobian().frobnorm() << "\n";
-
 
     //Create numerical integrator and configure it for the generator model
     AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);

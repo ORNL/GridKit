@@ -110,8 +110,8 @@ class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::rtol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::atol_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -123,8 +123,8 @@ public:
     SystemSteadyStateModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
         // Set system model tolerances
-        rtol_ = 1e-5;
-        atol_ = 1e-5;
+        rel_tol_ = 1e-5;
+        abs_tol_ = 1e-5;
     }
 
     /**
@@ -134,8 +134,8 @@ public:
      */
     SystemSteadyStateModel(GridKit::PowerSystemData::SystemModelData<ScalarT, IdxT> mp) : ModelEvaluatorImpl<ScalarT, IdxT>(0,0,0)
     {
-        rtol_ = 1e-5;
-        atol_ = 1e-5;
+        rel_tol_ = 1e-5;
+        abs_tol_ = 1e-5;
 
         //add buses
         for(auto busdata : mp.bus)
