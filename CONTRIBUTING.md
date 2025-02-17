@@ -328,3 +328,7 @@ class Matrix   // No, class is outside GridKit namespace
 ### Auto-formatting
 
 To help enforce the above code style guidelines, we use autoformatting provided by [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html), which is distributed as a part of `clang` and `llvm`. Pull-requests must be formatted using the version of `clang-format` distributed by the version of `llvm` required by development with Enzyme.
+
+VS Code users can use `clang-format` to automatically format their code by installing the [C/C++ Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) and using the `Format Document` command in the command palette with the file to be formatted open. As well, you can enabled the `editor.formatOnSave` option to auto-format any file when you save it.
+
+Other users can use the [`git clang-format`](https://clang.llvm.org/docs/ClangFormat.html#git-integration) subcommand installed along with `clang-format` to auto-format all staged files.
