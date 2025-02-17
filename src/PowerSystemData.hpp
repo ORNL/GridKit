@@ -38,17 +38,17 @@ namespace PowerSystemData
     inline std::string str() const
     {
       std::stringstream ss;
-      std::cerr << std::setw(10) << bus_i
-                << std::setw(10) << type 
-                << std::setw(10) << Gs
-                << std::setw(10) << Bs
-                << std::setw(10) << area
-                << std::setw(10) << Vm
-                << std::setw(10) << Va
-                << std::setw(10) << baseKV
-                << std::setw(10) << zone
-                << std::setw(10) << Vmax
-                << std::setw(10) << Vmin;
+      std::cerr << std::setw(10) << bus_i  //
+                << std::setw(10) << type   //
+                << std::setw(10) << Gs     //
+                << std::setw(10) << Bs     //
+                << std::setw(10) << area   //
+                << std::setw(10) << Vm     //
+                << std::setw(10) << Va     //
+                << std::setw(10) << baseKV //
+                << std::setw(10) << zone   //
+                << std::setw(10) << Vmax   //
+                << std::setw(10) << Vmin;  //
       ss << "\n";
       return ss.str();
     }
@@ -64,9 +64,9 @@ namespace PowerSystemData
     inline std::string str() const
     {
       std::stringstream ss;
-      std::cerr << std::setw(10) << bus_i
-                << std::setw(10) << Pd 
-                << std::setw(10) << Qd;
+      std::cerr << std::setw(10) << bus_i //
+                << std::setw(10) << Pd    //
+                << std::setw(10) << Qd;   //
       ss << "\n";
       return ss.str();
     }
@@ -100,27 +100,27 @@ namespace PowerSystemData
     inline std::string str() const
     {
       std::stringstream ss;
-      ss << std::setw(10) << bus 
-         << std::setw(10) << Pg
-         << std::setw(10) << Qg
-         << std::setw(10) << Qmax
-         << std::setw(10) << Qmin
-         << std::setw(10) << Vg
-         << std::setw(10) << mBase
-         << std::setw(10) << status
-         << std::setw(10) << Pmax
-         << std::setw(10) << Pmin
-         << std::setw(10) << Pc1
-         << std::setw(10) << Pc2
-         << std::setw(10) << Qc1min
-         << std::setw(10) << Qc1max
-         << std::setw(10) << Qc2min
-         << std::setw(10) << Qc2max
-         << std::setw(10) << ramp_agc
-         << std::setw(10) << ramp_10
-         << std::setw(10) << ramp_30
-         << std::setw(10) << ramp_q
-         << std::setw(10) << apf;
+      ss << std::setw(10) << bus      //
+         << std::setw(10) << Pg       //
+         << std::setw(10) << Qg       //
+         << std::setw(10) << Qmax     //
+         << std::setw(10) << Qmin     //
+         << std::setw(10) << Vg       //
+         << std::setw(10) << mBase    //
+         << std::setw(10) << status   //
+         << std::setw(10) << Pmax     //
+         << std::setw(10) << Pmin     //
+         << std::setw(10) << Pc1      //
+         << std::setw(10) << Pc2      //
+         << std::setw(10) << Qc1min   //
+         << std::setw(10) << Qc1max   //
+         << std::setw(10) << Qc2min   //
+         << std::setw(10) << Qc2max   //
+         << std::setw(10) << ramp_agc //
+         << std::setw(10) << ramp_10  //
+         << std::setw(10) << ramp_30  //
+         << std::setw(10) << ramp_q   //
+         << std::setw(10) << apf;     //
       ss << "\n";
       return ss.str();
     }
@@ -146,19 +146,19 @@ namespace PowerSystemData
     inline std::string str() const
     {
       std::stringstream ss;
-      ss << std::setw(10) << fbus
-         << std::setw(10) << tbus
-         << std::setw(10) << r
-         << std::setw(10) << x
-         << std::setw(10) << b
-         << std::setw(10) << rateA
-         << std::setw(10) << rateB
-         << std::setw(10) << rateC
-         << std::setw(10) << ratio
-         << std::setw(10) << angle
-         << std::setw(10) << status
-         << std::setw(10) << angmin
-         << std::setw(10) << angmax;
+      ss << std::setw(10) << fbus    //
+         << std::setw(10) << tbus    //
+         << std::setw(10) << r       //
+         << std::setw(10) << x       //
+         << std::setw(10) << b       //
+         << std::setw(10) << rateA   //
+         << std::setw(10) << rateB   //
+         << std::setw(10) << rateC   //
+         << std::setw(10) << ratio   //
+         << std::setw(10) << angle   //
+         << std::setw(10) << status  //
+         << std::setw(10) << angmin  //
+         << std::setw(10) << angmax; //
       ss << "\n";
       return ss.str();
     }
@@ -176,10 +176,10 @@ namespace PowerSystemData
     inline std::string str() const
     {
       std::stringstream ss;
-      ss << std::setw(10) << kind
-         << std::setw(10) << startup
-         << std::setw(10) << shutdown
-         << std::setw(10) << n;
+      ss << std::setw(10) << kind     //
+         << std::setw(10) << startup  //
+         << std::setw(10) << shutdown //
+         << std::setw(10) << n;       //
       for (const auto& val : rest)
         ss << std::setw(10) << val;
       ss << "\n";
