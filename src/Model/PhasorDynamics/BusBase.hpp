@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <ModelEvaluator.hpp>
+#include <Model/EvaluatorDynamics.hpp>
 
 namespace GridKit
 {
@@ -12,10 +12,10 @@ namespace PhasorDynamics
      *
      */
     template <class ScalarT, typename IdxT>
-    class BusBase : public ModelEvaluator<ScalarT, IdxT>
+    class BusBase : public Model::EvaluatorDynamics<ScalarT, IdxT>
     {
     public:
-        using real_type = typename ModelEvaluator<ScalarT, IdxT>::real_type;
+        using real_type = typename Model::EvaluatorDynamics<ScalarT, IdxT>::real_type;
 
         enum BusType{DEFAULT=1, SLACK};
 
@@ -30,10 +30,10 @@ namespace PhasorDynamics
         {
         }
 
-        BusBase(IdxT size, IdxT size_quad, IdxT size_opt)
+        BusBase(IdxT size, IdxT size_quad, IdxT size_param)
           : size_(size),
             size_quad_(size_quad),
-            size_param_(size_opt),
+            size_param_(size_param),
             y_(size_),
             yp_(size_),
             f_(size_),
@@ -71,12 +71,12 @@ namespace PhasorDynamics
             return false;
         }
 
-        virtual IdxT size_quad()
+        virtual IdxT sizeQuadrature()
         {
             return size_quad_;
         }
 
-        virtual IdxT size_opt()
+        virtual IdxT sizeParams()
         {
             return size_param_;
         }
