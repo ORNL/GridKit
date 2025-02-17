@@ -19,15 +19,13 @@ namespace GridKit
 namespace PhasorDynamics
 {
     /*!
-     * @brief Implementation of a PQ bus.
+     * @brief Implementation of an "infinite" bus.
      *
-     * Voltage _V_ and phase _theta_ are variables in PQ bus model.
-     * Active and reactive power, _P_ and _Q_, are residual components.
      *
      *
      */
     template  <class ScalarT, typename IdxT>
-    class Bus : public BusBase<ScalarT, IdxT>
+    class BusInfinite : public BusBase<ScalarT, IdxT>
     {
         using BusBase<ScalarT, IdxT>::size_;
         using BusBase<ScalarT, IdxT>::y_;
@@ -42,10 +40,10 @@ namespace PhasorDynamics
         using real_type = typename BusBase<ScalarT, IdxT>::real_type;
         using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
 
-        Bus();
-        Bus(ScalarT Vr, ScalarT Vi);
-        Bus(BusData& data);
-        virtual ~Bus();
+        BusInfinite();
+        BusInfinite(ScalarT Vr, ScalarT Vi);
+        BusInfinite(BusData& data);
+        virtual ~BusInfinite();
 
         virtual int allocate() override;
         virtual int tagDifferentiable() override;
@@ -57,96 +55,101 @@ namespace PhasorDynamics
         virtual int evaluateAdjointIntegrand() override;
         virtual int evaluateAdjointResidual() override;
 
-
         virtual int BusType() const override
         {
-            return BusBase<ScalarT, IdxT>::BusType::DEFAULT;
+            return BusBase<ScalarT, IdxT>::BusType::SLACK;
         }
 
         virtual ScalarT& Vr() override
         {
-            return y_[0];
+            return Vr_;
         }
 
         virtual const ScalarT& Vr() const override
         {
-            return y_[0];
+            return Vr_;
         }
 
         virtual ScalarT& Vi() override
         {
-            return y_[1];
+            return Vi_;
         }
 
         virtual const ScalarT& Vi() const override
         {
-            return y_[1];
+            return Vi_;
         }
 
         virtual ScalarT& Ir() override
         {
-            return f_[0];
+            return Ir_;
         }
 
         virtual const ScalarT& Ir() const override
         {
-            return f_[0];
+            return Ir_;
         }
 
         virtual ScalarT& Ii() override
         {
-            return f_[1];
+            return Ii_;
         }
 
         virtual const ScalarT& Ii() const override
         {
-            return f_[1];
+            return Ii_;
         }
 
         // virtual ScalarT& VrB() override
         // {
-        //     return yB_[0];
+        //     return VrB_;
         // }
 
         // virtual const ScalarT& VrB() const override
         // {
-        //     return yB_[0];
+        //     return VrB_;
         // }
 
         // virtual ScalarT& ViB() override
         // {
-        //     return yB_[1];
+        //     return ViB_;
         // }
 
         // virtual const ScalarT& ViB() const override
         // {
-        //     return yB_[1];
+        //     return ViB_;
         // }
 
         // virtual ScalarT& IrB() override
         // {
-        //     return fB_[0];
+        //     return IrB_;
         // }
 
         // virtual const ScalarT& IrB() const override
         // {
-        //     return fB_[0];
+        //     return IrB_;
         // }
 
         // virtual ScalarT& IiB() override
         // {
-        //     return fB_[1];
+        //     return IiB_;
         // }
 
         // virtual const ScalarT& IiB() const override
         // {
-        //     return fB_[1];
+        //     return IiB_;
         // }
 
     private:
-        ScalarT Vr0_{0.0};
-        ScalarT Vi0_{0.0};
+        ScalarT Vr_{0.0};
+        ScalarT Vi_{0.0};
+        ScalarT Ir_{0.0};
+        ScalarT Ii_{0.0};
 
+        ScalarT VrB_{0.0};
+        ScalarT ViB_{0.0};
+        ScalarT IrB_{0.0};
+        ScalarT IiB_{0.0};
     };
 
 } // PhasorDynamics
