@@ -155,22 +155,22 @@ int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
  * 
  * The matrix dF/dy should be
  *  
-[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-[-1,           0,           0,                             0,     -mp,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
-[ 0,           0,           0,                             0,     -wc,                0,            0,            0,      0,      0,                 0,                 0,            wc*x15,            wc*x16,     wc*x13,     wc*x14]
-[ 0,           0,           0,                             0,       0,              -wc,            0,            0,      0,      0,                 0,                 0,           -wc*x16,            wc*x15,     wc*x14,    -wc*x13]
-[ 0,           0,           0,                             0,       0,              -nq,            0,            0,      0,      0,                 0,                 0,                -1,                 0,          0,          0]
-[ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                -1,          0,          0]
-[ 0,           0,           0,                             0,       0,          -Kpv*nq,          Kiv,            0,      0,      0,                -1,                 0,              -Kpv,            -Cf*wb,          F,          0]
-[ 0,           0,           0,                             0,       0,                0,            0,          Kiv,      0,      0,                 0,                -1,             Cf*wb,              -Kpv,          0,          F]
-[ 0,           0,           0,                             0, -mp*x12, -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf - rLf/Lf,            -mp*x5, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf, (F*Kpc)/Lf,          0]
-[ 0,           0,           0,                             0,  mp*x11,                0,            0, (Kiv*Kpc)/Lf,      0, Kic/Lf,             mp*x5, - Kpc/Lf - rLf/Lf,    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,          0, (F*Kpc)/Lf]
-[ 0,           0,           0,                             0, -mp*x14,                0,            0,            0,      0,      0,              1/Cf,                 0,                 0,        wb - mp*x5,      -1/Cf,          0]
-[ 0,           0,           0,                             0,  mp*x13,                0,            0,            0,      0,      0,                 0,              1/Cf,        mp*x5 - wb,                 0,          0,      -1/Cf]
-[ 0, -cos(x4)/Lc, -sin(x4)/Lc, -(x3*cos(x4) - x2*sin(x4))/Lc, -mp*x16,                0,            0,            0,      0,      0,                 0,                 0,              1/Lc,                 0,    -rLc/Lc, wb - mp*x5]
-[ 0,  sin(x4)/Lc, -cos(x4)/Lc,  (x2*cos(x4) + x3*sin(x4))/Lc,  mp*x15,                0,            0,            0,      0,      0,                 0,                 0,                 0,              1/Lc, mp*x5 - wb,    -rLc/Lc]
+ *** [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+ *** [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+ *** [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+ *** [-1,           0,           0,                             0,     -mp,                0,            0,            0,      0,      0,                 0,                 0,                 0,                 0,          0,          0]
+ *** [ 0,           0,           0,                             0,     -wc,                0,            0,            0,      0,      0,                 0,                 0,            wc*x15,            wc*x16,     wc*x13,     wc*x14]
+ *** [ 0,           0,           0,                             0,       0,              -wc,            0,            0,      0,      0,                 0,                 0,           -wc*x16,            wc*x15,     wc*x14,    -wc*x13]
+ *** [ 0,           0,           0,                             0,       0,              -nq,            0,            0,      0,      0,                 0,                 0,                -1,                 0,          0,          0]
+ *** [ 0,           0,           0,                             0,       0,                0,            0,            0,      0,      0,                 0,                 0,                 0,                -1,          0,          0]
+ *** [ 0,           0,           0,                             0,       0,          -Kpv*nq,          Kiv,            0,      0,      0,                -1,                 0,              -Kpv,            -Cf*wb,          F,          0]
+ *** [ 0,           0,           0,                             0,       0,                0,            0,          Kiv,      0,      0,                 0,                -1,             Cf*wb,              -Kpv,          0,          F]
+ *** [ 0,           0,           0,                             0, -mp*x12, -(Kpc*Kpv*nq)/Lf, (Kiv*Kpc)/Lf,            0, Kic/Lf,      0, - Kpc/Lf - rLf/Lf,            -mp*x5, -(Kpc*Kpv + 1)/Lf,   -(Cf*Kpc*wb)/Lf, (F*Kpc)/Lf,          0]
+ *** [ 0,           0,           0,                             0,  mp*x11,                0,            0, (Kiv*Kpc)/Lf,      0, Kic/Lf,             mp*x5, - Kpc/Lf - rLf/Lf,    (Cf*Kpc*wb)/Lf, -(Kpc*Kpv + 1)/Lf,          0, (F*Kpc)/Lf]
+ *** [ 0,           0,           0,                             0, -mp*x14,                0,            0,            0,      0,      0,              1/Cf,                 0,                 0,        wb - mp*x5,      -1/Cf,          0]
+ *** [ 0,           0,           0,                             0,  mp*x13,                0,            0,            0,      0,      0,                 0,              1/Cf,        mp*x5 - wb,                 0,          0,      -1/Cf]
+ *** [ 0, -cos(x4)/Lc, -sin(x4)/Lc, -(x3*cos(x4) - x2*sin(x4))/Lc, -mp*x16,                0,            0,            0,      0,      0,                 0,                 0,              1/Lc,                 0,    -rLc/Lc, wb - mp*x5]
+ *** [ 0,  sin(x4)/Lc, -cos(x4)/Lc,  (x2*cos(x4) + x3*sin(x4))/Lc,  mp*x15,                0,            0,            0,      0,      0,                 0,                 0,                 0,              1/Lc, mp*x5 - wb,    -rLc/Lc]
  * 'Generated from MATLAB symbolic'
  * 
  * @tparam ScalarT 
