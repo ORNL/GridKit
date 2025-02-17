@@ -57,14 +57,16 @@
  *
  */
 
-
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "GeneratorPQ.hpp"
+
+#include <cmath>
+#include <iostream>
+#include <vector>
+
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace ModelLib {
+namespace ModelLib
+{
 
 /*!
  * @brief Constructor for a constant load model
@@ -73,12 +75,9 @@ namespace ModelLib {
  */
 
 template <class ScalarT, typename IdxT>
-GeneratorPQ<ScalarT, IdxT>::GeneratorPQ(bus_type* bus, GenData& data)
-  : P_(data.Pg),
-    Q_(data.Qg),
-    bus_(bus)
+GeneratorPQ<ScalarT, IdxT>::GeneratorPQ(bus_type* bus, GenData& data) : P_(data.Pg), Q_(data.Qg), bus_(bus)
 {
-    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    // std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
 }
 
@@ -158,11 +157,8 @@ int GeneratorPQ<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
-
 // Available template instantiations
 template class GeneratorPQ<double, long int>;
 template class GeneratorPQ<double, size_t>;
 
-
-} //namespace ModelLib
-
+} // namespace ModelLib

@@ -66,17 +66,19 @@ namespace GridKit
 {
 namespace PowerSystemData
 {
-    template <typename RealT, typename IdxT> struct BranchData;
+    template <typename RealT, typename IdxT>
+    struct BranchData;
 }
-}
+} // namespace GridKit
 
 namespace ModelLib
 {
 namespace PhasorDynamics
 {
-    template <class ScalarT, typename IdxT> class Bus;
+    template <class ScalarT, typename IdxT>
+    class Bus;
 }
-}
+} // namespace ModelLib
 
 namespace ModelLib
 {
@@ -86,7 +88,7 @@ namespace PhasorDynamics
      * @brief Implementation of a pi-model branch between two buses.
      *
      */
-    template  <class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     class Branch : public ModelEvaluatorImpl<ScalarT, IdxT>
     {
         using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
@@ -123,7 +125,7 @@ namespace PhasorDynamics
 
         int initializeAdjoint();
         int evaluateAdjointResidual();
-        //int evaluateAdjointJacobian();
+        // int evaluateAdjointJacobian();
         int evaluateAdjointIntegrand();
 
         void updateTime(real_type t, real_type a)
@@ -194,15 +196,15 @@ namespace PhasorDynamics
         }
 
     private:
-        real_type R_;
-        real_type X_;
-        real_type G_;
-        real_type B_;
+        real_type  R_;
+        real_type  X_;
+        real_type  G_;
+        real_type  B_;
         const IdxT bus1ID_;
         const IdxT bus2ID_;
-        bus_type* bus1_;
-        bus_type* bus2_;
+        bus_type*  bus1_;
+        bus_type*  bus2_;
     };
 
 } // namespace PhasorDynamics
-} // namespace GridKit
+} // namespace ModelLib

@@ -57,26 +57,21 @@
  *
  */
 
-
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <string>
 
+#include "lookup_table.hpp"
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
-
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4Param/Generator4Param.hpp>
-#include <SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-
+#include <Solver/Optimization/DynamicConstraint.hpp>
+#include <Solver/Optimization/DynamicObjective.hpp>
+#include <SystemModel.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
-
-#include "lookup_table.hpp"
-
 
 int main()
 {
@@ -143,7 +138,7 @@ int main()
     Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
 
     // Set solver tolerance
-    const double tol = 1e-5; 
+    const double tol = 1e-5;
 
     // Initialize the IpoptApplication and process the options
     Ipopt::ApplicationReturnStatus status;
@@ -170,16 +165,16 @@ int main()
     if (status == Ipopt::Solve_Succeeded)
     {
         // Print result
-        std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
+        std::cout << "\nSucess:\n The problem solved in " << ipoptApp->Statistics()->IterationCount()
+                  << " iterations!\n"
                   << " Optimal value of H = " << model->param()[0] << "\n"
-                  << " The final value of the objective function G(H) = "
-                  << ipoptApp->Statistics()->FinalObjective() << "\n\n";
+                  << " The final value of the objective function G(H) = " << ipoptApp->Statistics()->FinalObjective()
+                  << "\n\n";
     }
 
     // Store dynamic objective optimization results
-    double* results  = new double[model->size_opt()];
-    for(unsigned i=0; i <model->size_opt(); ++i)
+    double* results = new double[model->size_opt()];
+    for (unsigned i = 0; i < model->size_opt(); ++i)
     {
         results[i] = model->param()[i];
     }
@@ -198,27 +193,27 @@ int main()
     if (status == Ipopt::Solve_Succeeded)
     {
         // Print result
-        std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
+        std::cout << "\nSucess:\n The problem solved in " << ipoptApp->Statistics()->IterationCount()
+                  << " iterations!\n"
                   << " Optimal value of H = " << model->param()[0] << "\n"
-                  << " The final value of the objective function G(H) = "
-                  << ipoptApp->Statistics()->FinalObjective() << "\n\n";
+                  << " The final value of the objective function G(H) = " << ipoptApp->Statistics()->FinalObjective()
+                  << "\n\n";
     }
 
     // Compare results of the two optimization methods
     int retval = 0;
-    for(unsigned i=0; i <model->size_opt(); ++i)
+    for (unsigned i = 0; i < model->size_opt(); ++i)
     {
-        if(!isEqual(results[i], model->param()[i], 100*tol))
-            --retval; 
+        if (!isEqual(results[i], model->param()[i], 100 * tol))
+            --retval;
     }
 
-    if(retval < 0)
+    if (retval < 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
     }
 
-    delete [] results;
+    delete[] results;
     delete idas;
     delete model;
     return retval;

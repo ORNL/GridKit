@@ -61,7 +61,6 @@
 
 #include <ModelEvaluatorImpl.hpp>
 
-
 // Forward declaration of BusData structure
 namespace GridKit
 {
@@ -70,7 +69,7 @@ namespace PowerSystemData
     template <typename RealT, typename IdxT>
     struct BusData;
 }
-}
+} // namespace GridKit
 
 namespace ModelLib // change to GridKit
 {
@@ -84,7 +83,7 @@ namespace PhasorDynamics
      *
      *
      */
-    template  <class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     class Bus : public ModelEvaluatorImpl<ScalarT, IdxT>
     {
         using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
@@ -201,8 +200,7 @@ namespace PhasorDynamics
         // Default initial values for voltage and phase on PQ bus
         ScalarT Vr0_{0.0};
         ScalarT Vi0_{0.0};
-
     };
 
-} // PhasorDynamics
-} // namespace GridKit
+} // namespace PhasorDynamics
+} // namespace ModelLib

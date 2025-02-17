@@ -60,84 +60,84 @@
 #pragma once
 
 #include <vector>
+
+#include "GeneratorBase.hpp"
 #include <ModelEvaluatorImpl.hpp>
 #include <PowerSystemData.hpp>
-#include "GeneratorBase.hpp"
 
 namespace ModelLib
 {
-    template <class ScalarT, typename IdxT> class BaseBus;
+template <class ScalarT, typename IdxT>
+class BaseBus;
 }
 
-
 namespace ModelLib
 {
-     /*!
-     * @brief Implementation of a PV generator.
-     *
-     */
-    template  <class ScalarT, typename IdxT>
-    class GeneratorPQ : public GeneratorBase<ScalarT, IdxT>
+/*!
+ * @brief Implementation of a PV generator.
+ *
+ */
+template <class ScalarT, typename IdxT>
+class GeneratorPQ : public GeneratorBase<ScalarT, IdxT>
+{
+    using GeneratorBase<ScalarT, IdxT>::size_;
+    using GeneratorBase<ScalarT, IdxT>::nnz_;
+    using GeneratorBase<ScalarT, IdxT>::time_;
+    using GeneratorBase<ScalarT, IdxT>::alpha_;
+    using GeneratorBase<ScalarT, IdxT>::y_;
+    using GeneratorBase<ScalarT, IdxT>::yp_;
+    using GeneratorBase<ScalarT, IdxT>::tag_;
+    using GeneratorBase<ScalarT, IdxT>::f_;
+    using GeneratorBase<ScalarT, IdxT>::g_;
+    using GeneratorBase<ScalarT, IdxT>::yB_;
+    using GeneratorBase<ScalarT, IdxT>::ypB_;
+    using GeneratorBase<ScalarT, IdxT>::fB_;
+    using GeneratorBase<ScalarT, IdxT>::gB_;
+    using GeneratorBase<ScalarT, IdxT>::param_;
+
+    using bus_type  = BaseBus<ScalarT, IdxT>;
+    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+    using GenData   = GridKit::PowerSystemData::GenData<real_type, IdxT>;
+
+public:
+    GeneratorPQ(bus_type* bus, GenData& data);
+    virtual ~GeneratorPQ();
+
+    int allocate();
+    int initialize();
+    int tagDifferentiable();
+    int evaluateResidual();
+    int evaluateJacobian();
+    int evaluateIntegrand();
+
+    int initializeAdjoint();
+    int evaluateAdjointResidual();
+    // int evaluateAdjointJacobian();
+    int evaluateAdjointIntegrand();
+
+    virtual ScalarT& P()
     {
-        using GeneratorBase<ScalarT, IdxT>::size_;
-        using GeneratorBase<ScalarT, IdxT>::nnz_;
-        using GeneratorBase<ScalarT, IdxT>::time_;
-        using GeneratorBase<ScalarT, IdxT>::alpha_;
-        using GeneratorBase<ScalarT, IdxT>::y_;
-        using GeneratorBase<ScalarT, IdxT>::yp_;
-        using GeneratorBase<ScalarT, IdxT>::tag_;
-        using GeneratorBase<ScalarT, IdxT>::f_;
-        using GeneratorBase<ScalarT, IdxT>::g_;
-        using GeneratorBase<ScalarT, IdxT>::yB_;
-        using GeneratorBase<ScalarT, IdxT>::ypB_;
-        using GeneratorBase<ScalarT, IdxT>::fB_;
-        using GeneratorBase<ScalarT, IdxT>::gB_;
-        using GeneratorBase<ScalarT, IdxT>::param_;
+        return P_;
+    }
 
-        using bus_type = BaseBus<ScalarT, IdxT>;
-        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-        using GenData = GridKit::PowerSystemData::GenData<real_type, IdxT>;
+    virtual const ScalarT& P() const
+    {
+        return P_;
+    }
 
-    public:
-        GeneratorPQ(bus_type* bus, GenData& data);
-        virtual ~GeneratorPQ();
+    virtual ScalarT& Q()
+    {
+        return Q_;
+    }
 
-        int allocate();
-        int initialize();
-        int tagDifferentiable();
-        int evaluateResidual();
-        int evaluateJacobian();
-        int evaluateIntegrand();
+    virtual const ScalarT& Q() const
+    {
+        return Q_;
+    }
 
-        int initializeAdjoint();
-        int evaluateAdjointResidual();
-        //int evaluateAdjointJacobian();
-        int evaluateAdjointIntegrand();
-        
-        virtual ScalarT& P()
-        {
-            return P_;
-        }
-
-        virtual const ScalarT& P() const
-        {
-            return P_;
-        }
-
-        virtual ScalarT& Q()
-        {
-            return Q_;
-        }
-
-        virtual const ScalarT& Q() const
-        {
-            return Q_;
-        }
-
-    private:
-        ScalarT P_;
-        ScalarT Q_;
-        bus_type* bus_;
-    };
-}
-
+private:
+    ScalarT   P_;
+    ScalarT   Q_;
+    bus_type* bus_;
+};
+} // namespace ModelLib
