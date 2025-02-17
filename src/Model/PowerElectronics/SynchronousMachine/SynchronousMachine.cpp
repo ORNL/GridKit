@@ -1,6 +1,3 @@
-
-
-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -15,8 +12,26 @@ namespace GridKit {
  * @brief Constructor for a constant SynchronousMachine model
  *
  * Calls default ModelEvaluatorImpl constructor.
- * @todo This models equations are not finish
+ * @todo This model's equations are not finished
  * @todo needs to be tested for correctness
+ * 
+ * @tparam ScalarT - floating point type for the model
+ * @tparam IdxT - integer index type for the model
+ * 
+ * @param[in] id - unique identifier for the component
+ * @param[in] Lls - stator leakage inductance
+ * @param[in] Llkq - tuple of damper leakage reactances
+ * @param[in] Llfd - field leakage reactance
+ * @param[in] Llkd - damper leakage reactance
+ * @param[in] Lmq - quadrature axis magnetizing reactance
+ * @param[in] Lmd - direct axis magnetizing reactance
+ * @param[in] Rs - stator resistance
+ * @param[in] Rkq - tuple of damper resistances
+ * @param[in] Rfd - field resistance
+ * @param[in] Rkd - damper resistance
+ * @param[in] RJ - rotor moment of inertia
+ * @param[in] P - number of poles
+ * @param[in] mub - rated frequency
  */
 
 template <class ScalarT, typename IdxT>

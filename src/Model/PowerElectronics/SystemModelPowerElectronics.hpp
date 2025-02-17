@@ -34,9 +34,9 @@ namespace GridKit
         // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
         // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
         // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::J_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::rtol_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::atol_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::jac_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
         // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
         // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
         // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -44,32 +44,49 @@ namespace GridKit
     public:
         /**
          * @brief Default constructor for the system model
+         * 
+         * @post System model parameters set as default
          */
         PowerElectronicsModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
         {
-            // Set system model tolerances as default
-            rtol_ = 1e-4;
-            atol_ = 1e-4;
+            // Set system model parameters as default
+            rel_tol_ = 1e-4;
+            abs_tol_ = 1e-4;
             this->max_steps_ = 2000;
-            // By default not use jacobian
-            usejac_ = false;
+            // By default don't use the jacobian
+            use_jac_ = false;
         }
 
         /**
          * @brief Constructor for the system model
+         * 
+         * @param[in] rel_tol Relative tolerance for the system model
+         * @param[in] abs_tol Absolute tolerance for the system model
+         * @param[in] use_jac Boolean to choose if to use jacobian
+         * @param[in] max_steps Maximum number of steps for the system model
+         * 
+         * @post System model parameters set as input
          */
-        PowerElectronicsModel(double rt = 1e-4, double at = 1e-4, bool ju = false, IdxT msa = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+        PowerElectronicsModel(double rel_tol = 1e-4, 
+                              double abs_tol = 1e-4, 
+                              bool use_jac = false, 
+                              IdxT max_steps = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
         {
             // Set system model tolerances from input
-            rtol_ = rt;
-            atol_ = at;
-            this->max_steps_ = msa;
-            // Can choose if to use jacobain
-            usejac_ = ju;
+            rel_tol_ = rel_tol;
+            abs_tol_ = abs_tol;
+            this->max_steps_ = max_steps;
+            // Can choose if to use jacobian
+            use_jac_ = use_jac;
         }
 
         /**
          * @brief Destructor for the system model
+         * 
+         * @pre System components are allocated
+         * 
+         * @post System components are deallocated
+         * 
          */
         virtual ~PowerElectronicsModel()
         {
@@ -91,15 +108,15 @@ namespace GridKit
         }
 
         /**
-         * @brief Will check if each component has jacobian avalible. If one doesn't then jacobain is false.
+         * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
          *
          *
-         * @return true
-         * @return false
+         * @return true if all components have jacobian
+         * @return false otherwise
          */
         bool hasJacobian()
         {
-            if (!this->usejac_)
+            if (!this->use_jac_)
                 return false;
 
             for (const auto &component : components_)
@@ -116,8 +133,11 @@ namespace GridKit
          * @brief Allocate the vector data with size amount
          * @todo Add capability to go through component model connection to get the size of the actual vector
          *
-         * @param s
-         * @return int
+         * @param[in] s size of the vector
+         * 
+         * @post System model vectors allocated with size s
+         * 
+         * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
          */
         int allocate(IdxT s)
         {
@@ -140,7 +160,7 @@ namespace GridKit
         /**
          * @brief Set intial y and y' of each component
          *
-         * @return int
+         * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
          */
         int initialize()
         {
@@ -158,7 +178,9 @@ namespace GridKit
         /**
          * @brief Distribute y and y' to each component based of node connection graph
          *
-         * @return int
+         * @post Each component has y and y' set
+         * 
+         * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
          */
         int distributeVectors()
         {
@@ -189,7 +211,7 @@ namespace GridKit
         /**
          * @brief Evaluate Residuals at each component then collect them
          *
-         * @return int
+         * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
          */
         int evaluateResidual()
         {
@@ -222,11 +244,11 @@ namespace GridKit
         /**
          * @brief Creates the Sparse COO Jacobian representing  \alpha dF/dy' + dF/dy
          *
-         * @return int
+         * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
          */
         int evaluateJacobian()
         {
-            J_.zeroMatrix();
+            jac_.zeroMatrix();
             distributeVectors();
 
             // Evaluate component jacs
@@ -234,7 +256,7 @@ namespace GridKit
             {
                 component->evaluateJacobian();
 
-                // get references to local jacobain
+                // get references to local jacobian
                 std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
                 const auto& [r, c, v] = tpm;
 
@@ -253,7 +275,8 @@ namespace GridKit
                 }
 
                 // AXPY to Global Jacobian
-                J_.axpy(1.0, rgr, cgr, vgr);
+                // elementwise jac_(rgr, cgr) += vgr
+                jac_.axpy(1.0, rgr, cgr, vgr);
             }
 
             return 0;
@@ -325,7 +348,7 @@ namespace GridKit
         static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
         std::vector<component_type*> components_;
-        bool usejac_;
+        bool use_jac_;
 
     }; // class PowerElectronicsModel
 

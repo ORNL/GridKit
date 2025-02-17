@@ -17,6 +17,12 @@ namespace GridKit {
  * Calls default ModelEvaluatorImpl constructor.
  * @todo create a test case utilizing the component.
  * @todo create a unit test to check correctness of component
+ * 
+ * @tparam ScalarT - data type for scalar variables in the model
+ * @tparam IdxT - integer index type for the model
+ * 
+ * @param[in] id - unique identifier for the component
+ * @param[in] Lls - stator leakage inductance
  */
 
 template <class ScalarT, typename IdxT>

@@ -141,29 +141,29 @@ int TransmissionLine<ScalarT, IdxT>::evaluateJacobian()
     std::vector<IdxT> rtemp{0,1,2,3,4,5,6,7,8,9,10,11};
     std::vector<IdxT> ctemp{8,9,10,11,8,9,10,11,8,9,10,11};
     std::vector<ScalarT> vals{1.0,1.0,1.0,1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::vector<IdxT> ccord{0,1,2,3,4,5,6,7};
 
     std::vector<IdxT> rcord(ccord.size(),8);
     vals = {YReMat_, -YImMatDi_ ,-YReMat_, -YImMatOff_,-YReMat_, YImMatDi_ ,YReMat_, YImMatOff_};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::fill(rcord.begin(), rcord.end(), 9);
     vals = {YImMatDi_ ,YReMat_, YImMatOff_, -YReMat_,-YImMatDi_ ,-YReMat_, -YImMatOff_, YReMat_};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::fill(rcord.begin(), rcord.end(), 10);
     vals = {-YReMat_, -YImMatDi_ ,YReMat_, -YImMatOff_,YReMat_, YImMatDi_ ,-YReMat_, YImMatOff_};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     
     std::fill(rcord.begin(), rcord.end(), 11);
     vals = {YImMatDi_ ,-YReMat_, YImMatOff_, YReMat_,-YImMatDi_ ,YReMat_, -YImMatOff_, -YReMat_};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     return 0;
 }

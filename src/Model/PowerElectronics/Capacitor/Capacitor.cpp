@@ -90,12 +90,12 @@ int Capacitor<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int Capacitor<ScalarT, IdxT>::evaluateJacobian()
 {
-    J_.zeroMatrix();
+    jac_.zeroMatrix();
     //Create dF/dy
     std::vector<IdxT> rcord{2,2,2};
     std::vector<IdxT> ccord{0,1,2};
     std::vector<ScalarT> vals{1.0, -1.0, -1.0};
-    J_.setValues(rcord, ccord, vals);
+    jac_.setValues(rcord, ccord, vals);
 
     //Create dF/dy'
     std::vector<IdxT> rcordder{0,1,2};
@@ -104,7 +104,7 @@ int Capacitor<ScalarT, IdxT>::evaluateJacobian()
     COO_Matrix<ScalarT,IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder,3,3);
     
     //Perform dF/dy + \alpha dF/dy'
-    J_.axpy(alpha_, Jacder);
+    jac_.axpy(alpha_, Jacder);
 
     return 0;
 }

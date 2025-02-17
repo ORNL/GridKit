@@ -87,8 +87,8 @@ MiniGrid<ScalarT, IdxT>::MiniGrid()
     B23_( 12.0)
 {
     //std::cout << "Create a load model with " << size_ << " variables ...\n";
-    rtol_ = 1e-5;
-    atol_ = 1e-5;
+    rel_tol_ = 1e-5;
+    abs_tol_ = 1e-5;
 }
 
 template <class ScalarT, typename IdxT>
