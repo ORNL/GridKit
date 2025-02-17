@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include <PowerSystemData.hpp>
-#include "Bus.hpp"
+#include "BusInfinite.hpp"
 
 namespace GridKit
 {
@@ -11,68 +11,70 @@ namespace PhasorDynamics
 {
 
 /*!
- * @brief Constructor for a phasor dynamics bus.
+ * @brief Constructor for an infinite (slack) bus.
  *
  * The model is using current balance in Cartesian coordinates.
  * 
- * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
- * - Number of equations = 2 (size_)
- * - Number of variables = 2 (size_)
+ * Arguments to be passed to BusBase:
+ * - Number of equations = 0 (size_)
+ * - Number of variables = 0 (size_)
  * - Number of quadratures = 0
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-Bus<ScalarT, IdxT>::Bus()
-  : Vr0_(0.0), Vi0_(0.0)
+BusInfinite<ScalarT, IdxT>::BusInfinite()
 {
-    //std::cout << "Create Bus..." << std::endl;
+    //std::cout << "Create BusInfinite..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
 
-    size_ = 2;
+    size_ = 0;
 }
 
 /*!
- * @brief Bus constructor.
+ * @brief BusInfinite constructor.
  *
  * This constructor sets initial values for active and reactive voltage.
  *
- * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
- * - Number of equations = 2 (size_)
- * - Number of variables = 2 (size_)
+ * Arguments to be passed to BusBase:
+ * - Number of equations = 0 (size_)
+ * - Number of variables = 0 (size_)
  * - Number of quadratures = 0
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
-  : Vr0_(Vr), Vi0_(Vi)
+BusInfinite<ScalarT, IdxT>::BusInfinite(ScalarT Vr, ScalarT Vi)
+  : Vr_(Vr), Vi_(Vi)
 {
-    //std::cout << "Create Bus..." << std::endl;
+    //std::cout << "Create BusInfinite..." << std::endl;
     //std::cout << "Number of equations is " << size_ << std::endl;
 
-    size_ = 2;
+    size_ = 0;
 }
 
 /**
- * @brief Construct a new Bus
+ * @brief Construct a new BusInfinite
  * 
+ * Arguments to be set in BusBase:
+ * - Number of equations = 0 (size_)
+ * - Number of variables = 0 (size_)
+ * - Number of quadratures = 0
+ * - Number of optimization parameters = 0
+
  * @tparam ScalarT - type of scalar variables
  * @tparam IdxT    - type for vector/matrix indices
  * @param[in] data - structure with bus data 
  */
 template <class ScalarT, typename IdxT>
-Bus<ScalarT, IdxT>::Bus(BusData& data)
+BusInfinite<ScalarT, IdxT>::BusInfinite(BusData& data)
   : BusBase<ScalarT, IdxT>(data.bus_i),
-    Vr0_(data.Vm * cos(data.Va)),
-    Vi0_(data.Vm * sin(data.Va))
+    Vr_(data.Vm * cos(data.Va)),
+    Vi_(data.Vm * sin(data.Va))
 {
-    //std::cout << "Create Bus..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-
-    size_ = 2;
+    size_ = 0;
 }
 
 template <class ScalarT, typename IdxT>
-Bus<ScalarT, IdxT>::~Bus()
+BusInfinite<ScalarT, IdxT>::~BusInfinite()
 {
     //std::cout << "Destroy PQ bus ..." << std::endl;
 }
@@ -81,30 +83,17 @@ Bus<ScalarT, IdxT>::~Bus()
  * @brief allocate method resizes local solution and residual vectors.
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::allocate()
+int BusInfinite<ScalarT, IdxT>::allocate()
 {
-    //std::cout << "Allocate PQ bus ..." << std::endl;
-    f_.resize(size_);
-    y_.resize(size_);
-    yp_.resize(size_);
-    tag_.resize(size_);
-
-    fB_.resize(size_);
-    yB_.resize(size_);
-    ypB_.resize(size_);
+    //std::cout << "Nothing to allocate for infinite bus ..." << std::endl;
 
     return 0;
 }
 
 
-/*!
- * @brief Bus variables are algebraic.
- */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::tagDifferentiable()
+int BusInfinite<ScalarT, IdxT>::tagDifferentiable()
 {
-    tag_[0] = false;
-    tag_[1] = false;
     return 0;
 }
 
@@ -113,30 +102,31 @@ int Bus<ScalarT, IdxT>::tagDifferentiable()
  * @brief initialize method sets bus variables to stored initial values.
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::initialize()
+int BusInfinite<ScalarT, IdxT>::initialize()
 {
-    // std::cout << "Initialize Bus..." << std::endl;
-    y_[0] = Vr0_;
-    y_[1] = Vi0_;
-    yp_[0] = 0.0;
-    yp_[1] = 0.0;
+    // std::cout << "Initialize BusInfinite..." << std::endl;
 
     return 0;
 }
 
 /*!
- * @brief PQ bus does not compute residuals, so here we just reset residual values.
+ * @brief Reset slack currents to zero.
+ *
+ * Infinite bus does not compute residuals, so here we just reset
+ * current values to zero. Components connected to the infinite bus
+ * will add their currents to Ir_ and Ii_. The resultant will be slack
+ * current that the infinite bus has to pick up.
  *
  * @warning This implementation assumes bus residuals are always evaluated
  * _before_ component model residuals.
  *
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::evaluateResidual()
+int BusInfinite<ScalarT, IdxT>::evaluateResidual()
 {
     // std::cout << "Evaluating residual of a PQ bus ...\n";
-    f_[0] = 0.0;
-    f_[1] = 0.0;
+    Ir_ = 0.0;
+    Ii_ = 0.0;
     return 0;
 }
 
@@ -148,40 +138,32 @@ int Bus<ScalarT, IdxT>::evaluateResidual()
  * @return int - error code
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::evaluateJacobian()
+int BusInfinite<ScalarT, IdxT>::evaluateJacobian()
 {
     return 0;
 }
-
 
 /*!
  * @brief initialize method sets bus variables to stored initial values.
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::initializeAdjoint()
+int BusInfinite<ScalarT, IdxT>::initializeAdjoint()
 {
-    // std::cout << "Initialize Bus..." << std::endl;
-    yB_[0] = 0.0;
-    yB_[1] = 0.0;
-    ypB_[0] = 0.0;
-    ypB_[1] = 0.0;
+    // std::cout << "Initialize BusInfinite..." << std::endl;
 
     return 0;
 }
 
 /**
- * @brief Bus only initializes adjoint residual elements to zero.
+ * @brief BusInfinite only initializes adjoint residual elements to zero.
  * 
  * @tparam ScalarT - data type for the integrand
  * @tparam IdxT    - data type for matrix/vector indices
  * @return int - error code
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::evaluateAdjointResidual()
+int BusInfinite<ScalarT, IdxT>::evaluateAdjointResidual()
 {
-    fB_[0] = 0.0;
-    fB_[1] = 0.0;
-
     return 0;
 }
 
@@ -193,7 +175,7 @@ int Bus<ScalarT, IdxT>::evaluateAdjointResidual()
  * @return int - error code
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::evaluateIntegrand()
+int BusInfinite<ScalarT, IdxT>::evaluateIntegrand()
 {
     return 0;
 }
@@ -206,14 +188,15 @@ int Bus<ScalarT, IdxT>::evaluateIntegrand()
  * @return int - error code
  */
 template <class ScalarT, typename IdxT>
-int Bus<ScalarT, IdxT>::evaluateAdjointIntegrand()
+int BusInfinite<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     return 0;
 }
 
+
 // Available template instantiations
-template class Bus<double, long int>;
-template class Bus<double, size_t>;
+template class BusInfinite<double, long int>;
+template class BusInfinite<double, size_t>;
 
 } // namespace PhasorDynamic
 } // namespace GridKit
