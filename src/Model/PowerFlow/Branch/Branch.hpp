@@ -62,9 +62,15 @@
 
 #include <ModelEvaluatorImpl.hpp>
 
+// Forward declarations.
 namespace GridKit
 {
     template <class ScalarT, typename IdxT> class BaseBus;
+
+    namespace PowerSystemData {
+        template <class ScalarT, typename IdxT>
+        struct BranchData;
+    }
 }
 
 namespace GridKit
