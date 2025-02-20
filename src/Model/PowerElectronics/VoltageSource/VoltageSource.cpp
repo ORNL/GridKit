@@ -83,7 +83,7 @@ int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
     std::vector<IdxT> rcord{0,1,2,2};
     std::vector<IdxT> ccord{2,2,0,1};
     std::vector<ScalarT> vals{-1.0, 1.0, -1.0, 1.0};
-    J_.setValues(rcord, ccord, vals);
+    jac_.setValues(rcord, ccord, vals);
 
     return 0;
 }

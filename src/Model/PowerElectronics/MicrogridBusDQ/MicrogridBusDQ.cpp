@@ -93,13 +93,13 @@ int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::evaluateJacobian()
 {
-    J_.zeroMatrix();
+    jac_.zeroMatrix();
 
     //Create dF/dy
     std::vector<IdxT> rtemp{0,1};
     std::vector<IdxT> ctemp{0,1};
     std::vector<ScalarT> vals{-1.0 / RN_,-1.0 / RN_};
-    J_.setValues(rtemp, ctemp, vals);
+    jac_.setValues(rtemp, ctemp, vals);
 
     return 0;
 }

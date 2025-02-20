@@ -94,7 +94,7 @@ namespace GridKit
             ypB_(size_),
             fB_(size_),
             gB_(size_opt_),
-            J_(COO_Matrix<ScalarT, IdxT>()),
+            jac_(COO_Matrix<ScalarT, IdxT>()),
             param_(size_opt_),
             param_up_(size_opt_),
             param_lo_(size_opt_)
@@ -133,10 +133,10 @@ namespace GridKit
         //     std::cout << "updateTime: t = " << time_ << "\n";
         // }
 
-        virtual void setTolerances(real_type& rtol, real_type& atol) const
+        virtual void setTolerances(real_type& rel_tol, real_type& abs_tol) const
         {
-            rtol = rtol_;
-            atol = atol_;
+            rel_tol = rel_tol_;
+            abs_tol = abs_tol_;
         }
 
         virtual void setMaxSteps(IdxT& msa) const
@@ -236,12 +236,12 @@ namespace GridKit
 
         COO_Matrix<ScalarT, IdxT>& getJacobian()
         {
-            return J_;
+            return jac_;
         }
 
         const COO_Matrix<ScalarT, IdxT>& getJacobian() const
         {
-            return J_;
+            return jac_;
         }
 
         std::vector<ScalarT>& getIntegrand()
@@ -299,7 +299,7 @@ namespace GridKit
         std::vector<ScalarT> fB_;
         std::vector<ScalarT> gB_;
 
-        COO_Matrix<ScalarT, IdxT> J_;
+        COO_Matrix<ScalarT, IdxT> jac_;
 
         std::vector<ScalarT> param_;
         std::vector<ScalarT> param_up_;
@@ -308,8 +308,8 @@ namespace GridKit
         real_type time_;
         real_type alpha_;
 
-        real_type rtol_;
-        real_type atol_;
+        real_type rel_tol_;
+        real_type abs_tol_;
 
         IdxT max_steps_;
 

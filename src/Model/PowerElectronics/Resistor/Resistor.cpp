@@ -84,7 +84,7 @@ int Resistor<ScalarT, IdxT>::evaluateJacobian()
     std::vector<IdxT> rcord{0,0,1,1};
     std::vector<IdxT> ccord{0,1,0,1};
     std::vector<ScalarT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
-    J_.setValues(rcord, ccord, vals);
+    jac_.setValues(rcord, ccord, vals);
 
     return 0;
 }

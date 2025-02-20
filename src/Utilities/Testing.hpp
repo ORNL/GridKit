@@ -69,6 +69,7 @@
 #include <PowerSystemData.hpp>
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 namespace {
 
@@ -84,11 +85,14 @@ inline std::ostream &errs() {
 namespace GridKit {
 namespace Testing {
 
-template <typename T> bool isEqual(const T value, const T ref, const T tol)
-{
-  T error = std::abs(value - ref) / (1.0 + std::abs(ref));
-  return (error < tol);
-}
+    template <typename T> 
+    bool isEqual(const T value,
+                 const T ref,
+                 const T tol = std::numeric_limits<T>::epsilon())
+    {
+        T error = std::abs(value - ref) / (1.0 + std::abs(ref));
+        return (error < tol);
+    }
 
 template <typename RealT = double, typename IdxT = int>
 inline bool isEqual(PowerSystemData::GenCostData<RealT, IdxT> a,

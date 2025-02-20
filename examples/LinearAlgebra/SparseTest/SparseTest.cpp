@@ -50,7 +50,7 @@ int main(int argc, char const *argv[])
     std::vector<size_t> r;
     std::vector<size_t> c;
     std::vector<double> v;
-    std::tie(r,c,v) = A.getDataToCSR();
+    std::tie(r,c,v) = A.setDataToCSR();
 
     for (size_t i = 0; i < r.size() - 1; i++)
     {

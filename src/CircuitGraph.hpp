@@ -95,12 +95,13 @@ size_t CircuitGraph<N, E>::amountHyperEdges()
 }
 
 /**
- * @brief Printing
+ * @brief Print the bipartite graph
  *
  * @todo need to add verbose printing for connections display
  *
  * @tparam IdxT
- * @param verbose
+ * @param[in] verbose if true will print connections, 
+ * otherwise just the number of nodes and edges
  */
 
 template <typename N, typename E>
