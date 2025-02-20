@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <Model/EvaluatorDynamics.hpp>
+#include <Model/Evaluator.hpp>
 
 namespace GridKit
 {
@@ -13,10 +13,10 @@ namespace PhasorDynamics
      *
      */
     template <class ScalarT, typename IdxT>
-    class Component : public Model::EvaluatorDynamics<ScalarT, IdxT>
+    class Component : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-        using real_type = typename Model::EvaluatorDynamics<ScalarT, IdxT>::real_type;
+        using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
         Component()
           : size_(0),

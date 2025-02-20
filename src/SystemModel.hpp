@@ -74,7 +74,7 @@ namespace GridKit
  * @brief Prototype for a system model class
  *
  * This class maps component data to system data and implements
- * ModelEvaluator for the system model. This is still work in
+ * Model::Evaluator for the system model. This is still work in
  * progress and code is not optimized.
  *
  * @todo Address thread safety for the system model methods.
@@ -83,8 +83,8 @@ namespace GridKit
 template <class ScalarT, typename IdxT>
 class SystemModel : public ModelEvaluatorImpl<ScalarT, IdxT>
 {
-    typedef ModelEvaluator<ScalarT, IdxT> bus_type;
-    typedef ModelEvaluator<ScalarT, IdxT> component_type;
+    using bus_type       = Model::Evaluator<ScalarT, IdxT>;
+    using component_type = Model::Evaluator<ScalarT, IdxT>;
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
@@ -150,8 +150,8 @@ public:
         {
             bus->allocate();
             size_      += bus->size();
-            size_quad_ += bus->size_quad();
-            size_opt_  += bus->size_opt();
+            size_quad_ += bus->sizeQuadrature();
+            size_opt_  += bus->sizeParams();
         }
 
         // Allocate all components
@@ -159,8 +159,8 @@ public:
         {
             component->allocate();
             size_      += component->size();
-            size_quad_ += component->size_quad();
-            size_opt_  += component->size_opt();
+            size_quad_ += component->sizeQuadrature();
+            size_opt_  += component->sizeParams();
         }
 
         // Allocate global vectors
@@ -230,13 +230,13 @@ public:
             }
             varOffset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                 param_[optOffset + j]    = bus->param()[j];
                 param_lo_[optOffset + j] = bus->param_lo()[j];
                 param_up_[optOffset + j] = bus->param_up()[j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
         }
 
         // Initialize components
@@ -254,13 +254,13 @@ public:
             }
             varOffset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                 param_[optOffset + j]    = component->param()[j];
                 param_lo_[optOffset + j] = component->param_lo()[j];
                 param_up_[optOffset + j] = component->param_up()[j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
         }
 
         return 0;
@@ -332,11 +332,11 @@ public:
             }
             varOffset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                 bus->param()[j] = param_[optOffset + j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
 
             bus->evaluateResidual();
         }
@@ -350,11 +350,11 @@ public:
             }
             varOffset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                 component->param()[j] = param_[optOffset + j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
 
             component->evaluateResidual();
         }
@@ -409,11 +409,11 @@ public:
             }
             varOffset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                 bus->param()[j] = param_[optOffset + j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
 
             bus->evaluateIntegrand();
         }
@@ -427,11 +427,11 @@ public:
             }
             varOffset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                 component->param()[j] = param_[optOffset + j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
 
             component->evaluateIntegrand();
         }
@@ -440,20 +440,20 @@ public:
         IdxT intOffset = 0;
         for(const auto& bus: buses_)
         {
-            for(IdxT j=0; j<bus->size_quad(); ++j)
+            for(IdxT j=0; j<bus->sizeQuadrature(); ++j)
             {
                 g_[intOffset + j]  = bus->getIntegrand()[j];
             }
-            intOffset += bus->size_quad();
+            intOffset += bus->sizeQuadrature();
         }
 
         for(const auto& component : components_)
         {
-            for(IdxT j=0; j<component->size_quad(); ++j)
+            for(IdxT j=0; j<component->sizeQuadrature(); ++j)
             {
                 g_[intOffset + j]  = component->getIntegrand()[j];
             }
-            intOffset += component->size_quad();
+            intOffset += component->sizeQuadrature();
         }
 
         return 0;
@@ -480,11 +480,11 @@ public:
             }
             offset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                  bus->param()[j] = param_[optOffset + j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
         }
 
         // Update component variables and optimization parameters
@@ -497,11 +497,11 @@ public:
             }
             offset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                  component->param()[j]    = param_[optOffset + j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
         }
 
         // Reset counter
@@ -560,11 +560,11 @@ public:
             }
             varOffset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                 bus->param()[j] = param_[optOffset + j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
 
         }
 
@@ -579,11 +579,11 @@ public:
             }
             varOffset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                 component->param()[j] = param_[optOffset + j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
 
         }
 
@@ -645,11 +645,11 @@ public:
             }
             varOffset += bus->size();
 
-            for(IdxT j=0; j<bus->size_opt(); ++j)
+            for(IdxT j=0; j<bus->sizeParams(); ++j)
             {
                 bus->param()[j] = param_[optOffset + j];
             }
-            optOffset += bus->size_opt();
+            optOffset += bus->sizeParams();
         }
 
         for(const auto& component : components_)
@@ -663,17 +663,17 @@ public:
             }
             varOffset += component->size();
 
-            for(IdxT j=0; j<component->size_opt(); ++j)
+            for(IdxT j=0; j<component->sizeParams(); ++j)
             {
                 component->param()[j] = param_[optOffset + j];
             }
-            optOffset += component->size_opt();
+            optOffset += component->sizeParams();
         }
 
         // Evaluate integrand and update global vector
         for(const auto& component : components_)
         {
-            if(component->size_quad() == 1)
+            if(component->sizeQuadrature() == 1)
             {
                 component->evaluateAdjointIntegrand();
                 for(IdxT j=0; j<size_opt_; ++j)

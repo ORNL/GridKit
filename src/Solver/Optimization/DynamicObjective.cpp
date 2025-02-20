@@ -90,7 +90,7 @@ bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nn
     assert(model_->size_quad() == 1);
     
     // Number of optimization variables.
-    n = model_->size_opt();
+    n = model_->sizeParams();
 
     // There are no constraints
     m = 0;
@@ -113,11 +113,11 @@ bool DynamicObjective<ScalarT, IdxT>::get_bounds_info(Index n, Number* x_l, Numb
                                                       Index m, Number* g_l, Number* g_u)
 {
     // Check if sizes are set correctly
-    assert(n == (Index) model_->size_opt());
+    assert(n == (Index) model_->sizeParams());
     assert(m == 0);
 
     // Get boundaries for the optimization parameters
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
     {
         x_l[i] = model_->param_lo()[i];
         x_u[i] = model_->param_up()[i];
@@ -139,7 +139,7 @@ bool DynamicObjective<ScalarT, IdxT>::get_starting_point(Index n, bool init_x, N
     assert(init_lambda == false);
 
     // Initialize optimization parameters x
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         x[i] = model_->param()[i];
 
     return true;
@@ -150,7 +150,7 @@ template <class ScalarT, typename IdxT>
 bool DynamicObjective<ScalarT, IdxT>::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
 {
     // Update optimization parameters
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         model_->param()[i] = x[i];
 
     // Evaluate objective function
@@ -169,9 +169,9 @@ bool DynamicObjective<ScalarT, IdxT>::eval_f(Index n, const Number* x, bool new_
 template <class ScalarT, typename IdxT>
 bool DynamicObjective<ScalarT, IdxT>::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
 {
-    assert(model_->size_opt() == static_cast<IdxT>(n));
+    assert(model_->sizeParams() == static_cast<IdxT>(n));
     // Update optimization parameters
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         model_->param()[i] = x[i];
 
     // evaluate the gradient of the objective function grad_{x} f(x)
@@ -188,7 +188,7 @@ bool DynamicObjective<ScalarT, IdxT>::eval_grad_f(Index n, const Number* x, bool
     integrator_->runBackwardSimulation(t_init_);
 
     // For now assumes only one forward integrand and multiple optimization parameters.
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         grad_f[i] = -((integrator_->getAdjointIntegral())[i]);
 
     integrator_->deleteAdjoint();

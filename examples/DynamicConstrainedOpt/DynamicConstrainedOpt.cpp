@@ -165,8 +165,8 @@ int main()
     }
 
     // Store dynamic objective optimization results
-    double* results  = new double[model->size_opt()];
-    for(unsigned i=0; i <model->size_opt(); ++i)
+    double* results  = new double[model->sizeParams()];
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
         results[i] = model->param()[i];
     }
@@ -193,7 +193,7 @@ int main()
 
     // Compare results of the two optimization methods
     int retval = 0;
-    for(unsigned i=0; i <model->size_opt(); ++i)
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
         if(!isEqual(results[i], model->param()[i], 10*tol))
             --retval; 
