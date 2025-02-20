@@ -69,7 +69,7 @@
 #include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4Param/Generator4Param.hpp>
-#include <SystemModel.hpp>
+#include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
 #include <Utilities/FileIO.hpp>

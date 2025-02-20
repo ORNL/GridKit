@@ -63,7 +63,7 @@
 
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4/Generator4.hpp>
-#include <SystemModel.hpp>
+#include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
 #include <IpIpoptApplication.hpp>

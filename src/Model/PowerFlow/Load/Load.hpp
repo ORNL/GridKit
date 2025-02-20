@@ -60,7 +60,7 @@
 #ifndef _LOAD_HPP_
 #define _LOAD_HPP_
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 #include <PowerSystemData.hpp>
 
 namespace GridKit

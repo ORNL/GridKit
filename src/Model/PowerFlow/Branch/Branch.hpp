@@ -60,7 +60,7 @@
 #ifndef _BRANCH_H_
 #define _BRANCH_H_
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 
 // Forward declarations.
 namespace GridKit

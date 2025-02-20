@@ -59,7 +59,7 @@
 
 #pragma once
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 #include <vector>
 
 namespace GridKit

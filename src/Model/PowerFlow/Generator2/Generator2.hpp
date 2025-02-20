@@ -57,7 +57,7 @@
  *
  */
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 
 namespace GridKit
 {

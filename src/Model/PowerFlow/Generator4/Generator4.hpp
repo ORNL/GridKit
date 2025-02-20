@@ -60,7 +60,7 @@
 #ifndef _GENERATOR_4_H_
 #define _GENERATOR_4_H_
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 
 namespace GridKit
 {
