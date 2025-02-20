@@ -51,6 +51,9 @@ public:
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @param[in] IdxT - rows_size 
+ * @param[in] IdxT - columns_size 
  */
 template <class ScalarT, typename IdxT>
 DenseMatrix<ScalarT, IdxT>::DenseMatrix(const IdxT rows_size, const IdxT columns_size) :
@@ -67,6 +70,10 @@ DenseMatrix<ScalarT, IdxT>::DenseMatrix(const IdxT rows_size, const IdxT columns
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @param[in] IdxT - i row index
+ * @param[in] IdxT - j column index 
+ * @return ScalarT - value
  */
 template <class ScalarT, typename IdxT>
 inline ScalarT DenseMatrix<ScalarT, IdxT>::getValue(const IdxT i, const IdxT j) const
@@ -81,6 +88,10 @@ inline ScalarT DenseMatrix<ScalarT, IdxT>::getValue(const IdxT i, const IdxT j) 
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @param[in] IdxT - i row index
+ * @param[in] IdxT - j column index 
+ * @param[in] ScalarT - value 
  */
 template <class ScalarT, typename IdxT>
 inline void DenseMatrix<ScalarT, IdxT>::setValue(const IdxT i, const IdxT j, const ScalarT value)
@@ -96,6 +107,8 @@ inline void DenseMatrix<ScalarT, IdxT>::setValue(const IdxT i, const IdxT j, con
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @param[in] COO_Matrix<ScalarT, IdxT> - values_COO
  */
 template <class ScalarT, typename IdxT>
 inline void DenseMatrix<ScalarT, IdxT>::setValues(COO_Matrix<ScalarT, IdxT> values_COO)
@@ -113,6 +126,8 @@ inline void DenseMatrix<ScalarT, IdxT>::setValues(COO_Matrix<ScalarT, IdxT> valu
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @return Address of the vector containing matrix values
  */
 template <class ScalarT, typename IdxT>
 inline std::vector<ScalarT>* DenseMatrix<ScalarT, IdxT>::getValues()
@@ -125,6 +140,8 @@ inline std::vector<ScalarT>* DenseMatrix<ScalarT, IdxT>::getValues()
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @return Address of the COO matrix containing the sparsified matrix values
  */
 template <class ScalarT, typename IdxT>
 inline COO_Matrix<ScalarT, IdxT>* DenseMatrix<ScalarT, IdxT>::getValuesCOO()
@@ -176,6 +193,8 @@ inline void DenseMatrix<ScalarT, IdxT>::toCOO()
  *
  * @tparam ScalarT 
  * @tparam IdxT 
+ *
+ * @param[in] name to identify the specific matrix printed
  */
 template <class ScalarT, typename IdxT>
 inline void DenseMatrix<ScalarT, IdxT>::printMatrix(std::string name)
