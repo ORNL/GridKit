@@ -77,8 +77,8 @@ namespace PhasorDynamics
 
         virtual void setTolerances(real_type& rtol, real_type& atol) const
         {
-            rtol = rtol_;
-            atol = atol_;
+            rtol = rel_tol_;
+            atol = abs_tol_;
         }
 
         virtual void setMaxSteps(IdxT& msa) const
@@ -250,8 +250,8 @@ namespace PhasorDynamics
         real_type time_;
         real_type alpha_;
 
-        real_type rtol_;
-        real_type atol_;
+        real_type rel_tol_;
+        real_type abs_tol_;
 
         IdxT max_steps_;
 
