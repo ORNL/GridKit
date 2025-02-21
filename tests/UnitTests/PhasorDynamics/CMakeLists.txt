@@ -17,6 +17,7 @@ target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
                                 
 add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
+                                         GRIDKIT::phasor_dynamics_branch
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
