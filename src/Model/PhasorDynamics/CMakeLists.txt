@@ -6,3 +6,4 @@
 add_subdirectory(Branch)
 add_subdirectory(Bus)
 add_subdirectory(Load)
+add_subdirectory(SynchronousMachine)
