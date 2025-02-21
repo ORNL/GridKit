@@ -7,7 +7,6 @@
 #include <cassert>
 
 #include <ScalarTraits.hpp>
-#include <ModelEvaluatorImpl.hpp>
 #include <CircuitGraph.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 
@@ -15,31 +14,20 @@ namespace GridKit
 {
 
     template <class ScalarT, typename IdxT>
-    class PowerElectronicsModel : public ModelEvaluatorImpl<ScalarT, IdxT>
+    class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
     {
         typedef CircuitComponent<ScalarT, IdxT> component_type;
 
-        using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::size_opt_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::jac_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
-        using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
-        // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
+        using CircuitComponent<ScalarT, IdxT>::size_;
+        using CircuitComponent<ScalarT, IdxT>::nnz_;
+        using CircuitComponent<ScalarT, IdxT>::time_;
+        using CircuitComponent<ScalarT, IdxT>::alpha_;
+        using CircuitComponent<ScalarT, IdxT>::y_;
+        using CircuitComponent<ScalarT, IdxT>::yp_;
+        using CircuitComponent<ScalarT, IdxT>::f_;
+        using CircuitComponent<ScalarT, IdxT>::jac_;
+        using CircuitComponent<ScalarT, IdxT>::rel_tol_;
+        using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
     public:
         /**
@@ -47,7 +35,7 @@ namespace GridKit
          * 
          * @post System model parameters set as default
          */
-        PowerElectronicsModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+        PowerElectronicsModel()
         {
             // Set system model parameters as default
             rel_tol_ = 1e-4;
@@ -70,7 +58,7 @@ namespace GridKit
         PowerElectronicsModel(double rel_tol = 1e-4, 
                               double abs_tol = 1e-4, 
                               bool use_jac = false, 
-                              IdxT max_steps = 2000) : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+                              IdxT max_steps = 2000)
         {
             // Set system model tolerances from input
             rel_tol_ = rel_tol;
@@ -97,13 +85,13 @@ namespace GridKit
         /**
          * @brief allocator default
          *
-         * @todo this should throw an exception as no allocation without a graph is allowed. Or needs to be removed from the base class
+         * @todo this should throw an exception as no allocation without a graph is allowed.
+         * Or needs to be removed from the base class
          *
          * @return int
          */
         int allocate()
         {
-
             return 1;
         }
 
@@ -141,7 +129,6 @@ namespace GridKit
          */
         int allocate(IdxT s)
         {
-
             // Allocate all components
             size_ = s;
             for (const auto &component : components_)
@@ -164,7 +151,6 @@ namespace GridKit
          */
         int initialize()
         {
-
             // Initialize components
             for (const auto &component : components_)
             {

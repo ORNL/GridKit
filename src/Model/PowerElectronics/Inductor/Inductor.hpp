@@ -3,7 +3,7 @@
 #ifndef _IND_HPP_
 #define _IND_HPP_
 
-#include <ModelEvaluatorImpl.hpp>
+
 #include <PowerSystemData.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 

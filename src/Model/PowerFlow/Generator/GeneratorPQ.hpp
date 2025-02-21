@@ -60,7 +60,7 @@
 #pragma once
 
 #include <vector>
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 #include <PowerSystemData.hpp>
 #include "GeneratorBase.hpp"
 

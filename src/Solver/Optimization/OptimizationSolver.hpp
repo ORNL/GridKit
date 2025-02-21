@@ -60,7 +60,7 @@
 #ifndef _OPTIMIZATION_SOLVER_HPP_
 #define _OPTIMIZATION_SOLVER_HPP_
 
-#include "ModelEvaluator.hpp"
+#include "Model/Evaluator.hpp"
 #include <Solver/Dynamic/Ida.hpp>
 
 namespace AnalysisManager
@@ -83,7 +83,7 @@ namespace AnalysisManager
         virtual ~OptimizationSolver(){}
 
     protected:
-        GridKit::ModelEvaluator<ScalarT, IdxT>* model_;
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
         Sundials::Ida<ScalarT, IdxT>* integrator_;
     };
 

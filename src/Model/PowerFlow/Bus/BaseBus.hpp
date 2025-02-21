@@ -60,7 +60,7 @@
 #ifndef _BASE_BUS_HPP_
 #define _BASE_BUS_HPP_
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 
 namespace GridKit
 {

@@ -63,7 +63,7 @@
 
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4/Generator4.hpp>
-#include <SystemModel.hpp>
+#include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -142,9 +142,9 @@ int main()
     const double eps = 2e-3;
 
     // Compute gradient of the objective function numerically
-    std::vector<double> dGdp(model->size_opt());
+    std::vector<double> dGdp(model->sizeParams());
 
-    for (unsigned i=0; i<model->size_opt(); ++i)
+    for (unsigned i=0; i<model->sizeParams(); ++i)
     {
       model->param()[i] += eps;
       idas->getSavedInitialCondition();
@@ -185,7 +185,7 @@ int main()
     int retval = 0;
     std::cout << "\n\nComparison of numerical and adjoint results:\n\n";
     double* neg_dGdp = idas->getAdjointIntegral();
-    for (unsigned i=0; i<model->size_opt(); ++i)
+    for (unsigned i=0; i<model->sizeParams(); ++i)
     {
         std::cout << "dG/dp" << i << " (numerical) = " <<      dGdp[i] << "\n";
         std::cout << "dG/dp" << i << " (adjoint)   = " << -neg_dGdp[i] << "\n\n";

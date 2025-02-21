@@ -61,7 +61,7 @@
 #define _MODEL_EVALUATOR_IMPL_HPP_
 
 #include <vector>
-#include <ModelEvaluator.hpp>
+#include <Model/Evaluator.hpp>
 
 namespace GridKit
 {
@@ -71,10 +71,10 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class ModelEvaluatorImpl : public ModelEvaluator<ScalarT, IdxT>
+    class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-        typedef typename ModelEvaluator<ScalarT, IdxT>::real_type real_type;
+        typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
 
         ModelEvaluatorImpl()
           : size_(0),
@@ -116,12 +116,12 @@ namespace GridKit
             return false;
         }
 
-        virtual IdxT size_quad()
+        virtual IdxT sizeQuadrature()
         {
             return size_quad_;
         }
 
-        virtual IdxT size_opt()
+        virtual IdxT sizeParams()
         {
             return size_opt_;
         }
