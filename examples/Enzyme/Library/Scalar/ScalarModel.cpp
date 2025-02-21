@@ -18,7 +18,7 @@ void ScalarModel::evalFunction() {
 void ScalarModel::evalDerivative() {
     ScalarModel d_scalar_model;
     d_scalar_model.setVariable(1.0);
-    dfdx_ = __enzyme_fwddiff<double, ScalarModel>((double*)wrapper<double, ScalarModel>, enzyme_dup, this, &d_scalar_model);
+    df_dx_ = __enzyme_fwddiff<double, ScalarModel>((double*)wrapper<double, ScalarModel>, enzyme_dup, this, &d_scalar_model);
 }
 
 double ScalarModel::getVariable() const {
@@ -30,5 +30,5 @@ double ScalarModel::getFunctionValue() const {
 }
 
 double ScalarModel::getDerivativeValue() const {
-    return dfdx_;
+    return df_dx_;
 }

@@ -2,10 +2,10 @@
 #include "VectorModel.hpp"
 #include <iostream>
 
-VectorModel::VectorModel(int N) :
-   x_(N),
-   f_(N),
-   dfdx_(N, N)
+VectorModel::VectorModel(int n) :
+   x_(n),
+   f_(n),
+   df_dx_(n, n)
 {
 };
 
@@ -33,13 +33,13 @@ void VectorModel::evalResidual() {
 }
 
 void VectorModel::evalJacobian() {
-    const int N = x_.size();
-    std::vector<double> v(N);
-    VectorModel d_vector_model(N);
-    for (int idy = 0; idy < N; ++idy)
+    const int n = x_.size();
+    std::vector<double> v(n);
+    VectorModel d_vector_model(n);
+    for (int idy = 0; idy < n; ++idy)
     {
         // Elementary vector for Jacobian-vector product
-        for (int idx = 0; idx < N; ++idx)
+        for (int idx = 0; idx < n; ++idx)
         {
             v[idx] = 0.0;
         }
@@ -52,9 +52,9 @@ void VectorModel::evalJacobian() {
                                       enzyme_dup, this, &d_vector_model);
   
         // Store result
-        for (int idx = 0; idx < N; ++idx)
+        for (int idx = 0; idx < n; ++idx)
         {
-            dfdx_.setValue(idx, idy, d_res[idx]);
+            df_dx_.setValue(idx, idy, d_res[idx]);
         }
     }
 }
@@ -68,5 +68,5 @@ std::vector<double>& VectorModel::getResidual() {
 }
 
 DenseMatrix& VectorModel::getJacobian() {
-    return dfdx_;
+    return df_dx_;
 }

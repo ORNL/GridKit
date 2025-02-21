@@ -22,8 +22,8 @@ DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y) {
 
 int main() {
     // Size and variable declarations
-    constexpr int N = 10;
-    std::vector<double> var(N);
+    constexpr int n = 10;
+    std::vector<double> var(n);
 
     // Random input values
     srand(time(NULL));
@@ -33,7 +33,7 @@ int main() {
     }
 
     // Model
-    VectorModel* vector_model = new VectorModel(N);
+    VectorModel* vector_model = new VectorModel(n);
     vector_model->setVariable(var);
     vector_model->evalResidual();
     vector_model->evalJacobian();

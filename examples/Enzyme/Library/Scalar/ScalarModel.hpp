@@ -2,7 +2,7 @@
 
 class ScalarModel {
 private:
-    double x_, f_, dfdx_;
+    double x_, f_, df_dx_;
     inline double square(double);
 
 public:

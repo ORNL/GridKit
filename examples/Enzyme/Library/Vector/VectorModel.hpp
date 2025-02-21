@@ -7,7 +7,7 @@ using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 class VectorModel {
 private:
     std::vector<double> x_, f_;
-    DenseMatrix dfdx_;
+    DenseMatrix df_dx_;
     inline double square_scalar(double);
     void square(std::vector<double>&, std::vector<double>&);
 

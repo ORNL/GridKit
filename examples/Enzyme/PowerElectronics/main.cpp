@@ -35,12 +35,12 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
     constexpr double rLc_ = 0.03;
     constexpr double Lc_ = 0.35e-3;
 
-    constexpr bool refframe_ = true;
+    constexpr bool ref_frame_ = true;
 
     std::vector<double> yp_(0);
 
     double omega = wb_ - mp_ * y_[4];
-    if (refframe_)
+    if (ref_frame_)
     {
         f_[0] = omega - y_[0];
     }
