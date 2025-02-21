@@ -91,13 +91,13 @@ bool DynamicConstraint<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& n
 
     // Number of parameters is size of the system plus 1 fictitious parameter
     // to store the objective value.
-    n = model_->size_opt() + 1;
+    n = model_->sizeParams() + 1;
 
     // There is one constraint
     m = 1;
 
     // Jacobian is a dense row matrix of length n+1.
-    nnz_jac_g = model_->size_opt() + 1;
+    nnz_jac_g = model_->sizeParams() + 1;
 
     // Using numerical Hessian.
     nnz_h_lag = 0;
@@ -114,19 +114,19 @@ bool DynamicConstraint<ScalarT, IdxT>::get_bounds_info(Index n, Number* x_l, Num
                                                  Index m, Number* g_l, Number* g_u)
 {
     // Check if sizes are set correctly
-    assert(n == (Index) (model_->size_opt() + 1));
+    assert(n == (Index) (model_->sizeParams() + 1));
     assert(m == 1);
 
     // Get boundaries for the optimization parameters
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
     {
         x_l[i] = model_->param_lo()[i];
         x_u[i] = model_->param_up()[i];
     }
 
     // No boundaries for fictitious parameter x[n]
-    x_l[model_->size_opt()] = -1e20;
-    x_u[model_->size_opt()] = +1e20;
+    x_l[model_->sizeParams()] = -1e20;
+    x_u[model_->sizeParams()] = +1e20;
 
     // Set constraint g[0] to be equality constraint g[0] = 0
     g_l[0] = 0.0;
@@ -148,11 +148,11 @@ bool DynamicConstraint<ScalarT, IdxT>::get_starting_point(Index n, bool init_x, 
     assert(init_lambda == false);
 
     // Initialize optimization parameters x
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         x[i] = model_->param()[i];
 
     // Initialize fictitious parameter x[n-1] to zero
-    x[model_->size_opt()] = 0.0;
+    x[model_->sizeParams()] = 0.0;
 
     return true;
 }
@@ -162,7 +162,7 @@ template <class ScalarT, typename IdxT>
 bool DynamicConstraint<ScalarT, IdxT>::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
 {
     // Set objective to fictitious optimization parameter x[n-1]
-    obj_value = x[model_->size_opt()];
+    obj_value = x[model_->sizeParams()];
 
     return true;
 }
@@ -173,9 +173,9 @@ bool DynamicConstraint<ScalarT, IdxT>::eval_grad_f(Index n, const Number* x, boo
 {
     // Objective function equals to the fictitious parameter x[n-1].
     // Gradient, then assumes the simple form:
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
         grad_f[i] = 0.0;
-    grad_f[model_->size_opt()] = 1.0;
+    grad_f[model_->sizeParams()] = 1.0;
 
     return true;
 }
@@ -185,7 +185,7 @@ template <class ScalarT, typename IdxT>
 bool DynamicConstraint<ScalarT, IdxT>::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
 {
     // Update optimization parameters
-    for(IdxT i = 0; i < model_->size_opt(); ++i)
+    for(IdxT i = 0; i < model_->sizeParams(); ++i)
     {
         model_->param()[i] = x[i];
         //std::cout << "x[" << i << "] = " << x[i] << "\n";
@@ -205,7 +205,7 @@ bool DynamicConstraint<ScalarT, IdxT>::eval_g(Index n, const Number* x, bool new
     }
 
     // For now assumes only one forward integrand and multiple optimization parameters.
-    g[0] = (integrator_->getIntegral())[0] - x[model_->size_opt()];
+    g[0] = (integrator_->getIntegral())[0] - x[model_->sizeParams()];
     //std::cout << "constraint:" << g[0] << std::endl;
     return true;
 }
@@ -219,19 +219,19 @@ bool DynamicConstraint<ScalarT, IdxT>::eval_jac_g(Index n, const Number* x, bool
     // Set Jacobian sparsity pattern ...
     if(!values)
     {
-        for(IdxT i = 0; i < model_->size_opt(); ++i)
+        for(IdxT i = 0; i < model_->sizeParams(); ++i)
         {
             iRow[i] = 0;
             jCol[i] = i;
         }
-        iRow[model_->size_opt()] = 0;
-        jCol[model_->size_opt()] = model_->size_opt();
+        iRow[model_->sizeParams()] = 0;
+        jCol[model_->sizeParams()] = model_->sizeParams();
     }
     // ... or compute Jacobian derivatives
     else
     {
         // Update optimization parameters
-        for(IdxT i = 0; i < model_->size_opt(); ++i)
+        for(IdxT i = 0; i < model_->sizeParams(); ++i)
             model_->param()[i] = x[i];
 
         // evaluate the gradient of the objective function grad_{x} f(x)
@@ -261,11 +261,11 @@ bool DynamicConstraint<ScalarT, IdxT>::eval_jac_g(Index n, const Number* x, bool
         }
 
         // For now assumes only one forward integrand and multiple optimization parameters.
-        for(IdxT i = 0; i < model_->size_opt(); ++i)
+        for(IdxT i = 0; i < model_->sizeParams(); ++i)
         {
             values[i] = -((integrator_->getAdjointIntegral())[i]);
         }
-        values[model_->size_opt()] = -1.0;
+        values[model_->sizeParams()] = -1.0;
 
         integrator_->deleteAdjoint();
     }

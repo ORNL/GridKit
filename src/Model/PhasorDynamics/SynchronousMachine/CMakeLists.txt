@@ -5,9 +5,9 @@
 #    - Slaven Peles <peless@ornl.gov>
 # ]]
 
-gridkit_add_library(phasor_dynamics_branch
+gridkit_add_library(phasor_dynamics_synchronous_machine
   SOURCES
-    Branch.cpp
+    SynchronousMachine.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_branch)
+    gridkit_phasor_dynamics_synchronous_machine)
 

@@ -68,7 +68,7 @@
 #include <sunlinsol/sunlinsol_klu.h>       /* access to KLU linear solver          */
 #include <sunlinsol/sunlinsol_dense.h>     /* access to dense linear solver        */
 
-#include "ModelEvaluator.hpp"
+#include "Model/Evaluator.hpp"
 #include "DynamicSolver.hpp"
 
 namespace AnalysisManager
@@ -83,7 +83,7 @@ namespace AnalysisManager
             typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
         public:
-            Ida(GridKit::ModelEvaluator<ScalarT, IdxT>* model);
+            Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
             ~Ida();
 
             int configureSimulation();
@@ -212,7 +212,7 @@ namespace AnalysisManager
             int backwardID_;
 
         private:
-            //static void copyMat(ModelEvaluator::Mat& J, SlsMat Jida);
+            //static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
             static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
             static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
             static void copyVec(const std::vector<bool>& x, N_Vector y);

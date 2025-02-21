@@ -65,7 +65,7 @@
 #include <Model/PowerFlow/Load/Load.hpp>
 #include <Model/PowerFlow/Generator4Governor/Generator4Governor.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-#include <SystemModel.hpp>
+#include <Model/PowerFlow/SystemModel.hpp>
 
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
