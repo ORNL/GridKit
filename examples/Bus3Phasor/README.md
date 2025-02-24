@@ -130,8 +130,7 @@ V_{d,3} = -\psi_{qpp,3}(\psi_{qp^{\prime},3}E_{dp,3})(1+\omega_3)
 V_{q,3} = \psi_{dpp,3}(\psi_{dp^{\prime},3}E_{qp,3})(1+\omega_3)
 ```
 ```math
-I_{d,3} = I_{G,3, r}\sin(\delta_3) - I_{G,3,i}\cos(\delta_3)
-```
+I_{d,3} = I_{G,r,3}\sin(\delta_3) - I_{G,i,3}\cos(\delta_3)
 ```math
 I_{q,3} = I_{G,3, r}\cos(\delta_3) + I_{G,3,i}\sin(\delta_3)
 ```
