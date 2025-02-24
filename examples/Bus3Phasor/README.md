@@ -97,8 +97,7 @@ I_{q,1} = I_{G,1, r}\cos(\delta_1) + I_{G,1,i}\sin(\delta_1)
 
 Network interfaces:
 ```math
-V_{d,1} = V_{1,r}\sin(\delta_1) - V_{1,i}\cos(\delta_1) + I_{d,1} R_{a,1}  -I_{q,1} X_{qpp,1}
-```
+V_{d,1} = V_{r,1}\sin(\delta_1) - V_{i,1}\cos(\delta_1) + I_{d,1} R_{a,1}  -I_{q,1} X_{qpp,1}
 ```math
 V_{q,1} = V_{1,r}\cos(\delta_1) + V_{1,i}\sin(\delta_1) + I_{d,1}X_{qpp,1} + I_{q,1}R_{a,1}
 ```
