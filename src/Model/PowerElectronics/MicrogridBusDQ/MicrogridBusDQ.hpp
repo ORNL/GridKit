@@ -3,7 +3,7 @@
 #ifndef _VIRBUSDQ_HPP_
 #define _VIRBUSDQ_HPP_
 
-#include <ModelEvaluatorImpl.hpp>
+
 #include <PowerSystemData.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 

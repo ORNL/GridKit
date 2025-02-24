@@ -75,7 +75,7 @@
 // #include <sunlinsol/sunlinsol_klu.h>       /* access to KLU linear solver          */
 #include <sunlinsol/sunlinsol_dense.h>     /* access to dense linear solver        */
 
-#include "ModelEvaluator.hpp"
+#include "Model/Evaluator.hpp"
 #include "SteadyStateSolver.hpp"
 
 namespace AnalysisManager
@@ -90,7 +90,7 @@ namespace AnalysisManager
             typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
         public:
-            Kinsol(GridKit::ModelEvaluator<ScalarT, IdxT>* model);
+            Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
             ~Kinsol();
 
             int configureSimulation();
@@ -197,7 +197,7 @@ namespace AnalysisManager
             N_Vector yy0_; ///< Storage for initial values
 
         private:
-            //static void copyMat(ModelEvaluator::Mat& J, SlsMat Jida);
+            //static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
             static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
             static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
             static void copyVec(const std::vector<bool>& x, N_Vector y);

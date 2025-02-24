@@ -58,7 +58,7 @@
  */
 #pragma once
 
-#include "ModelEvaluator.hpp"
+#include "Model/Evaluator.hpp"
 
 namespace AnalysisManager
 {
@@ -66,18 +66,18 @@ namespace AnalysisManager
     class SteadyStateSolver
     {
     public:
-        SteadyStateSolver(GridKit::ModelEvaluator<ScalarT, IdxT>* model) : model_(model)
+        SteadyStateSolver(GridKit::Model::Evaluator<ScalarT, IdxT>* model) : model_(model)
         {
         }
         virtual ~SteadyStateSolver(){}
         
-        GridKit::ModelEvaluator<ScalarT, IdxT>* getModel()
+        GridKit::Model::Evaluator<ScalarT, IdxT>* getModel()
         {
             return model_;
         }
         
     protected:
-        GridKit::ModelEvaluator<ScalarT, IdxT>* model_;
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
     };
 
 }

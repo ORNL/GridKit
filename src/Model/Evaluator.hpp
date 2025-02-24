@@ -13,13 +13,13 @@ namespace Model
      *
      */
     template <class ScalarT, typename IdxT>
-    class EvaluatorDynamics
+    class Evaluator
     {
     public:
         typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
-        EvaluatorDynamics(){}
-        virtual ~EvaluatorDynamics(){}
+        Evaluator(){}
+        virtual ~Evaluator(){}
 
         virtual int allocate() = 0;
         virtual int initialize() = 0;

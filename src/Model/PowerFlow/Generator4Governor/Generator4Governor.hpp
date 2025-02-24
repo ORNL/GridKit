@@ -60,7 +60,7 @@
 #ifndef _GENERATOR_4_GOVERNOR_B_HPP_
 #define _GENERATOR_4_GOVERNOR_B_HPP_
 
-#include <ModelEvaluatorImpl.hpp>
+#include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
 
 namespace GridKit
 {
