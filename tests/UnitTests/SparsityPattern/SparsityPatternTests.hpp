@@ -56,7 +56,7 @@ namespace Testing
             // Check dependencies of f[1] (depends on x[0], x[1], x[2])
             {
                 const Sparse::Variable::DependencyMap& dependencies = 
-                    (f[1]).getDependencies();
+                    (f[2]).getDependencies();
             
                 success *= (dependencies.size() == 3);
                 success *= (dependencies.find(0) != dependencies.end());
