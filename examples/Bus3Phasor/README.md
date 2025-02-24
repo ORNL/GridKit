@@ -1,5 +1,5 @@
 
-<img src="genrou.png", style="text-align:center;">
+<img src="genrou.png">
 
 Notation: $I_{a,b}$ represents the current flowing into Bus b from the branch connecting Bus a and Bus b, $I_{G,a}$ the current from generator a, $I_{L,a}$ the current from load a, and $V_a$ the voltage at Bus a.
 Each component is sub-index by the components ID. The 3Bus model is composed of 3 buses, 3 branches, 2 loads and 2 generators. For simplicity in some equation, $I = \left[\begin{array}{c} I_r \\ I_i \end{array}\right]$ to represent complex variables.
@@ -92,17 +92,18 @@ V_{d,1} = -\psi_{qpp,1}(\psi_{qp^{\prime},1}E_{dp,1})(1+\omega_1)
 V_{q,1} = \psi_{dpp,1}(\psi_{dp^{\prime},1}E_{qp,1})(1+\omega_1)
 ```
 ```math
-I_{d,1} = I_{G,1, r}\sin(\delta_1) - I_{G,1,i}\cos(\delta_1)
+I_{d,1} = I_{G,r,1}\sin(\delta_1) - I_{G,i,1}\cos(\delta_1)
 ```
 ```math
-I_{q,1} = I_{G,1, r}\cos(\delta_1) + I_{G,1,i}\sin(\delta_1)
+I_{q,1} = I_{G,r,1}\cos(\delta_1) + I_{G,i,1}\sin(\delta_1)
 ```
 
 Network interfaces:
 ```math
 V_{d,1} = V_{r,1}\sin(\delta_1) - V_{i,1}\cos(\delta_1) + I_{d,1} R_{a,1}  -I_{q,1} X_{qpp,1}
+```
 ```math
-V_{q,1} = V_{1,r}\cos(\delta_1) + V_{1,i}\sin(\delta_1) + I_{d,1}X_{qpp,1} + I_{q,1}R_{a,1}
+V_{q,1} = V_{r, 1}\cos(\delta_1) + V_{i,1}\sin(\delta_1) + I_{d,1}X_{qpp,1} + I_{q,1}R_{a,1}
 ```
 ## Generator 3
 Generator connected to bus 3:<br>
@@ -134,15 +135,16 @@ V_{q,3} = \psi_{dpp,3}(\psi_{dp^{\prime},3}E_{qp,3})(1+\omega_3)
 ```
 ```math
 I_{d,3} = I_{G,r,3}\sin(\delta_3) - I_{G,i,3}\cos(\delta_3)
+```
 ```math
-I_{q,3} = I_{G,3, r}\cos(\delta_3) + I_{G,3,i}\sin(\delta_3)
+I_{q,3} = I_{G,r, 3}\cos(\delta_3) + I_{G,i,3}\sin(\delta_3)
 ```
 
 Network interfaces:
 ```math
-V_{d,3} = V_{3,r}\sin(\delta_3) - V_{3,i}\cos(\delta_3) + I_{d,3} R_{a,3}  -I_{q,3} X_{qpp,3}
+V_{d,3} = V_{r,3}\sin(\delta_3) - V_{i,3}\cos(\delta_3) + I_{d,3} R_{a,3}  -I_{q,3} X_{qpp,3}
 ```
 ```math
-V_{q,3} = V_{3,r}\cos(\delta_3) + V_{3,i} \sin(\delta_3) + I_{d,3}X_{qpp,3} + I_{q,3}R_{a,3}
+V_{q,3} = V_{r,3}\cos(\delta_3) + V_{i,3} \sin(\delta_3) + I_{d,3}X_{qpp,3} + I_{q,3}R_{a,3}
 ```
 
