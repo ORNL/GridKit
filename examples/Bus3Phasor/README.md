@@ -1,3 +1,6 @@
+
+<img src="genrou.png", style="text-align:center;">
+
 Notation: $I_{a,b}$ represents the current flowing into Bus b from the branch connecting Bus a and Bus b, $I_{G,a}$ the current from generator a, $I_{L,a}$ the current from load a, and $V_a$ the voltage at Bus a.
 Each component is sub-index by the components ID. The 3Bus model is composed of 3 buses, 3 branches, 2 loads and 2 generators. For simplicity in some equation, $I = \left[\begin{array}{c} I_r \\ I_i \end{array}\right]$ to represent complex variables.
 
