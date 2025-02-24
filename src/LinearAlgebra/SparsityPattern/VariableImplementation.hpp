@@ -2,8 +2,7 @@
     \file VariableImplementation.hpp
 */
 
-#ifndef SAD_VARIABLE_IMPLEMENTATION_HPP
-#define SAD_VARIABLE_IMPLEMENTATION_HPP
+#pragma once
 
 namespace GridKit
 {
@@ -213,5 +212,3 @@ namespace Sparse
 } // namespace Sparse
 } // namespace GridKit
 
-
-#endif // SAD_VARIABLE_IMPLEMENTATION_HPP

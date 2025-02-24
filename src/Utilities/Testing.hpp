@@ -99,6 +99,7 @@ inline bool isEqual(PowerSystemData::GenCostData<RealT, IdxT> a,
                     PowerSystemData::GenCostData<RealT, IdxT> b,
                     RealT tol = tol_)
 {
+  (void) tol; // suppress warning
   int fail = 0;
   fail += a.kind != b.kind;
   fail += a.startup != b.startup;
@@ -232,7 +233,7 @@ inline bool isEqual(std::vector<T> a, std::vector<T> b, double tol = tol_)
 
   int fail = 0;
   for (std::size_t i = 0; i < a.size(); i++) {
-    if (!isEqual(a[i], b[i])) {
+    if (!isEqual(a[i], b[i], tol)) {
       fail++;
       errs() << "[isEqual<vector<T>>]: Got failure with i=" << i << ".\n";
     }

@@ -1,8 +1,7 @@
 /*!
     \file Variable.hpp
 */
-#ifndef SAD_VARIABLE_HPP
-#define SAD_VARIABLE_HPP
+#pragma once
 
 #include <map>
 #include <vector>
@@ -264,7 +263,7 @@ namespace Sparse
         bool isFixed_;           ///< Constant parameter flag.
         
         mutable DependencyMap* dependencies_;
-        static const size_t INVALID_VAR_NUMBER = -1;
+        static const size_t INVALID_VAR_NUMBER = static_cast<const size_t>(-1);
     };
     
     //------------------------------------
@@ -336,4 +335,3 @@ namespace Sparse
 #include "VariableImplementation.hpp"
 #include "VariableOperators.hpp"
 
-#endif // SAD_VARIABLE_HPP

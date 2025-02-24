@@ -2,8 +2,7 @@
     \file VariableOperators.hpp
     
 */
-#ifndef SAD_VARIABLE_OPERATORS_HPP
-#define SAD_VARIABLE_OPERATORS_HPP
+#pragma once
 
 // Define derivatives of standard library mathematical functions here.
 // These definitions could be used to add smoothing in cases where 
@@ -361,5 +360,3 @@ namespace std
 
 } // namespace std
 
-
-#endif // SAD_VARIABLE_OPERATORS_HPP
