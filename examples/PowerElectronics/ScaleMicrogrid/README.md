@@ -2,9 +2,9 @@
 
 The model is an expanded form of the model in reference 1 and 2. Utilizes the PowerElectronicsModel composer framework. Given a free parameter $N \ge 1$ then the amount of components the system have are as follows.
  + Distributed Generators : $`2N`$
- + Microgrid Lines : $2N-1$
- + Microgrid Loads : $N$
- + Microgrid Buses : $N$
+ + Microgrid Lines : $`2N-1`$
+ + Microgrid Loads : $`N`$
+ + Microgrid Buses : $`N`$
 
 When $N=2$ the original case in reference 1 is constructed.
 All parameters are given by duplicating the parameters in reference 1 over the extended system. The system extends by connecting new systems over the even indexed buses.
