@@ -1,7 +1,7 @@
 
 
 The model is an expanded form of the model in reference 1 and 2. Utilizes the PowerElectronicsModel composer framework. Given a free parameter $N \ge 1$ then the amount of components the system have are as follows.
- + Discrete Generators : $2N$
+ + Distributed Generators : $`2N`$
  + Microgrid Lines : $2N-1$
  + Microgrid Loads : $N$
  + Microgrid Buses : $N$
