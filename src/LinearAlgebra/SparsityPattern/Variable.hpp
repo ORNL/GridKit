@@ -35,8 +35,8 @@ namespace Sparse
         */
         Variable()
             : value_(0.0),
-              variableNumber_(INVALID_VAR_NUMBER),
-              isFixed_(false),
+              variable_number_(INVALID_VAR_NUMBER),
+              is_fixed_(false),
               dependencies_(new DependencyMap)
         {
         }
@@ -46,8 +46,8 @@ namespace Sparse
         */
         explicit Variable(double value)
             : value_(value),
-              variableNumber_(INVALID_VAR_NUMBER),
-              isFixed_(false),
+              variable_number_(INVALID_VAR_NUMBER),
+              is_fixed_(false),
               dependencies_(new DependencyMap)
         {
         }
@@ -57,13 +57,13 @@ namespace Sparse
             number.
 
         */
-        Variable(double value, size_t variableNumber)
+        Variable(double value, size_t variable_number)
             : value_(value),
-              variableNumber_(variableNumber),
-              isFixed_(false),
+              variable_number_(variable_number),
+              is_fixed_(false),
               dependencies_(new DependencyMap)
         {
-            (*dependencies_)[variableNumber_] = 1.0;
+            (*dependencies_)[variable_number_] = 1.0;
         }
     
         /*!
@@ -71,8 +71,8 @@ namespace Sparse
         */
         Variable(const Variable& v)
             : value_(v.value_),
-              variableNumber_(INVALID_VAR_NUMBER),
-              isFixed_(false),
+              variable_number_(INVALID_VAR_NUMBER),
+              is_fixed_(false),
               dependencies_(new DependencyMap(*v.dependencies_))
         {
         }
@@ -115,7 +115,7 @@ namespace Sparse
             value_ = rhs.value_;
 
             // if rhs is a constant so is *this
-            setFixed(rhs.isFixed());
+            setFixed(rhs.is_fixed());
 
             // set dependencies from rhs
             dependencies_->clear(); // clear map just in case
@@ -181,17 +181,17 @@ namespace Sparse
         */
         size_t getVariableNumber() const
         {
-            return variableNumber_;
+            return variable_number_;
         }
     
         /*!
             \brief Sets the variable number.
         */
-        void setVariableNumber(size_t variableNumber)
+        void setVariableNumber(size_t variable_number)
         {
             dependencies_->clear();
-            variableNumber_ = variableNumber;
-            (*dependencies_)[variableNumber_] = 1.0;
+            variable_number_ = variable_number;
+            (*dependencies_)[variable_number_] = 1.0;
         }
     
         /*!
@@ -203,15 +203,15 @@ namespace Sparse
         */
         bool isRegistered() const
         {
-            return variableNumber_ != INVALID_VAR_NUMBER;
+            return variable_number_ != INVALID_VAR_NUMBER;
         }
     
         /*!
             \brief Checks whether the variable is fixed or not.
         */
-        bool isFixed() const
+        bool is_fixed() const
         {
-            return isFixed_;
+            return is_fixed_;
         }
     
         /*
@@ -219,7 +219,7 @@ namespace Sparse
         */
         void setFixed(bool b = false)
         {
-            isFixed_ = b;
+            is_fixed_ = b;
         }
         
 
@@ -259,8 +259,8 @@ namespace Sparse
         
     private:
         double value_;           ///< Value of the variable.        
-        size_t variableNumber_;  ///< Independent variable ID
-        bool isFixed_;           ///< Constant parameter flag.
+        size_t variable_number_;  ///< Independent variable ID
+        bool is_fixed_;           ///< Constant parameter flag.
         
         mutable DependencyMap* dependencies_;
         static const size_t INVALID_VAR_NUMBER = static_cast<const size_t>(-1);

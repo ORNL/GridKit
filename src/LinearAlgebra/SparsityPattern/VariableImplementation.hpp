@@ -59,15 +59,15 @@ namespace Sparse
     {
         os << value_;
         
-        if (isFixed_)
+        if (is_fixed_)
         {
             os << " (fixed)";
             return;
         }
         
-        if (variableNumber_ != INVALID_VAR_NUMBER)
+        if (variable_number_ != INVALID_VAR_NUMBER)
         {
-            os << " (variable " << variableNumber_ << ")";
+            os << " (variable " << variable_number_ << ")";
             return;
         }
         
@@ -113,7 +113,7 @@ namespace Sparse
     
     // -=
     /*!
-        \brief Compound substraction-assignment operator. Right hand 
+        \brief Compound subtraction-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator-=(const double& rhs)
@@ -123,7 +123,7 @@ namespace Sparse
     }
     
     /*!
-        \brief Compound substraction-assignment operator. Right hand 
+        \brief Compound subtraction-assignment operator. Right hand 
         side is a Variable type.
     */
     Variable& Variable::operator-=(const Variable& rhs)
