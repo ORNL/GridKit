@@ -1,5 +1,9 @@
 #pragma once
 
+/**
+ * @brief Class providing methods to evaluate a function and its derivative.
+ * This is used to test automatic differentiation.
+ */
 class ScalarModel {
 private:
     double x_, f_, df_dx_;

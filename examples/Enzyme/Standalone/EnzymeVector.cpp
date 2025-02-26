@@ -3,6 +3,13 @@
 #include <vector>
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
+/**
+ * @brief Standalone example that computes the Jacobian of a vector-valued function
+ * by automatic differentiation via Enzyme.
+ *
+ * TODO: Convert this into a unit test.
+ */
+
 using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 int enzyme_dupnoneed;
 int enzyme_dup;
@@ -20,6 +27,7 @@ double dsquare_ref_scalar(double x) {
     return 2.0 * x;
 }
 
+// Vector-valued function to differentiate
 void square(std::vector<double> x, std::vector<double>& y) {
     for (int idx = 0; idx < x.size(); ++idx)
     {
@@ -27,6 +35,7 @@ void square(std::vector<double> x, std::vector<double>& y) {
     }
 }
 
+// Reference Jacobian
 void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
     for (int idy = 0; idy < y.size(); ++idy)
     {
@@ -38,6 +47,7 @@ void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) 
     }
 }
 
+// Function that computes the Jacobian via automatic differentiation
 void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
     std::vector<double> v(x.size());
     std::vector<double> d_y(y.size());

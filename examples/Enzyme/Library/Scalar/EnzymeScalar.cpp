@@ -2,6 +2,14 @@
 #include <limits>
 #include "ScalarModel.hpp"
 
+/**
+ * @brief Example that computes the derivative of a library function 
+ * (implemented as the member function of a class and operating directly on class members)
+ * by automatic differentiation via Enzyme.
+ *
+ * TODO: Convert this into a unit test.
+ */
+
 int main() {
     int fail = 0;
     ScalarModel scalar_model;

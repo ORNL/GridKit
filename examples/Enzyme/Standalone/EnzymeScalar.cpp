@@ -1,6 +1,13 @@
 #include <iostream>
 #include <limits>
 
+/**
+ * @brief Standalone example that computes the derivative of a scalar function
+ * by automatic differentiation via Enzyme.
+ *
+ * TODO: Convert this into a unit test.
+ */
+
 double square(double x) {
     return x * x;
 }

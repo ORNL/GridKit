@@ -4,6 +4,15 @@
 #include <Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 
+/**
+ * @brief Standalone example that computes the Jacobian associated with the
+ * residual function of DistributedGenerator. We compare the Jacobian obtained
+ * by automatic differentiation via Enzyme to the analytical Jacobian
+ * implemented witin GridKit.
+ *
+ * TODO: Move automatic differentiation inside GridKit and convert this into a unit test.
+ */
+
 using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 using SparseMatrix = COO_Matrix<double, size_t>;
 using DG = GridKit::DistributedGenerator<double, size_t>;
@@ -84,6 +93,7 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
     f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - omega * y_[14] + (y_[13] - vbq_in) / Lc_;
 }
 
+// Function that computes the Jacobian via automatic differentiation
 template <typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
     int N = model->size();
@@ -178,6 +188,6 @@ int main() {
 
     // Cleanup
     delete dg;
-    return fail;
 
+    return fail;
 }

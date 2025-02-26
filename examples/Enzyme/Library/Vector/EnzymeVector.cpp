@@ -2,11 +2,20 @@
 #include <limits>
 #include "VectorModel.hpp"
 
+/**
+ * @brief Example that computes the Jacobian of a vector-valued residual 
+ * (implemented as the member function of a class and operating directly on class members)
+ * by automatic differentiation via Enzyme.
+ *
+ * TODO: Convert this into a unit test.
+ */
+
 inline
 double dsquare_ref_scalar(double x) {
     return 2.0 * x;
 }
 
+// Reference Jacobian
 DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y) {
     DenseMatrix jac(x.size(), y.size());
     for (int idy = 0; idy < y.size(); ++idy)
