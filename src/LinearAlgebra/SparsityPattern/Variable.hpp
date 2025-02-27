@@ -1,4 +1,4 @@
-/*!
+/**
     \file Variable.hpp
 */
 #pragma once
@@ -20,8 +20,8 @@ namespace GridKit
 namespace Sparse
 {
     
-    /*!
-        \brief The Variable class is used to store the unknowns of the 
+    /**
+        @brief The Variable class is used to store the unknowns of the 
         system and define abstract elementary algebra.
         
         \author Stefan Klus
@@ -30,8 +30,8 @@ namespace Sparse
     class Variable
     {
     public:
-        /*!
-            \brief Default constructor.
+        /**
+            @brief Default constructor.
         */
         Variable()
             : value_(0.0),
@@ -41,8 +41,8 @@ namespace Sparse
         {
         }
 
-        /*!
-            \brief Constructor which initializes the value.
+        /**
+            @brief Constructor which initializes the value.
         */
         explicit Variable(double value)
             : value_(value),
@@ -52,8 +52,8 @@ namespace Sparse
         {
         }
 
-        /*!
-            \brief Constructor which initializes the value and variable 
+        /**
+            @brief Constructor which initializes the value and variable 
             number.
 
         */
@@ -66,8 +66,8 @@ namespace Sparse
             (*dependencies_)[variable_number_] = 1.0;
         }
     
-        /*!
-            \brief Copy constructor.
+        /**
+            @brief Copy constructor.
         */
         Variable(const Variable& v)
             : value_(v.value_),
@@ -77,16 +77,16 @@ namespace Sparse
         {
         }
     
-        /*!
-            \brief Destructor deletes the dependency map.
+        /**
+            @brief Destructor deletes the dependency map.
         */
         ~Variable()
         {
             delete dependencies_;
         }
     
-        /*!
-            \brief Assignment operator. Assigning double value to 
+        /**
+            @brief Assignment operator. Assigning double value to 
             Variable removes its dependencies. Use only if you know 
             what you are doing.
         */
@@ -98,8 +98,8 @@ namespace Sparse
             return *this;
         }
     
-        /*!
-            \brief Assignment operator.
+        /**
+            @brief Assignment operator.
 
             This operator: 
             - assigns value from the right hand side
@@ -125,8 +125,8 @@ namespace Sparse
         }
     
         
-        /*!
-            \brief Operator () returns the value of a variable.
+        /**
+            @brief Operator () returns the value of a variable.
 
             This is just short notation to avoid using 
             getValue and setValue.
@@ -136,8 +136,8 @@ namespace Sparse
             return value_;
         }
     
-        /*!
-            \brief Operator() returns the value of a variable 
+        /**
+            @brief Operator() returns the value of a variable 
             (const version).
 
             This is just short notation to avoid using getValue. 
@@ -147,24 +147,24 @@ namespace Sparse
             return value_;
         }
 
-        /*!
-            \brief Return the current value of the variable.
+        /**
+            @brief Return the current value of the variable.
         */
         double getValue() const
         {
             return value_;
         }
     
-        /*!
-            \brief Overwrite the current value of the variable.
+        /**
+            @brief Overwrite the current value of the variable.
         */
         void setValue(double value)
         {
             value_ = value;
         }
     
-        /*!
-            \brief Return derivative of *this with respect to 
+        /**
+            @brief Return derivative of *this with respect to 
             dependency i.
         */
         double der(size_t i) const
@@ -173,8 +173,8 @@ namespace Sparse
         }
 
         
-        /*!
-            \brief Returns the variable number.
+        /**
+            @brief Returns the variable number.
 
             This number is assigned to state variables (variables 
             updated directly by the solver) only.
@@ -184,8 +184,8 @@ namespace Sparse
             return variable_number_;
         }
     
-        /*!
-            \brief Sets the variable number.
+        /**
+            @brief Sets the variable number.
         */
         void setVariableNumber(size_t variable_number)
         {
@@ -194,8 +194,8 @@ namespace Sparse
             (*dependencies_)[variable_number_] = 1.0;
         }
     
-        /*!
-            \brief Checks whether the variable was registered as 
+        /**
+            @brief Checks whether the variable was registered as 
             an unknown of the system.
 
             INVALID_VAR_NUMBER is used to mark parameters and 
@@ -206,17 +206,17 @@ namespace Sparse
             return variable_number_ != INVALID_VAR_NUMBER;
         }
     
-        /*!
-            \brief Checks whether the variable is fixed or not.
+        /**
+            @brief Checks whether the variable is fixed or not.
         */
         bool is_fixed() const
         {
             return is_fixed_;
         }
     
-        /*
-            \brief Turns variable into parameter, or vice versa.
-        */
+        /**
+            @brief Turns variable into parameter, or vice versa.
+         */
         void setFixed(bool b = false)
         {
             is_fixed_ = b;

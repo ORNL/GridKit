@@ -1,4 +1,4 @@
-/*!
+/**
     \file VariableImplementation.hpp
 */
 
@@ -8,8 +8,8 @@ namespace GridKit
 {
 namespace Sparse
 {
-    /*!
-        \brief Returns the list of derivatives.
+    /**
+        @brief Returns the list of derivatives.
     */
     const Variable::DependencyMap& Variable::getDependencies() const
     {
@@ -18,8 +18,8 @@ namespace Sparse
     }
     
 
-    /*!
-        \brief Registers a variable as an unknown of the system and 
+    /**
+        @brief Registers a variable as an unknown of the system and 
         adds a pointer to the global @a x vector.
     */
     void Variable::registerVariable(std::vector<Variable*>& x, 
@@ -32,8 +32,8 @@ namespace Sparse
     }
     
 
-    /*!
-        \brief Adds all dependencies of v to *this.
+    /**
+        @brief Adds all dependencies of v to *this.
     */
     void Variable::addDependencies(const Variable& v)
     {
@@ -42,8 +42,8 @@ namespace Sparse
     }
     
 
-    /*!
-        \brief Multiplies each partial derivative of @a this by @a c. 
+    /**
+        @brief Multiplies each partial derivative of @a this by @a c. 
     */
     void Variable::scaleDependencies(double c)
     {
@@ -52,8 +52,8 @@ namespace Sparse
     }
     
     
-    /*!
-        \brief Prints the value and input set of the variable.
+    /**
+        @brief Prints the value and input set of the variable.
     */
     void Variable::print(std::ostream& os) const
     {
@@ -85,8 +85,8 @@ namespace Sparse
     // compound assignment operators
     //------------------------------------
     
-    /*!
-        \brief Compound addition-assignment operator. Right hand 
+    /**
+        @brief Compound addition-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator+=(const double& rhs)
@@ -95,8 +95,8 @@ namespace Sparse
         return *this;
     }
     
-    /*!
-        \brief Compound addition-assignment operator. Right hand side 
+    /**
+        @brief Compound addition-assignment operator. Right hand side 
         is Variable type.
     */
     Variable& Variable::operator+=(const Variable& rhs)
@@ -112,8 +112,8 @@ namespace Sparse
     }
     
     // -=
-    /*!
-        \brief Compound subtraction-assignment operator. Right hand 
+    /**
+        @brief Compound subtraction-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator-=(const double& rhs)
@@ -122,8 +122,8 @@ namespace Sparse
         return *this;
     }
     
-    /*!
-        \brief Compound subtraction-assignment operator. Right hand 
+    /**
+        @brief Compound subtraction-assignment operator. Right hand 
         side is a Variable type.
     */
     Variable& Variable::operator-=(const Variable& rhs)
@@ -139,8 +139,8 @@ namespace Sparse
     }
     
     // *=
-    /*!
-        \brief Compound multiplication-assignment operator. Right hand 
+    /**
+        @brief Compound multiplication-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator*=(const double& rhs)
@@ -154,8 +154,8 @@ namespace Sparse
         return *this;
     }
     
-    /*!
-        \brief Compound multiplication-assignment operator. Right 
+    /**
+        @brief Compound multiplication-assignment operator. Right 
         hand side is a Variable type.
     */
     Variable& Variable::operator*=(const Variable& rhs)
@@ -174,8 +174,8 @@ namespace Sparse
     }
     
     // /=
-    /*!
-        \brief Compound division-assignment operator. Right hand side 
+    /**
+        @brief Compound division-assignment operator. Right hand side 
         is a built-in double type.
     */
     Variable& Variable::operator/=(const double& rhs)
@@ -189,8 +189,8 @@ namespace Sparse
         return *this;
     }
     
-    /*!
-        \brief Compound division-assignment operator. Right hand 
+    /**
+        @brief Compound division-assignment operator. Right hand 
         side is a Variable type.
     */
     Variable& Variable::operator/=(const Variable& rhs)

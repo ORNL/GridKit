@@ -1,12 +1,9 @@
-/*!
+/**
     \file VariableOperators.hpp
     
 */
 #pragma once
 
-// Define derivatives of standard library mathematical functions here.
-// These definitions could be used to add smoothing in cases where 
-// derivatives are discontinuous.
 namespace GridKit
 {
 namespace Sparse
@@ -185,8 +182,8 @@ namespace Sparse
     // non-member operators
     //------------------------------------
     
-    /*
-        \brief Stream insertion operator for variables.
+    /**
+        @brief Stream insertion operator for variables.
     */
     std::ostream& operator<<(std::ostream& os, const Variable& v)
     {
@@ -194,8 +191,8 @@ namespace Sparse
         return os;
     }
     
-    /*
-        \brief Adds all dependencies of a variable, i.e. v << u means 
+    /**
+        @brief Adds all dependencies of a variable, i.e. v << u means 
         that v depends on u.
 
         \attention Use only if you know what you are doing!
@@ -206,8 +203,8 @@ namespace Sparse
         return u;
     }
     
-    /*
-        \brief Stream extraction operator for variables.
+    /**
+        @brief Stream extraction operator for variables.
     */
     std::istream& operator>>(std::istream& is, Variable& v)
     {

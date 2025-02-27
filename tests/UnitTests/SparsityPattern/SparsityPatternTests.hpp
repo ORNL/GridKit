@@ -53,7 +53,7 @@ namespace Testing
                 success *= (dependencies.find(2) == dependencies.end());    
             }
             
-            // Check dependencies of f[1] (depends on x[0], x[1], x[2])
+            // Check dependencies of f[2] (depends on x[0], x[1], x[2])
             {
                 const Sparse::Variable::DependencyMap& dependencies = 
                     (f[2]).getDependencies();
@@ -73,11 +73,11 @@ namespace Testing
                                   const std::vector<T>& x,
                                   const std::vector<T>& p)
             {
-                const T y = x[0]*x[1];
+                const T u = x[0]*x[1];
                 
                 f[0] = p[0]*(x[1] - x[0]);        // sigma*(y - x)
                 f[1] = x[0]*(p[1] - x[2]) - x[1]; // x*(rho - z) - y
-                f[2] = y - p[2]*x[2];             // x*y - beta*z
+                f[2] = u - p[2]*x[2];             // x*y - beta*z
             }
         
 
