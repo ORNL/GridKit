@@ -7,32 +7,37 @@ VectorModel::VectorModel(int n) :
    f_(n),
    df_dx_(n, n)
 {
-};
+}
 
 inline
-double VectorModel::square_scalar(double x) {
+double VectorModel::square_scalar(double x) 
+{
     return x * x;
 }
 
-void VectorModel::square(std::vector<double>& x, std::vector<double>& y) {
+void VectorModel::square(std::vector<double>& x, std::vector<double>& y) 
+{
     for (int idx = 0; idx < x.size(); ++idx)
     {
         y[idx] = this->square_scalar(x[idx]);
     }
 }
 
-void VectorModel::setVariable(std::vector<double> x) {
+void VectorModel::setVariable(std::vector<double> x) 
+{
     for (int idx = 0; idx < x.size(); ++idx)
     {
         x_[idx] = x[idx];
     }
 }
 
-void VectorModel::evalResidual() {
+void VectorModel::evalResidual() 
+{
     square(x_, f_);
 }
 
-void VectorModel::evalJacobian() {
+void VectorModel::evalJacobian() 
+{
     const int n = x_.size();
     std::vector<double> v(n);
     VectorModel d_vector_model(n);
@@ -59,14 +64,21 @@ void VectorModel::evalJacobian() {
     }
 }
 
-std::vector<double>& VectorModel::getVariable() {
+std::vector<double>& VectorModel::getVariable() 
+{
     return x_;
 }
 
-std::vector<double>& VectorModel::getResidual() {
+std::vector<double>& VectorModel::getResidual() 
+{
     return f_;
 }
 
-DenseMatrix& VectorModel::getJacobian() {
+DenseMatrix& VectorModel::getJacobian() 
+{
     return df_dx_;
+}
+
+VectorModel::~VectorModel() 
+{
 }

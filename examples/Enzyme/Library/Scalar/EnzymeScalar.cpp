@@ -10,7 +10,8 @@
  * TODO: Convert this into a unit test.
  */
 
-int main() {
+int main() 
+{
     int fail = 0;
     ScalarModel scalar_model;
     double var = 5.0;

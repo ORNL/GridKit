@@ -95,7 +95,8 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
 
 // Function that computes the Jacobian via automatic differentiation
 template <typename T>
-void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
+void EnzymeModelJacobian(T* model, DenseMatrix& jac) 
+{
     int N = model->size();
     std::vector<double> y(N);
     std::vector<double> v(N);
@@ -125,7 +126,8 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac) {
     }
 }
 
-int main() {
+int main() 
+{
     // Model
     DGParameters parms;
     parms.wb_ = 2.0*M_PI*50.0;

@@ -8,12 +8,14 @@
  * TODO: Convert this into a unit test.
  */
 
-double square(double x) {
+double square(double x) 
+{
     return x * x;
 }
 
 double __enzyme_autodiff(double(*)(double), ...);
-double dsquare(double x) {
+double dsquare(double x) 
+{
     return __enzyme_autodiff(square, x);
 }
 

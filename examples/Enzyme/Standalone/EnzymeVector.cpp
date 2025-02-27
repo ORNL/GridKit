@@ -18,17 +18,20 @@ void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>,
                              int, std::vector<double>, std::vector<double>*);
 
 inline
-double square_scalar(double x) {
+double square_scalar(double x) 
+{
     return x * x;
 }
 
 inline
-double dsquare_ref_scalar(double x) {
+double dsquare_ref_scalar(double x) 
+{
     return 2.0 * x;
 }
 
 // Vector-valued function to differentiate
-void square(std::vector<double> x, std::vector<double>& y) {
+void square(std::vector<double> x, std::vector<double>& y) 
+{
     for (int idx = 0; idx < x.size(); ++idx)
     {
         y[idx] = square_scalar(x[idx]);
@@ -36,7 +39,8 @@ void square(std::vector<double> x, std::vector<double>& y) {
 }
 
 // Reference Jacobian
-void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
+void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) 
+{
     for (int idy = 0; idy < y.size(); ++idy)
     {
         for (int idx = 0; idx < x.size(); ++idx)
@@ -48,7 +52,8 @@ void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) 
 }
 
 // Function that computes the Jacobian via automatic differentiation
-void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) {
+void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy) 
+{
     std::vector<double> v(x.size());
     std::vector<double> d_y(y.size());
     for (int idy = 0; idy < y.size(); ++idy)

@@ -11,12 +11,14 @@
  */
 
 inline
-double dsquare_ref_scalar(double x) {
+double dsquare_ref_scalar(double x) 
+{
     return 2.0 * x;
 }
 
 // Reference Jacobian
-DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y) {
+DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y) 
+{
     DenseMatrix jac(x.size(), y.size());
     for (int idy = 0; idy < y.size(); ++idy)
     {
@@ -29,7 +31,8 @@ DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y) {
     return jac;
 }
 
-int main() {
+int main() 
+{
     // Size and variable declarations
     constexpr int n = 10;
     std::vector<double> var(n);
