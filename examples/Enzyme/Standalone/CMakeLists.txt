@@ -1,6 +1,13 @@
 enzyme_add_executable(
-  NAME EnzymeStandaloneCheck
-  SOURCES main.cpp
-  )
+  NAME EnzymeStandaloneScalarCheck
+  SOURCES EnzymeScalar.cpp
+)
 
-add_test(NAME "EnzymeStandaloneCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneCheck)
+enzyme_add_executable(
+  NAME EnzymeStandaloneVectorCheck
+  SOURCES EnzymeVector.cpp
+  LINK_LIBRARIES GRIDKIT::DenseMatrix
+)
+
+add_test(NAME "EnzymeStandaloneScalarCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneScalarCheck)
+add_test(NAME "EnzymeStandaloneVectorCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneVectorCheck)

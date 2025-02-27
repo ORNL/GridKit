@@ -69,7 +69,7 @@ public:
 
     std::tuple<IdxT, IdxT> getDimensions();
 
-    void printMatrix();
+    void printMatrix(std::string name="");
 
     
     static void sortSparseCOO(std::vector<IdxT> &rows, std::vector<IdxT> &columns, std::vector<ScalarT> &values);
@@ -443,7 +443,6 @@ inline ScalarT COO_Matrix<ScalarT, IdxT>::frobNorm()
  * @brief Permutate the matrix to a different one. Only changes the coordinates
  * 
  * @tparam ScalarT 
- * @tparam IdxT 
  * @param[in] row_perm 
  * @param[out] col_perm 
  * 
@@ -589,7 +588,7 @@ inline bool COO_Matrix<ScalarT, IdxT>::isSorted()
 template <class ScalarT, typename IdxT>
 inline IdxT COO_Matrix<ScalarT, IdxT>::nnz()
 {
-    return static_cast<IdxT>(this->values_.size);
+    return static_cast<IdxT>(this->values_.size());
 }
 
 template <class ScalarT, typename IdxT>
@@ -603,16 +602,18 @@ inline std::tuple<IdxT, IdxT> COO_Matrix<ScalarT, IdxT>::getDimensions()
  * 
  * @tparam ScalarT 
  * @tparam IdxT 
+ * 
+ * @param[in] name to identify the specific matrix printed
  */
 template <class ScalarT, typename IdxT>
-inline void COO_Matrix<ScalarT, IdxT>::printMatrix()
+inline void COO_Matrix<ScalarT, IdxT>::printMatrix(std::string name)
 {
     if (this->sorted_ == false)
     {
         this->sortSparse();
     }
     
-    std::cout << "Sparse COO Matrix\n";
+    std::cout << "Sparse COO Matrix: " << name << "\n";
     std::cout << "(x , y, value)\n";
     for (size_t i = 0; i < this->values_.size(); i++)
     {
