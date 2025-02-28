@@ -249,7 +249,7 @@ protected:
     size_t               n_intern_;
     std::set<IdxT>       extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects
-    /// instead of IdxT. Allows for container free setup
+    ///instead of IdxT. Allows for container free setup
     std::map<IdxT, IdxT> connection_nodes_;
 
 protected:
