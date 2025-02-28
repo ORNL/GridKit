@@ -57,26 +57,21 @@
  *
  */
 
-
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <string>
 
+#include "lookup_table.hpp"
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
-
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4Param/Generator4Param.hpp>
 #include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-
+#include <Solver/Optimization/DynamicConstraint.hpp>
+#include <Solver/Optimization/DynamicObjective.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>
-
-#include "lookup_table.hpp"
-
 
 int main()
 {
@@ -89,7 +84,8 @@ int main()
     BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0, 0.0);
 
     // Attach a generator to that bus
-    Generator4Param<double, size_t>* gen = new Generator4Param<double, size_t>(bus);
+    Generator4Param<double, size_t>* gen =
+        new Generator4Param<double, size_t>(bus);
 
     // Create a system model
     SystemModel<double, size_t>* model = new SystemModel<double, size_t>();
@@ -140,10 +136,11 @@ int main()
     model->param()[0] = 3.0;
 
     // Create an instance of the IpoptApplication
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp =
+        IpoptApplicationFactory();
 
     // Set solver tolerance
-    const double tol = 1e-5; 
+    const double tol = 1e-5;
 
     // Initialize the IpoptApplication and process the options
     Ipopt::ApplicationReturnStatus status;
@@ -155,7 +152,8 @@ int main()
     }
 
     // Configure Ipopt application
-    ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+    ipoptApp->Options()->SetStringValue("hessian_approximation",
+                                        "limited-memory");
     ipoptApp->Options()->SetNumericValue("tol", tol);
     ipoptApp->Options()->SetIntegerValue("print_level", 0);
 
@@ -165,21 +163,23 @@ int main()
 
     // Solve the problem
     status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
-    std::cout << "\n\nProblem formulated as dynamic objective optimiztion ...\n";
+    std::cout
+        << "\n\nProblem formulated as dynamic objective optimiztion ...\n";
 
     if (status == Ipopt::Solve_Succeeded)
     {
         // Print result
         std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
+                  << ipoptApp->Statistics()->IterationCount()
+                  << " iterations!\n"
                   << " Optimal value of H = " << model->param()[0] << "\n"
                   << " The final value of the objective function G(H) = "
                   << ipoptApp->Statistics()->FinalObjective() << "\n\n";
     }
 
     // Store dynamic objective optimization results
-    double* results  = new double[model->sizeParams()];
-    for(unsigned i=0; i <model->sizeParams(); ++i)
+    double* results = new double[model->sizeParams()];
+    for (unsigned i = 0; i < model->sizeParams(); ++i)
     {
         results[i] = model->param()[i];
     }
@@ -193,13 +193,15 @@ int main()
 
     // Solve the problem
     status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
-    std::cout << "\n\nProblem formulated as dynamic constraint optimiztion ...\n";
+    std::cout
+        << "\n\nProblem formulated as dynamic constraint optimiztion ...\n";
 
     if (status == Ipopt::Solve_Succeeded)
     {
         // Print result
         std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
+                  << ipoptApp->Statistics()->IterationCount()
+                  << " iterations!\n"
                   << " Optimal value of H = " << model->param()[0] << "\n"
                   << " The final value of the objective function G(H) = "
                   << ipoptApp->Statistics()->FinalObjective() << "\n\n";
@@ -207,18 +209,18 @@ int main()
 
     // Compare results of the two optimization methods
     int retval = 0;
-    for(unsigned i=0; i <model->sizeParams(); ++i)
+    for (unsigned i = 0; i < model->sizeParams(); ++i)
     {
-        if(!isEqual(results[i], model->param()[i], 100*tol))
-            --retval; 
+        if (!isEqual(results[i], model->param()[i], 100 * tol))
+            --retval;
     }
 
-    if(retval < 0)
+    if (retval < 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
     }
 
-    delete [] results;
+    delete[] results;
     delete idas;
     delete model;
     return retval;

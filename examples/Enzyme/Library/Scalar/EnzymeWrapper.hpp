@@ -5,11 +5,11 @@ int enzyme_dupnoneed;
 int enzyme_out;
 int enzyme_const;
 
-template <typename return_type, typename ... T>
-return_type __enzyme_fwddiff(return_type*, int, T* ... );
+template <typename return_type, typename... T>
+return_type __enzyme_fwddiff(return_type*, int, T*...);
 
 template <typename return_type, typename T>
-return_type wrapper(T* obj) 
+return_type wrapper(T* obj)
 {
     obj->evalFunction();
     return obj->getFunctionValue();

@@ -57,11 +57,13 @@
  *
  */
 
-#include <iostream>
-#include <cmath>
 #include "BusSlack.hpp"
 
-namespace GridKit {
+#include <cmath>
+#include <iostream>
+
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a slack bus
@@ -74,10 +76,16 @@ namespace GridKit {
  */
 template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack()
-    : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta_(0.0), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0),
+      V_(0.0),
+      theta_(0.0),
+      P_(0.0),
+      Q_(0.0),
+      PB_(0.0),
+      QB_(0.0)
 {
-    //std::cout << "Create BusSlack..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
+    // std::cout << "Create BusSlack..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 0;
 }
@@ -93,12 +101,18 @@ BusSlack<ScalarT, IdxT>::BusSlack()
  */
 template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack(ScalarT V, ScalarT theta)
-    : BaseBus<ScalarT, IdxT>(0), V_(V), theta_(theta), P_(0.0), Q_(0.0), PB_(0.0), QB_(0.0)
+    : BaseBus<ScalarT, IdxT>(0),
+      V_(V),
+      theta_(theta),
+      P_(0.0),
+      Q_(0.0),
+      PB_(0.0),
+      QB_(0.0)
 {
-    //std::cout << "Create BusSlack..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-    P() = 0.0;
-    Q() = 0.0;
+    // std::cout << "Create BusSlack..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
+    P()   = 0.0;
+    Q()   = 0.0;
     size_ = 0;
 }
 
@@ -106,10 +120,10 @@ template <class ScalarT, typename IdxT>
 BusSlack<ScalarT, IdxT>::BusSlack(BusData& data)
     : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta_(data.Va)
 {
-    //std::cout << "Create BusSlack..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-    P() = 0.0;
-    Q() = 0.0;
+    // std::cout << "Create BusSlack..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
+    P()   = 0.0;
+    Q()   = 0.0;
     size_ = 0;
 }
 
@@ -135,11 +149,8 @@ int BusSlack<ScalarT, IdxT>::evaluateAdjointResidual()
     return 0;
 }
 
-
 // Available template instantiations
 template class BusSlack<double, long int>;
 template class BusSlack<double, size_t>;
 
-
 } // namespace GridKit
-

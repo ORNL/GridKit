@@ -2,61 +2,58 @@
  * @file SynchronousMachine.hpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of a phasor dynamics branch model.
- * 
+ *
  * The model uses Cartesian coordinates.
- * 
+ *
  */
 
-#include <iostream>
+#include "SynchronousMachine.hpp"
+
 #include <cmath>
+#include <iostream>
+
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <PowerSystemData.hpp>
-
-#include "SynchronousMachine.hpp"
 
 namespace GridKit
 {
 namespace PhasorDynamics
 {
     /*!
-    * @brief Constructor for a pi-model branch
-    *
-    * Arguments passed to ModelEvaluatorImpl:
-    * - Number of equations = 0
-    * - Number of independent variables = 0
-    * - Number of quadratures = 0
-    * - Number of optimization parameters = 0
-    */
+     * @brief Constructor for a pi-model branch
+     *
+     * Arguments passed to ModelEvaluatorImpl:
+     * - Number of equations = 0
+     * - Number of independent variables = 0
+     * - Number of quadratures = 0
+     * - Number of optimization parameters = 0
+     */
     template <class ScalarT, typename IdxT>
     SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(bus_type* bus)
-    : bus_(bus),
-      R_(0.0),
-      X_(0.01),
-      G_(0.0),
-      B_(0.0)
+        : bus_(bus), R_(0.0), X_(0.01), G_(0.0), B_(0.0)
     {
         size_ = 0;
     }
 
     /**
      * @brief Destroy the SynchronousMachine
-     * 
-     * @tparam ScalarT 
-     * @tparam IdxT 
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
     SynchronousMachine<ScalarT, IdxT>::~SynchronousMachine()
     {
-        //std::cout << "Destroy SynchronousMachine..." << std::endl;
+        // std::cout << "Destroy SynchronousMachine..." << std::endl;
     }
 
     /*!
-    * @brief allocate method computes sparsity pattern of the Jacobian.
-    */
+     * @brief allocate method computes sparsity pattern of the Jacobian.
+     */
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::allocate()
     {
-        //std::cout << "Allocate SynchronousMachine..." << std::endl;
+        // std::cout << "Allocate SynchronousMachine..." << std::endl;
         return 0;
     }
 
@@ -82,7 +79,7 @@ namespace PhasorDynamics
     /**
      * \brief Residual contribution of the branch is pushed to the
      * two terminal buses.
-     * 
+     *
      */
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
@@ -96,7 +93,7 @@ namespace PhasorDynamics
 
     /**
      * @brief Jacobian evaluation not implemented yet
-     * 
+     *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
@@ -111,7 +108,7 @@ namespace PhasorDynamics
 
     /**
      * @brief Integrand (objective) evaluation not implemented yet
-     * 
+     *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
@@ -119,13 +116,14 @@ namespace PhasorDynamics
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::evaluateIntegrand()
     {
-        // std::cout << "Evaluate Integrand for SynchronousMachine..." << std::endl;
+        // std::cout << "Evaluate Integrand for SynchronousMachine..." <<
+        // std::endl;
         return 0;
     }
 
     /**
      * @brief Adjoint initialization not implemented yet
-     * 
+     *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
@@ -133,13 +131,14 @@ namespace PhasorDynamics
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::initializeAdjoint()
     {
-        //std::cout << "Initialize adjoint for SynchronousMachine..." << std::endl;
+        // std::cout << "Initialize adjoint for SynchronousMachine..." <<
+        // std::endl;
         return 0;
     }
 
     /**
      * @brief Adjoint residual evaluation not implemented yet
-     * 
+     *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
@@ -147,13 +146,14 @@ namespace PhasorDynamics
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointResidual()
     {
-        // std::cout << "Evaluate adjoint residual for SynchronousMachine..." << std::endl;
+        // std::cout << "Evaluate adjoint residual for SynchronousMachine..." <<
+        // std::endl;
         return 0;
     }
 
     /**
      * @brief Adjoint integrand (objective) evaluation not implemented yet
-     * 
+     *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
@@ -161,7 +161,8 @@ namespace PhasorDynamics
     template <class ScalarT, typename IdxT>
     int SynchronousMachine<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {
-        // std::cout << "Evaluate adjoint Integrand for SynchronousMachine..." << std::endl;
+        // std::cout << "Evaluate adjoint Integrand for SynchronousMachine..."
+        // << std::endl;
         return 0;
     }
 
@@ -169,5 +170,5 @@ namespace PhasorDynamics
     template class SynchronousMachine<double, long int>;
     template class SynchronousMachine<double, size_t>;
 
-} //namespace PhasorDynamics
-} //namespace GridKit
+} // namespace PhasorDynamics
+} // namespace GridKit
