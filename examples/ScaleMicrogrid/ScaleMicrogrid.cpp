@@ -165,7 +165,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     Lload_list[0] = Lload1;
 
     //							DGs	+		- refframe	   Lines +
-    //Loads
+    // Loads
     index_type vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
     //							\omegaref + BusDQ
     index_type vec_size_externals = 1 + 2 * (2 * Nsize);
