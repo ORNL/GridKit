@@ -57,14 +57,16 @@
  *
  */
 
-
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "MiniGrid.hpp"
+
+#include <cmath>
+#include <iostream>
+#include <vector>
+
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace GridKit {
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a constant load model
@@ -74,19 +76,19 @@ namespace GridKit {
 
 template <class ScalarT, typename IdxT>
 MiniGrid<ScalarT, IdxT>::MiniGrid()
-  : ModelEvaluatorImpl<ScalarT, IdxT>(3, 0, 0),
-    Pl2_(  2.5),
-    Ql2_( -0.8),
-    Pg3_(  2.0),
-    V1_ (  1.0),
-    th1_(  0.0),
-    V3_ (  1.1),
-    B12_( 10.0),
-    B13_( 15.0),
-    B22_(-22.0),
-    B23_( 12.0)
+    : ModelEvaluatorImpl<ScalarT, IdxT>(3, 0, 0),
+      Pl2_(2.5),
+      Ql2_(-0.8),
+      Pg3_(2.0),
+      V1_(1.0),
+      th1_(0.0),
+      V3_(1.1),
+      B12_(10.0),
+      B13_(15.0),
+      B22_(-22.0),
+      B23_(12.0)
 {
-    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    // std::cout << "Create a load model with " << size_ << " variables ...\n";
     rel_tol_ = 1e-5;
     abs_tol_ = 1e-5;
 }
@@ -117,7 +119,6 @@ int MiniGrid<ScalarT, IdxT>::initialize()
     return 0;
 }
 
-
 /**
  * @brief Contributes to the bus residual.
  *
@@ -126,9 +127,9 @@ int MiniGrid<ScalarT, IdxT>::initialize()
 template <class ScalarT, typename IdxT>
 int MiniGrid<ScalarT, IdxT>::evaluateResidual()
 {
-    f_[0] = -Pl2_ - V2()*(V1_*B12_*sin(th2()-th1_) + V3_*B23_*sin(th2() - th3()));
-    f_[1] = -Ql2_ + V2()*(V1_*B12_*cos(th2()-th1_) + B22_*V2() + V3_*B23_*cos(th2() - th3()));
-    f_[2] =  Pg3_ - V3_ *(V1_*B13_*sin(th3()-th1_) + V2()*B23_*sin(th3() - th2()));
+    f_[0] = -Pl2_ - V2() * (V1_ * B12_ * sin(th2() - th1_) + V3_ * B23_ * sin(th2() - th3()));
+    f_[1] = -Ql2_ + V2() * (V1_ * B12_ * cos(th2() - th1_) + B22_ * V2() + V3_ * B23_ * cos(th2() - th3()));
+    f_[2] = Pg3_ - V3_ * (V1_ * B13_ * sin(th3() - th1_) + V2() * B23_ * sin(th3() - th2()));
 
     return 0;
 }
@@ -143,6 +144,4 @@ int MiniGrid<ScalarT, IdxT>::evaluateJacobian()
 template class MiniGrid<double, long int>;
 template class MiniGrid<double, size_t>;
 
-
-} //namespace GridKit
-
+} // namespace GridKit

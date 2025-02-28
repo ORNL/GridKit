@@ -57,16 +57,15 @@
  *
  */
 
+#include "Ida.hpp"
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
 
 #include "Model/Evaluator.hpp"
-#include "Ida.hpp"
-
 
 namespace AnalysisManager
 {
@@ -83,16 +82,16 @@ namespace Sundials
         retval = SUNContext_Create(SUN_COMM_NULL, &context_);
         checkOutput(retval, "SUNContext");
         solver_ = IDACreate(context_);
-        tag_ = NULL;
+        tag_    = NULL;
     }
 
     /**
      * @brief Destroy the Ida< Scalar T,  Idx T>:: Ida object
-     * 
+     *
      * @note if sysmodel is freed before this will fail. May want something agnostic to this
-     * 
-     * @tparam ScalarT 
-     * @tparam IdxT 
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::~Ida()
@@ -114,7 +113,6 @@ namespace Sundials
         ///@todo this free is needed but on geninfbus this seg faults
         // IDAFree(&solver_);
         SUNContext_Free(&context_);
-        
     }
 
     template <class ScalarT, typename IdxT>
@@ -128,7 +126,7 @@ namespace Sundials
         yp_ = N_VClone(yy_);
         checkAllocation((void*) yp_, "N_VClone");
 
-        //get intial conditions
+        // get intial conditions
         this->getDefaultInitialCondition();
 
         // Create vectors to store restart initial condition
@@ -155,7 +153,7 @@ namespace Sundials
         model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
         retval = IDASStolerances(solver_, rel_tol, abs_tol);
         checkOutput(retval, "IDASStolerances");
-        
+
         IdxT msa;
         model_->setMaxSteps(msa);
 
@@ -190,7 +188,8 @@ namespace Sundials
         int retval = 0;
         if (model_->hasJacobian())
         {
-            JacobianMat_ = SUNSparseMatrix(model_->size(), model_->size(), model_->size() * model_->size(), CSR_MAT, context_);
+            JacobianMat_ =
+                SUNSparseMatrix(model_->size(), model_->size(), model_->size() * model_->size(), CSR_MAT, context_);
             checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
 
             linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
@@ -212,7 +211,6 @@ namespace Sundials
 
             retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
             checkOutput(retval, "IDASetLinearSolver");
-
         }
 
         return retval;
@@ -257,7 +255,7 @@ namespace Sundials
 
             retval = IDACalcIC(solver_, initType, 0.1);
             checkOutput(retval, "IDACalcIC");
-            
+
             copyVec(yy_, model_->y());
             copyVec(yp_, model_->yp());
         }
@@ -268,20 +266,20 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
     {
-        int retval = 0;
-        int iout = 0;
+        int       retval = 0;
+        int       iout   = 0;
         real_type tret;
-        real_type dt = tf / static_cast<real_type>(nout);
+        real_type dt   = tf / static_cast<real_type>(nout);
         real_type tout = dt;
 
         /* In loop, call IDASolve, print results, and test for error.
          *     Break out of loop when NOUT preset output times have been reached. */
-        //printOutput(0.0);
-        while(nout > iout)
+        // printOutput(0.0);
+        while (nout > iout)
         {
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
-            //printOutput(tout); 
+            // printOutput(tout);
 
             if (retval == IDA_SUCCESS)
             {
@@ -290,12 +288,12 @@ namespace Sundials
             }
         }
 
-        //Final copy out. No gaurentee last residual evaluation is final step.
+        // Final copy out. No gaurentee last residual evaluation is final step.
         model_->updateTime(tf, 0.0);
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
 
-        //std::cout << "\n";
+        // std::cout << "\n";
         return retval;
     }
 
@@ -308,7 +306,6 @@ namespace Sundials
         N_VDestroy(yp_);
         return 0;
     }
-
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureQuadrature()
@@ -328,7 +325,7 @@ namespace Sundials
         model_->setTolerances(rel_tol, abs_tol);
 
         // Set tolerances for quadrature stricter than for integration
-        retval = IDAQuadSStolerances(solver_, rel_tol*0.1, abs_tol*0.1);
+        retval = IDAQuadSStolerances(solver_, rel_tol * 0.1, abs_tol * 0.1);
         checkOutput(retval, "IDAQuadSStolerances");
 
         // Include quadrature in eror checking
@@ -337,7 +334,6 @@ namespace Sundials
 
         return retval;
     }
-
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeQuadrature()
@@ -354,25 +350,24 @@ namespace Sundials
         return retval;
     }
 
-
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(real_type tf, int nout)
     {
-        int retval = 0;
+        int       retval = 0;
         real_type tret;
 
-        //std::cout << "Forward integration for initial value problem ... \n";
+        // std::cout << "Forward integration for initial value problem ... \n";
 
-        real_type dt = tf / static_cast<real_type>(nout);
+        real_type dt   = tf / static_cast<real_type>(nout);
         real_type tout = dt;
-        //printOutput(0.0);
-        //printSpecial(0.0, yy_);
-        for(int i = 0; i < nout; ++i)
+        // printOutput(0.0);
+        // printSpecial(0.0, yy_);
+        for (int i = 0; i < nout; ++i)
         {
             retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
             checkOutput(retval, "IDASolve");
-            //printSpecial(tout, yy_);
-            //printOutput(tout); 
+            // printSpecial(tout, yy_);
+            // printOutput(tout);
 
             if (retval == IDA_SUCCESS)
             {
@@ -382,15 +377,14 @@ namespace Sundials
             retval = IDAGetQuad(solver_, &tret, q_);
             checkOutput(retval, "IDAGetQuad");
         }
-        
-        //Final copy out. No gaurentee last residual evaluation is final step.
+
+        // Final copy out. No gaurentee last residual evaluation is final step.
         model_->updateTime(tf, 0.0);
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
 
         return retval;
     }
-
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteQuadrature()
@@ -401,12 +395,11 @@ namespace Sundials
         return 0;
     }
 
-
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureAdjoint()
     {
         // Allocate adjoint vector, derivatives and quadrature
-      yyB_ = N_VNew_Serial(model_->size(), context_);
+        yyB_ = N_VNew_Serial(model_->size(), context_);
         checkAllocation((void*) yyB_, "N_VNew_Serial");
 
         ypB_ = N_VClone(yyB_);
@@ -433,13 +426,13 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
-        int retval = 0;
+        int         retval = 0;
         sunrealtype rel_tol;
         sunrealtype abs_tol;
 
         model_->initializeAdjoint();
 
-        copyVec(model_->yB(),  yyB_);
+        copyVec(model_->yB(), yyB_);
         copyVec(model_->ypB(), ypB_);
         N_VConst(0.0, qB_);
 
@@ -471,19 +464,17 @@ namespace Sundials
         retval = IDASetLinearSolverB(solver_, backwardID_, linearSolverB_, JacobianMatB_);
         checkOutput(retval, "IDASetLinearSolverB");
 
-
         // Also reinitialize quadratures.
         retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
         checkOutput(retval, "IDAQuadInitB");
 
-        //retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*1.1, abs_tol*1.1);
-        retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*0.1, abs_tol*0.1);
+        // retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*1.1, abs_tol*1.1);
+        retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol * 0.1, abs_tol * 0.1);
         checkOutput(retval, "IDAQuadSStolerancesB");
 
         // Include quadratures in error control
         retval = IDASetQuadErrConB(solver_, backwardID_, SUNTRUE);
         checkOutput(retval, "IDASetQuadErrConB");
-
 
         return retval;
     }
@@ -511,15 +502,15 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runForwardSimulation(real_type tf, int nout)
     {
-        int retval = 0;
-        int ncheck;
+        int       retval = 0;
+        int       ncheck;
         real_type time;
 
-        //std::cout << "Forward integration for adjoint analysis ... \n";
+        // std::cout << "Forward integration for adjoint analysis ... \n";
 
-        real_type dt = tf / static_cast<real_type>(nout);
+        real_type dt   = tf / static_cast<real_type>(nout);
         real_type tout = dt;
-        for(int i = 0; i < nout; ++i)
+        for (int i = 0; i < nout; ++i)
         {
             retval = IDASolveF(solver_, tout, &time, yy_, yp_, IDA_NORMAL, &ncheck);
             checkOutput(retval, "IDASolveF");
@@ -532,8 +523,8 @@ namespace Sundials
             retval = IDAGetQuad(solver_, &time, q_);
             checkOutput(retval, "IDASolve");
         }
-        
-        //Final copy out. No gaurentee last residual evaluation is final step.
+
+        // Final copy out. No gaurentee last residual evaluation is final step.
         model_->updateTime(tf, 0.0);
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
@@ -544,22 +535,22 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runBackwardSimulation(real_type t_init)
     {
-        int retval = 0;
-        long int nstB;
+        int       retval = 0;
+        long int  nstB;
         real_type time;
 
-        //std::cout << "Backward integration for adjoint analysis ... ";
+        // std::cout << "Backward integration for adjoint analysis ... ";
 
         retval = IDASolveB(solver_, t_init, IDA_NORMAL);
         checkOutput(retval, "IDASolveB");
 
         IDAGetNumSteps(IDAGetAdjIDABmem(solver_, backwardID_), &nstB);
-        //std::cout << "done ( nst = " << nstB << " )\n";
+        // std::cout << "done ( nst = " << nstB << " )\n";
 
         retval = IDAGetB(solver_, backwardID_, &time, yyB_, ypB_);
         checkOutput(retval, "IDAGetB");
 
-        //Copy back into model
+        // Copy back into model
         copyVec(yyB_, model_->yB());
         copyVec(ypB_, model_->ypB());
 
@@ -577,9 +568,10 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
+    int Ida<ScalarT, IdxT>::Residual(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+            static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tres, 0.0);
         copyVec(yy, model->y());
@@ -593,11 +585,20 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(sunrealtype t, sunrealtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+    int Ida<ScalarT, IdxT>::Jac(sunrealtype t,
+                                sunrealtype cj,
+                                N_Vector    yy,
+                                N_Vector    yp,
+                                N_Vector    resvec,
+                                SUNMatrix   J,
+                                void*       user_data,
+                                N_Vector    tmp1,
+                                N_Vector    tmp2,
+                                N_Vector    tmp3)
     {
 
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
-
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+            static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(t, cj);
         copyVec(yy, model->y());
@@ -605,39 +606,40 @@ namespace Sundials
 
         model->evaluateJacobian();
         COO_Matrix<ScalarT, IdxT> Jac = model->getJacobian();
-        
-        //Get reference to the jacobian entries
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
-        const auto [r, c, val] = tpm;
 
-        //get the CSR row pointers from COO matrix
+        // Get reference to the jacobian entries
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
+        const auto [r, c, val]                                                        = tpm;
+
+        // get the CSR row pointers from COO matrix
         std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
 
         SUNMatZero(J);
 
-        //Set row pointers
-        sunindextype *rowptrs = SUNSparseMatrix_IndexPointers(J);
-        for (unsigned int i = 0; i < csrrowdata.size() ; i++)
+        // Set row pointers
+        sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
+        for (unsigned int i = 0; i < csrrowdata.size(); i++)
         {
             rowptrs[i] = csrrowdata[i];
         }
 
-        sunindextype *colvals = SUNSparseMatrix_IndexValues(J);
-        sunrealtype  *data = SUNSparseMatrix_Data(J);
-        //Copy data from model jac to sundials
-        for (unsigned int i = 0; i < c.size(); i++ )
+        sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
+        sunrealtype*  data    = SUNSparseMatrix_Data(J);
+        // Copy data from model jac to sundials
+        for (unsigned int i = 0; i < c.size(); i++)
         {
             colvals[i] = c[i];
-            data[i] = val[i];
+            data[i]    = val[i];
         }
 
         return 0;
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void *user_data)
+    int Ida<ScalarT, IdxT>::Integrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+            static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());
@@ -651,9 +653,11 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void *user_data)
+    int Ida<ScalarT, IdxT>::adjointResidual(
+        sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+            static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());
@@ -668,11 +672,12 @@ namespace Sundials
         return 0;
     }
 
-
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void *user_data)
+    int Ida<ScalarT, IdxT>::adjointIntegrand(
+        sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+            static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         model->updateTime(tt, 0.0);
         copyVec(yy, model->y());
@@ -687,33 +692,31 @@ namespace Sundials
         return 0;
     }
 
-
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector< ScalarT >& y)
+    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
         const ScalarT* xdata = NV_DATA_S(x);
-        for(unsigned int i = 0; i < y.size(); ++i)
+        for (unsigned int i = 0; i < y.size(); ++i)
         {
             y[i] = xdata[i];
         }
     }
 
-
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector< ScalarT >& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
         ScalarT* ydata = NV_DATA_S(y);
-        for(unsigned int i = 0; i < x.size(); ++i)
+        for (unsigned int i = 0; i < x.size(); ++i)
         {
             ydata[i] = x[i];
         }
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector< bool >& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
         ScalarT* ydata = NV_DATA_S(y);
-        for(unsigned int i = 0; i < x.size(); ++i)
+        for (unsigned int i = 0; i < x.size(); ++i)
         {
             if (x[i])
                 ydata[i] = 1.0;
@@ -722,12 +725,11 @@ namespace Sundials
         }
     }
 
-
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printOutput(sunrealtype t)
     {
-        sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
-        sunrealtype *ypval = N_VGetArrayPointer_Serial(yp_);
+        sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
+        sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
 
         std::cout << std::setprecision(5) << std::setw(7) << t << " ";
         for (IdxT i = 0; i < model_->size(); ++i)
@@ -744,8 +746,8 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
     {
-        sunrealtype *yval = N_VGetArrayPointer_Serial(y);
-        IdxT N = static_cast<IdxT>(N_VGetLength_Serial(y));
+        sunrealtype* yval = N_VGetArrayPointer_Serial(y);
+        IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
         std::cout << "{";
         std::cout << std::setprecision(5) << std::setw(7) << t;
         for (IdxT i = 0; i < N; ++i)
@@ -758,8 +760,8 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printFinalStats()
     {
-        int retval = 0;
-        void* mem = solver_;
+        int      retval = 0;
+        void*    mem    = solver_;
         long int nst;
         long int nre;
         long int nje;
@@ -781,14 +783,13 @@ namespace Sundials
         checkOutput(retval, "IDAGetNumNonlinSolvConvFails");
 
         // std::cout << "\nFinal Run Statistics: \n\n";
-        std::cout << "Number of steps                    = " <<  nst  << "\n";
-        std::cout << "Number of residual evaluations     = " <<  nre  << "\n";
-        //std::cout << "Number of Jacobian evaluations     = " <<  nje  << "\n";
-        std::cout << "Number of nonlinear iterations     = " <<  nni  << "\n";
-        std::cout << "Number of error test failures      = " <<  netf << "\n";
-        std::cout << "Number of nonlinear conv. failures = " <<  ncfn << "\n";
+        std::cout << "Number of steps                    = " << nst << "\n";
+        std::cout << "Number of residual evaluations     = " << nre << "\n";
+        // std::cout << "Number of Jacobian evaluations     = " <<  nje  << "\n";
+        std::cout << "Number of nonlinear iterations     = " << nni << "\n";
+        std::cout << "Number of error test failures      = " << netf << "\n";
+        std::cout << "Number of nonlinear conv. failures = " << ncfn << "\n";
     }
-
 
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::checkAllocation(void* v, const char* functionName)

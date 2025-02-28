@@ -57,14 +57,16 @@
  *
  */
 
-
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "GeneratorSlack.hpp"
+
+#include <cmath>
+#include <iostream>
+#include <vector>
+
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace GridKit {
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a constant load model
@@ -73,10 +75,9 @@ namespace GridKit {
  */
 
 template <class ScalarT, typename IdxT>
-GeneratorSlack<ScalarT, IdxT>::GeneratorSlack(bus_type* bus, GenData& data)
-  : bus_(bus)
+GeneratorSlack<ScalarT, IdxT>::GeneratorSlack(bus_type* bus, GenData& data) : bus_(bus)
 {
-    //std::cout << "Create a load model with " << size_ << " variables ...\n";
+    // std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
 }
 
@@ -156,13 +157,8 @@ int GeneratorSlack<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
-
-
-
 // Available template instantiations
 template class GeneratorSlack<double, long int>;
 template class GeneratorSlack<double, size_t>;
 
-
-} //namespace GridKit
-
+} // namespace GridKit

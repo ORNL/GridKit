@@ -107,5 +107,3 @@ V_{F}=0
 ```
 ```math
 x_{2_{0}}=-\dfrac{K_{F}}{T_{F1}}\dfrac{E_{FD}}{\omega}
-
-

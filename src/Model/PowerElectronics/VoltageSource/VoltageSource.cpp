@@ -1,12 +1,13 @@
 
 
-
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "VoltageSource.hpp"
 
-namespace GridKit {
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a constant VoltageSource model
@@ -15,14 +16,13 @@ namespace GridKit {
  */
 
 template <class ScalarT, typename IdxT>
-VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, ScalarT V)
-  : V_(V)
+VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, ScalarT V) : V_(V)
 {
-    size_ = 3;
-    n_intern_ = 1;
-    n_extern_ = 2;
-    extern_indices_ = {0,1};
-    idc_ = id;
+    size_           = 3;
+    n_intern_       = 1;
+    n_extern_       = 2;
+    extern_indices_ = {0, 1};
+    idc_            = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -39,7 +39,7 @@ int VoltageSource<ScalarT, IdxT>::allocate()
     y_.resize(size_);
     yp_.resize(size_);
     f_.resize(size_);
-    
+
     return 0;
 }
 
@@ -67,11 +67,11 @@ int VoltageSource<ScalarT, IdxT>::tagDifferentiable()
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 {
-    //input
+    // input
     f_[0] = -y_[2];
-    //ouput
+    // ouput
     f_[1] = y_[2];
-    //internal
+    // internal
     f_[2] = y_[1] - y_[0] - V_;
     return 0;
 }
@@ -79,9 +79,9 @@ int VoltageSource<ScalarT, IdxT>::evaluateResidual()
 template <class ScalarT, typename IdxT>
 int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
 {
-    //Create dF/dy
-    std::vector<IdxT> rcord{0,1,2,2};
-    std::vector<IdxT> ccord{2,2,0,1};
+    // Create dF/dy
+    std::vector<IdxT>    rcord{0, 1, 2, 2};
+    std::vector<IdxT>    ccord{2, 2, 0, 1};
     std::vector<ScalarT> vals{-1.0, 1.0, -1.0, 1.0};
     jac_.setValues(rcord, ccord, vals);
 
@@ -112,11 +112,8 @@ int VoltageSource<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
-
 // Available template instantiations
 template class VoltageSource<double, long int>;
 template class VoltageSource<double, size_t>;
 
-
-} //namespace GridKit
-
+} // namespace GridKit

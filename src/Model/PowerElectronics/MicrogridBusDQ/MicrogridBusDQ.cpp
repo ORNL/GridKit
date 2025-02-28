@@ -1,16 +1,18 @@
 
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "MicrogridBusDQ.hpp"
 
-namespace GridKit {
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a constant MicrogridBusDQ model
  *
  * Calls default ModelEvaluatorImpl constructor.
- * 
+ *
  * In DQ space
  * Each microgrid line has a virtual resistance RN
  * Model is from paper: "Modeling, Analysis and Testing of Autonomous Operation
@@ -18,15 +20,14 @@ namespace GridKit {
  * Timothy C. Green, Section E
  */
 template <class ScalarT, typename IdxT>
-MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN)
-  : RN_(RN) 
+MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN) : RN_(RN)
 {
     // externals [vbus_d, vbus_q]
-    size_ = 2;
-    n_intern_ = 0;
-    n_extern_ = 2;
-    extern_indices_ = {0,1};
-    idc_ = id;
+    size_           = 2;
+    n_intern_       = 0;
+    n_extern_       = 2;
+    extern_indices_ = {0, 1};
+    idc_            = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -43,7 +44,7 @@ int MicrogridBusDQ<ScalarT, IdxT>::allocate()
     y_.resize(size_);
     yp_.resize(size_);
     f_.resize(size_);
-    
+
     return 0;
 }
 
@@ -71,12 +72,12 @@ int MicrogridBusDQ<ScalarT, IdxT>::tagDifferentiable()
  * The components are external to allow for outside components to add inductances to the terms.
  *
  * refernce to equations in class header
- * 
+ *
  */
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
 {
-    //bus voltage
+    // bus voltage
     f_[0] = -y_[0] / RN_;
     f_[1] = -y_[1] / RN_;
 
@@ -85,20 +86,20 @@ int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
 
 /**
  * @brief Generate Jacobian
- * 
- * @tparam ScalarT 
- * @tparam IdxT 
- * @return int 
+ *
+ * @tparam ScalarT
+ * @tparam IdxT
+ * @return int
  */
 template <class ScalarT, typename IdxT>
 int MicrogridBusDQ<ScalarT, IdxT>::evaluateJacobian()
 {
     jac_.zeroMatrix();
 
-    //Create dF/dy
-    std::vector<IdxT> rtemp{0,1};
-    std::vector<IdxT> ctemp{0,1};
-    std::vector<ScalarT> vals{-1.0 / RN_,-1.0 / RN_};
+    // Create dF/dy
+    std::vector<IdxT>    rtemp{0, 1};
+    std::vector<IdxT>    ctemp{0, 1};
+    std::vector<ScalarT> vals{-1.0 / RN_, -1.0 / RN_};
     jac_.setValues(rtemp, ctemp, vals);
 
     return 0;
@@ -128,11 +129,8 @@ int MicrogridBusDQ<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
-
 // Available template instantiations
 template class MicrogridBusDQ<double, long int>;
 template class MicrogridBusDQ<double, size_t>;
 
-
-} //namespace GridKit
-
+} // namespace GridKit

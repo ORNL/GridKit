@@ -2,9 +2,9 @@
  * @file SynchronousMachine.hpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of a phasor dynamics branch model.
- * 
+ *
  * The model uses Cartesian coordinates.
- * 
+ *
  */
 #pragma once
 
@@ -15,9 +15,10 @@ namespace GridKit
 {
 namespace PhasorDynamics
 {
-    template <class ScalarT, typename IdxT> class BusBase;
+    template <class ScalarT, typename IdxT>
+    class BusBase;
 }
-}
+} // namespace GridKit
 
 namespace GridKit
 {
@@ -25,12 +26,12 @@ namespace PhasorDynamics
 {
     /**
      * @brief Implementation of a pi-model branch between two buses.
-     * 
+     *
      * The model is implemented in Cartesian coordinates. Positive current
      * direction is into the busses.
      *
      */
-    template  <class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     class SynchronousMachine : public Component<ScalarT, IdxT>
     {
         using Component<ScalarT, IdxT>::size_;
@@ -113,7 +114,6 @@ namespace PhasorDynamics
         {
             return bus_->Ii();
         }
-
 
     private:
         bus_type* bus_;

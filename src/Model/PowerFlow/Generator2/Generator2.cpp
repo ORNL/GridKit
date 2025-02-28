@@ -57,12 +57,15 @@
  *
  */
 
-#include <iostream>
-#include <cmath>
-#include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include "Generator2.hpp"
 
-namespace GridKit {
+#include <cmath>
+#include <iostream>
+
+#include <Model/PowerFlow/Bus/BusSlack.hpp>
+
+namespace GridKit
+{
 
 /*!
  * @brief Constructor for a simple generator model
@@ -74,20 +77,20 @@ namespace GridKit {
  */
 template <class ScalarT, typename IdxT>
 Generator2<ScalarT, IdxT>::Generator2(bus_type* bus)
-  : ModelEvaluatorImpl<ScalarT, IdxT>(2, 1, 1),
-    H_(5.0),
-    D_(0.005),
-    Pm_(0.7),
-    Xdp_(0.5),
-    Eqp_(0.93),
-    omega_s_(1.0),
-    omega_b_(2.0*60.0*M_PI),
-    omega_up_(omega_s_ + 0.0002),
-    omega_lo_(omega_s_ - 0.0002),
-    theta_s_(1.0),
-    c_(10000.0),
-    beta_(2),
-    bus_(bus)
+    : ModelEvaluatorImpl<ScalarT, IdxT>(2, 1, 1),
+      H_(5.0),
+      D_(0.005),
+      Pm_(0.7),
+      Xdp_(0.5),
+      Eqp_(0.93),
+      omega_s_(1.0),
+      omega_b_(2.0 * 60.0 * M_PI),
+      omega_up_(omega_s_ + 0.0002),
+      omega_lo_(omega_s_ - 0.0002),
+      theta_s_(1.0),
+      c_(10000.0),
+      beta_(2),
+      bus_(bus)
 {
 }
 
@@ -118,12 +121,12 @@ template <class ScalarT, typename IdxT>
 int Generator2<ScalarT, IdxT>::initialize()
 {
     // Set optimization parameter value and bounds
-    param_[0] = Pm_;
+    param_[0]    = Pm_;
     param_up_[0] = 1.5;
     param_lo_[0] = 0.5;
 
-    y_[0] = asin((Pm_*Xdp_)/(Eqp_*V())) + theta(); // <~ asin(Pm/Pmax)
-    y_[1] = omega_s_;
+    y_[0]  = asin((Pm_ * Xdp_) / (Eqp_ * V())) + theta(); // <~ asin(Pm/Pmax)
+    y_[1]  = omega_s_;
     yp_[0] = 0.0;
     yp_[1] = 0.0;
 
@@ -133,8 +136,9 @@ int Generator2<ScalarT, IdxT>::initialize()
 template <class ScalarT, typename IdxT>
 int Generator2<ScalarT, IdxT>::evaluateResidual()
 {
-    f_[0] = -yp_[0] + omega_b_*(y_[1]-omega_s_);
-    f_[1] = -yp_[1] + omega_s_/(2.0*H_)*( param_[0] - Eqp_/Xdp_*V()*sin(y_[0] - theta()) - D_*(y_[1]-omega_s_) );
+    f_[0] = -yp_[0] + omega_b_ * (y_[1] - omega_s_);
+    f_[1] = -yp_[1]
+            + omega_s_ / (2.0 * H_) * (param_[0] - Eqp_ / Xdp_ * V() * sin(y_[0] - theta()) - D_ * (y_[1] - omega_s_));
     return 0;
 }
 
@@ -156,8 +160,8 @@ int Generator2<ScalarT, IdxT>::evaluateIntegrand()
 template <class ScalarT, typename IdxT>
 int Generator2<ScalarT, IdxT>::initializeAdjoint()
 {
-    yB_[0] = 0.0;
-    yB_[1] = 0.0;
+    yB_[0]  = 0.0;
+    yB_[1]  = 0.0;
     ypB_[0] = 0.0;
     ypB_[1] = frequencyPenaltyDer(y_[1]);
 
@@ -167,8 +171,8 @@ int Generator2<ScalarT, IdxT>::initializeAdjoint()
 template <class ScalarT, typename IdxT>
 int Generator2<ScalarT, IdxT>::evaluateAdjointResidual()
 {
-    fB_[0]  = -ypB_[0] + omega_s_/(2.0*H_)*Eqp_/Xdp_*V()*cos(y_[0] - theta()) * yB_[1];
-    fB_[1]  = -ypB_[1] + omega_s_/(2.0*H_)*D_ * yB_[1] - omega_b_*yB_[0] + frequencyPenaltyDer(y_[1]);
+    fB_[0] = -ypB_[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y_[0] - theta()) * yB_[1];
+    fB_[1] = -ypB_[1] + omega_s_ / (2.0 * H_) * D_ * yB_[1] - omega_b_ * yB_[0] + frequencyPenaltyDer(y_[1]);
     return 0;
 }
 
@@ -184,10 +188,9 @@ template <class ScalarT, typename IdxT>
 int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
 {
     // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
-    gB_[0] = -omega_s_/(2.0*H_) * yB_[1];
+    gB_[0] = -omega_s_ / (2.0 * H_) * yB_[1];
     return 0;
 }
-
 
 //
 // Private functions
@@ -223,11 +226,8 @@ ScalarT Generator2<ScalarT, IdxT>::frequencyPenaltyDer(ScalarT omega)
     }
 }
 
-
-
 // Available template instantiations
 template class Generator2<double, long int>;
 template class Generator2<double, size_t>;
-
 
 } // namespace GridKit
