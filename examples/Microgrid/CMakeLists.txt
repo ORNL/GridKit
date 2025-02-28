@@ -1,4 +1,3 @@
-
 add_executable(microgrid Microgrid.cpp)
 target_link_libraries(
   microgrid GRIDKIT::power_elec_disgen GRIDKIT::power_elec_microline

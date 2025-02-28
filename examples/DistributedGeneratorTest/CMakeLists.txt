@@ -1,4 +1,3 @@
-
 add_executable(dgtest DGTest.cpp)
 target_link_libraries(
   dgtest GRIDKIT::power_elec_disgen GRIDKIT::power_elec_microline

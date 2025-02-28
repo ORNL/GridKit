@@ -1,4 +1,3 @@
-
 add_executable(scalemicrogrid ScaleMicrogrid.cpp)
 target_link_libraries(
   scalemicrogrid GRIDKIT::power_elec_disgen GRIDKIT::power_elec_microline
