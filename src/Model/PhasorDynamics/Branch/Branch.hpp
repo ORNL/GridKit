@@ -18,7 +18,7 @@ namespace PowerSystemData
     template <typename RealT, typename IdxT>
     struct BranchData;
 }
-}
+} // namespace GridKit
 
 namespace GridKit
 {
