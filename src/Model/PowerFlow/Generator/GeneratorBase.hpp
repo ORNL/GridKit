@@ -122,4 +122,3 @@ namespace GridKit
         virtual const ScalarT& Q() const = 0;
     };
 }
-

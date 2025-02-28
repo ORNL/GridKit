@@ -202,4 +202,3 @@ template class TransmissionLine<double, size_t>;
 
 
 } //namespace GridKit
-

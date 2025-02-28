@@ -148,4 +148,3 @@ template class InductionMotor<double, size_t>;
 
 
 } //namespace GridKit
-

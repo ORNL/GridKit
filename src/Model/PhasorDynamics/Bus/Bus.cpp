@@ -217,4 +217,3 @@ template class Bus<double, size_t>;
 
 } // namespace PhasorDynamic
 } // namespace GridKit
-

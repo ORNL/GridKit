@@ -200,4 +200,3 @@ template class BusInfinite<double, size_t>;
 
 } // namespace PhasorDynamic
 } // namespace GridKit
-

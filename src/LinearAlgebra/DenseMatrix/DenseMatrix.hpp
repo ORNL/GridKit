@@ -227,4 +227,3 @@ template class DenseMatrix<double, size_t>;
 
 } // LinearAlgebra
 } // GridKit
-

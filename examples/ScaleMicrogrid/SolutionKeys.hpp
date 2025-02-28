@@ -538,5 +538,3 @@ const std::vector<real_type> answer_key_N8 = {
     322.018589824395,
     -176.179397251772
 };
-
-

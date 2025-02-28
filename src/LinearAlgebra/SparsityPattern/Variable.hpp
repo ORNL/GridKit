@@ -334,4 +334,3 @@ namespace Sparse
 
 #include "VariableImplementation.hpp"
 #include "VariableOperators.hpp"
-

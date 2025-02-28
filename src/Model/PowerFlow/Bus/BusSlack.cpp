@@ -142,4 +142,3 @@ template class BusSlack<double, size_t>;
 
 
 } // namespace GridKit
-

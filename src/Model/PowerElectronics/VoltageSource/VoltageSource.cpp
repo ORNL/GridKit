@@ -119,4 +119,3 @@ template class VoltageSource<double, size_t>;
 
 
 } //namespace GridKit
-

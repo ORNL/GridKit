@@ -169,4 +169,3 @@ template class MicrogridLoad<double, size_t>;
 
 
 } //namespace GridKit
-

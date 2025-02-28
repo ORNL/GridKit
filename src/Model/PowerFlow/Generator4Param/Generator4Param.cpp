@@ -472,4 +472,3 @@ template class Generator4Param<double, size_t>;
 
 
 } // namespace GridKit
-

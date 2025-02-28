@@ -135,4 +135,3 @@ template class MicrogridBusDQ<double, size_t>;
 
 
 } //namespace GridKit
-

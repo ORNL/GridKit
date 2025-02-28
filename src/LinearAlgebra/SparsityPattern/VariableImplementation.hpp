@@ -211,4 +211,3 @@ namespace Sparse
     
 } // namespace Sparse
 } // namespace GridKit
-

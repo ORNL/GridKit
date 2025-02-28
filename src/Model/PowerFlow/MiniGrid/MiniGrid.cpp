@@ -145,4 +145,3 @@ template class MiniGrid<double, size_t>;
 
 
 } //namespace GridKit
-

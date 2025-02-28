@@ -142,4 +142,3 @@ template class Capacitor<double, size_t>;
 
 
 } //namespace GridKit
-

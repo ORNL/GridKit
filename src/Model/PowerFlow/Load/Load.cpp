@@ -179,4 +179,3 @@ template class Load<double, size_t>;
 
 
 } //namespace GridKit
-

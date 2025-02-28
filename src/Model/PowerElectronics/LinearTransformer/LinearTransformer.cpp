@@ -130,4 +130,3 @@ template class LinearTransformer<double, size_t>;
 
 
 } //namespace GridKit
-

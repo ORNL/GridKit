@@ -141,4 +141,3 @@ template class Inductor<double, size_t>;
 
 
 } //namespace GridKit
-

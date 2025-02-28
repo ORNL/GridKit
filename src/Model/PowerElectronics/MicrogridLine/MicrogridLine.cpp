@@ -172,4 +172,3 @@ template class MicrogridLine<double, size_t>;
 
 
 } //namespace GridKit
-

@@ -123,4 +123,3 @@ template class Resistor<double, size_t>;
 
 
 } //namespace GridKit
-

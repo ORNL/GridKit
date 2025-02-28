@@ -356,4 +356,3 @@ namespace std
 #undef IMPL_FUN_1
 
 } // namespace std
-

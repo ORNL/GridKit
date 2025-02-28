@@ -145,5 +145,3 @@ namespace Testing
 
 } // namespace Testing
 } // namespace GridKit
-
-

@@ -360,4 +360,3 @@ template class DistributedGenerator<double, size_t>;
 
 
 } //namespace GridKit
-

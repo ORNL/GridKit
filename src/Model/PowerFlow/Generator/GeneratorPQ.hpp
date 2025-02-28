@@ -140,4 +140,3 @@ namespace GridKit
         bus_type* bus_;
     };
 }
-

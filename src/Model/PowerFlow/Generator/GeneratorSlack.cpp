@@ -165,4 +165,3 @@ template class GeneratorSlack<double, size_t>;
 
 
 } //namespace GridKit
-
