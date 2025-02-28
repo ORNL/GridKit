@@ -1,21 +1,20 @@
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Utilities/Testing.hpp>
 #include <Utilities/TestHelpers.hpp>
-
+#include <Utilities/Testing.hpp>
 
 namespace GridKit
 {
 namespace Testing
 {
-    template<class ScalarT, typename IdxT>
+    template <class ScalarT, typename IdxT>
     class BusTests
     {
     public:
-        BusTests() = default;
+        BusTests()  = default;
         ~BusTests() = default;
 
         /// Constructor, allocation, and initialization checks
@@ -25,16 +24,16 @@ namespace Testing
 
             ScalarT Vr{1.0};
             ScalarT Vi{2.0};
-        
+
             PhasorDynamics::BusBase<ScalarT, IdxT>* bus = nullptr;
 
             // Create an infinite bus
-            bus = new PhasorDynamics::BusInfinite<ScalarT, IdxT>();
+            bus      = new PhasorDynamics::BusInfinite<ScalarT, IdxT>();
             success *= isEqual(bus->Vr(), 0.0);
             success *= isEqual(bus->Vi(), 0.0);
             delete bus;
 
-            bus = new PhasorDynamics::BusInfinite<ScalarT, IdxT>(Vr, Vi);
+            bus      = new PhasorDynamics::BusInfinite<ScalarT, IdxT>(Vr, Vi);
             success *= isEqual(bus->Vr(), Vr);
             success *= isEqual(bus->Vi(), Vi);
             delete bus;
@@ -70,25 +69,25 @@ namespace Testing
             ScalarT Ii{2.0};
 
             PhasorDynamics::BusInfinite<ScalarT, IdxT> bus_inf;
-            bus_inf.Ir() = Ir;
-            success *= isEqual(bus_inf.Ir(), Ir);
-            bus_inf.Ii() = Ii;
-            success *= isEqual(bus_inf.Ii(), Ii);
+            bus_inf.Ir()  = Ir;
+            success      *= isEqual(bus_inf.Ir(), Ir);
+            bus_inf.Ii()  = Ii;
+            success      *= isEqual(bus_inf.Ii(), Ii);
 
             bus_inf.evaluateResidual();
             success *= isEqual(bus_inf.Ir(), 0.0);
             success *= isEqual(bus_inf.Ii(), 0.0);
 
-            PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr,Vi);
+            PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr, Vi);
             bus.allocate();
             bus.initialize();
             success *= isEqual(bus.Vr(), Vr);
             success *= isEqual(bus.Vi(), Vi);
 
-            bus.Ir() = Ir;
-            success *= isEqual(bus.Ir(), Ir);
-            bus.Ii() = Ii;
-            success *= isEqual(bus.Ii(), Ii);
+            bus.Ir()  = Ir;
+            success  *= isEqual(bus.Ir(), Ir);
+            bus.Ii()  = Ii;
+            success  *= isEqual(bus.Ii(), Ii);
 
             bus.evaluateResidual();
             success *= isEqual(bus.Ir(), 0.0);
@@ -96,7 +95,6 @@ namespace Testing
 
             return success.report(__func__);
         }
-
     };
 
 } // namespace Testing
