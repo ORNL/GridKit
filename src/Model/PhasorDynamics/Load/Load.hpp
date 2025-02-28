@@ -9,10 +9,9 @@ namespace GridKit
 {
 namespace PhasorDynamics
 {
-    template <class ScalarT, typename IdxT>
-    class Bus;
+    template <class ScalarT, typename IdxT> class Bus;
 }
-} // namespace GridKit
+}
 
 namespace GridKit
 {
@@ -22,7 +21,7 @@ namespace PhasorDynamics
      * @brief Implementation of a constant load.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template  <class ScalarT, typename IdxT>
     class Load : public Component<ScalarT, IdxT>
     {
         using Component<ScalarT, IdxT>::size_;
@@ -41,8 +40,8 @@ namespace PhasorDynamics
         using Component<ScalarT, IdxT>::param_;
         using Component<ScalarT, IdxT>::component_id_;
 
-        using bus_type  = BusBase<ScalarT, IdxT>;
-        using real_type = typename Component<ScalarT, IdxT>::real_type;
+        using bus_type   = BusBase<ScalarT, IdxT>;
+        using real_type  = typename Component<ScalarT, IdxT>::real_type;
 
     public:
         Load(bus_type* bus);
@@ -98,6 +97,7 @@ namespace PhasorDynamics
         {
             return bus_->Ii();
         }
+
 
     private:
         bus_type* bus_{nullptr};

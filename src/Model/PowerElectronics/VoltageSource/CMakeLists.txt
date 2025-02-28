@@ -1,3 +1,8 @@
 
-gridkit_add_library(power_elec_voltagesource SOURCES VoltageSource.cpp
-                    OUTPUT_NAME gridkit_power_elec_voltagesource)
+
+
+gridkit_add_library(power_elec_voltagesource
+  SOURCES
+  VoltageSource.cpp
+  OUTPUT_NAME
+    gridkit_power_elec_voltagesource)

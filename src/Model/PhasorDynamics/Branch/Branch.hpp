@@ -2,9 +2,9 @@
  * @file Branch.hpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of a phasor dynamics branch model.
- *
+ * 
  * The model uses Cartesian coordinates.
- *
+ * 
  */
 #pragma once
 
@@ -15,19 +15,17 @@ namespace GridKit
 {
 namespace PowerSystemData
 {
-    template <typename RealT, typename IdxT>
-    struct BranchData;
+    template <typename RealT, typename IdxT> struct BranchData;
 }
-} // namespace GridKit
+}
 
 namespace GridKit
 {
 namespace PhasorDynamics
 {
-    template <class ScalarT, typename IdxT>
-    class Bus;
+    template <class ScalarT, typename IdxT> class Bus;
 }
-} // namespace GridKit
+}
 
 namespace GridKit
 {
@@ -35,12 +33,12 @@ namespace PhasorDynamics
 {
     /**
      * @brief Implementation of a pi-model branch between two buses.
-     *
+     * 
      * The model is implemented in Cartesian coordinates. Positive current
      * direction is into the busses.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template  <class ScalarT, typename IdxT>
     class Branch : public Component<ScalarT, IdxT>
     {
         using Component<ScalarT, IdxT>::size_;
@@ -58,19 +56,13 @@ namespace PhasorDynamics
         using Component<ScalarT, IdxT>::gB_;
         using Component<ScalarT, IdxT>::param_;
 
-        using bus_type  = BusBase<ScalarT, IdxT>;
-        using real_type = typename Component<ScalarT, IdxT>::real_type;
-        using BranchData =
-            GridKit::PowerSystemData::BranchData<real_type, IdxT>;
+        using bus_type   = BusBase<ScalarT, IdxT>;
+        using real_type  = typename Component<ScalarT, IdxT>::real_type;
+        using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
 
     public:
         Branch(bus_type* bus1, bus_type* bus2);
-        Branch(bus_type* bus1,
-               bus_type* bus2,
-               real_type R,
-               real_type X,
-               real_type G,
-               real_type B);
+        Branch(bus_type* bus1, bus_type* bus2, real_type R, real_type X, real_type G, real_type B);
         Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
         virtual ~Branch();
 
@@ -154,12 +146,12 @@ namespace PhasorDynamics
         }
 
     private:
-        bus_type*  bus1_;
-        bus_type*  bus2_;
-        real_type  R_;
-        real_type  X_;
-        real_type  G_;
-        real_type  B_;
+        bus_type* bus1_;
+        bus_type* bus2_;
+        real_type R_;
+        real_type X_;
+        real_type G_;
+        real_type B_;
         const IdxT bus1ID_;
         const IdxT bus2ID_;
     };

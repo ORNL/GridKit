@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-
 #include <Model/Evaluator.hpp>
 
 namespace GridKit
@@ -18,13 +17,12 @@ namespace PhasorDynamics
     public:
         using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
-        enum BusType
-        {
-            DEFAULT = 1,
-            SLACK
-        };
+        enum BusType{DEFAULT=1, SLACK};
 
-        BusBase() : size_(0), size_quad_(0), size_param_(0)
+        BusBase()
+          : size_(0),
+            size_quad_(0),
+            size_param_(0)
         {
         }
 
@@ -33,21 +31,21 @@ namespace PhasorDynamics
         }
 
         BusBase(IdxT size, IdxT size_quad, IdxT size_param)
-            : size_(size),
-              size_quad_(size_quad),
-              size_param_(size_param),
-              y_(size_),
-              yp_(size_),
-              f_(size_),
-              g_(size_quad_),
-              yB_(size_),
-              ypB_(size_),
-              fB_(size_),
-              gB_(size_param_),
-              J_(COO_Matrix<ScalarT, IdxT>()),
-              param_(size_param_),
-              param_up_(size_param_),
-              param_lo_(size_param_)
+          : size_(size),
+            size_quad_(size_quad),
+            size_param_(size_param),
+            y_(size_),
+            yp_(size_),
+            f_(size_),
+            g_(size_quad_),
+            yB_(size_),
+            ypB_(size_),
+            fB_(size_),
+            gB_(size_param_),
+            J_(COO_Matrix<ScalarT, IdxT>()),
+            param_(size_param_),
+            param_up_(size_param_),
+            param_lo_(size_param_)
         {
         }
 
@@ -56,7 +54,7 @@ namespace PhasorDynamics
         }
 
         /// Pure virtual function, returns bus type (DEFAULT or SLACK).
-        virtual int BusType() const = 0;
+        virtual int BusType() const = 0;        
 
         virtual IdxT size() override
         {
@@ -99,14 +97,15 @@ namespace PhasorDynamics
             msa = max_steps_;
         }
 
-        virtual ScalarT&       Vr()       = 0;
+        virtual ScalarT& Vr() = 0;
         virtual const ScalarT& Vr() const = 0;
-        virtual ScalarT&       Vi()       = 0;
+        virtual ScalarT& Vi() = 0;
         virtual const ScalarT& Vi() const = 0;
-        virtual ScalarT&       Ir()       = 0;
+        virtual ScalarT& Ir() = 0;
         virtual const ScalarT& Ir() const = 0;
-        virtual ScalarT&       Ii()       = 0;
+        virtual ScalarT& Ii() = 0;
         virtual const ScalarT& Ii() const = 0;
+
 
         std::vector<ScalarT>& y() override
         {
@@ -243,6 +242,7 @@ namespace PhasorDynamics
             return bus_id_;
         }
 
+
     protected:
         const IdxT bus_id_{static_cast<IdxT>(-1)};
 
@@ -253,7 +253,7 @@ namespace PhasorDynamics
 
         std::vector<ScalarT> y_;
         std::vector<ScalarT> yp_;
-        std::vector<bool>    tag_;
+        std::vector<bool> tag_;
         std::vector<ScalarT> f_;
         std::vector<ScalarT> g_;
 
@@ -277,5 +277,5 @@ namespace PhasorDynamics
         IdxT max_steps_;
     };
 
-} // namespace PhasorDynamics
+} // namespace BusBase
 } // namespace GridKit

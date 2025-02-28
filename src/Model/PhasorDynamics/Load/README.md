@@ -26,3 +26,4 @@ where
 ```math
 g = \frac{R}{R^2+X^2} ~~~\mathrm{and}~~~ b = \frac{-X}{R^2+X^2}.
 ```
+
