@@ -36,6 +36,7 @@ AlignConsecutiveMacros:
   AcrossComments:   true
 
 # Newlines
+ColumnLimit:     120
 BreakBeforeBraces: Allman         # Braces on their own lines
 SeparateDefinitionBlocks: Always  # Separate definitions (functions etc.) with an empty line
 AlwaysBreakTemplateDeclarations: true # Put template on their own lines
