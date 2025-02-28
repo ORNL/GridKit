@@ -67,4 +67,3 @@ gridkit_add_library(bus
     BusSlack.cpp
   OUTPUT_NAME
     gridkit_bus)
-

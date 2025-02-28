@@ -10,4 +10,3 @@ gridkit_add_library(phasor_dynamics_bus
     BusInfinite.cpp
   OUTPUT_NAME
     gridkit_phasor_dynamics_bus)
-

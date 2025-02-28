@@ -9,10 +9,9 @@
 
 #define THROW_NULL_DEREF throw std::runtime_error("error")
 
-#include <limits>
 #include <cmath>
 #include <iostream>
-
+#include <limits>
 
 namespace GridKit
 {
@@ -21,34 +20,39 @@ namespace Colors
 {
     // must be const pointer and const dest for
     // const string declarations to pass -Wwrite-strings
-    static const char * const  RED       = "\033[1;31m";
-    static const char * const  GREEN     = "\033[1;32m";
-    static const char * const  YELLOW    = "\033[33;1m";
-    static const char * const  BLUE      = "\033[34;1m";
-    static const char * const  ORANGE    = "\u001b[38;5;208m";
-    static const char * const  CLEAR     = "\033[0m";
-}
+    static const char* const RED    = "\033[1;31m";
+    static const char* const GREEN  = "\033[1;32m";
+    static const char* const YELLOW = "\033[33;1m";
+    static const char* const BLUE   = "\033[34;1m";
+    static const char* const ORANGE = "\u001b[38;5;208m";
+    static const char* const CLEAR  = "\033[0m";
+} // namespace Colors
 
 namespace Testing
 {
-    enum TestOutcome {PASS=0, FAIL, SKIP, EXPECTED_FAIL, UNEXPECTED_PASS};
+    enum TestOutcome
+    {
+        PASS = 0,
+        FAIL,
+        SKIP,
+        EXPECTED_FAIL,
+        UNEXPECTED_PASS
+    };
 
     class TestStatus
     {
     public:
-        TestStatus()
-        : outcome_(TestOutcome::PASS)
+        TestStatus() : outcome_(TestOutcome::PASS)
         {
         }
 
         TestStatus(bool success)
-        : outcome_(success ? TestOutcome::PASS : TestOutcome::FAIL)
+            : outcome_(success ? TestOutcome::PASS : TestOutcome::FAIL)
         {
         }
 
-        TestStatus(const char* funcname) 
-        : outcome_(TestOutcome::PASS),
-          funcname_(funcname)
+        TestStatus(const char* funcname)
+            : outcome_(TestOutcome::PASS), funcname_(funcname)
         {
         }
 
@@ -58,23 +62,23 @@ namespace Testing
 
         TestStatus& operator=(const bool isPass)
         {
-            if(isPass)
+            if (isPass)
                 outcome_ = TestOutcome::PASS;
             else
-                outcome_ = TestOutcome::FAIL;   
+                outcome_ = TestOutcome::FAIL;
             return *this;
         }
 
         TestStatus& operator*=(const bool isPass)
         {
-            if(!isPass)
-                outcome_ = TestOutcome::FAIL;   
+            if (!isPass)
+                outcome_ = TestOutcome::FAIL;
             return *this;
         }
 
         void skipTest()
         {
-            outcome_ = TestOutcome::SKIP;   
+            outcome_ = TestOutcome::SKIP;
         }
 
         void expectFailure()
@@ -101,32 +105,32 @@ namespace Testing
                     outcome_ = SKIP;
             }
 
-            switch(outcome_)
+            switch (outcome_)
             {
             case PASS:
-                std::cout << "--- " << GREEN << "PASS" << CLEAR 
-                                    << ": Test " << funcname << "\n";
+                std::cout << "--- " << GREEN << "PASS" << CLEAR << ": Test "
+                          << funcname << "\n";
                 break;
             case FAIL:
-                std::cout << "--- " << RED << "FAIL" << CLEAR 
-                                    << ": Test " << funcname << "\n";
+                std::cout << "--- " << RED << "FAIL" << CLEAR << ": Test "
+                          << funcname << "\n";
                 break;
             case SKIP:
-                std::cout << "--- " << YELLOW << "SKIP" << CLEAR 
-                                    << ": Test " << funcname << CLEAR << "\n";
+                std::cout << "--- " << YELLOW << "SKIP" << CLEAR << ": Test "
+                          << funcname << CLEAR << "\n";
                 break;
             case EXPECTED_FAIL:
-                std::cout << "--- " << ORANGE << "FAIL" << CLEAR 
-                                    << " (EXPECTED)" << ": Test " << funcname << "\n";
+                std::cout << "--- " << ORANGE << "FAIL" << CLEAR
+                          << " (EXPECTED)" << ": Test " << funcname << "\n";
                 break;
             case UNEXPECTED_PASS:
-                std::cout << "--- " << BLUE << "PASS" << CLEAR 
-                                    << " (UNEXPECTED)" << ": Test " << funcname << "\n";
+                std::cout << "--- " << BLUE << "PASS" << CLEAR
+                          << " (UNEXPECTED)" << ": Test " << funcname << "\n";
                 break;
             default:
                 std::cout << "--- " << RED << "FAIL" << CLEAR
-                                    << "Unrecognized test result " << outcome_ 
-                                    << " for test " << funcname << "\n";
+                          << "Unrecognized test result " << outcome_
+                          << " for test " << funcname << "\n";
             }
             return outcome_;
         }
@@ -134,53 +138,57 @@ namespace Testing
     private:
         TestOutcome outcome_;
         const char* funcname_;
-        bool expectFailure_ = false;
+        bool        expectFailure_ = false;
     };
-
-
 
     struct TestingResults
     {
-        int success = 0;
-        int failure = 0;
-        int skip = 0;
-        int expected_failure = 0;
+        int success            = 0;
+        int failure            = 0;
+        int skip               = 0;
+        int expected_failure   = 0;
         int unexpected_success = 0;
 
-        TestingResults(){}
-        ~TestingResults(){}
+        TestingResults()
+        {
+        }
+
+        ~TestingResults()
+        {
+        }
+
         TestingResults(const TestingResults& r)
         {
-            this->success = r.success;    
-            this->failure = r.failure;
-            this->skip    = r.skip;
+            this->success            = r.success;
+            this->failure            = r.failure;
+            this->skip               = r.skip;
             this->expected_failure   = r.expected_failure;
             this->unexpected_success = r.unexpected_success;
         }
 
         void init()
         {
-            this->success = 0;    
-            this->failure = 0;
-            this->skip    = 0;
+            this->success            = 0;
+            this->failure            = 0;
+            this->skip               = 0;
             this->expected_failure   = 0;
             this->unexpected_success = 0;
         }
 
         TestingResults& operator+=(const TestingResults& rhs)
         {
-            this->success += rhs.success;    
-            this->failure += rhs.failure;
-            this->skip    += rhs.skip;
+            this->success            += rhs.success;
+            this->failure            += rhs.failure;
+            this->skip               += rhs.skip;
             this->expected_failure   += rhs.expected_failure;
             this->unexpected_success += rhs.unexpected_success;
-            
+
             return *this;
         }
 
         TestingResults& operator+=(const TestOutcome outcome)
         {
-            switch(outcome)
+            switch (outcome)
             {
             case PASS:
                 this->success++;
@@ -209,36 +217,39 @@ namespace Testing
         {
             std::cout << "\n\nTest Summary\n";
             std::cout << "----------------------------\n";
-            std::cout << "\tSuccessful tests:     " << success            << "\n"; 
-            std::cout << "\tFailed test:          " << failure            << "\n";
-            std::cout << "\tSkipped tests:        " << skip               << "\n";
-            std::cout << "\tExpected failures:    " << expected_failure   << "\n";
-            std::cout << "\tUnexpected successes: " << unexpected_success << "\n";
+            std::cout << "\tSuccessful tests:     " << success << "\n";
+            std::cout << "\tFailed test:          " << failure << "\n";
+            std::cout << "\tSkipped tests:        " << skip << "\n";
+            std::cout << "\tExpected failures:    " << expected_failure << "\n";
+            std::cout << "\tUnexpected successes: " << unexpected_success
+                      << "\n";
             std::cout << "\n";
 
             return failure;
         }
     };
 
-    TestingResults operator+(const TestingResults& lhs, const TestingResults& rhs)
+    TestingResults operator+(const TestingResults& lhs,
+                             const TestingResults& rhs)
     {
         return TestingResults(lhs) += rhs;
     }
 
-    TestingResults operator+(const TestingResults& lhs, const TestOutcome outcome)
+    TestingResults operator+(const TestingResults& lhs,
+                             const TestOutcome     outcome)
     {
         return TestingResults(lhs) += outcome;
     }
 
-    TestingResults operator+(const TestOutcome outcome, const TestingResults& rhs)
+    TestingResults operator+(const TestOutcome     outcome,
+                             const TestingResults& rhs)
     {
         return TestingResults(rhs) += outcome;
     }
 
-
     // /// @brief eps = 2.2e-15 for double type
-    // static const real_type eps_ = 10*std::numeric_limits<real_type>::epsilon();
-
+    // static const real_type eps_ =
+    // 10*std::numeric_limits<real_type>::epsilon();
 
     // class TestBase
     // {
@@ -253,7 +264,7 @@ namespace Testing
     //     {
     //         return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
     //     }
-        
+
     // };
 
 } // namespace Testing
