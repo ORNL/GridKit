@@ -17,7 +17,7 @@
 int main(int argc, char const* argv[])
 {
     ///@todo Needs to be modified. Some components are small relative to others
-    ///thus there error is high (or could be matlab vector issue)
+    /// thus there error is high (or could be matlab vector issue)
     double abs_tol         = 1.0e-8;
     double rel_tol         = 1.0e-8;
     size_t max_step_amount = 3000;
