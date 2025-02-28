@@ -59,43 +59,42 @@
 
 #pragma once
 
+#include <PowerSystemData.hpp>
 #include <Model/PowerFlow/Bus/BusPQ.hpp>
 #include <Model/PowerFlow/Bus/BusPV.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
-#include <PowerSystemData.hpp>
 
-namespace GridKit
-{
+namespace GridKit {
 
-template <typename ScalarT = double, typename IdxT = int>
-class BusFactory
-{
-public:
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
-
-    BusFactory() = delete;
-
-    static BaseBus<ScalarT, IdxT>* create(BusData& data)
+    template <typename ScalarT = double, typename IdxT = int>
+    class BusFactory
     {
-        BaseBus<ScalarT, IdxT>* bus = nullptr;
-        switch (data.type)
+    public:
+        using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+        using BusData = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+
+        BusFactory() = delete;
+
+        static BaseBus<ScalarT, IdxT>* create(BusData& data)
         {
-        case 1:
-            bus = new BusPQ<ScalarT, IdxT>(data);
-            break;
-        case 2:
-            bus = new BusPV<ScalarT, IdxT>(data);
-            break;
-        case 3:
-            bus = new BusSlack<ScalarT, IdxT>(data);
-            break;
-        default:
-            // Throw exception
-            std::cout << "Bus type " << data.type << " unrecognized.\n";
+            BaseBus<ScalarT, IdxT>* bus = nullptr;
+            switch(data.type)
+            {
+                case 1:
+                bus = new BusPQ<ScalarT, IdxT>(data);
+                break;
+                case 2:
+                bus = new BusPV<ScalarT, IdxT>(data);
+                break;
+                case 3:
+                bus = new BusSlack<ScalarT, IdxT>(data);
+                break;
+                default:
+                // Throw exception
+                std::cout << "Bus type " << data.type << " unrecognized.\n";
+            }
+            return bus;
         }
-        return bus;
-    }
-};
+    };
 
 } // namespace GridKit

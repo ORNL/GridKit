@@ -57,17 +57,19 @@
  *
  */
 
-#include <iomanip>
-#include <iostream>
 
-#include <IpIpoptApplication.hpp>
-#include <IpSolveStatistics.hpp>
+#include <iostream>
+#include <iomanip>
+
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator2/Generator2.hpp>
 #include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
+
+#include <IpIpoptApplication.hpp>
+#include <IpSolveStatistics.hpp>
 #include <Solver/Optimization/DynamicObjective.hpp>
+#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/Testing.hpp>
 
 int main()
@@ -112,7 +114,7 @@ int main()
     {
         gen->V() = 0.0;
         idas->runSimulation(t_clear, 2);
-        gen->V()     = 1.0;
+        gen->V() = 1.0;
         gen->theta() = -0.01;
         idas->saveInitialCondition();
     }
@@ -129,14 +131,13 @@ int main()
     // Initialize the IpoptApplication and process the options
     Ipopt::ApplicationReturnStatus status;
     status = ipoptApp->Initialize();
-    if (status != Ipopt::Solve_Succeeded)
-    {
+    if (status != Ipopt::Solve_Succeeded) {
         std::cout << "\n\n*** Initialization failed! ***\n\n";
         return (int) status;
     }
 
     // Set solver tolerance
-    const double tol = 1e-4;
+    const double tol = 1e-4; 
 
     // Configure Ipopt application
     ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
@@ -154,19 +155,18 @@ int main()
     status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
     std::cout << "\n\nProblem formulated as dynamic objective optimization ...\n";
 
-    if (status == Ipopt::Solve_Succeeded)
-    {
+    if (status == Ipopt::Solve_Succeeded) {
         // Print result
-        std::cout << "\nSucess:\n The problem solved in " << ipoptApp->Statistics()->IterationCount()
-                  << " iterations!\n"
+        std::cout << "\nSucess:\n The problem solved in "
+                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
                   << " Optimal value of Pm = " << model->param()[0] << "\n"
-                  << " The final value of the objective function G(Pm) = " << ipoptApp->Statistics()->FinalObjective()
-                  << "\n\n";
+                  << " The final value of the objective function G(Pm) = "
+                  << ipoptApp->Statistics()->FinalObjective() << "\n\n";
     }
 
     // Store dynamic objective optimization results
-    double* results = new double[model->sizeParams()];
-    for (unsigned i = 0; i < model->sizeParams(); ++i)
+    double* results  = new double[model->sizeParams()];
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
         results[i] = model->param()[i];
     }
@@ -177,35 +177,34 @@ int main()
 
     // Initialize problem
     model->param()[0] = Pm;
-
+    
     // Solve the problem
     status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
     std::cout << "\n\nProblem formulated as dynamic constraint optimization ...\n";
 
-    if (status == Ipopt::Solve_Succeeded)
-    {
+    if (status == Ipopt::Solve_Succeeded) {
         // Print result
-        std::cout << "\nSucess:\n The problem solved in " << ipoptApp->Statistics()->IterationCount()
-                  << " iterations!\n"
+        std::cout << "\nSucess:\n The problem solved in "
+                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
                   << " Optimal value of Pm = " << model->param()[0] << "\n"
-                  << " The final value of the objective function G(Pm) = " << ipoptApp->Statistics()->FinalObjective()
-                  << "\n\n";
+                  << " The final value of the objective function G(Pm) = "
+                  << ipoptApp->Statistics()->FinalObjective() << "\n\n";
     }
 
     // Compare results of the two optimization methods
     int retval = 0;
-    for (unsigned i = 0; i < model->sizeParams(); ++i)
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
-        if (!isEqual(results[i], model->param()[i], 10 * tol))
-            --retval;
+        if(!isEqual(results[i], model->param()[i], 10*tol))
+            --retval; 
     }
 
-    if (retval < 0)
+    if(retval < 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
     }
 
-    delete[] results;
+    delete [] results;
     delete idas;
     delete model;
     return retval;

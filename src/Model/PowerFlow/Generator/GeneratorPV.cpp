@@ -57,16 +57,14 @@
  *
  */
 
-#include "GeneratorPV.hpp"
 
-#include <cmath>
 #include <iostream>
+#include <cmath>
 #include <vector>
-
+#include "GeneratorPV.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace GridKit
-{
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant load model
@@ -76,11 +74,11 @@ namespace GridKit
 
 template <class ScalarT, typename IdxT>
 GeneratorPV<ScalarT, IdxT>::GeneratorPV(bus_type* bus, GenData& data)
-    : P_(data.Pg),
-      // Q_(data.Qg),
-      bus_(bus)
+  : P_(data.Pg),
+    // Q_(data.Qg),
+    bus_(bus)
 {
-    // std::cout << "Create a load model with " << size_ << " variables ...\n";
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
 }
 
@@ -160,8 +158,11 @@ int GeneratorPV<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
+
 // Available template instantiations
 template class GeneratorPV<double, long int>;
 template class GeneratorPV<double, size_t>;
 
-} // namespace GridKit
+
+} //namespace GridKit
+

@@ -1,19 +1,21 @@
+#include "EnzymeWrapper.hpp"
 #include "VectorModel.hpp"
-
 #include <iostream>
 
-#include "EnzymeWrapper.hpp"
-
-VectorModel::VectorModel(int n) : x_(n), f_(n), df_dx_(n, n)
+VectorModel::VectorModel(int n) :
+   x_(n),
+   f_(n),
+   df_dx_(n, n)
 {
 }
 
-inline double VectorModel::square_scalar(double x)
+inline
+double VectorModel::square_scalar(double x) 
 {
     return x * x;
 }
 
-void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
+void VectorModel::square(std::vector<double>& x, std::vector<double>& y) 
 {
     for (int idx = 0; idx < x.size(); ++idx)
     {
@@ -21,7 +23,7 @@ void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
     }
 }
 
-void VectorModel::setVariable(std::vector<double> x)
+void VectorModel::setVariable(std::vector<double> x) 
 {
     for (int idx = 0; idx < x.size(); ++idx)
     {
@@ -29,16 +31,16 @@ void VectorModel::setVariable(std::vector<double> x)
     }
 }
 
-void VectorModel::evalResidual()
+void VectorModel::evalResidual() 
 {
     square(x_, f_);
 }
 
-void VectorModel::evalJacobian()
+void VectorModel::evalJacobian() 
 {
-    const int           n = x_.size();
+    const int n = x_.size();
     std::vector<double> v(n);
-    VectorModel         d_vector_model(n);
+    VectorModel d_vector_model(n);
     for (int idy = 0; idy < n; ++idy)
     {
         // Elementary vector for Jacobian-vector product
@@ -48,11 +50,12 @@ void VectorModel::evalJacobian()
         }
         v[idy] = 1.0;
         d_vector_model.setVariable(v);
-
+  
         // Autodiff
         std::vector<double> d_res = __enzyme_fwddiff<VectorModel>(
-            (std::vector<double>*) wrapper<VectorModel>, enzyme_dup, this, &d_vector_model);
-
+                                      (std::vector<double>*)wrapper<VectorModel>, 
+                                      enzyme_dup, this, &d_vector_model);
+  
         // Store result
         for (int idx = 0; idx < n; ++idx)
         {
@@ -61,21 +64,21 @@ void VectorModel::evalJacobian()
     }
 }
 
-std::vector<double>& VectorModel::getVariable()
+std::vector<double>& VectorModel::getVariable() 
 {
     return x_;
 }
 
-std::vector<double>& VectorModel::getResidual()
+std::vector<double>& VectorModel::getResidual() 
 {
     return f_;
 }
 
-DenseMatrix& VectorModel::getJacobian()
+DenseMatrix& VectorModel::getJacobian() 
 {
     return df_dx_;
 }
 
-VectorModel::~VectorModel()
+VectorModel::~VectorModel() 
 {
 }

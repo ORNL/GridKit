@@ -57,13 +57,11 @@
  *
  */
 
+#include <iostream>
+#include <cmath>
 #include "BusPQ.hpp"
 
-#include <cmath>
-#include <iostream>
-
-namespace GridKit
-{
+namespace GridKit {
 
 /*!
  * @brief Constructor for a PQ bus
@@ -75,10 +73,11 @@ namespace GridKit
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ() : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
+BusPQ<ScalarT, IdxT>::BusPQ()
+  : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
 {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPQ..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 2;
 }
@@ -95,19 +94,21 @@ BusPQ<ScalarT, IdxT>::BusPQ() : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta) : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
+BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
+  : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
 {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPQ..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 2;
 }
 
 template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ(BusData& data) : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
+BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
+  : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
 {
-    // std::cout << "Create BusPQ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPQ..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 2;
 }
@@ -115,7 +116,7 @@ BusPQ<ScalarT, IdxT>::BusPQ(BusData& data) : BaseBus<ScalarT, IdxT>(data.bus_i),
 template <class ScalarT, typename IdxT>
 BusPQ<ScalarT, IdxT>::~BusPQ()
 {
-    // std::cout << "Destroy PQ bus ..." << std::endl;
+    //std::cout << "Destroy PQ bus ..." << std::endl;
 }
 
 /*!
@@ -124,7 +125,7 @@ BusPQ<ScalarT, IdxT>::~BusPQ()
 template <class ScalarT, typename IdxT>
 int BusPQ<ScalarT, IdxT>::allocate()
 {
-    // std::cout << "Allocate PQ bus ..." << std::endl;
+    //std::cout << "Allocate PQ bus ..." << std::endl;
     f_.resize(size_);
     y_.resize(size_);
     yp_.resize(size_);
@@ -137,6 +138,7 @@ int BusPQ<ScalarT, IdxT>::allocate()
     return 0;
 }
 
+
 template <class ScalarT, typename IdxT>
 int BusPQ<ScalarT, IdxT>::tagDifferentiable()
 {
@@ -145,6 +147,7 @@ int BusPQ<ScalarT, IdxT>::tagDifferentiable()
     return 0;
 }
 
+
 /*!
  * @brief initialize method sets bus variables to stored initial values.
  */
@@ -152,8 +155,8 @@ template <class ScalarT, typename IdxT>
 int BusPQ<ScalarT, IdxT>::initialize()
 {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    y_[0]  = V0_;
-    y_[1]  = theta0_;
+    y_[0] = V0_;
+    y_[1] = theta0_;
     yp_[0] = 0.0;
     yp_[1] = 0.0;
 
@@ -176,6 +179,7 @@ int BusPQ<ScalarT, IdxT>::evaluateResidual()
     return 0;
 }
 
+
 /*!
  * @brief initialize method sets bus variables to stored initial values.
  */
@@ -183,8 +187,8 @@ template <class ScalarT, typename IdxT>
 int BusPQ<ScalarT, IdxT>::initializeAdjoint()
 {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    yB_[0]  = 0.0;
-    yB_[1]  = 0.0;
+    yB_[0] = 0.0;
+    yB_[1] = 0.0;
     ypB_[0] = 0.0;
     ypB_[1] = 0.0;
 
@@ -204,4 +208,6 @@ int BusPQ<ScalarT, IdxT>::evaluateAdjointResidual()
 template class BusPQ<double, long int>;
 template class BusPQ<double, size_t>;
 
+
 } // namespace GridKit
+

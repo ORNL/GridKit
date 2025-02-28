@@ -1,7 +1,10 @@
-# [[ Author(s): - Cameron Rutherford <cameron.rutherford@pnnl.gov> ]]
 
-# add_library macro loosely based on
-# https://github.com/LLNL/sundials/blob/master/cmake/macros/SundialsAddLibrary.cmake
+# [[
+#  Author(s):
+#    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
+#]]
+
+# add_library macro loosely based on https://github.com/LLNL/sundials/blob/master/cmake/macros/SundialsAddLibrary.cmake
 
 macro(gridkit_add_library target)
 
@@ -10,8 +13,8 @@ macro(gridkit_add_library target)
   set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES)
 
   # parse arguments
-  cmake_parse_arguments(gridkit_add_library "${options}" "${oneValueArgs}"
-                        "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(gridkit_add_library
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # library types to create
   set(_libtypes "")
@@ -40,7 +43,7 @@ macro(gridkit_add_library target)
     # -- Create object library --
 
     add_library(${obj_target} OBJECT ${sources})
-
+    
     if(gridkit_add_library_LINK_LIBRARIES)
       if(${_lib_type} MATCHES "STATIC")
         append_static_suffix(gridkit_add_library_LINK_LIBRARIES _all_libs)
@@ -49,47 +52,41 @@ macro(gridkit_add_library target)
       endif()
       target_link_libraries(${obj_target} ${_all_libs})
     endif()
-
+    
     # object files going into shared libs need PIC code
-    set_target_properties(${obj_target} PROPERTIES POSITION_INDEPENDENT_CODE
-                                                   TRUE)
+    set_target_properties(${obj_target} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
     # set target name
     set(_actual_target_name ${target}${_lib_suffix})
 
-    add_library(${_actual_target_name} ${_libtype}
-                                       $<TARGET_OBJECTS:${obj_target}>)
+    add_library(${_actual_target_name} ${_libtype} $<TARGET_OBJECTS:${obj_target}>)
 
     if(gridkit_add_library_LINK_LIBRARIES)
-      target_link_libraries(${_actual_target_name}
-                            ${gridkit_add_library_LINK_LIBRARIES})
+      target_link_libraries(${_actual_target_name} ${gridkit_add_library_LINK_LIBRARIES})
     endif()
 
     add_library(GRIDKIT::${target} ALIAS ${_actual_target_name})
 
     # Set output name
     if(gridkit_add_library_OUTPUT_NAME)
-      set_target_properties(
-        ${_actual_target_name}
-        PROPERTIES OUTPUT_NAME ${gridkit_add_library_OUTPUT_NAME}
-                   CLEAN_DIRECT_OUTPUT 1)
+      set_target_properties(${_actual_target_name} PROPERTIES
+        OUTPUT_NAME ${gridkit_add_library_OUTPUT_NAME}
+        CLEAN_DIRECT_OUTPUT 1)
     else()
-      set_target_properties(
-        ${_actual_target_name} PROPERTIES OUTPUT_NAME ${target}
-                                          CLEAN_DIRECT_OUTPUT 1)
+      set_target_properties(${_actual_target_name} PROPERTIES
+        OUTPUT_NAME ${target}
+        CLEAN_DIRECT_OUTPUT 1)
     endif()
 
     # Set the library version
-    set_target_properties(
-      ${_actual_target_name} PROPERTIES VERSION ${PACKAGE_VERSION}
-                                        SOVERSION ${PACKAGE_VERSION_MAJOR})
+    set_target_properties(${_actual_target_name} PROPERTIES
+      VERSION ${PACKAGE_VERSION}
+      SOVERSION ${PACKAGE_VERSION_MAJOR})
 
-    install(
-      TARGETS ${_actual_target_name}
-      DESTINATION lib
-      EXPORT gridkit-targets)
+    install(TARGETS ${_actual_target_name} DESTINATION lib EXPORT gridkit-targets)
   endforeach()
 endmacro()
+
 
 macro(append_static_suffix libs_in libs_out)
   set(${libs_out} "")

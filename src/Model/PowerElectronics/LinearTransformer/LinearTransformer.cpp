@@ -1,13 +1,12 @@
 
 
+
+#include <iostream>
+#include <cmath>
+#include <vector>
 #include "LinearTransformer.hpp"
 
-#include <cmath>
-#include <iostream>
-#include <vector>
-
-namespace GridKit
-{
+namespace GridKit {
 
 /*!
  * @brief Constructor for a LinearTransformer model
@@ -15,10 +14,10 @@ namespace GridKit
  * Calls default ModelEvaluatorImpl constructor.
  * @todo Not tested in any model yet. Should be
  * @todo Has not been tested for correctness
- *
+ * 
  * @tparam ScalarT - floating point type for the model
  * @tparam IdxT - integer index type for the model
- *
+ * 
  * @param[in] id - unique identifier for the component
  * @param[in] L0 - inductance 0
  * @param[in] L1 - inductance 1
@@ -29,13 +28,17 @@ namespace GridKit
 
 template <class ScalarT, typename IdxT>
 LinearTransformer<ScalarT, IdxT>::LinearTransformer(IdxT id, ScalarT L0, ScalarT L1, ScalarT R0, ScalarT R1, ScalarT M)
-    : L0_(L0), L1_(L1), R0_(R0), R1_(R1), M_(M)
+  : L0_(L0),
+    L1_(L1),
+    R0_(R0),
+    R1_(R1),
+    M_(M)
 {
-    size_           = 4;
-    n_intern_       = 2;
-    n_extern_       = 2;
-    extern_indices_ = {0, 1};
-    idc_            = id;
+    size_ = 4;
+    n_intern_ = 2;
+    n_extern_ = 2;
+    extern_indices_ = {0,1};
+    idc_ = id;
 }
 
 template <class ScalarT, typename IdxT>
@@ -75,7 +78,7 @@ int LinearTransformer<ScalarT, IdxT>::tagDifferentiable()
 
 /**
  * @brief Computes the component resisdual
- *
+ * 
  */
 template <class ScalarT, typename IdxT>
 int LinearTransformer<ScalarT, IdxT>::evaluateResidual()
@@ -117,8 +120,14 @@ int LinearTransformer<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
+
+
+
+
 // Available template instantiations
 template class LinearTransformer<double, long int>;
 template class LinearTransformer<double, size_t>;
 
-} // namespace GridKit
+
+} //namespace GridKit
+

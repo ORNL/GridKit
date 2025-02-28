@@ -16,18 +16,21 @@ namespace Sparse
         assert(dependencies_ != 0);
         return *dependencies_;
     }
+    
 
     /**
-        @brief Registers a variable as an unknown of the system and
+        @brief Registers a variable as an unknown of the system and 
         adds a pointer to the global @a x vector.
     */
-    void Variable::registerVariable(std::vector<Variable*>& x, const size_t& offset)
+    void Variable::registerVariable(std::vector<Variable*>& x, 
+                                    const size_t& offset)
     {
-        setVariableNumber(offset); // define global variable number
-        setFixed(false);           // not a constant
+        setVariableNumber(offset);  // define global variable number
+        setFixed(false);            // not a constant
 
         x[offset] = this;
     }
+    
 
     /**
         @brief Adds all dependencies of v to *this.
@@ -37,36 +40,38 @@ namespace Sparse
         for (auto& p : *(v.dependencies_))
             (*dependencies_)[p.first] = p.second;
     }
+    
 
     /**
-        @brief Multiplies each partial derivative of @a this by @a c.
+        @brief Multiplies each partial derivative of @a this by @a c. 
     */
     void Variable::scaleDependencies(double c)
     {
         for (auto& p : *dependencies_)
             (*dependencies_)[p.first] *= c;
     }
-
+    
+    
     /**
         @brief Prints the value and input set of the variable.
     */
     void Variable::print(std::ostream& os) const
     {
         os << value_;
-
+        
         if (is_fixed_)
         {
             os << " (fixed)";
             return;
         }
-
+        
         if (variable_number_ != INVALID_VAR_NUMBER)
         {
             os << " (variable " << variable_number_ << ")";
             return;
         }
-
-        if (dependencies_ != NULL && !dependencies_->empty())
+        
+        if (dependencies_!= NULL && !dependencies_->empty())
         {
             os << " dependencies: [ ";
             for (auto& p : *dependencies_)
@@ -74,13 +79,14 @@ namespace Sparse
             os << "]";
         }
     }
-
+    
+    
     //------------------------------------
     // compound assignment operators
     //------------------------------------
-
+    
     /**
-        @brief Compound addition-assignment operator. Right hand
+        @brief Compound addition-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator+=(const double& rhs)
@@ -88,9 +94,9 @@ namespace Sparse
         value_ += rhs;
         return *this;
     }
-
+    
     /**
-        @brief Compound addition-assignment operator. Right hand side
+        @brief Compound addition-assignment operator. Right hand side 
         is Variable type.
     */
     Variable& Variable::operator+=(const Variable& rhs)
@@ -104,10 +110,10 @@ namespace Sparse
 
         return *this;
     }
-
+    
     // -=
     /**
-        @brief Compound subtraction-assignment operator. Right hand
+        @brief Compound subtraction-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator-=(const double& rhs)
@@ -115,9 +121,9 @@ namespace Sparse
         value_ -= rhs;
         return *this;
     }
-
+    
     /**
-        @brief Compound subtraction-assignment operator. Right hand
+        @brief Compound subtraction-assignment operator. Right hand 
         side is a Variable type.
     */
     Variable& Variable::operator-=(const Variable& rhs)
@@ -131,10 +137,10 @@ namespace Sparse
 
         return *this;
     }
-
+    
     // *=
     /**
-        @brief Compound multiplication-assignment operator. Right hand
+        @brief Compound multiplication-assignment operator. Right hand 
         side is a built-in double type.
     */
     Variable& Variable::operator*=(const double& rhs)
@@ -147,9 +153,9 @@ namespace Sparse
 
         return *this;
     }
-
+    
     /**
-        @brief Compound multiplication-assignment operator. Right
+        @brief Compound multiplication-assignment operator. Right 
         hand side is a Variable type.
     */
     Variable& Variable::operator*=(const Variable& rhs)
@@ -166,15 +172,15 @@ namespace Sparse
 
         return *this;
     }
-
+    
     // /=
     /**
-        @brief Compound division-assignment operator. Right hand side
+        @brief Compound division-assignment operator. Right hand side 
         is a built-in double type.
     */
     Variable& Variable::operator/=(const double& rhs)
     {
-        double inverseRhs = 1.0 / rhs;
+        double inverseRhs = 1.0/rhs;
 
         // compute derivatives of @a *this
         scaleDependencies(inverseRhs);
@@ -182,14 +188,14 @@ namespace Sparse
         value_ *= inverseRhs;
         return *this;
     }
-
+    
     /**
-        @brief Compound division-assignment operator. Right hand
+        @brief Compound division-assignment operator. Right hand 
         side is a Variable type.
     */
     Variable& Variable::operator/=(const Variable& rhs)
     {
-        double inverseRhs   = 1.0 / rhs.value_;
+        double inverseRhs        = 1.0/rhs.value_;
         double inverseRhsSq = inverseRhs * inverseRhs;
 
         // derivation by parts of @a *this
@@ -202,6 +208,7 @@ namespace Sparse
 
         return *this;
     }
-
+    
 } // namespace Sparse
 } // namespace GridKit
+

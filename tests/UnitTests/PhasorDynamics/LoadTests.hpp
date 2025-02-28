@@ -1,13 +1,13 @@
 #pragma once
 
-#include <iomanip>
 #include <iostream>
+#include <iomanip>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
+#include <Utilities/TestHelpers.hpp>
 
 namespace GridKit
 {
@@ -19,16 +19,17 @@ namespace Testing
     public:
         using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
 
-        LoadTests()  = default;
+        LoadTests() = default;
         ~LoadTests() = default;
 
         TestOutcome constructor()
         {
             TestStatus success = true;
-
+        
             auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
-            PhasorDynamics::Component<ScalarT, IdxT>* load = new PhasorDynamics::Load<ScalarT, IdxT>(bus);
+            PhasorDynamics::Component<ScalarT, IdxT>* load = 
+                new PhasorDynamics::Load<ScalarT, IdxT>(bus);
 
             success *= (load != nullptr);
 
@@ -44,7 +45,7 @@ namespace Testing
         TestOutcome residual()
         {
             TestStatus success = true;
-
+        
             real_type R{2.0}; ///< Load resistance
             real_type X{4.0}; ///< Load reactance
 
@@ -68,3 +69,5 @@ namespace Testing
 
 } // namespace Testing
 } // namespace GridKit
+
+

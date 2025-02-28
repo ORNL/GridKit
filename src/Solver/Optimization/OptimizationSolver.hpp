@@ -65,30 +65,29 @@
 
 namespace AnalysisManager
 {
-template <class ScalarT, typename IdxT>
-class DynamicSolver;
+    template <class ScalarT, typename IdxT>
+    class DynamicSolver;
 
-template <class ScalarT, typename IdxT>
-class OptimizationSolver
-{
-public:
-    OptimizationSolver()
+    template <class ScalarT, typename IdxT>
+    class OptimizationSolver
     {
-    }
+    public:
+        OptimizationSolver()
+        {
+        }
 
-    OptimizationSolver(Sundials::Ida<ScalarT, IdxT>* integrator) : integrator_(integrator)
-    {
-    }
+        OptimizationSolver(Sundials::Ida<ScalarT, IdxT>* integrator) : integrator_(integrator)
+        {
+        }
 
-    virtual ~OptimizationSolver()
-    {
-    }
+        virtual ~OptimizationSolver(){}
 
-protected:
-    GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
-    Sundials::Ida<ScalarT, IdxT>*             integrator_;
-};
+    protected:
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
+        Sundials::Ida<ScalarT, IdxT>* integrator_;
+    };
 
-} // namespace AnalysisManager
+}
+
 
 #endif // _OPTIMIZATION_SOLVER_HPP_

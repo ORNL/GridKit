@@ -1,27 +1,28 @@
 #pragma once
 
-#include <iomanip>
 #include <iostream>
+#include <iomanip>
 
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
+#include <Utilities/TestHelpers.hpp>
+
 
 namespace GridKit
 {
 namespace Testing
 {
-    template <class ScalarT, typename IdxT>
+    template<class ScalarT, typename IdxT>
     class SystemTests
     {
     private:
         using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
 
     public:
-        SystemTests()  = default;
+        SystemTests() = default;
         ~SystemTests() = default;
 
         /// Constructor, allocation, and initialization checks
@@ -31,7 +32,7 @@ namespace Testing
 
             // ScalarT Vr{1.0};
             // ScalarT Vi{2.0};
-
+        
             PhasorDynamics::SystemModel<ScalarT, IdxT>* system = nullptr;
 
             // Create an empty system
@@ -91,6 +92,7 @@ namespace Testing
 
             return success.report(__func__);
         }
+
     };
 
 } // namespace Testing

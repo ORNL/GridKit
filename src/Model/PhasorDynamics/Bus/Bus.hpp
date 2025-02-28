@@ -3,6 +3,7 @@
 
 #include <Model/PhasorDynamics/BusBase.hpp>
 
+
 // Forward declaration of BusData structure
 namespace GridKit
 {
@@ -11,7 +12,7 @@ namespace PowerSystemData
     template <typename RealT, typename IdxT>
     struct BusData;
 }
-} // namespace GridKit
+}
 
 namespace GridKit
 {
@@ -25,7 +26,7 @@ namespace PhasorDynamics
      *
      *
      */
-    template <class ScalarT, typename IdxT>
+    template  <class ScalarT, typename IdxT>
     class Bus : public BusBase<ScalarT, IdxT>
     {
         using BusBase<ScalarT, IdxT>::size_;
@@ -55,6 +56,7 @@ namespace PhasorDynamics
         virtual int initializeAdjoint() override;
         virtual int evaluateAdjointIntegrand() override;
         virtual int evaluateAdjointResidual() override;
+
 
         virtual int BusType() const override
         {
@@ -144,7 +146,8 @@ namespace PhasorDynamics
     private:
         ScalarT Vr0_{0.0};
         ScalarT Vi0_{0.0};
+
     };
 
-} // namespace PhasorDynamics
+} // PhasorDynamics
 } // namespace GridKit
