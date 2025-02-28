@@ -17,5 +17,7 @@ jobs:
       if: failure()
       with:
         fetch: false
+        committer_name: GitHub Actions
+        committer_email: actions@github.com
         message: Apply pre-commmit fixes 
         
