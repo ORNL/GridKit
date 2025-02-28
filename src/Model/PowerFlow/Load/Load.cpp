@@ -57,16 +57,14 @@
  *
  */
 
-#include "Load.hpp"
 
-#include <cmath>
 #include <iostream>
+#include <cmath>
 #include <vector>
-
+#include "Load.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
-namespace GridKit
-{
+namespace GridKit {
 
 /*!
  * @brief Constructor for a constant load model
@@ -76,17 +74,23 @@ namespace GridKit
 
 template <class ScalarT, typename IdxT>
 Load<ScalarT, IdxT>::Load(bus_type* bus, ScalarT P, ScalarT Q)
-    : P_(P), Q_(Q), busID_(0), bus_(bus)
+  : P_(P),
+    Q_(Q),
+    busID_(0),
+    bus_(bus)
 {
-    // std::cout << "Create a load model with " << size_ << " variables ...\n";
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
 }
 
 template <class ScalarT, typename IdxT>
 Load<ScalarT, IdxT>::Load(bus_type* bus, LoadData& data)
-    : P_(data.Pd), Q_(data.Qd), busID_(data.bus_i), bus_(bus)
+  : P_(data.Pd),
+    Q_(data.Qd),
+    busID_(data.bus_i),
+    bus_(bus)
 {
-    // std::cout << "Create a load model with " << size_ << " variables ...\n";
+    //std::cout << "Create a load model with " << size_ << " variables ...\n";
     size_ = 0;
 }
 
@@ -166,8 +170,13 @@ int Load<ScalarT, IdxT>::evaluateAdjointIntegrand()
     return 0;
 }
 
+
+
+
 // Available template instantiations
 template class Load<double, long int>;
 template class Load<double, size_t>;
 
-} // namespace GridKit
+
+} //namespace GridKit
+

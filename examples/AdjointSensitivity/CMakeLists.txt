@@ -65,3 +65,5 @@ target_link_libraries(adjoint GRIDKIT::bus GRIDKIT::generator4 GRIDKIT::solvers_
 install(TARGETS adjoint DESTINATION bin)
 
 add_test(NAME AdjointSens COMMAND $<TARGET_FILE:adjoint> )
+
+

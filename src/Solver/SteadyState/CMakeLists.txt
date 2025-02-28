@@ -67,3 +67,4 @@ gridkit_add_library(solvers_steady
     PUBLIC SUNDIALS::kinsol
   OUTPUT_NAME
     gridkit_solvers_steady)
+

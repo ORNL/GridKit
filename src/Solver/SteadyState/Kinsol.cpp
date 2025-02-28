@@ -60,23 +60,23 @@
 /**
  * @file Kinsol.cpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
- *
+ * 
  * Contains definition of interface to KINSOL nonlinear solver from
  * SUNDIALS library.
- *
+ * 
  */
 
-#include "Kinsol.hpp"
-
-#include <iomanip>
 #include <iostream>
+#include <iomanip>
 
 #include <kinsol/kinsol.h>             // access to KINSOL func., consts.
-#include <nvector/nvector_serial.h>    // access to serial N_Vector
+#include <nvector/nvector_serial.h>    // access to serial N_Vector      
+#include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix      
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
-#include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix
 
 #include "Model/Evaluator.hpp"
+#include "Kinsol.hpp"
+
 
 namespace AnalysisManager
 {
@@ -85,8 +85,7 @@ namespace Sundials
 {
 
     template <class ScalarT, typename IdxT>
-    Kinsol<ScalarT, IdxT>::Kinsol(
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+    Kinsol<ScalarT, IdxT>::Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model) 
         : SteadyStateSolver<ScalarT, IdxT>(model)
     {
         int retval = 0;
@@ -96,7 +95,7 @@ namespace Sundials
         checkOutput(retval, "SUNContext");
 
         solver_ = KINCreate(context_);
-        tag_    = NULL;
+        tag_ = NULL;
     }
 
     template <class ScalarT, typename IdxT>
@@ -111,7 +110,7 @@ namespace Sundials
 
         SUNMatDestroy(this->JacobianMat_);
         SUNLinSolFree_Dense(this->linearSolver_);
-
+        
         solver_ = 0;
     }
 
@@ -144,9 +143,7 @@ namespace Sundials
         sunrealtype fnormtol;  ///< Residual tolerance
         sunrealtype scsteptol; ///< Scaled step tolerance
 
-        model_->setTolerances(
-            fnormtol,
-            scsteptol); ///< \todo Function name should be "getTolerances"!
+        model_->setTolerances(fnormtol, scsteptol); ///< \todo Function name should be "getTolerances"!
         retval = KINSetFuncNormTol(solver_, fnormtol);
         checkOutput(retval, "KINSetFuncNormTol");
 
@@ -201,8 +198,8 @@ namespace Sundials
         N_VConst(1.0, scale_);
         retval = KINSol(solver_, yy_, KIN_LINESEARCH, scale_, scale_);
         checkOutput(retval, "KINSol");
-        // printOutput(tout);
-        // std::cout << "\n";
+        //printOutput(tout); 
+        //std::cout << "\n";
         return retval;
     }
 
@@ -217,10 +214,9 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    int
-    Kinsol<ScalarT, IdxT>::Residual(N_Vector yy, N_Vector rr, void* user_data)
+    int Kinsol<ScalarT, IdxT>::Residual(N_Vector yy, N_Vector rr, void *user_data)
     {
-        GridKit::Model::Evaluator<ScalarT, IdxT>* model =
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model = 
             static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
         copyVec(yy, model->y());
@@ -233,32 +229,31 @@ namespace Sundials
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector        x,
-                                        std::vector<ScalarT>& y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector< ScalarT >& y)
     {
         const ScalarT* xdata = NV_DATA_S(x);
-        for (unsigned int i = 0; i < y.size(); ++i)
+        for(unsigned int i = 0; i < y.size(); ++i)
         {
             y[i] = xdata[i];
         }
     }
 
+
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x,
-                                        N_Vector                    y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector< ScalarT >& x, N_Vector y)
     {
         ScalarT* ydata = NV_DATA_S(y);
-        for (unsigned int i = 0; i < x.size(); ++i)
+        for(unsigned int i = 0; i < x.size(); ++i)
         {
             ydata[i] = x[i];
         }
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector< bool >& x, N_Vector y)
     {
         ScalarT* ydata = NV_DATA_S(y);
-        for (unsigned int i = 0; i < x.size(); ++i)
+        for(unsigned int i = 0; i < x.size(); ++i)
         {
             if (x[i])
                 ydata[i] = 1.0;
@@ -267,10 +262,11 @@ namespace Sundials
         }
     }
 
+
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printOutput()
     {
-        sunrealtype* yval = N_VGetArrayPointer_Serial(yy_);
+        sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
 
         std::cout << std::setprecision(5) << std::setw(7);
         for (IdxT i = 0; i < model_->size(); ++i)
@@ -283,8 +279,8 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
     {
-        sunrealtype* yval = N_VGetArrayPointer_Serial(y);
-        IdxT         N    = N_VGetLength_Serial(y);
+        sunrealtype *yval = N_VGetArrayPointer_Serial(y);
+        IdxT N = N_VGetLength_Serial(y);
         std::cout << "{";
         std::cout << std::setprecision(5) << std::setw(7) << t;
         for (IdxT i = 0; i < N; ++i)
@@ -297,8 +293,8 @@ namespace Sundials
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printFinalStats()
     {
-        int      retval = 0;
-        void*    mem    = solver_;
+        int retval = 0;
+        void* mem = solver_;
         long int nni;
         long int nfe;
         long int nje;
@@ -316,38 +312,34 @@ namespace Sundials
         checkOutput(retval, "KINGetNumLinFuncEvals");
 
         // std::cout << "\nFinal Run Statistics: \n\n";
-        std::cout << "Number of nonlinear iterations     = " << nni << "\n";
-        std::cout << "Number of function evaluations     = " << nfe << "\n";
-        std::cout << "Number of Jacobian evaluations     = " << nje << "\n";
-        std::cout << "Number of linear function evals.   = " << nlfe << "\n";
+        std::cout << "Number of nonlinear iterations     = " <<  nni  << "\n";
+        std::cout << "Number of function evaluations     = " <<  nfe  << "\n";
+        std::cout << "Number of Jacobian evaluations     = " <<  nje  << "\n";
+        std::cout << "Number of linear function evals.   = " <<  nlfe << "\n";
     }
 
+
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkAllocation(void*       v,
-                                                const char* functionName)
+    void Kinsol<ScalarT, IdxT>::checkAllocation(void* v, const char* functionName)
     {
         if (v == NULL)
         {
-            std::cerr << "\nERROR: Function " << functionName
-                      << " failed -- returned NULL pointer!\n\n";
+            std::cerr << "\nERROR: Function " << functionName << " failed -- returned NULL pointer!\n\n";
             throw SundialsException();
         }
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::checkOutput(int         retval,
-                                            const char* functionName)
+    void Kinsol<ScalarT, IdxT>::checkOutput(int retval, const char* functionName)
     {
         if (retval < 0)
         {
-            std::cerr << "\nERROR: Function " << functionName
-                      << " failed with flag " << retval << "!\n\n";
+            std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
             throw SundialsException();
         }
     }
 
-    // Compiler will prevent building modules with data type incompatible with
-    // sunrealtype
+    // Compiler will prevent building modules with data type incompatible with sunrealtype
     template class Kinsol<sunrealtype, long int>;
     template class Kinsol<sunrealtype, int>;
     template class Kinsol<sunrealtype, size_t>;

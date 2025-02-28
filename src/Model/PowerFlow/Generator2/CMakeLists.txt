@@ -65,3 +65,4 @@ gridkit_add_library(generator2
     Generator2.cpp
   OUTPUT_NAME
     gridkit_generator2)
+

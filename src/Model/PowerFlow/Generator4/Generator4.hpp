@@ -64,198 +64,199 @@
 
 namespace GridKit
 {
-template <class ScalarT, typename IdxT>
-class BaseBus;
+    template <class ScalarT, typename IdxT> class BaseBus;
 }
 
 namespace GridKit
 {
-/*!
- * @brief Implementation of a fourth order generator model.
- *
- */
-template <class ScalarT, typename IdxT>
-class Generator4 : public ModelEvaluatorImpl<ScalarT, IdxT>
-{
-    using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
-
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-    typedef BaseBus<ScalarT, IdxT>                                bus_type;
-
-public:
-    Generator4(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
-    virtual ~Generator4();
-
-    int allocate();
-    int initialize();
-    int tagDifferentiable();
-    int evaluateResidual();
-    int evaluateJacobian();
-    int evaluateIntegrand();
-
-    int initializeAdjoint();
-    int evaluateAdjointResidual();
-    // int evaluateAdjointJacobian();
-    int evaluateAdjointIntegrand();
-
-    void updateTime(real_type t, real_type a)
+    /*!
+     * @brief Implementation of a fourth order generator model.
+     *
+     */
+    template  <class ScalarT, typename IdxT>
+    class Generator4 : public ModelEvaluatorImpl<ScalarT, IdxT>
     {
-        time_  = t;
-        alpha_ = a;
-    }
+        using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
+        using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
-    // Inline accesor functions
-    ScalarT& V()
-    {
-        return bus_->V();
-    }
+        typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+        typedef BaseBus<ScalarT, IdxT> bus_type;
 
-    const ScalarT& V() const
-    {
-        return bus_->V();
-    }
+    public:
+        Generator4(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
+        virtual ~Generator4();
 
-    ScalarT& theta()
-    {
-        return bus_->theta();
-    }
+        int allocate();
+        int initialize();
+        int tagDifferentiable();
+        int evaluateResidual();
+        int evaluateJacobian();
+        int evaluateIntegrand();
 
-    const ScalarT& theta() const
-    {
-        return bus_->theta();
-    }
+        int initializeAdjoint();
+        int evaluateAdjointResidual();
+        //int evaluateAdjointJacobian();
+        int evaluateAdjointIntegrand();
 
-    ScalarT& P()
-    {
-        return bus_->P();
-    }
+        void updateTime(real_type t, real_type a)
+        {
+            time_ = t;
+            alpha_ = a;
+        }
 
-    const ScalarT& P() const
-    {
-        return bus_->P();
-    }
+        // Inline accesor functions
+        ScalarT& V()
+        {
+            return bus_->V();
+        }
 
-    ScalarT& Q()
-    {
-        return bus_->Q();
-    }
+        const ScalarT& V() const
+        {
+            return bus_->V();
+        }
 
-    const ScalarT& Q() const
-    {
-        return bus_->Q();
-    }
+        ScalarT& theta()
+        {
+            return bus_->theta();
+        }
 
-private:
-    const ScalarT& Pm() const
-    {
-        return param_[0];
-    }
+        const ScalarT& theta() const
+        {
+            return bus_->theta();
+        }
 
-    const ScalarT& Ef() const
-    {
-        return param_[1];
-    }
+        ScalarT& P()
+        {
+            return bus_->P();
+        }
 
-    ScalarT Pg();
-    ScalarT Qg();
-    ScalarT frequencyPenalty(ScalarT omega);
-    ScalarT frequencyPenaltyDer(ScalarT omega);
+        const ScalarT& P() const
+        {
+            return bus_->P();
+        }
 
-private:
-    //
-    // Private inlined accessor methods
-    //
+        ScalarT& Q()
+        {
+            return bus_->Q();
+        }
 
-    const ScalarT dotDelta() const
-    {
-        return yp_[0];
-    }
+        const ScalarT& Q() const
+        {
+            return bus_->Q();
+        }
 
-    const ScalarT dotOmega() const
-    {
-        return yp_[1];
-    }
 
-    const ScalarT dotEdp() const
-    {
-        return yp_[2];
-    }
+    private:
+        const ScalarT& Pm() const
+        {
+            return param_[0];
+        }
 
-    const ScalarT dotEqp() const
-    {
-        return yp_[3];
-    }
+        const ScalarT& Ef() const
+        {
+            return param_[1];
+        }
 
-    const ScalarT delta() const
-    {
-        return y_[0];
-    }
+        ScalarT Pg();
+        ScalarT Qg();
+        ScalarT frequencyPenalty(ScalarT omega);
+        ScalarT frequencyPenaltyDer(ScalarT omega);
 
-    const ScalarT omega() const
-    {
-        return y_[1];
-    }
+    private:
+        //
+        // Private inlined accessor methods
+        //
 
-    const ScalarT Edp() const
-    {
-        return y_[2];
-    }
+        const ScalarT dotDelta() const
+        {
+            return yp_[0];
+        }
 
-    const ScalarT Eqp() const
-    {
-        return y_[3];
-    }
+        const ScalarT dotOmega() const
+        {
+            return yp_[1];
+        }
 
-    const ScalarT Id() const
-    {
-        return y_[4];
-    }
+        const ScalarT dotEdp() const
+        {
+            return yp_[2];
+        }
 
-    const ScalarT Iq() const
-    {
-        return y_[5];
-    }
+        const ScalarT dotEqp() const
+        {
+            return yp_[3];
+        }
 
-private:
-    real_type H_;    ///< Inertia constant [s]
-    real_type D_;    ///< Damping constant [pu]
-    real_type Xq_;   ///< q-axis synchronous reactance [pu]
-    real_type Xd_;   ///< d-axis synchronous reactance [pu]
-    real_type Xqp_;  ///< q-axis transient reactance [pu]
-    real_type Xdp_;  ///< d-axis transient reactance [pu]
-    real_type Rs_;   ///< stator armature resistance [pu]
-    real_type Tq0p_; ///< q-axis open circuit transient time constant [s]
-    real_type Td0p_; ///< d-axis open circuit transient time constant [s]
-    real_type Ef_;
-    real_type Pm_;
-    real_type omega_s_;
-    real_type omega_b_;
-    real_type omega_up_;
-    real_type omega_lo_;
-    real_type c_;
-    real_type beta_;
+        const ScalarT delta() const
+        {
+            return y_[0];
+        }
 
-    ScalarT P0_;
-    ScalarT Q0_;
+        const ScalarT omega() const
+        {
+            return y_[1];
+        }
 
-    bus_type* bus_;
-};
+        const ScalarT Edp() const
+        {
+            return y_[2];
+        }
+
+        const ScalarT Eqp() const
+        {
+            return y_[3];
+        }
+
+        const ScalarT Id() const
+        {
+            return y_[4];
+        }
+
+        const ScalarT Iq() const
+        {
+            return y_[5];
+        }
+
+    private:
+        real_type H_;    ///< Inertia constant [s]
+        real_type D_;    ///< Damping constant [pu]
+        real_type Xq_;   ///< q-axis synchronous reactance [pu]
+        real_type Xd_;   ///< d-axis synchronous reactance [pu]
+        real_type Xqp_;  ///< q-axis transient reactance [pu]
+        real_type Xdp_;  ///< d-axis transient reactance [pu]
+        real_type Rs_;   ///< stator armature resistance [pu]
+        real_type Tq0p_; ///< q-axis open circuit transient time constant [s]
+        real_type Td0p_; ///< d-axis open circuit transient time constant [s]
+        real_type Ef_;
+        real_type Pm_;
+        real_type omega_s_;
+        real_type omega_b_;
+        real_type omega_up_;
+        real_type omega_lo_;
+        real_type c_;
+        real_type beta_;
+
+        ScalarT P0_;
+        ScalarT Q0_;
+
+        bus_type* bus_;
+    };
 
 } // namespace GridKit
+
 
 #endif // _GENERATOR_4_H_

@@ -57,18 +57,21 @@
  *
  */
 
-#include <iomanip>
-#include <iostream>
 
-#include <IpIpoptApplication.hpp>
-#include <IpSolveStatistics.hpp>
+#include <iostream>
+#include <iomanip>
+
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4/Generator4.hpp>
 #include <Model/PowerFlow/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
+
+#include <IpIpoptApplication.hpp>
+#include <IpSolveStatistics.hpp>
 #include <Solver/Optimization/DynamicObjective.hpp>
+#include <Solver/Optimization/DynamicConstraint.hpp>
 #include <Utilities/Testing.hpp>
+
 
 int main()
 {
@@ -90,6 +93,7 @@ int main()
 
     // allocate model components
     model->allocate();
+    
 
     // Create numerical integrator and configure it for the generator model
     Ida<double, size_t>* idas = new Ida<double, size_t>(model);
@@ -127,24 +131,21 @@ int main()
     double Ef = 1.45;
 
     // Create an instance of the IpoptApplication
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp =
-        IpoptApplicationFactory();
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
 
     // Initialize the IpoptApplication and process the options
     Ipopt::ApplicationReturnStatus status;
     status = ipoptApp->Initialize();
-    if (status != Ipopt::Solve_Succeeded)
-    {
+    if (status != Ipopt::Solve_Succeeded) {
         std::cout << "\n\n*** Initialization failed! ***\n\n";
         return (int) status;
     }
 
     // Set solver tolerance
-    const double tol = 1e-4;
+    const double tol = 1e-4; 
 
     // Configure Ipopt application
-    ipoptApp->Options()->SetStringValue("hessian_approximation",
-                                        "limited-memory");
+    ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
     ipoptApp->Options()->SetNumericValue("tol", tol);
     ipoptApp->Options()->SetIntegerValue("print_level", 0);
 
@@ -158,15 +159,12 @@ int main()
 
     // Solve the problem
     status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
-    std::cout
-        << "\n\nProblem formulated as dynamic objective optimiztion ...\n";
+    std::cout << "\n\nProblem formulated as dynamic objective optimiztion ...\n";
 
-    if (status == Ipopt::Solve_Succeeded)
-    {
+    if (status == Ipopt::Solve_Succeeded) {
         // Print result
         std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount()
-                  << " iterations!\n"
+                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
                   << " Optimal value of Pm = " << model->param()[0] << "\n"
                   << " Optimal value of Ef = " << model->param()[1] << "\n"
                   << " The final value of the objective function G(Pm,Ef) = "
@@ -178,8 +176,8 @@ int main()
         new IpoptInterface::DynamicConstraint<double, size_t>(idas);
 
     // Store dynamic objective optimization results
-    double* results = new double[model->sizeParams()];
-    for (unsigned i = 0; i < model->sizeParams(); ++i)
+    double* results  = new double[model->sizeParams()];
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
         results[i] = model->param()[i];
     }
@@ -190,15 +188,12 @@ int main()
 
     // Solve the problem
     status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
-    std::cout
-        << "\n\nProblem formulated as dynamic constraint optimiztion ...\n";
+    std::cout << "\n\nProblem formulated as dynamic constraint optimiztion ...\n";
 
-    if (status == Ipopt::Solve_Succeeded)
-    {
+    if (status == Ipopt::Solve_Succeeded) {
         // Print result
         std::cout << "\nSucess:\n The problem solved in "
-                  << ipoptApp->Statistics()->IterationCount()
-                  << " iterations!\n"
+                  << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
                   << " Optimal value of Pm = " << model->param()[0] << "\n"
                   << " Optimal value of Ef = " << model->param()[1] << "\n"
                   << " The final value of the objective function G(Pm,Ef) = "
@@ -207,18 +202,18 @@ int main()
 
     // Compare results of the two optimization methods
     int retval = 0;
-    for (unsigned i = 0; i < model->sizeParams(); ++i)
+    for(unsigned i=0; i <model->sizeParams(); ++i)
     {
-        if (!isEqual(results[i], model->param()[i], 100 * tol))
-            --retval;
+        if(!isEqual(results[i], model->param()[i], 100*tol))
+            --retval; 
     }
 
-    if (retval < 0)
+    if(retval < 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
     }
 
-    delete[] results;
+    delete [] results;
     delete idas;
     delete model;
     return 0;

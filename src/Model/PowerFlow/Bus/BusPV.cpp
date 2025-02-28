@@ -57,13 +57,11 @@
  *
  */
 
+#include <iostream>
+#include <cmath>
 #include "BusPV.hpp"
 
-#include <cmath>
-#include <iostream>
-
-namespace GridKit
-{
+namespace GridKit {
 
 /*!
  * @brief Constructor for a PV bus
@@ -75,10 +73,11 @@ namespace GridKit
  * - Number of optimization parameters = 0
  */
 template <class ScalarT, typename IdxT>
-BusPV<ScalarT, IdxT>::BusPV() : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
+BusPV<ScalarT, IdxT>::BusPV()
+  : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
 {
-    // std::cout << "Create BusPV..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPV..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 1;
 }
@@ -94,20 +93,20 @@ BusPV<ScalarT, IdxT>::BusPV() : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
  */
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0)
-    : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0)
+  : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0)
 {
-    // std::cout << "Create BusPV..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPV..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 1;
 }
 
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::BusPV(BusData& data)
-    : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta0_(data.Va)
+  : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta0_(data.Va)
 {
-    // std::cout << "Create BusPV ..." << std::endl;
-    // std::cout << "Number of equations is " << size_ << std::endl;
+    //std::cout << "Create BusPV ..." << std::endl;
+    //std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 1;
 }
@@ -115,7 +114,7 @@ BusPV<ScalarT, IdxT>::BusPV(BusData& data)
 template <class ScalarT, typename IdxT>
 BusPV<ScalarT, IdxT>::~BusPV()
 {
-    // std::cout << "Destroy Gen2..." << std::endl;
+    //std::cout << "Destroy Gen2..." << std::endl;
 }
 
 /*!
@@ -124,7 +123,7 @@ BusPV<ScalarT, IdxT>::~BusPV()
 template <class ScalarT, typename IdxT>
 int BusPV<ScalarT, IdxT>::allocate()
 {
-    // std::cout << "Allocate PV bus ..." << std::endl;
+    //std::cout << "Allocate PV bus ..." << std::endl;
     f_.resize(size_);
     y_.resize(size_);
     yp_.resize(size_);
@@ -137,12 +136,14 @@ int BusPV<ScalarT, IdxT>::allocate()
     return 0;
 }
 
+
 template <class ScalarT, typename IdxT>
 int BusPV<ScalarT, IdxT>::tagDifferentiable()
 {
     tag_[0] = false;
     return 0;
 }
+
 
 /*!
  * @brief initialize method sets bus variables to stored initial values.
@@ -152,14 +153,13 @@ int BusPV<ScalarT, IdxT>::initialize()
 {
     // std::cout << "Initialize BusPV..." << std::endl;
     theta() = theta0_;
-    yp_[0]  = 0.0;
+    yp_[0] = 0.0;
 
     return 0;
 }
 
 /*!
- * @brief PV bus does not compute residuals, so here we just reset residual
- * values.
+ * @brief PV bus does not compute residuals, so here we just reset residual values.
  *
  * @warning This implementation assumes bus residuals are always evaluated
  * _before_ component model residuals.
@@ -175,6 +175,7 @@ int BusPV<ScalarT, IdxT>::evaluateResidual()
     return 0;
 }
 
+
 /*!
  * @brief initialize method sets bus variables to stored initial values.
  */
@@ -182,7 +183,7 @@ template <class ScalarT, typename IdxT>
 int BusPV<ScalarT, IdxT>::initializeAdjoint()
 {
     // std::cout << "Initialize BusPV..." << std::endl;
-    yB_[0]  = 0.0;
+    yB_[0] = 0.0;
     ypB_[0] = 0.0;
 
     return 0;
@@ -200,4 +201,6 @@ int BusPV<ScalarT, IdxT>::evaluateAdjointResidual()
 template class BusPV<double, long int>;
 template class BusPV<double, size_t>;
 
+
 } // namespace GridKit
+
