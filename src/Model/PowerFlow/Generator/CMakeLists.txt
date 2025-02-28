@@ -67,4 +67,3 @@ gridkit_add_library(generator
     GeneratorPQ.cpp
   OUTPUT_NAME
     gridkit_generator)
-

@@ -65,4 +65,3 @@ gridkit_add_library(load
     Load.cpp
   OUTPUT_NAME
     gridkit_load)
-

@@ -57,9 +57,8 @@
  *
  */
 
-
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
 #include <Model/PowerFlow/Generator4/Generator4.hpp>
@@ -112,7 +111,6 @@ int main()
     idas->configureQuadrature();
     idas->initializeQuadrature();
 
-
     idas->runSimulation(0.1, 2);
     idas->saveInitialCondition();
 
@@ -138,30 +136,29 @@ int main()
     std::cout << "\n\nCost of computing objective function:\n\n";
     idas->printFinalStats();
 
-    const double g1 = Q[0];
+    const double g1  = Q[0];
     const double eps = 2e-3;
 
     // Compute gradient of the objective function numerically
     std::vector<double> dGdp(model->sizeParams());
 
-    for (unsigned i=0; i<model->sizeParams(); ++i)
+    for (unsigned i = 0; i < model->sizeParams(); ++i)
     {
-      model->param()[i] += eps;
-      idas->getSavedInitialCondition();
-      idas->initializeSimulation(t_init);
-      idas->initializeQuadrature();
-      idas->runSimulationQuadrature(t_final,100);
+        model->param()[i] += eps;
+        idas->getSavedInitialCondition();
+        idas->initializeSimulation(t_init);
+        idas->initializeQuadrature();
+        idas->runSimulationQuadrature(t_final, 100);
 
-      std::cout << "\n\nCost of computing derivative with respect to parameter "
-                << i << ":\n\n";
-      idas->printFinalStats();
-      double g2 = Q[0];
+        std::cout << "\n\nCost of computing derivative with respect to parameter " << i << ":\n\n";
+        idas->printFinalStats();
+        double g2 = Q[0];
 
-      // restore parameter to original value
-      model->param()[i] -= eps;
+        // restore parameter to original value
+        model->param()[i] -= eps;
 
-      // Evaluate dG/dp numerically
-      dGdp[i] = (g2 - g1)/eps;
+        // Evaluate dG/dp numerically
+        dGdp[i] = (g2 - g1) / eps;
     }
 
     // Compute gradient of the objective function using adjoint method
@@ -185,15 +182,15 @@ int main()
     int retval = 0;
     std::cout << "\n\nComparison of numerical and adjoint results:\n\n";
     double* neg_dGdp = idas->getAdjointIntegral();
-    for (unsigned i=0; i<model->sizeParams(); ++i)
+    for (unsigned i = 0; i < model->sizeParams(); ++i)
     {
-        std::cout << "dG/dp" << i << " (numerical) = " <<      dGdp[i] << "\n";
+        std::cout << "dG/dp" << i << " (numerical) = " << dGdp[i] << "\n";
         std::cout << "dG/dp" << i << " (adjoint)   = " << -neg_dGdp[i] << "\n\n";
-        if(!isEqual(dGdp[i], -neg_dGdp[i], 10*eps))
-            --retval; 
+        if (!isEqual(dGdp[i], -neg_dGdp[i], 10 * eps))
+            --retval;
     }
 
-    if(retval < 0)
+    if (retval < 0)
     {
         std::cout << "The two results differ beyond solver tolerance!\n";
     }

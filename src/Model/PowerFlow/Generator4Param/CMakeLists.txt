@@ -65,4 +65,3 @@ gridkit_add_library(generator4param
     Generator4Param.cpp
   OUTPUT_NAME
     gridkit_generator4param)
-
