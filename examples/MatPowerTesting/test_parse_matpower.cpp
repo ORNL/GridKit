@@ -1,19 +1,21 @@
+#include <iostream>
+
 #include <FileIO.hpp>
 #include <PowerSystemData.hpp>
 #include <Testing.hpp>
-#include <iostream>
 
 using namespace GridKit;
 using namespace GridKit::Testing;
 using namespace GridKit::PowerSystemData;
 
-namespace {
+namespace
+{
 
-using IdxT = int;
-using RealT = double;
+  using IdxT  = int;
+  using RealT = double;
 
-static const std::string matpower_data{
-    R"(
+  static const std::string matpower_data{
+      R"(
 function mpc = case5
 %CASE5  Power flow data for modified 5 bus, 5 gen case based on PJM 5-bus system
 %   Please see CASEFORMAT for details on the case file format.
@@ -81,16 +83,17 @@ mpc.gencost = [
 
 } // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
   int fail = 0;
 
   // All types will use the scalar types at the top of the file
-  using BusDataT = BusData<RealT, IdxT>;
-  using GenDataT = GenData<RealT, IdxT>;
-  using BranchDataT = BranchData<RealT, IdxT>;
-  using GenCostDataT = GenCostData<RealT, IdxT>;
+  using BusDataT         = BusData<RealT, IdxT>;
+  using GenDataT         = GenData<RealT, IdxT>;
+  using BranchDataT      = BranchData<RealT, IdxT>;
+  using GenCostDataT     = GenCostData<RealT, IdxT>;
   using SystemModelDataT = SystemModelData<RealT, IdxT>;
-  using LoadDataT = LoadData<RealT, IdxT>;
+  using LoadDataT        = LoadData<RealT, IdxT>;
 
   // Create the struct of expected values
   std::vector<BranchDataT> branch_answer{
@@ -110,33 +113,31 @@ int main(int argc, char **argv) {
   };
   std::vector<GenDataT> gen_answer{
       {1, 40, 0, 30, -30, 1, 100, 1, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {1, 170, 0, 127.5, -127.5, 1, 100, 1, 170, 0, 0,
-       0, 0,   0, 0,     0,      0, 0,   0, 0,   0},
-      {3, 323.49, 0, 390, -390, 1, 100, 1, 520, 0, 0,
-       0, 0,      0, 0,   0,    0, 0,   0, 0,   0},
+      {1, 170, 0, 127.5, -127.5, 1, 100, 1, 170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+      {3, 323.49, 0, 390, -390, 1, 100, 1, 520, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {4, 0, 0, 150, -150, 1, 100, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {5, 466.51, 0, 450, -450, 1, 100, 1, 600, 0, 0,
-       0, 0,      0, 0,   0,    0, 0,   0, 0,   0}};
+      {5, 466.51, 0, 450, -450, 1, 100, 1, 600, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
   std::vector<GenCostDataT> gencost_answer{
-      {2, 0, 0, 3, {0, 14, 0}}, {2, 0, 0, 3, {0, 15, 0}},
-      {2, 0, 0, 3, {0, 30, 0}}, {2, 0, 0, 3, {0, 40, 0}},
+      {2, 0, 0, 3, {0, 14, 0}},
+      {2, 0, 0, 3, {0, 15, 0}},
+      {2, 0, 0, 3, {0, 30, 0}},
+      {2, 0, 0, 3, {0, 40, 0}},
       {2, 0, 0, 3, {0, 10, 0}},
   };
   std::vector<LoadDataT> load_answer{
-      {1,   0,      0},
-      {2, 300,  98.61},
-      {3, 300,  98.61},
+      {1, 0, 0},
+      {2, 300, 98.61},
+      {3, 300, 98.61},
       {4, 400, 131.47},
-      {5,   0,      0},
+      {5, 0, 0},
   };
-
 
   SystemModelDataT mp_answer;
   mp_answer.gencost = gencost_answer;
-  mp_answer.gen = gen_answer;
-  mp_answer.bus = bus_answer;
-  mp_answer.branch = branch_answer;
-  mp_answer.load = load_answer;
+  mp_answer.gen     = gen_answer;
+  mp_answer.bus     = bus_answer;
+  mp_answer.branch  = branch_answer;
+  mp_answer.load    = load_answer;
   mp_answer.version = "2";
   mp_answer.baseMVA = 100;
 

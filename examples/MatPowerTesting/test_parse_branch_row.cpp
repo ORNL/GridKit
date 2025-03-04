@@ -1,19 +1,21 @@
+#include <iostream>
+
 #include <FileIO.hpp>
 #include <PowerSystemData.hpp>
 #include <Testing.hpp>
-#include <iostream>
 
 using namespace GridKit;
 using namespace GridKit::Testing;
 using namespace GridKit::PowerSystemData;
 
-namespace {
+namespace
+{
 
-using IdxT = int;
-using RealT = double;
+  using IdxT  = int;
+  using RealT = double;
 
-static const std::string matpower_data{
-    R"(
+  static const std::string matpower_data{
+      R"(
 
 %% branch data
 %	fbus	tbus	r	x	b	rateA	rateB	rateC	ratio	angle	status	angmin	angmax
@@ -31,8 +33,9 @@ mpc.branch = [
 
 } // namespace
 
-int main(int argc, char **argv) {
-  int fail = 0;
+int main(int argc, char** argv)
+{
+  int                                  fail = 0;
   std::vector<BranchData<RealT, IdxT>> branch_answer{
       {1, 2, 0.00281, 0.0281, 0.00712, 400, 400, 400, 0, 0, 1, -360, 360},
       {1, 4, 0.00304, 0.0304, 0.00658, 0, 0, 0, 0, 0, 1, -360, 360},

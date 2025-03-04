@@ -2,14 +2,14 @@
 
 int main()
 {
-    using namespace GridKit;
-    using namespace GridKit::Testing;
+  using namespace GridKit;
+  using namespace GridKit::Testing;
 
-    GridKit::Testing::TestingResults result; 
-    GridKit::Testing::BusTests<double, size_t> test;
+  GridKit::Testing::TestingResults           result;
+  GridKit::Testing::BusTests<double, size_t> test;
 
-    result += test.constructor();
-    result += test.residual();
+  result += test.constructor();
+  result += test.residual();
 
-    return result.summary();
+  return result.summary();
 }
