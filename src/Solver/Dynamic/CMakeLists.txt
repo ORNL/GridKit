@@ -69,4 +69,3 @@ gridkit_add_library(solvers_dyn
     PUBLIC SUNDIALS::sunlinsolklu
   OUTPUT_NAME
     gridkit_solvers_dyn)
-

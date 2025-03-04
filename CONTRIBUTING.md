@@ -321,4 +321,3 @@ class Matrix   // No, class is outside GridKit namespace
 {
   // matrix code
 };
-
