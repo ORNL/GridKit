@@ -115,7 +115,7 @@ int & n;       // No, the reference symbol is a part of `int&` type
 ```
 
 ### Indentation
-Use only spaces for indentation, not tabs. Indent size is 4 spaces.
+Use only spaces for indentation, not tabs. Indent size is 2 spaces.
 
 When defining a class, the code blocks after `private`, `public` and `protected`
 should be aligned with opening/closing braces. There should be an empty line
@@ -138,7 +138,7 @@ protected:
 ### Braces
 All braces should follow Allman style:
 ```c++
-namespace someNamespace
+namespace SomeNamespace
 {
   //some code 
 }
