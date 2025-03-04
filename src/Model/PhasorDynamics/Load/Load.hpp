@@ -10,7 +10,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
-    class Bus;
+    class BusBase;
   }
 } // namespace GridKit
 
