@@ -46,7 +46,7 @@ clarity of the code. If your line is longer than 90 characters, you are
 probably doing something wrong.
 
 `clang-format` is configured so it does not enforce line length; that is
-developer's responsibility. Break the long lineas at places where it will
+developer's responsibility. Break the long lines at places where it will
 improve readability of the code. Running `clang-format` after that will help
 align the code properly in accordance with GridKit coding style.
 
