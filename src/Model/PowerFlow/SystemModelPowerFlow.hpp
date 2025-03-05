@@ -60,38 +60,38 @@
 /**
  * @file SystemSteadyStaeModel.hpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
- * 
+ *
  * Contains definition of power flow analysis class.
- * 
+ *
  */
 #pragma once
 
+#include <cassert>
 #include <iostream>
 #include <vector>
-#include <cassert>
 
-#include <ScalarTraits.hpp>
 #include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
+#include <ScalarTraits.hpp>
 
 namespace GridKit
 {
 
-/**
- * @brief Prototype for a system model class
- *
- * This class maps component data to system data and implements
- * ModelEvaluator for the system model. This is still work in
- * progress and code is not optimized.
- *
- * @todo Address thread safety for the system model methods.
- * 
- * @todo Tolerance management needs to be reconsidered.
- *
- */
-template <class ScalarT, typename IdxT>
-class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
-{
-    typedef BaseBus<ScalarT, IdxT> bus_type;
+  /**
+   * @brief Prototype for a system model class
+   *
+   * This class maps component data to system data and implements
+   * ModelEvaluator for the system model. This is still work in
+   * progress and code is not optimized.
+   *
+   * @todo Address thread safety for the system model methods.
+   *
+   * @todo Tolerance management needs to be reconsidered.
+   *
+   */
+  template <class ScalarT, typename IdxT>
+  class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
+  {
+    typedef BaseBus<ScalarT, IdxT>            bus_type;
     typedef ModelEvaluatorImpl<ScalarT, IdxT> component_type;
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
 
@@ -116,57 +116,59 @@ class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
-public:
+  public:
     /**
      * @brief Constructor for the system model
      */
-    SystemSteadyStateModel() : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
+    SystemSteadyStateModel()
+      : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-        // Set system model tolerances
-        rel_tol_ = 1e-5;
-        abs_tol_ = 1e-5;
+      // Set system model tolerances
+      rel_tol_ = 1e-5;
+      abs_tol_ = 1e-5;
     }
 
     /**
      * @brief Construct a new System Steady State Model object. Allows for simple allocation.
-     * 
+     *
      * @param mp model data
      */
-    SystemSteadyStateModel(GridKit::PowerSystemData::SystemModelData<ScalarT, IdxT> mp) : ModelEvaluatorImpl<ScalarT, IdxT>(0,0,0)
+    SystemSteadyStateModel(GridKit::PowerSystemData::SystemModelData<ScalarT, IdxT> mp)
+      : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-        rel_tol_ = 1e-5;
-        abs_tol_ = 1e-5;
+      rel_tol_ = 1e-5;
+      abs_tol_ = 1e-5;
 
-        //add buses
-        for(auto busdata : mp.bus)
-        {
-            auto* bus = BusFactory<double, size_t>::create(busdata);
-            this->addBus(bus);
-        }
+      // add buses
+      for (auto busdata : mp.bus)
+      {
+        auto* bus = BusFactory<double, size_t>::create(busdata);
+        this->addBus(bus);
+      }
 
-        //add generators
-        for (auto gendata : mp.gen)
-        {
-            auto* gen = GeneratorFactory<double,size_t>::create(this->getBus(gendata.bus),gendata);
-            this->addComponent(gen);
-        }
+      // add generators
+      for (auto gendata : mp.gen)
+      {
+        auto* gen = GeneratorFactory<double, size_t>::create(this->getBus(gendata.bus), gendata);
+        this->addComponent(gen);
+      }
 
-        //add branches
-        for (auto branchdata : mp.branch)
-        {
-            auto* branch = new Branch<double, size_t>(this->getBus(branchdata.fbus),this->getBus(branchdata.tbus),branchdata);
-            this->addComponent(branch);
-        }
+      // add branches
+      for (auto branchdata : mp.branch)
+      {
+        auto* branch = new Branch<double, size_t>(this->getBus(branchdata.fbus), this->getBus(branchdata.tbus), branchdata);
+        this->addComponent(branch);
+      }
 
-        //add loads
-        for (auto loaddata : mp.load)
-        {
-            auto* loadm = new Load<double,size_t>(this->getBus(loaddata.bus_i),loaddata);
-            this->addComponent(loadm);
-        }
+      // add loads
+      for (auto loaddata : mp.load)
+      {
+        auto* loadm = new Load<double, size_t>(this->getBus(loaddata.bus_i), loaddata);
+        this->addComponent(loadm);
+      }
 
-        //There is no Generator Cost Object
-        //TODO: Implment for GenCost
+      // There is no Generator Cost Object
+      // TODO: Implment for GenCost
     }
 
     /**
@@ -174,8 +176,10 @@ public:
      */
     virtual ~SystemSteadyStateModel()
     {
-        for (auto comp : this->components_) delete comp;
-        for (auto bus : this->buses_) delete bus;
+      for (auto comp : this->components_)
+        delete comp;
+      for (auto bus : this->buses_)
+        delete bus;
     }
 
     /**
@@ -192,27 +196,27 @@ public:
      */
     int allocate()
     {
-        size_ = 0;
+      size_ = 0;
 
-        // Allocate all buses
-        for(const auto& bus: buses_)
-        {
-            bus->allocate();
-            size_ += bus->size();
-        }
+      // Allocate all buses
+      for (const auto& bus : buses_)
+      {
+        bus->allocate();
+        size_ += bus->size();
+      }
 
-        // Allocate all components
-        for(const auto& component : components_)
-        {
-            component->allocate();
-            size_ += component->size();
-        }
+      // Allocate all components
+      for (const auto& component : components_)
+      {
+        component->allocate();
+        size_ += component->size();
+      }
 
-        // Allocate global vectors
-        y_.resize(size_);
-        f_.resize(size_);
+      // Allocate global vectors
+      y_.resize(size_);
+      f_.resize(size_);
 
-        return 0;
+      return 0;
     }
 
     /**
@@ -232,38 +236,38 @@ public:
      */
     int initialize()
     {
-        // Set initial values for global solution vectors
-        IdxT varOffset = 0;
+      // Set initial values for global solution vectors
+      IdxT varOffset = 0;
 
-        for(const auto& bus: buses_)
-        {
-            bus->initialize();
-        }
+      for (const auto& bus : buses_)
+      {
+        bus->initialize();
+      }
 
-        for(const auto& bus: buses_)
+      for (const auto& bus : buses_)
+      {
+        for (IdxT j = 0; j < bus->size(); ++j)
         {
-            for(IdxT j=0; j<bus->size(); ++j)
-            {
-                y_[varOffset + j]  = bus->y()[j];
-            }
-            varOffset += bus->size();
+          y_[varOffset + j] = bus->y()[j];
         }
+        varOffset += bus->size();
+      }
 
-        // Initialize components
-        for(const auto& component : components_)
-        {
-            component->initialize();
-        }
+      // Initialize components
+      for (const auto& component : components_)
+      {
+        component->initialize();
+      }
 
-        for(const auto& component : components_)
+      for (const auto& component : components_)
+      {
+        for (IdxT j = 0; j < component->size(); ++j)
         {
-            for(IdxT j=0; j<component->size(); ++j)
-            {
-                y_[varOffset + j]  = component->y()[j];
-            }
-            varOffset += component->size();
+          y_[varOffset + j] = component->y()[j];
         }
-        return 0;
+        varOffset += component->size();
+      }
+      return 0;
     }
 
     /**
@@ -275,7 +279,7 @@ public:
      */
     int tagDifferentiable()
     {
-        return 0;
+      return 0;
     }
 
     /**
@@ -298,49 +302,49 @@ public:
      */
     int evaluateResidual()
     {
-        // Update variables
-        IdxT varOffset = 0;
-        for(const auto& bus: buses_)
+      // Update variables
+      IdxT varOffset = 0;
+      for (const auto& bus : buses_)
+      {
+        for (IdxT j = 0; j < bus->size(); ++j)
         {
-            for(IdxT j=0; j<bus->size(); ++j)
-            {
-                bus->y()[j]  = y_[varOffset + j];
-            }
-            varOffset += bus->size();
-            bus->evaluateResidual();
+          bus->y()[j] = y_[varOffset + j];
         }
+        varOffset += bus->size();
+        bus->evaluateResidual();
+      }
 
-        for(const auto& component : components_)
+      for (const auto& component : components_)
+      {
+        for (IdxT j = 0; j < component->size(); ++j)
         {
-            for(IdxT j=0; j<component->size(); ++j)
-            {
-                component->y()[j]  = y_[varOffset + j];
-            }
-            varOffset += component->size();
-            component->evaluateResidual();
+          component->y()[j] = y_[varOffset + j];
         }
+        varOffset += component->size();
+        component->evaluateResidual();
+      }
 
-        // Update system residual vector
-        IdxT resOffset = 0;
-        for(const auto& bus : buses_)
+      // Update system residual vector
+      IdxT resOffset = 0;
+      for (const auto& bus : buses_)
+      {
+        for (IdxT j = 0; j < bus->size(); ++j)
         {
-            for(IdxT j=0; j<bus->size(); ++j)
-            {
-                f_[resOffset + j] = bus->getResidual()[j];
-            }
-            resOffset += bus->size();
+          f_[resOffset + j] = bus->getResidual()[j];
         }
+        resOffset += bus->size();
+      }
 
-        for(const auto& component : components_)
+      for (const auto& component : components_)
+      {
+        for (IdxT j = 0; j < component->size(); ++j)
         {
-            for(IdxT j=0; j<component->size(); ++j)
-            {
-                f_[resOffset + j] = component->getResidual()[j];
-            }
-            resOffset += component->size();
+          f_[resOffset + j] = component->getResidual()[j];
         }
+        resOffset += component->size();
+      }
 
-        return 0;
+      return 0;
     }
 
     /**
@@ -351,7 +355,10 @@ public:
      * only.
      *
      */
-    int evaluateJacobian(){return 0;}
+    int evaluateJacobian()
+    {
+      return 0;
+    }
 
     /**
      * @brief Evaluate integrands for the system quadratures.
@@ -359,7 +366,7 @@ public:
     int evaluateIntegrand()
     {
 
-        return 0;
+      return 0;
     }
 
     /**
@@ -370,7 +377,7 @@ public:
      */
     int initializeAdjoint()
     {
-        return 0;
+      return 0;
     }
 
     /**
@@ -382,10 +389,10 @@ public:
      */
     int evaluateAdjointResidual()
     {
-        return 0;
+      return 0;
     }
 
-    //int evaluateAdjointJacobian(){return 0;}
+    // int evaluateAdjointJacobian(){return 0;}
 
     /**
      * @brief Evaluate adjoint integrand for the system model.
@@ -396,7 +403,7 @@ public:
      */
     int evaluateAdjointIntegrand()
     {
-        return 0;
+      return 0;
     }
 
     void updateTime(real_type t, real_type a)
@@ -405,25 +412,25 @@ public:
 
     void addBus(bus_type* bus)
     {
-        buses_.push_back(bus);
+      buses_.push_back(bus);
     }
 
     void addComponent(component_type* component)
     {
-        components_.push_back(component);
+      components_.push_back(component);
     }
 
     bus_type* getBus(IdxT busid)
     {
-        // Need to implement mapping of bus IDs to buses in the system model
-        assert( (buses_[busid - 1])->BusID() == busid );
-        return buses_[busid - 1];
+      // Need to implement mapping of bus IDs to buses in the system model
+      assert((buses_[busid - 1])->BusID() == busid);
+      return buses_[busid - 1];
     }
 
-private:
-    std::vector<bus_type*> buses_;
+  private:
+    std::vector<bus_type*>       buses_;
     std::vector<component_type*> components_;
 
-}; // class SystemSteadyStateModel
+  }; // class SystemSteadyStateModel
 
 } // namespace GridKit

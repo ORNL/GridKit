@@ -65,4 +65,3 @@ gridkit_add_library(generator4governor
     Generator4Governor.cpp
   OUTPUT_NAME
     gridkit_generator4governor)
-

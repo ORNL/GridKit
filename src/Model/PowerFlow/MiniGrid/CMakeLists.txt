@@ -65,4 +65,3 @@ gridkit_add_library(minigrid
     MiniGrid.cpp
   OUTPUT_NAME
     gridkit_minigrid)
-

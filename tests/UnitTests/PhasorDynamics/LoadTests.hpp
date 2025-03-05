@@ -1,73 +1,71 @@
 #pragma once
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Utilities/Testing.hpp>
 #include <Utilities/TestHelpers.hpp>
+#include <Utilities/Testing.hpp>
 
 namespace GridKit
 {
-namespace Testing
-{
+  namespace Testing
+  {
     template <class ScalarT, typename IdxT>
     class LoadTests
     {
     public:
-        using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
 
-        LoadTests() = default;
-        ~LoadTests() = default;
+      LoadTests()  = default;
+      ~LoadTests() = default;
 
-        TestOutcome constructor()
+      TestOutcome constructor()
+      {
+        TestStatus success = true;
+
+        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+
+        PhasorDynamics::Component<ScalarT, IdxT>* load =
+            new PhasorDynamics::Load<ScalarT, IdxT>(bus);
+
+        success *= (load != nullptr);
+
+        if (load)
         {
-            TestStatus success = true;
-        
-            auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
-
-            PhasorDynamics::Component<ScalarT, IdxT>* load = 
-                new PhasorDynamics::Load<ScalarT, IdxT>(bus);
-
-            success *= (load != nullptr);
-
-            if (load)
-            {
-                delete load;
-            }
-            delete bus;
-
-            return success.report(__func__);
+          delete load;
         }
+        delete bus;
 
-        TestOutcome residual()
-        {
-            TestStatus success = true;
-        
-            real_type R{2.0}; ///< Load resistance
-            real_type X{4.0}; ///< Load reactance
+        return success.report(__func__);
+      }
 
-            ScalarT Vr{10.0}; ///< Bus real voltage
-            ScalarT Vi{20.0}; ///< Bus imaginary voltage
+      TestOutcome residual()
+      {
+        TestStatus success = true;
 
-            const ScalarT Ir{3.0};  ///< Solution real current
-            const ScalarT Ii{-4.0}; ///< Solution imaginary current
+        real_type R{2.0}; ///< Load resistance
+        real_type X{4.0}; ///< Load reactance
 
-            PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
+        ScalarT Vr{10.0}; ///< Bus real voltage
+        ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
-            PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
-            load.evaluateResidual();
+        const ScalarT Ir{3.0};  ///< Solution real current
+        const ScalarT Ii{-4.0}; ///< Solution imaginary current
 
-            success *= isEqual(bus.Ir(), Ir);
-            success *= isEqual(bus.Ii(), Ii);
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
 
-            return success.report(__func__);
-        }
+        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+        load.evaluateResidual();
+
+        success *= isEqual(bus.Ir(), Ir);
+        success *= isEqual(bus.Ii(), Ii);
+
+        return success.report(__func__);
+      }
     };
 
-} // namespace Testing
+  } // namespace Testing
 } // namespace GridKit
-
-

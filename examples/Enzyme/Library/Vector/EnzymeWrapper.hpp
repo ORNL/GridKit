@@ -11,8 +11,8 @@ template <typename T>
 std::vector<double> __enzyme_fwddiff(std::vector<double>*, int, T*, T*);
 
 template <typename T>
-std::vector<double> wrapper(T* obj) 
+std::vector<double> wrapper(T* obj)
 {
-    obj->evalResidual();
-    return obj->getResidual();
+  obj->evalResidual();
+  return obj->getResidual();
 }

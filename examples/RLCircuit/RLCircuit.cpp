@@ -1,146 +1,138 @@
 
 
-#include <iostream>
-#include <iomanip>
 #include <cmath>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 
 #include <Model/PowerElectronics/Capacitor/Capacitor.hpp>
 #include <Model/PowerElectronics/Inductor/Inductor.hpp>
 #include <Model/PowerElectronics/Resistor/Resistor.hpp>
-#include <Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
-
 #include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
-#include <Solver/Dynamic/Ida.hpp>
+#include <Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
 #include <Solver/Dynamic/DynamicSolver.hpp>
+#include <Solver/Dynamic/Ida.hpp>
 
-
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
-    double abs_tol = 1.0e-8;
-    double rel_tol = 1.0e-8;
-    bool use_jac = true;
+  double abs_tol = 1.0e-8;
+  double rel_tol = 1.0e-8;
+  bool   use_jac = true;
 
-    //TODO:setup as named parameters
-    //Create circuit model
-    auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
+  // TODO:setup as named parameters
+  // Create circuit model
+  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
 
-    size_t idoff = 0;
+  size_t idoff = 0;
 
-    //RL circuit parameters
-    double rinit = 1.0;
-    double linit = 1.0;
-    double vinit = 1.0;
+  // RL circuit parameters
+  double rinit = 1.0;
+  double linit = 1.0;
+  double vinit = 1.0;
 
+  // inductor
+  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor(idoff, linit);
+  // Form index to node uid realations
+  //  input
+  induct->setExternalConnectionNodes(0, 1);
+  // output
+  induct->setExternalConnectionNodes(1, -1);
+  // internal
+  induct->setExternalConnectionNodes(2, 2);
+  // add component
+  sysmodel->addComponent(induct);
 
-    //inductor
-    GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor(idoff,linit);
-    //Form index to node uid realations
-    // input
-    induct->setExternalConnectionNodes(0,1);
-    //output
-    induct->setExternalConnectionNodes(1,-1);
-    //internal
-    induct->setExternalConnectionNodes(2,2);
-    //add component
-    sysmodel->addComponent(induct);
+  // resistor
+  idoff++;
+  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor(idoff, rinit);
+  // Form index to node uid realations
+  // input
+  resis->setExternalConnectionNodes(0, 0);
+  // output
+  resis->setExternalConnectionNodes(1, 1);
+  // add
+  sysmodel->addComponent(resis);
 
+  // voltage source
+  idoff++;
+  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource(idoff, vinit);
+  // Form index to node uid realations
+  // input
+  vsource->setExternalConnectionNodes(0, -1);
+  // output
+  vsource->setExternalConnectionNodes(1, 0);
+  // internal
+  vsource->setExternalConnectionNodes(2, 3);
 
-    //resistor
-    idoff++;
-    GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor(idoff, rinit);
-    //Form index to node uid realations
-    //input
-    resis->setExternalConnectionNodes(0,0);
-    //output
-    resis->setExternalConnectionNodes(1,1);
-    //add
-    sysmodel->addComponent(resis);
+  sysmodel->addComponent(vsource);
 
-    //voltage source
-    idoff++;
-    GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource(idoff, vinit);
-    //Form index to node uid realations
-    //input
-    vsource->setExternalConnectionNodes(0,-1);
-    //output
-    vsource->setExternalConnectionNodes(1,0);
-    //internal
-    vsource->setExternalConnectionNodes(2,3);
-    
-    
-    sysmodel->addComponent(vsource);
+  sysmodel->allocate(4);
 
-    sysmodel->allocate(4);
+  std::cout << sysmodel->y().size() << std::endl;
 
-    std::cout << sysmodel->y().size() << std::endl;
+  // Grounding for IDA. If no grounding then circuit is \mu > 1
+  // v_0 (grounded)
+  // Create Intial points
+  sysmodel->y()[0] = vinit; // v_1
+  sysmodel->y()[1] = vinit; // v_2
+  sysmodel->y()[2] = 0.0;   // i_L
+  sysmodel->y()[3] = 0.0;   // i_s
 
-    //Grounding for IDA. If no grounding then circuit is \mu > 1
-    //v_0 (grounded)
-    //Create Intial points
-    sysmodel->y()[0] = vinit; //v_1
-    sysmodel->y()[1] = vinit; // v_2
-    sysmodel->y()[2] = 0.0; // i_L
-    sysmodel->y()[3] = 0.0; // i_s
+  sysmodel->yp()[0] = 0.0;            // v'_1
+  sysmodel->yp()[1] = 0.0;            // v'_2
+  sysmodel->yp()[2] = -vinit / linit; // i'_s
+  sysmodel->yp()[3] = -vinit / linit; // i'_L
 
-    sysmodel->yp()[0] = 0.0; // v'_1
-    sysmodel->yp()[1] = 0.0; // v'_2
-    sysmodel->yp()[2] = -vinit / linit; // i'_s
-    sysmodel->yp()[3] = -vinit / linit; // i'_L
-    
-    
-    sysmodel->initialize();
-    sysmodel->evaluateResidual();
+  sysmodel->initialize();
+  sysmodel->evaluateResidual();
 
-    std::cout << "Verify Intial Resisdual is Zero: {";
-    for (double i : sysmodel->getResidual())
-    {
-        std::cout << i << ", ";
-    }
-    std::cout << "}\n";
+  std::cout << "Verify Intial Resisdual is Zero: {";
+  for (double i : sysmodel->getResidual())
+  {
+    std::cout << i << ", ";
+  }
+  std::cout << "}\n";
 
+  sysmodel->updateTime(0.0, 1.0);
+  sysmodel->evaluateJacobian();
+  std::cout << "Intial Jacobian with alpha = 1:\n";
+  sysmodel->getJacobian().printMatrix();
 
-    sysmodel->updateTime(0.0, 1.0);
-    sysmodel->evaluateJacobian();
-    std::cout << "Intial Jacobian with alpha = 1:\n";
-    sysmodel->getJacobian().printMatrix();
+  // Create numerical integrator and configure it for the generator model
+  AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
 
+  double t_init  = 0.0;
+  double t_final = 1.0;
 
-    // Create numerical integrator and configure it for the generator model
-    AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
+  // setup simulation
+  idas->configureSimulation();
+  idas->getDefaultInitialCondition();
+  idas->initializeSimulation(t_init);
 
-    double t_init  = 0.0;
-    double t_final = 1.0;
+  idas->runSimulation(t_final);
 
-    // setup simulation
-    idas->configureSimulation();
-    idas->getDefaultInitialCondition();
-    idas->initializeSimulation(t_init);
+  std::vector<double>& yfinial = sysmodel->y();
 
-    idas->runSimulation(t_final);
+  std::cout << "Final Vector y\n";
+  for (size_t i = 0; i < yfinial.size(); i++)
+  {
+    std::cout << yfinial[i] << "\n";
+  }
 
-    std::vector<double>& yfinial = sysmodel->y(); 
+  std::vector<double> yexact(4);
 
-    std::cout << "Final Vector y\n";
-    for (size_t i = 0; i < yfinial.size(); i++)
-    {
-        std::cout << yfinial[i] << "\n";
-    }
+  // analytical solution to the circuit
+  yexact[0] = vinit;
+  yexact[2] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
+  yexact[3] = yexact[2];
+  yexact[1] = vinit + rinit * yexact[2];
 
-    std::vector<double> yexact(4);
+  std::cout << "Element-wise Relative error at t=" << t_final << "\n";
+  for (size_t i = 0; i < yfinial.size(); i++)
+  {
+    std::cout << abs((yfinial[i] - yexact[i]) / yexact[i]) << "\n";
+  }
 
-    //analytical solution to the circuit
-    yexact[0] = vinit;
-    yexact[2] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
-    yexact[3] = yexact[2];
-    yexact[1] = vinit + rinit * yexact[2];
-    
-    std::cout << "Element-wise Relative error at t=" << t_final << "\n";
-    for (size_t i = 0; i < yfinial.size(); i++)
-    {
-        std::cout <<  abs((yfinial[i] - yexact[i]) / yexact[i]) << "\n";
-    }
-
-    return 0;
+  return 0;
 }
