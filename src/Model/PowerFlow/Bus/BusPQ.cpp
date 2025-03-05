@@ -57,75 +57,77 @@
  *
  */
 
-#include <iostream>
-#include <cmath>
 #include "BusPQ.hpp"
 
-namespace GridKit {
+#include <cmath>
+#include <iostream>
 
-/*!
- * @brief Constructor for a PQ bus
- *
- * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
- * - Number of equations = 2 (size_)
- * - Number of variables = 2 (size_)
- * - Number of quadratures = 0
- * - Number of optimization parameters = 0
- */
-template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ()
-  : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
+namespace GridKit
 {
-    //std::cout << "Create BusPQ..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
+
+  /*!
+   * @brief Constructor for a PQ bus
+   *
+   * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
+   * - Number of equations = 2 (size_)
+   * - Number of variables = 2 (size_)
+   * - Number of quadratures = 0
+   * - Number of optimization parameters = 0
+   */
+  template <class ScalarT, typename IdxT>
+  BusPQ<ScalarT, IdxT>::BusPQ()
+    : BaseBus<ScalarT, IdxT>(0), V0_(0.0), theta0_(0.0)
+  {
+    // std::cout << "Create BusPQ..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 2;
-}
+  }
 
-/*!
- * @brief BusPQ constructor.
- *
- * This constructor sets initial values for voltage and phase angle.
- *
- * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
- * - Number of equations = 2 (size_)
- * - Number of variables = 2 (size_)
- * - Number of quadratures = 0
- * - Number of optimization parameters = 0
- */
-template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
-  : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
-{
-    //std::cout << "Create BusPQ..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
-
-    size_ = 2;
-}
-
-template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
-  : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
-{
-    //std::cout << "Create BusPQ..." << std::endl;
-    //std::cout << "Number of equations is " << size_ << std::endl;
+  /*!
+   * @brief BusPQ constructor.
+   *
+   * This constructor sets initial values for voltage and phase angle.
+   *
+   * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
+   * - Number of equations = 2 (size_)
+   * - Number of variables = 2 (size_)
+   * - Number of quadratures = 0
+   * - Number of optimization parameters = 0
+   */
+  template <class ScalarT, typename IdxT>
+  BusPQ<ScalarT, IdxT>::BusPQ(ScalarT V, ScalarT theta)
+    : BaseBus<ScalarT, IdxT>(0), V0_(V), theta0_(theta)
+  {
+    // std::cout << "Create BusPQ..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
 
     size_ = 2;
-}
+  }
 
-template <class ScalarT, typename IdxT>
-BusPQ<ScalarT, IdxT>::~BusPQ()
-{
-    //std::cout << "Destroy PQ bus ..." << std::endl;
-}
+  template <class ScalarT, typename IdxT>
+  BusPQ<ScalarT, IdxT>::BusPQ(BusData& data)
+    : BaseBus<ScalarT, IdxT>(data.bus_i), V0_(data.Vm), theta0_(data.Va)
+  {
+    // std::cout << "Create BusPQ..." << std::endl;
+    // std::cout << "Number of equations is " << size_ << std::endl;
 
-/*!
- * @brief allocate method resizes local solution and residual vectors.
- */
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::allocate()
-{
-    //std::cout << "Allocate PQ bus ..." << std::endl;
+    size_ = 2;
+  }
+
+  template <class ScalarT, typename IdxT>
+  BusPQ<ScalarT, IdxT>::~BusPQ()
+  {
+    // std::cout << "Destroy PQ bus ..." << std::endl;
+  }
+
+  /*!
+   * @brief allocate method resizes local solution and residual vectors.
+   */
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::allocate()
+  {
+    // std::cout << "Allocate PQ bus ..." << std::endl;
     f_.resize(size_);
     y_.resize(size_);
     yp_.resize(size_);
@@ -136,78 +138,73 @@ int BusPQ<ScalarT, IdxT>::allocate()
     ypB_.resize(size_);
 
     return 0;
-}
+  }
 
-
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::tagDifferentiable()
-{
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::tagDifferentiable()
+  {
     tag_[0] = false;
     tag_[1] = false;
     return 0;
-}
+  }
 
-
-/*!
- * @brief initialize method sets bus variables to stored initial values.
- */
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::initialize()
-{
+  /*!
+   * @brief initialize method sets bus variables to stored initial values.
+   */
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::initialize()
+  {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    y_[0] = V0_;
-    y_[1] = theta0_;
+    y_[0]  = V0_;
+    y_[1]  = theta0_;
     yp_[0] = 0.0;
     yp_[1] = 0.0;
 
     return 0;
-}
+  }
 
-/*!
- * @brief PQ bus does not compute residuals, so here we just reset residual values.
- *
- * @warning This implementation assumes bus residuals are always evaluated
- * _before_ component model residuals.
- *
- */
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::evaluateResidual()
-{
+  /*!
+   * @brief PQ bus does not compute residuals, so here we just reset residual values.
+   *
+   * @warning This implementation assumes bus residuals are always evaluated
+   * _before_ component model residuals.
+   *
+   */
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::evaluateResidual()
+  {
     // std::cout << "Evaluating residual of a PQ bus ...\n";
     f_[0] = 0.0;
     f_[1] = 0.0;
     return 0;
-}
+  }
 
-
-/*!
- * @brief initialize method sets bus variables to stored initial values.
- */
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::initializeAdjoint()
-{
+  /*!
+   * @brief initialize method sets bus variables to stored initial values.
+   */
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::initializeAdjoint()
+  {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    yB_[0] = 0.0;
-    yB_[1] = 0.0;
+    yB_[0]  = 0.0;
+    yB_[1]  = 0.0;
     ypB_[0] = 0.0;
     ypB_[1] = 0.0;
 
     return 0;
-}
+  }
 
-template <class ScalarT, typename IdxT>
-int BusPQ<ScalarT, IdxT>::evaluateAdjointResidual()
-{
+  template <class ScalarT, typename IdxT>
+  int BusPQ<ScalarT, IdxT>::evaluateAdjointResidual()
+  {
     fB_[0] = 0.0;
     fB_[1] = 0.0;
 
     return 0;
-}
+  }
 
-// Available template instantiations
-template class BusPQ<double, long int>;
-template class BusPQ<double, size_t>;
-
+  // Available template instantiations
+  template class BusPQ<double, long int>;
+  template class BusPQ<double, size_t>;
 
 } // namespace GridKit
-

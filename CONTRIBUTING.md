@@ -30,6 +30,25 @@ Each class should be implemented in a `*.cpp` and a `*.hpp` files with
 the same name. Files containing collection of standalone functions should
 have a descriptive name starting with lowercase character.
 
+### Using `clang-format`
+
+Coding style rules are specified in `.clang-format` file in GridKit root
+directory. Use
+```shell
+clang-format -i <filename>
+```
+to make sure your code follows the style guidelines.
+
+### Line length
+
+Keep line length below 80 characters unless a longer line is needed for better
+clarity of the code. If your line is longer than 90 characters, you are
+probably doing something wrong.
+
+`clang-format` is configured so it does not enforce line length; that is
+developer's responsibility. Break the long lines at places where it will
+improve readability of the code. Running `clang-format` after that will help
+align the code properly in accordance with GridKit coding style.
 
 ### Local variables naming
 
@@ -98,10 +117,10 @@ constants with long names, use underscores to separate words in the constant
 name. Use all caps (screaming snake case).
 
 ```c++
-   constexpr double Pi = 3.1415; // No, the constant name should be all caps
+   constexpr double Pi = 3.1415;      // No, use all caps for the constant name
    constexpr double SQRT_TWO = 1.4142 // Yes
-   constexpr double SQRTTWO_ = 1.4142 // No, there is a trailing underscore
-   constexpr double EXP = 2.7183 // Yes   
+   constexpr double SQRTTWO = 1.4142  // No, the two words not separated by "_"
+   constexpr double EXP = 2.7183      // Yes 
 ```
 
 ### Pointers and references
@@ -115,7 +134,7 @@ int & n;       // No, the reference symbol is a part of `int&` type
 ```
 
 ### Indentation
-Use only spaces for indentation, not tabs. Indent size is 4 spaces.
+Use only spaces for indentation, not tabs. Indent size is 2 spaces.
 
 When defining a class, the code blocks after `private`, `public` and `protected`
 should be aligned with opening/closing braces. There should be an empty line
@@ -138,7 +157,7 @@ protected:
 ### Braces
 All braces should follow Allman style:
 ```c++
-namespace someNamespace
+namespace SomeNamespace
 {
   //some code 
 }
@@ -321,4 +340,3 @@ class Matrix   // No, class is outside GridKit namespace
 {
   // matrix code
 };
-

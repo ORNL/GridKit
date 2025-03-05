@@ -3,34 +3,32 @@
  * @author Reid Gomillion (rjg18@vt.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Answer keys for Scaled Microgrid test with Nsize = 2, 4, 8
- * 
+ *
  * Data generated with Matlab ode23tb solver with tolerances set to
  * abs_tol = 1e-12 and rel_tol = 1e-12 for the ODE derivation of the model.
  * No index reduction was preformed to get to the ODE model.
- * 
+ *
  * @note This file is only to be included in ScaleMicrogrid.cpp. It has no
  * use anywhere else.
  */
 
 #include <vector>
 
-
-/// 
+///
 /**
  * The SCALE_MICROGRID_ERROR_TOL is a metric to determine if the error is good enough to pass the test.
  * REL_TOL and ABS_TOL determine the amount of error the problem produces. As the tolerance decrease so does the error.
- * 
+ *
  * For References keys on N=8:
  * 2-Norm Relative Error: 2.33318e-07  (rel/abs tol = 1e-6)
  * 2-Norm Relative Error: 8.65796e-08  (rel/abs tol = 1e-7)
  * 2-Norm Relative Error: 1.1618e-08   (rel/abs tol = 1e-8)
- * 
+ *
  */
-constexpr real_type SCALE_MICROGRID_ERROR_TOL = 1.0e-6;
-constexpr real_type SCALE_MICROGRID_REL_TOL = 1.0e-8;
-constexpr real_type SCALE_MICROGRID_ABS_TOL = 1.0e-8;
+constexpr real_type  SCALE_MICROGRID_ERROR_TOL = 1.0e-6;
+constexpr real_type  SCALE_MICROGRID_REL_TOL   = 1.0e-8;
+constexpr real_type  SCALE_MICROGRID_ABS_TOL   = 1.0e-8;
 constexpr index_type SCALE_MICROGRID_MAX_STEPS = 10000;
-
 
 const std::vector<real_type> answer_key_N2 = {
     22975.4182636905,
@@ -102,8 +100,7 @@ const std::vector<real_type> answer_key_N2 = {
     347.214535767435,
     -32.7241067379802,
     360.411028950125,
-    -34.9283280833745
-};
+    -34.9283280833745};
 
 const std::vector<real_type> answer_key_N4 = {
     27828.3291148094,
@@ -247,8 +244,7 @@ const std::vector<real_type> answer_key_N4 = {
     332.2248206198,
     -103.942854393111,
     347.103721199815,
-    -107.812479611979
-};
+    -107.812479611979};
 
 const std::vector<real_type> answer_key_N8 = {
     29266.6517718661,
@@ -536,7 +532,4 @@ const std::vector<real_type> answer_key_N8 = {
     306.288884765777,
     -170.785573848562,
     322.018589824395,
-    -176.179397251772
-};
-
-
+    -176.179397251772};

@@ -1,61 +1,58 @@
 
 
-#include <iostream>
-#include <iomanip>
 #include <cmath>
-#include <fstream>
 #include <filesystem>
-
-#include <Utilities/Testing.hpp>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 
 #include <Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
 #include <Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
-#include <Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
-
 #include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
-#include <Solver/Dynamic/Ida.hpp>
 #include <Solver/Dynamic/DynamicSolver.hpp>
+#include <Solver/Dynamic/Ida.hpp>
+#include <Utilities/Testing.hpp>
 
 using index_type = size_t;
-using real_type = double;
+using real_type  = double;
 
 // Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
 #include "SolutionKeys.hpp"
 
-
 static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false);
 
 /**
- * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness. 
- * 
+ * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
+ *
  * @param argc unused
  * @param argv unsued
- * @return int 
+ * @return int
  */
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
-    int retval = 0;
-    bool debug_out = false;
-    real_type tol = SCALE_MICROGRID_ERROR_TOL;
+  int       retval    = 0;
+  bool      debug_out = false;
+  real_type tol       = SCALE_MICROGRID_ERROR_TOL;
 
-    retval += test(2, tol, debug_out);
-    retval += test(4, tol, debug_out);
-    retval += test(8, tol, debug_out);
-    if (retval > 0)
-    {
-        std::cout << "Some tests fail!!\n";
-    }
-    else
-    {
-        std::cout << "All tests pass!!\n";
-    }
-    return retval;
+  retval += test(2, tol, debug_out);
+  retval += test(4, tol, debug_out);
+  retval += test(8, tol, debug_out);
+  if (retval > 0)
+  {
+    std::cout << "Some tests fail!!\n";
+  }
+  else
+  {
+    std::cout << "All tests pass!!\n";
+  }
+  return retval;
 }
 
 /**
  * @brief Tests network of distributed generators.
- * 
+ *
  * @param Nsize - The number of DG line load cobinations to generate for scale
  * @param error_tol - The tolerance for the model to meet to pass
  * @param debug_output - Enable debug output
@@ -64,326 +61,321 @@ int main(int argc, char const *argv[])
  */
 int test(index_type Nsize, real_type error_tol, bool debug_output)
 {
-    using namespace GridKit;
+  using namespace GridKit;
 
-    bool use_jac = true;
+  bool use_jac = true;
 
-    real_type t_init  = 0.0;
-    real_type t_final = 1.0;
+  real_type t_init  = 0.0;
+  real_type t_final = 1.0;
 
-    real_type rel_tol = SCALE_MICROGRID_REL_TOL;
-    real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
+  real_type rel_tol = SCALE_MICROGRID_REL_TOL;
+  real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
-    // Create circuit model
-    auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                      abs_tol,
-                                                                      use_jac,
-                                                                      SCALE_MICROGRID_MAX_STEPS);
+  // Create circuit model
+  auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(rel_tol,
+                                                                    abs_tol,
+                                                                    use_jac,
+                                                                    SCALE_MICROGRID_MAX_STEPS);
 
-    const std::vector<real_type>* true_vec = &answer_key_N8;
+  const std::vector<real_type>* true_vec = &answer_key_N8;
 
-    switch (Nsize)
+  switch (Nsize)
+  {
+  case 2:
+    true_vec = &answer_key_N2;
+    break;
+  case 4:
+    true_vec = &answer_key_N4;
+    break;
+  case 8:
+    // true_vec = &answer_key_N8;
+    break;
+  default:
+    std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
+    std::cout << "Using default Nsize = 8.\n";
+  }
+
+  // Modeled after the problem in the paper
+  // Every Bus has the same virtual resistance. This is due to the numerical stability as mentioned in the paper.
+  real_type RN = 1.0e4;
+
+  // DG Params Vector
+  // All DGs have the same set of parameters except for the first two.
+  GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
+  DG_parms1.wb_  = 2.0 * M_PI * 50.0;
+  DG_parms1.wc_  = 31.41;
+  DG_parms1.mp_  = 9.4e-5;
+  DG_parms1.Vn_  = 380.0;
+  DG_parms1.nq_  = 1.3e-3;
+  DG_parms1.F_   = 0.75;
+  DG_parms1.Kiv_ = 420.0;
+  DG_parms1.Kpv_ = 0.1;
+  DG_parms1.Kic_ = 2.0e4;
+  DG_parms1.Kpc_ = 15.0;
+  DG_parms1.Cf_  = 5.0e-5;
+  DG_parms1.rLf_ = 0.1;
+  DG_parms1.Lf_  = 1.35e-3;
+  DG_parms1.rLc_ = 0.03;
+  DG_parms1.Lc_  = 0.35e-3;
+
+  GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms2;
+  DG_parms2.wb_  = 2.0 * M_PI * 50.0;
+  DG_parms2.wc_  = 31.41;
+  DG_parms2.mp_  = 12.5e-5;
+  DG_parms2.Vn_  = 380.0;
+  DG_parms2.nq_  = 1.5e-3;
+  DG_parms2.F_   = 0.75;
+  DG_parms2.Kiv_ = 390.0;
+  DG_parms2.Kpv_ = 0.05;
+  DG_parms2.Kic_ = 16.0e3;
+  DG_parms2.Kpc_ = 10.5;
+  DG_parms2.Cf_  = 50.0e-6;
+  DG_parms2.rLf_ = 0.1;
+  DG_parms2.Lf_  = 1.35e-3;
+  DG_parms2.rLc_ = 0.03;
+  DG_parms2.Lc_  = 0.35e-3;
+
+  std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2 * Nsize, DG_parms2);
+
+  DGParams_list[0] = DG_parms1;
+  DGParams_list[1] = DG_parms1;
+
+  // line vector params
+  // Every odd line has the same parameters and every even line has the same parameters
+  real_type              rline1 = 0.23;
+  real_type              Lline1 = 0.1 / (2.0 * M_PI * 50.0);
+  real_type              rline2 = 0.35;
+  real_type              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
+  std::vector<real_type> rline_list(2 * Nsize - 1, 0.0);
+  std::vector<real_type> Lline_list(2 * Nsize - 1, 0.0);
+  for (index_type i = 0; i < rline_list.size(); i++)
+  {
+    rline_list[i] = (i % 2) ? rline2 : rline1;
+    Lline_list[i] = (i % 2) ? Lline2 : Lline1;
+  }
+
+  // load parms
+  // Only the first load has the same paramaters.
+  real_type rload1 = 3.0;
+  real_type Lload1 = 2.0 / (2.0 * M_PI * 50.0);
+  real_type rload2 = 2.0;
+  real_type Lload2 = 1.0 / (2.0 * M_PI * 50.0);
+
+  std::vector<real_type> rload_list(Nsize, rload2);
+  std::vector<real_type> Lload_list(Nsize, Lload2);
+  rload_list[0] = rload1;
+  Lload_list[0] = Lload1;
+
+  //							DGs	+		- refframe	   Lines +				Loads
+  index_type vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
+  //							\omegaref + BusDQ
+  index_type vec_size_externals = 1 + 2 * (2 * Nsize);
+
+  std::vector<index_type> vdqbus_index(2 * Nsize, 0);
+  vdqbus_index[0] = vec_size_internals + 1;
+  for (index_type i = 1; i < vdqbus_index.size(); i++)
+  {
+    vdqbus_index[i] = vdqbus_index[i - 1] + 2;
+  }
+
+  // Total size of the vector setup
+  index_type vec_size_total = vec_size_internals + vec_size_externals;
+
+  // Create the reference DG
+  auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
+                                                                 DGParams_list[0],
+                                                                 true);
+  // ref motor
+  dg_ref->setExternalConnectionNodes(0, vec_size_internals);
+  // outputs
+  dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
+  dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
+  //"grounding" of the difference
+  dg_ref->setExternalConnectionNodes(3, -1);
+  // internal connections
+  for (index_type i = 0; i < 12; i++)
+  {
+    dg_ref->setExternalConnectionNodes(4 + i, i);
+  }
+  sysmodel->addComponent(dg_ref);
+
+  // Keep track of models and index location
+  index_type indexv   = 12;
+  index_type model_id = 1;
+  // Add all other DGs
+  for (index_type i = 1; i < 2 * Nsize; i++)
+  {
+    // current DG to add
+    auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
+                                                               DGParams_list[i],
+                                                               false);
+    // ref motor
+    dg->setExternalConnectionNodes(0, vec_size_internals);
+    // outputs
+    dg->setExternalConnectionNodes(1, vdqbus_index[i]);
+    dg->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
+    // internal connections
+    for (index_type j = 0; j < 13; j++)
     {
-        case 2:
-            true_vec = &answer_key_N2;
-            break;
-        case 4:
-            true_vec = &answer_key_N4;
-            break;
-        case 8:
-            // true_vec = &answer_key_N8;
-            break;
-        default:
-            std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
-            std::cout << "Using default Nsize = 8.\n";
+      dg->setExternalConnectionNodes(3 + j, indexv + j);
     }
+    indexv += 13;
+    sysmodel->addComponent(dg);
+  }
 
-    
-    // Modeled after the problem in the paper
-    // Every Bus has the same virtual resistance. This is due to the numerical stability as mentioned in the paper.
-    real_type RN = 1.0e4;
-
-    // DG Params Vector
-    // All DGs have the same set of parameters except for the first two.
-    GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms1;
-    DG_parms1.wb_ = 2.0*M_PI*50.0;
-    DG_parms1.wc_ = 31.41;
-    DG_parms1.mp_ = 9.4e-5;
-    DG_parms1.Vn_ = 380.0;
-    DG_parms1.nq_ = 1.3e-3;
-    DG_parms1.F_ = 0.75;
-    DG_parms1.Kiv_ = 420.0;
-    DG_parms1.Kpv_ = 0.1;
-    DG_parms1.Kic_ = 2.0e4;
-    DG_parms1.Kpc_ = 15.0;
-    DG_parms1.Cf_ = 5.0e-5;
-    DG_parms1.rLf_ = 0.1;
-    DG_parms1.Lf_ = 1.35e-3;
-    DG_parms1.rLc_ = 0.03;
-    DG_parms1.Lc_ = 0.35e-3;
-
-    GridKit::DistributedGeneratorParameters<real_type, index_type> DG_parms2;
-    DG_parms2.wb_ = 2.0*M_PI*50.0;
-    DG_parms2.wc_ = 31.41;
-    DG_parms2.mp_ = 12.5e-5;
-    DG_parms2.Vn_ = 380.0;
-    DG_parms2.nq_ = 1.5e-3;
-    DG_parms2.F_ = 0.75;
-    DG_parms2.Kiv_ = 390.0;
-    DG_parms2.Kpv_ = 0.05;
-    DG_parms2.Kic_ = 16.0e3;
-    DG_parms2.Kpc_ = 10.5;
-    DG_parms2.Cf_ = 50.0e-6;
-    DG_parms2.rLf_ = 0.1;
-    DG_parms2.Lf_ = 1.35e-3;
-    DG_parms2.rLc_ = 0.03;
-    DG_parms2.Lc_ = 0.35e-3;
-
-    std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2*Nsize, DG_parms2);
-
-    DGParams_list[0] = DG_parms1;
-    DGParams_list[1] = DG_parms1;
-
-    //line vector params
-    //Every odd line has the same parameters and every even line has the same parameters
-    real_type rline1 = 0.23;
-    real_type Lline1 = 0.1 / (2.0 * M_PI * 50.0);
-    real_type rline2 = 0.35;
-    real_type Lline2 = 0.58 / (2.0 * M_PI * 50.0);
-    std::vector<real_type> rline_list(2*Nsize-1, 0.0);
-    std::vector<real_type> Lline_list(2*Nsize-1, 0.0);
-    for (index_type i = 0; i < rline_list.size(); i++)
+  // Load all the Line compoenents
+  for (index_type i = 0; i < 2 * Nsize - 1; i++)
+  {
+    // line
+    auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
+                                                                rline_list[i],
+                                                                Lline_list[i]);
+    // ref motor
+    line_model->setExternalConnectionNodes(0, vec_size_internals);
+    // input connections
+    line_model->setExternalConnectionNodes(1, vdqbus_index[i]);
+    line_model->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
+    // output connections
+    line_model->setExternalConnectionNodes(3, vdqbus_index[i + 1]);
+    line_model->setExternalConnectionNodes(4, vdqbus_index[i + 1] + 1);
+    // internal connections
+    for (index_type j = 0; j < 2; j++)
     {
-        rline_list[i] = (i % 2) ? rline2 : rline1;
-        Lline_list[i] = (i % 2) ? Lline2 : Lline1;
+      line_model->setExternalConnectionNodes(5 + j, indexv + j);
     }
-    
+    indexv += 2;
+    sysmodel->addComponent(line_model);
+  }
 
-    //load parms
-    //Only the first load has the same paramaters.
-    real_type rload1 = 3.0;
-    real_type Lload1 = 2.0 / (2.0 * M_PI * 50.0);
-    real_type rload2 = 2.0;
-    real_type Lload2 = 1.0 / (2.0 * M_PI * 50.0);
-
-    std::vector<real_type> rload_list(Nsize, rload2);
-    std::vector<real_type> Lload_list(Nsize, Lload2);
-    rload_list[0] = rload1;
-    Lload_list[0] = Lload1;
-
-    //							DGs	+		- refframe	   Lines +				Loads
-    index_type vec_size_internals = 13*(2*Nsize) - 1 + (2 + 4*(Nsize - 1)) + 2*Nsize;
-    //							\omegaref + BusDQ
-    index_type vec_size_externals = 1 +	2*(2*Nsize);
-
-    std::vector<index_type> vdqbus_index(2*Nsize,0);
-    vdqbus_index[0] = vec_size_internals + 1;
-    for (index_type i = 1; i < vdqbus_index.size(); i++)
+  //  Load all the Load components
+  for (index_type i = 0; i < Nsize; i++)
+  {
+    auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
+                                                                rload_list[i],
+                                                                Lload_list[i]);
+    // ref motor
+    load_model->setExternalConnectionNodes(0, vec_size_internals);
+    // input connections
+    load_model->setExternalConnectionNodes(1, vdqbus_index[2 * i]);
+    load_model->setExternalConnectionNodes(2, vdqbus_index[2 * i] + 1);
+    // internal connections
+    for (index_type j = 0; j < 2; j++)
     {
-        vdqbus_index[i] = vdqbus_index[i-1] + 2;
+      load_model->setExternalConnectionNodes(3 + j, indexv + j);
     }
+    indexv += 2;
+    sysmodel->addComponent(load_model);
+  }
 
-    //Total size of the vector setup
-    index_type vec_size_total = vec_size_internals + vec_size_externals;
+  // Add all the microgrid Virtual DQ Buses
+  for (index_type i = 0; i < 2 * Nsize; i++)
+  {
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
 
+    virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
+    virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
+    sysmodel->addComponent(virDQbus_model);
+  }
 
-    //Create the reference DG
-    auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
-                                                                   DGParams_list[0],
-                                                                   true);
-    //ref motor
-    dg_ref->setExternalConnectionNodes(0, vec_size_internals);
-    //outputs
-    dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
-    dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
-    //"grounding" of the difference
-    dg_ref->setExternalConnectionNodes(3, -1);
-    //internal connections
-    for (index_type i = 0; i < 12; i++)
+  // allocate all the intial conditions
+  sysmodel->allocate(vec_size_total);
+
+  if (debug_output)
+  {
+    std::cout << sysmodel->y().size() << std::endl;
+    std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
+  }
+
+  // Create Intial points for states. Every state is to specified to the zero intially
+  for (index_type i = 0; i < vec_size_total; i++)
+  {
+    sysmodel->y()[i]  = 0.0;
+    sysmodel->yp()[i] = 0.0;
+  }
+
+  // Create Intial derivatives specifics generated in MATLAB
+  for (index_type i = 0; i < 2 * Nsize; i++)
+  {
+    sysmodel->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
+    sysmodel->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    sysmodel->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+  }
+
+  // since the intial P_com = 0, the set the intial vector to the reference frame
+  sysmodel->y()[vec_size_internals] = DG_parms1.wb_;
+
+  sysmodel->initialize();
+  sysmodel->evaluateResidual();
+
+  std::vector<real_type>& fres = sysmodel->getResidual();
+  if (debug_output)
+  {
+    std::cout << "Verify Intial Resisdual is Zero: {\n";
+    for (index_type i = 0; i < fres.size(); i++)
     {
-        dg_ref->setExternalConnectionNodes(4 + i, i);
+      std::cout << i << " : " << fres[i] << "\n";
     }
-    sysmodel->addComponent(dg_ref);
+    std::cout << "}\n";
+  }
 
-    //Keep track of models and index location
-    index_type indexv = 12;
-    index_type model_id = 1;
-    //Add all other DGs
-    for (index_type i = 1; i < 2*Nsize; i++)
+  sysmodel->updateTime(0.0, 1.0e-8);
+  sysmodel->evaluateJacobian();
+  if (debug_output)
+    std::cout << "Intial Jacobian with alpha:\n";
+
+  // Create numerical integrator and configure it for the generator model
+  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
+
+  // setup simulation
+  idas->configureSimulation();
+  idas->getDefaultInitialCondition();
+  idas->initializeSimulation(t_init);
+
+  idas->runSimulation(t_final);
+
+  std::vector<real_type>& yfinal = sysmodel->y();
+
+  if (debug_output)
+  {
+    std::cout << "Final Vector y\n";
+    for (index_type i = 0; i < yfinal.size(); i++)
     {
-        //current DG to add
-        auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
-                                                                   DGParams_list[i],
-                                                                   false);
-        //ref motor
-        dg->setExternalConnectionNodes(0,vec_size_internals);
-        //outputs
-        dg->setExternalConnectionNodes(1,vdqbus_index[i]);
-        dg->setExternalConnectionNodes(2,vdqbus_index[i] + 1);
-        //internal connections
-        for (index_type j = 0; j < 13; j++)
-        {
-            dg->setExternalConnectionNodes(3 + j,indexv + j);
-        }
-        indexv += 13;
-        sysmodel->addComponent(dg);
+      std::cout << i << " : " << yfinal[i] << "\n";
     }
+  }
 
-    // Load all the Line compoenents
-    for (index_type i = 0; i < 2*Nsize - 1; i++)
-    {
-        //line
-        auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
-                                                                    rline_list[i],
-                                                                    Lline_list[i]);
-        //ref motor
-        line_model->setExternalConnectionNodes(0, vec_size_internals);
-        //input connections
-        line_model->setExternalConnectionNodes(1, vdqbus_index[i]);
-        line_model->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-        //output connections
-        line_model->setExternalConnectionNodes(3, vdqbus_index[i+1]);
-        line_model->setExternalConnectionNodes(4, vdqbus_index[i+1] + 1);
-        //internal connections
-        for (index_type j = 0; j < 2; j++)
-        {
-            line_model->setExternalConnectionNodes(5 + j, indexv + j);
-        }
-        indexv += 2;
-        sysmodel->addComponent(line_model);
-    }
+  bool test_pass = true;
 
-    //  Load all the Load components
-    for (index_type i = 0; i < Nsize; i++)
-    {
-        auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
-                                                                    rload_list[i],
-                                                                    Lload_list[i]);
-        //ref motor
-        load_model->setExternalConnectionNodes(0, vec_size_internals);
-        //input connections
-        load_model->setExternalConnectionNodes(1, vdqbus_index[2*i]);
-        load_model->setExternalConnectionNodes(2, vdqbus_index[2*i] + 1);
-        //internal connections
-        for (index_type j = 0; j < 2; j++)
-        {
-            load_model->setExternalConnectionNodes(3 + j, indexv + j);
-        }
-        indexv += 2;
-        sysmodel->addComponent(load_model);
-    }
+  real_type sumtop    = 0.0;
+  real_type sumbottom = 0.0;
 
-    //Add all the microgrid Virtual DQ Buses
-    for (index_type i = 0; i < 2*Nsize; i++)
-    {
-        auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
-
-        virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
-        virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
-        sysmodel->addComponent(virDQbus_model);
-    }
-    
-    //allocate all the intial conditions
-    sysmodel->allocate(vec_size_total);
-
+  // check relative error
+  std::cout << "Test the Relative Error for N = " << Nsize << "\n";
+  for (index_type i = 0; i < true_vec->size(); i++)
+  {
+    // Print the Elementwise Relative Error
     if (debug_output)
-    {
-        std::cout << sysmodel->y().size() << std::endl;
-        std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
-    }
+      std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
 
-    //Create Intial points for states. Every state is to specified to the zero intially
-    for (index_type i = 0; i < vec_size_total; i++)
-    {
-        sysmodel->y()[i] = 0.0;
-        sysmodel->yp()[i] = 0.0;
-    }
+    sumtop    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
+    sumbottom += (true_vec->at(i) * true_vec->at(i));
+  }
 
-    // Create Intial derivatives specifics generated in MATLAB
-    for (index_type i = 0; i < 2*Nsize; i++)
-    {
-        sysmodel->yp()[13*i - 1 + 3] = DGParams_list[i].Vn_;
-        sysmodel->yp()[13*i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-        sysmodel->yp()[13*i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
-    }
+  real_type norm2error = (sqrt(sumtop) / sqrt(sumbottom));
+  std::cout << "2-Norm Relative Error: " << norm2error << std::endl;
+  test_pass = norm2error < error_tol;
 
-    //since the intial P_com = 0, the set the intial vector to the reference frame
-    sysmodel->y()[vec_size_internals] = DG_parms1.wb_;
+  delete idas;
+  delete sysmodel;
 
-    sysmodel->initialize();
-    sysmodel->evaluateResidual();
-
-    std::vector<real_type>& fres = sysmodel->getResidual();
-    if (debug_output)
-    {
-        std::cout << "Verify Intial Resisdual is Zero: {\n";
-        for (index_type i = 0; i < fres.size(); i++)
-        {
-            std::cout << i << " : " << fres[i] << "\n";
-        }
-        std::cout << "}\n";
-    }
-
-    sysmodel->updateTime(0.0, 1.0e-8);
-    sysmodel->evaluateJacobian();
-    if (debug_output)
-        std::cout << "Intial Jacobian with alpha:\n";
-
-
-    //Create numerical integrator and configure it for the generator model
-    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
-
-    // setup simulation
-    idas->configureSimulation();
-    idas->getDefaultInitialCondition();
-    idas->initializeSimulation(t_init);
-
-    idas->runSimulation(t_final);
-
-    std::vector<real_type>& yfinal = sysmodel->y(); 
-
-    if (debug_output)
-    {
-        std::cout << "Final Vector y\n";
-        for (index_type i = 0; i < yfinal.size(); i++)
-        {
-            std::cout << i << " : " << yfinal[i] << "\n";
-        }
-    }
-
-    bool test_pass = true;
-
-    real_type sumtop = 0.0;
-    real_type sumbottom = 0.0;
-
-    // check relative error
-    std::cout << "Test the Relative Error for N = " << Nsize << "\n";
-    for (index_type i = 0; i < true_vec->size(); i++)
-    {
-        //Print the Elementwise Relative Error
-        if (debug_output)
-            std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
-
-        sumtop += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
-        sumbottom += (true_vec->at(i) * true_vec->at(i));
-    }
-
-    real_type norm2error =  (sqrt(sumtop) / sqrt(sumbottom));
-    std::cout << "2-Norm Relative Error: " << norm2error << std::endl; 
-    test_pass = norm2error < error_tol;
-
-    
-    delete idas;
-    delete sysmodel; 
-
-    if(test_pass)
-    {
-        std::cout << "Test with Nsize = " << Nsize << " passes!\n";
-        return 0;
-    }
-    else
-    {
-        std::cout << "Test with Nsize = " << Nsize << " fails!\n";
-        return 1;
-    }
+  if (test_pass)
+  {
+    std::cout << "Test with Nsize = " << Nsize << " passes!\n";
+    return 0;
+  }
+  else
+  {
+    std::cout << "Test with Nsize = " << Nsize << " fails!\n";
+    return 1;
+  }
 }
