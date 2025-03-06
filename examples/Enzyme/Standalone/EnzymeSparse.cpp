@@ -3,14 +3,28 @@
 #include <stdio.h>
 #include <vector>
 
+#include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+
 /**
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function
  * by automatic differentiation via Enzyme.
  *
+ * TODO: Modify the sparse storage to directly operate on std::vector and COO_Matrix
  * TODO: Convert this into a unit test.
  */
 
-// Sparse storage
+using SparseMatrix = COO_Matrix<double, size_t>;
+extern int enzyme_dup;
+extern int enzyme_const;
+extern int enzyme_dupnoneed;
+
+template <typename T, typename... Tys>
+extern T __enzyme_fwddiff(void*, Tys...) noexcept;
+
+template <typename T, typename... Tys>
+extern T __enzyme_todense(Tys...) noexcept;
+
+// Sparse storage for Enzyme
 template <typename T>
 struct Triple
 {
@@ -68,17 +82,6 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
   return (T) (idx == i);
 }
 
-// Enzyme definitions
-extern int enzyme_dup;
-extern int enzyme_const;
-extern int enzyme_dupnoneed;
-
-template <typename T, typename... Tys>
-extern T __enzyme_fwddiff(void*, Tys...) noexcept;
-
-template <typename T, typename... Tys>
-extern T __enzyme_todense(Tys...) noexcept;
-
 // Vector-valued function to differentiate
 template <typename T>
 __attribute__((always_inline)) static void f(size_t N, T* input, T* dinput)
@@ -87,6 +90,28 @@ __attribute__((always_inline)) static void f(size_t N, T* input, T* dinput)
   {
     dinput[i] = input[i] * input[i];
   }
+}
+
+// Reference Jacobian
+template <typename T>
+void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
+{
+  std::vector<size_t> ctemp{};
+  std::vector<size_t> rtemp{};
+  std::vector<T>      valtemp{};
+  for (int idy = 0; idy < y.size(); ++idy)
+  {
+    for (int idx = 0; idx < x.size(); ++idx)
+    {
+      if (idx == idy)
+      {
+        rtemp.push_back(idx);
+        ctemp.push_back(idy);
+        valtemp.push_back(2.0 * x[idx]);
+      }
+    }
+  }
+  jac.setValues(rtemp, ctemp, valtemp);
 }
 
 // Function that computes the Jacobian via automatic differentiation
@@ -116,26 +141,47 @@ jac_f(size_t N, T* input)
 
 int main()
 {
-  size_t N = 5;
+  // Vector and matrix declarations
+  size_t              N = 5;
+  std::vector<double> x(N);
+  std::vector<double> sq(N);
+  SparseMatrix        dsq_ref = SparseMatrix(N, N);
 
-  double* x   = (double*) malloc(sizeof(double) * N);
-  double  val = 0.0;
+  // Input initialization
+  double val = 0.0;
   for (int i = 0; i < N; ++i)
   {
     x[i]  = val;
     val  += 1.0;
   }
 
-  auto res = jac_f<double>(N, x);
+  // Function evaluation
+  f(x.size(), x.data(), sq.data());
 
-  printf("Number of elements %ld\n", res.size());
+  // Reference Jacobian
+  jac_f_ref(x, sq, dsq_ref);
 
-  for (auto& tup : res)
+  // Enzyme Jacobian
+  auto dsq = jac_f<double>(N, x.data());
+
+  // Check
+  int  fail    = 0;
+  bool verbose = true;
+  if (verbose)
   {
-    printf("%ld, %ld = %f\n", tup.row, tup.col, tup.val);
+    std::cout << "Sparse Triplet Matrix: "
+              << "Autodiff Jacobian"
+              << "\n";
+    std::cout << "(x , y, value)\n";
+    for (auto& tup : dsq)
+    {
+      std::cout << "(" << tup.row
+                << ", " << tup.col
+                << ", " << tup.val << ")\n";
+    }
+
+    dsq_ref.printMatrix("Reference Jacobian");
   }
 
-  delete[] x;
-
-  return 0;
+  return fail;
 }
