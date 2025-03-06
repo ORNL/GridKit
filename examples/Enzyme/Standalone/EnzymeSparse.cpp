@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include <vector>
 
+/**
+ * @brief Standalone example that computes the sparse Jacobian of a vector-valued function
+ * by automatic differentiation via Enzyme.
+ *
+ * TODO: Convert this into a unit test.
+ */
+
+// Sparse storage
 template <typename T>
 struct Triple
 {
@@ -60,6 +68,7 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
   return (T) (idx == i);
 }
 
+// Enzyme definitions
 extern int enzyme_dup;
 extern int enzyme_const;
 extern int enzyme_dupnoneed;
@@ -70,6 +79,7 @@ extern T __enzyme_fwddiff(void*, Tys...) noexcept;
 template <typename T, typename... Tys>
 extern T __enzyme_todense(Tys...) noexcept;
 
+// Vector-valued function to differentiate
 template <typename T>
 __attribute__((always_inline)) static void f(size_t N, T* input, T* dinput)
 {
@@ -79,6 +89,7 @@ __attribute__((always_inline)) static void f(size_t N, T* input, T* dinput)
   }
 }
 
+// Function that computes the Jacobian via automatic differentiation
 template <typename T>
 __attribute__((noinline))
 std::vector<Triple<T>>
