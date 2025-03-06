@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <cmath>
+#include <limits>
 #include <stdio.h>
 #include <vector>
 
@@ -9,7 +10,7 @@
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function
  * by automatic differentiation via Enzyme.
  *
- * TODO: Modify the sparse storage to directly operate on std::vector and COO_Matrix
+ * TODO: Modify the sparse storage provided to Enzyme to directly operate on std::vector and COO_Matrix
  * TODO: Convert this into a unit test.
  */
 
@@ -116,9 +117,7 @@ void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
 
 // Function that computes the Jacobian via automatic differentiation
 template <typename T>
-__attribute__((noinline))
-std::vector<Triple<T>>
-jac_f(size_t N, T* input)
+__attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
 {
   std::vector<Triple<T>> triplets;
   for (size_t i = 0; i < N; i++)
@@ -136,7 +135,35 @@ jac_f(size_t N, T* input)
                            (T*) 0x1,
                            d_output);
   }
-  return triplets;
+
+  std::vector<size_t> ctemp{};
+  std::vector<size_t> rtemp{};
+  std::vector<T>      valtemp{};
+  for (auto& tup : triplets)
+  {
+    rtemp.push_back(tup.row);
+    ctemp.push_back(tup.col);
+    valtemp.push_back(tup.val);
+  }
+  jac.setValues(rtemp, ctemp, valtemp);
+}
+
+// Compare two sparse matrices
+void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
+{
+  std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_1 = matrix_1.getEntries();
+  const auto [rcord_1, ccord_1, vals_1]                                                  = entries_1;
+  std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_2 = matrix_2.getEntries();
+  const auto [rcord_2, ccord_2, vals_2]                                                  = entries_2;
+  for (int ind = 0; ind < vals_1.size(); ++ind)
+  {
+    if (rcord_1[ind] != rcord_2[ind])
+      fail++;
+    if (ccord_1[ind] != ccord_2[ind])
+      fail++;
+    if (std::abs(vals_1[ind] - vals_2[ind]) > std::numeric_limits<double>::epsilon())
+      fail++;
+  }
 }
 
 int main()
@@ -145,6 +172,7 @@ int main()
   size_t              N = 5;
   std::vector<double> x(N);
   std::vector<double> sq(N);
+  SparseMatrix        dsq     = SparseMatrix(N, N);
   SparseMatrix        dsq_ref = SparseMatrix(N, N);
 
   // Input initialization
@@ -162,24 +190,15 @@ int main()
   jac_f_ref(x, sq, dsq_ref);
 
   // Enzyme Jacobian
-  auto dsq = jac_f<double>(N, x.data());
+  jac_f<double>(N, x.data(), dsq);
 
   // Check
-  int  fail    = 0;
+  int fail = 0;
+  check(dsq, dsq_ref, fail);
   bool verbose = true;
   if (verbose)
   {
-    std::cout << "Sparse Triplet Matrix: "
-              << "Autodiff Jacobian"
-              << "\n";
-    std::cout << "(x , y, value)\n";
-    for (auto& tup : dsq)
-    {
-      std::cout << "(" << tup.row
-                << ", " << tup.col
-                << ", " << tup.val << ")\n";
-    }
-
+    dsq.printMatrix("Autodiff Jacobian");
     dsq_ref.printMatrix("Reference Jacobian");
   }
 
