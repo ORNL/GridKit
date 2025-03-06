@@ -85,11 +85,11 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
 
 // Vector-valued function to differentiate
 template <typename T>
-__attribute__((always_inline)) static void f(size_t N, T* input, T* dinput)
+__attribute__((always_inline)) static void f(size_t N, T* input, T* output)
 {
   for (size_t i = 0; i < N; i++)
   {
-    dinput[i] = input[i] * input[i];
+    output[i] = input[i] * input[i];
   }
 }
 
