@@ -86,10 +86,10 @@ Differential equations:
 ```
 Algebraic equations:
 ```math
-V_{d,1} = -\psi_{qpp,1}(\psi_{qp^{\prime},1}E_{dp,1})(1+\omega_1)
+V_{d,1} = -\psi_{qpp,1}(\psi_{qp,1},E_{dp,1})(1+\omega_1)
 ```
 ```math
-V_{q,1} = \psi_{dpp,1}(\psi_{dp^{\prime},1}E_{qp,1})(1+\omega_1)
+V_{q,1} = \psi_{dpp,1}(\psi_{dp,1},E_{qp,1})(1+\omega_1)
 ```
 ```math
 I_{d,1} = I_{G,r,1}\sin(\delta_1) - I_{G,i,1}\cos(\delta_1)
@@ -104,6 +104,45 @@ V_{d,1} = V_{r,1}\sin(\delta_1) - V_{i,1}\cos(\delta_1) + I_{d,1} R_{a,1}  -I_{q
 ```
 ```math
 V_{q,1} = V_{r, 1}\cos(\delta_1) + V_{i,1}\sin(\delta_1) + I_{d,1}X_{qpp,1} + I_{q,1}R_{a,1}
+```
+
+We can lump together the algebraic and network interface equations to get the following equivalent constraint equations:
+```math
+\left[\begin{array}{c}
+I_{d} \\ 
+I_{q}
+\end{array}\right] = 
+\left[\begin{array}{cr}
+\sin(\delta_1) & -\cos(\delta_1)\\
+\cos(\delta_1) & \sin(\delta_1)
+\end{array}\right] 
+\left[\begin{array}{c}
+I_{G,r,1} \\ 
+I_{G,i,1}
+\end{array}\right] 
+```
+```math
+\left[\begin{array}{c}
+-\psi_{qpp,1}(\psi_{qp,1},E_{dp,1})(1+\omega_1) \\
+\psi_{dpp,1}(\psi_{dp,1},E_{qp,1})(1+\omega_1)
+\end{array}\right]
+- \left[\begin{array}{cr}
+\sin(\delta_1) & -\cos(\delta_1)\\
+\cos(\delta_1) & \sin(\delta_1)
+\end{array}\right] 
+\left[\begin{array}{c}
+V_{r,1} \\ 
+V_{i,1}
+\end{array}\right] 
+=
+\left[\begin{array}{cr}
+R_a & -X_{qpp}\\
+X_{qpp} & R_a
+\end{array}\right] 
+\left[\begin{array}{c}
+I_{d} \\ 
+I_{q}
+\end{array}\right]
 ```
 ## Generator 3
 Generator connected to bus 3:<br>
