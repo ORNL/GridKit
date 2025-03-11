@@ -36,6 +36,9 @@ namespace AnalysisManager
       int runSimulation(real_type tf, int nout = 1);
       int deleteSimulation();
 
+      // TODO: Temporary
+      int runSimulationFixed(real_type t0, real_type dt, real_type tmax, FILE* f);
+
       int configureQuadrature();
       int initializeQuadrature();
       int runSimulationQuadrature(real_type tf, int nout = 1);
@@ -101,6 +104,7 @@ namespace AnalysisManager
       void printOutput(sunrealtype t);
       void printSpecial(sunrealtype t, N_Vector x);
       void printFinalStats();
+      void printOutputF(sunrealtype t, int res, FILE* f);
 
     private:
       static int Residual(sunrealtype t,
@@ -109,7 +113,16 @@ namespace AnalysisManager
                           N_Vector    rr,
                           void*       user_data);
 
-      static int Jac(sunrealtype t, sunrealtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void* user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+      static int Jac(sunrealtype t,
+                     sunrealtype cj,
+                     N_Vector    yy,
+                     N_Vector    yp,
+                     N_Vector    resvec,
+                     SUNMatrix   J,
+                     void*       user_data,
+                     N_Vector    tmp1,
+                     N_Vector    tmp2,
+                     N_Vector    tmp3);
 
       static int Integrand(sunrealtype t,
                            N_Vector    yy,
