@@ -681,6 +681,7 @@ namespace AnalysisManager
       }
     }
 
+    template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, FILE *f)
     {
       sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
