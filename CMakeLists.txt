@@ -20,6 +20,11 @@ set(PACKAGE_VERSION_PATCH "7")
 
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
+# TODO: Probably beter to set a debug interface target
+# set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
+
+set(CMAKE_CXX_STANDARD 17)
+
 # Ipopt support is disabled by default
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
@@ -33,6 +38,7 @@ option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
 set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -56,11 +62,6 @@ if("${isSystemDir}" STREQUAL "-1")
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
-
-# TODO: Probably beter to set a debug interface target
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
-
-set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
