@@ -64,10 +64,11 @@ namespace GridKit
       {
         if (status_)
         {
-          double B  = -X_ / (X_ * X_ + R_ * R_);
-          double G  = R_ / (X_ * X_ + R_ * R_);
-          Ir()     += -Vr() * G + Vi() * B;
-          Ii()     += -Vr() * B - Vi() * G;
+          double B = -X_ / (X_ * X_ + R_ * R_);
+          double G = R_ / (X_ * X_ + R_ * R_);
+
+          Ir() += -Vr() * G + Vi() * B;
+          Ii() += -Vr() * B - Vi() * G;
         }
         return 0;
       }
