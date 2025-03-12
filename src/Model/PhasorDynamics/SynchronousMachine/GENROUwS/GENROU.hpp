@@ -170,10 +170,10 @@ namespace GridKit
         double psidpp = vq / (1 + omega);
         double Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
         double psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+                       / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
         double Edp   = psiqp - (Xqp_ - Xl_) * iq;
         double psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+                       / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
         double Eqp = psidp + (Xdp_ - Xl_) * id;
 
         /* Now we have the state variables, solve for alg. variables */

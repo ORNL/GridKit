@@ -206,34 +206,32 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, 
-        real_type tmax, FILE *f)
+    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, FILE* f)
     {
-        int retval = 0;
-        int iout = 0;
-        real_type t, tret;
-        
-        //printOutputF(t0, 0, f);
-        for (t = t0+dt; t < tmax; t += dt)
+      int       retval = 0;
+      int       iout   = 0;
+      real_type t, tret;
+
+      // printOutputF(t0, 0, f);
+      for (t = t0 + dt; t < tmax; t += dt)
+      {
+        retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
+        checkOutput(retval, "IDASolve");
+        printOutputF(t, retval, f);
+
+        if (retval != IDA_SUCCESS)
         {
-            retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
-            checkOutput(retval, "IDASolve");
-            printOutputF(t, retval, f); 
-
-            if (retval != IDA_SUCCESS)
-            {
-                printf("IDA Failure! %dn", retval);
-                break;
-            }
+          printf("IDA Failure! %dn", retval);
+          break;
         }
+      }
 
-        model_->updateTime(t, 0.0);
-        copyVec(yy_, model_->y());
-        copyVec(yp_, model_->yp());
+      model_->updateTime(t, 0.0);
+      copyVec(yy_, model_->y());
+      copyVec(yp_, model_->yp());
 
-        return retval;
+      return retval;
     }
-
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
@@ -682,10 +680,10 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, FILE *f)
+    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, FILE* f)
     {
-      sunrealtype *yval  = N_VGetArrayPointer_Serial(yy_);
-      sunrealtype *ypval = N_VGetArrayPointer_Serial(yp_);
+      sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
+      sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
 
       fprintf(f, "%g,%d", t, res);
       for (IdxT i = 0; i < model_->size(); ++i)
