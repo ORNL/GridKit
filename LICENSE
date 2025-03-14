@@ -1,63 +1,46 @@
-*******************************************************************************
-
-GridKit™: ................................, version 0.0.5
-
-Copyright (c) 2017, Lawrence Livermore National Security, LLC.
-Produced at the Lawrence Livermore National Laboratory.
-Written by Slaven Peles <peles2@llnl.gov>.
-LLNL-CODE-718378.
-OCEC-17-011
+Copyright (c) 2025, UT-Battelle.
 All rights reserved.
 
-
-*******************************************************************************
-
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, 
-  this list of conditions and the disclaimer below.
-
-* Redistributions in binary form must reproduce the above copyright notice, 
-  this list of conditions and the disclaimer (as noted below) in the 
-  documentation and/or other materials provided with the distribution.
-
-* Neither the name of the LLNS/LLNL nor the names of its contributors may be 
-  used to endorse or promote products derived from this software without 
-  specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY, LLC, 
-THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY 
-OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+GridKit™ version 0.1
 
 
-Additional BSD Notice
----------------------
+Open Source License:
 
-1. This notice is required to be provided under our contract with the U.S. 
-Department of Energy (DOE). This work was produced at Lawrence Livermore 
-National Laboratory under Contract No. DE-AC52-07NA27344 with the DOE.
+Subject to the conditions of this License, UT-Battelle, LLC, hereby grants
+free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), a perpetual, worldwide, non-exclusive,
+no-charge, royalty-free, irrevocable copyright license to use, copy, modify,
+merge, publish, distribute, and/or sublicense copies of the Software.
 
-2. Neither the United States Government nor Lawrence Livermore National 
-Security, LLC nor any of their employees, makes any warranty, express or 
-implied, or assumes any liability or responsibility for the accuracy, 
-completeness, or usefulness of any information, apparatus, product, or 
-process disclosed, or represents that its use would not infringe 
-privately-owned rights.
+1. Redistributions of Software must retain the above open source license grant,
+copyright and license notices, this list of conditions, and the disclaimer
+listed below.  Changes or modifications to, or derivative works of the
+Software must be noted with comments and the contributor and organization's
+name.  If the Software is protected by a proprietary trademark owned by
+UT-Battelle, LLC or the Department of Energy, then derivative works of the
+Software may not be distributed using the trademark without the prior written
+approval of the trademark owner.
 
-3. Also, reference herein to any specific commercial products, process, 
-or services by trade name, trademark, manufacturer or otherwise does not 
-necessarily constitute or imply its endorsement, recommendation, or favoring 
-by the United States Government or Lawrence Livermore National Security, LLC. 
-The views and opinions of authors expressed herein do not necessarily state 
-or reflect those of the United States Government or Lawrence Livermore 
-National Security, LLC, and shall not be used for advertising or product 
-endorsement purposes.
+2. Neither the names of Licensor nor the Department of Energy may be used to
+endorse or promote products derived from this Software without their specific
+prior written permission.
+ 
+3. The Software, with or without modification, must include the following
+acknowledgment: "This product includes software produced by UT-Battelle, LLC
+under Contract No. DE-AC05-00OR22725 with the Department of Energy.”
+ 
+
+
+-------------------------------------------------------------------------------
+
+DISCLAIMER:
+
+UT-BATTELLE, LLC, AND THE GOVERNMENT MAKE NO REPRESENTATIONS AND DISCLAIM ALL
+WARRANTIES, BOTH EXPRESSED AND IMPLIED. THERE ARE NO EXPRESS OR IMPLIED
+WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR THAT THE
+USE OF THE SOFTWARE WILL NOT INFRINGE ANY PATENT, COPYRIGHT, TRADEMARK, OR
+OTHER PROPRIETARY RIGHTS, OR THAT THE SOFTWARE WILL ACCOMPLISH THE INTENDED
+RESULTS OR THAT THE SOFTWARE OR ITS USE WILL NOT RESULT IN INJURY OR DAMAGE.
+THE USER ASSUMES RESPONSIBILITY FOR ALL LIABILITIES, PENALTIES, FINES, CLAIMS,
+CAUSES OF ACTION, AND COSTS AND EXPENSES, CAUSED BY, RESULTING FROM OR ARISING
+OUT OF, IN WHOLE OR IN PART THE USE, STORAGE OR DISPOSAL OF THE SOFTWARE.
