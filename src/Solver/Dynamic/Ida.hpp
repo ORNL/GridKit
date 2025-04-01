@@ -37,7 +37,7 @@ namespace AnalysisManager
       int deleteSimulation();
 
       // TODO: Temporary
-      int runSimulationFixed(real_type t0, real_type dt, real_type tmax, FILE* f);
+      int runSimulationFixed(real_type t0, real_type dt, real_type tmax, std::ostream& buffer);
 
       int configureQuadrature();
       int initializeQuadrature();
@@ -104,7 +104,7 @@ namespace AnalysisManager
       void printOutput(sunrealtype t);
       void printSpecial(sunrealtype t, N_Vector x);
       void printFinalStats();
-      void printOutputF(sunrealtype t, int res, FILE* f);
+      void printOutputF(sunrealtype t, int res, std::ostream& buffer);
 
     private:
       static int Residual(sunrealtype t,

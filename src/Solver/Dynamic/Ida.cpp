@@ -206,22 +206,22 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, FILE* f)
+    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, std::ostream& buffer)
     {
       int       retval = 0;
       int       iout   = 0;
       real_type t, tret;
 
-      // printOutputF(t0, 0, f);
       for (t = t0 + dt; t < tmax; t += dt)
+      // for (t = t0; t <= tmax; t += dt)
       {
         retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
-        printOutputF(t, retval, f);
+        printOutputF(t, retval, buffer);
 
         if (retval != IDA_SUCCESS)
         {
-          printf("IDA Failure! %dn", retval);
+          std::cout << "IDA Failure! " << retval;
           break;
         }
       }
@@ -680,21 +680,32 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, FILE* f)
+    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, std::ostream& buffer)
     {
       sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
       sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
 
-      fprintf(f, "%g,%d", t, res);
+      buffer << t << " " << res;
       for (IdxT i = 0; i < model_->size(); ++i)
       {
-        fprintf(f, ",%g", yval[i]);
+        buffer << " " << yval[i];
       }
       for (IdxT i = 0; i < model_->size(); ++i)
       {
-        fprintf(f, ",%g", ypval[i]);
+        buffer << " " << ypval[i];
       }
-      fprintf(f, "\n");
+      buffer << std::endl;
+
+      // fprintf(f, "%g,%d", t, res);
+      // for (IdxT i = 0; i < model_->size(); ++i)
+      // {
+      //   fprintf(f, ",%g", yval[i]);
+      // }
+      // for (IdxT i = 0; i < model_->size(); ++i)
+      // {
+      //   fprintf(f, ",%g", ypval[i]);
+      // }
+      // fprintf(f, "\n");
     }
 
     template <class ScalarT, typename IdxT>
