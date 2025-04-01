@@ -94,12 +94,12 @@ int main()
 
   // buffer >> time >> retvalue >> y0;
   // std::cout << time << " " << retvalue << " " << y0 << "\n";
-  int    i  = 0;
-  int    j  = 0;
-  double Vr = 0.0;
-  double Vi = 0.0;
-  double dw = 0.0;
-  double ti = 0.0;
+  int    i       = 0;
+  int    j       = 0;
+  double Vr      = 0.0;
+  double Vi      = 0.0;
+  double dw      = 0.0;
+  double ti      = 0.0;
   double error_V = 0.0;
   while (buffer >> time)
   {
@@ -116,7 +116,7 @@ int main()
                 << ", |V| = " << reference_solution[i / 48][2]
                 << ", w = " << reference_solution[i / 48][1]
                 << "\n";
-      std::cout << "Error in |V| = " 
+      std::cout << "Error in |V| = "
                 << err
                 << "\n";
       j  = 0;
