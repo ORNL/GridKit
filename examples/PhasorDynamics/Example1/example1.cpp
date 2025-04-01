@@ -10,6 +10,7 @@
 #include <sunlinsol/sunlinsol_klu.h>
 #include <sunmatrix/sunmatrix_sparse.h>
 
+#include "Example1_Powerworld_Reference.hpp"
 #include "Model/PhasorDynamics/Branch/Branch.cpp"
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
 #include "Model/PhasorDynamics/Bus/Bus.cpp"
@@ -21,8 +22,6 @@
 #include "Model/PhasorDynamics/SystemModel.hpp"
 #include "Solver/Dynamic/Ida.cpp"
 #include "Solver/Dynamic/Ida.hpp"
-
-#include "Example1_Powerworld_Reference.hpp"
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -89,46 +88,58 @@ int main()
 
   buffer.seekg(0, std::ios::beg);
   double time;
-  int retvalue;
+  int    retvalue;
   double y0;
 
   // buffer >> time >> retvalue >> y0;
   // std::cout << time << " " << retvalue << " " << y0 << "\n";
-  int i = 0;
-  int j = 0;
+  int    i  = 0;
+  int    j  = 0;
   double Vr = 0.0;
   double Vi = 0.0;
   double dw = 0.0;
   double ti = 0.0;
-  while (buffer >> time) {
-    if ((i % 48) == 0) {
+  while (buffer >> time)
+  {
+    if ((i % 48) == 0)
+    {
       // std::cout << "t = " << ti << ": Vr = " << Vr << ", Vi = " << Vi << ", dw = " << dw;
-      std::cout << "GridKit: t = " << ti 
-                << ", |V| = "      << std::sqrt(Vr*Vr + Vi*Vi) 
-                << ", w = "        << (1.0 + dw) << "\n";
-      std::cout << "Ref    : t = " << reference_solution[i/48][0]
-                << ", |V| = "      << reference_solution[i/48][1] 
-                << ", w = "        << reference_solution[i/48][2];
-      j = 0;
+      std::cout << "GridKit: t = " << ti
+                << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
+                << ", w = " << (1.0 + dw) << "\n";
+      std::cout << "Ref    : t = " << reference_solution[i / 48][0]
+                << ", |V| = " << reference_solution[i / 48][1]
+                << ", w = " << reference_solution[i / 48][2];
+      j  = 0;
       Vr = 0.0;
       Vi = 0.0;
       std::cout << "\n";
     }
-    if (j == 0) {
+    if (j == 0)
+    {
       ti = time;
-    } else if (j == 1+1) {
+    }
+    else if (j == 1 + 1)
+    {
       Vr = time;
-    } else if (j == 2+1) {
+    }
+    else if (j == 2 + 1)
+    {
       Vi = time;
-    } else if (j == 4+1) {
+    }
+    else if (j == 4 + 1)
+    {
       dw = time;
-    } else {
+    }
+    else
+    {
       // do nothing
     }
     ++j;
     // std::cout << time << " ";
     ++i;
-    if (i > 500) break;
+    if (i > 500)
+      break;
   }
 
   // std::cout << buffer.str();
