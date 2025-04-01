@@ -22,6 +22,7 @@
 #include "Model/PhasorDynamics/SystemModel.hpp"
 #include "Solver/Dynamic/Ida.cpp"
 #include "Solver/Dynamic/Ida.hpp"
+#include <Utilities/Testing.hpp>
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -76,7 +77,7 @@ int main()
 
   /* Run simulation */
   double start = (double) clock();
-  ida.printOutputF(0, 0, buffer);
+  // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
   ida.runSimulationFixed(0.0, dt, 1.0, buffer);
   fault.setStatus(1);
@@ -99,17 +100,25 @@ int main()
   double Vi = 0.0;
   double dw = 0.0;
   double ti = 0.0;
+  double error_V = 0.0;
   while (buffer >> time)
   {
     if ((i % 48) == 0)
     {
+      double err = std::abs(std::sqrt(Vr * Vr + Vi * Vi) - reference_solution[i / 48][2]) / (1.0 + std::abs(reference_solution[i / 48][2]));
+      if (err > error_V)
+        error_V = err;
       // std::cout << "t = " << ti << ": Vr = " << Vr << ", Vi = " << Vi << ", dw = " << dw;
       std::cout << "GridKit: t = " << ti
                 << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
                 << ", w = " << (1.0 + dw) << "\n";
       std::cout << "Ref    : t = " << reference_solution[i / 48][0]
-                << ", |V| = " << reference_solution[i / 48][1]
-                << ", w = " << reference_solution[i / 48][2];
+                << ", |V| = " << reference_solution[i / 48][2]
+                << ", w = " << reference_solution[i / 48][1]
+                << "\n";
+      std::cout << "Error in |V| = " 
+                << err
+                << "\n";
       j  = 0;
       Vr = 0.0;
       Vi = 0.0;
@@ -138,11 +147,12 @@ int main()
     ++j;
     // std::cout << time << " ";
     ++i;
-    if (i > 500)
-      break;
+    // if (i > 500)
+    //   break;
   }
 
   // std::cout << buffer.str();
+  std::cout << "Max error in |V| = " << error_V << "\n";
 
   printf("\n\nComplete in %.4g seconds\n", (clock() - start) / CLOCKS_PER_SEC);
   // fclose(f);

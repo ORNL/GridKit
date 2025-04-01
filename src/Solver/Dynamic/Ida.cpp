@@ -212,8 +212,7 @@ namespace AnalysisManager
       int       iout   = 0;
       real_type t, tret;
 
-      for (t = t0 + dt; t < tmax; t += dt)
-      // for (t = t0; t <= tmax; t += dt)
+      for (t = t0 + dt; t <= tmax; t += dt)
       {
         retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
