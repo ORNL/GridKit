@@ -50,12 +50,12 @@ namespace GridKit
         return size_;
       }
 
-      virtual IdxT nnz()
+      virtual IdxT nnz() override
       {
         return nnz_;
       }
 
-      virtual bool hasJacobian()
+      virtual bool hasJacobian() override
       {
         return false;
       }
