@@ -137,9 +137,6 @@ jobs:
                       cxx: /usr/lib/llvm-16/bin/clang++
           EOF
 
-      - name: Check LLVM compilers
-        run: ls /usr/lib/llvm-16/bin/
-
       - name: Configure GHCR mirror
         run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
 
