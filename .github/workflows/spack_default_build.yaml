@@ -139,6 +139,10 @@ jobs:
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
 
+      - name: Find and list compilers
+        run: spack -e . compiler find
+        run: spack -e . compiler list
+
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
 
