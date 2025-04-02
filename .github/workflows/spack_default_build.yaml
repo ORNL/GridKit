@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.4
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.5
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -124,9 +124,9 @@ jobs:
               install_tree:
                 root: /opt/spack
                 padded_length: 128
-                #mirrors:
-                #  local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                #  spack: https://binaries.spack.io/develop
+                mirrors:
+                  local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                  spack: https://binaries.spack.io/develop
             packages:
               llvm:
                 externals:
@@ -135,7 +135,7 @@ jobs:
           EOF
 
       - name: Configure GHCR mirror
-        run: spack -e . mirror add --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
 
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
