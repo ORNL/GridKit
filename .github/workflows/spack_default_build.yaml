@@ -139,8 +139,10 @@ jobs:
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
 
-      - name: Find and list compilers
+      - name: Find compilers
         run: spack -e . compiler find
+
+      - name: List compilers
         run: spack -e . compiler list
 
       - name: Find external packages
