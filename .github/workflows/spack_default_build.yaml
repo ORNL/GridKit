@@ -131,6 +131,10 @@ jobs:
                 externals:
                 - spec: llvm@16
                   prefix: /usr/lib/llvm-16
+                  extra_attributes:
+                    compilers:
+                      c: /usr/lib/llvm-16/bin/clang
+                      cxx: /usr/lib/llvm-16/bin/clang++
           EOF
 
       - name: Configure GHCR mirror
@@ -138,12 +142,6 @@ jobs:
 
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
-
-      - name: Find compilers
-        run: spack -e . compiler find
-
-      - name: List compilers
-        run: spack -e . compiler list
 
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
@@ -153,9 +151,6 @@ jobs:
 
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
-
-      - name: List spack.yaml
-        run: cat spack.yaml
 
       - name: Concretize
         run: spack -e . concretize
