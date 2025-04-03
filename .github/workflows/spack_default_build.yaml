@@ -159,7 +159,7 @@ jobs:
         run: spack -e . install --no-check-signature --only dependencies
 
       - name: Install package
-        run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
+        run: spack -e . install -v --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Build
         run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
