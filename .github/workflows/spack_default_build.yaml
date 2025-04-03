@@ -152,6 +152,9 @@ jobs:
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
 
+      - name: cat spack.yaml
+        run: cat spack.yaml
+
       - name: Concretize
         run: spack -e . concretize
 
