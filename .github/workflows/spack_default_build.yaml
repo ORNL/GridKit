@@ -131,10 +131,6 @@ jobs:
                 externals:
                 - spec: llvm@16
                   prefix: /usr/lib/llvm-16
-                  extra_attributes:
-                    compilers:
-                      c: /usr/lib/llvm-16/bin/clang
-                      cxx: /usr/lib/llvm-16/bin/clang++
           EOF
 
       - name: Configure GHCR mirror
