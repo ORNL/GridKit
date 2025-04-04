@@ -97,7 +97,7 @@ jobs:
       matrix:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - llvm@16.0.0
+          - llvm@16
           #- gridkit@develop +enzyme
 
     name: Build gridkit with Spack
