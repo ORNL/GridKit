@@ -149,7 +149,7 @@ jobs:
         run: ls -ltrh $(pwd)/*/*/
 
       - name: Concretize
-        run: spack -d -e . concretize
+        run: spack -e . concretize
 
       - name: Install dependencies
         run: spack -e . install --no-check-signature --only dependencies
