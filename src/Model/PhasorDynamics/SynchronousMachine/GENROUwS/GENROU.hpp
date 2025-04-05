@@ -11,6 +11,7 @@ namespace GridKit
   {
     using ComponentT = Component<double, size_t>;
     using BaseBusT   = BusBase<double, size_t>;
+    using IdxT = size_t;
 
     class GENROU : public ComponentT
     {
@@ -32,10 +33,10 @@ namespace GridKit
     public:
       GENROU(BaseBusT* bus, int unit_id)
         : bus_(bus),
+          busID_(0),
           unit_id_(unit_id),
           p0_(0),
           q0_(0),
-          busID_(0),
           H_(3),
           D_(0),
           Ra_(0),
@@ -55,6 +56,8 @@ namespace GridKit
       {
         size_ = 21;
         set_derived_params();
+        (void) busID_;
+        (void) unit_id_;
       }
 
       GENROU(BaseBusT* bus,
@@ -78,10 +81,10 @@ namespace GridKit
              double    S10,
              double    S12)
         : bus_(bus),
+          busID_(0),
           unit_id_(unit_id),
           p0_(p0),
           q0_(q0),
-          busID_(0),
           H_(H),
           D_(D),
           Ra_(Ra),
@@ -205,14 +208,14 @@ namespace GridKit
         y_[20] = B_ * (vd * sin(delta) + vq * cos(delta))
                  + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
 
-        for (int i = 0; i < size_; ++i)
+        for (IdxT i = 0; i < size_; ++i)
           yp_[i] = 0.0;
         return 0;
       }
 
       int tagDifferentiable() override
       {
-        for (int i = 0; i < size_; ++i)
+        for (IdxT i = 0; i < size_; ++i)
         {
           tag_[i] = i < 6;
         }
@@ -323,7 +326,7 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime(double t, double a) override
+      void updateTime(double /* t */, double /* a */) override
       {
       }
 

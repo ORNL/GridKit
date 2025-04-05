@@ -32,6 +32,7 @@ namespace GridKit
       BusFault(BaseBusT* bus)
         : bus_(bus), R_(0), X_(0.01), status_(0), busID_(0)
       {
+        (void) busID_;
         size_ = 0;
       }
 
@@ -98,7 +99,7 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime(double t, double a) override
+      void updateTime(double /* t */, double /* a */) override
       {
       }
 

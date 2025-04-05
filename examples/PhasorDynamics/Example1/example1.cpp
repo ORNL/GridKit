@@ -75,11 +75,9 @@ int main()
   buffer.seekg(0, std::ios::beg);
 
   double data;
-  int    retvalue;
-  double y0;
 
-  int    i       = 0; // data row counter
-  int    j       = 0; // data column counter
+  size_t i       = 0;   // data row counter
+  size_t j       = 0;   // data column counter
   double Vr      = 0.0; // Bus real voltage
   double Vi      = 0.0; // Bus imaginary voltage
   double dw      = 0.0; // Generator frequency deviation [rad/s]
