@@ -1,4 +1,4 @@
-/* GENROU Component - Adam Birchfield */
+/* Genrou Component - Adam Birchfield */
 #pragma once
 
 #define _USE_MATH_DEFINES
@@ -9,38 +9,39 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using ComponentT = Component<double, size_t>;
-    using BaseBusT   = BusBase<double, size_t>;
-    using IdxT = size_t;
 
-    class GENROU : public ComponentT
+    template <class ScalarT, typename IdxT>
+    class Genrou : public Component<ScalarT, IdxT>
     {
-      using ComponentT::alpha_;
-      using ComponentT::f_;
-      using ComponentT::fB_;
-      using ComponentT::g_;
-      using ComponentT::gB_;
-      using ComponentT::nnz_;
-      using ComponentT::param_;
-      using ComponentT::size_;
-      using ComponentT::tag_;
-      using ComponentT::time_;
-      using ComponentT::y_;
-      using ComponentT::yB_;
-      using ComponentT::yp_;
-      using ComponentT::ypB_;
+      using Component<ScalarT, IdxT>::alpha_;
+      using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::fB_;
+      using Component<ScalarT, IdxT>::g_;
+      using Component<ScalarT, IdxT>::gB_;
+      using Component<ScalarT, IdxT>::nnz_;
+      using Component<ScalarT, IdxT>::param_;
+      using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::tag_;
+      using Component<ScalarT, IdxT>::time_;
+      using Component<ScalarT, IdxT>::y_;
+      using Component<ScalarT, IdxT>::yB_;
+      using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::ypB_;
+
+      using bus_type  = BusBase<ScalarT, IdxT>;
+      using real_type = typename Component<ScalarT, IdxT>::real_type;
 
     public:
-      GENROU(BaseBusT* bus, int unit_id)
+      Genrou(bus_type* bus, int unit_id)
         : bus_(bus),
           busID_(0),
           unit_id_(unit_id),
-          p0_(0),
-          q0_(0),
-          H_(3),
-          D_(0),
-          Ra_(0),
-          Tdop_(7),
+          p0_(0.),
+          q0_(0.),
+          H_(3.),
+          D_(0.),
+          Ra_(0.),
+          Tdop_(7.),
           Tdopp_(.04),
           Tqopp_(.05),
           Tqop_(.75),
@@ -51,35 +52,37 @@ namespace GridKit
           Xqp_(.5),
           Xqpp_(.18),
           Xl_(.15),
-          S10_(0),
-          S12_(0)
+          S10_(0.),
+          S12_(0.)
       {
         size_ = 21;
         set_derived_params();
+
+        // Temporary, to eliminate compiler warnings
         (void) busID_;
         (void) unit_id_;
       }
 
-      GENROU(BaseBusT* bus,
+      Genrou(bus_type* bus,
              int       unit_id,
-             double    p0,
-             double    q0,
-             double    H,
-             double    D,
-             double    Ra,
-             double    Tdop,
-             double    Tdopp,
-             double    Tqopp,
-             double    Tqop,
-             double    Xd,
-             double    Xdp,
-             double    Xdpp,
-             double    Xq,
-             double    Xqp,
-             double    Xqpp,
-             double    Xl,
-             double    S10,
-             double    S12)
+             ScalarT   p0,
+             ScalarT   q0,
+             real_type H,
+             real_type D,
+             real_type Ra,
+             real_type Tdop,
+             real_type Tdopp,
+             real_type Tqopp,
+             real_type Tqop,
+             real_type Xd,
+             real_type Xdp,
+             real_type Xdpp,
+             real_type Xq,
+             real_type Xqp,
+             real_type Xqpp,
+             real_type Xl,
+             real_type S10,
+             real_type S12)
         : bus_(bus),
           busID_(0),
           unit_id_(unit_id),
@@ -112,7 +115,7 @@ namespace GridKit
         SB_ = 0;
         if (S12_ != 0)
         {
-          double s112 = sqrt(S10_ / S12_);
+          real_type s112 = sqrt(S10_ / S12_);
 
           SA_ = (1.2 * s112 + 1) / (s112 + 1);
           SB_ = (1.2 * s112 - 1) / (s112 - 1);
@@ -135,7 +138,7 @@ namespace GridKit
         B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
       }
 
-      ~GENROU()
+      ~Genrou()
       {
       }
 
@@ -154,34 +157,34 @@ namespace GridKit
       int initialize() override
       {
         /* Initialization tricks -- assuming NO saturation */
-        double vr     = Vr();
-        double vi     = Vi();
-        double p      = p0_;
-        double q      = q0_;
-        double vm2    = vr * vr + vi * vi;
-        double Er     = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
-        double Ei     = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
-        double delta  = atan2(Ei, Er);
-        double omega  = 0;
-        double ir     = (p * vr + q * vi) / vm2;
-        double ii     = (p * vi - q * vr) / vm2;
-        double id     = ir * sin(delta) - ii * cos(delta);
-        double iq     = ir * cos(delta) + ii * sin(delta);
-        double vd     = vr * sin(delta) - vi * cos(delta) + id * Ra_ - iq * Xqpp_;
-        double vq     = vr * cos(delta) + vi * sin(delta) + id * Xqpp_ - iq * Ra_;
-        double psiqpp = -vd / (1 + omega);
-        double psidpp = vq / (1 + omega);
-        double Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
-        double psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                       / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
-        double Edp   = psiqp - (Xqp_ - Xl_) * iq;
-        double psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                       / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
-        double Eqp = psidp + (Xdp_ - Xl_) * id;
+        ScalarT vr     = Vr();
+        ScalarT vi     = Vi();
+        ScalarT p      = p0_;
+        ScalarT q      = q0_;
+        ScalarT vm2    = vr * vr + vi * vi;
+        ScalarT Er     = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
+        ScalarT Ei     = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
+        ScalarT delta  = atan2(Ei, Er);
+        ScalarT omega  = 0;
+        ScalarT ir     = (p * vr + q * vi) / vm2;
+        ScalarT ii     = (p * vi - q * vr) / vm2;
+        ScalarT id     = ir * sin(delta) - ii * cos(delta);
+        ScalarT iq     = ir * cos(delta) + ii * sin(delta);
+        ScalarT vd     = vr * sin(delta) - vi * cos(delta) + id * Ra_ - iq * Xqpp_;
+        ScalarT vq     = vr * cos(delta) + vi * sin(delta) + id * Xqpp_ - iq * Ra_;
+        ScalarT psiqpp = -vd / (1 + omega);
+        ScalarT psidpp = vq / (1 + omega);
+        ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+        ScalarT psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
+                        / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+        ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
+        ScalarT psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
+                        / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+        ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
 
         /* Now we have the state variables, solve for alg. variables */
-        double ksat;
-        double psipp;
+        ScalarT ksat;
+        ScalarT psipp;
 
         y_[0] = delta; //= 0.55399038;
         y_[1] = omega; // = 0;
@@ -225,39 +228,39 @@ namespace GridKit
       int evaluateResidual() override
       {
         /* Read variables */
-        double delta  = y_[0];
-        double omega  = y_[1];
-        double Eqp    = y_[2];
-        double psidp  = y_[3];
-        double psiqp  = y_[4];
-        double Edp    = y_[5];
-        double psiqpp = y_[6];
-        double psidpp = y_[7];
-        double psipp  = y_[8];
-        double ksat   = y_[9];
-        double vd     = y_[10];
-        double vq     = y_[11];
-        double telec  = y_[12];
-        double id     = y_[13];
-        double iq     = y_[14];
-        double ir     = y_[15];
-        double ii     = y_[16];
-        double pmech  = y_[17];
-        double efd    = y_[18];
-        double inr    = y_[19];
-        double ini    = y_[20];
-        double vr     = Vr();
-        double vi     = Vi();
+        ScalarT delta  = y_[0];
+        ScalarT omega  = y_[1];
+        ScalarT Eqp    = y_[2];
+        ScalarT psidp  = y_[3];
+        ScalarT psiqp  = y_[4];
+        ScalarT Edp    = y_[5];
+        ScalarT psiqpp = y_[6];
+        ScalarT psidpp = y_[7];
+        ScalarT psipp  = y_[8];
+        ScalarT ksat   = y_[9];
+        ScalarT vd     = y_[10];
+        ScalarT vq     = y_[11];
+        ScalarT telec  = y_[12];
+        ScalarT id     = y_[13];
+        ScalarT iq     = y_[14];
+        ScalarT ir     = y_[15];
+        ScalarT ii     = y_[16];
+        ScalarT pmech  = y_[17];
+        ScalarT efd    = y_[18];
+        ScalarT inr    = y_[19];
+        ScalarT ini    = y_[20];
+        ScalarT vr     = Vr();
+        ScalarT vi     = Vi();
 
         /* Read derivatives */
-        double delta_dot = yp_[0];
-        double omega_dot = yp_[1];
-        double Eqp_dot   = yp_[2];
-        double psidp_dot = yp_[3];
-        double psiqp_dot = yp_[4];
-        double Edp_dot   = yp_[5];
+        ScalarT delta_dot = yp_[0];
+        ScalarT omega_dot = yp_[1];
+        ScalarT Eqp_dot   = yp_[2];
+        ScalarT psidp_dot = yp_[3];
+        ScalarT psiqp_dot = yp_[4];
+        ScalarT Edp_dot   = yp_[5];
 
-        /* 6 GENROU differential equations */
+        /* 6 Genrou differential equations */
         f_[0] = delta_dot - omega * (2 * M_PI * 60);
         f_[1] = omega_dot - (1 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
         f_[2] = Eqp_dot - (1 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
@@ -265,7 +268,7 @@ namespace GridKit
         f_[4] = psiqp_dot - (1 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
         f_[5] = Edp_dot - (1 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
-        /* 11 GENROU algebraic equations */
+        /* 11 Genrou algebraic equations */
         f_[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
         f_[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
         f_[8]  = psipp - sqrt(pow(psidpp, 2.0) + pow(psiqpp, 2.0));
@@ -278,11 +281,11 @@ namespace GridKit
         f_[15] = ir + G_ * vr - B_ * vi - inr;
         f_[16] = ii + B_ * vr + G_ * vi - ini;
 
-        /* 2 GENROU control inputs are set to constant for this example */
+        /* 2 Genrou control inputs are set to constant for this example */
         f_[17] = pmech - pmech_set_;
         f_[18] = efd - efd_set_;
 
-        /* 2 GENROU current source definitions */
+        /* 2 Genrou current source definitions */
         f_[19] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
         f_[20] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
 
@@ -290,11 +293,11 @@ namespace GridKit
         Ir() += inr - Vr() * G_ + Vi() * B_;
         Ii() += ini - Vr() * B_ - Vi() * G_;
 
-        // printf("GENROU residual\n");
+        // printf("Genrou residual\n");
         // for (int i = 0 ; i < 21; ++i) printf("%d: %g\n", i, f_[i]);
 
-        // printf("GENROU inr %g Vr %g B %g Vi %g G %g\n", inr, Vr(), B_, Vi(), G_);
-        // printf("GENROU Ii = %g\n", inr - Vr()*B_ - Vi()*G_);
+        // printf("Genrou inr %g Vr %g B %g Vi %g G %g\n", inr, Vr(), B_, Vi(), G_);
+        // printf("Genrou Ii = %g\n", inr - Vr()*B_ - Vi()*G_);
 
         return 0;
       }
@@ -326,79 +329,80 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime(double /* t */, double /* a */) override
+      void updateTime(real_type /* t */, real_type /* a */) override
       {
       }
 
     private:
-      double& Vr()
+      ScalarT& Vr()
       {
         return bus_->Vr();
       }
 
-      double& Vi()
+      ScalarT& Vi()
       {
         return bus_->Vi();
       }
 
-      double& Ir()
+      ScalarT& Ir()
       {
         return bus_->Ir();
       }
 
-      double& Ii()
+      ScalarT& Ii()
       {
         return bus_->Ii();
       }
 
     private:
       /* Identification */
-      BaseBusT* bus_;
+      bus_type* bus_;
+
       const int busID_;
       int       unit_id_;
 
       /* Initial terminal conditions */
-      double p0_;
-      double q0_;
+      ScalarT p0_;
+      ScalarT q0_;
 
       /* Input parameters */
-      double H_;
-      double D_;
-      double Ra_;
-      double Tdop_;
-      double Tdopp_;
-      double Tqopp_;
-      double Tqop_;
-      double Xd_;
-      double Xdp_;
-      double Xdpp_;
-      double Xq_;
-      double Xqp_;
-      double Xqpp_;
-      double Xl_;
-      double S10_;
-      double S12_;
+      real_type H_;
+      real_type D_;
+      real_type Ra_;
+      real_type Tdop_;
+      real_type Tdopp_;
+      real_type Tqopp_;
+      real_type Tqop_;
+      real_type Xd_;
+      real_type Xdp_;
+      real_type Xdpp_;
+      real_type Xq_;
+      real_type Xqp_;
+      real_type Xqpp_;
+      real_type Xl_;
+      real_type S10_;
+      real_type S12_;
 
       /* Derivied parameters */
-      double SA_;
-      double SB_;
-      double Xd1_;
-      double Xd2_;
-      double Xd3_;
-      double Xd4_;
-      double Xd5_;
-      double Xq1_;
-      double Xq2_;
-      double Xq3_;
-      double Xq4_;
-      double Xq5_;
-      double Xqd_;
-      double G_;
-      double B_;
+      real_type SA_;
+      real_type SB_;
+      real_type Xd1_;
+      real_type Xd2_;
+      real_type Xd3_;
+      real_type Xd4_;
+      real_type Xd5_;
+      real_type Xq1_;
+      real_type Xq2_;
+      real_type Xq3_;
+      real_type Xq4_;
+      real_type Xq5_;
+      real_type Xqd_;
+      real_type G_;
+      real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
-      double pmech_set_;
-      double efd_set_;
+      real_type pmech_set_;
+      real_type efd_set_;
     };
 
   } // namespace PhasorDynamics
