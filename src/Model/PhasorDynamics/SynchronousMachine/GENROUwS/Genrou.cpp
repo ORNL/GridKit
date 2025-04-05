@@ -1,17 +1,17 @@
 /**
- * @file Genrou.hpp
+ * @file Genrou.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Definition of a phasor dynamics branch model.
+ * @brief Definition of a GENROU generator model.
  *
- * The model uses Cartesian coordinates.
  *
  */
+
+#include "Genrou.hpp"
 
 #include <cmath>
 #include <iostream>
 
-#include "Genrou.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 
 namespace GridKit

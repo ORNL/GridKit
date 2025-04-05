@@ -1,4 +1,11 @@
-/* Genrou Component - Adam Birchfield */
+/**
+ * @file Genrou.cpp
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Declaration of a GENROU generator model.
+ *
+ */
+
 #pragma once
 
 #define _USE_MATH_DEFINES
@@ -95,7 +102,6 @@ namespace GridKit
       }
 
     private:
-
       /* Identification */
       bus_type* bus_;
       const int busID_;
