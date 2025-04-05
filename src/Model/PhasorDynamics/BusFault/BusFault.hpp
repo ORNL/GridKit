@@ -8,144 +8,89 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using ComponentT = Component<double, size_t>;
-    using BaseBusT   = BusBase<double, size_t>;
-
-    class BusFault : public ComponentT
+    template <class ScalarT, typename IdxT>
+    class BusFault : public Component<ScalarT, IdxT>
     {
-      using ComponentT::alpha_;
-      using ComponentT::f_;
-      using ComponentT::fB_;
-      using ComponentT::g_;
-      using ComponentT::gB_;
-      using ComponentT::nnz_;
-      using ComponentT::param_;
-      using ComponentT::size_;
-      using ComponentT::tag_;
-      using ComponentT::time_;
-      using ComponentT::y_;
-      using ComponentT::yB_;
-      using ComponentT::yp_;
-      using ComponentT::ypB_;
+      using Component<ScalarT, IdxT>::alpha_;
+      using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::fB_;
+      using Component<ScalarT, IdxT>::g_;
+      using Component<ScalarT, IdxT>::gB_;
+      using Component<ScalarT, IdxT>::nnz_;
+      using Component<ScalarT, IdxT>::param_;
+      using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::tag_;
+      using Component<ScalarT, IdxT>::time_;
+      using Component<ScalarT, IdxT>::y_;
+      using Component<ScalarT, IdxT>::yB_;
+      using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::ypB_;
+
+      using bus_type  = BusBase<ScalarT, IdxT>;
+      using real_type = typename Component<ScalarT, IdxT>::real_type;
 
     public:
-      BusFault(BaseBusT* bus)
-        : bus_(bus), R_(0), X_(0.01), status_(0), busID_(0)
-      {
-        (void) busID_;
-        size_ = 0;
-      }
+      BusFault(bus_type* bus);
+      BusFault(bus_type* bus, real_type R, real_type X, int status);
+      ~BusFault() = default;
 
-      BusFault(BaseBusT* bus, double R, double X, int status)
-        : bus_(bus), R_(R), X_(X), status_(status), busID_(0)
-      {
-        size_ = 0;
-      }
+        int allocate() override;
+        int initialize() override;
+        int tagDifferentiable() override;
+        int evaluateResidual() override;
+        int evaluateJacobian() override;
+        int evaluateIntegrand() override;
+        int initializeAdjoint() override;
+        int evaluateAdjointResidual() override;
+        int evaluateAdjointIntegrand() override;
 
-      ~BusFault()
-      {
-      }
-
-      int allocate() override
-      {
-        return 0;
-      }
-
-      int initialize() override
-      {
-        return 0;
-      }
-
-      int tagDifferentiable() override
-      {
-        return 0;
-      }
-
-      int evaluateResidual() override
-      {
-        if (status_)
+        void updateTime(real_type /* t */, real_type /* a */) override
         {
-          double B = -X_ / (X_ * X_ + R_ * R_);
-          double G = R_ / (X_ * X_ + R_ * R_);
-
-          Ir() += -Vr() * G + Vi() * B;
-          Ii() += -Vr() * B - Vi() * G;
         }
-        return 0;
-      }
 
-      int evaluateJacobian() override
-      {
-        return 0;
-      }
+      public:
+        void setR(real_type R)
+        {
+          R_ = R;
+        }
 
-      int evaluateIntegrand() override
-      {
-        return 0;
-      }
+        void setX(real_type X)
+        {
+          X_ = X;
+        }
 
-      int initializeAdjoint() override
-      {
-        return 0;
-      }
+        void setStatus(int status)
+        {
+          status_ = status;
+        }
 
-      int evaluateAdjointResidual() override
-      {
-        return 0;
-      }
+      private:
+        ScalarT& Vr()
+        {
+          return bus_->Vr();
+        }
 
-      int evaluateAdjointIntegrand() override
-      {
-        return 0;
-      }
+        ScalarT& Vi()
+        {
+          return bus_->Vi();
+        }
 
-      void updateTime(double /* t */, double /* a */) override
-      {
-      }
+        ScalarT& Ir()
+        {
+          return bus_->Ir();
+        }
 
-    public:
-      void setR(double R)
-      {
-        R_ = R;
-      }
+        ScalarT& Ii()
+        {
+          return bus_->Ii();
+        }
 
-      void setX(double X)
-      {
-        X_ = X;
-      }
-
-      void setStatus(int status)
-      {
-        status_ = status;
-      }
-
-    private:
-      double& Vr()
-      {
-        return bus_->Vr();
-      }
-
-      double& Vi()
-      {
-        return bus_->Vi();
-      }
-
-      double& Ir()
-      {
-        return bus_->Ir();
-      }
-
-      double& Ii()
-      {
-        return bus_->Ii();
-      }
-
-    private:
-      BaseBusT* bus_;
-      double    R_;
-      double    X_;
-      int       status_;
-      const int busID_;
+      private:
+        bus_type* bus_;
+        real_type R_;
+        real_type X_;
+        int       status_;
+        const int busID_;
     };
 
   } // namespace PhasorDynamics

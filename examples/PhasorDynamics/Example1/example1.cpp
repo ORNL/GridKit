@@ -38,7 +38,7 @@ int main()
   Bus<double, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
   BusInfinite<double, size_t> bus2(1.0, 0.0);
   Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
-  BusFault                    fault(&bus1, 0, 1e-3, 0);
+  BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
 
   Genrou<double, size_t> gen(&bus1,
                              1,
