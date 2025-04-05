@@ -333,6 +333,43 @@ namespace GridKit
       {
       }
 
+    // public:
+    //   Genrou(bus_type* bus, int unit_id);
+    //   Genrou(bus_type* bus,
+    //          int       unit_id,
+    //          ScalarT   p0,
+    //          ScalarT   q0,
+    //          real_type H,
+    //          real_type D,
+    //          real_type Ra,
+    //          real_type Tdop,
+    //          real_type Tdopp,
+    //          real_type Tqopp,
+    //          real_type Tqop,
+    //          real_type Xd,
+    //          real_type Xdp,
+    //          real_type Xdpp,
+    //          real_type Xq,
+    //          real_type Xqp,
+    //          real_type Xqpp,
+    //          real_type Xl,
+    //          real_type S10,
+    //          real_type S12);
+    //   ~Genrou();
+    //   void set_derived_params();
+    //   int  allocate() override;
+    //   int  initialize() override;
+    //   int  tagDifferentiable() override;
+    //   int  evaluateResidual() override;
+    //   int  evaluateJacobian() override;
+    //   int  evaluateIntegrand() override;
+    //   int  initializeAdjoint() override;
+    //   int  evaluateAdjointResidual() override;
+    //   int  evaluateAdjointIntegrand() override;
+    //   void updateTime(real_type /* t */, real_type /* a */) override
+    //   {
+    //   }
+
     private:
       ScalarT& Vr()
       {

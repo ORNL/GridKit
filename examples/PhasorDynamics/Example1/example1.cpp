@@ -40,7 +40,7 @@ int main()
   Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
   BusFault                    fault(&bus1, 0, 1e-3, 0);
 
-  Genrou gen(&bus1, 1, 1., 0.05013, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<double, size_t> gen(&bus1, 1, 1., 0.05013, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
 
   /* Connect everything together */
   sys.addBus(&bus1);
