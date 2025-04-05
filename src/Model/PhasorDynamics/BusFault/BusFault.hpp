@@ -34,63 +34,63 @@ namespace GridKit
       BusFault(bus_type* bus, real_type R, real_type X, int status);
       ~BusFault() = default;
 
-        int allocate() override;
-        int initialize() override;
-        int tagDifferentiable() override;
-        int evaluateResidual() override;
-        int evaluateJacobian() override;
-        int evaluateIntegrand() override;
-        int initializeAdjoint() override;
-        int evaluateAdjointResidual() override;
-        int evaluateAdjointIntegrand() override;
+      int allocate() override;
+      int initialize() override;
+      int tagDifferentiable() override;
+      int evaluateResidual() override;
+      int evaluateJacobian() override;
+      int evaluateIntegrand() override;
+      int initializeAdjoint() override;
+      int evaluateAdjointResidual() override;
+      int evaluateAdjointIntegrand() override;
 
-        void updateTime(real_type /* t */, real_type /* a */) override
-        {
-        }
+      void updateTime(real_type /* t */, real_type /* a */) override
+      {
+      }
 
-      public:
-        void setR(real_type R)
-        {
-          R_ = R;
-        }
+    public:
+      void setR(real_type R)
+      {
+        R_ = R;
+      }
 
-        void setX(real_type X)
-        {
-          X_ = X;
-        }
+      void setX(real_type X)
+      {
+        X_ = X;
+      }
 
-        void setStatus(int status)
-        {
-          status_ = status;
-        }
+      void setStatus(int status)
+      {
+        status_ = status;
+      }
 
-      private:
-        ScalarT& Vr()
-        {
-          return bus_->Vr();
-        }
+    private:
+      ScalarT& Vr()
+      {
+        return bus_->Vr();
+      }
 
-        ScalarT& Vi()
-        {
-          return bus_->Vi();
-        }
+      ScalarT& Vi()
+      {
+        return bus_->Vi();
+      }
 
-        ScalarT& Ir()
-        {
-          return bus_->Ir();
-        }
+      ScalarT& Ir()
+      {
+        return bus_->Ir();
+      }
 
-        ScalarT& Ii()
-        {
-          return bus_->Ii();
-        }
+      ScalarT& Ii()
+      {
+        return bus_->Ii();
+      }
 
-      private:
-        bus_type* bus_;
-        real_type R_;
-        real_type X_;
-        int       status_;
-        const int busID_;
+    private:
+      bus_type* bus_;
+      real_type R_;
+      real_type X_;
+      int       status_;
+      const int busID_;
     };
 
   } // namespace PhasorDynamics
