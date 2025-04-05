@@ -1,6 +1,5 @@
-gridkit_add_library(phasor_dynamics_GENROU
+gridkit_add_library(phasor_dynamics_genrou
   SOURCES
-    #GENROU.cpp
-    SynchronousMachine.cpp
+    Genrou.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_GENROU)
+    gridkit_phasor_dynamics_genrou)
