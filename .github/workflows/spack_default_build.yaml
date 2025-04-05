@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.2
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.8
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -125,7 +125,7 @@ jobs:
                 padded_length: 128
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-              spack: https://binaries.spack.io/develop
+              spack: https://binaries.spack.io/v0.23.1
             packages:
               llvm:
                 externals:
