@@ -8,9 +8,17 @@
 
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
+
+// Forward declarations.
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    template <class ScalarT, typename IdxT>
+    class BusBase;
+  }
+} // namespace GridKit
 
 namespace GridKit
 {

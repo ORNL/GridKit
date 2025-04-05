@@ -1,12 +1,13 @@
-#include "SynchronousMachineTests.hpp"
+#include "GenrouTests.hpp"
 
 int main()
 {
   using namespace GridKit;
   using namespace GridKit::Testing;
 
-  GridKit::Testing::TestingResults                          result;
-  GridKit::Testing::SynchronousMachineTests<double, size_t> test;
+  GridKit::Testing::TestingResults result;
+
+  GridKit::Testing::GenrouTests<double, size_t> test;
 
   result += test.constructor();
   result += test.accessors();

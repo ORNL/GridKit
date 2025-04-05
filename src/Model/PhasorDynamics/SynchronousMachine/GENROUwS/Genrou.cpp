@@ -14,6 +14,8 @@
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 
+#define _USE_MATH_DEFINES
+
 namespace GridKit
 {
   namespace PhasorDynamics

@@ -15,8 +15,8 @@ add_executable(test_phasor_load runLoadTests.cpp)
 target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
                                        GRIDKIT::phasor_dynamics_bus)
 
-add_executable(test_phasor_synchronous_machine runSynchronousMachineTests.cpp)
-target_link_libraries(test_phasor_synchronous_machine GRIDKIT::phasor_dynamics_synchronous_machine
+add_executable(test_phasor_genrou runGenrouTests.cpp)
+target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
                                         GRIDKIT::phasor_dynamics_bus)
                                                                                                               
                                        
@@ -27,12 +27,12 @@ target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
 add_test(NAME PhasorDynamicsBranchTest COMMAND $<TARGET_FILE:test_phasor_branch>)
-add_test(NAME PhasorDynamicsSynchronousMachineTest COMMAND $<TARGET_FILE:test_phasor_synchronous_machine>)
+add_test(NAME PhasorDynamicsGenrouTest COMMAND $<TARGET_FILE:test_phasor_genrou>)
 add_test(NAME PhasorDynamicsLoadTest COMMAND $<TARGET_FILE:test_phasor_load>)
 add_test(NAME PhasorDynamicsSystemTest COMMAND $<TARGET_FILE:test_phasor_system>)
 
 install(TARGETS test_phasor_bus 
                 test_phasor_branch
                 test_phasor_load
-                test_phasor_synchronous_machine
+                test_phasor_genrou
                 test_phasor_system RUNTIME DESTINATION bin)
