@@ -150,7 +150,7 @@ jobs:
         run: ls -ltrh $(pwd)/*/*/
 
       - name: List Clang directory
-        run: ls -ltrh /usr/lib/llvm-16/lib/cmake/llvm/../clang
+        run: ls -ltrh /usr/lib/llvm-16/lib/cmake/llvm/../clang/../../libclang*.a
 
       - name: Concretize
         run: spack -e . concretize
