@@ -99,7 +99,7 @@ jobs:
         spack_spec:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
-            ^llvm~libomptarget~lua~offload
+            ^llvm~lldb~libomptarget~lua~offload
 
     name: Build gridkit with Spack
     steps:
