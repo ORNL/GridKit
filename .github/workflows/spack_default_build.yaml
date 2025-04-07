@@ -149,6 +149,9 @@ jobs:
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
 
+      - name: List Enzyme directory
+        run: ls /opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_p/linux-x86_64_v2/enzyme-0.0.172-v6rs5oi4ee2ly5zvkelt6qw2aphts2t3/*/*
+
       - name: Concretize
         run: spack -e . concretize
 
