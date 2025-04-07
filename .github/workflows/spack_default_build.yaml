@@ -155,6 +155,12 @@ jobs:
       - name: Install dependencies
         run: spack -e . install --no-check-signature --only dependencies
 
+      - name: Remove Enzyme
+        run: spack -e . uninstall --dependents -y enzyme
+
+      - name: Fresh install of Enzyme with verbose outputs
+        run: spack -e . install -v --no-check-signature --no-cache --fresh enzyme
+
       - name: List Enzyme directory
         run: ls $(spack -e . location -i enzyme)/*
 
