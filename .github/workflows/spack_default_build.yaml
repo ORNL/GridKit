@@ -91,7 +91,7 @@ jobs:
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 360
 
     strategy:
       matrix:
@@ -99,6 +99,7 @@ jobs:
         spack_spec:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
+            ^llvm~libomptarget~lua~offload
 
     name: Build gridkit with Spack
     steps:
@@ -148,9 +149,6 @@ jobs:
 
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
-
-      - name: List Clang directory
-        run: ls -ltrh /usr/lib/llvm-16/lib/cmake/llvm/../clang/../../libclang*.a
 
       - name: Concretize
         run: spack -e . concretize
