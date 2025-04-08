@@ -154,7 +154,7 @@ jobs:
         run: spack -e . concretize
 
       - name: Install dependencies
-        run: spack -e . install -v --no-check-signature --only dependencies
+        run: spack -e . install --no-check-signature --only dependencies
 
       - name: Remove Enzyme
         run: spack -e . uninstall --dependents -y enzyme
