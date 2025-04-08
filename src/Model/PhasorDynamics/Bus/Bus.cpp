@@ -84,15 +84,18 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Bus<ScalarT, IdxT>::allocate()
     {
-      // std::cout << "Allocate PQ bus ..." << std::endl;
-      f_.resize(size_);
-      y_.resize(size_);
-      yp_.resize(size_);
-      tag_.resize(size_);
+      // Temporary while we use std::vector in the code
+      size_t size = static_cast<size_t>(size_);
 
-      fB_.resize(size_);
-      yB_.resize(size_);
-      ypB_.resize(size_);
+      // Resize component model data
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      tag_.resize(size);
+
+      fB_.resize(size);
+      yB_.resize(size);
+      ypB_.resize(size);
 
       return 0;
     }

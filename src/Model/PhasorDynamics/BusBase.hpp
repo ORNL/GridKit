@@ -67,12 +67,12 @@ namespace GridKit
         return size_;
       }
 
-      virtual IdxT nnz()
+      virtual IdxT nnz() override
       {
         return nnz_;
       }
 
-      virtual bool hasJacobian()
+      virtual bool hasJacobian() override
       {
         return false;
       }
@@ -87,18 +87,18 @@ namespace GridKit
         return size_param_;
       }
 
-      virtual void updateTime(real_type /* t */, real_type /* a */)
+      virtual void updateTime(real_type /* t */, real_type /* a */) override
       {
         // No time to update in bus models
       }
 
-      virtual void setTolerances(real_type& rtol, real_type& atol) const
+      virtual void setTolerances(real_type& rtol, real_type& atol) const override
       {
         rtol = rtol_;
         atol = atol_;
       }
 
-      virtual void setMaxSteps(IdxT& msa) const
+      virtual void setMaxSteps(IdxT& msa) const override
       {
         msa = max_steps_;
       }
@@ -202,12 +202,12 @@ namespace GridKit
         return f_;
       }
 
-      COO_Matrix<ScalarT, IdxT>& getJacobian()
+      COO_Matrix<ScalarT, IdxT>& getJacobian() override
       {
         return J_;
       }
 
-      const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+      const COO_Matrix<ScalarT, IdxT>& getJacobian() const override
       {
         return J_;
       }

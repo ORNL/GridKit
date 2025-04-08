@@ -75,7 +75,7 @@ namespace AnalysisManager
       // Create vectors to store restart initial condition
       yy0_ = N_VClone(yy_);
       checkAllocation((void*) yy0_, "N_VClone");
-      yp0_ = N_VClone(yy_);
+      yp0_ = N_VClone(yp_);
       checkAllocation((void*) yp0_, "N_VClone");
 
       // Dummy initial time; will be overridden.
@@ -201,6 +201,33 @@ namespace AnalysisManager
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
       }
+
+      return retval;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, std::ostream& buffer)
+    {
+      int       retval = 0;
+      int       iout   = 0;
+      real_type t, tret;
+
+      for (t = t0 + dt; t <= tmax; t += dt)
+      {
+        retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
+        checkOutput(retval, "IDASolve");
+        printOutputF(t, retval, buffer);
+
+        if (retval != IDA_SUCCESS)
+        {
+          std::cout << "IDA Failure! " << retval;
+          break;
+        }
+      }
+
+      model_->updateTime(t, 0.0);
+      copyVec(yy_, model_->y());
+      copyVec(yp_, model_->yp());
 
       return retval;
     }
@@ -649,6 +676,35 @@ namespace AnalysisManager
         else
           ydata[i] = 0.0;
       }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, std::ostream& buffer)
+    {
+      sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
+      sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
+
+      buffer << t << " " << res;
+      for (IdxT i = 0; i < model_->size(); ++i)
+      {
+        buffer << " " << yval[i];
+      }
+      for (IdxT i = 0; i < model_->size(); ++i)
+      {
+        buffer << " " << ypval[i];
+      }
+      buffer << std::endl;
+
+      // fprintf(f, "%g,%d", t, res);
+      // for (IdxT i = 0; i < model_->size(); ++i)
+      // {
+      //   fprintf(f, ",%g", yval[i]);
+      // }
+      // for (IdxT i = 0; i < model_->size(); ++i)
+      // {
+      //   fprintf(f, ",%g", ypval[i]);
+      // }
+      // fprintf(f, "\n");
     }
 
     template <class ScalarT, typename IdxT>
