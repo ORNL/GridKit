@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.8
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.10
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -85,8 +85,19 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  gridkit_spack_builds:
+  free_disk_space:
     needs: base_image_build
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: true
+
+  gridkit_spack_builds:
+    needs: free_disk_space
     runs-on: ubuntu-24.04
     permissions:
       packages: write
@@ -155,12 +166,6 @@ jobs:
 
       - name: Install dependencies
         run: spack -e . install --no-check-signature --only dependencies
-
-      - name: Remove Enzyme
-        run: spack -e . uninstall --dependents -y enzyme
-
-      - name: Fresh install of Enzyme with verbose outputs
-        run: spack -e . install -v --no-check-signature --no-cache --fresh enzyme
 
       - name: List Enzyme directory
         run: ls $(spack -e . location -i enzyme)/*
