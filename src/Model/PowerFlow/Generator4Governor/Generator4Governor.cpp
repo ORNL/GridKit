@@ -57,6 +57,7 @@
  *
  */
 
+#define _USE_MATH_DEFINES
 #include "Generator4Governor.hpp"
 
 #include <cmath>
