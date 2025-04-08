@@ -50,12 +50,13 @@ namespace GridKit
         return size_;
       }
 
-      virtual IdxT nnz()
+      virtual IdxT nnz() override
       {
         return nnz_;
       }
 
-      virtual bool hasJacobian()
+      /// @todo Remove this method. It should be part of DynamicSolver class.
+      virtual bool hasJacobian() override
       {
         return false;
       }
@@ -77,13 +78,13 @@ namespace GridKit
       //     std::cout << "updateTime: t = " << time_ << "\n";
       // }
 
-      virtual void setTolerances(real_type& rtol, real_type& atol) const
+      virtual void setTolerances(real_type& rtol, real_type& atol) const override
       {
         rtol = rel_tol_;
         atol = abs_tol_;
       }
 
-      virtual void setMaxSteps(IdxT& msa) const
+      virtual void setMaxSteps(IdxT& msa) const override
       {
         msa = max_steps_;
       }
@@ -178,12 +179,12 @@ namespace GridKit
         return f_;
       }
 
-      COO_Matrix<ScalarT, IdxT>& getJacobian()
+      COO_Matrix<ScalarT, IdxT>& getJacobian() override
       {
         return J_;
       }
 
-      const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+      const COO_Matrix<ScalarT, IdxT>& getJacobian() const override
       {
         return J_;
       }

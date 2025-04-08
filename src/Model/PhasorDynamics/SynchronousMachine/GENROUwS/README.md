@@ -93,9 +93,14 @@ then
 Sat(\psi'')=Sat(\vert V_{r}+jV_{i} \vert)
 ```
 
-It is important to point out that finding the initial value of $`\delta`$ for the model without saturation direct method can be used. In case when saturation is considered some "claver" math is needed. Key insight for determining initial $`\delta`$ is that the magnitude of the saturation depends upon the magnitude of $`\psi''`$, which is independent of $`\delta`$.
+It is important to point out that finding the initial value of $`\delta`$ for
+the model without saturation direct method can be used. In case when saturation
+is considered some "claver" math is needed. Key insight for determining initial
+$`\delta`$ is that the magnitude of the saturation depends upon the magnitude
+of $`\psi''`$, which is independent of $`\delta`$.
 ```math
-\delta=tan^{-1}(\dfrac{K_{sat}V_{iterm}+K_{sat}R_{a}I_{i}+(K_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}{K_{sat}V_{rterm}+K_{sat}R_{a}I_{r}-(K_{sat}X''_{d}+X_{q}-X''_{q})I_{i}})
+\delta=\tan^{-1}\left(\dfrac{K_{sat}V_{iterm}+K_{sat}R_{a}I_{i}+(K_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
+                            {K_{sat}V_{rterm}+K_{sat}R_{a}I_{r}-(K_{sat}X''_{d}+X_{q}-X''_{q})I_{i}} \right)
 ```
 where
 ```math
