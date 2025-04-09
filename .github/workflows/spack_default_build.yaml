@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.10
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.11
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -85,35 +85,30 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  free_disk_space:
-    needs: base_image_build
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Free Disk Space (Ubuntu)
-      uses: jlumbroso/free-disk-space@main
-      with:
-        # this might remove tools that are actually needed,
-        # if set to "true" but frees about 6 GB
-        tool-cache: true
-
   gridkit_spack_builds:
-    needs: free_disk_space
+    name: Build gridkit with Spack
+    needs: base_image_build
     runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 360
+    timeout-minutes: 30
 
     strategy:
       matrix:
+        llvm: ["16"]
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
-            ^llvm~lldb~libomptarget~lua~offload
 
-    name: Build gridkit with Spack
     steps:
+      - name: Add LLVM
+        run: |
+            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+            sudo apt-add-repository "deb http://apt.llvm.org/`lsb_release -c | cut -f2`/ llvm-toolchain-`lsb_release -c | cut -f2`-${{ matrix.llvm }} main" || true
+            sudo apt-get install -y cmake gcc g++ llvm-${{ matrix.llvm }}-dev libzstd-dev
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
