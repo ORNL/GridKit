@@ -105,9 +105,10 @@ jobs:
     steps:
       - name: Add LLVM
         run: |
-            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+            sudo apt-get install -y libmpfr-dev
             sudo apt-add-repository "deb http://apt.llvm.org/`lsb_release -c | cut -f2`/ llvm-toolchain-`lsb_release -c | cut -f2`-${{ matrix.llvm }} main" || true
-            sudo apt-get install -y cmake gcc g++ llvm-${{ matrix.llvm }}-dev libzstd-dev
+            sudo apt-get install -y cmake gcc g++ llvm-${{ matrix.llvm }}-dev libomp-${{ matrix.llvm }}-dev lld-${{ matrix.llvm }} clang-${{ matrix.llvm }} libclang-${{ matrix.llvm }}-dev libeigen3-dev libboost-dev libzstd-dev
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -138,7 +139,7 @@ jobs:
               llvm:
                 externals:
                 - spec: llvm@16
-                  prefix: /usr/lib/llvm-16
+                  prefix: /usr/lib/llvm-${{ matrix.llvm }}
           EOF
 
       - name: Configure GHCR mirror
