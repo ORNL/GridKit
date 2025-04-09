@@ -157,23 +157,11 @@ jobs:
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
 
-      - name: List Clang directory
-        run: ls -ltrh /usr/lib/llvm-16/lib/cmake/llvm/../clang/../../libclang*.a
-
       - name: Concretize
         run: spack -e . concretize
 
       - name: Install dependencies
         run: spack -e . install --no-check-signature --only dependencies
-
-      - name: Remove Enzyme
-        run: spack -e . uninstall --dependents -y enzyme
-
-      - name: Fresh install of Enzyme with verbose outputs
-        run: spack -e . install -v --no-check-signature --no-cache --fresh enzyme
-
-      - name: List Enzyme directory
-        run: ls $(spack -e . location -i enzyme)/*
 
       - name: Install package
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
