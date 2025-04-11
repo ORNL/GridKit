@@ -45,7 +45,7 @@ namespace GridKit
       TestOutcome residual()
       {
         TestStatus success = true;
-        success.skipTest();
+        
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, 1, 0.05013, 3, 0,
           0, 7, 0.04, 0.05, 0.75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0);
