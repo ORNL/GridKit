@@ -93,8 +93,8 @@ namespace GridKit
       real_type b = -X_ / (R_ * R_ + X_ * X_);
       real_type g = R_ / (R_ * R_ + X_ * X_);
 
-      Ir() += -g * Vr() - b * Vi();
-      Ii() += b * Vr() - g * Vi();
+      Ir() += -g * Vr() + b * Vi();
+      Ii() += -b * Vr() - g * Vi();
 
       return 0;
     }
