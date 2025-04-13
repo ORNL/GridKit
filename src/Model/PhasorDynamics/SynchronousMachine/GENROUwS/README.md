@@ -128,36 +128,20 @@ and the algebraic Network Interface Equations (4)
 
 ### Without Saturation
 
-Pressume there is no saturation to simplify solution procedure for initial conditions. Let the network-reference frame terminal variables be defined for notational purposes.
+Pressume there is no saturation to simplify solution procedure for initial conditions.
 
-``` math
-\begin{aligned}
-\bar V &= V_r + jV_i && \text{Complex Terminal Voltage} \\
-\bar I &= I_r + jI_i && \text{Complex Terminal Current} \\
-\bar Z &= R_a + jX_q && \text{Machine Internal Impedance} \\
-\end{aligned}
-```
-
-Using the power-flow solution, we have explicity solutions for the following variables. 
+Using the power-flow solution, we have explicity solutions for the following variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated from the network interface equations. The remaining are algebraicillay solved from the steady-state initial conditions.
 
 ``` math
 \begin{aligned}
 \omega &= 0 \\
-\delta &= \text{arg} (\bar V + \bar Z \bar I) \\
-  I_{dq}&=-jIe^{j\delta} \\
-  V_{dq}&=-jVe^{j\delta}+ZI \\
-  \psi^{''}_{dq} &= jV_{dq} \\
+\delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
+  \psi^{''}_{d} &= V_q \\
+  \psi^{''}_{q} &= -V_d \\
   \psi^{''} &= |\psi^{''}_{dq}| \\
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
-  P_{mech} &= T_{elec}
-\end{aligned}
-```
-
-The remaining are algebraicillay solved from the steady-state initial conditions.
-
-``` math
-\begin{aligned}
+  P_{mech} &= T_{elec} \\
 \psi^{'}_d &=\dfrac{\psi^{''}_d/X_{d5}-X_{d2}I_d}{1+1/X_{d5}}\\
 \psi^{'}_q &=\dfrac{X_{q2}I_q-\psi^{''}_q/X_{q5}}{1+1/X_{q5}}\\
 E^{'}_d &=\psi^{'}_q - X_{q2}I_q \\
