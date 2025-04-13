@@ -22,10 +22,7 @@ The GENSAL model is a variation of the [General Synchronous Machine Model](../RE
 ## Equations
 ### Nomenclature
 
-See general model nomencalture at links below
-- [Synchronous Machine State Variables](../README.md#state-variables)
-- [Synchronous Machine Algebraic Variables](../README.md#algebraic-variables)
-- [Synchronous Machine Parameters](../README.md#parameters)
+See [Synchronous Machine Nomenclature](../README.md#nomenclature)
 
 ## Equations
 ### Differential Equations

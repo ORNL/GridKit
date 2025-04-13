@@ -1,5 +1,6 @@
 # GENROU
 
+## Block Diagram
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
    
@@ -8,7 +9,7 @@
 </div>
 
 ## Simplifications
-The GENSAL model is a variation of the [General Synchronous Machine Model](../README.md)
+The GENROU model is a variation of the [General Synchronous Machine Model](../README.md)
 - $`X''_{q}=X''_{d}`$
 - $`X''_{d}`$ does not saturate
 - Same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
@@ -17,10 +18,7 @@ The GENSAL model is a variation of the [General Synchronous Machine Model](../RE
 ## Equations
 ### Nomenclature
 
-See general model nomencalture at links below
-- [Synchronous Machine State Variables](../README.md#state-variables)
-- [Synchronous Machine Algebraic Variables](../README.md#algebraic-variables)
-- [Synchronous Machine Parameters](../README.md#parameters)
+See [Synchronous Machine Nomenclature](../README.md#nomenclature)
 
 ## Equations
 ### Differential Equations
