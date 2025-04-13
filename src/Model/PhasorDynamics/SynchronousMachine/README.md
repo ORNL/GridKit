@@ -60,6 +60,19 @@ Two main types:
 - $S_{10}$ - Saturation factor at 1.0 pu flux, (0) 
 - $S_{12}$ - Saturation factor at 1.2 pu flux, (0) 
 
+### Auxillary Parameters
+Transformed parameters used during implementation and for readability.
+``` math
+\begin{aligned}
+ S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+ X_{d1} &= X_d-X_d{'}      & X_{q1} &= X_q-X_q{'} \\
+ X_{d2} &= X_d^{'}-X_\ell  & X_{q2} &= X_q^{'}-X_\ell\\
+ X_{d3} &= (X_d^{'}-X_d^{''})/X_{d2}^2 & X_{q3} &= (X_q^{'}-X_q^{''})/X_{q2}^2 \\
+X_{d5} &= (X_d^{''}-X_\ell)/X_{d2}    & X_{q5} &= (X_q^{''}-X_\ell)/X_{q2}\\
+ X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
+ \end{aligned}
+```
+
 ## Equations
 
 
