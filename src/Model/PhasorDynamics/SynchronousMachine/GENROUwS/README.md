@@ -91,7 +91,7 @@ X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
 
 ### Algebraic Equations
 
-These algebraic equations define internal variables (7)
+These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
 ``` math
 \begin{aligned}
   \psi''_{q} &= -E'_{d}X_{q5}
@@ -102,28 +102,13 @@ These algebraic equations define internal variables (7)
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   V_{d}       &= -\psi''_{q}(1+\omega)\\
   V_{q}       &= +\psi''_{d}(1+\omega)\\
-  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d
-\end{aligned}
-```
-
-and the algebraic Network Interface Equations (4)
-``` math
-\begin{aligned}
-\begin{cases}
-  I_{dq}&=-jIe^{j\delta} \\
-  V_{dq}&=-jVe^{j\delta}+ZI
-\end{cases}
-\implies
-\begin{cases}
+  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
   I_d &= I_r \sin\delta - I_i\cos\delta \\
   I_q &= I_r \cos\delta + I_i\sin\delta \\
-
   V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^{''}_q\\
   V_q &= V_r \cos\delta + V_i\sin\delta + I_d X^{''}_q + I_q R_a\\
-\end{cases} \\
 \end{aligned}
 ```
-
 ## Initialization
 
 ### Without Saturation
