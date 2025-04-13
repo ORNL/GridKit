@@ -40,7 +40,7 @@ X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
 \begin{aligned}
 & \delta        && \text{Machine Internal Angle}\\
 & \omega        && \text{Machine Relative Speed} \\
-& E^{'}_q,\psi^{'}_d, \psi^{'}_q, E^{'}_d         
+& \psi^{'}_d, \psi^{'}_q, E^{'}_d, E^{'}_q        
                 && \text{Machine Internal Flux Values}\\
 & \psi^{''}_q, \psi^{''}_d, \psi^{''}       
                 && \text{Machine Total Subtransient Flux}\\
@@ -147,8 +147,8 @@ of $\psi''$, which is independent of $\delta$.
 \begin{aligned}
   \delta=\tan^{-1}
   \left[
-    \dfrac{(V_{iterm}+R_{a}I_{i})k_{sat}+(k_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
-          {(V_{rterm}+R_{a}I_{r})k_{sat}-(k_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
+    \dfrac{(V_{i}+R_{a}I_{i})k_{sat}+(k_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
+          {(V_{r}+R_{a}I_{r})k_{sat}-(k_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
   \right]
 \end{aligned}
 ```
