@@ -103,6 +103,7 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   V_{d}       &= -\psi''_{q}(1+\omega)\\
   V_{q}       &= +\psi''_{d}(1+\omega)\\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
+  k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   I_d &= I_r \sin\delta - I_i\cos\delta \\
   I_q &= I_r \cos\delta + I_i\sin\delta \\
   V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^{''}_q\\

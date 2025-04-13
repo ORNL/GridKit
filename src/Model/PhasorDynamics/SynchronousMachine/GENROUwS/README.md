@@ -45,52 +45,14 @@
 
 
 ## Equations
-
 ### Differential Equations
 
-``` math
-\begin{aligned}
-  \dot\delta&=\omega\cdot\omega_0 \\
-  \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
-  \dot{\psi}^{'}_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
-  \dot{\psi}^{'}_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
-
-
-  \dot{E}^{'}_{d} &= \dfrac{1}{T'_{q0}}
-  \left(  -E'_{d}+X_{q1}
-    (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
-    + X_{qd}\psi''_{q}k_{sat}
-  \right) \\
-
-  \dot{E}^{'}_{q} &= \dfrac{1}{T'_{d0}}
-  \left(
-    E_{fd}-E'_{q}-X_{d1}
-    (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
-    -\psi''_{d}k_{sat}
-  \right)\\
-\end{aligned}
-```
+See [General Synchronous Machine](../README.md)
 
 ### Algebraic Equations
 
-These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
-``` math
-\begin{aligned}
-  \psi''_{q} &= -E'_{d}X_{q5}
-                -\psi'_{q}X_{q4} \\
-  \psi''_{d}  &= +E'_{q}X_{d5}
-                +\psi'_{d}X_{d4}\\
-  \psi^{''}   &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
-  V_{d}       &= -\psi''_{q}(1+\omega)\\
-  V_{q}       &= +\psi''_{d}(1+\omega)\\
-  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
-  I_d &= I_r \sin\delta - I_i\cos\delta \\
-  I_q &= I_r \cos\delta + I_i\sin\delta \\
-  V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^{''}_q\\
-  V_q &= V_r \cos\delta + V_i\sin\delta + I_d X^{''}_q + I_q R_a\\
-\end{aligned}
-```
+See [General Synchronous Machine](../README.md)
+
 ## Initialization
 
 ### Without Saturation
