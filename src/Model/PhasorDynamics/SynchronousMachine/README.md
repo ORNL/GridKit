@@ -44,7 +44,7 @@ There are two main variations
 - $H$ - Intertia constant, sec (3)
 - $D$ - Damping factor, pu (0)
 - $R_{a}$ - Stator winding resistance, pu (0)
-- $X_{l}$ - Stator leakage reactance, pu (0.15)
+- $X_{\ell}$ - Stator leakage reactance, pu (0.15)
 - $X_{d}$ - Direct axis synchronous reactance, (2.1)
 - $X'_{d}$ - Direct axis transient reactance, (0.2)
 - $X''_{d}$ - Direct axis sub-transient reactance, (0.18)
