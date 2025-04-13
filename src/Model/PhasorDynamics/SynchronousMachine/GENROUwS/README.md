@@ -19,12 +19,13 @@
             && \text{Time Constants} \\
 & X_d, X^{'}_d, X^{''}_d,  X_q, X^{'}_q, X^{''}_q, X_\ell 
             && \text{Machine Reactance Parameters} \\
-& S_{10}, S_{12} \to S_{A}, S_{B} && \text{Saturation Parameters}
+& S_{10}, S_{12} && \text{Saturation Parameters}
 \end{aligned}
 ```
 ### Auxillary Parameters
 ``` math
 \begin{aligned}
+S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
 X_{d1} &= X_d-X_d{'}      & X_{q1} &= X_q-X_q{'} \\
 X_{d2} &= X_d^{'}-X_\ell  & X_{q2} &= X_q^{'}-X_\ell\\
 X_{d3} &= (X_d^{'}-X_d^{''})/X_{d2}^2 & X_{q3} &= (X_q^{'}-X_q^{''})/X_{q2}^2 \\
@@ -33,7 +34,6 @@ X_{d5} &= (X_d^{''}-X_\ell)/X_{d2}    & X_{q5} &= (X_q^{''}-X_\ell)/X_{q2}\\
 X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
 \end{aligned}
 ```
-
 ### State Variables
 
 ``` math
@@ -138,7 +138,7 @@ Using the power-flow solution, we have explicity solutions for the following var
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
   \psi^{''}_{d} &= V_q \\
   \psi^{''}_{q} &= -V_d \\
-  \psi^{''} &= |\psi^{''}_{dq}| \\
+  \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
   P_{mech} &= T_{elec} \\
