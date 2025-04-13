@@ -23,8 +23,8 @@ rotor angle w.r.t. to q-axis
 
 Two main types:
 
-- Round Rotor (we will use GENROU model)
-- Salient Rotor/ Salient Pole (we will use GENSAL model)
+- Round Rotor (See [GENROU](GENROUwS/README.md))
+- Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
 
 ## Nomenclature
 ### Algebraic Variables
@@ -61,8 +61,6 @@ Two main types:
 - $S_{12}$ - Saturation factor at 1.2 pu flux, (0) 
 
 ## Equations
-
-
 
 
 ### Differential Equations

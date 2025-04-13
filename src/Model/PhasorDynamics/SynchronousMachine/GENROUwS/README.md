@@ -7,51 +7,22 @@
   Figure 2: GENROU. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
-## Nomenclature
+## Equations
+### Nomenclature
 
-### Algebraic Variables
-
-- $V_d$, $V_q$   Machine Internal Voltage on the machine d-q reference frame  
-- $I_d$, $I_q$   Terminal currents on the machine d-q reference frame  
-- $V_r$, $V_i$    Terminal voltages on the network reference frame
-- $I_r$, $I_i$   Terminal currents on the network reference frame
-- $T_{elec}$  Electrical Torque 
-- $P_{mech}$    Mechanical power from the prime mover 
-- $E_{fd}$     Field winding voltage from the excitation system 
-- $k_{sat}$   Saturation Coefficient 
-### State Variables
-- $\delta$    Machine Internal Angle
-- $\omega$  Machine Relative Speed
-- $\psi^{'}_d$, $\psi^{'}_q$, $E^{'}_d$, $E^{'}_q$  Machine Internal Flux Values
-- $\psi^{''}_q$, $\psi^{''}_d$, $\psi^{''}$    Machine Total Subtransient Flux
-### Parameters
-- $\omega_{0}$ - Nominal Frequnecy ($2\pi 60$)
-- $H$ - Intertia constant, sec (3)
-- $D$ - Damping factor, pu (0)
-- $R_{a}$ - Stator winding resistance, pu (0)
-- $X_{l}$ - Stator leakage reactance, pu (0.15)
-- $X_{d}$ - Direct axis synchronous reactance, (2.1)
-- $X'_{d}$ - Direct axis transient reactance, (0.2)
-- $X''_{d}$ - Direct axis sub-transient reactance, (0.18)
-- $X_{q}$ - Quadrature axis synchronous reactance, (0.5)
-- $X'_{q}$ - Quadrature axis transient reactance, (0.47619)
-- $X''_{q}$ - Quadrature axis sub-transient reactance, (0.18)
-- $T'_{d0}$ - Open circuit direct axis transient time const., (7)
-- $T''_{d0}$ - Open circuit direct axis sub-transient time const., (0.04)
-- $T'_{q0}$ - Open circuit quadrature axis transient time const., (0.75)
-- $T''_{q0}$ - Open circuit quadrature axis sub-transient time const., (0.05) 
-- $S_{10}$ - Saturation factor at 1.0 pu flux, (0) 
-- $S_{12}$ - Saturation factor at 1.2 pu flux, (0) 
-
+See general model nomencalture at links below
+- [Synchronous Machine State Variables](../README.md#state-variables)
+- [Synchronous Machine Algebraic Variables](../README.md#algebraic-variables)
+- [Synchronous Machine Parameters](../README.md#parameters)
 
 ## Equations
 ### Differential Equations
 
-See [General Synchronous Machine](../README.md)
+See [Synchronous Machine Diffrential Equations](../README.md#differential-equations)
 
 ### Algebraic Equations
 
-See [General Synchronous Machine](../README.md)
+See [Synchronous Machine Algebraic Equations](../README.md#algebraic-equations)
 
 ## Initialization
 
