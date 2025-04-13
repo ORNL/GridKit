@@ -1,9 +1,4 @@
 # GENROU
-## Simplifications
-
-- $`X''_{q}=X''_{d}`$
-- $`X''_{d}`$ does not saturate
-- same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
 
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
@@ -27,8 +22,7 @@
 & S_{10}, S_{12} \to S_{A}, S_{B} && \text{Saturation Parameters}
 \end{aligned}
 ```
-
-### States Variables
+### State Variables
 
 ``` math
 \begin{aligned}
@@ -45,22 +39,14 @@
 
 ``` math
 \begin{aligned}
-& k_{sat}             
-                && \text{Saturation Coefficient} \\
-& V_d, V_q        
-                && \text{Machine Internal Voltage} \\
-& T_{elec} 
-                && \text{Electrical Torque} \\
-& I_r, I_i 
-                && \text{Terminal currents on the network reference frame} \\
-& V_d, V_q 
-                && \text{Terminal voltages on the network reference frame} \\
-& I_d, I_q 
-                && \text{Terminal currents on the machine d-q reference frame} \\
-& P_{mech} 
-                && \text{Mechanical power from the prime mover} \\
-& E_{fd} 
-                && \text{Field winding voltage from the excitation system} \\
+& k_{sat}       && \text{Saturation Coefficient} \\
+& V_d, V_q      && \text{Machine Internal Voltage} \\
+& T_{elec}      && \text{Electrical Torque} \\
+& I_r, I_i      && \text{Terminal currents on the network reference frame} \\
+& V_d, V_q      && \text{Terminal voltages on the network reference frame} \\
+& I_d, I_q      && \text{Terminal currents on the machine d-q reference frame} \\
+& P_{mech}      && \text{Mechanical power from the prime mover} \\
+& E_{fd}        && \text{Field winding voltage from the excitation system} \\
 \end{aligned}
 ```
 
@@ -74,14 +60,7 @@
 \begin{aligned}
   \dot\delta&=\omega\cdot\omega_0 \\
   \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right) \\
-  \dot{E}^{'}_{q} &= \dfrac{1}{T'_{d0}}
-  \left(
-    E_{fd}-E'_{q}-(X_{d}-X'_{d})
-    \left(
-      I_{d}+\dfrac{X'_{d}-X''_{d}}{(X'_{d}-X_{l})^2}(E'_{q}-\psi'_{d}-(X'_{d}-X_{l})I_{d})
-    \right)
-    -\psi''_{d}k_{sat}
-  \right)\\
+
 
   \dot{\psi}^{'}_{d} &= \dfrac{1}{T''_{d0}}
   \left(
@@ -105,12 +84,21 @@
       \dfrac{X_{q}-X_{l}}{X_{d}-X_{l}} 
     \right)
   \psi''_{q}k_{sat}
-  \right)
+  \right) \\
+
+  \dot{E}^{'}_{q} &= \dfrac{1}{T'_{d0}}
+  \left(
+    E_{fd}-E'_{q}-(X_{d}-X'_{d})
+    \left(
+      I_{d}+\dfrac{X'_{d}-X''_{d}}{(X'_{d}-X_{l})^2}(E'_{q}-\psi'_{d}-(X'_{d}-X_{l})I_{d})
+    \right)
+    -\psi''_{d}k_{sat}
+  \right)\\
 \end{aligned}
 ```
 
 ### Algebraic Equations
-These algebraic equations define internal variables
+These algebraic equations define internal variables (7)
 ``` math
 \begin{aligned}
   -\psi''_{q} &= E'_{d}\dfrac{X''_{q}-X_{l}}{X'_{q}-X_{l}}
@@ -125,35 +113,82 @@ These algebraic equations define internal variables
 \end{aligned}
 ```
 
-and the algebraic Network Interface Equations
+and the algebraic Network Interface Equations (4)
 ``` math
 \begin{aligned}
+\begin{cases}
+  I_{dq}&=-jIe^{j\delta} \\
+  V_{dq}&=-jVe^{j\delta}+ZI
+\end{cases}
+\implies
+\begin{cases}
   I_d &= I_r \sin\delta - I_i\cos\delta \\
   I_q &= I_r \cos\delta + I_i\sin\delta \\
+
   V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^{''}_q\\
   V_q &= V_r \cos\delta + V_i\sin\delta + I_d X^{''}_q + I_q R_a\\
+\end{cases} \\
 \end{aligned}
 ```
+
+## Simplifications
+
+- $X''_{q} = X''_{d}$
+- $X''_{d}$ does not saturate
+- The same relative amount of saturation occurs on both $d$ and $q$ axis
+
+
 
 ## Initialization
 
-From the block diagram it can be written:
+### Without Saturation
 
+Pressume there is no saturation to simplify solution procedure for initial conditions. The variables () have explicity expressions, and the remainder are solved algebraically, shown below.
+
+First, let the network-reference frame terminal variables be defined for notational purposes.
 ``` math
 \begin{aligned}
-  0&=-\psi'_{d}-(X'_{d}-X_{l})I_{d}+E'_{q} \\
-  0&=-\psi''_{d}+E'_{q}\dfrac{X''_{d}-X_{l}}{X'_{d}-X_{l}}+\psi'_{d}\dfrac{X'_{d}-X''_{d}}{X'_{d}-X_{l}} \\
-  0&=-\psi'_{q}+(X'_{q}-X_{l})I_{q}+E'_{d} \\
-  0&=\psi''_{q}+E'_{d}\dfrac{X''_{q}-X_{l}}{X'_{q}-X_{l}}+\psi'_{q}\dfrac{X'_{q}-X''_{q}}{X'_{q}-X_{l}} \\
-  0&= -E'_{d}+(X_{q}-X'_{q})I_{q}+(\dfrac{X_{q}-X_{l}}{X_{d}-X_{l}})\psi''_{q}k_{sat}
+\bar V &= V_r + jV_i && \text{Complex Terminal Voltage} \\
+
+\bar I &= I_r + jI_i && \text{Complex Terminal Current} \\
+\bar Z &= R_a + jX_q && \text{Machine Internal Impedance} \\
 \end{aligned}
 ```
 
-Internal voltage on the referece frame can be calculated directly:
+We have explicity solutions for $V_{dq},I_{dq},\psi^{''}_{dq},k_{sat}, T_{elec}$. The remaining are algebraicillay solved and are the steady-state initial conditions.
+
 ``` math
 \begin{aligned}
-V_{r}&=V_{rterm}+R_{a}I_{r}-X''_{d}I_{i} \\
-V_{i}&=V_{iterm}+R_{a}I_{i}-X''_{d}I_{r}
+\omega &= 0 \\
+\delta &= \text{arg} (\bar V + \bar Z \bar I) \\
+\psi^{'}_d &= \dfrac{X^{'}_d-X_\ell}
+  {1 + (X^{''}_d-X_\ell)}
+  (\psi^{''}_d -(X^{''}_d-X_\ell)I_d ) \\
+\psi^{'}_q &= \dfrac{X^{'}_q-X_\ell}
+  {1 + (X^{''}_q-X_\ell)}
+  (\psi^{''}_q -(X^{''}_q-X_\ell)I_q)\\
+E^{'}_d &=\psi^{'}_q - (X^{'}_q-X_\ell)I_q \\
+E^{'}_q &=\psi^{'}_d + (X^{'}_d-X_\ell)I_d \\
+E_{fd} &= E'_{q}+(X_{d}-X'_{d})I_{d}+\psi^{''}_{d}k_{sat} \\
+P_{mech} &= T_{elec}(1+\omega) + D\omega
+\end{aligned}
+```
+
+### With Saturation
+
+It is important to point out that finding the initial value of $\delta$ for
+the model without saturation direct method can be used. In case when saturation
+is considered some "claver" math is needed. Key insight for determining initial
+$\delta$ is that the magnitude of the saturation depends upon the magnitude
+of $\psi''$, which is independent of $\delta$.
+
+``` math
+\begin{aligned}
+  \delta=\tan^{-1}
+  \left[
+    \dfrac{(V_{iterm}+R_{a}I_{i})k_{sat}+(k_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
+          {(V_{rterm}+R_{a}I_{r})k_{sat}-(k_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
+  \right]
 \end{aligned}
 ```
 
@@ -165,33 +200,17 @@ then
 \end{aligned}
 ```
 
-It is important to point out that finding the initial value of $`\delta`$ for
-the model without saturation direct method can be used. In case when saturation
-is considered some "claver" math is needed. Key insight for determining initial
-$`\delta`$ is that the magnitude of the saturation depends upon the magnitude
-of $`\psi''`$, which is independent of $`\delta`$.
+where $k_{sat}$ is defined to be
+
+$$
+k_{sat}:=1+\left(\dfrac{X_{q}-X_{l}}{X_{d}-X_{l}}\right)Sat(\psi'')
+$$
+
+The following must be true (if not enforce the corrections):
 
 ``` math
 \begin{aligned}
-  \delta=\tan^{-1}
-  \left(
-    \dfrac{K_{sat}V_{iterm}+K_{sat}R_{a}I_{i}+(K_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
-          {K_{sat}V_{rterm}+K_{sat}R_{a}I_{r}-(K_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
-  \right)
-\end{aligned}
-```
-
-where
-
-$$
-K_{sat}=(1+(\dfrac{X_{q}-X_{l}}{X_{d}-X_{l}})Sat(\psi''))
-$$
-
-Following must be true (if not enforce the corrections):
-
-``` math
-\begin{aligned}
-  X_{l}<=X''{q}<=X'{q}<=Xq \\
-  X_{l}<=X''{d}<=X'{d}<=Xd
+  X_{l}<=X''_{q}<=X'_{q}<=X_q \\
+  X_{l}<=X''_{d}<=X'_{d}<=X_d
 \end{aligned}
 ```
