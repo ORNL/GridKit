@@ -1,9 +1,7 @@
-# **Synchronous Machine - GENERAL**
+# **General Synchronous Machine Model**
 
-
-**Note: Synchronous machine models not yet implemented**
-
-
+> [!NOTE]  
+> Only the GENROU model has been implemented.
 
 ## Convention
 
@@ -15,13 +13,13 @@
   Figure 1: Synchronous Machine. Figure courtesy of [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
 </div>
 
-q-axis leads the d-axis
-
-rotor angle w.r.t. to q-axis
+The following conventians are used for the d-q reference frame.
+- The q-axis leads the d-axis
+- The Rotor angle is w.r.t. to q-axis
 
 ## Types
 
-Two main types:
+There are two main variations 
 
 - Round Rotor (See [GENROU](GENROUwS/README.md))
 - Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
