@@ -12,7 +12,7 @@ namespace GridKit
     using ComponentT = Component<double, size_t>;
     using BaseBusT   = BusBase<double, size_t>;
 
-    class GEN2 : public ComponentT
+    class ClassicalGen : public ComponentT
     {
       using ComponentT::alpha_;
       using ComponentT::f_;
@@ -30,27 +30,29 @@ namespace GridKit
       using ComponentT::ypB_;
 
     public:
-      GEN2(BaseBusT* bus, int unit_id)
+      ClassicalGen(BaseBusT* bus, int unit_id, double pmech, double ep)
         : bus_(bus),
           unit_id_(unit_id),
           busID_(0),
           H_(3),
           D_(0),
           Ra_(0),
-          Xdp_(0.2)
+          Xdp_(0.2),
+          pmech_(pmech),
+          ep_(ep)
       {
         size_ = 5;
         set_derived_params();
       }
 
-      GEN2(BaseBusT* bus,
+      ClassicalGen(BaseBusT* bus,
              int       unit_id,
              double    H,
              double    D,
              double    Ra,
              double    Xdp,
-             double    pmech_,
-             double    ep_)
+             double    pmech,
+             double    ep)
         : bus_(bus),
           unit_id_(unit_id),
           busID_(0),
@@ -58,8 +60,8 @@ namespace GridKit
           D_(D),
           Ra_(Ra),
           Xdp_(Xdp),
-          pmech(pmech_),
-          ep(ep_)
+          pmech_(pmech),
+          ep_(ep)
       {
         size_ = 5;
         set_derived_params();
@@ -68,10 +70,10 @@ namespace GridKit
       void set_derived_params()
       {
         g  = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-        b   = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+        b   = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       }
 
-      ~GEN2()
+      ~ClassicalGen()
       {
       }
 
@@ -112,18 +114,18 @@ namespace GridKit
 
         /* 6 GENROU differential equations */
         f_[0] = delta_dot - omega * (2 * M_PI * 60);
-        f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
+        f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech_ - D_ * omega) / (1 + omega) - telec);
         
         /* 11 GENROU algebraic equations */
-        f_[2] = telec - (1.0/(1.0 + omega))*(g*ep*ep - ep*(cos(delta)*(g*Vr() - b*Vi()) + sin(delta)*(b*Vr() + g*Vi())));
+        f_[2] = telec - (1.0/(1.0 + omega))*(g*ep_*ep_ - ep_*(cos(delta)*(g*Vr() - b*Vi()) + sin(delta)*(b*Vr() + g*Vi())));
 
-        f_[3] = ir + g*Vr() - b * Vi()  - ep*(g*cos(delta) -b*sin(delta));
-        f_[4] = ii + b*Vr() +  g * Vi() - ep*(b*cos(delta) + g*sin(delta));
+        f_[3] = ir + g*Vr() - b * Vi()  - ep_*(g*cos(delta) -b*sin(delta));
+        f_[4] = ii + b*Vr() +  g * Vi() - ep_*(b*cos(delta) + g*sin(delta));
 
     
         /* Current balance */
-        Ir() += - (g*Vr() - b * Vi()  - ep*(g*cos(delta) -b*sin(delta)));
-        Ii() += - (b*Vr() +  g * Vi() - ep*(b*cos(delta) + g*sin(delta)));
+        Ir() += - (g*Vr() - b * Vi()  - ep_*(g*cos(delta) -b*sin(delta)));
+        Ii() += - (b*Vr() +  g * Vi() - ep_*(b*cos(delta) + g*sin(delta)));
 
         // printf("GENROU residual\n");
         // for (int i = 0 ; i < 21; ++i) printf("%d: %g\n", i, f_[i]);
@@ -192,7 +194,7 @@ namespace GridKit
       const int busID_;
       int       unit_id_;
 
-      /* Input parameters */
+      /* Input parameters */ 
       double H_;
       double D_;
       double Ra_;
@@ -203,8 +205,8 @@ namespace GridKit
       double b;
 
       /* Setpoints for control variables (determined at initialization) */
-      double pmech;
-      double ep;
+      double pmech_;
+      double ep_;
     };
 
   } // namespace PhasorDynamics
