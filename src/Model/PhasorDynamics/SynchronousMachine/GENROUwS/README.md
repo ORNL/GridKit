@@ -7,6 +7,13 @@
   Figure 2: GENROU. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
+## Simplifications
+The GENSAL model is a variation of the [General Synchronous Machine Model](../README.md)
+- $`X''_{q}=X''_{d}`$
+- $`X''_{d}`$ does not saturate
+- Same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
+
+
 ## Equations
 ### Nomenclature
 

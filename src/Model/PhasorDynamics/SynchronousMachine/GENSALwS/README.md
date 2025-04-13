@@ -1,6 +1,6 @@
 # GENSAL 
 
-
+## Block Diagram
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENSAL.JPG">
    
@@ -9,11 +9,11 @@
 </div>
 
 ## Simplifications
-
-- $X''_{q}=X''_{d}$
-- $X''_{d}$ does not saturate
-- only d-axis affected by saturation
-- $X_{q}=X'_{q}$
+The GENSAL model is a variation of the [General Synchronous Machine Model](../README.md)
+- $`X''_{q}=X''_{d}`$
+- $`X''_{d}`$ does not saturate
+- Only d-axis affected by saturation
+- $`X_{q}=X'_{q}`$
 - $T'_{q0}$ is neglected
 
 ## Equations
