@@ -133,8 +133,8 @@ and the algebraic Network Interface Equations (4)
 
 ## Simplifications
 
-- $X''_{q} = X''_{d}$
-- $X''_{d}$ does not saturate
+- $X^{''}_{q} = X^{''}_{d}$
+- $X^{''}_{d}$ does not saturate
 - The same relative amount of saturation occurs on both $d$ and $q$ axis
 
 
@@ -146,21 +146,35 @@ and the algebraic Network Interface Equations (4)
 Pressume there is no saturation to simplify solution procedure for initial conditions. The variables () have explicity expressions, and the remainder are solved algebraically, shown below.
 
 First, let the network-reference frame terminal variables be defined for notational purposes.
+
 ``` math
 \begin{aligned}
 \bar V &= V_r + jV_i && \text{Complex Terminal Voltage} \\
-
 \bar I &= I_r + jI_i && \text{Complex Terminal Current} \\
 \bar Z &= R_a + jX_q && \text{Machine Internal Impedance} \\
 \end{aligned}
 ```
 
-We have explicity solutions for $V_{dq},I_{dq},\psi^{''}_{dq},k_{sat}, T_{elec}$. The remaining are algebraicillay solved and are the steady-state initial conditions.
+Using the power-flow solution, we have explicity solutions for the following variables. 
 
 ``` math
 \begin{aligned}
 \omega &= 0 \\
 \delta &= \text{arg} (\bar V + \bar Z \bar I) \\
+  I_{dq}&=-jIe^{j\delta} \\
+  V_{dq}&=-jVe^{j\delta}+ZI \\
+  \psi^{''}_{dq} &= jV_{dq} \\
+  \psi^{''} &= |\psi^{''}_{dq}| \\
+  k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
+  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
+  P_{mech} &= T_{elec}
+\end{aligned}
+```
+
+The remaining are algebraicillay solved from the steady-state initial conditions.
+
+``` math
+\begin{aligned}
 \psi^{'}_d &= \dfrac{X^{'}_d-X_\ell}
   {1 + (X^{''}_d-X_\ell)}
   (\psi^{''}_d -(X^{''}_d-X_\ell)I_d ) \\
@@ -170,7 +184,6 @@ We have explicity solutions for $V_{dq},I_{dq},\psi^{''}_{dq},k_{sat}, T_{elec}$
 E^{'}_d &=\psi^{'}_q - (X^{'}_q-X_\ell)I_q \\
 E^{'}_q &=\psi^{'}_d + (X^{'}_d-X_\ell)I_d \\
 E_{fd} &= E'_{q}+(X_{d}-X'_{d})I_{d}+\psi^{''}_{d}k_{sat} \\
-P_{mech} &= T_{elec}(1+\omega) + D\omega
 \end{aligned}
 ```
 
