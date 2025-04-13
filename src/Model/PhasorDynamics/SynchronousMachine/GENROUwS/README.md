@@ -22,6 +22,18 @@
 & S_{10}, S_{12} \to S_{A}, S_{B} && \text{Saturation Parameters}
 \end{aligned}
 ```
+### Auxillary Parameters
+``` math
+\begin{aligned}
+X_{d1} &= X_d-X_d{'}      & X_{q1} &= X_q-X_q{'} \\
+X_{d2} &= X_d^{'}-X_\ell  & X_{q2} &= X_q^{'}-X_\ell\\
+X_{d3} &= (X_d^{'}-X_d^{''})/X_{d2}^2 & X_{q3} &= (X_q^{'}-X_q^{''})/X_{q2}^2 \\
+X_{d4} &= (X_d^{'}-X_d^{''})/X_{d2}   & X_{q4} &= (X_q^{'}-X_q^{''})/X_{q2} \\
+X_{d5} &= (X_d^{''}-X_\ell)/X_{d2}    & X_{q5} &= (X_q^{''}-X_\ell)/X_{q2}\\
+X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
+\end{aligned}
+```
+
 ### State Variables
 
 ``` math
@@ -52,63 +64,44 @@
 
 ## Equations
 
-
-
 ### Differential Equations
 
 ``` math
 \begin{aligned}
   \dot\delta&=\omega\cdot\omega_0 \\
-  \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right) \\
-
-
-  \dot{\psi}^{'}_{d} &= \dfrac{1}{T''_{d0}}
-  \left(
-    E'_{q}-\psi'_{d}-(X'_{d}-X_{l})I_{d}
-  \right)\\
-
-  \dot{\psi}^{'}_{q} &= \dfrac{1}{T''_{q0}}
-  \left(
-    E'_{d}-\psi'_{q}+(X'_{q}-X_{l})I_{q}
-  \right)
-  \\
+  \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
+  \dot{\psi}^{'}_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
+  \dot{\psi}^{'}_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
 
 
   \dot{E}^{'}_{d} &= \dfrac{1}{T'_{q0}}
-  \left(  -E'_{d}+(X_{q}-X'_{q})
-    \left(
-      I_{q}-\dfrac{X'_{q}-X''_{q}}{(X'_{q}-X_{l})^2}(E'_{d}-\psi'_{q}+(X'_{q}-X_{l})I_{q})
-    \right)
-    + 
-    \left( 
-      \dfrac{X_{q}-X_{l}}{X_{d}-X_{l}} 
-    \right)
-  \psi''_{q}k_{sat}
+  \left(  -E'_{d}+X_{q1}
+    (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
+    + X_{qd}\psi''_{q}k_{sat}
   \right) \\
 
   \dot{E}^{'}_{q} &= \dfrac{1}{T'_{d0}}
   \left(
-    E_{fd}-E'_{q}-(X_{d}-X'_{d})
-    \left(
-      I_{d}+\dfrac{X'_{d}-X''_{d}}{(X'_{d}-X_{l})^2}(E'_{q}-\psi'_{d}-(X'_{d}-X_{l})I_{d})
-    \right)
+    E_{fd}-E'_{q}-X_{d1}
+    (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
     -\psi''_{d}k_{sat}
   \right)\\
 \end{aligned}
 ```
 
 ### Algebraic Equations
+
 These algebraic equations define internal variables (7)
 ``` math
 \begin{aligned}
-  -\psi''_{q} &= E'_{d}\dfrac{X''_{q}-X_{l}}{X'_{q}-X_{l}}
-                +\psi'_{q}\dfrac{X'_{q}-X''_{q}}{X'_{q}-X_{l}} \\
-  \psi''_{d}  &= E'_{q}\dfrac{X''_{d}-X_{l}}{X'_{d}-X_{l}}
-                +\psi'_{d}\dfrac{X'_{d}-X''_{d}}{X'_{d}-X_{l}} \\
+  \psi''_{q} &= -E'_{d}X_{q5}
+                -\psi'_{q}X_{q4} \\
+  \psi''_{d}  &= +E'_{q}X_{d5}
+                +\psi'_{d}X_{d4}\\
   \psi^{''}   &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   V_{d}       &= -\psi''_{q}(1+\omega)\\
-  V_{q}       &= \psi''_{d}(1+\omega)\\
+  V_{q}       &= +\psi''_{d}(1+\omega)\\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d
 \end{aligned}
 ```
@@ -131,21 +124,11 @@ and the algebraic Network Interface Equations (4)
 \end{aligned}
 ```
 
-## Simplifications
-
-- $X^{''}_{q} = X^{''}_{d}$
-- $X^{''}_{d}$ does not saturate
-- The same relative amount of saturation occurs on both $d$ and $q$ axis
-
-
-
 ## Initialization
 
 ### Without Saturation
 
-Pressume there is no saturation to simplify solution procedure for initial conditions. The variables () have explicity expressions, and the remainder are solved algebraically, shown below.
-
-First, let the network-reference frame terminal variables be defined for notational purposes.
+Pressume there is no saturation to simplify solution procedure for initial conditions. Let the network-reference frame terminal variables be defined for notational purposes.
 
 ``` math
 \begin{aligned}
@@ -175,15 +158,11 @@ The remaining are algebraicillay solved from the steady-state initial conditions
 
 ``` math
 \begin{aligned}
-\psi^{'}_d &= \dfrac{X^{'}_d-X_\ell}
-  {1 + (X^{''}_d-X_\ell)}
-  (\psi^{''}_d -(X^{''}_d-X_\ell)I_d ) \\
-\psi^{'}_q &= \dfrac{X^{'}_q-X_\ell}
-  {1 + (X^{''}_q-X_\ell)}
-  (\psi^{''}_q -(X^{''}_q-X_\ell)I_q)\\
-E^{'}_d &=\psi^{'}_q - (X^{'}_q-X_\ell)I_q \\
-E^{'}_q &=\psi^{'}_d + (X^{'}_d-X_\ell)I_d \\
-E_{fd} &= E'_{q}+(X_{d}-X'_{d})I_{d}+\psi^{''}_{d}k_{sat} \\
+\psi^{'}_d &=\dfrac{\psi^{''}_d/X_{d5}-X_{d2}I_d}{1+1/X_{d5}}\\
+\psi^{'}_q &=\dfrac{X_{q2}I_q-\psi^{''}_q/X_{q5}}{1+1/X_{q5}}\\
+E^{'}_d &=\psi^{'}_q - X_{q2}I_q \\
+E^{'}_q &=\psi^{'}_d + X_{d2}I_d \\
+E_{fd} &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
 \end{aligned}
 ```
 
@@ -202,28 +181,5 @@ of $\psi''$, which is independent of $\delta$.
     \dfrac{(V_{iterm}+R_{a}I_{i})k_{sat}+(k_{sat}X''_{d}+X_{q}-X''_{q})I_{r}}
           {(V_{rterm}+R_{a}I_{r})k_{sat}-(k_{sat}X''_{d}+X_{q}-X''_{q})I_{i}}
   \right]
-\end{aligned}
-```
-
-then
-
-``` math
-\begin{aligned}
-    Sat(\psi'')=Sat(\vert V_{r}+jV_{i} \vert) 
-\end{aligned}
-```
-
-where $k_{sat}$ is defined to be
-
-$$
-k_{sat}:=1+\left(\dfrac{X_{q}-X_{l}}{X_{d}-X_{l}}\right)Sat(\psi'')
-$$
-
-The following must be true (if not enforce the corrections):
-
-``` math
-\begin{aligned}
-  X_{l}<=X''_{q}<=X'_{q}<=X_q \\
-  X_{l}<=X''_{d}<=X'_{d}<=X_d
 \end{aligned}
 ```
