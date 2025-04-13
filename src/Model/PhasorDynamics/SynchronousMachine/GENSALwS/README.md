@@ -1,5 +1,8 @@
 # GENSAL 
 
+> [!NOTE]  
+> This has not yet been implemented
+
 ## Block Diagram
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENSAL.JPG">
