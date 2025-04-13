@@ -67,7 +67,7 @@ Two main types:
 
 ### Differential Equations
 
-$$
+``` math
 \begin{aligned}
   \dot\delta&=\omega\cdot\omega_0 \\
   \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
@@ -88,12 +88,12 @@ $$
     -\psi''_{d}k_{sat}
   \right)\\
 \end{aligned}
-$$
+```
 
 ### Algebraic Equations
 
 These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
-$$
+``` math
 \begin{aligned}
   \psi''_{q} &= -E'_{d}X_{q5}
                 -\psi'_{q}X_{q4} \\
@@ -108,18 +108,18 @@ $$
   V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^{''}_q\\
   V_q &= V_r \cos\delta + V_i\sin\delta + I_d X^{''}_q + I_q R_a\\
 \end{aligned}
-$$
+```
 
 #### Saturation
 
 Saturation means increasingly large amounts of current are needed to increase the flux density. There are various methods to include the saturation (it is not standardized yet). We are going to use the approach implemented in PTI PSS/E and PowerWorld Simulator (scaled quadratic). 
 
-$$
+``` math
 \begin{aligned}
 k_{sat}= \begin{cases}
    S_B(\psi^{''}-S_A)^2 &\text{if } \psi^{''}>S_A \\
    0 &\text{if } \psi^{''}\leq S_A
 \end{cases}
 \end{aligned}
-$$
+```
 
