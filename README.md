@@ -1,9 +1,11 @@
 # GridKit™
 
-This is experimental code for prototyping interfaces for dynamic 
-simulations, sensitivity analysis and optimization. Target applications 
-are power grids, but the methodology and the framework could be used 
-in other areas without major modifications. 
+The objective of GridKit™ is to provide a modeling framework for power
+systems simulations and analysis that can support multiple advanced
+analysys methods, such as dynamic constrained optimization and partitioned
+numerical integrators for systems of differential and algebraic equations.
+While target applications are power grids, but the methodology and the
+framework could be used in other areas without major modifications. 
 
 ## Installation Guide
 
@@ -48,5 +50,8 @@ as functionality test and executed by running `ctest` in the build directory.
 
 ## Contributors
 
-GridKit™ is written by Slaven Peles (peless@ornl.gov) and has received contributions
-from Tamara Becejac (Avangrid), R. Cameron Rutherford (PNNL), Asher J. Mancinelli (NVIDIA), and Reid Gomillion (Virginia Tech).
+GridKit™ is written by Slaven Peles (peless@ornl.gov) and has received
+contribution from Abdourahman Barry (Virginia Tech), Tamara Becejac (Avangrid),
+Adam Birchfield (Texas A&M), Reid Gomillion (Virginia Tech), Nicholson
+Koukpaizan (ORNL), Asher J. Mancinelli (NVIDIA), Alex Novotny (Virginia Tech),
+Shaked Regev (ORNL), and R. Cameron Rutherford (PNNL).
