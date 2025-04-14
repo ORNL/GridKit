@@ -54,4 +54,4 @@ GridKit™ is written by Slaven Peles (peless@ornl.gov) and has received
 contribution from Abdourahman Barry (Virginia Tech), Tamara Becejac (Avangrid),
 Adam Birchfield (Texas A&M), Reid Gomillion (Virginia Tech), Nicholson
 Koukpaizan (ORNL), Asher J. Mancinelli (NVIDIA), Alex Novotny (Virginia Tech),
-and R. Cameron Rutherford (PNNL).
+Shaked Regev (ORNL), and R. Cameron Rutherford (PNNL).
