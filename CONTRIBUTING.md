@@ -1,5 +1,64 @@
 # Developer Guidelines
 
+## Git workflows
+
+### Keeping your local repository updated
+
+Main development branch is `develop`. The `main` branch is used for stable,
+ready-to-release code. Use `git pull` to keep `develop` branch in your local
+repo updated. If you get conflicts when pulling from upstream reset your
+local `develop` to the upstream:
+```
+git fetch
+git checkout develop
+git reset --hard origin/develop
+```
+Here `origin` is the name of the remote upstream repository in your local
+repository. If you set custom name for your remote, replace `origin` with
+that name.
+
+
+### Feature branches
+
+For each new feature feature create a new branch from `develop`. Name your
+feature branch `<developer name>/<short_feature_description>_dev. Bug fix
+branches should follow similar pattern, only ending with `_fix`. Always
+use underscores to separate different words.
+```
+git checkout -b shaked/sparse_matrix_transpose_dev
+```
+In some instances you also might want to branch off a feature branch, for
+example to fix a bug or suggest significant changes.
+
+
+### Merging your feature branch
+
+Feature branches should be merged back to the branch from where they were
+branched off (typically `develop`). All merging should be done through
+GutHub pull request. Before creating a pull request make sure:
+- All tests pass.
+- Code compiles cleanly with flags `-Wall -Wpedantic -Wconversion -Wextra`.
+- The new code follows GridKit™ style guidelines.
+- There are unit tests for the new code.
+- The new code is documented.
+- The feature branch is rebased with respect to the target branch.
+
+To rebase your feature branch, first ensure the target branch is up-to-date.
+Then use
+```
+git checkout <feature branch>
+git rebase -i <target branch>
+```
+to rebase your branch to the target branch. Follow the instructions on the
+screen. You may need to resolve rebase conflicts.
+
+Once your branch is ready, create pull request using the template provided
+in the GridKit™ repository. There has to be at least one approval before
+the pull request can be merged.
+
+
+
+
 ## Code Style
 
 ### Existing non-compliant code

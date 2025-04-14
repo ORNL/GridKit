@@ -1,5 +1,14 @@
 # Release Changelog
 
+## v0.1
+
+- Refactored code to support adding different model families.
+- Added PowerElectronics family of models.
+- Prototype for sparse system matrix assembly (for PowerElectronics only).
+- Added PhasorDynamics family of models.
+- Unit testing framework.
+- GridKit now depends on Sundials >= 7.0.
+
 ## v0.0.7
 
 - Added parser for Matpower files.
