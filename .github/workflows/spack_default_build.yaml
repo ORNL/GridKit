@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.8
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.11
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -86,6 +86,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   gridkit_spack_builds:
+    name: Build gridkit with Spack
     needs: base_image_build
     runs-on: ubuntu-24.04
     permissions:
@@ -95,12 +96,19 @@ jobs:
 
     strategy:
       matrix:
+        llvm: ["16"]
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - gridkit@develop +enzyme
 
-    name: Build gridkit with Spack
     steps:
+      - name: Add LLVM
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+            sudo apt-get install -y libmpfr-dev
+            sudo apt-add-repository "deb http://apt.llvm.org/`lsb_release -c | cut -f2`/ llvm-toolchain-`lsb_release -c | cut -f2`-${{ matrix.llvm }} main" || true
+            sudo apt-get install -y cmake gcc g++ llvm-${{ matrix.llvm }}-dev libomp-${{ matrix.llvm }}-dev lld-${{ matrix.llvm }} clang-${{ matrix.llvm }} libclang-${{ matrix.llvm }}-dev libeigen3-dev libboost-dev libzstd-dev
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -129,8 +137,8 @@ jobs:
             packages:
               llvm:
                 externals:
-                - spec: llvm@16
-                  prefix: /usr/lib/llvm-16
+                - spec: llvm@${{ matrix.llvm }}
+                  prefix: /usr/lib/llvm-${{ matrix.llvm }}
           EOF
 
       - name: Configure GHCR mirror
