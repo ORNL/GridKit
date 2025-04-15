@@ -1,7 +1,7 @@
 name: "\U0001F4A5 Tests error"
 description: "Some GridKit™ tests are failing"
 title: "Testing issue: "
-labels: [test-error]
+labels: [testing]
 body:
   - type: textarea
     id: reproduce

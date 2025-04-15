@@ -1,7 +1,7 @@
 name: "\U0001F4A5 Build error"
 description: "Unable to build GridKit™"
 title: "Build issue: "
-labels: [build-error]
+labels: [cmake]
 body:
   - type: textarea
     id: reproduce
