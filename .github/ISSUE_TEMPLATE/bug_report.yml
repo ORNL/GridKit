@@ -1,0 +1,41 @@
+name: "\U0001FAB2 Bug report"
+description: "Bug in GridKit™ code"
+title: "Build issue: "
+labels: [bug]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Description how to reproduce the bug"
+      description: "Fill in the console output when you try to build."
+      value: |
+        ```console
+        $ ./resolve_app
+        ...
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: information
+    attributes:
+      label: "System and environment details"
+      description: |
+        Please include details about your system, such as:
+        - Operating system  
+        - Compilers  
+        - Hardware backends (CUDA, HIP)  
+        - Dependencies and package versions  
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        If you have additional debugging information, such as backtrace, you can add them below.
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: "Additional information"
+      description: "Upload test logs or provide any additional context about the issue."
