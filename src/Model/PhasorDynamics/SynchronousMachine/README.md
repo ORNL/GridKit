@@ -37,8 +37,8 @@ There are two main variations
 ### State Variables
 - $\delta$    Machine Internal Angle
 - $\omega$  Machine Relative Speed
-- $\psi^'_d$, $\psi^'_q$, $E^'_d$, $E^'_q$  Machine Internal Flux Values
-- $\psi^''_q$, $\psi^''_d$, $\psi^''$    Machine Total Subtransient Flux
+- $\psi'_d$, $\psi'_q$, $E'_d$, $E'_q$  Machine Internal Flux Values
+- $\psi''_q$, $\psi''_d$, $\psi''$    Machine Total Subtransient Flux
 ### Parameters
 - $\omega_{0}$ - Nominal Frequnecy ($2\pi 60$)
 - $H$ - Intertia constant, sec (3)
@@ -64,9 +64,9 @@ Transformed parameters used during implementation and for readability.
 \begin{aligned}
  S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
  X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
- X_{d2} &= X_d^'-X_\ell  & X_{q2} &= X_q^'-X_\ell\\
- X_{d3} &= (X_d^'-X_d^'')/X_{d2}^2 & X_{q3} &= (X_q^'-X_q^'')/X_{q2}^2 \\
-X_{d5} &= (X_d^''-X_\ell)/X_{d2}    & X_{q5} &= (X_q^''-X_\ell)/X_{q2}\\
+ X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
+ X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
  X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
  \end{aligned}
 ```
@@ -80,17 +80,17 @@ X_{d5} &= (X_d^''-X_\ell)/X_{d2}    & X_{q5} &= (X_q^''-X_\ell)/X_{q2}\\
 \begin{aligned}
   \dot\delta&=\omega\cdot\omega_0 \\
   \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
-  \dot{\psi}^'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
-  \dot{\psi}^'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
+  \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
+  \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
 
 
-  \dot{E}^'_{d} &= \dfrac{1}{T'_{q0}}
+  \dot{E}'_{d} &= \dfrac{1}{T'_{q0}}
   \left(  -E'_{d}+X_{q1}
     (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
     + X_{qd}\psi''_{q}k_{sat}
   \right) \\
 
-  \dot{E}^'_{q} &= \dfrac{1}{T'_{d0}}
+  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
   \left(
     E_{fd}-E'_{q}-X_{d1}
     (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
@@ -108,14 +108,14 @@ These algebraic equations define internal variables (7) and the algebraic Networ
                 -\psi'_{q}X_{q4} \\
   \psi''_{d}  &= +E'_{q}X_{d5}
                 +\psi'_{d}X_{d4}\\
-  \psi^''   &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
+  \psi''   &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   V_{d}       &= -\psi''_{q}(1+\omega)\\
   V_{q}       &= +\psi''_{d}(1+\omega)\\
-  T_{elec}    &= (\psi''_{d} - I_dX_d^'')I_q-(\psi''_{q} - I_qX_d^'')I_d \\
+  T_{elec}    &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   I_d &= I_r \sin\delta - I_i\cos\delta \\
   I_q &= I_r \cos\delta + I_i\sin\delta \\
-  V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X^''_q\\
-  V_q &= V_r \cos\delta + V_i\sin\delta + I_d X^''_q + I_q R_a\\
+  V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X''_q\\
+  V_q &= V_r \cos\delta + V_i\sin\delta + I_d X''_q + I_q R_a\\
 \end{aligned}
 ```
 
@@ -126,8 +126,8 @@ Saturation means increasingly large amounts of current are needed to increase th
 ``` math
 \begin{aligned}
 k_{sat}= \begin{cases}
-   S_B(\psi^''-S_A)^2 &\text{if } \psi^''>S_A \\
-   0 &\text{if } \psi^''\leq S_A
+   S_B(\psi''-S_A)^2 &\text{if } \psi''>S_A \\
+   0 &\text{if } \psi''\leq S_A
 \end{cases}
 \end{aligned}
 ```
