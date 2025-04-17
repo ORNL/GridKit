@@ -91,6 +91,11 @@ namespace GridKit
         Sparse::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
         Sparse::Variable Vr2{30.0}; ///< Bus-2 real voltage
         Sparse::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
+          
+        Vr1.setVariableNumber(0);
+        Vi1.setVariableNumber(1);
+        Vr2.setVariableNumber(2);
+        Vi1.setVariableNumber(3);
 
         const Sparse::Variable Ir1{17.0};  ///< Solution: real current entering bus-1
         const Sparse::Variable Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
