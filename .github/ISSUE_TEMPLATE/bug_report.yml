@@ -11,8 +11,15 @@ body:
       value: |
         ```console
         $ ./resolve_app
-        ...
+        (...)
         ```
+        If the error output is long, write it in a block that can be closed:
+        <detail>
+        ```
+        $ ./resolve_app
+        (...)
+        ```
+        </detail>
     validations:
       required: true
 
