@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <Model/Evaluator.hpp>
+#include <LinearAlgebra/SparsityPattern/Variable.hpp>
 
 namespace GridKit
 {

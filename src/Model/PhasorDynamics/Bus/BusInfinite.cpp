@@ -195,6 +195,7 @@ namespace GridKit
     // Available template instantiations
     template class BusInfinite<double, long int>;
     template class BusInfinite<double, size_t>;
+    template class BusInfinite<Sparse::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

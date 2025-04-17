@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <ScalarTraits.hpp>
 
 namespace GridKit
 {
@@ -324,6 +325,19 @@ namespace GridKit
     inline std::istream& operator>>(std::istream& is, Variable& v);
 
   } // namespace Sparse
+} // namespace GridKit
+
+namespace GridKit
+{
+  template <>
+  class ScalarTraits<Sparse::Variable>
+  {
+  public:
+    typedef double real_type;
+    typedef double norm_type;
+    typedef double scalar_type;
+  };
+
 } // namespace GridKit
 
 #include "VariableImplementation.hpp"

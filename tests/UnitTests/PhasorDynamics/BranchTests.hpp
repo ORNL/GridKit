@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <LinearAlgebra/SparsityPattern/Variable.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -73,6 +74,42 @@ namespace GridKit
         success *= isEqual(bus1.Ii(), Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        real_type R{2.0}; ///< Branch series resistance
+        real_type X{4.0}; ///< Branch series reactance
+        real_type G{0.2}; ///< Branch shunt conductance
+        real_type B{1.2}; ///< Branch shunt charging
+
+        Sparse::Variable Vr1{10.0}; ///< Bus-1 real voltage
+        Sparse::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
+        Sparse::Variable Vr2{30.0}; ///< Bus-2 real voltage
+        Sparse::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
+
+        const Sparse::Variable Ir1{17.0};  ///< Solution: real current entering bus-1
+        const Sparse::Variable Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
+        const Sparse::Variable Ir2{15.0};  ///< Solution: real current entering bus-2
+        const Sparse::Variable Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+
+        PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus1(Vr1, Vi1);
+        PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus2(Vr2, Vi2);
+
+        PhasorDynamics::Branch<Sparse::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        branch.evaluateResidual();
+
+        {
+          Sparse::Variable res = bus1.Ir();
+          const Sparse::Variable::DependencyMap& dependencies =
+              res.getDependencies();
+
+          std::cout << "Dependency size: " << dependencies.size() << "\n";
+        }
 
         return success.report(__func__);
       }
