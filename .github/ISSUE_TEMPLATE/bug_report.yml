@@ -1,0 +1,58 @@
+name: "\U0001FAB2 Bug report"
+description: "Bug in GridKit™ code"
+title: "Bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Description how to reproduce the bug"
+      description: "Please provide launch command and the output when you encounter bug."
+      value: |
+        <!-- Include short error output as needed, see example below. -->        
+        ```
+        $ ./gridkit_app
+        ( your output ...)
+        ```
+        <!-- If the error output is long, attach a file or include it in
+             a block that can be closed, see below. -->
+        <details>
+        
+        ```
+        $ ./gridkit_app
+        ( your output ...)
+        ```
+
+        </details>
+    validations:
+      required: true
+
+  - type: input
+    id: gridkit-version
+    attributes:
+      label: "GridKit™ version"
+      description: |
+        Please include the version of GridKit™ which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
+    validations:
+      required: true
+
+  - type: textarea
+    id: sys-info
+    attributes:
+      label: "System and environment details"
+      description: |
+        Please include details about your system, such as:
+        - Dependencies and their versions  
+        - Operating system  
+        - Compiler(s)  
+        - Hardware backends (CUDA, HIP)  
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: "Additional information"
+      description: "Upload additional debugging information, such as backtrace."
