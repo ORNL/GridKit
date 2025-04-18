@@ -20,6 +20,7 @@ body:
         $ ./gridkit_app
         (...)
         ```
+        
         </details>
     validations:
       required: true
