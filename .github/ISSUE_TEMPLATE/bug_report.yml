@@ -9,35 +9,47 @@ body:
       label: "Description how to reproduce the bug"
       description: "Please provide launch command and the output when you encounter bug."
       value: |
-        ```console
-        $ ./gridkit_app
-        (...)
+        <!-- Include short error output as needed, see example below. -->        
         ```
-        If the error output is long, attach a file or write it in a block that can be closed:
+        $ ./gridkit_app
+        ( your output ...)
+        ```
+        <!-- If the error output is long, attach a file or include it in
+             a block that can be closed, see below. -->
         <details>
         
         ```
         $ ./gridkit_app
-        (...)
+        ( your output ...)
         ```
 
         </details>
     validations:
       required: true
 
+  - type: input
+    id: gridkit-version
+    attributes:
+      label: "GridKit™ version"
+      description: |
+        Please include the version of GridKit™ which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
+    validations:
+      required: true
+
   - type: textarea
-    id: information
+    id: sys-info
     attributes:
       label: "System and environment details"
       description: |
         Please include details about your system, such as:
-        - GridKit version
         - Dependencies and their versions  
         - Operating system  
-        - Compilers  
+        - Compiler(s)  
         - Hardware backends (CUDA, HIP)  
     validations:
       required: true
+
 
   - type: textarea
     id: additional_information

@@ -11,10 +11,21 @@ body:
         Fill in the failing test output, errors,  
         or steps to reproduce the failure(s).
       value: |
+        <!-- Include output of `ctest -VV --rerun-failed`. -->        
         ```console
         $ ctest -VV --rerun-failed
-        ...
+        ( failed tests output ...)
         ```
+    validations:
+      required: true
+
+  - type: input
+    id: gridkit-version
+    attributes:
+      label: "GridKit™ version"
+      description: |
+        Please include the version of GridKit™ which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
     validations:
       required: true
 
@@ -24,13 +35,13 @@ body:
       label: "System and environment details"
       description: |
         Please include details about your system, such as:
-        - GridKit version
         - Dependencies and their versions  
         - Operating system  
-        - Compilers  
+        - Compiler(s)  
         - Hardware backends (CUDA, HIP)  
     validations:
       required: true
+
 
   - type: textarea
     id: additional_information
