@@ -22,10 +22,11 @@ body:
       label: "System and environment details"
       description: |
         Please include details about your system, such as:
+        - GridKit version
+        - Dependencies and their versions  
         - Operating system  
         - Compilers  
         - Hardware backends (CUDA, HIP)  
-        - Dependencies and package versions  
     validations:
       required: true
 
