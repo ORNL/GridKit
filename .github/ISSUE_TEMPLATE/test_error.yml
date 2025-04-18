@@ -1,5 +1,5 @@
 name: "\U0001F4A5 Tests error"
-description: "Some GridKit™ tests are failing"
+description: "Some ReSolve tests are failing"
 title: "Testing issue: "
 labels: [testing]
 body:
@@ -12,7 +12,7 @@ body:
         or steps to reproduce the failure(s).
       value: |
         ```console
-        $ make test
+        $ ctest -VV --rerun-failed
         ...
         ```
     validations:
@@ -30,11 +30,6 @@ body:
         - Dependencies and package versions  
     validations:
       required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        If you have relevant configuration details (e.g., custom `packages.yaml` or `modules.yaml`), you can add them below.
 
   - type: textarea
     id: additional_information

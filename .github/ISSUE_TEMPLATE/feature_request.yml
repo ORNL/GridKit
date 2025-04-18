@@ -1,6 +1,6 @@
 name: "\U0001F38A Feature request"
-description: Suggest adding a feature that is not yet in GridKit™
-labels: [enhancement]
+description: Suggest adding a feature that is not yet in ReSolve
+labels: [feature]
 body:
   - type: textarea
     id: summary

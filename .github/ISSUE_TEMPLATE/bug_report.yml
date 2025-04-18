@@ -1,25 +1,26 @@
 name: "\U0001FAB2 Bug report"
 description: "Bug in GridKit™ code"
-title: "Build issue: "
+title: "Bug: "
 labels: [bug]
 body:
   - type: textarea
     id: reproduce
     attributes:
       label: "Description how to reproduce the bug"
-      description: "Fill in the console output when you try to build."
+      description: "Please provide launch command and the output when you encounter bug."
       value: |
         ```console
-        $ ./resolve_app
+        $ ./gridkit_app
         (...)
         ```
-        If the error output is long, write it in a block that can be closed:
-        <detail>
+        If the error output is long, attach a file or write it in a block that can be closed:
+        <details>
+        
         ```
-        $ ./resolve_app
+        $ ./gridkit_app
         (...)
         ```
-        </detail>
+        </details>
     validations:
       required: true
 
@@ -36,13 +37,8 @@ body:
     validations:
       required: true
 
-  - type: markdown
-    attributes:
-      value: |
-        If you have additional debugging information, such as backtrace, you can add them below.
-
   - type: textarea
     id: additional_information
     attributes:
       label: "Additional information"
-      description: "Upload test logs or provide any additional context about the issue."
+      description: "Upload additional debugging information, such as backtrace."
