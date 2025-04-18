@@ -1,5 +1,5 @@
 name: "\U0001F4A5 Tests error"
-description: "Some ReSolve tests are failing"
+description: "Some GridKit™ tests are failing"
 title: "Testing issue: "
 labels: [testing]
 body:
