@@ -1,0 +1,47 @@
+name: "\U0001F4A5 Build error"
+description: "Unable to build GridKit™"
+title: "Build issue: "
+labels: [cmake]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Build error message(s)"
+      description: "Instructions how to reproduce build failure and the error output."
+      value: |
+        <!-- Include build output (from cmake, make or ninja commands). -->        
+        ```console
+        $ make
+        ( some output ...)
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: gridkit-version
+    attributes:
+      label: "GridKit™ version"
+      description: |
+        Please include the version of GridKit™ which demonstrates the problem.
+        If building from source on a non-tagged version, please include the commit hash.
+    validations:
+      required: true
+
+  - type: textarea
+    id: information
+    attributes:
+      label: "System and environment details"
+      description: |
+        Please include details about your system, such as:
+        - Dependencies and their versions  
+        - Operating system  
+        - Compiler(s)  
+        - Hardware backends (CUDA, HIP)  
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: "Additional information"
+      description: "Upload build logs or provide any additional context about the issue."
