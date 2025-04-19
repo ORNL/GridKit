@@ -45,10 +45,9 @@ namespace GridKit
       TestOutcome residual()
       {
         TestStatus success = true;
-        
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, 1, 0.05013, 3, 0,
-          0, 7, 0.04, 0.05, 0.75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, 1, 0.05013, 3, 0, 0, 7, 0.04, 0.05, 0.75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0);
 
         bus.allocate();
         bus.initialize();
@@ -57,11 +56,12 @@ namespace GridKit
         gen.allocate();
         gen.initialize();
         gen.evaluateResidual();
-        
+
         const std::vector<ScalarT>& f = gen.getResidual();
-        for(int i = 0; i < 21; ++i) 
+        for (int i = 0; i < 21; ++i)
         {
-          if (fabs(f[i]) > 1e-10) success = false;
+          if (fabs(f[i]) > 1e-10)
+            success = false;
         }
 
         return success.report(__func__);
