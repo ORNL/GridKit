@@ -81,7 +81,7 @@ namespace GridKit
       TestOutcome jacobian()
       {
         TestStatus success = true;
-
+        
         real_type R{2.0}; ///< Branch series resistance
         real_type X{4.0}; ///< Branch series reactance
         real_type G{0.2}; ///< Branch shunt conductance
@@ -95,12 +95,7 @@ namespace GridKit
         Vr1.setVariableNumber(0);
         Vi1.setVariableNumber(1);
         Vr2.setVariableNumber(2);
-        Vi1.setVariableNumber(3);
-
-        const Sparse::Variable Ir1{17.0};  ///< Solution: real current entering bus-1
-        const Sparse::Variable Ii1{-10.0}; ///< Solution: imaginary current entering bus-1
-        const Sparse::Variable Ir2{15.0};  ///< Solution: real current entering bus-2
-        const Sparse::Variable Ii2{-20.0}; ///< Solution: imaginary current entering bus-2
+        Vi2.setVariableNumber(3);
 
         PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus1(Vr1, Vi1);
         PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus2(Vr2, Vi2);
@@ -114,6 +109,51 @@ namespace GridKit
               res.getDependencies();
 
           std::cout << "Dependency size: " << dependencies.size() << "\n";
+          success *= (dependencies.size() == 4);
+          for (const auto& [key, value] : dependencies)
+          {
+            std::cout << '[' << key << "] = " << value << "; ";
+          }
+          std::cout << std::endl;
+        }
+        {
+          Sparse::Variable res = bus1.Ii();
+          const Sparse::Variable::DependencyMap& dependencies =
+              res.getDependencies();
+
+          std::cout << "Dependency size: " << dependencies.size() << "\n";
+          success *= (dependencies.size() == 4);
+          for (const auto& [key, value] : dependencies)
+          {
+            std::cout << '[' << key << "] = " << value << "; ";
+          }
+          std::cout << std::endl;
+        }
+        {
+          Sparse::Variable res = bus2.Ir();
+          const Sparse::Variable::DependencyMap& dependencies =
+              res.getDependencies();
+
+          std::cout << "Dependency size: " << dependencies.size() << "\n";
+          success *= (dependencies.size() == 4);
+          for (const auto& [key, value] : dependencies)
+          {
+            std::cout << '[' << key << "] = " << value << "; ";
+          }
+          std::cout << std::endl;
+        }
+        {
+          Sparse::Variable res = bus2.Ii();
+          const Sparse::Variable::DependencyMap& dependencies =
+              res.getDependencies();
+
+          std::cout << "Dependency size: " << dependencies.size() << "\n";
+          success *= (dependencies.size() == 4);
+          for (const auto& [key, value] : dependencies)
+          {
+            std::cout << '[' << key << "] = " << value << "; ";
+          }
+          std::cout << std::endl;
         }
 
         return success.report(__func__);
