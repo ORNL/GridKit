@@ -145,4 +145,3 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   \right)
 \end{aligned}
 ```
-

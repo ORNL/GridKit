@@ -50,4 +50,3 @@ Saturation means increasingly large amounts of current are needed to increase th
   \end{cases}
 \end{aligned}
 ```
-
