@@ -156,7 +156,7 @@ Pressume there is no saturation to simplify solution procedure for initial condi
 
 Using the power-flow solution, we have explicity solutions for the following variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated from the network interface equations. The remaining are algebraicillay solved from the steady-state initial conditions.
 
-``` math
+$$
 \begin{aligned}
 \omega &= 0 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
@@ -166,13 +166,14 @@ Using the power-flow solution, we have explicity solutions for the following var
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
   P_{mech} &= T_{elec} \\
-\psi^{'}_d &=\dfrac{\psi^{''}_d/X_{d5}-X_{d2}I_d}{1+1/X_{d5}}\\
-\psi^{'}_q &=\dfrac{X_{q2}I_q-\psi^{''}_q/X_{q5}}{1+1/X_{q5}}\\
+\psi^{'}_d &=
+\dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
+\psi^{'}_q &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\
 E^{'}_d &=\psi^{'}_q - X_{q2}I_q \\
 E^{'}_q &=\psi^{'}_d + X_{d2}I_d \\
 E_{fd} &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
 \end{aligned}
-```
+$$
 
 ### With Saturation
 
