@@ -122,7 +122,7 @@ These algebraic equations define internal variables (7) and the algebraic Networ
 
   \begin{bmatrix}
     I_r \\ I_i
-  \end{bmatrix}\\
+  \end{bmatrix}
   &=
   
   \begin{bmatrix}
