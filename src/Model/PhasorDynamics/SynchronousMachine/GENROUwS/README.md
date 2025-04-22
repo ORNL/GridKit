@@ -14,8 +14,6 @@ The GENROU model is a variation of the [General Synchronous Machine Model](../RE
 - $`X''_{d}`$ does not saturate
 - Same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
 
-
-## Equations
 ## Nomenclature
 ### Algebraic Variables
 - $V_d$, $V_q$   Machine Internal Voltage on the machine d-q reference frame  
@@ -104,10 +102,47 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   V_{d}       &= -\psi''_{q}(1+\omega)\\
   V_{q}       &= +\psi''_{d}(1+\omega)\\
   T_{elec}    &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
-  I_d &= I_r \sin\delta - I_i\cos\delta \\
-  I_q &= I_r \cos\delta + I_i\sin\delta \\
-  V_d &= V_r \sin\delta - V_i\cos\delta + I_d R_a - I_q X''_q\\
-  V_q &= V_r \cos\delta + V_i\sin\delta + I_d X''_q + I_q R_a\\
+
+  \begin{bmatrix}
+  I_d \\
+  I_q
+  \end{bmatrix}&=
+    \begin{bmatrix}
+  \sin \delta & -\cos\delta \\
+  \cos\delta & \sin\delta
+  \end{bmatrix}
+    \begin{bmatrix}
+  I_r \\
+  I_i
+  \end{bmatrix}
+  \\
+
+  \begin{bmatrix}
+  I_r \\
+  I_i
+  \end{bmatrix}
+  &=
+  
+  \begin{bmatrix}
+  G & -B \\
+  B & G
+  \end{bmatrix}
+  \left(
+
+  \begin{bmatrix}
+  \sin \delta & \cos\delta \\
+  -\cos\delta & \sin\delta
+  \end{bmatrix}
+    \begin{bmatrix}
+  V_d \\
+  V_q
+  \end{bmatrix}
+  -  
+  \begin{bmatrix}
+  V_r \\
+  V_i
+  \end{bmatrix}
+  \right)
 \end{aligned}
 ```
 

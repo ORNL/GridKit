@@ -23,6 +23,9 @@ There are two main variations
 
 - Round Rotor (See [GENROU](GENROUwS/README.md))
 - Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
+- GENPWS
+- GENTPF
+- GENTPJ
 
 
 #### Saturation
