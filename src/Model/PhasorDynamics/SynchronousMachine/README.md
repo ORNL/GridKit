@@ -31,14 +31,14 @@ There are two main variations
 ### Per-Unit Basis
 
 In relevant models, the terminal impedences are on the generator impedance base. To convert to network base, the following must be performed.
-$$
+``` math
 \begin{aligned}
 R_a &\mapsto R_a\dfrac{S_{base,sys}}{S_{base,machine}}
 \\\
 X_q'' &\mapsto 
 X_q''\dfrac{S_{base,sys}}{S_{base,machine}}
 \end{aligned}
-$$
+```
 
 #### Saturation
 
