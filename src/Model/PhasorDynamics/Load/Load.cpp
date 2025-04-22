@@ -173,6 +173,8 @@ namespace GridKit
     // Available template instantiations
     template class Load<double, long int>;
     template class Load<double, size_t>;
+    template class Load<Sparse::Variable, long int>;
+    template class Load<Sparse::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

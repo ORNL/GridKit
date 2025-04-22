@@ -232,7 +232,6 @@ namespace GridKit
       for (const auto& pair_a : a)
       {
         auto it = b.find(pair_a.first);
-        std::cout << pair_a.second << ", " << it->second << std::endl;
         fail += !isEqual(pair_a.second, it->second);
       }
 
