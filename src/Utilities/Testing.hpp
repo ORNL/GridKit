@@ -220,6 +220,17 @@ namespace GridKit
       return fail == 0;
     }
 
+    /**
+     * @brief Equatlity comparison between maps with a tolerance for the scalar value
+     *
+     * @tparam IdxT
+     * @tparam RealT
+     *
+     * @param[in] std::map<IdxT, RealT> - first map
+     * @param[in] std::map<IdxT, RealT> - second map
+     * @param[in] RealT - tolerance 
+     * @return bool - true if the maps are equal; false otherwise
+     */
     template <typename IdxT = size_t, typename RealT = double>
     inline bool isEqual(std::map<IdxT, RealT> a,
                         std::map<IdxT, RealT> b,
