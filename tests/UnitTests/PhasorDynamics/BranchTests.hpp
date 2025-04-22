@@ -106,12 +106,13 @@ namespace GridKit
 
         std::vector<Sparse::Variable> residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
         std::vector<Sparse::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
+        
+        /// Compare dependencies computed automatically to the ones computed analytically
         for (size_t i = 0; i < residuals.size(); ++i)
         {
           Sparse::Variable res = residuals[i];
           const Sparse::Variable::DependencyMap& dependencies = res.getDependencies();
-          success *= (dependencies == ref[i]); ///< Compare dependencies computed automatically
-                                               ///< to the ones computed analytically
+          success *= (GridKit::Testing::isEqual(dependencies, ref[i])); 
         }
 
         return success.report(__func__);
