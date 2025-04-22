@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include <ScalarTraits.hpp>
 
 namespace GridKit

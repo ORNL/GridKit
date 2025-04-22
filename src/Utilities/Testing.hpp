@@ -223,7 +223,7 @@ namespace GridKit
     template <typename IdxT = size_t, typename RealT = double>
     inline bool isEqual(std::map<IdxT, RealT> a,
                         std::map<IdxT, RealT> b,
-                        const RealT tol = std::numeric_limits<RealT>::epsilon())
+                        const RealT           tol = std::numeric_limits<RealT>::epsilon())
     {
       int fail = 0;
 
@@ -231,8 +231,8 @@ namespace GridKit
 
       for (const auto& pair_a : a)
       {
-        auto it = b.find(pair_a.first);
-        fail += !isEqual(pair_a.second, it->second);
+        auto it  = b.find(pair_a.first);
+        fail    += !isEqual(pair_a.second, it->second);
       }
 
       return fail == 0;

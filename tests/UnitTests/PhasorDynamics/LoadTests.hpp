@@ -76,29 +76,30 @@ namespace GridKit
 
         Sparse::Variable Vr{10.0}; ///< Bus real voltage
         Sparse::Variable Vi{20.0}; ///< Bus imaginary voltage
-                                   
+
         Vr.setVariableNumber(0); ///< Independent variables: first
         Vi.setVariableNumber(1); ///< Independent variables: second
 
         PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus(Vr, Vi);
 
         PhasorDynamics::Load<Sparse::Variable, IdxT> load(&bus, R, X);
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking 
+        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
-        std::vector<Sparse::Variable> residuals{bus.Ir(), bus.Ii()};
+        std::vector<Sparse::Variable>                residuals{bus.Ir(), bus.Ii()};
         std::vector<Sparse::Variable::DependencyMap> ref = analyticalJacobian(R, X);
-        
+
         /// Compare dependencies computed automatically to the ones computed analytically
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          Sparse::Variable res = residuals[i];
-          const Sparse::Variable::DependencyMap& dependencies = res.getDependencies();
-          success *= (GridKit::Testing::isEqual(dependencies, ref[i])); 
+          Sparse::Variable                       res           = residuals[i];
+          const Sparse::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                             *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
       }
+
     private:
       std::vector<Sparse::Variable::DependencyMap> analyticalJacobian(const real_type R,
                                                                       const real_type X)
@@ -109,9 +110,9 @@ namespace GridKit
         real_type dIr_dVr = -g;
         real_type dIr_dVi = -b;
 
-        real_type dIi_dVr = b; 
+        real_type dIi_dVr = b;
         real_type dIi_dVi = -g;
-                              
+
         std::vector<Sparse::Variable::DependencyMap> dependencies(2);
         dependencies[0] = {{0, dIr_dVr}, {1, dIr_dVi}};
         dependencies[1] = {{0, dIi_dVr}, {1, dIi_dVi}};

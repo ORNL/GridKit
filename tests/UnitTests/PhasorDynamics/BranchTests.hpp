@@ -81,7 +81,7 @@ namespace GridKit
       TestOutcome jacobian()
       {
         TestStatus success = true;
-        
+
         real_type R{2.0}; ///< Branch series resistance
         real_type X{4.0}; ///< Branch series reactance
         real_type G{0.2}; ///< Branch shunt conductance
@@ -91,7 +91,7 @@ namespace GridKit
         Sparse::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
         Sparse::Variable Vr2{30.0}; ///< Bus-2 real voltage
         Sparse::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
-          
+
         Vr1.setVariableNumber(0); ///< Independent variables: first
         Vi1.setVariableNumber(1); ///< Independent variables: second
         Vr2.setVariableNumber(2); ///< Independent variables: third
@@ -101,18 +101,18 @@ namespace GridKit
         PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus2(Vr2, Vi2);
 
         PhasorDynamics::Branch<Sparse::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
-        branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking 
+        branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
-        std::vector<Sparse::Variable> residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        std::vector<Sparse::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
         std::vector<Sparse::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
-        
+
         /// Compare dependencies computed automatically to the ones computed analytically
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          Sparse::Variable res = residuals[i];
-          const Sparse::Variable::DependencyMap& dependencies = res.getDependencies();
-          success *= (GridKit::Testing::isEqual(dependencies, ref[i])); 
+          Sparse::Variable                       res           = residuals[i];
+          const Sparse::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                             *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
@@ -180,6 +180,7 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
     private:
       std::vector<Sparse::Variable::DependencyMap> analyticalJacobian(const real_type R,
                                                                       const real_type X,
@@ -188,23 +189,23 @@ namespace GridKit
       {
         const real_type b = -X / (R * R + X * X);
         const real_type g = R / (R * R + X * X);
-        
+
         real_type dIr1_dVr1 = -(g + 0.5 * G);
         real_type dIr1_dVi1 = (b + 0.5 * B);
         real_type dIr1_dVr2 = g;
         real_type dIr1_dVi2 = -b;
 
-        real_type dIi1_dVr1 = -(b + 0.5 * B); 
+        real_type dIi1_dVr1 = -(b + 0.5 * B);
         real_type dIi1_dVi1 = -(g + 0.5 * G);
         real_type dIi1_dVr2 = b;
         real_type dIi1_dVi2 = g;
-                              
-        real_type dIr2_dVr1 = g; 
+
+        real_type dIr2_dVr1 = g;
         real_type dIr2_dVi1 = -b;
         real_type dIr2_dVr2 = -(g + 0.5 * G);
         real_type dIr2_dVi2 = (b + 0.5 * B);
-                              
-        real_type dIi2_dVr1 = b; 
+
+        real_type dIi2_dVr1 = b;
         real_type dIi2_dVi1 = g;
         real_type dIi2_dVr2 = -(b + 0.5 * B);
         real_type dIi2_dVi2 = -(g + 0.5 * G);
