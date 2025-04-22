@@ -52,15 +52,16 @@ The GENROU model is a variation of the [General Synchronous Machine Model](../RE
 Transformed parameters used during implementation and for readability.
 ``` math
 \begin{aligned}
-G &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
-B &=\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
- S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
- X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
- X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
- X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
-X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
- X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
- \end{aligned}
+  G   &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
+  B   &=\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
+  S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
+  X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
+  X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
+  X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
+\end{aligned}
 ```
 
 ## Equations
@@ -74,14 +75,11 @@ X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
   \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
-
-
   \dot{E}'_{d} &= \dfrac{1}{T'_{q0}}
   \left(  -E'_{d}+X_{q1}
     (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
     + X_{qd}\psi''_{q}k_{sat}
   \right) \\
-
   \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
   \left(
     E_{fd}-E'_{q}-X_{d1}
@@ -113,36 +111,31 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   \sin \delta & -\cos\delta \\
   \cos\delta & \sin\delta
   \end{bmatrix}
-    \begin{bmatrix}
-  I_r \\
-  I_i
-  \end{bmatrix}
-  \\
+  \begin{bmatrix}
+    I_r \\ I_i
+  \end{bmatrix}\\
 
   \begin{bmatrix}
-  I_r \\
-  I_i
-  \end{bmatrix}
+    I_r \\ I_i
+  \end{bmatrix}\\
   &=
   
   \begin{bmatrix}
   G & -B \\
   B & G
   \end{bmatrix}
-  \left(
 
+  \left(
   \begin{bmatrix}
-  \sin \delta & \cos\delta \\
-  -\cos\delta & \sin\delta
+    \sin \delta & \cos\delta \\
+    -\cos\delta & \sin\delta
   \end{bmatrix}
-    \begin{bmatrix}
-  V_d \\
-  V_q
+  \begin{bmatrix}
+    V_d \\ V_q
   \end{bmatrix}
   -  
   \begin{bmatrix}
-  V_r \\
-  V_i
+    V_r \\V_i
   \end{bmatrix}
   \right)
 \end{aligned}
@@ -156,7 +149,7 @@ Pressume there is no saturation to simplify solution procedure for initial condi
 
 Using the power-flow solution, we have explicity solutions for the following variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated from the network interface equations. The remaining are algebraicillay solved from the steady-state initial conditions.
 
-$$
+``` math
 \begin{aligned}
 \omega &= 0 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
@@ -165,15 +158,15 @@ $$
   \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
-  P_{mech} &= T_{elec} \\
-\psi^{'}_d &=
-\dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
-\psi^{'}_q &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\
-E^{'}_d &=\psi^{'}_q - X_{q2}I_q \\
-E^{'}_q &=\psi^{'}_d + X_{d2}I_d \\
-E_{fd} &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
+  P_{mech}    &= T_{elec} \\
+  \psi^{'}_d  &=
+  \dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
+  \psi^{'}_q  &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\
+  E^{'}_d     &=\psi^{'}_q - X_{q2}I_q \\
+  E^{'}_q     &=\psi^{'}_d + X_{d2}I_d \\
+  E_{fd}      &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
 \end{aligned}
-$$
+```
 
 ### With Saturation
 

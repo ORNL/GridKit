@@ -57,15 +57,16 @@ The GENSAL model is a variation of the [General Synchronous Machine Model](../RE
 Transformed parameters used during implementation and for readability.
 ``` math
 \begin{aligned}
-G &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
-B &=\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
- S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
- X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
- X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
- X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
-X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
- X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
- \end{aligned}
+  G   &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
+  B   &=\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
+  S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
+  X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
+  X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
+  X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
+\end{aligned}
 ```
 
 ## Equations
@@ -79,14 +80,11 @@ X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
   \dot\omega&=\dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
-
-
   \dot{E}'_{d} &= \dfrac{1}{T'_{q0}}
   \left(  -E'_{d}+X_{q1}
     (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
     + X_{qd}\psi''_{q}k_{sat}
   \right) \\
-
   \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
   \left(
     E_{fd}-E'_{q}-X_{d1}
@@ -109,42 +107,42 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   V_{d}       &= -\psi''_{q}(1+\omega)\\
   V_{q}       &= +\psi''_{d}(1+\omega)\\
   T_{elec}    &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
+
   \begin{bmatrix}
   I_d \\
   I_q
   \end{bmatrix}&=
-  \begin{bmatrix}
+    \begin{bmatrix}
   \sin \delta & -\cos\delta \\
   \cos\delta & \sin\delta
   \end{bmatrix}
   \begin{bmatrix}
-  I_r \\ I_i
-  \end{bmatrix}
-  \\
+    I_r \\ I_i
+  \end{bmatrix}\\
+
   \begin{bmatrix}
-  I_r \\
-  I_i
-  \end{bmatrix}
+    I_r \\ I_i
+  \end{bmatrix}\\
   &=
+  
   \begin{bmatrix}
   G & -B \\
   B & G
   \end{bmatrix}
-  \left(
 
+  \left(
   \begin{bmatrix}
-  \sin \delta & \cos\delta \\
-  -\cos\delta & \sin\delta
+    \sin \delta & \cos\delta \\
+    -\cos\delta & \sin\delta
   \end{bmatrix}
-    \begin{bmatrix}
-  V_d \\
-  V_q
+  \begin{bmatrix}
+    V_d \\ V_q
   \end{bmatrix}
   -  
   \begin{bmatrix}
-  V_r \\
-  V_i
+    V_r \\V_i
   \end{bmatrix}
   \right)
 \end{aligned}
 ```
+

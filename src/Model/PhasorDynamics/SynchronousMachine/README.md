@@ -43,10 +43,11 @@ Saturation means increasingly large amounts of current are needed to increase th
 
 ``` math
 \begin{aligned}
-k_{sat}= \begin{cases}
-   S_B(\psi''-S_A)^2 &\text{if } \psi''>S_A \\
-   0 &\text{if } \psi''\leq S_A
-\end{cases}
+  k_{sat} = 
+  \begin{cases}
+    S_B(\psi''-S_A)^2 &\text{if } \psi''>S_A \\
+    0 &\text{if } \psi''\leq S_A
+  \end{cases}
 \end{aligned}
 ```
 
