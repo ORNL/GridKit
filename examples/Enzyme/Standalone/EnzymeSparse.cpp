@@ -25,7 +25,7 @@ extern T __enzyme_fwddiff(void*, Tys...) noexcept;
 template <typename T, typename... Tys>
 extern T __enzyme_todense(Tys...) noexcept;
 
-// Sparse storage for Enzyme
+/// Sparse storage for Enzyme
 template <typename T>
 struct Triple
 {
@@ -83,7 +83,7 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
   return (T) (idx == i);
 }
 
-// Vector-valued function to differentiate
+/// Vector-valued function to differentiate
 template <typename T>
 __attribute__((always_inline)) static void f(size_t N, T* input, T* output)
 {
@@ -93,7 +93,7 @@ __attribute__((always_inline)) static void f(size_t N, T* input, T* output)
   }
 }
 
-// Reference Jacobian
+/// Reference Jacobian
 template <typename T>
 void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
 {
@@ -115,7 +115,7 @@ void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
   jac.setValues(rtemp, ctemp, valtemp);
 }
 
-// Function that computes the Jacobian via automatic differentiation
+/// Function that computes the Jacobian via automatic differentiation
 template <typename T>
 __attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
 {
@@ -148,7 +148,7 @@ __attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
   jac.setValues(rtemp, ctemp, valtemp);
 }
 
-// Compare two sparse matrices
+/// Compare two sparse matrices
 void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
 {
   std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_1 = matrix_1.getEntries();
@@ -168,14 +168,14 @@ void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
 
 int main()
 {
-  // Vector and matrix declarations
+  /// Vector and matrix declarations
   size_t              N = 5;
   std::vector<double> x(N);
   std::vector<double> sq(N);
   SparseMatrix        dsq     = SparseMatrix(N, N);
   SparseMatrix        dsq_ref = SparseMatrix(N, N);
 
-  // Input initialization
+  /// Input initialization
   double val = 0.0;
   for (int i = 0; i < N; ++i)
   {
@@ -183,16 +183,16 @@ int main()
     val  += 1.0;
   }
 
-  // Function evaluation
+  /// Function evaluation
   f(x.size(), x.data(), sq.data());
 
-  // Reference Jacobian
+  /// Reference Jacobian
   jac_f_ref(x, sq, dsq_ref);
 
-  // Enzyme Jacobian
+  /// Enzyme Jacobian
   jac_f<double>(N, x.data(), dsq);
 
-  // Check
+  /// Check
   int fail = 0;
   check(dsq, dsq_ref, fail);
   bool verbose = true;
