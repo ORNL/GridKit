@@ -88,7 +88,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     true_vec = &answer_key_N4;
     break;
   case 8:
-    // true_vec = &answer_key_N8;
+    true_vec = &answer_key_N8;
     break;
   default:
     std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
