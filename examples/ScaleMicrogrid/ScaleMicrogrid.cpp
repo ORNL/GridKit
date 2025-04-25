@@ -73,9 +73,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   // Create circuit model
   auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                    abs_tol,
-                                                                    use_jac,
-                                                                    SCALE_MICROGRID_MAX_STEPS);
+                                                                     abs_tol,
+                                                                     use_jac,
+                                                                     SCALE_MICROGRID_MAX_STEPS);
 
   const std::vector<real_type>* true_vec = &answer_key_N8;
 
