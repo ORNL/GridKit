@@ -48,11 +48,15 @@ message(STATUS "Enzyme Clang plugin library: ${ENZYME_CLANG_PLUGIN_LIBRARY}")
 
 find_program(GRIDKIT_LLVM_LINK llvm-link
              PATHS ${Enzyme_LLVM_BINARY_DIR}
+             PATH_SUFFIXES
+             bin
              REQUIRED)
 message(STATUS "llvm-link: ${GRIDKIT_LLVM_LINK}")
 
 find_program(GRIDKIT_OPT opt
              PATHS ${Enzyme_LLVM_BINARY_DIR}
+             PATH_SUFFIXES
+             bin
              REQUIRED)
 message(STATUS "opt: ${GRIDKIT_OPT}")
 
