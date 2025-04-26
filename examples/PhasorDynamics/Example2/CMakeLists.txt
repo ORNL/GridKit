@@ -12,4 +12,4 @@ target_link_libraries(phasordynamics_example2
 	SUNDIALS::sunmatrixdense)
 install(TARGETS phasordynamics_example2 RUNTIME DESTINATION bin)
 
-add_test(NAME GenrouTest COMMAND $<TARGET_FILE:phasordynamics_example2>)
+add_test(NAME GenrouTest2 COMMAND $<TARGET_FILE:phasordynamics_example2>)
