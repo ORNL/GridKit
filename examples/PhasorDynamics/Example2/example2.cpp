@@ -126,7 +126,7 @@ int main()
   }
   fclose(f);
 
-  std::cout << "Worst error "  << worst_error
+  std::cout << "Worst error " << worst_error
             << " at time t = " << worst_error_time << "\n";
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
