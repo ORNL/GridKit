@@ -1,31 +1,22 @@
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include "example2.hpp"
+
+#include <cmath>
+#include <cstdio>
 #include <time.h>
+#include <vector>
 
-// #include <sundials_core.h>
-#include <idas/idas.h>
-#include <nvector/nvector_serial.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
-#include "Example2_Powerworld_Reference.hpp"
-#include "Model/PhasorDynamics/Branch/Branch.cpp"
-#include "Model/PhasorDynamics/Branch/Branch.hpp"
-#include "Model/PhasorDynamics/Bus/Bus.cpp"
-#include "Model/PhasorDynamics/Bus/Bus.hpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.cpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
-#include "Model/PhasorDynamics/BusFault/BusFault.hpp"
-#include "Model/PhasorDynamics/Load/Load.hpp"
-#include "Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp"
-#include "Model/PhasorDynamics/SystemModel.hpp"
-#include "Solver/Dynamic/Ida.cpp"
-#include "Solver/Dynamic/Ida.hpp"
+#include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/Load/Load.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SystemModel.hpp>
+#include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
 #define _CRT_SECURE_NO_WARNINGS
+#define _USE_MATH_DEFINES
 
 int main()
 {
