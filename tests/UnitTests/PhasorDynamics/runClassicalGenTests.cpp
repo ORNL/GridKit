@@ -8,6 +8,7 @@ int main()
 
   result += test.constructor();
   result += test.residual();
+  result += test.initial();
 
   return result.summary();
 }
