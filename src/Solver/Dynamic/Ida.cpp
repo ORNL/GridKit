@@ -183,6 +183,8 @@ namespace AnalysisManager
     {
       int retval = 0;
 
+      t_init_ = t0;
+
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
       checkOutput(retval, "IDAReInit");
@@ -206,40 +208,13 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, std::ostream& buffer)
-    {
-      int       retval = 0;
-      int       iout   = 0;
-      real_type t, tret;
-
-      for (t = t0 + dt; t <= tmax; t += dt)
-      {
-        retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
-        printOutputF(t, retval, buffer);
-
-        if (retval != IDA_SUCCESS)
-        {
-          std::cout << "IDA Failure! " << retval;
-          break;
-        }
-      }
-
-      model_->updateTime(t, 0.0);
-      copyVec(yy_, model_->y());
-      copyVec(yp_, model_->yp());
-
-      return retval;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
+    int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout, const std::optional<std::function<void(real_type)>> step_callback)
     {
       int       retval = 0;
       int       iout   = 0;
       real_type tret;
-      real_type dt   = tf / static_cast<real_type>(nout);
-      real_type tout = dt;
+      real_type dt   = (tf - t_init_) / static_cast<real_type>(nout);
+      real_type tout = t_init_ + dt;
 
       /* In loop, call IDASolve, print results, and test for error.
        *     Break out of loop when NOUT preset output times have been reached. */
@@ -248,7 +223,17 @@ namespace AnalysisManager
       {
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
-        // printOutput(tout);
+
+        if (step_callback.has_value())
+        {
+          // The callback may try to observe upated values in the model, so we should update them here
+          // (At this point, the model's values are one internal integrator step out of date)
+          model_->updateTime(tret, 0.0);
+          copyVec(yy_, model_->y());
+          copyVec(yp_, model_->yp());
+
+          (*step_callback)(tret);
+        }
 
         if (retval == IDA_SUCCESS)
         {
