@@ -3,7 +3,7 @@
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Reference solution for the 3-bus system obtained with Powerworld
- * 
+ *
  */
 #include <vector>
 
