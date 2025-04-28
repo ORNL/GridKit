@@ -50,12 +50,12 @@
      ClassicalGen(bus_type* bus, int unit_id);
      ClassicalGen(bus_type* bus,
               int       unit_id,
+              ScalarT   p0,
+              ScalarT   q0,
               real_type H,
               real_type D,
               real_type Ra,
-              real_type Xdp,
-              real_type pmech,
-              real_type ep);
+              real_type Xdp);
        ~ClassicalGen() = default;
  
        int allocate() override;
@@ -102,6 +102,10 @@
        bus_type* bus_;
        const int busID_;
        int       unit_id_;
+
+       /* Initial terminal conditions */
+       ScalarT p0_;
+       ScalarT q0_;
  
        /* Input parameters */
        real_type H_;
@@ -114,8 +118,8 @@
        real_type b;
  
        /* Setpoints for control variables (determined at initialization) */
-       real_type pmech_;
-       real_type ep_;
+       real_type pmech_set_;
+       real_type ep_set_;
      };
  
    } // namespace PhasorDynamics
