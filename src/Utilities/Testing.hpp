@@ -243,7 +243,7 @@ namespace GridKit
       for (const auto& pair_a : a)
       {
         auto it  = b.find(pair_a.first);
-        fail    += !isEqual(pair_a.second, it->second);
+        fail    += !isEqual(pair_a.second, it->second, tol);
       }
 
       return fail == 0;
