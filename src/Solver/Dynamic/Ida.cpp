@@ -664,35 +664,6 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, std::ostream& buffer)
-    {
-      sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
-      sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
-
-      buffer << t << " " << res;
-      for (IdxT i = 0; i < model_->size(); ++i)
-      {
-        buffer << " " << yval[i];
-      }
-      for (IdxT i = 0; i < model_->size(); ++i)
-      {
-        buffer << " " << ypval[i];
-      }
-      buffer << std::endl;
-
-      // fprintf(f, "%g,%d", t, res);
-      // for (IdxT i = 0; i < model_->size(); ++i)
-      // {
-      //   fprintf(f, ",%g", yval[i]);
-      // }
-      // for (IdxT i = 0; i < model_->size(); ++i)
-      // {
-      //   fprintf(f, ",%g", ypval[i]);
-      // }
-      // fprintf(f, "\n");
-    }
-
-    template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printOutput(sunrealtype t)
     {
       sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);

@@ -116,7 +116,6 @@ namespace AnalysisManager
       void printOutput(sunrealtype t);
       void printSpecial(sunrealtype t, N_Vector x);
       void printFinalStats();
-      void printOutputF(sunrealtype t, int res, std::ostream& buffer);
 
     private:
       static int Residual(sunrealtype t,
