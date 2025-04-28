@@ -69,6 +69,23 @@ int main()
 
   std::stringstream buffer;
 
+  auto buffer_write_cb = [&](double t)
+  {
+    std::vector<double>& yval  = sys.y();
+    std::vector<double>& ypval = sys.yp();
+    buffer
+        << t << " " << 0;
+    for (size_t i = 0; i < sys.size(); ++i)
+    {
+      buffer << " " << yval[i];
+    }
+    for (size_t i = 0; i < sys.size(); ++i)
+    {
+      buffer << " " << ypval[i];
+    }
+    buffer << std::endl;
+  };
+
   /* Set up simulation */
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
@@ -77,13 +94,13 @@ int main()
   double start = static_cast<double>(clock());
   // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
-  ida.runSimulationFixed(0.0, dt, 1.0, buffer);
+  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), buffer_write_cb);
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulationFixed(1.0, dt, 1.1, buffer);
+  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), buffer_write_cb);
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulationFixed(1.1, dt, 10.0, buffer);
+  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), buffer_write_cb);
   double stop = static_cast<double>(clock());
 
   // Go to the beginning of the data buffer
