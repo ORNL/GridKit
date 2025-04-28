@@ -73,7 +73,6 @@ int main()
   };
 
   std::vector<OutputData> output;
-  unsigned                out_idx;
 
   auto buffer_write_cb = [&](double t)
   {
