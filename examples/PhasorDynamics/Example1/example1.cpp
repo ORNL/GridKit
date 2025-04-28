@@ -67,23 +67,22 @@ int main()
 
   double dt = 1.0 / 4.0 / 60.0;
 
-  std::stringstream buffer;
+  struct OutputData
+  {
+    double ti, Vr, Vi, dw;
+  };
+
+  std::vector<OutputData> output;
+  unsigned                out_idx;
 
   auto buffer_write_cb = [&](double t)
   {
-    std::vector<double>& yval  = sys.y();
-    std::vector<double>& ypval = sys.yp();
-    buffer
-        << t << " " << 0;
-    for (size_t i = 0; i < sys.size(); ++i)
-    {
-      buffer << " " << yval[i];
-    }
-    for (size_t i = 0; i < sys.size(); ++i)
-    {
-      buffer << " " << ypval[i];
-    }
-    buffer << std::endl;
+    std::vector<double>& yval = sys.y();
+
+    output.push_back({.ti = t,
+                      .Vr = yval[0],
+                      .Vi = yval[1],
+                      .dw = yval[3]});
   };
 
   /* Set up simulation */
@@ -103,64 +102,31 @@ int main()
   ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), buffer_write_cb);
   double stop = static_cast<double>(clock());
 
-  // Go to the beginning of the data buffer
-  buffer.seekg(0, std::ios::beg);
-
-  double data;
-
-  size_t i       = 0;   // data row counter
-  size_t j       = 0;   // data column counter
-  double Vr      = 0.0; // Bus real voltage
-  double Vi      = 0.0; // Bus imaginary voltage
-  double dw      = 0.0; // Generator frequency deviation [rad/s]
-  double ti      = 0.0; // time
   double error_V = 0.0; // error in |V|
 
   // Read through the simulation data storred in the buffer
-  while (buffer >> data)
+  for (size_t i = 0; i < output.size(); i++)
   {
-    // At the end of each data line compare computed data to Powerworld results
-    // and reset column counter to zero.
-    if ((i % 48) == 0)
-    {
-      double err =
-          std::abs(std::sqrt(Vr * Vr + Vi * Vi) - reference_solution[i / 48][2])
-          / (1.0 + std::abs(reference_solution[i / 48][2]));
-      if (err > error_V)
-        error_V = err;
-      std::cout << "GridKit: t = " << ti
-                << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
-                << ", w = " << (1.0 + dw) << "\n";
-      std::cout << "Ref    : t = " << reference_solution[i / 48][0]
-                << ", |V| = " << reference_solution[i / 48][2]
-                << ", w = " << reference_solution[i / 48][1]
-                << "\n";
-      std::cout << "Error in |V| = "
-                << err
-                << "\n";
-      j  = 0;
-      Vr = 0.0;
-      Vi = 0.0;
-      std::cout << "\n";
-    }
-    if (j == 0)
-    {
-      ti = data;
-    }
-    if (j == 2)
-    {
-      Vr = data;
-    }
-    if (j == 3)
-    {
-      Vi = data;
-    }
-    if (j == 5)
-    {
-      dw = data;
-    }
-    ++j;
-    ++i;
+    OutputData           data    = output[i];
+    std::vector<double>& ref_sol = reference_solution[i + 1];
+
+    double err =
+        std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
+        / (1.0 + std::abs(ref_sol[2]));
+    if (err > error_V)
+      error_V = err;
+
+    std::cout << "GridKit: t = " << data.ti
+              << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
+              << ", w = " << (1.0 + data.dw) << "\n";
+    std::cout << "Ref    : t = " << ref_sol[0]
+              << ", |V| = " << ref_sol[2]
+              << ", w = " << ref_sol[1]
+              << "\n";
+    std::cout << "Error in |V| = "
+              << err
+              << "\n";
+    std::cout << "\n";
   }
 
   int status = 0;
