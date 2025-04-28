@@ -238,12 +238,25 @@ namespace GridKit
     {
       int fail = 0;
 
-      fail += a.size() != b.size();
+      if (a.size() != b.size())
+      {
+        fail++;
+        errs() << "Containers do not have the same size! "
+               << "a.size() = " << a.size() << ", and "
+               << "b.size() = " << b.size() << "\n";
+      }
 
       for (const auto& pair_a : a)
       {
-        auto it  = b.find(pair_a.first);
-        fail    += !isEqual(pair_a.second, it->second, tol);
+        auto it = b.find(pair_a.first);
+        if (!isEqual(pair_a.second, it->second, tol))
+        {
+          fail++;
+          errs() << "Mismatching map values! "
+                 << "a.first = " << pair_a.first << ", "
+                 << "a.second = " << pair_a.second << ", and "
+                 << "b.second = " << it->second << "\n";
+        }
       }
 
       return fail == 0;
