@@ -74,7 +74,7 @@ int main()
 
   std::vector<OutputData> output;
 
-  auto buffer_write_cb = [&](double t)
+  auto output_cb = [&](double t)
   {
     std::vector<double>& yval = sys.y();
 
@@ -92,13 +92,13 @@ int main()
   double start = static_cast<double>(clock());
   // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
-  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), buffer_write_cb);
+  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), output_cb);
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), buffer_write_cb);
+  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), output_cb);
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), buffer_write_cb);
+  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), output_cb);
   double stop = static_cast<double>(clock());
 
   double error_V = 0.0; // error in |V|
