@@ -226,9 +226,9 @@ namespace GridKit
      * @tparam IdxT
      * @tparam RealT
      *
-     * @param[in] std::map<IdxT, RealT> - first map
-     * @param[in] std::map<IdxT, RealT> - second map
-     * @param[in] RealT - tolerance
+     * @param[in] a - first map to compare
+     * @param[in] b - second map to compare
+     * @param[in] tol - tolerance
      * @return bool - true if the maps are equal; false otherwise
      */
     template <typename IdxT = size_t, typename RealT = double>
