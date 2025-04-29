@@ -324,10 +324,23 @@ namespace GridKit
       alpha_ = a;
     }
 
+    /**
+     * @brief print the system Jacobian in COO format
+     * 
+     * 
+     */
+
+    void printJacobianMatrixMarket(std::string filename, std::string title)
+    {
+      jac_.printMatrixMarket(filename, title);
+    }
+
     void addComponent(component_type* component)
     {
       components_.push_back(component);
     }
+
+
 
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
