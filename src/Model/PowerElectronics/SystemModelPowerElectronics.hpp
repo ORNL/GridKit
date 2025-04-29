@@ -326,8 +326,9 @@ namespace GridKit
 
     /**
      * @brief print the system Jacobian in COO format
-     * 
-     * 
+     *
+     * @param[in] filename
+     * @param[in] title
      */
 
     void printJacobianMatrixMarket(std::string filename, std::string title)
