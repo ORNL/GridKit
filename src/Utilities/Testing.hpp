@@ -249,13 +249,22 @@ namespace GridKit
       for (const auto& pair_a : a)
       {
         auto it = b.find(pair_a.first);
-        if (!isEqual(pair_a.second, it->second, tol))
+        if (it != b.end())
+        {
+          if (!isEqual(pair_a.second, it->second, tol))
+          {
+            fail++;
+            errs() << "Mismatching map values! "
+                   << "a.first = " << pair_a.first << ", "
+                   << "a.second = " << pair_a.second << ", and "
+                   << "b.second = " << it->second << "\n";
+          }
+        }
+        else
         {
           fail++;
-          errs() << "Mismatching map values! "
-                 << "a.first = " << pair_a.first << ", "
-                 << "a.second = " << pair_a.second << ", and "
-                 << "b.second = " << it->second << "\n";
+          errs() << "Entry not found in the second container! "
+                 << "a.first = " << pair_a.first << "\n";
         }
       }
 
