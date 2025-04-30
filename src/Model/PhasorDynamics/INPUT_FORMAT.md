@@ -51,7 +51,11 @@ and can also be used to inform future formats and software efforts.
         generators, loads, branches, controllers, and events
 
 ```json
-{"header":{... }, "nodes":[... ], "devices":[... ]}
+{
+    "header":{... },
+    "nodes":[... ],
+    "devices":[... ]
+}
 ```
 
 
@@ -70,8 +74,7 @@ allowing for extensibility as well.
   format_revision   | Integer of format revision (1 for this version 0.1)
   case_name         | Short string for the case name 
   case_date         | String in a standard date/time format 
-  case_description  | Longer string giving a more specific description of what 
-                    | is modeled in the case 
+  case_description  | Longer string giving a more specific description of what is modeled in the case 
   comments          | Even longer string with notes as needed 
   freq_base         | System frequency base, floating point in Hz (commonly 60)
   va_base           | System power base, floating point in VA (commonly 100e6)
@@ -94,20 +97,19 @@ and has exactly 6 items as follows.
   4     | Voltage base for per-unit, floating point value in V. Set to 1 to indicated that voltages or signals given are already in actual units.
   5     |  Extra, object with key-value pairs for any extra information to provide with the node. This can be an empty object. If you want to specify a non-default frequency or power base, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the voltage or signal values specified in the array for this node will be added to an output channel. Other uses of this section would be coordinates for one-line diagram drawing, membership in components or areas, etc.
   
+
 ### Table of Supported Node Classes
 
 For now the following node classes are specified (though not all
 implemented yet)
 
-  Node Class                                                 | Variables
-  -----------------------------------------------------------|--------------
-  "bus" positive-sequence, AC phasor domain bus              | [Vr, Vi]
-  "infinite_bus" positive-sequence, AC phasor domain bus     | 
-  with fixed voltage                                         | [Vr, Vi]
-  "emt_bus" 3-phase bus with instantaneous voltages          | [Va, Vb, Vc]
-  "infinite_emt_bus" 3-phase bus with instantaneous voltages | [Va, Vb, Vc]
-  "control" single control signal                            | [x]
-
+  Node Class   | Description                                 | Variables
+  -------------|---------------------------------------------|--------------
+  bus          | positive-sequence, AC phasor domain bus     | [Vr, Vi]
+  infinite_bus | positive-sequence, AC phasor domain bus with fixed voltage | [Vr, Vi]
+  emt_bus      | 3-phase bus with instantaneous voltages     | [Va, Vb, Vc]
+  infinite_emt_bus | 3-phase bus with instantaneous voltages | [Va, Vb, Vc]
+  control      | single control signal                       | [x]
 
 
 ### Devices Section
@@ -125,7 +127,7 @@ one device, and has exactly 5 items as follows.
   1     | Node numbers, an array of nodes connected with this device. The length of this array is fixed depending on the device class, but some nodes may be 0 if that functionality is not used. For example, GENROU class devices must have 3 nodes: bus, exciter signal, and governor signal. But the bus is the only one which must be connected to an actual node.
   2     | String ID disambiguator. Each device must have a unique combination of node numbers plus this string. It is recommended for most devices for this to only be 1-2 characters to facilitate converting to industry formats.
   3     | Array of initialization parameters. The length and meaning of these values is fixed and specified by the device class (see table below).
-  4     | Extra, object with key-value pairs for any extra information to provide with the device. This can be an empty object {}. If you want to specify a non-default frequency or power base for this    device, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the variable values specified in the array will be recorded to an output channel.
+  4     | Extra, object with key-value pairs for any extra information to provide with the device. This can be an empty object {}. If you want to specify a non-default frequency or power base for this device, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the variable values specified in the array will be recorded to an output channel.
 
 
 ### Table of Supported Device Classes
@@ -137,12 +139,12 @@ exact lists of nodes and parameters may change with updates in different
 versions.
 
 
-  Class Name             | Nodes                  | Initialization Parameters
-  -----------------------| -----------------------|-----------------------
-  "branch" -- a basic algebraic pi model for a line or transformer  | 2: Bus1, Bus2 | 4: R, X, G, B                         
-  "static_load" -- a basic static ZIP load  | 1: Bus                 | 6: Pz, Qz, Pi, Qi, Pp, Qp
-  "GENROU" -- 6th order machine model | 3: Bus, exciter_signal,  governor_signal |18: p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12
-  "bus_fault" -- simple impedance-based fault at a bus | 2: Bus, control signal | 3: state0, R, X                                       
+  Class Name    | Description  | Nodes                  | Initialization Parameters
+  --------------|--------------| -----------------------|-----------------------
+  branch        | a basic algebraic pi model for a line or transformer | 2: Bus1, Bus2 | 4: R, X, G, B                         
+  static_load   | a basic static ZIP load   | 1: Bus        | 6: Pz, Qz, Pi, Qi, Pp, Qp
+  GENROU        | 6th order machine model   | 3: Bus, exciter_signal, governor_signal | 18: p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12
+  bus_fault     | simple impedance-based fault at a bus | 2: Bus, control signal | 3: state0, R, X                                       
 
 
 ### Example File for 2-Bus System
