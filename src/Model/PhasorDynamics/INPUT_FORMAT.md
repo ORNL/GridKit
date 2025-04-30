@@ -141,7 +141,7 @@ versions.
   -----------------------| -----------------------|-----------------------
   "branch" -- a basic algebraic pi model for a line or transformer  | 2: Bus1, Bus2 | 4: R, X, G, B                         
   "static_load" -- a basic static ZIP load  | 1: Bus                 | 6: Pz, Qz, Pi, Qi, Pp, Qp
-  "GENROU" -- 6^th^ order machine model | 3: Bus, exciter_signal,  governor_signal |18: p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12
+  "GENROU" -- 6th order machine model | 3: Bus, exciter_signal,  governor_signal |18: p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12
   "bus_fault" -- simple impedance-based fault at a bus | 2: Bus, control signal | 3: state0, R, X                                       
 
 
@@ -149,11 +149,10 @@ versions.
 
 ```json
 {"header": {
-"format_version": 0, "format_revision": 1, "case_name": "two-bus test
-case 1", "case_data": "2/28/2025", "case_description": "A two-bus test
-case for demonstrating the dynamics format.", "comments":"The case is
-set up to monitor the voltage at both buses and the machine angle and
-speed", "freq_base":60, "va_base": 100e6
+"format_version": 0, "format_revision": 1, "case_name": "two-bus test case 1", "case_data": "2/28/2025",
+"case_description": "A two-bus test case for demonstrating the dynamics format.",
+"comments":"The case is set up to monitor the voltage at both buses and the machine angle and speed",
+"freq_base":60, "va_base": 100e6
 },
 
 "nodes": [
@@ -166,7 +165,7 @@ speed", "freq_base":60, "va_base": 100e6
 "devices": [
 
 ["branch", [1, 2], "1", [0, 0.1, 0, 0], {}],
-["GENROU", [1, 0, 0], "1", [1, 0.05013, 3, 0, 0, 7, .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0], {"monitor": ["delta", "omega"]}],
+["GENROU", [1, 0, 0], "1", [1, 0.05013, 3, 0, 0, 7, 0.04, 0.05, 0.75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0], {"monitor": ["delta", "omega"]}],
 ["bus_fault": [1], "1", [0, 0, 1e-3], {}]
 
 ] }
