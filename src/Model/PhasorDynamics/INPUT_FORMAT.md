@@ -1,9 +1,6 @@
 ## Grid Dynamics Case Format
 
 Adam Birchfield, Texas A&M University, 2/28/2025
-
-For SCIDAC-OE Project on Next-Generation Grid Dynamics Simulations
-
 Version 0.1
 
 ### Overview
@@ -129,7 +126,6 @@ one device, and has exactly 5 items as follows.
   2     | String ID disambiguator. Each device must have a unique combination of node numbers plus this string. It is recommended for most devices for this to only be 1-2 characters to facilitate converting to industry formats.
   3     | Array of initialization parameters. The length and meaning of these values is fixed and specified by the device class (see table below).
   4     | Extra, object with key-value pairs for any extra information to provide with the device. This can be an empty object {}. If you want to specify a non-default frequency or power base for this    device, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the variable values specified in the array will be recorded to an output channel.
-  ------------------------------------------------------------------------
 
 
 ### Table of Supported Device Classes
