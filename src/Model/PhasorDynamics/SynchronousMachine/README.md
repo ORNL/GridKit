@@ -27,6 +27,7 @@ There are two main variations
 - GENTPF
 - GENTPJ
 - GENQEC
+- GenClassical
 
 ### Per-Unit Basis
 
