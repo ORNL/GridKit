@@ -39,12 +39,13 @@ In relevant models, the terminal impedences are on the generator impedance base.
 \end{aligned}
 ```
 
-For example, say the terminal impedence is $Z=0.05 p.u.$ on the machine's base of
-$S_{base,machine}=50 MW$, and the system base is $S_{base,sys}=100 MW$. Then 
-the terminal impedence on the the system base is calculated as follows.
+For example, say the terminal impedence is $Z=0.05$ in per-unit on the 
+machine's base of $S_{base,machine}=50$  MW, and the system base is 
+$S_{base,sys}=100$ MW. Then the terminal impedence on the the system 
+base is calculated as follows.
 ``` math
 \begin{aligned}
-  Z_{term} =(0.05)\dfrac{100 \text{MW}}{50 \text{MW}} = 0.1
+  Z_{sys} = 0.05\dfrac{100 \text{MW}}{50 \text{MW}} = 0.1
 \end{aligned}
 ```
 
