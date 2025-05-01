@@ -24,7 +24,7 @@ The GENROU model is a variation of the [General Synchronous Machine Model](../RE
 - $P_{mech}$    Mechanical power from the prime mover 
 - $E_{fd}$     Field winding voltage from the excitation system 
 - $k_{sat}$   Saturation Coefficient 
-### State Variables
+### Differential Variables
 - $\delta$    Machine Internal Angle
 - $\omega$  Machine Relative Speed
 - $\psi'_d$, $\psi'_q$, $E'_d$, $E'_q$  Machine Internal Flux Values
