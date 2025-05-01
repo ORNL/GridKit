@@ -97,6 +97,7 @@ Transformed parameters used during implementation and for readability.
 ### Algebraic Equations
 
 These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
+These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
 ``` math
 \begin{aligned}
   \psi''_{q} &= -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
@@ -105,7 +106,12 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   V_{d}      &= -\psi''_{q}(1+\omega)\\
   V_{q}      &= +\psi''_{d}(1+\omega)\\
   T_{elec}   &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
+\end{aligned}
+```
+#### Network Interface equations
 
+``` math
+\begin{aligned}
   \begin{bmatrix}
     I_d \\ I_q
   \end{bmatrix}
@@ -125,8 +131,8 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   &=
   
   \begin{bmatrix}
-  G & -B \\
-  B & G
+    G & -B \\
+    B & G
   \end{bmatrix}
 
   \left(

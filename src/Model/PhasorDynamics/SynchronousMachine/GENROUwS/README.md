@@ -125,8 +125,8 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   &=
   
   \begin{bmatrix}
-  G & -B \\
-  B & G
+    G & -B \\
+    B & G
   \end{bmatrix}
 
   \left(
