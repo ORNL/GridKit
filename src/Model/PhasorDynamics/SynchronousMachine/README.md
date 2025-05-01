@@ -44,7 +44,7 @@ $S_{base,machine}=50 MW$, and the system base is $S_{base,sys}=100 MW$. Then
 the terminal impedence on the the system base is calculated as follows.
 ``` math
 \begin{aligned}
-  Z_{term} =(0.05)\dfrac{100 MW}{50 MW} = 0.1 p.u.
+  Z_{term} =(0.05)\dfrac{100 \text{MW}}{50 \text{MW}} = 0.1
 \end{aligned}
 ```
 
