@@ -103,7 +103,7 @@ These algebraic equations define internal variables (7) and the algebraic Networ
 \end{aligned}
 ```
 #### Network Interface equations
-
+The network interface equations provide the algebraic relationship the network and internal reference frame.
 ``` math
 \begin{aligned}
   \begin{bmatrix}
