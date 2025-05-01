@@ -39,6 +39,15 @@ In relevant models, the terminal impedences are on the generator impedance base.
 \end{aligned}
 ```
 
+For example, say the terminal impedence is $Z=0.05 p.u.$ on the machine's base of
+$S_{base,machine}=50 MW$, and the system base is $S_{base,sys}=100 MW$. Then 
+the terminal impedence on the the system base is calculated as follows.
+``` math
+\begin{aligned}
+  Z_{term} =(0.05)\dfrac{100 MW}{50 MW} = 0.1 p.u.
+\end{aligned}
+```
+
 #### Saturation
 Saturation means increasingly large amounts of current are needed to increase 
 the flux density. The Scaled Quadratic saturation model is currently implemented.
