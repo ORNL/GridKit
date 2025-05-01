@@ -4,7 +4,6 @@
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
    
-   
   Figure 2: GENROU. Figure courtesy of 
   [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
