@@ -5,11 +5,13 @@
    <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
    
    
-  Figure 2: GENROU. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
+  Figure 2: GENROU. Figure courtesy of 
+  [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
 ## Simplifications
-The GENROU model is a variation of the [General Synchronous Machine Model](../README.md)
+The GENROU model is a variation of the 
+[General Synchronous Machine Model](../README.md)
 - $`X''_{q}=X''_{d}`$
 - $`X''_{d}`$ does not saturate
 - Same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
@@ -66,13 +68,12 @@ Transformed parameters used during implementation and for readability.
 
 ## Equations
 
-
 ### Differential Equations
-
 ``` math
 \begin{aligned}
   \dot\delta      &= \omega\cdot\omega_0 \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
+  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}
+                   - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
   \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
@@ -90,8 +91,8 @@ Transformed parameters used during implementation and for readability.
 ```
 
 ### Algebraic Equations
-
-These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
+These algebraic equations define internal variables (7) and the algebraic 
+Network Interface Equations (4)
 ``` math
 \begin{aligned}
   \psi''_{q} &= -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
@@ -102,8 +103,10 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   T_{elec}   &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
 \end{aligned}
 ```
+
 #### Network Interface equations
-The network interface equations provide the algebraic relationship the network and internal reference frame.
+The network interface equations provide the algebraic relationship the network
+ and internal reference frame.
 ``` math
 \begin{aligned}
   \begin{bmatrix}
@@ -114,21 +117,18 @@ The network interface equations provide the algebraic relationship the network a
     \sin \delta & -\cos\delta \\
     \cos\delta  &  \sin\delta
   \end{bmatrix}
-
   \begin{bmatrix}
     I_r \\ I_i
-  \end{bmatrix}\\
-
+  \end{bmatrix}
+  \\
   \begin{bmatrix}
     I_r \\ I_i
   \end{bmatrix}
   &=
-  
   \begin{bmatrix}
     G & -B \\
     B & G
   \end{bmatrix}
-
   \left(
     \begin{bmatrix}
       \sin \delta & \cos\delta \\
@@ -144,14 +144,17 @@ The network interface equations provide the algebraic relationship the network a
   \right)
 \end{aligned}
 ```
+
 ## Initialization
 
 ### Without Saturation
+Pressume there is no saturation to simplify solution procedure for initial 
+conditions.
 
-Pressume there is no saturation to simplify solution procedure for initial conditions.
-
-Using the power-flow solution, we have explicity solutions for the following variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated from the network interface equations. The remaining are algebraicillay solved from the steady-state initial conditions.
-
+Using the power-flow solution, we have explicity solutions for the following 
+variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated
+from the network interface equations. The remaining are algebraicillay solved 
+from the steady-state initial conditions.
 ``` math
 \begin{aligned}
 \omega &= 0 \\
@@ -172,7 +175,6 @@ Using the power-flow solution, we have explicity solutions for the following var
 ```
 
 ### With Saturation
-
 It is important to point out that finding the initial value of $\delta$ for
 the model without saturation direct method can be used. In case when saturation
 is considered some "claver" math is needed. Key insight for determining initial

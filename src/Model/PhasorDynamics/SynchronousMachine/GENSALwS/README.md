@@ -8,11 +8,13 @@
    <img align="center" src="../../../../../docs/Figures/GENSAL.JPG">
    
    
-  Figure 2: GENSAL. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
+  Figure 2: GENSAL. Figure courtesy of 
+  [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
 ## Simplifications
-The GENSAL model is a variation of the [General Synchronous Machine Model](../README.md)
+The GENSAL model is a variation of the 
+[General Synchronous Machine Model](../README.md)
 - $`X''_{q}=X''_{d}`$
 - $`X''_{d}`$ does not saturate
 - Only d-axis affected by saturation
@@ -71,13 +73,12 @@ Transformed parameters used during implementation and for readability.
 
 ## Equations
 
-
 ### Differential Equations
-
 ``` math
 \begin{aligned}
   \dot\delta      &= \omega\cdot\omega_0 \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}-T_{elec}\right)\\
+  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}
+                   - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
   \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
@@ -95,8 +96,8 @@ Transformed parameters used during implementation and for readability.
 ```
 
 ### Algebraic Equations
-
-These algebraic equations define internal variables (7) and the algebraic Network Interface Equations (4)
+These algebraic equations define internal variables (7) and the algebraic
+Network Interface Equations (4)
 ``` math
 \begin{aligned}
   \psi''_{q} &= -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
@@ -107,9 +108,10 @@ These algebraic equations define internal variables (7) and the algebraic Networ
   T_{elec}   &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
 \end{aligned}
 ```
-#### Network Interface equations
 
-The network interface equations provide the algebraic relationship the network and internal reference frame.
+#### Network Interface equations
+The network interface equations provide the algebraic relationship the 
+network and internal reference frame.
 ``` math
 \begin{aligned}
   \begin{bmatrix}
