@@ -1,5 +1,5 @@
 /**
- * @file Genrou.cpp
+ * @file ClassicalGen.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of a Classical generator model.
@@ -82,19 +82,6 @@
        setDerivedParams();
      }
 
-
- 
-     // /**
-     //  * @brief Destroy the Genrou
-     //  *
-     //  * @tparam ScalarT
-     //  * @tparam IdxT
-     //  */
-     // template <class ScalarT, typename IdxT>
-     // Genrou<ScalarT, IdxT>::~Genrou()
-     // {
-     //   // std::cout << "Destroy Genrou..." << std::endl;
-     // }
  
      /*!
       * @brief allocate method computes sparsity pattern of the Jacobian.
@@ -221,7 +208,7 @@
      template <class ScalarT, typename IdxT>
      int ClassicalGen<ScalarT, IdxT>::evaluateIntegrand()
      {
-       // std::cout << "Evaluate Integrand for Genrou..." << std::endl;
+       // std::cout << "Evaluate Integrand for ClassicalGen..." << std::endl;
        return 0;
      }
  
@@ -235,7 +222,7 @@
      template <class ScalarT, typename IdxT>
      int ClassicalGen<ScalarT, IdxT>::initializeAdjoint()
      {
-       // std::cout << "Initialize adjoint for Genrou..." << std::endl;
+       // std::cout << "Initialize adjoint for ClassicalGen..." << std::endl;
        return 0;
      }
  
@@ -249,7 +236,7 @@
      template <class ScalarT, typename IdxT>
      int ClassicalGen<ScalarT, IdxT>::evaluateAdjointResidual()
      {
-       // std::cout << "Evaluate adjoint residual for Genrou..." << std::endl;
+       // std::cout << "Evaluate adjoint residual for ClassicalGen..." << std::endl;
        return 0;
      }
  
@@ -263,7 +250,7 @@
      template <class ScalarT, typename IdxT>
      int ClassicalGen<ScalarT, IdxT>::evaluateAdjointIntegrand()
      {
-       // std::cout << "Evaluate adjoint Integrand for Genrou..." << std::endl;
+       // std::cout << "Evaluate adjoint Integrand for ClassicalGen..." << std::endl;
        return 0;
      }
  
