@@ -1,8 +1,8 @@
 /**
- * @file Genrou.cpp
+ * @file ClassicalGen.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Declaration of a GENROU generator model.
+ * @brief Declaration of a Classical generator model.
  *
  */
 
