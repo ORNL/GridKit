@@ -21,12 +21,12 @@ namespace GridKit
    * @return true if the write was successful, false otherwise
    */
   template <typename T>
-  bool writeVectorToMatrixMarket(const std::vector<T>& vec, const std::string& filename, const std::string& header) {
+  void writeVectorToMatrixMarket(const std::vector<T>& vec, const std::string& filename, const std::string& header) {
       std::ofstream outFile(filename);
       
       if (!outFile.is_open()) {
           std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
-          return false;
+          return;
       }
       
       // Write Matrix Market header
@@ -46,10 +46,8 @@ namespace GridKit
           outFile << val << std::endl;
       }
       
-      outFile.close();
-      
-      std::cout << "Vector successfully written to " << filename << std::endl;
-      return true;
+      outFile.close();      
+      return;
   }
 
 

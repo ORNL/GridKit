@@ -608,7 +608,7 @@ inline void COO_Matrix<ScalarT, IdxT>::printMatrix(std::string name)
  * @param[in] comment Optional comment for the Matrix Market file
  */
 template <class ScalarT, typename IdxT>
-inline void COO_Matrix<ScalarT, IdxT>::printMatrixMarket(const std::string& filename, const std::string& comment)
+void COO_Matrix<ScalarT, IdxT>::printMatrixMarket(const std::string& filename, const std::string& comment)
 {
   if (this->sorted_ == false)
   {
@@ -625,13 +625,11 @@ inline void COO_Matrix<ScalarT, IdxT>::printMatrixMarket(const std::string& file
   // Write Matrix Market header
   outfile << "%%MatrixMarket matrix coordinate ";
 
-  // Determine real/integer/pattern type
-  if (std::is_same<ScalarT, int>::value || std::is_same<ScalarT, long>::value)
-    outfile << "integer ";
-  else if (std::is_floating_point<ScalarT>::value)
-    outfile << "real ";
-  else
-    outfile << "pattern ";
+  if (!std::is_floating_point<ScalarT>::value)
+  {
+    // error message
+    return;
+  }
 
   // For simplicity, assume general (not symmetric/hermitian)
   outfile << "general" << std::endl;
