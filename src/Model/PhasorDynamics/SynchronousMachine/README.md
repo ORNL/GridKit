@@ -14,7 +14,7 @@
   [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
 </div>
 
-The following conventians are used for the d-q reference frame.
+The following conventions are used for the d-q reference frame.
 - The q-axis leads the d-axis
 - The Rotor angle is w.r.t. to q-axis
 
