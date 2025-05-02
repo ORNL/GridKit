@@ -150,9 +150,9 @@ The network interface equations provide the algebraic relationship the network
 Pressume there is no saturation to simplify solution procedure for initial 
 conditions.
 
-Using the power-flow solution, we have explicity solutions for the following 
+Using the power-flow solution, we have explicit solutions for the following 
 variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated
-from the network interface equations. The remaining are algebraicillay solved 
+from the network interface equations. The remaining are algebraically solved 
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}
