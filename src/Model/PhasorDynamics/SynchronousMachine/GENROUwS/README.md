@@ -54,7 +54,7 @@ Transformed parameters used during implementation and for readability.
 ``` math
 \begin{aligned}
   G   &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
-  B   &=\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
+  B   &= -\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
   S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
   S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
   X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
