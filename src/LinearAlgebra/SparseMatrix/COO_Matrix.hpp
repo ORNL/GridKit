@@ -631,7 +631,6 @@ void COO_Matrix<ScalarT, IdxT>::printMatrixMarket(const std::string& filename, c
     return;
   }
 
-  // For simplicity, assume general (not symmetric/hermitian)
   outfile << "general" << std::endl;
 
   // Write comment if provided
