@@ -7,6 +7,7 @@
 #include <Model/PhasorDynamics/SynchronousMachine/ClassicalGenerator/ClassicalGen.cpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
+#include <limits>
 
 namespace GridKit
 {
@@ -66,7 +67,7 @@ namespace GridKit
         const ScalarT res5{5.0}; /// fifth residual
         const ScalarT res6{2.5}; /// fifth residual
 
-        const ScalarT tol{0.0000001}; //tolerance for comparing result
+        const ScalarT tol{0.00000000001}; //tolerance for comparing result
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
         PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
@@ -114,25 +115,25 @@ namespace GridKit
         TestStatus success = true;
         
         // classical generator parameters
-        real_type p0{1.12}; 
-        real_type q0{0.35};
-        real_type H{0.85}; 
-        real_type D{2.77};
-        real_type Ra{1.55}; 
-        real_type Xdp{2.15}; 
+        real_type p0{3}; 
+        real_type q0{-1};
+        real_type H{1}; 
+        real_type D{1};
+        real_type Ra{0.4}; 
+        real_type Xdp{-0.2}; 
 
-        ScalarT Vr1{2.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.5}; ///< Bus-1 imaginary voltage
+        ScalarT Vr1{1}; ///< Bus-1 real voltage
+        ScalarT Vi1{1}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{0.2562082853611203};  /// first residual
+        const ScalarT delta{1.1071487177940905030170654601785};  /// first residual
         const ScalarT omega{0.0}; /// second residual
-        const ScalarT Te{1.461471200000000};  /// third residual
-        const ScalarT ir{0.4424000000000000}; /// fourth residual
-        const ScalarT ii{0.1568000000000000}; /// fifth residual
-        const ScalarT pmech{1.461471200000000}; /// fifth residual
-        const ScalarT Ep{3.124841691990172}; /// fifth residual
+        const ScalarT Te{5.0};  /// third residual
+        const ScalarT ir{1.0}; /// fourth residual
+        const ScalarT ii{2.0}; /// fifth residual
+        const ScalarT pmech{5.0}; /// fifth residual
+        const ScalarT Ep{2.23606797749978969640917366873}; /// fifth residual
 
-        const ScalarT tol{0.0000001}; //tolerance for comparing result
+        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing result
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
         PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
