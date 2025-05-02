@@ -27,15 +27,15 @@ The GENSAL model is a variation of the
 - $I_d$, $I_q$   Terminal currents on the machine d-q reference frame  
 - $V_r$, $V_i$    Terminal voltages on the network reference frame
 - $I_r$, $I_i$   Terminal currents on the network reference frame
-- $\psi'_d$, $\psi'_q$, $E'_d$, $E'_q$  Machine Internal Flux Values
 - $\psi''_q$, $\psi''_d$, $\psi''$    Machine Total Subtransient Flux
 - $T_{elec}$  Electrical Torque 
 - $P_{mech}$    Mechanical power from the prime mover 
 - $E_{fd}$     Field winding voltage from the excitation system 
 - $k_{sat}$   Saturation Coefficient 
-### State Variables
+### Differential Variables
 - $\delta$    Machine Internal Angle
 - $\omega$  Machine Relative Speed
+- $\psi'_d$, $\psi'_q$, $E'_d$, $E'_q$  Machine Internal Flux Values
 ### Parameters
 - $\omega_{0}$ - Nominal Frequnecy ($2\pi 60$)
 - $H$ - Intertia constant, sec (3)
