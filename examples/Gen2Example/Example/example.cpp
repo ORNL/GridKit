@@ -38,7 +38,7 @@ int main()
   Bus<double, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
   BusInfinite<double, size_t> bus2(1.0, 0.0);
   Branch<double, size_t>      branch(&bus1, &bus2, 0.0, 0.1, 0, 0);
-  ClassicalGen<double, size_t> gen(&bus1, 1,3, 0, 0, 0.2, 0.1, 0.2);
+  ClassicalGen<double, size_t> gen(&bus1, 1, 1, 0.05013, 3.0, 0.0, 0.0, 0.2);
  
 
 
@@ -57,6 +57,7 @@ FILE* f = fopen("example1_v4_results.csv", "w");
 if (!f)
   printf("ERROR writing to output file!\n");
   
+fprintf(f, "t, res, ");
 for (int i = 0; i < sys.size(); ++i)
 {
   if(i == 0)
@@ -82,7 +83,7 @@ ida.runSimulationFixed(0.0, dt, 1.0, buffer);
 
 int i=1;
 double data;
-int size  = 2*sys.size();
+int size  = 2*sys.size() + 2;
 while(buffer >> data){
 
     if(i%(size) == 0){
