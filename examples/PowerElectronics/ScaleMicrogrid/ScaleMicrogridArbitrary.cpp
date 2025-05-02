@@ -34,12 +34,16 @@ int main(int argc, char const* argv[])
 {
   // Default value
   index_type N_size = 4;
-  
+
   // Parse command line arguments if provided
-  if (argc > 1) {
-    try {
+  if (argc > 1)
+  {
+    try
+    {
       N_size = std::stoi(argv[1]);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
       std::cerr << "Error parsing grid size argument: " << e.what() << std::endl;
       std::cerr << "Using default grid size = " << N_size << std::endl;
     }
@@ -68,12 +72,13 @@ int printMicrogridSystems(index_type N_size)
 
   // Create circuit model
   auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                    abs_tol,
-                                                                    use_jac,
-                                                                    SCALE_MICROGRID_MAX_STEPS);
+                                                                     abs_tol,
+                                                                     use_jac,
+                                                                     SCALE_MICROGRID_MAX_STEPS);
 
   // Ensure minimum size requirement
-  if (N_size < 1) {
+  if (N_size < 1)
+  {
     std::cout << "N_size must be at least 1.\n";
     return 1;
   }
@@ -121,8 +126,10 @@ int printMicrogridSystems(index_type N_size)
   std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2 * N_size, DG_parms2);
 
   // First two generators use parameters 1
-  if (DGParams_list.size() >= 1) DGParams_list[0] = DG_parms1;
-  if (DGParams_list.size() >= 2) DGParams_list[1] = DG_parms1;
+  if (DGParams_list.size() >= 1)
+    DGParams_list[0] = DG_parms1;
+  if (DGParams_list.size() >= 2)
+    DGParams_list[1] = DG_parms1;
 
   // line vector params
   // Every odd line has the same parameters and every even line has the same parameters
@@ -147,7 +154,8 @@ int printMicrogridSystems(index_type N_size)
 
   std::vector<real_type> rload_list(N_size, rload2);
   std::vector<real_type> Lload_list(N_size, Lload2);
-  if (rload_list.size() >= 1) {
+  if (rload_list.size() >= 1)
+  {
     rload_list[0] = rload1;
     Lload_list[0] = Lload1;
   }
@@ -266,7 +274,6 @@ int printMicrogridSystems(index_type N_size)
   // allocate all the initial conditions
   sys_model->allocate(vec_size_total);
 
-
   // Create Initial points for states. Every state is set to zero initially
   for (index_type i = 0; i < vec_size_total; i++)
   {
@@ -287,19 +294,19 @@ int printMicrogridSystems(index_type N_size)
 
   sys_model->initialize();
   sys_model->evaluateResidual();
-  
+
   // Output file names based on grid size
   std::string size_suffix = std::to_string(N_size);
-  
+
   // print the residual in matrix market format
-  sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx", 
+  sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
                                        "ScaleMicrogrid Residual N" + size_suffix);
-  
+
   std::vector<real_type>& fres = sys_model->getResidual();
 
   sys_model->updateTime(0.0, 1.0e-8);
   sys_model->evaluateJacobian();
-  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx", 
-                                      "ScaleMicrogrid Jacobian N" + size_suffix);
+  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx",
+                                       "ScaleMicrogrid Jacobian N" + size_suffix);
   return 0;
 }

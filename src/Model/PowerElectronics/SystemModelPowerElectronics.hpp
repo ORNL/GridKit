@@ -14,42 +14,45 @@ namespace GridKit
 {
   /**
    * Writes a vector to a file in Matrix Market format
-   * 
+   *
    * @param vec The vector to write
    * @param filename The name of the output file
    * @param header Additional header information/comments
    * @return true if the write was successful, false otherwise
    */
   template <typename T>
-  void writeVectorToMatrixMarket(const std::vector<T>& vec, const std::string& filename, const std::string& header) {
-      std::ofstream outFile(filename);
-      
-      if (!outFile.is_open()) {
-          std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
-          return;
-      }
-      
-      // Write Matrix Market header
-      outFile << "%%MatrixMarket vector array real general" << std::endl;
-      
-      // Write additional header information as comments
-      if (!header.empty()) {
-          outFile << "% " << header << std::endl;
-      }
-      
-      // Write the vector size
-      outFile << vec.size() << std::endl;
-      
-      // Write the vector elements
-      outFile << std::scientific << std::setprecision(16);
-      for (const auto& val : vec) {
-          outFile << val << std::endl;
-      }
-      
-      outFile.close();      
-      return;
-  }
+  void writeVectorToMatrixMarket(const std::vector<T>& vec, const std::string& filename, const std::string& header)
+  {
+    std::ofstream outFile(filename);
 
+    if (!outFile.is_open())
+    {
+      std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
+      return;
+    }
+
+    // Write Matrix Market header
+    outFile << "%%MatrixMarket vector array real general" << std::endl;
+
+    // Write additional header information as comments
+    if (!header.empty())
+    {
+      outFile << "% " << header << std::endl;
+    }
+
+    // Write the vector size
+    outFile << vec.size() << std::endl;
+
+    // Write the vector elements
+    outFile << std::scientific << std::setprecision(16);
+    for (const auto& val : vec)
+    {
+      outFile << val << std::endl;
+    }
+
+    outFile.close();
+    return;
+  }
 
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
@@ -389,8 +392,6 @@ namespace GridKit
     {
       components_.push_back(component);
     }
-
-
 
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);

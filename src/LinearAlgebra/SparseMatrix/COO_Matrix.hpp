@@ -5,13 +5,13 @@
 #include <assert.h>
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <tuple>
-#include <vector>
-#include <fstream>
 #include <type_traits>
-#include <algorithm>
+#include <vector>
+
 /**
  * @brief Quick class to provide sparse matrices of COO type.
  *
