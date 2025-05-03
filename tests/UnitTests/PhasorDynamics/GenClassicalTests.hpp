@@ -1,12 +1,14 @@
 #include <iomanip>
 #include <iostream>
+#include <limits>
+
+#include <Model/PhasorDynamics/SynchronousMachine/ClassicalGenerator/ClassicalGen.cpp>
+
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
+#include <Model/PhasorDynamics/SynchronousMachine/ClassicalGenerator/ClassicalGen.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
-#include <limits>
 
 namespace GridKit
 {
@@ -49,52 +51,48 @@ namespace GridKit
       TestOutcome residual()
       {
         TestStatus success = true;
-        
+
         // classical generator parameters
-        real_type H{0.1}; 
+        real_type H{0.1};
         real_type D{2.35};
-        real_type Ra{1.5}; 
-        real_type Xdp{4.5}; 
-        real_type pmech{5.0}; 
-        real_type ep{2.5}; 
+        real_type Ra{1.5};
+        real_type Xdp{4.5};
+        real_type pmech{5.0};
+        real_type ep{2.5};
 
         ScalarT Vr1{2.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.5}; ///< Bus-1 imaginary voltage
 
-        const ScalarT res0{-1128.973355292326};  /// first residual
-        const ScalarT res1{27.5625000000000}; /// second residual
+        const ScalarT res0{-1128.973355292326}; /// first residual
+        const ScalarT res1{27.5625000000000};   /// second residual
         const ScalarT res2{4.102511525891203};  /// third residual
-        const ScalarT res3{8.164018441425924}; /// fourth residual
-        const ScalarT res4{2.089603682931281}; /// fifth residual
-        const ScalarT res5{5.0}; /// fifth residual
-        const ScalarT res6{2.5}; /// fifth residual
-        const ScalarT tol = 0.000000000001; //tolerance for comparing results
+        const ScalarT res3{8.164018441425924};  /// fourth residual
+        const ScalarT res4{2.089603682931281};  /// fifth residual
+        const ScalarT res5{5.0};                /// fifth residual
+        const ScalarT res6{2.5};                /// fifth residual
+        const ScalarT tol = 0.000000000001;     // tolerance for comparing results
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
-        gen.allocate(); 
+        gen.allocate();
 
-        
+        gen.y()[0] = 1.0; // delta
+        gen.y()[1] = 3.0; // omega
+        gen.y()[2] = 4.0; // telec
+        gen.y()[3] = 8.0; // ir
+        gen.y()[4] = 2.0; // ii
+        gen.y()[5] = 5.0; // pmech
+        gen.y()[6] = 2.5; // Ep
 
-        gen.y()[0] = 1.0; //delta
-        gen.y()[1] = 3.0; //omega
-        gen.y()[2] = 4.0; //telec
-        gen.y()[3] = 8.0; //ir
-        gen.y()[4] = 2.0; //ii
-        gen.y()[5] = 5.0; //pmech
-        gen.y()[6] = 2.5; //Ep
-
-        gen.yp()[0] = 2.0; //delta_dot
-        gen.yp()[1] = 5.0; //omega_dot
-        gen.yp()[2] = 0.0; //telec
-        gen.yp()[3] = 0.0; //ir
-        gen.yp()[4] = 0.0; //ii
-        gen.yp()[5] = 0.0; //pmech
-        gen.yp()[6] = 0.0; //Ep
-
-        
+        gen.yp()[0] = 2.0; // delta_dot
+        gen.yp()[1] = 5.0; // omega_dot
+        gen.yp()[2] = 0.0; // telec
+        gen.yp()[3] = 0.0; // ir
+        gen.yp()[4] = 0.0; // ii
+        gen.yp()[5] = 0.0; // pmech
+        gen.yp()[6] = 0.0; // Ep
 
         gen.evaluateResidual();
 
@@ -112,39 +110,39 @@ namespace GridKit
       }
 
       /**
-       * 
+       *
        * Verifies correctness of the system initialization
        */
       TestOutcome initial()
       {
         TestStatus success = true;
-        
+
         // classical generator parameters
-        real_type p0{3}; 
+        real_type p0{3};
         real_type q0{-1};
-        real_type H{1}; 
+        real_type H{1};
         real_type D{1};
-        real_type Ra{0.4}; 
-        real_type Xdp{-0.2}; 
+        real_type Ra{0.4};
+        real_type Xdp{-0.2};
 
         ScalarT Vr1{1}; ///< Bus-1 real voltage
         ScalarT Vi1{1}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{1.1071487177940905030170654601785};  /// first residual
-        const ScalarT omega{0.0}; /// second residual
-        const ScalarT Te{5.0};  /// third residual
-        const ScalarT ir{1.0}; /// fourth residual
-        const ScalarT ii{2.0}; /// fifth residual
-        const ScalarT pmech{5.0}; /// fifth residual
-        const ScalarT Ep{2.23606797749978969640917366873}; /// fifth residual
+        const ScalarT delta{1.1071487177940905030170654601785}; /// first residual
+        const ScalarT omega{0.0};                               /// second residual
+        const ScalarT Te{5.0};                                  /// third residual
+        const ScalarT ir{1.0};                                  /// fourth residual
+        const ScalarT ii{2.0};                                  /// fifth residual
+        const ScalarT pmech{5.0};                               /// fifth residual
+        const ScalarT Ep{2.23606797749978969640917366873};      /// fifth residual
 
-        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing result
+        const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
-        gen.allocate(); 
+        gen.allocate();
         gen.initialize();
 
         success *= isEqual(gen.y()[0], delta, tol);
@@ -162,44 +160,43 @@ namespace GridKit
         success *= isEqual(gen.yp()[4], 0.0, tol);
         success *= isEqual(gen.yp()[5], 0.0, tol);
         success *= isEqual(gen.yp()[6], 0.0, tol);
-        
 
         return success.report(__func__);
       }
 
       /*
-      *Verifies the residual evaluates to zero for the initial conditions
-      */
+       *Verifies the residual evaluates to zero for the initial conditions
+       */
       TestOutcome zeroInitialResidual()
       {
         TestStatus success = true;
-        
+
         // classical generator parameters
-        real_type p0{3}; 
+        real_type p0{3};
         real_type q0{-1};
-        real_type H{1}; 
+        real_type H{1};
         real_type D{1};
-        real_type Ra{0.4}; 
-        real_type Xdp{-0.2}; 
+        real_type Ra{0.4};
+        real_type Xdp{-0.2};
 
         ScalarT Vr1{1}; ///< Bus-1 real voltage
         ScalarT Vi1{1}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{1.1071487177940905030170654601785};  /// first residual
-        const ScalarT omega{0.0}; /// second residual
-        const ScalarT Te{5.0};  /// third residual
-        const ScalarT ir{1.0}; /// fourth residual
-        const ScalarT ii{2.0}; /// fifth residual
-        const ScalarT pmech{5.0}; /// sixth residual
-        const ScalarT Ep{2.23606797749978969640917366873}; /// seventh residual
+        const ScalarT delta{1.1071487177940905030170654601785}; /// first residual
+        const ScalarT omega{0.0};                               /// second residual
+        const ScalarT Te{5.0};                                  /// third residual
+        const ScalarT ir{1.0};                                  /// fourth residual
+        const ScalarT ii{2.0};                                  /// fifth residual
+        const ScalarT pmech{5.0};                               /// sixth residual
+        const ScalarT Ep{2.23606797749978969640917366873};      /// seventh residual
 
-        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing results
+        const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
-        gen.allocate(); 
+        gen.allocate();
         gen.initialize();
         gen.evaluateResidual();
         std::vector<double> res = gen.getResidual();
@@ -211,13 +208,10 @@ namespace GridKit
         success *= isEqual(res[4], 0.0, tol);
         success *= isEqual(res[5], 0.0, tol);
         success *= isEqual(res[6], 0.0, tol);
-   
+
         return success.report(__func__);
       }
 
-
-
-      
     }; // class BranchTest
 
   } // namespace Testing
