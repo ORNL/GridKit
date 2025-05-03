@@ -44,6 +44,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * A test case to verify residual values
+       */
       TestOutcome residual()
       {
         TestStatus success = true;
@@ -67,7 +70,7 @@ namespace GridKit
         const ScalarT res5{5.0}; /// fifth residual
         const ScalarT res6{2.5}; /// fifth residual
 
-        const ScalarT tol{0.00000000001}; //tolerance for comparing result
+        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing results
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
         PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
@@ -110,6 +113,10 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * 
+       * Verifies correctness of the system initialization
+       */
       TestOutcome initial()
       {
         TestStatus success = true;
@@ -162,7 +169,9 @@ namespace GridKit
         return success.report(__func__);
       }
 
-
+      /*
+      *Verifies the residual evaluates to zero for the initial conditions
+      */
       TestOutcome zeroInitialResidual()
       {
         TestStatus success = true;
@@ -183,10 +192,10 @@ namespace GridKit
         const ScalarT Te{5.0};  /// third residual
         const ScalarT ir{1.0}; /// fourth residual
         const ScalarT ii{2.0}; /// fifth residual
-        const ScalarT pmech{5.0}; /// fifth residual
-        const ScalarT Ep{2.23606797749978969640917366873}; /// fifth residual
+        const ScalarT pmech{5.0}; /// sixth residual
+        const ScalarT Ep{2.23606797749978969640917366873}; /// seventh residual
 
-        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing result
+        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing results
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
         PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
