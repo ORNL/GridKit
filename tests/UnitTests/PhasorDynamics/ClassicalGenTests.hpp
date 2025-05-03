@@ -163,6 +163,53 @@ namespace GridKit
       }
 
 
+      TestOutcome zeroInitialResidual()
+      {
+        TestStatus success = true;
+        
+        // classical generator parameters
+        real_type p0{3}; 
+        real_type q0{-1};
+        real_type H{1}; 
+        real_type D{1};
+        real_type Ra{0.4}; 
+        real_type Xdp{-0.2}; 
+
+        ScalarT Vr1{1}; ///< Bus-1 real voltage
+        ScalarT Vi1{1}; ///< Bus-1 imaginary voltage
+
+        const ScalarT delta{1.1071487177940905030170654601785};  /// first residual
+        const ScalarT omega{0.0}; /// second residual
+        const ScalarT Te{5.0};  /// third residual
+        const ScalarT ir{1.0}; /// fourth residual
+        const ScalarT ii{2.0}; /// fifth residual
+        const ScalarT pmech{5.0}; /// fifth residual
+        const ScalarT Ep{2.23606797749978969640917366873}; /// fifth residual
+
+        const ScalarT tol = 5*(std::numeric_limits<double>::epsilon()); //tolerance for comparing result
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::ClassicalGen<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
+        bus.allocate();
+        bus.initialize();
+        gen.allocate(); 
+        gen.initialize();
+        gen.evaluateResidual();
+        std::vector<double> res = gen.getResidual();
+
+        success *= isEqual(res[0], 0.0, tol);
+        success *= isEqual(res[1], 0.0, tol);
+        success *= isEqual(res[2], 0.0, tol);
+        success *= isEqual(res[3], 0.0, tol);
+        success *= isEqual(res[4], 0.0, tol);
+        success *= isEqual(res[5], 0.0, tol);
+        success *= isEqual(res[6], 0.0, tol);
+   
+        return success.report(__func__);
+      }
+
+
+
       
     }; // class BranchTest
 
