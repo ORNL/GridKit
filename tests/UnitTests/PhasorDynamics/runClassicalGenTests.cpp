@@ -9,6 +9,7 @@ int main()
   result += test.constructor();
   result += test.residual();
   result += test.initial();
+  result += test.zeroInitialResidual();
 
   return result.summary();
 }
