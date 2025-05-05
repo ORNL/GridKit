@@ -17,10 +17,20 @@ Standard model of the stream turbine
 - $`P_{REF}`$ - reference power (set point)
 - $`\Delta\omega`$
 
+(Below is for exciter oops)
+
 ### Algebraic Variables
+- $V_{tr}$ - Sensed terminal voltage
+- $V_{F}$ - Voltage Regulator
+- $V_{E}'$ - Field Current 
+- $E_{fd}$ - Exciter Feedback Internal State
+- $k_{sat}$ - Exciter Feedback Internal State
+
 ### Differential Variables
-- $`P`$ - turbine power (state 1 in the Figure)
-- $`V`$ - valve position (state 2 in the Figure)
+- $V_{ts}$ - Sensed terminal voltage
+- $V_{R}$ - Voltage Regulator
+- $E_{FD}'$ - Field Current 
+- $V_{fx}$ - Exciter Feedback Internal State
 
 ### Parameters
 - $`R`$ - permanent droop, pu (0.05)
