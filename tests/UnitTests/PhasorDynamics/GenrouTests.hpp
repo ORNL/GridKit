@@ -76,10 +76,13 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
+        // Require results to be within machine precision
+        auto tol = 10*std::numeric_limits<real_type>::epsilon();
+
         const std::vector<ScalarT>& f = gen.getResidual();
-        for (IdxT i = 0; i < 21; ++i)
+        for (const auto& f_val : f)
         {
-          if (!isEqual(f[i], 0.0, 1e-14))
+          if (!isEqual(f_val, 0.0, tol))
             success = false;
         }
 

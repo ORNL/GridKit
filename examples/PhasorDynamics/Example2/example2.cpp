@@ -1,8 +1,8 @@
 #include "example2.hpp"
 
-#include <cmath>
 #include <cstdio>
-#include <time.h>
+#include <ctime>
+#include <fstream>
 #include <vector>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
@@ -14,9 +14,6 @@
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
-
-#define _CRT_SECURE_NO_WARNINGS
-#define _USE_MATH_DEFINES
 
 int main()
 {
@@ -66,7 +63,6 @@ int main()
 
   /* Run simulation */
   scalar_type start = static_cast<scalar_type>(clock());
-  // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
   ida.runSimulationFixed(0.0, dt, 1.0, buffer);
   fault.setStatus(1);
@@ -85,17 +81,25 @@ int main()
   const index_type nt     = 2401;
   scalar_type      results[stride];
   buffer.seekg(0, std::ios::beg);
-  FILE* f = fopen("example2_results.csv", "w");
-  fprintf(f, "Time,gen2speed,gen3speed,v2mag,v3mag\n");
-  fprintf(f, "0,1,1,1,1\n");
+
+  std::ostream nullout(nullptr);
+  std::ostream& out = nullout;
+
+  // // Uncomment code below to print output to a file:
+  // std::ofstream fileout;
+  // fileout.open("example2_results.csv");
+  // std::ostream& out = fileout;
+
+  out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
+  out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";
+
   for (index_type i = 0; i < nt - 1; ++i)
   {
     for (index_type j = 0; j < stride; ++j)
+    {
       buffer >> results[j];
-    // for (j = 0; j < stride; ++j) printf("%d %d %g\n", i, j, results[j]);
+    }
     real_type   t             = results[0];
-    scalar_type tref          = reference_solution[i + 1][0];
-    // printf("Time GridKit %g PowerWorld %g\n", t, tref);
     scalar_type gen2speed     = 1 + results[7];
     scalar_type gen2speed_ref = reference_solution[i + 1][1];
     scalar_type gen3speed     = 1 + results[28];
@@ -104,18 +108,20 @@ int main()
     scalar_type v2mag_ref     = reference_solution[i + 1][4];
     scalar_type v3mag         = sqrt(results[4] * results[4] + results[5] * results[5]);
     scalar_type v3mag_ref     = reference_solution[i + 1][5];
-    fprintf(f, "%g,%g,%g,%g,%g\n", t, gen2speed, gen3speed, v2mag, v3mag);
-    real_type err = std::max(std::max(std::abs(gen2speed - gen2speed_ref),
-                                      std::abs(gen3speed - gen3speed_ref)),
-                             std::max(std::abs(v2mag - v2mag_ref),
-                                      std::abs(v3mag - v3mag_ref)));
+
+    out << t << "," << gen2speed << "," << gen3speed << "," << v2mag << "," << v3mag << "\n";
+
+    real_type err = std::max({std::abs(gen2speed - gen2speed_ref),
+                              std::abs(gen3speed - gen3speed_ref),
+                              std::abs(v2mag - v2mag_ref),
+                              std::abs(v3mag - v3mag_ref)});
     if (err > worst_error)
     {
       worst_error      = err;
       worst_error_time = t;
     }
   }
-  fclose(f);
+  // fileout.close();
 
   std::cout << "Worst error " << worst_error
             << " at time t = " << worst_error_time << "\n";
