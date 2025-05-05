@@ -91,12 +91,10 @@ int main()
   // push it into output, which is updated outside the callback.
   auto output_cb = [&](double t)
   {
-    std::vector<double>& yval = sys.y();
-
     output.push_back({.ti = t,
-                      .Vr = yval[0],
-                      .Vi = yval[1],
-                      .dw = yval[3]});
+                      .Vr = bus1.Vr(),
+                      .Vi = bus1.Vi(),
+                      .dw = gen.y()[1]});
   };
 
   // The above lambda is equivalent to writing

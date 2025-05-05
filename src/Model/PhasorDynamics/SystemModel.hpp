@@ -343,42 +343,15 @@ namespace GridKit
        */
       int evaluateIntegrand()
       {
-        // Update variables
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
+        updateChildren();
+
         for (const auto& bus : buses_)
         {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[varOffset + j];
-            bus->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-
           bus->evaluateIntegrand();
         }
 
         for (const auto& component : components_)
         {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[varOffset + j];
-            component->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-
           component->evaluateIntegrand();
         }
 
@@ -413,45 +386,9 @@ namespace GridKit
        */
       int initializeAdjoint()
       {
-        IdxT offset    = 0;
-        IdxT optOffset = 0;
+        updateChildren();
 
-        // Update bus variables and optimization parameters
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[offset + j];
-            bus->yp()[j] = yp_[offset + j];
-          }
-          offset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        // Update component variables and optimization parameters
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[offset + j];
-            component->yp()[j] = yp_[offset + j];
-          }
-          offset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
-
-        // Reset counter
-        offset = 0;
+        size_t offset = 0;
 
         // Initialize bus adjoints
         for (const auto& bus : buses_)
@@ -491,45 +428,7 @@ namespace GridKit
        */
       int evaluateAdjointResidual()
       {
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
-
-        // Update variables in component models
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]   = y_[varOffset + j];
-            bus->yp()[j]  = yp_[varOffset + j];
-            bus->yB()[j]  = yB_[varOffset + j];
-            bus->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]   = y_[varOffset + j];
-            component->yp()[j]  = yp_[varOffset + j];
-            component->yB()[j]  = yB_[varOffset + j];
-            component->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
+        updateChildrenAdjoint();
 
         for (const auto& bus : buses_)
         {
@@ -575,44 +474,7 @@ namespace GridKit
        */
       int evaluateAdjointIntegrand()
       {
-        // First, update variables
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]   = y_[varOffset + j];
-            bus->yp()[j]  = yp_[varOffset + j];
-            bus->yB()[j]  = yB_[varOffset + j];
-            bus->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]   = y_[varOffset + j];
-            component->yp()[j]  = yp_[varOffset + j];
-            component->yB()[j]  = yB_[varOffset + j];
-            component->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
+        updateChildrenAdjoint();
 
         // Evaluate integrand and update global vector
         for (const auto& component : components_)
@@ -648,10 +510,89 @@ namespace GridKit
         components_.push_back(component);
       }
 
+      void update() override
+      {
+        updateChildrenAdjoint();
+      }
+
     private:
       std::vector<bus_type*>       buses_;
       std::vector<component_type*> components_;
 
+      /// @brief Whenever the internal state of a system is updated, the system
+      ///        needs to reflect those changes in its "children" aka buses and
+      ///        components. `updateChildren` will only update `y`, `yp`, and
+      ///        `param` - call when you know only the internal state of those
+      ///        variables has been updated.
+      void updateChildren()
+      {
+        // Update variables
+        IdxT varOffset = 0;
+        IdxT optOffset = 0;
+        for (const auto& bus : buses_)
+        {
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus->y()[j]  = y_[varOffset + j];
+            bus->yp()[j] = yp_[varOffset + j];
+          }
+          varOffset += bus->size();
+
+          for (IdxT j = 0; j < bus->sizeParams(); ++j)
+          {
+            bus->param()[j] = param_[optOffset + j];
+          }
+          optOffset += bus->sizeParams();
+        }
+
+        for (const auto& component : components_)
+        {
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component->y()[j]  = y_[varOffset + j];
+            component->yp()[j] = yp_[varOffset + j];
+          }
+          varOffset += component->size();
+
+          for (IdxT j = 0; j < component->sizeParams(); ++j)
+          {
+            component->param()[j] = param_[optOffset + j];
+          }
+          optOffset += component->sizeParams();
+        }
+      }
+
+      /// @brief Whenever the internal state of a system is updated, the system
+      ///        needs to reflect those changes in its "children" aka buses and
+      ///        components. `updateChildrenAdjoint` will update all internal
+      ///        variables of this system's children, including adjoint variables.
+      void updateChildrenAdjoint()
+      {
+        // Update all non-adjoint state
+        updateChildren();
+
+        IdxT varOffset = 0;
+        IdxT optOffset = 0;
+        for (const auto& bus : buses_)
+        {
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus->yB()[j]  = yB_[varOffset + j];
+            bus->ypB()[j] = ypB_[varOffset + j];
+          }
+          varOffset += bus->size();
+        }
+
+        for (const auto& component : components_)
+        {
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component->yB()[j]  = yB_[varOffset + j];
+            component->ypB()[j] = ypB_[varOffset + j];
+          }
+          varOffset += component->size();
+        }
+      }
     }; // class SystemModel
 
   } // namespace PhasorDynamics

@@ -231,6 +231,7 @@ namespace AnalysisManager
           model_->updateTime(tret, 0.0);
           copyVec(yy_, model_->y());
           copyVec(yp_, model_->yp());
+          model_->update();
 
           (*step_callback)(tret);
         }
@@ -246,6 +247,7 @@ namespace AnalysisManager
       model_->updateTime(tf, 0.0);
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
+      model_->update();
 
       // std::cout << "\n";
       return retval;

@@ -56,6 +56,12 @@ namespace GridKit
       virtual void setTolerances(real_type& rtol, real_type& atol) const = 0;
       virtual void setMaxSteps(IdxT& msa) const                          = 0;
 
+      /// @brief Let the `Evaluator` know that its state has been updated externally (for example by an integrator),
+      ///        in case it needs to keep other things up to date based on its internal state.
+      virtual void update()
+      {
+      }
+
       virtual std::vector<ScalarT>&       y()       = 0;
       virtual const std::vector<ScalarT>& y() const = 0;
 
