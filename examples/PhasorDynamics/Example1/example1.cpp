@@ -67,13 +67,28 @@ int main()
 
   double dt = 1.0 / 4.0 / 60.0;
 
+  // A data structure to keep track of the data we want to
+  // compare to the reference solution. Rather than keeping
+  // the entire solution vector at every time step around,
+  // we instead narrow down exactly what we want to keep.
   struct OutputData
   {
     double ti, Vr, Vi, dw;
   };
 
+  // A list of output for each time step.
   std::vector<OutputData> output;
 
+  // A callback which will be called by the integrator after
+  // each time step. It will be told the time of the current
+  // state, and it is allowed to access the up-to-date state
+  // of the components, which are captured by a closure
+  // due to the [&] notation (every variable that is referenced
+  // by the callback that is external to the callback itself -
+  // here output, bus1, and gen - will be considered a
+  // reference to that variable inside the callback). We select
+  // the subset of the output we're interested in recording and
+  // push it into output, which is updated outside the callback.
   auto output_cb = [&](double t)
   {
     std::vector<double>& yval = sys.y();
@@ -84,11 +99,27 @@ int main()
                       .dw = yval[3]});
   };
 
+  // The above lambda is equivalent to writing
+  // struct
+  // {
+  //   SystemModel<double, size_t>& sys;
+  //
+  //   void operator()(double t)
+  //   {
+  //     std::vector<double>& yval = sys.y();
+  //
+  //     output.push_back({.ti = t,
+  //                       .Vr = yval[0],
+  //                       .Vi = yval[1],
+  //                       .dw = yval[3]});
+  //   }
+  // } output_cb = {output, bus1, gen};
+
   /* Set up simulation */
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
 
-  /* Run simulation */
+  /* Run simulation - making sure to pass the callback to record output*/
   double start = static_cast<double>(clock());
   // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
@@ -103,7 +134,9 @@ int main()
 
   double error_V = 0.0; // error in |V|
 
-  // Read through the simulation data storred in the buffer
+  // Read through the simulation data stored in the buffer.
+  // Since we captured by reference, output should be available
+  // for us to read here, outside the callback.
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData           data    = output[i];
