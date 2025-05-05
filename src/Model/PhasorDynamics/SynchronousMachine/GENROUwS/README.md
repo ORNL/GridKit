@@ -16,6 +16,7 @@ The GENROU model is a variation of the
 - Same relative amount of saturation occurs on both $`d`$ and $`q`$ axis
 
 ## Nomenclature
+
 ### Algebraic Variables
 - $V_d$, $V_q$   Machine Internal Voltage on the machine d-q reference frame  
 - $I_d$, $I_q$   Terminal currents on the machine d-q reference frame  
@@ -158,18 +159,18 @@ from the steady-state initial conditions.
 \begin{aligned}
 \omega &= 0 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
-  \psi^{''}_{d} &= V_q \\
-  \psi^{''}_{q} &= -V_d \\
-  \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
-  T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
+  \psi''_{d} &= V_q \\
+  \psi''_{q} &= -V_d \\
+  \psi'' &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
+  k_{sat}     &= S_B(\psi''-S_A)^2 \\
+  T_{elec}    &= (\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   P_{mech}    &= T_{elec} \\
   \psi^{'}_d  &=
-  \dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
-  \psi^{'}_q  &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\
+  \dfrac{\psi''_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
+  \psi^{'}_q  &=\dfrac{X_{q5}X_{q2}I_q-\psi''_q}{X_{q5}+1}\\
   E^{'}_d     &=\psi^{'}_q - X_{q2}I_q \\
   E^{'}_q     &=\psi^{'}_d + X_{d2}I_d \\
-  E_{fd}      &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
+  E_{fd}      &= E'_{q}+X_{d1}I_{d}+\psi''_{d}k_{sat} \\
 \end{aligned}
 ```
 
