@@ -82,7 +82,7 @@ int main()
   scalar_type      results[stride];
   buffer.seekg(0, std::ios::beg);
 
-  std::ostream nullout(nullptr);
+  std::ostream  nullout(nullptr);
   std::ostream& out = nullout;
 
   // // Uncomment code below to print output to a file:
