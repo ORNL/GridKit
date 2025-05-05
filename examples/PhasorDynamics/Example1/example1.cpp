@@ -1,7 +1,7 @@
 #include "example1.hpp"
 
-#include <cmath>
-#include <time.h>
+#include <ctime>
+#include <iostream>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -12,15 +12,12 @@
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
-#define _USE_MATH_DEFINES
-#define _CRT_SECURE_NO_WARNINGS
-
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  printf("Example 1 version 2\n");
+  std::cout << "Example 1 version 2\n";
 
   /* Create model parts */
   SystemModel<double, size_t> sys;
@@ -104,7 +101,6 @@ int main()
           / (1.0 + std::abs(reference_solution[i / 48][2]));
       if (err > error_V)
         error_V = err;
-      // std::cout << "t = " << ti << ": Vr = " << Vr << ", Vi = " << Vi << ", dw = " << dw;
       std::cout << "GridKit: t = " << ti
                 << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
                 << ", w = " << (1.0 + dw) << "\n";
@@ -138,11 +134,8 @@ int main()
     }
     ++j;
     ++i;
-    // if (i > 500)
-    //   break;
   }
 
-  // std::cout << buffer.str();
   int status = 0;
   std::cout << "Max error in |V| = " << error_V << "\n";
   if (error_V > 2e-4)
@@ -153,5 +146,5 @@ int main()
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return 0;
+  return status;
 }
