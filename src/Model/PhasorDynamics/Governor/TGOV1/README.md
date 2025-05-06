@@ -13,34 +13,23 @@ Standard model of the stream turbine
 
 ## Nomenclature
 
-### Inputs 
-- $`P_{REF}`$ - reference power (set point)
-- $`\Delta\omega`$
-
-(Below is for exciter oops)
-
 ### Algebraic Variables
-- $V_{tr}$ - Sensed terminal voltage
-- $V_{F}$ - Voltage Regulator
-- $V_{E}'$ - Field Current 
-- $E_{fd}$ - Exciter Feedback Internal State
-- $k_{sat}$ - Exciter Feedback Internal State
+- $\omega$ - Per-unit Speed Deviation
+- $P_{ref}$ - Reference Power
+- $P_{mech}$ - Mechnical Power to Generator
 
 ### Differential Variables
-- $V_{ts}$ - Sensed terminal voltage
-- $V_{R}$ - Voltage Regulator
-- $E_{FD}'$ - Field Current 
-- $V_{fx}$ - Exciter Feedback Internal State
+- $P_{tx}$ - Turbine Power 
+- $P_{v}$ - Valve Position
 
 ### Parameters
-- $`R`$ - permanent droop, pu (0.05)
-- $`T2`$ - steam bowl time constant, sec (0.5)
-- $`V_{max}`$ - maximum valve position limit (1)
-- $`V_{min}`$ -  minimum valve position limit (0)
-- $`T2`$ - numerator time constant of T2, T3 block, sec (2.5)
-- $`T3`$ - reheater time constant, sec (7.5)
-- $`D_{t}`$ - turbine damping coefficient, pu (0)
-- $`T_{rate}`$ - turbine rating, MW (0) 
+- $R$ - Droop Constant
+- $T_1$ - Valve Time Delay
+- $V_{max}$ - Max Valve Position
+- $V_{min}$ -  Min Valve Position
+- $T_2$ - Turbine Numerator Time Constat
+- $T_3$ - Turbine Delay
+- $D_t$ - Turbine Damping Coefficient
 
 ## Equations
 
