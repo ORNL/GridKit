@@ -73,6 +73,11 @@ int main()
   // we instead narrow down exactly what we want to keep.
   struct OutputData
   {
+    OutputData(double ti_in, double Vr_in, double Vi_in, double dw_in)
+      : ti(ti_in), Vr(Vr_in), Vi(Vi_in), dw(dw_in)
+    {
+    }
+
     double ti, Vr, Vi, dw;
   };
 
@@ -93,46 +98,32 @@ int main()
   {
     std::vector<double>& yval = sys.y();
 
-    output.push_back({.ti = t,
-                      .Vr = yval[0],
-                      .Vi = yval[1],
-                      .dw = yval[3]});
+    output.push_back(OutputData(t, yval[0], yval[1], yval[3]));
   };
 
-  // The above lambda is equivalent to writing
-  // struct OutputCallback
-  // {
-  //   SystemModel<double, size_t>& sys;
-  //   std::vector<OutputData>&     output;
-  //
-  //   void operator()(double t)
-  //   {
-  //     std::vector<double>& yval = sys.y();
-  //
-  //     output.push_back({.ti = t,
-  //                       .Vr = yval[0],
-  //                       .Vi = yval[1],
-  //                       .dw = yval[3]});
-  //   }
-  // };
-  //
-  // OutputCallback output_cb = {.sys = sys, .output = output};
-
-  /* Set up simulation */
+  // Set up simulation
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
 
-  /* Run simulation - making sure to pass the callback to record output*/
+  // Run simulation - making sure to pass the callback to record output
   double start = static_cast<double>(clock());
-  // ida.printOutputF(0, 0, buffer);
+
+  // Run for 1s
   ida.initializeSimulation(0.0, false);
-  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), output_cb);
+  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
+  ida.runSimulation(1.0, nout, output_cb);
+
+  // Introduce fault and run for the next 0.1s
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), output_cb);
+  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
+  ida.runSimulation(1.1, nout, output_cb);
+
+  // Clear the fault and run until t = 10s.
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), output_cb);
+  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
+  ida.runSimulation(10.0, nout, output_cb);
   double stop = static_cast<double>(clock());
 
   double error_V = 0.0; // error in |V|

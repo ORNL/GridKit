@@ -37,16 +37,36 @@ struct OutputData
   scalar_type v2mag;
   scalar_type v3mag;
 
-  OutputData operator-(const OutputData& other) const
+  OutputData(real_type   t_in,
+             scalar_type gen2speed_in,
+             scalar_type gen3speed_in,
+             scalar_type v2mag_in,
+             scalar_type v3mag_in)
+    : t(t_in),
+      gen2speed(gen2speed_in),
+      gen3speed(gen3speed_in),
+      v2mag(v2mag_in),
+      v3mag(v3mag_in)
+  {
+  }
+
+  OutputData(const OutputData& data)
+    : t(data.t),
+      gen2speed(data.gen2speed),
+      gen3speed(data.gen3speed),
+      v2mag(data.v2mag),
+      v3mag(data.v3mag)
+  {
+  }
+
+  OutputData& operator-=(const OutputData& other)
   {
     assert(t == other.t);
-    return {
-        .t         = t,
-        .gen2speed = gen2speed - other.gen2speed,
-        .gen3speed = gen3speed - other.gen3speed,
-        .v2mag     = v2mag - other.v2mag,
-        .v3mag     = v3mag - other.v3mag,
-    };
+    gen2speed -= other.gen2speed;
+    gen3speed -= other.gen3speed;
+    v2mag     -= other.v2mag;
+    v3mag     -= other.v3mag;
+    return *this;
   }
 
   double norm() const
@@ -59,6 +79,11 @@ struct OutputData
     });
   }
 };
+
+const OutputData operator-(const OutputData& lhs, const OutputData& rhs)
+{
+  return OutputData(lhs) -= rhs;
+}
 
 std::ostream& operator<<(std::ostream& out, const OutputData& data)
 {
@@ -113,28 +138,36 @@ int main()
   {
     std::vector<double>& yval = sys.y();
 
-    output.push_back({.t         = t,
-                      .gen2speed = 1 + yval[5],
-                      .gen3speed = 1 + yval[26],
-                      .v2mag     = sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
-                      .v3mag     = sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
+    output.push_back(OutputData(t,
+                                1.0 + yval[5],
+                                1.0 + yval[26],
+                                std::sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
+                                std::sqrt(yval[2] * yval[2] + yval[3] * yval[3])));
   };
 
-  /* Set up simulation */
-  Ida<scalar_type, index_type>
-      ida(&sys);
+  // Set up simulation
+  Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
 
-  /* Run simulation */
+  // Run simulation, output each `dt` interval
   scalar_type start = static_cast<scalar_type>(clock());
   ida.initializeSimulation(0.0, false);
-  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), output_cb);
+
+  // Run for 1s
+  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
+  ida.runSimulation(1.0, nout, output_cb);
+
+  // Introduce fault to ground and run for 0.1s
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), output_cb);
+  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
+  ida.runSimulation(1.1, nout, output_cb);
+
+  // Clear fault and run until t = 10s.
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), output_cb);
+  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
+  ida.runSimulation(10.0, nout, output_cb);
   double stop = static_cast<double>(clock());
 
   /* Check worst-case error */
@@ -154,12 +187,11 @@ int main()
 
   for (index_type i = 0; i < output.size(); ++i)
   {
-    OutputData ref = {
-        .t         = reference_solution[i + 1][0],
-        .gen2speed = reference_solution[i + 1][1],
-        .gen3speed = reference_solution[i + 1][2],
-        .v2mag     = reference_solution[i + 1][4],
-        .v3mag     = reference_solution[i + 1][5]};
+    OutputData ref(reference_solution[i + 1][0],
+                   reference_solution[i + 1][1],
+                   reference_solution[i + 1][2],
+                   reference_solution[i + 1][4],
+                   reference_solution[i + 1][5]);
     OutputData out_data = output[i];
 
     out << out_data << '\n';
