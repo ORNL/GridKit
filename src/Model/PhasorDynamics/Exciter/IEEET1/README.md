@@ -51,8 +51,19 @@ The algebraic equation dictating the mechnical power output.
 ```math
 \begin{aligned}
    V_{tr} &= V_{ref} - V_{ts}+V_{UEL} + V_{OEL} + V_S - V_F\\
+    V_{f} &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
+    E_{fd}&= \begin{cases}
+        E_{fd}^{'}           &  \text{if } I_{spdlm}\\
+        (1+\omega)E_{fd}^{'}  &  \text{else } \\
+   \end{cases}\\
+    k_{sat}&= \begin{cases}
+        S_B(E_{fd}^{'} -S_A)^2        &  \text{if } E_{fd}^{'} >S_A\\
+        0  &  \text{else } \\
+   \end{cases}
+    V_{E} &= k_{sat}\cdot E_{fd}^{'} \\
 \end{aligned}
 ```
+
 
 ### Differential Equations
 The TGOV1 differential equations, as derived from the model diagram.
@@ -69,7 +80,7 @@ The TGOV1 differential equations, as derived from the model diagram.
    \end{cases}
 \end{aligned}
 ```
-The domain of the state variable $P_{v}\in(V_{min}, V_{max})$ is enforced
+The domain of the state variable $V_{R}\in(V_{rmin}, V_{rmax})$ is enforced
 through the piece-wise definition above. However, depending on the
 general solver's requirments, this may need to be expressed as a
 smooth approximation (bump function/smooth indicator). Perhaps like the 
@@ -79,8 +90,8 @@ following.
    I(x,x_0,\epsilon) 
             &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
             \left(\dfrac{x-x_0}{\epsilon}\right) \\
-   \phi(x)  &= I \left(x;V_{min}, \epsilon \right) -
-            I \left(x;V_{max}, \epsilon \right)
+   \phi(x)  &= I \left(x;V_{rmin}, \epsilon \right) -
+            I \left(x;V_{rmax}, \epsilon \right)
             \qquad \epsilon <<1 \\
    \dot{P}_{v}   
             &= 
