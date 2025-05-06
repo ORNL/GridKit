@@ -263,42 +263,17 @@ namespace GridKit
        */
       int evaluateResidual()
       {
-        // Update variables
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
+        // No need to notify children yet, since we're about to
+        // evaluate them
+        updateChildren<false>();
+
         for (const auto& bus : buses_)
         {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[varOffset + j];
-            bus->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-
           bus->evaluateResidual();
         }
 
         for (const auto& component : components_)
         {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[varOffset + j];
-            component->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-
           component->evaluateResidual();
         }
 
