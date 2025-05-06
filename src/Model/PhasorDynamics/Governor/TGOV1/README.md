@@ -67,16 +67,14 @@ following.
    I(x,a,\epsilon) 
             &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
             \left(\dfrac{x-b}{\epsilon}\right) \\
-   \phi(x)  &= I\left(x;V_{min}, \epsilon
-            \right) -
-            I\left(x;V_{max}, \epsilon
-            \right)\qquad \epsilon <<1\\
+   \phi(x)  &= I \left(x;V_{min}, \epsilon \right) -
+            I \left(x;V_{max}, \epsilon \right)
+            \qquad \epsilon <<1 \\
    \dot{P}_{v}   
-            &=  \
+            &= 
             \dfrac{1}{T_1}\cdot I(P_v)
             \left[
                -P_{v} + \frac{1}{R}(P_{ref}-\omega)
-               \right] \\
-   \nabla P_v
+            \right] \\
 \end{aligned}
 ```
