@@ -93,11 +93,11 @@ following.
    \phi(x)  &= I \left(x;V_{rmin}, \epsilon \right) -
             I \left(x;V_{rmax}, \epsilon \right)
             \qquad \epsilon <<1 \\
-   \dot{P}_{v}   
+   \dot{V}_{R}   
             &= 
-            \dfrac{1}{T_1}\cdot \phi(P_v)
+            \dfrac{1}{T_A}\cdot \phi(V_R)
             \left[
-               -P_{v} + \frac{1}{R}(P_{ref}-\omega)
+               -V_{R}+K_{a}V_{tr}
             \right] \\
 \end{aligned}
 ```
