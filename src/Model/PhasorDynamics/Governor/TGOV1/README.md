@@ -50,12 +50,11 @@ through the piece-wise definition below.
 \begin{aligned}
    \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
    \dot{P}_{v}    &= 
+      \dfrac{1}{T_1}
    \begin{cases}
-      \dfrac{1}{T_1}(
-         -P_{v} + \frac{1}{R}(P_{ref}-\omega)
-      )  &  \text{if } P_v \geq V_{max}\\
+      -P_{v} + \frac{1}{R}(P_{ref}-\omega)
+         &  \text{if } P_v \in \in[V_{min}, V_{max}]\\
       0  
-         &  \text{if } P_v \leq V_{min}\\
          &  \text{else } \\
    \end{cases}
 \end{aligned}
