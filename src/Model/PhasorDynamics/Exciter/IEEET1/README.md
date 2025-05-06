@@ -5,7 +5,7 @@
 Standard model of the IEEET1 Exciter.
 
 <div align="center">
-   <img align="center" src="../../../../../docs/Figures/____.JPG">
+   <img align="center" src="../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png">
    
    
   Figure 1: Exciter IEEET1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
