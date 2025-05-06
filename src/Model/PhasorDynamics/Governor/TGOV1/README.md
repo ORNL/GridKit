@@ -25,10 +25,10 @@ Standard model of the stream turbine
 ### Parameters
 - $R$ - Droop Constant
 - $T_1$ - Valve Time Delay
-- $V_{max}$ - Max Valve Position
-- $V_{min}$ -  Min Valve Position
 - $T_2$ - Turbine Numerator Time Constat
 - $T_3$ - Turbine Delay
+- $V_{max}$ - Max Valve Position
+- $V_{min}$ -  Min Valve Position
 - $D_t$ - Turbine Damping Coefficient
 
 ## Equations
@@ -37,26 +37,22 @@ Standard model of the stream turbine
 ### Algebraic Equations
 
 ```math
-\Delta\omega=\dfrac{\omega-\omega_{s}}{\omega_{s}}
+\begin{aligned}
+   \dot{P}_{mech} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
+\end{aligned}
 ```
 
 ### Differential Equations
 First block
 ```math
-\dfrac{dV}{dt} = \begin{cases}
-   \dfrac{1}{T1}(\dfrac{P_{REF}-\Delta\omega}{R}-V) &\text{if } V_{min}<=V<= V_{max}\\
-   0 &\text{if } \dfrac{P_{REF}-\Delta\omega}{R}>0 \text{  and  } V>=V_{max} &\text{ also then } V=V_{max}\\
-   0 &\text{if } \dfrac{P_{REF}-\Delta\omega}{R}<0 \text{  and  } V<=V_{min} &\text{ also then } V=V_{min}\\
-\end{cases}
-```
-Second block
-```math
-\dfrac{dx}{dt}=\dfrac{1}{T3}(V-P)
-```
-```math
-P=x+\dfrac{T2}{T3}V
-```
-Output
-```math
-P_{mech}=P-\Delta\omega D_{t}
+\begin{aligned}
+   \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
+   \dfrac{dV}{dt} &= 
+   \begin{cases}
+      \dfrac{1}{T1}(\dfrac{P_{ref}-\Delta\omega}{R}-V) 
+         &  \text{if } P_v \geq V_{max}\\
+      0  &  \text{if } P_v \leq V_{min}\\
+         &  \text{else } \\
+   \end{cases}
+\end{aligned}
 ```
