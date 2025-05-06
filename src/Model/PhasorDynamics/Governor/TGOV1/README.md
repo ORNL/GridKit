@@ -53,7 +53,7 @@ through the piece-wise definition below.
       \dfrac{1}{T_1}
    \begin{cases}
       -P_{v} + \frac{1}{R}(P_{ref}-\omega)
-         &  \text{if } P_v \in \in[V_{min}, V_{max}]\\
+         &  \text{if } P_v \in (V_{min}, V_{max})\\
       0  
          &  \text{else } \\
    \end{cases}
