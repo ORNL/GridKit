@@ -100,9 +100,10 @@ int main()
   };
 
   // The above lambda is equivalent to writing
-  // struct
+  // struct OutputCallback
   // {
   //   SystemModel<double, size_t>& sys;
+  //   std::vector<OutputData>&     output;
   //
   //   void operator()(double t)
   //   {
@@ -113,7 +114,9 @@ int main()
   //                       .Vi = yval[1],
   //                       .dw = yval[3]});
   //   }
-  // } output_cb = {output, bus1, gen};
+  // };
+  //
+  // OutputCallback output_cb = {.sys = sys, .output = output};
 
   /* Set up simulation */
   Ida<double, size_t> ida(&sys);
