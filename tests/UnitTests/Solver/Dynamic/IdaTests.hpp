@@ -61,7 +61,7 @@ namespace GridKit
         return 0;
       }
 
-      void setTolerances(real_type& rel_tol, real_type& abs_tol) const override
+      void setTolerances([[maybe_unused]] real_type& rel_tol, [[maybe_unused]] real_type& abs_tol) const override
       {
       }
 
@@ -77,7 +77,7 @@ namespace GridKit
 
       int evaluateResidual() override
       {
-        // f_ = yp_;
+        g_ = y_;
         return 0;
       }
 
@@ -106,7 +106,7 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime(real_type t, real_type a) override
+      void updateTime([[maybe_unused]] real_type t, [[maybe_unused]] real_type a) override
       {
       }
 
@@ -282,7 +282,7 @@ namespace GridKit
         ida.configureSimulation();
 
         unsigned observed_steps = 0;
-        auto     output_cb      = [&](double t)
+        auto     output_cb      = [&]([[maybe_unused]] double t)
         {
           observed_steps++;
         };
