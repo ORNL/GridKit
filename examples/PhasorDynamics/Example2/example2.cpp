@@ -111,8 +111,6 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
-
     output.push_back({.t         = t,
                       .gen2speed = 1 + gen2.y()[1],
                       .gen3speed = 1 + gen3.y()[1],
