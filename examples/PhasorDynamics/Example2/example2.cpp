@@ -3,10 +3,10 @@
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 3-bus system
- * 
+ *
  * Simulates a 3-bus system with two Genrou 6th order generator models and
  * compares results with data generated for the same system by Poweworld.
- * 
+ *
  */
 #include "example2.hpp"
 
