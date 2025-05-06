@@ -1,4 +1,5 @@
 
+#define _USE_MATH_DEFINES
 #include "Generator4Param.hpp"
 
 #include <cmath>
