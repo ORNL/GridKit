@@ -71,13 +71,12 @@ int main()
   // compare to the reference solution. Rather than keeping
   // the entire solution vector at every time step around,
   // we instead narrow down exactly what we want to keep.
+  //
+  // Since this struct is "simple" enough (no constructors or
+  // assignment operators, and "simple" members), it is a POD
+  // (plain ol' data), which have some benefits in C++.
   struct OutputData
   {
-    OutputData(double ti_in, double Vr_in, double Vi_in, double dw_in)
-      : ti(ti_in), Vr(Vr_in), Vi(Vi_in), dw(dw_in)
-    {
-    }
-
     double ti, Vr, Vi, dw;
   };
 
@@ -98,7 +97,7 @@ int main()
   {
     std::vector<double>& yval = sys.y();
 
-    output.push_back(OutputData(t, yval[0], yval[1], yval[3]));
+    output.push_back(OutputData{t, yval[0], yval[1], yval[3]});
   };
 
   // Set up simulation

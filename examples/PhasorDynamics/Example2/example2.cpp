@@ -37,28 +37,6 @@ struct OutputData
   scalar_type v2mag;
   scalar_type v3mag;
 
-  OutputData(real_type   t_in,
-             scalar_type gen2speed_in,
-             scalar_type gen3speed_in,
-             scalar_type v2mag_in,
-             scalar_type v3mag_in)
-    : t(t_in),
-      gen2speed(gen2speed_in),
-      gen3speed(gen3speed_in),
-      v2mag(v2mag_in),
-      v3mag(v3mag_in)
-  {
-  }
-
-  OutputData(const OutputData& data)
-    : t(data.t),
-      gen2speed(data.gen2speed),
-      gen3speed(data.gen3speed),
-      v2mag(data.v2mag),
-      v3mag(data.v3mag)
-  {
-  }
-
   OutputData& operator-=(const OutputData& other)
   {
     assert(t == other.t);
@@ -138,11 +116,11 @@ int main()
   {
     std::vector<double>& yval = sys.y();
 
-    output.push_back(OutputData(t,
+    output.push_back(OutputData{t,
                                 1.0 + yval[5],
                                 1.0 + yval[26],
                                 std::sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
-                                std::sqrt(yval[2] * yval[2] + yval[3] * yval[3])));
+                                std::sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
   };
 
   // Set up simulation
@@ -187,11 +165,11 @@ int main()
 
   for (index_type i = 0; i < output.size(); ++i)
   {
-    OutputData ref(reference_solution[i + 1][0],
+    OutputData ref{reference_solution[i + 1][0],
                    reference_solution[i + 1][1],
                    reference_solution[i + 1][2],
                    reference_solution[i + 1][4],
-                   reference_solution[i + 1][5]);
+                   reference_solution[i + 1][5]};
     OutputData out_data = output[i];
 
     out << out_data << '\n';
