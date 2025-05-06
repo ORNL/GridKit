@@ -42,10 +42,58 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Checks residual evaluation.
+       *
+       * The test instantiates and initializes Genrou model. Properly
+       * initialized model should have residual equal to zero within machine
+       * precision.
+       *
+       * @return TestOutcome - wheter test was successful
+       */
       TestOutcome residual()
       {
         TestStatus success = true;
-        success.skipTest();
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
+                                                  1,
+                                                  1,
+                                                  0.05013,
+                                                  3,
+                                                  0,
+                                                  0,
+                                                  7,
+                                                  0.04,
+                                                  0.05,
+                                                  0.75,
+                                                  2.1,
+                                                  0.2,
+                                                  0.18,
+                                                  0.5,
+                                                  0.5,
+                                                  0.18,
+                                                  0.15,
+                                                  0,
+                                                  0);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        // Require results to be within machine precision
+        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+
+        const std::vector<ScalarT>& f = gen.getResidual();
+        for (const auto& f_val : f)
+        {
+          if (!isEqual(f_val, 0.0, tol))
+            success = false;
+        }
 
         return success.report(__func__);
       }

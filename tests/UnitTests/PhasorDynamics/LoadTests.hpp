@@ -52,8 +52,8 @@ namespace GridKit
         ScalarT Vr{10.0}; ///< Bus real voltage
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
-        const ScalarT Ir{3.0};  ///< Solution real current
-        const ScalarT Ii{-4.0}; ///< Solution imaginary current
+        const ScalarT Ir{-5.0}; ///< Solution real current
+        const ScalarT Ii{0.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
 

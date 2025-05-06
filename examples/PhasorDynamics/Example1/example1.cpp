@@ -1,37 +1,33 @@
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <time.h>
+/**
+ * @file example1.cpp
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Example running a 2-bus system
+ *
+ * Simulates a 2-bus system with Genrou 6th order generator model and
+ * compares results with data generated for the same system by Poweworld.
+ *
+ */
+#include "example1.hpp"
 
-// #include <sundials_core.h>
-#include <idas/idas.h>
-#include <nvector/nvector_serial.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunmatrix/sunmatrix_sparse.h>
+#include <ctime>
+#include <iostream>
 
-#include "Example1_Powerworld_Reference.hpp"
-#include "Model/PhasorDynamics/Branch/Branch.cpp"
-#include "Model/PhasorDynamics/Branch/Branch.hpp"
-#include "Model/PhasorDynamics/Bus/Bus.cpp"
-#include "Model/PhasorDynamics/Bus/Bus.hpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.cpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
-#include "Model/PhasorDynamics/BusFault/BusFault.hpp"
-#include "Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp"
-#include "Model/PhasorDynamics/SystemModel.hpp"
-#include "Solver/Dynamic/Ida.cpp"
-#include "Solver/Dynamic/Ida.hpp"
+#include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SystemModel.hpp>
+#include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
-
-#define _CRT_SECURE_NO_WARNINGS
 
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  printf("Example 1 version 2\n");
+  std::cout << "Example 1 version 2\n";
 
   /* Create model parts */
   SystemModel<double, size_t> sys;
@@ -115,7 +111,6 @@ int main()
           / (1.0 + std::abs(reference_solution[i / 48][2]));
       if (err > error_V)
         error_V = err;
-      // std::cout << "t = " << ti << ": Vr = " << Vr << ", Vi = " << Vi << ", dw = " << dw;
       std::cout << "GridKit: t = " << ti
                 << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
                 << ", w = " << (1.0 + dw) << "\n";
@@ -149,11 +144,8 @@ int main()
     }
     ++j;
     ++i;
-    // if (i > 500)
-    //   break;
   }
 
-  // std::cout << buffer.str();
   int status = 0;
   std::cout << "Max error in |V| = " << error_V << "\n";
   if (error_V > 2e-4)
@@ -164,5 +156,5 @@ int main()
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return 0;
+  return status;
 }
