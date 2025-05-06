@@ -42,6 +42,15 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Checks residual evaluation.
+       * 
+       * The test instantiates and initializes Genrou model. Properly
+       * initialized model should have residual equal to zero within machine
+       * precision.
+       * 
+       * @return TestOutcome - wheter test was successful
+       */
       TestOutcome residual()
       {
         TestStatus success = true;

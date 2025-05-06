@@ -1,3 +1,13 @@
+/**
+ * @file example1.cpp
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Example running a 2-bus system
+ * 
+ * Simulates a 2-bus system with Genrou 6th order generator model and
+ * compares results with data generated for the same system by Poweworld.
+ * 
+ */
 #include "example1.hpp"
 
 #include <ctime>
