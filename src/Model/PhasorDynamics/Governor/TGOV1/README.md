@@ -43,9 +43,7 @@ The algebraic equation dictating the mechnical power output.
 ```
 
 ### Differential Equations
-The TGOV1 differential equations, which include a piecewise definition.
-The domain of the state variable $P_{v}\in[V_{min}, V_{max}]$ is enforced
-through the piece-wise definition below.
+The TGOV1 differential equations, as derived from the model diagram.
 ```math
 \begin{aligned}
    \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
@@ -59,3 +57,39 @@ through the piece-wise definition below.
    \end{cases}
 \end{aligned}
 ```
+The domain of the state variable $P_{v}\in[V_{min}, V_{max}]$ is enforced
+through the piece-wise definition above. However, depending on the
+general solver's requirments, this may need to be expressed as a
+smooth approximation (bump function/smooth indicator).
+```math
+\begin{aligned}
+   f(x) &=  \dfrac{1}{T_1}(-P_{v} + \frac{1}{R}(P_{ref}-\omega))
+   I(x) &= \dfrac{1}{2}(1 + \tanh x)
+   \phi(x) &= I\left(
+            \dfrac{P_v-V_{min}}{\epsilon}
+            \right)
+            -
+            I\left(
+            \dfrac{P_v-V_{max}}{\epsilon}
+            \right)
+   \dot{P}_{v}    &= f(x)\cdot I(x)
+\end{aligned}
+```
+Perhaps like the following.
+$$
+\begin{aligned}
+   I(x,a,\epsilon) 
+            &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
+            \left(\dfrac{x-b}{\epsilon}\right) \\
+   \phi(x)  &= I\left(x;V_{min}, \epsilon
+            \right) -
+            I\left(x;V_{max}, \epsilon
+            \right)\qquad \epsilon <<1\\
+   \dot{P}_{v}   
+            &=  \
+            \dfrac{1}{T_1}\cdot I(P_v)
+            \left[
+               -P_{v} + \frac{1}{R}(P_{ref}-\omega)
+               \right] 
+\end{aligned}
+$$
