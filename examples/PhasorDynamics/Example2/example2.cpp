@@ -114,10 +114,10 @@ int main()
     std::vector<double>& yval = sys.y();
 
     output.push_back({.t         = t,
-                      .gen2speed = 1 + yval[5],
-                      .gen3speed = 1 + yval[26],
-                      .v2mag     = sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
-                      .v3mag     = sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
+                      .gen2speed = 1 + gen2.y()[1],
+                      .gen3speed = 1 + gen3.y()[1],
+                      .v2mag     = sqrt(bus2.Vr() * bus2.Vr() + bus2.Vi() * bus2.Vi()),
+                      .v3mag     = sqrt(bus3.Vr() * bus3.Vr() + bus3.Vi() * bus3.Vi())});
   };
 
   /* Set up simulation */
