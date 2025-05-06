@@ -25,13 +25,55 @@
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
+using scalar_type = double;
+using real_type   = double;
+using index_type  = size_t;
+
+struct OutputData
+{
+  real_type   t;
+  scalar_type gen2speed;
+  scalar_type gen3speed;
+  scalar_type v2mag;
+  scalar_type v3mag;
+
+  OutputData operator-(const OutputData& other) const
+  {
+    assert(t == other.t);
+    return {
+        .t         = t,
+        .gen2speed = gen2speed - other.gen2speed,
+        .gen3speed = gen3speed - other.gen3speed,
+        .v2mag     = v2mag - other.v2mag,
+        .v3mag     = v3mag - other.v3mag,
+    };
+  }
+
+  double norm() const
+  {
+    return std::max({
+        std::abs(gen2speed),
+        std::abs(gen3speed),
+        std::abs(v2mag),
+        std::abs(v3mag),
+    });
+  }
+};
+
+std::ostream& operator<<(std::ostream& out, const OutputData& data)
+{
+  out << data.t << ","
+      << data.gen2speed << ","
+      << data.gen3speed << ","
+      << data.v2mag << ","
+      << data.v3mag;
+  return out;
+}
+
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
-  using scalar_type = double;
-  using real_type   = double;
-  using index_type  = size_t;
 
   auto error_allowed = static_cast<real_type>(1e-4);
 
@@ -65,32 +107,39 @@ int main()
 
   real_type dt = 1.0 / 4.0 / 60.0;
 
-  std::stringstream buffer;
+  std::vector<OutputData> output;
+
+  auto output_cb = [&](real_type t)
+  {
+    std::vector<double>& yval = sys.y();
+
+    output.push_back({.t         = t,
+                      .gen2speed = 1 + yval[5],
+                      .gen3speed = 1 + yval[26],
+                      .v2mag     = sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
+                      .v3mag     = sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
+  };
 
   /* Set up simulation */
-  Ida<scalar_type, index_type> ida(&sys);
+  Ida<scalar_type, index_type>
+      ida(&sys);
   ida.configureSimulation();
 
   /* Run simulation */
   scalar_type start = static_cast<scalar_type>(clock());
   ida.initializeSimulation(0.0, false);
-  ida.runSimulationFixed(0.0, dt, 1.0, buffer);
+  ida.runSimulation(1.0, std::round((1.0 - 0.0) / dt), output_cb);
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulationFixed(1.0, dt, 1.1, buffer);
+  ida.runSimulation(1.1, std::round((1.1 - 1.0) / dt), output_cb);
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulationFixed(1.1, dt, 10.0, buffer);
+  ida.runSimulation(10.0, std::round((10.0 - 1.1) / dt), output_cb);
   double stop = static_cast<double>(clock());
 
   /* Check worst-case error */
   real_type worst_error      = 0;
   real_type worst_error_time = 0;
-
-  const index_type stride = 94;
-  const index_type nt     = 2401;
-  scalar_type      results[stride];
-  buffer.seekg(0, std::ios::beg);
 
   std::ostream  nullout(nullptr);
   std::ostream& out = nullout;
@@ -103,32 +152,23 @@ int main()
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
   out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";
 
-  for (index_type i = 0; i < nt - 1; ++i)
+  for (index_type i = 0; i < output.size(); ++i)
   {
-    for (index_type j = 0; j < stride; ++j)
-    {
-      buffer >> results[j];
-    }
-    real_type   t             = results[0];
-    scalar_type gen2speed     = 1 + results[7];
-    scalar_type gen2speed_ref = reference_solution[i + 1][1];
-    scalar_type gen3speed     = 1 + results[28];
-    scalar_type gen3speed_ref = reference_solution[i + 1][2];
-    scalar_type v2mag         = sqrt(results[2] * results[2] + results[3] * results[3]);
-    scalar_type v2mag_ref     = reference_solution[i + 1][4];
-    scalar_type v3mag         = sqrt(results[4] * results[4] + results[5] * results[5]);
-    scalar_type v3mag_ref     = reference_solution[i + 1][5];
+    OutputData ref = {
+        .t         = reference_solution[i + 1][0],
+        .gen2speed = reference_solution[i + 1][1],
+        .gen3speed = reference_solution[i + 1][2],
+        .v2mag     = reference_solution[i + 1][4],
+        .v3mag     = reference_solution[i + 1][5]};
+    OutputData out_data = output[i];
 
-    out << t << "," << gen2speed << "," << gen3speed << "," << v2mag << "," << v3mag << "\n";
+    out << out_data << '\n';
 
-    real_type err = std::max({std::abs(gen2speed - gen2speed_ref),
-                              std::abs(gen3speed - gen3speed_ref),
-                              std::abs(v2mag - v2mag_ref),
-                              std::abs(v3mag - v3mag_ref)});
+    real_type err = (out_data - ref).norm();
     if (err > worst_error)
     {
       worst_error      = err;
-      worst_error_time = t;
+      worst_error_time = out_data.t;
     }
   }
   // fileout.close();
