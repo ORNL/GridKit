@@ -77,7 +77,7 @@ namespace GridKit
 
       int evaluateResidual() override
       {
-        g_ = y_;
+        f_ = y_;
         return 0;
       }
 
