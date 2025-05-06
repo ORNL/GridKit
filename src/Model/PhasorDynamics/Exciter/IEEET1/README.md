@@ -14,24 +14,24 @@ Standard model of the IEEET1 Exciter.
 ## Nomenclature
 
 ### Algebraic Variables
-- $V_{tr}$ - 
-- $V_{F}$ - 
-- $V_{E}$ - 
-- $E_{fd}$ - 
-- $k_{sat}$ - 
+- $V_{tr}$ - Terminal Voltage Error input to controller
+- $V_{F}$ - Feedback Voltage
+- $V_{E}$ - Excitation control voltage
+- $E_{fd}$ - Field winding voltage
+- $k_{sat}$ - Saturation variable
 
 These can be constants or external states
-- $E_{C}$ - 
-- $V_{ref}$ - 
-- $V_{UEL}$ - 
-- $V_{OEL}$ - 
-- $V_{S}$ - 
+- $E_{C}$ - Compensated machine terminal voltage magnitude
+- $V_{ref}$ - Referebce ternubak voltage
+- $V_{UEL}$ - Input from under excitation limiter
+- $V_{OEL}$ - Input from over excitation limiter
+- $V_{S}$ - Input from stabilizer controller
 - $\omega$ - Machine speed deviation from machine model
 
 ### Differential Variables
 - $V_{ts}$ - Sensed terminal voltage
 - $V_{R}$ - Voltage regulator
-- $E_{FD}'$ - Field-current pre-speed multiplier
+- $E_{fd}'$ - Field-current pre-speed multiplier
 - $V_{fx}$ - Exciter feedback internal state
 
 ### Parameters
@@ -59,7 +59,7 @@ The algebraic equation dictating the mechnical power output.
     k_{sat}&= \begin{cases}
         S_B(E_{fd}^{'} -S_A)^2        &  \text{if } E_{fd}^{'} >S_A\\
         0  &  \text{else } \\
-   \end{cases}
+   \end{cases} \\
     V_{E} &= k_{sat}\cdot E_{fd}^{'} \\
 \end{aligned}
 ```
