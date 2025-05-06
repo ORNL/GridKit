@@ -47,7 +47,7 @@ These can be constants or external states
 
 
 ### Algebraic Equations
-The algebraic equation dictating the mechnical power output.
+The algebraic equations of the exciter.
 ```math
 \begin{aligned}
    V_{tr} &= V_{ref} - V_{ts}+V_{UEL} + V_{OEL} + V_S - V_F\\
@@ -66,7 +66,7 @@ The algebraic equation dictating the mechnical power output.
 
 
 ### Differential Equations
-The TGOV1 differential equations, as derived from the model diagram.
+The IEEET1 differential equations, as derived from the model diagram.
 ```math
 \begin{aligned}
    \dot{V}_{ts}   &= \dfrac{1}{T_R}(E_C-V_{ts}) \\
