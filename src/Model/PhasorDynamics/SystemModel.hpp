@@ -343,7 +343,9 @@ namespace GridKit
        */
       int evaluateIntegrand()
       {
-        updateChildren();
+        // No need to notify children yet, since we're about to
+        // evaluate them
+        updateChildren<false>();
 
         for (const auto& bus : buses_)
         {
@@ -386,6 +388,8 @@ namespace GridKit
        */
       int initializeAdjoint()
       {
+        // No need to notify children yet, since we're about to
+        // initialize them
         updateChildren();
 
         size_t offset = 0;
@@ -428,7 +432,9 @@ namespace GridKit
        */
       int evaluateAdjointResidual()
       {
-        updateChildrenAdjoint();
+        // No need to notify children yet, since we're about to
+        // evaluate them
+        updateChildrenAdjoint<false>();
 
         for (const auto& bus : buses_)
         {
@@ -474,7 +480,9 @@ namespace GridKit
        */
       int evaluateAdjointIntegrand()
       {
-        updateChildrenAdjoint();
+        // No need to notify children yet, since we're about to
+        // evaluate them
+        updateChildrenAdjoint<false>();
 
         // Evaluate integrand and update global vector
         for (const auto& component : components_)
@@ -512,7 +520,7 @@ namespace GridKit
 
       void update() override
       {
-        updateChildrenAdjoint();
+        updateChildrenAdjoint<true>();
       }
 
     private:
@@ -524,6 +532,11 @@ namespace GridKit
       ///        components. `updateChildren` will only update `y`, `yp`, and
       ///        `param` - call when you know only the internal state of those
       ///        variables has been updated.
+      /// @tparam NOTIFY_CHILDREN Whether or not buses and components should
+      ///         be notified through their `update()` method that their state
+      ///         has been updated. If you are planning to notify them otherwise,
+      ///         set this to `false`.
+      template <bool NOTIFY_CHILDREN = true>
       void updateChildren()
       {
         // Update variables
@@ -543,6 +556,9 @@ namespace GridKit
             bus->param()[j] = param_[optOffset + j];
           }
           optOffset += bus->sizeParams();
+
+          if constexpr (NOTIFY_CHILDREN)
+            bus->update();
         }
 
         for (const auto& component : components_)
@@ -559,6 +575,9 @@ namespace GridKit
             component->param()[j] = param_[optOffset + j];
           }
           optOffset += component->sizeParams();
+
+          if constexpr (NOTIFY_CHILDREN)
+            component->update();
         }
       }
 
@@ -566,10 +585,17 @@ namespace GridKit
       ///        needs to reflect those changes in its "children" aka buses and
       ///        components. `updateChildrenAdjoint` will update all internal
       ///        variables of this system's children, including adjoint variables.
+      /// @tparam NOTIFY_CHILDREN Whether or not buses and components should
+      ///         be notified through their `update()` method that their state
+      ///         has been updated. If you are planning to notify them otherwise,
+      ///         set this to `false`.
+      template <bool NOTIFY_CHILDREN = true>
       void updateChildrenAdjoint()
       {
-        // Update all non-adjoint state
-        updateChildren();
+        // Update all non-adjoint state.
+        // No need to notify children that they've been updated yet,
+        // because we still have more updating to do.
+        updateChildren<false>();
 
         IdxT varOffset = 0;
         IdxT optOffset = 0;
@@ -581,6 +607,9 @@ namespace GridKit
             bus->ypB()[j] = ypB_[varOffset + j];
           }
           varOffset += bus->size();
+
+          if constexpr (NOTIFY_CHILDREN)
+            bus->update();
         }
 
         for (const auto& component : components_)
@@ -591,6 +620,9 @@ namespace GridKit
             component->ypB()[j] = ypB_[varOffset + j];
           }
           varOffset += component->size();
+
+          if constexpr (NOTIFY_CHILDREN)
+            component->update();
         }
       }
     }; // class SystemModel
