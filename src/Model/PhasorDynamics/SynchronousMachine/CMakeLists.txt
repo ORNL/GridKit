@@ -6,4 +6,4 @@
 # ]]
 
 add_subdirectory(GENROUwS)
-add_subdirectory(ClassicalGenerator)
+add_subdirectory(GenClassical)
