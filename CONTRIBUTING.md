@@ -57,6 +57,64 @@ in the GridKit™ repository. There has to be at least one approval before
 the pull request can be merged.
 
 
+## Documenting Code
+
+### Doxygen
+All comments in the code should follow [Doxygen](https://www.doxygen.nl/manual/index.html)
+markup. For uniformity, we recommend C-style Doxygen comments starting with
+two `*`.
+
+### Documenting functions
+Functions should be documented in source files. The reationale is to have
+the documentation near the implementation, so that is handy to a developer and
+can be updated quickly when the function modified.
+
+### Minimal function documentation
+Function documentation should include specification of function parameters,
+template parameters (if any), return value, preconditions, postconditions,
+and invariants.
+
+```c++
+/**
+ * @brief <BRIEF DESCRIPTION>
+ *
+ * @param <NAME> <DESCRIPTION>
+ * @tparam <NAME> <DESCRIPTION>
+ * @return <DESCRIPTION OF RETURN VALUE>
+ *
+ * @pre <PRECONDITION>
+ * @post <POSTCONDITION>
+ *
+ * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+ */
+```
+
+* `@brief` marks the text that will be displayed in summaries and index lists.
+Typically you would put here a few words description of your function.
+* `@param` describes a function parameter and takes an optional direction:
+`@param[in]` means the parameter's value is only read and not modified within
+the function, `@param[out]` means the parameter is not read and is only
+modified, and `@param[in,out]` means the parameter is both read and modified.
+* `@pre` and `@post` define the pre- and postconditions, which should be
+precise but brief. When in doubt, attempt rigorous conditions but keep in mind
+that some concepts such as "validity" may be difficult or impossible to define
+precisely. Specifications are primarily for human consumption.
+* `@param`, `@pre`, and `@post` sections should be repeated as many time as
+required.
+
+
+### Doxygen and Markdown
+
+Doxygen supports Markdown markup and it should be used to make documentation
+more clear. For example, 
+```c++
+ * @return The size of `a`
+```
+is clearer than 
+```c++
+ * @return The size of a
+```
+when read in plain text and in formatted documentation.
 
 
 ## Code Style
