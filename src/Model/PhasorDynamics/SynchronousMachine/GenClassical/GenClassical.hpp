@@ -1,8 +1,6 @@
 /**
- * @file ClassicalGen.cpp
- * @author Adam Birchfield (abirchfield@tamu.edu)
- * @author Slaven Peles (peless@ornl.gov)
- * @brief Declaration of a Classical generator model.
+ * @file GenClassical.cpp
+ * @author Abdourahman Barry (abdourahman@vt.edu)
  *
  */
 
@@ -26,7 +24,7 @@
    {
  
      template <class ScalarT, typename IdxT>
-     class ClassicalGen : public Component<ScalarT, IdxT>
+     class GenClassical : public Component<ScalarT, IdxT>
      {
        using Component<ScalarT, IdxT>::alpha_;
        using Component<ScalarT, IdxT>::f_;
@@ -47,8 +45,8 @@
        using real_type = typename Component<ScalarT, IdxT>::real_type;
  
      public:
-     ClassicalGen(bus_type* bus, int unit_id);
-     ClassicalGen(bus_type* bus,
+     GenClassical(bus_type* bus, int unit_id);
+     GenClassical(bus_type* bus,
               int       unit_id,
               ScalarT   p0,
               ScalarT   q0,
@@ -56,7 +54,7 @@
               real_type D,
               real_type Ra,
               real_type Xdp);
-       ~ClassicalGen() = default;
+       ~GenClassical() = default;
  
        int allocate() override;
        int initialize() override;
