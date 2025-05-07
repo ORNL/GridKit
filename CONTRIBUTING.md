@@ -65,7 +65,7 @@ markup. For uniformity, we recommend C-style Doxygen comments starting with
 two `*`.
 
 ### Documenting functions
-Functions should be documented in source files. The reationale is to have
+Functions should be documented in source files. The rationale is to have
 the documentation near the implementation, so that is handy to a developer and
 can be updated quickly when the function modified.
 
