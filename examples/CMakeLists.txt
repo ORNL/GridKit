@@ -3,7 +3,6 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-add_subdirectory(MatPowerTesting)
 add_subdirectory(LinearAlgebra)
 
 add_subdirectory(PowerFlow)
