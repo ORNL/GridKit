@@ -639,8 +639,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printOutput(real_type t)
     {
-      real_type* yval  = N_VGetArrayPointer_Serial(yy_);
-      real_type* ypval = N_VGetArrayPointer_Serial(yp_);
+      real_type* yval  = N_VGetArrayPointer(yy_);
+      real_type* ypval = N_VGetArrayPointer(yp_);
 
       std::cout << std::setprecision(5) << std::setw(7) << t << " ";
       for (IdxT i = 0; i < model_->size(); ++i)
@@ -657,8 +657,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printSpecial(real_type t, N_Vector y)
     {
-      real_type* yval = N_VGetArrayPointer_Serial(y);
-      IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
+      real_type* yval = N_VGetArrayPointer(y);
+      IdxT         N    = static_cast<IdxT>(N_VGetLength(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;
       for (IdxT i = 0; i < N; ++i)
