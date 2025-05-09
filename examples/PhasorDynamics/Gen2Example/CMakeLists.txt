@@ -8,4 +8,3 @@ target_link_libraries(gen2_example
 install(TARGETS gen2_example RUNTIME DESTINATION bin)
 
 add_test(NAME GenClassicalTest1 COMMAND $<TARGET_FILE:gen2_example>)
-
