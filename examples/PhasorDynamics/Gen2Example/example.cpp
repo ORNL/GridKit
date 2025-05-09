@@ -1,10 +1,10 @@
 #include <stdio.h>
 #define _USE_MATH_DEFINES
-#include <math.h>
-#include <time.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <math.h>
 #include <sstream>
+#include <time.h>
 
 // #include <sundials_core.h>
 #include <idas/idas.h>
@@ -52,8 +52,6 @@ int main(int argc, char* argv[])
 
   double dt = 1.0 / 4.0 / 60.0;
 
-  
-
   // std::stringstream buffer;
 
   /* Set up simulation */
@@ -66,7 +64,7 @@ int main(int argc, char* argv[])
   size_t nout = 200;
   ida.runSimulation(1.0, nout);
 
-  if(argc >= 1)
+  if (argc >= 1)
   {
     std::cout << argv[1] << std::endl;
     std::ofstream outfile(argv[1]);
@@ -75,7 +73,7 @@ int main(int argc, char* argv[])
 
     outfile << "t" << "," << "res";
     for (int i = 0; i < sys.size(); ++i)
-        outfile << ",Y[" + std::to_string(i) + "]";
+      outfile << ",Y[" + std::to_string(i) + "]";
 
     for (int i = 0; i < sys.size(); ++i)
       outfile << ",Yp[" + std::to_string(i) + "]";
@@ -103,7 +101,6 @@ int main(int argc, char* argv[])
   }
 
   printf("Complete in %.4g seconds\n", (clock() - start) / CLOCKS_PER_SEC);
-    
 
   return 0;
 }
