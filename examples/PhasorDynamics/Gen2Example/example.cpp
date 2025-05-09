@@ -6,26 +6,13 @@
 #include <sstream>
 #include <time.h>
 
-// #include <sundials_core.h>
-#include <idas/idas.h>
-#include <nvector/nvector_serial.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-
-#include "Model/PhasorDynamics/Branch/Branch.cpp"
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
-#include "Model/PhasorDynamics/Bus/Bus.cpp"
 #include "Model/PhasorDynamics/Bus/Bus.hpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.cpp"
 #include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
 #include "Model/PhasorDynamics/BusFault/BusFault.hpp"
-#include "Model/PhasorDynamics/Load/Load.cpp"
 #include "Model/PhasorDynamics/Load/Load.hpp"
-#include "Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp"
 #include "Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp"
 #include "Model/PhasorDynamics/SystemModel.hpp"
-#include "Solver/Dynamic/Ida.cpp"
 #include "Solver/Dynamic/Ida.hpp"
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -41,7 +28,7 @@ int main(int argc, char* argv[])
   Bus<double, size_t>          bus1(0.9949877346411762, 0.09999703952427966);
   BusInfinite<double, size_t>  bus2(1.0, 0.0);
   Branch<double, size_t>       branch(&bus1, &bus2, 0.0, 0.1, 0, 0);
-  GenClassical<double, size_t> gen(&bus1, 1, 1, 0.05013, 3.0, 0.0, 0.0, 0.2);
+  GenClassical<double, size_t> gen(&bus1, 1, 1.0, 0.05013, 3.0, 0.0, 0.0, 0.2);
 
   /* Connect everything together */
   sys.addBus(&bus1);
