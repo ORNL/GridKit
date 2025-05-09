@@ -37,7 +37,6 @@ namespace AnalysisManager
       checkOutput(retval, "SUNContext");
 
       solver_ = KINCreate(context_);
-      tag_    = NULL;
     }
 
     template <class ScalarT, typename IdxT>
@@ -46,14 +45,14 @@ namespace AnalysisManager
       SUNContext_Free(&context_);
       KINFree(&solver_);
 
-      N_VDestroy_Serial(this->yy_);
-      N_VDestroy_Serial(this->yy0_);
-      N_VDestroy_Serial(this->scale_);
+      N_VDestroy(this->yy_);
+      N_VDestroy(this->yy0_);
+      N_VDestroy(this->scale_);
 
       SUNMatDestroy(this->JacobianMat_);
       SUNLinSolFree_Dense(this->linearSolver_);
 
-      solver_ = 0;
+      solver_ = nullptr;
     }
 
     template <class ScalarT, typename IdxT>
@@ -173,40 +172,28 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
-      const ScalarT* xdata = NV_DATA_S(x);
-      for (unsigned int i = 0; i < y.size(); ++i)
-      {
-        y[i] = xdata[i];
-      }
+      const ScalarT* xdata = N_VGetArrayPointer(x);
+      std::copy_n(xdata, y.size(), y.begin());
     }
 
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
-      ScalarT* ydata = NV_DATA_S(y);
-      for (unsigned int i = 0; i < x.size(); ++i)
-      {
-        ydata[i] = x[i];
-      }
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy_n(x.cbegin(), x.size(), ydata);
     }
 
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
-      ScalarT* ydata = NV_DATA_S(y);
-      for (unsigned int i = 0; i < x.size(); ++i)
-      {
-        if (x[i])
-          ydata[i] = 1.0;
-        else
-          ydata[i] = 0.0;
-      }
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy(x.cbegin(), x.cend(), ydata);
     }
 
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printOutput()
     {
-      sunrealtype* yval = N_VGetArrayPointer_Serial(yy_);
+      sunrealtype* yval = N_VGetArrayPointer(yy_);
 
       std::cout << std::setprecision(5) << std::setw(7);
       for (IdxT i = 0; i < model_->size(); ++i)
@@ -220,7 +207,7 @@ namespace AnalysisManager
     void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
     {
       sunrealtype* yval = N_VGetArrayPointer_Serial(y);
-      IdxT         N    = N_VGetLength_Serial(y);
+      IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;
       for (IdxT i = 0; i < N; ++i)
@@ -233,29 +220,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printFinalStats()
     {
-      int      retval = 0;
-      void*    mem    = solver_;
-      long int nni;
-      long int nfe;
-      long int nje;
-      long int nlfe;
-
-      // retval = KINGetNumSteps(mem, &nst);
-      // checkOutput(retval, "KINGetNumSteps");
-      retval = KINGetNumNonlinSolvIters(mem, &nni);
-      checkOutput(retval, "KINGetNumNonlinSolvIters");
-      retval = KINGetNumFuncEvals(mem, &nfe);
-      checkOutput(retval, "KINGetNumFuncEvals");
-      retval = KINGetNumJacEvals(mem, &nje);
-      checkOutput(retval, "KINGetNumJacEvals");
-      retval = KINGetNumLinFuncEvals(mem, &nlfe);
-      checkOutput(retval, "KINGetNumLinFuncEvals");
-
-      // std::cout << "\nFinal Run Statistics: \n\n";
-      std::cout << "Number of nonlinear iterations     = " << nni << "\n";
-      std::cout << "Number of function evaluations     = " << nfe << "\n";
-      std::cout << "Number of Jacobian evaluations     = " << nje << "\n";
-      std::cout << "Number of linear function evals.   = " << nlfe << "\n";
+      int retval = KINPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
+      checkOutput(retval, "IDAPrintAllStats");
     }
 
     template <class ScalarT, typename IdxT>

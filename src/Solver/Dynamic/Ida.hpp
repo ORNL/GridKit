@@ -26,6 +26,10 @@ namespace AnalysisManager
 
       typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
+      static_assert(std::is_same_v<real_type, sunrealtype>, "real_type must be the same type as sunrealtype");
+      // TODO: can't include this assert because cpp file instantiates a few values of IdxT
+      // static_assert(std::is_same_v<IdxT, sunindextype>, "IdxT must be the same type as sunindextype");
+
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
@@ -95,96 +99,97 @@ namespace AnalysisManager
 
       const real_type* getIntegral() const
       {
-        return NV_DATA_S(q_);
+        return N_VGetArrayPointer(q_);
       }
 
       real_type* getIntegral()
       {
-        return NV_DATA_S(q_);
+        return N_VGetArrayPointer(q_);
       }
 
       const real_type* getAdjointIntegral() const
       {
-        return NV_DATA_S(qB_);
+        return N_VGetArrayPointer(qB_);
       }
 
       real_type* getAdjointIntegral()
       {
-        return NV_DATA_S(qB_);
+        return N_VGetArrayPointer(qB_);
       }
 
-      void printOutput(sunrealtype t);
-      void printSpecial(sunrealtype t, N_Vector x);
+      void printOutput(real_type t);
+      void printSpecial(real_type t, N_Vector x);
       void printFinalStats();
 
     private:
-      static int Residual(sunrealtype t,
-                          N_Vector    yy,
-                          N_Vector    yp,
-                          N_Vector    rr,
-                          void*       user_data);
+      static int Residual(real_type t,
+                          N_Vector  yy,
+                          N_Vector  yp,
+                          N_Vector  rr,
+                          void*     user_data);
 
-      static int Jac(sunrealtype t,
-                     sunrealtype cj,
-                     N_Vector    yy,
-                     N_Vector    yp,
-                     N_Vector    resvec,
-                     SUNMatrix   J,
-                     void*       user_data,
-                     N_Vector    tmp1,
-                     N_Vector    tmp2,
-                     N_Vector    tmp3);
+      static int Jac(real_type t,
+                     real_type cj,
+                     N_Vector  yy,
+                     N_Vector  yp,
+                     N_Vector  resvec,
+                     SUNMatrix J,
+                     void*     user_data,
+                     N_Vector  tmp1,
+                     N_Vector  tmp2,
+                     N_Vector  tmp3);
 
-      static int Integrand(sunrealtype t,
-                           N_Vector    yy,
-                           N_Vector    yp,
-                           N_Vector    rhsQ,
-                           void*       user_data);
+      static int Integrand(real_type t,
+                           N_Vector  yy,
+                           N_Vector  yp,
+                           N_Vector  rhsQ,
+                           void*     user_data);
 
-      static int adjointResidual(sunrealtype t,
-                                 N_Vector    yy,
-                                 N_Vector    yp,
-                                 N_Vector    yyB,
-                                 N_Vector    ypB,
-                                 N_Vector    rrB,
-                                 void*       user_data);
+      static int adjointResidual(real_type t,
+                                 N_Vector  yy,
+                                 N_Vector  yp,
+                                 N_Vector  yyB,
+                                 N_Vector  ypB,
+                                 N_Vector  rrB,
+                                 void*     user_data);
 
-      static int adjointIntegrand(sunrealtype t,
-                                  N_Vector    yy,
-                                  N_Vector    yp,
-                                  N_Vector    yyB,
-                                  N_Vector    ypB,
-                                  N_Vector    rhsQB,
-                                  void*       user_data);
+      static int adjointIntegrand(real_type t,
+                                  N_Vector  yy,
+                                  N_Vector  yp,
+                                  N_Vector  yyB,
+                                  N_Vector  ypB,
+                                  N_Vector  rhsQB,
+                                  void*     user_data);
 
     private:
-      void*           solver_;
-      SUNContext      context_;
-      SUNMatrix       JacobianMat_;
-      SUNMatrix       JacobianMatB_;
-      SUNLinearSolver linearSolver_;
-      SUNLinearSolver linearSolverB_;
+      void*           solver_{};
+      SUNContext      context_{};
+      SUNMatrix       JacobianMat_{};
+      SUNMatrix       JacobianMatB_{};
+      SUNLinearSolver linearSolver_{};
+      SUNLinearSolver linearSolverB_{};
 
-      real_type t_init_;
-      real_type t_final_;
-      int       nout_; ///< Number of integration outputs
+      real_type t_init_{};
+      real_type t_final_{};
+      int       nout_{}; ///< Number of integration outputs
 
-      N_Vector yy_;  ///< Solution vector
-      N_Vector yp_;  ///< Solution derivatives vector
-      N_Vector tag_; ///< Tags differential variables
-      N_Vector q_;   ///< Integrand vector
+      N_Vector yy_{};  ///< Solution vector
+      N_Vector yp_{};  ///< Solution derivatives vector
+      N_Vector tag_{}; ///< Tags differential variables
+      N_Vector q_{};   ///< Integrand vector
 
-      N_Vector yy0_; ///< Storage for initial values
-      N_Vector yp0_; ///< Storage for initial derivatives
+      N_Vector yy0_{}; ///< Storage for initial values
+      N_Vector yp0_{}; ///< Storage for initial derivatives
 
-      N_Vector yyB_; ///< Adjoint solution vector
-      N_Vector ypB_; ///< Adjoint solution derivatives vector
-      N_Vector qB_;  ///< Backward integrand vector
+      N_Vector yyB_{}; ///< Adjoint solution vector
+      N_Vector ypB_{}; ///< Adjoint solution derivatives vector
+      N_Vector qB_{};  ///< Backward integrand vector
 
-      int backwardID_;
+      int backwardID_{};
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
+      //TODO: should template type be real_type rather than ScalarT?
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);

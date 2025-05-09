@@ -31,6 +31,8 @@ namespace AnalysisManager
 
       typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
+      static_assert(std::is_same_v<real_type, sunrealtype>, "real_type must be the same type as sunrealtype");
+
     public:
       Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Kinsol();
@@ -85,22 +87,22 @@ namespace AnalysisManager
 
       // const real_type* getIntegral() const
       // {
-      //     return NV_DATA_S(q_);
+      //     return N_VGetArrayPointer(q_);
       // }
 
       // real_type* getIntegral()
       // {
-      //     return NV_DATA_S(q_);
+      //     return N_VGetArrayPointer(q_);
       // }
 
       // const real_type* getAdjointIntegral() const
       // {
-      //     return NV_DATA_S(qB_);
+      //     return N_VGetArrayPointer(qB_);
       // }
 
       // real_type* getAdjointIntegral()
       // {
-      //     return NV_DATA_S(qB_);
+      //     return N_VGetArrayPointer(qB_);
       // }
 
       void printOutput();
@@ -125,17 +127,17 @@ namespace AnalysisManager
       //                             N_Vector rhsQB, void *user_data);
 
     private:
-      void*           solver_;
-      SUNContext      context_;
-      SUNMatrix       JacobianMat_;
-      SUNLinearSolver linearSolver_;
+      void*           solver_{};
+      SUNContext      context_{};
+      SUNMatrix       JacobianMat_{};
+      SUNLinearSolver linearSolver_{};
 
-      N_Vector yy_;    ///< Solution vector
-      N_Vector scale_; ///< Scaling vector
-      N_Vector tag_;   ///< Tags differential variables
-      N_Vector q_;     ///< Integrand vector
+      N_Vector yy_{};    ///< Solution vector
+      N_Vector scale_{}; ///< Scaling vector
+      N_Vector tag_{};   ///< Tags differential variables
+      N_Vector q_{};     ///< Integrand vector
 
-      N_Vector yy0_; ///< Storage for initial values
+      N_Vector yy0_{}; ///< Storage for initial values
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
