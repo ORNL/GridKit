@@ -13,15 +13,15 @@ target_link_libraries(test_phasor_branch GRIDKIT::phasor_dynamics_branch
                                 
 add_executable(test_phasor_load runLoadTests.cpp)
 target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
-                                       GRIDKIT::phasor_dynamics_bus)
+                                         GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
-                                        GRIDKIT::phasor_dynamics_bus)
+                                         GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_classical_gen runGenClassicalTests.cpp)
 target_link_libraries(test_phasor_classical_gen GRIDKIT::phasor_dynamics_classical_gen
-                                                                                GRIDKIT::phasor_dynamics_bus)
+                                         GRIDKIT::phasor_dynamics_bus)
                                                                                                                                                    
 add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
