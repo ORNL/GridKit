@@ -163,7 +163,6 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::setIntegrationTime(real_type t_init, real_type t_final, int nout)
     {
-      //TODO: I don't see these variables used anywhere. Remove?
       t_init_  = t_init;
       t_final_ = t_final;
       nout_    = nout;
@@ -174,6 +173,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::initializeSimulation(real_type t0, bool findConsistent)
     {
       int retval = 0;
+
+      t_init_ = t0;
 
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
