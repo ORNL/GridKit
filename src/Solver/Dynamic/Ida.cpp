@@ -99,12 +99,13 @@ namespace AnalysisManager
       std::vector<bool>& tag = model_->tag();
       if (static_cast<IdxT>(tag.size()) == model_->size())
       {
-        tag_ = N_VClone(yy_);
+        N_Vector tag_ = N_VClone(yy_);
         checkAllocation((void*) tag_, "N_VClone");
         model_->tagDifferentiable();
         copyVec(tag, tag_);
 
         retval = IDASetId(solver_, tag_);
+        N_VDestroy(tag_);
         checkOutput(retval, "IDASetId");
         retval = IDASetSuppressAlg(solver_, SUNTRUE);
         checkOutput(retval, "IDASetSuppressAlg");
