@@ -6,7 +6,7 @@
  *
  */
 
-#include "ClassicalGen.hpp"
+#include "GenClassical.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -29,7 +29,7 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
-    ClassicalGen<ScalarT, IdxT>::ClassicalGen(bus_type* bus, int unit_id)
+    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
@@ -58,7 +58,7 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
-    ClassicalGen<ScalarT, IdxT>::ClassicalGen(bus_type* bus,
+    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
                                               int       unit_id,
                                               ScalarT   p0,
                                               ScalarT   q0,
@@ -85,7 +85,7 @@ namespace GridKit
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
-    int ClassicalGen<ScalarT, IdxT>::allocate()
+    int GenClassical<ScalarT, IdxT>::allocate()
     {
       f_.resize(size_);
       y_.resize(size_);
@@ -136,7 +136,7 @@ namespace GridKit
      * \brief Identify differential variables.
      */
     template <class ScalarT, typename IdxT>
-    int ClassicalGen<ScalarT, IdxT>::tagDifferentiable()
+    int GenClassical<ScalarT, IdxT>::tagDifferentiable()
     {
 
       return 0;
@@ -148,9 +148,11 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int ClassicalGen<ScalarT, IdxT>::evaluateResidual()
+    int GenClassical<ScalarT, IdxT>::evaluateResidual()
     {
       /* Read variables */
+      ScalarT delta_dot = yp_[0];
+      ScalarT omega_dot = yp_[1];
       ScalarT delta = y_[0];
       ScalarT omega = y_[1];
       ScalarT telec = y_[2];
@@ -169,8 +171,8 @@ namespace GridKit
        f_[3] = ir + G*Vr() - B * Vi()  - ep*(G*cos(delta) -B*sin(delta));
        f_[4] = ii + B*Vr() +  G * Vi() - ep*(B*cos(delta) + G*sin(delta));
 
-      /* 11 ClassicalGen algebraic equations */
-      f_[2] = telec - (1.0 / (1.0 + omega)) * (g * ep * ep - ep * (cos(delta) * (g * Vr() - b * Vi()) + sin(delta) * (b * Vr() + g * Vi())));
+      /* 11 GenClassical algebraic equations */
+      f_[2] = telec - (1.0 / (1.0 + omega)) * (G * ep * ep - ep * (cos(delta) * (G * Vr() - B * Vi()) + sin(delta) * (B * Vr() + G * Vi())));
 
        Ir() += - (G*Vr() - B * Vi()  - ep*(G*cos(delta) - B*sin(delta)));
        Ii() += - (B*Vr() +  G * Vi() - ep*(B*cos(delta) + G*sin(delta)));

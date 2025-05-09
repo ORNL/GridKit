@@ -19,8 +19,8 @@
 #include "Model/PhasorDynamics/BusFault/BusFault.hpp"
 #include "Model/PhasorDynamics/Load/Load.cpp"
 #include "Model/PhasorDynamics/Load/Load.hpp"
-#include "Model/PhasorDynamics/SynchronousMachine/ClassicalGenerator/ClassicalGen.cpp"
-#include "Model/PhasorDynamics/SynchronousMachine/ClassicalGenerator/ClassicalGen.hpp"
+#include "Model/PhasorDynamics/SynchronousMachine/GenClassicalerator/GenClassical.cpp"
+#include "Model/PhasorDynamics/SynchronousMachine/GenClassicalerator/GenClassical.hpp"
 #include "Model/PhasorDynamics/SystemModel.hpp"
 #include "Solver/Dynamic/Ida.cpp"
 #include "Solver/Dynamic/Ida.hpp"
@@ -38,7 +38,7 @@ int main()
   Bus<double, size_t>          bus1(0.9949877346411762, 0.09999703952427966);
   BusInfinite<double, size_t>  bus2(1.0, 0.0);
   Branch<double, size_t>       branch(&bus1, &bus2, 0.0, 0.1, 0, 0);
-  ClassicalGen<double, size_t> gen(&bus1, 1, 1, 0.05013, 3.0, 0.0, 0.0, 0.2);
+  GenClassical<double, size_t> gen(&bus1, 1, 1, 0.05013, 3.0, 0.0, 0.0, 0.2);
 
   /* Connect everything together */
   sys.addBus(&bus1);
