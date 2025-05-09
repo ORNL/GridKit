@@ -9,7 +9,7 @@
 
 #include "Model/Evaluator.hpp"
 
-//TODO: move implementations to header since they are templated?
+// TODO: move implementations to header since they are templated?
 namespace AnalysisManager
 {
 
@@ -373,7 +373,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
-      int         retval = 0;
+      int       retval = 0;
       real_type rel_tol;
       real_type abs_tol;
 
@@ -660,7 +660,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::printSpecial(real_type t, N_Vector y)
     {
       real_type* yval = N_VGetArrayPointer(y);
-      IdxT         N    = static_cast<IdxT>(N_VGetLength(y));
+      IdxT       N    = static_cast<IdxT>(N_VGetLength(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;
       for (IdxT i = 0; i < N; ++i)

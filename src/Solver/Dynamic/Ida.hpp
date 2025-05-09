@@ -173,9 +173,9 @@ namespace AnalysisManager
       real_type t_final_{};
       int       nout_{}; ///< Number of integration outputs
 
-      N_Vector yy_{};  ///< Solution vector
-      N_Vector yp_{};  ///< Solution derivatives vector
-      N_Vector q_{};   ///< Integrand vector
+      N_Vector yy_{}; ///< Solution vector
+      N_Vector yp_{}; ///< Solution derivatives vector
+      N_Vector q_{};  ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
       N_Vector yp0_{}; ///< Storage for initial derivatives
@@ -188,7 +188,7 @@ namespace AnalysisManager
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
-      //TODO: should template type be real_type rather than ScalarT?
+      // TODO: should template type be real_type rather than ScalarT?
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);
