@@ -1,10 +1,12 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
+
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -70,7 +72,7 @@ namespace GridKit
         const ScalarT res6{2.5};                /// fifth residual
         const ScalarT tol = 0.000000000001;     // tolerance for comparing results
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
@@ -136,7 +138,7 @@ namespace GridKit
 
         const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
@@ -190,7 +192,7 @@ namespace GridKit
 
         const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr1, Vi1);
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();

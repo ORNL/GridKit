@@ -101,22 +101,22 @@ namespace GridKit
      * Initialization of the branch model
      *
      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::initialize()
-     {
-       ScalarT vr     = Vr();
-       ScalarT vi     = Vi();
-       ScalarT p      = p0_;
-       ScalarT q      = q0_;
-       ScalarT vm2    = vr * vr + vi * vi;
-       ScalarT ir     = (p * vr + q * vi) / vm2;
-       ScalarT ii     = (p * vi - q * vr) / vm2;
-       ScalarT Er     = (G*(ir + G*vr - B*vi) + B*(ii + B*vr + G*vi))/(G*G + B*B);
-       ScalarT Ei     = (-B*(ir + G*vr - B*vi) + G*(ii + B*vr + G*vi))/(G*G + B*B);
-       ScalarT delta  = atan2(Ei, Er);
-       ScalarT omega  = 0;
-       ScalarT Ep     = sqrt(Er*Er + Ei*Ei);
-       ScalarT Te     = G*Ep*Ep - Ep*((G*vr - B*vi)*cos(delta) + (B*vr + G*vi)*sin(delta));
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::initialize()
+    {
+      ScalarT vr    = Vr();
+      ScalarT vi    = Vi();
+      ScalarT p     = p0_;
+      ScalarT q     = q0_;
+      ScalarT vm2   = vr * vr + vi * vi;
+      ScalarT ir    = (p * vr + q * vi) / vm2;
+      ScalarT ii    = (p * vi - q * vr) / vm2;
+      ScalarT Er    = (G * (ir + G * vr - B * vi) + B * (ii + B * vr + G * vi)) / (G * G + B * B);
+      ScalarT Ei    = (-B * (ir + G * vr - B * vi) + G * (ii + B * vr + G * vi)) / (G * G + B * B);
+      ScalarT delta = atan2(Ei, Er);
+      ScalarT omega = 0;
+      ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
+      ScalarT Te    = G * Ep * Ep - Ep * ((G * vr - B * vi) * cos(delta) + (B * vr + G * vi) * sin(delta));
 
       y_[0] = delta;
       y_[1] = omega;
@@ -153,113 +153,112 @@ namespace GridKit
       /* Read variables */
       ScalarT delta_dot = yp_[0];
       ScalarT omega_dot = yp_[1];
-      ScalarT delta = y_[0];
-      ScalarT omega = y_[1];
-      ScalarT telec = y_[2];
-      ScalarT ir    = y_[3];
-      ScalarT ii    = y_[4];
-      ScalarT pmech = y_[5];
-      ScalarT ep    = y_[6];
+      ScalarT delta     = y_[0];
+      ScalarT omega     = y_[1];
+      ScalarT telec     = y_[2];
+      ScalarT ir        = y_[3];
+      ScalarT ii        = y_[4];
+      ScalarT pmech     = y_[5];
+      ScalarT ep        = y_[6];
 
-       /* 6 GenClassical differential equations */
-       f_[0] = delta_dot - omega * (2 * M_PI * 60);
-       f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
-       
-       /* 11 GenClassical algebraic equations */
-       f_[2] = telec - (1.0/(1.0 + omega))*(G*ep*ep - ep*(cos(delta)*(G*Vr() - B*Vi()) + sin(delta)*(B*Vr() + G*Vi())));
-
-       f_[3] = ir + G*Vr() - B * Vi()  - ep*(G*cos(delta) -B*sin(delta));
-       f_[4] = ii + B*Vr() +  G * Vi() - ep*(B*cos(delta) + G*sin(delta));
+      /* 6 GenClassical differential equations */
+      f_[0] = delta_dot - omega * (2 * M_PI * 60);
+      f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
 
       /* 11 GenClassical algebraic equations */
       f_[2] = telec - (1.0 / (1.0 + omega)) * (G * ep * ep - ep * (cos(delta) * (G * Vr() - B * Vi()) + sin(delta) * (B * Vr() + G * Vi())));
 
-       Ir() += - (G*Vr() - B * Vi()  - ep*(G*cos(delta) - B*sin(delta)));
-       Ii() += - (B*Vr() +  G * Vi() - ep*(B*cos(delta) + G*sin(delta)));
+      f_[3] = ir + G * Vr() - B * Vi() - ep * (G * cos(delta) - B * sin(delta));
+      f_[4] = ii + B * Vr() + G * Vi() - ep * (B * cos(delta) + G * sin(delta));
 
-       return 0;
-     }
- 
-     /**
-      * @brief Jacobian evaluation not implemented yet
-      *
-      * @tparam ScalarT - scalar data type
-      * @tparam IdxT    - matrix index data type
-      * @return int - error code, 0 = success
-      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::evaluateJacobian()
-     {
-       return 0;
-     }
- 
-     /**
-      * @brief Integrand (objective) evaluation not implemented yet
-      *
-      * @tparam ScalarT - scalar data type
-      * @tparam IdxT    - matrix index data type
-      * @return int - error code, 0 = success
-      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::evaluateIntegrand()
-     {
-       // std::cout << "Evaluate Integrand for GenClassical..." << std::endl;
-       return 0;
-     }
- 
-     /**
-      * @brief Adjoint initialization not implemented yet
-      *
-      * @tparam ScalarT - scalar data type
-      * @tparam IdxT    - matrix index data type
-      * @return int - error code, 0 = success
-      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::initializeAdjoint()
-     {
-       // std::cout << "Initialize adjoint for GenClassical..." << std::endl;
-       return 0;
-     }
- 
-     /**
-      * @brief Adjoint residual evaluation not implemented yet
-      *
-      * @tparam ScalarT - scalar data type
-      * @tparam IdxT    - matrix index data type
-      * @return int - error code, 0 = success
-      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::evaluateAdjointResidual()
-     {
-       // std::cout << "Evaluate adjoint residual for GenClassical..." << std::endl;
-       return 0;
-     }
- 
-     /**
-      * @brief Adjoint integrand (objective) evaluation not implemented yet
-      *
-      * @tparam ScalarT - scalar data type
-      * @tparam IdxT    - matrix index data type
-      * @return int - error code, 0 = success
-      */
-     template <class ScalarT, typename IdxT>
-     int GenClassical<ScalarT, IdxT>::evaluateAdjointIntegrand()
-     {
-       // std::cout << "Evaluate adjoint Integrand for GenClassical..." << std::endl;
-       return 0;
-     }
- 
-     template <class ScalarT, typename IdxT>
-     void GenClassical<ScalarT, IdxT>::setDerivedParams()
-     {
-       G   = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-       B   = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-     }
- 
-     // Available template instantiations
-     template class GenClassical<double, long int>;
-     template class GenClassical<double, size_t>;
- 
-   } // namespace PhasorDynamics
- } // namespace GridKit
- 
+      /* 11 GenClassical algebraic equations */
+      f_[2] = telec - (1.0 / (1.0 + omega)) * (G * ep * ep - ep * (cos(delta) * (G * Vr() - B * Vi()) + sin(delta) * (B * Vr() + G * Vi())));
+
+      Ir() += -(G * Vr() - B * Vi() - ep * (G * cos(delta) - B * sin(delta)));
+      Ii() += -(B * Vr() + G * Vi() - ep * (B * cos(delta) + G * sin(delta)));
+
+      return 0;
+    }
+
+    /**
+     * @brief Jacobian evaluation not implemented yet
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::evaluateJacobian()
+    {
+      return 0;
+    }
+
+    /**
+     * @brief Integrand (objective) evaluation not implemented yet
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::evaluateIntegrand()
+    {
+      // std::cout << "Evaluate Integrand for GenClassical..." << std::endl;
+      return 0;
+    }
+
+    /**
+     * @brief Adjoint initialization not implemented yet
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::initializeAdjoint()
+    {
+      // std::cout << "Initialize adjoint for GenClassical..." << std::endl;
+      return 0;
+    }
+
+    /**
+     * @brief Adjoint residual evaluation not implemented yet
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::evaluateAdjointResidual()
+    {
+      // std::cout << "Evaluate adjoint residual for GenClassical..." << std::endl;
+      return 0;
+    }
+
+    /**
+     * @brief Adjoint integrand (objective) evaluation not implemented yet
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::evaluateAdjointIntegrand()
+    {
+      // std::cout << "Evaluate adjoint Integrand for GenClassical..." << std::endl;
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void GenClassical<ScalarT, IdxT>::setDerivedParams()
+    {
+      G = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+    }
+
+    // Available template instantiations
+    template class GenClassical<double, long int>;
+    template class GenClassical<double, size_t>;
+
+  } // namespace PhasorDynamics
+} // namespace GridKit
