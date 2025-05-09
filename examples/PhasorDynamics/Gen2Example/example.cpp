@@ -2,6 +2,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <time.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 // #include <sundials_core.h>
 #include <idas/idas.h>
@@ -10,18 +13,24 @@
 #include <sunlinsol/sunlinsol_klu.h>
 #include <sunmatrix/sunmatrix_sparse.h>
 
+#include "Model/PhasorDynamics/Branch/Branch.cpp"
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
+#include "Model/PhasorDynamics/Bus/Bus.cpp"
 #include "Model/PhasorDynamics/Bus/Bus.hpp"
+#include "Model/PhasorDynamics/Bus/BusInfinite.cpp"
 #include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
 #include "Model/PhasorDynamics/BusFault/BusFault.hpp"
+#include "Model/PhasorDynamics/Load/Load.cpp"
 #include "Model/PhasorDynamics/Load/Load.hpp"
+#include "Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp"
 #include "Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp"
 #include "Model/PhasorDynamics/SystemModel.hpp"
+#include "Solver/Dynamic/Ida.cpp"
 #include "Solver/Dynamic/Ida.hpp"
 
 #define _CRT_SECURE_NO_WARNINGS
 
-int main()
+int main(int argc, char* argv[])
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
@@ -43,26 +52,11 @@ int main()
 
   double dt = 1.0 / 4.0 / 60.0;
 
-  /* Output file header */
-  FILE* f = fopen("example1_v4_results.csv", "w");
-  if (!f)
-    printf("ERROR writing to output file!\n");
-
-  fprintf(f, "t, res, ");
-  for (int i = 0; i < sys.size(); ++i)
-  {
-    if (i == 0)
-      fprintf(f, "Y[%d]", i);
-    else
-      fprintf(f, ",Y[%d]", i);
-  }
-  for (int i = 0; i < sys.size(); ++i)
-    fprintf(f, ",Yp[%d]", i);
-  fprintf(f, "\n");
+  
 
   std::stringstream buffer;
 
-  /* Set up simulation */
+/* Set up simulation */
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
 
@@ -72,27 +66,44 @@ int main()
   ida.initializeSimulation(0.0, false);
   ida.runSimulationFixed(0.0, dt, 1.0, buffer);
 
-  int    i = 1;
-  double data;
-  int    size = 2 * sys.size() + 2;
-  while (buffer >> data)
+  if(argc >= 1)
   {
+    std::cout << argv[1] << std::endl;
+    std::ofstream outfile(argv[1]);
+    if (!outfile)
+      printf("ERROR writing to output file!\n");
 
-    if (i % (size) == 0)
-    {
-      fprintf(f, "%f", data);
-      fprintf(f, "\n");
-    }
-    else
-    {
-      fprintf(f, "%f,", data);
-    }
+    outfile << "t" << "," << "res";
+    for (int i = 0; i < sys.size(); ++i)
+        outfile << ",Y[" + std::to_string(i) + "]";
 
-    i++;
+    for (int i = 0; i < sys.size(); ++i)
+      outfile << ",Yp[" + std::to_string(i) + "]";
+
+    outfile << "\n";
+
+    int    i = 1;
+    double data;
+    int    size = 2 * sys.size() + 2;
+    while (buffer >> data)
+    {
+
+      if (i % (size) == 0)
+      {
+        outfile << data << "\n";
+      }
+      else
+      {
+        outfile << data << ",";
+      }
+
+      i++;
+    }
+    outfile.close();
   }
 
   printf("Complete in %.4g seconds\n", (clock() - start) / CLOCKS_PER_SEC);
-  fclose(f);
+    
 
   return 0;
 }
