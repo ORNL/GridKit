@@ -54,17 +54,17 @@ int main(int argc, char* argv[])
 
   
 
-  std::stringstream buffer;
+  // std::stringstream buffer;
 
-/* Set up simulation */
+  /* Set up simulation */
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
 
   /* Run simulation */
   double start = static_cast<double>(clock());
-  // ida.printOutputF(0, 0, buffer);
   ida.initializeSimulation(0.0, false);
-  ida.runSimulationFixed(0.0, dt, 1.0, buffer);
+  size_t nout = 200;
+  ida.runSimulation(1.0, nout);
 
   if(argc >= 1)
   {
@@ -85,20 +85,20 @@ int main(int argc, char* argv[])
     int    i = 1;
     double data;
     int    size = 2 * sys.size() + 2;
-    while (buffer >> data)
-    {
+    // while (buffer >> data)
+    // {
 
-      if (i % (size) == 0)
-      {
-        outfile << data << "\n";
-      }
-      else
-      {
-        outfile << data << ",";
-      }
+    //   if (i % (size) == 0)
+    //   {
+    //     outfile << data << "\n";
+    //   }
+    //   else
+    //   {
+    //     outfile << data << ",";
+    //   }
 
-      i++;
-    }
+    //   i++;
+    // }
     outfile.close();
   }
 
