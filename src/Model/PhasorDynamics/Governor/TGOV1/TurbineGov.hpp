@@ -10,7 +10,8 @@
 
 #include <Model/PhasorDynamics/Component.hpp>
 
-// Forward declarations.
+// Forward declarations
+// TODO: Make a MachineBase class for use with any synch. machine
 namespace GridKit
 {
   namespace PhasorDynamics
