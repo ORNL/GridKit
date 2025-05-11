@@ -58,21 +58,13 @@ The TGOV1 differential equations, as derived from the model diagram.
 \end{aligned}
 ```
 The domain of the state variable $P_{v}\in(P_{vmin}, P_{vmax})$ is enforced
-through the piece-wise definition above. However, depending on the
-general solver's requirments, this may need to be expressed as a
-smooth approximation (bump function/smooth indicator). Perhaps like the 
-following.
+through the piece-wise definition above. This may need to be expressed as a
+smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 ```math
 \begin{aligned}
-   I(x,x_0,\epsilon) 
-            &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
-            \left(\dfrac{x-x_0}{\epsilon}\right) \\
-   \phi(x)  &= I \left(x;P_{vmin}, \epsilon \right) -
-            I \left(x;P_{vmax}, \epsilon \right)
-            \qquad \epsilon <<1 \\
    \dot{P}_{v}   
             &= 
-            \dfrac{1}{T_1}\cdot \phi(P_v)
+            \phi(P_v) \cdot \dfrac{1}{T_1}
             \left[
                -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
             \right] \\
