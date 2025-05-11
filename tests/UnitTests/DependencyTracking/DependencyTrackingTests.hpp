@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <LinearAlgebra/SparsityPattern/Variable.hpp>
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -22,7 +22,7 @@ namespace GridKit
         TestStatus success = true;
 
         const size_t                  n = 3;
-        std::vector<Sparse::Variable> x(n), p(n), f(n);
+        std::vector<DependencyTracking::Variable> x(n), p(n), f(n);
 
         // decide x, y, and z are variables
         for (size_t i = 0; i < n; ++i)
@@ -47,7 +47,7 @@ namespace GridKit
 
         // Check dependenices of f[0] (depends on x[0] and x[1])
         {
-          const Sparse::Variable::DependencyMap& dependencies =
+          const DependencyTracking::Variable::DependencyMap& dependencies =
               (f[0]).getDependencies();
 
           success *= (dependencies.size() == 2);
@@ -58,7 +58,7 @@ namespace GridKit
 
         // Check dependencies of f[2] (depends on x[0], x[1], x[2])
         {
-          const Sparse::Variable::DependencyMap& dependencies =
+          const DependencyTracking::Variable::DependencyMap& dependencies =
               (f[2]).getDependencies();
 
           success *= (dependencies.size() == 3);

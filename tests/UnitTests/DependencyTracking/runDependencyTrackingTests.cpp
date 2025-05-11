@@ -1,4 +1,4 @@
-#include "SparsityPatternTests.hpp"
+#include "DependencyTrackingTests.hpp"
 
 int main()
 {

@@ -18,7 +18,7 @@
 
 namespace GridKit
 {
-  namespace Sparse
+  namespace DependencyTracking
   {
 
     /**
@@ -325,7 +325,7 @@ namespace GridKit
 
     inline std::istream& operator>>(std::istream& is, Variable& v);
 
-  } // namespace Sparse
+  } // namespace DependencyTracking
 } // namespace GridKit
 
 namespace GridKit

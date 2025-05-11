@@ -6,7 +6,7 @@
 
 namespace GridKit
 {
-  namespace Sparse
+  namespace DependencyTracking
   {
     /**
         @brief Returns the list of derivatives.
@@ -204,5 +204,5 @@ namespace GridKit
       return *this;
     }
 
-  } // namespace Sparse
+  } // namespace DependencyTracking
 } // namespace GridKit
