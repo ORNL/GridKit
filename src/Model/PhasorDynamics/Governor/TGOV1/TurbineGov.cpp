@@ -39,9 +39,6 @@ namespace GridKit
       // 2 Internal Variables and 7 Parameters
       size_       = 2;
       size_param_ = 7;
-
-      // Eliminate compiler warnings
-      (void) unit_id_;
     }
 
     /*!
@@ -77,8 +74,6 @@ namespace GridKit
       size_       = 2;
       size_param_ = 7;
 
-      // Eliminate compiler warnings
-      (void) unit_id_;
     }
 
     /*!
@@ -151,6 +146,7 @@ namespace GridKit
     {
 
       // External Variables
+      // TODO: should be deviation, not true speed.
       ScalarT omega  = machine_->omega();
       
       // Internal Variables 
