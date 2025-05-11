@@ -1,0 +1,95 @@
+/**
+ * @file TurbineGov.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @brief Declaration of a Turbine Governor Model (IEEET1).
+ *
+ */
+
+#pragma once
+
+#include <Model/PhasorDynamics/Component.hpp>
+
+// Forward declarations.
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    template <class ScalarT, typename IdxT>
+    class MachineBase;
+  }
+} // namespace GridKit
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+
+    template <class ScalarT, typename IdxT>
+    class TurbineGov : public Component<ScalarT, IdxT>
+    {
+      using Component<ScalarT, IdxT>::alpha_;
+      using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::fB_;
+      using Component<ScalarT, IdxT>::g_;
+      using Component<ScalarT, IdxT>::gB_;
+      using Component<ScalarT, IdxT>::nnz_;
+      using Component<ScalarT, IdxT>::param_;
+      using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::tag_;
+      using Component<ScalarT, IdxT>::time_;
+      using Component<ScalarT, IdxT>::y_;
+      using Component<ScalarT, IdxT>::yB_;
+      using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::ypB_;
+
+      using machine_type  = MachineBase<ScalarT, IdxT>;
+      using real_type     = typename Component<ScalarT, IdxT>::real_type;
+
+    public:
+      TurbineGov(machine_type* machine);
+      TurbineGov(machine_type* machine,
+                  real_type R,
+                  real_type Pvmin,
+                  real_type Pvmax,
+                  real_type T1,
+                  real_type T2,
+                  real_type T3,
+                  real_type Dt);
+      ~TurbineGov() = default;
+
+      int allocate() override;
+      int initialize() override;
+      int tagDifferentiable() override;
+      int evaluateResidual() override;
+
+      // Still to be implemented
+      int evaluateJacobian() override;
+      int evaluateIntegrand() override;
+      int initializeAdjoint() override;
+      int evaluateAdjointResidual() override;
+      int evaluateAdjointIntegrand() override;
+
+      void updateTime(real_type /* t */, real_type /* a */) override
+      {
+      }
+
+    private:
+    
+      // Associated Machine Model
+      machine_type* machine_;
+
+      // Input parameters
+      real_type R_;
+      real_type T1_;
+      real_type T2_;
+      real_type T3_;
+      real_type Dt_;
+
+      // Output States
+      ScalarT pmech_;
+
+    };
+
+  } // namespace PhasorDynamics
+} // namespace GridKit
