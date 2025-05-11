@@ -14,7 +14,7 @@ Standard model of the stream turbine
 ## Nomenclature
 
 ### Algebraic Variables
-- $\omega$ - Per-unit Speed Deviation (p.u.)
+- $\Delta\omega$ - Per-unit Speed Deviation (p.u.)
 - $P_{ref}$ - Reference Power 
 - $P_{mech}$ - Mechnical Power to Generator
 
@@ -38,7 +38,7 @@ Standard model of the stream turbine
 The algebraic equation dictating the mechnical power output.
 ```math
 \begin{aligned}
-   P_{mech} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
+   P_{mech} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \Delta\omega \\
 \end{aligned}
 ```
 
@@ -50,7 +50,7 @@ The TGOV1 differential equations, as derived from the model diagram.
    \dot{P}_{v}    &= 
       \dfrac{1}{T_1}
    \begin{cases}
-      -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
+      -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
          &  \text{if } P_v \in (P_{vmin}, P_{vmax})\\
       0  
          &  \text{else } \\
@@ -74,7 +74,7 @@ following.
             &= 
             \dfrac{1}{T_1}\cdot \phi(P_v)
             \left[
-               -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
+               -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
             \right] \\
 \end{aligned}
 ```
