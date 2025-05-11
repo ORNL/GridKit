@@ -81,21 +81,13 @@ The IEEET1 differential equations, as derived from the model diagram.
 \end{aligned}
 ```
 The domain of the state variable $V_{R}\in(V_{rmin}, V_{rmax})$ is enforced
-through the piece-wise definition above. However, depending on the
-general solver's requirments, this may need to be expressed as a
-smooth approximation (bump function/smooth indicator). Perhaps like the 
-following.
+through the piece-wise definition above. This may need to be expressed as a
+smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 ```math
 \begin{aligned}
-   I(x,x_0,\epsilon) 
-            &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
-            \left(\dfrac{x-x_0}{\epsilon}\right) \\
-   \phi(x)  &= I \left(x;V_{rmin}, \epsilon \right) -
-            I \left(x;V_{rmax}, \epsilon \right)
-            \qquad \epsilon <<1 \\
    \dot{V}_{R}   
             &= 
-            \dfrac{1}{T_A}\cdot \phi(V_R)
+            \phi(V_R)\cdot \dfrac{1}{T_A}
             \left[
                -V_{R}+K_{a}V_{tr}
             \right] \\
