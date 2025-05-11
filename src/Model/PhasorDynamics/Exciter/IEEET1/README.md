@@ -1,4 +1,4 @@
-# **IEEET1**
+# **IEEE Type 1 Excitation System Model (IEEET1)**
 
 ## Control Diagram
 
@@ -26,7 +26,7 @@ These can be constants or external states
 - $V_{UEL}$ - Input from under excitation limiter
 - $V_{OEL}$ - Input from over excitation limiter
 - $V_{S}$ - Input from stabilizer controller
-- $\omega$ - Machine speed deviation from machine model
+- $\Delta \omega$ - Machine speed deviation from machine model
 
 ### Differential Variables
 - $V_{ts}$ - Sensed terminal voltage
@@ -53,14 +53,14 @@ The algebraic equations of the exciter.
    V_{tr} &= V_{ref} - V_{ts}+V_{UEL} + V_{OEL} + V_S - V_F\\
     V_{f} &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
     E_{fd}&= \begin{cases}
-        E_{fd}^{'}           &  \text{if } I_{spdlm}\\
-        (1+\omega)E_{fd}^{'}  &  \text{else } \\
+        E_{fd}'           &  \text{if } I_{spdlm}\\
+        (1+\Delta \omega)E_{fd}'  &  \text{else } \\
    \end{cases}\\
     k_{sat}&= \begin{cases}
-        S_B(E_{fd}^{'} -S_A)^2        &  \text{if } E_{fd}^{'} >S_A\\
+        S_B(E_{fd}' -S_A)^2        &  \text{if } E_{fd}' >S_A\\
         0  &  \text{else } \\
    \end{cases} \\
-    V_{E} &= k_{sat}\cdot E_{fd}^{'} \\
+    V_{E} &= k_{sat}\cdot E_{fd}' \\
 \end{aligned}
 ```
 
