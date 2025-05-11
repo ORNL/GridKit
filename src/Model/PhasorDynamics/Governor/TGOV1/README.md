@@ -15,11 +15,11 @@ Standard model of the stream turbine
 
 ### Algebraic Variables
 - $\Delta\omega$ - Per-unit Speed Deviation (p.u.)
-- $P_{ref}$ - Reference Power 
-- $P_{mech}$ - Mechnical Power to Generator
+- $P_{ref}$ - Reference Power (p.u.)
+- $P_{mech}$ - Mechnical Power to Generator (p.u.)
 
 ### Differential Variables
-- $P_{tx}$ - Turbine Power (State 1 in Fig. 1)
+- $P_{tx}$ - Turbine Power (p.u.) (State 1 in Fig. 1)
 - $P_{v}$ - Valve Position (State 2 in Fig. 1)
 
 ### Parameters
