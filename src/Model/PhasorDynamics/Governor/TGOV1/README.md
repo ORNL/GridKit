@@ -1,4 +1,4 @@
-# **TGOV1**
+# **Steam Turbine-Governor Model (TGOV1)**
 
 ## Control Diagram
 
@@ -14,22 +14,22 @@ Standard model of the stream turbine
 ## Nomenclature
 
 ### Algebraic Variables
-- $\omega$ - Per-unit Speed Deviation
-- $P_{ref}$ - Reference Power
+- $\omega$ - Per-unit Speed Deviation (p.u.)
+- $P_{ref}$ - Reference Power 
 - $P_{mech}$ - Mechnical Power to Generator
 
 ### Differential Variables
-- $P_{tx}$ - Turbine Power 
-- $P_{v}$ - Valve Position
+- $P_{tx}$ - Turbine Power (State 1 in Fig. 1)
+- $P_{v}$ - Valve Position (State 2 in Fig. 1)
 
 ### Parameters
-- $R$ - Droop Constant
-- $T_1$ - Valve Time Delay
-- $T_2$ - Turbine Numerator Time Constat
-- $T_3$ - Turbine Delay
-- $V_{max}$ - Max Valve Position
-- $V_{min}$ -  Min Valve Position
-- $D_t$ - Turbine Damping Coefficient
+- $R$ - Droop Constant (p.u.)
+- $T_1$ - Valve Time Delay (sec)
+- $T_2$ - Turbine Numerator Time Constat (sec)
+- $T_3$ - Turbine Delay (sec)
+- $P_{vmax}$ - Max Valve Position
+- $P_{vmin}$ -  Min Valve Position
+- $D_t$ - Turbine Damping Coefficient (p.u.)
 
 ## Equations
 
@@ -50,14 +50,14 @@ The TGOV1 differential equations, as derived from the model diagram.
    \dot{P}_{v}    &= 
       \dfrac{1}{T_1}
    \begin{cases}
-      -P_{v} + \frac{1}{R}(P_{ref}-\omega)
-         &  \text{if } P_v \in (V_{min}, V_{max})\\
+      -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
+         &  \text{if } P_v \in (P_{vmin}, P_{vmax})\\
       0  
          &  \text{else } \\
    \end{cases}
 \end{aligned}
 ```
-The domain of the state variable $P_{v}\in(V_{min}, V_{max})$ is enforced
+The domain of the state variable $P_{v}\in(P_{vmin}, P_{vmax})$ is enforced
 through the piece-wise definition above. However, depending on the
 general solver's requirments, this may need to be expressed as a
 smooth approximation (bump function/smooth indicator). Perhaps like the 
@@ -67,14 +67,14 @@ following.
    I(x,x_0,\epsilon) 
             &= \dfrac{1}{2} + \dfrac{1}{2}\tanh 
             \left(\dfrac{x-x_0}{\epsilon}\right) \\
-   \phi(x)  &= I \left(x;V_{min}, \epsilon \right) -
-            I \left(x;V_{max}, \epsilon \right)
+   \phi(x)  &= I \left(x;P_{vmin}, \epsilon \right) -
+            I \left(x;P_{vmax}, \epsilon \right)
             \qquad \epsilon <<1 \\
    \dot{P}_{v}   
             &= 
             \dfrac{1}{T_1}\cdot \phi(P_v)
             \left[
-               -P_{v} + \frac{1}{R}(P_{ref}-\omega)
+               -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
             \right] \\
 \end{aligned}
 ```
