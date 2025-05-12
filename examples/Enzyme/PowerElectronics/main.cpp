@@ -22,33 +22,35 @@ using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 int  enzyme_dupnoneed;
 int  enzyme_dup;
 int  enzyme_const;
-void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>, int, std::vector<double>, std::vector<double>*);
+template <class ScalarT>
+void __enzyme_fwddiff(void*, int, std::vector<ScalarT>, std::vector<ScalarT>, int, std::vector<ScalarT>, std::vector<ScalarT>*);
 
 // Copy from DistributedGenerator<ScalarT, IdxT>::evaluateResidual
 // Need to find a way to differentiate the member function directly
-void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
+template <class ScalarT>
+void evaluateResidual(std::vector<ScalarT> y_, std::vector<ScalarT> f_)
 {
-  constexpr double wb_  = 2.0 * M_PI * 50.0;
-  constexpr double wc_  = 31.41;
-  constexpr double mp_  = 9.4e-5;
-  constexpr double Vn_  = 380.0;
-  constexpr double nq_  = 1.3e-3;
-  constexpr double F_   = 0.75;
-  constexpr double Kiv_ = 420.0;
-  constexpr double Kpv_ = 0.1;
-  constexpr double Kic_ = 2.0e4;
-  constexpr double Kpc_ = 15.0;
-  constexpr double Cf_  = 5.0e-5;
-  constexpr double rLf_ = 0.1;
-  constexpr double Lf_  = 1.35e-3;
-  constexpr double rLc_ = 0.03;
-  constexpr double Lc_  = 0.35e-3;
+  constexpr ScalarT wb_  = 2.0 * M_PI * 50.0;
+  constexpr ScalarT wc_  = 31.41;
+  constexpr ScalarT mp_  = 9.4e-5;
+  constexpr ScalarT Vn_  = 380.0;
+  constexpr ScalarT nq_  = 1.3e-3;
+  constexpr ScalarT F_   = 0.75;
+  constexpr ScalarT Kiv_ = 420.0;
+  constexpr ScalarT Kpv_ = 0.1;
+  constexpr ScalarT Kic_ = 2.0e4;
+  constexpr ScalarT Kpc_ = 15.0;
+  constexpr ScalarT Cf_  = 5.0e-5;
+  constexpr ScalarT rLf_ = 0.1;
+  constexpr ScalarT Lf_  = 1.35e-3;
+  constexpr ScalarT rLc_ = 0.03;
+  constexpr ScalarT Lc_  = 0.35e-3;
 
   constexpr bool ref_frame_ = true;
 
-  std::vector<double> yp_(0);
+  std::vector<ScalarT> yp_(0);
 
-  double omega = wb_ - mp_ * y_[4];
+  ScalarT omega = wb_ - mp_ * y_[4];
   if (ref_frame_)
   {
     f_[0] = omega - y_[0];
@@ -61,27 +63,27 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
   f_[1] = cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15];
   f_[2] = sin(y_[3]) * y_[14] + cos(y_[3]) * y_[15];
 
-  double vbd_in = cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2];
-  double vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
+  ScalarT vbd_in = cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2];
+  ScalarT vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
 
   f_[3] = -yp_[3] + omega - y_[0];
   f_[4] = -yp_[4] + wc_ * (y_[12] * y_[14] + y_[13] * y_[15] - y_[4]);
   f_[5] = -yp_[5] + wc_ * (-y_[12] * y_[15] + y_[13] * y_[14] - y_[5]);
 
-  double vod_star = Vn_ - nq_ * y_[5];
-  double voq_star = 0.0;
+  ScalarT vod_star = Vn_ - nq_ * y_[5];
+  ScalarT voq_star = 0.0;
 
   f_[6] = -yp_[6] + vod_star - y_[12];
   f_[7] = -yp_[7] + voq_star - y_[13];
 
-  double ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6];
-  double ilq_star = F_ * y_[15] + wb_ * Cf_ * y_[12] + Kpv_ * (voq_star - y_[13]) + Kiv_ * y_[7];
+  ScalarT ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6];
+  ScalarT ilq_star = F_ * y_[15] + wb_ * Cf_ * y_[12] + Kpv_ * (voq_star - y_[13]) + Kiv_ * y_[7];
 
   f_[8] = -yp_[8] + ild_star - y_[10];
   f_[9] = -yp_[9] + ilq_star - y_[11];
 
-  double vid_star = -wb_ * Lf_ * y_[11] + Kpc_ * (ild_star - y_[10]) + Kic_ * y_[8];
-  double viq_star = wb_ * Lf_ * y_[10] + Kpc_ * (ilq_star - y_[11]) + Kic_ * y_[9];
+  ScalarT vid_star = -wb_ * Lf_ * y_[11] + Kpc_ * (ild_star - y_[10]) + Kic_ * y_[8];
+  ScalarT viq_star = wb_ * Lf_ * y_[10] + Kpc_ * (ilq_star - y_[11]) + Kic_ * y_[9];
 
   f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] + omega * y_[11] + (vid_star - y_[12]) / Lf_;
   f_[11] = -yp_[11] - (rLf_ / Lf_) * y_[11] - omega * y_[10] + (viq_star - y_[13]) / Lf_;
@@ -94,18 +96,18 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
 }
 
 // Function that computes the Jacobian via automatic differentiation
-template <typename T>
+template <class ScalarT, typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac)
 {
-  int                 N = model->size();
-  std::vector<double> y(N);
-  std::vector<double> v(N);
-  std::vector<double> res(N);
-  std::vector<double> d_res(N);
-  for (int idy = 0; idy < N; ++idy)
+  size_t              N = model->size();
+  std::vector<ScalarT> y(N);
+  std::vector<ScalarT> v(N);
+  std::vector<ScalarT> res(N);
+  std::vector<ScalarT> d_res(N);
+  for (size_t idy = 0; idy < N; ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < N; ++idx)
     {
       y[idx]   = (model->y())[idx];
       res[idx] = (model->getResidual())[idx];
@@ -114,16 +116,16 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac)
     v[idy] = 1.0;
 
     // Autodiff
-    __enzyme_fwddiff((void*) evaluateResidual,
-                     enzyme_dup,
-                     y,
-                     v,
-                     enzyme_dupnoneed,
-                     res,
-                     &d_res);
+    __enzyme_fwddiff<ScalarT>((void*) evaluateResidual<ScalarT>,
+                              enzyme_dup,
+                              y,
+                              v,
+                              enzyme_dupnoneed,
+                              res,
+                              &d_res);
 
     // Store result
-    for (int idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < N; ++idx)
     {
       jac.setValue(idx, idy, d_res[idx]);
     }
@@ -166,14 +168,14 @@ int main()
 
   // Enzyme Jacobian
   DenseMatrix jac_autodiff(dg->size(), dg->size());
-  EnzymeModelJacobian<DG>(dg, jac_autodiff);
+  EnzymeModelJacobian<double, DG>(dg, jac_autodiff);
 
   // Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < dg->size(); ++idy)
+  for (size_t idy = 0; idy < dg->size(); ++idy)
   {
-    for (int idx = 0; idx < dg->size(); ++idx)
+    for (size_t idx = 0; idx < dg->size(); ++idx)
     {
       if (std::abs(jac_autodiff.getValue(idx, idy) - jac_ref_dense.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
       {

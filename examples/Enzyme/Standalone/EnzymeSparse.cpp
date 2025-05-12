@@ -84,25 +84,25 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
 }
 
 /// Vector-valued function to differentiate
-template <typename T>
-__attribute__((always_inline)) static void f(size_t N, T* input, T* output)
+template <class ScalarT, typename IdxT>
+__attribute__((always_inline)) static void f(size_t N, ScalarT* input, ScalarT* output)
 {
-  for (size_t i = 0; i < N; i++)
+  for (IdxT i = 0; i < N; i++)
   {
     output[i] = input[i] * input[i];
   }
 }
 
 /// Reference Jacobian
-template <typename T>
-void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
+template <class ScalarT, typename IdxT>
+void jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, SparseMatrix& jac)
 {
-  std::vector<size_t> ctemp{};
-  std::vector<size_t> rtemp{};
-  std::vector<T>      valtemp{};
-  for (int idy = 0; idy < y.size(); ++idy)
+  std::vector<IdxT>    ctemp{};
+  std::vector<IdxT>    rtemp{};
+  std::vector<ScalarT> valtemp{};
+  for (IdxT idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (IdxT idx = 0; idx < x.size(); ++idx)
     {
       if (idx == idy)
       {
@@ -116,29 +116,29 @@ void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
 }
 
 /// Function that computes the Jacobian via automatic differentiation
-template <typename T>
-__attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
+template <class ScalarT, typename IdxT>
+__attribute__((noinline)) void jac_f(IdxT N, ScalarT* input, SparseMatrix& jac)
 {
-  std::vector<Triple<T>> triplets;
-  for (size_t i = 0; i < N; i++)
+  std::vector<Triple<ScalarT>> triplets;
+  for (IdxT i = 0; i < N; i++)
   {
-    T* output   = __enzyme_todense<T*>((void*) ident_load<T>, (void*) ident_store<T>, i);
-    T* d_output = __enzyme_todense<T*>((void*) sparse_load<T>, (void*) sparse_store<T>, i, &triplets);
+    ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
+    ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
 
-    __enzyme_fwddiff<void>((void*) f<T>,
+    __enzyme_fwddiff<void>((void*) f<ScalarT, IdxT>,
                            enzyme_const,
                            N,
                            enzyme_dup,
                            input,
                            output,
                            enzyme_dupnoneed,
-                           (T*) 0x1,
+                           (ScalarT*) 0x1,
                            d_output);
   }
 
-  std::vector<size_t> ctemp{};
-  std::vector<size_t> rtemp{};
-  std::vector<T>      valtemp{};
+  std::vector<IdxT>    ctemp{};
+  std::vector<IdxT>    rtemp{};
+  std::vector<ScalarT> valtemp{};
   for (auto& tup : triplets)
   {
     rtemp.push_back(tup.row);
@@ -149,19 +149,20 @@ __attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
 }
 
 /// Compare two sparse matrices
+template <class ScalarT, typename IdxT>
 void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
 {
-  std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_1 = matrix_1.getEntries();
-  const auto [rcord_1, ccord_1, vals_1]                                                  = entries_1;
-  std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_2 = matrix_2.getEntries();
-  const auto [rcord_2, ccord_2, vals_2]                                                  = entries_2;
-  for (int ind = 0; ind < vals_1.size(); ++ind)
+  std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> entries_1 = matrix_1.getEntries();
+  const auto [rcord_1, ccord_1, vals_1]                                               = entries_1;
+  std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> entries_2 = matrix_2.getEntries();
+  const auto [rcord_2, ccord_2, vals_2]                                               = entries_2;
+  for (IdxT ind = 0; ind < vals_1.size(); ++ind)
   {
     if (rcord_1[ind] != rcord_2[ind])
       fail++;
     if (ccord_1[ind] != ccord_2[ind])
       fail++;
-    if (std::abs(vals_1[ind] - vals_2[ind]) > std::numeric_limits<double>::epsilon())
+    if (std::abs(vals_1[ind] - vals_2[ind]) > std::numeric_limits<ScalarT>::epsilon())
       fail++;
   }
 }
@@ -177,24 +178,24 @@ int main()
 
   /// Input initialization
   double val = 0.0;
-  for (int i = 0; i < N; ++i)
+  for (size_t i = 0; i < N; ++i)
   {
     x[i]  = val;
     val  += 1.0;
   }
 
   /// Function evaluation
-  f(x.size(), x.data(), sq.data());
+  f<double, size_t>(x.size(), x.data(), sq.data());
 
   /// Reference Jacobian
-  jac_f_ref(x, sq, dsq_ref);
+  jac_f_ref<double, size_t>(x, sq, dsq_ref);
 
   /// Enzyme Jacobian
-  jac_f<double>(N, x.data(), dsq);
+  jac_f<double, size_t>(N, x.data(), dsq);
 
   /// Check
   int fail = 0;
-  check(dsq, dsq_ref, fail);
+  check<double, size_t>(dsq, dsq_ref, fail);
   bool verbose = true;
   if (verbose)
   {
