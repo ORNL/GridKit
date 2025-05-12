@@ -12,62 +12,70 @@
  */
 
 using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
-int  enzyme_dupnoneed;
-int  enzyme_dup;
-int  enzyme_const;
-void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>, int, std::vector<double>, std::vector<double>*);
+int enzyme_dupnoneed;
+int enzyme_dup;
+int enzyme_const;
+template <class ScalarT, typename IdxT>
+void __enzyme_fwddiff(void*, int, std::vector<ScalarT>, std::vector<ScalarT>, int, std::vector<ScalarT>, std::vector<ScalarT>*);
 
-inline double square_scalar(double x)
+template <class ScalarT>
+inline ScalarT square_scalar(ScalarT x)
 {
   return x * x;
 }
 
-inline double dsquare_ref_scalar(double x)
+template <class ScalarT>
+inline ScalarT dsquare_ref_scalar(ScalarT x)
 {
   return 2.0 * x;
 }
 
-// Vector-valued function to differentiate
-void square(std::vector<double> x, std::vector<double>& y)
+/// Vector-valued function to differentiate
+template <class ScalarT, typename IdxT>
+void square(std::vector<ScalarT> x, std::vector<ScalarT>& y)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (IdxT idx = 0; idx < x.size(); ++idx)
   {
-    y[idx] = square_scalar(x[idx]);
+    y[idx] = square_scalar<ScalarT>(x[idx]);
   }
 }
 
-// Reference Jacobian
-void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
+/// Reference Jacobian
+template <class ScalarT, typename IdxT>
+void dsquare_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy)
 {
-  for (int idy = 0; idy < y.size(); ++idy)
+  for (IdxT idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (IdxT idx = 0; idx < x.size(); ++idx)
     {
       if (idx == idy)
-        dy.setValue(idx, idy, dsquare_ref_scalar(x[idx]));
+        dy.setValue(idx, idy, dsquare_ref_scalar<ScalarT>(x[idx]));
     }
   }
 }
 
-// Function that computes the Jacobian via automatic differentiation
-void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
+/// Function that computes the Jacobian via automatic differentiation
+template <class ScalarT, typename IdxT>
+void dsquare(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy)
 {
-  std::vector<double> v(x.size());
-  std::vector<double> d_y(y.size());
-  for (int idy = 0; idy < y.size(); ++idy)
+  std::vector<ScalarT> v(x.size());
+  std::vector<ScalarT> d_y(y.size());
+  for (IdxT idy = 0; idy < y.size(); ++idy)
   {
-    // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < x.size(); ++idx)
+    /// Elementary vector for Jacobian-vector product
+    for (IdxT idx = 0; idx < x.size(); ++idx)
     {
       v[idx] = 0.0;
     }
     v[idy] = 1.0;
 
-    // Autodiff
-    __enzyme_fwddiff((void*) square, enzyme_dup, x, v, enzyme_dupnoneed, y, &d_y);
+    /// Autodiff
+    __enzyme_fwddiff<ScalarT, IdxT>((void*) square<ScalarT, IdxT>, 
+                                    enzyme_dup, x, v, 
+                                    enzyme_dupnoneed, y, &d_y);
 
-    // Store result
-    for (int idx = 0; idx < x.size(); ++idx)
+    /// Store result
+    for (IdxT idx = 0; idx < x.size(); ++idx)
     {
       dy.setValue(idx, idy, d_y[idx]);
     }
@@ -76,35 +84,35 @@ void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
 
 int main()
 {
-  // Vector and matrix declarations
-  constexpr int       N = 10;
+  /// Vector and matrix declarations
+  constexpr size_t       N = 10;
   std::vector<double> x(N);
   std::vector<double> sq(N);
   DenseMatrix         dsq     = DenseMatrix(N, N);
   DenseMatrix         dsq_ref = DenseMatrix(N, N);
 
-  // Random input values
+  /// Random input values
   srand(time(NULL));
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (size_t idx = 0; idx < x.size(); ++idx)
   {
     x[idx] = rand();
   }
 
-  // Function evaluation
-  square(x, sq);
+  /// Function evaluation
+  square<double, size_t>(x, sq);
 
-  // Reference Jacobian
-  dsquare_ref(x, sq, dsq_ref);
+  /// Reference Jacobian
+  dsquare_ref<double, size_t>(x, sq, dsq_ref);
 
-  // Enzyme Jacobian
-  dsquare(x, sq, dsq);
+  /// Enzyme Jacobian
+  dsquare<double, size_t>(x, sq, dsq);
 
-  // Check
+  /// Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < sq.size(); ++idy)
+  for (size_t idy = 0; idy < sq.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       if (std::abs(dsq.getValue(idx, idy) - dsq_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
       {
