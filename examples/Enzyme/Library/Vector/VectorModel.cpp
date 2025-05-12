@@ -32,12 +32,12 @@ void VectorModel::setVariable(std::vector<double> x)
   }
 }
 
-void VectorModel::evalResidual()
+void VectorModel::evaluateResidual()
 {
   square(x_, f_);
 }
 
-void VectorModel::evalJacobian()
+void VectorModel::evaluateJacobian()
 {
   const int           n = x_.size();
   std::vector<double> v(n);

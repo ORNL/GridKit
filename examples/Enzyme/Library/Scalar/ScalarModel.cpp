@@ -18,12 +18,12 @@ void ScalarModel::setVariable(double x)
   x_ = x;
 }
 
-void ScalarModel::evalFunction()
+void ScalarModel::evaluateFunction()
 {
   f_ = square(x_);
 }
 
-void ScalarModel::evalDerivative()
+void ScalarModel::evaluateDerivative()
 {
   ScalarModel d_scalar_model;
   d_scalar_model.setVariable(1.0);

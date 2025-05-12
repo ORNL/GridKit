@@ -13,8 +13,8 @@ private:
 public:
   ScalarModel();
   void   setVariable(double);
-  void   evalFunction();
-  void   evalDerivative();
+  void   evaluateFunction();
+  void   evaluateDerivative();
   double getVariable() const;
   double getFunctionValue() const;
   double getDerivativeValue() const;

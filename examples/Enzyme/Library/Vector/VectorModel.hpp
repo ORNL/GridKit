@@ -19,8 +19,8 @@ private:
 public:
   VectorModel(int);
   void                 setVariable(std::vector<double>);
-  void                 evalResidual();
-  void                 evalJacobian();
+  void                 evaluateResidual();
+  void                 evaluateJacobian();
   std::vector<double>& getVariable();
   std::vector<double>& getResidual();
   DenseMatrix&         getJacobian();

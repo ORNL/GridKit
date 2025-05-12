@@ -49,8 +49,8 @@ int main()
   // Model
   VectorModel* vector_model = new VectorModel(n);
   vector_model->setVariable(var);
-  vector_model->evalResidual();
-  vector_model->evalJacobian();
+  vector_model->evaluateResidual();
+  vector_model->evaluateJacobian();
   std::vector<double> var_temp = vector_model->getVariable();
   std::vector<double> res      = vector_model->getResidual();
   DenseMatrix         jac      = vector_model->getJacobian();

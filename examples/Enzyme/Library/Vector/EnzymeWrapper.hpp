@@ -13,6 +13,6 @@ std::vector<ScalarT> __enzyme_fwddiff(std::vector<ScalarT>*, int, T*, T*);
 template <class ScalarT, typename T>
 std::vector<ScalarT> wrapper(T* obj)
 {
-  obj->evalResidual();
+  obj->evaluateResidual();
   return obj->getResidual();
 }

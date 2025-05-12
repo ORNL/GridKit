@@ -17,8 +17,8 @@ int main()
   ScalarModel scalar_model;
   double      var = 5.0;
   scalar_model.setVariable(var);
-  scalar_model.evalFunction();
-  scalar_model.evalDerivative();
+  scalar_model.evaluateFunction();
+  scalar_model.evaluateDerivative();
   double sq  = scalar_model.getFunctionValue();
   double dsq = scalar_model.getDerivativeValue();
 
