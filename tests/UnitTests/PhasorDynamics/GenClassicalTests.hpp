@@ -53,41 +53,41 @@ namespace GridKit
         TestStatus success = true;
 
         // classical generator parameters
-        real_type H{0.1};
-        real_type D{2.35};
-        real_type Ra{1.5};
-        real_type Xdp{4.5};
-        real_type pmech{5.0};
-        real_type ep{2.5};
+        real_type H{0.5};
+        real_type D{-1.0};
+        real_type Ra{0.5};
+        real_type Xdp{0.5};
+        real_type pmech{1.0};
+        real_type ep{2.0};
 
-        ScalarT Vr1{2.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.5}; ///< Bus-1 imaginary voltage
+        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
+        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        const ScalarT res0{-1128.973355292326}; /// first residual
-        const ScalarT res1{27.5625000000000};   /// second residual
-        const ScalarT res2{4.102511525891203};  /// third residual
-        const ScalarT res3{8.164018441425924};  /// fourth residual
-        const ScalarT res4{2.089603682931281};  /// fifth residual
-        const ScalarT res5{5.0};                /// fifth residual
-        const ScalarT res6{2.5};                /// fifth residual
-        const ScalarT tol = 0.000000000001;     // tolerance for comparing results
+        const ScalarT res0{0.0}; /// first residual
+        const ScalarT res1{0.0};   /// second residual
+        const ScalarT res2{0.0};  /// third residual
+        const ScalarT res3{0.0};  /// fourth residual
+        const ScalarT res4{0.0};  /// fifth residual
+        const ScalarT res5{0.0};                /// fifth residual
+        const ScalarT res6{0.0};                /// fifth residual
+        const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()) ;    // tolerance for comparing results
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1, 1, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
         gen.allocate();
 
-        gen.y()[0] = 1.0; // delta
-        gen.y()[1] = 3.0; // omega
-        gen.y()[2] = 4.0; // telec
-        gen.y()[3] = 8.0; // ir
-        gen.y()[4] = 2.0; // ii
-        gen.y()[5] = 5.0; // pmech
-        gen.y()[6] = 2.5; // Ep
+        gen.y()[0] = M_PI; // delta
+        gen.y()[1] = 1.0; // omega
+        gen.y()[2] = 2.0; // telec
+        gen.y()[3] = -2.0; // ir
+        gen.y()[4] = -4.0; // ii
+        gen.y()[5] = 1.0; // pmech
+        gen.y()[6] = 2.0; // Ep
 
-        gen.yp()[0] = 2.0; // delta_dot
-        gen.yp()[1] = 5.0; // omega_dot
+        gen.yp()[0] = 2*M_PI*60.0; // delta_dot
+        gen.yp()[1] = -1.0; // omega_dot
         gen.yp()[2] = 0.0; // telec
         gen.yp()[3] = 0.0; // ir
         gen.yp()[4] = 0.0; // ii
