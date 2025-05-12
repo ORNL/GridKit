@@ -85,9 +85,9 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
 
 /// Vector-valued function to differentiate
 template <class ScalarT, typename IdxT>
-__attribute__((always_inline)) static void f(size_t N, ScalarT* input, ScalarT* output)
+__attribute__((always_inline)) static void f(size_t n, ScalarT* input, ScalarT* output)
 {
-  for (IdxT i = 0; i < N; i++)
+  for (IdxT i = 0; i < n; i++)
   {
     output[i] = input[i] * input[i];
   }
@@ -117,17 +117,17 @@ void jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, SparseMatrix& jac
 
 /// Function that computes the Jacobian via automatic differentiation
 template <class ScalarT, typename IdxT>
-__attribute__((noinline)) void jac_f(IdxT N, ScalarT* input, SparseMatrix& jac)
+__attribute__((noinline)) void jac_f(IdxT n, ScalarT* input, SparseMatrix& jac)
 {
   std::vector<Triple<ScalarT>> triplets;
-  for (IdxT i = 0; i < N; i++)
+  for (IdxT i = 0; i < n; i++)
   {
     ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
     ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
 
     __enzyme_fwddiff<void>((void*) f<ScalarT, IdxT>,
                            enzyme_const,
-                           N,
+                           n,
                            enzyme_dup,
                            input,
                            output,
@@ -170,15 +170,15 @@ void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
 int main()
 {
   /// Vector and matrix declarations
-  size_t              N = 5;
-  std::vector<double> x(N);
-  std::vector<double> sq(N);
-  SparseMatrix        dsq     = SparseMatrix(N, N);
-  SparseMatrix        dsq_ref = SparseMatrix(N, N);
+  size_t              n = 5;
+  std::vector<double> x(n);
+  std::vector<double> sq(n);
+  SparseMatrix        dsq     = SparseMatrix(n, n);
+  SparseMatrix        dsq_ref = SparseMatrix(n, n);
 
   /// Input initialization
   double val = 0.0;
-  for (size_t i = 0; i < N; ++i)
+  for (size_t i = 0; i < n; ++i)
   {
     x[i]  = val;
     val  += 1.0;
@@ -191,7 +191,7 @@ int main()
   jac_f_ref<double, size_t>(x, sq, dsq_ref);
 
   /// Enzyme Jacobian
-  jac_f<double, size_t>(N, x.data(), dsq);
+  jac_f<double, size_t>(n, x.data(), dsq);
 
   /// Check
   int fail = 0;

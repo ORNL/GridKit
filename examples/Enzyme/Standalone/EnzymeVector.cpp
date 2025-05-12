@@ -85,11 +85,11 @@ void dsquare(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy)
 int main()
 {
   /// Vector and matrix declarations
-  constexpr size_t       N = 10;
-  std::vector<double> x(N);
-  std::vector<double> sq(N);
-  DenseMatrix         dsq     = DenseMatrix(N, N);
-  DenseMatrix         dsq_ref = DenseMatrix(N, N);
+  constexpr size_t       n = 10;
+  std::vector<double> x(n);
+  std::vector<double> sq(n);
+  DenseMatrix         dsq     = DenseMatrix(n, n);
+  DenseMatrix         dsq_ref = DenseMatrix(n, n);
 
   /// Random input values
   srand(time(NULL));

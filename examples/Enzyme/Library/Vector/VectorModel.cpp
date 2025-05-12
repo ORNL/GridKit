@@ -53,8 +53,8 @@ void VectorModel::evalJacobian()
     d_vector_model.setVariable(v);
 
     // Autodiff
-    std::vector<double> d_res = __enzyme_fwddiff<VectorModel>(
-        (std::vector<double>*) wrapper<VectorModel>,
+    std::vector<double> d_res = __enzyme_fwddiff<double, VectorModel>(
+        (std::vector<double>*) wrapper<double, VectorModel>,
         enzyme_dup,
         this,
         &d_vector_model);

@@ -11,18 +11,20 @@
  * TODO: Convert this into a unit test.
  */
 
-inline double dsquare_ref_scalar(double x)
+template <class ScalarT>
+inline ScalarT dsquare_ref_scalar(ScalarT x)
 {
   return 2.0 * x;
 }
 
 // Reference Jacobian
-DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y)
+template <class ScalarT, typename IdxT>
+DenseMatrix dsquare_ref(std::vector<ScalarT> x, std::vector<ScalarT> y)
 {
   DenseMatrix jac(x.size(), y.size());
-  for (int idy = 0; idy < y.size(); ++idy)
+  for (IdxT idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (IdxT idx = 0; idx < x.size(); ++idx)
     {
       if (idx == idy)
         jac.setValue(idx, idy, dsquare_ref_scalar(x[idx]));
@@ -34,12 +36,12 @@ DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y)
 int main()
 {
   // Size and variable declarations
-  constexpr int       n = 10;
+  constexpr size_t    n = 10;
   std::vector<double> var(n);
 
   // Random input values
   srand(time(NULL));
-  for (int idx = 0; idx < var.size(); ++idx)
+  for (size_t idx = 0; idx < var.size(); ++idx)
   {
     var[idx] = rand();
   }
@@ -54,14 +56,14 @@ int main()
   DenseMatrix         jac      = vector_model->getJacobian();
 
   // Reference Jacobian
-  DenseMatrix jac_ref = dsquare_ref(var, res);
+  DenseMatrix jac_ref = dsquare_ref<double, size_t>(var, res);
 
   // Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < res.size(); ++idy)
+  for (size_t idy = 0; idy < res.size(); ++idy)
   {
-    for (int idx = 0; idx < var.size(); ++idx)
+    for (size_t idx = 0; idx < var.size(); ++idx)
     {
       if (std::abs(jac.getValue(idx, idy) - jac_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
       {
