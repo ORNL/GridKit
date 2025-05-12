@@ -99,15 +99,15 @@ void evaluateResidual(std::vector<ScalarT> y_, std::vector<ScalarT> f_)
 template <class ScalarT, typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac)
 {
-  size_t               N = model->size();
-  std::vector<ScalarT> y(N);
-  std::vector<ScalarT> v(N);
-  std::vector<ScalarT> res(N);
-  std::vector<ScalarT> d_res(N);
-  for (size_t idy = 0; idy < N; ++idy)
+  size_t               n = model->size();
+  std::vector<ScalarT> y(n);
+  std::vector<ScalarT> v(n);
+  std::vector<ScalarT> res(n);
+  std::vector<ScalarT> d_res(n);
+  for (size_t idy = 0; idy < n; ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (size_t idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < n; ++idx)
     {
       y[idx]   = (model->y())[idx];
       res[idx] = (model->getResidual())[idx];
@@ -125,7 +125,7 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac)
                               &d_res);
 
     // Store result
-    for (size_t idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < n; ++idx)
     {
       jac.setValue(idx, idy, d_res[idx]);
     }
