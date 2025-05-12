@@ -3,6 +3,7 @@
 #ifndef _CAP_HPP_
 #define _CAP_HPP_
 
+#include <AutomaticDifferentiation/Enzyme/EnzymeWrapper.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 
 namespace GridKit
