@@ -10,11 +10,11 @@
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function
  * by automatic differentiation via Enzyme.
  *
- * TODO: Modify the sparse storage provided to Enzyme to directly operate on std::vector and COO_Matrix
+ * TODO: Modify the sparse storage provided to Enzyme to directly operate on std::vector and GridKit::LinearAlgebra::COO_Matrix
  * TODO: Convert this into a unit test.
  */
 
-using SparseMatrix = COO_Matrix<double, size_t>;
+using SparseMatrix = GridKit::LinearAlgebra::COO_Matrix<double, size_t>;
 extern int enzyme_dup;
 extern int enzyme_const;
 extern int enzyme_dupnoneed;

@@ -39,7 +39,7 @@ namespace GridKit
           ypB_(size_),
           fB_(size_),
           gB_(size_param_),
-          J_(COO_Matrix<ScalarT, IdxT>()),
+          J_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>()),
           param_(size_param_),
           param_up_(size_param_),
           param_lo_(size_param_)
@@ -180,12 +180,12 @@ namespace GridKit
         return f_;
       }
 
-      COO_Matrix<ScalarT, IdxT>& getJacobian() override
+      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() override
       {
         return J_;
       }
 
-      const COO_Matrix<ScalarT, IdxT>& getJacobian() const override
+      const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const override
       {
         return J_;
       }
@@ -243,7 +243,7 @@ namespace GridKit
       std::vector<ScalarT> fB_;
       std::vector<ScalarT> gB_;
 
-      COO_Matrix<ScalarT, IdxT> J_;
+      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
 
       std::vector<ScalarT> param_;
       std::vector<ScalarT> param_up_;

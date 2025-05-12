@@ -124,7 +124,7 @@ namespace GridKit
     std::vector<IdxT>         rcordder{3, 4};
     std::vector<IdxT>         ccordder{3, 4};
     std::vector<ScalarT>      valsder{-1.0, -1.0};
-    COO_Matrix<ScalarT, IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder, 5, 5);
+    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder, 5, 5);
 
     // Perform dF/dy + \alpha dF/dy'
     jac_.axpy(alpha_, Jacder);
