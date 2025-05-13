@@ -11,7 +11,7 @@
 // Time, Gen 2 #1 Speed, Gen 3 #1 Speed, Bus 1 V pu, Bus 2 V pu, Bus 3 V pu
 namespace Example2
 {
-  double reference_tol = 1e-6;
+  double                           reference_tol      = 1e-6;
   std::vector<std::vector<double>> reference_solution = {
       {0, 1, 1, 1.059999943, 1.059997797, 0.969999611},
       {0.004167, 0.99999994, 0.99999994, 1.059999943, 1.059997797, 0.969999611},
@@ -2414,4 +2414,4 @@ namespace Example2
       {9.991667, 0.999999762, 0.99999994, 1.059999943, 1.059871316, 0.969944358},
       {9.995833, 0.999999762, 0.99999994, 1.059999943, 1.059871554, 0.969944477},
       {10, 0.999999762, 0.99999994, 1.059999943, 1.059871912, 0.969944596}};
-} // nanespace Example2
+} // namespace Example2
