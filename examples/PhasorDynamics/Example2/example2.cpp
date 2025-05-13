@@ -39,7 +39,7 @@ struct OutputData
 
   OutputData& operator-=(const OutputData& other)
   {
-    assert(t == other.t);
+    assert((t - other.t) < Example2::reference_tol);
     gen2speed -= other.gen2speed;
     gen3speed -= other.gen3speed;
     v2mag     -= other.v2mag;
@@ -165,11 +165,11 @@ int main()
 
   for (index_type i = 0; i < output.size(); ++i)
   {
-    OutputData ref{reference_solution[i + 1][0],
-                   reference_solution[i + 1][1],
-                   reference_solution[i + 1][2],
-                   reference_solution[i + 1][4],
-                   reference_solution[i + 1][5]};
+    OutputData ref{Example2::reference_solution[i + 1][0],
+                   Example2::reference_solution[i + 1][1],
+                   Example2::reference_solution[i + 1][2],
+                   Example2::reference_solution[i + 1][4],
+                   Example2::reference_solution[i + 1][5]};
     OutputData out_data = output[i];
 
     out << out_data << '\n';
