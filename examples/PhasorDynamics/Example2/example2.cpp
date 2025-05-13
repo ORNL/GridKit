@@ -39,7 +39,7 @@ struct OutputData
 
   OutputData& operator-=(const OutputData& other)
   {
-    assert((t - other.t) < Example2::reference_tol);
+    assert(GridKit::Testing::isEqual(t, other.t, Example2::reference_tol));
     gen2speed -= other.gen2speed;
     gen3speed -= other.gen3speed;
     v2mag     -= other.v2mag;
