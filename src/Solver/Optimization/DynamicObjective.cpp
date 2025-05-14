@@ -28,7 +28,7 @@ namespace AnalysisManager
     bool DynamicObjective<ScalarT, IdxT>::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g, Index& nnz_h_lag, IndexStyleEnum& index_style)
     {
       // This code handles one objective function
-      assert(model_->size_quad() == 1);
+      assert(model_->sizeQuadrature() == 1);
 
       // Number of optimization variables.
       n = model_->sizeParams();

@@ -110,132 +110,132 @@ namespace GridKit
       {
       }
 
-      std::vector<ScalarT>& y()
+      std::vector<ScalarT>& y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const
+      const std::vector<ScalarT>& y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp()
+      std::vector<ScalarT>& yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const
+      const std::vector<ScalarT>& yp() const override
       {
         return yp_;
       }
 
-      std::vector<bool>& tag()
+      std::vector<bool>& tag() override
       {
         return tag_;
       }
 
-      const std::vector<bool>& tag() const
+      const std::vector<bool>& tag() const override
       {
         return tag_;
       }
 
-      std::vector<ScalarT>& yB()
+      std::vector<ScalarT>& yB() override
       {
         return yB_;
       }
 
-      const std::vector<ScalarT>& yB() const
+      const std::vector<ScalarT>& yB() const override
       {
         return yB_;
       }
 
-      std::vector<ScalarT>& ypB()
+      std::vector<ScalarT>& ypB() override
       {
         return ypB_;
       }
 
-      const std::vector<ScalarT>& ypB() const
+      const std::vector<ScalarT>& ypB() const override
       {
         return ypB_;
       }
 
-      std::vector<ScalarT>& param()
+      std::vector<ScalarT>& param() override
       {
         return param_;
       }
 
-      const std::vector<ScalarT>& param() const
+      const std::vector<ScalarT>& param() const override
       {
         return param_;
       }
 
-      std::vector<ScalarT>& param_up()
+      std::vector<ScalarT>& param_up() override
       {
         return param_up_;
       }
 
-      const std::vector<ScalarT>& param_up() const
+      const std::vector<ScalarT>& param_up() const override
       {
         return param_up_;
       }
 
-      std::vector<ScalarT>& param_lo()
+      std::vector<ScalarT>& param_lo() override
       {
         return param_lo_;
       }
 
-      const std::vector<ScalarT>& param_lo() const
+      const std::vector<ScalarT>& param_lo() const override
       {
         return param_lo_;
       }
 
-      std::vector<ScalarT>& getResidual()
+      std::vector<ScalarT>& getResidual() override
       {
         return f_;
       }
 
-      const std::vector<ScalarT>& getResidual() const
+      const std::vector<ScalarT>& getResidual() const override
       {
         return f_;
       }
 
-      COO_Matrix<ScalarT, IdxT>& getJacobian()
+      COO_Matrix<ScalarT, IdxT>& getJacobian() override
       {
         return jac_;
       }
 
-      const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+      const COO_Matrix<ScalarT, IdxT>& getJacobian() const override
       {
         return jac_;
       }
 
-      std::vector<ScalarT>& getIntegrand()
+      std::vector<ScalarT>& getIntegrand() override
       {
         return g_;
       }
 
-      const std::vector<ScalarT>& getIntegrand() const
+      const std::vector<ScalarT>& getIntegrand() const override
       {
         return g_;
       }
 
-      std::vector<ScalarT>& getAdjointResidual()
+      std::vector<ScalarT>& getAdjointResidual() override
       {
         return fB_;
       }
 
-      const std::vector<ScalarT>& getAdjointResidual() const
+      const std::vector<ScalarT>& getAdjointResidual() const override
       {
         return fB_;
       }
 
-      std::vector<ScalarT>& getAdjointIntegrand()
+      std::vector<ScalarT>& getAdjointIntegrand() override
       {
         return gB_;
       }
 
-      const std::vector<ScalarT>& getAdjointIntegrand() const
+      const std::vector<ScalarT>& getAdjointIntegrand() const override
       {
         return gB_;
       }
