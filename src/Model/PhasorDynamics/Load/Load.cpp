@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 
+#include <AutomaticDifferentiation/Enzyme/EnzymeWrapper.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 
@@ -98,7 +99,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Jacobian evaluation not implemented yet
+     * @brief Jacobian evaluation (experimental via Enzyme)
      *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
@@ -108,7 +109,14 @@ namespace GridKit
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
       std::cout << "Evaluate Jacobian for Load..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
+      std::cout << "Jacobian evaluation experimental!" << std::endl;
+
+      ScalarT var  = 5.0;
+      ScalarT sq   = GridKit::Enzyme::square(var);
+      ScalarT dsq  = GridKit::Enzyme::__enzyme_autodiff(GridKit::Enzyme::square, var);
+
+      std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n";
+
       return 0;
     }
 
