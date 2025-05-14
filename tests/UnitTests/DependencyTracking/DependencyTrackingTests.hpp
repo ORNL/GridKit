@@ -21,7 +21,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const size_t                  n = 3;
+        const size_t                              n = 3;
         std::vector<DependencyTracking::Variable> x(n), p(n), f(n);
 
         // decide x, y, and z are variables

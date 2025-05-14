@@ -34,58 +34,58 @@ namespace GridKit
       IdxT                 rows_size_;
       IdxT                 columns_size_;
       bool                 sorted_;
-    
+
     public:
       // Constructors
       COO_Matrix(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v, IdxT m, IdxT n);
       COO_Matrix(IdxT m, IdxT n);
       COO_Matrix();
       ~COO_Matrix();
-    
+
       // Operations
-    
+
       // --- Functions which call sort ---
       std::tuple<std::vector<IdxT>, std::vector<ScalarT>>                       getRowCopy(IdxT r);
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> getEntries();
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<ScalarT>>    getEntryCopies();
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<ScalarT>>    getEntryCopiesSubMatrix(std::vector<IdxT> submap);
-    
+
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<ScalarT>> setDataToCSR();
       std::vector<IdxT>                                                      getCSRRowData();
-    
+
       // BLAS. Will sort before running
       void    setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v);
       void    axpy(ScalarT alpha, COO_Matrix<ScalarT, IdxT>& a);
       void    axpy(ScalarT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v);
       void    scal(ScalarT alpha);
       ScalarT frobNorm();
-    
+
       // --- Permutation Operations ---
       // Sorting is only done if not already sorted.
       void permutation(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm);
       void permutationSizeMap(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm, IdxT m, IdxT n);
-    
+
       void zeroMatrix();
-    
+
       void identityMatrix(IdxT n);
-    
+
       // Resort values_
       void sortSparse();
       bool isSorted();
       IdxT nnz();
-    
+
       std::tuple<IdxT, IdxT> getDimensions();
-    
+
       void printMatrix(std::string name = "");
-    
+
       static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<ScalarT>& values);
-    
+
     private:
       IdxT indexStartRow(const std::vector<IdxT>& rows, IdxT r);
       IdxT sparseCordBinarySearch(const std::vector<IdxT>& rows, const std::vector<IdxT>& columns, IdxT ri, IdxT ci);
       bool checkIncreaseSize(IdxT r, IdxT c);
     };
-    
+
     /**
      * @brief Get copy of row index
      *
@@ -102,22 +102,22 @@ namespace GridKit
         this->sortSparse();
       }
       IdxT row_index = this->indexStartRow(r);
-    
+
       if (row_index == -1)
       {
         return {std::vector<IdxT>(), std::vector<ScalarT>()};
       }
-    
+
       IdxT rsize = row_index;
       do
       {
         rsize++;
       } while (rsize < this->values_.size() && this->row_indices_[rsize] == r);
-    
+
       return {{this->column_indices_.begin() + row_index, this->column_indices_.begin() + rsize},
               {this->values_.begin() + row_index, this->values_.begin() + rsize}};
     }
-    
+
     /**
      * @brief Get all entry pointers. Will sort before returning
      *
@@ -134,7 +134,7 @@ namespace GridKit
       }
       return {this->row_indices_, this->column_indices_, this->values_};
     }
-    
+
     /**
      * @brief Sorts the data if it's not already sorted
      *
@@ -151,7 +151,7 @@ namespace GridKit
       }
       return {this->row_indices_, this->column_indices_, this->values_};
     }
-    
+
     /**
      * @brief Returns the data in CSR Format
      *
@@ -177,7 +177,7 @@ namespace GridKit
       }
       return {row_size_vec, this->column_indices_, this->values_};
     }
-    
+
     /**
      * @brief Only creates the row data
      *
@@ -206,7 +206,7 @@ namespace GridKit
       }
       return row_size_vec;
     }
-    
+
     /**
      * @brief Set coordinates and values of the matrix.
      *
@@ -228,7 +228,7 @@ namespace GridKit
     {
       // sort input
       this->sortSparseCOO(r, c, v);
-    
+
       // Duplicated with axpy. Could replace with function depdent on lambda expression
       IdxT a_iter = 0;
       // iterate for all current values_ in matrix
@@ -247,7 +247,7 @@ namespace GridKit
         {
           break;
         }
-    
+
         if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
         {
           this->values_[i] = v[a_iter];
@@ -260,13 +260,13 @@ namespace GridKit
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
         this->values_.push_back(v[i]);
-    
+
         this->checkIncreaseSize(r[i], c[i]);
       }
-    
+
       this->sorted_ = false;
     }
-    
+
     /**
      * @brief Implements axpy this += alpha * a. Will sort before running
      *
@@ -284,7 +284,7 @@ namespace GridKit
       {
         return;
       }
-    
+
       if (!this->sorted_)
       {
         this->sortSparse();
@@ -298,11 +298,11 @@ namespace GridKit
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = a.getEntries();
       const auto& [r, c, val]                                                       = tpm;
       std::tie(m, n)                                                                = a.getDimensions();
-    
+
       // Increase size as necessary
       this->rows_size_    = this->rows_size_ > m ? this->rows_size_ : m;
       this->columns_size_ = this->columns_size_ > n ? this->columns_size_ : n;
-    
+
       IdxT a_iter = 0;
       // iterate for all current values in matrix
       for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
@@ -313,7 +313,7 @@ namespace GridKit
           this->row_indices_.push_back(r[a_iter]);
           this->column_indices_.push_back(c[a_iter]);
           this->values_.push_back(alpha * val[a_iter]);
-    
+
           this->checkIncreaseSize(r[a_iter], c[a_iter]);
           a_iter++;
         }
@@ -321,7 +321,7 @@ namespace GridKit
         {
           break;
         }
-    
+
         if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
         {
           this->values_[i] += alpha * val[a_iter];
@@ -334,13 +334,13 @@ namespace GridKit
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
         this->values_.push_back(alpha * val[i]);
-    
+
         this->checkIncreaseSize(r[i], c[i]);
       }
-    
+
       this->sorted_ = false;
     }
-    
+
     /**
      * @brief axpy on a COO representation of a matrix. Will sort before running
      *
@@ -361,15 +361,15 @@ namespace GridKit
     {
       if (alpha == 0)
         return;
-    
+
       if (!this->sorted_)
       {
         this->sortSparse();
       }
-    
+
       // sort input
       this->sortSparseCOO(r, c, v);
-    
+
       IdxT a_iter = 0;
       // iterate for all current values_ in matrix
       for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
@@ -380,7 +380,7 @@ namespace GridKit
           this->row_indices_.push_back(r[a_iter]);
           this->column_indices_.push_back(c[a_iter]);
           this->values_.push_back(alpha * v[a_iter]);
-    
+
           this->checkIncreaseSize(r[a_iter], c[a_iter]);
           a_iter++;
         }
@@ -388,7 +388,7 @@ namespace GridKit
         {
           break;
         }
-    
+
         if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
         {
           this->values_[i] += alpha * v[a_iter];
@@ -401,13 +401,13 @@ namespace GridKit
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
         this->values_.push_back(alpha * v[i]);
-    
+
         this->checkIncreaseSize(r[i], c[i]);
       }
-    
+
       this->sorted_ = false;
     }
-    
+
     /**
      * @brief Scale all values by alpha
      *
@@ -423,7 +423,7 @@ namespace GridKit
         *i *= alpha;
       }
     }
-    
+
     /**
      * @brief Calculates the Frobenius Norm of the matrix
      *
@@ -441,7 +441,7 @@ namespace GridKit
       }
       return totsum;
     }
-    
+
     /**
      * @brief Permutate the matrix to a different one. Only changes the coordinates
      *
@@ -458,7 +458,7 @@ namespace GridKit
     {
       assert(row_perm.size() = this->rows_size_);
       assert(col_perm.size() = this->columns_size_);
-    
+
       for (int i = 0; i < this->values_.size(); i++)
       {
         this->row_indices_[i]    = row_perm[this->row_indices_[i]];
@@ -467,7 +467,7 @@ namespace GridKit
       this->sorted_ = false;
       // cycle sorting maybe useful since permutations are already known
     }
-    
+
     /**
      * @brief Permutes the matrix and can change its size efficently
      *
@@ -489,10 +489,10 @@ namespace GridKit
     {
       assert(row_perm.size() == this->rows_size_);
       assert(col_perm.size() == this->columns_size_);
-    
+
       this->rows_size_    = m;
       this->columns_size_ = n;
-    
+
       for (int i = 0; i < this->values_.size(); i++)
       {
         if (row_perm[this->row_indices_[i]] == -1 || col_perm[this->column_indices_[i]] == -1)
@@ -507,7 +507,7 @@ namespace GridKit
       }
       this->sorted_ = false;
     }
-    
+
     /**
      * @brief Turn matrix into the zero matrix. Does not actually delete memory
      *
@@ -524,7 +524,7 @@ namespace GridKit
       this->values_.resize(0);
       this->sorted_ = true;
     }
-    
+
     /**
      * @brief Turn matrix into the identity matrix
      *
@@ -537,7 +537,7 @@ namespace GridKit
      *
      * @todo - it might be better to explicitly zero out the matrix and require to be so in preconditions
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline void COO_Matrix<ScalarT, IdxT>::identityMatrix(IdxT n)
     {
@@ -551,7 +551,7 @@ namespace GridKit
       }
       this->sorted_ = true;
     }
-    
+
     /**
      * @brief Restructure the sparse matrix for faster accesses and modifications
      *
@@ -564,7 +564,7 @@ namespace GridKit
       this->sortSparseCOO(this->row_indices_, this->column_indices_, this->values_);
       this->sorted_ = true;
     }
-    
+
     /**
      * @brief Check if the matrix is sorted
      *
@@ -573,13 +573,13 @@ namespace GridKit
      *
      * @param[out]  bool - true if sorted, false otherwise
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline bool COO_Matrix<ScalarT, IdxT>::isSorted()
     {
       return this->sorted_;
     }
-    
+
     /**
      * @brief Get the number of non-zero elements in the matrix
      *
@@ -593,13 +593,13 @@ namespace GridKit
     {
       return static_cast<IdxT>(this->values_.size());
     }
-    
+
     template <class ScalarT, typename IdxT>
     inline std::tuple<IdxT, IdxT> COO_Matrix<ScalarT, IdxT>::getDimensions()
     {
       return std::tuple<IdxT, IdxT>(this->rows_size_, this->columns_size_);
     }
-    
+
     /**
      * @brief Print matrix in sorted order
      *
@@ -615,7 +615,7 @@ namespace GridKit
       {
         this->sortSparse();
       }
-    
+
       std::cout << "Sparse COO Matrix: " << name << "\n";
       std::cout << "(x , y, value)\n";
       for (size_t i = 0; i < this->values_.size(); i++)
@@ -626,7 +626,7 @@ namespace GridKit
       }
       std::cout << std::flush;
     }
-    
+
     /**
      * @brief Find the lowest row cordinate from set of provided coordinates
      *
@@ -665,7 +665,7 @@ namespace GridKit
           {
             return m_smallest;
           }
-    
+
           // Keep track of smallest cordinate
           m_smallest = m;
           i2         = m - 1;
@@ -673,7 +673,7 @@ namespace GridKit
       }
       return m_smallest;
     }
-    
+
     /**
      * @brief Basic binary search
      *
@@ -718,10 +718,10 @@ namespace GridKit
           break;
         }
       }
-    
+
       return m;
     }
-    
+
     /**
      * @brief Check if the size of the matrix needs to be increased
      *
@@ -731,7 +731,7 @@ namespace GridKit
      * @param[in] c column index
      * @return true if size was increased
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline bool COO_Matrix<ScalarT, IdxT>::checkIncreaseSize(IdxT r, IdxT c)
     {
@@ -746,10 +746,10 @@ namespace GridKit
         this->columns_size_ = c + 1;
         changed             = true;
       }
-    
+
       return changed;
     }
-    
+
     /**
      * @brief Sorts unordered COO matrix
      *
@@ -771,7 +771,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     inline void COO_Matrix<ScalarT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<ScalarT>& values)
     {
-    
+
       // index based sort code
       //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
       // cannot call sort since two arrays are used instead
@@ -779,13 +779,13 @@ namespace GridKit
       std::size_t         n(0);
       std::generate(std::begin(ordervec), std::end(ordervec), [&]
                     { return n++; });
-    
+
       // Sort by row first then column.
       std::sort(std::begin(ordervec),
                 std::end(ordervec),
                 [&](int i1, int i2)
                 { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
-    
+
       // reorder based of index-sorting. Only swap cost no extra memory.
       //  @todo see if extra memory creation is fine
       //  https://stackoverflow.com/a/22183350
@@ -797,13 +797,13 @@ namespace GridKit
           std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
           std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
           std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
-    
+
           // swap orderings
           std::swap(ordervec[i], ordervec[ordervec[i]]);
         }
       }
     }
-    
+
     /**
      * @brief Constructor for COO Matrix with given cooridnates and values
      *
@@ -821,7 +821,7 @@ namespace GridKit
      *
      * @post COO_Matrix is created with given coordinates and values
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline COO_Matrix<ScalarT, IdxT>::COO_Matrix(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v, IdxT m, IdxT n)
     {
@@ -832,7 +832,7 @@ namespace GridKit
       this->columns_size_   = n;
       this->sorted_         = false; // Set to false until explicitly sorted, though logically it is sorted.
     }
-    
+
     /**
      * @brief Constructor for empty COO Matrix of a given size
      *
@@ -844,7 +844,7 @@ namespace GridKit
      *
      * @post empty COO Matrix is created with given size
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline COO_Matrix<ScalarT, IdxT>::COO_Matrix(IdxT m, IdxT n)
     {
@@ -855,7 +855,7 @@ namespace GridKit
       this->column_indices_ = std::vector<IdxT>();
       this->sorted_         = false; // Set to false until explicitly sorted, though logically it is sorted.
     }
-    
+
     /**
      * @brief Constructor for empty COO Matrix of size 0
      *
@@ -864,7 +864,7 @@ namespace GridKit
      *
      * @post empty COO Matrix of size 0 is created
      */
-    
+
     template <class ScalarT, typename IdxT>
     inline COO_Matrix<ScalarT, IdxT>::COO_Matrix()
     {
@@ -875,7 +875,7 @@ namespace GridKit
       this->column_indices_ = std::vector<IdxT>();
       this->sorted_         = false; // Set to false until explicitly sorted, though logically it is sorted.
     }
-    
+
     template <class ScalarT, typename IdxT>
     COO_Matrix<ScalarT, IdxT>::~COO_Matrix()
     {

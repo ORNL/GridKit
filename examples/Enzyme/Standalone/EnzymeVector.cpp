@@ -70,9 +70,13 @@ void dsquare(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy)
     v[idy] = 1.0;
 
     /// Autodiff
-    __enzyme_fwddiff<ScalarT, IdxT>((void*) square<ScalarT, IdxT>, 
-                                    enzyme_dup, x, v, 
-                                    enzyme_dupnoneed, y, &d_y);
+    __enzyme_fwddiff<ScalarT, IdxT>((void*) square<ScalarT, IdxT>,
+                                    enzyme_dup,
+                                    x,
+                                    v,
+                                    enzyme_dupnoneed,
+                                    y,
+                                    &d_y);
 
     /// Store result
     for (IdxT idx = 0; idx < x.size(); ++idx)
@@ -85,7 +89,7 @@ void dsquare(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy)
 int main()
 {
   /// Vector and matrix declarations
-  constexpr size_t       n = 10;
+  constexpr size_t    n = 10;
   std::vector<double> x(n);
   std::vector<double> sq(n);
   DenseMatrix         dsq     = DenseMatrix(n, n);

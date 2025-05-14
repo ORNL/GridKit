@@ -19,9 +19,9 @@ using SparseMatrix = GridKit::LinearAlgebra::COO_Matrix<double, size_t>;
 using DG           = GridKit::DistributedGenerator<double, size_t>;
 using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 
-int  enzyme_dupnoneed;
-int  enzyme_dup;
-int  enzyme_const;
+int enzyme_dupnoneed;
+int enzyme_dup;
+int enzyme_const;
 template <class ScalarT>
 void __enzyme_fwddiff(void*, int, std::vector<ScalarT>, std::vector<ScalarT>, int, std::vector<ScalarT>, std::vector<ScalarT>*);
 
@@ -99,7 +99,7 @@ void evaluateResidual(std::vector<ScalarT> y_, std::vector<ScalarT> f_)
 template <class ScalarT, typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac)
 {
-  size_t              N = model->size();
+  size_t               N = model->size();
   std::vector<ScalarT> y(N);
   std::vector<ScalarT> v(N);
   std::vector<ScalarT> res(N);

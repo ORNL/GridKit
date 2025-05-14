@@ -121,9 +121,9 @@ namespace GridKit
     jac_.setValues(rcord, ccor2, vals);
 
     // Create -dF/dy'
-    std::vector<IdxT>         rcordder{3, 4};
-    std::vector<IdxT>         ccordder{3, 4};
-    std::vector<ScalarT>      valsder{-1.0, -1.0};
+    std::vector<IdxT>                                 rcordder{3, 4};
+    std::vector<IdxT>                                 ccordder{3, 4};
+    std::vector<ScalarT>                              valsder{-1.0, -1.0};
     GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder, 5, 5);
 
     // Perform dF/dy + \alpha dF/dy'

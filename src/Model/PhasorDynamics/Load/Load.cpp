@@ -111,9 +111,9 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for Load..." << std::endl;
       std::cout << "Jacobian evaluation experimental!" << std::endl;
 
-      ScalarT var  = 5.0;
-      ScalarT sq   = GridKit::Enzyme::square(var);
-      ScalarT dsq  = GridKit::Enzyme::__enzyme_autodiff(GridKit::Enzyme::square, var);
+      ScalarT var = 5.0;
+      ScalarT sq  = GridKit::Enzyme::square(var);
+      ScalarT dsq = GridKit::Enzyme::__enzyme_autodiff(GridKit::Enzyme::square, var);
 
       std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n";
 

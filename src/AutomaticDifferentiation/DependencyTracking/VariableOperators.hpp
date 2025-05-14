@@ -325,15 +325,15 @@ namespace GridKit
 namespace std
 {
 
-#define IMPL_FUN_1(FUN, DER)                                               \
+#define IMPL_FUN_1(FUN, DER)                                                                       \
   inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x) \
-  {                                                                        \
-    double                    val = FUN(x());                              \
-    double                    der = DER(x());                              \
-    GridKit::DependencyTracking::Variable res(x); /* copy derivatives of x*/           \
-    res.setValue(val);                /* set function value f(x) */        \
-    res.scaleDependencies(der);       /* compute derivatives of f(x) */    \
-    return res;                                                            \
+  {                                                                                                \
+    double                                val = FUN(x());                                          \
+    double                                der = DER(x());                                          \
+    GridKit::DependencyTracking::Variable res(x); /* copy derivatives of x*/                       \
+    res.setValue(val);                            /* set function value f(x) */                    \
+    res.scaleDependencies(der);                   /* compute derivatives of f(x) */                \
+    return res;                                                                                    \
   }
 
   IMPL_FUN_1(sin, GridKit::DependencyTracking::sin_derivative)

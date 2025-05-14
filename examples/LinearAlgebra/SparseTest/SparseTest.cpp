@@ -34,9 +34,9 @@ int main()
   std::cout << "A:\n";
   A.printMatrix();
 
-  std::vector<double>        val2{0.5, 0.6, 0.7, 0.8, 1.0};
-  std::vector<size_t>        x2{0, 2, 0, 2, 1};
-  std::vector<size_t>        y2{3, 3, 2, 2, 3};
+  std::vector<double>                                val2{0.5, 0.6, 0.7, 0.8, 1.0};
+  std::vector<size_t>                                x2{0, 2, 0, 2, 1};
+  std::vector<size_t>                                y2{3, 3, 2, 2, 3};
   GridKit::LinearAlgebra::COO_Matrix<double, size_t> B = GridKit::LinearAlgebra::COO_Matrix<double, size_t>(x2, y2, val2, m, n);
 
   std::cout << "B:\n";
