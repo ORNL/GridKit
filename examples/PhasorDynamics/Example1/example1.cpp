@@ -133,7 +133,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData           data    = output[i];
-    std::vector<double>& ref_sol = reference_solution[i + 1];
+    std::vector<double>& ref_sol = Example1::reference_solution[i + 1];
 
     double err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
