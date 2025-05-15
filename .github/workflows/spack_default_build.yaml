@@ -133,6 +133,9 @@ jobs:
               install_tree:
                 root: /opt/spack
                 padded_length: 128
+            mirrors:
+              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
+              spack: https://binaries.spack.io/v0.23.1
             packages:
               llvm:
                 externals:
@@ -141,7 +144,7 @@ jobs:
           EOF
 
       - name: Configure GHCR mirror
-        run: spack -e . mirror add --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
+        run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
 
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
@@ -159,7 +162,7 @@ jobs:
         run: spack -e . concretize
 
       - name: Install dependencies
-        run: spack -e . install --no-check-signature --no-cache --fresh --only dependencies
+        run: spack -e . install --no-check-signature --only dependencies
 
       - name: Install package
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
