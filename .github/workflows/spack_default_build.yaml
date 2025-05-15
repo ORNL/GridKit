@@ -136,7 +136,6 @@ jobs:
                 padded_length: 128
             mirrors:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-              spack: https://binaries.spack.io/v0.23.1
             packages:
               llvm:
                 externals:
