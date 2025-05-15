@@ -134,20 +134,12 @@ jobs:
               install_tree:
                 root: /opt/spack
                 padded_length: 128
-            mirrors:
-              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
             packages:
               llvm:
                 externals:
                 - spec: llvm@${{ matrix.llvm }}
                   prefix: /usr/lib/llvm-${{ matrix.llvm }}
           EOF
-
-      - name: Configure GHCR mirror
-        run: spack -e . mirror set --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache
-
-      - name: Trust keys
-        run: spack -e . buildcache keys --install --trust
 
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
@@ -172,9 +164,3 @@ jobs:
 
       - name: Test Build
         run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
-
-      # Push with force to override existing binaries...
-      - name: Push to binaries to buildcache
-        run: |
-          spack -e . buildcache push --force --base-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }} --unsigned --update-index local-buildcache
-        if: ${{ !cancelled() }}
