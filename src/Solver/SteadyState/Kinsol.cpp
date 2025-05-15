@@ -42,16 +42,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     Kinsol<ScalarT, IdxT>::~Kinsol()
     {
+      deleteSimulation();
       SUNContext_Free(&context_);
-      KINFree(&solver_);
-
-      N_VDestroy(this->yy_);
-      N_VDestroy(this->yy0_);
-      N_VDestroy(this->scale_);
-
-      SUNMatDestroy(this->JacobianMat_);
-      SUNLinSolFree_Dense(this->linearSolver_);
-
       solver_ = nullptr;
     }
 
@@ -92,16 +84,7 @@ namespace AnalysisManager
       checkOutput(retval, "KINSetScaledStepTol");
 
       // Set up linear solver
-      JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
-      checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
-
-      linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-      checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
-
-      retval = KINSetLinearSolver(solver_, linearSolver_, JacobianMat_);
-      checkOutput(retval, "KINSetLinearSolver");
-
-      return retval;
+      return this->configureLinearSolver();
     }
 
     template <class ScalarT, typename IdxT>
@@ -147,10 +130,12 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Kinsol<ScalarT, IdxT>::deleteSimulation()
     {
-      SUNLinSolFree(linearSolver_);
       KINFree(&solver_);
-      N_VDestroy(yy_);
-      N_VDestroy(scale_);
+      N_VDestroy(this->yy_);
+      N_VDestroy(this->yy0_);
+      N_VDestroy(this->scale_);
+      SUNMatDestroy(this->JacobianMat_);
+      SUNLinSolFree_Dense(this->linearSolver_);
       return 0;
     }
 

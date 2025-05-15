@@ -107,9 +107,7 @@ namespace AnalysisManager
       }
 
       // Set up linear solver
-      this->configureLinearSolver();
-
-      return retval;
+      return this->configureLinearSolver();
     }
 
     template <class ScalarT, typename IdxT>
