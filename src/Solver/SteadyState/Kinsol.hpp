@@ -134,7 +134,6 @@ namespace AnalysisManager
 
       N_Vector yy_{};    ///< Solution vector
       N_Vector scale_{}; ///< Scaling vector
-      N_Vector tag_{};   ///< Tags differential variables
       N_Vector q_{};     ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
