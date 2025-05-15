@@ -101,6 +101,7 @@ jobs:
         spack_spec:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
+            ^gcc-runtime@13.3.0
 
     steps:
       - name: Add LLVM
