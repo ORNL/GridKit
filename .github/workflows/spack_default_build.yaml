@@ -128,6 +128,7 @@ jobs:
             specs:
             - ${{ matrix.spack_spec }} target=x86_64_v2
             concretizer:
+              unify: true
               reuse: dependencies
             config:
               install_tree:
