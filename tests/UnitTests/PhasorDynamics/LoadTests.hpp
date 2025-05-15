@@ -108,9 +108,9 @@ namespace GridKit
         const real_type g = R / (R * R + X * X);
 
         real_type dIr_dVr = -g;
-        real_type dIr_dVi = -b;
+        real_type dIr_dVi = b;
 
-        real_type dIi_dVr = b;
+        real_type dIi_dVr = -b;
         real_type dIi_dVi = -g;
 
         std::vector<Sparse::Variable::DependencyMap> dependencies(2);
