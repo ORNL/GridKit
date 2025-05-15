@@ -101,7 +101,6 @@ jobs:
         spack_spec:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
-            ^gcc-runtime@13.3.0
 
     steps:
       - name: Add LLVM
@@ -141,14 +140,17 @@ jobs:
                   prefix: /usr/lib/llvm-${{ matrix.llvm }}
           EOF
 
+      - name: Configure GHCR mirror
+        run: spack -e . mirror add --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Trust keys
+        run: spack -e . buildcache keys --install --trust
+
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
-
-      - name: Spack clean
-        run: spack clean -am
 
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
@@ -164,3 +166,9 @@ jobs:
 
       - name: Test Build
         run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
+
+      # Push with force to override existing binaries...
+      - name: Push to binaries to buildcache
+        run: |
+          spack -e . buildcache push --force --base-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BASE_VERSION }} --unsigned --update-index local-buildcache
+        if: ${{ !cancelled() }}
