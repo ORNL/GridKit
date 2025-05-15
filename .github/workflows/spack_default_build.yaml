@@ -92,7 +92,7 @@ jobs:
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -141,7 +141,7 @@ jobs:
           EOF
 
       - name: Configure GHCR mirror
-        run: spack -e . mirror add --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: spack -e . mirror add --oci-username ${{ env.USERNAME }} --oci-password "${{ secrets.GITHUB_TOKEN }}" local-buildcache oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
 
       - name: Trust keys
         run: spack -e . buildcache keys --install --trust
