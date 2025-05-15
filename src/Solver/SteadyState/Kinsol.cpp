@@ -184,13 +184,6 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
-    {
-      ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy(x.cbegin(), x.cend(), ydata);
-    }
-
-    template <class ScalarT, typename IdxT>
     void Kinsol<ScalarT, IdxT>::printOutput()
     {
       sunrealtype* yval = N_VGetArrayPointer(yy_);
