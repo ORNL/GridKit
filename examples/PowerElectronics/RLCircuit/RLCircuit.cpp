@@ -32,7 +32,7 @@ int main(int argc, char const* argv[])
   double vinit = 1.0;
 
   // inductor
-  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor(idoff, linit);
+  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit);
   // Form index to node uid realations
   //  input
   induct->setExternalConnectionNodes(0, 1);
@@ -45,7 +45,7 @@ int main(int argc, char const* argv[])
 
   // resistor
   idoff++;
-  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor(idoff, rinit);
+  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit);
   // Form index to node uid realations
   // input
   resis->setExternalConnectionNodes(0, 0);
@@ -56,7 +56,7 @@ int main(int argc, char const* argv[])
 
   // voltage source
   idoff++;
-  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource(idoff, vinit);
+  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit);
   // Form index to node uid realations
   // input
   vsource->setExternalConnectionNodes(0, -1);

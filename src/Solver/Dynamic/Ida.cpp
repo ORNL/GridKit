@@ -39,13 +39,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::~Ida()
     {
-      N_VDestroy(yy_);
-      N_VDestroy(yp_);
-      N_VDestroy(yy0_);
-      N_VDestroy(yp0_);
-      SUNLinSolFree(linearSolver_);
-      SUNMatDestroy(JacobianMat_);
-      IDAFree(&solver_);
+      deleteQuadrature();
+      deleteAdjoint();
+      deleteSimulation();
       SUNContext_Free(&context_);
     }
 
@@ -99,13 +95,12 @@ namespace AnalysisManager
       std::vector<bool>& tag = model_->tag();
       if (static_cast<IdxT>(tag.size()) == model_->size())
       {
-        N_Vector tag_ = N_VClone(yy_);
+        tag_ = N_VClone(yy_);
         checkAllocation((void*) tag_, "N_VClone");
         model_->tagDifferentiable();
         copyVec(tag, tag_);
 
         retval = IDASetId(solver_, tag_);
-        N_VDestroy(tag_);
         checkOutput(retval, "IDASetId");
         retval = IDASetSuppressAlg(solver_, SUNTRUE);
         checkOutput(retval, "IDASetSuppressAlg");
@@ -189,7 +184,6 @@ namespace AnalysisManager
         if (tag_)
           initType = IDA_YA_YDP_INIT;
 
-        // TODO: this doesn't doing anything without calling IDAGetConsistentIC
         retval = IDACalcIC(solver_, initType, 0.1);
         checkOutput(retval, "IDACalcIC");
 
@@ -247,10 +241,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteSimulation()
     {
-      IDAFree(&solver_);
-      SUNLinSolFree(linearSolver_);
       N_VDestroy(yy_);
       N_VDestroy(yp_);
+      N_VDestroy(tag_);
+      N_VDestroy(yy0_);
+      N_VDestroy(yp0_);
+      SUNLinSolFree(linearSolver_);
+      SUNMatDestroy(JacobianMat_);
+      IDAFree(&solver_);
       return 0;
     }
 
@@ -510,6 +508,11 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteAdjoint()
     {
+      N_VDestroy(yyB_);
+      N_VDestroy(ypB_);
+      N_VDestroy(qB_);
+      SUNLinSolFree(linearSolverB_);
+      SUNMatDestroy(JacobianMatB_);
       IDAAdjFree(solver_);
       return 0;
     }
