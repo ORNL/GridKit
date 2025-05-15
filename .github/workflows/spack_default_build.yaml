@@ -155,6 +155,9 @@ jobs:
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
 
+      - name: Spack clean
+        run: spack clean -am
+
       - name: List working directory
         run: ls -ltrh $(pwd)/*/*/
 
