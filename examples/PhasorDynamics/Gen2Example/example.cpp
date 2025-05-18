@@ -5,7 +5,6 @@
 #include <math.h>
 #include <sstream>
 #include <time.h>
-
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
 #include "Model/PhasorDynamics/Bus/Bus.hpp"
 #include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
