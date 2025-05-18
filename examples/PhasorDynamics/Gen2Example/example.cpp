@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   /* Run simulation */
   double start = static_cast<double>(clock());
   ida.initializeSimulation(0.0, false);
-  size_t nout = 200;
+  size_t nout = 50;
   ida.runSimulation(1.0, nout);
 
   if (argc >= 1)
