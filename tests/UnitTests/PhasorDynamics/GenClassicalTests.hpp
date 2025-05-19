@@ -109,9 +109,6 @@ namespace GridKit
 
         std::vector<ScalarT> residual = gen.getResidual();
 
-        for (auto s : residual)
-          std::cout << s << std::endl;
-
         success *= isEqual(residual[0], res0, tol);
         success *= isEqual(residual[1], res1, tol);
         success *= isEqual(residual[2], res2, tol);
