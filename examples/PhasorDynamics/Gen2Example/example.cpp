@@ -35,10 +35,26 @@ int main(int argc, char* argv[])
   sys.addComponent(&branch);
   sys.addComponent(&gen);
   sys.allocate();
+  sys.initialize();
 
   double dt = 1.0 / 4.0 / 60.0;
 
-  // std::stringstream buffer;
+  std::vector<std::vector<double>> outputData;
+
+  auto output_cb = [&](double t)
+  {
+    std::vector<double> yval;
+
+    yval.push_back(t);
+    for(auto val: sys.y())
+    {
+      yval.push_back(val);
+    } 
+
+    outputData.push_back(yval);
+  };
+
+  output_cb(0);
 
   /* Set up simulation */
   Ida<double, size_t> ida(&sys);
@@ -48,41 +64,34 @@ int main(int argc, char* argv[])
   double start = static_cast<double>(clock());
   ida.initializeSimulation(0.0, false);
   size_t nout = 50;
-  ida.runSimulation(1.0, nout);
+  ida.runSimulation(1.0, nout, output_cb);
 
-  if (argc >= 1)
+  if (argc >= 2)
   {
-    std::cout << argv[1] << std::endl;
     std::ofstream outfile(argv[1]);
+
     if (!outfile)
-      printf("ERROR writing to output file!\n");
+    {
+      std::cout << "ERROR writing to output file!" << std::endl;
+    }
 
-    outfile << "t" << "," << "res";
+    outfile << "t";
     for (int i = 0; i < sys.size(); ++i)
+    {
       outfile << ",Y[" + std::to_string(i) + "]";
-
-    for (int i = 0; i < sys.size(); ++i)
-      outfile << ",Yp[" + std::to_string(i) + "]";
-
+    }
     outfile << "\n";
 
-    int    i = 1;
-    double data;
-    int    size = 2 * sys.size() + 2;
-    // while (buffer >> data)
-    // {
-
-    //   if (i % (size) == 0)
-    //   {
-    //     outfile << data << "\n";
-    //   }
-    //   else
-    //   {
-    //     outfile << data << ",";
-    //   }
-
-    //   i++;
-    // }
+    for(auto y_tstep: outputData)
+    {
+      outfile << y_tstep[0];
+      for(int i = 1; i < y_tstep.size(); i++)
+      {
+        outfile << "," << y_tstep[i];
+      }
+      outfile << "\n";
+    }
+      
     outfile.close();
   }
 
