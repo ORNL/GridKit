@@ -112,8 +112,8 @@ namespace GridKit
       real_type Xdp_;
 
       /* Derivied parameters */
-      real_type G;
-      real_type B;
+      real_type G_;
+      real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
       real_type pmech_set_;

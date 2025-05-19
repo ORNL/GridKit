@@ -7,10 +7,8 @@
  */
 
 #include "GenClassical.hpp"
-
 #include <cmath>
 #include <iostream>
-
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 
 #define _USE_MATH_DEFINES
@@ -111,12 +109,12 @@ namespace GridKit
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
-      ScalarT Er    = (G * (ir + G * vr - B * vi) + B * (ii + B * vr + G * vi)) / (G * G + B * B);
-      ScalarT Ei    = (-B * (ir + G * vr - B * vi) + G * (ii + B * vr + G * vi)) / (G * G + B * B);
+      ScalarT Er    = (G_ * (ir + G_ * vr - B_ * vi) + B_ * (ii + B_ * vr + G_ * vi)) / (G_ * G_ + B_ * B_);
+      ScalarT Ei    = (-B_ * (ir + G_ * vr - B_ * vi) + G_ * (ii + B_ * vr + G_ * vi)) / (G_ * G_ + B_ * B_);
       ScalarT delta = atan2(Ei, Er);
       ScalarT omega = 0;
       ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
-      ScalarT Te    = G * Ep * Ep - Ep * ((G * vr - B * vi) * cos(delta) + (B * vr + G * vi) * sin(delta));
+      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * cos(delta) + (B_ * vr + G_ * vi) * sin(delta));
 
       y_[0] = delta;
       y_[1] = omega;
@@ -151,31 +149,33 @@ namespace GridKit
     int GenClassical<ScalarT, IdxT>::evaluateResidual()
     {
       /* Read variables */
+      ScalarT delta = y_[0];
+      ScalarT omega = y_[1];
+      ScalarT telec = y_[2];
+      ScalarT ir    = y_[3];
+      ScalarT ii    = y_[4];
+      ScalarT pmech = y_[5];
+      ScalarT ep    = y_[6];
+
+      /* Read derivatives */
       ScalarT delta_dot = yp_[0];
       ScalarT omega_dot = yp_[1];
-      ScalarT delta     = y_[0];
-      ScalarT omega     = y_[1];
-      ScalarT telec     = y_[2];
-      ScalarT ir        = y_[3];
-      ScalarT ii        = y_[4];
-      ScalarT pmech     = y_[5];
-      ScalarT ep        = y_[6];
 
       /* 6 GenClassical differential equations */
       f_[0] = delta_dot - omega * (2 * M_PI * 60);
       f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
 
       /* 11 GenClassical algebraic equations */
-      f_[2] = telec - (1.0 / (1.0 + omega)) * (G * ep * ep - ep * (cos(delta) * (G * Vr() - B * Vi()) + sin(delta) * (B * Vr() + G * Vi())));
+      f_[2] = telec - (1.0 / (1.0 + omega)) * (G_ * ep * ep - ep * (cos(delta) * (G_ * Vr() - B_ * Vi()) + sin(delta) * (B_ * Vr() + G_ * Vi())));
 
-      f_[3] = ir + G * Vr() - B * Vi() - ep * (G * cos(delta) - B * sin(delta));
-      f_[4] = ii + B * Vr() + G * Vi() - ep * (B * cos(delta) + G * sin(delta));
+      f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
+      f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));
 
-      /* 11 GenClassical algebraic equations */
-      f_[2] = telec - (1.0 / (1.0 + omega)) * (G * ep * ep - ep * (cos(delta) * (G * Vr() - B * Vi()) + sin(delta) * (B * Vr() + G * Vi())));
+      f_[5] = pmech - pmech_set_;
+      f_[6] = ep - ep_set_;
 
-      Ir() += -(G * Vr() - B * Vi() - ep * (G * cos(delta) - B * sin(delta)));
-      Ii() += -(B * Vr() + G * Vi() - ep * (B * cos(delta) + G * sin(delta)));
+      Ir() += -(G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta)));
+      Ii() += -(B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta)));
 
       return 0;
     }
@@ -252,8 +252,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     void GenClassical<ScalarT, IdxT>::setDerivedParams()
     {
-      G = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      B = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B_ = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
     }
 
     // Available template instantiations
