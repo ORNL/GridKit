@@ -9,6 +9,7 @@
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_klu.h>
 #include <sunmatrix/sunmatrix_sparse.h>
+
 #include "Model/PhasorDynamics/Branch/Branch.cpp"
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
 #include "Model/PhasorDynamics/Bus/Bus.cpp"

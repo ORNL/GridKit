@@ -5,6 +5,7 @@
 #include <math.h>
 #include <sstream>
 #include <time.h>
+
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
 #include "Model/PhasorDynamics/Bus/Bus.hpp"
 #include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
@@ -46,10 +47,10 @@ int main(int argc, char* argv[])
     std::vector<double> yval;
 
     yval.push_back(t);
-    for(auto val: sys.y())
+    for (auto val : sys.y())
     {
       yval.push_back(val);
-    } 
+    }
 
     outputData.push_back(yval);
   };
@@ -82,16 +83,16 @@ int main(int argc, char* argv[])
     }
     outfile << "\n";
 
-    for(auto y_tstep: outputData)
+    for (auto y_tstep : outputData)
     {
       outfile << y_tstep[0];
-      for(int i = 1; i < y_tstep.size(); i++)
+      for (int i = 1; i < y_tstep.size(); i++)
       {
         outfile << "," << y_tstep[i];
       }
       outfile << "\n";
     }
-      
+
     outfile.close();
   }
 

@@ -72,8 +72,8 @@ namespace GridKit
         const ScalarT res6{0.0};                                          /// fifth residual
 <<<<<<< HEAD
         const ScalarT tol = 7 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
-=======
-        const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
+        == == == =
+            const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
 >>>>>>> 51a2990595f0129dd21e9643f5198af4c544ac7d
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
@@ -102,7 +102,7 @@ namespace GridKit
 
         std::vector<ScalarT> residual = gen.getResidual();
 
-        for(auto s: residual)
+        for (auto s : residual)
           std::cout << s << std::endl;
 
         success *= isEqual(residual[0], res0, tol);
@@ -135,13 +135,13 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{M_PI / 4.0}; /// first residual
-        const ScalarT omega{0.0};                               /// second residual
-        const ScalarT Te{6.0};                                  /// third residual
-        const ScalarT ir{1.0};                                  /// fourth residual
-        const ScalarT ii{2.0};                                  /// fifth residual
-        const ScalarT pmech{6.0};                               /// fifth residual
-        const ScalarT Ep{2.0 * sqrt(2.0)};      /// fifth residual
+        const ScalarT delta{M_PI / 4.0};   /// first residual
+        const ScalarT omega{0.0};          /// second residual
+        const ScalarT Te{6.0};             /// third residual
+        const ScalarT ir{1.0};             /// fourth residual
+        const ScalarT ii{2.0};             /// fifth residual
+        const ScalarT pmech{6.0};          /// fifth residual
+        const ScalarT Ep{2.0 * sqrt(2.0)}; /// fifth residual
 
         const ScalarT tol = 5.0 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
 
@@ -189,13 +189,13 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{M_PI / 4.0}; /// first residual
-        const ScalarT omega{0.0};                               /// second residual
-        const ScalarT Te{6.0};                                  /// third residual
-        const ScalarT ir{1.0};                                  /// fourth residual
-        const ScalarT ii{2.0};                                  /// fifth residual
-        const ScalarT pmech{6.0};                               /// fifth residual
-        const ScalarT Ep{2.0 * sqrt(2.0)};      /// fifth residual
+        const ScalarT delta{M_PI / 4.0};   /// first residual
+        const ScalarT omega{0.0};          /// second residual
+        const ScalarT Te{6.0};             /// third residual
+        const ScalarT ir{1.0};             /// fourth residual
+        const ScalarT ii{2.0};             /// fifth residual
+        const ScalarT pmech{6.0};          /// fifth residual
+        const ScalarT Ep{2.0 * sqrt(2.0)}; /// fifth residual
 
         const ScalarT tol = 5.0 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
 
