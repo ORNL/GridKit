@@ -70,7 +70,11 @@ namespace GridKit
         const ScalarT res4{0.0};                                          /// fifth residual
         const ScalarT res5{0.0};                                          /// fifth residual
         const ScalarT res6{0.0};                                          /// fifth residual
+<<<<<<< HEAD
         const ScalarT tol = 7 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
+=======
+        const ScalarT tol = 5 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
+>>>>>>> 51a2990595f0129dd21e9643f5198af4c544ac7d
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
