@@ -35,10 +35,10 @@ namespace GridKit
         unit_id_(unit_id),
         p0_(0),
         q0_(0),
-        H_(3.),
-        D_(0.),
-        Ra_(0.),
-        Xdp_(.5)
+        H_(3.0),
+        D_(0.0),
+        Ra_(0.0),
+        Xdp_(0.5)
     {
       size_ = 7;
       setDerivedParams();
