@@ -5,7 +5,6 @@
 #include <math.h>
 #include <sstream>
 #include <time.h>
-
 #include "Model/PhasorDynamics/Branch/Branch.hpp"
 #include "Model/PhasorDynamics/Bus/Bus.hpp"
 #include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
@@ -22,13 +21,31 @@ int main(int argc, char* argv[])
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  printf("Example 1 version GENERATION 2\n");
+  std::cout << "Example 1 version GENERATION 2" << std::endl;
+
+  // bus voltages
+  double vr  = 1.0;
+  double vi  = 0.0;
+
+  // branch parameters
+  double R   = 0.0;    //line series resistance 
+  double X   = 0.1;    //line series reactance
+  double G   = 0.0;    //line shunt conductance
+  double B   = 0.0;    //line shunt charging
+
+  // Generator parameters
+  double p0  = 1.0;     //real power output
+  double q0  = 0.05013; //reactive power output
+  double H   = 3.0;     //Initia constant
+  double D   = 0.0;     //Damping coefficient 
+  double Ra  = 0.0;     //Winding resistance
+  double Xdp = 0.2;     //Machine reactance parameter
 
   SystemModel<double, size_t>  sys;
-  Bus<double, size_t>          bus1(0.9949877346411762, 0.09999703952427966);
-  BusInfinite<double, size_t>  bus2(1.0, 0.0);
-  Branch<double, size_t>       branch(&bus1, &bus2, 0.0, 0.1, 0, 0);
-  GenClassical<double, size_t> gen(&bus1, 1, 1.0, 0.05013, 3.0, 0.0, 0.0, 0.2);
+  Bus<double, size_t>          bus1(vr, vi);
+  BusInfinite<double, size_t>  bus2(vr, vi);
+  Branch<double, size_t>       branch(&bus1, &bus2, R, X, G, B);
+  GenClassical<double, size_t> gen(&bus1, 1, p0, q0, H, D, Ra, Xdp);
 
   /* Connect everything together */
   sys.addBus(&bus1);
@@ -38,10 +55,9 @@ int main(int argc, char* argv[])
   sys.allocate();
   sys.initialize();
 
-  double dt = 1.0 / 4.0 / 60.0;
-
   std::vector<std::vector<double>> outputData;
 
+  //callback for outputting solution
   auto output_cb = [&](double t)
   {
     std::vector<double> yval;
@@ -67,6 +83,7 @@ int main(int argc, char* argv[])
   size_t nout = 50;
   ida.runSimulation(1.0, nout, output_cb);
 
+  //write solution to file if the user passes in a file name
   if (argc >= 2)
   {
     std::ofstream outfile(argv[1]);
@@ -94,6 +111,10 @@ int main(int argc, char* argv[])
     }
 
     outfile.close();
+  }
+  else
+  {
+    std::cout << "To print the solution, add a file name(eg:./gen2_example output.csv)" << std::endl;
   }
 
   printf("Complete in %.4g seconds\n", (clock() - start) / CLOCKS_PER_SEC);
