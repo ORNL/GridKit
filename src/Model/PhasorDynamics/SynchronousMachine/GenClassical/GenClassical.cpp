@@ -33,8 +33,8 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
-        p0_(0),
-        q0_(0),
+        p0_(0.0),
+        q0_(0.0),
         H_(3.0),
         D_(0.0),
         Ra_(0.0),
@@ -176,8 +176,8 @@ namespace GridKit
       f_[5] = pmech - pmech_set_;
       f_[6] = ep - ep_set_;
 
-      Ir() += -(G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta)));
-      Ii() += -(B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta)));
+      Ir() += -G_ * Vr() + B_ * Vi() + ep * (G_ * cos(delta) - B_ * sin(delta));
+      Ii() += -B_ * Vr() - G_ * Vi() + ep * (B_ * cos(delta) + G_ * sin(delta));
 
       return 0;
     }
