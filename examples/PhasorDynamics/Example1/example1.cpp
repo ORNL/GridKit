@@ -126,6 +126,7 @@ int main()
   double stop = static_cast<double>(clock());
 
   double error_V = 0.0; // error in |V|
+  double error_w = 0.0; // error in rotor speed
 
   // Read through the simulation data stored in the buffer.
   // Since we captured by reference, output should be available
@@ -141,22 +142,37 @@ int main()
     if (err > error_V)
       error_V = err;
 
-    std::cout << "GridKit: t = " << data.ti
-              << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
-              << ", w = " << (1.0 + data.dw) << "\n";
-    std::cout << "Ref    : t = " << ref_sol[0]
-              << ", |V| = " << ref_sol[2]
-              << ", w = " << ref_sol[1]
-              << "\n";
-    std::cout << "Error in |V| = "
-              << err
-              << "\n";
-    std::cout << "\n";
+    err = std::abs(1.0 + data.dw - ref_sol[1])/(1.0 + ref_sol[1]);
+    if (err > error_w)
+      error_w = err;
+
+    // // Optional output
+    // std::cout << "GridKit: t = " << data.ti
+    //           << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
+    //           << ", w = " << (1.0 + data.dw) << "\n";
+    // std::cout << "Ref    : t = " << ref_sol[0]
+    //           << ", |V| = " << ref_sol[2]
+    //           << ", w = " << ref_sol[1]
+    //           << "\n";
+    // std::cout << "Error in |V| = "
+    //           << err
+    //           << "\n";
+    // std::cout << "\n";
   }
 
+  double error_V_allowed = 2e-4;
+  double error_w_allowed = 1e-4;
+
+  // Tolerances based on Powerworld reference accuracy
   int status = 0;
   std::cout << "Max error in |V| = " << error_V << "\n";
-  if (error_V > 2e-4)
+  if (error_V > error_V_allowed)
+  {
+    std::cout << "Test failed with error too large!\n";
+    status = 1;
+  }
+  std::cout << "Max error in  w  = " << error_w << "\n";
+  if (error_w > error_w_allowed)
   {
     std::cout << "Test failed with error too large!\n";
     status = 1;
