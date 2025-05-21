@@ -83,7 +83,7 @@ mpc.gencost = [
 
 } // namespace
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
   int fail = 0;
 

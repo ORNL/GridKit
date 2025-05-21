@@ -28,7 +28,7 @@ mpc.bus = [
 
 } // namespace
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
   int                               fail = 0;
   std::vector<BusData<RealT, IdxT>> bus_answer{

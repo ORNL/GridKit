@@ -33,7 +33,7 @@ mpc.branch = [
 
 } // namespace
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
   int                                  fail = 0;
   std::vector<BranchData<RealT, IdxT>> branch_answer{
