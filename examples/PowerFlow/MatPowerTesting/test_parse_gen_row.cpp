@@ -2,7 +2,7 @@
 
 #include <FileIO.hpp>
 #include <PowerSystemData.hpp>
-#include <Testing.hpp>
+#include "MatPowerTesting.hpp"
 
 using namespace GridKit;
 using namespace GridKit::Testing;
