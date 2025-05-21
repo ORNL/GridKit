@@ -75,7 +75,7 @@ int main(int /* argc */, char const** /* argv */)
                                2.684419146397466e+03};
 
   std::cout << "Testing the DistributedGenerator model ...\n";
-  double error_allowed = 10*std::numeric_limits<double>::epsilon();
+  double error_allowed = 10 * std::numeric_limits<double>::epsilon();
   for (size_t i = 0; i < true_vec.size(); i++)
   {
     double error = std::abs(true_vec[i] - dg->getResidual()[i]) / std::abs(1.0 + true_vec[i]);

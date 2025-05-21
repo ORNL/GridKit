@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include "MatPowerTesting.hpp"
 #include <FileIO.hpp>
 #include <PowerSystemData.hpp>
-#include "MatPowerTesting.hpp"
 
 using namespace GridKit;
 using namespace GridKit::Testing;

@@ -15,7 +15,6 @@
 
 #include <PowerSystemData.hpp>
 
-
 namespace GridKit
 {
   namespace Testing
@@ -52,8 +51,8 @@ namespace GridKit
       {
         fail++;
         std::cerr << "Containers do not have the same size! "
-               << "a.size() = " << a.size() << ", and "
-               << "b.size() = " << b.size() << "\n";
+                  << "a.size() = " << a.size() << ", and "
+                  << "b.size() = " << b.size() << "\n";
       }
 
       for (const auto& pair_a : a)
@@ -65,22 +64,21 @@ namespace GridKit
           {
             fail++;
             std::cerr << "Mismatching map values! "
-                   << "a.first = " << pair_a.first << ", "
-                   << "a.second = " << pair_a.second << ", and "
-                   << "b.second = " << it->second << "\n";
+                      << "a.first = " << pair_a.first << ", "
+                      << "a.second = " << pair_a.second << ", and "
+                      << "b.second = " << it->second << "\n";
           }
         }
         else
         {
           fail++;
           std::cerr << "Entry not found in the second container! "
-                 << "a.first = " << pair_a.first << "\n";
+                    << "a.first = " << pair_a.first << "\n";
         }
       }
 
       return fail == 0;
     }
-
 
   } // namespace Testing
 

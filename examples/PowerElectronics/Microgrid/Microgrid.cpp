@@ -17,7 +17,7 @@
 
 int main(int /* argc */, char const** /* argv */)
 {
-  /// @todo Needs to be modified. Some components are small relative to others thus 
+  /// @todo Needs to be modified. Some components are small relative to others thus
   /// there error is high (or could be matlab vector issue)
   double abs_tol         = 1.0e-8;
   double rel_tol         = 1.0e-8;
@@ -432,7 +432,7 @@ int main(int /* argc */, char const** /* argv */)
 
   std::cout << "Testing the DistributedGenerator model ...\n";
   double error_allowed = 1e-4;
-  double max_error = 0.0;
+  double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)
   {
     double error = std::abs(true_vec[i] - yfinial[i]) / std::abs(1.0 + true_vec[i]);

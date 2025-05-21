@@ -142,7 +142,7 @@ int main()
     if (err > error_V)
       error_V = err;
 
-    err = std::abs(1.0 + data.dw - ref_sol[1])/(1.0 + ref_sol[1]);
+    err = std::abs(1.0 + data.dw - ref_sol[1]) / (1.0 + ref_sol[1]);
     if (err > error_w)
       error_w = err;
 
