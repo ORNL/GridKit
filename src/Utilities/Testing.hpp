@@ -11,9 +11,6 @@
 #include <iostream>
 #include <limits>
 #include <map>
-#include <vector>
-
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {

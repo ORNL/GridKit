@@ -1,8 +1,8 @@
 /**
- * @file Testing.hpp
+ * @file MatPowerTesting.hpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
  *
- * Contains utilies for testing.
+ * Contains utilities for testing Matpower parser for GridKit.
  *
  */
 #pragma once
@@ -10,7 +10,6 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include <map>
 #include <vector>
 
 #include <PowerSystemData.hpp>
