@@ -9,7 +9,6 @@
 
 #include "Model/Evaluator.hpp"
 
-// TODO: move implementations to header since they are templated?
 namespace AnalysisManager
 {
 

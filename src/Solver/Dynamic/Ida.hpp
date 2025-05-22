@@ -26,10 +26,6 @@ namespace AnalysisManager
 
       typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
 
-      static_assert(std::is_same_v<real_type, sunrealtype>, "real_type must be the same type as sunrealtype");
-      // TODO: can't include this assert because cpp file instantiates a few values of IdxT
-      // static_assert(std::is_same_v<IdxT, sunindextype>, "IdxT must be the same type as sunindextype");
-
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
@@ -189,7 +185,6 @@ namespace AnalysisManager
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
-      // TODO: should template type be real_type rather than ScalarT?
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);
