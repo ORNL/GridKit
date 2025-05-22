@@ -195,22 +195,22 @@ namespace AnalysisManager
     /**
      * @brief Run the IDA solver on the given model and produce a solution at
      * the given final time.
-     * 
+     *
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Matrix and vector index data type
      * @param tf The final simulation time.
-     * @param nout The number of integration segmentstimes. 
+     * @param nout The number of integration segmentstimes.
      * @param step_callback An optional callback which, if provided, will be
      * called after each time the IDA solver has been invoked with the value
      * of `t` that IDA has calculated the last step at. The provided model will
      * be updated with the latest values of `y` and `yp` before the callback is
      * invoked.
      * @return int zero if successful, error code otherwise.
-     * 
+     *
      * @note The actual time of the final IDA solution should be somewhat
      * close to `tf`, however due to rounding error the precise final time may
      * be before or after `tf`.
-     * 
+     *
      * @todo Consider adding initial time as the function argument, as well.
      */
     template <class ScalarT, typename IdxT>
@@ -543,7 +543,6 @@ namespace AnalysisManager
 
       return 0;
     }
-
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
