@@ -36,18 +36,6 @@ namespace AnalysisManager
       int setIntegrationTime(real_type t_init, real_type t_final, int nout);
       int initializeSimulation(real_type t0, bool findConsistent = false);
 
-      /// @brief               Run the IDA solver on the given model and produce a solution at the given final time.
-      /// @attention           `Ida::initializeSimulation` must be called with the initial time (and to find consistent
-      ///                      initial conditions if needed) before calling `runSimulation`.
-      /// @param tf            The final time, used to calculate the size of each step IDA should take. The actual time
-      ///                      of the final IDA solution should be somewhat close to `tf`, however due to rounding error
-      ///                      the precise final time may be before or after `tf`.
-      ///
-      /// @param nout          The number of times the IDA integrator should be invoked to calculate the solution at `tf`.
-      ///
-      /// @param step_callback An optional callback which, if provided, will be called after each time the IDA solver has
-      ///                      been invoked with the value of `t` that IDA has calculated the last step at. The provided
-      ///                      model will be updated with the latest values of `y` and `yp` before the callback is invoked.
       int runSimulation(real_type tf, int nout = 1, std::optional<std::function<void(real_type)>> step_callback = {});
       int deleteSimulation();
 
@@ -63,6 +51,7 @@ namespace AnalysisManager
       int runForwardSimulation(real_type tf, int nout = 1);
       int runBackwardSimulation(real_type t0);
       int deleteAdjoint();
+      int deleteBackwardSimulation();
 
       int saveInitialCondition()
       {
