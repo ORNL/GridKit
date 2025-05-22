@@ -138,5 +138,10 @@ int main()
     std::cout << "The two results differ beyond solver tolerance!\n";
   }
 
+  delete idas;
+  delete bus;
+  delete gen;
+  delete model;
+
   return retval;
 }
