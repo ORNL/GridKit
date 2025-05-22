@@ -40,6 +40,11 @@ namespace AnalysisManager
     {
       deleteQuadrature();
       deleteAdjoint();
+      N_VDestroy(yyB_);
+      N_VDestroy(ypB_);
+      N_VDestroy(qB_);
+      SUNLinSolFree(linearSolverB_);
+      SUNMatDestroy(JacobianMatB_);
       deleteSimulation();
       SUNContext_Free(&context_);
     }
@@ -505,11 +510,6 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteAdjoint()
     {
-      N_VDestroy(yyB_);
-      N_VDestroy(ypB_);
-      N_VDestroy(qB_);
-      SUNLinSolFree(linearSolverB_);
-      SUNMatDestroy(JacobianMatB_);
       IDAAdjFree(solver_);
       return 0;
     }
