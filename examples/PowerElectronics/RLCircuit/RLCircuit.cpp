@@ -14,7 +14,7 @@
 #include <Solver/Dynamic/DynamicSolver.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
   double abs_tol = 1.0e-8;
   double rel_tol = 1.0e-8;
@@ -22,7 +22,7 @@ int main(int argc, char const* argv[])
 
   // TODO:setup as named parameters
   // Create circuit model
-  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac);
+  GridKit::PowerElectronicsModel<double, size_t> sysmodel(rel_tol, abs_tol, use_jac);
 
   size_t idoff = 0;
 
@@ -41,7 +41,7 @@ int main(int argc, char const* argv[])
   // internal
   induct->setExternalConnectionNodes(2, 2);
   // add component
-  sysmodel->addComponent(induct);
+  sysmodel.addComponent(induct);
 
   // resistor
   idoff++;
@@ -52,7 +52,7 @@ int main(int argc, char const* argv[])
   // output
   resis->setExternalConnectionNodes(1, 1);
   // add
-  sysmodel->addComponent(resis);
+  sysmodel.addComponent(resis);
 
   // voltage source
   idoff++;
@@ -65,54 +65,54 @@ int main(int argc, char const* argv[])
   // internal
   vsource->setExternalConnectionNodes(2, 3);
 
-  sysmodel->addComponent(vsource);
+  sysmodel.addComponent(vsource);
 
-  sysmodel->allocate(4);
+  sysmodel.allocate(4);
 
-  std::cout << sysmodel->y().size() << std::endl;
+  std::cout << sysmodel.y().size() << std::endl;
 
   // Grounding for IDA. If no grounding then circuit is \mu > 1
   // v_0 (grounded)
   // Create Intial points
-  sysmodel->y()[0] = vinit; // v_1
-  sysmodel->y()[1] = vinit; // v_2
-  sysmodel->y()[2] = 0.0;   // i_L
-  sysmodel->y()[3] = 0.0;   // i_s
+  sysmodel.y()[0] = vinit; // v_1
+  sysmodel.y()[1] = vinit; // v_2
+  sysmodel.y()[2] = 0.0;   // i_L
+  sysmodel.y()[3] = 0.0;   // i_s
 
-  sysmodel->yp()[0] = 0.0;            // v'_1
-  sysmodel->yp()[1] = 0.0;            // v'_2
-  sysmodel->yp()[2] = -vinit / linit; // i'_s
-  sysmodel->yp()[3] = -vinit / linit; // i'_L
+  sysmodel.yp()[0] = 0.0;            // v'_1
+  sysmodel.yp()[1] = 0.0;            // v'_2
+  sysmodel.yp()[2] = -vinit / linit; // i'_s
+  sysmodel.yp()[3] = -vinit / linit; // i'_L
 
-  sysmodel->initialize();
-  sysmodel->evaluateResidual();
+  sysmodel.initialize();
+  sysmodel.evaluateResidual();
 
   std::cout << "Verify Intial Resisdual is Zero: {";
-  for (double i : sysmodel->getResidual())
+  for (double i : sysmodel.getResidual())
   {
     std::cout << i << ", ";
   }
   std::cout << "}\n";
 
-  sysmodel->updateTime(0.0, 1.0);
-  sysmodel->evaluateJacobian();
+  sysmodel.updateTime(0.0, 1.0);
+  sysmodel.evaluateJacobian();
   std::cout << "Intial Jacobian with alpha = 1:\n";
-  sysmodel->getJacobian().printMatrix();
+  sysmodel.getJacobian().printMatrix();
 
   // Create numerical integrator and configure it for the generator model
-  AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
+  AnalysisManager::Sundials::Ida<double, size_t> idas(&sysmodel);
 
   double t_init  = 0.0;
   double t_final = 1.0;
 
   // setup simulation
-  idas->configureSimulation();
-  idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init);
+  idas.configureSimulation();
+  idas.getDefaultInitialCondition();
+  idas.initializeSimulation(t_init);
 
-  idas->runSimulation(t_final);
+  idas.runSimulation(t_final);
 
-  std::vector<double>& yfinial = sysmodel->y();
+  std::vector<double>& yfinial = sysmodel.y();
 
   std::cout << "Final Vector y\n";
   for (size_t i = 0; i < yfinial.size(); i++)

@@ -40,12 +40,8 @@ namespace AnalysisManager
     {
       deleteQuadrature();
       deleteAdjoint();
-      N_VDestroy(yyB_);
-      N_VDestroy(ypB_);
-      N_VDestroy(qB_);
-      SUNLinSolFree(linearSolverB_);
-      SUNMatDestroy(JacobianMatB_);
       deleteSimulation();
+      deleteBackwardSimulation();
       SUNContext_Free(&context_);
     }
 
@@ -196,6 +192,27 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Run the IDA solver on the given model and produce a solution at
+     * the given final time.
+     * 
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Matrix and vector index data type
+     * @param tf The final simulation time.
+     * @param nout The number of integration segmentstimes. 
+     * @param step_callback An optional callback which, if provided, will be
+     * called after each time the IDA solver has been invoked with the value
+     * of `t` that IDA has calculated the last step at. The provided model will
+     * be updated with the latest values of `y` and `yp` before the callback is
+     * invoked.
+     * @return int zero if successful, error code otherwise.
+     * 
+     * @note The actual time of the final IDA solution should be somewhat
+     * close to `tf`, however due to rounding error the precise final time may
+     * be before or after `tf`.
+     * 
+     * @todo Consider adding initial time as the function argument, as well.
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout, const std::optional<std::function<void(real_type)>> step_callback)
     {
@@ -205,8 +222,8 @@ namespace AnalysisManager
       real_type dt   = (tf - t_init_) / static_cast<real_type>(nout);
       real_type tout = t_init_ + dt;
 
-      /* In loop, call IDASolve, print results, and test for error.
-       *     Break out of loop when NOUT preset output times have been reached. */
+      // In loop, call IDASolve, print results, and test for error.
+      //  Break out of loop when NOUT preset output times have been reached.
       // printOutput(0.0);
       while (nout > iout)
       {
@@ -215,8 +232,9 @@ namespace AnalysisManager
 
         if (step_callback.has_value())
         {
-          // The callback may try to observe upated values in the model, so we should update them here
-          // (At this point, the model's values are one internal integrator step out of date)
+          // The callback may try to observe upated values in the model, so we
+          // should update them here (At this point, the model's values are one
+          // internal integrator step out of date)
           model_->updateTime(tret, 0.0);
           copyVec(yy_, model_->y());
           copyVec(yp_, model_->yp());
@@ -513,6 +531,19 @@ namespace AnalysisManager
       IDAAdjFree(solver_);
       return 0;
     }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::deleteBackwardSimulation()
+    {
+      N_VDestroy(yyB_);
+      N_VDestroy(ypB_);
+      N_VDestroy(qB_);
+      SUNLinSolFree(linearSolverB_);
+      SUNMatDestroy(JacobianMatB_);
+
+      return 0;
+    }
+
 
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
