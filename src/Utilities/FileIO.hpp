@@ -189,7 +189,7 @@ namespace
     if (std::regex_match(line, matches, pat))
     {
       std::string s = matches[1];
-      mp.baseMVA    = std::atoi(s.c_str());
+      mp.baseMVA    = std::atof(s.c_str());
     }
     else
     {

@@ -197,7 +197,7 @@ namespace GridKit
       using LoadDataT    = LoadData<RealT, IdxT>;
 
       std::string               version;
-      IdxT                      baseMVA;
+      RealT                     baseMVA;
       std::vector<BusDataT>     bus;
       std::vector<GenDataT>     gen;
       std::vector<BranchDataT>  branch;

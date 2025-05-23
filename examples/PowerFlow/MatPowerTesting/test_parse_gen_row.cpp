@@ -1,8 +1,8 @@
 #include <iostream>
 
+#include "MatPowerTesting.hpp"
 #include <FileIO.hpp>
 #include <PowerSystemData.hpp>
-#include <Testing.hpp>
 
 using namespace GridKit;
 using namespace GridKit::Testing;
@@ -30,7 +30,7 @@ mpc.gen = [
 
 } // namespace
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
   int                               fail = 0;
   std::vector<GenData<RealT, IdxT>> gen_answer{
