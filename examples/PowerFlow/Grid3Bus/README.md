@@ -10,7 +10,7 @@ The mathematical model of the power flow problem is formulated as a set of nonli
 The model and its parameters are described in Figure 1:
 
 <div align="center">
-   <img align="center" src="../../docs/Figures/example1.jpg">
+   <img align="center" src="../../../docs/Figures/example1.jpg">
    
    
   Figure 1: A simple 3-bus grid example.

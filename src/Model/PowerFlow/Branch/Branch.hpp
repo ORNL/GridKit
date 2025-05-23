@@ -63,7 +63,7 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(real_type /* t */, real_type /* a */)
     {
     }
 

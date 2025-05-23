@@ -16,7 +16,7 @@
  * @param argv
  * @return int
  */
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
 
   GridKit::DistributedGeneratorParameters<double, size_t> parms;
@@ -49,12 +49,12 @@ int main(int argc, char const* argv[])
 
   dg->evaluateResidual();
 
-  std::cout << "Output: {";
-  for (double i : dg->getResidual())
-  {
-    printf("%e ,", i);
-  }
-  std::cout << "}\n";
+  // std::cout << "Output: {";
+  // for (double i : dg->getResidual())
+  // {
+  //   printf("%e ,", i);
+  // }
+  // std::cout << "}\n";
 
   // Generated from matlab code with same parameters and inputs
   std::vector<double> true_vec{3.141592277589793e+02,
@@ -74,11 +74,20 @@ int main(int argc, char const* argv[])
                                3.337988298081817e+03,
                                2.684419146397466e+03};
 
-  std::cout << "Test the Relative Error\n";
+  std::cout << "Testing the DistributedGenerator model ...\n";
+  double error_allowed = 10 * std::numeric_limits<double>::epsilon();
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    printf("%e ,\n", (true_vec[i] - dg->getResidual()[i]) / true_vec[i]);
+    double error = std::abs(true_vec[i] - dg->getResidual()[i]) / std::abs(1.0 + true_vec[i]);
+    if (error > error_allowed)
+    {
+      std::cout << "Model error for equation " << i << " is: " << error << "\n";
+      std::cout << "Maximum allowed error is: " << error_allowed << "\n";
+      std::cout << "Test FAILED!\n";
+      return 1;
+    }
   }
+  std::cout << "Test successful!\n";
 
   return 0;
 }
