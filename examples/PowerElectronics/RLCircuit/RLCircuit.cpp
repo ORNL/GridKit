@@ -14,7 +14,7 @@
 #include <Solver/Dynamic/DynamicSolver.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
   double abs_tol = 1.0e-8;
   double rel_tol = 1.0e-8;

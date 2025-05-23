@@ -17,7 +17,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  GeneratorSlack<ScalarT, IdxT>::GeneratorSlack(bus_type* bus, GenData& data)
+  GeneratorSlack<ScalarT, IdxT>::GeneratorSlack(bus_type* bus, GenData& /* data */)
     : bus_(bus)
   {
     // std::cout << "Create a load model with " << size_ << " variables ...\n";

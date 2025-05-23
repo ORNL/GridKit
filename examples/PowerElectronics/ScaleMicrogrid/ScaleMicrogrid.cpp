@@ -31,7 +31,7 @@ static int test(index_type Nsize, real_type test_tolerance, bool error_tol = fal
  * @param argv unsued
  * @return int
  */
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
   int       retval    = 0;
   bool      debug_out = false;
