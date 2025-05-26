@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 #include <Utilities/Testing.hpp>
 
 namespace

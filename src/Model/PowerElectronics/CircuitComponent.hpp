@@ -6,7 +6,6 @@
 #include <set>
 
 #include <Model/Evaluator.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {

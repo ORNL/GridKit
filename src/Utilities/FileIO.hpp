@@ -17,7 +17,7 @@
 #include <sstream>
 #include <vector>
 
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace
 {

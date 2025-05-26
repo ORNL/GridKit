@@ -4,7 +4,7 @@
 #include <Model/PowerFlow/Bus/BusPQ.hpp>
 #include <Model/PowerFlow/Bus/BusPV.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {

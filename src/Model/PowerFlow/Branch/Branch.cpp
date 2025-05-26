@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {

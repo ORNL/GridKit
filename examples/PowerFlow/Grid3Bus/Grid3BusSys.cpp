@@ -22,7 +22,7 @@
 #include <Model/PowerFlow/Load/Load.hpp>
 #include <Model/PowerFlow/MiniGrid/MiniGrid.hpp>
 #include <Model/PowerFlow/SystemModelPowerFlow.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <Utilities/FileIO.hpp>
 #include <Utilities/Testing.hpp>

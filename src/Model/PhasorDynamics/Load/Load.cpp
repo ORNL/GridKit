@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {
