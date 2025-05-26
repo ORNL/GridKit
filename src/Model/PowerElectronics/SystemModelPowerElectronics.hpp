@@ -6,8 +6,8 @@
 #include <iostream>
 #include <vector>
 
-#include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
+#include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <ScalarTraits.hpp>
 
 namespace GridKit
