@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include <CircuitGraph.hpp>
+#include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 #include <ScalarTraits.hpp>
 
