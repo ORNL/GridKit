@@ -12,8 +12,8 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
 
 namespace GridKit
 {

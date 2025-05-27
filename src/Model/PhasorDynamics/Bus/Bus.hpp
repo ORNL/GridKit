@@ -101,7 +101,6 @@ namespace GridKit
         return f_[1];
       }
 
-
     private:
       ScalarT Vr0_{0.0};
       ScalarT Vi0_{0.0};
