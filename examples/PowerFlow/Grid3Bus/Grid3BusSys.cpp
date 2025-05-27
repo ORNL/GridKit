@@ -24,7 +24,7 @@
 #include <Model/PowerFlow/PowerSystemData.hpp>
 #include <Model/PowerFlow/SystemModelPowerFlow.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
-#include <Utilities/FileIO.hpp>
+#include <Model/PowerFlow/MatpowerParser.hpp>
 #include <Utilities/Testing.hpp>
 
 static const std::string BUS3_DATA_STRING = R"(
