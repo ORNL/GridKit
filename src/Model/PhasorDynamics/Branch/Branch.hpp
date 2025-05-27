@@ -20,7 +20,7 @@ namespace GridKit
 
     template <typename RealT, typename IdxT>
     struct BranchData;
-  }
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
