@@ -4,7 +4,6 @@
 #define _VIRBUSDQ_HPP_
 
 #include <Model/PowerElectronics/CircuitComponent.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {

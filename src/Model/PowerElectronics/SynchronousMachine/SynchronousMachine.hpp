@@ -6,7 +6,6 @@
 #include <tuple>
 
 #include <Model/PowerElectronics/CircuitComponent.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {

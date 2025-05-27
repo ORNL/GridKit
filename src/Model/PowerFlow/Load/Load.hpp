@@ -3,7 +3,7 @@
 #define _LOAD_HPP_
 
 #include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {
