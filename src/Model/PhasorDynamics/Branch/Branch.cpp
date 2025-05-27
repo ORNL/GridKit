@@ -36,8 +36,8 @@ namespace GridKit
         X_(0.01),
         G_(0.0),
         B_(0.0),
-        bus1ID_(0),
-        bus2ID_(0)
+        bus1_id_(0),
+        bus2_id_(0)
     {
       size_ = 0;
     }
@@ -67,8 +67,8 @@ namespace GridKit
         X_(X),
         G_(G),
         B_(B),
-        bus1ID_(0),
-        bus2ID_(0)
+        bus1_id_(0),
+        bus2_id_(0)
     {
     }
 
@@ -80,8 +80,8 @@ namespace GridKit
         X_(data.X),
         G_(data.G),
         B_(data.B),
-        bus1ID_(data.fbus),
-        bus2ID_(data.tbus)
+        bus1_id_(data.bus1_id),
+        bus2_id_(data.bus2_id)
     {
       size_ = 0;
     }
