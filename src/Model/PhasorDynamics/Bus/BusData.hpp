@@ -1,7 +1,7 @@
 /**
  * @file BusData.hpp
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Modeling data for branches (transmission lines)
+ * @brief Modeling data for buses (nodes)
  * 
  */
 #pragma once

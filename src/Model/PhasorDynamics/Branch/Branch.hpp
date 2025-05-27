@@ -15,17 +15,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename RealT, typename IdxT>
-    struct BranchData;
-  }
-} // namespace GridKit
-
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
     template <class ScalarT, typename IdxT>
     class BusBase;
+
+    template <typename RealT, typename IdxT>
+    struct BranchData;
   }
 } // namespace GridKit
 
@@ -154,8 +148,8 @@ namespace GridKit
       real_type  X_;
       real_type  G_;
       real_type  B_;
-      const IdxT bus1ID_;
-      const IdxT bus2ID_;
+      const IdxT bus1_id_;
+      const IdxT bus2_id_;
     };
 
   } // namespace PhasorDynamics

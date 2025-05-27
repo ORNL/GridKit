@@ -1,7 +1,7 @@
 /**
- * @file BranchData.hpp
+ * @file LoadData.hpp
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Modeling data for branches (transmission lines)
+ * @brief Modeling data for loads
  * 
  */
 #pragma once
@@ -12,7 +12,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Contains modeling data for a Branch
+     * @brief Contains modeling data for a Load
      * 
      * @tparam RealT Real parameter data type
      * @tparam IdxT  Integer parameter data type
@@ -22,15 +22,12 @@ namespace GridKit
      * @todo Decide on naming scheme for model parameters.
      */
     template <typename RealT, typename IdxT>
-    struct BranchData
+    struct LoadData
     {
-      RealT R{0.0}; ///< line series resistance
-      RealT X{0.0}; ///< line series reactance
-      RealT G{0.0}; ///< line shunt conductance
-      RealT B{0.0}; ///< line shunt charging 
+      RealT R{0.0}; ///< load resistance
+      RealT X{0.0}; ///< load reactance
 
-      IdxT bus1_id{0}; ///< Unique ID of bus 1
-      IdxT bus2_id{0}; ///< Unique ID of bus 2
+      IdxT bus_id{0}; ///< Unique ID of bus 1
     };
   }
 }
