@@ -20,11 +20,11 @@
 #include <Model/PowerFlow/Bus/BusFactory.hpp>
 #include <Model/PowerFlow/Generator/GeneratorFactory.hpp>
 #include <Model/PowerFlow/Load/Load.hpp>
+#include <Model/PowerFlow/MatpowerParser.hpp>
 #include <Model/PowerFlow/MiniGrid/MiniGrid.hpp>
 #include <Model/PowerFlow/PowerSystemData.hpp>
 #include <Model/PowerFlow/SystemModelPowerFlow.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
-#include <Model/PowerFlow/MatpowerParser.hpp>
 #include <Utilities/Testing.hpp>
 
 static const std::string BUS3_DATA_STRING = R"(

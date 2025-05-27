@@ -294,5 +294,6 @@ namespace GridKit
       }
     }
   }
-// } // namespace PowerSystemsData
+
+  // } // namespace PowerSystemsData
 } // namespace GridKit
