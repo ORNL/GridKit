@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 
 namespace GridKit
 {
@@ -73,13 +73,13 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
+    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, model_data_type& data)
       : bus1_(bus1),
         bus2_(bus2),
-        R_(data.r),
-        X_(data.x),
-        G_(0.0),
-        B_(data.b),
+        R_(data.R),
+        X_(data.X),
+        G_(data.G),
+        B_(data.B),
         bus1ID_(data.fbus),
         bus2ID_(data.tbus)
     {
