@@ -100,24 +100,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome enzyme_jacobian()
-      {
-        TestStatus success = true;
-
-        real_type R{2.0}; ///< Load resistance
-        real_type X{4.0}; ///< Load reactance
-
-        ScalarT Vr{10.0}; ///< Bus real voltage
-        ScalarT Vi{20.0}; ///< Bus imaginary voltage
-
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
-        load.evaluateJacobian();
-
-        return success.report(__func__);
-      }
-
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const real_type R,
                                                                                   const real_type X)
