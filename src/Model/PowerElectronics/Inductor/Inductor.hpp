@@ -4,7 +4,6 @@
 #define _IND_HPP_
 
 #include <Model/PowerElectronics/CircuitComponent.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {

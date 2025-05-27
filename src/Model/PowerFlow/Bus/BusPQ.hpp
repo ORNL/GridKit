@@ -3,7 +3,7 @@
 #define _BUS_PQ_HPP_
 
 #include "BaseBus.hpp"
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {

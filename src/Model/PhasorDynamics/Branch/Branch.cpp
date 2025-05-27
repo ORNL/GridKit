@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {

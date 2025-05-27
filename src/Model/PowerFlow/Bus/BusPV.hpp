@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include "BaseBus.hpp"
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {
