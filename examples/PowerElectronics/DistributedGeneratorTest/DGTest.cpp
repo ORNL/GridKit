@@ -89,5 +89,7 @@ int main(int /* argc */, char const** /* argv */)
   }
   std::cout << "Test successful!\n";
 
+  delete dg;
+
   return 0;
 }
