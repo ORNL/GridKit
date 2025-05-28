@@ -20,7 +20,8 @@ RUN git clone --single-branch --depth 1 --branch v7.10.2 https://github.com/DrTi
 	rm -rf /tmp/suitesparse
 
 # Install sundials using klu from previous step
-RUN git clone --single-branch --depth 1 --branch v7.3.0 https://github.com/LLNL/sundials.git /tmp/sundials && \
+RUN git clone --single-branch --branch develop https://github.com/LLNL/sundials.git /tmp/sundials && \
+	git checkout 07d21c2c5ae33211a9a2fafd8eac56de5582dce0 && \
 	cd /tmp/sundials && \
 	mkdir -p build && cd build && \
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
