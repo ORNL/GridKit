@@ -15,7 +15,7 @@ RUN git clone --single-branch --depth 1 --branch v7.10.2 https://github.com/DrTi
 	mkdir -p build && cd build && \
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DSUITESPARSE_ENABLE_PROJECTS="klu" .. && \
-	ninja -j $(nproc) && \
+	ninja && \
 	ninja install && \
 	rm -rf /tmp/suitesparse
 
@@ -27,6 +27,6 @@ RUN git clone --single-branch --branch develop https://github.com/LLNL/sundials.
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DENABLE_KLU=ON \
 		-DKLU_ROOT=/usr/local/lib/cmake/KLU .. && \
-	ninja -j $(nproc) && \
+	ninja && \
 	ninja install && \
 	rm -rf /tmp/sundials
