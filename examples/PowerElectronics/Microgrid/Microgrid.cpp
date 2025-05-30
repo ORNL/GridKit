@@ -1,5 +1,6 @@
 
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -14,16 +15,17 @@
 #include <Solver/Dynamic/DynamicSolver.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
-  ///@todo Needs to be modified. Some components are small relative to others thus there error is high (or could be matlab vector issue)
+  /// @todo Needs to be modified. Some components are small relative to others thus
+  /// there error is high (or could be matlab vector issue)
   double abs_tol         = 1.0e-8;
   double rel_tol         = 1.0e-8;
-  size_t max_step_amount = 3000;
+  size_t max_step_number = 3000;
   bool   use_jac         = true;
 
   // Create model
-  GridKit::PowerElectronicsModel<double, size_t>* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_amount);
+  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
 
   // Modeled after the problem in the paper
   double RN = 1.0e4;
@@ -314,20 +316,21 @@ int main(int argc, char const* argv[])
   sysmodel->initialize();
   sysmodel->evaluateResidual();
 
-  std::vector<double>& fres = sysmodel->getResidual();
-  std::cout << "Verify Intial Resisdual is Zero: {\n";
-  for (size_t i = 0; i < fres.size(); i++)
-  {
-    printf("%lu : %e \n", i, fres[i]);
-  }
-  std::cout << "}\n";
+  // // Optional debugging output
+  // std::vector<double>& fres = sysmodel->getResidual();
+  // std::cout << "Verify Intial Resisdual is Zero: {\n";
+  // for (size_t i = 0; i < fres.size(); i++)
+  // {
+  //   printf("%lu : %e \n", i, fres[i]);
+  // }
+  // std::cout << "}\n";
 
   sysmodel->updateTime(0.0, 1.0e-8);
   sysmodel->evaluateJacobian();
   std::cout << "Intial Jacobian with alpha:\n";
 
   // Create numerical integrator and configure it for the generator model
-  AnalysisManager::Sundials::Ida<double, size_t>* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
+  auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
 
   double t_init  = 0.0;
   double t_final = 1.0;
@@ -341,13 +344,14 @@ int main(int argc, char const* argv[])
 
   std::vector<double>& yfinial = sysmodel->y();
 
-  std::cout << "Final Vector y\n";
-  for (size_t i = 0; i < yfinial.size(); i++)
-  {
-    std::cout << yfinial[i] << "\n";
-  }
+  // // Optional debugging output
+  // std::cout << "Final Vector y\n";
+  // for (size_t i = 0; i < yfinial.size(); i++)
+  // {
+  //   std::cout << yfinial[i] << "\n";
+  // }
 
-  // Generate from MATLAB code ODE form with tolerances of 1e-12
+  // Generated from MATLAB code ODE form with tolerances of 1e-12
   std::vector<double> true_vec{
       2.297543153595780e+04,
       1.275311524125022e+04,
@@ -420,11 +424,31 @@ int main(int argc, char const* argv[])
       3.604108939430972e+02,
       -3.492842627398574e+01};
 
-  std::cout << "Test the Relative Error\n";
+  // std::cout << "Test the Relative Error\n";
+  // for (size_t i = 0; i < true_vec.size(); i++)
+  // {
+  //   printf("%lu : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
+  // }
+
+  std::cout << "Testing the DistributedGenerator model ...\n";
+  double error_allowed = 1e-4;
+  double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    printf("%lu : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
+    double error = std::abs(true_vec[i] - yfinial[i]) / std::abs(1.0 + true_vec[i]);
+    if (error > max_error)
+      max_error = error;
+    if (error > error_allowed)
+    {
+      std::cout << "Model error for equation " << i << " is: " << error << "\n";
+      std::cout << "Maximum allowed error is: " << error_allowed << "\n";
+      std::cout << "Test FAILED!\n";
+      return 1;
+    }
   }
+  std::cout << "Max error     = " << max_error << "\n";
+  std::cout << "Allowed error = " << error_allowed << "\n";
+  std::cout << "Test successful!\n";
 
   delete idas;
   delete sysmodel;

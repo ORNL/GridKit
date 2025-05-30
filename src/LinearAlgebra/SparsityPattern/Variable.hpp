@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include <ScalarTraits.hpp>
+
 namespace GridKit
 {
   namespace Sparse
@@ -258,7 +260,7 @@ namespace GridKit
       bool   is_fixed_;        ///< Constant parameter flag.
 
       mutable DependencyMap* dependencies_;
-      static const size_t    INVALID_VAR_NUMBER = static_cast<const size_t>(-1);
+      static const size_t    INVALID_VAR_NUMBER = static_cast<size_t>(-1);
     };
 
     //------------------------------------
@@ -324,6 +326,19 @@ namespace GridKit
     inline std::istream& operator>>(std::istream& is, Variable& v);
 
   } // namespace Sparse
+} // namespace GridKit
+
+namespace GridKit
+{
+  template <>
+  class ScalarTraits<Sparse::Variable>
+  {
+  public:
+    typedef double real_type;
+    typedef double norm_type;
+    typedef double scalar_type;
+  };
+
 } // namespace GridKit
 
 #include "VariableImplementation.hpp"

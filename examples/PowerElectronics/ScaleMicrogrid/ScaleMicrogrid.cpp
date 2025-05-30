@@ -1,5 +1,6 @@
 
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -30,7 +31,7 @@ static int test(index_type Nsize, real_type test_tolerance, bool error_tol = fal
  * @param argv unsued
  * @return int
  */
-int main(int argc, char const* argv[])
+int main(int /* argc */, char const** /* argv */)
 {
   int       retval    = 0;
   bool      debug_out = false;
@@ -72,10 +73,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  auto* sysmodel = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                    abs_tol,
-                                                                    use_jac,
-                                                                    SCALE_MICROGRID_MAX_STEPS);
+  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
+                                                                     abs_tol,
+                                                                     use_jac,
+                                                                     SCALE_MICROGRID_MAX_STEPS);
 
   const std::vector<real_type>* true_vec = &answer_key_N8;
 
@@ -88,7 +89,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     true_vec = &answer_key_N4;
     break;
   case 8:
-    // true_vec = &answer_key_N8;
+    true_vec = &answer_key_N8;
     break;
   default:
     std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
@@ -197,7 +198,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   {
     dg_ref->setExternalConnectionNodes(4 + i, i);
   }
-  sysmodel->addComponent(dg_ref);
+  sys_model->addComponent(dg_ref);
 
   // Keep track of models and index location
   index_type indexv   = 12;
@@ -220,7 +221,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       dg->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 13;
-    sysmodel->addComponent(dg);
+    sys_model->addComponent(dg);
   }
 
   // Load all the Line compoenents
@@ -244,7 +245,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       line_model->setExternalConnectionNodes(5 + j, indexv + j);
     }
     indexv += 2;
-    sysmodel->addComponent(line_model);
+    sys_model->addComponent(line_model);
   }
 
   //  Load all the Load components
@@ -264,7 +265,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       load_model->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 2;
-    sysmodel->addComponent(load_model);
+    sys_model->addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
@@ -274,40 +275,40 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
     virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
     virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
-    sysmodel->addComponent(virDQbus_model);
+    sys_model->addComponent(virDQbus_model);
   }
 
   // allocate all the intial conditions
-  sysmodel->allocate(vec_size_total);
+  sys_model->allocate(vec_size_total);
 
   if (debug_output)
   {
-    std::cout << sysmodel->y().size() << std::endl;
+    std::cout << sys_model->y().size() << std::endl;
     std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
   }
 
   // Create Intial points for states. Every state is to specified to the zero intially
   for (index_type i = 0; i < vec_size_total; i++)
   {
-    sysmodel->y()[i]  = 0.0;
-    sysmodel->yp()[i] = 0.0;
+    sys_model->y()[i]  = 0.0;
+    sys_model->yp()[i] = 0.0;
   }
 
   // Create Intial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * Nsize; i++)
   {
-    sysmodel->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-    sysmodel->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sysmodel->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    sys_model->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
+    sys_model->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    sys_model->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
-  sysmodel->y()[vec_size_internals] = DG_parms1.wb_;
+  sys_model->y()[vec_size_internals] = DG_parms1.wb_;
 
-  sysmodel->initialize();
-  sysmodel->evaluateResidual();
+  sys_model->initialize();
+  sys_model->evaluateResidual();
 
-  std::vector<real_type>& fres = sysmodel->getResidual();
+  std::vector<real_type>& fres = sys_model->getResidual();
   if (debug_output)
   {
     std::cout << "Verify Intial Resisdual is Zero: {\n";
@@ -318,13 +319,13 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     std::cout << "}\n";
   }
 
-  sysmodel->updateTime(0.0, 1.0e-8);
-  sysmodel->evaluateJacobian();
+  sys_model->updateTime(0.0, 1.0e-8);
+  sys_model->evaluateJacobian();
   if (debug_output)
     std::cout << "Intial Jacobian with alpha:\n";
 
   // Create numerical integrator and configure it for the generator model
-  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sysmodel);
+  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
 
   // setup simulation
   idas->configureSimulation();
@@ -333,7 +334,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   idas->runSimulation(t_final);
 
-  std::vector<real_type>& yfinal = sysmodel->y();
+  std::vector<real_type>& yfinal = sys_model->y();
 
   if (debug_output)
   {
@@ -346,8 +347,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   bool test_pass = true;
 
-  real_type sumtop    = 0.0;
-  real_type sumbottom = 0.0;
+  real_type sum_top    = 0.0;
+  real_type sum_bottom = 0.0;
 
   // check relative error
   std::cout << "Test the Relative Error for N = " << Nsize << "\n";
@@ -357,16 +358,16 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     if (debug_output)
       std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
 
-    sumtop    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
-    sumbottom += (true_vec->at(i) * true_vec->at(i));
+    sum_top    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
+    sum_bottom += (true_vec->at(i) * true_vec->at(i));
   }
 
-  real_type norm2error = (sqrt(sumtop) / sqrt(sumbottom));
+  real_type norm2error = (sqrt(sum_top) / sqrt(sum_bottom));
   std::cout << "2-Norm Relative Error: " << norm2error << std::endl;
   test_pass = norm2error < error_tol;
 
   delete idas;
-  delete sysmodel;
+  delete sys_model;
 
   if (test_pass)
   {

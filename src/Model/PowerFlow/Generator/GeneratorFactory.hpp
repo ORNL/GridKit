@@ -5,7 +5,7 @@
 #include <Model/PowerFlow/Generator/GeneratorPQ.hpp>
 #include <Model/PowerFlow/Generator/GeneratorPV.hpp>
 #include <Model/PowerFlow/Generator/GeneratorSlack.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {

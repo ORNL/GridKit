@@ -11,6 +11,7 @@ int main()
   result += test.constructor();
   result += test.accessors();
   result += test.residual();
+  result += test.jacobian();
 
   return result.summary();
 }

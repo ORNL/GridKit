@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <FileIO.hpp>
-#include <PowerSystemData.hpp>
-#include <Testing.hpp>
+#include "MatPowerTesting.hpp"
+#include <Model/PowerFlow/MatpowerParser.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 using namespace GridKit;
 using namespace GridKit::Testing;
@@ -83,7 +83,7 @@ mpc.gencost = [
 
 } // namespace
 
-int main(int argc, char** argv)
+int main(int /* argc */, char** /* argv */)
 {
   int fail = 0;
 

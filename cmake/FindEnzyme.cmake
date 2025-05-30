@@ -32,13 +32,31 @@ find_library(ENZYME_LLVM_PLUGIN_LIBRARY
   REQUIRED)
 message(STATUS "Enzyme LLVM plugin library: ${ENZYME_LLVM_PLUGIN_LIBRARY}")
 
+find_library(ENZYME_CLANG_PLUGIN_LIBRARY
+  NAMES
+  ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.so
+  ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dylib
+  ClangEnzyme-${Enzyme_LLVM_VERSION_MAJOR}.dll
+  PATHS
+  ${ENZYME_DIR}
+  ENV LD_LIBRARY_PATH 
+  ENV DYLD_LIBRARY_PATH
+  PATH_SUFFIXES
+  lib64 lib
+  REQUIRED)
+message(STATUS "Enzyme Clang plugin library: ${ENZYME_CLANG_PLUGIN_LIBRARY}")
+
 find_program(GRIDKIT_LLVM_LINK llvm-link
              PATHS ${Enzyme_LLVM_BINARY_DIR}
+             PATH_SUFFIXES
+             bin
              REQUIRED)
 message(STATUS "llvm-link: ${GRIDKIT_LLVM_LINK}")
 
 find_program(GRIDKIT_OPT opt
              PATHS ${Enzyme_LLVM_BINARY_DIR}
+             PATH_SUFFIXES
+             bin
              REQUIRED)
 message(STATUS "opt: ${GRIDKIT_OPT}")
 
@@ -80,7 +98,7 @@ macro(enzyme_add_executable)
     add_custom_command(
       DEPENDS ${PHASE0} 
       OUTPUT ${PHASE1}
-      COMMAND ${CMAKE_CXX_COMPILER} -flto -c ${PHASE0} ${INCLUDE_COMPILER_LIST} -O2 -fno-vectorize -ffast-math -fno-unroll-loops -o ${PHASE1}
+      COMMAND ${CMAKE_CXX_COMPILER} -flto -c ${PHASE0} ${INCLUDE_COMPILER_LIST} -O2 -fno-vectorize -ffast-math -fno-unroll-loops -fpass-plugin=${ENZYME_CLANG_PLUGIN_LIBRARY} -Xclang -load -Xclang ${ENZYME_CLANG_PLUGIN_LIBRARY} -mllvm -enable-load-pre=0 -mllvm -enzyme-auto-sparsity=1 -o ${PHASE1}
       COMMENT "Compiling ${SRC} to object file for target ${enzyme_add_executable_NAME}"
       )
     set(OBJS "${OBJS} ${PHASE1}")

@@ -348,7 +348,7 @@ namespace GridKit
       return 0;
     }
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(real_type /* t */, real_type /* a */)
     {
     }
 

@@ -81,7 +81,7 @@ I_{r2} = g V_{r1} - b V_{i1}
 ```
 
 ```math
-I_{i1} = b V_{r1} + g V_{i1}
+I_{i2} = b V_{r1} + g V_{i1}
          - \left(b + \frac{B}{2} \right) V_{r2} - \left(g + \frac{G}{2}\right) V_{i2}
 ```
 

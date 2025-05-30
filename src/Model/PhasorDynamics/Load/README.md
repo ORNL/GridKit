@@ -16,11 +16,11 @@ where $`V_{bus}`$ is the voltage on the bus to which the load is connected.
 After some algebra, one obtains expressions for real and imaginary components
 for the currents entering the bus:
 ```math
-I_{r} = -g V_{r} - b V_{i} 
+I_{r} = -g V_{r} + b V_{i} 
 ```
 
 ```math
-I_{i} = b V_{r} - g V_{i}
+I_{i} = - b V_{r} - g V_{i}
 ```
 where
 ```math

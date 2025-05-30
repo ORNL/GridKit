@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {
@@ -215,6 +215,8 @@ namespace GridKit
     // Available template instantiations
     template class Bus<double, long int>;
     template class Bus<double, size_t>;
+    template class Bus<Sparse::Variable, long int>;
+    template class Bus<Sparse::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -1,37 +1,33 @@
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <time.h>
+/**
+ * @file example1.cpp
+ * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Slaven Peles (peless@ornl.gov)
+ * @brief Example running a 2-bus system
+ *
+ * Simulates a 2-bus system with Genrou 6th order generator model and
+ * compares results with data generated for the same system by Poweworld.
+ *
+ */
+#include "example1.hpp"
 
-// #include <sundials_core.h>
-#include <idas/idas.h>
-#include <nvector/nvector_serial.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol/sunlinsol_klu.h>
-#include <sunmatrix/sunmatrix_sparse.h>
+#include <ctime>
+#include <iostream>
 
-#include "Example1_Powerworld_Reference.hpp"
-#include "Model/PhasorDynamics/Branch/Branch.cpp"
-#include "Model/PhasorDynamics/Branch/Branch.hpp"
-#include "Model/PhasorDynamics/Bus/Bus.cpp"
-#include "Model/PhasorDynamics/Bus/Bus.hpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.cpp"
-#include "Model/PhasorDynamics/Bus/BusInfinite.hpp"
-#include "Model/PhasorDynamics/BusFault/BusFault.hpp"
-#include "Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp"
-#include "Model/PhasorDynamics/SystemModel.hpp"
-#include "Solver/Dynamic/Ida.cpp"
-#include "Solver/Dynamic/Ida.hpp"
+#include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SystemModel.hpp>
+#include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
-
-#define _CRT_SECURE_NO_WARNINGS
 
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  printf("Example 1 version 2\n");
+  std::cout << "Example 1 version 2\n";
 
   /* Create model parts */
   SystemModel<double, size_t> sys;
@@ -71,92 +67,112 @@ int main()
 
   double dt = 1.0 / 4.0 / 60.0;
 
-  std::stringstream buffer;
+  // A data structure to keep track of the data we want to
+  // compare to the reference solution. Rather than keeping
+  // the entire solution vector at every time step around,
+  // we instead narrow down exactly what we want to keep.
+  //
+  // Since this struct is "simple" enough (no constructors or
+  // assignment operators, and "simple" members), it is a POD
+  // (plain ol' data), which have some benefits in C++.
+  struct OutputData
+  {
+    double ti, Vr, Vi, dw;
+  };
 
-  /* Set up simulation */
+  // A list of output for each time step.
+  std::vector<OutputData> output;
+
+  // A callback which will be called by the integrator after
+  // each time step. It will be told the time of the current
+  // state, and it is allowed to access the up-to-date state
+  // of the components, which are captured by a closure
+  // due to the [&] notation (every variable that is referenced
+  // by the callback that is external to the callback itself -
+  // here output, bus1, and gen - will be considered a
+  // reference to that variable inside the callback). We select
+  // the subset of the output we're interested in recording and
+  // push it into output, which is updated outside the callback.
+  auto output_cb = [&](double t)
+  {
+    std::vector<double>& yval = sys.y();
+
+    output.push_back(OutputData{t, yval[0], yval[1], yval[3]});
+  };
+
+  // Set up simulation
   Ida<double, size_t> ida(&sys);
   ida.configureSimulation();
 
-  /* Run simulation */
+  // Run simulation - making sure to pass the callback to record output
   double start = static_cast<double>(clock());
-  // ida.printOutputF(0, 0, buffer);
+
+  // Run for 1s
   ida.initializeSimulation(0.0, false);
-  ida.runSimulationFixed(0.0, dt, 1.0, buffer);
+  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
+  ida.runSimulation(1.0, nout, output_cb);
+
+  // Introduce fault and run for the next 0.1s
   fault.setStatus(1);
   ida.initializeSimulation(1.0, false);
-  ida.runSimulationFixed(1.0, dt, 1.1, buffer);
+  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
+  ida.runSimulation(1.1, nout, output_cb);
+
+  // Clear the fault and run until t = 10s.
   fault.setStatus(0);
   ida.initializeSimulation(1.1, false);
-  ida.runSimulationFixed(1.1, dt, 10.0, buffer);
+  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
+  ida.runSimulation(10.0, nout, output_cb);
   double stop = static_cast<double>(clock());
 
-  // Go to the beginning of the data buffer
-  buffer.seekg(0, std::ios::beg);
-
-  double data;
-
-  size_t i       = 0;   // data row counter
-  size_t j       = 0;   // data column counter
-  double Vr      = 0.0; // Bus real voltage
-  double Vi      = 0.0; // Bus imaginary voltage
-  double dw      = 0.0; // Generator frequency deviation [rad/s]
-  double ti      = 0.0; // time
   double error_V = 0.0; // error in |V|
+  double error_w = 0.0; // error in rotor speed
 
-  // Read through the simulation data storred in the buffer
-  while (buffer >> data)
+  // Read through the simulation data stored in the buffer.
+  // Since we captured by reference, output should be available
+  // for us to read here, outside the callback.
+  for (size_t i = 0; i < output.size(); i++)
   {
-    // At the end of each data line compare computed data to Powerworld results
-    // and reset column counter to zero.
-    if ((i % 48) == 0)
-    {
-      double err =
-          std::abs(std::sqrt(Vr * Vr + Vi * Vi) - reference_solution[i / 48][2])
-          / (1.0 + std::abs(reference_solution[i / 48][2]));
-      if (err > error_V)
-        error_V = err;
-      // std::cout << "t = " << ti << ": Vr = " << Vr << ", Vi = " << Vi << ", dw = " << dw;
-      std::cout << "GridKit: t = " << ti
-                << ", |V| = " << std::sqrt(Vr * Vr + Vi * Vi)
-                << ", w = " << (1.0 + dw) << "\n";
-      std::cout << "Ref    : t = " << reference_solution[i / 48][0]
-                << ", |V| = " << reference_solution[i / 48][2]
-                << ", w = " << reference_solution[i / 48][1]
-                << "\n";
-      std::cout << "Error in |V| = "
-                << err
-                << "\n";
-      j  = 0;
-      Vr = 0.0;
-      Vi = 0.0;
-      std::cout << "\n";
-    }
-    if (j == 0)
-    {
-      ti = data;
-    }
-    if (j == 2)
-    {
-      Vr = data;
-    }
-    if (j == 3)
-    {
-      Vi = data;
-    }
-    if (j == 5)
-    {
-      dw = data;
-    }
-    ++j;
-    ++i;
-    // if (i > 500)
-    //   break;
+    OutputData           data    = output[i];
+    std::vector<double>& ref_sol = Example1::reference_solution[i + 1];
+
+    double err =
+        std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
+        / (1.0 + std::abs(ref_sol[2]));
+    if (err > error_V)
+      error_V = err;
+
+    err = std::abs(1.0 + data.dw - ref_sol[1]) / (1.0 + ref_sol[1]);
+    if (err > error_w)
+      error_w = err;
+
+    // // Optional output
+    // std::cout << "GridKit: t = " << data.ti
+    //           << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
+    //           << ", w = " << (1.0 + data.dw) << "\n";
+    // std::cout << "Ref    : t = " << ref_sol[0]
+    //           << ", |V| = " << ref_sol[2]
+    //           << ", w = " << ref_sol[1]
+    //           << "\n";
+    // std::cout << "Error in |V| = "
+    //           << err
+    //           << "\n";
+    // std::cout << "\n";
   }
 
-  // std::cout << buffer.str();
+  double error_V_allowed = 2e-4;
+  double error_w_allowed = 1e-4;
+
+  // Tolerances based on Powerworld reference accuracy
   int status = 0;
   std::cout << "Max error in |V| = " << error_V << "\n";
-  if (error_V > 2e-4)
+  if (error_V > error_V_allowed)
+  {
+    std::cout << "Test failed with error too large!\n";
+    status = 1;
+  }
+  std::cout << "Max error in  w  = " << error_w << "\n";
+  if (error_w > error_w_allowed)
   {
     std::cout << "Test failed with error too large!\n";
     status = 1;
@@ -164,5 +180,5 @@ int main()
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return 0;
+  return status;
 }

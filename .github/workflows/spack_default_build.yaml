@@ -1,5 +1,5 @@
 # https://spack.readthedocs.io/en/latest/binary_caches.html#spack-build-cache-for-github-actions
-name: Spack Ubunutu x86_64 Buildcache
+name: CPU tests (Ubunutu x86_64)
 
 env:
   SPACK_COLOR: always
@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.11
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.12
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -92,7 +92,7 @@ jobs:
     permissions:
       packages: write
       contents: read
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -100,6 +100,8 @@ jobs:
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
           - gridkit@develop +enzyme
+            ^enzyme@0.0.173
+            ^sundials@develop
 
     steps:
       - name: Add LLVM
@@ -126,13 +128,14 @@ jobs:
             specs:
             - ${{ matrix.spack_spec }} target=x86_64_v2
             concretizer:
+              unify: true
               reuse: dependencies
             config:
               install_tree:
                 root: /opt/spack
                 padded_length: 128
             mirrors:
-              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+              local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
               spack: https://binaries.spack.io/v0.23.1
             packages:
               llvm:

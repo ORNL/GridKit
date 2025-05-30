@@ -25,7 +25,6 @@ namespace AnalysisManager
       retval = SUNContext_Create(SUN_COMM_NULL, &context_);
       checkOutput(retval, "SUNContext");
       solver_ = IDACreate(context_);
-      tag_    = NULL;
     }
 
     /**
@@ -39,22 +38,10 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     Ida<ScalarT, IdxT>::~Ida()
     {
-      N_VDestroy(yy_);
-      N_VDestroy(yp_);
-      N_VDestroy(yy0_);
-      N_VDestroy(yp0_);
-      if (model_->hasJacobian())
-      {
-        SUNLinSolFree_KLU(linearSolver_);
-        SUNMatDestroy_Sparse(JacobianMat_);
-      }
-      else
-      {
-        SUNLinSolFree_Dense(linearSolver_);
-        SUNMatDestroy_Dense(JacobianMat_);
-      }
-      ///@todo this free is needed but on geninfbus this seg faults
-      // IDAFree(&solver_);
+      deleteQuadrature();
+      deleteAdjoint();
+      deleteSimulation();
+      deleteBackwardSimulation();
       SUNContext_Free(&context_);
     }
 
@@ -79,7 +66,7 @@ namespace AnalysisManager
       checkAllocation((void*) yp0_, "N_VClone");
 
       // Dummy initial time; will be overridden.
-      const sunrealtype t0 = SUN_RCONST(0.0);
+      const real_type t0 = 0.0;
 
       // Allocate and initialize IDA workspace
       retval = IDAInit(solver_, this->Residual, t0, yy_, yp_);
@@ -90,8 +77,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetUserData");
 
       // Set tolerances
-      sunrealtype rel_tol;
-      sunrealtype abs_tol;
+      real_type rel_tol;
+      real_type abs_tol;
 
       model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
       retval = IDASStolerances(solver_, rel_tol, abs_tol);
@@ -120,9 +107,7 @@ namespace AnalysisManager
       }
 
       // Set up linear solver
-      this->configureLinearSolver();
-
-      return retval;
+      return this->configureLinearSolver();
     }
 
     template <class ScalarT, typename IdxT>
@@ -183,6 +168,8 @@ namespace AnalysisManager
     {
       int retval = 0;
 
+      t_init_ = t0;
+
       // Need to reinitialize IDA to set to get correct initial conditions
       retval = IDAReInit(solver_, t0, yy_, yp_);
       checkOutput(retval, "IDAReInit");
@@ -205,50 +192,55 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Run the IDA solver on the given model and produce a solution at
+     * the given final time.
+     *
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Matrix and vector index data type
+     * @param tf The final simulation time.
+     * @param nout The number of integration segmentstimes.
+     * @param step_callback An optional callback which, if provided, will be
+     * called after each time the IDA solver has been invoked with the value
+     * of `t` that IDA has calculated the last step at. The provided model will
+     * be updated with the latest values of `y` and `yp` before the callback is
+     * invoked.
+     * @return int zero if successful, error code otherwise.
+     *
+     * @note The actual time of the final IDA solution should be somewhat
+     * close to `tf`, however due to rounding error the precise final time may
+     * be before or after `tf`.
+     *
+     * @todo Consider adding initial time as the function argument, as well.
+     */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationFixed(real_type t0, real_type dt, real_type tmax, std::ostream& buffer)
-    {
-      int       retval = 0;
-      int       iout   = 0;
-      real_type t, tret;
-
-      for (t = t0 + dt; t <= tmax; t += dt)
-      {
-        retval = IDASolve(solver_, t, &tret, yy_, yp_, IDA_NORMAL);
-        checkOutput(retval, "IDASolve");
-        printOutputF(t, retval, buffer);
-
-        if (retval != IDA_SUCCESS)
-        {
-          std::cout << "IDA Failure! " << retval;
-          break;
-        }
-      }
-
-      model_->updateTime(t, 0.0);
-      copyVec(yy_, model_->y());
-      copyVec(yp_, model_->yp());
-
-      return retval;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout)
+    int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout, const std::optional<std::function<void(real_type)>> step_callback)
     {
       int       retval = 0;
       int       iout   = 0;
       real_type tret;
-      real_type dt   = tf / static_cast<real_type>(nout);
-      real_type tout = dt;
+      real_type dt   = (tf - t_init_) / static_cast<real_type>(nout);
+      real_type tout = t_init_ + dt;
 
-      /* In loop, call IDASolve, print results, and test for error.
-       *     Break out of loop when NOUT preset output times have been reached. */
+      // In loop, call IDASolve, print results, and test for error.
+      //  Break out of loop when NOUT preset output times have been reached.
       // printOutput(0.0);
       while (nout > iout)
       {
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
-        // printOutput(tout);
+
+        if (step_callback.has_value())
+        {
+          // The callback may try to observe upated values in the model, so we
+          // should update them here (At this point, the model's values are one
+          // internal integrator step out of date)
+          model_->updateTime(tret, 0.0);
+          copyVec(yy_, model_->y());
+          copyVec(yp_, model_->yp());
+
+          (*step_callback)(tret);
+        }
 
         if (retval == IDA_SUCCESS)
         {
@@ -257,7 +249,7 @@ namespace AnalysisManager
         }
       }
 
-      // Final copy out. No gaurentee last residual evaluation is final step.
+      // Final copy out. No guarantee last residual evaluation is final step.
       model_->updateTime(tf, 0.0);
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
@@ -269,10 +261,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteSimulation()
     {
-      IDAFree(&solver_);
-      SUNLinSolFree(linearSolver_);
       N_VDestroy(yy_);
       N_VDestroy(yp_);
+      N_VDestroy(tag_);
+      N_VDestroy(yy0_);
+      N_VDestroy(yp0_);
+      SUNLinSolFree(linearSolver_);
+      SUNMatDestroy(JacobianMat_);
+      IDAFree(&solver_);
       return 0;
     }
 
@@ -310,7 +306,7 @@ namespace AnalysisManager
       int retval = 0;
 
       // Set all quadratures to zero
-      N_VConst(SUN_RCONST(0.0), q_);
+      N_VConst(0.0, q_);
 
       // Initialize quadratures
       retval = IDAQuadReInit(solver_, q_);
@@ -395,9 +391,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
-      int         retval = 0;
-      sunrealtype rel_tol;
-      sunrealtype abs_tol;
+      int       retval = 0;
+      real_type rel_tol;
+      real_type abs_tol;
 
       model_->initializeAdjoint();
 
@@ -537,7 +533,19 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
+    int Ida<ScalarT, IdxT>::deleteBackwardSimulation()
+    {
+      N_VDestroy(yyB_);
+      N_VDestroy(ypB_);
+      N_VDestroy(qB_);
+      SUNLinSolFree(linearSolverB_);
+      SUNMatDestroy(JacobianMatB_);
+
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -553,7 +561,7 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(sunrealtype t, sunrealtype cj, N_Vector yy, N_Vector yp, N_Vector resvec, SUNMatrix J, void* user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+    int Ida<ScalarT, IdxT>::Jac(real_type t, real_type cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
 
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
@@ -576,25 +584,19 @@ namespace AnalysisManager
 
       // Set row pointers
       sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
-      for (unsigned int i = 0; i < csrrowdata.size(); i++)
-      {
-        rowptrs[i] = csrrowdata[i];
-      }
+      std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
 
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
-      sunrealtype*  data    = SUNSparseMatrix_Data(J);
+      real_type*    data    = SUNSparseMatrix_Data(J);
       // Copy data from model jac to sundials
-      for (unsigned int i = 0; i < c.size(); i++)
-      {
-        colvals[i] = c[i];
-        data[i]    = val[i];
-      }
+      std::copy(c.cbegin(), c.cend(), colvals);
+      std::copy(val.cbegin(), val.cend(), data);
 
       return 0;
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
+    int Ida<ScalarT, IdxT>::Integrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -610,7 +612,7 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointResidual(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -628,7 +630,7 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointIntegrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -648,70 +650,29 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
-      const ScalarT* xdata = NV_DATA_S(x);
-      for (unsigned int i = 0; i < y.size(); ++i)
-      {
-        y[i] = xdata[i];
-      }
+      const ScalarT* xdata = N_VGetArrayPointer(x);
+      std::copy_n(xdata, y.size(), y.begin());
     }
 
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
-      ScalarT* ydata = NV_DATA_S(y);
-      for (unsigned int i = 0; i < x.size(); ++i)
-      {
-        ydata[i] = x[i];
-      }
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy(x.cbegin(), x.cend(), ydata);
     }
 
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
-      ScalarT* ydata = NV_DATA_S(y);
-      for (unsigned int i = 0; i < x.size(); ++i)
-      {
-        if (x[i])
-          ydata[i] = 1.0;
-        else
-          ydata[i] = 0.0;
-      }
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy(x.cbegin(), x.cend(), ydata);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutputF(sunrealtype t, int res, std::ostream& buffer)
+    void Ida<ScalarT, IdxT>::printOutput(real_type t)
     {
-      sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
-      sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
-
-      buffer << t << " " << res;
-      for (IdxT i = 0; i < model_->size(); ++i)
-      {
-        buffer << " " << yval[i];
-      }
-      for (IdxT i = 0; i < model_->size(); ++i)
-      {
-        buffer << " " << ypval[i];
-      }
-      buffer << std::endl;
-
-      // fprintf(f, "%g,%d", t, res);
-      // for (IdxT i = 0; i < model_->size(); ++i)
-      // {
-      //   fprintf(f, ",%g", yval[i]);
-      // }
-      // for (IdxT i = 0; i < model_->size(); ++i)
-      // {
-      //   fprintf(f, ",%g", ypval[i]);
-      // }
-      // fprintf(f, "\n");
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(sunrealtype t)
-    {
-      sunrealtype* yval  = N_VGetArrayPointer_Serial(yy_);
-      sunrealtype* ypval = N_VGetArrayPointer_Serial(yp_);
+      real_type* yval  = N_VGetArrayPointer(yy_);
+      real_type* ypval = N_VGetArrayPointer(yp_);
 
       std::cout << std::setprecision(5) << std::setw(7) << t << " ";
       for (IdxT i = 0; i < model_->size(); ++i)
@@ -726,10 +687,10 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
+    void Ida<ScalarT, IdxT>::printSpecial(real_type t, N_Vector y)
     {
-      sunrealtype* yval = N_VGetArrayPointer_Serial(y);
-      IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
+      real_type* yval = N_VGetArrayPointer(y);
+      IdxT       N    = static_cast<IdxT>(N_VGetLength(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;
       for (IdxT i = 0; i < N; ++i)
@@ -742,35 +703,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printFinalStats()
     {
-      int      retval = 0;
-      void*    mem    = solver_;
-      long int nst;
-      long int nre;
-      long int nje;
-      long int nni;
-      long int netf;
-      long int ncfn;
-
-      retval = IDAGetNumSteps(mem, &nst);
-      checkOutput(retval, "IDAGetNumSteps");
-      retval = IDAGetNumResEvals(mem, &nre);
-      checkOutput(retval, "IDAGetNumResEvals");
-      retval = IDAGetNumJacEvals(mem, &nje);
-      checkOutput(retval, "IDAGetNumJacEvals");
-      retval = IDAGetNumNonlinSolvIters(mem, &nni);
-      checkOutput(retval, "IDAGetNumNonlinSolvIters");
-      retval = IDAGetNumErrTestFails(mem, &netf);
-      checkOutput(retval, "IDAGetNumErrTestFails");
-      retval = IDAGetNumNonlinSolvConvFails(mem, &ncfn);
-      checkOutput(retval, "IDAGetNumNonlinSolvConvFails");
-
-      // std::cout << "\nFinal Run Statistics: \n\n";
-      std::cout << "Number of steps                    = " << nst << "\n";
-      std::cout << "Number of residual evaluations     = " << nre << "\n";
-      // std::cout << "Number of Jacobian evaluations     = " <<  nje  << "\n";
-      std::cout << "Number of nonlinear iterations     = " << nni << "\n";
-      std::cout << "Number of error test failures      = " << netf << "\n";
-      std::cout << "Number of nonlinear conv. failures = " << ncfn << "\n";
+      int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
+      checkOutput(retval, "IDAPrintAllStats");
     }
 
     template <class ScalarT, typename IdxT>

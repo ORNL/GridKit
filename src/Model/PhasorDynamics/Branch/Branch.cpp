@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerSystemData.hpp>
 
 namespace GridKit
 {
@@ -221,6 +221,8 @@ namespace GridKit
     // Available template instantiations
     template class Branch<double, long int>;
     template class Branch<double, size_t>;
+    template class Branch<Sparse::Variable, long int>;
+    template class Branch<Sparse::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

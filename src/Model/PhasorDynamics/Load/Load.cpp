@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <PowerSystemData.hpp>
 
 namespace GridKit
 {
@@ -93,8 +92,8 @@ namespace GridKit
       real_type b = -X_ / (R_ * R_ + X_ * X_);
       real_type g = R_ / (R_ * R_ + X_ * X_);
 
-      Ir() += -g * Vr() - b * Vi();
-      Ii() += b * Vr() - g * Vi();
+      Ir() += -g * Vr() + b * Vi();
+      Ii() += -b * Vr() - g * Vi();
 
       return 0;
     }
@@ -173,6 +172,8 @@ namespace GridKit
     // Available template instantiations
     template class Load<double, long int>;
     template class Load<double, size_t>;
+    template class Load<Sparse::Variable, long int>;
+    template class Load<Sparse::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
