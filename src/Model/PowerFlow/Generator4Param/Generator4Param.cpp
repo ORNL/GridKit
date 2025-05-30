@@ -1,10 +1,9 @@
 
 #define _USE_MATH_DEFINES
-#include "Generator4Param.hpp"
-
 #include <cmath>
 #include <iostream>
 
+#include "Generator4Param.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
 namespace GridKit
@@ -316,8 +315,8 @@ namespace GridKit
     size_t N  = table_.size();
     double ti = table_[0][0];
     double tf = table_[N - 1][0];
-    double dt = (tf - ti) / (N - 1);
-    int    n  = std::trunc(t / tf * (N - 1.0));
+    double dt = (tf - ti) / static_cast<double>(N - 1);
+    int    n  = static_cast<int>(std::trunc(t / tf * static_cast<double>(N - 1)));
 
     double Edp_est = 0.0;
     double Eqp_est = 0.0;
@@ -354,8 +353,8 @@ namespace GridKit
     size_t N       = table_.size();
     double ti      = table_[0][0];
     double tf      = table_[N - 1][0];
-    double dt      = (tf - ti) / (N - 1);
-    int    n       = std::trunc(t / tf * (N - 1.0));
+    double dt      = (tf - ti) / static_cast<double>(N - 1);
+    int    n       = static_cast<int>(std::trunc(t / tf * static_cast<double>(N - 1)));
     double Edp_est = 0.0;
 
     if (t >= ti && t < tf)
@@ -385,8 +384,8 @@ namespace GridKit
     size_t N       = table_.size();
     double ti      = table_[0][0];
     double tf      = table_[N - 1][0];
-    double dt      = (tf - ti) / (N - 1);
-    int    n       = std::trunc(t / tf * (N - 1.0));
+    double dt      = (tf - ti) / static_cast<double>(N - 1);
+    int    n       = static_cast<int>(std::trunc(t / tf * static_cast<double>(N - 1)));
     double Eqp_est = 0.0;
 
     if (t >= ti && t < tf)

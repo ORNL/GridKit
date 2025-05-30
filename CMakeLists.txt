@@ -24,6 +24,7 @@ set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE
 # set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
 
 # Ipopt support is disabled by default
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
@@ -36,6 +37,22 @@ option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON
 
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
+
+# Enable the address sanitizer
+option(GRIDKIT_ENABLE_ASAN "Enable the address sanitizer" OFF)
+
+if(GRIDKIT_ENABLE_ASAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif()
+
+# Enable the undefined behavior sanitizer
+option(GRIDKIT_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
+
+if(GRIDKIT_ENABLE_UBSAN)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
 
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
@@ -73,7 +90,7 @@ if(GRIDKIT_ENABLE_IPOPT)
   enable_language(Fortran) # Needed for linking to HSL
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS)
-  find_package(SUNDIALS 7.0.0 REQUIRED CONFIG 
+  find_package(SUNDIALS 7.0.0 REQUIRED CONFIG
                PATHS ${SUNDIALS_DIR}
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
@@ -97,7 +114,7 @@ add_subdirectory(src)
 enable_testing()
 add_subdirectory(examples)
 add_subdirectory(tests)
-  
+
 export(EXPORT gridkit-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/GridKitTargets.cmake)
 
 # Configuring exporting cmake config
