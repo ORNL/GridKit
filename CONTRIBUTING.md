@@ -457,3 +457,7 @@ class Matrix   // No, class is outside GridKit namespace
 {
   // matrix code
 };
+```
+
+## Development Container
+A development container is available for all developers using VS Code to develop. This will automatically install all pre-requisite software you need to develop in GridKit. Any developer who wishes to use this setup can follow [this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and simply use the option "Reopen Folder in Container" rather than "New Dev Container...", which will automatically build the included container.
