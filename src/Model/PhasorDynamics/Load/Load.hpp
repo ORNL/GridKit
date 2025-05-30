@@ -36,12 +36,6 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
-      // using Component<ScalarT, IdxT>::g_;
-      // using Component<ScalarT, IdxT>::yB_;
-      // using Component<ScalarT, IdxT>::ypB_;
-      // using Component<ScalarT, IdxT>::fB_;
-      // using Component<ScalarT, IdxT>::gB_;
-      // using Component<ScalarT, IdxT>::param_;
       using Component<ScalarT, IdxT>::component_id_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
