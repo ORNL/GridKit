@@ -10,7 +10,7 @@
 
 #include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 
-int main(int argc, char const* argv[])
+int main()
 {
   std::vector<double> val{0.1, 0.2, 0.3, 0.4};
   std::vector<size_t> x{2, 1, 3, 1};
