@@ -1,11 +1,13 @@
 FROM ubuntu:24.04
 
-RUN apt update -y && apt install -y \
+RUN apt update -y && apt install -y --no-install-recommends\
 	gcc \
 	g++ \
+	make \
 	cmake \
 	ninja-build \
 	git \
+	ca-certificates \
 	libopenblas-dev \
 	&& apt clean && rm -rf /var/lib/apt/lists/*
 
