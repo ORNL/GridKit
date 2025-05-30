@@ -24,7 +24,6 @@ RUN git clone --single-branch --branch develop https://github.com/LLNL/sundials.
 	git checkout 07d21c2c5ae33211a9a2fafd8eac56de5582dce0 && \
 	mkdir -p build && cd build && \
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-		-DENABLE_KLU=ON \
-		-DKLU_ROOT=/usr/local/lib/cmake/KLU .. && \
+		-DENABLE_KLU=ON .. && \
 	ninja install && \
 	rm -rf /tmp/sundials
