@@ -2,11 +2,11 @@
 
 #include "MatPowerTesting.hpp"
 #include <Model/PowerFlow/MatpowerParser.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 using namespace GridKit;
 using namespace GridKit::Testing;
-using namespace GridKit::PowerSystemData;
+using namespace GridKit::PowerFlowData;
 
 namespace
 {

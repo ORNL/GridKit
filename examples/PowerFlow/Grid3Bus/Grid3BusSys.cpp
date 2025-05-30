@@ -22,7 +22,7 @@
 #include <Model/PowerFlow/Load/Load.hpp>
 #include <Model/PowerFlow/MatpowerParser.hpp>
 #include <Model/PowerFlow/MiniGrid/MiniGrid.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 #include <Model/PowerFlow/SystemModelPowerFlow.hpp>
 #include <Solver/SteadyState/Kinsol.hpp>
 #include <Utilities/Testing.hpp>
@@ -79,7 +79,7 @@ using namespace GridKit;
 using namespace AnalysisManager::Sundials;
 using namespace AnalysisManager;
 using namespace GridKit::Testing;
-using namespace GridKit::PowerSystemData;
+using namespace GridKit::PowerFlowData;
 
 constexpr double theta2_ref = -4.87979; // [deg]
 constexpr double V2_ref     = 1.08281;  // [p.u.]
@@ -149,7 +149,7 @@ int parserCase()
   std::cout << "Solving same problem, but assembled from components via a parser ...\n\n";
 
   // Data File Reading
-  GridKit::PowerSystemData::SystemModelData<double, size_t> mp;
+  GridKit::PowerFlowData::SystemModelData<double, size_t> mp;
 
   std::istringstream iss(BUS3_DATA_STRING);
   GridKit::readMatPower(mp, iss);

@@ -75,7 +75,7 @@ namespace GridKit
      *
      * @param mp model data
      */
-    SystemSteadyStateModel(GridKit::PowerSystemData::SystemModelData<ScalarT, IdxT> mp)
+    SystemSteadyStateModel(GridKit::PowerFlowData::SystemModelData<ScalarT, IdxT> mp)
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
       rel_tol_ = 1e-5;

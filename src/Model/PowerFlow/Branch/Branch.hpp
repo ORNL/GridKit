@@ -10,7 +10,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class BaseBus;
 
-  namespace PowerSystemData
+  namespace PowerFlowData
   {
     template <class ScalarT, typename IdxT>
     struct BranchData;
@@ -43,7 +43,7 @@ namespace GridKit
 
     using bus_type   = BaseBus<ScalarT, IdxT>;
     using real_type  = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
+    using BranchData = GridKit::PowerFlowData::BranchData<real_type, IdxT>;
 
   public:
     Branch(bus_type* bus1, bus_type* bus2);
