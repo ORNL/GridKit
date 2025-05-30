@@ -102,8 +102,10 @@ namespace GridKit
   int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
   {
     ScalarT rkq1  = std::get<0>(Rkq_);
+    [[maybe_unused]]
     ScalarT rkq2  = std::get<1>(Rkq_);
     ScalarT llkq1 = std::get<0>(Llkq_);
+    [[maybe_unused]]
     ScalarT llkq2 = std::get<1>(Llkq_);
 
     ScalarT cos1   = cos((P_ / 2.0) * y_[5]);
