@@ -101,7 +101,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
   {
-    ScalarT rkq1  = std::get<0>(Rkq_);
+    ScalarT rkq1 = std::get<0>(Rkq_);
     [[maybe_unused]]
     ScalarT rkq2  = std::get<1>(Rkq_);
     ScalarT llkq1 = std::get<0>(Llkq_);
