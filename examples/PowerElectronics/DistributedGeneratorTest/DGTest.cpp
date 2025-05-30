@@ -37,20 +37,20 @@ int main(int /* argc */, char const** /* argv */)
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
 
-  GridKit::DistributedGenerator<double, size_t>* dg = new GridKit::DistributedGenerator<double, size_t>(0, parms, true);
+  GridKit::DistributedGenerator<double, size_t> dg(0, parms, true);
 
   std::vector<double> t1(16, 0.0);
   std::vector<double> t2{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
 
-  dg->allocate();
+  dg.allocate();
 
-  dg->y()  = t2;
-  dg->yp() = t1;
+  dg.y()  = t2;
+  dg.yp() = t1;
 
-  dg->evaluateResidual();
+  dg.evaluateResidual();
 
   // std::cout << "Output: {";
-  // for (double i : dg->getResidual())
+  // for (double i : dg.getResidual())
   // {
   //   printf("%e ,", i);
   // }
@@ -78,7 +78,7 @@ int main(int /* argc */, char const** /* argv */)
   double error_allowed = 10 * std::numeric_limits<double>::epsilon();
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - dg->getResidual()[i]) / std::abs(1.0 + true_vec[i]);
+    double error = std::abs(true_vec[i] - dg.getResidual()[i]) / std::abs(1.0 + true_vec[i]);
     if (error > error_allowed)
     {
       std::cout << "Model error for equation " << i << " is: " << error << "\n";
