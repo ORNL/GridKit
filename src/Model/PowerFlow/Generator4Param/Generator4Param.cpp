@@ -1,9 +1,10 @@
 
 #define _USE_MATH_DEFINES
+#include "Generator4Param.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Generator4Param.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
 namespace GridKit

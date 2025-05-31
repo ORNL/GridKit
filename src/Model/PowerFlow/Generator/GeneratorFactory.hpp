@@ -5,7 +5,7 @@
 #include <Model/PowerFlow/Generator/GeneratorPQ.hpp>
 #include <Model/PowerFlow/Generator/GeneratorPV.hpp>
 #include <Model/PowerFlow/Generator/GeneratorSlack.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
@@ -15,7 +15,7 @@ namespace GridKit
   {
   public:
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using GenData   = GridKit::PowerSystemData::GenData<real_type, IdxT>;
+    using GenData   = GridKit::PowerFlowData::GenData<real_type, IdxT>;
 
     GeneratorFactory() = delete;
 

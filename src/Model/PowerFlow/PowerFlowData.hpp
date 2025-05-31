@@ -6,7 +6,7 @@
 
 /**
  *
- * @file PowerSystemData.hpp
+ * @file PowerFlowData.hpp
  * @author Asher Mancinelli <asher.mancinelli@pnnl.gov>
  *
  * @remark `std::stringstream` is preferred over `operator+(std::string, ...)`
@@ -17,7 +17,7 @@
 namespace GridKit
 {
 
-  namespace PowerSystemData
+  namespace PowerFlowData
   {
 
     template <typename RealT = double, typename IdxT = int>
@@ -238,5 +238,5 @@ namespace GridKit
       }
     }; // struct SystemModelData
 
-  } // namespace PowerSystemData
+  } // namespace PowerFlowData
 } // namespace GridKit

@@ -3,7 +3,7 @@
 #define _LOAD_HPP_
 
 #include <Model/PowerFlow/ModelEvaluatorImpl.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
@@ -39,7 +39,7 @@ namespace GridKit
     // typedef BaseBus<ScalarT, IdxT> bus_type;
     using bus_type  = BaseBus<ScalarT, IdxT>;
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using LoadData  = GridKit::PowerSystemData::LoadData<real_type, IdxT>;
+    using LoadData  = GridKit::PowerFlowData::LoadData<real_type, IdxT>;
 
   public:
     Load(bus_type* bus, ScalarT P, ScalarT Q);

@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 #include <Utilities/Testing.hpp>
 
 namespace
@@ -34,9 +34,9 @@ namespace GridKit
   {
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::GenCostData<RealT, IdxT> a,
-                        PowerSystemData::GenCostData<RealT, IdxT> b,
-                        RealT                                     tol = tol_)
+    inline bool isEqual(PowerFlowData::GenCostData<RealT, IdxT> a,
+                        PowerFlowData::GenCostData<RealT, IdxT> b,
+                        RealT                                   tol = tol_)
     {
       (void) tol; // suppress warning
       int fail  = 0;
@@ -52,9 +52,9 @@ namespace GridKit
     }
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::GenData<RealT, IdxT> a,
-                        PowerSystemData::GenData<RealT, IdxT> b,
-                        RealT                                 tol = tol_)
+    inline bool isEqual(PowerFlowData::GenData<RealT, IdxT> a,
+                        PowerFlowData::GenData<RealT, IdxT> b,
+                        RealT                               tol = tol_)
     {
       int fail = 0;
 
@@ -88,9 +88,9 @@ namespace GridKit
     }
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::BusData<RealT, IdxT> a,
-                        PowerSystemData::BusData<RealT, IdxT> b,
-                        RealT                                 tol = tol_)
+    inline bool isEqual(PowerFlowData::BusData<RealT, IdxT> a,
+                        PowerFlowData::BusData<RealT, IdxT> b,
+                        RealT                               tol = tol_)
     {
       int fail = 0;
 
@@ -124,9 +124,9 @@ namespace GridKit
     }
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::LoadData<RealT, IdxT> a,
-                        PowerSystemData::LoadData<RealT, IdxT> b,
-                        RealT                                  tol = tol_)
+    inline bool isEqual(PowerFlowData::LoadData<RealT, IdxT> a,
+                        PowerFlowData::LoadData<RealT, IdxT> b,
+                        RealT                                tol = tol_)
     {
       int fail = 0;
 
@@ -144,9 +144,9 @@ namespace GridKit
     }
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::BranchData<RealT, IdxT> a,
-                        PowerSystemData::BranchData<RealT, IdxT> b,
-                        RealT                                    tol = tol_)
+    inline bool isEqual(PowerFlowData::BranchData<RealT, IdxT> a,
+                        PowerFlowData::BranchData<RealT, IdxT> b,
+                        RealT                                  tol = tol_)
     {
       int fail = 0;
 
@@ -197,8 +197,8 @@ namespace GridKit
     }
 
     template <typename RealT = double, typename IdxT = int>
-    inline bool isEqual(PowerSystemData::SystemModelData<RealT, IdxT> a,
-                        PowerSystemData::SystemModelData<RealT, IdxT> b)
+    inline bool isEqual(PowerFlowData::SystemModelData<RealT, IdxT> a,
+                        PowerFlowData::SystemModelData<RealT, IdxT> b)
     {
       int fail = 0;
 

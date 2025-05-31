@@ -13,20 +13,14 @@
 // Forward declarations.
 namespace GridKit
 {
-  namespace PowerSystemData
-  {
-    template <typename RealT, typename IdxT>
-    struct BranchData;
-  }
-} // namespace GridKit
-
-namespace GridKit
-{
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
-  }
+
+    template <typename RealT, typename IdxT>
+    struct BranchData;
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
@@ -51,21 +45,15 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::g_;
-      using Component<ScalarT, IdxT>::yB_;
-      using Component<ScalarT, IdxT>::ypB_;
-      using Component<ScalarT, IdxT>::fB_;
-      using Component<ScalarT, IdxT>::gB_;
-      using Component<ScalarT, IdxT>::param_;
 
-      using bus_type   = BusBase<ScalarT, IdxT>;
-      using real_type  = typename Component<ScalarT, IdxT>::real_type;
-      using BranchData = GridKit::PowerSystemData::BranchData<real_type, IdxT>;
+      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using bus_type        = BusBase<ScalarT, IdxT>;
+      using model_data_type = BranchData<real_type, IdxT>;
 
     public:
       Branch(bus_type* bus1, bus_type* bus2);
       Branch(bus_type* bus1, bus_type* bus2, real_type R, real_type X, real_type G, real_type B);
-      Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
+      Branch(bus_type* bus1, bus_type* bus2, model_data_type& data);
       virtual ~Branch();
 
       virtual int allocate() override;
@@ -154,8 +142,8 @@ namespace GridKit
       real_type  X_;
       real_type  G_;
       real_type  B_;
-      const IdxT bus1ID_;
-      const IdxT bus2ID_;
+      const IdxT bus1_id_;
+      const IdxT bus2_id_;
     };
 
   } // namespace PhasorDynamics
