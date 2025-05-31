@@ -11,7 +11,10 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
-  }
+
+    template <typename RealT, typename IdxT>
+    struct LoadData;
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
@@ -33,16 +36,11 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::g_;
-      using Component<ScalarT, IdxT>::yB_;
-      using Component<ScalarT, IdxT>::ypB_;
-      using Component<ScalarT, IdxT>::fB_;
-      using Component<ScalarT, IdxT>::gB_;
-      using Component<ScalarT, IdxT>::param_;
       using Component<ScalarT, IdxT>::component_id_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
-      using real_type = typename Component<ScalarT, IdxT>::real_type;
+      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using bus_type        = BusBase<ScalarT, IdxT>;
+      using model_data_type = LoadData<real_type, IdxT>;
 
     public:
       Load(bus_type* bus);

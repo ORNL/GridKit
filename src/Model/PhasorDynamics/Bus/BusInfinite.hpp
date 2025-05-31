@@ -6,7 +6,7 @@
 // Forward declaration of BusData structure
 namespace GridKit
 {
-  namespace PowerSystemData
+  namespace PhasorDynamics
   {
     template <typename RealT, typename IdxT>
     struct BusData;
@@ -37,11 +37,11 @@ namespace GridKit
 
     public:
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
-      using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+      using DataT     = BusData<real_type, IdxT>;
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(BusData& data);
+      BusInfinite(DataT& data);
       virtual ~BusInfinite();
 
       virtual int allocate() override;
@@ -98,46 +98,6 @@ namespace GridKit
       {
         return Ii_;
       }
-
-      // virtual ScalarT& VrB() override
-      // {
-      //     return VrB_;
-      // }
-
-      // virtual const ScalarT& VrB() const override
-      // {
-      //     return VrB_;
-      // }
-
-      // virtual ScalarT& ViB() override
-      // {
-      //     return ViB_;
-      // }
-
-      // virtual const ScalarT& ViB() const override
-      // {
-      //     return ViB_;
-      // }
-
-      // virtual ScalarT& IrB() override
-      // {
-      //     return IrB_;
-      // }
-
-      // virtual const ScalarT& IrB() const override
-      // {
-      //     return IrB_;
-      // }
-
-      // virtual ScalarT& IiB() override
-      // {
-      //     return IiB_;
-      // }
-
-      // virtual const ScalarT& IiB() const override
-      // {
-      //     return IiB_;
-      // }
 
     private:
       ScalarT Vr_{0.0};

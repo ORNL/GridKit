@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include "BaseBus.hpp"
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
@@ -31,7 +31,7 @@ namespace GridKit
 
   public:
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+    using BusData   = GridKit::PowerFlowData::BusData<real_type, IdxT>;
 
     BusPV();
     BusPV(ScalarT V, ScalarT theta0);

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 
 namespace GridKit
 {
@@ -66,10 +66,10 @@ namespace GridKit
      * @param[in] data - structure with bus data
      */
     template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::BusInfinite(BusData& data)
-      : BusBase<ScalarT, IdxT>(data.bus_i),
-        Vr_(data.Vm * cos(data.Va)),
-        Vi_(data.Vm * sin(data.Va))
+    BusInfinite<ScalarT, IdxT>::BusInfinite(DataT& data)
+      : BusBase<ScalarT, IdxT>(data.bus_id),
+        Vr_(data.Vr0),
+        Vi_(data.Vi0)
     {
       size_ = 0;
     }

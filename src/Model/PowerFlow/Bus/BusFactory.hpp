@@ -4,7 +4,7 @@
 #include <Model/PowerFlow/Bus/BusPQ.hpp>
 #include <Model/PowerFlow/Bus/BusPV.hpp>
 #include <Model/PowerFlow/Bus/BusSlack.hpp>
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
@@ -14,7 +14,7 @@ namespace GridKit
   {
   public:
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BusData   = GridKit::PowerSystemData::BusData<real_type, IdxT>;
+    using BusData   = GridKit::PowerFlowData::BusData<real_type, IdxT>;
 
     BusFactory() = delete;
 

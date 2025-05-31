@@ -17,11 +17,11 @@
 #include <sstream>
 #include <vector>
 
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
-  using namespace GridKit::PowerSystemData;
+  using namespace GridKit::PowerFlowData;
 
   static const std::string matlab_syntax_error{
       "Only a subset of Matlab syntax is supported."

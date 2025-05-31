@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Load/LoadData.hpp>
 
 namespace GridKit
 {
@@ -34,14 +35,12 @@ namespace GridKit
       : bus_(bus),
         R_(R),
         X_(X)
-
     {
     }
 
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type* bus, IdxT component_id)
       : bus_(bus)
-
     {
       size_         = 0;
       component_id_ = component_id;

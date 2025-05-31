@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "GeneratorBase.hpp"
-#include <Model/PowerFlow/PowerSystemData.hpp>
+#include <Model/PowerFlow/PowerFlowData.hpp>
 
 namespace GridKit
 {
@@ -38,7 +38,7 @@ namespace GridKit
 
     using bus_type  = BaseBus<ScalarT, IdxT>;
     using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using GenData   = GridKit::PowerSystemData::GenData<real_type, IdxT>;
+    using GenData   = GridKit::PowerFlowData::GenData<real_type, IdxT>;
     // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
     // typedef BaseBus<ScalarT, IdxT> bus_type;
 
