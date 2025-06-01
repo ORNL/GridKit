@@ -26,15 +26,15 @@ template <typename T, typename... Tys>
 extern T __enzyme_todense(Tys...) noexcept;
 
 /// Sparse storage for Enzyme
-template <typename T>
+template <typename ScalarT>
 struct Triple
 {
-  size_t row;
-  size_t col;
-  T      val;
+  size_t  row;
+  size_t  col;
+  ScalarT val;
   Triple(Triple&&) = default;
 
-  Triple(size_t row, size_t col, T val)
+  Triple(size_t row, size_t col, ScalarT val)
     : row(row),
       col(col),
       val(val)
@@ -52,35 +52,35 @@ __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(int64_t row
   triplets.emplace_back(row, col, val);
 }
 
-template <typename T>
-__attribute__((always_inline)) static void sparse_store(T val, int64_t idx, size_t i, std::vector<Triple<T>>& triplets)
+template <typename ScalarT>
+__attribute__((always_inline)) static void sparse_store(ScalarT val, int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
 {
   if (val == 0.0)
     return;
-  idx /= sizeof(T);
-  if constexpr (sizeof(T) == 4)
+  idx /= sizeof(ScalarT);
+  if constexpr (sizeof(ScalarT) == 4)
     inner_storeflt(i, idx, val, triplets);
   else
     inner_storedbl(i, idx, val, triplets);
 }
 
-template <typename T>
-__attribute__((always_inline)) static T sparse_load(int64_t idx, size_t i, std::vector<Triple<T>>& triplets)
+template <typename ScalarT>
+__attribute__((always_inline)) static ScalarT sparse_load(int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
 {
   return 0.0;
 }
 
-template <typename T>
-__attribute__((always_inline)) static void ident_store(T, int64_t idx, size_t i)
+template <typename ScalarT>
+__attribute__((always_inline)) static void ident_store(ScalarT, int64_t idx, size_t i)
 {
   assert(0 && "should never load");
 }
 
-template <typename T>
-__attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
+template <typename ScalarT>
+__attribute__((always_inline)) static ScalarT ident_load(int64_t idx, size_t i)
 {
-  idx /= sizeof(T);
-  return (T) (idx == i);
+  idx /= sizeof(ScalarT);
+  return (ScalarT) (idx == i);
 }
 
 /// Vector-valued function to differentiate
