@@ -13,7 +13,7 @@ target_link_libraries(test_phasor_branch GRIDKIT::phasor_dynamics_branch
                                 
 add_executable(test_phasor_load runLoadTests.cpp)
 target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
-                                       GRIDKIT::phasor_dynamics_load_test
+                                       GRIDKIT::phasor_dynamics_load_dependency_tracking
                                        GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_genrou runGenrouTests.cpp)

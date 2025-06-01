@@ -13,8 +13,8 @@ gridkit_add_library(phasor_dynamics_load
   OUTPUT_NAME
     gridkit_phasor_dynamics_load)
 
-gridkit_add_library(phasor_dynamics_load_test
+gridkit_add_library(phasor_dynamics_load_dependency_tracking
   SOURCES
-    LoadTest.cpp
+  LoadDependencyTracking.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_load_test)
+    gridkit_phasor_dynamics_load_dependency_tracking)
