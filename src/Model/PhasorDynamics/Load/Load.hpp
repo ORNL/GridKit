@@ -100,8 +100,7 @@ namespace GridKit
       }
 
     public:
-      int evaluateResidualLocally(const std::vector<ScalarT>, std::vector<ScalarT>&);
-      int evaluateJacobianLocally(const std::vector<ScalarT>, const std::vector<ScalarT>, GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT>&);
+      int evaluateResidualLocally(ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};

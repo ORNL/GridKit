@@ -85,7 +85,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::evaluateResidualLocally(const std::vector<ScalarT> y, std::vector<ScalarT>& f)
+    int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* f)
     {
       real_type b = -X_ / (R_ * R_ + X_ * X_);
       real_type g = R_ / (R_ * R_ + X_ * X_);
@@ -107,7 +107,7 @@ namespace GridKit
       std::vector<ScalarT> f(2);
       y[0] = Vr();
       y[1] = Vi();
-      evaluateResidualLocally(y, f);
+      evaluateResidualLocally(y.data(), f.data());
       Ir() += f[0];
       Ii() += f[1];
 
