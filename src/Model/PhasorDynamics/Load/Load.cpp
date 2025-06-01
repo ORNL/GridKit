@@ -1,6 +1,5 @@
 
 #include "LoadImpl.hpp"
-
 #include <AutomaticDifferentiation/Enzyme/Wrapper.hpp>
 
 namespace GridKit
@@ -12,7 +11,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::evaluateJacobianLocally(const std::vector<ScalarT> x, const std::vector<ScalarT> y, matrix_type& dy_dx)
+    int Load<ScalarT, IdxT>::evaluateJacobianLocally(const std::vector<ScalarT> x, const std::vector<ScalarT> y, GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT>& dy_dx)
     {
       std::vector<ScalarT> v(x.size());
       std::vector<ScalarT> d_y(y.size());
@@ -46,7 +45,7 @@ namespace GridKit
 
       return 0;
     }
-    
+
     /**
      * @brief Jacobian evaluation experimental
      *
@@ -60,9 +59,9 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for Load..." << std::endl;
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-      matrix_type          jac = matrix_type(2, 2);
-      std::vector<ScalarT> y(2);
-      std::vector<ScalarT> f(2);
+      GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT> jac(2, 2);
+      std::vector<ScalarT>                               y(2);
+      std::vector<ScalarT>                               f(2);
       y[0] = Vr();
       y[1] = Vi();
       evaluateResidualLocally(y, f);

@@ -42,7 +42,6 @@ namespace GridKit
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = LoadData<real_type, IdxT>;
-      using matrix_type     = GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT>;
 
     public:
       Load(bus_type* bus);
@@ -101,7 +100,7 @@ namespace GridKit
 
     public:
       int evaluateResidualLocally(const std::vector<ScalarT>, std::vector<ScalarT>&);
-      int evaluateJacobianLocally(const std::vector<ScalarT>, const std::vector<ScalarT>, matrix_type&);
+      int evaluateJacobianLocally(const std::vector<ScalarT>, const std::vector<ScalarT>, GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT>&);
 
     private:
       bus_type* bus_{nullptr};
