@@ -11,6 +11,7 @@ int main()
   result += test.constructor();
   result += test.residual();
   result += test.jacobian();
+  result += test.enzyme_jacobian();
 
   return result.summary();
 }

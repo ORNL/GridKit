@@ -12,3 +12,9 @@ gridkit_add_library(phasor_dynamics_load
     ClangEnzymeFlags
   OUTPUT_NAME
     gridkit_phasor_dynamics_load)
+
+gridkit_add_library(phasor_dynamics_load_test
+  SOURCES
+    LoadTest.cpp
+  OUTPUT_NAME
+    gridkit_phasor_dynamics_load_test)

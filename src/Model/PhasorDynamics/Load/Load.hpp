@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <AutomaticDifferentiation/Enzyme/Wrapper.hpp>
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 
