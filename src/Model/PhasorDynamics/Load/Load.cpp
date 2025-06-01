@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <AutomaticDifferentiation/Enzyme/EnzymeWrapper.hpp>
+#include <AutomaticDifferentiation/Enzyme/Wrapper.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 
@@ -83,17 +83,75 @@ namespace GridKit
     }
 
     /**
+     * @brief Residual contribution computed locally
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    int Load<ScalarT, IdxT>::evaluateResidualLocally(const std::vector<ScalarT> y, std::vector<ScalarT>& f)
+    {
+      real_type b = -X_ / (R_ * R_ + X_ * X_);
+      real_type g = R_ / (R_ * R_ + X_ * X_);
+
+      f[0] = -g * y[0] + b * y[1];
+      f[1] = -b * y[0] - g * y[1];
+
+      return 0;
+    }
+
+    /**
      * \brief Residual contribution of the load is pushed to the bus.
      *
      */
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateResidual()
     {
-      real_type b = -X_ / (R_ * R_ + X_ * X_);
-      real_type g = R_ / (R_ * R_ + X_ * X_);
+      std::vector<ScalarT> y(2);
+      std::vector<ScalarT> f(2);
+      y[0] = Vr();
+      y[1] = Vi();
+      evaluateResidualLocally(y, f);
+      Ir() += f[0];
+      Ii() += f[1];
 
-      Ir() += -g * Vr() + b * Vi();
-      Ii() += -b * Vr() - g * Vi();
+      return 0;
+    }
+
+    /**
+     * @brief Jacobian contribution computed locally
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    int Load<ScalarT, IdxT>::evaluateJacobianLocally(const std::vector<ScalarT> x, const std::vector<ScalarT> y, matrix_type& dy_dx)
+    {
+      std::vector<ScalarT> v(x.size());
+      std::vector<ScalarT> d_y(y.size());
+      for (IdxT idy = 0; idy < y.size(); ++idy)
+      {
+        // Elementary vector for Jacobian-vector product
+        for (IdxT idx = 0; idx < x.size(); ++idx)
+        {
+          v[idx] = 0.0;
+        }
+        v[idy] = 1.0;
+
+        // Autodiff
+        __enzyme_fwddiff<Load<ScalarT, IdxT>>(
+            (void*) residual_wrapper<Load<ScalarT, IdxT>>,
+            enzyme_const,
+            this,
+            enzyme_dup,
+            x,
+            v,
+            enzyme_dupnoneed,
+            y,
+            &d_y);
+
+        // Store result
+        for (IdxT idx = 0; idx < x.size(); ++idx)
+        {
+          dy_dx.setValue(idx, idy, d_y[idx]);
+        }
+      }
 
       return 0;
     }
@@ -109,7 +167,18 @@ namespace GridKit
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
       std::cout << "Evaluate Jacobian for Load..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
+      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+
+      matrix_type          jac = matrix_type(2, 2);
+      std::vector<ScalarT> y(2);
+      std::vector<ScalarT> f(2);
+      y[0] = Vr();
+      y[1] = Vi();
+      evaluateResidualLocally(y, f);
+      evaluateJacobianLocally(y, f, jac);
+
+      jac.printMatrix("Load autodiff Jacobian");
+
       return 0;
     }
 
@@ -172,8 +241,8 @@ namespace GridKit
     // Available template instantiations
     template class Load<double, long int>;
     template class Load<double, size_t>;
-    template class Load<Sparse::Variable, long int>;
-    template class Load<Sparse::Variable, size_t>;
+    template class Load<DependencyTracking::Variable, long int>;
+    template class Load<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

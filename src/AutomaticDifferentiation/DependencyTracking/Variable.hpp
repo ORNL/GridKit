@@ -331,7 +331,7 @@ namespace GridKit
 namespace GridKit
 {
   template <>
-  class ScalarTraits<Sparse::Variable>
+  class ScalarTraits<DependencyTracking::Variable>
   {
   public:
     typedef double real_type;

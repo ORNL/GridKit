@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <LinearAlgebra/SparsityPattern/Variable.hpp>
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
 
 namespace GridKit
