@@ -23,10 +23,7 @@ namespace GridKit
       std::vector<ScalarT>                              y(2);
       y[0] = Vr();
       y[1] = Vi();
-      EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, y.size(), y.data(), jac);
-
-      J_ = jac; ///< Forced setting of Jacobian
-                ///< Careful here, because J_ was not set in the constructor
+      EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, y.size(), y.data(), J_);
 
       return 0;
     }
