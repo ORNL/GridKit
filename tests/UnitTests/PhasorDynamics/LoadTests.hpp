@@ -114,6 +114,11 @@ namespace GridKit
 
         PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
         load.evaluateJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = load.getJacobian();
+        model_jacobian.printMatrix("Model Jacobian");
+
+        /// Compare model Jacobian wih dependencies computed analytically
+        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X);
 
         return success.report(__func__);
       }

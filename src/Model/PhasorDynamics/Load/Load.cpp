@@ -64,10 +64,10 @@ namespace GridKit
       std::vector<ScalarT>                               f(2);
       y[0] = Vr();
       y[1] = Vi();
-      evaluateResidualLocally(y, f);
       evaluateJacobianLocally(y, f, jac);
 
-      jac.printMatrix("Load autodiff Jacobian");
+      J_ = *(jac.getValuesCOO()); ///< Forced setting of Jacobian
+                                  ///< Careful here, because J_ was not set in the constructor
 
       return 0;
     }
