@@ -59,9 +59,9 @@ __attribute__((always_inline)) static void sparse_store(ScalarT val, int64_t idx
     return;
   idx /= sizeof(ScalarT);
   if constexpr (sizeof(ScalarT) == 4)
-    inner_storeflt(i, idx, val, triplets);
+    inner_storeflt(idx, i, val, triplets);
   else
-    inner_storedbl(i, idx, val, triplets);
+    inner_storedbl(idx, i, val, triplets);
 }
 
 template <typename ScalarT>
@@ -87,9 +87,13 @@ __attribute__((always_inline)) static ScalarT ident_load(int64_t idx, size_t i)
 template <class ScalarT, typename IdxT>
 __attribute__((always_inline)) static void f(size_t n, ScalarT* input, ScalarT* output)
 {
-  for (IdxT i = 0; i < n; i++)
+  for (IdxT idx = 0; idx < n; ++idx)
   {
-    output[i] = input[i] * input[i];
+    output[idx] = 0.0;
+    for (IdxT idy = 0; idy <= idx; idy++)
+    {
+      output[idx] += input[idy] * input[idy];
+    }
   }
 }
 
@@ -104,11 +108,11 @@ void jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, SparseMatrix& jac
   {
     for (IdxT idx = 0; idx < x.size(); ++idx)
     {
-      if (idx == idy)
+      if (idy <= idx)
       {
         rtemp.push_back(idx);
         ctemp.push_back(idy);
-        valtemp.push_back(2.0 * x[idx]);
+        valtemp.push_back(2.0 * x[idy]);
       }
     }
   }
@@ -120,7 +124,7 @@ template <class ScalarT, typename IdxT>
 __attribute__((noinline)) void jac_f(IdxT n, ScalarT* input, SparseMatrix& jac)
 {
   std::vector<Triple<ScalarT>> triplets;
-  for (IdxT i = 0; i < n; i++)
+  for (IdxT i = 0; i < n; ++i)
   {
     ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
     ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
