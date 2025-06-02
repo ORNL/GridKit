@@ -119,6 +119,11 @@ namespace GridKit
 
         /// Compare model Jacobian wih dependencies computed analytically
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X);
+        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = mapFromCOO(model_jacobian);
+        for (size_t i = 0; i < ref.size(); ++i)
+        {
+          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
+        }
 
         return success.report(__func__);
       }
@@ -139,6 +144,24 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
         dependencies[0] = {{0, dIr_dVr}, {1, dIr_dVi}};
         dependencies[1] = {{0, dIi_dVr}, {1, dIi_dVi}};
+
+        return dependencies;
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> mapFromCOO(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> matrix)
+      {
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> matrix_entries = matrix.getEntries();
+        const auto [rows, columns, values] = matrix_entries;
+
+        std::tuple<IdxT, IdxT> matrix_dimensions = matrix.getDimensions();
+        const auto [n_rows, n_columns] = matrix_dimensions;
+
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(n_rows);
+
+        for (IdxT i = 0; i < rows.size(); ++i)
+        {
+          dependencies[rows[i]].insert(std::make_pair(columns[i], values[i]));
+        }
 
         return dependencies;
       }
