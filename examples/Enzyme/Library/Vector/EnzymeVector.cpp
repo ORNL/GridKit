@@ -11,6 +11,8 @@
  * TODO: Convert this into a unit test.
  */
 
+using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
+
 template <class ScalarT>
 inline ScalarT dsquare_ref_scalar(ScalarT x)
 {
@@ -47,7 +49,7 @@ int main()
   }
 
   // Model
-  VectorModel* vector_model = new VectorModel(n);
+  VectorModel<double, size_t>* vector_model = new VectorModel<double, size_t>(n);
   vector_model->setVariable(var);
   vector_model->evaluateResidual();
   vector_model->evaluateJacobian();

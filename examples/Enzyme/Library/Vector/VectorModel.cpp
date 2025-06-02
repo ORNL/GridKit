@@ -4,52 +4,58 @@
 
 #include "EnzymeWrapper.hpp"
 
-VectorModel::VectorModel(int n)
+template <class ScalarT, typename IdxT>
+VectorModel<ScalarT, IdxT>::VectorModel(IdxT n)
   : x_(n),
     f_(n),
     df_dx_(n, n)
 {
 }
 
-inline double VectorModel::square_scalar(double x)
+template <class ScalarT, typename IdxT>
+inline ScalarT VectorModel<ScalarT, IdxT>::square_scalar(ScalarT x)
 {
   return x * x;
 }
 
-void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
+template <class ScalarT, typename IdxT>
+void VectorModel<ScalarT, IdxT>::square(std::vector<ScalarT>& x, std::vector<ScalarT>& y)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (IdxT idx = 0; idx < x.size(); ++idx)
   {
     y[idx] = 0.0;
-    for (int idy = 0; idy <= idx; idy++)
+    for (IdxT idy = 0; idy <= idx; idy++)
     {
       y[idx] += this->square_scalar(x[idy]);
     }
   }
 }
 
-void VectorModel::setVariable(std::vector<double> x)
+template <class ScalarT, typename IdxT>
+void VectorModel<ScalarT, IdxT>::setVariable(std::vector<ScalarT> x)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (IdxT idx = 0; idx < x.size(); ++idx)
   {
     x_[idx] = x[idx];
   }
 }
 
-void VectorModel::evaluateResidual()
+template <class ScalarT, typename IdxT>
+void VectorModel<ScalarT, IdxT>::evaluateResidual()
 {
   square(x_, f_);
 }
 
-void VectorModel::evaluateJacobian()
+template <class ScalarT, typename IdxT>
+void VectorModel<ScalarT, IdxT>::evaluateJacobian()
 {
-  const int           n = x_.size();
-  std::vector<double> v(n);
+  const IdxT           n = x_.size();
+  std::vector<ScalarT> v(n);
   VectorModel         d_vector_model(n);
-  for (int idy = 0; idy < n; ++idy)
+  for (IdxT idy = 0; idy < n; ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < n; ++idx)
+    for (IdxT idx = 0; idx < n; ++idx)
     {
       v[idx] = 0.0;
     }
@@ -57,35 +63,42 @@ void VectorModel::evaluateJacobian()
     d_vector_model.setVariable(v);
 
     // Autodiff
-    std::vector<double> d_res = __enzyme_fwddiff<double, VectorModel>(
-        (std::vector<double>*) wrapper<double, VectorModel>,
+    std::vector<ScalarT> d_res = __enzyme_fwddiff<ScalarT, VectorModel>(
+        (std::vector<ScalarT>*) wrapper<ScalarT, VectorModel>,
         enzyme_dup,
         this,
         &d_vector_model);
 
     // Store result
-    for (int idx = 0; idx < n; ++idx)
+    for (IdxT idx = 0; idx < n; ++idx)
     {
       df_dx_.setValue(idx, idy, d_res[idx]);
     }
   }
 }
 
-std::vector<double>& VectorModel::getVariable()
+template <class ScalarT, typename IdxT>
+std::vector<ScalarT>& VectorModel<ScalarT, IdxT>::getVariable()
 {
   return x_;
 }
 
-std::vector<double>& VectorModel::getResidual()
+template <class ScalarT, typename IdxT>
+std::vector<ScalarT>& VectorModel<ScalarT, IdxT>::getResidual()
 {
   return f_;
 }
 
-DenseMatrix& VectorModel::getJacobian()
+template <class ScalarT, typename IdxT>
+GridKit::LinearAlgebra::DenseMatrix<ScalarT, IdxT>& VectorModel<ScalarT, IdxT>::getJacobian()
 {
   return df_dx_;
 }
 
-VectorModel::~VectorModel()
+template <class ScalarT, typename IdxT>
+VectorModel<ScalarT, IdxT>::~VectorModel()
 {
 }
+
+template class VectorModel<double, long int>;
+template class VectorModel<double, size_t>;
