@@ -106,7 +106,7 @@ int main(int /* argc */, char const** /* argv */)
   dg1->setExternalConnectionNodes(1, dqbus1);
   dg1->setExternalConnectionNodes(2, dqbus1 + 1);
   //"grounding" of the difference
-  dg1->setExternalConnectionNodes(3, -1);
+  dg1->setExternalConnectionNodes(3, static_cast<size_t>(-1));
   // internal connections
   for (size_t i = 0; i < 12; i++)
   {

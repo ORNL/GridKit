@@ -1,10 +1,9 @@
 
 #define _USE_MATH_DEFINES
-#include "Generator4.hpp"
-
 #include <cmath>
 #include <iostream>
 
+#include "Generator4.hpp"
 #include <Model/PowerFlow/Bus/BaseBus.hpp>
 
 namespace GridKit
@@ -57,7 +56,7 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::allocate()
   {
     // std::cout << "Allocate Generator4..." << std::endl;
-    tag_.resize(size_);
+    tag_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
@@ -143,7 +142,7 @@ namespace GridKit
 
     for (IdxT i = 4; i < size_; ++i)
     {
-      tag_[i] = false;
+      tag_[static_cast<size_t>(i)] = false;
     }
 
     return 0;
@@ -217,8 +216,8 @@ namespace GridKit
     // std::cout << "Initialize adjoint for Generator4..." << std::endl;
     for (IdxT i = 0; i < size_; ++i)
     {
-      yB_[i]  = 0.0;
-      ypB_[i] = 0.0;
+      yB_[static_cast<size_t>(i)]  = 0.0;
+      ypB_[static_cast<size_t>(i)] = 0.0;
     }
     ypB_[1] = frequencyPenaltyDer(y_[1]);
 

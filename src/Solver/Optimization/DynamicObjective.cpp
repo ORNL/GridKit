@@ -63,8 +63,8 @@ namespace AnalysisManager
       // Get boundaries for the optimization parameters
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
-        x_l[i] = model_->param_lo()[i];
-        x_u[i] = model_->param_up()[i];
+        x_l[i] = model_->param_lo()[static_cast<size_t>(i)];
+        x_u[i] = model_->param_up()[static_cast<size_t>(i)];
       }
 
       return true;
@@ -88,7 +88,7 @@ namespace AnalysisManager
 
       // Initialize optimization parameters x
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        x[i] = model_->param()[i];
+        x[i] = model_->param()[static_cast<size_t>(i)];
 
       return true;
     }
@@ -101,7 +101,7 @@ namespace AnalysisManager
     {
       // Update optimization parameters
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        model_->param()[i] = x[i];
+        model_->param()[static_cast<size_t>(i)] = x[i];
 
       // Evaluate objective function
       integrator_->getSavedInitialCondition();
@@ -124,7 +124,7 @@ namespace AnalysisManager
       assert(model_->sizeParams() == static_cast<IdxT>(n));
       // Update optimization parameters
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        model_->param()[i] = x[i];
+        model_->param()[static_cast<size_t>(i)] = x[i];
 
       // evaluate the gradient of the objective function grad_{x} f(x)
       // This is creating and deleting adjoint system for each iteration!

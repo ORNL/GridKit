@@ -105,7 +105,7 @@ size_t CircuitGraph<N, E>::amountHyperEdges()
  */
 
 template <typename N, typename E>
-void CircuitGraph<N, E>::printBiPartiteGraph(bool verbose)
+void CircuitGraph<N, E>::printBiPartiteGraph([[maybe_unused]] bool verbose)
 {
 
   std::cout << "Amount of HyperNodes: " << this->amountHyperNodes() << std::endl;

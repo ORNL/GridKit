@@ -57,9 +57,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::allocate()
   {
-    y_.resize(size_);
-    yp_.resize(size_);
-    f_.resize(size_);
+    y_.resize(static_cast<size_t>(size_));
+    yp_.resize(static_cast<size_t>(size_));
+    f_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
@@ -186,7 +186,7 @@ namespace GridKit
     std::vector<ScalarT> valsder(13, -1.0);
     for (int i = 0; i < 13; i++)
     {
-      rcordder[i] = i + 3;
+      rcordder[static_cast<size_t>(i)] = static_cast<IdxT>(i + 3);
     }
     COO_Matrix<ScalarT, IdxT> Jacder = COO_Matrix<ScalarT, IdxT>(rcordder, rcordder, valsder, 16, 16);
 

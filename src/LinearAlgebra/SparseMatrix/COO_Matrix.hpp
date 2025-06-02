@@ -189,14 +189,15 @@ inline std::vector<IdxT> COO_Matrix<ScalarT, IdxT>::getCSRRowData()
 {
   if (!this->isSorted())
     this->sortSparse();
-  std::vector<IdxT> row_size_vec(this->rows_size_ + 1, 0);
+  std::vector<IdxT> row_size_vec(static_cast<size_t>(this->rows_size_ + 1), 0);
   IdxT              counter = 0;
   for (IdxT i = 0; i < static_cast<IdxT>(row_size_vec.size() - 1); i++)
   {
-    row_size_vec[i + 1] = row_size_vec[i];
-    while (counter < static_cast<IdxT>(this->row_indices_.size()) && i == this->row_indices_[counter])
+    row_size_vec[static_cast<size_t>(i + 1)] = row_size_vec[static_cast<size_t>(i)];
+    while (counter < static_cast<IdxT>(this->row_indices_.size())
+           && i == this->row_indices_[static_cast<size_t>(counter)])
     {
-      row_size_vec[i + 1]++;
+      row_size_vec[static_cast<size_t>(i + 1)]++;
       counter++;
     }
   }
@@ -231,12 +232,12 @@ inline void COO_Matrix<ScalarT, IdxT>::setValues(std::vector<IdxT> r, std::vecto
   for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
   {
     // pushback values_ when they are not in current matrix
-    while (a_iter < static_cast<IdxT>(r.size()) && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+    while (a_iter < static_cast<IdxT>(r.size()) && (r[static_cast<size_t>(a_iter)] < this->row_indices_[static_cast<size_t>(i)] || (r[static_cast<size_t>(a_iter)] == this->row_indices_[static_cast<size_t>(i)] && c[static_cast<size_t>(a_iter)] < this->column_indices_[static_cast<size_t>(i)])))
     {
-      this->row_indices_.push_back(r[a_iter]);
-      this->column_indices_.push_back(c[a_iter]);
-      this->values_.push_back(v[a_iter]);
-      this->checkIncreaseSize(r[a_iter], c[a_iter]);
+      this->row_indices_.push_back(r[static_cast<size_t>(a_iter)]);
+      this->column_indices_.push_back(c[static_cast<size_t>(a_iter)]);
+      this->values_.push_back(v[static_cast<size_t>(a_iter)]);
+      this->checkIncreaseSize(r[static_cast<size_t>(a_iter)], c[static_cast<size_t>(a_iter)]);
       a_iter++;
     }
     if (a_iter >= static_cast<IdxT>(r.size()))
@@ -244,20 +245,20 @@ inline void COO_Matrix<ScalarT, IdxT>::setValues(std::vector<IdxT> r, std::vecto
       break;
     }
 
-    if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+    if (r[static_cast<size_t>(a_iter)] == this->row_indices_[static_cast<size_t>(i)] && c[static_cast<size_t>(a_iter)] == this->column_indices_[static_cast<size_t>(i)])
     {
-      this->values_[i] = v[a_iter];
+      this->values_[static_cast<size_t>(i)] = v[static_cast<size_t>(a_iter)];
       a_iter++;
     }
   }
   // push back rest that was not found sorted
   for (IdxT i = a_iter; i < static_cast<IdxT>(r.size()); i++)
   {
-    this->row_indices_.push_back(r[i]);
-    this->column_indices_.push_back(c[i]);
-    this->values_.push_back(v[i]);
+    this->row_indices_.push_back(r[static_cast<size_t>(i)]);
+    this->column_indices_.push_back(c[static_cast<size_t>(i)]);
+    this->values_.push_back(v[static_cast<size_t>(i)]);
 
-    this->checkIncreaseSize(r[i], c[i]);
+    this->checkIncreaseSize(r[static_cast<size_t>(i)], c[static_cast<size_t>(i)]);
   }
 
   this->sorted_ = false;
@@ -304,13 +305,13 @@ inline void COO_Matrix<ScalarT, IdxT>::axpy(ScalarT alpha, COO_Matrix<ScalarT, I
   for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
   {
     // pushback values when they are not in current matrix
-    while (a_iter < static_cast<IdxT>(r.size()) && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+    while (a_iter < static_cast<IdxT>(r.size()) && (r[static_cast<size_t>(a_iter)] < this->row_indices_[static_cast<size_t>(i)] || (r[static_cast<size_t>(a_iter)] == this->row_indices_[static_cast<size_t>(i)] && c[static_cast<size_t>(a_iter)] < this->column_indices_[static_cast<size_t>(i)])))
     {
-      this->row_indices_.push_back(r[a_iter]);
-      this->column_indices_.push_back(c[a_iter]);
-      this->values_.push_back(alpha * val[a_iter]);
+      this->row_indices_.push_back(r[static_cast<size_t>(a_iter)]);
+      this->column_indices_.push_back(c[static_cast<size_t>(a_iter)]);
+      this->values_.push_back(alpha * val[static_cast<size_t>(a_iter)]);
 
-      this->checkIncreaseSize(r[a_iter], c[a_iter]);
+      this->checkIncreaseSize(r[static_cast<size_t>(a_iter)], c[static_cast<size_t>(a_iter)]);
       a_iter++;
     }
     if (a_iter >= static_cast<IdxT>(r.size()))
@@ -318,20 +319,20 @@ inline void COO_Matrix<ScalarT, IdxT>::axpy(ScalarT alpha, COO_Matrix<ScalarT, I
       break;
     }
 
-    if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+    if (r[static_cast<size_t>(a_iter)] == this->row_indices_[static_cast<size_t>(i)] && c[static_cast<size_t>(a_iter)] == this->column_indices_[static_cast<size_t>(i)])
     {
-      this->values_[i] += alpha * val[a_iter];
+      this->values_[static_cast<size_t>(i)] += alpha * val[static_cast<size_t>(a_iter)];
       a_iter++;
     }
   }
   // push back rest that was not found sorted_
   for (IdxT i = a_iter; i < static_cast<IdxT>(r.size()); i++)
   {
-    this->row_indices_.push_back(r[i]);
-    this->column_indices_.push_back(c[i]);
-    this->values_.push_back(alpha * val[i]);
+    this->row_indices_.push_back(r[static_cast<size_t>(i)]);
+    this->column_indices_.push_back(c[static_cast<size_t>(i)]);
+    this->values_.push_back(alpha * val[static_cast<size_t>(i)]);
 
-    this->checkIncreaseSize(r[i], c[i]);
+    this->checkIncreaseSize(r[static_cast<size_t>(i)], c[static_cast<size_t>(i)]);
   }
 
   this->sorted_ = false;
@@ -780,7 +781,9 @@ inline void COO_Matrix<ScalarT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, st
   std::sort(std::begin(ordervec),
             std::end(ordervec),
             [&](int i1, int i2)
-            { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
+            { return (rows[static_cast<size_t>(i1)] < rows[static_cast<size_t>(i2)])
+                     || (rows[static_cast<size_t>(i1)] == rows[static_cast<size_t>(i2)]
+                         && columns[static_cast<size_t>(i1)] < columns[static_cast<size_t>(i2)]); });
 
   // reorder based of index-sorting. Only swap cost no extra memory.
   //  @todo see if extra memory creation is fine

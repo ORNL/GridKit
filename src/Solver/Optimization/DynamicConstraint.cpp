@@ -64,8 +64,8 @@ namespace AnalysisManager
       // Get boundaries for the optimization parameters
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
-        x_l[i] = model_->param_lo()[i];
-        x_u[i] = model_->param_up()[i];
+        x_l[i] = model_->param_lo()[static_cast<size_t>(i)];
+        x_u[i] = model_->param_up()[static_cast<size_t>(i)];
       }
 
       // No boundaries for fictitious parameter x[n]
@@ -97,7 +97,7 @@ namespace AnalysisManager
 
       // Initialize optimization parameters x
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        x[i] = model_->param()[i];
+        x[i] = model_->param()[static_cast<size_t>(i)];
 
       // Initialize fictitious parameter x[n-1] to zero
       x[model_->sizeParams()] = 0.0;
@@ -142,7 +142,7 @@ namespace AnalysisManager
       // Update optimization parameters
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
-        model_->param()[i] = x[i];
+        model_->param()[static_cast<size_t>(i)] = x[i];
         // std::cout << "x[" << i << "] = " << x[i] << "\n";
       }
 
@@ -191,7 +191,7 @@ namespace AnalysisManager
       {
         // Update optimization parameters
         for (IdxT i = 0; i < model_->sizeParams(); ++i)
-          model_->param()[i] = x[i];
+          model_->param()[static_cast<size_t>(i)] = x[i];
 
         // evaluate the gradient of the objective function grad_{x} f(x)
         // This is creating and deleting adjoint system for each iteration!

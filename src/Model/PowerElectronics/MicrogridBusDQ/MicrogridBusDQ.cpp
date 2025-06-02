@@ -42,9 +42,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::allocate()
   {
-    y_.resize(size_);
-    yp_.resize(size_);
-    f_.resize(size_);
+    y_.resize(static_cast<size_t>(size_));
+    yp_.resize(static_cast<size_t>(size_));
+    f_.resize(static_cast<size_t>(size_));
 
     return 0;
   }

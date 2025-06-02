@@ -68,14 +68,14 @@ namespace GridKit
   int BusPV<ScalarT, IdxT>::allocate()
   {
     // std::cout << "Allocate PV bus ..." << std::endl;
-    f_.resize(size_);
-    y_.resize(size_);
-    yp_.resize(size_);
-    tag_.resize(size_);
+    f_.resize(static_cast<size_t>(size_));
+    y_.resize(static_cast<size_t>(size_));
+    yp_.resize(static_cast<size_t>(size_));
+    tag_.resize(static_cast<size_t>(size_));
 
-    fB_.resize(size_);
-    yB_.resize(size_);
-    ypB_.resize(size_);
+    fB_.resize(static_cast<size_t>(size_));
+    yB_.resize(static_cast<size_t>(size_));
+    ypB_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
