@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
   /* Run simulation */
   double start = static_cast<double>(clock());
   ida.initializeSimulation(0.0, false);
-  size_t nout = 50;
-  ida.runSimulation(1.0, nout, output_cb);
+  size_t nout = 200;
+  ida.runSimulation(10.0, nout, output_cb);
 
   // write solution to file if the user passes in a file name
   if (argc >= 2)
