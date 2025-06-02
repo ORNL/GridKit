@@ -17,8 +17,8 @@ $X_{dp}$    | [p.u.]  | machine reactance parameter     |
 
 ### Model Derived Parameters
 
-- $g = \dfrac{R_a}{\sqrt{R_a^2 + X_{dp}^2}}$
-- $b = \dfrac{-X_{dp}}{\sqrt{R_a^2 + X_{dp}^2}}$
+- $g = \dfrac{R_a}{R_a^2 + X_{dp}^2}$
+- $b = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2}$
 
 <br>
 
