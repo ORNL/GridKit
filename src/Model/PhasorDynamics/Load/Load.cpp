@@ -20,10 +20,10 @@ namespace GridKit
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> jac(2, 2);
-      std::vector<ScalarT>                              y(2);
+      std::vector<ScalarT> y(2);
       y[0] = Vr();
       y[1] = Vi();
-      EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, y.size(), y.data(), J_);
+      GridKit::Enzyme::EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, y.size(), y.data(), J_);
 
       return 0;
     }
