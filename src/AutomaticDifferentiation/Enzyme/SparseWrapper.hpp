@@ -60,9 +60,9 @@ namespace GridKit
         return;
       idx /= sizeof(ScalarT);
       if constexpr (sizeof(ScalarT) == 4)
-        inner_storeflt(i, idx, val, triplets);
-      else
-        inner_storedbl(i, idx, val, triplets);
+        inner_storeflt(idx, i, val, triplets);
+      else                     
+        inner_storedbl(idx, i, val, triplets);
     }
     
     template <typename ScalarT>
