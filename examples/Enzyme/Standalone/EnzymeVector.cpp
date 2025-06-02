@@ -36,7 +36,11 @@ void square(std::vector<ScalarT> x, std::vector<ScalarT>& y)
 {
   for (IdxT idx = 0; idx < x.size(); ++idx)
   {
-    y[idx] = square_scalar<ScalarT>(x[idx]);
+    y[idx] = 0.0;
+    for (IdxT idy = 0; idy <= idx; idy++)
+    {
+      y[idx] += square_scalar<ScalarT>(x[idy]);
+    }
   }
 }
 
@@ -48,8 +52,8 @@ void dsquare_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, DenseMatrix& dy
   {
     for (IdxT idx = 0; idx < x.size(); ++idx)
     {
-      if (idx == idy)
-        dy.setValue(idx, idy, dsquare_ref_scalar<ScalarT>(x[idx]));
+      if (idy <= idx)
+        dy.setValue(idx, idy, dsquare_ref_scalar<ScalarT>(x[idy]));
     }
   }
 }
