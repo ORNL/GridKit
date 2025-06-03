@@ -1,8 +1,8 @@
 
+#include "DynamicObjective.hpp"
+
 #include <cassert>
 #include <iostream>
-
-#include "DynamicObjective.hpp"
 
 namespace AnalysisManager
 {

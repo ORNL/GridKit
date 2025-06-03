@@ -1,9 +1,10 @@
 
 #define _USE_MATH_DEFINES
+#include "Generator4Governor.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Generator4Governor.hpp"
 #include "Model/PowerFlow/Bus/BaseBus.hpp"
 
 namespace GridKit
@@ -297,15 +298,15 @@ namespace GridKit
     // Generator adjoint
     fB_[static_cast<size_t>(offsetGen_ + 0)] = ypB_[static_cast<size_t>(offsetGen_ + 0)] - yB_[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi + yB_[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi;
     fB_[static_cast<size_t>(offsetGen_ + 1)] = 2.0 * H_ / omega_s_ * ypB_[static_cast<size_t>(offsetGen_ + 1)] + yB_[static_cast<size_t>(offsetGen_ + 0)] * omega_b_ - yB_[static_cast<size_t>(offsetGen_ + 1)] * D_ + frequencyPenaltyDer(omega())
-                          + yB_[static_cast<size_t>(offsetGov_ + 1)] * (1.0 - T2() / T1()) - yB_[static_cast<size_t>(offsetGov_ + 2)] * K() * T2() / T1();
+                                               + yB_[static_cast<size_t>(offsetGov_ + 1)] * (1.0 - T2() / T1()) - yB_[static_cast<size_t>(offsetGov_ + 2)] * K() * T2() / T1();
     fB_[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * ypB_[static_cast<size_t>(offsetGen_ + 2)] - yB_[static_cast<size_t>(offsetGen_ + 1)] * Id() - yB_[static_cast<size_t>(offsetGen_ + 2)] + yB_[static_cast<size_t>(offsetGen_ + 4)]
-                          + lambdaP() * Id() - lambdaQ() * Iq();
+                                               + lambdaP() * Id() - lambdaQ() * Iq();
     fB_[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * ypB_[static_cast<size_t>(offsetGen_ + 3)] - yB_[static_cast<size_t>(offsetGen_ + 1)] * Iq() - yB_[static_cast<size_t>(offsetGen_ + 3)] + yB_[static_cast<size_t>(offsetGen_ + 5)]
-                          + lambdaP() * Iq() + lambdaQ() * Id();
+                                               + lambdaP() * Iq() + lambdaQ() * Id();
     fB_[static_cast<size_t>(offsetGen_ + 4)] = -yB_[static_cast<size_t>(offsetGen_ + 1)] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB_[static_cast<size_t>(offsetGen_ + 3)] * (Xd_ - Xdp_) - yB_[static_cast<size_t>(offsetGen_ + 4)] * Rs_ - yB_[static_cast<size_t>(offsetGen_ + 5)] * Xdp_
-                          + lambdaP() * (Edp() + (Xqp_ - Xdp_) * Iq() - 2.0 * Rs_ * Id()) + lambdaQ() * (Eqp() - 2.0 * Xdp_ * Id());
+                                               + lambdaP() * (Edp() + (Xqp_ - Xdp_) * Iq() - 2.0 * Rs_ * Id()) + lambdaQ() * (Eqp() - 2.0 * Xdp_ * Id());
     fB_[static_cast<size_t>(offsetGen_ + 5)] = -yB_[static_cast<size_t>(offsetGen_ + 1)] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB_[static_cast<size_t>(offsetGen_ + 2)] * (Xq_ - Xqp_) + yB_[static_cast<size_t>(offsetGen_ + 4)] * Xqp_ - yB_[static_cast<size_t>(offsetGen_ + 5)] * Rs_
-                          + lambdaP() * (Eqp() + (Xqp_ - Xdp_) * Id() - 2.0 * Rs_ * Iq()) - lambdaQ() * (Edp() + 2.0 * Xqp_ * Iq());
+                                               + lambdaP() * (Eqp() + (Xqp_ - Xdp_) * Id() - 2.0 * Rs_ * Iq()) - lambdaQ() * (Edp() + 2.0 * Xqp_ * Iq());
 
     // Bus adjoint
     PB() += (-yB_[static_cast<size_t>(offsetGen_ + 4)] * sinPhi - yB_[static_cast<size_t>(offsetGen_ + 5)] * cosPhi);

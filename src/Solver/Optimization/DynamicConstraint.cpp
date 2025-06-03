@@ -1,8 +1,8 @@
 
+#include "DynamicConstraint.hpp"
+
 #include <cassert>
 #include <iostream>
-
-#include "DynamicConstraint.hpp"
 
 namespace AnalysisManager
 {

@@ -1,11 +1,12 @@
 
+#include "Ida.hpp"
+
 #include <iomanip>
 #include <iostream>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
 
-#include "Ida.hpp"
 #include "Model/Evaluator.hpp"
 
 namespace AnalysisManager

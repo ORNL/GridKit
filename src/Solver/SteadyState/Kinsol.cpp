@@ -8,6 +8,8 @@
  *
  */
 
+#include "Kinsol.hpp"
+
 #include <iomanip>
 #include <iostream>
 
@@ -16,7 +18,6 @@
 #include <sunlinsol/sunlinsol_dense.h> // access to dense SUNLinearSolver
 #include <sunmatrix/sunmatrix_dense.h> // access to dense SUNMatrix
 
-#include "Kinsol.hpp"
 #include "Model/Evaluator.hpp"
 
 namespace AnalysisManager

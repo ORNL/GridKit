@@ -8,10 +8,11 @@
  */
 
 #define _USE_MATH_DEFINES
+#include "Genrou.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Genrou.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 
 #define _USE_MATH_DEFINES
