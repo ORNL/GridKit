@@ -51,7 +51,7 @@ void VectorModel<ScalarT, IdxT>::evaluateJacobian()
 {
   const IdxT           n = x_.size();
   std::vector<ScalarT> v(n);
-  VectorModel         d_vector_model(n);
+  VectorModel          d_vector_model(n);
   for (IdxT idy = 0; idy < n; ++idy)
   {
     // Elementary vector for Jacobian-vector product

@@ -2,7 +2,6 @@
 
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
-
 /**
  * @brief Class providing methods to evaluate a vector-valued residual and its Jacobian.
  * This is used to test automatic differentiation.

@@ -21,7 +21,7 @@ namespace GridKit
     /// Enzyme fwddiff template
     template <typename T, typename... Tys>
     extern T __enzyme_fwddiff(void*, Tys...) noexcept;
-    
+
     /// Enzyme todense template
     template <typename T, typename... Tys>
     extern T __enzyme_todense(Tys...) noexcept;
@@ -34,7 +34,7 @@ namespace GridKit
       size_t  col;
       ScalarT val;
       Triple(Triple&&) = default;
-    
+
       Triple(size_t row, size_t col, ScalarT val)
         : row(row),
           col(col),
@@ -42,17 +42,17 @@ namespace GridKit
       {
       }
     };
-    
+
     __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(int64_t row, int64_t col, float val, std::vector<Triple<float>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
-    
+
     __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(int64_t row, int64_t col, double val, std::vector<Triple<double>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
-    
+
     template <typename ScalarT>
     __attribute__((always_inline)) static void sparse_store(ScalarT val, int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
     {
@@ -61,29 +61,29 @@ namespace GridKit
       idx /= sizeof(ScalarT);
       if constexpr (sizeof(ScalarT) == 4)
         inner_storeflt(idx, i, val, triplets);
-      else                     
+      else
         inner_storedbl(idx, i, val, triplets);
     }
-    
+
     template <typename ScalarT>
     __attribute__((always_inline)) static ScalarT sparse_load(int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
     {
       return 0.0;
     }
-    
+
     template <typename ScalarT>
     __attribute__((always_inline)) static void ident_store(ScalarT, int64_t idx, size_t i)
     {
       assert(0 && "should never load");
     }
-    
+
     template <typename ScalarT>
     __attribute__((always_inline)) static ScalarT ident_load(int64_t idx, size_t i)
     {
       idx /= sizeof(ScalarT);
       return (ScalarT) (idx == i);
     }
-    
+
     /// Function that computes the Jacobian via automatic differentiation
     template <typename T, class ScalarT, typename IdxT>
     __attribute__((noinline)) void EnzymeSparseModelJacobian(T* model, IdxT n, ScalarT* input, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
@@ -93,7 +93,7 @@ namespace GridKit
       {
         ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
         ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
-    
+
         __enzyme_fwddiff<void>((void*) residual_wrapper<T, ScalarT>,
                                enzyme_const,
                                model,
@@ -104,7 +104,7 @@ namespace GridKit
                                (ScalarT*) 0x1,
                                d_output);
       }
-    
+
       std::vector<IdxT>    ctemp{};
       std::vector<IdxT>    rtemp{};
       std::vector<ScalarT> valtemp{};
@@ -117,4 +117,4 @@ namespace GridKit
       jac.setValues(rtemp, ctemp, valtemp);
     }
   } // namespace Enzyme
-} // namespace GridKit    
+} // namespace GridKit

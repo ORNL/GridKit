@@ -118,7 +118,7 @@ namespace GridKit
         model_jacobian.printMatrix("Model Jacobian");
 
         /// Compare model Jacobian wih dependencies computed analytically
-        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X);
+        std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = mapFromCOO(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
@@ -151,10 +151,10 @@ namespace GridKit
       std::vector<DependencyTracking::Variable::DependencyMap> mapFromCOO(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> matrix)
       {
         std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> matrix_entries = matrix.getEntries();
-        const auto [rows, columns, values] = matrix_entries;
+        const auto [rows, columns, values]                                                       = matrix_entries;
 
         std::tuple<IdxT, IdxT> matrix_dimensions = matrix.getDimensions();
-        const auto [n_rows, n_columns] = matrix_dimensions;
+        const auto [n_rows, n_columns]           = matrix_dimensions;
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(n_rows);
 
