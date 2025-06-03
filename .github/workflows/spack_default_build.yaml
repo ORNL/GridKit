@@ -102,6 +102,8 @@ jobs:
           - gridkit@develop +enzyme
             ^enzyme@0.0.173
             ^sundials@develop
+          - gridkit@develop ~enzyme
+            ^sundials@develop
 
     steps:
       - name: Add LLVM
