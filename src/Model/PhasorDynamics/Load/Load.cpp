@@ -20,12 +20,13 @@ namespace GridKit
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
       std::vector<ScalarT> y(2);
+      std::vector<ScalarT> f(2);
       y[0] = Vr();
       y[1] = Vi();
       /// Setting J_ via Enzyme works, though J_ had not been initialized within the model.
       /// This is because the COO_Matrix class is very permissive.
       /// Having the currents as model variables and allocating J_ accordingly will be helpful.
-      GridKit::Enzyme::EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, y.size(), y.data(), J_);
+      GridKit::Enzyme::EnzymeSparseModelJacobian<Load<ScalarT, IdxT>, ScalarT, IdxT>(this, f.size(), y.data(), J_);
 
       return 0;
     }

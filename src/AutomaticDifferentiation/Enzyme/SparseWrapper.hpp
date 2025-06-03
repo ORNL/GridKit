@@ -2,14 +2,22 @@
 
 #include <vector>
 
-/// Enzyme constants for activity analysis
+/**
+ * @brief Enzyme constants for activity analysis
+ *
+ */
 extern int enzyme_dup;
 extern int enzyme_const;
 extern int enzyme_dupnoneed;
 
-/// Wrapper around model residual
-template <typename T, typename ScalarT>
-void residual_wrapper(T* obj, ScalarT* y, ScalarT* f)
+/**
+ * @brief Residual wrapper around residual methods inside model classes
+ *
+ * @tparam ModelT - model type
+ * @tparam ScalarT - scalar data type
+ */
+template <typename ModelT, typename ScalarT>
+void residual_wrapper(ModelT* obj, ScalarT* y, ScalarT* f)
 {
   obj->evaluateResidualLocally(y, f);
 }
@@ -18,15 +26,29 @@ namespace GridKit
 {
   namespace Enzyme
   {
-    /// Enzyme fwddiff template
-    template <typename T, typename... Tys>
-    extern T __enzyme_fwddiff(void*, Tys...) noexcept;
+    /**
+     * @brief Enzyme fwddiff template
+     *
+     * @tparam T - return type
+     * @tparam ModelT - model type
+     */
+    template <typename T, typename... ModelT>
+    extern T __enzyme_fwddiff(void*, ModelT...) noexcept;
 
-    /// Enzyme todense template
-    template <typename T, typename... Tys>
-    extern T __enzyme_todense(Tys...) noexcept;
+    /**
+     * @brief Enzyme todense template
+     *
+     * @tparam T - return type
+     * @tparam ModelT - model type
+     */
+    template <typename T, typename... ModelT>
+    extern T __enzyme_todense(ModelT...) noexcept;
 
-    /// Sparse storage for Enzyme
+    /**
+     * @brief Enzyme sparse storage in triplet format
+     *
+     * @tparam ScalarT - scalar data type
+     */
     template <typename ScalarT>
     struct Triple
     {
@@ -43,16 +65,29 @@ namespace GridKit
       }
     };
 
+    /**
+     * @brief Enzyme sparse accumulation for float
+     *
+     */
     __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(int64_t row, int64_t col, float val, std::vector<Triple<float>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
 
+    /**
+     * @brief Enzyme sparse accumulation for double
+     *
+     */
     __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(int64_t row, int64_t col, double val, std::vector<Triple<double>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
 
+    /**
+     * @brief Enzyme sparse store
+     *
+     * @tparam ScalarT - scalar data type
+     */
     template <typename ScalarT>
     __attribute__((always_inline)) static void sparse_store(ScalarT val, int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
     {
@@ -65,18 +100,33 @@ namespace GridKit
         inner_storedbl(idx, i, val, triplets);
     }
 
+    /**
+     * @brief Enzyme sparse load
+     *
+     * @tparam ScalarT - scalar data type
+     */
     template <typename ScalarT>
     __attribute__((always_inline)) static ScalarT sparse_load(int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
     {
       return 0.0;
     }
 
+    /**
+     * @brief Enzyme identity store
+     *
+     * @tparam ScalarT - scalar data type
+     */
     template <typename ScalarT>
     __attribute__((always_inline)) static void ident_store(ScalarT, int64_t idx, size_t i)
     {
       assert(0 && "should never load");
     }
 
+    /**
+     * @brief Enzyme identity load
+     *
+     * @tparam ScalarT - scalar data type
+     */
     template <typename ScalarT>
     __attribute__((always_inline)) static ScalarT ident_load(int64_t idx, size_t i)
     {
@@ -84,9 +134,15 @@ namespace GridKit
       return (ScalarT) (idx == i);
     }
 
-    /// Function that computes the Jacobian via automatic differentiation
-    template <typename T, class ScalarT, typename IdxT>
-    __attribute__((noinline)) void EnzymeSparseModelJacobian(T* model, IdxT n, ScalarT* input, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+    /**
+     * @brief Function that computes the Jacobian via automatic differentiation
+     *
+     * @tparam ModelT - model type
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - index data type
+     */
+    template <typename ModelT, class ScalarT, typename IdxT>
+    __attribute__((noinline)) void EnzymeSparseModelJacobian(ModelT* model, IdxT n, ScalarT* input, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
     {
       std::vector<Triple<ScalarT>> triplets;
       for (IdxT i = 0; i < n; i++)
@@ -94,7 +150,7 @@ namespace GridKit
         ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
         ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
 
-        __enzyme_fwddiff<void>((void*) residual_wrapper<T, ScalarT>,
+        __enzyme_fwddiff<void>((void*) residual_wrapper<ModelT, ScalarT>,
                                enzyme_const,
                                model,
                                enzyme_dup,
