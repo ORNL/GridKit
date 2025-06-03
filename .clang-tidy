@@ -1,4 +1,4 @@
-Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cppcoreguidelines-*,readability-*,-bugprone-easily-swappable-parameters'
+Checks: '-*,--clang-analyzer-*,-clang-analyzer-cplusplus*,google-*,bugprone-*,cppcoreguidelines-*,readability-*,-bugprone-easily-swappable-parameters,-google-readability-todo'
 # Checks: '-*,readability-identifier-naming'
 HeaderFilterRegex: '.*' # Makes certain to check header files (by default ignores them)
 UseColor: True
