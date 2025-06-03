@@ -515,7 +515,7 @@ inline void COO_Matrix<ScalarT, IdxT>::permutationSizeMap(std::vector<IdxT> row_
 template <class ScalarT, typename IdxT>
 inline void COO_Matrix<ScalarT, IdxT>::zeroMatrix()
 {
-  // resize doesn't effect capacity if smaller
+  // resize doesn't affect capacity if smaller
   this->column_indices_.resize(0);
   this->row_indices_.resize(0);
   this->values_.resize(0);
