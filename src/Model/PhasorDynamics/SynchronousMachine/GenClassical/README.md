@@ -17,8 +17,8 @@ $X_{dp}$    | [p.u.]  | machine reactance parameter     |
 
 ### Model Derived Parameters
 
-- $g = \dfrac{R_a}{R_a^2 + X_{dp}^2}$
-- $b = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2}$
+- $G = \dfrac{R_a}{R_a^2 + X_{dp}^2}$
+- $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2}$
 
 <br>
 
@@ -83,9 +83,9 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 
 ```math
 \begin{aligned}
-    0 &= T_{e} - \frac{1}{\omega}\left( g E_p^2 - E_p \left[(gV_r - bV_i)\cos\delta + (bV_r + gV_i)\sin\delta \right]\right)\\
-    0 &= I_r + gV_r - bV_i - E_p(g \cos\delta - b \sin\delta) \\
-    0 &= I_i + bV_r + gV_i - E_p(b \cos\delta + g \sin\delta)
+    0 &= T_{e} - \frac{1}{\omega}\left( G E_p^2 - E_p \left[(G V_r - B V_i)\cos\delta + (B V_r + G V_i)\sin\delta \right]\right)\\
+    0 &= I_r + G V_r - B V_i - E_p(G \cos\delta - B \sin\delta) \\
+    0 &= I_i + B V_r + G V_i - E_p(B \cos\delta + G \sin\delta)
 \end{aligned}
 ```
 As noted earlier, all three algebraic equations can be expressed as functions
@@ -100,8 +100,16 @@ To initialize the model, given bus voltages $V_r$, $V_i$, and initial generator
 injection active and reactive power, $P$ and $Q$, we take following steps to
 initialize the system:
 
-First compute injection currents from initial power injection power and bus
-voltages:
+Complex power is defined as
+```math
+S=VI^{*}
+```
+or
+```math
+P + jQ = (V_r + j V_i)(I_r - j I_i).
+```
+From here, we compute injection currents from the initial power injection and bus
+voltages as
 ```math
 \begin{aligned}
 I_r &= \frac{PV_r + QV_i}{V_r^2 + V_i^2} \\
@@ -109,27 +117,43 @@ I_i &= \frac{PV_i - QV_r}{V_r^2 + V_i^2}
 \end{aligned} 
 ```
 
-Next compute field winding voltage and machine angle:
+We substitute expressions above into equations for current injections and
+obtain
+```math
+\begin{align}
+E_p \sin\delta &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \\
+E_p \cos\delta &= \dfrac{ G I_r + B I_i}{G^2 + B^2} + V_r
+\end{align}
+```
+By dividing (1) by (2) we get expression for machine angle at the
+steady state
+```math
+\delta = \arctan \dfrac{E_i}{E_r} \, ,
+```
+and by squaring and adding (1) and (2), we get expression for field
+winding voltage at the steady state
+```math
+E_p = \sqrt{E_r^2 + E_i^2}   \, ,
+```
+where
 ```math
 \begin{aligned}
-E_r &= \frac{ g(I_r + gV_r - bV_i) + b (I_i + bV_r + gV_i)   }{g^2 + b^2} \\
-E_i &= \frac{ -b(I_r + gV_r - bV_i) + g (I_i + bV_r + gV_i)   }{g^2 + b^2} \\
-E_p &= \sqrt{E_r^2 + E_i^2} \\
-\delta &= \arctan \dfrac{E_i}{E_r}
+E_r &= \dfrac{ G I_r + B I_i}{G^2 + B^2} + V_r \, ,\\
+E_i &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \, .
 \end{aligned}
 ```
 
-Set machine speed to the synchronous speed:
+Next, we set machine speed to the synchronous speed:
 ```math
 \omega = 1
 ```
 
 Now, we can compute electrical torque and set mechanical torque to be equal
-to the electrical.
+to the electrical:
 ```math
 \begin{aligned}
-T_{elec} &= gE_p^2 - E_p \left[ (gV_r -  bV_i ) \cos\delta + (bV_r + gV_i )\sin\delta \right] \\
-P_{mech} &= T_{elec} 
+T_{e} &= G E_p^2 - E_p \left[ (G V_r - B V_i ) \cos\delta + (B V_r + G V_i )\sin\delta \right] \\
+P_{m} &= T_{e} 
 \end{aligned} 
 ```
 

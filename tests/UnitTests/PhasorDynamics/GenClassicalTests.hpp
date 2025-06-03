@@ -68,8 +68,8 @@ namespace GridKit
         const ScalarT res2{0.0};                                          /// third residual
         const ScalarT res3{0.0};                                          /// fourth residual
         const ScalarT res4{0.0};                                          /// fifth residual
-        const ScalarT res5{0.0};                                          /// fifth residual
-        const ScalarT res6{0.0};                                          /// fifth residual
+        const ScalarT res5{pmech};                                          /// fifth residual
+        const ScalarT res6{ep};                                          /// fifth residual
         const ScalarT tol = 7 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
@@ -79,24 +79,13 @@ namespace GridKit
         gen.allocate();
 
         gen.y()[0] = M_PI; // delta
-        gen.y()[1] = 1.0;  // omega
-        gen.y()[2] = 2.0;  // telec
-        gen.y()[1] = 1.0;  // omega
+        gen.y()[1] = 2.0;  // omega
         gen.y()[2] = 2.0;  // telec
         gen.y()[3] = -2.0; // ir
         gen.y()[4] = -4.0; // ii
-        gen.y()[5] = 1.0;  // pmech
-        gen.y()[6] = 2.0;  // Ep
-        gen.y()[5] = 1.0;  // pmech
-        gen.y()[6] = 2.0;  // Ep
+        gen.y()[5] = pmech;  // pmech
+        gen.y()[6] = ep;  // Ep
 
-        gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
-        gen.yp()[1] = -1.0;            // omega_dot
-        gen.yp()[2] = 0.0;             // telec
-        gen.yp()[3] = 0.0;             // ir
-        gen.yp()[4] = 0.0;             // ii
-        gen.yp()[5] = 0.0;             // pmech
-        gen.yp()[6] = 0.0;             // Ep
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
         gen.yp()[1] = -1.0;            // omega_dot
         gen.yp()[2] = 0.0;             // telec
@@ -114,8 +103,8 @@ namespace GridKit
         success *= isEqual(residual[2], res2, tol);
         success *= isEqual(residual[3], res3, tol);
         success *= isEqual(residual[4], res4, tol);
-        // success *= isEqual(residual[5], res5, tol);
-        // success *= isEqual(residual[6], res6, tol);
+        success *= isEqual(residual[5], res5, tol);
+        success *= isEqual(residual[6], res6, tol);
 
         return success.report(__func__);
       }
@@ -140,7 +129,7 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         const ScalarT delta{M_PI / 4.0};   /// first residual
-        const ScalarT omega{0.0};          /// second residual
+        const ScalarT omega{1.0};          /// second residual
         const ScalarT Te{6.0};             /// third residual
         const ScalarT ir{1.0};             /// fourth residual
         const ScalarT ii{2.0};             /// fifth residual
@@ -192,14 +181,6 @@ namespace GridKit
 
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
-
-        const ScalarT delta{M_PI / 4.0};   /// first residual
-        const ScalarT omega{0.0};          /// second residual
-        const ScalarT Te{6.0};             /// third residual
-        const ScalarT ir{1.0};             /// fourth residual
-        const ScalarT ii{2.0};             /// fifth residual
-        const ScalarT pmech{6.0};          /// fifth residual
-        const ScalarT Ep{2.0 * sqrt(2.0)}; /// fifth residual
 
         const ScalarT tol = 5.0 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
 

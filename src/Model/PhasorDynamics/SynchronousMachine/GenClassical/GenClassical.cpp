@@ -111,10 +111,10 @@ namespace GridKit
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
-      ScalarT Er    = (G_ * (ir + G_ * vr - B_ * vi) + B_ * (ii + B_ * vr + G_ * vi)) / (G_ * G_ + B_ * B_);
-      ScalarT Ei    = (-B_ * (ir + G_ * vr - B_ * vi) + G_ * (ii + B_ * vr + G_ * vi)) / (G_ * G_ + B_ * B_);
+      ScalarT Er    = (G_ * ir + B_ * ii) / (G_ * G_ + B_ * B_) + vr;
+      ScalarT Ei    = (-B_ * ir + G_ * ii) / (G_ * G_ + B_ * B_) + vi;
       ScalarT delta = atan2(Ei, Er);
-      ScalarT omega = 0;
+      ScalarT omega = 1.0;
       ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
       ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * cos(delta) + (B_ * vr + G_ * vi) * sin(delta));
 
