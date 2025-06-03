@@ -124,7 +124,8 @@ Set machine speed to the synchronous speed:
 \omega = 1
 ```
 
-Now, we can compute electrical torque and set mechanical 
+Now, we can compute electrical torque and set mechanical torque to be equal
+to the electrical.
 ```math
 \begin{aligned}
 T_{elec} &= gE_p^2 - E_p \left[ (gV_r -  bV_i ) \cos\delta + (bV_r + gV_i )\sin\delta \right] \\
