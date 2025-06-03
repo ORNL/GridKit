@@ -85,7 +85,7 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 \begin{aligned}
     0 &= T_{e} - \frac{1}{\omega}\left( g E_p^2 - E_p \left[(gV_r - bV_i)\cos\delta + (bV_r + gV_i)\sin\delta \right]\right)\\
     0 &= I_r + gV_r - bV_i - E_p(g \cos\delta - b \sin\delta) \\
-    0 &= I_i + gV_r + bV_i - E_p(b \cos\delta + g \sin\delta)
+    0 &= I_i + bV_r + gV_i - E_p(b \cos\delta + g \sin\delta)
 \end{aligned}
 ```
 As noted earlier, all three algebraic equations can be expressed as functions

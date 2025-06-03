@@ -164,11 +164,11 @@ namespace GridKit
       ScalarT omega_dot = yp_[1];
 
       /* 6 GenClassical differential equations */
-      f_[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
-      f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
+      f_[0] = delta_dot - (omega - 1.0) * (2.0 * M_PI * 60.0);
+      f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       /* 11 GenClassical algebraic equations */
-      f_[2] = telec - (1.0 / (1.0 + omega)) * (G_ * ep * ep - ep * (cos(delta) * (G_ * Vr() - B_ * Vi()) + sin(delta) * (B_ * Vr() + G_ * Vi())));
+      f_[2] = telec - (1.0 / omega) * (G_ * ep * ep - ep * ((G_ * Vr() - B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
 
       f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
       f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));
