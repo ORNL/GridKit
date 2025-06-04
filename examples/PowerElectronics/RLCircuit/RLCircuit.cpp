@@ -37,7 +37,7 @@ int main(int /* argc */, char const** /* argv */)
   //  input
   induct->setExternalConnectionNodes(0, 1);
   // output
-  induct->setExternalConnectionNodes(1, -1);
+  induct->setExternalConnectionNodes(1, static_cast<size_t>(-1));
   // internal
   induct->setExternalConnectionNodes(2, 2);
   // add component
@@ -59,7 +59,7 @@ int main(int /* argc */, char const** /* argv */)
   GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit);
   // Form index to node uid realations
   // input
-  vsource->setExternalConnectionNodes(0, -1);
+  vsource->setExternalConnectionNodes(0, static_cast<size_t>(-1));
   // output
   vsource->setExternalConnectionNodes(1, 0);
   // internal

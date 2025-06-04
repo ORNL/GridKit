@@ -51,7 +51,7 @@ namespace AnalysisManager
       int retval = 0;
 
       // Allocate solution vectors
-      yy_ = N_VNew_Serial(model_->size(), context_);
+      yy_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
       checkAllocation((void*) yy_, "N_VNew_Serial");
       yp_ = N_VClone(yy_);
       checkAllocation((void*) yp_, "N_VClone");
@@ -88,7 +88,7 @@ namespace AnalysisManager
       model_->setMaxSteps(msa);
 
       /// \todo Need to set max number of steps based on user input!
-      retval = IDASetMaxNumSteps(solver_, msa);
+      retval = IDASetMaxNumSteps(solver_, static_cast<long>(msa));
       checkOutput(retval, "IDASetMaxNumSteps");
 
       // Tag differential variables
@@ -116,7 +116,11 @@ namespace AnalysisManager
       int retval = 0;
       if (model_->hasJacobian())
       {
-        JacobianMat_ = SUNSparseMatrix(model_->size(), model_->size(), model_->size() * model_->size(), CSR_MAT, context_);
+        JacobianMat_ = SUNSparseMatrix(static_cast<sunindextype>(model_->size()),
+                                       static_cast<sunindextype>(model_->size()),
+                                       static_cast<sunindextype>(model_->size() * model_->size()),
+                                       CSR_MAT,
+                                       context_);
         checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
 
         linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
@@ -130,7 +134,9 @@ namespace AnalysisManager
       }
       else
       {
-        JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
+        JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                      static_cast<sunindextype>(model_->size()),
+                                      context_);
         checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
 
         linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
@@ -278,7 +284,7 @@ namespace AnalysisManager
       int retval = 0;
 
       // Create and initialize quadratures
-      q_ = N_VNew_Serial(model_->sizeQuadrature(), context_);
+      q_ = N_VNew_Serial(static_cast<sunindextype>(model_->sizeQuadrature()), context_);
       checkAllocation((void*) q_, "N_VNew_Serial");
 
       // Set integrand function and allocate quadrature workspace
@@ -364,13 +370,13 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::configureAdjoint()
     {
       // Allocate adjoint vector, derivatives and quadrature
-      yyB_ = N_VNew_Serial(model_->size(), context_);
+      yyB_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
       checkAllocation((void*) yyB_, "N_VNew_Serial");
 
       ypB_ = N_VClone(yyB_);
       checkAllocation((void*) ypB_, "N_VClone");
 
-      qB_ = N_VNew_Serial(model_->sizeParams(), context_);
+      qB_ = N_VNew_Serial(static_cast<sunindextype>(model_->sizeParams()), context_);
       checkAllocation((void*) qB_, "N_VNew_Serial");
 
       return 0;
@@ -382,7 +388,7 @@ namespace AnalysisManager
       int retval = 0;
 
       // Create adjoint workspace
-      retval = IDAAdjInit(solver_, steps, IDA_HERMITE);
+      retval = IDAAdjInit(solver_, static_cast<long>(steps), IDA_HERMITE);
       checkOutput(retval, "IDAAdjInit");
 
       return retval;
@@ -420,7 +426,9 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxNumSteps");
 
       // Set up linear solver
-      JacobianMatB_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
+      JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                     static_cast<sunindextype>(model_->size()),
+                                     context_);
       checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
 
       linearSolverB_ = SUNLinSol_Dense(yyB_, JacobianMatB_, context_);
@@ -450,7 +458,9 @@ namespace AnalysisManager
       int retval = 0;
 
       // Create Jacobian matrix
-      JacobianMatB_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
+      JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                     static_cast<sunindextype>(model_->size()),
+                                     context_);
       checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
 
       // Create linear solver
