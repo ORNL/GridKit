@@ -1,6 +1,7 @@
 /**
  * @file GenClassical.cpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
+ * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of a Classical generator model.
  *
  *
@@ -19,14 +20,9 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Constructor for a pi-model branch
+    /**
+     * @brief Constructor for a classical generator model.
      *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
@@ -51,11 +47,6 @@ namespace GridKit
     /*!
      * @brief Constructor for a pi-model branch
      *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
@@ -98,7 +89,7 @@ namespace GridKit
     }
 
     /**
-     * Initialization of the branch model
+     * Initialization of the generator model
      *
      */
     template <class ScalarT, typename IdxT>
@@ -111,12 +102,12 @@ namespace GridKit
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
-      ScalarT Er    = (G_ * ir + B_ * ii) / (G_ * G_ + B_ * B_) + vr;
-      ScalarT Ei    = (-B_ * ir + G_ * ii) / (G_ * G_ + B_ * B_) + vi;
+      ScalarT Er    = (G_ * ir - B_ * ii) / (G_ * G_ + B_ * B_) + vr;
+      ScalarT Ei    = (B_ * ir + G_ * ii) / (G_ * G_ + B_ * B_) + vi;
       ScalarT delta = atan2(Ei, Er);
       ScalarT omega = 1.0;
       ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
-      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * cos(delta) + (B_ * vr + G_ * vi) * sin(delta));
+      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + B_ * vi) * cos(delta) + (-B_ * vr + G_ * vi) * sin(delta));
 
       y_[0] = delta;
       y_[1] = omega;
@@ -143,8 +134,7 @@ namespace GridKit
     }
 
     /**
-     * \brief Residual contribution of the branch is pushed to the
-     * two terminal buses.
+     * \brief Residual for the generator model.
      *
      */
     template <class ScalarT, typename IdxT>
@@ -168,16 +158,16 @@ namespace GridKit
       f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       /* 11 GenClassical algebraic equations */
-      f_[2] = telec - (1.0 / omega) * (G_ * ep * ep - ep * ((G_ * Vr() - B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
+      f_[2] = telec - (1.0 / omega) * (G_ * ep * ep - ep * ((G_ * Vr() + B_ * Vi()) * cos(delta) + (-B_ * Vr() + G_ * Vi()) * sin(delta)));
 
-      f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
-      f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));
+      f_[3] = ir + G_ * Vr() + B_ * Vi() - ep * (G_ * cos(delta) + B_ * sin(delta));
+      f_[4] = ii - B_ * Vr() + G_ * Vi() - ep * (-B_ * cos(delta) + G_ * sin(delta));
 
       f_[5] = pmech - pmech_set_;
       f_[6] = ep - ep_set_;
 
-      Ir() += -G_ * Vr() + B_ * Vi() + ep * (G_ * cos(delta) - B_ * sin(delta));
-      Ii() += -B_ * Vr() - G_ * Vi() + ep * (B_ * cos(delta) + G_ * sin(delta));
+      Ir() += ir;
+      Ii() += ii;
 
       return 0;
     }
@@ -255,7 +245,7 @@ namespace GridKit
     void GenClassical<ScalarT, IdxT>::setDerivedParams()
     {
       G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      B_ = Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
     }
 
     // Available template instantiations

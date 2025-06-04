@@ -83,9 +83,9 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 
 ```math
 \begin{aligned}
-    0 &= T_{e} - \frac{1}{\omega}\left( G E_p^2 - E_p \left[(G V_r - B V_i)\cos\delta + (B V_r + G V_i)\sin\delta \right]\right)\\
-    0 &= I_r + G V_r - B V_i - E_p(G \cos\delta - B \sin\delta) \\
-    0 &= I_i + B V_r + G V_i - E_p(B \cos\delta + G \sin\delta)
+    0 &= T_{e} - \frac{1}{\omega}\left( G E_p^2 - E_p \left[(G V_r + B V_i)\cos\delta + (-B V_r + G V_i)\sin\delta \right]\right) \\
+    0 &= I_r + G V_r + B V_i - E_p(G \cos\delta + B \sin\delta) \\
+    0 &= I_i - B V_r + G V_i - E_p(-B \cos\delta + G \sin\delta)
 \end{aligned}
 ```
 As noted earlier, all three algebraic equations can be expressed as functions
@@ -120,17 +120,17 @@ I_i &= \frac{PV_i - QV_r}{V_r^2 + V_i^2}
 We substitute expressions above into equations for current injections and
 obtain
 ```math
-\begin{align}
-E_p \sin\delta &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \\
-E_p \cos\delta &= \dfrac{ G I_r + B I_i}{G^2 + B^2} + V_r
-\end{align}
+\begin{aligned}
+E_p \sin\delta &= \dfrac{B I_r + G I_i}{G^2 + B^2} + V_i \\
+E_p \cos\delta &= \dfrac{G I_r - B I_i}{G^2 + B^2} + V_r
+\end{aligned}
 ```
-By dividing (1) by (2) we get expression for machine angle at the
+By dividing these two equations we get expression for machine angle at the
 steady state
 ```math
 \delta = \arctan \dfrac{E_i}{E_r} \, ,
 ```
-and by squaring and adding (1) and (2), we get expression for field
+and by squaring and adding them, we get expression for field
 winding voltage at the steady state
 ```math
 E_p = \sqrt{E_r^2 + E_i^2}   \, ,
@@ -138,8 +138,8 @@ E_p = \sqrt{E_r^2 + E_i^2}   \, ,
 where
 ```math
 \begin{aligned}
-E_r &= \dfrac{ G I_r + B I_i}{G^2 + B^2} + V_r \, ,\\
-E_i &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \, .
+E_r &= \dfrac{G I_r - B I_i}{G^2 + B^2} + V_r \, ,\\
+E_i &= \dfrac{B I_r + G I_i}{G^2 + B^2} + V_i \, .
 \end{aligned}
 ```
 
@@ -152,7 +152,7 @@ Now, we can compute electrical torque and set mechanical torque to be equal
 to the electrical:
 ```math
 \begin{aligned}
-T_{e} &= G E_p^2 - E_p \left[ (G V_r - B V_i ) \cos\delta + (B V_r + G V_i )\sin\delta \right] \\
+T_{e} &= G E_p^2 - E_p \left[ (G V_r + B V_i ) \cos\delta + (-B V_r + G V_i )\sin\delta \right] \\
 P_{m} &= T_{e} 
 \end{aligned} 
 ```
