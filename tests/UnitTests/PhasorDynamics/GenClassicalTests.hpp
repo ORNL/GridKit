@@ -3,7 +3,7 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @author Abdourahman Barry (abdourahman@vt.edu)
  * @brief Tests for classical generator model.
- * 
+ *
  */
 #include <iomanip>
 #include <iostream>
@@ -26,8 +26,8 @@ namespace GridKit
     class GenClassicalTests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
-      static constexpr ScalarT tol_  = 10 * std::numeric_limits<ScalarT>::epsilon();
+      using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:
       GenClassicalTests()  = default;
@@ -143,12 +143,12 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         // Test answer keys
-        const std::vector<ScalarT> var_answer = {M_PI / 4.0, // delta
-                                                 1.0,        // omega
-                                                 6.0,        // Te
-                                                 1.0,        // Ir
-                                                 2.0,        // Ii
-                                                 6.0,        // Pm
+        const std::vector<ScalarT> var_answer = {M_PI / 4.0,       // delta
+                                                 1.0,              // omega
+                                                 6.0,              // Te
+                                                 1.0,              // Ir
+                                                 2.0,              // Ii
+                                                 6.0,              // Pm
                                                  2.0 * sqrt(2.0)}; // Ep
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
