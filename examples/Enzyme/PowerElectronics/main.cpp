@@ -15,7 +15,7 @@
  */
 
 using DenseMatrix  = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
-using SparseMatrix = COO_Matrix<double, size_t>;
+using SparseMatrix = GridKit::LinearAlgebra::COO_Matrix<double, size_t>;
 using DG           = GridKit::DistributedGenerator<double, size_t>;
 using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 

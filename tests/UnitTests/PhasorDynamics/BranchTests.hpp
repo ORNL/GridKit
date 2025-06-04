@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <LinearAlgebra/SparsityPattern/Variable.hpp>
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -87,32 +87,32 @@ namespace GridKit
         real_type G{0.2}; ///< Branch shunt conductance
         real_type B{1.2}; ///< Branch shunt charging
 
-        Sparse::Variable Vr1{10.0}; ///< Bus-1 real voltage
-        Sparse::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
-        Sparse::Variable Vr2{30.0}; ///< Bus-2 real voltage
-        Sparse::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
+        DependencyTracking::Variable Vr1{10.0}; ///< Bus-1 real voltage
+        DependencyTracking::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
+        DependencyTracking::Variable Vr2{30.0}; ///< Bus-2 real voltage
+        DependencyTracking::Variable Vi2{40.0}; ///< Bus-2 imaginary voltage
 
         Vr1.setVariableNumber(0); ///< Independent variables: first
         Vi1.setVariableNumber(1); ///< Independent variables: second
         Vr2.setVariableNumber(2); ///< Independent variables: third
         Vi2.setVariableNumber(3); ///< Independent variables: fourth
 
-        PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::BusInfinite<Sparse::Variable, IdxT> bus2(Vr2, Vi2);
+        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
+        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
 
-        PhasorDynamics::Branch<Sparse::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
-        std::vector<Sparse::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
-        std::vector<Sparse::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
+        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
 
         /// Compare dependencies computed automatically to the ones computed analytically
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          Sparse::Variable                       res           = residuals[i];
-          const Sparse::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                             *= (GridKit::Testing::isEqual(dependencies, ref[i]));
+          DependencyTracking::Variable                       res           = residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
@@ -182,10 +182,10 @@ namespace GridKit
       }
 
     private:
-      std::vector<Sparse::Variable::DependencyMap> analyticalJacobian(const real_type R,
-                                                                      const real_type X,
-                                                                      const real_type G,
-                                                                      const real_type B)
+      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const real_type R,
+                                                                                  const real_type X,
+                                                                                  const real_type G,
+                                                                                  const real_type B)
       {
         const real_type b = -X / (R * R + X * X);
         const real_type g = R / (R * R + X * X);
@@ -210,7 +210,7 @@ namespace GridKit
         real_type dIi2_dVr2 = -(b + 0.5 * B);
         real_type dIi2_dVi2 = -(g + 0.5 * G);
 
-        std::vector<Sparse::Variable::DependencyMap> dependencies(4);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
         dependencies[0] = {{0, dIr1_dVr1}, {1, dIr1_dVi1}, {2, dIr1_dVr2}, {3, dIr1_dVi2}};
         dependencies[1] = {{0, dIi1_dVr1}, {1, dIi1_dVi1}, {2, dIi1_dVr2}, {3, dIi1_dVi2}};
         dependencies[2] = {{0, dIr2_dVr1}, {1, dIr2_dVi1}, {2, dIr2_dVr2}, {3, dIr2_dVi2}};

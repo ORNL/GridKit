@@ -83,8 +83,8 @@ namespace GridKit
       virtual std::vector<ScalarT>&       getResidual()       = 0;
       virtual const std::vector<ScalarT>& getResidual() const = 0;
 
-      virtual COO_Matrix<ScalarT, IdxT>&       getJacobian()       = 0;
-      virtual const COO_Matrix<ScalarT, IdxT>& getJacobian() const = 0;
+      virtual GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>&       getJacobian()       = 0;
+      virtual const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const = 0;
 
       virtual std::vector<ScalarT>&       getIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getIntegrand() const = 0;

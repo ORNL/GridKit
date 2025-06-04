@@ -6,7 +6,7 @@
 
 namespace GridKit
 {
-  namespace Sparse
+  namespace DependencyTracking
   {
     //------------------------------------
     // non-member operators and functions
@@ -317,7 +317,7 @@ namespace GridKit
       return x > 0.0 ? 1.0 : -1.0;
     }
 
-  } // namespace Sparse
+  } // namespace DependencyTracking
 } // namespace GridKit
 
 // Add all mathematical functions to the namespace std so that,
@@ -325,31 +325,31 @@ namespace GridKit
 namespace std
 {
 
-#define IMPL_FUN_1(FUN, DER)                                               \
-  inline GridKit::Sparse::Variable FUN(const GridKit::Sparse::Variable& x) \
-  {                                                                        \
-    double                    val = FUN(x());                              \
-    double                    der = DER(x());                              \
-    GridKit::Sparse::Variable res(x); /* copy derivatives of x*/           \
-    res.setValue(val);                /* set function value f(x) */        \
-    res.scaleDependencies(der);       /* compute derivatives of f(x) */    \
-    return res;                                                            \
+#define IMPL_FUN_1(FUN, DER)                                                                       \
+  inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x) \
+  {                                                                                                \
+    double                                val = FUN(x());                                          \
+    double                                der = DER(x());                                          \
+    GridKit::DependencyTracking::Variable res(x); /* copy derivatives of x*/                       \
+    res.setValue(val);                            /* set function value f(x) */                    \
+    res.scaleDependencies(der);                   /* compute derivatives of f(x) */                \
+    return res;                                                                                    \
   }
 
-  IMPL_FUN_1(sin, GridKit::Sparse::sin_derivative)
-  IMPL_FUN_1(cos, GridKit::Sparse::cos_derivative)
-  IMPL_FUN_1(tan, GridKit::Sparse::tan_derivative)
-  IMPL_FUN_1(asin, GridKit::Sparse::asin_derivative)
-  IMPL_FUN_1(acos, GridKit::Sparse::acos_derivative)
-  IMPL_FUN_1(atan, GridKit::Sparse::atan_derivative)
-  IMPL_FUN_1(sinh, GridKit::Sparse::sinh_derivative)
-  IMPL_FUN_1(cosh, GridKit::Sparse::cosh_derivative)
-  IMPL_FUN_1(tanh, GridKit::Sparse::tanh_derivative)
-  IMPL_FUN_1(exp, GridKit::Sparse::exp_derivative)
-  IMPL_FUN_1(log, GridKit::Sparse::log_derivative)
-  IMPL_FUN_1(log10, GridKit::Sparse::log10_derivative)
-  IMPL_FUN_1(sqrt, GridKit::Sparse::sqrt_derivative)
-  IMPL_FUN_1(abs, GridKit::Sparse::abs_derivative)
+  IMPL_FUN_1(sin, GridKit::DependencyTracking::sin_derivative)
+  IMPL_FUN_1(cos, GridKit::DependencyTracking::cos_derivative)
+  IMPL_FUN_1(tan, GridKit::DependencyTracking::tan_derivative)
+  IMPL_FUN_1(asin, GridKit::DependencyTracking::asin_derivative)
+  IMPL_FUN_1(acos, GridKit::DependencyTracking::acos_derivative)
+  IMPL_FUN_1(atan, GridKit::DependencyTracking::atan_derivative)
+  IMPL_FUN_1(sinh, GridKit::DependencyTracking::sinh_derivative)
+  IMPL_FUN_1(cosh, GridKit::DependencyTracking::cosh_derivative)
+  IMPL_FUN_1(tanh, GridKit::DependencyTracking::tanh_derivative)
+  IMPL_FUN_1(exp, GridKit::DependencyTracking::exp_derivative)
+  IMPL_FUN_1(log, GridKit::DependencyTracking::log_derivative)
+  IMPL_FUN_1(log10, GridKit::DependencyTracking::log10_derivative)
+  IMPL_FUN_1(sqrt, GridKit::DependencyTracking::sqrt_derivative)
+  IMPL_FUN_1(abs, GridKit::DependencyTracking::abs_derivative)
 
 #undef IMPL_FUN_1
 

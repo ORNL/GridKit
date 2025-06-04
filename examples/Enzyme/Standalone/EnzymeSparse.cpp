@@ -14,7 +14,7 @@
  * TODO: Convert this into a unit test.
  */
 
-using SparseMatrix = COO_Matrix<double, size_t>;
+using SparseMatrix = GridKit::LinearAlgebra::COO_Matrix<double, size_t>;
 extern int enzyme_dup;
 extern int enzyme_const;
 extern int enzyme_dupnoneed;
