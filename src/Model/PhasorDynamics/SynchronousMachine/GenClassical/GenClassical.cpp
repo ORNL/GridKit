@@ -78,13 +78,14 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::allocate()
     {
-      f_.resize(size_);
-      y_.resize(size_);
-      yp_.resize(size_);
-      tag_.resize(size_);
-      fB_.resize(size_);
-      yB_.resize(size_);
-      ypB_.resize(size_);
+      auto size = static_cast<size_t>(size_);
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      tag_.resize(size);
+      fB_.resize(size);
+      yB_.resize(size);
+      ypB_.resize(size);
       return 0;
     }
 
@@ -117,7 +118,7 @@ namespace GridKit
       y_[5] = pmech_set_ = Te;
       y_[6] = ep_set_ = Ep;
 
-      for (IdxT i = 0; i < size_; ++i)
+      for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         yp_[i] = 0.0;
 
       return 0;
