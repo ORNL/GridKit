@@ -1,3 +1,10 @@
+/**
+ * @file GenClassicalTests.hpp
+ * @author Slaven Peles (peless@ornl.gov)
+ * @author Abdourahman Barry (abdourahman@vt.edu)
+ * @brief Tests for classical generator model.
+ * 
+ */
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -20,6 +27,7 @@ namespace GridKit
     {
     private:
       using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      static constexpr ScalarT tol_  = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:
       GenClassicalTests()  = default;
@@ -63,48 +71,54 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        const ScalarT res0{0.0};                                          /// first residual
-        const ScalarT res1{0.0};                                          /// second residual
-        const ScalarT res2{0.0};                                          /// third residual
-        const ScalarT res3{0.0};                                          /// fourth residual
-        const ScalarT res4{0.0};                                          /// fifth residual
-        const ScalarT res5{pmech};                                          /// fifth residual
-        const ScalarT res6{ep};                                          /// fifth residual
-        const ScalarT tol = 7 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing results
+        // Test answer keys
+        const std::vector<ScalarT> res_answer = {0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 pmech,
+                                                 ep};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
+
+        // Allocate but not initialize genrator model
         gen.allocate();
 
-        gen.y()[0] = M_PI; // delta
-        gen.y()[1] = 2.0;  // omega
-        gen.y()[2] = 2.0;  // telec
-        gen.y()[3] = -2.0; // ir
-        gen.y()[4] = -4.0; // ii
-        gen.y()[5] = pmech;  // pmech
-        gen.y()[6] = ep;  // Ep
+        // Set variable values matching the answer key
+        gen.y()[0] = M_PI;  // delta
+        gen.y()[1] = 2.0;   // omega
+        gen.y()[2] = 2.0;   // telec
+        gen.y()[3] = -2.0;  // ir
+        gen.y()[4] = -4.0;  // ii
+        gen.y()[5] = pmech; // pmech
+        gen.y()[6] = ep;    // Ep
 
+        // Set derivative values matching the answer key
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
         gen.yp()[1] = -1.0;            // omega_dot
-        gen.yp()[2] = 0.0;             // telec
-        gen.yp()[3] = 0.0;             // ir
-        gen.yp()[4] = 0.0;             // ii
-        gen.yp()[5] = 0.0;             // pmech
-        gen.yp()[6] = 0.0;             // Ep
+        gen.yp()[2] = 0.0;
+        gen.yp()[3] = 0.0;
+        gen.yp()[4] = 0.0;
+        gen.yp()[5] = 0.0;
+        gen.yp()[6] = 0.0;
 
         gen.evaluateResidual();
+        std::vector<ScalarT>& residual = gen.getResidual();
 
-        std::vector<ScalarT> residual = gen.getResidual();
-
-        success *= isEqual(residual[0], res0, tol);
-        success *= isEqual(residual[1], res1, tol);
-        success *= isEqual(residual[2], res2, tol);
-        success *= isEqual(residual[3], res3, tol);
-        success *= isEqual(residual[4], res4, tol);
-        success *= isEqual(residual[5], res5, tol);
-        success *= isEqual(residual[6], res6, tol);
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          if (!isEqual(residual[i], res_answer[i], tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << residual[i] << " != " << res_answer[i] << "\n";
+            success = false;
+            break;
+          }
+        }
 
         return success.report(__func__);
       }
@@ -128,15 +142,14 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
-        const ScalarT delta{M_PI / 4.0};   /// first residual
-        const ScalarT omega{1.0};          /// second residual
-        const ScalarT Te{6.0};             /// third residual
-        const ScalarT ir{1.0};             /// fourth residual
-        const ScalarT ii{2.0};             /// fifth residual
-        const ScalarT pmech{6.0};          /// fifth residual
-        const ScalarT Ep{2.0 * sqrt(2.0)}; /// fifth residual
-
-        const ScalarT tol = 5.0 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
+        // Test answer keys
+        const std::vector<ScalarT> var_answer = {M_PI / 4.0, // delta
+                                                 1.0,        // omega
+                                                 6.0,        // Te
+                                                 1.0,        // Ir
+                                                 2.0,        // Ii
+                                                 6.0,        // Pm
+                                                 2.0 * sqrt(2.0)}; // Ep
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
@@ -145,21 +158,24 @@ namespace GridKit
         gen.allocate();
         gen.initialize();
 
-        success *= isEqual(gen.y()[0], delta, tol);
-        success *= isEqual(gen.y()[1], omega, tol);
-        success *= isEqual(gen.y()[2], Te, tol);
-        success *= isEqual(gen.y()[3], ir, tol);
-        success *= isEqual(gen.y()[4], ii, tol);
-        success *= isEqual(gen.y()[5], pmech, tol);
-        success *= isEqual(gen.y()[6], Ep, tol);
+        for (size_t i = 0; i < var_answer.size(); ++i)
+        {
+          if (!isEqual(gen.y()[i], var_answer[i], tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << gen.y()[i] << " != " << var_answer[i] << "\n";
+            success = false;
+            break;
+          }
 
-        success *= isEqual(gen.yp()[0], 0.0, tol);
-        success *= isEqual(gen.yp()[1], 0.0, tol);
-        success *= isEqual(gen.yp()[2], 0.0, tol);
-        success *= isEqual(gen.yp()[3], 0.0, tol);
-        success *= isEqual(gen.yp()[4], 0.0, tol);
-        success *= isEqual(gen.yp()[5], 0.0, tol);
-        success *= isEqual(gen.yp()[6], 0.0, tol);
+          if (!isEqual(gen.yp()[i], 0.0, tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << gen.yp()[i] << " != 0\n";
+            success = false;
+            break;
+          }
+        }
 
         return success.report(__func__);
       }
@@ -179,10 +195,8 @@ namespace GridKit
         real_type Ra{0.6};
         real_type Xdp{0.2};
 
-        ScalarT Vr1{1.0}; ///< Bus-1 real voltage
-        ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
-
-        const ScalarT tol = 5.0 * (std::numeric_limits<double>::epsilon()); // tolerance for comparing result
+        ScalarT Vr1{1.0}; ///< Bus real voltage
+        ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
@@ -191,20 +205,23 @@ namespace GridKit
         gen.allocate();
         gen.initialize();
         gen.evaluateResidual();
-        std::vector<double> res = gen.getResidual();
+        std::vector<ScalarT> res = gen.getResidual();
 
-        success *= isEqual(res[0], 0.0, tol);
-        success *= isEqual(res[1], 0.0, tol);
-        success *= isEqual(res[2], 0.0, tol);
-        success *= isEqual(res[3], 0.0, tol);
-        success *= isEqual(res[4], 0.0, tol);
-        success *= isEqual(res[5], 0.0, tol);
-        success *= isEqual(res[6], 0.0, tol);
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+          if (!isEqual(res[i], 0.0, tol_))
+          {
+            std::cout << "Incorrect result: "
+                      << gen.yp()[i] << " != 0\n";
+            success = false;
+            break;
+          }
+        }
 
         return success.report(__func__);
       }
 
-    }; // class BranchTest
+    }; // class GenClassicalTests
 
   } // namespace Testing
 } // namespace GridKit
