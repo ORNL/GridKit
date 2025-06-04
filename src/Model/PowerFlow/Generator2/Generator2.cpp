@@ -48,7 +48,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::allocate()
   {
-    tag_.resize(size_);
+    tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
 

@@ -136,13 +136,13 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::allocate()
     {
-      f_.resize(size_);
-      y_.resize(size_);
-      yp_.resize(size_);
-      tag_.resize(size_);
-      fB_.resize(size_);
-      yB_.resize(size_);
-      ypB_.resize(size_);
+      f_.resize(static_cast<size_t>(size_));
+      y_.resize(static_cast<size_t>(size_));
+      yp_.resize(static_cast<size_t>(size_));
+      tag_.resize(static_cast<size_t>(size_));
+      fB_.resize(static_cast<size_t>(size_));
+      yB_.resize(static_cast<size_t>(size_));
+      ypB_.resize(static_cast<size_t>(size_));
       return 0;
     }
 
@@ -209,7 +209,7 @@ namespace GridKit
                + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
 
       for (IdxT i = 0; i < size_; ++i)
-        yp_[i] = 0.0;
+        yp_[static_cast<size_t>(i)] = 0.0;
 
       return 0;
     }
@@ -222,7 +222,7 @@ namespace GridKit
     {
       for (IdxT i = 0; i < size_; ++i)
       {
-        tag_[i] = i < 6;
+        tag_[static_cast<size_t>(i)] = i < 6;
       }
       return 0;
     }

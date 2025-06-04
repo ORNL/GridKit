@@ -20,9 +20,6 @@ set(PACKAGE_VERSION_PATCH "0")
 
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
-# TODO: Probably beter to set a debug interface target
-# set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -DDEBUG")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
 

@@ -53,7 +53,7 @@ namespace AnalysisManager
       int retval = 0;
 
       // Allocate solution vectors
-      yy_ = N_VNew_Serial(model_->size(), context_);
+      yy_ = N_VNew_Serial(static_cast<sunindextype>(model_->size()), context_);
       checkAllocation((void*) yy_, "N_VNew_Serial");
 
       // Allocate scaling vector
@@ -93,7 +93,9 @@ namespace AnalysisManager
       int retval = 0;
 
       // Set up linear solver
-      JacobianMat_ = SUNDenseMatrix(model_->size(), model_->size(), context_);
+      JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                    static_cast<sunindextype>(model_->size()),
+                                    context_);
       checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
 
       linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);

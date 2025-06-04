@@ -53,7 +53,7 @@ namespace GridKit
   int Generator4Param<ScalarT, IdxT>::allocate()
   {
     // std::cout << "Allocate Generator4Param..." << std::endl;
-    tag_.resize(size_);
+    tag_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
@@ -143,7 +143,7 @@ namespace GridKit
 
     for (IdxT i = 4; i < size_; ++i)
     {
-      tag_[i] = false;
+      tag_[static_cast<size_t>(i)] = false;
     }
 
     return 0;
@@ -219,8 +219,8 @@ namespace GridKit
     // std::cout << "Initialize adjoint for Generator4Param..." << std::endl;
     for (IdxT i = 0; i < size_; ++i)
     {
-      yB_[i]  = 0.0;
-      ypB_[i] = 0.0;
+      yB_[static_cast<size_t>(i)]  = 0.0;
+      ypB_[static_cast<size_t>(i)] = 0.0;
     }
     // ypB_[1] = frequencyPenaltyDer(y_[1]);
     ypB_[2] = -trajectoryPenaltyDerEdp(time_) / Tq0p_;
@@ -325,16 +325,16 @@ namespace GridKit
     if (t >= ti && t < tf)
     {
       // Interpolate from look-up table
-      Edp_est = (table_[n + 1][3] - table_[n][3]) / (table_[n + 1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][3];
-      Eqp_est = (table_[n + 1][4] - table_[n][4]) / (table_[n + 1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][4];
+      Edp_est = (table_[static_cast<size_t>(n + 1)][3] - table_[static_cast<size_t>(n)][3]) / (table_[static_cast<size_t>(n + 1)][0] - table_[static_cast<size_t>(n)][0]) * (t - table_[static_cast<size_t>(n)][0]) + table_[static_cast<size_t>(n)][3];
+      Eqp_est = (table_[static_cast<size_t>(n + 1)][4] - table_[static_cast<size_t>(n)][4]) / (table_[static_cast<size_t>(n + 1)][0] - table_[static_cast<size_t>(n)][0]) * (t - table_[static_cast<size_t>(n)][0]) + table_[static_cast<size_t>(n)][4];
     }
     else
     {
       if (tf <= t && t < tf + dt)
       {
         // Extrapolate from look-up table
-        Edp_est = (table_[n][3] - table_[n - 1][3]) / (table_[n][0] - table_[n - 1][0]) * (t - table_[n - 1][0]) + table_[n - 1][3];
-        Eqp_est = (table_[n][4] - table_[n - 1][4]) / (table_[n][0] - table_[n - 1][0]) * (t - table_[n - 1][0]) + table_[n - 1][4];
+        Edp_est = (table_[static_cast<size_t>(n)][3] - table_[static_cast<size_t>(n - 1)][3]) / (table_[static_cast<size_t>(n)][0] - table_[static_cast<size_t>(n - 1)][0]) * (t - table_[static_cast<size_t>(n - 1)][0]) + table_[static_cast<size_t>(n - 1)][3];
+        Eqp_est = (table_[static_cast<size_t>(n)][4] - table_[static_cast<size_t>(n - 1)][4]) / (table_[static_cast<size_t>(n)][0] - table_[static_cast<size_t>(n - 1)][0]) * (t - table_[static_cast<size_t>(n - 1)][0]) + table_[static_cast<size_t>(n - 1)][4];
       }
       else
       {
@@ -360,13 +360,13 @@ namespace GridKit
 
     if (t >= ti && t < tf)
     {
-      Edp_est = (table_[n + 1][3] - table_[n][3]) / (table_[n + 1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][3];
+      Edp_est = (table_[static_cast<size_t>(n + 1)][3] - table_[static_cast<size_t>(n)][3]) / (table_[static_cast<size_t>(n + 1)][0] - table_[static_cast<size_t>(n)][0]) * (t - table_[static_cast<size_t>(n)][0]) + table_[static_cast<size_t>(n)][3];
     }
     else
     {
       if (tf <= t && t < tf + dt)
       {
-        Edp_est = (table_[n][3] - table_[n - 1][3]) / (table_[n][0] - table_[n - 1][0]) * (t - table_[n - 1][0]) + table_[n - 1][3];
+        Edp_est = (table_[static_cast<size_t>(n)][3] - table_[static_cast<size_t>(n - 1)][3]) / (table_[static_cast<size_t>(n)][0] - table_[static_cast<size_t>(n - 1)][0]) * (t - table_[static_cast<size_t>(n - 1)][0]) + table_[static_cast<size_t>(n - 1)][3];
       }
       else
       {
@@ -391,13 +391,13 @@ namespace GridKit
 
     if (t >= ti && t < tf)
     {
-      Eqp_est = (table_[n + 1][4] - table_[n][4]) / (table_[n + 1][0] - table_[n][0]) * (t - table_[n][0]) + table_[n][4];
+      Eqp_est = (table_[static_cast<size_t>(n + 1)][4] - table_[static_cast<size_t>(n)][4]) / (table_[static_cast<size_t>(n + 1)][0] - table_[static_cast<size_t>(n)][0]) * (t - table_[static_cast<size_t>(n)][0]) + table_[static_cast<size_t>(n)][4];
     }
     else
     {
       if (tf <= t && t < tf + dt)
       {
-        Eqp_est = (table_[n][4] - table_[n - 1][4]) / (table_[n][0] - table_[n - 1][0]) * (t - table_[n - 1][0]) + table_[n - 1][4];
+        Eqp_est = (table_[static_cast<size_t>(n)][4] - table_[static_cast<size_t>(n - 1)][4]) / (table_[static_cast<size_t>(n)][0] - table_[static_cast<size_t>(n - 1)][0]) * (t - table_[static_cast<size_t>(n - 1)][0]) + table_[static_cast<size_t>(n - 1)][4];
       }
       else
       {
