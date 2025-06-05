@@ -13,8 +13,8 @@ $U$ | [unitless] | Binary status $$\in \{0, 1\}$$ | Set by user to put fault on 
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R}{R^2+(X)^2} \\
-  B   &= -\dfrac{X}{R^2+(X)^2}\\
+  G   &=\dfrac{R}{R^2+ X^2} \\
+  B   &= -\dfrac{X}{R^2 + X^2}\\
 \end{aligned}
 ```
 

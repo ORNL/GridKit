@@ -16,8 +16,8 @@ $X$  | [p.u.] | Load reactance  |
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R}{R^2+(X)^2} \\
-  B   &= -\dfrac{X}{R^2+(X)^2}\\
+  G   &=\dfrac{R}{R^2 + X^2} \\
+  B   &= -\dfrac{X}{R^2 + X^2}\\
 \end{aligned}
 ```
 
@@ -57,7 +57,7 @@ None.
 ### Algebraic Equations
 ``` math
 \begin{aligned}
-0 &= -I_{r} -g V_{r} + b V_{i} \\
-0 &= -I_{i} -b V_{r} - g V_{i}
+0 &= I_{r} +G V_{r} - B V_{i} \\
+0 &= I_{i} +B V_{r} + G V_{i}
 \end{aligned}
 ```

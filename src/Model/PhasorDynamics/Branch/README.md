@@ -29,8 +29,8 @@ $B$  | [p.u.] | Branch shunt susceptance  |
 Note the difference between little-g and big-G, little-b, big-B in these equations.
 ``` math
 \begin{aligned}
-  g   &=\dfrac{R}{R^2+(X)^2} \\
-  b   &= -\dfrac{X}{R^2+(X)^2}\\
+  g   &=\dfrac{R}{R^2 + X^2} \\
+  b   &= -\dfrac{X}{R^2 + X^2}\\
 \end{aligned}
 ```
 

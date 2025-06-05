@@ -20,7 +20,7 @@ Notes:
 
 Symbol      | Units   | Description                     | Typical Value | Note
 ------------|---------|---------------------------------|---------------| ------
-$\omega_0$  | [rad/s] | synchronous frequency           | $2\pi60$
+$\omega_0$  | [rad/s] | synchronous frequency           | $2\pi \cdot 60$
 $H$         | [s]     | rotor inertia                   | 3
 $D$         | [p.u.]  | damping coefficient             | 0
 $R_a$       | [p.u.]  | winding resistance              | 0
@@ -62,7 +62,7 @@ $S_{12}$   | [p.u.] | Saturation factor at 1.2 pu flux | 0 |
 Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------| ------
 $\delta$  | [rad] | Machine internal rotor angle |
-$\omega$  | [p.u.] | Machine relative speed | Optionally read by governor or stabilizer component
+$\omega$  | [p.u.] | Machine speed | Optionally read by governor or stabilizer component
 $\psi'_d$ | [p.u.] | Direct axis subtransient flux | 
 $\psi'_q$ | [p.u.] | Quadrature axis subtransient flux | 
 $E'_d$ | [p.u.] | Direct axis transient flux | 
@@ -80,7 +80,7 @@ $I_i$  | [p.u.] | Terminal current, imaginary component on network reference fra
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux
 $\psi''_d$  | [p.u.] | Total d-axis subtransient flux
 $\psi''$    | [p.u.] |   Machine total subtransient flux
-$T_{elec}$   | [p.u.] |  Electrical torque
+$T_{e}$   | [p.u.] |  Electrical torque
 $k_{sat}$   | [p.u.] |   Saturation coefficient 
 
 ### External Variables
@@ -93,7 +93,7 @@ Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------| ------
 $V_r$  | [p.u.] | Terminal voltage, real component on network reference frame | owned by bus object
 $V_i$  | [p.u.] | Terminal voltage, imaginary component on network reference frame | owned by bus object
-$P_{mech}$   | [p.u.] | Mechanical power from the prime mover | Owned by governor, constant if no governor is connected to the machine
+$P_{m}$   | [p.u.] | Mechanical power from the prime mover | Owned by governor, constant if no governor is connected to the machine
 $E_{fd}$    | [p.u.] | Field winding voltage from the excitation system  | Owned by exciter, constant if no exciter is connected to the machine
 
 ## Model Equations
@@ -127,8 +127,8 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
   0 &= -\psi'' +\sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  0 &= -V_{d} -\psi''_{q}(1+\omega)\\
-  0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
+  0 &= -V_{d} -\psi''_{q}\omega\\
+  0 &= -V_{q}  +\psi''_{d}\omega\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   0 &= -k_{sat} + S_B (\psi''-S_A)^2 \\
  0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
