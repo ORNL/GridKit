@@ -38,7 +38,7 @@ namespace GridKit
         ypB_(static_cast<size_t>(size_)),
         fB_(static_cast<size_t>(size_)),
         gB_(static_cast<size_t>(size_opt_)),
-        jac_(COO_Matrix<ScalarT, IdxT>()),
+        jac_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>()),
         param_(static_cast<size_t>(size_opt_)),
         param_up_(static_cast<size_t>(size_opt_)),
         param_lo_(static_cast<size_t>(size_opt_))
@@ -178,12 +178,12 @@ namespace GridKit
       return f_;
     }
 
-    COO_Matrix<ScalarT, IdxT>& getJacobian()
+    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian()
     {
       return jac_;
     }
 
-    const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+    const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const
     {
       return jac_;
     }
@@ -241,7 +241,7 @@ namespace GridKit
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
 
-    COO_Matrix<ScalarT, IdxT> jac_;
+    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;
@@ -260,4 +260,4 @@ namespace GridKit
 
 } // namespace GridKit
 
-#endif // _MODEL_EVALUATOR_IMPL_HPP_
+#endif // _MODEL_EVALUATOR_IMPL_H

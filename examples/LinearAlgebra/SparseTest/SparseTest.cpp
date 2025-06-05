@@ -18,7 +18,7 @@ int main()
   size_t              n = 4;
   size_t              m = 4;
 
-  COO_Matrix<double, size_t> A = COO_Matrix<double, size_t>(x, y, val, m, n);
+  GridKit::LinearAlgebra::COO_Matrix<double, size_t> A = GridKit::LinearAlgebra::COO_Matrix<double, size_t>(x, y, val, m, n);
 
   std::vector<double> valn(4);
   std::vector<size_t> xn(4);
@@ -34,10 +34,10 @@ int main()
   std::cout << "A:\n";
   A.printMatrix();
 
-  std::vector<double>        val2{0.5, 0.6, 0.7, 0.8, 1.0};
-  std::vector<size_t>        x2{0, 2, 0, 2, 1};
-  std::vector<size_t>        y2{3, 3, 2, 2, 3};
-  COO_Matrix<double, size_t> B = COO_Matrix<double, size_t>(x2, y2, val2, m, n);
+  std::vector<double>                                val2{0.5, 0.6, 0.7, 0.8, 1.0};
+  std::vector<size_t>                                x2{0, 2, 0, 2, 1};
+  std::vector<size_t>                                y2{3, 3, 2, 2, 3};
+  GridKit::LinearAlgebra::COO_Matrix<double, size_t> B = GridKit::LinearAlgebra::COO_Matrix<double, size_t>(x2, y2, val2, m, n);
 
   std::cout << "B:\n";
   B.printMatrix();
