@@ -196,12 +196,12 @@ namespace GridKit
       return f_;
     }
 
-    COO_Matrix<ScalarT, IdxT>& getJacobian()
+    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian()
     {
       return jac_;
     }
 
-    const COO_Matrix<ScalarT, IdxT>& getJacobian() const
+    const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const
     {
       return jac_;
     }
@@ -266,7 +266,7 @@ namespace GridKit
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
 
-    COO_Matrix<ScalarT, IdxT> jac_;
+    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;

@@ -1,4 +1,4 @@
 #
+add_subdirectory(AutomaticDifferentiation)
 add_subdirectory(PhasorDynamics)
-add_subdirectory(SparsityPattern)
 add_subdirectory(Solver)

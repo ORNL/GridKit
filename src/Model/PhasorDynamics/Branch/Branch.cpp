@@ -221,8 +221,8 @@ namespace GridKit
     // Available template instantiations
     template class Branch<double, long int>;
     template class Branch<double, size_t>;
-    template class Branch<Sparse::Variable, long int>;
-    template class Branch<Sparse::Variable, size_t>;
+    template class Branch<DependencyTracking::Variable, long int>;
+    template class Branch<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
