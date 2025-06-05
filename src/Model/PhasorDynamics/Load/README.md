@@ -2,27 +2,62 @@
 
 Load modeling is one of the more complex aspects of power system dynamics.
 The simplest model, which is used for this challenge problem, is to model
-the load as a complex shunt impedance with the impedance given by:
-``` math
-Z = R + jX
-```
-where $`R`$ is the load resistance, $`X`$ is the load reactance. The current
-drawn by the load is then obtained as
-```math
-I_{\mathrm{load}} = \frac{V_{\mathrm{bus}}}{Z},
-```
-where $`V_{bus}`$ is the voltage on the bus to which the load is connected.
+the load as a complex shunt impedance $$ R + jX $$.
 
-After some algebra, one obtains expressions for real and imaginary components
-for the currents entering the bus:
-```math
-I_{r} = -g V_{r} + b V_{i} 
-```
 
-```math
-I_{i} = - b V_{r} - g V_{i}
-```
-where
-```math
-g = \frac{R}{R^2+X^2} ~~~\mathrm{and}~~~ b = \frac{-X}{R^2+X^2}.
-```
+## Model Parameters
+
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$R$  | [p.u.] | Load resistance  | 
+$X$  | [p.u.] | Load reactance  | 
+
+
+### Model Derived Parameters
+$$
+\begin{aligned}
+  G   &=\dfrac{R}{R^2+(X)^2} \\
+  B   &= -\dfrac{X}{R^2+(X)^2}\\
+\end{aligned}
+$$
+
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+None.
+
+#### Algebraic
+
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$I_r$  | [p.u.] | Terminal current, real component  | Read by bus
+$I_i$  | [p.u.] | Terminal current, imaginary component  |  Read by bus
+
+
+### External Variables
+
+#### Differential
+None.
+
+#### Algebraic
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$V_r$  | [p.u.] | Terminal voltage, real component | owned by bus object
+$V_i$  | [p.u.] | Terminal voltage, imaginary component | owned by bus object
+
+
+## Model Equations
+
+### Differential Equations
+None.
+
+### Algebraic Equations
+$$
+\begin{aligned}
+0 &= -I_{r} -g V_{r} + b V_{i} \\
+0 &= -I_{i} -b V_{r} - g V_{i}
+\end{aligned}
+$$
