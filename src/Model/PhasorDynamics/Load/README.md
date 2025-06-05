@@ -14,12 +14,12 @@ $X$  | [p.u.] | Load reactance  |
 
 
 ### Model Derived Parameters
-$$
+``` math
 \begin{aligned}
   G   &=\dfrac{R}{R^2+(X)^2} \\
   B   &= -\dfrac{X}{R^2+(X)^2}\\
 \end{aligned}
-$$
+```
 
 
 ## Model Variables
@@ -55,9 +55,9 @@ $V_i$  | [p.u.] | Terminal voltage, imaginary component | owned by bus object
 None.
 
 ### Algebraic Equations
-$$
+``` math
 \begin{aligned}
 0 &= -I_{r} -g V_{r} + b V_{i} \\
 0 &= -I_{i} -b V_{r} - g V_{i}
 \end{aligned}
-$$
+```
