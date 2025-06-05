@@ -97,7 +97,7 @@ $E_{fd}$    | [p.u.] | Field winding voltage from the excitation system  | Owned
 ### Differential Equations
 ``` math
 \begin{aligned}
-  \dot\delta      &= \omega\cdot\omega_0 \\
+  \dot\delta      &= (\omega-1)\cdot\omega_0 \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D (\omega-1)}{\omega}
                    - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\

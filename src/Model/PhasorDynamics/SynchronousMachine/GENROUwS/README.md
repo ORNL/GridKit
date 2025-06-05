@@ -101,8 +101,8 @@ $E_{fd}$    | [p.u.] | Field winding voltage from the excitation system  | Owned
 ### Differential Equations
 ``` math
 \begin{aligned}
-  \dot\delta      &= \omega\cdot\omega_0 \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}
+  \dot\delta      &= (\omega-1)\cdot\omega_0 \\
+  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D(\omega-1)}{\omega}
                    - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
@@ -150,7 +150,7 @@ from the network interface equations. The remaining are algebraically solved
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}
-\omega &= 0 \\
+\omega &= 1 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
   \psi^{''}_{d} &= V_q \\
   \psi^{''}_{q} &= -V_d \\
