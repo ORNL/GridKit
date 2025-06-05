@@ -17,8 +17,8 @@ $X_{dp}$    | [p.u.]  | machine reactance parameter     |
 
 ### Model Derived Parameters
 
-- $G = \dfrac{R_a}{R_a^2 + X_{dp}^2}$
-- $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2}$
+- $G = \dfrac{R_a}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding conductance
+- $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding susceptance
 
 <br>
 

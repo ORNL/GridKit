@@ -57,7 +57,6 @@ namespace GridKit
                                               real_type D,
                                               real_type Ra,
                                               real_type Xdp)
-
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
@@ -141,24 +140,24 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::evaluateResidual()
     {
-      /* Read variables */
-      ScalarT delta = y_[0];
-      ScalarT omega = y_[1];
-      ScalarT telec = y_[2];
-      ScalarT ir    = y_[3];
-      ScalarT ii    = y_[4];
-      ScalarT pmech = y_[5];
-      ScalarT ep    = y_[6];
+      // Set variable aliases for better reliability
+      const ScalarT delta = y_[0];
+      const ScalarT omega = y_[1];
+      const ScalarT telec = y_[2];
+      const ScalarT ir    = y_[3];
+      const ScalarT ii    = y_[4];
+      const ScalarT pmech = y_[5];
+      const ScalarT ep    = y_[6];
 
-      /* Read derivatives */
-      ScalarT delta_dot = yp_[0];
-      ScalarT omega_dot = yp_[1];
+      // Set derivative aliases for better reliability
+      const ScalarT delta_dot = yp_[0];
+      const ScalarT omega_dot = yp_[1];
 
-      /* 6 GenClassical differential equations */
+      // GenClassical differential equations
       f_[0] = delta_dot - (omega - 1.0) * (2.0 * M_PI * 60.0);
-      f_[1] = omega_dot - (1.0 / (2 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
+      f_[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
-      /* 11 GenClassical algebraic equations */
+      // GenClassical algebraic equations
       f_[2] = telec - (1.0 / omega) * (G_ * ep * ep - ep * ((G_ * Vr() + B_ * Vi()) * cos(delta) + (-B_ * Vr() + G_ * Vi()) * sin(delta)));
 
       f_[3] = ir + G_ * Vr() + B_ * Vi() - ep * (G_ * cos(delta) + B_ * sin(delta));
@@ -167,6 +166,7 @@ namespace GridKit
       f_[5] = pmech - pmech_set_;
       f_[6] = ep - ep_set_;
 
+      // GenClassical contribution to bus algebraic equations
       Ir() += ir;
       Ii() += ii;
 
