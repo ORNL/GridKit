@@ -1,10 +1,8 @@
-# Branch Model
+# Transmission Line Branch Model
 
 Transmission lines and different types of transformers (traditional, Load
 Tap-Changing transformers (LTC) and Phase Angle Regulators (PARs)) can be
 modeled with a common branch model.
-
-## Transmission Line Model
 
 The most common circuit that is used to represent the transmission line model
 is $`\pi`$ circuit as shown in Figure 1. The positive flow direction is into
@@ -18,75 +16,74 @@ provides more flexibility for modeling.
   Figure 1: Transmission line $`\pi`$ equivalent circuit
 </div>
 
-Here
+## Model Parameters
+
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$R$  | [p.u.] | Branch series resistance  | 
+$X$  | [p.u.] | Branch series reactance  | 
+$G$  | [p.u.] | Branch shunt conductance  | 
+$B$  | [p.u.] | Branch shunt susceptance  | 
+
+### Model Derived Parameters
+Note the difference between little-g and big-G, little-b, big-B in these equations.
 ``` math
-Z = R + jX
+\begin{aligned}
+  g   &=\dfrac{R}{R^2+(X)^2} \\
+  b   &= -\dfrac{X}{R^2+(X)^2}\\
+\end{aligned}
 ```
-and
+
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+None.
+
+#### Algebraic
+
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$I_{r1}$  | [p.u.] | Terminal current, real component, bus 1  | Read by bus
+$I_{i1}$  | [p.u.] | Terminal current, imaginary component, bus 1  |  Read by bus
+$I_{r2}$  | [p.u.] | Terminal current, real component, bus 2  | Read by bus
+$I_{i2}$  | [p.u.] | Terminal current, imaginary component, bus 2  |  Read by bus
+
+
+### External Variables
+
+#### Differential
+None.
+
+#### Algebraic
+Symbol      | Units   | Description                     | Note
+------------|---------|---------------------------------| ------
+$V_{r1}$  | [p.u.] | Terminal voltage, real component, bus 1 | owned by bus object
+$V_{i1}$  | [p.u.] | Terminal voltage, imaginary component, bus 1 | owned by bus object
+$V_{r2}$  | [p.u.] | Terminal voltage, real component, bus 2 | owned by bus object
+$V_{i2}$  | [p.u.] | Terminal voltage, imaginary component, bus 2 | owned by bus object
+
+
+## Model Equations
+
+### Differential Equations
+None.
+
+### Algebraic Equations
 ``` math
-Y = G + jB,
-```
-where $`R`$ is line series resistance, $`X`$ is line series reactance, $`B`$ is
-line shunt charging, and $`G`$ is line shunt conductance. As can be seen from
-Figure 1 total $`B`$ and $`G`$ are separated between two buses. The current
-entering bus 1 can be obtained from Kirchhoff's current law as
-```math
-I_1 = y(V_2 - V_1) - \frac{Y}{2} V_1,
-```
-where $`V_1`$ and $`V_2`$ are respective bus voltages and
-```math
-y = \frac{1}{Z} = \frac{R}{R^2+X^2} + j\frac{-X}{R^2+X^2} = g + jb.
-```
-Similarly, current entering bus 2 is given as
-```math
-I_2 = y(V_1 - V_2) + \frac{Y}{2} V_2.
-```
-These equations can be written in a compact form as:
-```math
-\begin{bmatrix}
-I_{1}\\
-I_{2}
-\end{bmatrix}
-= \mathbf{Y}
-\begin{bmatrix}
-V_{1}\\
-V_{2}
-\end{bmatrix}
-```
-where:
-```math
-\mathbf{Y}_{TL}=\begin{bmatrix}
--(g + jb) - \dfrac{G+jB}{2} &   g + jb \\
-  g + jb                    & -(g + jb) - \dfrac{G+jB}{2}
-\end{bmatrix}
-```
-
-### Branch contributions to residuals at adjacent buses
-
-After some algebra, one obtains expressions for real and imaginary components
-for the currents entering adjacent buses:
-```math
-I_{r1} = -\left(g + \frac{G}{2}\right) V_{r1} + \left(b + \frac{B}{2} \right) V_{i1} 
-         + g V_{r2} - b V_{i2}
-```
-
-```math
-I_{i1} = -\left(b + \frac{B}{2} \right) V_{r1} - \left(g + \frac{G}{2}\right) V_{i1}
-         + b V_{r2} + g V_{i2}
-```
-
-```math
-I_{r2} = g V_{r1} - b V_{i1}
-         - \left(g + \frac{G}{2}\right) V_{r2} + \left(b + \frac{B}{2} \right) V_{i2} 
-```
-
-```math
-I_{i2} = b V_{r1} + g V_{i1}
-         - \left(b + \frac{B}{2} \right) V_{r2} - \left(g + \frac{G}{2}\right) V_{i2}
+\begin{aligned}
+      0 &= - I_{r1} -\left(g + \dfrac{G}{2}\right) V_{r1} + \left(b + \dfrac{B}{2}\right) V_{i1} + g V_{r2} - b V_{i2}\\
+      0 &= I_{i1} - \left(b + \dfrac{B}{2}\right) V_{r1} - \left(g + \dfrac{G}{2}\right) V_{i1} + b V_{r2} + g V_{i2}\\
+      0 &= I_{r2} + g V_{r1} - b V_{i1} - \left(g + \dfrac{G}{2}\right) V_{r2} + \left(b + \dfrac{B}{2}\right) V_{i2}\\
+      0 &= I_{i2} + b V_{r1} + g V_{i1} - \left(b + \dfrac{B}{2}\right) V_{r2} - \left(g + \dfrac{G}{2}\right) V_{i2}
+\end{aligned}
 ```
 
 
-## Transformer Branch Model
+
+# Transformer Branch Model
 
 **Note: Transformer model not yet implemented**
 
