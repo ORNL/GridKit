@@ -1,22 +1,19 @@
-# Load Model
+# Bus Fault
 
-Load modeling is one of the more complex aspects of power system dynamics.
-The simplest model, which is used for this challenge problem, is to model
-the load as a complex shunt impedance $$ R + jX $$.
-
+Represents an impedance fault at a bus. This device can exist in two states, on or off, controlled by the user. Following a state change, generally the solver needs to be reset as this is a discrete event.
 
 ## Model Parameters
 
 Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------| ------
-$R$  | [p.u.] | Load resistance  | 
-$X$  | [p.u.] | Load reactance  | 
-
+$R$  | [p.u.] | Fault resistance  | 
+$X$  | [p.u.] | Fault reactance  | 
+$U$ | [unitless] | Binary status $$\in \{0, 1\}$$ | Set by user to put fault on or off.
 
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R}{R^2 + X^2} \\
+  G   &=\dfrac{R}{R^2+ X^2} \\
   B   &= -\dfrac{X}{R^2 + X^2}\\
 \end{aligned}
 ```
@@ -57,7 +54,7 @@ None.
 ### Algebraic Equations
 ``` math
 \begin{aligned}
-0 &= I_{r} +G V_{r} - B V_{i} \\
-0 &= I_{i} +B V_{r} + G V_{i}
+0 &= -I_{r} + U (-G V_{r} + B V_{i}) \\
+0 &= -I_{i} + U (-B V_{r} - G V_{i})
 \end{aligned}
 ```
