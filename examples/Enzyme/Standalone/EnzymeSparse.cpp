@@ -60,7 +60,7 @@ __attribute__((always_inline)) static void sparse_store(T val, int64_t idx, size
   idx /= sizeof(T);
   if constexpr (sizeof(T) == 4)
     inner_storeflt(idx, i, val, triplets);
-  else                  
+  else
     inner_storedbl(idx, i, val, triplets);
 }
 
