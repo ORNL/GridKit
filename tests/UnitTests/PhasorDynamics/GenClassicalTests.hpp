@@ -5,6 +5,7 @@
  * @brief Tests for classical generator model.
  *
  */
+#define _USE_MATH_DEFINES  /* need this since directly including GenClassical.cpp for MSVC compiler */
 #include <iomanip>
 #include <iostream>
 #include <limits>
