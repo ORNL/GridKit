@@ -24,8 +24,8 @@ DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y)
   {
     for (int idx = 0; idx < x.size(); ++idx)
     {
-      if (idx == idy)
-        jac.setValue(idx, idy, dsquare_ref_scalar(x[idx]));
+      if (idy <= idx)
+        jac.setValue(idx, idy, dsquare_ref_scalar(x[idy]));
     }
   }
   return jac;

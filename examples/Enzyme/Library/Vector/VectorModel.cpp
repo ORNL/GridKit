@@ -20,7 +20,11 @@ void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
 {
   for (int idx = 0; idx < x.size(); ++idx)
   {
-    y[idx] = this->square_scalar(x[idx]);
+    y[idx] = 0.0;
+    for (int idy = 0; idy <= idx; idy++)
+    {
+      y[idx] += this->square_scalar(x[idy]);
+    }
   }
 }
 

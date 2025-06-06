@@ -59,9 +59,9 @@ __attribute__((always_inline)) static void sparse_store(T val, int64_t idx, size
     return;
   idx /= sizeof(T);
   if constexpr (sizeof(T) == 4)
-    inner_storeflt(i, idx, val, triplets);
-  else
-    inner_storedbl(i, idx, val, triplets);
+    inner_storeflt(idx, i, val, triplets);
+  else                  
+    inner_storedbl(idx, i, val, triplets);
 }
 
 template <typename T>
@@ -87,9 +87,13 @@ __attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
 template <typename T>
 __attribute__((always_inline)) static void f(size_t N, T* input, T* output)
 {
-  for (size_t i = 0; i < N; i++)
+  for (size_t idx = 0; idx < N; ++idx)
   {
-    output[i] = input[i] * input[i];
+    output[idx] = 0.0;
+    for (size_t idy = 0; idy <= idx; idy++)
+    {
+      output[idx] += input[idy] * input[idy];
+    }
   }
 }
 
@@ -104,11 +108,11 @@ void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
   {
     for (int idx = 0; idx < x.size(); ++idx)
     {
-      if (idx == idy)
+      if (idy <= idx)
       {
         rtemp.push_back(idx);
         ctemp.push_back(idy);
-        valtemp.push_back(2.0 * x[idx]);
+        valtemp.push_back(2.0 * x[idy]);
       }
     }
   }
