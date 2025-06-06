@@ -89,7 +89,7 @@ Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------| ------
 $V_r$  | [p.u.] | Terminal voltage, real component on network reference frame | owned by bus object
 $V_i$  | [p.u.] | Terminal voltage, imaginary component on network reference frame | owned by bus object
-$P_{m$   | [p.u.] | Mechanical power from the prime mover | Owned by governor, constant if no governor is connected to the machine
+$P_{m}$   | [p.u.] | Mechanical power from the prime mover | Owned by governor, constant if no governor is connected to the machine
 $E_{fd}$    | [p.u.] | Field winding voltage from the excitation system  | Owned by exciter, constant if no exciter is connected to the machine
 
 ## Model Equations

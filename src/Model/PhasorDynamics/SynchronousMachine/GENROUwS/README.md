@@ -170,7 +170,7 @@ from the steady-state initial conditions.
 ### With Saturation
 It is important to point out that finding the initial value of $\delta$ for
 the model without saturation direct method can be used. In case when saturation
-is considered some "claver" math is needed. Key insight for determining initial
+is considered some "clever" math is needed. Key insight for determining initial
 $\delta$ is that the magnitude of the saturation depends upon the magnitude
 of $\psi''$, which is independent of $\delta$.
 
