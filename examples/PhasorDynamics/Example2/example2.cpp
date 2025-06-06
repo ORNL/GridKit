@@ -22,6 +22,7 @@
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
@@ -87,6 +88,50 @@ int main()
   // Create model data
   //
 
+  // Generator on bus 2
+  GenrouData<real_type, index_type> gen_data_2;
+  gen_data_2.unit_id = 1;
+  gen_data_2.p0      = 0.5;
+  gen_data_2.q0      = -0.07588;
+  gen_data_2.H       = 2.7;
+  gen_data_2.D       = 0.;
+  gen_data_2.Ra      = 0.;
+  gen_data_2.Tdop    = 7.;
+  gen_data_2.Tdopp   = .04;
+  gen_data_2.Tqopp   = .05;
+  gen_data_2.Tqop    = .75;
+  gen_data_2.Xd      = 1.9;
+  gen_data_2.Xdp     = 0.17;
+  gen_data_2.Xdpp    = 0.15;
+  gen_data_2.Xq      = 0.4;
+  gen_data_2.Xqp     = 0.35;
+  gen_data_2.Xqpp    = 0.15;
+  gen_data_2.Xl      = 0.14999;
+  gen_data_2.S10     = 0.;
+  gen_data_2.S12     = 0.;
+
+  // Generator on bus 3
+  GenrouData<real_type, index_type> gen_data_3;
+  gen_data_3.unit_id = 1;
+  gen_data_3.p0      = 0.25;
+  gen_data_3.q0      = 0.26587;
+  gen_data_3.H       = 1.6;
+  gen_data_3.D       = 0.;
+  gen_data_3.Ra      = 0.;
+  gen_data_3.Tdop    = 7.5;
+  gen_data_3.Tdopp   = .04;
+  gen_data_3.Tqopp   = .05;
+  gen_data_3.Tqop    = .75;
+  gen_data_3.Xd      = 2.3;
+  gen_data_3.Xdp     = 0.2;
+  gen_data_3.Xdpp    = 0.18;
+  gen_data_3.Xq      = 0.5;
+  gen_data_3.Xqp     = 0.5;
+  gen_data_3.Xqpp    = 0.18;
+  gen_data_3.Xl      = 0.15;
+  gen_data_3.S10     = 0.;
+  gen_data_3.S12     = 0.;
+
   // Load on bus 3
   LoadData<real_type, index_type> load_data_3;
   load_data_3.R      = 0.4447197839297772;
@@ -104,46 +149,8 @@ int main()
   Branch<scalar_type, index_type>      branch12(&bus1, &bus2, 0.05, 0.21, 0, 0.1);
   Branch<scalar_type, index_type>      branch13(&bus1, &bus3, 0.06, 0.15, 0, 0.12);
   Branch<scalar_type, index_type>      branch23(&bus2, &bus3, 0.08, 0.27, 0, 0.45);
-  Genrou<scalar_type, index_type>      gen2(&bus2,
-                                       1,
-                                       0.5,
-                                       -0.07588,
-                                       2.7,
-                                       0.,
-                                       0.,
-                                       7.,
-                                       .04,
-                                       .05,
-                                       .75,
-                                       1.9,
-                                       0.17,
-                                       0.15,
-                                       0.4,
-                                       0.35,
-                                       0.15,
-                                       0.14999,
-                                       0.,
-                                       0.);
-  Genrou<scalar_type, index_type>      gen3(&bus3,
-                                       1,
-                                       0.25,
-                                       0.26587,
-                                       1.6,
-                                       0.,
-                                       0.,
-                                       7.5,
-                                       .04,
-                                       .05,
-                                       .75,
-                                       2.3,
-                                       0.2,
-                                       0.18,
-                                       0.5,
-                                       0.5,
-                                       0.18,
-                                       0.15,
-                                       0.,
-                                       0.);
+  Genrou<scalar_type, index_type>      gen2(&bus2, gen_data_2);
+  Genrou<scalar_type, index_type>      gen3(&bus3, gen_data_3);
   Load<scalar_type, index_type>        load3(&bus3, load_data_3);
   BusFault<scalar_type, index_type>    fault(&bus3, 0, 1e-5, 0);
 

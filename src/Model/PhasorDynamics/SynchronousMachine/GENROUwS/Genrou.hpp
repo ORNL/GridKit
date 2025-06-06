@@ -17,6 +17,9 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
+
+    template <typename RealT, typename IdxT>
+    struct GenrouData;
   }
 } // namespace GridKit
 
@@ -43,13 +46,15 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
+      using bus_type  = BusBase<ScalarT, IdxT>;
+      using model_data_type = GenrouData<real_type, IdxT>;
 
     public:
-      Genrou(bus_type* bus, int unit_id);
+      Genrou(bus_type* bus, IdxT unit_id);
+      Genrou(bus_type* bus, model_data_type& data);
       Genrou(bus_type* bus,
-             int       unit_id,
+             IdxT      unit_id,
              ScalarT   p0,
              ScalarT   q0,
              real_type H,
@@ -113,7 +118,7 @@ namespace GridKit
       /* Identification */
       bus_type* bus_;
       const int busID_;
-      int       unit_id_;
+      IdxT      unit_id_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
