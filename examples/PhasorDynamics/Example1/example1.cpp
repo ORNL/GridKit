@@ -18,6 +18,7 @@
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
@@ -27,37 +28,51 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
+  using scalar_type = double;
+  using real_type   = double;
+  using index_type  = size_t;
+
   std::cout << "Example 1 version 2\n";
 
-  /* Create model parts */
-  SystemModel<double, size_t> sys;
-  Bus<double, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
-  BusInfinite<double, size_t> bus2(1.0, 0.0);
-  Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
-  BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
+  //
+  // Create model data
+  //
+  GenrouData<real_type, index_type> gen_data_1;
+  gen_data_1.unit_id = 1;
+  gen_data_1.p0      = 1.;
+  gen_data_1.q0      = 0.05013;
+  gen_data_1.H       = 3.;
+  gen_data_1.D       = 0.;
+  gen_data_1.Ra      = 0.;
+  gen_data_1.Tdop    = 7.;
+  gen_data_1.Tdopp   = .04;
+  gen_data_1.Tqopp   = .05;
+  gen_data_1.Tqop    = .75;
+  gen_data_1.Xd      = 2.1;
+  gen_data_1.Xdp     = 0.2;
+  gen_data_1.Xdpp    = 0.18;
+  gen_data_1.Xq      = 0.5;
+  gen_data_1.Xqp     = 0.5;
+  gen_data_1.Xqpp    = 0.18;
+  gen_data_1.Xl      = 0.15;
+  gen_data_1.S10     = 0.;
+  gen_data_1.S12     = 0.;
 
-  Genrou<double, size_t> gen(&bus1,
-                             1,
-                             1.,
-                             0.05013,
-                             3.,
-                             0.,
-                             0.,
-                             7.,
-                             .04,
-                             .05,
-                             .75,
-                             2.1,
-                             0.2,
-                             0.18,
-                             0.5,
-                             0.5,
-                             0.18,
-                             0.15,
-                             0.,
-                             0.);
+  //
+  // Instantiate model components
+  //
 
-  /* Connect everything together */
+  Bus<scalar_type, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
+  BusInfinite<scalar_type, size_t> bus2(1.0, 0.0);
+  Branch<scalar_type, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
+  BusFault<scalar_type, size_t>    fault(&bus1, 0, 1e-3, 0);
+  Genrou<scalar_type, size_t>      gen(&bus1, gen_data_1);
+
+  //
+  // Create the 2-bus system
+  //
+
+  SystemModel<scalar_type, size_t> sys;
   sys.addBus(&bus1);
   sys.addBus(&bus2);
   sys.addComponent(&branch);
@@ -65,7 +80,7 @@ int main()
   sys.addComponent(&gen);
   sys.allocate();
 
-  double dt = 1.0 / 4.0 / 60.0;
+  real_type dt = 1.0 / 4.0 / 60.0;
 
   // A data structure to keep track of the data we want to
   // compare to the reference solution. Rather than keeping
@@ -77,7 +92,7 @@ int main()
   // (plain ol' data), which have some benefits in C++.
   struct OutputData
   {
-    double ti, Vr, Vi, dw;
+    real_type ti, Vr, Vi, dw;
   };
 
   // A list of output for each time step.
@@ -93,19 +108,19 @@ int main()
   // reference to that variable inside the callback). We select
   // the subset of the output we're interested in recording and
   // push it into output, which is updated outside the callback.
-  auto output_cb = [&](double t)
+  auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
+    std::vector<scalar_type>& yval = sys.y();
 
     output.push_back(OutputData{t, yval[0], yval[1], yval[3]});
   };
 
   // Set up simulation
-  Ida<double, size_t> ida(&sys);
+  Ida<scalar_type, size_t> ida(&sys);
   ida.configureSimulation();
 
   // Run simulation - making sure to pass the callback to record output
-  double start = static_cast<double>(clock());
+  real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
   ida.initializeSimulation(0.0, false);
@@ -123,20 +138,20 @@ int main()
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
-  double stop = static_cast<double>(clock());
+  real_type stop = static_cast<real_type>(clock());
 
-  double error_V = 0.0; // error in |V|
-  double error_w = 0.0; // error in rotor speed
+  real_type error_V = 0.0; // error in |V|
+  real_type error_w = 0.0; // error in rotor speed
 
   // Read through the simulation data stored in the buffer.
   // Since we captured by reference, output should be available
   // for us to read here, outside the callback.
   for (size_t i = 0; i < output.size(); i++)
   {
-    OutputData           data    = output[i];
-    std::vector<double>& ref_sol = Example1::reference_solution[i + 1];
+    OutputData              data    = output[i];
+    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
 
-    double err =
+    real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
         / (1.0 + std::abs(ref_sol[2]));
     if (err > error_V)
@@ -160,8 +175,8 @@ int main()
     // std::cout << "\n";
   }
 
-  double error_V_allowed = 2e-4;
-  double error_w_allowed = 1e-4;
+  real_type error_V_allowed = 2e-4;
+  real_type error_w_allowed = 1e-4;
 
   // Tolerances based on Powerworld reference accuracy
   int status = 0;
