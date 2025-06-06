@@ -6,15 +6,13 @@
  *
  *
  */
-
+#define _USE_MATH_DEFINES
 #include "GenClassical.hpp"
 
 #include <cmath>
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-
-#define _USE_MATH_DEFINES
 
 namespace GridKit
 {
