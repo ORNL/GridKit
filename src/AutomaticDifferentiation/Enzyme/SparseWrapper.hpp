@@ -69,7 +69,7 @@ namespace GridKit
      * @brief Enzyme sparse accumulation for float
      *
      */
-    __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(size_t row, size_t col, float val, std::vector<Triple<float>>& triplets)
+    [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(size_t row, size_t col, float val, std::vector<Triple<float>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
@@ -78,7 +78,7 @@ namespace GridKit
      * @brief Enzyme sparse accumulation for double
      *
      */
-    __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(size_t row, size_t col, double val, std::vector<Triple<double>>& triplets)
+    [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(size_t row, size_t col, double val, std::vector<Triple<double>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
