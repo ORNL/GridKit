@@ -69,7 +69,7 @@ namespace GridKit
      * @brief Enzyme sparse accumulation for float
      *
      */
-    __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(int64_t row, int64_t col, float val, std::vector<Triple<float>>& triplets)
+    __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(size_t row, size_t col, float val, std::vector<Triple<float>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
@@ -78,7 +78,7 @@ namespace GridKit
      * @brief Enzyme sparse accumulation for double
      *
      */
-    __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(int64_t row, int64_t col, double val, std::vector<Triple<double>>& triplets)
+    __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(size_t row, size_t col, double val, std::vector<Triple<double>>& triplets)
     {
       triplets.emplace_back(row, col, val);
     }
@@ -89,7 +89,7 @@ namespace GridKit
      * @tparam ScalarT - scalar data type
      */
     template <typename ScalarT>
-    __attribute__((always_inline)) static void sparse_store(ScalarT val, int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
+    __attribute__((always_inline)) static void sparse_store(ScalarT val, size_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
     {
       if (val == 0.0)
         return;
@@ -106,7 +106,7 @@ namespace GridKit
      * @tparam ScalarT - scalar data type
      */
     template <typename ScalarT>
-    __attribute__((always_inline)) static ScalarT sparse_load(int64_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
+    __attribute__((always_inline)) static ScalarT sparse_load(size_t, size_t, std::vector<Triple<ScalarT>>&)
     {
       return 0.0;
     }
@@ -117,7 +117,7 @@ namespace GridKit
      * @tparam ScalarT - scalar data type
      */
     template <typename ScalarT>
-    __attribute__((always_inline)) static void ident_store(ScalarT, int64_t idx, size_t i)
+    __attribute__((always_inline)) static void ident_store(ScalarT, size_t, size_t)
     {
       assert(0 && "should never load");
     }
@@ -128,7 +128,7 @@ namespace GridKit
      * @tparam ScalarT - scalar data type
      */
     template <typename ScalarT>
-    __attribute__((always_inline)) static ScalarT ident_load(int64_t idx, size_t i)
+    __attribute__((always_inline)) static ScalarT ident_load(size_t idx, size_t i)
     {
       idx /= sizeof(ScalarT);
       return (ScalarT) (idx == i);
@@ -139,13 +139,13 @@ namespace GridKit
      *
      * @tparam ModelT - model type
      * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - index data type
+     * @tparam IdxT    - matrix index data type
      */
     template <typename ModelT, class ScalarT, typename IdxT>
-    __attribute__((noinline)) void EnzymeSparseModelJacobian(ModelT* model, IdxT n, ScalarT* input, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+    __attribute__((noinline)) void EnzymeSparseModelJacobian(ModelT* model, size_t n, ScalarT* input, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
     {
       std::vector<Triple<ScalarT>> triplets;
-      for (IdxT i = 0; i < n; i++)
+      for (size_t i = 0; i < n; i++)
       {
         ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
         ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
@@ -166,8 +166,8 @@ namespace GridKit
       std::vector<ScalarT> valtemp{};
       for (auto& tup : triplets)
       {
-        rtemp.push_back(tup.row);
-        ctemp.push_back(tup.col);
+        rtemp.push_back(static_cast<IdxT>(tup.row));
+        ctemp.push_back(static_cast<IdxT>(tup.col));
         valtemp.push_back(tup.val);
       }
       jac.setValues(rtemp, ctemp, valtemp);
