@@ -20,6 +20,7 @@
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
+#include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
@@ -82,7 +83,20 @@ int main()
 
   std::cout << "Example 2 version 1\n";
 
-  /* Create model parts */
+  //
+  // Create model data
+  //
+
+  // Load on bus 3
+  LoadData<real_type, index_type> load_data_3;
+  load_data_3.R      = 0.4447197839297772;
+  load_data_3.X      = 0.20330047265361242;
+  load_data_3.bus_id = 3;
+
+  //
+  // Instantiate model components
+  //
+
   SystemModel<scalar_type, index_type> sys;
   BusInfinite<scalar_type, index_type> bus1(1.06, 0.0);
   Bus<scalar_type, index_type>         bus2(1.0599558398065716, -0.009675621941024773);
@@ -90,9 +104,47 @@ int main()
   Branch<scalar_type, index_type>      branch12(&bus1, &bus2, 0.05, 0.21, 0, 0.1);
   Branch<scalar_type, index_type>      branch13(&bus1, &bus3, 0.06, 0.15, 0, 0.12);
   Branch<scalar_type, index_type>      branch23(&bus2, &bus3, 0.08, 0.27, 0, 0.45);
-  Genrou<scalar_type, index_type>      gen2(&bus2, 1, 0.5, -0.07588, 2.7, 0., 0., 7., .04, .05, .75, 1.9, 0.17, 0.15, 0.4, 0.35, 0.15, 0.14999, 0., 0.);
-  Genrou<scalar_type, index_type>      gen3(&bus3, 1, 0.25, 0.26587, 1.6, 0., 0., 7.5, .04, .05, .75, 2.3, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Load<scalar_type, index_type>        load3(&bus3, 0.4447197839297772, 0.20330047265361242);
+  Genrou<scalar_type, index_type>      gen2(&bus2,
+                                       1,
+                                       0.5,
+                                       -0.07588,
+                                       2.7,
+                                       0.,
+                                       0.,
+                                       7.,
+                                       .04,
+                                       .05,
+                                       .75,
+                                       1.9,
+                                       0.17,
+                                       0.15,
+                                       0.4,
+                                       0.35,
+                                       0.15,
+                                       0.14999,
+                                       0.,
+                                       0.);
+  Genrou<scalar_type, index_type>      gen3(&bus3,
+                                       1,
+                                       0.25,
+                                       0.26587,
+                                       1.6,
+                                       0.,
+                                       0.,
+                                       7.5,
+                                       .04,
+                                       .05,
+                                       .75,
+                                       2.3,
+                                       0.2,
+                                       0.18,
+                                       0.5,
+                                       0.5,
+                                       0.18,
+                                       0.15,
+                                       0.,
+                                       0.);
+  Load<scalar_type, index_type>        load3(&bus3, load_data_3);
   BusFault<scalar_type, index_type>    fault(&bus3, 0, 1e-5, 0);
 
   /* Connect everything together */

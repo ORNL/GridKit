@@ -26,7 +26,7 @@ namespace GridKit
       RealT R{0.0}; ///< load resistance
       RealT X{0.0}; ///< load reactance
 
-      IdxT bus_id{0}; ///< Unique ID of bus 1
+      IdxT bus_id{0}; ///< Unique ID of bus to which the load is connnected.
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
