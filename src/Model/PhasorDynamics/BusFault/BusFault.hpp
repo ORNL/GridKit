@@ -4,6 +4,16 @@
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 
+// Forward declaration of BusData structure
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    template <typename RealT, typename IdxT>
+    struct BusFaultData;
+  }
+} // namespace GridKit
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -28,10 +38,12 @@ namespace GridKit
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
+      using DataT     = BusFaultData<real_type, IdxT>;
 
     public:
       BusFault(bus_type* bus);
       BusFault(bus_type* bus, real_type R, real_type X, int status);
+      BusFault(bus_type* bus, DataT& data);
       ~BusFault() = default;
 
       int allocate() override;
@@ -90,7 +102,7 @@ namespace GridKit
       real_type R_;
       real_type X_;
       int       status_;
-      const int busID_;
+      const IdxT busID_;
     };
 
   } // namespace PhasorDynamics

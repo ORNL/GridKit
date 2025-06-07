@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 
 namespace GridKit
 {
@@ -50,6 +51,25 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, real_type R, real_type X, int status)
       : bus_(bus), R_(R), X_(X), status_(status), busID_(0)
+    {
+      size_ = 0;
+    }
+
+    /**
+     * @brief Construct a new BusFault
+     *
+     * @tparam ScalarT - scalar type
+     * @tparam IdxT    - matrix/vector index type
+     * @param bus1 - pointer to bus-1
+     * @param bus2 - pointer to bus-2
+     */
+    template <class ScalarT, typename IdxT>
+    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, DataT& data)
+      : bus_(bus),
+        R_(data.R),
+        X_(data.X),
+        status_(data.status),
+        busID_(data.bus_id)
     {
       size_ = 0;
     }

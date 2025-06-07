@@ -16,9 +16,12 @@
 #include <vector>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
@@ -85,8 +88,44 @@ int main()
   std::cout << "Example 2 version 1\n";
 
   //
-  // Create model data
+  // Create (load) model data
   //
+
+  // Bus 1
+  BusData<real_type, index_type> bus_data_1;
+  bus_data_1.Vr0 = 1.06;
+  bus_data_1.Vi0 = 0.0;
+
+  // Bus 2
+  BusData<real_type, index_type> bus_data_2;
+  bus_data_2.Vr0 = 1.0599558398065716;
+  bus_data_2.Vi0 = -0.009675621941024773;
+
+  // Bus 3
+  BusData<real_type, index_type> bus_data_3;
+  bus_data_3.Vr0 = 0.9610827543495831;
+  bus_data_3.Vi0 = -0.13122476630506485;
+
+  // Branch 1-2
+  BranchData<real_type, index_type> branch_data_1_2;
+  branch_data_1_2.R = 0.05;
+  branch_data_1_2.X = 0.21;
+  branch_data_1_2.G = 0;
+  branch_data_1_2.B = 0.1;
+
+  // Branch 1-3
+  BranchData<real_type, index_type> branch_data_1_3;
+  branch_data_1_3.R = 0.06;
+  branch_data_1_3.X = 0.15;
+  branch_data_1_3.G = 0;
+  branch_data_1_3.B = 0.12;
+
+  // Branch 2-3
+  BranchData<real_type, index_type> branch_data_2_3;
+  branch_data_2_3.R = 0.08;
+  branch_data_2_3.X = 0.27;
+  branch_data_2_3.G = 0;
+  branch_data_2_3.B = 0.45;
 
   // Generator on bus 2
   GenrouData<real_type, index_type> gen_data_2;
@@ -138,23 +177,30 @@ int main()
   load_data_3.X      = 0.20330047265361242;
   load_data_3.bus_id = 3;
 
+  BusFaultData<real_type, index_type> bus_fault_data_3;
+  bus_fault_data_3.R = 0.0;
+  bus_fault_data_3.X = 1e-5;
+  bus_fault_data_3.status = 0;
+
   //
   // Instantiate model components
   //
 
-  SystemModel<scalar_type, index_type> sys;
-  BusInfinite<scalar_type, index_type> bus1(1.06, 0.0);
-  Bus<scalar_type, index_type>         bus2(1.0599558398065716, -0.009675621941024773);
-  Bus<scalar_type, index_type>         bus3(0.9610827543495831, -0.13122476630506485);
-  Branch<scalar_type, index_type>      branch12(&bus1, &bus2, 0.05, 0.21, 0, 0.1);
-  Branch<scalar_type, index_type>      branch13(&bus1, &bus3, 0.06, 0.15, 0, 0.12);
-  Branch<scalar_type, index_type>      branch23(&bus2, &bus3, 0.08, 0.27, 0, 0.45);
-  Genrou<scalar_type, index_type>      gen2(&bus2, gen_data_2);
-  Genrou<scalar_type, index_type>      gen3(&bus3, gen_data_3);
-  Load<scalar_type, index_type>        load3(&bus3, load_data_3);
-  BusFault<scalar_type, index_type>    fault(&bus3, 0, 1e-5, 0);
+  BusInfinite<scalar_type, index_type> bus1(bus_data_1);
+  Bus<scalar_type, index_type>         bus2(bus_data_2);
+  Bus<scalar_type, index_type>         bus3(bus_data_3);
+
+  Branch<scalar_type, index_type> branch12(&bus1, &bus2, branch_data_1_2);
+  Branch<scalar_type, index_type> branch13(&bus1, &bus3, branch_data_1_3);
+  Branch<scalar_type, index_type> branch23(&bus2, &bus3, branch_data_2_3);
+
+  Genrou<scalar_type, index_type>   gen2(&bus2, gen_data_2);
+  Genrou<scalar_type, index_type>   gen3(&bus3, gen_data_3);
+  Load<scalar_type, index_type>     load3(&bus3, load_data_3);
+  BusFault<scalar_type, index_type> fault(&bus3, bus_fault_data_3);
 
   /* Connect everything together */
+  SystemModel<scalar_type, index_type> sys;
   sys.addBus(&bus1);
   sys.addBus(&bus2);
   sys.addBus(&bus3);

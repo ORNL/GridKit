@@ -15,8 +15,11 @@
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -37,6 +40,20 @@ int main()
   //
   // Create model data
   //
+  BusData<real_type, index_type> bus_data_1;
+  bus_data_1.Vr0 = 0.9949877346411762;
+  bus_data_1.Vi0 = 0.09999703952427966;
+
+  BusData<real_type, index_type> bus_data_2;
+  bus_data_2.Vr0 = 1.0;
+  bus_data_2.Vi0 = 0.0;
+
+  BranchData<real_type, index_type> branch_data_1_2;
+  branch_data_1_2.R = 0.0;
+  branch_data_1_2.X = 0.1;
+  branch_data_1_2.G = 0.0;
+  branch_data_1_2.B = 0.0;  
+
   GenrouData<real_type, index_type> gen_data_1;
   gen_data_1.unit_id = 1;
   gen_data_1.p0      = 1.;
@@ -58,14 +75,19 @@ int main()
   gen_data_1.S10     = 0.;
   gen_data_1.S12     = 0.;
 
+  BusFaultData<real_type, index_type> bus_fault_data_1;
+  bus_fault_data_1.R = 0.0;
+  bus_fault_data_1.X = 1e-3;
+  bus_fault_data_1.status = 0;
+
   //
   // Instantiate model components
   //
 
-  Bus<scalar_type, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
-  BusInfinite<scalar_type, size_t> bus2(1.0, 0.0);
-  Branch<scalar_type, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
-  BusFault<scalar_type, size_t>    fault(&bus1, 0, 1e-3, 0);
+  Bus<scalar_type, size_t>         bus1(bus_data_1);
+  BusInfinite<scalar_type, size_t> bus2(bus_data_2);
+  Branch<scalar_type, size_t>      branch(&bus1, &bus2, branch_data_1_2);
+  BusFault<scalar_type, size_t>    fault(&bus1, bus_fault_data_1);
   Genrou<scalar_type, size_t>      gen(&bus1, gen_data_1);
 
   //
