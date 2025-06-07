@@ -175,17 +175,14 @@ int main()
   {
     for (size_t idx = 0; idx < dg->size(); ++idx)
     {
-      double jac_value = jac_autodiff.getValue(idx, idy);
+      double jac_value     = jac_autodiff.getValue(idx, idy);
       double jac_ref_value = jac_ref_dense.getValue(idx, idy);
-      if (std::abs(jac_value - jac_ref_value) > 10*std::numeric_limits<double>::epsilon())
+      if (std::abs(jac_value - jac_ref_value) > 10 * std::numeric_limits<double>::epsilon())
       {
         fail++;
         if (verbose)
         {
-          std::cout << "Result incorrect at line = " << idy << ", column = " << idx << 
-                       ", obtained = " << jac_value << ", reference = " << jac_ref_value <<
-                       ", difference = " << std::abs(jac_value - jac_ref_value) <<
-                       "\n";
+          std::cout << "Result incorrect at line = " << idy << ", column = " << idx << ", obtained = " << jac_value << ", reference = " << jac_ref_value << ", difference = " << std::abs(jac_value - jac_ref_value) << "\n";
         }
       }
     }
