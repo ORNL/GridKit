@@ -30,10 +30,10 @@ inline double dsquare_ref_scalar(double x)
 // Vector-valued function to differentiate
 void square(std::vector<double> x, std::vector<double>& y)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (size_t idx = 0; idx < x.size(); ++idx)
   {
     y[idx] = 0.0;
-    for (int idy = 0; idy <= idx; idy++)
+    for (size_t idy = 0; idy <= idx; idy++)
     {
       y[idx] += square_scalar(x[idy]);
     }
@@ -43,9 +43,9 @@ void square(std::vector<double> x, std::vector<double>& y)
 // Reference Jacobian
 void dsquare_ref(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
 {
-  for (int idy = 0; idy < y.size(); ++idy)
+  for (size_t idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       if (idy <= idx)
         dy.setValue(idx, idy, dsquare_ref_scalar(x[idy]));
@@ -58,10 +58,10 @@ void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
 {
   std::vector<double> v(x.size());
   std::vector<double> d_y(y.size());
-  for (int idy = 0; idy < y.size(); ++idy)
+  for (size_t idy = 0; idy < y.size(); ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       v[idx] = 0.0;
     }
@@ -71,7 +71,7 @@ void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
     __enzyme_fwddiff((void*) square, enzyme_dup, x, v, enzyme_dupnoneed, y, &d_y);
 
     // Store result
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       dy.setValue(idx, idy, d_y[idx]);
     }
@@ -81,15 +81,15 @@ void dsquare(std::vector<double> x, std::vector<double> y, DenseMatrix& dy)
 int main()
 {
   // Vector and matrix declarations
-  constexpr int       N = 10;
+  constexpr size_t    N = 10;
   std::vector<double> x(N);
   std::vector<double> sq(N);
   DenseMatrix         dsq     = DenseMatrix(N, N);
   DenseMatrix         dsq_ref = DenseMatrix(N, N);
 
   // Random input values
-  srand(time(NULL));
-  for (int idx = 0; idx < x.size(); ++idx)
+  srand(static_cast<unsigned int>(time(NULL)));
+  for (size_t idx = 0; idx < x.size(); ++idx)
   {
     x[idx] = rand();
   }
@@ -106,9 +106,9 @@ int main()
   // Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < sq.size(); ++idy)
+  for (size_t idy = 0; idy < sq.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       if (std::abs(dsq.getValue(idx, idy) - dsq_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
       {

@@ -20,9 +20,9 @@ inline double dsquare_ref_scalar(double x)
 DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y)
 {
   DenseMatrix jac(x.size(), y.size());
-  for (int idy = 0; idy < y.size(); ++idy)
+  for (size_t idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       if (idy <= idx)
         jac.setValue(idx, idy, dsquare_ref_scalar(x[idy]));
@@ -34,12 +34,12 @@ DenseMatrix dsquare_ref(std::vector<double> x, std::vector<double> y)
 int main()
 {
   // Size and variable declarations
-  constexpr int       n = 10;
+  constexpr size_t    n = 10;
   std::vector<double> var(n);
 
   // Random input values
-  srand(time(NULL));
-  for (int idx = 0; idx < var.size(); ++idx)
+  srand(static_cast<unsigned int>(time(NULL)));
+  for (size_t idx = 0; idx < var.size(); ++idx)
   {
     var[idx] = rand();
   }
@@ -59,9 +59,9 @@ int main()
   // Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < res.size(); ++idy)
+  for (size_t idy = 0; idy < res.size(); ++idy)
   {
-    for (int idx = 0; idx < var.size(); ++idx)
+    for (size_t idx = 0; idx < var.size(); ++idx)
     {
       if (std::abs(jac.getValue(idx, idy) - jac_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
       {

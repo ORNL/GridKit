@@ -26,15 +26,15 @@ template <typename T, typename... Tys>
 extern T __enzyme_todense(Tys...) noexcept;
 
 /// Sparse storage for Enzyme
-template <typename T>
+template <typename ScalarT>
 struct Triple
 {
-  size_t row;
-  size_t col;
-  T      val;
+  size_t  row;
+  size_t  col;
+  ScalarT val;
   Triple(Triple&&) = default;
 
-  Triple(size_t row, size_t col, T val)
+  Triple(size_t row, size_t col, ScalarT val)
     : row(row),
       col(col),
       val(val)
@@ -42,50 +42,50 @@ struct Triple
   }
 };
 
-__attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(int64_t row, int64_t col, float val, std::vector<Triple<float>>& triplets)
+[[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(size_t row, size_t col, float val, std::vector<Triple<float>>& triplets)
 {
   triplets.emplace_back(row, col, val);
 }
 
-__attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(int64_t row, int64_t col, double val, std::vector<Triple<double>>& triplets)
+[[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(size_t row, size_t col, double val, std::vector<Triple<double>>& triplets)
 {
   triplets.emplace_back(row, col, val);
 }
 
-template <typename T>
-__attribute__((always_inline)) static void sparse_store(T val, int64_t idx, size_t i, std::vector<Triple<T>>& triplets)
+template <typename ScalarT>
+__attribute__((always_inline)) static void sparse_store(ScalarT val, size_t idx, size_t i, std::vector<Triple<ScalarT>>& triplets)
 {
   if (val == 0.0)
     return;
-  idx /= sizeof(T);
-  if constexpr (sizeof(T) == 4)
+  idx /= sizeof(ScalarT);
+  if constexpr (sizeof(ScalarT) == 4)
     inner_storeflt(idx, i, val, triplets);
   else
     inner_storedbl(idx, i, val, triplets);
 }
 
-template <typename T>
-__attribute__((always_inline)) static T sparse_load(int64_t idx, size_t i, std::vector<Triple<T>>& triplets)
+template <typename ScalarT>
+__attribute__((always_inline)) static ScalarT sparse_load(size_t, size_t, std::vector<Triple<ScalarT>>&)
 {
   return 0.0;
 }
 
-template <typename T>
-__attribute__((always_inline)) static void ident_store(T, int64_t idx, size_t i)
+template <typename ScalarT>
+__attribute__((always_inline)) static void ident_store(ScalarT, size_t, size_t)
 {
   assert(0 && "should never load");
 }
 
-template <typename T>
-__attribute__((always_inline)) static T ident_load(int64_t idx, size_t i)
+template <typename ScalarT>
+__attribute__((always_inline)) static ScalarT ident_load(size_t idx, size_t i)
 {
-  idx /= sizeof(T);
-  return (T) (idx == i);
+  idx /= sizeof(ScalarT);
+  return (ScalarT) (idx == i);
 }
 
 /// Vector-valued function to differentiate
-template <typename T>
-__attribute__((always_inline)) static void f(size_t N, T* input, T* output)
+template <typename ScalarT>
+__attribute__((always_inline)) static void f(size_t N, ScalarT* input, ScalarT* output)
 {
   for (size_t idx = 0; idx < N; ++idx)
   {
@@ -98,15 +98,15 @@ __attribute__((always_inline)) static void f(size_t N, T* input, T* output)
 }
 
 /// Reference Jacobian
-template <typename T>
-void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
+template <typename ScalarT>
+void jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y, SparseMatrix& jac)
 {
-  std::vector<size_t> ctemp{};
-  std::vector<size_t> rtemp{};
-  std::vector<T>      valtemp{};
-  for (int idy = 0; idy < y.size(); ++idy)
+  std::vector<size_t>  ctemp{};
+  std::vector<size_t>  rtemp{};
+  std::vector<ScalarT> valtemp{};
+  for (size_t idy = 0; idy < y.size(); ++idy)
   {
-    for (int idx = 0; idx < x.size(); ++idx)
+    for (size_t idx = 0; idx < x.size(); ++idx)
     {
       if (idy <= idx)
       {
@@ -120,29 +120,29 @@ void jac_f_ref(std::vector<T> x, std::vector<T> y, SparseMatrix& jac)
 }
 
 /// Function that computes the Jacobian via automatic differentiation
-template <typename T>
-__attribute__((noinline)) void jac_f(size_t N, T* input, SparseMatrix& jac)
+template <typename ScalarT>
+__attribute__((noinline)) void jac_f(size_t N, ScalarT* input, SparseMatrix& jac)
 {
-  std::vector<Triple<T>> triplets;
+  std::vector<Triple<ScalarT>> triplets;
   for (size_t i = 0; i < N; i++)
   {
-    T* output   = __enzyme_todense<T*>((void*) ident_load<T>, (void*) ident_store<T>, i);
-    T* d_output = __enzyme_todense<T*>((void*) sparse_load<T>, (void*) sparse_store<T>, i, &triplets);
+    ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
+    ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
 
-    __enzyme_fwddiff<void>((void*) f<T>,
+    __enzyme_fwddiff<void>((void*) f<ScalarT>,
                            enzyme_const,
                            N,
                            enzyme_dup,
                            input,
                            output,
                            enzyme_dupnoneed,
-                           (T*) 0x1,
+                           (ScalarT*) 0x1,
                            d_output);
   }
 
-  std::vector<size_t> ctemp{};
-  std::vector<size_t> rtemp{};
-  std::vector<T>      valtemp{};
+  std::vector<size_t>  ctemp{};
+  std::vector<size_t>  rtemp{};
+  std::vector<ScalarT> valtemp{};
   for (auto& tup : triplets)
   {
     rtemp.push_back(tup.row);
@@ -159,7 +159,7 @@ void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
   const auto [rcord_1, ccord_1, vals_1]                                                  = entries_1;
   std::tuple<std::vector<size_t>&, std::vector<size_t>&, std::vector<double>&> entries_2 = matrix_2.getEntries();
   const auto [rcord_2, ccord_2, vals_2]                                                  = entries_2;
-  for (int ind = 0; ind < vals_1.size(); ++ind)
+  for (size_t ind = 0; ind < vals_1.size(); ++ind)
   {
     if (rcord_1[ind] != rcord_2[ind])
       fail++;
@@ -181,7 +181,7 @@ int main()
 
   /// Input initialization
   double val = 0.0;
-  for (int i = 0; i < N; ++i)
+  for (size_t i = 0; i < N; ++i)
   {
     x[i]  = val;
     val  += 1.0;

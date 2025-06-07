@@ -4,7 +4,7 @@
 
 #include "EnzymeWrapper.hpp"
 
-VectorModel::VectorModel(int n)
+VectorModel::VectorModel(size_t n)
   : x_(n),
     f_(n),
     df_dx_(n, n)
@@ -18,10 +18,10 @@ inline double VectorModel::square_scalar(double x)
 
 void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (size_t idx = 0; idx < x.size(); ++idx)
   {
     y[idx] = 0.0;
-    for (int idy = 0; idy <= idx; idy++)
+    for (size_t idy = 0; idy <= idx; idy++)
     {
       y[idx] += this->square_scalar(x[idy]);
     }
@@ -30,7 +30,7 @@ void VectorModel::square(std::vector<double>& x, std::vector<double>& y)
 
 void VectorModel::setVariable(std::vector<double> x)
 {
-  for (int idx = 0; idx < x.size(); ++idx)
+  for (size_t idx = 0; idx < x.size(); ++idx)
   {
     x_[idx] = x[idx];
   }
@@ -43,13 +43,13 @@ void VectorModel::evalResidual()
 
 void VectorModel::evalJacobian()
 {
-  const int           n = x_.size();
+  const size_t        n = x_.size();
   std::vector<double> v(n);
   VectorModel         d_vector_model(n);
-  for (int idy = 0; idy < n; ++idy)
+  for (size_t idy = 0; idy < n; ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < n; ++idx)
+    for (size_t idx = 0; idx < n; ++idx)
     {
       v[idx] = 0.0;
     }
@@ -64,7 +64,7 @@ void VectorModel::evalJacobian()
         &d_vector_model);
 
     // Store result
-    for (int idx = 0; idx < n; ++idx)
+    for (size_t idx = 0; idx < n; ++idx)
     {
       df_dx_.setValue(idx, idy, d_res[idx]);
     }
