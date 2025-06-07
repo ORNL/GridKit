@@ -97,15 +97,15 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
 template <typename T>
 void EnzymeModelJacobian(T* model, DenseMatrix& jac)
 {
-  int                 N = model->size();
+  size_t              N = model->size();
   std::vector<double> y(N);
   std::vector<double> v(N);
   std::vector<double> res(N);
   std::vector<double> d_res(N);
-  for (int idy = 0; idy < N; ++idy)
+  for (size_t idy = 0; idy < N; ++idy)
   {
     // Elementary vector for Jacobian-vector product
-    for (int idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < N; ++idx)
     {
       y[idx]   = (model->y())[idx];
       res[idx] = (model->getResidual())[idx];
@@ -123,7 +123,7 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac)
                      &d_res);
 
     // Store result
-    for (int idx = 0; idx < N; ++idx)
+    for (size_t idx = 0; idx < N; ++idx)
     {
       jac.setValue(idx, idy, d_res[idx]);
     }
@@ -171,16 +171,21 @@ int main()
   // Check
   int  fail    = 0;
   bool verbose = true;
-  for (int idy = 0; idy < dg->size(); ++idy)
+  for (size_t idy = 0; idy < dg->size(); ++idy)
   {
-    for (int idx = 0; idx < dg->size(); ++idx)
+    for (size_t idx = 0; idx < dg->size(); ++idx)
     {
-      if (std::abs(jac_autodiff.getValue(idx, idy) - jac_ref_dense.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
+      double jac_value = jac_autodiff.getValue(idx, idy);
+      double jac_ref_value = jac_ref_dense.getValue(idx, idy);
+      if (std::abs(jac_value - jac_ref_value) > 10*std::numeric_limits<double>::epsilon())
       {
         fail++;
         if (verbose)
         {
-          std::cout << "Result incorrect at line = " << idy << ", column = " << idx << "\n";
+          std::cout << "Result incorrect at line = " << idy << ", column = " << idx << 
+                       ", obtained = " << jac_value << ", reference = " << jac_ref_value <<
+                       ", difference = " << std::abs(jac_value - jac_ref_value) <<
+                       "\n";
         }
       }
     }

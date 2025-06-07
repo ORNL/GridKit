@@ -1,7 +1,4 @@
-enzyme_add_executable(
-  NAME EnzymePowerElectronicsCheck 
-  SOURCES main.cpp
-  LINK_LIBRARIES GRIDKIT::DenseMatrix GRIDKIT::power_elec_disgen
-)
+add_executable(EnzymePowerElectronicsCheck main.cpp)
+target_link_libraries(EnzymePowerElectronicsCheck ClangEnzymeFlags GRIDKIT::DenseMatrix GRIDKIT::power_elec_disgen)
 
 add_test(NAME "EnzymePowerElectronicsCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymePowerElectronicsCheck)
