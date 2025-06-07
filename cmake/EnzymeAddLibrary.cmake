@@ -1,10 +1,7 @@
 # 
 #[[
 
-Finds Enzyme Clang plugin
-
-User may set:
-- ENZYME_DIR
+Macro to manually compile with Enzyme
 
 Author(s):
 - Asher Mancinelli <ashermancinelli@gmail.com>
