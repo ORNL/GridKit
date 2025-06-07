@@ -103,7 +103,6 @@ endif()
 
 if(${GRIDKIT_ENABLE_ENZYME})
   include(FindEnzyme)
-  include(EnzymeAddLibrary)
   # todo Add a centralized configuration file
   add_definitions(-DGRIDKIT_ENABLE_ENZYME)
 endif()
