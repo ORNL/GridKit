@@ -6,7 +6,7 @@ Version 0.1
 ## Overview
 
 This document describes a data format for grid dynamics cases intended to
-be used in the SCIDAC-OE project "Next-Generation Grid Simulations". The
+be used in the SciDAC-OE project "Next-Generation Grid Simulations". The
 format is designed first for implementation as UTF-8 encoded JSON but may
 also be encoded as [MessagePack](https://msgpack.org).
 
