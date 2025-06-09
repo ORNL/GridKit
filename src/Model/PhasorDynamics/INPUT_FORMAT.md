@@ -36,8 +36,8 @@ also be encoded as [MessagePack](https://msgpack.org).
 
 The root element in the format is an object with three keys: `header`,
 `buses`, and `devices`. `header` contains information about the case,
-`buses` is an array of buses (which can include electrical buses of 
-different types as well as signal buses), and `devices` is an array 
+`buses` is an array of buses (which can include electrical buses of
+different types as well as signal buses), and `devices` is an array
 of system devices.
 
 ### Header
@@ -49,7 +49,7 @@ Contained in the `header` key is an object with the following items:
   `format_version`   | Non-negative integer indicating the format version
   `format_revision`  | Non-negative integer indicating the format revision
   `case_name`        | A string containing the name of the case
-  `case_date`        | A string in standard date/time format
+  `case_date`        | Optional string in the ISO 8601 date format (YYYY-MM-DD) indicating a date associated with the case
   `case_description` | A string with more specific description of what is modeled in the case
   `case_comments`    | A string with additional notes as needed
   `freq_base`        | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
@@ -66,10 +66,10 @@ a bus and has the following fields:
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | Optional string containing the name of the node. This may be empty or non-unique
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values. If this object is missing, all variables will be given default values. See the table below for more information
-  `vbase`            | Optional floating point value giving the voltage base in volts (V). If omitted, default value of 1 V is assumed (common for signal buses)
+  `v_base`           | Optional floating point value giving the voltage base in volts (V). If omitted, default value of 1 V is assumed (common for signal buses)
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
-  `freq_base`        | Optional uncommon field to override the system frequency base at this bus
-  `va_base`          | Optional uncommon field to override the system power base at this bus
+  `freq_base`        | Optional field to override the system frequency base at this bus
+  `va_base`          | Optional field to override the system power base at this bus
   `extension`        | Optional field containing an object with implementation-defined keys
 
 #### Bus classes
@@ -81,7 +81,7 @@ specified:
   -------------------|------------------------------------------------------------|------------------------- | -------------------------
   `bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
   `infinite_bus`     | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
-  `emt_bus`          | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         | 
+  `emt_bus`          | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
   `infinite_emt_bus` | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
   `control`          | A single control signal                                    | `x`                      |
 
@@ -100,7 +100,7 @@ represent a device and has the following fields:
   `params`          | An object mapping initialization parameters to numerical values, depending on the class. See the table below for more information
   `mon`             | Optional field, which is an array specifying variables to record the value of in an output channel. Available variables are determined by the device class, as specified in the table below
   `va_base`         | Optional field to override the system power base for this device
-  `freq_base`       | Optional uncommon field to override the system frequency base for this device
+  `freq_base`       | Optional field to override the system frequency base for this device
   `extension`       | Optional field containing an object with implementation-defined keys
 
 #### Device classes
@@ -115,10 +115,8 @@ are specified:
   `GENROU`      | 6th order machine model                              | `bus`, `exciter_signal`\*, `governor_signal`\* | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `control_signal`\*                    | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
-Ports marked with \* are optional and, if missing, will be assumed to be connected to a constant value.
-
-
-This list is subject to change.
+Ports marked with \* are optional and, if missing, will be assumed to be
+connected to a constant value. This list is subject to change.
 
 ## Example File for a 2-Bus System
 
@@ -139,7 +137,7 @@ This list is subject to change.
     ],
     "devices": [
         { "class": "branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0, "X":0.1, "G":0, "B":0} },
-        { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1, "q0":0.05013, "H":3, "D":0, "Ra":0, "Tdop":7, "Tdopp":0.04, "Tqopp":0.05, 
+        { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1, "q0":0.05013, "H":3, "D":0, "Ra":0, "Tdop":7, "Tdopp":0.04, "Tqopp":0.05,
                "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqpp":0.18, "Xl":0.15, "S10":0, "S12":0}, "mon": ["delta", "omega"] }
         { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0":0, "R":0, "X":1e-3} }
     ]
