@@ -178,8 +178,8 @@ int main()
   load_data_3.bus_id = 3;
 
   BusFaultData<real_type, index_type> bus_fault_data_3;
-  bus_fault_data_3.R = 0.0;
-  bus_fault_data_3.X = 1e-5;
+  bus_fault_data_3.R      = 0.0;
+  bus_fault_data_3.X      = 1e-5;
   bus_fault_data_3.status = 0;
 
   //

@@ -23,7 +23,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct GenrouData
     {
-      IdxT  unit_id{0}; ///< Unique unit ID
+      IdxT unit_id{0}; ///< Unique unit ID
 
       RealT p0{0.0};    ///< Initial active power
       RealT q0{0.0};    ///< Initial reactive power

@@ -98,10 +98,10 @@ namespace GridKit
       }
 
     private:
-      bus_type* bus_;
-      real_type R_;
-      real_type X_;
-      int       status_;
+      bus_type*  bus_;
+      real_type  R_;
+      real_type  X_;
+      int        status_;
       const IdxT busID_;
     };
 

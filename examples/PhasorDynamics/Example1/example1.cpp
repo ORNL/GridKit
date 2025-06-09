@@ -14,12 +14,12 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -52,7 +52,7 @@ int main()
   branch_data_1_2.R = 0.0;
   branch_data_1_2.X = 0.1;
   branch_data_1_2.G = 0.0;
-  branch_data_1_2.B = 0.0;  
+  branch_data_1_2.B = 0.0;
 
   GenrouData<real_type, index_type> gen_data_1;
   gen_data_1.unit_id = 1;
@@ -76,8 +76,8 @@ int main()
   gen_data_1.S12     = 0.;
 
   BusFaultData<real_type, index_type> bus_fault_data_1;
-  bus_fault_data_1.R = 0.0;
-  bus_fault_data_1.X = 1e-3;
+  bus_fault_data_1.R      = 0.0;
+  bus_fault_data_1.X      = 1e-3;
   bus_fault_data_1.status = 0;
 
   //

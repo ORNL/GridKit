@@ -23,9 +23,9 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusFaultData
     {
-      RealT R{0.0}; ///< short to ground resistance
-      RealT X{0.0}; ///< short to ground reactance
-      int status{0}; ///< if the fault happened
+      RealT R{0.0};    ///< short to ground resistance
+      RealT X{0.0};    ///< short to ground reactance
+      int   status{0}; ///< if the fault happened
 
       IdxT bus_id{0}; ///< Unique ID of bus where fault occurs.
     };

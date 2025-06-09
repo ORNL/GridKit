@@ -20,7 +20,7 @@ namespace GridKit
 
     template <typename RealT, typename IdxT>
     struct GenrouData;
-  }
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
@@ -46,8 +46,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using real_type = typename Component<ScalarT, IdxT>::real_type;
-      using bus_type  = BusBase<ScalarT, IdxT>;
+      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
 
     public:
