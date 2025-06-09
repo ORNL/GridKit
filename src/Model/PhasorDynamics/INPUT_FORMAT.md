@@ -49,7 +49,7 @@ Contained in the `header` key is an object with the following items:
   `format_version`   | Non-negative integer indicating the format version
   `format_revision`  | Non-negative integer indicating the format revision
   `case_name`        | A string containing the name of the case
-  `case_date`        | Optional string in the ISO 8601 date format (YYYY-MM-DD) indicating a date associated with the case
+  `case_datetime`    | Optional string in the ISO 8601 format indicating a date associated with the case. A time may also be included, and if so, it is recommended that an offset from UTC also be specified.
   `case_description` | A string with more specific description of what is modeled in the case
   `case_comments`    | A string with additional notes as needed
   `freq_base`        | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
@@ -65,7 +65,7 @@ a bus and has the following fields:
   `number`           | Unique positive (> 0) integer identifying the node
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | Optional string containing the name of the node. This may be empty or non-unique
-  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values. If this object is missing, all variables will be given default values. See the table below for more information
+  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
   `v_base`           | Optional floating point value giving the voltage base in volts (V). If omitted, default value of 1 V is assumed (common for signal buses)
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `freq_base`        | Optional field to override the system frequency base at this bus
@@ -85,7 +85,8 @@ specified:
   `infinite_emt_bus` | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
   `control`          | A single control signal                                    | `x`                      |
 
-This list is subject to change.
+For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
+`0.0`. This list is subject to change.
 
 ### Devices
 
