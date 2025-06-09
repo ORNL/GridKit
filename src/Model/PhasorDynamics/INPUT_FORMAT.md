@@ -49,7 +49,7 @@ Contained in the `header` key is an object with the following items:
   `format_version`   | Non-negative integer indicating the format version
   `format_revision`  | Non-negative integer indicating the format revision
   `case_name`        | A string containing the name of the case
-  `case_datetime`    | Optional string in the ISO 8601 format indicating a date associated with the case. A time may also be included, and if so, it is recommended that an offset from UTC also be specified.
+  `case_datetime`    | Optional string in the ISO 8601 format indicating a datetime associated with the case. Including a time is optional, but if one is specified, it is recommended that a UTC offset be included.
   `case_description` | A string with more specific description of what is modeled in the case
   `case_comments`    | A string with additional notes as needed
   `freq_base`        | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
