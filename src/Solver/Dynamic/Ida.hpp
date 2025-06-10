@@ -150,9 +150,9 @@ namespace AnalysisManager
       void*           solver_{};
       SUNContext      context_{};
       SUNMatrix       JacobianMat_{};
-      SUNMatrix       JacobianMatB_{};
+      SUNMatrix       JacobianMatB_ = nullptr;
       SUNLinearSolver linearSolver_{};
-      SUNLinearSolver linearSolverB_{};
+      SUNLinearSolver linearSolverB_ = nullptr;
 
       real_type t_init_{};
       real_type t_final_{};

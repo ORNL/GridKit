@@ -1,6 +1,6 @@
-
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
@@ -20,49 +20,49 @@ int main()
   using namespace GridKit::Testing;
 
   // Create an infinite bus
-  BaseBus<double, size_t>* bus = new BusSlack<double, size_t>(1.0, 0.0);
+  std::unique_ptr<BaseBus<double, size_t>> bus = std::make_unique<BusSlack<double, size_t>>(1.0, 0.0);
 
   // Attach a generator to that bus
-  Generator4<double, size_t>* gen = new Generator4<double, size_t>(bus);
+  Generator4<double, size_t> gen(bus.get());
 
   // Create a system model
-  SystemModel<double, size_t>* model = new SystemModel<double, size_t>();
-  model->addBus(bus);
-  model->addComponent(gen);
+  SystemModel<double, size_t> model;
+  model.addBus(bus.get());
+  model.addComponent(&gen);
 
   // allocate model components
-  model->allocate();
+  model.allocate();
 
   // Create numerical integrator and configure it for the generator model
-  Ida<double, size_t>* idas = new Ida<double, size_t>(model);
+  Ida<double, size_t> idas(&model);
 
   double t_init  = 0.0;
   double t_final = 15.0;
 
   // setup simulation
-  idas->configureSimulation();
-  idas->configureAdjoint();
-  idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init);
-  idas->configureQuadrature();
-  idas->initializeQuadrature();
+  idas.configureSimulation();
+  idas.configureAdjoint();
+  idas.getDefaultInitialCondition();
+  idas.initializeSimulation(t_init);
+  idas.configureQuadrature();
+  idas.initializeQuadrature();
 
   double t_fault = 0.1;
   double t_clear = 0.1;
-  idas->runSimulation(t_fault);
-  idas->saveInitialCondition();
+  idas.runSimulation(t_fault);
+  idas.saveInitialCondition();
   // create initial condition after a fault
   {
-    idas->getSavedInitialCondition();
-    idas->initializeSimulation(t_init);
-    gen->V() = 0.0;
-    idas->runSimulation(t_clear, 20);
-    gen->V() = 1.0;
-    idas->saveInitialCondition();
+    idas.getSavedInitialCondition();
+    idas.initializeSimulation(t_init);
+    gen.V() = 0.0;
+    idas.runSimulation(t_clear, 20);
+    gen.V() = 1.0;
+    idas.saveInitialCondition();
   }
 
   // Set integration time for dynamic constrained optimization
-  idas->setIntegrationTime(t_init, t_final, 100);
+  idas.setIntegrationTime(t_init, t_final, 100);
 
   // Guess initial values of optimization parameters
   double Pm = 1.0;
@@ -90,11 +90,11 @@ int main()
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(idas);
+      new IpoptInterface::DynamicObjective<double, size_t>(&idas);
 
   // Initialize the problem
-  model->param()[0] = Pm;
-  model->param()[1] = Ef;
+  model.param()[0] = Pm;
+  model.param()[1] = Ef;
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
@@ -105,26 +105,26 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of Pm = " << model->param()[0] << "\n"
-              << " Optimal value of Ef = " << model->param()[1] << "\n"
+              << " Optimal value of Pm = " << model.param()[0] << "\n"
+              << " Optimal value of Ef = " << model.param()[1] << "\n"
               << " The final value of the objective function G(Pm,Ef) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
-      new IpoptInterface::DynamicConstraint<double, size_t>(idas);
+      new IpoptInterface::DynamicConstraint<double, size_t>(&idas);
 
   // Store dynamic objective optimization results
-  double* results = new double[model->sizeParams()];
-  for (unsigned i = 0; i < model->sizeParams(); ++i)
+  double* results = new double[model.sizeParams()];
+  for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    results[i] = model->param()[i];
+    results[i] = model.param()[i];
   }
 
   // Initialize the problem
-  model->param()[0] = Pm;
-  model->param()[1] = Ef;
+  model.param()[0] = Pm;
+  model.param()[1] = Ef;
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
@@ -135,17 +135,17 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of Pm = " << model->param()[0] << "\n"
-              << " Optimal value of Ef = " << model->param()[1] << "\n"
+              << " Optimal value of Pm = " << model.param()[0] << "\n"
+              << " Optimal value of Ef = " << model.param()[1] << "\n"
               << " The final value of the objective function G(Pm,Ef) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
 
   // Compare results of the two optimization methods
   int retval = 0;
-  for (unsigned i = 0; i < model->sizeParams(); ++i)
+  for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    if (!isEqual(results[i], model->param()[i], 100 * tol))
+    if (!isEqual(results[i], model.param()[i], 100 * tol))
       --retval;
   }
 
@@ -155,7 +155,5 @@ int main()
   }
 
   delete[] results;
-  delete idas;
-  delete model;
   return 0;
 }

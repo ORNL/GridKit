@@ -1,12 +1,11 @@
 
-#include "Ida.hpp"
-
 #include <iomanip>
 #include <iostream>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
 
+#include "Ida.hpp"
 #include "Model/Evaluator.hpp"
 
 namespace AnalysisManager
@@ -426,6 +425,17 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxNumSteps");
 
       // Set up linear solver
+
+      if (JacobianMatB_ != nullptr || linearSolverB_ != nullptr)
+      {
+        // guard against repeated initialization
+        SUNLinSolFree(linearSolverB_);
+        SUNMatDestroy(JacobianMatB_);
+
+        linearSolverB_ = nullptr;
+        JacobianMatB_ = nullptr;
+      }
+
       JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
                                      static_cast<sunindextype>(model_->size()),
                                      context_);
