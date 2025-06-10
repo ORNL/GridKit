@@ -1,12 +1,12 @@
 add_executable(EnzymeStandaloneScalarCheck EnzymeScalar.cpp)
-target_link_libraries(EnzymeStandaloneScalarCheck ClangEnzymeFlags)
+target_link_libraries(EnzymeStandaloneScalarCheck ClangEnzymeFlags GRIDKIT::Utilities)
 
 add_executable(EnzymeStandaloneVectorCheck EnzymeVector.cpp)
-target_link_libraries(EnzymeStandaloneVectorCheck ClangEnzymeFlags GRIDKIT::DenseMatrix)
+target_link_libraries(EnzymeStandaloneVectorCheck ClangEnzymeFlags GRIDKIT::DenseMatrix GRIDKIT::Utilities)
 
 add_executable(EnzymeStandaloneSparseCheck EnzymeSparse.cpp)
 target_compile_options(EnzymeStandaloneSparseCheck PUBLIC -mllvm -enzyme-auto-sparsity=1)
-target_link_libraries(EnzymeStandaloneSparseCheck ClangEnzymeFlags GRIDKIT::SparseMatrix)
+target_link_libraries(EnzymeStandaloneSparseCheck ClangEnzymeFlags GRIDKIT::SparseMatrix GRIDKIT::Utilities)
 
 add_test(NAME "EnzymeStandaloneScalarCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneScalarCheck)
 add_test(NAME "EnzymeStandaloneVectorCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeStandaloneVectorCheck)

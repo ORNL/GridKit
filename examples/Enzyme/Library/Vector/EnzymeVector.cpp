@@ -1,7 +1,7 @@
 #include <iostream>
-#include <limits>
 
 #include "VectorModel.hpp"
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Example that computes the Jacobian of a vector-valued residual
@@ -63,7 +63,7 @@ int main()
   {
     for (size_t idx = 0; idx < var.size(); ++idx)
     {
-      if (std::abs(jac.getValue(idx, idy) - jac_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
+      if (!GridKit::Testing::isEqual(jac.getValue(idx, idy), jac_ref.getValue(idx, idy)))
       {
         fail++;
         if (verbose)

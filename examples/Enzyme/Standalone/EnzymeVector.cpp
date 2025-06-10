@@ -1,8 +1,8 @@
 #include <iostream>
-#include <limits>
 #include <vector>
 
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the Jacobian of a vector-valued function
@@ -110,7 +110,7 @@ int main()
   {
     for (size_t idx = 0; idx < x.size(); ++idx)
     {
-      if (std::abs(dsq.getValue(idx, idy) - dsq_ref.getValue(idx, idy)) > std::numeric_limits<double>::epsilon())
+      if (!GridKit::Testing::isEqual(dsq.getValue(idx, idy), dsq_ref.getValue(idx, idy)))
       {
         fail++;
         if (verbose)

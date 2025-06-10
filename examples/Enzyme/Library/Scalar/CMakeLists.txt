@@ -1,4 +1,4 @@
 add_executable(EnzymeLibScalarCheck EnzymeScalar.cpp ScalarModel.cpp)
-target_link_libraries(EnzymeLibScalarCheck ClangEnzymeFlags)
+target_link_libraries(EnzymeLibScalarCheck ClangEnzymeFlags GRIDKIT::Utilities)
 
 add_test(NAME "EnzymeLibScalarCheck" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/EnzymeLibScalarCheck)

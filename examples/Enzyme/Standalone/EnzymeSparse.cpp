@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <cmath>
-#include <limits>
 #include <stdio.h>
 #include <vector>
 
 #include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function
@@ -165,7 +165,7 @@ void check(SparseMatrix matrix_1, SparseMatrix matrix_2, int& fail)
       fail++;
     if (ccord_1[ind] != ccord_2[ind])
       fail++;
-    if (std::abs(vals_1[ind] - vals_2[ind]) > std::numeric_limits<double>::epsilon())
+    if (!GridKit::Testing::isEqual(vals_1[ind], vals_2[ind]))
       fail++;
   }
 }

@@ -1,9 +1,9 @@
 #include <iostream>
-#include <limits>
 
 #include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 #include <Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the Jacobian associated with the
@@ -177,7 +177,7 @@ int main()
     {
       double jac_value     = jac_autodiff.getValue(idx, idy);
       double jac_ref_value = jac_ref_dense.getValue(idx, idy);
-      if (std::abs(jac_value - jac_ref_value) > 10 * std::numeric_limits<double>::epsilon())
+      if (!GridKit::Testing::isEqual(jac_value, jac_ref_value))
       {
         fail++;
         if (verbose)
