@@ -60,17 +60,17 @@ int main()
   Branch<scalar_type, index_type> branch67(&bus6, &bus7, 0.001, 0.005, 0, 0);
   Branch<scalar_type, index_type> branch78(&bus7, &bus8, 0.001, 0.005, 0, 0);
   Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
-  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.27, 0, 0.45);
+  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
 
-  Genrou<scalar_type, index_type> gen2(&bus2, 1, 0.5, -0.442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen3(&bus3, 1, 0.5, -2.510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen4(&bus4, 1, 0.5, -4.339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen5(&bus5, 1, 0.5, -23.34993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen6(&bus6, 1, 0.5, 69.907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen7(&bus7, 1, 0.5, -8.318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen8(&bus8, 1, 0.5, -9.123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen9(&bus9, 1, 0.5, -9.662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen10(&bus10, 1, 0.5, -9.932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen2(&bus2, 1, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen3(&bus3, 1, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen4(&bus4, 1, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen5(&bus5, 1, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen6(&bus6, 1, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen7(&bus7, 1, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen8(&bus8, 1, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen9(&bus9, 1, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen10(&bus10, 1, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
 
   BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
 
@@ -115,6 +115,17 @@ int main()
   fileout.open("example3_results.csv");
   std::ostream& out = fileout;
 
+  out << "t,";
+  for (size_t i = 0; i < 9; ++i)
+  {
+    out << "v" << i + 2 << ",";
+  }
+  for (size_t i = 0; i < 9; ++i)
+  {
+    out << "omega" << i + 2 << ",";
+  }
+  out << "\n";
+
   auto output_cb = [&](real_type t)
   {
     std::vector<double>& yval = sys.y();
@@ -124,6 +135,10 @@ int main()
     {
       out << std::sqrt(yval[2 * i] * yval[2 * i]
                              + yval[2 * i + 1] * yval[2 * i + 1]) << ",";
+    }
+    for (size_t i = 0; i < 9; ++i)
+    {
+      out << yval[18 + 21*i + 1] << ",";
     }
     out << "\n";
   };
