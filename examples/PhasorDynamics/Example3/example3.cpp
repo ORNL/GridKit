@@ -34,7 +34,6 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-
   /* Create model parts */
   BusInfinite<scalar_type, index_type> bus1(1, 0);
 
@@ -134,7 +133,8 @@ int main()
     for (size_t i = 0; i < 9; ++i)
     {
       out << std::sqrt(yval[2 * i] * yval[2 * i]
-                       + yval[2 * i + 1] * yval[2 * i + 1]) << ",";
+                       + yval[2 * i + 1] * yval[2 * i + 1])
+          << ",";
     }
 
     // Output generator frequencies
