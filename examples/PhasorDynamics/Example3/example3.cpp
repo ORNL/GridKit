@@ -29,15 +29,11 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  // auto error_allowed = static_cast<real_type>(1e-4);
-
-  // std::cout << "Example 3 version 1\n";
 
   /* Create model parts */
   BusInfinite<scalar_type, index_type> bus1(1, 0);
@@ -115,6 +111,7 @@ int main()
   fileout.open("example3_results.csv");
   std::ostream& out = fileout;
 
+  // Create header for the CSV output file
   out << "t,";
   for (size_t i = 0; i < 9; ++i)
   {
@@ -130,15 +127,23 @@ int main()
   {
     std::vector<double>& yval = sys.y();
 
+    // Output time
     out << t << ",";
+
+    // Output voltage magnitudes on buses
     for (size_t i = 0; i < 9; ++i)
     {
       out << std::sqrt(yval[2 * i] * yval[2 * i]
-                             + yval[2 * i + 1] * yval[2 * i + 1]) << ",";
+                       + yval[2 * i + 1] * yval[2 * i + 1]) << ",";
     }
+
+    // Output generator frequencies
     for (size_t i = 0; i < 9; ++i)
     {
-      out << yval[18 + 21*i + 1] << ",";
+      // 18 is offset for variables of 9 buses.
+      // Each generator has 21 equations.
+      // We are outputting second equation of each generator.
+      out << yval[18 + 21 * i + 1] << ",";
     }
     out << "\n";
   };
