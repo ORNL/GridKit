@@ -149,9 +149,9 @@ namespace AnalysisManager
     private:
       void*           solver_{};
       SUNContext      context_{};
-      SUNMatrix       JacobianMat_ = nullptr;
-      SUNMatrix       JacobianMatB_ = nullptr;
-      SUNLinearSolver linearSolver_ = nullptr;
+      SUNMatrix       JacobianMat_   = nullptr;
+      SUNMatrix       JacobianMatB_  = nullptr;
+      SUNLinearSolver linearSolver_  = nullptr;
       SUNLinearSolver linearSolverB_ = nullptr;
 
       real_type t_init_{};
