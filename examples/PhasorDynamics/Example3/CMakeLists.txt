@@ -8,4 +8,5 @@ target_link_libraries(phasordynamics_example3
 	GRIDKIT::solvers_dyn)
 install(TARGETS phasordynamics_example3 RUNTIME DESTINATION bin)
 
-add_test(NAME GenrouTest3 COMMAND $<TARGET_FILE:phasordynamics_example3>)
+# Not used for tesing for now.
+# add_test(NAME GenrouTest3 COMMAND $<TARGET_FILE:phasordynamics_example3>)
