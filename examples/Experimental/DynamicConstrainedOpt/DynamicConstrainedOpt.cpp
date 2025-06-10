@@ -20,14 +20,14 @@ int main()
   using namespace GridKit::Testing;
 
   // Create an infinite bus
-  std::unique_ptr<BaseBus<double, size_t>> bus = std::make_unique<BusSlack<double, size_t>>(1.0, 0.0);
+  BusSlack<double, size_t> bus(1.0, 0.0);
 
   // Attach a generator to that bus
-  Generator2<double, size_t> gen(bus.get());
+  Generator2<double, size_t> gen(&bus);
 
   // Create a system model
   SystemModel<double, size_t> model;
-  model.addBus(bus.get());
+  model.addBus(&bus);
   model.addComponent(&gen);
 
   // allocate model components
