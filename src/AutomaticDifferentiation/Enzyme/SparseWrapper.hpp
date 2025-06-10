@@ -10,22 +10,22 @@ extern int enzyme_dup;
 extern int enzyme_const;
 extern int enzyme_dupnoneed;
 
-/**
- * @brief Residual wrapper around residual methods inside model classes
- *
- * @tparam ModelT - model type
- * @tparam ScalarT - scalar data type
- */
-template <typename ModelT, typename ScalarT>
-void residual_wrapper(ModelT* obj, ScalarT* y, ScalarT* f)
-{
-  obj->evaluateResidualLocally(y, f);
-}
-
 namespace GridKit
 {
   namespace Enzyme
   {
+    /**
+     * @brief Residual wrapper around residual methods inside model classes
+     *
+     * @tparam ModelT - model type
+     * @tparam ScalarT - scalar data type
+     */
+    template <typename ModelT, typename ScalarT>
+    void residual_wrapper(ModelT* obj, ScalarT* y, ScalarT* f)
+    {
+      obj->evaluateResidualLocally(y, f);
+    }
+
     /**
      * @brief Enzyme fwddiff template
      *
