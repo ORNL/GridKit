@@ -16,11 +16,16 @@
 #include <vector>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
+#include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
@@ -82,20 +87,120 @@ int main()
 
   std::cout << "Example 2 version 1\n";
 
-  /* Create model parts */
-  SystemModel<scalar_type, index_type> sys;
-  BusInfinite<scalar_type, index_type> bus1(1.06, 0.0);
-  Bus<scalar_type, index_type>         bus2(1.0599558398065716, -0.009675621941024773);
-  Bus<scalar_type, index_type>         bus3(0.9610827543495831, -0.13122476630506485);
-  Branch<scalar_type, index_type>      branch12(&bus1, &bus2, 0.05, 0.21, 0, 0.1);
-  Branch<scalar_type, index_type>      branch13(&bus1, &bus3, 0.06, 0.15, 0, 0.12);
-  Branch<scalar_type, index_type>      branch23(&bus2, &bus3, 0.08, 0.27, 0, 0.45);
-  Genrou<scalar_type, index_type>      gen2(&bus2, 1, 0.5, -0.07588, 2.7, 0., 0., 7., .04, .05, .75, 1.9, 0.17, 0.15, 0.4, 0.35, 0.15, 0.14999, 0., 0.);
-  Genrou<scalar_type, index_type>      gen3(&bus3, 1, 0.25, 0.26587, 1.6, 0., 0., 7.5, .04, .05, .75, 2.3, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Load<scalar_type, index_type>        load3(&bus3, 0.4447197839297772, 0.20330047265361242);
-  BusFault<scalar_type, index_type>    fault(&bus3, 0, 1e-5, 0);
+  //
+  // Create (load) model data
+  //
+
+  // Bus 1
+  BusData<real_type, index_type> bus_data_1;
+  bus_data_1.Vr0 = 1.06;
+  bus_data_1.Vi0 = 0.0;
+
+  // Bus 2
+  BusData<real_type, index_type> bus_data_2;
+  bus_data_2.Vr0 = 1.0599558398065716;
+  bus_data_2.Vi0 = -0.009675621941024773;
+
+  // Bus 3
+  BusData<real_type, index_type> bus_data_3;
+  bus_data_3.Vr0 = 0.9610827543495831;
+  bus_data_3.Vi0 = -0.13122476630506485;
+
+  // Branch 1-2
+  BranchData<real_type, index_type> branch_data_1_2;
+  branch_data_1_2.R = 0.05;
+  branch_data_1_2.X = 0.21;
+  branch_data_1_2.G = 0;
+  branch_data_1_2.B = 0.1;
+
+  // Branch 1-3
+  BranchData<real_type, index_type> branch_data_1_3;
+  branch_data_1_3.R = 0.06;
+  branch_data_1_3.X = 0.15;
+  branch_data_1_3.G = 0;
+  branch_data_1_3.B = 0.12;
+
+  // Branch 2-3
+  BranchData<real_type, index_type> branch_data_2_3;
+  branch_data_2_3.R = 0.08;
+  branch_data_2_3.X = 0.27;
+  branch_data_2_3.G = 0;
+  branch_data_2_3.B = 0.45;
+
+  // Generator on bus 2
+  GenrouData<real_type, index_type> gen_data_2;
+  gen_data_2.unit_id = 1;
+  gen_data_2.p0      = 0.5;
+  gen_data_2.q0      = -0.07588;
+  gen_data_2.H       = 2.7;
+  gen_data_2.D       = 0.;
+  gen_data_2.Ra      = 0.;
+  gen_data_2.Tdop    = 7.;
+  gen_data_2.Tdopp   = .04;
+  gen_data_2.Tqopp   = .05;
+  gen_data_2.Tqop    = .75;
+  gen_data_2.Xd      = 1.9;
+  gen_data_2.Xdp     = 0.17;
+  gen_data_2.Xdpp    = 0.15;
+  gen_data_2.Xq      = 0.4;
+  gen_data_2.Xqp     = 0.35;
+  gen_data_2.Xqpp    = 0.15;
+  gen_data_2.Xl      = 0.14999;
+  gen_data_2.S10     = 0.;
+  gen_data_2.S12     = 0.;
+
+  // Generator on bus 3
+  GenrouData<real_type, index_type> gen_data_3;
+  gen_data_3.unit_id = 1;
+  gen_data_3.p0      = 0.25;
+  gen_data_3.q0      = 0.26587;
+  gen_data_3.H       = 1.6;
+  gen_data_3.D       = 0.;
+  gen_data_3.Ra      = 0.;
+  gen_data_3.Tdop    = 7.5;
+  gen_data_3.Tdopp   = .04;
+  gen_data_3.Tqopp   = .05;
+  gen_data_3.Tqop    = .75;
+  gen_data_3.Xd      = 2.3;
+  gen_data_3.Xdp     = 0.2;
+  gen_data_3.Xdpp    = 0.18;
+  gen_data_3.Xq      = 0.5;
+  gen_data_3.Xqp     = 0.5;
+  gen_data_3.Xqpp    = 0.18;
+  gen_data_3.Xl      = 0.15;
+  gen_data_3.S10     = 0.;
+  gen_data_3.S12     = 0.;
+
+  // Load on bus 3
+  LoadData<real_type, index_type> load_data_3;
+  load_data_3.R      = 0.4447197839297772;
+  load_data_3.X      = 0.20330047265361242;
+  load_data_3.bus_id = 3;
+
+  BusFaultData<real_type, index_type> bus_fault_data_3;
+  bus_fault_data_3.R      = 0.0;
+  bus_fault_data_3.X      = 1e-5;
+  bus_fault_data_3.status = false;
+
+  //
+  // Instantiate model components
+  //
+
+  BusInfinite<scalar_type, index_type> bus1(bus_data_1);
+  Bus<scalar_type, index_type>         bus2(bus_data_2);
+  Bus<scalar_type, index_type>         bus3(bus_data_3);
+
+  Branch<scalar_type, index_type> branch12(&bus1, &bus2, branch_data_1_2);
+  Branch<scalar_type, index_type> branch13(&bus1, &bus3, branch_data_1_3);
+  Branch<scalar_type, index_type> branch23(&bus2, &bus3, branch_data_2_3);
+
+  Genrou<scalar_type, index_type>   gen2(&bus2, gen_data_2);
+  Genrou<scalar_type, index_type>   gen3(&bus3, gen_data_3);
+  Load<scalar_type, index_type>     load3(&bus3, load_data_3);
+  BusFault<scalar_type, index_type> fault(&bus3, bus_fault_data_3);
 
   /* Connect everything together */
+  SystemModel<scalar_type, index_type> sys;
   sys.addBus(&bus1);
   sys.addBus(&bus2);
   sys.addBus(&bus3);
@@ -114,13 +219,13 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
+    std::vector<double>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                1.0 + yval[5],
-                                1.0 + yval[26],
-                                std::sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
-                                std::sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
+                                1.0 + y_val[5],
+                                1.0 + y_val[26],
+                                std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),
+                                std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])});
   };
 
   // Set up simulation
@@ -136,13 +241,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  fault.setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  fault.setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

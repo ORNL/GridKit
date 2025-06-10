@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -31,7 +32,7 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, int unit_id)
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
@@ -65,15 +66,10 @@ namespace GridKit
     /*!
      * @brief Constructor for a pi-model branch
      *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
-                                  int       unit_id,
+                                  IdxT      unit_id,
                                   ScalarT   p0,
                                   ScalarT   q0,
                                   real_type H,
@@ -113,6 +109,38 @@ namespace GridKit
         Xl_(Xl),
         S10_(S10),
         S12_(S12)
+    {
+      size_ = 21;
+      setDerivedParams();
+    }
+
+    /*!
+     * @brief Constructor for the GENROU generator with saturation.
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, model_data_type& data)
+      : bus_(bus),
+        busID_(0),
+        unit_id_(data.unit_id),
+        p0_(data.p0),
+        q0_(data.q0),
+        H_(data.H),
+        D_(data.D),
+        Ra_(data.Ra),
+        Tdop_(data.Tdop),
+        Tdopp_(data.Tdopp),
+        Tqopp_(data.Tqopp),
+        Tqop_(data.Tqop),
+        Xd_(data.Xd),
+        Xdp_(data.Xdp),
+        Xdpp_(data.Xdpp),
+        Xq_(data.Xq),
+        Xqp_(data.Xqp),
+        Xqpp_(data.Xqpp),
+        Xl_(data.Xl),
+        S10_(data.S10),
+        S12_(data.S12)
     {
       size_ = 21;
       setDerivedParams();
