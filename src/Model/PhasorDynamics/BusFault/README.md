@@ -4,11 +4,11 @@ Represents an impedance fault at a bus. This device can exist in two states, on 
 
 ## Model Parameters
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$R$  | [p.u.] | Fault resistance  | 
-$X$  | [p.u.] | Fault reactance  | 
-$U$ | [unitless] | Binary status $$\in \{0, 1\}$$ | Set by user to put fault on or off.
+Symbol   | Units      | Description                     | Note
+---------|------------|---------------------------------|-------
+$R$      | [p.u.]     | Fault resistance                | 
+$X$      | [p.u.]     | Fault reactance                 | 
+$U$      | [unitless] | Binary status $$\in \{0, 1\}$$  | Set by user to put fault on or off.
 
 ### Model Derived Parameters
 ``` math
@@ -28,10 +28,10 @@ None.
 
 #### Algebraic
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$I_r$  | [p.u.] | Terminal current, real component  | Read by bus
-$I_i$  | [p.u.] | Terminal current, imaginary component  |  Read by bus
+Symbol      | Units   | Description                           | Note
+------------|---------|---------------------------------------| ------
+$I_r$       | [p.u.]  | Terminal current, real component      | Read by bus
+$I_i$       | [p.u.]  | Terminal current, imaginary component |  Read by bus
 
 
 ### External Variables
@@ -40,10 +40,10 @@ $I_i$  | [p.u.] | Terminal current, imaginary component  |  Read by bus
 None.
 
 #### Algebraic
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$V_r$  | [p.u.] | Terminal voltage, real component | owned by bus object
-$V_i$  | [p.u.] | Terminal voltage, imaginary component | owned by bus object
+Symbol      | Units   | Description                           | Note
+------------|---------|---------------------------------------| ------
+$V_r$       | [p.u.]  | Terminal voltage, real component      | owned by bus object
+$V_i$       | [p.u.]  | Terminal voltage, imaginary component | owned by bus object
 
 
 ## Model Equations

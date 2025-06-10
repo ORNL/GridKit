@@ -14,10 +14,14 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
@@ -27,37 +31,70 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
+  using scalar_type = double;
+  using real_type   = double;
+  using index_type  = size_t;
+
   std::cout << "Example 1 version 2\n";
 
-  /* Create model parts */
-  SystemModel<double, size_t> sys;
-  Bus<double, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
-  BusInfinite<double, size_t> bus2(1.0, 0.0);
-  Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
-  BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
+  //
+  // Create model data
+  //
+  BusData<real_type, index_type> bus_data_1;
+  bus_data_1.Vr0 = 0.9949877346411762;
+  bus_data_1.Vi0 = 0.09999703952427966;
 
-  Genrou<double, size_t> gen(&bus1,
-                             1,
-                             1.,
-                             0.05013,
-                             3.,
-                             0.,
-                             0.,
-                             7.,
-                             .04,
-                             .05,
-                             .75,
-                             2.1,
-                             0.2,
-                             0.18,
-                             0.5,
-                             0.5,
-                             0.18,
-                             0.15,
-                             0.,
-                             0.);
+  BusData<real_type, index_type> bus_data_2;
+  bus_data_2.Vr0 = 1.0;
+  bus_data_2.Vi0 = 0.0;
 
-  /* Connect everything together */
+  BranchData<real_type, index_type> branch_data_1_2;
+  branch_data_1_2.R = 0.0;
+  branch_data_1_2.X = 0.1;
+  branch_data_1_2.G = 0.0;
+  branch_data_1_2.B = 0.0;
+
+  GenrouData<real_type, index_type> gen_data_1;
+  gen_data_1.unit_id = 1;
+  gen_data_1.p0      = 1.;
+  gen_data_1.q0      = 0.05013;
+  gen_data_1.H       = 3.;
+  gen_data_1.D       = 0.;
+  gen_data_1.Ra      = 0.;
+  gen_data_1.Tdop    = 7.;
+  gen_data_1.Tdopp   = .04;
+  gen_data_1.Tqopp   = .05;
+  gen_data_1.Tqop    = .75;
+  gen_data_1.Xd      = 2.1;
+  gen_data_1.Xdp     = 0.2;
+  gen_data_1.Xdpp    = 0.18;
+  gen_data_1.Xq      = 0.5;
+  gen_data_1.Xqp     = 0.5;
+  gen_data_1.Xqpp    = 0.18;
+  gen_data_1.Xl      = 0.15;
+  gen_data_1.S10     = 0.;
+  gen_data_1.S12     = 0.;
+
+  BusFaultData<real_type, index_type> bus_fault_data_1;
+  bus_fault_data_1.R      = 0.0;
+  bus_fault_data_1.X      = 1e-3;
+  bus_fault_data_1.status = false;
+
+  //
+  // Instantiate model components
+  //
+
+  Bus<scalar_type, size_t>         bus1(bus_data_1);
+  BusInfinite<scalar_type, size_t> bus2(bus_data_2);
+  Branch<scalar_type, size_t>      branch(&bus1, &bus2, branch_data_1_2);
+  BusFault<scalar_type, size_t>    fault(&bus1, bus_fault_data_1);
+  Genrou<scalar_type, size_t>      gen(&bus1, gen_data_1);
+
+  //
+  // Create the 2-bus system
+  //
+
+  SystemModel<scalar_type, size_t> sys;
   sys.addBus(&bus1);
   sys.addBus(&bus2);
   sys.addComponent(&branch);
@@ -65,7 +102,8 @@ int main()
   sys.addComponent(&gen);
   sys.allocate();
 
-  double dt = 1.0 / 4.0 / 60.0;
+  // Set time step to 1/4 of a 60Hz cycle
+  real_type dt = 1.0 / 4.0 / 60.0;
 
   // A data structure to keep track of the data we want to
   // compare to the reference solution. Rather than keeping
@@ -77,7 +115,9 @@ int main()
   // (plain ol' data), which have some benefits in C++.
   struct OutputData
   {
-    double ti, Vr, Vi, dw;
+    // Output variables are time, real and imaginary voltage and
+    // frequency deviation
+    real_type ti, Vr, Vi, dw;
   };
 
   // A list of output for each time step.
@@ -93,19 +133,19 @@ int main()
   // reference to that variable inside the callback). We select
   // the subset of the output we're interested in recording and
   // push it into output, which is updated outside the callback.
-  auto output_cb = [&](double t)
+  auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
+    std::vector<scalar_type>& y_val = sys.y();
 
-    output.push_back(OutputData{t, yval[0], yval[1], yval[3]});
+    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
   };
 
   // Set up simulation
-  Ida<double, size_t> ida(&sys);
+  Ida<scalar_type, size_t> ida(&sys);
   ida.configureSimulation();
 
   // Run simulation - making sure to pass the callback to record output
-  double start = static_cast<double>(clock());
+  real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
   ida.initializeSimulation(0.0, false);
@@ -113,30 +153,30 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault.setStatus(1);
+  fault.setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault.setStatus(0);
+  fault.setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
-  double stop = static_cast<double>(clock());
+  real_type stop = static_cast<real_type>(clock());
 
-  double error_V = 0.0; // error in |V|
-  double error_w = 0.0; // error in rotor speed
+  real_type error_V = 0.0; // error in |V|
+  real_type error_w = 0.0; // error in rotor speed
 
   // Read through the simulation data stored in the buffer.
   // Since we captured by reference, output should be available
   // for us to read here, outside the callback.
   for (size_t i = 0; i < output.size(); i++)
   {
-    OutputData           data    = output[i];
-    std::vector<double>& ref_sol = Example1::reference_solution[i + 1];
+    OutputData              data    = output[i];
+    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
 
-    double err =
+    real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
         / (1.0 + std::abs(ref_sol[2]));
     if (err > error_V)
@@ -160,8 +200,9 @@ int main()
     // std::cout << "\n";
   }
 
-  double error_V_allowed = 2e-4;
-  double error_w_allowed = 1e-4;
+  // Errors allowed for agreement with Powerworld results
+  real_type error_V_allowed = 2e-4;
+  real_type error_w_allowed = 1e-4;
 
   // Tolerances based on Powerworld reference accuracy
   int status = 0;

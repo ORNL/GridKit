@@ -46,6 +46,7 @@ namespace GridKit
       Load(bus_type* bus);
       Load(bus_type* bus, real_type R, real_type X);
       Load(bus_type* bus, IdxT component_id);
+      Load(bus_type* bus, model_data_type& data);
       virtual ~Load();
 
       virtual int allocate() override;
