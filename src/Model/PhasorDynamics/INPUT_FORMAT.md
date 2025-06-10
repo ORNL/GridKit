@@ -1,15 +1,16 @@
-## Grid Dynamics Case Format
+# Grid Dynamics case format specification
 
 Adam Birchfield, Texas A&M University, 2/28/2025
 Version 0.1
 
-### Overview
+## Overview
 
-This document describes the data format for grid dynamics cases which
-will be used in the SCIDAC-OE project "Next-Generation Grid Simulations"
-and can also be used to inform future formats and software efforts.
+This document describes a data format for grid dynamics cases intended to
+be used in the SciDAC-OE project "Next-Generation Grid Simulations". The
+format is designed first for implementation as UTF-8 encoded JSON but may
+also be encoded as [MessagePack](https://msgpack.org).
 
-#### Overall goals of the format
+### Goals
 
 -   Simplicity both of user understanding and of software
     implementation.
@@ -24,156 +25,127 @@ and can also be used to inform future formats and software efforts.
 -   Extensible to be able to add many different kinds of nodes and
     device classes.
 
--   Non-repetitive to keep file size concise and enhance human
-    readibility. For example, if we have 300 GENROU devices, we do not
-    need to say "Tdopp" for every one of them. Just putting "GENROU" for
-    each lets us know what the parameters mean and their order.
+-   Self-describing, by explicitly labeling parameters.
 
 -   Backward compatibility. Newer software should always be able to read
     older files. When possible, also have forward compatibility where
     older software can read newer files as long as they do not contain
     newly added or modified devices.
 
-#### Overview of the input format
+## Format
 
--   Using JSON in UTF-8 as the base format style
+The root element in the format is an object with three keys: `header`,
+`buses`, and `devices`. `header` contains information about the case,
+`buses` is an array of buses (which can include electrical buses of
+different types as well as signal buses), and `devices` is an array
+of system devices.
 
--   Root is an object with three main sections as key-value pair items:
+### Header
 
-    -   "header" section is itself an object with various system-wide
-        information about the case as key-value pairs: name, date, base
-        frequency, etc.
+Contained in the `header` key is an object with the following items:
 
-    -   "nodes" section is an array of nodes: primarily electrical buses
-        and control signals
+   Name              | Value
+ --------------------|-------------------------------------------------------
+  `format_version`   | Non-negative integer indicating the format version
+  `format_revision`  | Non-negative integer indicating the format revision
+  `case_name`        | A string containing the name of the case
+  `case_datetime`    | Optional string in the ISO 8601 format indicating a datetime associated with the case. Including a time is optional, but if one is specified, it is recommended that a UTC offset be included.
+  `case_description` | A string with more specific description of what is modeled in the case
+  `case_comments`    | A string with additional notes as needed
+  `freq_base`        | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
+  `va_base`          | A floating point value indicating the system power base in volt-amperes (VA). This is commonly 100e6 VA
 
-    -   "devices" section is an array of system devices, including
-        generators, loads, branches, controllers, and events
+### Buses
+
+Contained in the `buses` key is an array of objects, each of which represent
+a bus and has the following fields:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `number`           | Unique positive (> 0) integer identifying the node
+  `class`            | A string indicating the class of node. See the table below for more information
+  `name`             | Optional string containing the name of the node. This may be empty or non-unique
+  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
+  `v_base`           | Optional floating point value giving the voltage base in volts (V). If omitted, default value of 1 V is assumed (common for signal buses)
+  `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
+  `freq_base`        | Optional field to override the system frequency base at this bus
+  `va_base`          | Optional field to override the system power base at this bus
+  `extension`        | Optional field containing an object with implementation-defined keys
+
+#### Bus classes
+
+As of the current version and revision, the following bus classes are
+specified:
+
+  Bus class          | Description                                                | Initialization variables | Other variables available to monitor
+  -------------------|------------------------------------------------------------|------------------------- | -------------------------
+  `bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
+  `infinite_bus`     | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
+  `emt_bus`          | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
+  `infinite_emt_bus` | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
+  `control`          | A single control signal                                    | `x`                      |
+
+For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
+`0.0`. This list is subject to change.
+
+### Devices
+
+Contained in the `devices` section is an array of objects, each of which
+represent a device and has the following fields:
+
+  Name              | Description
+  ------------------|------------------------------------------------------
+  `class`           | A string indicating the class of device. See the table below for more information
+  `ports`           | An object mapping the object's port names (depending on the device class as specified in the table below) to the associated bus number to which it is connected. Any field listed under variables available to monitor can also be added here as a read-only port
+  `id`              | A string disambiguating the device from others. Each device in a class must have a unique combination of required port bus numbers and this string. This string should be 1 or 2 characters long.
+  `params`          | An object mapping initialization parameters to numerical values, depending on the class. See the table below for more information
+  `mon`             | Optional field, which is an array specifying variables to record the value of in an output channel. Available variables are determined by the device class, as specified in the table below
+  `va_base`         | Optional field to override the system power base for this device
+  `freq_base`       | Optional field to override the system frequency base for this device
+  `extension`       | Optional field containing an object with implementation-defined keys
+
+#### Device classes
+
+As of the current version and revision, the following device classes
+are specified:
+
+  Device class  | Description                                          | Ports                                         | Initialization parameters | Variables available to monitor
+  --------------|------------------------------------------------------|-----------------------------------------------|---------------------------- | -------------------------
+  `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                             | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `static_load` | a basic static ZIP load                              | `bus`                                      | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
+  `GENROU`      | 6th order machine model                              | `bus`, `exciter_signal`\*, `governor_signal`\* | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `control_signal`\*                    | `state0`, `R`, `X` | `state`, `ir`, `ii`
+
+Ports marked with \* are optional and, if missing, will be assumed to be
+connected to a constant value. This list is subject to change.
+
+## Example File for a 2-Bus System
 
 ```json
 {
-    "header":{... },
-    "nodes":[... ],
-    "devices":[... ]
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "Two-bus test case 1",
+        "case_description": "A two-bus test case for demonstrating the dynamics format",
+        "comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed",
+        "freq_base": 60,
+        "va_base": 100e6
+    },
+    "buses": [
+        { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "vbase": 115e3, "mon": ["Vr", "Vi"] },
+        { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0}, "vbase": 115e3 }
+    ],
+    "devices": [
+        { "class": "branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0, "X":0.1, "G":0, "B":0} },
+        { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1, "q0":0.05013, "H":3, "D":0, "Ra":0, "Tdop":7, "Tdopp":0.04, "Tqopp":0.05,
+               "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqpp":0.18, "Xl":0.15, "S10":0, "S12":0}, "mon": ["delta", "omega"] }
+        { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0":0, "R":0, "X":1e-3} }
+    ]
 }
 ```
 
-
-### Header Section
-
-```json
-"header": { "key": value, ...}
-```
-
-The header section is an object, with the following standardized items,
-allowing for extensibility as well.
-
-   Name             | Value                                                  
- -------------------|---------------------------------------------------------
-  format_version    | Integer of main format version (0 for this version 0.1)
-  format_revision   | Integer of format revision (1 for this version 0.1)
-  case_name         | Short string for the case name 
-  case_date         | String in a standard date/time format 
-  case_description  | Longer string giving a more specific description of what is modeled in the case 
-  comments          | Even longer string with notes as needed 
-  freq_base         | System frequency base, floating point in Hz (commonly 60)
-  va_base           | System power base, floating point in VA (commonly 100e6)
-
-### Nodes Section
-
-```json
-"nodes": [[..., ], [..., ], [..., ]]
-```
-
-The nodes section is an array of arrays. Each array represents one node,
-and has exactly 6 items as follows.
-
-  Index |  Node item
-  ------|---------------------------------------------------------
-  0     | Number, a unique integer \> 0 to identify the node 
-  1     |  Node class, string, for what type of node it is. See table below for supported classes 
-  2     | String name of the node, not necessarily unique. If desired, for simplicity it can be an empty string. Nodes are identified by number, not name, but this can be a helpful label for debugging.
-  3     |  Array of default voltages or signal values. Length of array and meaning depends on node class (see table below).
-  4     | Voltage base for per-unit, floating point value in V. Set to 1 to indicated that voltages or signals given are already in actual units.
-  5     |  Extra, object with key-value pairs for any extra information to provide with the node. This can be an empty object. If you want to specify a non-default frequency or power base, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the voltage or signal values specified in the array for this node will be added to an output channel. Other uses of this section would be coordinates for one-line diagram drawing, membership in components or areas, etc.
-  
-
-### Table of Supported Node Classes
-
-For now the following node classes are specified (though not all
-implemented yet)
-
-  Node Class   | Description                                 | Variables
-  -------------|---------------------------------------------|--------------
-  bus          | positive-sequence, AC phasor domain bus     | [Vr, Vi]
-  infinite_bus | positive-sequence, AC phasor domain bus with fixed voltage | [Vr, Vi]
-  emt_bus      | 3-phase bus with instantaneous voltages     | [Va, Vb, Vc]
-  infinite_emt_bus | 3-phase bus with instantaneous voltages | [Va, Vb, Vc]
-  control      | single control signal                       | [x]
-
-
-### Devices Section
-
-```json
-"devices": [[..., ], [..., ], [..., ]]
-```
-
-The devices section is also an array of arrays. Each array represents
-one device, and has exactly 5 items as follows.
-
-  Index | Node item
-  ------|----------------------------------------------------------------
-  0     | Device class, a string identifier for what type of device this is. See table below for currently supported devices. A goal is to continually increase the number of supported devices.
-  1     | Node numbers, an array of nodes connected with this device. The length of this array is fixed depending on the device class, but some nodes may be 0 if that functionality is not used. For example, GENROU class devices must have 3 nodes: bus, exciter signal, and governor signal. But the bus is the only one which must be connected to an actual node.
-  2     | String ID disambiguator. Each device must have a unique combination of node numbers plus this string. It is recommended for most devices for this to only be 1-2 characters to facilitate converting to industry formats.
-  3     | Array of initialization parameters. The length and meaning of these values is fixed and specified by the device class (see table below).
-  4     | Extra, object with key-value pairs for any extra information to provide with the device. This can be an empty object {}. If you want to specify a non-default frequency or power base for this device, do it here with `"freq_base"` or `"va_base"`. If you add the item `"monitor":[]`, the variable values specified in the array will be recorded to an output channel.
-
-
-### Table of Supported Device Classes
-
-For now the following device classes are supported, with more to be
-added in future versions. Note that the format version number and
-revision number are extremely important, as the device list and the
-exact lists of nodes and parameters may change with updates in different
-versions.
-
-
-  Class Name    | Description  | Nodes                  | Initialization Parameters
-  --------------|--------------| -----------------------|-----------------------
-  branch        | a basic algebraic pi model for a line or transformer | 2: Bus1, Bus2 | 4: R, X, G, B                         
-  static_load   | a basic static ZIP load   | 1: Bus        | 6: Pz, Qz, Pi, Qi, Pp, Qp
-  GENROU        | 6th order machine model   | 3: Bus, exciter_signal, governor_signal | 18: p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12
-  bus_fault     | simple impedance-based fault at a bus | 2: Bus, control signal | 3: state0, R, X                                       
-
-
-### Example File for 2-Bus System
-
-```json
-{"header": {
-"format_version": 0, "format_revision": 1, "case_name": "two-bus test case 1", "case_data": "2/28/2025",
-"case_description": "A two-bus test case for demonstrating the dynamics format.",
-"comments":"The case is set up to monitor the voltage at both buses and the machine angle and speed",
-"freq_base":60, "va_base": 100e6
-},
-
-"nodes": [
-
-[1, "bus", "Bus 1", [0.994988, 0.099997], 115e3, {"monitor": [ "Vr", "Vi"]}],
-[2, "infinite_bus", "Bus 2", [1.0, 0], 115e3, {}]
-
-],
-
-"devices": [
-
-["branch", [1, 2], "1", [0, 0.1, 0, 0], {}],
-["GENROU", [1, 0, 0], "1", [1, 0.05013, 3, 0, 0, 7, 0.04, 0.05, 0.75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0, 0], {"monitor": ["delta", "omega"]}],
-["bus_fault": [1], "1", [0, 0, 1e-3], {}]
-
-] }
-```
-
-### Appendix: Output File Format
+## Appendix: Output file format
 
 There could be multiple output file formats, but the simplest output
 file format is a comma-separated text file table. The first row is a
