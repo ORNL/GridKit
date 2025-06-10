@@ -71,7 +71,7 @@ namespace GridKit
         X_ = X;
       }
 
-      void setStatus(int status)
+      void setStatus(bool status)
       {
         status_ = status;
       }
@@ -101,7 +101,7 @@ namespace GridKit
       bus_type*  bus_;
       real_type  R_;
       real_type  X_;
-      int        status_;
+      bool       status_;
       const IdxT busID_;
     };
 

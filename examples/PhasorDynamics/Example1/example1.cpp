@@ -78,7 +78,7 @@ int main()
   BusFaultData<real_type, index_type> bus_fault_data_1;
   bus_fault_data_1.R      = 0.0;
   bus_fault_data_1.X      = 1e-3;
-  bus_fault_data_1.status = 0;
+  bus_fault_data_1.status = false;
 
   //
   // Instantiate model components
@@ -102,6 +102,7 @@ int main()
   sys.addComponent(&gen);
   sys.allocate();
 
+  // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
   // A data structure to keep track of the data we want to
@@ -114,6 +115,8 @@ int main()
   // (plain ol' data), which have some benefits in C++.
   struct OutputData
   {
+    // Output variables are time, real and imaginary voltage and
+    // frequency deviation
     real_type ti, Vr, Vi, dw;
   };
 
@@ -132,9 +135,9 @@ int main()
   // push it into output, which is updated outside the callback.
   auto output_cb = [&](real_type t)
   {
-    std::vector<scalar_type>& yval = sys.y();
+    std::vector<scalar_type>& y_val = sys.y();
 
-    output.push_back(OutputData{t, yval[0], yval[1], yval[3]});
+    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
   };
 
   // Set up simulation
@@ -150,13 +153,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault.setStatus(1);
+  fault.setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault.setStatus(0);
+  fault.setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
@@ -197,6 +200,7 @@ int main()
     // std::cout << "\n";
   }
 
+  // Errors allowed for agreement with Powerworld results
   real_type error_V_allowed = 2e-4;
   real_type error_w_allowed = 1e-4;
 

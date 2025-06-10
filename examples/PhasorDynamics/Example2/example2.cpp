@@ -180,7 +180,7 @@ int main()
   BusFaultData<real_type, index_type> bus_fault_data_3;
   bus_fault_data_3.R      = 0.0;
   bus_fault_data_3.X      = 1e-5;
-  bus_fault_data_3.status = 0;
+  bus_fault_data_3.status = false;
 
   //
   // Instantiate model components
@@ -219,13 +219,13 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
+    std::vector<double>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                1.0 + yval[5],
-                                1.0 + yval[26],
-                                std::sqrt(yval[0] * yval[0] + yval[1] * yval[1]),
-                                std::sqrt(yval[2] * yval[2] + yval[3] * yval[3])});
+                                1.0 + y_val[5],
+                                1.0 + y_val[26],
+                                std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),
+                                std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])});
   };
 
   // Set up simulation
@@ -241,13 +241,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  fault.setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  fault.setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

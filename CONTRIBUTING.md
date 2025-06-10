@@ -184,6 +184,24 @@ double another_member;   // No, there is no trailing underscore to distinguish i
 double memberVariable_;  // No, using lowercase camel instead of C-style name format
 ```
 
+#### Ecxeption
+
+Public member variables that are accessed directly do not need trailing
+underscores. For example, consider this code:
+```c++
+struct ModelData
+{
+  int id;
+  double value;
+};
+
+ModelData data;
+data.id = 1;
+data.value = 2.0;
+```
+Member variables of struct `data` are accessed diorectly outside the struct
+and do not need to be denoted with trailing underscores `_`.
+
 ### Function names
 
 Use lowercase camel format for function names.
