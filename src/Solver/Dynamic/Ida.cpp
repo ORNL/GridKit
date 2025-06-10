@@ -441,7 +441,7 @@ namespace AnalysisManager
         checkAllocation((void*) linearSolverB_, "SUNLinSol_Dense");
       }
 
-      // Setup linear solver (only dense supported at this time) 
+      // Setup linear solver (only dense supported at this time)
       retval = IDASetLinearSolverB(solver_, backwardID_, linearSolverB_, JacobianMatB_);
       checkOutput(retval, "IDASetLinearSolverB");
 
