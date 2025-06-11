@@ -425,15 +425,23 @@ namespace AnalysisManager
       retval = IDASetMaxNumStepsB(solver_, backwardID_, 2000);
       checkOutput(retval, "IDASetMaxNumSteps");
 
-      // Set up linear solver
-      JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                     static_cast<sunindextype>(model_->size()),
-                                     context_);
-      checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
+      // Allocate Jacobian matrix, if not already
+      if (JacobianMatB_ == nullptr)
+      {
+        JacobianMatB_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                       static_cast<sunindextype>(model_->size()),
+                                       context_);
+        checkAllocation((void*) JacobianMatB_, "SUNDenseMatrix");
+      }
 
-      linearSolverB_ = SUNLinSol_Dense(yyB_, JacobianMatB_, context_);
-      checkAllocation((void*) linearSolverB_, "SUNLinSol_Dense");
+      // Allocate linear solver, if not already
+      if (linearSolverB_ == nullptr)
+      {
+        linearSolverB_ = SUNLinSol_Dense(yyB_, JacobianMatB_, context_);
+        checkAllocation((void*) linearSolverB_, "SUNLinSol_Dense");
+      }
 
+      // Setup linear solver (only dense supported at this time)
       retval = IDASetLinearSolverB(solver_, backwardID_, linearSolverB_, JacobianMatB_);
       checkOutput(retval, "IDASetLinearSolverB");
 
