@@ -119,7 +119,7 @@ int main()
   // sys.addComponent(&gen);
   sys.allocate();
 
-  auto* fault = dynamic_cast<BusFault<scalar_type, index_type>*>(sys.getComponent(1));
+  auto* fault = dynamic_cast<BusFault<scalar_type, index_type>*>(sys.getFault(0));
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;

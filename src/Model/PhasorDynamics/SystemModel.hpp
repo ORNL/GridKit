@@ -109,7 +109,7 @@ namespace GridKit
         for (const auto& faultdata : data.bus_fault)
         {
           auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
-          addComponent(fault);
+          addFault(fault);
         }
 
         // Add generators
@@ -706,6 +706,12 @@ namespace GridKit
         components_.push_back(component);
       }
 
+      void addFault(component_type* component)
+      {
+        components_.push_back(component);
+        faults_.push_back(component);
+      }
+
       bus_type* getBus(IdxT busid)
       {
         // Need to implement mapping of bus IDs to buses in the system model
@@ -727,9 +733,15 @@ namespace GridKit
         return components_[comp_id];
       }
 
+      component_type* getFault(IdxT fault_id)
+      {
+        return faults_[fault_id];
+      }
+
     private:
       std::vector<bus_type*>       buses_;
       std::vector<component_type*> components_;
+      std::vector<component_type*> faults_;
 
     }; // class SystemModel
 
