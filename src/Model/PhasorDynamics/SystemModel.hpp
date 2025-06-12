@@ -9,10 +9,9 @@
 #include <Model/PhasorDynamics/Component.hpp>
 #include <ScalarTraits.hpp>
 
-#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
 // Temporary
+#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-// #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
@@ -99,12 +98,12 @@ namespace GridKit
           addComponent(branch);
         }
 
-        // // Add loads
-        // for (const auto& loaddata : data.load)
-        // {
-        //   auto* load = new Load<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
-        //   addComponent(load);
-        // }
+        // Add loads
+        for (const auto& loaddata : data.load)
+        {
+          auto* load = new Load<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
+          addComponent(load);
+        }
 
         // Add faults
         for (const auto& faultdata : data.bus_fault)
