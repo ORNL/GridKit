@@ -58,7 +58,7 @@ namespace GridKit
 
       virtual int BusType() const override
       {
-        return BusBase<ScalarT, IdxT>::BusType::DEFAULT;
+        return BusData<real_type, IdxT>::BusType::DEFAULT;
       }
 
       virtual ScalarT& Vr() override

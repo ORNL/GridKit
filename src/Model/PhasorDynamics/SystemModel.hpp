@@ -8,6 +8,8 @@
 #include <Model/PhasorDynamics/Component.hpp>
 #include <ScalarTraits.hpp>
 
+#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
+
 namespace GridKit
 {
   namespace PhasorDynamics

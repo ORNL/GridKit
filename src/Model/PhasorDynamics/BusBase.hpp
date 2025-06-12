@@ -19,12 +19,6 @@ namespace GridKit
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
-      enum BusType
-      {
-        DEFAULT = 1,
-        SLACK
-      };
-
       BusBase()
         : size_(0),
           size_quad_(0),
