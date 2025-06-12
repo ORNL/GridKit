@@ -98,28 +98,14 @@ int main()
   data.bus_fault[0].status = false;
 
   //
-  // Instantiate model components
-  //
-
-  // Bus<scalar_type, size_t>         bus1(data.bus[0]);
-  // BusInfinite<scalar_type, size_t> bus2(data.bus[1]);
-  // Branch<scalar_type, size_t>      branch(&bus1, &bus2, data.branch[0]);
-  // BusFault<scalar_type, size_t>    fault(&bus1, data.bus_fault[0]);
-  // Genrou<scalar_type, size_t>      gen(&bus1, data.genrou[0]);
-
-  //
-  // Create the 2-bus system
+  // Instantiate system model
   //
 
   SystemModel<scalar_type, index_type> sys(data);
-  // sys.addBus(&bus1);
-  // sys.addBus(&bus2);
-  // sys.addComponent(&branch);
-  // sys.addComponent(&fault);
-  // sys.addComponent(&gen);
   sys.allocate();
 
-  auto* fault = dynamic_cast<BusFault<scalar_type, index_type>*>(sys.getFault(0));
+  // Get access to the fault
+  auto* fault = sys.getBusFault(0);
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;

@@ -4,18 +4,17 @@
 #include <iostream>
 #include <vector>
 
-#include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <ScalarTraits.hpp>
 
 // Temporary
-#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
-
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 
 namespace GridKit
 {
@@ -74,8 +73,8 @@ namespace GridKit
 
       /**
        * @brief Construct a new System Model object
-       * 
-       * @param[in] data - Data structure with complete system data 
+       *
+       * @param[in] data - Data structure with complete system data
        */
       SystemModel(SystemModelData<real_type, IdxT>& data)
       {
@@ -118,7 +117,6 @@ namespace GridKit
           auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
           addComponent(gen);
         }
-
       }
 
       /**
@@ -720,22 +718,14 @@ namespace GridKit
       }
 
       /**
-       * @brief Get the Component object
-       * 
-       * For now, this is an ugly hack to get an access to
-       * a component from outside the system model.
-       * 
-       * @param comp_id 
-       * @return Component* 
+       * @brief Return pointer to a bus fault model
+       *
+       * @warning This is a hack to get access to bus faults in examples.
+       * A more comprehensive solution is needed.
        */
-      component_type* getComponent(IdxT comp_id)
+      BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id)
       {
-        return components_[comp_id];
-      }
-
-      component_type* getFault(IdxT fault_id)
-      {
-        return faults_[fault_id];
+        return dynamic_cast<BusFault<ScalarT, IdxT>*>(faults_[fault_id]);
       }
 
     private:
