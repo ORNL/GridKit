@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
@@ -9,7 +11,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <typename RealT = double, typename IdxT = size_t>
-    class SystemModelData
+    struct SystemModelData
     {
       using BranchDataT   = BranchData<RealT, IdxT>;
       using BusDataT      = BusData<RealT, IdxT>;

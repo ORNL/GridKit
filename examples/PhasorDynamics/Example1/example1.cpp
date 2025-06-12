@@ -23,6 +23,7 @@
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
+#include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -40,55 +41,69 @@ int main()
   //
   // Create model data
   //
-  BusData<real_type, index_type> bus_data_1;
-  bus_data_1.Vr0 = 0.9949877346411762;
-  bus_data_1.Vi0 = 0.09999703952427966;
 
-  BusData<real_type, index_type> bus_data_2;
-  bus_data_2.Vr0 = 1.0;
-  bus_data_2.Vi0 = 0.0;
+  SystemModelData<scalar_type, index_type> data;
 
-  BranchData<real_type, index_type> branch_data_1_2;
-  branch_data_1_2.R = 0.0;
-  branch_data_1_2.X = 0.1;
-  branch_data_1_2.G = 0.0;
-  branch_data_1_2.B = 0.0;
+  // Set bus data
+  data.bus.resize(2);
 
-  GenrouData<real_type, index_type> gen_data_1;
-  gen_data_1.unit_id = 1;
-  gen_data_1.p0      = 1.;
-  gen_data_1.q0      = 0.05013;
-  gen_data_1.H       = 3.;
-  gen_data_1.D       = 0.;
-  gen_data_1.Ra      = 0.;
-  gen_data_1.Tdop    = 7.;
-  gen_data_1.Tdopp   = .04;
-  gen_data_1.Tqopp   = .05;
-  gen_data_1.Tqop    = .75;
-  gen_data_1.Xd      = 2.1;
-  gen_data_1.Xdp     = 0.2;
-  gen_data_1.Xdpp    = 0.18;
-  gen_data_1.Xq      = 0.5;
-  gen_data_1.Xqp     = 0.5;
-  gen_data_1.Xqpp    = 0.18;
-  gen_data_1.Xl      = 0.15;
-  gen_data_1.S10     = 0.;
-  gen_data_1.S12     = 0.;
+  data.bus[0].bus_id = 0;
+  data.bus[0].Vr0 = 0.9949877346411762;
+  data.bus[0].Vi0 = 0.09999703952427966;
 
-  BusFaultData<real_type, index_type> bus_fault_data_1;
-  bus_fault_data_1.R      = 0.0;
-  bus_fault_data_1.X      = 1e-3;
-  bus_fault_data_1.status = false;
+  data.bus[1].bus_id = 1;
+  data.bus[1].Vr0 = 1.0;
+  data.bus[1].Vi0 = 0.0;
+
+  // Set branch data
+  data.branch.resize(1);
+
+  data.branch[0].bus1_id = data.bus[0].bus_id;
+  data.branch[0].bus2_id = data.bus[1].bus_id;
+  data.branch[0].R = 0.0;
+  data.branch[0].X = 0.1;
+  data.branch[0].G = 0.0;
+  data.branch[0].B = 0.0;
+
+  // Set generator data
+  data.genrou.resize(1);
+
+  data.genrou[0].unit_id = 1;
+  data.genrou[0].p0      = 1.;
+  data.genrou[0].q0      = 0.05013;
+  data.genrou[0].H       = 3.;
+  data.genrou[0].D       = 0.;
+  data.genrou[0].Ra      = 0.;
+  data.genrou[0].Tdop    = 7.;
+  data.genrou[0].Tdopp   = .04;
+  data.genrou[0].Tqopp   = .05;
+  data.genrou[0].Tqop    = .75;
+  data.genrou[0].Xd      = 2.1;
+  data.genrou[0].Xdp     = 0.2;
+  data.genrou[0].Xdpp    = 0.18;
+  data.genrou[0].Xq      = 0.5;
+  data.genrou[0].Xqp     = 0.5;
+  data.genrou[0].Xqpp    = 0.18;
+  data.genrou[0].Xl      = 0.15;
+  data.genrou[0].S10     = 0.;
+  data.genrou[0].S12     = 0.;
+
+  // Add faults
+  data.bus_fault.resize(1);
+
+  data.bus_fault[0].R      = 0.0;
+  data.bus_fault[0].X      = 1e-3;
+  data.bus_fault[0].status = false;
 
   //
   // Instantiate model components
   //
 
-  Bus<scalar_type, size_t>         bus1(bus_data_1);
-  BusInfinite<scalar_type, size_t> bus2(bus_data_2);
-  Branch<scalar_type, size_t>      branch(&bus1, &bus2, branch_data_1_2);
-  BusFault<scalar_type, size_t>    fault(&bus1, bus_fault_data_1);
-  Genrou<scalar_type, size_t>      gen(&bus1, gen_data_1);
+  Bus<scalar_type, size_t>         bus1(data.bus[0]);
+  BusInfinite<scalar_type, size_t> bus2(data.bus[1]);
+  Branch<scalar_type, size_t>      branch(&bus1, &bus2, data.branch[0]);
+  BusFault<scalar_type, size_t>    fault(&bus1, data.bus_fault[0]);
+  Genrou<scalar_type, size_t>      gen(&bus1, data.genrou[0]);
 
   //
   // Create the 2-bus system

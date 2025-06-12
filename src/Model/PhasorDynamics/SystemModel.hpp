@@ -87,7 +87,7 @@ namespace GridKit
         // Add electrical buses
         for (const auto& busdata : data.bus)
         {
-          BusBase<ScalarT, IdxT>* bus = new Bus<ScalarT, IdxT>(busdata);
+          BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
           addBus(bus);
         }
 
