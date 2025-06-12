@@ -4,11 +4,18 @@
 #include <iostream>
 #include <vector>
 
+#include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 #include <ScalarTraits.hpp>
 
 #include <Model/PhasorDynamics/Bus/BusFactory.hpp>
+// Temporary
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+// #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/Branch/Branch.hpp>
+
 
 namespace GridKit
 {
@@ -63,6 +70,55 @@ namespace GridKit
         rel_tol_         = 1e-7;
         abs_tol_         = 1e-9;
         this->max_steps_ = 2000;
+      }
+
+      /**
+       * @brief Construct a new System Model object
+       * 
+       * @param[in] data - Data structure with complete system data 
+       */
+      SystemModel(SystemModelData<real_type, IdxT>& data)
+      {
+        // Set system model tolerances
+        rel_tol_         = 1e-7;
+        abs_tol_         = 1e-9;
+        this->max_steps_ = 2000;
+
+        // Add electrical buses
+        for (const auto& busdata : data.bus)
+        {
+          BusBase<ScalarT, IdxT>* bus = new Bus<ScalarT, IdxT>(busdata);
+          addBus(bus);
+        }
+
+        // Add branches
+        for (const auto& branchdata : data.branch)
+        {
+          auto* branch = new Branch<ScalarT, IdxT>(getBus(branchdata.bus1_id), getBus(branchdata.bus2_id), branchdata);
+          addComponent(branch);
+        }
+
+        // Add loads
+        for (const auto& loaddata : data.load)
+        {
+          auto* load = new Genrou<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
+          addComponent(load);
+        }
+
+        // Add faults
+        for (const auto& faultdata : data.bus_fault)
+        {
+          auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
+          addComponent(fault);
+        }
+
+        // Add generators
+        for (const auto& gendata : data.genrou)
+        {
+          auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
+          addComponent(gen);
+        }
+
       }
 
       /**
@@ -648,6 +704,13 @@ namespace GridKit
       void addComponent(component_type* component)
       {
         components_.push_back(component);
+      }
+
+      bus_type* getBus(IdxT busid)
+      {
+        // Need to implement mapping of bus IDs to buses in the system model
+        assert((buses_[busid])->BusID() == busid);
+        return buses_[busid];
       }
 
     private:
