@@ -1,7 +1,7 @@
 #include <iostream>
-#include <limits>
 
 #include "ScalarModel.hpp"
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Example that computes the derivative of a library function
@@ -23,7 +23,7 @@ int main()
   double dsq = scalar_model.getDerivativeValue();
 
   std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n";
-  if (std::abs(dsq - 2.0 * var) > std::numeric_limits<double>::epsilon())
+  if (!GridKit::Testing::isEqual(dsq, 2.0 * var))
   {
     fail++;
     std::cout << "Result incorrect\n";

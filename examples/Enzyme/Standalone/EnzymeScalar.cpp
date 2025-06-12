@@ -1,5 +1,6 @@
 #include <iostream>
-#include <limits>
+
+#include <Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the derivative of a scalar function
@@ -27,7 +28,7 @@ int main()
   double sq   = square(var);
   double dsq  = dsquare(var);
   std::cout << "x = " << var << ", x^2 = " << sq << ", d(x^2)/dx = " << dsq << "\n";
-  if (std::abs(dsq - 2.0 * var) > std::numeric_limits<double>::epsilon())
+  if (!GridKit::Testing::isEqual(dsq, 2.0 * var))
   {
     fail++;
     std::cout << "Result incorrect\n";

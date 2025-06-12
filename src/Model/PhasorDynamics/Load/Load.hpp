@@ -36,6 +36,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::component_id_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
@@ -97,6 +98,9 @@ namespace GridKit
       {
         return bus_->Ii();
       }
+
+    public:
+      int evaluateResidualLocally(ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};

@@ -11,6 +11,9 @@ int main()
   result += test.constructor();
   result += test.residual();
   result += test.jacobian();
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.enzyme_jacobian();
+#endif
 
   return result.summary();
 }

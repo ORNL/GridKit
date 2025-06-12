@@ -17,7 +17,7 @@ private:
   void                square(std::vector<double>&, std::vector<double>&);
 
 public:
-  VectorModel(int);
+  VectorModel(size_t);
   void                 setVariable(std::vector<double>);
   void                 evalResidual();
   void                 evalJacobian();

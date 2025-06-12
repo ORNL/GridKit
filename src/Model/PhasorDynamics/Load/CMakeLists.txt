@@ -1,12 +1,29 @@
- 
+
 
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 # ]]
 
-gridkit_add_library(phasor_dynamics_load
+
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(phasor_dynamics_load
+    SOURCES
+      LoadEnzyme.cpp
+    LINK_LIBRARIES
+      ClangEnzymeFlags
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_load)
+else()
+  gridkit_add_library(phasor_dynamics_load
+    SOURCES
+      Load.cpp
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_load)
+endif()
+
+gridkit_add_library(phasor_dynamics_load_dependency_tracking
   SOURCES
-    Load.cpp
+    LoadDependencyTracking.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_load)
+    gridkit_phasor_dynamics_load_dependency_tracking)
