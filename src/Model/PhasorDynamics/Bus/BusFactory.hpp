@@ -18,7 +18,7 @@ namespace GridKit
 
       BusFactory() = delete;
 
-      static BusBase<ScalarT, IdxT>* create(BusData& data)
+      static BusBase<ScalarT, IdxT>* create(const BusData& data)
       {
         BusBase<ScalarT, IdxT>* bus = nullptr;
 
@@ -32,7 +32,7 @@ namespace GridKit
           break;
         default:
           // Throw exception
-          std::cout << "Bus type " << data.type << " unrecognized.\n";
+          std::cout << "Bus type " << data.bus_type << " unrecognized.\n";
         }
         return bus;
       }

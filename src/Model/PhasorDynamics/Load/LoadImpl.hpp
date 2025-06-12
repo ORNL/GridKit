@@ -39,7 +39,7 @@ namespace GridKit
 
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type*        bus,
-                              model_data_type& data)
+                              const model_data_type& data)
       : bus_(bus),
         R_(data.R),
         X_(data.X)

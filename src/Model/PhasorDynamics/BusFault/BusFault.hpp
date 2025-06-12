@@ -43,7 +43,7 @@ namespace GridKit
     public:
       BusFault(bus_type* bus);
       BusFault(bus_type* bus, real_type R, real_type X, int status);
-      BusFault(bus_type* bus, DataT& data);
+      BusFault(bus_type* bus, const DataT& data);
       ~BusFault() = default;
 
       int allocate() override;

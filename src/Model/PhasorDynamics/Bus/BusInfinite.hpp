@@ -41,7 +41,7 @@ namespace GridKit
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(DataT& data);
+      BusInfinite(const DataT& data);
       virtual ~BusInfinite();
 
       virtual int allocate() override;

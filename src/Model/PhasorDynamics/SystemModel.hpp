@@ -15,6 +15,7 @@
 // #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Load/Load.hpp>
 
 
 namespace GridKit
@@ -98,12 +99,12 @@ namespace GridKit
           addComponent(branch);
         }
 
-        // Add loads
-        for (const auto& loaddata : data.load)
-        {
-          auto* load = new Genrou<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
-          addComponent(load);
-        }
+        // // Add loads
+        // for (const auto& loaddata : data.load)
+        // {
+        //   auto* load = new Load<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
+        //   addComponent(load);
+        // }
 
         // Add faults
         for (const auto& faultdata : data.bus_fault)
@@ -711,6 +712,20 @@ namespace GridKit
         // Need to implement mapping of bus IDs to buses in the system model
         assert((buses_[busid])->BusID() == busid);
         return buses_[busid];
+      }
+
+      /**
+       * @brief Get the Component object
+       * 
+       * For now, this is an ugly hack to get an access to
+       * a component from outside the system model.
+       * 
+       * @param comp_id 
+       * @return Component* 
+       */
+      component_type* getComponent(IdxT comp_id)
+      {
+        return components_[comp_id];
       }
 
     private:

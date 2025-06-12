@@ -48,10 +48,12 @@ int main()
   data.bus.resize(2);
 
   data.bus[0].bus_id = 0;
+  data.bus[0].bus_type = BusData<scalar_type, index_type>::DEFAULT;
   data.bus[0].Vr0 = 0.9949877346411762;
   data.bus[0].Vi0 = 0.09999703952427966;
 
   data.bus[1].bus_id = 1;
+  data.bus[1].bus_type = BusData<scalar_type, index_type>::SLACK;
   data.bus[1].Vr0 = 1.0;
   data.bus[1].Vi0 = 0.0;
 
@@ -99,23 +101,25 @@ int main()
   // Instantiate model components
   //
 
-  Bus<scalar_type, size_t>         bus1(data.bus[0]);
-  BusInfinite<scalar_type, size_t> bus2(data.bus[1]);
-  Branch<scalar_type, size_t>      branch(&bus1, &bus2, data.branch[0]);
-  BusFault<scalar_type, size_t>    fault(&bus1, data.bus_fault[0]);
-  Genrou<scalar_type, size_t>      gen(&bus1, data.genrou[0]);
+  // Bus<scalar_type, size_t>         bus1(data.bus[0]);
+  // BusInfinite<scalar_type, size_t> bus2(data.bus[1]);
+  // Branch<scalar_type, size_t>      branch(&bus1, &bus2, data.branch[0]);
+  // BusFault<scalar_type, size_t>    fault(&bus1, data.bus_fault[0]);
+  // Genrou<scalar_type, size_t>      gen(&bus1, data.genrou[0]);
 
   //
   // Create the 2-bus system
   //
 
-  SystemModel<scalar_type, size_t> sys;
-  sys.addBus(&bus1);
-  sys.addBus(&bus2);
-  sys.addComponent(&branch);
-  sys.addComponent(&fault);
-  sys.addComponent(&gen);
+  SystemModel<scalar_type, index_type> sys(data);
+  // sys.addBus(&bus1);
+  // sys.addBus(&bus2);
+  // sys.addComponent(&branch);
+  // sys.addComponent(&fault);
+  // sys.addComponent(&gen);
   sys.allocate();
+
+  auto* fault = dynamic_cast<BusFault<scalar_type, index_type>*>(sys.getComponent(1));
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -168,13 +172,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault.setStatus(true);
+  fault->setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault.setStatus(false);
+  fault->setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

@@ -66,7 +66,7 @@ namespace GridKit
      * @param[in] data - structure with bus data
      */
     template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::BusInfinite(DataT& data)
+    BusInfinite<ScalarT, IdxT>::BusInfinite(const DataT& data)
       : BusBase<ScalarT, IdxT>(data.bus_id),
         Vr_(data.Vr0),
         Vi_(data.Vi0)

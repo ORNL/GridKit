@@ -43,7 +43,7 @@ namespace GridKit
 
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);
-      Bus(DataT& data);
+      Bus(const DataT& data);
       virtual ~Bus();
 
       virtual int allocate() override;
