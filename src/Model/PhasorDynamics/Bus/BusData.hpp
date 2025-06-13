@@ -33,7 +33,7 @@ namespace GridKit
       RealT Vr0{0.0}; ///< Initial value for real bus voltage
       RealT Vi0{0.0}; ///< Initial value for imaginary bus voltage
 
-      IdxT bus_id{0}; ///< Unique ID of bus 1
+      IdxT    bus_id{0}; ///< Unique ID of bus 1
       BusType bus_type{INVALID};
     };
   } // namespace PhasorDynamics

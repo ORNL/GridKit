@@ -98,22 +98,22 @@ int main()
   data.bus.resize(3);
 
   // Bus 0
-  data.bus[0].bus_id = 0;
+  data.bus[0].bus_id   = 0;
   data.bus[0].bus_type = BusData<scalar_type, index_type>::SLACK;
-  data.bus[0].Vr0 = 1.06;
-  data.bus[0].Vi0 = 0.0;
+  data.bus[0].Vr0      = 1.06;
+  data.bus[0].Vi0      = 0.0;
 
   // Bus 1
-  data.bus[1].bus_id = 1;
+  data.bus[1].bus_id   = 1;
   data.bus[1].bus_type = BusData<scalar_type, index_type>::DEFAULT;
-  data.bus[1].Vr0 = 1.0599558398065716;
-  data.bus[1].Vi0 = -0.009675621941024773;
+  data.bus[1].Vr0      = 1.0599558398065716;
+  data.bus[1].Vi0      = -0.009675621941024773;
 
   // Bus 2
-  data.bus[2].bus_id = 2;
+  data.bus[2].bus_id   = 2;
   data.bus[2].bus_type = BusData<scalar_type, index_type>::DEFAULT;
-  data.bus[2].Vr0 = 0.9610827543495831;
-  data.bus[2].Vi0 = -0.13122476630506485;
+  data.bus[2].Vr0      = 0.9610827543495831;
+  data.bus[2].Vi0      = -0.13122476630506485;
 
   // Set branch data
   data.branch.resize(3);
@@ -121,26 +121,26 @@ int main()
   // Branch 0-1
   data.branch[0].bus1_id = data.bus[0].bus_id;
   data.branch[0].bus2_id = data.bus[1].bus_id;
-  data.branch[0].R = 0.05;
-  data.branch[0].X = 0.21;
-  data.branch[0].G = 0;
-  data.branch[0].B = 0.1;
+  data.branch[0].R       = 0.05;
+  data.branch[0].X       = 0.21;
+  data.branch[0].G       = 0;
+  data.branch[0].B       = 0.1;
 
   // Branch 0-2
   data.branch[1].bus1_id = data.bus[0].bus_id;
   data.branch[1].bus2_id = data.bus[2].bus_id;
-  data.branch[1].R = 0.06;
-  data.branch[1].X = 0.15;
-  data.branch[1].G = 0;
-  data.branch[1].B = 0.12;
+  data.branch[1].R       = 0.06;
+  data.branch[1].X       = 0.15;
+  data.branch[1].G       = 0;
+  data.branch[1].B       = 0.12;
 
   // Branch 1-2
   data.branch[2].bus1_id = data.bus[1].bus_id;
   data.branch[2].bus2_id = data.bus[2].bus_id;
-  data.branch[2].R = 0.08;
-  data.branch[2].X = 0.27;
-  data.branch[2].G = 0;
-  data.branch[2].B = 0.45;
+  data.branch[2].R       = 0.08;
+  data.branch[2].X       = 0.27;
+  data.branch[2].G       = 0;
+  data.branch[2].B       = 0.45;
 
   // Set generator data
   data.genrou.resize(2);

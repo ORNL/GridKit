@@ -47,25 +47,25 @@ int main()
   // Set bus data
   data.bus.resize(2);
 
-  data.bus[0].bus_id = 0;
+  data.bus[0].bus_id   = 0;
   data.bus[0].bus_type = BusData<scalar_type, index_type>::DEFAULT;
-  data.bus[0].Vr0 = 0.9949877346411762;
-  data.bus[0].Vi0 = 0.09999703952427966;
+  data.bus[0].Vr0      = 0.9949877346411762;
+  data.bus[0].Vi0      = 0.09999703952427966;
 
-  data.bus[1].bus_id = 1;
+  data.bus[1].bus_id   = 1;
   data.bus[1].bus_type = BusData<scalar_type, index_type>::SLACK;
-  data.bus[1].Vr0 = 1.0;
-  data.bus[1].Vi0 = 0.0;
+  data.bus[1].Vr0      = 1.0;
+  data.bus[1].Vi0      = 0.0;
 
   // Set branch data
   data.branch.resize(1);
 
   data.branch[0].bus1_id = data.bus[0].bus_id;
   data.branch[0].bus2_id = data.bus[1].bus_id;
-  data.branch[0].R = 0.0;
-  data.branch[0].X = 0.1;
-  data.branch[0].G = 0.0;
-  data.branch[0].B = 0.0;
+  data.branch[0].R       = 0.0;
+  data.branch[0].X       = 0.1;
+  data.branch[0].G       = 0.0;
+  data.branch[0].B       = 0.0;
 
   // Set generator data
   data.genrou.resize(1);
