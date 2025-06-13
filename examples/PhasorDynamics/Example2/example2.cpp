@@ -193,7 +193,6 @@ int main()
   data.load.resize(1);
 
   // Load on bus 2
-  // LoadData<real_type, index_type> data.load[0];
   data.load[0].bus_id = 2;
   data.load[0].R      = 0.4447197839297772;
   data.load[0].X      = 0.20330047265361242;
@@ -201,7 +200,6 @@ int main()
   // Set fault data
   data.bus_fault.resize(1);
 
-  // BusFaultData<real_type, index_type> data.bus_fault[0];
   data.bus_fault[0].bus_id = 2;
   data.bus_fault[0].R      = 0.0;
   data.bus_fault[0].X      = 1e-5;
