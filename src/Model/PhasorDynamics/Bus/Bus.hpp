@@ -43,7 +43,7 @@ namespace GridKit
 
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);
-      Bus(DataT& data);
+      Bus(const DataT& data);
       virtual ~Bus();
 
       virtual int allocate() override;
@@ -58,7 +58,7 @@ namespace GridKit
 
       virtual int BusType() const override
       {
-        return BusBase<ScalarT, IdxT>::BusType::DEFAULT;
+        return BusData<real_type, IdxT>::BusType::DEFAULT;
       }
 
       virtual ScalarT& Vr() override

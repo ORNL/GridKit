@@ -53,7 +53,7 @@ namespace GridKit
     public:
       Branch(bus_type* bus1, bus_type* bus2);
       Branch(bus_type* bus1, bus_type* bus2, real_type R, real_type X, real_type G, real_type B);
-      Branch(bus_type* bus1, bus_type* bus2, model_data_type& data);
+      Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
       virtual ~Branch();
 
       virtual int allocate() override;

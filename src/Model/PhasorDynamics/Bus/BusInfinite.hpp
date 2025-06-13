@@ -41,7 +41,7 @@ namespace GridKit
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(DataT& data);
+      BusInfinite(const DataT& data);
       virtual ~BusInfinite();
 
       virtual int allocate() override;
@@ -56,7 +56,7 @@ namespace GridKit
 
       virtual int BusType() const override
       {
-        return BusBase<ScalarT, IdxT>::BusType::SLACK;
+        return BusData<real_type, IdxT>::BusType::SLACK;
       }
 
       virtual ScalarT& Vr() override

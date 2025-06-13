@@ -7,6 +7,7 @@
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
+#include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -29,20 +30,71 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // ScalarT Vr{1.0};
-        // ScalarT Vi{2.0};
-
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = nullptr;
 
         // Create an empty system
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
-        success *= (system != nullptr);
-
-        if (system)
+        if (system == nullptr)
         {
-          delete system;
+          std::cout << "Default constructor failed!\n";
+          success = false;
+          return success.report(__func__);
         }
+
+        delete system;
+        system = nullptr;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].bus1_id = data.bus[0].bus_id;
+        data.branch[0].bus2_id = data.bus[1].bus_id;
+        data.branch[0].R       = 2.0;
+        data.branch[0].X       = 4.0;
+        data.branch[0].G       = 0.2;
+        data.branch[0].B       = 1.2;
+
+        // Create an empty system model
+        system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);
+        system->allocate();
+        system->initialize();
+        system->evaluateResidual();
+
+        // Answer keys
+        const ScalarT Ir0{17.0};  ///< Solution: real current entering bus-0
+        const ScalarT Ii0{-10.0}; ///< Solution: imaginary current entering bus-0
+        const ScalarT Ir1{15.0};  ///< Solution: real current entering bus-1
+        const ScalarT Ii1{-20.0}; ///< Solution: imaginary current entering bus-1
+
+        auto* bus0 = system->getBus(0);
+        auto* bus1 = system->getBus(1);
+
+        success *= isEqual(bus0->Ir(), Ir0);
+        success *= isEqual(bus0->Ii(), Ii0);
+        success *= isEqual(bus1->Ir(), Ir1);
+        success *= isEqual(bus1->Ii(), Ii1);
+
+        delete system;
+        system = nullptr;
 
         return success.report(__func__);
       }

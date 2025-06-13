@@ -52,7 +52,7 @@ namespace GridKit
 
     public:
       Genrou(bus_type* bus, IdxT unit_id);
-      Genrou(bus_type* bus, model_data_type& data);
+      Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
              ScalarT   p0,
