@@ -83,6 +83,8 @@ namespace GridKit
         abs_tol_         = 1e-9;
         this->max_steps_ = 2000;
 
+        owns_components_ = true;
+
         // Add electrical buses
         for (const auto& busdata : data.bus)
         {
@@ -124,6 +126,19 @@ namespace GridKit
        */
       virtual ~SystemModel()
       {
+        if (owns_components_)
+        {
+          for (auto component : components_)
+          {
+            delete component;
+          }
+
+          for (auto bus : buses_)
+          {
+            delete bus;
+          }
+
+        }
       }
 
       /**
@@ -732,6 +747,8 @@ namespace GridKit
       std::vector<bus_type*>       buses_;
       std::vector<component_type*> components_;
       std::vector<component_type*> faults_;
+
+      bool owns_components_{false};
 
     }; // class SystemModel
 
