@@ -112,18 +112,18 @@ namespace GridKit
           addComponent(load);
         }
 
-        // Add faults
-        for (const auto& faultdata : data.bus_fault)
-        {
-          auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
-          addFault(fault);
-        }
-
         // Add generators
         for (const auto& gendata : data.genrou)
         {
           auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
           addComponent(gen);
+        }
+
+        // Add faults
+        for (const auto& faultdata : data.bus_fault)
+        {
+          auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
+          addFault(fault);
         }
       }
 
