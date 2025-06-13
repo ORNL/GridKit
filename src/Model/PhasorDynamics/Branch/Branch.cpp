@@ -73,7 +73,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, model_data_type& data)
+    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data)
       : bus1_(bus1),
         bus2_(bus2),
         R_(data.R),

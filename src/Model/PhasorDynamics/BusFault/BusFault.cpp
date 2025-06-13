@@ -64,7 +64,7 @@ namespace GridKit
      * @param bus2 - pointer to bus-2
      */
     template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, DataT& data)
+    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, const DataT& data)
       : bus_(bus),
         R_(data.R),
         X_(data.X),
