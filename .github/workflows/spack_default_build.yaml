@@ -7,7 +7,7 @@ env:
   # Our repo name contains upper case characters, so we can't use ${{ github.repository }}
   IMAGE_NAME: gridkit
   USERNAME: gridkit-bot
-  BASE_VERSION: ubuntu-24.04-fortran-v0.2.12
+  BASE_VERSION: ubuntu-24.04-fortran-v0.2.13
 
 # Until we remove the need to clone submodules to build, this should on be in PRs
 on: [pull_request]
@@ -99,11 +99,8 @@ jobs:
         llvm: ["16"]
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop +enzyme
-            ^enzyme@0.0.173
-            ^sundials@develop
-          - gridkit@develop ~enzyme
-            ^sundials@develop
+          - gridkit@develop ~asan+enzyme+ipopt~ubsan
+          - gridkit@develop +asan~enzyme+ipopt+ubsan
 
     steps:
       - name: Add LLVM
@@ -130,7 +127,7 @@ jobs:
             specs:
             - ${{ matrix.spack_spec }} target=x86_64_v2
             concretizer:
-              unify: true
+              unify: when_possible
               reuse: dependencies
             config:
               install_tree:
@@ -140,6 +137,12 @@ jobs:
               local-buildcache: oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.BASE_VERSION }}
               spack: https://binaries.spack.io/v0.23.1
             packages:
+              ipopt:
+                require: ~coinhsl+mumps
+              mumps:
+                require: ~mpi~openmp
+              sundials:
+                require: '@develop'
               llvm:
                 externals:
                 - spec: llvm@${{ matrix.llvm }}
