@@ -75,10 +75,10 @@ namespace GridKit
        * @brief Construct a new System Model object
        *
        * @param[in] data - Data structure with complete system data
-       * 
+       *
        * @pre SystemModelData contains consistent connectivity information
        * and physically meaningful model parameters.
-       * 
+       *
        * @post All component models in SystemModelData are created, and
        * correctly connected into the system model.
        */
@@ -129,7 +129,7 @@ namespace GridKit
 
       /**
        * @brief Destructor for the system model
-       * 
+       *
        * If the SystemModel owns the components, it needs to delete them upon
        * destructor call.
        */
@@ -146,7 +146,6 @@ namespace GridKit
           {
             delete bus;
           }
-
         }
       }
 
@@ -743,7 +742,7 @@ namespace GridKit
 
       /**
        * @brief Return pointer to a bus fault model
-       * 
+       *
        * This function is used to provide easier access to setting and
        * clearing faults from the SystemModel interface.
        *

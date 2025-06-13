@@ -51,16 +51,16 @@ namespace GridKit
         data.bus.resize(2);
 
         // Bus 0
-        data.bus[0].bus_id = 0;
+        data.bus[0].bus_id   = 0;
         data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
-        data.bus[0].Vr0 = 10.0;
-        data.bus[0].Vi0 = 20.0;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
 
         // Bus 1
-        data.bus[1].bus_id = 1;
+        data.bus[1].bus_id   = 1;
         data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
-        data.bus[1].Vr0 = 30.0;
-        data.bus[1].Vi0 = 40.0;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
 
         // Set branch data
         data.branch.resize(1);
@@ -68,10 +68,10 @@ namespace GridKit
         // Branch 0-1
         data.branch[0].bus1_id = data.bus[0].bus_id;
         data.branch[0].bus2_id = data.bus[1].bus_id;
-        data.branch[0].R = 2.0;
-        data.branch[0].X = 4.0;
-        data.branch[0].G = 0.2;
-        data.branch[0].B = 1.2;
+        data.branch[0].R       = 2.0;
+        data.branch[0].X       = 4.0;
+        data.branch[0].G       = 0.2;
+        data.branch[0].B       = 1.2;
 
         // Create an empty system model
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);
