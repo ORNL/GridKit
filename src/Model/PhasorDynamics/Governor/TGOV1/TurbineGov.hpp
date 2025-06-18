@@ -37,6 +37,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::nnz_;
       using Component<ScalarT, IdxT>::param_;
       using Component<ScalarT, IdxT>::size_;
+      using Component<ScalarT, IdxT>::size_param_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
@@ -85,6 +86,8 @@ namespace GridKit
 
       // Input parameters
       real_type R_;
+      real_type Pvmin_;
+      real_type Pvmax_;
       real_type T1_;
       real_type T2_;
       real_type T3_;
