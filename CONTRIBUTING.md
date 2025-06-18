@@ -85,7 +85,7 @@ and invariants.
  * @pre <PRECONDITION>
  * @post <POSTCONDITION>
  *
- * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+ * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC
  */
 ```
 
@@ -106,11 +106,11 @@ required.
 ### Doxygen and Markdown
 
 Doxygen supports Markdown markup and it should be used to make documentation
-more clear. For example, 
+more clear. For example,
 ```c++
  * @return The size of `a`
 ```
-is clearer than 
+is clearer than
 ```c++
  * @return The size of a
 ```
@@ -137,7 +137,7 @@ and after each `<<`. If the line needs to be broken, the `<<` operators should
 be aligned:
 
 ```c++
-std::cout << "index out of bounds. Row " << i << " starts at: " << start 
+std::cout << "index out of bounds. Row " << i << " starts at: " << start
           << " and ends at " << end << std::endl;
 ```
 
@@ -184,7 +184,7 @@ double another_member;   // No, there is no trailing underscore to distinguish i
 double memberVariable_;  // No, using lowercase camel instead of C-style name format
 ```
 
-#### Ecxeption
+#### Exceptions
 
 Public member variables that are accessed directly do not need trailing
 underscores. For example, consider this code:
@@ -215,7 +215,7 @@ int YetAnotherFunction(); // No, using uppercase camel name format
 
 Class names should us uppercase camel name format.
 ```c++
-class MyClass // Yes 
+class MyClass // Yes
 {
   ...
 }
@@ -241,9 +241,9 @@ capitalized and the constant names should be uppercase with underscores
 
 ```c++
   enum ExampleEnum { CONST_ONE = 0,
-                     CONST_TWO = 8, 
+                     CONST_TWO = 8,
                      YET_ANOTHER_CONST = 17 };
-``` 
+```
 
 ### Constants
 
@@ -255,7 +255,7 @@ name. Use all caps (screaming snake case).
    constexpr double Pi = 3.1415;      // No, use all caps for the constant name
    constexpr double SQRT_TWO = 1.4142 // Yes
    constexpr double SQRTTWO = 1.4142  // No, the two words not separated by "_"
-   constexpr double EXP = 2.7183      // Yes 
+   constexpr double EXP = 2.7183      // Yes
 ```
 
 ### Pointers and references
@@ -294,7 +294,7 @@ All braces should follow Allman style:
 ```c++
 namespace SomeNamespace
 {
-  //some code 
+  //some code
 }
 ```
 For short functions (i.e., empty constructor), do not inline braces.
@@ -304,7 +304,7 @@ ClassA::ClassA()
 }
 ```
 Have opening brace at the next line following  `for`, `if`, or `while`
-statement. When using `else`, follow the example below. 
+statement. When using `else`, follow the example below.
 ```c++
 if (cond == true)
 {
@@ -321,13 +321,13 @@ shown here:
 for (int i = 0; i < n; ++i)
 {
   // some code
-} 
+}
 ```
 
 Do not use one-line `if`s and `for`s. Always use braces.
 
 ### Use of spaces and newlines
-There should be spaces between arithmetic operators. 
+There should be spaces between arithmetic operators.
 ```c++
 x = c * (a + b);  // Yes
 x = c*(a+b).      // No, the clarity is better if there are spaces between
@@ -351,13 +351,13 @@ struct MyStruct
 
 ### Include files
 
-Leave one empty line between all the includes and the first line of the actual code. 
+Leave one empty line between all the includes and the first line of the actual code.
 ```c++
 #include <iostream>
 
 int main()
 {
-  std::cout 
+  std::cout
 }
 ```
 
@@ -437,8 +437,8 @@ MyClass(n, m) : n_(n), m_(m)
 }
 
 // Long initializer list
-MyClass(n, m) 
-  : n_(n), 
+MyClass(n, m)
+  : n_(n),
     m_(m),
     pX_(nullptr),
     pY_(nullptr),
@@ -459,7 +459,7 @@ namespace GridKit
 {
   class Solver  // Yes, class defined inside GridKit namespace
   {
-    // some code; 
+    // some code;
   };
 
   namespace LinearAlgebra

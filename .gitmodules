@@ -2,3 +2,6 @@
 	path = buildsystem/spack/spack
 	url = https://github.com/nkoukpaizan/spack.git
 	branch = Gridkit-package-dev+enzyme
+[submodule "third-party/rapidjson"]
+	path = third-party/rapidjson
+	url = https://github.com/Tencent/rapidjson

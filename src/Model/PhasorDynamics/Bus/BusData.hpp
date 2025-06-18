@@ -6,6 +6,9 @@
  */
 #pragma once
 
+#include <bitset>
+#include <type_traits>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,18 +26,35 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusData
     {
-      enum BusType
+      /// Enumeration over the kinds of bus this data structure can be for
+      enum class BusType
       {
-        INVALID = 0,
-        DEFAULT,
-        SLACK
+        Default,
+        Slack,
       };
 
-      RealT Vr0{0.0}; ///< Initial value for real bus voltage
-      RealT Vi0{0.0}; ///< Initial value for imaginary bus voltage
+      /// Initial value for the real bus voltage
+      RealT Vr0{0.0};
 
-      IdxT    bus_id{0}; ///< Unique ID of bus 1
-      BusType bus_type{INVALID};
+      /// Initial value for the imaginary bus voltage
+      RealT Vi0{0.0};
+
+      /// The unique ID of bus 1
+      IdxT bus_id{0};
+
+      /// The kind of bus this data is for
+      BusType bus_type{Default};
+
+      /// Indices of the variables able to be monitored in the bitset
+      enum class MonitorableVariables : size_t
+      {
+        Vm,
+        Va,
+        Maximum,
+      };
+
+      /// Set of variables being monitored
+      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum) - 1> monitored_variables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -6,6 +6,9 @@
  */
 #pragma once
 
+#include <bitset>
+#include <type_traits>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,13 +26,34 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BranchData
     {
-      RealT R{0.0}; ///< line series resistance
-      RealT X{0.0}; ///< line series reactance
-      RealT G{0.0}; ///< line shunt conductance
-      RealT B{0.0}; ///< line shunt charging
+      /// Line series resistance
+      RealT R{0.0};
 
-      IdxT bus1_id{0}; ///< Unique ID of bus 1
-      IdxT bus2_id{0}; ///< Unique ID of bus 2
+      /// Line series reactance
+      RealT X{0.0};
+
+      /// Line shunt conductance
+      RealT G{0.0};
+
+      /// Line shunt charging
+      RealT B{0.0};
+
+      /// Unique ID of bus 1
+      IdxT bus1_id{0};
+
+      /// Unique ID of bus 2
+      IdxT bus2_id{0};
+
+      /// Indices of the variables able to be monitored in the bitset
+      enum class MonitorableVariables : size_t
+      {
+        Vm,
+        Va,
+        Maximum,
+      };
+
+      /// Set of variables being monitored
+      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum) - 1> monitored_variables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

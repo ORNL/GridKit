@@ -77,13 +77,15 @@ a bus and has the following fields:
 As of the current version and revision, the following bus classes are
 specified:
 
-  Bus class          | Description                                                | Initialization variables | Other variables available to monitor
+  Bus class          | Description                                                | Initialization variables | Variables available to monitor
   -------------------|------------------------------------------------------------|------------------------- | -------------------------
   `bus`              | Positive-sequence, AC phasor domain bus                    | `Vr`, `Vi`               | `Vm`, `Va`
   `infinite_bus`     | Positive-sequence, AC phasor domain bus with fixed voltage | `Vr`, `Vi`               | `Vm`, `Va`
   `emt_bus`          | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
   `infinite_emt_bus` | 3-phase bus with instantaneous voltages                    | `Va`, `Vb`, `Vc`         |
   `control`          | A single control signal                                    | `x`                      |
+
+NOTE: are `Vr`, `Vi` able to be monitored for `bus`/`infinite_bus`?
 
 For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
 `0.0`. This list is subject to change.
@@ -133,8 +135,8 @@ connected to a constant value. This list is subject to change.
         "va_base": 100e6
     },
     "buses": [
-        { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "vbase": 115e3, "mon": ["Vr", "Vi"] },
-        { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0}, "vbase": 115e3 }
+        { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
+        { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0}, "v_base": 115e3 }
     ],
     "devices": [
         { "class": "branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0, "X":0.1, "G":0, "B":0} },
