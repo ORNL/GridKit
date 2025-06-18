@@ -251,11 +251,11 @@ namespace GridKit
       ScalarT pmech;
       if(gov_)
       {
-        pmech = pmech_set_
+        pmech = gov_->Pmech();
       }
       else
       {
-        pmech = gov_->Pmech()
+        pmech = pmech_set_;
       }
 
       /* Read derivatives */
