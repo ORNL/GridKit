@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/MachineBase.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -29,22 +29,22 @@ namespace GridKit
   {
 
     template <class ScalarT, typename IdxT>
-    class Genrou : public Component<ScalarT, IdxT>
+    class Genrou : public MachineBase<ScalarT, IdxT>
     {
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::fB_;
-      using Component<ScalarT, IdxT>::g_;
-      using Component<ScalarT, IdxT>::gB_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::param_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yB_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::ypB_;
+      using MachineBase<ScalarT, IdxT>::alpha_;
+      using MachineBase<ScalarT, IdxT>::f_;
+      using MachineBase<ScalarT, IdxT>::fB_;
+      using MachineBase<ScalarT, IdxT>::g_;
+      using MachineBase<ScalarT, IdxT>::gB_;
+      using MachineBase<ScalarT, IdxT>::nnz_;
+      using MachineBase<ScalarT, IdxT>::param_;
+      using MachineBase<ScalarT, IdxT>::size_;
+      using MachineBase<ScalarT, IdxT>::tag_;
+      using MachineBase<ScalarT, IdxT>::time_;
+      using MachineBase<ScalarT, IdxT>::y_;
+      using MachineBase<ScalarT, IdxT>::yB_;
+      using MachineBase<ScalarT, IdxT>::yp_;
+      using MachineBase<ScalarT, IdxT>::ypB_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
@@ -89,6 +89,16 @@ namespace GridKit
 
       void updateTime(real_type /* t */, real_type /* a */) override
       {
+      }
+
+      /*!
+      * @brief Getter for machine speed deviation
+      *
+      * @return Reference to speed state variable
+      */
+      ScalarT& speed() override
+      {
+        return y_[1];
       }
 
     private:

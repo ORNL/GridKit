@@ -70,3 +70,13 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
             \right] \\
 \end{aligned}
 ```
+
+## Initialization
+```math
+\begin{aligned}
+   P_{tx}  &= (T_3-T_2) P_{mech}\\
+   P_{v}   &= P_{mech}\\
+   \dot{P}_{tx} &=0\\
+   \dot{P}_{v}  &=0\\
+\end{aligned}
+```

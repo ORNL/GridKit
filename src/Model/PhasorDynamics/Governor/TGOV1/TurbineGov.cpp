@@ -7,6 +7,12 @@
  *
  */
 
+ // NOTES
+ // Input Variables: Machine Speed Deviation (w)
+ // Output Variables: Pmech, Pref
+ // (No algebraic variables in reduced form)
+ // Differential Variables: Ptx, Pv
+
 #include "TurbineGov.hpp"
 
 #include <cmath>
@@ -23,7 +29,7 @@ namespace GridKit
     /*!
      * @brief Constructor for Governor with default parameters
      *
-     * @param unit_id Associated Generator Unit ID
+     * @param machine Associated Generator Object
      */
     template <class ScalarT, typename IdxT>
     TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine)
@@ -36,18 +42,23 @@ namespace GridKit
           T3_(.05),
           Dt_(.75),
     {
-      // 2 Internal Variables and 7 Parameters
+      // 2 Internal Variables
       size_       = 2;
+
+      // 7 Parameters
       size_param_ = 7;
     }
 
     /*!
      * @brief Constructor for Governor
      *
-     * @param unit_id Generator Unit ID
+     * @param machine Generator Object
      * @param R       Droop Constant (p.u.) 
      * @param Pvmin   Minimum Valve Position
      * @param Pvmax   Maximum Valve Position
+     * @param T1      Param description
+     * @param T2      Param description
+     * @param T3      Param description
      * @param Dt      Turbine Damping Coefficient (p.u.)
      */
     template <class ScalarT, typename IdxT>
@@ -55,6 +66,7 @@ namespace GridKit
         machine_type* machine,
         real_type R,
         real_type Pvmin,
+        real_type Pvmax,
         real_type T1,
         real_type T2,
         real_type T3,
@@ -70,8 +82,10 @@ namespace GridKit
         Dt_(.75),
     {
 
-      // 2 Internal Variables and 7 Parameters
+      // 2 Internal Variables
       size_       = 2;
+
+      // 7 Parameters
       size_param_ = 7;
 
     }
@@ -89,7 +103,6 @@ namespace GridKit
 
     /*!
      * @brief Allocate memory for model
-     *
      *
      */
     template <class ScalarT, typename IdxT>
@@ -113,13 +126,13 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::initialize()
     {
 
-      // Initialize Differential Variables:
-      y_[0] = pref_;  // Valve Position
-      y_[1] = pmech_; // Turbine Power
+      // D.V. Value
+      y_[0] = (T3_-T2_) * pmech_;  // Ptx (Turbine Power )
+      y_[1] = pmech_;              // Pv  (Valve Position)
 
-      // Initialize Differential Variables
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      // D.V. Derivative
+      yp_[0] = 0.0;                // Ptx
+      yp_[1] = 0.0;                // Pv
 
       return 0;
     }
@@ -130,6 +143,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int TurbineGov<ScalarT, IdxT>::tagDifferentiable()
     {
+
+      // Indicate which variables in y_ are differential
       for (IdxT i = 0; i < size_; ++i)
       {
         tag_[i] = true;
@@ -145,9 +160,8 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::evaluateResidual()
     {
 
-      // External Variables
-      // TODO: should be deviation, not true speed.
-      ScalarT omega  = machine_->omega();
+      // Input Variables
+      ScalarT omega  = machine_->speed();
       
       // Internal Variables 
       ScalarT pv       = y_[0];
@@ -161,9 +175,6 @@ namespace GridKit
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
       f_[1] = pv_dot  + (pv - (pref_ - omega) / R ) / T3_;
       
-      // Output Variable
-      pmech_ = (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
-
       return 0;
     }
 
@@ -243,16 +254,24 @@ namespace GridKit
      * @return ScalarT - Mechanical output power value.
      */
     template <class ScalarT, typename IdxT>
-    ScalarT TurbineGov<ScalarT, IdxT>::Pmech()
+    ScalarT TurbineGov<ScalarT, IdxT>::pmech()
     {
-      return pmech_;
+
+      // Relevant Variables
+      ScalarT omega  = machine_->speed();
+      ScalarT pv  = y_[0];
+      ScalarT ptx = y_[1];
+
+      // Output Variable
+      ScalarT pmech = (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+
+      return pmech;
     }
 
     // Available template instantiations
     template class TurbineGov<double, long int>;
     template class TurbineGov<double, size_t>;
 
-    
 
   } // namespace PhasorDynamics
 } // namespace GridKit
