@@ -107,7 +107,7 @@ namespace GridKit
 
       void setgov(gov_type* gov) 
       {
-        gov_(gov);
+        gov_ = gov
       }
 
     private:
