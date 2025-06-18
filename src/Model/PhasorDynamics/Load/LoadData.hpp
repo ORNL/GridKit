@@ -23,10 +23,16 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct LoadData
     {
-      RealT R{0.0}; ///< load resistance
-      RealT X{0.0}; ///< load reactance
+      /// Load resistance
+      RealT R{0.0};
 
-      IdxT bus_id{0}; ///< Unique ID of bus to which the load is connnected.
+      /// Load reactance
+      RealT X{0.0};
+
+      //TODO: add the monitorable variables to this
+
+      /// Unique ID of bus to which the load is connnected
+      IdxT bus_id{0};
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -6,6 +6,9 @@
  */
 #pragma once
 
+#include <bitset>
+#include <type_traits>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,28 +26,80 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct GenrouData
     {
-      IdxT unit_id{0}; ///< Unique unit ID
+      /// Unique unit ID
+      IdxT unit_id{0};
 
-      RealT p0{0.0};    ///< Initial active power
-      RealT q0{0.0};    ///< Initial reactive power
-      RealT H{0.0};     ///< Rotor inertia
-      RealT D{0.0};     ///< Damping coefficient
-      RealT Ra{0.0};    ///< Winding resistance
-      RealT Tdop{0.0};  ///< Open circuit direct axis transient time
-      RealT Tdopp{0.0}; ///< Open circuit direct axis sub-transient time
-      RealT Tqop{0.0};  ///< Open circuit quadrature axis transient
-      RealT Tqopp{0.0}; ///< Open circuit quadrature axis sub-transient time
-      RealT Xd{0.0};    ///< Direct axis synchronous reactance
-      RealT Xdp{0.0};   ///< Direct axis transient reactance
-      RealT Xdpp{0.0};  ///< Direct axis sub-transient reactance
-      RealT Xq{0.0};    ///< Quadrature axis synchronous reactance
-      RealT Xqp{0.0};   ///< Quadrature axis transient reactance
-      RealT Xqpp{0.0};  ///< Quadrature axis sub-transient reactance
-      RealT Xl{0.0};    ///< Stator leakage reactance
-      RealT S10{0.0};   ///< Saturation factor at 1.0 pu flux
-      RealT S12{0.0};   ///< Saturation factor at 1.2 pu flux
+      /// Initial active power
+      RealT p0{0.0};
 
-      IdxT bus_id{0}; ///< Unique ID of the connecting bus
+      /// Initial reactive power
+      RealT q0{0.0};
+
+      /// Rotor inertia
+      RealT H{0.0};
+
+      /// Damping coefficient
+      RealT D{0.0};
+
+      /// Winding resistance
+      RealT Ra{0.0};
+
+      /// Open circuit direct axis transient time
+      RealT Tdop{0.0};
+
+      /// Open circuit direct axis sub-transient time
+      RealT Tdopp{0.0};
+
+      /// Open circuit quadrature axis transient
+      RealT Tqop{0.0};
+
+      /// Open circuit quadrature axis sub-transient time
+      RealT Tqopp{0.0};
+
+      /// Direct axis synchronous reactance
+      RealT Xd{0.0};
+
+      /// Direct axis transient reactance
+      RealT Xdp{0.0};
+
+      /// Direct axis sub-transient reactance
+      RealT Xdpp{0.0};
+
+      /// Quadrature axis synchronous reactance
+      RealT Xq{0.0};
+
+      /// Quadrature axis transient reactance
+      RealT Xqp{0.0};
+
+      /// Quadrature axis sub-transient reactance
+      RealT Xqpp{0.0};
+
+      /// Stator leakage reactance
+      RealT Xl{0.0};
+
+      /// Saturation factor at 1.0 pu flux
+      RealT S10{0.0};
+
+      /// Saturation factor at 1.2 pu flux
+      RealT S12{0.0};
+
+      /// Unique ID of the connecting bus
+      IdxT bus_id{0};
+
+      /// Indices of the variables able to be monitored in the bitset
+      enum class MonitorableVariables : size_t
+      {
+        Ir,
+        Ii,
+        P,
+        Q,
+        Delta,
+        Omega,
+        Maximum,
+      };
+
+      /// Set of variables being monitored
+      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum) - 1> monitored_variables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

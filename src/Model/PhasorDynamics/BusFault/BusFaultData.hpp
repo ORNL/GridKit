@@ -6,6 +6,9 @@
  */
 #pragma once
 
+#include <bitset>
+#include <type_traits>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,11 +26,29 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusFaultData
     {
-      RealT R{0.0};        ///< short to ground resistance
-      RealT X{0.0};        ///< short to ground reactance
-      bool  status{false}; ///< if the fault happened
+      /// Short to ground resistance
+      RealT R{0.0};
 
-      IdxT bus_id{0}; ///< Unique ID of bus where fault occurs.
+      /// Short to ground reactance
+      RealT X{0.0};
+
+      /// If the fault has happened
+      bool status{false};
+
+      /// Unique ID of the bus where the fault occurs
+      IdxT bus_id{0};
+
+      /// Indices of the variables able to be monitored in the bitset
+      enum class MonitorableVariables : size_t
+      {
+        State,
+        Ir,
+        Ii,
+        Maximum,
+      };
+
+      /// Set of variables being monitored
+      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum) - 1> monitored_variables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

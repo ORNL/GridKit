@@ -48,6 +48,8 @@ namespace GridKit
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t
       {
+        Vr,
+        Vi,
         Vm,
         Va,
         Maximum,
