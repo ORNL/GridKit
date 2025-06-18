@@ -75,6 +75,9 @@ namespace GridKit
       {
       }
 
+      // Public Access to Pmech
+      ScalarT pmech();
+
     private:
     
       // Associated Machine Model
@@ -86,6 +89,9 @@ namespace GridKit
       real_type T2_;
       real_type T3_;
       real_type Dt_;
+
+      // Input States (which can be parameters)
+      ScalarT pref_;
 
       // Output States
       ScalarT pmech_;
