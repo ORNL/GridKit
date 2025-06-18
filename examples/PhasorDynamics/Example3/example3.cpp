@@ -66,7 +66,7 @@ int main()
   TurbineGov<double, size_t> gov(&gen);
 
   // Temporary Implementation, eventually move to 'Signal' framework
-  gen.setgov(&gov)
+  gen.setgov(&gov);
 
   /* Connect everything together */
   sys.addBus(&bus1);
