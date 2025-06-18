@@ -21,6 +21,8 @@ namespace GridKit
 
     template <typename RealT, typename IdxT>
     struct GenrouData;
+    template <class ScalarT, typename IdxT>
+    class GovernorBase;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -47,6 +49,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
+      using gov_type  = GovernorBase<ScalarT, IdxT>;
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
@@ -102,6 +105,11 @@ namespace GridKit
         return y_[1];
       }
 
+      void setgov(gov_type* gov) 
+      {
+        gov_(gov);
+      }
+
     private:
       void setDerivedParams();
 
@@ -130,6 +138,9 @@ namespace GridKit
       bus_type* bus_;
       const int busID_;
       IdxT      unit_id_;
+
+      // Components
+      gov_type* gov_;
 
       /* Initial terminal conditions */
       ScalarT p0_;

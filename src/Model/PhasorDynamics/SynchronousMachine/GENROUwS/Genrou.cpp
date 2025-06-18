@@ -55,7 +55,7 @@ namespace GridKit
         S10_(0.),
         S12_(0.)
     {
-      size_ = 21;
+      size_ = 20; // 21; 20 without Pmech
       setDerivedParams();
 
       // Temporary, to eliminate compiler warnings
@@ -110,7 +110,7 @@ namespace GridKit
         S10_(S10),
         S12_(S12)
     {
-      size_ = 21;
+      size_ = 20;// 21; 20 without Pmech
       setDerivedParams();
     }
 
@@ -211,17 +211,17 @@ namespace GridKit
       ScalarT ksat;
       ScalarT psipp;
 
-      y_[0] = delta; //= 0.55399038;
+      y_[0] = delta; // = 0.55399038;
       y_[1] = omega; // = 0;
       y_[2] = Eqp;   // = 0.995472581;
       y_[3] = psidp; // = 0.971299567;
       y_[4] = psiqp; // = 0.306880069;
       y_[5] = Edp;   // = 0;
 
-      y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
-      y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y_[8] = psipp = sqrt(psiqpp * psiqpp + psidpp * psidpp);
-      y_[9] = ksat = SB_ * pow(psipp - SA_, 2);
+      y_[6]  = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
+      y_[7]  = psidpp = psidp * Xd4_ + Eqp * Xd5_;
+      y_[8]  = psipp = sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      y_[9]  = ksat = SB_ * pow(psipp - SA_, 2);
       y_[10] = vd = -psiqpp * (1 + omega);
       y_[11] = vq = psidpp * (1 + omega);
       y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
@@ -229,12 +229,15 @@ namespace GridKit
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      y_[17] = pmech_set_ = Te;
-      y_[18] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      y_[19]            = G_ * (vd * sin(delta) + vq * cos(delta))
+      //y_[17] = pmech_set_ = Te;
+      y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      y_[18]            = G_ * (vd * sin(delta) + vq * cos(delta))
                - B_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, real */
-      y_[20] = B_ * (vd * sin(delta) + vq * cos(delta))
+      y_[19] = B_ * (vd * sin(delta) + vq * cos(delta))
                + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
+
+      // Set Setpoint mechanical power, which may or may not be used
+      pmech_set_ = Te;
 
       for (IdxT i = 0; i < size_; ++i)
         yp_[static_cast<size_t>(i)] = 0.0;
@@ -281,12 +284,20 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT pmech  = y_[17];
-      ScalarT efd    = y_[18];
-      ScalarT inr    = y_[19];
-      ScalarT ini    = y_[20];
+      ScalarT efd    = y_[17];
+      ScalarT inr    = y_[18];
+      ScalarT ini    = y_[19];
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
+      ScalarT pmech;
+      if(gov_)
+      {
+        pmech = pmech_set_
+      }
+      else
+      {
+        pmech = gov_->Pmech()
+      }
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];
@@ -318,12 +329,12 @@ namespace GridKit
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      f_[17] = pmech - pmech_set_;
-      f_[18] = efd - efd_set_;
+      //f_[17] = pmech - pmech_set_;
+      f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */
-      f_[19] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
-      f_[20] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[18] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[19] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
 
       /* Current balance */
       Ir() += inr - Vr() * G_ + Vi() * B_;

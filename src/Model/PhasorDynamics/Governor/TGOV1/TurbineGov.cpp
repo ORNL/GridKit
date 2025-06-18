@@ -242,7 +242,7 @@ namespace GridKit
      * @return ScalarT - Mechanical output power value.
      */
     template <class ScalarT, typename IdxT>
-    ScalarT TurbineGov<ScalarT, IdxT>::pmech()
+    ScalarT TurbineGov<ScalarT, IdxT>::Pmech()
     {
 
       // Relevant Variables
