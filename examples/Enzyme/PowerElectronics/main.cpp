@@ -22,11 +22,11 @@ using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 int  enzyme_dupnoneed;
 int  enzyme_dup;
 int  enzyme_const;
-void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>, int, std::vector<double>, std::vector<double>*);
+void __enzyme_fwddiff(void*, int, std::vector<double>, std::vector<double>, int, std::vector<double>, int, std::vector<double>, std::vector<double>*);
 
 // Copy from DistributedGenerator<ScalarT, IdxT>::evaluateResidual
 // Need to find a way to differentiate the member function directly
-void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
+void evaluateResidual(std::vector<double> y_, std::vector<double> yp_, std::vector<double> f_)
 {
   constexpr double wb_  = 2.0 * M_PI * 50.0;
   constexpr double wc_  = 31.41;
@@ -45,8 +45,6 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> f_)
   constexpr double Lc_  = 0.35e-3;
 
   constexpr bool ref_frame_ = true;
-
-  std::vector<double> yp_(0);
 
   double omega = wb_ - mp_ * y_[4];
   if (ref_frame_)
@@ -99,6 +97,7 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac)
 {
   size_t              N = model->size();
   std::vector<double> y(N);
+  std::vector<double> yp(N);
   std::vector<double> v(N);
   std::vector<double> res(N);
   std::vector<double> d_res(N);
@@ -113,11 +112,13 @@ void EnzymeModelJacobian(T* model, DenseMatrix& jac)
     }
     v[idy] = 1.0;
 
-    // Autodiff
+    // Autodiff with respect to y
     __enzyme_fwddiff((void*) evaluateResidual,
                      enzyme_dup,
                      y,
                      v,
+                     enzyme_const,
+                     yp,
                      enzyme_dupnoneed,
                      res,
                      &d_res);
