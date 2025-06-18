@@ -33,14 +33,14 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine)
-        : unit_id_(unit_id),
+        : machine_(machine),
           R_(3.),
           Pvmin_(0.),
           Pvmax_(1.),
           T1_(7.),
           T2_(.04),
           T3_(.05),
-          Dt_(.75),
+          Dt_(.75)
     {
       // 2 Internal Variables
       size_       = 2;
@@ -79,7 +79,7 @@ namespace GridKit
         T1_(7.),
         T2_(.04),
         T3_(.05),
-        Dt_(.75),
+        Dt_(.75)
     {
 
       // 2 Internal Variables
@@ -89,17 +89,6 @@ namespace GridKit
       size_param_ = 7;
 
     }
-
-    /*!
-     * @brief Destructor for Governor Model
-     *
-     */
-    template <class ScalarT, typename IdxT>
-    TurbineGov<ScalarT, IdxT>::~TurbineGov()
-    {
-      std::cout << "Destroy Governor ..." << std::endl;
-    }
-
 
     /*!
      * @brief Allocate memory for model
@@ -173,7 +162,7 @@ namespace GridKit
 
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
-      f_[1] = pv_dot  + (pv - (pref_ - omega) / R ) / T3_;
+      f_[1] = pv_dot  + (pv - (pref_ - omega) / R_ ) / T3_;
       
       return 0;
     }
