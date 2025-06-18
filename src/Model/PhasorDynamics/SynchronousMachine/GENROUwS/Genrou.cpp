@@ -405,6 +405,18 @@ namespace GridKit
       B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
     }
 
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::setgov(gov_type* gov) 
+    {
+      gov_ = gov;
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT& Genrou<ScalarT, IdxT>::speed()
+    {
+      return y_[1];
+    }
+
     // Available template instantiations
     template class Genrou<double, long int>;
     template class Genrou<double, size_t>;
