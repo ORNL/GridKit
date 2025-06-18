@@ -4,7 +4,6 @@
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @brief Definition of a Turbine Governor Model (IEEET1).
  *
- *
  */
 
  // NOTES
