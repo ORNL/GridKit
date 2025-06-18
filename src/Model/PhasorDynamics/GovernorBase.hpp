@@ -15,7 +15,7 @@ namespace GridKit
     {
     public:
 
-      virtual ScalarT& Pmech() = 0;
+      virtual ScalarT Pmech() = 0;
 
     };
 
