@@ -100,15 +100,9 @@ namespace GridKit
       *
       * @return Reference to speed state variable
       */
-      ScalarT& speed() override
-      {
-        return y_[1];
-      }
+      ScalarT& speed() override;
 
-      void setgov(gov_type* gov) 
-      {
-        gov_ = gov;
-      }
+      void setgov(gov_type* gov);
 
     private:
       void setDerivedParams();
