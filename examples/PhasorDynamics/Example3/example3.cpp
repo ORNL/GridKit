@@ -63,7 +63,10 @@ int main()
                              0.);
 
   // Governor of Generator
-  TurbineGov<double, size_t> turb(&gen);
+  TurbineGov<double, size_t> gov(&gen);
+
+  // Temporary Implementation, eventually move to 'Signal' framework
+  gen.setgov(&gov)
 
   /* Connect everything together */
   sys.addBus(&bus1);
@@ -71,6 +74,7 @@ int main()
   sys.addComponent(&branch);
   sys.addComponent(&fault);
   sys.addComponent(&gen);
+  sys.addComponent(&gov);
   sys.allocate();
 
   double dt = 1.0 / 4.0 / 60.0;

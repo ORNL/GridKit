@@ -18,6 +18,8 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
+    template <class ScalarT, typename IdxT>
+    class GovernorBase;
   }
 } // namespace GridKit
 
@@ -45,6 +47,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::ypB_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
+      using gov_type  = GovernorBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
 
     public:
@@ -97,6 +100,11 @@ namespace GridKit
         return y_[1];
       }
 
+      void setgov(gov_type* gov) 
+      {
+        gov_(gov);
+      }
+
     private:
       void setDerivedParams();
 
@@ -125,6 +133,9 @@ namespace GridKit
       bus_type* bus_;
       const int busID_;
       int       unit_id_;
+
+      // Components
+      gov_type* gov_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
