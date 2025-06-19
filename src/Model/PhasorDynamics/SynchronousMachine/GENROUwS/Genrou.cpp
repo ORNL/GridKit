@@ -23,8 +23,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-
-
     /*!
      * @brief Constructor for all custom arguments
      *
@@ -106,11 +104,9 @@ namespace GridKit
         Xqpp_(.18),
         Xl_(.15),
         S10_(0.),
-        S12_(0.),
-
+        S12_(0.)
     {
-      size_ = 20; // 21; 20 without Pmech
-      gov_ = nullptr;
+      size_ = 20; 
       setDerivedParams();
 
       // Temporary, to eliminate compiler warnings

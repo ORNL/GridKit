@@ -73,7 +73,7 @@ namespace GridKit
             real_type S10,
             real_type S12);
       Genrou(bus_type* bus, int unit_id, gov_type* gov);
-      Genrou(bus_type* bus, int unit_id)
+      Genrou(bus_type* bus, int unit_id);
 
       ~Genrou() = default;
 
