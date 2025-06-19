@@ -66,8 +66,6 @@ namespace GridKit
         real_type D{-1.0};
         real_type Ra{0.5};
         real_type Xdp{0.5};
-        real_type pmech{1.0};
-        real_type ep{2.0};
 
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
@@ -75,11 +73,9 @@ namespace GridKit
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
                                                  0.0,
+                                                 2.0,
                                                  0.0,
-                                                 0.0,
-                                                 0.0,
-                                                 pmech,
-                                                 ep};
+                                                 -4.0};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
@@ -95,17 +91,13 @@ namespace GridKit
         gen.y()[2] = 2.0;   // telec
         gen.y()[3] = -2.0;  // ir
         gen.y()[4] = -4.0;  // ii
-        gen.y()[5] = pmech; // pmech
-        gen.y()[6] = ep;    // Ep
 
         // Set derivative values matching the answer key
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
-        gen.yp()[1] = -1.0;            // omega_dot
-        gen.yp()[2] = 0.0;
-        gen.yp()[3] = 0.0;
-        gen.yp()[4] = 0.0;
-        gen.yp()[5] = 0.0;
-        gen.yp()[6] = 0.0;
+        gen.yp()[1] = -1.5;            // omega_dot
+        gen.yp()[2] = 0;
+        gen.yp()[3] = 0;
+        gen.yp()[4] = 0;
 
         gen.evaluateResidual();
         std::vector<ScalarT>& residual = gen.getResidual();
@@ -137,20 +129,19 @@ namespace GridKit
         real_type q0{-1.0};
         real_type H{1.0};
         real_type D{1.0};
-        real_type Ra{0.6};
-        real_type Xdp{0.2};
+        real_type Ra{0.1};
+        real_type Xdp{2.3};
 
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         // Test answer keys
-        const std::vector<ScalarT> var_answer = {M_PI / 4.0,       // delta
+        const std::vector<ScalarT> var_answer = {3.0 * M_PI / 4.0,       // delta
                                                  1.0,              // omega
-                                                 6.0,              // Te
+                                                 3.5,              // Te
                                                  1.0,              // Ir
                                                  2.0,              // Ii
-                                                 6.0,              // Pm
-                                                 2.0 * sqrt(2.0)}; // Ep
+                                                 };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
