@@ -46,30 +46,10 @@ int main()
   TurbineGov<double, size_t>* gov;
 
   // Instatiation
-  gen = new Genrou<double, size_t>(&bus1,
-                             1,
-                             gov
-                             1.,
-                             0.05013,
-                             3.,
-                             0.,
-                             0.,
-                             7.,
-                             .04,
-                             .05,
-                             .75,
-                             2.1,
-                             0.2,
-                             0.18,
-                             0.5,
-                             0.5,
-                             0.18,
-                             0.15,
-                             0.,
-                             0.);
+  gen = new Genrou<double, size_t>(&bus1, 1, gov);
 
   // Governor of Generator
-  gov = TurbineGov<double, size_t>(gen);
+  gov = new TurbineGov<double, size_t>(gen);
 
 
   /* Connect everything together */
