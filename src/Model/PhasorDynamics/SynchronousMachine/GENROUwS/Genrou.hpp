@@ -154,6 +154,9 @@ namespace GridKit
       // Governor Pointer
       gov_type* gov_;
 
+      // Governor Pointer
+      gov_type* gov_;
+
       /* Initial terminal conditions */
       ScalarT p0_;
       ScalarT q0_;
