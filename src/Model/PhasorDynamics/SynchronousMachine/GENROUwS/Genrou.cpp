@@ -14,9 +14,8 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/GovernorBase.hpp>
-
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -226,10 +225,10 @@ namespace GridKit
       y_[4] = psiqp; // = 0.306880069;
       y_[5] = Edp;   // = 0;
 
-      y_[6]  = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
-      y_[7]  = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y_[8]  = psipp = sqrt(psiqpp * psiqpp + psidpp * psidpp);
-      y_[9]  = ksat = SB_ * pow(psipp - SA_, 2);
+      y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
+      y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
+      y_[8] = psipp = sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      y_[9] = ksat = SB_ * pow(psipp - SA_, 2);
       y_[10] = vd = -psiqpp * (1 + omega);
       y_[11] = vq = psidpp * (1 + omega);
       y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
@@ -237,7 +236,7 @@ namespace GridKit
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      //y_[17] = pmech_set_ = Te;
+      // y_[17] = pmech_set_ = Te;
       y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
       y_[18]            = G_ * (vd * sin(delta) + vq * cos(delta))
                - B_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, real */
@@ -298,7 +297,7 @@ namespace GridKit
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
       ScalarT pmech;
-      if(gov_)
+      if (gov_)
       {
         pmech = gov_->Pmech(); // ISSUE IS HERE?
       }
@@ -337,7 +336,7 @@ namespace GridKit
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      //f_[17] = pmech - pmech_set_;
+      // f_[17] = pmech - pmech_set_;
       f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */

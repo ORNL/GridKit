@@ -42,7 +42,7 @@ int main()
   BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
 
   // Decleration
-  Genrou<double, size_t>* gen;
+  Genrou<double, size_t>*     gen;
   TurbineGov<double, size_t>* gov;
 
   // Instatiation

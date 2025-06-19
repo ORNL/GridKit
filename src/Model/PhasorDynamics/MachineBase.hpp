@@ -14,9 +14,7 @@ namespace GridKit
     class MachineBase
     {
     public:
-
       virtual ScalarT speed() = 0;
-
     };
 
   } // namespace PhasorDynamics

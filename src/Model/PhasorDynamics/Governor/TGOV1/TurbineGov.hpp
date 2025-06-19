@@ -45,19 +45,19 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using machine_type  = MachineBase<ScalarT, IdxT>;
-      using real_type     = typename Component<ScalarT, IdxT>::real_type;
+      using machine_type = MachineBase<ScalarT, IdxT>;
+      using real_type    = typename Component<ScalarT, IdxT>::real_type;
 
     public:
       TurbineGov(machine_type* machine);
       TurbineGov(machine_type* machine,
-                  real_type R,
-                  real_type Pvmin,
-                  real_type Pvmax,
-                  real_type T1,
-                  real_type T2,
-                  real_type T3,
-                  real_type Dt);
+                 real_type     R,
+                 real_type     Pvmin,
+                 real_type     Pvmax,
+                 real_type     T1,
+                 real_type     T2,
+                 real_type     T3,
+                 real_type     Dt);
       ~TurbineGov() = default;
 
       int allocate() override;
@@ -80,7 +80,6 @@ namespace GridKit
       ScalarT Pmech() override;
 
     private:
-    
       // Associated Machine Model
       machine_type* machine_;
 
@@ -95,7 +94,6 @@ namespace GridKit
 
       // Input States (which can be parameters)
       ScalarT pref_;
-
     };
 
   } // namespace PhasorDynamics
