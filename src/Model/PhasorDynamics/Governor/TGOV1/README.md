@@ -11,27 +11,45 @@ Standard model of the stream turbine
   Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
-## Nomenclature
+## Model Parameters
 
-### Algebraic Variables
-- $\Delta\omega$ - Per-unit Speed Deviation (p.u.)
-- $P_{ref}$ - Reference Power (p.u.)
-- $P_{mech}$ - Mechnical Power to Generator (p.u.)
+Symbol      | Units  | Description                       | Typical Value | Note
+------------|--------|-----------------------------------|---------------| ------
+$R$         | [p.u.] | Droop Constant                    | 1 |
+$T_1$       | [sec]  | Valve Time Delay                  | 1 |
+$T_2$       | [sec]  | Turbine Numerator Time Constant   | 1 |
+$T_3$       | [sec]  | Turbine Delay                     | 1 |
+$P_{vmax}$  | [p.u.] | Stator leakage reactance          | 1 | 
+$P_{vmin}$  | [p.u.] | Max Valve Position                | 1 | 
+$D_t$       | [p.u.] | Turbine Damping Coefficient       | 1 | 
 
-### Differential Variables
-- $P_{tx}$ - Turbine Power (p.u.) (State 1 in Fig. 1)
-- $P_{v}$ - Valve Position (State 2 in Fig. 1)
+### Internal Variables
 
-### Parameters
-- $R$ - Droop Constant (p.u.)
-- $T_1$ - Valve Time Delay (sec)
-- $T_2$ - Turbine Numerator Time Constat (sec)
-- $T_3$ - Turbine Delay (sec)
-- $P_{vmax}$ - Max Valve Position
-- $P_{vmin}$ -  Min Valve Position
-- $D_t$ - Turbine Damping Coefficient (p.u.)
+#### Differential
 
-## Equations
+Symbol    | Units  | Description                       | Note
+----------|--------|-----------------------------------|-------
+$P_{tx}$  | [p.u.] | Turbine Power (State 1 in Fig. 1) |
+$P_{v}$   | [p.u.] | Valve Position (State 2 in Fig. 1)| 
+
+#### Algebraic
+Symbol          | Units  | Description                       | Note
+----------------|--------|-----------------------------------|-------
+$P_{mech}$      | [p.u.] | Mechnical Power to Generator      | Read by a Machine Model
+
+### External Variables
+
+#### Differential
+Symbol          | Units  | Description                       | Note
+----------------|--------|-----------------------------------|-------
+$\Delta\omega$  | [p.u.] | Speed Deviation                   |
+
+#### Algebraic
+Symbol          | Units  | Description                       | Note
+----------------|--------|-----------------------------------|-------
+$P_{ref}$       | [p.u.] | Reference Power                   | 
+
+## Model Equations
 
 
 ### Algebraic Equations

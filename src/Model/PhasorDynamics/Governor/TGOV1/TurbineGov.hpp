@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include <Model/PhasorDynamics/GovernorBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
-// TODO: Make a MachineBase class for use with any synch. machine
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -77,7 +76,7 @@ namespace GridKit
       {
       }
 
-      // Public Access to Pmech
+      // Read Access to Pmech
       ScalarT Pmech() override;
 
     private:
@@ -96,9 +95,6 @@ namespace GridKit
 
       // Input States (which can be parameters)
       ScalarT pref_;
-
-      // Output States
-      ScalarT pmech_;
 
     };
 

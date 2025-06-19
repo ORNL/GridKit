@@ -300,7 +300,7 @@ namespace GridKit
       ScalarT pmech;
       if(gov_)
       {
-        pmech = gov_->Pmech();
+        pmech = gov_->Pmech(); // ISSUE IS HERE?
       }
       else
       {
@@ -453,7 +453,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    ScalarT& Genrou<ScalarT, IdxT>::speed()
+    ScalarT Genrou<ScalarT, IdxT>::speed()
     {
       return y_[1];
     }
