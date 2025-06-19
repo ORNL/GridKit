@@ -42,10 +42,8 @@ namespace GridKit
           Dt_(.75)
     {
       // 2 Internal Variables
-      size_       = 2;
+      size_       = 3;
 
-      // 7 Parameters
-      size_param_ = 7;
     }
 
     /*!
@@ -82,10 +80,7 @@ namespace GridKit
     {
 
       // 2 Internal Variables
-      size_       = 2;
-
-      // 7 Parameters
-      size_param_ = 7;
+      size_       = 3;
 
     }
 
@@ -114,9 +109,15 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::initialize()
     {
 
-      // D.V. Value
-      y_[0] = (T3_-T2_) * pmech_;  // Ptx (Turbine Power )
-      y_[1] = pmech_;              // Pv  (Valve Position)
+      // Input Variables (Parameter for now)
+      pref_ = 1 / R_;
+
+      // Differential Variables
+      y_[0] = (T3_-T2_) * R_ * pref_;  // Ptx (Turbine Power )
+      y_[1] = R_ * pref_;              // Pv  (Valve Position)
+
+      // Algebraic Variables
+      y_[2] = R_ * pref_; // Pmech
 
       // D.V. Derivative
       yp_[0] = 0.0;                // Ptx
@@ -132,11 +133,9 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::tagDifferentiable()
     {
 
-      // Indicate which variables in y_ are differential
-      for (IdxT i = 0; i < size_; ++i)
-      {
-        tag_[i] = true;
-      }
+      tag_[0] = true;  // Pv
+      tag_[1] = true;  // Ptx
+      tag_[2] = false; // Pmech
       return 0;
     }
 
@@ -154,6 +153,7 @@ namespace GridKit
       // Internal Variables 
       ScalarT pv       = y_[0];
       ScalarT ptx      = y_[1];
+      ScalarT pmech    = y_[2];
 
       // Internal Derivatives
       ScalarT pv_dot   = yp_[0];
@@ -162,6 +162,9 @@ namespace GridKit
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
       f_[1] = pv_dot  + (pv - (pref_ - omega) / R_ ) / T3_;
+
+      // Internal Algebraic Equations
+      f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
       
       return 0;
     }
@@ -244,16 +247,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     ScalarT TurbineGov<ScalarT, IdxT>::Pmech()
     {
-
-      // Relevant Variables
-      ScalarT omega  = machine_->speed();
-      ScalarT pv  = y_[0];
-      ScalarT ptx = y_[1];
-
-      // Output Variable
-      ScalarT pmech = (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
-
-      return pmech;
+      return y_[2];
     }
 
     // Available template instantiations

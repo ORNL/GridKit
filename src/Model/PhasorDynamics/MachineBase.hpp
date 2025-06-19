@@ -15,7 +15,7 @@ namespace GridKit
     {
     public:
 
-      virtual ScalarT& speed() = 0;
+      virtual ScalarT speed() = 0;
 
     };
 

@@ -93,7 +93,8 @@ namespace GridKit
       {
       }
 
-      ScalarT& speed() override;
+      // Read Access to Machine Relative Speed
+      ScalarT speed() override;
 
     private:
       void setDerivedParams();
