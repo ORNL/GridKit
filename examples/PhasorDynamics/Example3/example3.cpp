@@ -41,8 +41,14 @@ int main()
   Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
   BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
 
-  Genrou<double, size_t> gen(&bus1,
+  // Decleration
+  Genrou<double, size_t>* gen;
+  TurbineGov<double, size_t>* gov;
+
+  // Instatiation
+  gen = new Genrou<double, size_t>(&bus1,
                              1,
+                             gov
                              1.,
                              0.05013,
                              3.,
@@ -63,18 +69,16 @@ int main()
                              0.);
 
   // Governor of Generator
-  TurbineGov<double, size_t> gov(&gen);
+  gov = TurbineGov<double, size_t>(gen);
 
-  // Temporary Implementation, eventually move to 'Signal' framework
-  gen.setgov(&gov);
 
   /* Connect everything together */
   sys.addBus(&bus1);
   sys.addBus(&bus2);
   sys.addComponent(&branch);
   sys.addComponent(&fault);
-  sys.addComponent(&gen);
-  sys.addComponent(&gov);
+  sys.addComponent(gen);
+  sys.addComponent(gov);
   sys.allocate();
 
   double dt = 1.0 / 4.0 / 60.0;

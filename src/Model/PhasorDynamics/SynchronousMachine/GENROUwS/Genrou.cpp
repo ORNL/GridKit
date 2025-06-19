@@ -22,59 +22,18 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Constructor for a pi-model branch
-     *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
-     */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, int unit_id)
-      : bus_(bus),
-        busID_(0),
-        unit_id_(unit_id),
-        p0_(0.),
-        q0_(0.),
-        H_(3.),
-        D_(0.),
-        Ra_(0.),
-        Tdop_(7.),
-        Tdopp_(.04),
-        Tqopp_(.05),
-        Tqop_(.75),
-        Xd_(2.1),
-        Xdp_(0.2),
-        Xdpp_(0.18),
-        Xq_(.5),
-        Xqp_(.5),
-        Xqpp_(.18),
-        Xl_(.15),
-        S10_(0.),
-        S12_(0.)
-    {
-      size_ = 20; // 21; 20 without Pmech
-      setDerivedParams();
 
-      // Temporary, to eliminate compiler warnings
-      (void) busID_;
-      (void) unit_id_;
-    }
+
 
     /*!
-     * @brief Constructor for a pi-model branch
+     * @brief Constructor for all custom arguments
      *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
+     * @param bus
      */
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
                                   int       unit_id,
+                                  gov_type* gov,
                                   ScalarT   p0,
                                   ScalarT   q0,
                                   real_type H,
@@ -96,6 +55,7 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
+        gov_(gov),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -115,9 +75,61 @@ namespace GridKit
         S10_(S10),
         S12_(S12)
     {
-      size_ = 20;// 21; 20 without Pmech
+      size_ = 20;
       setDerivedParams();
     }
+
+
+    /*!
+     * @brief Constructor for default parameters
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, int unit_id, gov_type* gov)
+      : bus_(bus),
+        busID_(0),
+        unit_id_(unit_id),
+        gov_(gov),
+        p0_(0.),
+        q0_(0.),
+        H_(3.),
+        D_(0.),
+        Ra_(0.),
+        Tdop_(7.),
+        Tdopp_(.04),
+        Tqopp_(.05),
+        Tqop_(.75),
+        Xd_(2.1),
+        Xdp_(0.2),
+        Xdpp_(0.18),
+        Xq_(.5),
+        Xqp_(.5),
+        Xqpp_(.18),
+        Xl_(.15),
+        S10_(0.),
+        S12_(0.),
+
+    {
+      size_ = 20; // 21; 20 without Pmech
+      gov_ = nullptr;
+      setDerivedParams();
+
+      // Temporary, to eliminate compiler warnings
+      (void) busID_;
+      (void) unit_id_;
+    }
+
+    /*!
+     * @brief Constructor for default no governor
+     *
+     * @param bus Pointer to Bus
+     * @param unit_id Unique int to index generators at the bus
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, int unit_id)
+    :Genrou(bus, unit_id, nullptr)
+    {
+    }
+
 
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
@@ -206,8 +218,8 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * \brief Identify differential variables.
+    /*!
+     * @brief Identify differential variables.
      */
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::tagDifferentiable()
@@ -219,8 +231,8 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * \brief Residual contribution of the branch is pushed to the
+    /*!
+     * @brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      *
      */
@@ -403,12 +415,6 @@ namespace GridKit
       Xqd_ = (Xq_ - Xl_) / (Xd_ - Xl_);
       G_   = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
       B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::setgov(gov_type* gov) 
-    {
-      gov_ = gov;
     }
 
     template <class ScalarT, typename IdxT>
