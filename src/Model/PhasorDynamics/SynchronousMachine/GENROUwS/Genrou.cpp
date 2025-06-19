@@ -76,7 +76,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
                                   IdxT      unit_id,
-                                  gov_type* gov,
                                   ScalarT   p0,
                                   ScalarT   q0,
                                   real_type H,
