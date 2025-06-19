@@ -49,7 +49,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using gov_type  = GovernorBase<ScalarT, IdxT>;
+      using gov_type        = GovernorBase<ScalarT, IdxT>;
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
@@ -77,27 +77,27 @@ namespace GridKit
              real_type Xl,
              real_type S10,
              real_type S12);
-        Genrou(bus_type* bus,
-            int       unit_id,
-            gov_type* gov,
-            ScalarT   p0,
-            ScalarT   q0,
-            real_type H,
-            real_type D,
-            real_type Ra,
-            real_type Tdop,
-            real_type Tdopp,
-            real_type Tqopp,
-            real_type Tqop,
-            real_type Xd,
-            real_type Xdp,
-            real_type Xdpp,
-            real_type Xq,
-            real_type Xqp,
-            real_type Xqpp,
-            real_type Xl,
-            real_type S10,
-            real_type S12);
+      Genrou(bus_type* bus,
+             int       unit_id,
+             gov_type* gov,
+             ScalarT   p0,
+             ScalarT   q0,
+             real_type H,
+             real_type D,
+             real_type Ra,
+             real_type Tdop,
+             real_type Tdopp,
+             real_type Tqopp,
+             real_type Tqop,
+             real_type Xd,
+             real_type Xdp,
+             real_type Xdpp,
+             real_type Xq,
+             real_type Xqp,
+             real_type Xqpp,
+             real_type Xl,
+             real_type S10,
+             real_type S12);
       Genrou(bus_type* bus, int unit_id, gov_type* gov);
       Genrou(bus_type* bus, int unit_id);
 
