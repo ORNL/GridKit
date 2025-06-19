@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <string>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -29,7 +31,16 @@ namespace GridKit
       /// Load reactance
       RealT X{0.0};
 
-      //TODO: add the monitorable variables to this
+      /// Override for the system-wide base frequency
+      RealT freq_base;
+
+      /// Override for the system-wide power base
+      RealT va_base;
+
+      /// Disambiguation string for this device
+      std::string disambiguation_string;
+
+      // TODO: add the monitorable variables to this
 
       /// Unique ID of bus to which the load is connnected
       IdxT bus_id{0};

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <bitset>
+#include <string>
 #include <type_traits>
 
 namespace GridKit
@@ -85,6 +86,15 @@ namespace GridKit
 
       /// Unique ID of the connecting bus
       IdxT bus_id{0};
+
+      /// Override for the system-wide base frequency
+      RealT freq_base;
+
+      /// Override for the system-wide power base
+      RealT va_base;
+
+      /// Disambiguation string for this device
+      std::string disambiguation_string;
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t

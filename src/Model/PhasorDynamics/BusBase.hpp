@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/Evaluator.hpp>
 
 namespace GridKit
@@ -18,6 +19,7 @@ namespace GridKit
     {
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
+      using BusTypeT = typename BusData<real_type, IdxT>::BusType;
 
       BusBase()
         : size_(0),
@@ -55,7 +57,10 @@ namespace GridKit
       }
 
       /// Pure virtual function, returns bus type (DEFAULT or SLACK).
-      virtual int BusType() const = 0;
+      virtual BusTypeT BusType() const
+      {
+        return BusTypeT::Default;
+      }
 
       virtual IdxT size() override
       {

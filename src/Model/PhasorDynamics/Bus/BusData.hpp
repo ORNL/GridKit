@@ -43,7 +43,13 @@ namespace GridKit
       IdxT bus_id{0};
 
       /// The kind of bus this data is for
-      BusType bus_type{Default};
+      BusType bus_type{BusType::Default};
+
+      /// Override for the system-wide base frequency
+      RealT freq_base;
+
+      /// Override for the system-wide power base
+      RealT va_base;
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t

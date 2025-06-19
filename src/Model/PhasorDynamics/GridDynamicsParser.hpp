@@ -208,12 +208,10 @@ namespace GridKit
       case State::ExpectBusOrArrayClose:
         state_ = State::ExpectBusKeyOrObjectClose;
         current_structure_.emplace(BusDataT());
-        monitoring_parameter_bitfield_.reset();
         input_parameter_and_port_bitfield_.reset();
         break;
       case State::ExpectDeviceOrArrayClose:
         state_ = State::ExpectDeviceKeyOrObjectClose;
-        monitoring_parameter_bitfield_.reset();
         input_parameter_and_port_bitfield_.reset();
         break;
       default:
