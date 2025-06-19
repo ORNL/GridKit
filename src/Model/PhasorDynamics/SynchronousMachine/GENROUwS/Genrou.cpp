@@ -24,7 +24,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+
+
+
     /*!
+     * @brief Constructor for all custom arguments
+     *
+     * @param bus
      * @brief Constructor for a pi-model branch
      *
      * Arguments passed to ModelEvaluatorImpl:
@@ -72,6 +78,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
                                   IdxT      unit_id,
+                                  gov_type* gov,
                                   ScalarT   p0,
                                   ScalarT   q0,
                                   real_type H,
@@ -93,6 +100,7 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
+        gov_(gov),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -112,7 +120,7 @@ namespace GridKit
         S10_(S10),
         S12_(S12)
     {
-      size_ = 20;// 21; 20 without Pmech
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -247,8 +255,8 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * \brief Identify differential variables.
+    /*!
+     * @brief Identify differential variables.
      */
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::tagDifferentiable()
@@ -260,8 +268,8 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * \brief Residual contribution of the branch is pushed to the
+    /*!
+     * @brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      *
      */
@@ -444,12 +452,6 @@ namespace GridKit
       Xqd_ = (Xq_ - Xl_) / (Xd_ - Xl_);
       G_   = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
       B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::setgov(gov_type* gov) 
-    {
-      gov_ = gov;
     }
 
     template <class ScalarT, typename IdxT>

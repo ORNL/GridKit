@@ -77,6 +77,30 @@ namespace GridKit
              real_type Xl,
              real_type S10,
              real_type S12);
+        Genrou(bus_type* bus,
+            int       unit_id,
+            gov_type* gov,
+            ScalarT   p0,
+            ScalarT   q0,
+            real_type H,
+            real_type D,
+            real_type Ra,
+            real_type Tdop,
+            real_type Tdopp,
+            real_type Tqopp,
+            real_type Tqop,
+            real_type Xd,
+            real_type Xdp,
+            real_type Xdpp,
+            real_type Xq,
+            real_type Xqp,
+            real_type Xqpp,
+            real_type Xl,
+            real_type S10,
+            real_type S12);
+      Genrou(bus_type* bus, int unit_id, gov_type* gov);
+      Genrou(bus_type* bus, int unit_id)
+
       ~Genrou() = default;
 
       int allocate() override;
@@ -95,14 +119,7 @@ namespace GridKit
       {
       }
 
-      /*!
-      * @brief Getter for machine speed deviation
-      *
-      * @return Reference to speed state variable
-      */
       ScalarT& speed() override;
-
-      void setgov(gov_type* gov);
 
     private:
       void setDerivedParams();
@@ -133,7 +150,7 @@ namespace GridKit
       const int busID_;
       IdxT      unit_id_;
 
-      // Components
+      // Governor Pointer
       gov_type* gov_;
 
       /* Initial terminal conditions */

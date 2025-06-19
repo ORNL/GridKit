@@ -41,8 +41,14 @@ int main()
   Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
   BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
 
-  Genrou<double, size_t> gen(&bus1,
+  // Decleration
+  Genrou<double, size_t>* gen;
+  TurbineGov<double, size_t>* gov;
+
+  // Instatiation
+  gen = new Genrou<double, size_t>(&bus1,
                              1,
+                             gov
                              1.,
                              0.05013,
                              3.,
