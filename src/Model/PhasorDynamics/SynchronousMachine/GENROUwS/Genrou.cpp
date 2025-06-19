@@ -25,8 +25,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-
-
     /*!
      * @brief Constructor for all custom arguments
      *
