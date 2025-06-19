@@ -160,7 +160,7 @@ int main()
     }
     out << "\n";
   };
-  
+
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
@@ -189,6 +189,6 @@ int main()
   fileout.close();
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
-  
+
   return 0;
 }

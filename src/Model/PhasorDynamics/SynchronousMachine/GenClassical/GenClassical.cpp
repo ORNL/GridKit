@@ -107,13 +107,13 @@ namespace GridKit
       ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
       ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + -B_ * vi) * cos(delta) + (B_ * vr + G_ * vi) * sin(delta));
 
-      y_[0] = delta;
-      y_[1] = omega;
-      y_[2] = Te;
-      y_[3] = ir;
-      y_[4] = ii;
+      y_[0]      = delta;
+      y_[1]      = omega;
+      y_[2]      = Te;
+      y_[3]      = ir;
+      y_[4]      = ii;
       pmech_set_ = Te;
-      ep_set_ = Ep;
+      ep_set_    = Ep;
 
       for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         yp_[i] = 0.0;
@@ -148,7 +148,7 @@ namespace GridKit
       const ScalarT ir    = y_[3];
       const ScalarT ii    = y_[4];
       const ScalarT pmech = pmech_set_; /* Later optionally acquire from governor */
-      const ScalarT ep    = ep_set_; /* Later optionally acquire from exciter */
+      const ScalarT ep    = ep_set_;    /* Later optionally acquire from exciter */
 
       // Set derivative aliases for better reliability
       const ScalarT delta_dot = yp_[0];

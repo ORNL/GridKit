@@ -86,11 +86,11 @@ namespace GridKit
         gen.allocate();
 
         // Set variable values matching the answer key
-        gen.y()[0] = M_PI;  // delta
-        gen.y()[1] = 2.0;   // omega
-        gen.y()[2] = 2.0;   // telec
-        gen.y()[3] = -2.0;  // ir
-        gen.y()[4] = -4.0;  // ii
+        gen.y()[0] = M_PI; // delta
+        gen.y()[1] = 2.0;  // omega
+        gen.y()[2] = 2.0;  // telec
+        gen.y()[3] = -2.0; // ir
+        gen.y()[4] = -4.0; // ii
 
         // Set derivative values matching the answer key
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
@@ -136,12 +136,13 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         // Test answer keys
-        const std::vector<ScalarT> var_answer = {3.0 * M_PI / 4.0,       // delta
-                                                 1.0,              // omega
-                                                 3.5,              // Te
-                                                 1.0,              // Ir
-                                                 2.0,              // Ii
-                                                 };
+        const std::vector<ScalarT> var_answer = {
+            3.0 * M_PI / 4.0, // delta
+            1.0,              // omega
+            3.5,              // Te
+            1.0,              // Ir
+            2.0,              // Ii
+        };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
