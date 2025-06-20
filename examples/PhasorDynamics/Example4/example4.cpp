@@ -90,6 +90,9 @@ int main()
   Genrou<scalar_type, index_type>* gen;
   TurbineGov<scalar_type, index_type>* gov;
 
+  gen = nullptr;
+  gov = nullptr;
+
   // Set generator data
   data.genrou.resize(1);
 
@@ -112,6 +115,8 @@ int main()
   data.genrou[0].Xl      = 0.15;
   data.genrou[0].S10     = 0.;
   data.genrou[0].S12     = 0.;
+
+  data.gov.resize(1);
 
   // Set Gov data
   data.gov[0].R     = 1;
@@ -215,7 +220,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = Example4::reference_solution[i + 1];
 
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])

@@ -1,5 +1,5 @@
 /**
- * @file example1.hpp
+ * @file example4.hpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Reference solution for the 2-bus system obtained with Powerworld
@@ -9,7 +9,7 @@
 
 // Columns:
 // Time, Machine Speed (PowerWorld), Bus 1 Voltage Magnitude (PowerWorld)},
-namespace Example1
+namespace Example4
 {
   std::vector<std::vector<double>> reference_solution =
       {{0, 1, 0}, // It should be {0,1,1.000000477} but something is wrong in GridKit
