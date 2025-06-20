@@ -57,7 +57,6 @@ namespace GridKit
     public:
       Genrou(bus_type* bus, IdxT unit_id);
       Genrou(bus_type* bus, const model_data_type& data);
-      Genrou(bus_type* bus, gov_type* gov, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
              ScalarT   p0,
@@ -99,6 +98,9 @@ namespace GridKit
 
       // Read Access to Machine Relative Speed
       ScalarT speed() override;
+
+      // TODO set governor method
+      void setgovenor(gov_type* gov);
 
     private:
       void setDerivedParams();

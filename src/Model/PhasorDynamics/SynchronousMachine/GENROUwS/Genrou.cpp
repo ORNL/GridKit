@@ -155,39 +155,6 @@ namespace GridKit
     }
 
     /*!
-     * @brief Constructor for the GENROU generator with governor pointer
-     *
-     */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, gov_type* gov, const model_data_type& data)
-      : bus_(bus),
-        busID_(0),
-        gov_(gov),
-        unit_id_(data.unit_id),
-        p0_(data.p0),
-        q0_(data.q0),
-        H_(data.H),
-        D_(data.D),
-        Ra_(data.Ra),
-        Tdop_(data.Tdop),
-        Tdopp_(data.Tdopp),
-        Tqopp_(data.Tqopp),
-        Tqop_(data.Tqop),
-        Xd_(data.Xd),
-        Xdp_(data.Xdp),
-        Xdpp_(data.Xdpp),
-        Xq_(data.Xq),
-        Xqp_(data.Xqp),
-        Xqpp_(data.Xqpp),
-        Xl_(data.Xl),
-        S10_(data.S10),
-        S12_(data.S12)
-    {
-      size_ = 20;
-      setDerivedParams();
-    }
-
-    /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
@@ -479,6 +446,12 @@ namespace GridKit
       return y_[1];
     }
 
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::setgovenor(gov_type* gov)
+    {
+      gov_ = gov;
+    }
+    
     // Available template instantiations
     template class Genrou<double, long int>;
     template class Genrou<double, size_t>;
