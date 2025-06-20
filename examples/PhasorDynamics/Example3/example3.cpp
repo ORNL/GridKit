@@ -31,25 +31,40 @@ using index_type  = size_t;
 
 int main()
 {
-  using namespace GridKit::PhasorDynamics;
-  using namespace AnalysisManager::Sundials;
-
   /* Create model parts */
-  SystemModel<double, size_t> sys;
-  Bus<double, size_t>         bus1(0.9949877346411762, 0.09999703952427966);
-  BusInfinite<double, size_t> bus2(1.0, 0.0);
-  Branch<double, size_t>      branch(&bus1, &bus2, 0, 0.1, 0, 0);
-  BusFault<double, size_t>    fault(&bus1, 0, 1e-3, 0);
+  BusInfinite<scalar_type, index_type> bus1(1, 0);
 
-  // Decleration
-  Genrou<double, size_t>*     gen;
-  TurbineGov<double, size_t>* gov;
+  Bus<scalar_type, index_type> bus2(0.999733719609643, 0.0230757421433613);
+  Bus<scalar_type, index_type> bus3(0.999047460127767, 0.0436368240395443);
+  Bus<scalar_type, index_type> bus4(0.998097277498088, 0.061658775943942);
+  Bus<scalar_type, index_type> bus5(0.997021447662007, 0.0771246581966912);
+  Bus<scalar_type, index_type> bus6(0.946436885707683, 0.322888837484268);
+  Bus<scalar_type, index_type> bus7(0.943037519659334, 0.332686393642377);
+  Bus<scalar_type, index_type> bus8(0.940418229359708, 0.340019961013984);
+  Bus<scalar_type, index_type> bus9(0.938638861502395, 0.344901620288291);
+  Bus<scalar_type, index_type> bus10(0.937739191669114, 0.347340277548916);
 
-  // Instatiation
-  gen = new Genrou<double, size_t>(&bus1, 1, gov);
+  Branch<scalar_type, index_type> branch12(&bus1, &bus2, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch23(&bus2, &bus3, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch34(&bus3, &bus4, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch45(&bus4, &bus5, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch56(&bus5, &bus6, 0.001, 0.1, 0, 0);
+  Branch<scalar_type, index_type> branch67(&bus6, &bus7, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch78(&bus7, &bus8, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
+  Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
 
-  // Governor of Generator
-  TurbineGov<double, size_t> turb(&gen);
+  Genrou<scalar_type, index_type> gen2(&bus2, 1, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen3(&bus3, 1, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen4(&bus4, 1, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen5(&bus5, 1, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen6(&bus6, 1, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen7(&bus7, 1, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen8(&bus8, 1, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen9(&bus9, 1, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  Genrou<scalar_type, index_type> gen10(&bus10, 1, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+
+  BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
 
   /* Connect everything together */
   SystemModel<scalar_type, index_type> sys;
