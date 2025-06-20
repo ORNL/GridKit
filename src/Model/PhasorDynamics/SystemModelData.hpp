@@ -38,7 +38,7 @@ namespace GridKit
       std::vector<BranchDataT>      branch;
       std::vector<BusFaultDataT>    bus_fault;
       std::vector<GenrouDataT>      genrou;
-      std::vector < TurbineGovDataT gov;
+      std::vector<TurbineGovDataT>  gov;
       std::vector<LoadDataT>        load;
     };
   } // namespace PhasorDynamics

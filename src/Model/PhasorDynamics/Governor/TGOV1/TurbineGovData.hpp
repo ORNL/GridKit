@@ -1,5 +1,5 @@
 /**
- * @file GenrouData.hpp
+ * @file TurbineGovData.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @brief Modeling data for TGOV1 (transmission lines)
  *
