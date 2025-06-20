@@ -9,6 +9,7 @@
 #include <bitset>
 #include <string>
 #include <type_traits>
+#include <optional>
 
 namespace GridKit
 {
@@ -46,10 +47,10 @@ namespace GridKit
       IdxT bus2_id{0};
 
       /// Override for the system-wide base frequency
-      RealT freq_base;
+      std::optional<RealT> freq_base;
 
       /// Override for the system-wide power base
-      RealT va_base;
+      std::optional<RealT> va_base;
 
       /// Disambiguation string for this device
       std::string disambiguation_string;

@@ -7,7 +7,9 @@
 #pragma once
 
 #include <bitset>
+#include <optional>
 #include <type_traits>
+#include <string>
 
 namespace GridKit
 {
@@ -33,6 +35,9 @@ namespace GridKit
         Slack,
       };
 
+      /// A name given to this bus
+      std::string name;
+
       /// Initial value for the real bus voltage
       RealT Vr0{0.0};
 
@@ -46,10 +51,10 @@ namespace GridKit
       BusType bus_type{BusType::Default};
 
       /// Override for the system-wide base frequency
-      RealT freq_base;
+      std::optional<RealT> freq_base;
 
       /// Override for the system-wide power base
-      RealT va_base;
+      std::optional<RealT> va_base;
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t

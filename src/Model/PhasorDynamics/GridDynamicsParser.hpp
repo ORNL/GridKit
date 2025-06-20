@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -25,7 +26,7 @@ namespace GridKit
 
   /// RapidJSON handler for the Grid Dynamics case format
   template <typename RealT = double, typename IdxT = size_t>
-  class GridDynamicsFormatHandler
+  struct GridDynamicsFormatHandler
     : public BaseReaderHandler<UTF8<>,
                                GridDynamicsFormatHandler<RealT,
                                                          IdxT>>
@@ -45,9 +46,143 @@ namespace GridKit
     {
     }
 
+    bool Uint(unsigned u)
+    {
+      switch (state_)
+      {
+      case State::ExpectFormatVersion:
+        // technically we should work with this and change parsing of the
+        // rest of the file based on this versioning but that's not
+        // necessary just yet
+        system_model.format_version = u;
+        state_                      = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectFormatRevision:
+        // likewise here
+        system_model.format_revision = u;
+        state_                       = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectBusNumber:
+        bus_data.bus_id = u;
+        state_          = State::ExpectBusKeyOrObjectClose;
+        break;
+      default:
+        return false;
+      }
+      return true;
+    }
+
+    bool String(const char* str, SizeType length, bool)
+    {
+      auto s = std::string(str, length);
+      switch (state_)
+      {
+      case State::ExpectCaseName:
+        system_model.case_name = s;
+        state_                 = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectCaseDateTime:
+        // this should be validated to be iso 8601 -- see the comment in the
+        // system model data structure
+        system_model.case_date_time = s;
+        state_                      = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectCaseDescription:
+        system_model.case_description = s;
+        state_                        = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectCaseComments:
+        system_model.case_comments = s;
+        state_                     = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectBusClass:
+        if (s == "bus")
+        {
+          bus_data.bus_type = BusDataT::BusType::Default;
+        }
+        else if (s == "infinite_bus")
+        {
+          bus_data.bus_type = BusDataT::BusType::Slack;
+        }
+        else
+        {
+          return false;
+        }
+        state_ = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectBusName:
+        bus_data.name = s;
+        state_        = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectMonitoredBusVariableOrArrayClose:
+        if (s == "Vr")
+        {
+          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vr);
+        }
+        else if (s == "Vi")
+        {
+          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vi);
+        }
+        else if (s == "Vm")
+        {
+          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vm);
+        }
+        else if (s == "Va")
+        {
+          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Va);
+        }
+        else
+        {
+          return false;
+        }
+      default:
+        return false;
+      }
+      return true;
+    }
+
+    bool Double(double d)
+    {
+      switch (state_)
+      {
+      case State::ExpectFreqBase:
+        system_model.freq_base = d;
+        state_                 = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectVaBase:
+        system_model.va_base = d;
+        state_               = State::ExpectHeaderKeyOrObjectClose;
+        break;
+      case State::ExpectBusInitialParameterVr:
+        bus_data.Vr0 = d;
+        state_       = State::ExpectBusInitialParameterKeyOrObjectClose;
+        break;
+      case State::ExpectBusInitialParameterVi:
+        bus_data.Vi0 = d;
+        state_       = State::ExpectBusInitialParameterKeyOrObjectClose;
+        break;
+      case State::ExpectBusVBase:
+        // TODO: set this. there doesn't seem to be a field on the bus data
+        //       structure for this
+        state_ = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectBusFreqBase:
+        bus_data.freq_base = d;
+        state_             = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectBusVaBase:
+        bus_data.va_base = d;
+        state_           = State::ExpectBusKeyOrObjectClose;
+        break;
+      default:
+        return false;
+      }
+      return true;
+    }
+
     bool Key(const char* str, SizeType length, bool)
     {
-      auto key = std::string(str, length);
+      auto key = std::string_view(str, length);
       switch (state_)
       {
       case State::ExpectInnerKey:
@@ -186,6 +321,21 @@ namespace GridKit
           return false;
         }
         break;
+      case State::ExpectBusInitialParameterKeyOrObjectClose:
+        // NOTE: these are hardcoded for now because there are so few of them.
+        if (key == "Vr")
+        {
+          state_ = State::ExpectBusInitialParameterVr;
+        }
+        else if (key == "Vi")
+        {
+          state_ = State::ExpectBusInitialParameterVi;
+        }
+        else
+        {
+          return false;
+        }
+        break;
       default:
         return false;
       }
@@ -206,13 +356,23 @@ namespace GridKit
         state_ = State::ExpectInnerKey;
         break;
       case State::ExpectBusOrArrayClose:
-        state_ = State::ExpectBusKeyOrObjectClose;
-        current_structure_.emplace(BusDataT());
-        input_parameter_and_port_bitfield_.reset();
+        state_   = State::ExpectBusKeyOrObjectClose;
+        bus_data = BusDataT();
         break;
       case State::ExpectDeviceOrArrayClose:
         state_ = State::ExpectDeviceKeyOrObjectClose;
-        input_parameter_and_port_bitfield_.reset();
+        device_input_parameters.clear();
+        device_ports.clear();
+        device_id.clear();
+        device_va_base.reset();
+        device_freq_base.reset();
+        monitored_device_variables.reset();
+        break;
+      case State::ExpectBusInitialParameters:
+        state_ = State::ExpectBusInitialParameterKeyOrObjectClose;
+        break;
+      case State::ExpectBusExtension:
+        state_ = State::IgnoreUntilExtensionObjectClose;
         break;
       default:
         return false;
@@ -227,10 +387,17 @@ namespace GridKit
       switch (state_)
       {
       case State::ExpectBusKeyOrObjectClose:
+        system_model.bus.push_back(bus_data);
         state_ = State::ExpectBusOrArrayClose;
         break;
       case State::ExpectDeviceKeyOrObjectClose:
         state_ = State::ExpectDeviceOrArrayClose;
+        break;
+      case State::ExpectBusInitialParameterKeyOrObjectClose:
+        state_ = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::IgnoreUntilExtensionObjectClose:
+        state_ = State::ExpectBusKeyOrObjectClose;
         break;
       default:
         return false;
@@ -250,10 +417,10 @@ namespace GridKit
         state_ = State::ExpectDeviceOrArrayClose;
         break;
       case State::ExpectBusMonitor:
-        // TODO
+        state_ = State::ExpectMonitoredBusVariableOrArrayClose;
         break;
       case State::ExpectDeviceMonitor:
-        // TODO
+        state_ = State::ExpectMonitoredDeviceVariableOrArrayClose;
         break;
       default:
         return false;
@@ -271,6 +438,12 @@ namespace GridKit
       case State::ExpectDeviceOrArrayClose:
         state_ = State::ExpectInnerKey;
         break;
+      case State::ExpectMonitoredBusVariableOrArrayClose:
+        state_ = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectMonitoredDeviceVariableOrArrayClose:
+        state_ = State::ExpectDeviceKeyOrObjectClose;
+        break;
       default:
         return false;
       }
@@ -284,16 +457,11 @@ namespace GridKit
       return false;
     }
 
-    /// Type-safe union of the values that are constructed
-    std::variant<BusDataT,
-                 BranchDataT,
-                 BusFaultDataT,
-                 GenrouDataT,
-                 LoadDataT>
-        current_structure_;
+    /// Bus data structure used to hold information during construction
+    BusDataT bus_data;
 
-    /// The internal [`SystemModelData`] being constructed
-    SystemModelData system_model_;
+    /// The internal `SystemModelData` being constructed
+    SystemModelData system_model;
 
     /// Enumeration used to indicate the kind of parameter being
     /// set for a bus
@@ -301,10 +469,6 @@ namespace GridKit
     {
       Vr,
       Vi,
-      Va,
-      Vb,
-      Vc,
-      X,
       Maximum,
     };
 
@@ -356,29 +520,48 @@ namespace GridKit
       state0,
     };
 
+    /// Enumeration used to assign indices of variables able to be monitored
+    /// in the bitset
+    enum class MonitorableDeviceVariables : size_t
+    {
+      Ir1,
+      Ii1,
+      Im1,
+      P1,
+      Q1,
+      Ir2,
+      Ii2,
+      Im2,
+      P2,
+      Q2,
+      State,
+      P,
+      Q,
+      Delta,
+      Omega,
+      Maximum,
+    };
+
     /// Storage for input parameters to devices
     std::vector<std::pair<DeviceParameter, RealT>>
-        device_input_parameters_;
+        device_input_parameters;
 
     /// Storage for ports of devices
     std::vector<std::pair<DevicePort, IdxT>>
-        device_ports_;
+        device_ports;
 
     /// Storage for the ID of devices
-    std::string device_id_;
+    std::string device_id;
 
     /// Storage for the system power base override of devices
-    std::optional<RealT> device_va_base_;
+    std::optional<RealT> device_va_base;
 
     /// Storage for the system frequency base override
     /// of devices
-    std::optional<RealT> device_freq_base_;
+    std::optional<RealT> device_freq_base;
 
-    /// Bitfield for ensuring no device ports are repeated nor
-    /// any bus or device input parameters
-    std::bitset<std::max(static_cast<std::underlying_type_t<DevicePort>>(DevicePort::Maximum) + static_cast<std::underlying_type_t<DeviceParameter>>(DeviceParameter::Maximum) - 2,
-                         static_cast<std::underlying_type_t<BusParameter>>(BusParameter::Maximum) - 1)>
-        input_parameter_and_port_bitfield_;
+    /// Bitfield for tracking the device variables being monitored
+    std::bitset<static_cast<std::underlying_type_t<MonitorableDeviceVariables>>(MonitorableDeviceVariables::Maximum) - 1> monitored_device_variables;
 
     /// Enumeration used to track the current state of
     /// the parser
@@ -403,8 +586,12 @@ namespace GridKit
       ExpectBusClass,
       ExpectBusName,
       ExpectBusInitialParameters,
+      ExpectBusInitialParameterKeyOrObjectClose,
+      ExpectBusInitialParameterVr,
+      ExpectBusInitialParameterVi,
       ExpectBusVBase,
       ExpectBusMonitor,
+      ExpectMonitoredBusVariableOrArrayClose,
       ExpectBusFreqBase,
       ExpectBusVaBase,
       ExpectBusExtension,
@@ -416,9 +603,11 @@ namespace GridKit
       ExpectDeviceId,
       ExpectDeviceInitialParameters,
       ExpectDeviceMonitor,
+      ExpectMonitoredDeviceVariableOrArrayClose,
       ExpectDeviceVaBase,
       ExpectDeviceFreqBase,
       ExpectDeviceExtension,
+      IgnoreUntilExtensionObjectClose,
     } state_;
   };
 } // namespace GridKit
