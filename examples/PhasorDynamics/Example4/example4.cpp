@@ -82,8 +82,6 @@ int main()
 
   SystemModel<scalar_type, index_type> sys(data);
 
-
-
   // Set generator data
   data.genrou.resize(1);
 
@@ -118,7 +116,7 @@ int main()
   data.gov[0].T3    = 1;
   data.gov[0].Dt    = 1;
 
-    // Manual add gen & gov components
+  // Manual add gen & gov components
   // since SignalBus not implemented
   // This is a hack
 
@@ -139,7 +137,6 @@ int main()
 
   sys.addComponent(gen);
   sys.addComponent(gov);
-
 
   sys.allocate();
 
