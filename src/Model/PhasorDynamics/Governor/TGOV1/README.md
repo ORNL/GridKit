@@ -15,13 +15,13 @@ Standard model of the stream turbine
 
 Symbol      | Units  | Description                       | Typical Value | Note
 ------------|--------|-----------------------------------|---------------| ------
-$R$         | [p.u.] | Droop Constant                    | 1 |
-$T_1$       | [sec]  | Valve Time Delay                  | 1 |
-$T_2$       | [sec]  | Turbine Numerator Time Constant   | 1 |
-$T_3$       | [sec]  | Turbine Delay                     | 1 |
-$P_{vmax}$  | [p.u.] | Stator leakage reactance          | 1 | 
-$P_{vmin}$  | [p.u.] | Max Valve Position                | 1 | 
-$D_t$       | [p.u.] | Turbine Damping Coefficient       | 1 | 
+$R$         | [p.u.] | Droop Constant                    | 0.05 |
+$T_1$       | [sec]  | Valve Time Delay                  | 0.5  |
+$T_2$       | [sec]  | Turbine Numerator Time Constant   | 2.5  |
+$T_3$       | [sec]  | Turbine Delay                     | 7.5  |
+$P_{vmax}$  | [p.u.] | Stator leakage reactance          | 1    | 
+$P_{vmin}$  | [p.u.] | Max Valve Position                | 0    | 
+$D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    | 
 
 ### Internal Variables
 

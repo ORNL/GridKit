@@ -107,14 +107,14 @@ int main()
 
   data.gov.resize(1);
 
-  // Set Gov data
-  data.gov[0].R     = 1;
-  data.gov[0].Pvmin = 0.2;
+  // Set Gov data (Default PW values)
+  data.gov[0].R     = 0.05;
+  data.gov[0].Pvmin = 0;
   data.gov[0].Pvmax = 1;
-  data.gov[0].T1    = 1;
-  data.gov[0].T2    = 1;
-  data.gov[0].T3    = 1;
-  data.gov[0].Dt    = 1;
+  data.gov[0].T1    = 0.5;
+  data.gov[0].T2    = 2.5;
+  data.gov[0].T3    = 7.5;
+  data.gov[0].Dt    = 0;
 
   // Manual add gen & gov components
   // since SignalBus not implemented
