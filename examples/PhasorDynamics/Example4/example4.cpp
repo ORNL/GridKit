@@ -123,15 +123,15 @@ int main()
   data.gov[0].Dt    = 1;
 
   // Instatiate Genrou & add to system model
-  gen = new Genrou<ScalarT, IdxT>(
-    sys.getBus(gendata.bus_id),  
+  gen = new Genrou<scalar_type, index_type>(
+    sys.getBus(0),  
     gov,
     data.genrou[0]
   );
   sys.addComponent(gen);
 
   // Instatiate TGOV1 & add to system model
-  gov = new TurbineGov<ScalarT, IdxT>(
+  gov = new TurbineGov<scalar_type, index_type>(
     gen,  
     data.gov[0]
   );
