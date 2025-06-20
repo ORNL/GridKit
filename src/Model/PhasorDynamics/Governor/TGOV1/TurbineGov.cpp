@@ -68,15 +68,19 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::initialize()
     {
 
+      // Initial mechanical = initial electric power
+      // TODO obtain from generator value
+      ScalarT p0 = 1;
+
       // Input Variables (Parameter for now)
-      pref_ = 1 / R_;
+      pref_ = R_ * p0;
 
       // Differential Variables
-      y_[0] = (T3_ - T2_) * R_ * pref_; // Ptx (Turbine Power )
-      y_[1] = R_ * pref_;               // Pv  (Valve Position)
+      y_[0] = (T3_ - T2_) * p0; // Ptx (Turbine Power )
+      y_[1] = p0;                // Pv  (Valve Position)
 
       // Algebraic Variables
-      y_[2] = R_ * pref_; // Pmech
+      y_[2] = p0; // Pmech
 
       // D.V. Derivative
       yp_[0] = 0.0; // Ptx
