@@ -102,6 +102,11 @@ int main()
   //
 
   SystemModel<scalar_type, index_type> sys(data);
+
+  // Manual add gov components since SignalBus not implemented
+  
+
+
   sys.allocate();
 
   // Get access to the fault

@@ -17,6 +17,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
+    class TurbineGovData;
+    template <class ScalarT, typename IdxT>
     class MachineBase;
   }
 } // namespace GridKit

@@ -6,18 +6,13 @@
  *
  */
 
-// NOTES
-// Input Variables: Machine Speed Deviation (w)
-// Output Variables: Pmech, Pref
-// (No algebraic variables in reduced form)
-// Differential Variables: Ptx, Pv
-
 #include "TurbineGov.hpp"
 
 #include <cmath>
 #include <iostream>
 
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -30,13 +25,7 @@ namespace GridKit
      * @brief Constructor for Governor
      *
      * @param machine Generator Object
-     * @param R       Droop Constant (p.u.)
-     * @param Pvmin   Minimum Valve Position
-     * @param Pvmax   Maximum Valve Position
-     * @param T1      Param description
-     * @param T2      Param description
-     * @param T3      Param description
-     * @param Dt      Turbine Damping Coefficient (p.u.)
+     * @param data TGOV1 Data Object
      */
     template <class ScalarT, typename IdxT>
     TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine, const model_data_type& data)
