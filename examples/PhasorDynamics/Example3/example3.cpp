@@ -31,6 +31,9 @@ using index_type  = size_t;
 
 int main()
 {
+  using namespace GridKit::PhasorDynamics;
+  using namespace AnalysisManager::Sundials;
+
   /* Create model parts */
   BusInfinite<scalar_type, index_type> bus1(1, 0);
 
@@ -98,7 +101,6 @@ int main()
   sys.addComponent(&gen9);
   sys.addComponent(&gen10);
   sys.addComponent(&fault);
-  sys.addComponent(&gen);
   sys.allocate();
 
   real_type dt = 1.0 / 4.0 / 60.0;
