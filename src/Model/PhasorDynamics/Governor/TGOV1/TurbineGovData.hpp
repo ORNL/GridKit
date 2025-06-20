@@ -1,7 +1,7 @@
 /**
  * @file TurbineGovData.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Modeling data for TGOV1 (transmission lines)
+ * @brief Modeling data for TGOV1 
  *
  */
 #pragma once
@@ -23,6 +23,8 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct TurbineGovData
     {
+      IdxT gov_id{0}; ///< Unique unit ID
+
       RealT R{0.0};     ///< R
       RealT Pvmin{0.0}; ///< Min Valve Power
       RealT Pvmax{0.0}; ///< Max Valve Power

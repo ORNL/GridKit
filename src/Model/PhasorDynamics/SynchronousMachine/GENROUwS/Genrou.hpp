@@ -1,5 +1,5 @@
 /**
- * @file Genrou.cpp
+ * @file Genrou.hpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of a GENROU generator model.

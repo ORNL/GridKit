@@ -24,18 +24,6 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-    /*!
-     * @brief Constructor for all custom arguments
-     *
-     * @param bus
-     * @brief Constructor for a pi-model branch
-     *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
-     */
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
