@@ -34,7 +34,7 @@ namespace GridKit
         Ra_(0.0),
         Xdp_(0.5)
     {
-      size_ = 7;
+      size_ = 5;
       setDerivedParams();
 
       // Temporary, to eliminate compiler warnings
@@ -65,7 +65,7 @@ namespace GridKit
         Ra_(Ra),
         Xdp_(Xdp)
     {
-      size_ = 7;
+      size_ = 5;
       setDerivedParams();
     }
 
@@ -100,20 +100,20 @@ namespace GridKit
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
-      ScalarT Er    = (G_ * ir - B_ * ii) / (G_ * G_ + B_ * B_) + vr;
-      ScalarT Ei    = (B_ * ir + G_ * ii) / (G_ * G_ + B_ * B_) + vi;
+      ScalarT Er    = Ra_ * ir - Xdp_ * ii + vr;
+      ScalarT Ei    = Ra_ * ii + Xdp_ * ir + vi;
       ScalarT delta = atan2(Ei, Er);
       ScalarT omega = 1.0;
       ScalarT Ep    = sqrt(Er * Er + Ei * Ei);
-      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + B_ * vi) * cos(delta) + (-B_ * vr + G_ * vi) * sin(delta));
+      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + -B_ * vi) * cos(delta) + (B_ * vr + G_ * vi) * sin(delta));
 
-      y_[0] = delta;
-      y_[1] = omega;
-      y_[2] = Te;
-      y_[3] = ir;
-      y_[4] = ii;
-      y_[5] = pmech_set_ = Te;
-      y_[6] = ep_set_ = Ep;
+      y_[0]      = delta;
+      y_[1]      = omega;
+      y_[2]      = Te;
+      y_[3]      = ir;
+      y_[4]      = ii;
+      pmech_set_ = Te;
+      ep_set_    = Ep;
 
       for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         yp_[i] = 0.0;
@@ -127,7 +127,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::tagDifferentiable()
     {
-
+      for (IdxT i = 0; i < size_; ++i)
+      {
+        tag_[static_cast<size_t>(i)] = i < 2;
+      }
       return 0;
     }
 
@@ -144,8 +147,8 @@ namespace GridKit
       const ScalarT telec = y_[2];
       const ScalarT ir    = y_[3];
       const ScalarT ii    = y_[4];
-      const ScalarT pmech = y_[5];
-      const ScalarT ep    = y_[6];
+      const ScalarT pmech = pmech_set_; /* Later optionally acquire from governor */
+      const ScalarT ep    = ep_set_;    /* Later optionally acquire from exciter */
 
       // Set derivative aliases for better reliability
       const ScalarT delta_dot = yp_[0];
@@ -156,13 +159,10 @@ namespace GridKit
       f_[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       // GenClassical algebraic equations
-      f_[2] = telec - (1.0 / omega) * (G_ * ep * ep - ep * ((G_ * Vr() + B_ * Vi()) * cos(delta) + (-B_ * Vr() + G_ * Vi()) * sin(delta)));
+      f_[2] = telec - (G_ * ep * ep - ep * ((G_ * Vr() + -B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
 
-      f_[3] = ir + G_ * Vr() + B_ * Vi() - ep * (G_ * cos(delta) + B_ * sin(delta));
-      f_[4] = ii - B_ * Vr() + G_ * Vi() - ep * (-B_ * cos(delta) + G_ * sin(delta));
-
-      f_[5] = pmech - pmech_set_;
-      f_[6] = ep - ep_set_;
+      f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
+      f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));
 
       // GenClassical contribution to bus algebraic equations
       Ir() += ir;
