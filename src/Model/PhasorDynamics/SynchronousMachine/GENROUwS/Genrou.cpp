@@ -40,6 +40,7 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
         busID_(0),
+        gov_(nullptr),
         unit_id_(unit_id),
         p0_(0.),
         q0_(0.),
@@ -95,6 +96,7 @@ namespace GridKit
                                   real_type S12)
       : bus_(bus),
         busID_(0),
+        gov_(nullptr),
         unit_id_(unit_id),
         p0_(p0),
         q0_(q0),
@@ -127,6 +129,40 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
         busID_(0),
+        gov_(nullptr),
+        unit_id_(data.unit_id),
+        p0_(data.p0),
+        q0_(data.q0),
+        H_(data.H),
+        D_(data.D),
+        Ra_(data.Ra),
+        Tdop_(data.Tdop),
+        Tdopp_(data.Tdopp),
+        Tqopp_(data.Tqopp),
+        Tqop_(data.Tqop),
+        Xd_(data.Xd),
+        Xdp_(data.Xdp),
+        Xdpp_(data.Xdpp),
+        Xq_(data.Xq),
+        Xqp_(data.Xqp),
+        Xqpp_(data.Xqpp),
+        Xl_(data.Xl),
+        S10_(data.S10),
+        S12_(data.S12)
+    {
+      size_ = 20;
+      setDerivedParams();
+    }
+
+    /*!
+     * @brief Constructor for the GENROU generator with governor pointer
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, gov_type* gov,const model_data_type& data)
+      : bus_(bus),
+        busID_(0),
+        gov_(gov),
         unit_id_(data.unit_id),
         p0_(data.p0),
         q0_(data.q0),
@@ -282,15 +318,15 @@ namespace GridKit
       ScalarT ini    = y_[19];
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
-      ScalarT pmech  = pmech_set_;
-      // if (gov_)
-      //{
-      //   pmech = gov_->Pmech(); // ISSUE IS HERE?
-      // }
-      // else
-      //{
-      //   pmech = pmech_set_;
-      // }
+      ScalarT pmech;
+      if (gov_)
+      {
+        pmech = gov_->Pmech(); // ISSUE IS HERE?
+      }
+      else
+      {
+        pmech = pmech_set_;
+      }
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];

@@ -21,7 +21,7 @@ namespace GridKit
      * @todo Decide on naming scheme for model parameters.
      */
     template <typename RealT, typename IdxT>
-    struct GenrouData
+    struct TurbineGovData
     {
       RealT R{0.0};     ///< R
       RealT Pvmin{0.0}; ///< Min Valve Power

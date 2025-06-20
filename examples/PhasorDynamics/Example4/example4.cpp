@@ -20,6 +20,8 @@
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGov.hpp>
+#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -67,6 +69,27 @@ int main()
   data.branch[0].G       = 0.0;
   data.branch[0].B       = 0.0;
 
+  // Add faults
+  data.bus_fault.resize(1);
+
+  data.bus_fault[0].R      = 0.0;
+  data.bus_fault[0].X      = 1e-3;
+  data.bus_fault[0].status = false;
+
+  //
+  // Instantiate system model
+  //
+
+  SystemModel<scalar_type, index_type> sys(data);
+
+  // Manual add gen & gov components 
+  // since SignalBus not implemented
+  // This is a hack
+
+  // Create Pointers first
+  Genrou<scalar_type, index_type>* gen;
+  TurbineGov<scalar_type, index_type>* gov;
+
   // Set generator data
   data.genrou.resize(1);
 
@@ -90,21 +113,29 @@ int main()
   data.genrou[0].S10     = 0.;
   data.genrou[0].S12     = 0.;
 
-  // Add faults
-  data.bus_fault.resize(1);
+  // Set Gov data
+  data.gov[0].R     = 1;
+  data.gov[0].Pvmin = 0.2;
+  data.gov[0].Pvmax = 1;
+  data.gov[0].T1    = 1;
+  data.gov[0].T2    = 1;
+  data.gov[0].T3    = 1;
+  data.gov[0].Dt    = 1;
 
-  data.bus_fault[0].R      = 0.0;
-  data.bus_fault[0].X      = 1e-3;
-  data.bus_fault[0].status = false;
+  // Instatiate Genrou & add to system model
+  gen = new Genrou<ScalarT, IdxT>(
+    sys.getBus(gendata.bus_id),  
+    gov,
+    data.genrou[0]
+  );
+  sys.addComponent(gen);
 
-  //
-  // Instantiate system model
-  //
-
-  SystemModel<scalar_type, index_type> sys(data);
-
-  // Manual add gov components since SignalBus not implemented
-  
+  // Instatiate TGOV1 & add to system model
+  gov = new TurbineGov<ScalarT, IdxT>(
+    gen,  
+    data.gov[0]
+  );
+  sys.addComponent(gov);
 
 
   sys.allocate();
@@ -184,7 +215,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example4::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
 
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
