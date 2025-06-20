@@ -106,7 +106,7 @@ namespace GridKit
       tag_[0] = true;  // Pv
       tag_[1] = true;  // Ptx
       tag_[2] = false; // Pmech
-      
+
       return 0;
     }
 

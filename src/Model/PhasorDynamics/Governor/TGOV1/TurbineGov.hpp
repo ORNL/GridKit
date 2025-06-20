@@ -45,8 +45,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using machine_type = MachineBase<ScalarT, IdxT>;
-      using real_type    = typename Component<ScalarT, IdxT>::real_type;
+      using machine_type    = MachineBase<ScalarT, IdxT>;
+      using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using model_data_type = TurbineGovData<real_type, IdxT>;
 
     public:

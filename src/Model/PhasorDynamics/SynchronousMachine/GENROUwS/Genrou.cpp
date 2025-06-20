@@ -151,7 +151,6 @@ namespace GridKit
       setDerivedParams();
     }
 
-
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
@@ -284,14 +283,14 @@ namespace GridKit
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
       ScalarT pmech  = pmech_set_;
-      //if (gov_)
+      // if (gov_)
       //{
-      //  pmech = gov_->Pmech(); // ISSUE IS HERE?
-      //}
-      //else
+      //   pmech = gov_->Pmech(); // ISSUE IS HERE?
+      // }
+      // else
       //{
-      //  pmech = pmech_set_;
-      //}
+      //   pmech = pmech_set_;
+      // }
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];

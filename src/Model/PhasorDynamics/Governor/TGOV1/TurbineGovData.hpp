@@ -26,10 +26,10 @@ namespace GridKit
       RealT R{0.0};     ///< R
       RealT Pvmin{0.0}; ///< Min Valve Power
       RealT Pvmax{0.0}; ///< Max Valve Power
-      RealT T1{0.0};    ///< 
-      RealT T2{0.0};    ///< 
-      RealT T3{0.0};    ///< 
-      RealT Dt{0.0};    ///< 
+      RealT T1{0.0};    ///<
+      RealT T2{0.0};    ///<
+      RealT T3{0.0};    ///<
+      RealT Dt{0.0};    ///<
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

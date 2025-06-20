@@ -3,10 +3,9 @@
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
-#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
-
 
 namespace GridKit
 {
@@ -36,11 +35,11 @@ namespace GridKit
       std::vector<BusDataT> bus;
 
       // Component data
-      std::vector<BranchDataT>    branch;
-      std::vector<BusFaultDataT>  bus_fault;
-      std::vector<GenrouDataT>    genrou;
-      std::vector<TurbineGovDataT gov;
-      std::vector<LoadDataT>      load;
+      std::vector<BranchDataT>      branch;
+      std::vector<BusFaultDataT>    bus_fault;
+      std::vector<GenrouDataT>      genrou;
+      std::vector < TurbineGovDataT gov;
+      std::vector<LoadDataT>        load;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
