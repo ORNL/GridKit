@@ -20,7 +20,7 @@ namespace GridKit
     struct TurbineGovData;
     template <class ScalarT, typename IdxT>
     class MachineBase;
-  }
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit

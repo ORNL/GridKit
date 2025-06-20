@@ -159,7 +159,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, gov_type* gov,const model_data_type& data)
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, gov_type* gov, const model_data_type& data)
       : bus_(bus),
         busID_(0),
         gov_(gov),
