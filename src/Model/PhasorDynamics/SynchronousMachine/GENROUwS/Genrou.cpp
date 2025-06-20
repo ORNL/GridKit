@@ -96,7 +96,6 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
-        gov_(gov),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -148,21 +147,10 @@ namespace GridKit
         S10_(data.S10),
         S12_(data.S12)
     {
-      size_ = 21;
+      size_ = 20;
       setDerivedParams();
     }
 
-    // /**
-    //  * @brief Destroy the Genrou
-    //  *
-    //  * @tparam ScalarT
-    //  * @tparam IdxT
-    //  */
-    // template <class ScalarT, typename IdxT>
-    // Genrou<ScalarT, IdxT>::~Genrou()
-    // {
-    //   // std::cout << "Destroy Genrou..." << std::endl;
-    // }
 
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
@@ -295,15 +283,15 @@ namespace GridKit
       ScalarT ini    = y_[19];
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
-      ScalarT pmech;
-      if (gov_)
-      {
-        pmech = gov_->Pmech(); // ISSUE IS HERE?
-      }
-      else
-      {
-        pmech = pmech_set_;
-      }
+      ScalarT pmech  = pmech_set_;
+      //if (gov_)
+      //{
+      //  pmech = gov_->Pmech(); // ISSUE IS HERE?
+      //}
+      //else
+      //{
+      //  pmech = pmech_set_;
+      //}
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];
