@@ -47,17 +47,10 @@ namespace GridKit
 
       using machine_type = MachineBase<ScalarT, IdxT>;
       using real_type    = typename Component<ScalarT, IdxT>::real_type;
+      using model_data_type = TurbineGovData<real_type, IdxT>;
 
     public:
-      TurbineGov(machine_type* machine);
-      TurbineGov(machine_type* machine,
-                 real_type     R,
-                 real_type     Pvmin,
-                 real_type     Pvmax,
-                 real_type     T1,
-                 real_type     T2,
-                 real_type     T3,
-                 real_type     Dt);
+      TurbineGov(machine_type* machine, const model_data_type& data);
       ~TurbineGov() = default;
 
       int allocate() override;

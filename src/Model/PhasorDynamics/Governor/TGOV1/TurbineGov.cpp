@@ -25,25 +25,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Constructor for Governor with default parameters
-     *
-     * @param machine Associated Generator Object
-     */
-    template <class ScalarT, typename IdxT>
-    TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine)
-      : machine_(machine),
-        R_(3.),
-        Pvmin_(0.),
-        Pvmax_(1.),
-        T1_(7.),
-        T2_(.04),
-        T3_(.05),
-        Dt_(.75)
-    {
-      // 2 Internal Variables
-      size_ = 3;
-    }
 
     /*!
      * @brief Constructor for Governor
@@ -58,26 +39,18 @@ namespace GridKit
      * @param Dt      Turbine Damping Coefficient (p.u.)
      */
     template <class ScalarT, typename IdxT>
-    TurbineGov<ScalarT, IdxT>::TurbineGov(
-        machine_type* machine,
-        real_type     R,
-        real_type     Pvmin,
-        real_type     Pvmax,
-        real_type     T1,
-        real_type     T2,
-        real_type     T3,
-        real_type     Dt)
+    TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine, const model_data_type& data)
       : machine_(machine),
-        R_(3.),
-        Pvmin_(0.),
-        Pvmax_(1.),
-        T1_(7.),
-        T2_(.04),
-        T3_(.05),
-        Dt_(.75)
+        R_(data.R),
+        Pvmin_(data.Pvmin),
+        Pvmax_(data.Pvmax),
+        T1_(data.T1),
+        T2_(data.T2),
+        T3_(data.T3),
+        Dt_(data.Dt)
     {
 
-      // 2 Internal Variables
+      // 3 Internal Variables
       size_ = 3;
     }
 
@@ -133,6 +106,7 @@ namespace GridKit
       tag_[0] = true;  // Pv
       tag_[1] = true;  // Ptx
       tag_[2] = false; // Pmech
+      
       return 0;
     }
 

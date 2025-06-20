@@ -5,6 +5,8 @@
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
+
 
 namespace GridKit
 {
@@ -13,11 +15,12 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     struct SystemModelData
     {
-      using BranchDataT   = BranchData<RealT, IdxT>;
-      using BusDataT      = BusData<RealT, IdxT>;
-      using BusFaultDataT = BusFaultData<RealT, IdxT>;
-      using GenrouDataT   = GenrouData<RealT, IdxT>;
-      using LoadDataT     = LoadData<RealT, IdxT>;
+      using BranchDataT     = BranchData<RealT, IdxT>;
+      using BusDataT        = BusData<RealT, IdxT>;
+      using BusFaultDataT   = BusFaultData<RealT, IdxT>;
+      using GenrouDataT     = GenrouData<RealT, IdxT>;
+      using TurbineGovDataT = TurbineGovData<RealT, IdxT>;
+      using LoadDataT       = LoadData<RealT, IdxT>;
 
       // Header info
       unsigned short format_version;
@@ -33,10 +36,11 @@ namespace GridKit
       std::vector<BusDataT> bus;
 
       // Component data
-      std::vector<BranchDataT>   branch;
-      std::vector<BusFaultDataT> bus_fault;
-      std::vector<GenrouDataT>   genrou;
-      std::vector<LoadDataT>     load;
+      std::vector<BranchDataT>    branch;
+      std::vector<BusFaultDataT>  bus_fault;
+      std::vector<GenrouDataT>    genrou;
+      std::vector<TurbineGovDataT gov;
+      std::vector<LoadDataT>      load;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
