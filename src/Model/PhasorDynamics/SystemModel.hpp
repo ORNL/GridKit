@@ -736,7 +736,7 @@ namespace GridKit
       bus_type* getBus(IdxT busid)
       {
         // Need to implement mapping of bus IDs to buses in the system model
-        assert((buses_[busid])->BusID() == busid);
+        assert((buses_[busid])->busID() == busid);
         return buses_[busid];
       }
 
