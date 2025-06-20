@@ -82,12 +82,12 @@ int main()
 
   SystemModel<scalar_type, index_type> sys(data);
 
-  // Manual add gen & gov components 
+  // Manual add gen & gov components
   // since SignalBus not implemented
   // This is a hack
 
   // Create Pointers first
-  Genrou<scalar_type, index_type>* gen;
+  Genrou<scalar_type, index_type>*     gen;
   TurbineGov<scalar_type, index_type>* gov;
 
   // Set generator data
@@ -124,19 +124,16 @@ int main()
 
   // Instatiate Genrou & add to system model
   gen = new Genrou<scalar_type, index_type>(
-    sys.getBus(0),  
-    gov,
-    data.genrou[0]
-  );
+      sys.getBus(0),
+      gov,
+      data.genrou[0]);
   sys.addComponent(gen);
 
   // Instatiate TGOV1 & add to system model
   gov = new TurbineGov<scalar_type, index_type>(
-    gen,  
-    data.gov[0]
-  );
+      gen,
+      data.gov[0]);
   sys.addComponent(gov);
-
 
   sys.allocate();
 
