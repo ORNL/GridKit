@@ -131,7 +131,7 @@ int main()
 
   // Hack, need to gaurentee that gen is 
   // initialized first so Gov can access torque
-  gen->initialize();
+  // gen->initialize();
 
   // Instatiate TGOV1 & add to system model
   gov = new TurbineGov<scalar_type, index_type>(
@@ -193,20 +193,22 @@ int main()
   real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
+  real_type tfault = 6.0;
+  real_type fault_duration = 0.1;
   ida.initializeSimulation(0.0, false);
-  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout, output_cb);
+  int nout = static_cast<int>(std::round((tfault - 0.0) / dt));
+  ida.runSimulation(tfault, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
   fault->setStatus(true);
-  ida.initializeSimulation(1.0, false);
-  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
-  ida.runSimulation(1.1, nout, output_cb);
+  ida.initializeSimulation(tfault, false);
+  nout = static_cast<int>(std::round((fault_duration) / dt));
+  ida.runSimulation(tfault + fault_duration, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
-  ida.initializeSimulation(1.1, false);
-  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
+  ida.initializeSimulation(tfault+fault_duration, false);
+  nout = static_cast<int>(std::round((10.0 - tfault+fault_duration) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
 

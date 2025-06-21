@@ -437,7 +437,23 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     ScalarT Genrou<ScalarT, IdxT>::get_torque()
     {
-      return y_[12];
+      ScalarT vr     = Vr();
+      ScalarT vi     = Vi();
+      ScalarT p      = p0_;
+      ScalarT q      = q0_;
+      ScalarT vm2    = vr * vr + vi * vi;
+      ScalarT Er     = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
+      ScalarT Ei     = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
+      ScalarT delta  = atan2(Ei, Er);
+      ScalarT omega  = 0;
+      ScalarT ir     = (p * vr + q * vi) / vm2;
+      ScalarT ii     = (p * vi - q * vr) / vm2;
+      ScalarT id     = ir * sin(delta) - ii * cos(delta);
+      ScalarT iq     = ir * cos(delta) + ii * sin(delta);
+      ScalarT psiqpp = -vd / (1 + omega);
+      ScalarT psidpp = vq / (1 + omega);
+      ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      return Te;
     }
 
     template <class ScalarT, typename IdxT>
