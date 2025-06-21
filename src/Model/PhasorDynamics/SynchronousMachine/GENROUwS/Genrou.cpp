@@ -435,6 +435,12 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    ScalarT Genrou<ScalarT, IdxT>::get_torque()
+    {
+      return y_[12];
+    }
+
+    template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::setgovenor(gov_type* gov)
     {
       gov_ = gov;

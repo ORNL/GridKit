@@ -69,9 +69,9 @@ namespace GridKit
     {
 
 
-      // Initial mechanical = initial electric power
-      // TODO obtain from generator value
-      ScalarT p0 = 1;
+      // Initial mechanical = initial electric torque
+      // There is definitily a better way to do this!
+      ScalarT p0 = machine_->get_torque();
 
       // Input Variables (Parameter for now)
       pref_ = R_ * p0;
@@ -86,6 +86,7 @@ namespace GridKit
       // D.V. Derivative
       yp_[0] = 0.0; // Ptx
       yp_[1] = 0.0; // Pv
+      yp_[2] = 0.0; // Bug?? I shouldn't need to set this
 
       return 0;
     }

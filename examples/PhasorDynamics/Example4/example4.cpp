@@ -129,6 +129,10 @@ int main()
       sys.getBus(0),
       data.genrou[0]);
 
+  // Hack, need to gaurentee that gen is 
+  // initialized first so Gov can access torque
+  gen->initialize();
+
   // Instatiate TGOV1 & add to system model
   gov = new TurbineGov<scalar_type, index_type>(
       gen,
