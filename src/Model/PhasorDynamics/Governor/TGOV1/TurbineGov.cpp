@@ -78,7 +78,7 @@ namespace GridKit
 
       // Differential Variables
       y_[0] = (T3_ - T2_) * p0; // Ptx (Turbine Power )
-      y_[1] = p0;                // Pv  (Valve Position)
+      y_[1] = p0;               // Pv  (Valve Position)
 
       // Algebraic Variables
       y_[2] = p0; // Pmech
@@ -109,7 +109,7 @@ namespace GridKit
     ScalarT TurbineGov<ScalarT, IdxT>::sigmoid(ScalarT x)
     {
       ScalarT a = 4000;
-      return a*x / ( 1 + std::abs(a*x) ) / 2 + 1 / 2;
+      return a * x / ( 1 + std::abs(a * x) ) / 2 + 1 / 2;
     }
 
     template <class ScalarT, typename IdxT>
@@ -156,7 +156,7 @@ namespace GridKit
 
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
-      f_[1] = pv_dot - valv_ind * f / T1_;
+      f_[1] = - pv_dot + valv_ind * f / T1_;
 
       // Internal Algebraic Equations
       f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
