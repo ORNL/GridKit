@@ -110,7 +110,7 @@ int main()
   // Set Gov data (Default PW values)
   data.gov[0].R     = 0.05;
   data.gov[0].Pvmin = 0;
-  data.gov[0].Pvmax = 1;
+  data.gov[0].Pvmax = 1.2;
   data.gov[0].T1    = 0.5;
   data.gov[0].T2    = 2.5;
   data.gov[0].T3    = 7.5;
@@ -193,22 +193,20 @@ int main()
   real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
-  real_type tfault = 1.0;
-  real_type fault_duration = 0.1;
   ida.initializeSimulation(0.0, false);
-  int nout = static_cast<int>(std::round((tfault - 0.0) / dt));
-  ida.runSimulation(tfault, nout, output_cb);
+  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
+  ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
   fault->setStatus(true);
-  ida.initializeSimulation(tfault, false);
-  nout = static_cast<int>(std::round((fault_duration) / dt));
-  ida.runSimulation(tfault + fault_duration, nout, output_cb);
+  ida.initializeSimulation(1.0, false);
+  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
+  ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
-  ida.initializeSimulation(tfault+fault_duration, false);
-  nout = static_cast<int>(std::round((10.0 - tfault + fault_duration) / dt));
+  ida.initializeSimulation(1.1, false);
+  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
