@@ -107,7 +107,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     ScalarT TurbineGov<ScalarT, IdxT>::sigmoid(ScalarT x)
     {
-      ScalarT a = 200;
+      ScalarT a = 4000;
       return a*x / ( 1 + std::abs(a*x) ) / 2 + 1 / 2;
     }
 
@@ -150,12 +150,12 @@ namespace GridKit
       ScalarT ptx_dot = yp_[1];
 
       // The 'pre-limit' derivative of Pv
-      ScalarT f = ( -pv + (pref_ - omega) / R_) / T1_;
+      ScalarT f = ( -pv + (pref_ - omega) / R_);
       ScalarT valv_ind = this->indicator(pv, f);
 
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
-      f_[1] = pv_dot - valv_ind * f;
+      f_[1] = pv_dot - valv_ind * f / T1_;
 
       // Internal Algebraic Equations
       f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
