@@ -103,6 +103,31 @@ namespace GridKit
       return 0;
     }
 
+    template <class ScalarT, typename IdxT>
+    ScalarT TurbineGov<ScalarT, IdxT>::sigmoid(ScalarT x)
+    {
+      ScalarT a = 200;
+      return a*x / ( 1 + std::abs(a*x) ) / 2 + 1 / 2
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT TurbineGov<ScalarT, IdxT>::indicator_low(ScalarT x, ScalarT f)
+    {
+      return (this->sigmoid(Pvmin_ - x)) * (this->sigmoid(-f));
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT TurbineGov<ScalarT, IdxT>::indicator_high(ScalarT x, ScalarT f)
+    {
+      return (this->sigmoid(x - Pvmax_)) * (this->sigmoid(f));
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT TurbineGov<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
+    {
+      return ( 1 - this->indicator_low(x, f) ) * ( 1 - this->indicator_high(x, f) );
+    }
+
     /**
      * @brief Residuals of system equations
      *
@@ -123,9 +148,14 @@ namespace GridKit
       ScalarT pv_dot  = yp_[0];
       ScalarT ptx_dot = yp_[1];
 
+      // The 'pre-limit' derivative of Pv
+      ScalarT f = (pv - (pref_ - omega) / R_) / T1_;
+      ScalarT valv_ind = this->indicator(pv, f);
+
+
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
-      f_[1] = pv_dot + (pv - (pref_ - omega) / R_) / T3_;
+      f_[1] = pv_dot + valv_ind * f;
 
       // Internal Algebraic Equations
       f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);

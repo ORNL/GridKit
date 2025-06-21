@@ -74,6 +74,14 @@ namespace GridKit
       // Read Access to Pmech
       ScalarT Pmech() override;
 
+      // Activation function (sigmoid approximation)
+      ScalarT sigmoid(ScalarT x);
+
+      // Indicator of Valve limit states
+      ScalarT indicator_low(ScalarT x, ScalarT f);
+      ScalarT indicator_high(ScalarT x, ScalarT f);
+      ScalarT indicator(ScalarT x, ScalarT f);
+
     private:
       // Associated Machine Model
       machine_type* machine_;
