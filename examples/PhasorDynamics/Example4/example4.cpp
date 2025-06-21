@@ -193,7 +193,7 @@ int main()
   real_type start = static_cast<real_type>(clock());
 
   // Run for 1s
-  real_type tfault = 6.0;
+  real_type tfault = 1.0;
   real_type fault_duration = 0.1;
   ida.initializeSimulation(0.0, false);
   int nout = static_cast<int>(std::round((tfault - 0.0) / dt));
@@ -208,7 +208,7 @@ int main()
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
   ida.initializeSimulation(tfault+fault_duration, false);
-  nout = static_cast<int>(std::round((10.0 - tfault+fault_duration) / dt));
+  nout = static_cast<int>(std::round((10.0 - tfault + fault_duration) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
