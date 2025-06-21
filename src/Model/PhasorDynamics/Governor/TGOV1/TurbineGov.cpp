@@ -68,6 +68,7 @@ namespace GridKit
     int TurbineGov<ScalarT, IdxT>::initialize()
     {
 
+
       // Initial mechanical = initial electric power
       // TODO obtain from generator value
       ScalarT p0 = 1;
@@ -107,7 +108,7 @@ namespace GridKit
     ScalarT TurbineGov<ScalarT, IdxT>::sigmoid(ScalarT x)
     {
       ScalarT a = 200;
-      return a*x / ( 1 + std::abs(a*x) ) / 2 + 1 / 2
+      return a*x / ( 1 + std::abs(a*x) ) / 2 + 1 / 2;
     }
 
     template <class ScalarT, typename IdxT>
@@ -149,13 +150,12 @@ namespace GridKit
       ScalarT ptx_dot = yp_[1];
 
       // The 'pre-limit' derivative of Pv
-      ScalarT f = (pv - (pref_ - omega) / R_) / T1_;
+      ScalarT f = ( -pv + (pref_ - omega) / R_) / T1_;
       ScalarT valv_ind = this->indicator(pv, f);
-
 
       // Internal Differential Equations
       f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
-      f_[1] = pv_dot + valv_ind * f;
+      f_[1] = pv_dot - valv_ind * f;
 
       // Internal Algebraic Equations
       f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
