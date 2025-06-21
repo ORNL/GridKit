@@ -155,11 +155,11 @@ namespace GridKit
       ScalarT valv_ind = this->indicator(pv, f);
 
       // Internal Differential Equations
-      f_[0] = ptx_dot - pv + (ptx + T2_ * pv) / T3_;
+      f_[0] = - ptx_dot + pv - (ptx + T2_ * pv) / T3_;
       f_[1] = - pv_dot + valv_ind * f / T1_;
 
       // Internal Algebraic Equations
-      f_[2] = pmech - (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+      f_[2] = - pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
       return 0;
     }
