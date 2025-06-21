@@ -15,6 +15,7 @@ namespace GridKit
     {
     public:
       virtual ScalarT speed() = 0;
+      virtual ScalarT get_torque() = 0;
     };
 
   } // namespace PhasorDynamics

@@ -98,7 +98,7 @@ namespace GridKit
 
       // Read Access to Machine Relative Speed
       ScalarT speed() override;
-      ScalarT get_torque();
+      ScalarT get_torque() override;
 
       // TODO set governor method
       void setgovenor(gov_type* gov);
