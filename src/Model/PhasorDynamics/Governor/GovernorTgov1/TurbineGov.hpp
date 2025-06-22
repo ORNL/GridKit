@@ -53,6 +53,7 @@ namespace GridKit
 
     public:
       TurbineGov(machine_type* machine, const model_data_type& data);
+      TurbineGov(machine_type* machine);
       ~TurbineGov() = default;
 
       int allocate() override;

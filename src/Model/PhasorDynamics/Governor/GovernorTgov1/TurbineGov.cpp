@@ -43,6 +43,22 @@ namespace GridKit
       size_ = 3;
     }
 
+    template <class ScalarT, typename IdxT>
+    TurbineGov<ScalarT, IdxT>::TurbineGov(machine_type* machine)
+      : machine_(machine),
+        R_(0.05),
+        Pvmin_(0),
+        Pvmax_(1),
+        T1_(0.5),
+        T2_(2.5),
+        T3_(7.5),
+        Dt_(0)
+    {
+
+      // 3 Internal Variables
+      size_ = 3;
+    }
+
     /*!
      * @brief Allocate memory for model
      *
