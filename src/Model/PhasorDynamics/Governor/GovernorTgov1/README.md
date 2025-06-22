@@ -23,6 +23,8 @@ $P_{vmax}$  | [p.u.] | Stator leakage reactance          | 1    |
 $P_{vmin}$  | [p.u.] | Max Valve Position                | 0    | 
 $D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    | 
 
+## Model Variables 
+
 ### Internal Variables
 
 #### Differential
@@ -51,15 +53,6 @@ $P_{ref}$       | [p.u.] | Reference Power                   |
 
 ## Model Equations
 
-
-### Algebraic Equations
-The algebraic equation dictating the mechnical power output.
-```math
-\begin{aligned}
-   P_{mech} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \Delta\omega \\
-\end{aligned}
-```
-
 ### Differential Equations
 The TGOV1 differential equations, as derived from the model diagram.
 ```math
@@ -75,6 +68,15 @@ The TGOV1 differential equations, as derived from the model diagram.
    \end{cases}
 \end{aligned}
 ```
+
+### Algebraic Equations
+The algebraic equation dictating the mechnical power output.
+```math
+\begin{aligned}
+   P_{mech} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \Delta\omega \\
+\end{aligned}
+```
+
 The domain of the state variable $P_{v}\in(P_{vmin}, P_{vmax})$ is enforced
 through the piece-wise definition above. This may need to be expressed as a
 smooth approximation (smooth indicator $\phi$) expressed generically as follows.
@@ -90,7 +92,7 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 ```
 
 ## Initialization
-Assuming no limits are reached, initialized reveals:
+Assuming no limits are reached, the initial conditions are a function of $P_{mech}$ which is equal to the electric torque.
 ```math
 \begin{aligned}
    P_{tx}  &= (T_3-T_2) P_{mech}\\
