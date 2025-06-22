@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
+#include <Model/PhasorDynamics/Governor/GovernorTgov1/TurbineGovData.hpp>
 
 #define _USE_MATH_DEFINES
 
