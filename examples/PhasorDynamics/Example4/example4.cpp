@@ -117,8 +117,7 @@ int main()
   data.gov[0].Dt    = 0;
 
   // Manual add gen & gov components
-  // since SignalBus not implemented
-  // This is a hack
+  // This is a hack  since SignalBus not implemented
 
   // Create Pointers first
   Genrou<scalar_type, index_type>*     gen;
@@ -129,19 +128,17 @@ int main()
       sys.getBus(0),
       data.genrou[0]);
 
-  // Hack, need to gaurentee that gen is 
-  // initialized first so Gov can access torque
-  // gen->initialize();
-
   // Instatiate TGOV1 & add to system model
   gov = new TurbineGov<scalar_type, index_type>(
       gen,
       data.gov[0]);
   gen->setgovenor(gov);
 
+  // Add Generator and Governor to System
   sys.addComponent(gen);
   sys.addComponent(gov);
 
+  // Allocate Memory
   sys.allocate();
 
   // Get access to the fault

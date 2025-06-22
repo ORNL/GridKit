@@ -83,6 +83,7 @@ namespace GridKit
       ScalarT indicator(ScalarT x, ScalarT f);
 
     private:
+    
       // Associated Machine Model
       machine_type* machine_;
 

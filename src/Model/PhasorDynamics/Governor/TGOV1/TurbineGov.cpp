@@ -78,12 +78,12 @@ namespace GridKit
       // Internal States
       y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
       y_[1] = p0;               // y1 - Pv  (Valve Position)
-      y_[2] = p0;               // y2 - Pmech
+      y_[2] = p0;               // y2 - Pm  (Mech Power)
 
       // D.V. Derivative
       yp_[0] = 0.0; // Ptx
       yp_[1] = 0.0; // Pv
-      yp_[2] = 0.0; 
+      yp_[2] = 0.0; // Do I need to set algebraic to zero?
 
       return 0;
     }
@@ -138,15 +138,12 @@ namespace GridKit
       // Input Variables
       ScalarT omega = machine_->speed();
 
-      // Internal Variables
-      // y0 - Ptx
-      // y1 - Pv
-      // y2 - Pmech
-      ScalarT ptx   = y_[0];
-      ScalarT pv    = y_[1];
-      ScalarT pmech = y_[2];
+      // Read Internal Variables
+      ScalarT ptx   = y_[0]; // y0 - Ptx
+      ScalarT pv    = y_[1]; // y1 - Pv
+      ScalarT pmech = y_[2]; // y2 - Pmech
 
-      // Internal Derivatives
+      // Read Internal Derivatives
       ScalarT ptx_dot  = yp_[0];
       ScalarT pv_dot   = yp_[1];
 
