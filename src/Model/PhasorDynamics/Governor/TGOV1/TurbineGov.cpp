@@ -76,12 +76,13 @@ namespace GridKit
       // Input Variables (Parameter for now)
       pref_ = R_ * p0;
 
-      // Differential Variables
+      // States
+      // y0 - Ptx
+      // y1 - Pv
+      // y2 - Pmech
       y_[0] = (T3_ - T2_) * p0; // Ptx (Turbine Power )
       y_[1] = p0;               // Pv  (Valve Position)
-
-      // Algebraic Variables
-      y_[2] = p0; // Pmech
+      y_[2] = p0;               // Pmech
 
       // D.V. Derivative
       yp_[0] = 0.0; // Ptx
@@ -142,24 +143,27 @@ namespace GridKit
       ScalarT omega = machine_->speed();
 
       // Internal Variables
-      ScalarT pv    = y_[0];
-      ScalarT ptx   = y_[1];
+      // y0 - Ptx
+      // y1 - Pv
+      // y2 - Pmech
+      ScalarT ptx   = y_[0];
+      ScalarT pv    = y_[1];
       ScalarT pmech = y_[2];
 
       // Internal Derivatives
-      ScalarT pv_dot  = yp_[0];
-      ScalarT ptx_dot = yp_[1];
+      ScalarT ptx_dot  = yp_[0];
+      ScalarT pv_dot   = yp_[1];
 
       // The 'pre-limit' derivative of Pv
-      ScalarT f = ( -pv + (pref_ - omega) / R_);
+      ScalarT f        = ( -pv + (pref_ - omega) / R_) / T1_;
       ScalarT valv_ind = this->indicator(pv, f);
 
       // Internal Differential Equations
       f_[0] = - ptx_dot + pv - (ptx + T2_ * pv) / T3_;
-      f_[1] = - pv_dot + valv_ind * f / T1_;
+      f_[1] = - pv_dot  + valv_ind * f;
 
       // Internal Algebraic Equations
-      f_[2] = - pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+      f_[2] = - pmech   + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
       return 0;
     }
@@ -242,8 +246,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     ScalarT& TurbineGov<ScalarT, IdxT>::Pmech()
     {
-      // NOTE setting this to 1 gives good answer,
-      // so it must be configured wrong
       return y_[2];
     }
 
