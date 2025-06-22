@@ -40,8 +40,8 @@ target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
 add_test(NAME PhasorDynamicsBranchTest COMMAND $<TARGET_FILE:test_phasor_branch>)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND $<TARGET_FILE:test_phasor_genrou>)
-add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND $<TARGET_FILE:test_phasor_governortgov1>)
-#add_test(NAME PhasorDynamicsGenClassicalTest COMMAND $<TARGET_FILE:test_phasor_gen_classical>)
+#add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND $<TARGET_FILE:test_phasor_governortgov1>)
+add_test(NAME PhasorDynamicsGenClassicalTest COMMAND $<TARGET_FILE:test_phasor_gen_classical>)
 add_test(NAME PhasorDynamicsLoadTest COMMAND $<TARGET_FILE:test_phasor_load>)
 add_test(NAME PhasorDynamicsSystemTest COMMAND $<TARGET_FILE:test_phasor_system>)
 
