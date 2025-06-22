@@ -30,7 +30,7 @@ namespace GridKit
 
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
-        PhasorDynamics::MachineBase<ScalarT, IdxT>* machine =
+        PhasorDynamics::Genrou<ScalarT, IdxT>* machine =
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
 
         PhasorDynamics::Component<ScalarT, IdxT>* gov =
