@@ -71,23 +71,19 @@ namespace GridKit
 
       // Initial mechanical = initial electric torque
       ScalarT p0 = machine_->get_torque();
-      //ScalarT p0 = 1;// still causes issues
 
       // Input Variables (Parameter for now)
       pref_ = R_ * p0;
 
-      // States
-      // y0 - Ptx
-      // y1 - Pv
-      // y2 - Pmech
-      y_[0] = (T3_ - T2_) * p0; // Ptx (Turbine Power )
-      y_[1] = p0;               // Pv  (Valve Position)
-      y_[2] = p0;               // Pmech
+      // Internal States
+      y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
+      y_[1] = p0;               // y1 - Pv  (Valve Position)
+      y_[2] = p0;               // y2 - Pmech
 
       // D.V. Derivative
       yp_[0] = 0.0; // Ptx
       yp_[1] = 0.0; // Pv
-      yp_[2] = 0.0; // Bug?? I shouldn't need to set this
+      yp_[2] = 0.0; 
 
       return 0;
     }
