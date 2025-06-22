@@ -3,7 +3,7 @@
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
+#include <Model/PhasorDynamics/Governor/GovernorTgov1/TurbineGovData.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
