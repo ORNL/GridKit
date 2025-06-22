@@ -20,8 +20,8 @@
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGov.hpp>
-#include <Model/PhasorDynamics/Governor/TGOV1/TurbineGovData.hpp>
+#include <Model/PhasorDynamics/Governor/GovernorTgov1/TurbineGov.hpp>
+#include <Model/PhasorDynamics/Governor/GovernorTgov1/TurbineGovData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -128,7 +128,7 @@ int main()
       sys.getBus(0),
       data.genrou[0]);
 
-  // Instatiate TGOV1 & add to system model
+  // Instatiate GovernorTgov1 & add to system model
   gov = new TurbineGov<scalar_type, index_type>(
       gen,
       data.gov[0]);

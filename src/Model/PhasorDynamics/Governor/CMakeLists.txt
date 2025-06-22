@@ -5,4 +5,4 @@
 #    - Adam Birchfield <abirchfield@tamu.edu>
 # ]]
 
-add_subdirectory(TGOV1)
+add_subdirectory(GovernorTgov1)
