@@ -70,8 +70,8 @@ namespace GridKit
 
 
       // Initial mechanical = initial electric torque
-      // There is definitily a better way to do this!
       ScalarT p0 = machine_->get_torque();
+      //ScalarT p0 = 1;// still causes issues
 
       // Input Variables (Parameter for now)
       pref_ = R_ * p0;
@@ -240,8 +240,10 @@ namespace GridKit
      * @return ScalarT - Mechanical output power value.
      */
     template <class ScalarT, typename IdxT>
-    ScalarT TurbineGov<ScalarT, IdxT>::Pmech()
+    ScalarT& TurbineGov<ScalarT, IdxT>::Pmech()
     {
+      // NOTE setting this to 1 gives good answer,
+      // so it must be configured wrong
       return y_[2];
     }
 

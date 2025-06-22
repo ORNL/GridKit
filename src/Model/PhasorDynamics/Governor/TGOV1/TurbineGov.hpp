@@ -72,7 +72,7 @@ namespace GridKit
       }
 
       // Read Access to Pmech
-      ScalarT Pmech() override;
+      ScalarT& Pmech() override;
 
       // Activation function (sigmoid approximation)
       ScalarT sigmoid(ScalarT x);

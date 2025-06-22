@@ -14,7 +14,7 @@ namespace GridKit
     class GovernorBase
     {
     public:
-      virtual ScalarT Pmech() = 0;
+      virtual ScalarT& Pmech() = 0;
     };
 
   } // namespace PhasorDynamics
