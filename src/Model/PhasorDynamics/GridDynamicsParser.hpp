@@ -2,12 +2,13 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cstdint>
 #include <iostream>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -42,29 +43,85 @@ namespace GridKit
     /// Default constructor for this handler. Initializes the
     /// class such that it expects the outer object of the
     /// case format
-    GridDynamicsFormatHandler() : state_(State::ExpectOuterObject)
+    GridDynamicsFormatHandler() : state(State::ExpectOuterObject)
     {
     }
 
-    bool Uint(unsigned u)
+    bool Bool(bool b)
     {
-      switch (state_)
+      switch (state)
+      {
+      case State::ExpectDeviceInitialParameterMapping:
+        if (staged_device_parameter != DeviceParameter::state0)
+        {
+          return false;
+        }
+        device_input_parameters.insert({staged_device_parameter, b});
+        state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
+        break;
+      }
+      return true;
+    }
+
+    bool Uint64(std::uint64_t i)
+    {
+      switch (state)
+      {
+      case State::ExpectBusNumber:
+        bus_data.bus_id = static_cast<IdxT>(i);
+        state           = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectDevicePortMapping:
+        device_ports.insert({staged_device_port,
+                             static_cast<IdxT>(i)});
+        state = State::ExpectDevicePortKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceInitialParameterMapping:
+        if (staged_device_parameter != DeviceParameter::UnitId)
+        {
+          return false;
+        }
+        device_input_parameters.insert({staged_device_parameter, static_cast<IdxT>(i)});
+        state = State::ExpectDeviceInitialParametrKeyOrObjectClose;
+        break;
+      default:
+        return false;
+      }
+      return true;
+    }
+
+    bool Uint(unsigned i)
+    {
+      switch (state)
       {
       case State::ExpectFormatVersion:
         // technically we should work with this and change parsing of the
         // rest of the file based on this versioning but that's not
         // necessary just yet
-        system_model.format_version = u;
-        state_                      = State::ExpectHeaderKeyOrObjectClose;
+        system_model.format_version = i;
+        state                       = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectFormatRevision:
         // likewise here
-        system_model.format_revision = u;
-        state_                       = State::ExpectHeaderKeyOrObjectClose;
+        system_model.format_revision = i;
+        state                        = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectBusNumber:
-        bus_data.bus_id = u;
-        state_          = State::ExpectBusKeyOrObjectClose;
+        bus_data.bus_id = static_cast<IdxT>(i);
+        state           = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectDevicePortMapping:
+        device_ports.insert({staged_device_port,
+                             static_cast<IdxT>(i)});
+        state = State::ExpectDevicePortKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceInitialParameterMapping:
+        if (staged_device_parameter != DeviceParameter::UnitId)
+        {
+          return false;
+        }
+        device_input_parameters.insert({staged_device_parameter, static_cast<IdxT>(i)});
+        state = State::ExpectDeviceInitialParametrKeyOrObjectClose;
         break;
       default:
         return false;
@@ -75,25 +132,25 @@ namespace GridKit
     bool String(const char* str, SizeType length, bool)
     {
       auto s = std::string(str, length);
-      switch (state_)
+      switch (state)
       {
       case State::ExpectCaseName:
         system_model.case_name = s;
-        state_                 = State::ExpectHeaderKeyOrObjectClose;
+        state                  = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectCaseDateTime:
         // this should be validated to be iso 8601 -- see the comment in the
         // system model data structure
         system_model.case_date_time = s;
-        state_                      = State::ExpectHeaderKeyOrObjectClose;
+        state                       = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectCaseDescription:
         system_model.case_description = s;
-        state_                        = State::ExpectHeaderKeyOrObjectClose;
+        state                         = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectCaseComments:
         system_model.case_comments = s;
-        state_                     = State::ExpectHeaderKeyOrObjectClose;
+        state                      = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectBusClass:
         if (s == "bus")
@@ -108,11 +165,11 @@ namespace GridKit
         {
           return false;
         }
-        state_ = State::ExpectBusKeyOrObjectClose;
+        state = State::ExpectBusKeyOrObjectClose;
         break;
       case State::ExpectBusName:
         bus_data.name = s;
-        state_        = State::ExpectBusKeyOrObjectClose;
+        state         = State::ExpectBusKeyOrObjectClose;
         break;
       case State::ExpectMonitoredBusVariableOrArrayClose:
         if (s == "Vr")
@@ -135,6 +192,81 @@ namespace GridKit
         {
           return false;
         }
+        break;
+      case State::ExpectDeviceClass:
+        device_class = s;
+        state        = State::ExpectDeviceKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceId:
+        device_id = s;
+        state     = State::ExpectDeviceKeyOrObjectClose;
+        break;
+      case State::ExpectMonitoredDeviceVariableOrArrayClose:
+        if (s == "ir1")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Ir1);
+        }
+        else if (s == "ii1")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Ii1);
+        }
+        else if (s == "im1")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Im1);
+        }
+        else if (s == "p1")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::P1);
+        }
+        else if (s == "q1")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Q1);
+        }
+        else if (s == "ir2")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Ir2);
+        }
+        else if (s == "ii2")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Ii2);
+        }
+        else if (s == "im2")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Im2);
+        }
+        else if (s == "p2")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::P2);
+        }
+        else if (s == "q2")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Q2);
+        }
+        else if (s == "state")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::State);
+        }
+        else if (s == "p")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::P);
+        }
+        else if (s == "q")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Q);
+        }
+        else if (s == "delta")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Delta);
+        }
+        else if (s == "omega")
+        {
+          monitored_device_variables.set(MonitorableDeviceVariables::Omega);
+        }
+        else
+        {
+          return false;
+        }
+        break;
       default:
         return false;
       }
@@ -143,36 +275,53 @@ namespace GridKit
 
     bool Double(double d)
     {
-      switch (state_)
+      RealT r = static_cast<RealT>(d);
+      switch (state)
       {
       case State::ExpectFreqBase:
-        system_model.freq_base = d;
-        state_                 = State::ExpectHeaderKeyOrObjectClose;
+        system_model.freq_base = r;
+        state                  = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectVaBase:
-        system_model.va_base = d;
-        state_               = State::ExpectHeaderKeyOrObjectClose;
+        system_model.va_base = r;
+        state                = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectBusInitialParameterVr:
-        bus_data.Vr0 = d;
-        state_       = State::ExpectBusInitialParameterKeyOrObjectClose;
+        bus_data.Vr0 = r;
+        state        = State::ExpectBusInitialParameterKeyOrObjectClose;
         break;
       case State::ExpectBusInitialParameterVi:
-        bus_data.Vi0 = d;
-        state_       = State::ExpectBusInitialParameterKeyOrObjectClose;
+        bus_data.Vi0 = r;
+        state        = State::ExpectBusInitialParameterKeyOrObjectClose;
         break;
       case State::ExpectBusVBase:
-        // TODO: set this. there doesn't seem to be a field on the bus data
-        //       structure for this
-        state_ = State::ExpectBusKeyOrObjectClose;
+        bus_data.v_base = r;
+        state           = State::ExpectBusKeyOrObjectClose;
         break;
       case State::ExpectBusFreqBase:
-        bus_data.freq_base = d;
-        state_             = State::ExpectBusKeyOrObjectClose;
+        bus_data.freq_base = r;
+        state              = State::ExpectBusKeyOrObjectClose;
         break;
       case State::ExpectBusVaBase:
-        bus_data.va_base = d;
-        state_           = State::ExpectBusKeyOrObjectClose;
+        bus_data.va_base = r;
+        state            = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceInitialParameterMapping:
+        if (staged_device_parameter == DeviceParameter::UnitId
+            || staged_device_parameter == DeviceParameter::state0)
+        {
+          return false;
+        }
+        device_input_parameters.insert({staged_device_parameter, r});
+        state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceVaBase:
+        device_va_base = r;
+        state          = State::ExpectDeviceKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceFreqBase:
+        device_freq_base = r;
+        state            = State::ExpectDeviceKeyOrObjectClose;
         break;
       default:
         return false;
@@ -183,20 +332,20 @@ namespace GridKit
     bool Key(const char* str, SizeType length, bool)
     {
       auto key = std::string_view(str, length);
-      switch (state_)
+      switch (state)
       {
       case State::ExpectInnerKey:
         if (key == "header")
         {
-          state_ = State::ExpectHeader;
+          state = State::ExpectHeader;
         }
         else if (key == "buses")
         {
-          state_ = State::ExpectBuses;
+          state = State::ExpectBuses;
         }
         else if (key == "devices")
         {
-          state_ = State::ExpectDevices;
+          state = State::ExpectDevices;
         }
         else
         {
@@ -206,35 +355,35 @@ namespace GridKit
       case State::ExpectHeaderKeyOrObjectClose:
         if (key == "format_version")
         {
-          state_ = State::ExpectFormatVersion;
+          state = State::ExpectFormatVersion;
         }
         else if (key == "format_revision")
         {
-          state_ = State::ExpectFormatRevision;
+          state = State::ExpectFormatRevision;
         }
         else if (key == "case_name")
         {
-          state_ = State::ExpectCaseName;
+          state = State::ExpectCaseName;
         }
         else if (key == "case_date_time")
         {
-          state_ = State::ExpectCaseDateTime;
+          state = State::ExpectCaseDateTime;
         }
         else if (key == "case_description")
         {
-          state_ = State::ExpectCaseDescription;
+          state = State::ExpectCaseDescription;
         }
         else if (key == "case_comments")
         {
-          state_ = State::ExpectCaseComments;
+          state = State::ExpectCaseComments;
         }
         else if (key == "freq_base")
         {
-          state_ = State::ExpectFreqBase;
+          state = State::ExpectFreqBase;
         }
         else if (key == "va_base")
         {
-          state_ = State::ExpectVaBase;
+          state = State::ExpectVaBase;
         }
         else
         {
@@ -244,39 +393,39 @@ namespace GridKit
       case State::ExpectBusKeyOrObjectClose:
         if (key == "number")
         {
-          state_ = State::ExpectBusNumber;
+          state = State::ExpectBusNumber;
         }
         else if (key == "class")
         {
-          state_ = State::ExpectBusClass;
+          state = State::ExpectBusClass;
         }
         else if (key == "name")
         {
-          state_ = State::ExpectBusName;
+          state = State::ExpectBusName;
         }
         else if (key == "init")
         {
-          state_ = State::ExpectBusInitialParameters;
+          state = State::ExpectBusInitialParameters;
         }
         else if (key == "v_base")
         {
-          state_ = State::ExpectBusVBase;
+          state = State::ExpectBusVBase;
         }
         else if (key == "mon")
         {
-          state_ = State::ExpectBusMonitor;
+          state = State::ExpectBusMonitor;
         }
         else if (key == "freq_base")
         {
-          state_ = State::ExpectBusFreqBase;
+          state = State::ExpectBusFreqBase;
         }
         else if (key == "va_base")
         {
-          state_ = State::ExpectBusVaBase;
+          state = State::ExpectBusVaBase;
         }
         else if (key == "extension")
         {
-          state_ = State::ExpectBusExtension;
+          state = State::ExpectBusExtension;
         }
         else
         {
@@ -286,35 +435,35 @@ namespace GridKit
       case State::ExpectDeviceKeyOrObjectClose:
         if (key == "class")
         {
-          state_ = State::ExpectDeviceClass;
+          state = State::ExpectDeviceClass;
         }
         else if (key == "ports")
         {
-          state_ = State::ExpectDevicePorts;
+          state = State::ExpectDevicePorts;
         }
         else if (key == "id")
         {
-          state_ = State::ExpectDeviceId;
+          state = State::ExpectDeviceId;
         }
         else if (key == "params")
         {
-          state_ = State::ExpectDeviceInitialParameters;
+          state = State::ExpectDeviceInitialParameters;
         }
         else if (key == "mon")
         {
-          state_ = State::ExpectDeviceMonitor;
+          state = State::ExpectDeviceMonitor;
         }
         else if (key == "va_base")
         {
-          state_ = State::ExpectDeviceVaBase;
+          state = State::ExpectDeviceVaBase;
         }
         else if (key == "freq_base")
         {
-          state_ = State::ExpectDeviceFreqBase;
+          state = State::ExpectDeviceFreqBase;
         }
         else if (key == "extension")
         {
-          state_ = State::ExpectDeviceExtension;
+          state = State::ExpectDeviceExtension;
         }
         else
         {
@@ -325,16 +474,174 @@ namespace GridKit
         // NOTE: these are hardcoded for now because there are so few of them.
         if (key == "Vr")
         {
-          state_ = State::ExpectBusInitialParameterVr;
+          state = State::ExpectBusInitialParameterVr;
         }
         else if (key == "Vi")
         {
-          state_ = State::ExpectBusInitialParameterVi;
+          state = State::ExpectBusInitialParameterVi;
         }
         else
         {
           return false;
         }
+        break;
+      case State::ExpectDevicePortKeyOrObjectClose:
+        if (key == "bus1")
+        {
+          staged_device_port = DevicePort::Bus1;
+        }
+        else if (key == "bus2")
+        {
+          staged_device_port = DevicePort::Bus2;
+        }
+        else if (key == "bus")
+        {
+          staged_device_port = DevicePort::Bus;
+        }
+        else if (key == "exciter_signal")
+        {
+          staged_device_port = DevicePort::ExciterSignal;
+        }
+        else if (key == "governor_signal")
+        {
+          staged_device_port = DevicePort::GovernorSignal;
+        }
+        else if (key == "control_signal")
+        {
+          staged_device_port = DevicePort::ControlSignal;
+        }
+        else
+        {
+          return false;
+        }
+        state = State::ExpectDevicePortMapping;
+        break;
+      case State::ExpectDeviceInitialParameterKeyOrObjectClose:
+        if (key == "R")
+        {
+          staged_device_parameter = DeviceParameter::R;
+        }
+        else if (key == "X")
+        {
+          staged_device_parameter = DeviceParameter::X;
+        }
+        else if (key == "G")
+        {
+          staged_device_parameter = DeviceParameter::G;
+        }
+        else if (key == "B")
+        {
+          staged_device_parameter = DeviceParameter::B;
+        }
+        else if (key == "Pz")
+        {
+          staged_device_parameter = DeviceParameter::Pz;
+        }
+        else if (key == "Qz")
+        {
+          staged_device_parameter = DeviceParameter::Qz;
+        }
+        else if (key == "Pi")
+        {
+          staged_device_parameter = DeviceParameter::Pi;
+        }
+        else if (key == "Qi")
+        {
+          staged_device_parameter = DeviceParameter::Qi;
+        }
+        else if (key == "Pp")
+        {
+          staged_device_parameter = DeviceParameter::Pp;
+        }
+        else if (key == "Qp")
+        {
+          staged_device_parameter = DeviceParameter::Qp;
+        }
+        else if (key == "unit_id")
+        {
+          staged_device_parameter = DeviceParameter::UnitId;
+        }
+        else if (key == "p0")
+        {
+          staged_device_parameter = DeviceParameter::P0;
+        }
+        else if (key == "q0")
+        {
+          staged_device_parameter = DeviceParameter::Q0;
+        }
+        else if (key == "H")
+        {
+          staged_device_parameter = DeviceParameter::H;
+        }
+        else if (key == "D")
+        {
+          staged_device_parameter = DeviceParameter::D;
+        }
+        else if (key == "Ra")
+        {
+          staged_device_parameter = DeviceParameter::Ra;
+        }
+        else if (key == "Tdop")
+        {
+          staged_device_parameter = DeviceParameter::Tdop;
+        }
+        else if (key == "Tdopp")
+        {
+          staged_device_parameter = DeviceParameter::Tdopp;
+        }
+        else if (key == "Tqopp")
+        {
+          staged_device_parameter = DeviceParameter::Tqopp;
+        }
+        else if (key == "Tqop")
+        {
+          staged_device_parameter = DeviceParameter::Tqop;
+        }
+        else if (key == "Xd")
+        {
+          staged_device_parameter = DeviceParameter::Xd;
+        }
+        else if (key == "Xdp")
+        {
+          staged_device_parameter = DeviceParameter::Xdp;
+        }
+        else if (key == "Xdpp")
+        {
+          staged_device_parameter = DeviceParameter::Xdpp;
+        }
+        else if (key == "Xq")
+        {
+          staged_device_parameter = DeviceParameter::Xq;
+        }
+        else if (key == "Xqp")
+        {
+          staged_device_parameter = DeviceParameter::Xqp;
+        }
+        else if (key == "Xqpp")
+        {
+          staged_device_parameter = DeviceParameter::Xqpp;
+        }
+        else if (key == "Xl")
+        {
+          staged_device_parameter = DeviceParameter::Xl;
+        }
+        else if (key == "S10")
+        {
+          staged_device_parameter = DeviceParameter::S10;
+        }
+        else if (key == "S12")
+        {
+          staged_device_parameter = DeviceParameter::S12;
+        }
+        else if (key == "state0")
+        {
+          staged_device_parameter = DeviceParameter::state0;
+        }
+        else
+        {
+          return false;
+        }
+        state = State::ExpectDeviceInitialParameterMapping;
         break;
       default:
         return false;
@@ -344,23 +651,21 @@ namespace GridKit
 
     bool StartObject()
     {
-      // TODO: we should probably erase prior state information here when
-      //       a new object is entered that needs to store certain
-      //       state information
-      switch (state_)
+      switch (state)
       {
       case State::ExpectHeader:
-        state_ = State::ExpectHeaderKeyOrObjectClose;
+        state = State::ExpectHeaderKeyOrObjectClose;
         break;
       case State::ExpectOuterObject:
-        state_ = State::ExpectInnerKey;
+        state = State::ExpectInnerKey;
         break;
       case State::ExpectBusOrArrayClose:
-        state_   = State::ExpectBusKeyOrObjectClose;
+        state    = State::ExpectBusKeyOrObjectClose;
         bus_data = BusDataT();
         break;
       case State::ExpectDeviceOrArrayClose:
-        state_ = State::ExpectDeviceKeyOrObjectClose;
+        state = State::ExpectDeviceKeyOrObjectClose;
+        device_class.clear();
         device_input_parameters.clear();
         device_ports.clear();
         device_id.clear();
@@ -369,10 +674,19 @@ namespace GridKit
         monitored_device_variables.reset();
         break;
       case State::ExpectBusInitialParameters:
-        state_ = State::ExpectBusInitialParameterKeyOrObjectClose;
+        state = State::ExpectBusInitialParameterKeyOrObjectClose;
         break;
       case State::ExpectBusExtension:
-        state_ = State::IgnoreUntilExtensionObjectClose;
+        state = State::IgnoreUntilBusExtensionObjectClose;
+        break;
+      case State::ExpectDevicePorts:
+        state = State::ExpectDevicePortKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceInitialParameters:
+        state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceExtension:
+        state = State::IgnoreUntilDeviceExtensionObjectClose;
         break;
       default:
         return false;
@@ -381,23 +695,28 @@ namespace GridKit
       return true;
     }
 
-    bool EndObject(size_t length)
+    bool EndObject(size_t)
     {
-      // TODO: validate the length of the object
-      switch (state_)
+      switch (state)
       {
       case State::ExpectBusKeyOrObjectClose:
         system_model.bus.push_back(bus_data);
-        state_ = State::ExpectBusOrArrayClose;
+        state = State::ExpectBusOrArrayClose;
         break;
       case State::ExpectDeviceKeyOrObjectClose:
-        state_ = State::ExpectDeviceOrArrayClose;
+        state = State::ExpectDeviceOrArrayClose;
         break;
       case State::ExpectBusInitialParameterKeyOrObjectClose:
-        state_ = State::ExpectBusKeyOrObjectClose;
+        state = State::ExpectBusKeyOrObjectClose;
         break;
-      case State::IgnoreUntilExtensionObjectClose:
-        state_ = State::ExpectBusKeyOrObjectClose;
+      case State::IgnoreUntilBusExtensionObjectClose:
+        state = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectDevicePortKeyOrObjectClose:
+        state = State::ExpectDeviceKeyOrObjectClose;
+        break;
+      case State::IgnoreUntilDeviceExtensionObjectClose:
+        state = State::ExpectDeviceKeyOrObjectClose;
         break;
       default:
         return false;
@@ -408,19 +727,19 @@ namespace GridKit
 
     bool StartArray()
     {
-      switch (state_)
+      switch (state)
       {
       case State::ExpectBuses:
-        state_ = State::ExpectBusOrArrayClose;
+        state = State::ExpectBusOrArrayClose;
         break;
       case State::ExpectDevices:
-        state_ = State::ExpectDeviceOrArrayClose;
+        state = State::ExpectDeviceOrArrayClose;
         break;
       case State::ExpectBusMonitor:
-        state_ = State::ExpectMonitoredBusVariableOrArrayClose;
+        state = State::ExpectMonitoredBusVariableOrArrayClose;
         break;
       case State::ExpectDeviceMonitor:
-        state_ = State::ExpectMonitoredDeviceVariableOrArrayClose;
+        state = State::ExpectMonitoredDeviceVariableOrArrayClose;
         break;
       default:
         return false;
@@ -429,20 +748,19 @@ namespace GridKit
       return true;
     }
 
-    bool EndArray(size_t length)
+    bool EndArray(size_t)
     {
-      // TODO: validate the length of the array
-      switch (state_)
+      switch (state)
       {
       case State::ExpectBusOrArrayClose:
       case State::ExpectDeviceOrArrayClose:
-        state_ = State::ExpectInnerKey;
+        state = State::ExpectInnerKey;
         break;
       case State::ExpectMonitoredBusVariableOrArrayClose:
-        state_ = State::ExpectBusKeyOrObjectClose;
+        state = State::ExpectBusKeyOrObjectClose;
         break;
       case State::ExpectMonitoredDeviceVariableOrArrayClose:
-        state_ = State::ExpectDeviceKeyOrObjectClose;
+        state = State::ExpectDeviceKeyOrObjectClose;
         break;
       default:
         return false;
@@ -499,6 +817,7 @@ namespace GridKit
       Qi,
       Pp,
       Qp,
+      UnitId,
       P0,
       Q0,
       H,
@@ -542,13 +861,20 @@ namespace GridKit
       Maximum,
     };
 
-    /// Storage for input parameters to devices
-    std::vector<std::pair<DeviceParameter, RealT>>
-        device_input_parameters;
+    /// Device class
+    std::string device_class;
 
-    /// Storage for ports of devices
-    std::vector<std::pair<DevicePort, IdxT>>
-        device_ports;
+    /// Mapping of device input parameters to values
+    std::map<DeviceParameter, std::variant<RealT, IdxT, bool>> device_input_parameters;
+
+    /// Place for holding the device initial parameter to map to a value
+    DeviceParameter staged_device_parameter;
+
+    /// Mapping of ports to bus indices
+    std::map<DevicePort, IdxT> device_ports;
+
+    /// Place for holding the device port to map to a bus index
+    DevicePort staged_device_port;
 
     /// Storage for the ID of devices
     std::string device_id;
@@ -595,19 +921,24 @@ namespace GridKit
       ExpectBusFreqBase,
       ExpectBusVaBase,
       ExpectBusExtension,
+      IgnoreUntilBusExtensionObjectClose,
       ExpectDevices,
       ExpectDeviceOrArrayClose,
       ExpectDeviceKeyOrObjectClose,
       ExpectDeviceClass,
       ExpectDevicePorts,
+      ExpectDevicePortKeyOrObjectClose,
+      ExpectDevicePortMapping,
       ExpectDeviceId,
       ExpectDeviceInitialParameters,
+      ExpectDeviceInitialParameterKeyOrObjectClose,
+      ExpectDeviceInitialParameterMapping,
       ExpectDeviceMonitor,
       ExpectMonitoredDeviceVariableOrArrayClose,
       ExpectDeviceVaBase,
       ExpectDeviceFreqBase,
       ExpectDeviceExtension,
-      IgnoreUntilExtensionObjectClose,
-    } state_;
+      IgnoreUntilDeviceExtensionObjectClose,
+    } state;
   };
 } // namespace GridKit

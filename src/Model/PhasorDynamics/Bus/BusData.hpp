@@ -50,6 +50,9 @@ namespace GridKit
       /// The kind of bus this data is for
       BusType bus_type{BusType::Default};
 
+      /// Voltage base in volts
+      RealT v_base;
+
       /// Override for the system-wide base frequency
       std::optional<RealT> freq_base;
 
