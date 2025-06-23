@@ -39,7 +39,7 @@ namespace GridKit
       std::string name;
 
       /// Initial value for the real bus voltage
-      RealT Vr0{0.0};
+      RealT Vr0{1.0};
 
       /// Initial value for the imaginary bus voltage
       RealT Vi0{0.0};
@@ -51,7 +51,7 @@ namespace GridKit
       BusType bus_type{BusType::Default};
 
       /// Voltage base in volts
-      RealT v_base;
+      RealT v_base{1.0};
 
       /// Override for the system-wide base frequency
       std::optional<RealT> freq_base;

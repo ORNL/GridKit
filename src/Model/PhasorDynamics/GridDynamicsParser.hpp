@@ -704,6 +704,94 @@ namespace GridKit
         state = State::ExpectBusOrArrayClose;
         break;
       case State::ExpectDeviceKeyOrObjectClose:
+        if (device_class == "branch")
+        {
+          auto branch_data = BranchDataT{};
+
+          if (auto R = device_input_parameters.find(DeviceParameter::R);
+              R != device_input_parameters.end())
+          {
+            branch_data.R = R;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto X = device_input_parameters.find(DeviceParameter::X);
+              X != device_input_parameters.end())
+          {
+            branch_data.X = X;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto G = device_input_parameters.find(DeviceParameter::G);
+              G != device_input_parameters.end())
+          {
+            branch_data.G = G;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto B = device_input_parameters.find(DeviceParameter::B);
+              B != device_input_parameters.end())
+          {
+            branch_data.B = B;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto bus1 = device_ports.find(DevicePort::Bus1);
+              bus1 != device_ports.end())
+          {
+            branch_data.bus1_id = bus1;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto bus2 = device_ports.find(DevicePort::Bus2);
+              bus2 != device_ports.end())
+          {
+            branch_data.bus2_id = bus2;
+          }
+          else
+          {
+            return false;
+          }
+
+          branch_data.freq_base = device_freq_base;
+          branch_data.va_base = device_va_base;
+          branch_data.disambiguation_string = device_id;
+
+          // TODO: add monitoring variable transfer
+
+          system_model.branch.push_back(branch_data);
+        }
+        else if (device_class == "static_load")
+        {
+          // TODO: there doesn't appear to be an implementation
+          //       of this in gridkit
+          return false;
+        }
+        else if (device_class == "GENROU")
+        {
+        }
+        else if (device_class == "bus_fault")
+        {
+        }
+        else
+        {
+          return false;
+        }
         state = State::ExpectDeviceOrArrayClose;
         break;
       case State::ExpectBusInitialParameterKeyOrObjectClose:
