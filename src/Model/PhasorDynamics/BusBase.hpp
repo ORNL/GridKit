@@ -3,8 +3,8 @@
 #include <vector>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/Evaluator.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
 
 namespace GridKit
 {
@@ -19,7 +19,7 @@ namespace GridKit
     {
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
-      using BusTypeT = typename BusData<real_type, IdxT>::BusType;
+      using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
 
       BusBase()
         : size_(0),

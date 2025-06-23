@@ -43,7 +43,8 @@ namespace GridKit
     /// Default constructor for this handler. Initializes the
     /// class such that it expects the outer object of the
     /// case format
-    GridDynamicsFormatHandler() : state(State::ExpectOuterObject)
+    GridDynamicsFormatHandler()
+      : state(State::ExpectOuterObject)
     {
     }
 
@@ -768,8 +769,8 @@ namespace GridKit
             return false;
           }
 
-          branch_data.freq_base = device_freq_base;
-          branch_data.va_base = device_va_base;
+          branch_data.freq_base             = device_freq_base;
+          branch_data.va_base               = device_va_base;
           branch_data.disambiguation_string = device_id;
 
           // TODO: add monitoring variable transfer

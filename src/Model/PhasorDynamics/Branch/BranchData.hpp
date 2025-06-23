@@ -7,9 +7,9 @@
 #pragma once
 
 #include <bitset>
+#include <optional>
 #include <string>
 #include <type_traits>
-#include <optional>
 
 namespace GridKit
 {

@@ -8,8 +8,8 @@
 
 #include <bitset>
 #include <optional>
-#include <type_traits>
 #include <string>
+#include <type_traits>
 
 namespace GridKit
 {
