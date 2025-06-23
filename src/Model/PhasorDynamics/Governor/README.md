@@ -9,4 +9,4 @@ A governor models the control system that regulates the output power of a machin
 
 ## Types
 There are a few standard Governor models
-- Turbine Governor (See [TGOV1](TGOV1/README.md))
+- Turbine Governor (See [TGOV1](GovernorTgov1/README.md))
