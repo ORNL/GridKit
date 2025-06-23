@@ -266,7 +266,8 @@ namespace GridKit
 
     /**
      * @brief The mechanical power output.
-     *
+     * @warning This is not yet accessed by anything. The Genrou class will
+     *          need to access this instead of a constant Pmech.
      * @return ScalarT - Mechanical output power value.
      */
     template <class ScalarT, typename IdxT>
