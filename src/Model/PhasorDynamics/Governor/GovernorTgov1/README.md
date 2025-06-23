@@ -101,6 +101,13 @@ The indicator function $\phi$ can be defined in terms of a scaled activation fun
 \end{aligned}
 ```
 
+The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
+```math
+\begin{aligned}
+   \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}\approx \dfrac{1}{2}\left(\dfrac{\alpha x}{1+|\alpha x|}\right)
+\end{aligned}
+```
+
 ## Initialization
 At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_{m}$ which is equal to the electric torque.
 ```math
