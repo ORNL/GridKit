@@ -21,7 +21,7 @@ target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
-target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
+target_link_libraries(test_phasor_governortgov1 GRIDKIT::phasor_dynamics_genrou
                                          GRIDKIT::phasor_dynamics_governortgov1
                                          GRIDKIT::phasor_dynamics_bus)
                                          
