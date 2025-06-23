@@ -91,6 +91,11 @@ namespace GridKit
       {
       }
 
+      // Temporary access functions for governor
+      // Should be abstracted 
+      ScalarT getSpeed();
+      ScalarT getTorque();
+
     private:
       void setDerivedParams();
 

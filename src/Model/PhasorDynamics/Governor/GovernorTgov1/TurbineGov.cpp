@@ -85,7 +85,7 @@ namespace GridKit
     {
 
       // Initial mechanical = initial electric torque
-      ScalarT p0 = machine_->get_torque();
+      ScalarT p0 = machine_->getTorque();
 
       // Input Variables (Parameter for now)
       pref_ = R_ * p0;
@@ -169,7 +169,7 @@ namespace GridKit
     {
 
       // Input Variables
-      ScalarT omega = machine_->speed();
+      ScalarT omega = machine_->getSpeed();
 
       // Read Internal Variables
       ScalarT ptx   = y_[0]; // y0 - Ptx
