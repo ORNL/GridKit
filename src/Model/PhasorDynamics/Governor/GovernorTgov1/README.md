@@ -88,7 +88,16 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
          -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
       \right] \\
    \dot{P}_{v} &= 
-            \phi(P_v, f(P_v)) \cdot f(P_v)
+            \phi(P_v, f) \cdot f(P_v)
+\end{aligned}
+```
+
+The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $P_v$ limits $(P_{vmin}, P_{vmax})$.
+```math
+\begin{aligned}
+   \phi_L(P_v,f)&= \sigma(P_{vmin}-P_v)\sigma(-f)            \\
+   \phi_U(P_v,f)&= \sigma(P_v-P_{vmax})\sigma(f)             \\
+   \phi(P_v,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
 \end{aligned}
 ```
 
