@@ -7,7 +7,6 @@ Standard model of the stream turbine
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/TGOV1.JPG">
    
-   
   Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
@@ -37,7 +36,7 @@ $P_{v}$   | [p.u.] | Valve Position (State 2 in Fig. 1)|
 #### Algebraic
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$P_{m}$      | [p.u.] | Mechnical Power to Generator      | Read by a Machine Model
+$P_{m}$         | [p.u.] | Mechnical Power to Generator      | Read by a Machine Model
 
 ### External Variables
 
