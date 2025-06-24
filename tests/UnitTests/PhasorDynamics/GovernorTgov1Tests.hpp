@@ -4,7 +4,7 @@
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/Governor/GovernorTgov1/TurbineGov.hpp>
+#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -32,8 +32,8 @@ namespace GridKit
         PhasorDynamics::Genrou<ScalarT, IdxT>* machine =
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
 
-        PhasorDynamics::TurbineGov<ScalarT, IdxT>* gov =
-            new PhasorDynamics::TurbineGov<ScalarT, IdxT>(machine);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>* gov =
+            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(machine);
 
         success *= (gov != nullptr);
 
@@ -84,7 +84,7 @@ namespace GridKit
                                                   0.15,
                                                   0,
                                                   0);
-        PhasorDynamics::TurbineGov<ScalarT, IdxT> gov(&gen);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&gen);
 
         bus.allocate();
         bus.initialize();

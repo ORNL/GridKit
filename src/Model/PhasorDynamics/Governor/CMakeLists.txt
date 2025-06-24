@@ -4,4 +4,4 @@
 #    - Luke Lowery <lukel@tamu.edu>
 # ]]
 
-add_subdirectory(GovernorTgov1)
+add_subdirectory(Tgov1)
