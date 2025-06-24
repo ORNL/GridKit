@@ -161,23 +161,21 @@ Lastly for the algebraic (continuous) piecewise functions, this implementation i
 ```
 
 ## Initialization
-At steady state we assume that $V_R$ is at or within its limits, and that the exciter is not saturated.
+At steady state we assume that $V_R$ is at or within its limits, 
+and that the exciter is not saturated. The field $E_{fd}$ can be 
+obtained through the steady-state conditions of the machine. 
+We also assume for the moment that the stabilizer and over/under 
+excitation limiters are non-existant.
 ```math
 \begin{aligned}
-
-   V_{ts}         &= E_C \\
-   0              &= V_R-K_E E_{fd}' \\
-    V_{fx}        &= 0 \\\\
-
-    
+    E_{fd}' &= E_{fd}  \\
+    V_{fx}  &= 0 \\
     V_{E}   &= 0 \\
     k_{sat} &= 0 \\
-    E_{fd} &= E_{fd}'  \\
-    V_{f} &= \dfrac{K_F}{T_F} E_{fd}' \\
-       V_{tr} &= V_{ref} +V_{UEL} + V_{OEL} + V_S - V_f- V_{ts}\\\\
-
-    
-   V_{R}          &= K_{a}V_{tr} \\
-    
+    V_{f}   &= \dfrac{K_F}{T_F} E_{fd} \\
+    V_R     &= K_E E_{fd} \\
+    V_{tr}  &= \dfrac{1}{K_{a}}V_{R} \\
+    E_C     &= V_{ref}-V_f - V_{tr}  \\
+    V_{ts}  &= E_C \\
 \end{aligned}
 ```
