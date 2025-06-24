@@ -2,8 +2,10 @@
 
 int main()
 {
-  GridKit::Testing::TestingResults  result;
-  GridKit::Testing::CaseFormatTests test;
+  GridKit::Testing::TestingResults                  result;
+  GridKit::Testing::CaseFormatTests<double, size_t> test;
+
+  result += test.simpleParse();
 
   return result.summary();
 }

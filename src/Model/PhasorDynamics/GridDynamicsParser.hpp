@@ -60,6 +60,8 @@ namespace GridKit
         device_input_parameters.insert({staged_device_parameter, b});
         state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
         break;
+      default:
+        return false;
       }
       return true;
     }
@@ -83,7 +85,7 @@ namespace GridKit
           return false;
         }
         device_input_parameters.insert({staged_device_parameter, static_cast<IdxT>(i)});
-        state = State::ExpectDeviceInitialParametrKeyOrObjectClose;
+        state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
         break;
       default:
         return false;
@@ -122,7 +124,7 @@ namespace GridKit
           return false;
         }
         device_input_parameters.insert({staged_device_parameter, static_cast<IdxT>(i)});
-        state = State::ExpectDeviceInitialParametrKeyOrObjectClose;
+        state = State::ExpectDeviceInitialParameterKeyOrObjectClose;
         break;
       default:
         return false;
@@ -175,19 +177,19 @@ namespace GridKit
       case State::ExpectMonitoredBusVariableOrArrayClose:
         if (s == "Vr")
         {
-          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vr);
+          bus_data.monitored_variables.set(static_cast<size_t>(BusDataT::MonitorableVariables::Vr));
         }
         else if (s == "Vi")
         {
-          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vi);
+          bus_data.monitored_variables.set(static_cast<size_t>(BusDataT::MonitorableVariables::Vi));
         }
         else if (s == "Vm")
         {
-          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Vm);
+          bus_data.monitored_variables.set(static_cast<size_t>(BusDataT::MonitorableVariables::Vm));
         }
         else if (s == "Va")
         {
-          bus_data.monitored_variables.set(BusDataT::MonitorableVariables::Va);
+          bus_data.monitored_variables.set(static_cast<size_t>(BusDataT::MonitorableVariables::Va));
         }
         else
         {
@@ -205,63 +207,71 @@ namespace GridKit
       case State::ExpectMonitoredDeviceVariableOrArrayClose:
         if (s == "ir1")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Ir1);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ir1));
         }
         else if (s == "ii1")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Ii1);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ii1));
         }
         else if (s == "im1")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Im1);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Im1));
         }
         else if (s == "p1")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::P1);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::P1));
         }
         else if (s == "q1")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Q1);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Q1));
         }
         else if (s == "ir2")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Ir2);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ir2));
         }
         else if (s == "ii2")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Ii2);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ii2));
         }
         else if (s == "im2")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Im2);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Im2));
         }
         else if (s == "p2")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::P2);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::P2));
         }
         else if (s == "q2")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Q2);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Q2));
         }
         else if (s == "state")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::State);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::State));
         }
         else if (s == "p")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::P);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::P));
         }
         else if (s == "q")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Q);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Q));
+        }
+        else if (s == "ir")
+        {
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ir));
+        }
+        else if (s == "ii")
+        {
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Ii));
         }
         else if (s == "delta")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Delta);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Delta));
         }
         else if (s == "omega")
         {
-          monitored_device_variables.set(MonitorableDeviceVariables::Omega);
+          monitored_device_variables.set(static_cast<size_t>(MonitorableDeviceVariables::Omega));
         }
         else
         {
@@ -712,7 +722,7 @@ namespace GridKit
           if (auto R = device_input_parameters.find(DeviceParameter::R);
               R != device_input_parameters.end())
           {
-            branch_data.R = R;
+            branch_data.R = std::get<RealT>(R->second);
           }
           else
           {
@@ -722,7 +732,7 @@ namespace GridKit
           if (auto X = device_input_parameters.find(DeviceParameter::X);
               X != device_input_parameters.end())
           {
-            branch_data.X = X;
+            branch_data.X = std::get<RealT>(X->second);
           }
           else
           {
@@ -732,7 +742,7 @@ namespace GridKit
           if (auto G = device_input_parameters.find(DeviceParameter::G);
               G != device_input_parameters.end())
           {
-            branch_data.G = G;
+            branch_data.G = std::get<RealT>(G->second);
           }
           else
           {
@@ -742,7 +752,7 @@ namespace GridKit
           if (auto B = device_input_parameters.find(DeviceParameter::B);
               B != device_input_parameters.end())
           {
-            branch_data.B = B;
+            branch_data.B = std::get<RealT>(B->second);
           }
           else
           {
@@ -752,7 +762,7 @@ namespace GridKit
           if (auto bus1 = device_ports.find(DevicePort::Bus1);
               bus1 != device_ports.end())
           {
-            branch_data.bus1_id = bus1;
+            branch_data.bus1_id = bus1->second;
           }
           else
           {
@@ -762,7 +772,7 @@ namespace GridKit
           if (auto bus2 = device_ports.find(DevicePort::Bus2);
               bus2 != device_ports.end())
           {
-            branch_data.bus2_id = bus2;
+            branch_data.bus2_id = bus2->second;
           }
           else
           {
@@ -773,16 +783,16 @@ namespace GridKit
           branch_data.va_base               = device_va_base;
           branch_data.disambiguation_string = device_id;
 
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ir1] = monitored_device_variables[MonitorableDeviceVariables::Ir1];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ii1] = monitored_device_variables[MonitorableDeviceVariables::Ii1];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Im1] = monitored_device_variables[MonitorableDeviceVariables::Im1];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::P1]  = monitored_device_variables[MonitorableDeviceVariables::P1];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Q1]  = monitored_device_variables[MonitorableDeviceVariables::Q1];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ir2] = monitored_device_variables[MonitorableDeviceVariables::Ir2];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ii2] = monitored_device_variables[MonitorableDeviceVariables::Ii2];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Im2] = monitored_device_variables[MonitorableDeviceVariables::Im2];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::P2]  = monitored_device_variables[MonitorableDeviceVariables::P2];
-          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Q2]  = monitored_device_variables[MonitorableDeviceVariables::Q2];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Ir1)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ir1)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Ii1)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ii1)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Im1)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Im1)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::P1)]  = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::P1)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Q1)]  = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Q1)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Ir2)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ir2)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Ii2)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ii2)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Im2)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Im2)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::P2)]  = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::P2)];
+          branch_data.monitored_variables[static_cast<size_t>(BranchDataT::MonitorableVariables::Q2)]  = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Q2)];
 
           system_model.branch.push_back(branch_data);
         }
@@ -799,7 +809,7 @@ namespace GridKit
           if (auto unit_id = device_input_parameters.find(DeviceParameter::UnitId);
               unit_id != device_input_parameters.end())
           {
-            genrou_data.unit_id = unit_id;
+            genrou_data.unit_id = std::get<IdxT>(unit_id->second);
           }
           else
           {
@@ -809,7 +819,7 @@ namespace GridKit
           if (auto p0 = device_input_parameters.find(DeviceParameter::P0);
               p0 != device_input_parameters.end())
           {
-            genrou_data.p0 = p0;
+            genrou_data.p0 = std::get<RealT>(p0->second);
           }
           else
           {
@@ -819,7 +829,7 @@ namespace GridKit
           if (auto q0 = device_input_parameters.find(DeviceParameter::Q0);
               q0 != device_input_parameters.end())
           {
-            genrou_data.q0 = q0;
+            genrou_data.q0 = std::get<RealT>(q0->second);
           }
           else
           {
@@ -829,7 +839,7 @@ namespace GridKit
           if (auto H = device_input_parameters.find(DeviceParameter::H);
               H != device_input_parameters.end())
           {
-            genrou_data.H = H;
+            genrou_data.H = std::get<RealT>(H->second);
           }
           else
           {
@@ -839,7 +849,7 @@ namespace GridKit
           if (auto D = device_input_parameters.find(DeviceParameter::D);
               D != device_input_parameters.end())
           {
-            genrou_data.D = D;
+            genrou_data.D = std::get<RealT>(D->second);
           }
           else
           {
@@ -849,7 +859,7 @@ namespace GridKit
           if (auto Ra = device_input_parameters.find(DeviceParameter::Ra);
               Ra != device_input_parameters.end())
           {
-            genrou_data.Ra = Ra;
+            genrou_data.Ra = std::get<RealT>(Ra->second);
           }
           else
           {
@@ -859,7 +869,7 @@ namespace GridKit
           if (auto Tdop = device_input_parameters.find(DeviceParameter::Tdop);
               Tdop != device_input_parameters.end())
           {
-            genrou_data.Tdop = Tdop;
+            genrou_data.Tdop = std::get<RealT>(Tdop->second);
           }
           else
           {
@@ -869,7 +879,7 @@ namespace GridKit
           if (auto Tdopp = device_input_parameters.find(DeviceParameter::Tdopp);
               Tdopp != device_input_parameters.end())
           {
-            genrou_data.Tdopp = Tdopp;
+            genrou_data.Tdopp = std::get<RealT>(Tdopp->second);
           }
           else
           {
@@ -879,7 +889,7 @@ namespace GridKit
           if (auto Tqop = device_input_parameters.find(DeviceParameter::Tqop);
               Tqop != device_input_parameters.end())
           {
-            genrou_data.Tqop = Tqop;
+            genrou_data.Tqop = std::get<RealT>(Tqop->second);
           }
           else
           {
@@ -889,7 +899,7 @@ namespace GridKit
           if (auto Tqopp = device_input_parameters.find(DeviceParameter::Tqopp);
               Tqopp != device_input_parameters.end())
           {
-            genrou_data.Tqopp = Tqopp;
+            genrou_data.Tqopp = std::get<RealT>(Tqopp->second);
           }
           else
           {
@@ -899,7 +909,7 @@ namespace GridKit
           if (auto Xd = device_input_parameters.find(DeviceParameter::Xd);
               Xd != device_input_parameters.end())
           {
-            genrou_data.Xd = Xd;
+            genrou_data.Xd = std::get<RealT>(Xd->second);
           }
           else
           {
@@ -909,7 +919,7 @@ namespace GridKit
           if (auto Xdp = device_input_parameters.find(DeviceParameter::Xdp);
               Xdp != device_input_parameters.end())
           {
-            genrou_data.Xdp = Xdp;
+            genrou_data.Xdp = std::get<RealT>(Xdp->second);
           }
           else
           {
@@ -919,7 +929,7 @@ namespace GridKit
           if (auto Xdpp = device_input_parameters.find(DeviceParameter::Xdpp);
               Xdpp != device_input_parameters.end())
           {
-            genrou_data.Xdpp = Xdpp;
+            genrou_data.Xdpp = std::get<RealT>(Xdpp->second);
           }
           else
           {
@@ -929,7 +939,7 @@ namespace GridKit
           if (auto Xq = device_input_parameters.find(DeviceParameter::Xq);
               Xq != device_input_parameters.end())
           {
-            genrou_data.Xq = Xq;
+            genrou_data.Xq = std::get<RealT>(Xq->second);
           }
           else
           {
@@ -939,7 +949,7 @@ namespace GridKit
           if (auto Xqp = device_input_parameters.find(DeviceParameter::Xqp);
               Xqp != device_input_parameters.end())
           {
-            genrou_data.Xqp = Xqp;
+            genrou_data.Xqp = std::get<RealT>(Xqp->second);
           }
           else
           {
@@ -949,7 +959,7 @@ namespace GridKit
           if (auto Xqpp = device_input_parameters.find(DeviceParameter::Xqpp);
               Xqpp != device_input_parameters.end())
           {
-            genrou_data.Xqpp = Xqpp;
+            genrou_data.Xqpp = std::get<RealT>(Xqpp->second);
           }
           else
           {
@@ -959,7 +969,7 @@ namespace GridKit
           if (auto Xl = device_input_parameters.find(DeviceParameter::Xl);
               Xl != device_input_parameters.end())
           {
-            genrou_data.Xl = Xl;
+            genrou_data.Xl = std::get<RealT>(Xl->second);
           }
           else
           {
@@ -969,7 +979,7 @@ namespace GridKit
           if (auto S10 = device_input_parameters.find(DeviceParameter::S10);
               S10 != device_input_parameters.end())
           {
-            genrou_data.S10 = S10;
+            genrou_data.S10 = std::get<RealT>(S10->second);
           }
           else
           {
@@ -979,7 +989,7 @@ namespace GridKit
           if (auto S12 = device_input_parameters.find(DeviceParameter::S12);
               S12 != device_input_parameters.end())
           {
-            genrou_data.S12 = S12;
+            genrou_data.S12 = std::get<RealT>(S12->second);
           }
           else
           {
@@ -989,7 +999,7 @@ namespace GridKit
           if (auto bus = device_ports.find(DevicePort::Bus);
               bus != device_ports.end())
           {
-            genrou_data.bus_id = bus;
+            genrou_data.bus_id = bus->second;
           }
           else
           {
@@ -1000,12 +1010,12 @@ namespace GridKit
           genrou_data.va_base               = device_va_base;
           genrou_data.disambiguation_string = device_id;
 
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Ir]    = monitored_device_variables[MonitorableDeviceVariables::Ir];
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Ii]    = monitored_device_variables[MonitorableDeviceVariables::Ii];
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::P]     = monitored_device_variables[MonitorableDeviceVariables::P];
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Q]     = monitored_device_variables[MonitorableDeviceVariables::Q];
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Delta] = monitored_device_variables[MonitorableDeviceVariables::Delta];
-          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Omega] = monitored_device_variables[MonitorableDeviceVariables::Omega];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::Ir)]    = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ir)];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::Ii)]    = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ii)];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::P)]     = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::P)];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::Q)]     = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Q)];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::Delta)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Delta)];
+          genrou_data.monitored_variables[static_cast<size_t>(GenrouDataT::MonitorableVariables::Omega)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Omega)];
 
           system_model.genrou.push_back(genrou_data);
         }
@@ -1016,7 +1026,7 @@ namespace GridKit
           if (auto R = device_input_parameters.find(DeviceParameter::R);
               R != device_input_parameters.end())
           {
-            bus_fault_data.R = R;
+            bus_fault_data.R = std::get<RealT>(R->second);
           }
           else
           {
@@ -1026,7 +1036,7 @@ namespace GridKit
           if (auto X = device_input_parameters.find(DeviceParameter::X);
               X != device_input_parameters.end())
           {
-            bus_fault_data.X = X;
+            bus_fault_data.X = std::get<RealT>(X->second);
           }
           else
           {
@@ -1036,7 +1046,7 @@ namespace GridKit
           if (auto status = device_input_parameters.find(DeviceParameter::state0);
               status != device_input_parameters.end())
           {
-            bus_fault_data.status = status;
+            bus_fault_data.status = std::get<bool>(status->second);
           }
           else
           {
@@ -1046,7 +1056,7 @@ namespace GridKit
           if (auto bus = device_ports.find(DevicePort::Bus);
               bus != device_ports.end())
           {
-            bus_fault_data.bus_id = bus;
+            bus_fault_data.bus_id = bus->second;
           }
           else
           {
@@ -1057,9 +1067,9 @@ namespace GridKit
           bus_fault_data.va_base               = device_va_base;
           bus_fault_data.disambiguation_string = device_id;
 
-          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::State] = monitored_device_variables[MonitorableDeviceVariables::State];
-          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::Ir]    = monitored_device_variables[MonitorableDeviceVariables::Ir];
-          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::Ii]    = monitored_device_variables[MonitorableDeviceVariables::Ii];
+          bus_fault_data.monitored_variables[static_cast<size_t>(BusFaultDataT::MonitorableVariables::State)] = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::State)];
+          bus_fault_data.monitored_variables[static_cast<size_t>(BusFaultDataT::MonitorableVariables::Ir)]    = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ir)];
+          bus_fault_data.monitored_variables[static_cast<size_t>(BusFaultDataT::MonitorableVariables::Ii)]    = monitored_device_variables[static_cast<size_t>(MonitorableDeviceVariables::Ii)];
 
           system_model.bus_fault.push_back(bus_fault_data);
         }
@@ -1219,6 +1229,8 @@ namespace GridKit
       State,
       P,
       Q,
+      Ir,
+      Ii,
       Delta,
       Omega,
       Maximum,
