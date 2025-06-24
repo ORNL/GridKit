@@ -29,7 +29,7 @@ $E_1$       | [p.u.] | Saturation Parameter                              | 2.8  
 $E_2$       | [p.u.] | Saturation Parameter                              | 3.73    | 
 $S_{e1}$    | [p.u.] | Saturation Parameter                              | 0.04    | 
 $S_{e2}$    | [p.u.] | Saturation Parameter                              | 0.33    | 
-$I_{spdlm}$ | [p.u.] | Speed Limit flag indicator                        | 0       | 
+$I_{spdlm}$ | [binary] | Speed Limit flag indicator                        | 0       | 
 
 
 ## Model Variables 
