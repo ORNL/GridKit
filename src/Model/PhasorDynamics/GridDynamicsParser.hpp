@@ -1079,8 +1079,14 @@ namespace GridKit
         }
         state = State::ExpectDeviceOrArrayClose;
         break;
+      case State::ExpectHeaderKeyOrObjectClose:
+        state = State::ExpectInnerKey;
+        break;
       case State::ExpectBusInitialParameterKeyOrObjectClose:
         state = State::ExpectBusKeyOrObjectClose;
+        break;
+      case State::ExpectDeviceInitialParameterKeyOrObjectClose:
+        state = State::ExpectDeviceKeyOrObjectClose;
         break;
       case State::IgnoreUntilBusExtensionObjectClose:
         state = State::ExpectBusKeyOrObjectClose;
@@ -1090,6 +1096,8 @@ namespace GridKit
         break;
       case State::IgnoreUntilDeviceExtensionObjectClose:
         state = State::ExpectDeviceKeyOrObjectClose;
+        break;
+      case State::ExpectInnerKey:
         break;
       default:
         return false;
@@ -1262,7 +1270,7 @@ namespace GridKit
     std::optional<RealT> device_freq_base;
 
     /// Bitfield for tracking the device variables being monitored
-    std::bitset<static_cast<std::underlying_type_t<MonitorableDeviceVariables>>(MonitorableDeviceVariables::Maximum) - 1> monitored_device_variables;
+    std::bitset<static_cast<std::underlying_type_t<MonitorableDeviceVariables>>(MonitorableDeviceVariables::Maximum)> monitored_device_variables;
 
     /// Enumeration used to track the current state of
     /// the parser
@@ -1315,5 +1323,154 @@ namespace GridKit
       ExpectDeviceExtension,
       IgnoreUntilDeviceExtensionObjectClose,
     } state;
+
+    friend std::ostream& operator<<(std::ostream& os, const State& state)
+    {
+      switch (state)
+      {
+      case State::ExpectOuterObject:
+        os << "ExpectOuterObject";
+        break;
+      case State::ExpectInnerKey:
+        os << "ExpectInnerKey";
+        break;
+      case State::ExpectHeader:
+        os << "ExpectHeader";
+        break;
+      case State::ExpectHeaderKeyOrObjectClose:
+        os << "ExpectHeaderKeyOrObjectClose";
+        break;
+      case State::ExpectFormatVersion:
+        os << "ExpectFormatVersion";
+        break;
+      case State::ExpectFormatRevision:
+        os << "ExpectFormatRevision";
+        break;
+      case State::ExpectCaseName:
+        os << "ExpectCaseName";
+        break;
+      case State::ExpectCaseDateTime:
+        os << "ExpectCaseDateTime";
+        break;
+      case State::ExpectCaseDescription:
+        os << "ExpectCaseDescription";
+        break;
+      case State::ExpectCaseComments:
+        os << "ExpectCaseComments";
+        break;
+      case State::ExpectFreqBase:
+        os << "ExpectFreqBase";
+        break;
+      case State::ExpectVaBase:
+        os << "ExpectVaBase";
+        break;
+      case State::ExpectBuses:
+        os << "ExpectBuses";
+        break;
+      case State::ExpectBusOrArrayClose:
+        os << "ExpectBusOrArrayClose";
+        break;
+      case State::ExpectBusKeyOrObjectClose:
+        os << "ExpectBusKeyOrObjectClose";
+        break;
+      case State::ExpectBusNumber:
+        os << "ExpectBusNumber";
+        break;
+      case State::ExpectBusClass:
+        os << "ExpectBusClass";
+        break;
+      case State::ExpectBusName:
+        os << "ExpectBusName";
+        break;
+      case State::ExpectBusInitialParameters:
+        os << "ExpectBusInitialParameters";
+        break;
+      case State::ExpectBusInitialParameterKeyOrObjectClose:
+        os << "ExpectBusInitialParameterKeyOrObjectClose";
+        break;
+      case State::ExpectBusInitialParameterVr:
+        os << "ExpectBusInitialParameterVr";
+        break;
+      case State::ExpectBusInitialParameterVi:
+        os << "ExpectBusInitialParameterVi";
+        break;
+      case State::ExpectBusVBase:
+        os << "ExpectBusVBase";
+        break;
+      case State::ExpectBusMonitor:
+        os << "ExpectBusMonitor";
+        break;
+      case State::ExpectMonitoredBusVariableOrArrayClose:
+        os << "ExpectMonitoredBusVariableOrArrayClose";
+        break;
+      case State::ExpectBusFreqBase:
+        os << "ExpectBusFreqBase";
+        break;
+      case State::ExpectBusVaBase:
+        os << "ExpectBusVaBase";
+        break;
+      case State::ExpectBusExtension:
+        os << "ExpectBusExtension";
+        break;
+      case State::IgnoreUntilBusExtensionObjectClose:
+        os << "IgnoreUntilBusExtensionObjectClose";
+        break;
+      case State::ExpectDevices:
+        os << "ExpectDevices";
+        break;
+      case State::ExpectDeviceOrArrayClose:
+        os << "ExpectDeviceOrArrayClose";
+        break;
+      case State::ExpectDeviceKeyOrObjectClose:
+        os << "ExpectDeviceKeyOrObjectClose";
+        break;
+      case State::ExpectDeviceClass:
+        os << "ExpectDeviceClass";
+        break;
+      case State::ExpectDevicePorts:
+        os << "ExpectDevicePorts";
+        break;
+      case State::ExpectDevicePortKeyOrObjectClose:
+        os << "ExpectDevicePortKeyOrObjectClose";
+        break;
+      case State::ExpectDevicePortMapping:
+        os << "ExpectDevicePortMapping";
+        break;
+      case State::ExpectDeviceId:
+        os << "ExpectDeviceId";
+        break;
+      case State::ExpectDeviceInitialParameters:
+        os << "ExpectDeviceInitialParameters";
+        break;
+      case State::ExpectDeviceInitialParameterKeyOrObjectClose:
+        os << "ExpectDeviceInitialParameterKeyOrObjectClose";
+        break;
+      case State::ExpectDeviceInitialParameterMapping:
+        os << "ExpectDeviceInitialParameterMapping";
+        break;
+      case State::ExpectDeviceMonitor:
+        os << "ExpectDeviceMonitor";
+        break;
+      case State::ExpectMonitoredDeviceVariableOrArrayClose:
+        os << "ExpectMonitoredDeviceVariableOrArrayClose";
+        break;
+      case State::ExpectDeviceVaBase:
+        os << "ExpectDeviceVaBase";
+        break;
+      case State::ExpectDeviceFreqBase:
+        os << "ExpectDeviceFreqBase";
+        break;
+      case State::ExpectDeviceExtension:
+        os << "ExpectDeviceExtension";
+        break;
+      case State::IgnoreUntilDeviceExtensionObjectClose:
+        os << "IgnoreUntilDeviceExtensionObjectClose";
+        break;
+      default:
+        os << "Unknown State (" << static_cast<size_t>(state) << ")";
+        break;
+      }
+      return os;
+    }
   };
 } // namespace GridKit

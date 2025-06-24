@@ -70,7 +70,7 @@ namespace GridKit
       };
 
       /// Set of variables being monitored
-      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum) - 1> monitored_variables;
+      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum)> monitored_variables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit
