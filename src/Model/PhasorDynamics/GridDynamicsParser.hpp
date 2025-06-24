@@ -773,7 +773,16 @@ namespace GridKit
           branch_data.va_base               = device_va_base;
           branch_data.disambiguation_string = device_id;
 
-          // TODO: add monitoring variable transfer
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ir1] = monitored_device_variables[MonitorableDeviceVariables::Ir1];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ii1] = monitored_device_variables[MonitorableDeviceVariables::Ii1];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Im1] = monitored_device_variables[MonitorableDeviceVariables::Im1];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::P1]  = monitored_device_variables[MonitorableDeviceVariables::P1];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Q1]  = monitored_device_variables[MonitorableDeviceVariables::Q1];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ir2] = monitored_device_variables[MonitorableDeviceVariables::Ir2];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Ii2] = monitored_device_variables[MonitorableDeviceVariables::Ii2];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Im2] = monitored_device_variables[MonitorableDeviceVariables::Im2];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::P2]  = monitored_device_variables[MonitorableDeviceVariables::P2];
+          branch_data.monitored_variables[BranchDataT::MonitorableVariables::Q2]  = monitored_device_variables[MonitorableDeviceVariables::Q2];
 
           system_model.branch.push_back(branch_data);
         }
