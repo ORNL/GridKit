@@ -104,7 +104,7 @@ The IEEET1 differential equations, as derived from the model diagram.  By defini
 The algebraic equations of the exciter.
 ```math
 \begin{aligned}
-   V_{tr} &= V_{ref} - V_{ts}+V_{UEL} + V_{OEL} + V_S - V_F\\
+   V_{tr} &= V_{ref} +V_{UEL} + V_{OEL} + V_S - V_f- V_{ts}\\
     V_{f} &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
     V_{E} &= k_{sat}\cdot E_{fd}' \\
     E_{fd}&= \begin{cases}
@@ -169,10 +169,10 @@ excitation limiters are non-existant.
 ```math
 \begin{aligned}
     E_{fd}' &= E_{fd}  \\
-    V_{fx}  &= 0 \\
+    V_{f}  &= 0 \\
     V_{E}   &= 0 \\
     k_{sat} &= 0 \\
-    V_{f}   &= \dfrac{K_F}{T_F} E_{fd} \\
+    V_{fx}   &= \dfrac{K_F}{T_F} E_{fd} \\
     V_R     &= K_E E_{fd} \\
     V_{tr}  &= \dfrac{1}{K_{a}}V_{R} \\
     E_C     &= V_{ref}-V_f - V_{tr}  \\
