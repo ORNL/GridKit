@@ -794,6 +794,218 @@ namespace GridKit
         }
         else if (device_class == "GENROU")
         {
+          auto genrou_data = GenrouDataT{};
+
+          if (auto unit_id = device_input_parameters.find(DeviceParameter::UnitId);
+              unit_id != device_input_parameters.end())
+          {
+            genrou_data.unit_id = unit_id;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto p0 = device_input_parameters.find(DeviceParameter::P0);
+              p0 != device_input_parameters.end())
+          {
+            genrou_data.p0 = p0;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto q0 = device_input_parameters.find(DeviceParameter::Q0);
+              q0 != device_input_parameters.end())
+          {
+            genrou_data.q0 = q0;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto H = device_input_parameters.find(DeviceParameter::H);
+              H != device_input_parameters.end())
+          {
+            genrou_data.H = H;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto D = device_input_parameters.find(DeviceParameter::D);
+              D != device_input_parameters.end())
+          {
+            genrou_data.D = D;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Ra = device_input_parameters.find(DeviceParameter::Ra);
+              Ra != device_input_parameters.end())
+          {
+            genrou_data.Ra = Ra;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Tdop = device_input_parameters.find(DeviceParameter::Tdop);
+              Tdop != device_input_parameters.end())
+          {
+            genrou_data.Tdop = Tdop;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Tdopp = device_input_parameters.find(DeviceParameter::Tdopp);
+              Tdopp != device_input_parameters.end())
+          {
+            genrou_data.Tdopp = Tdopp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Tqop = device_input_parameters.find(DeviceParameter::Tqop);
+              Tqop != device_input_parameters.end())
+          {
+            genrou_data.Tqop = Tqop;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Tqopp = device_input_parameters.find(DeviceParameter::Tqopp);
+              Tqopp != device_input_parameters.end())
+          {
+            genrou_data.Tqopp = Tqopp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xd = device_input_parameters.find(DeviceParameter::Xd);
+              Xd != device_input_parameters.end())
+          {
+            genrou_data.Xd = Xd;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xdp = device_input_parameters.find(DeviceParameter::Xdp);
+              Xdp != device_input_parameters.end())
+          {
+            genrou_data.Xdp = Xdp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xdpp = device_input_parameters.find(DeviceParameter::Xdpp);
+              Xdpp != device_input_parameters.end())
+          {
+            genrou_data.Xdpp = Xdpp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xq = device_input_parameters.find(DeviceParameter::Xq);
+              Xq != device_input_parameters.end())
+          {
+            genrou_data.Xq = Xq;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xqp = device_input_parameters.find(DeviceParameter::Xqp);
+              Xqp != device_input_parameters.end())
+          {
+            genrou_data.Xqp = Xqp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xqpp = device_input_parameters.find(DeviceParameter::Xqpp);
+              Xqpp != device_input_parameters.end())
+          {
+            genrou_data.Xqpp = Xqpp;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto Xl = device_input_parameters.find(DeviceParameter::Xl);
+              Xl != device_input_parameters.end())
+          {
+            genrou_data.Xl = Xl;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto S10 = device_input_parameters.find(DeviceParameter::S10);
+              S10 != device_input_parameters.end())
+          {
+            genrou_data.S10 = S10;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto S12 = device_input_parameters.find(DeviceParameter::S12);
+              S12 != device_input_parameters.end())
+          {
+            genrou_data.S12 = S12;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto bus = device_ports.find(DevicePort::Bus);
+              bus != device_ports.end())
+          {
+            genrou_data.bus_id = bus;
+          }
+          else
+          {
+            return false;
+          }
+
+          genrou_data.freq_base             = device_freq_base;
+          genrou_data.va_base               = device_va_base;
+          genrou_data.disambiguation_string = device_id;
+
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Ir]    = monitored_device_variables[MonitorableDeviceVariables::Ir];
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Ii]    = monitored_device_variables[MonitorableDeviceVariables::Ii];
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::P]     = monitored_device_variables[MonitorableDeviceVariables::P];
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Q]     = monitored_device_variables[MonitorableDeviceVariables::Q];
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Delta] = monitored_device_variables[MonitorableDeviceVariables::Delta];
+          genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Omega] = monitored_device_variables[MonitorableDeviceVariables::Omega];
         }
         else if (device_class == "bus_fault")
         {
