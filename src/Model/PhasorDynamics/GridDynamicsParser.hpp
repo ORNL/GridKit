@@ -1006,9 +1006,62 @@ namespace GridKit
           genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Q]     = monitored_device_variables[MonitorableDeviceVariables::Q];
           genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Delta] = monitored_device_variables[MonitorableDeviceVariables::Delta];
           genrou_data.monitored_variables[GenrouDataT::MonitorableVariables::Omega] = monitored_device_variables[MonitorableDeviceVariables::Omega];
+
+          system_model.genrou.push_back(genrou_data);
         }
         else if (device_class == "bus_fault")
         {
+          auto bus_fault_data = BusFaultDataT{};
+
+          if (auto R = device_input_parameters.find(DeviceParameter::R);
+              R != device_input_parameters.end())
+          {
+            bus_fault_data.R = R;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto X = device_input_parameters.find(DeviceParameter::X);
+              X != device_input_parameters.end())
+          {
+            bus_fault_data.X = X;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto status = device_input_parameters.find(DeviceParameter::state0);
+              status != device_input_parameters.end())
+          {
+            bus_fault_data.status = status;
+          }
+          else
+          {
+            return false;
+          }
+
+          if (auto bus = device_ports.find(DevicePort::Bus);
+              bus != device_ports.end())
+          {
+            bus_fault_data.bus_id = bus;
+          }
+          else
+          {
+            return false;
+          }
+
+          bus_fault_data.freq_base             = device_freq_base;
+          bus_fault_data.va_base               = device_va_base;
+          bus_fault_data.disambiguation_string = device_id;
+
+          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::State] = monitored_device_variables[MonitorableDeviceVariables::State];
+          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::Ir]    = monitored_device_variables[MonitorableDeviceVariables::Ir];
+          bus_fault_data.monitored_variables[GenrouDataT::MonitorableVariables::Ii]    = monitored_device_variables[MonitorableDeviceVariables::Ii];
+
+          system_model.bus_fault.push_back(bus_fault_data);
         }
         else
         {
