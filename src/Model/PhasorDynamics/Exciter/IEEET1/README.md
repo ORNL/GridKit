@@ -161,15 +161,23 @@ Lastly for the algebraic (continuous) piecewise functions, this implementation i
 ```
 
 ## Initialization
-At steady state we assume that $V_R$ is at or within its limits. (Incomplete at this moment)
+At steady state we assume that $V_R$ is at or within its limits, and that the exciter is not saturated.
 ```math
 \begin{aligned}
 
    V_{ts}         &= E_C \\
-   V_{R}          &= K_{a}V_{tr} \\
-   0  &= V_R-V_E-K_E E_{fd}' \\
-    
+   0              &= V_R-K_E E_{fd}' \\
     V_{fx}        &= 0 \\\\
-    E_{fd}        &= E_{fd}'  \\
+
+    
+    V_{E}   &= 0 \\
+    k_{sat} &= 0 \\
+    E_{fd} &= E_{fd}'  \\
+    V_{f} &= \dfrac{K_F}{T_F} E_{fd}' \\
+       V_{tr} &= V_{ref} +V_{UEL} + V_{OEL} + V_S - V_f- V_{ts}\\\\
+
+    
+   V_{R}          &= K_{a}V_{tr} \\
+    
 \end{aligned}
 ```
