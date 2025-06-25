@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES
@@ -55,7 +56,7 @@ namespace GridKit
         S10_(0.),
         S12_(0.)
     {
-      size_ = 21;
+      size_ = 20;
       setDerivedParams();
 
       // Temporary, to eliminate compiler warnings
@@ -110,7 +111,7 @@ namespace GridKit
         S10_(S10),
         S12_(S12)
     {
-      size_ = 21;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -142,7 +143,7 @@ namespace GridKit
         S10_(data.S10),
         S12_(data.S12)
     {
-      size_ = 21;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -229,13 +230,17 @@ namespace GridKit
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      y_[17] = pmech_set_ = Te;
-      y_[18] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      y_[19]            = G_ * (vd * sin(delta) + vq * cos(delta))
+      y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      y_[18]            = G_ * (vd * sin(delta) + vq * cos(delta))
                - B_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, real */
-      y_[20] = B_ * (vd * sin(delta) + vq * cos(delta))
+      y_[19] = B_ * (vd * sin(delta) + vq * cos(delta))
                + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
 
+      
+      // Steady Pmech setpoint
+      pmech_set_ = Te;
+
+      // Steady State Conditions
       for (IdxT i = 0; i < size_; ++i)
         yp_[static_cast<size_t>(i)] = 0.0;
 
@@ -281,7 +286,15 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT pmech  = y_[17];
+      ScalarT pmech;
+      if (pmech_signal_)
+      {
+        pmech = pmech_signal_->Vr();
+      }
+      else
+      {
+        pmech = pmech_set_;
+      }
       ScalarT efd    = y_[18];
       ScalarT inr    = y_[19];
       ScalarT ini    = y_[20];
@@ -317,17 +330,20 @@ namespace GridKit
       f_[15] = ir + G_ * vr - B_ * vi - inr;
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
-      /* 2 Genrou control inputs are set to constant for this example */
-      f_[17] = pmech - pmech_set_;
-      f_[18] = efd - efd_set_;
+      /* 1 Genrou control inputs are set to constant for this example */
+      f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */
-      f_[19] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
-      f_[20] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[18] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[19] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
 
       /* Current balance */
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
+
+      // Update Signals
+      speed_signal_->Vr()  = omega;
+      torqie_signal_->Vr() = telec;
 
       return 0;
     }
@@ -410,16 +426,23 @@ namespace GridKit
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
+    
     template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getSpeed()
+    void Genrou<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
     {
-      return y_[1];
+      speed_signal_ = signal;
     }
 
     template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getTorque()
+    void Genrou<ScalarT, IdxT>::set_torque_signal(bus_type* signal)
     {
-      return y_[12];
+      torque_signal_ = signal;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::set_pmech_signal(bus_type* signal)
+    {
+      pmech_signal_ = signal;
     }
 
     template <class ScalarT, typename IdxT>

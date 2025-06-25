@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Utilities/TestHelpers.hpp>
@@ -33,7 +33,21 @@ namespace GridKit
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
 
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>* gov =
-            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>(machine);
+            new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>();
+
+        // Speed Signal Connection
+        auto* speed_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
+        gov->set_speed_signal(speed_signal);
+        gen->set_speed_signal(speed_signal);
+
+        auto* torque_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
+        gov->set_torque_signal(torque_signal);
+        gen->set_torque_signal(torque_signal);
+
+        auto* pmech_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
+        gov->set_pmech_signal(pmech_signal);
+        gen->set_pmech_signal(pmech_signal);
+
 
         success *= (gov != nullptr);
 

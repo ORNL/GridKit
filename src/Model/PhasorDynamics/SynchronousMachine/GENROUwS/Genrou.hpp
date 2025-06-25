@@ -91,13 +91,20 @@ namespace GridKit
       {
       }
 
-      // Temporary access functions for governor
-      // Should be abstracted
-      ScalarT getSpeed();
-      ScalarT getTorque();
+      // Should be abstracted for all machine models
+      void set_speed_signal(bus_type* signal);
+      void set_torque_signal(bus_type* signal);
+      void set_pmech_signal(bus_type* signal);
 
     private:
       void setDerivedParams();
+
+      // Input Signals
+      bus_type* speed_signal_;
+      bus_type* torque_signal_;
+
+      // Output Signals
+      bus_type* pmech_signal_;
 
       ScalarT& Vr()
       {

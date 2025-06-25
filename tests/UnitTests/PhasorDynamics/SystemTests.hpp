@@ -5,7 +5,7 @@
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Utilities/TestHelpers.hpp>

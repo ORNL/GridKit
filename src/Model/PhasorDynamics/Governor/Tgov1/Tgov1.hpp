@@ -22,7 +22,7 @@ namespace GridKit
     } // namespace Governor
 
     template <class ScalarT, typename IdxT>
-    class Genrou;
+    class BusSignal;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -53,13 +53,13 @@ namespace GridKit
         using Component<ScalarT, IdxT>::yp_;
         using Component<ScalarT, IdxT>::ypB_;
 
-        using machine_type    = Genrou<ScalarT, IdxT>;
+        using bus_type        = BusSignal<ScalarT, IdxT>;
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
 
       public:
-        Tgov1(machine_type* machine, const model_data_type& data);
-        Tgov1(machine_type* machine);
+        Tgov1(const model_data_type& data);
+        Tgov1();
         ~Tgov1() = default;
 
         int allocate() override;
@@ -81,9 +81,19 @@ namespace GridKit
         // Read Access to Pmech
         ScalarT& Pmech();
 
+        // Setters for input signals
+        void set_speed_signal(bus_type* signal);
+        void set_torque_signal(bus_type* signal);
+        void set_pmech_signal(bus_type* signal);
+
       private:
-        // Associated Machine Model
-        machine_type* machine_;
+
+        // Input Signals
+        bus_type* speed_signal_;
+        bus_type* torque_signal_;
+
+        // Output Signals
+        bus_type* pmech_signal_;
 
         // Input parameters
         real_type R_;

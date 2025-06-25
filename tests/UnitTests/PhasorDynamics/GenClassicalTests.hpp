@@ -13,7 +13,7 @@
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>

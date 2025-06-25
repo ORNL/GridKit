@@ -12,8 +12,6 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-
 #define _USE_MATH_DEFINES
 
 namespace GridKit
@@ -26,13 +24,11 @@ namespace GridKit
       /*!
        * @brief Constructor for Governor
        *
-       * @param machine Generator Object
        * @param data    TGOV1 Data Object
        */
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : machine_(machine),
-          R_(data.R),
+      Tgov1<ScalarT, IdxT>::Tgov1(const model_data_type& data)
+        : R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
           T1_(data.T1),
@@ -46,9 +42,8 @@ namespace GridKit
       }
 
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine)
-        : machine_(machine),
-          R_(0.05),
+      Tgov1<ScalarT, IdxT>::Tgov1()
+        : R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
           T1_(0.5),
@@ -88,7 +83,7 @@ namespace GridKit
       {
 
         // Initial mechanical = initial electric torque
-        ScalarT p0 = machine_->getTorque();
+        ScalarT p0 = torque_signal_->Vr();
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -171,7 +166,7 @@ namespace GridKit
       {
 
         // Input Variables
-        ScalarT omega = machine_->getSpeed();
+        ScalarT omega = torque_signal_->Vr();
 
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
@@ -192,6 +187,9 @@ namespace GridKit
 
         // Internal Algebraic Equations
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+
+        // Update signal
+        pmech_signal_->Vr() = pmech;
 
         return 0;
       }
@@ -276,6 +274,24 @@ namespace GridKit
       ScalarT& Tgov1<ScalarT, IdxT>::Pmech()
       {
         return y_[2];
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Tgov1<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
+      {
+        speed_signal_ = signal;
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Tgov1<ScalarT, IdxT>::set_torque_signal(bus_type* signal)
+      {
+        torque_signal_ = signal;
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Tgov1<ScalarT, IdxT>::set_pmech_signal(bus_type* signal)
+      {
+        pmech_signal_ = signal;
       }
 
       // Available template instantiations

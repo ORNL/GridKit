@@ -29,5 +29,5 @@ should have associated Nominal Voltage value.
 ## Bus Types
 
 - General Bus 
-- Inifnite Bus (See [BusInfinite](BusInfinite/README.md))
-- Signal Bus (See [BusSignal](BusSignal/README.md))
+- Inifnite Bus (See [BusInfinite](BusInfinite/))
+- Signal Bus (See [BusSignal](BusSignal/))
