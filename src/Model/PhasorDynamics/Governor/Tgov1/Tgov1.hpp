@@ -105,6 +105,9 @@ namespace GridKit
 
         // Input States (which can be parameters)
         ScalarT pref_;
+
+        // Scale of Sigmoid function (temporary local implementation)
+        const ScalarT mu_ = 4000.0;
       };
 
     } // namespace Governor
