@@ -64,8 +64,6 @@ namespace GridKit
       // Temporary, to eliminate compiler warnings
       (void) busID_;
       (void) unit_id_;
-
-
     }
 
     /*!
@@ -244,7 +242,6 @@ namespace GridKit
       y_[19] = B_ * (vd * sin(delta) + vq * cos(delta))
                + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
 
-      
       // Steady Pmech setpoint
       pmech_set_ = Te;
 
@@ -294,16 +291,16 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT pmech = pmech_set_;
+      ScalarT pmech  = pmech_set_;
       if (pmech_signal_)
       {
         pmech = pmech_signal_->Vr();
       }
-      ScalarT efd    = y_[17];
-      ScalarT inr    = y_[18];
-      ScalarT ini    = y_[19];
-      ScalarT vr     = Vr();
-      ScalarT vi     = Vi();
+      ScalarT efd = y_[17];
+      ScalarT inr = y_[18];
+      ScalarT ini = y_[19];
+      ScalarT vr  = Vr();
+      ScalarT vi  = Vi();
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];
@@ -346,18 +343,17 @@ namespace GridKit
       Ii() += ini - Vr() * B_ - Vi() * G_;
 
       // Initialize Speed Signal
-      if(speed_signal_)
+      if (speed_signal_)
       {
-        speed_signal_->Vr()  = omega;
+        speed_signal_->Vr() = omega;
       }
 
       // Initialize Pmech Signal
       // Machine only reads from this after initialization
-      if(pmech_signal_)
+      if (pmech_signal_)
       {
         pmech_signal_->Vr() = telec;
       }
-      
 
       return 0;
     }
@@ -440,7 +436,7 @@ namespace GridKit
      * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
-    
+
     template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
     {

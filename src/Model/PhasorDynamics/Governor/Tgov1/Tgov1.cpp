@@ -87,7 +87,7 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::initialize()
       {
 
-        // Requires machine to be initialized first 
+        // Requires machine to be initialized first
         // (Is there a better way to have dependent initialization schemes?)
         ScalarT p0 = 0;
         if (pmech_signal_)
@@ -283,7 +283,7 @@ namespace GridKit
 
       /**
        * @brief The machine speed signal setter.
-       * 
+       *
        * @param signal A BusSignal pointer
        */
       template <class ScalarT, typename IdxT>
@@ -294,7 +294,7 @@ namespace GridKit
 
       /**
        * @brief The machine pmech signal setter.
-       * 
+       *
        * @param signal A BusSignal pointer
        */
       template <class ScalarT, typename IdxT>

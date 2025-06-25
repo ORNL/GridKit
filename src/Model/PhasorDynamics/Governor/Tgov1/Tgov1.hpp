@@ -83,7 +83,6 @@ namespace GridKit
         void set_pmech_signal(bus_type* signal);
 
       private:
-
         // Input Signals
         bus_type* speed_signal_;
 
