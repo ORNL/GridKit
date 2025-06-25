@@ -333,11 +333,11 @@ namespace GridKit
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      f_[18] = efd - efd_set_;
+      f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */
-      f_[19] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
-      f_[20] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[18] = inr - (G_ * (sin(delta) * vd + cos(delta) * vq) - B_ * (-cos(delta) * vd + sin(delta) * vq));
+      f_[19] = ini - (B_ * (sin(delta) * vd + cos(delta) * vq) + G_ * (-cos(delta) * vd + sin(delta) * vq));
 
       /* Current balance */
       Ir() += inr - Vr() * G_ + Vi() * B_;
