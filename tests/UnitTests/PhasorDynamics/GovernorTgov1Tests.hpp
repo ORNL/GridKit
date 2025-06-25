@@ -3,6 +3,7 @@
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Utilities/TestHelpers.hpp>
