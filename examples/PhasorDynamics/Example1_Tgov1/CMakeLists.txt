@@ -1,5 +1,5 @@
 add_executable(phasordynamics_example1_tgov1 example1_tgov1.cpp)
-target_link_libraries(phasordynamics_example1 
+target_link_libraries(phasordynamics_example1_tgov1 
 	GRIDKIT::phasor_dynamics_bus 
 	GRIDKIT::phasor_dynamics_bus_fault 
 	GRIDKIT::phasor_dynamics_branch
