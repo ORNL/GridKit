@@ -17,7 +17,7 @@ namespace GridKit
       using BranchDataT   = BranchData<RealT, IdxT>;
       using BusDataT      = BusData<RealT, IdxT>;
       using BusFaultDataT = BusFaultData<RealT, IdxT>;
-      using Tgov1DataT    = Tgov1Data<RealT, IdxT>;
+      using Tgov1DataT    = Governor::Tgov1Data<RealT, IdxT>;
       using GenrouDataT   = GenrouData<RealT, IdxT>;
       using LoadDataT     = LoadData<RealT, IdxT>;
 
