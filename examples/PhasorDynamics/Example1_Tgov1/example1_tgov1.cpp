@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "example1.hpp"
+#include "example1_tgov1.hpp"
 
 #include <ctime>
 #include <iostream>
