@@ -35,7 +35,10 @@ namespace GridKit
           T1_(data.T1),
           T2_(data.T2),
           T3_(data.T3),
-          Dt_(data.Dt)
+          Dt_(data.Dt),
+          speed_signal_(nullptr),
+          torque_signal_(nullptr),
+          pmech_signal_(nullptr)
       {
 
         // 3 Internal Variables
@@ -50,7 +53,10 @@ namespace GridKit
           T1_(0.5),
           T2_(2.5),
           T3_(7.5),
-          Dt_(0)
+          Dt_(0),
+          speed_signal_(nullptr),
+          torque_signal_(nullptr),
+          pmech_signal_(nullptr)
       {
 
         // 3 Internal Variables

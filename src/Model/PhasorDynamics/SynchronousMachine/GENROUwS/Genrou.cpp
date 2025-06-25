@@ -54,7 +54,10 @@ namespace GridKit
         Xqpp_(.18),
         Xl_(.15),
         S10_(0.),
-        S12_(0.)
+        S12_(0.),
+        speed_signal_(nullptr),
+        torque_signal_(nullptr),
+        pmech_signal_(nullptr)
     {
       size_ = 20;
       setDerivedParams();
@@ -62,6 +65,8 @@ namespace GridKit
       // Temporary, to eliminate compiler warnings
       (void) busID_;
       (void) unit_id_;
+
+
     }
 
     /*!
@@ -109,7 +114,10 @@ namespace GridKit
         Xqpp_(Xqpp),
         Xl_(Xl),
         S10_(S10),
-        S12_(S12)
+        S12_(S12),
+        speed_signal_(nullptr),
+        torque_signal_(nullptr),
+        pmech_signal_(nullptr)
     {
       size_ = 20;
       setDerivedParams();
@@ -141,7 +149,10 @@ namespace GridKit
         Xqpp_(data.Xqpp),
         Xl_(data.Xl),
         S10_(data.S10),
-        S12_(data.S12)
+        S12_(data.S12),
+        speed_signal_(nullptr),
+        torque_signal_(nullptr),
+        pmech_signal_(nullptr)
     {
       size_ = 20;
       setDerivedParams();
