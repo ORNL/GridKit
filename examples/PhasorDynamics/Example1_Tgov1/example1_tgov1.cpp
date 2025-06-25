@@ -122,7 +122,7 @@ int main()
 
   // Create Pointers first
   Genrou<scalar_type, index_type>*  gen;
-  Tgov1<scalar_type, index_type>*   gov;
+  Governor::Tgov1<scalar_type, index_type>*   gov;
 
   // Instatiate Genrou & add to system model
   gen = new Genrou<scalar_type, index_type>(
