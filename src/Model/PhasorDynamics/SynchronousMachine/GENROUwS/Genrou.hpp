@@ -99,13 +99,6 @@ namespace GridKit
     private:
       void setDerivedParams();
 
-      // Input Signals
-      bus_type* speed_signal_;
-      bus_type* torque_signal_;
-
-      // Output Signals
-      bus_type* pmech_signal_;
-
       ScalarT& Vr()
       {
         return bus_->Vr();
@@ -131,6 +124,13 @@ namespace GridKit
       bus_type* bus_;
       const int busID_;
       IdxT      unit_id_;
+
+      // Input Signals
+      bus_type* speed_signal_;
+      bus_type* torque_signal_;
+
+      // Output Signals
+      bus_type* pmech_signal_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
