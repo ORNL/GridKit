@@ -286,7 +286,7 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT pmech = pmech_set;
+      ScalarT pmech = pmech_set_;
       if (pmech_signal_)
       {
         pmech = pmech_signal_->Vr();
