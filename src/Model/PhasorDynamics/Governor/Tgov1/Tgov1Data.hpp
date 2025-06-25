@@ -1,7 +1,7 @@
 /**
  * @file Tgov1Data.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Modeling data for TGOV1 
+ * @brief Modeling data for TGOV1
  *
  */
 #pragma once
@@ -25,7 +25,7 @@ namespace GridKit
       template <typename RealT, typename IdxT>
       struct Tgov1Data
       {
-        RealT R{0.05};     ///< Droop Constant
+        RealT R{0.05};    ///< Droop Constant
         RealT T1{0.5};    ///< Valve Time Delay
         RealT T2{2.5};    ///< Turbine Numerator Time Constant
         RealT T3{7.5};    ///< Turbine Delay

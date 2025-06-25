@@ -3,8 +3,8 @@
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -63,8 +63,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus,
                                                   1,
                                                   1,
                                                   0.05013,
@@ -122,4 +122,3 @@ namespace GridKit
 
   } // namespace Testing
 } // namespace GridKit
-
