@@ -82,7 +82,6 @@ int main()
 
   SystemModel<scalar_type, index_type> sys(data);
 
-
   // Set generator data
   data.genrou.resize(1);
 
@@ -121,8 +120,8 @@ int main()
   // This is a hack  since SignalBus not implemented
 
   // Create Pointers first
-  Genrou<scalar_type, index_type>*  gen;
-  Governor::Tgov1<scalar_type, index_type>*   gov;
+  Genrou<scalar_type, index_type>*          gen;
+  Governor::Tgov1<scalar_type, index_type>* gov;
 
   // Instatiate Genrou & add to system model
   gen = new Genrou<scalar_type, index_type>(

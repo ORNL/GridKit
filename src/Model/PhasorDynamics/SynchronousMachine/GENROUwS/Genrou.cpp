@@ -14,8 +14,8 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -295,13 +295,12 @@ namespace GridKit
       ScalarT pmech;
       if (gov_)
       {
-        pmech = gov_->Pmech(); 
+        pmech = gov_->Pmech();
       }
       else
       {
         pmech = pmech_set_;
       }
-
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];
