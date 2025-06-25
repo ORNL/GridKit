@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 
+#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #define _USE_MATH_DEFINES
 
