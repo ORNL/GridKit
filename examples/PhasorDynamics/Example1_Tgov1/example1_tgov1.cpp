@@ -212,7 +212,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = Example1_Tgov1::reference_solution[i + 1];
 
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
