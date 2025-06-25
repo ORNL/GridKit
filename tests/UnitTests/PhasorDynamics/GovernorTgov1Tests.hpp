@@ -99,7 +99,7 @@ namespace GridKit
                                                   0.15,
                                                   0,
                                                   0);
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&gen);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov();
 
         bus.allocate();
         bus.initialize();
