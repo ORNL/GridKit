@@ -4,6 +4,7 @@
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusSignal.hpp>
 
 namespace GridKit
 {
@@ -29,6 +30,9 @@ namespace GridKit
           break;
         case BusData::SLACK:
           bus = new BusInfinite<ScalarT, IdxT>(data);
+          break;
+        case BusData::SIGNAL:
+          bus = new BusSignal<ScalarT, IdxT>(data);
           break;
         default:
           // Throw exception
