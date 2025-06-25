@@ -68,13 +68,14 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::allocate()
       {
-        f_.resize(size_);
-        y_.resize(size_);
-        yp_.resize(size_);
-        tag_.resize(size_);
-        fB_.resize(size_);
-        yB_.resize(size_);
-        ypB_.resize(size_);
+        auto size = static_cast<size_t>(size_); // avoid compiler warnings
+        f_.resize(size);
+        y_.resize(size);
+        yp_.resize(size);
+        tag_.resize(size);
+        fB_.resize(size);
+        yB_.resize(size);
+        ypB_.resize(size);
         return 0;
       }
 
