@@ -15,13 +15,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Governor
-    {
-      template <typename RealT, typename IdxT>
-      class Tgov1;
-    }
     template <class ScalarT, typename IdxT>
     class BusBase;
+
+    template <class ScalarT, typename IdxT>
+    class GovernorBase;
 
     template <typename RealT, typename IdxT>
     struct GenrouData;
