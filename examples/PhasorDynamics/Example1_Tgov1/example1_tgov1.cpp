@@ -135,6 +135,10 @@ int main()
       data.gov[0]);
   gen->setgovenor(gov);
 
+  // Add Generator and Governor to System
+  sys.addComponent(gen);
+  sys.addComponent(gov);
+
   sys.allocate();
 
   // Get access to the fault
