@@ -5,4 +5,5 @@ A signal bus is allows multiple models to read/access information.
 
 ## Application
 
-Example.
+Through a signal bus object, models are capable of reading/writing to 
+a shared complex signal (either voltage-type or current-type).

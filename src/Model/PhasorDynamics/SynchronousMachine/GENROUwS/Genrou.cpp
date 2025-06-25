@@ -37,9 +37,8 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
-        speed_signal_(nullptr),
-        torque_signal_(nullptr),
         pmech_signal_(nullptr),
+        speed_signal_(nullptr),
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -97,9 +96,8 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
-        speed_signal_(nullptr),
-        torque_signal_(nullptr),
         pmech_signal_(nullptr),
+        speed_signal_(nullptr),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -132,9 +130,8 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(data.unit_id),
-        speed_signal_(nullptr),
-        torque_signal_(nullptr),
         pmech_signal_(nullptr),
+        speed_signal_(nullptr),
         p0_(data.p0),
         q0_(data.q0),
         H_(data.H),
@@ -348,14 +345,17 @@ namespace GridKit
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
 
-      // Update Signals
+      // Initialize Speed Signal
       if(speed_signal_)
       {
         speed_signal_->Vr()  = omega;
       }
-      if(torque_signal_)
+
+      // Initialize Pmech Signal
+      // Machine only reads from this after initialization
+      if(pmech_signal_)
       {
-        torque_signal_->Vr() = telec;
+        pmech_signal_->Vr() = telec;
       }
       
 
@@ -445,12 +445,6 @@ namespace GridKit
     void Genrou<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
     {
       speed_signal_ = signal;
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::set_torque_signal(bus_type* signal)
-    {
-      torque_signal_ = signal;
     }
 
     template <class ScalarT, typename IdxT>

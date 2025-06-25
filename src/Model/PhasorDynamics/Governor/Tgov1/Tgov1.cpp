@@ -30,7 +30,6 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(const model_data_type& data)
         : speed_signal_(nullptr),
-          torque_signal_(nullptr),
           pmech_signal_(nullptr),
           R_(data.R),
           Pvmin_(data.Pvmin),
@@ -48,7 +47,6 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1()
         : speed_signal_(nullptr),
-          torque_signal_(nullptr),
           pmech_signal_(nullptr),
           R_(0.05),
           Pvmin_(0),
@@ -89,11 +87,12 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::initialize()
       {
 
-        // Initial mechanical = initial electric torque
+        // Requires machine to be initialized first 
+        // (Is there a better way to have dependent initialization schemes?)
         ScalarT p0 = 0;
         if (pmech_signal_)
         {
-          p0 = torque_signal_->Vr();
+          p0 = pmech_signal_->Vr();
         }
 
         // Input Variables (Parameter for now)
@@ -178,9 +177,9 @@ namespace GridKit
 
         // Input Variables
         ScalarT omega = 0;
-        if (pmech_signal_)
+        if (speed_signal_)
         {
-          omega = torque_signal_->Vr();
+          omega = speed_signal_->Vr();
         }
 
         // Read Internal Variables
@@ -284,6 +283,8 @@ namespace GridKit
 
       /**
        * @brief The machine speed signal setter.
+       * 
+       * @param signal A BusSignal pointer
        */
       template <class ScalarT, typename IdxT>
       void Tgov1<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
@@ -291,12 +292,11 @@ namespace GridKit
         speed_signal_ = signal;
       }
 
-      template <class ScalarT, typename IdxT>
-      void Tgov1<ScalarT, IdxT>::set_torque_signal(bus_type* signal)
-      {
-        torque_signal_ = signal;
-      }
-
+      /**
+       * @brief The machine pmech signal setter.
+       * 
+       * @param signal A BusSignal pointer
+       */
       template <class ScalarT, typename IdxT>
       void Tgov1<ScalarT, IdxT>::set_pmech_signal(bus_type* signal)
       {

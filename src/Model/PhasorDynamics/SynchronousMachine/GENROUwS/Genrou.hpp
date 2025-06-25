@@ -93,7 +93,6 @@ namespace GridKit
 
       // Should be abstracted for all machine models
       void set_speed_signal(bus_type* signal);
-      void set_torque_signal(bus_type* signal);
       void set_pmech_signal(bus_type* signal);
 
     private:
@@ -126,11 +125,10 @@ namespace GridKit
       IdxT      unit_id_;
 
       // Input Signals
-      bus_type* speed_signal_;
-      bus_type* torque_signal_;
+      bus_type* pmech_signal_;
 
       // Output Signals
-      bus_type* pmech_signal_;
+      bus_type* speed_signal_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
