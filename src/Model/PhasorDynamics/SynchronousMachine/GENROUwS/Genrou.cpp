@@ -15,6 +15,7 @@
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 
 #define _USE_MATH_DEFINES
 

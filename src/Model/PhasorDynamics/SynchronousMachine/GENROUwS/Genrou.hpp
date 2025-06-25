@@ -15,6 +15,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    namespace Governor
+    {
+      template <typename RealT, typename IdxT>
+      class Tgov1;
+    }
     template <class ScalarT, typename IdxT>
     class BusBase;
 
@@ -47,6 +52,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::ypB_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using gov_type        = Tgov1<ScalarT, IdxT>;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
 
