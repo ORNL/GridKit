@@ -22,7 +22,7 @@ namespace GridKit
     } // namespace Governor
 
     template <class ScalarT, typename IdxT>
-    class BusSignal;
+    class BusBase;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -53,7 +53,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::yp_;
         using Component<ScalarT, IdxT>::ypB_;
 
-        using bus_type        = BusSignal<ScalarT, IdxT>;
+        using bus_type        = BusBase<ScalarT, IdxT>;
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
 
