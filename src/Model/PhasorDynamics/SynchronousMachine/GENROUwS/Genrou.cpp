@@ -302,9 +302,9 @@ namespace GridKit
       {
         pmech = pmech_signal_->Vr();
       }
-      ScalarT efd    = y_[18];
-      ScalarT inr    = y_[19];
-      ScalarT ini    = y_[20];
+      ScalarT efd    = y_[17];
+      ScalarT inr    = y_[18];
+      ScalarT ini    = y_[19];
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
 
