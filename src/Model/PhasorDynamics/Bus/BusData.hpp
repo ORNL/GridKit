@@ -27,7 +27,8 @@ namespace GridKit
       {
         INVALID = 0,
         DEFAULT,
-        SLACK
+        SLACK,
+        SIGNAL
       };
 
       RealT Vr0{0.0}; ///< Initial value for real bus voltage
