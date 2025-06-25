@@ -343,7 +343,7 @@ namespace GridKit
 
       // Update Signals
       speed_signal_->Vr()  = omega;
-      torqie_signal_->Vr() = telec;
+      torque_signal_->Vr() = telec;
 
       return 0;
     }
