@@ -28,3 +28,9 @@ sign.
 **Other Parameters**
 Buses are uniquely defined by their ID (number or name). Besides, each bus
 should have associated Nominal Voltage value.
+
+## Bus Types
+
+- General Bus
+- Inifnite Bus
+- Signal Bus
