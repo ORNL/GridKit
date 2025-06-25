@@ -36,15 +36,12 @@ namespace GridKit
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>* gov =
             new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>();
 
-        // Speed Signal Connection
+        // Speed Signal
         auto* speed_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
         gov->set_speed_signal(speed_signal);
         machine->set_speed_signal(speed_signal);
 
-        auto* torque_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
-        gov->set_torque_signal(torque_signal);
-        machine->set_torque_signal(torque_signal);
-
+        // Pmech Signal
         auto* pmech_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0,0);
         gov->set_pmech_signal(pmech_signal);
         machine->set_pmech_signal(pmech_signal);
