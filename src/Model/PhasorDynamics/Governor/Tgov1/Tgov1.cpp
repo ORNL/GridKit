@@ -84,7 +84,11 @@ namespace GridKit
       {
 
         // Initial mechanical = initial electric torque
-        ScalarT p0 = torque_signal_->Vr();
+        ScalarT p0 = 0;
+        if (pmech_signal_)
+        {
+          p0 = torque_signal_->Vr();
+        }
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -167,7 +171,11 @@ namespace GridKit
       {
 
         // Input Variables
-        ScalarT omega = torque_signal_->Vr();
+        ScalarT omega = 0;
+        if (pmech_signal_)
+        {
+          omega = torque_signal_->Vr();
+        }
 
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
@@ -189,8 +197,11 @@ namespace GridKit
         // Internal Algebraic Equations
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
-        // Update signal
-        pmech_signal_->Vr() = pmech;
+        // Update signal if available
+        if (pmech_signal_)
+        {
+          pmech_signal_->Vr() = pmech;
+        }
 
         return 0;
       }
@@ -264,7 +275,6 @@ namespace GridKit
         std::cout << "Evaluate adjoint Integrand for Tgov1..." << std::endl;
         return 0;
       }
-
 
       /**
        * @brief The machine speed signal setter.

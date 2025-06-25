@@ -286,14 +286,10 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT pmech;
+      ScalarT pmech = pmech_set;
       if (pmech_signal_)
       {
         pmech = pmech_signal_->Vr();
-      }
-      else
-      {
-        pmech = pmech_set_;
       }
       ScalarT efd    = y_[18];
       ScalarT inr    = y_[19];
@@ -342,8 +338,15 @@ namespace GridKit
       Ii() += ini - Vr() * B_ - Vi() * G_;
 
       // Update Signals
-      speed_signal_->Vr()  = omega;
-      torque_signal_->Vr() = telec;
+      if(speed_signal_)
+      {
+        speed_signal_->Vr()  = omega;
+      }
+      if(torque_signal_)
+      {
+        torque_signal_->Vr() = telec;
+      }
+      
 
       return 0;
     }
