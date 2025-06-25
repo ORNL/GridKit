@@ -22,15 +22,12 @@ sign.
   balance.
 </div>
 
-
-
-
 **Other Parameters**
 Buses are uniquely defined by their ID (number or name). Besides, each bus
 should have associated Nominal Voltage value.
 
 ## Bus Types
 
-- General Bus
-- Inifnite Bus
-- Signal Bus
+- General Bus 
+- Inifnite Bus (See [BusInfinite](BusInfinite/README.md))
+- Signal Bus (See [BusSignal](BusSignal/README.md))
