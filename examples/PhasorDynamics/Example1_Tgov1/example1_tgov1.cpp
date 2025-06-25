@@ -231,7 +231,7 @@ int main()
     // // Optional output
     std::cout << "GridKit: t = " << data.ti
                << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
-               << ", w = " << (1.0 + data.dw) << "\n";
+               << ", Vref = " << (ref_sol[2]) << "\n";
     // std::cout << "Ref    : t = " << ref_sol[0]
     //           << ", |V| = " << ref_sol[2]
     //           << ", w = " << ref_sol[1]
