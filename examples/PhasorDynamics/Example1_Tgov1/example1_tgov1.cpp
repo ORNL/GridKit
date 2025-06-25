@@ -130,7 +130,7 @@ int main()
       data.genrou[0]);
 
   // Instatiate GovernorTgov1 & add to system model
-  gov = new Tgov1<scalar_type, index_type>(
+  gov = new Governor::Tgov1<scalar_type, index_type>(
       gen,
       data.gov[0]);
   gen->setgovenor(gov);
