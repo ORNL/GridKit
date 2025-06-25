@@ -100,7 +100,7 @@ namespace GridKit
         // D.V. Derivative
         yp_[0] = 0.0; // Ptx
         yp_[1] = 0.0; // Pv
-        yp_[2] = 0.0; // Pm (Algebraic, is this needed?)
+        yp_[2] = 0.0; // Pm
 
         return 0;
       }
