@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -35,7 +36,7 @@ namespace GridKit
     {
 
       template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>
+      class Tgov1 : public Component<ScalarT, IdxT>, public GovernorBase<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
@@ -79,7 +80,7 @@ namespace GridKit
         }
 
         // Read Access to Pmech
-        ScalarT& Pmech();
+        ScalarT& Pmech() override;
 
       private:
         // Associated Machine Model

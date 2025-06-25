@@ -295,7 +295,7 @@ namespace GridKit
       ScalarT pmech;
       if (gov_)
       {
-        pmech = gov_->Pmech(); // ISSUE IS HERE?
+        pmech = gov_->Pmech(); 
       }
       else
       {
