@@ -218,20 +218,22 @@ int main()
     OutputData              data    = output[i];
     std::vector<real_type>& ref_sol = Example1_Tgov1::reference_solution[i + 1];
 
+    // Review Note: I believe the denominator should not have +1
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
         / (1.0 + std::abs(ref_sol[2]));
     if (err > error_V)
       error_V = err;
 
+    // Review Note: I believe the denominator should not have +1
     err = std::abs(1.0 + data.dw - ref_sol[1]) / (1.0 + ref_sol[1]);
     if (err > error_w)
       error_w = err;
 
     // // Optional output
-    std::cout << "GridKit: t = " << data.ti
-               << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
-               << ", Vref = " << (ref_sol[2]) << "\n";
+    // std::cout << "GridKit: t = " << data.ti
+    //           << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
+    //           << ", w = " << (1.0 + data.dw) << "\n";
     // std::cout << "Ref    : t = " << ref_sol[0]
     //           << ", |V| = " << ref_sol[2]
     //           << ", w = " << ref_sol[1]
