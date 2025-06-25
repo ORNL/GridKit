@@ -96,6 +96,9 @@ namespace GridKit
       ScalarT getSpeed();
       ScalarT getTorque();
 
+      // Temporary set governor function until SignalBus implemented
+      void setgovenor(gov_type* gov);
+
     private:
       void setDerivedParams();
 
@@ -124,6 +127,9 @@ namespace GridKit
       bus_type* bus_;
       const int busID_;
       IdxT      unit_id_;
+
+      // Governor Pointer
+      gov_type* gov_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
