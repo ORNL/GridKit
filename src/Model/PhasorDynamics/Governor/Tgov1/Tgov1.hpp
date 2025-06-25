@@ -78,9 +78,6 @@ namespace GridKit
         {
         }
 
-        // Read Access to Pmech
-        ScalarT& Pmech();
-
         // Setters for input signals
         void set_speed_signal(bus_type* signal);
         void set_torque_signal(bus_type* signal);

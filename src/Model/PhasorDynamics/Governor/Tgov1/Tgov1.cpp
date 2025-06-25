@@ -265,18 +265,10 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief The mechanical power output.
-       * @warning This is not yet accessed by anything. The Genrou class will
-       *          need to access this instead of a constant Pmech.
-       * @return ScalarT - Mechanical output power value.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT& Tgov1<ScalarT, IdxT>::Pmech()
-      {
-        return y_[2];
-      }
 
+      /**
+       * @brief The machine speed signal setter.
+       */
       template <class ScalarT, typename IdxT>
       void Tgov1<ScalarT, IdxT>::set_speed_signal(bus_type* signal)
       {
