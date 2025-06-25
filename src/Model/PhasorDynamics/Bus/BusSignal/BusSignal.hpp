@@ -1,3 +1,9 @@
+/**
+ * @file BusSignal.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of BusSignal class.
+ *
+ */
 
 #pragma once
 

@@ -1,4 +1,11 @@
 
+/**
+ * @file BusSignal.cpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Definition of BusSignal class.
+ *
+ */
+
 #include "BusSignal.hpp"
 
 #include <cmath>
