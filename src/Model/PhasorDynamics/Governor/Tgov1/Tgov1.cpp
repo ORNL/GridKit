@@ -132,7 +132,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ((0.5 * mu_ * x ) / (1.0 + std::abs(mu_ * x))) + 0.5;
+        return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
       }
 
       /**
