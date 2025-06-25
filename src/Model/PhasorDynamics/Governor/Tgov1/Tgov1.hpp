@@ -15,11 +15,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-      namespace Governor
-      {
-        template <typename RealT, typename IdxT>
-        struct Tgov1Data;
-      } // namespace Governor
+    namespace Governor
+    {
+      template <typename RealT, typename IdxT>
+      struct Tgov1Data;
+    } // namespace Governor
 
     template <class ScalarT, typename IdxT>
     class Genrou;
@@ -82,7 +82,6 @@ namespace GridKit
         ScalarT& Pmech();
 
       private:
-      
         // Associated Machine Model
         machine_type* machine_;
 

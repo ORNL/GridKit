@@ -11,8 +11,8 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -24,11 +24,11 @@ namespace GridKit
     {
 
       /*!
-      * @brief Constructor for Governor
-      *
-      * @param machine Generator Object
-      * @param data    TGOV1 Data Object
-      */
+       * @brief Constructor for Governor
+       *
+       * @param machine Generator Object
+       * @param data    TGOV1 Data Object
+       */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
         : machine_(machine),
@@ -62,19 +62,20 @@ namespace GridKit
       }
 
       /*!
-      * @brief Allocate memory for model
-      *
-      */
+       * @brief Allocate memory for model
+       *
+       */
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::allocate()
       {
-        f_.resize(size_);
-        y_.resize(size_);
-        yp_.resize(size_);
-        tag_.resize(size_);
-        fB_.resize(size_);
-        yB_.resize(size_);
-        ypB_.resize(size_);
+        auto size = static_cast<size_t>(size_); // avoid compiler warnings
+        f_.resize(size);
+        y_.resize(size);
+        yp_.resize(size);
+        tag_.resize(size);
+        fB_.resize(size);
+        yB_.resize(size);
+        ypB_.resize(size);
         return 0;
       }
 
@@ -121,17 +122,17 @@ namespace GridKit
 
       /**
        * @brief Scaled sigmoid activation function
-       * 
+       *
        * Temporary local implementation of smooth approximation
        * of a piecewise differential equation. Ideally this is
        * a more abstracted capability with GK.
-       * 
+       *
        * Algebraic approximation of transcendental sigmoid.
        */
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ( ( 0.5 * mu_ * x ) / ( 1.0 + std::abs(mu_ * x) )  ) + 0.5;
+        return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
       }
 
       /**
@@ -158,7 +159,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
-        return ( 1 - this->indicator_low(x, f) ) * ( 1 - this->indicator_high(x, f) );
+        return (1 - this->indicator_low(x, f)) * (1 - this->indicator_high(x, f));
       }
 
       /**
@@ -178,19 +179,19 @@ namespace GridKit
         ScalarT pmech = y_[2]; // y2 - Pmech
 
         // Read Internal Derivatives
-        ScalarT ptx_dot  = yp_[0];
-        ScalarT pv_dot   = yp_[1];
+        ScalarT ptx_dot = yp_[0];
+        ScalarT pv_dot  = yp_[1];
 
         // The 'pre-limit' derivative of Pv
-        ScalarT f        = ( -pv + (pref_ - omega) / R_) / T1_;
+        ScalarT f        = (-pv + (pref_ - omega) / R_) / T1_;
         ScalarT valv_ind = this->indicator(pv, f);
 
         // Internal Differential Equations
-        f_[0] = - ptx_dot + pv - (ptx + T2_ * pv) / T3_;
-        f_[1] = - pv_dot  + valv_ind * f;
+        f_[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
+        f_[1] = -pv_dot + valv_ind * f;
 
         // Internal Algebraic Equations
-        f_[2] = - pmech   + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+        f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         return 0;
       }
