@@ -403,6 +403,25 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Access generator relative speed
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam IdxT    - matrix index data type
+     * @return int - error code, 0 = success
+     */
+    template <class ScalarT, typename IdxT>
+    ScalarT Genrou<ScalarT, IdxT>::getSpeed()
+    {
+      return y_[1];
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT Genrou<ScalarT, IdxT>::getTorque()
+    {
+      return y_[12];
+    }
+
     template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::setDerivedParams()
     {
