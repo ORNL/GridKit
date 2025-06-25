@@ -101,7 +101,7 @@ namespace GridKit
         // D.V. Derivative
         yp_[0] = 0.0; // Ptx
         yp_[1] = 0.0; // Pv
-        yp_[2] = 0.0; // Pm (Algebraic, is this needed?)
+        yp_[2] = 0.0; // Pm
 
         return 0;
       }
@@ -132,8 +132,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        ScalarT a = 4000;
-        return ((0.5 * a * x) / (1.0 + std::abs(a * x))) + 0.5;
+        return ((0.5 * mu_ * x ) / (1.0 + std::abs(mu_ * x))) + 0.5;
       }
 
       /**
