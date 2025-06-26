@@ -126,7 +126,7 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(data.unit_id),
-        gov_(nullptr),
+        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(data.p0),
         q0_(data.q0),
         H_(data.H),
