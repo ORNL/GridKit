@@ -26,9 +26,9 @@ namespace GridKit
       enum BusType
       {
         INVALID = 0,
-        DEFAULT,
-        SLACK,
-        SIGNAL
+        DEFAULT,    ///< Electrical, Infinite
+        SLACK,      ///< Electrical, Infinite
+        SIGNAL      ///< Control   , Signal
       };
 
       RealT Vr0{0.0}; ///< Initial value for real bus voltage

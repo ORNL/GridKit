@@ -1,5 +1,4 @@
-
-#include "Bus.hpp"
+#include "BusNetwork.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -23,7 +22,7 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus()
+    BusNetwork<ScalarT, IdxT>::BusNetwork()
       : Vr0_(0.0), Vi0_(0.0)
     {
       // std::cout << "Create Bus..." << std::endl;
@@ -44,7 +43,7 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
+    BusNetwork<ScalarT, IdxT>::BusNetwork(ScalarT Vr, ScalarT Vi)
       : Vr0_(Vr), Vi0_(Vi)
     {
       // std::cout << "Create Bus..." << std::endl;
@@ -61,7 +60,7 @@ namespace GridKit
      * @param[in] data - structure with bus data
      */
     template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus(const DataT& data)
+    BusNetwork<ScalarT, IdxT>::BusNetwork(const DataT& data)
       : BusBase<ScalarT, IdxT>(data.bus_id),
         Vr0_(data.Vr0),
         Vi0_(data.Vi0)
@@ -73,7 +72,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::~Bus()
+    BusNetwork<ScalarT, IdxT>::~BusNetwork()
     {
       // std::cout << "Destroy PQ bus ..." << std::endl;
     }
@@ -82,7 +81,7 @@ namespace GridKit
      * @brief allocate method resizes local solution and residual vectors.
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::allocate()
+    int BusNetwork<ScalarT, IdxT>::allocate()
     {
       // Temporary while we use std::vector in the code
       size_t size = static_cast<size_t>(size_);
@@ -104,7 +103,7 @@ namespace GridKit
      * @brief Bus variables are algebraic.
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::tagDifferentiable()
+    int BusNetwork<ScalarT, IdxT>::tagDifferentiable()
     {
       tag_[0] = false;
       tag_[1] = false;
@@ -115,7 +114,7 @@ namespace GridKit
      * @brief initialize method sets bus variables to stored initial values.
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::initialize()
+    int BusNetwork<ScalarT, IdxT>::initialize()
     {
       // std::cout << "Initialize Bus..." << std::endl;
       y_[0]  = Vr0_;
@@ -134,7 +133,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateResidual()
+    int BusNetwork<ScalarT, IdxT>::evaluateResidual()
     {
       // std::cout << "Evaluating residual of a PQ bus ...\n";
       f_[0] = 0.0;
@@ -150,7 +149,7 @@ namespace GridKit
      * @return int - error code
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateJacobian()
+    int BusNetwork<ScalarT, IdxT>::evaluateJacobian()
     {
       return 0;
     }
@@ -159,7 +158,7 @@ namespace GridKit
      * @brief initialize method sets bus variables to stored initial values.
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::initializeAdjoint()
+    int BusNetwork<ScalarT, IdxT>::initializeAdjoint()
     {
       // std::cout << "Initialize Bus..." << std::endl;
       yB_[0]  = 0.0;
@@ -178,7 +177,7 @@ namespace GridKit
      * @return int - error code
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateAdjointResidual()
+    int BusNetwork<ScalarT, IdxT>::evaluateAdjointResidual()
     {
       fB_[0] = 0.0;
       fB_[1] = 0.0;
@@ -194,7 +193,7 @@ namespace GridKit
      * @return int - error code
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateIntegrand()
+    int BusNetwork<ScalarT, IdxT>::evaluateIntegrand()
     {
       return 0;
     }
@@ -207,16 +206,10 @@ namespace GridKit
      * @return int - error code
      */
     template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateAdjointIntegrand()
+    int BusNetwork<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {
       return 0;
     }
-
-    // Available template instantiations
-    template class Bus<double, long int>;
-    template class Bus<double, size_t>;
-    template class Bus<DependencyTracking::Variable, long int>;
-    template class Bus<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

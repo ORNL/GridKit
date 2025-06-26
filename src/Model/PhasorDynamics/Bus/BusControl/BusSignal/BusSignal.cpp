@@ -18,46 +18,21 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-    /*!
-     * @brief Constructor for a phasor dynamics bus.
+        /**
+     * @brief Construct a new Bus
      *
-     * The model is using current balance in Cartesian coordinates.
-     *
-     * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
-     * - Number of equations = 2 (size_)
-     * - Number of variables = 2 (size_)
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
+     * @tparam ScalarT - type of scalar variables
+     * @tparam IdxT    - type for vector/matrix indices
+     * @param[in] data - structure with bus data
      */
     template <class ScalarT, typename IdxT>
     BusSignal<ScalarT, IdxT>::BusSignal()
-      : Vr0_(0.0), Vi0_(0.0)
+      : BusSignalBase<ScalarT, IdxT>()
     {
       // std::cout << "Create Bus..." << std::endl;
       // std::cout << "Number of equations is " << size_ << std::endl;
 
-      size_ = 2;
-    }
-
-    /*!
-     * @brief BusSignal constructor.
-     *
-     * This constructor sets initial values for active and reactive voltage.
-     *
-     * @todo Arguments that should be passed to ModelEvaluatorImpl constructor:
-     * - Number of equations = 2 (size_)
-     * - Number of variables = 2 (size_)
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
-     */
-    template <class ScalarT, typename IdxT>
-    BusSignal<ScalarT, IdxT>::BusSignal(ScalarT Vr, ScalarT Vi)
-      : Vr0_(Vr), Vi0_(Vi)
-    {
-      // std::cout << "Create Bus..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
-      size_ = 2;
+      size_ = 0;
     }
 
     /**
@@ -69,14 +44,12 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusSignal<ScalarT, IdxT>::BusSignal(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data.bus_id),
-        Vr0_(data.Vr0),
-        Vi0_(data.Vi0)
+      : BusSignalBase<ScalarT, IdxT>(data.bus_id)
     {
       // std::cout << "Create Bus..." << std::endl;
       // std::cout << "Number of equations is " << size_ << std::endl;
 
-      size_ = 2;
+      size_ = 0;
     }
 
     template <class ScalarT, typename IdxT>
@@ -99,11 +72,9 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
-
       fB_.resize(size);
       yB_.resize(size);
       ypB_.resize(size);
-
       return 0;
     }
 
@@ -113,8 +84,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusSignal<ScalarT, IdxT>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
       return 0;
     }
 
@@ -125,11 +94,6 @@ namespace GridKit
     int BusSignal<ScalarT, IdxT>::initialize()
     {
       // std::cout << "Initialize Bus..." << std::endl;
-      y_[0]  = Vr0_;
-      y_[1]  = Vi0_;
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
-
       return 0;
     }
 
@@ -144,8 +108,6 @@ namespace GridKit
     int BusSignal<ScalarT, IdxT>::evaluateResidual()
     {
       // std::cout << "Evaluating residual of a PQ bus ...\n";
-      f_[0] = 0.0;
-      f_[1] = 0.0;
       return 0;
     }
 
@@ -169,11 +131,6 @@ namespace GridKit
     int BusSignal<ScalarT, IdxT>::initializeAdjoint()
     {
       // std::cout << "Initialize Bus..." << std::endl;
-      yB_[0]  = 0.0;
-      yB_[1]  = 0.0;
-      ypB_[0] = 0.0;
-      ypB_[1] = 0.0;
-
       return 0;
     }
 
@@ -187,9 +144,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusSignal<ScalarT, IdxT>::evaluateAdjointResidual()
     {
-      fB_[0] = 0.0;
-      fB_[1] = 0.0;
-
       return 0;
     }
 
@@ -218,12 +172,6 @@ namespace GridKit
     {
       return 0;
     }
-
-    // Available template instantiations
-    template class BusSignal<double, long int>;
-    template class BusSignal<double, size_t>;
-    template class BusSignal<DependencyTracking::Variable, long int>;
-    template class BusSignal<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -1,13 +1,7 @@
-/**
- * @file BusSignal.hpp
- * @author Luke Lowery (lukel@tamu.edu)
- * @brief Declaration of BusSignal class.
- *
- */
 
 #pragma once
 
-#include <Model/PhasorDynamics/BusBase.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusElectric.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
@@ -32,7 +26,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class BusSignal : public BusBase<ScalarT, IdxT>
+    class BusNetwork : public BusNetwork<ScalarT, IdxT>
     {
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
@@ -44,13 +38,13 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::tag_;
 
     public:
-      using real_type = typename BusBase<ScalarT, IdxT>::real_type;
+      using real_type = typename BusNetwork<ScalarT, IdxT>::real_type;
       using DataT     = BusData<real_type, IdxT>;
 
-      BusSignal();
-      BusSignal(ScalarT Vr, ScalarT Vi);
-      BusSignal(const DataT& data);
-      virtual ~BusSignal();
+      BusNetwork();
+      BusNetwork(ScalarT Vr, ScalarT Vi);
+      BusNetwork(const DataT& data);
+      virtual ~BusNetwork();
 
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
@@ -64,47 +58,7 @@ namespace GridKit
 
       virtual int BusType() const override
       {
-        return BusData<real_type, IdxT>::BusType::SIGNAL;
-      }
-
-      virtual ScalarT& Vr() override
-      {
-        return y_[0];
-      }
-
-      virtual const ScalarT& Vr() const override
-      {
-        return y_[0];
-      }
-
-      virtual ScalarT& Vi() override
-      {
-        return y_[1];
-      }
-
-      virtual const ScalarT& Vi() const override
-      {
-        return y_[1];
-      }
-
-      virtual ScalarT& Ir() override
-      {
-        return f_[0];
-      }
-
-      virtual const ScalarT& Ir() const override
-      {
-        return f_[0];
-      }
-
-      virtual ScalarT& Ii() override
-      {
-        return f_[1];
-      }
-
-      virtual const ScalarT& Ii() const override
-      {
-        return f_[1];
+        return BusData<real_type, IdxT>::BusType::DEFAULT;
       }
 
     private:

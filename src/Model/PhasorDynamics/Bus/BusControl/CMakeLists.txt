@@ -3,7 +3,6 @@
 #    - Luke Lowery <lukel@tamu.edu>
 #]]
 
-add_subdirectory(BusElectric)
-add_subdirectory(BusControl)
+add_subdirectory(BusSignal)
 
 

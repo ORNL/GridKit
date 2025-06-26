@@ -1,33 +1,21 @@
-
 #pragma once
 
-#include <Model/PhasorDynamics/BusBase.hpp>
+#include <vector>
 
-// Forward declaration of BusData structure
-namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename RealT, typename IdxT>
-    struct BusData;
-  }
-} // namespace GridKit
+#include <Model/PhasorDynamics/Bus/BusBase.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     /*!
-     * @brief Implementation of a PQ bus.
-     *
-     * Voltage _V_ and phase _theta_ are variables in PQ bus model.
-     * Active and reactive power, _P_ and _Q_, are residual components.
-     *
+     * @brief BusElectric model implementation base class.
      *
      */
     template <class ScalarT, typename IdxT>
-    class Bus : public BusBase<ScalarT, IdxT>
+    class BusElectric: public BusBase<ScalarT, IdxT>
     {
+
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
       using BusBase<ScalarT, IdxT>::yp_;
@@ -39,22 +27,25 @@ namespace GridKit
 
     public:
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
-      using DataT     = BusData<real_type, IdxT>;
 
-      Bus();
-      Bus(ScalarT Vr, ScalarT Vi);
-      Bus(const DataT& data);
-      virtual ~Bus();
+      BusElectric();
+      BusElectric(ScalarT Vr, ScalarT Vi);
+      BusElectric(const DataT& data);
+      virtual ~BusElectric();
 
-      virtual int allocate() override;
-      virtual int tagDifferentiable() override;
-      virtual int initialize() override;
-      virtual int evaluateResidual() override;
-      virtual int evaluateIntegrand() override;
-      virtual int evaluateJacobian() override;
-      virtual int initializeAdjoint() override;
-      virtual int evaluateAdjointIntegrand() override;
-      virtual int evaluateAdjointResidual() override;
+      /// Pure virtual function, returns bus type (DEFAULT or SLACK).
+      virtual int BusType() const = 0;
+
+      // Voltage and Current Accessors
+      virtual ScalarT&       Vr()       = 0;
+      virtual const ScalarT& Vr() const = 0;
+      virtual ScalarT&       Vi()       = 0;
+      virtual const ScalarT& Vi() const = 0;
+      virtual ScalarT&       Ir()       = 0;
+      virtual const ScalarT& Ir() const = 0;
+      virtual ScalarT&       Ii()       = 0;
+      virtual const ScalarT& Ii() const = 0;
+
 
       virtual int BusType() const override
       {

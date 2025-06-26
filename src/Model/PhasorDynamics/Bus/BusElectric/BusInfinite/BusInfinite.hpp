@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <Model/PhasorDynamics/BusBase.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusElectric.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
@@ -24,19 +24,19 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class BusInfinite : public BusBase<ScalarT, IdxT>
+    class BusInfinite : public BusElectric<ScalarT, IdxT>
     {
-      using BusBase<ScalarT, IdxT>::size_;
-      using BusBase<ScalarT, IdxT>::y_;
-      using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::yB_;
-      using BusBase<ScalarT, IdxT>::ypB_;
-      using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::fB_;
-      using BusBase<ScalarT, IdxT>::tag_;
+      using BusElectric<ScalarT, IdxT>::size_;
+      using BusElectric<ScalarT, IdxT>::y_;
+      using BusElectric<ScalarT, IdxT>::yp_;
+      using BusElectric<ScalarT, IdxT>::yB_;
+      using BusElectric<ScalarT, IdxT>::ypB_;
+      using BusElectric<ScalarT, IdxT>::f_;
+      using BusElectric<ScalarT, IdxT>::fB_;
+      using BusElectric<ScalarT, IdxT>::tag_;
 
     public:
-      using real_type = typename BusBase<ScalarT, IdxT>::real_type;
+      using real_type = typename BusElectric<ScalarT, IdxT>::real_type;
       using DataT     = BusData<real_type, IdxT>;
 
       BusInfinite();
@@ -57,46 +57,6 @@ namespace GridKit
       virtual int BusType() const override
       {
         return BusData<real_type, IdxT>::BusType::SLACK;
-      }
-
-      virtual ScalarT& Vr() override
-      {
-        return Vr_;
-      }
-
-      virtual const ScalarT& Vr() const override
-      {
-        return Vr_;
-      }
-
-      virtual ScalarT& Vi() override
-      {
-        return Vi_;
-      }
-
-      virtual const ScalarT& Vi() const override
-      {
-        return Vi_;
-      }
-
-      virtual ScalarT& Ir() override
-      {
-        return Ir_;
-      }
-
-      virtual const ScalarT& Ir() const override
-      {
-        return Ir_;
-      }
-
-      virtual ScalarT& Ii() override
-      {
-        return Ii_;
-      }
-
-      virtual const ScalarT& Ii() const override
-      {
-        return Ii_;
       }
 
     private:

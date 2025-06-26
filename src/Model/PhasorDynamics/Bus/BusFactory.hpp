@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
-#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusControl/BusSignal/BusSignal.hpp>
 
 namespace GridKit
 {
@@ -26,7 +26,7 @@ namespace GridKit
         switch (data.bus_type)
         {
         case BusData::DEFAULT:
-          bus = new Bus<ScalarT, IdxT>(data);
+          bus = new BusNetwork<ScalarT, IdxT>(data);
           break;
         case BusData::SLACK:
           bus = new BusInfinite<ScalarT, IdxT>(data);
