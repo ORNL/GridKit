@@ -93,7 +93,7 @@ namespace GridKit
       : bus_(bus),
         busID_(0),
         unit_id_(unit_id),
-        gov_(nullptr),
+        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(p0),
         q0_(q0),
         H_(H),
