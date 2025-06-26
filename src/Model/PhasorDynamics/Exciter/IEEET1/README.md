@@ -34,8 +34,8 @@ $I_{spdlm}$ | [binary] | Speed Limit flag indicator                      | 0    
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  S_e1 &= S_B(E_1-S_A)^2& 
-  S_e2 &= S_B(E_2-S_A)^2
+  S_{e1} &= S_B(E_1-S_A)^2 \\
+  S_{e2} &= S_B(E_2-S_A)^2
 \end{aligned}
 ```
 
