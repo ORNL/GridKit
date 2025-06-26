@@ -19,7 +19,7 @@ namespace GridKit
     class BusBase;
 
     template <class ScalarT, typename IdxT>
-    class GovernorBase;
+    class GovernorBase; // <- TODO: Temporary, to be removed.
 
     template <typename RealT, typename IdxT>
     struct GenrouData;
