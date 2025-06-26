@@ -1,5 +1,9 @@
 # **EXDC1**
 
+> [!NOTE]  
+> This documentation is not in the standard format and EXDC1 is not scheduled to be developed as of 06/26/2025.
+
+
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/EXDC1.JPG">
    

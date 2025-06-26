@@ -108,8 +108,8 @@ The algebraic equations of the exciter.
     V_{f} &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
     V_{E} &= k_{sat}\cdot E_{fd}' \\
     E_{fd}&= \begin{cases}
-        E_{fd}'           &  \text{if } I_{spdlm}\\
-        (1+\Delta \omega)E_{fd}'  &  \text{else } \\
+        (1+\Delta \omega)E_{fd}'           &  \text{if } I_{spdlm}=1\\
+         E_{fd}' &  \text{else} \\
    \end{cases}\\
     k_{sat}&= \begin{cases}
         S_B(E_{fd}' -S_A)^2        &  \text{if } E_{fd}' >S_A\\
