@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
-#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusControl/BusSignal.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Utilities/TestHelpers.hpp>
@@ -28,7 +28,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto* bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Genrou<ScalarT, IdxT>* machine =
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
@@ -37,14 +37,14 @@ namespace GridKit
             new PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>();
 
         // Speed Signal
-        auto* speed_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0, 0);
-        gov->set_speed_signal(speed_signal);
-        machine->set_speed_signal(speed_signal);
+        //auto* speed_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>();
+        //gov->set_speed_signal(speed_signal);
+        //machine->set_speed_signal(speed_signal);
 
         // Pmech Signal
-        auto* pmech_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>(0, 0);
-        gov->set_pmech_signal(pmech_signal);
-        machine->set_pmech_signal(pmech_signal);
+        //auto* pmech_signal = new PhasorDynamics::BusSignal<ScalarT, IdxT>();
+        //gov->set_pmech_signal(pmech_signal);
+        //machine->set_pmech_signal(pmech_signal);
 
         success *= (gov != nullptr);
 
@@ -74,7 +74,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT>      bus(1.0, 0.0);
         PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus,
                                                   1,
                                                   1,

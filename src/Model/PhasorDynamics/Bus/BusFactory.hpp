@@ -1,10 +1,9 @@
 
 #pragma once
 
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
-#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork/BusNetwork.hpp>
-#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite/BusInfinite.hpp>
-#include <Model/PhasorDynamics/Bus/BusControl/BusSignal/BusSignal.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusElectricData.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 
 namespace GridKit
 {
@@ -14,25 +13,22 @@ namespace GridKit
     class BusFactory
     {
     public:
-      using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
-      using BusData   = GridKit::PhasorDynamics::BusData<real_type, IdxT>;
+      using real_type = typename BusElectric<ScalarT, IdxT>::real_type;
+      using BusElectricData   = GridKit::PhasorDynamics::BusElectricData<real_type, IdxT>;
 
       BusFactory() = delete;
 
-      static BusBase<ScalarT, IdxT>* create(const BusData& data)
+      static BusElectric<ScalarT, IdxT>* create(const BusElectricData& data)
       {
-        BusBase<ScalarT, IdxT>* bus = nullptr;
+        BusElectric<ScalarT, IdxT>* bus = nullptr;
 
         switch (data.bus_type)
         {
-        case BusData::DEFAULT:
+        case BusElectricData::DEFAULT:
           bus = new BusNetwork<ScalarT, IdxT>(data);
           break;
-        case BusData::SLACK:
+        case BusElectricData::SLACK:
           bus = new BusInfinite<ScalarT, IdxT>(data);
-          break;
-        case BusData::SIGNAL:
-          bus = new BusSignal<ScalarT, IdxT>(data);
           break;
         default:
           // Throw exception

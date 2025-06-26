@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "Load.hpp"
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 
 namespace GridKit

@@ -13,8 +13,8 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric.hpp>
+#include <Model/PhasorDynamics/Bus/BusControl/BusSignal.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES

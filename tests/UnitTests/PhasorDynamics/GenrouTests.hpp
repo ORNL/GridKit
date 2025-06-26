@@ -1,8 +1,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
@@ -26,7 +26,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto* bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
             new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
@@ -55,7 +55,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT>    bus(1.0, 0.0);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
                                                   1,
                                                   1,

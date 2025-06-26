@@ -11,7 +11,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/BusSignal/BusSignal.hpp>
+#include <Model/PhasorDynamics/Bus/BusControl/BusSignal.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #define _USE_MATH_DEFINES
 
@@ -92,7 +92,7 @@ namespace GridKit
         ScalarT p0 = 0;
         if (pmech_signal_)
         {
-          p0 = pmech_signal_->Vr();
+          p0 = pmech_signal_->poll();
         }
 
         // Input Variables (Parameter for now)
@@ -179,7 +179,7 @@ namespace GridKit
         ScalarT omega = 0;
         if (speed_signal_)
         {
-          omega = speed_signal_->Vr();
+          omega = speed_signal_->poll();
         }
 
         // Read Internal Variables
@@ -203,10 +203,10 @@ namespace GridKit
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         // Update signal if available
-        if (pmech_signal_)
-        {
-          pmech_signal_->Vr() = pmech;
-        }
+        //if (pmech_signal_)
+        //{
+        //  pmech_signal_->Vr() = pmech;
+        //}
 
         return 0;
       }

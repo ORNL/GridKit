@@ -1,7 +1,13 @@
+/**
+ * @file BusSignal.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of BusSignal class.
+ *
+ */
 
 #pragma once
 
-#include <Model/PhasorDynamics/Bus/BusElectric/BusElectric.hpp>
+#include <Model/PhasorDynamics/Bus/BusControl.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
@@ -9,7 +15,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <typename RealT, typename IdxT>
-    struct BusData;
+    struct BusControlData;
   }
 } // namespace GridKit
 
@@ -26,25 +32,24 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class BusNetwork : public BusNetwork<ScalarT, IdxT>
+    class BusSignal : public BusControl<ScalarT, IdxT>
     {
-      using BusBase<ScalarT, IdxT>::size_;
-      using BusBase<ScalarT, IdxT>::y_;
-      using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::yB_;
-      using BusBase<ScalarT, IdxT>::ypB_;
-      using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::fB_;
-      using BusBase<ScalarT, IdxT>::tag_;
+      using BusControl<ScalarT, IdxT>::size_;
+      using BusControl<ScalarT, IdxT>::y_;
+      using BusControl<ScalarT, IdxT>::yp_;
+      using BusControl<ScalarT, IdxT>::yB_;
+      using BusControl<ScalarT, IdxT>::ypB_;
+      using BusControl<ScalarT, IdxT>::f_;
+      using BusControl<ScalarT, IdxT>::fB_;
+      using BusControl<ScalarT, IdxT>::tag_;
 
     public:
-      using real_type = typename BusNetwork<ScalarT, IdxT>::real_type;
-      using DataT     = BusData<real_type, IdxT>;
+      using real_type = typename BusControl<ScalarT, IdxT>::real_type;
+      using DataT     = BusControlData<real_type, IdxT>;
 
-      BusNetwork();
-      BusNetwork(ScalarT Vr, ScalarT Vi);
-      BusNetwork(const DataT& data);
-      virtual ~BusNetwork();
+      BusSignal();
+      BusSignal(const DataT& data);
+      virtual ~BusSignal();
 
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
@@ -58,12 +63,16 @@ namespace GridKit
 
       virtual int BusType() const override
       {
-        return BusData<real_type, IdxT>::BusType::DEFAULT;
+        return BusControlData<real_type, IdxT>::BusType::SIGNAL;
       }
 
+      void set_source(ScalarT (*callback)()) override;
+      ScalarT poll() override;
+
     private:
-      ScalarT Vr0_{0.0};
-      ScalarT Vi0_{0.0};
+
+      ScalarT (*callback_)();
+
     };
 
   } // namespace PhasorDynamics

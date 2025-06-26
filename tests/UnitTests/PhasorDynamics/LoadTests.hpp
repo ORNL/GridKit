@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
@@ -27,7 +27,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto* bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
             new PhasorDynamics::Load<ScalarT, IdxT>(bus);

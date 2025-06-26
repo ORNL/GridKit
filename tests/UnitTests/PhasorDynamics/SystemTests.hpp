@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Utilities/TestHelpers.hpp>
@@ -52,13 +52,13 @@ namespace GridKit
 
         // Bus 0
         data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[0].bus_type = PhasorDynamics::BusElectricData<ScalarT, IdxT>::SLACK;
         data.bus[0].Vr0      = 10.0;
         data.bus[0].Vi0      = 20.0;
 
         // Bus 1
         data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[1].bus_type = PhasorDynamics::BusElectricData<ScalarT, IdxT>::SLACK;
         data.bus[1].Vr0      = 30.0;
         data.bus[1].Vi0      = 40.0;
 

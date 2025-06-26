@@ -1,8 +1,9 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -25,7 +26,7 @@ namespace GridKit
         ScalarT Vr{1.0};
         ScalarT Vi{2.0};
 
-        PhasorDynamics::BusBase<ScalarT, IdxT>* bus = nullptr;
+        PhasorDynamics::BusElectric<ScalarT, IdxT>* bus = nullptr;
 
         // Create an infinite bus
         bus      = new PhasorDynamics::BusInfinite<ScalarT, IdxT>();
@@ -39,14 +40,14 @@ namespace GridKit
         delete bus;
 
         // Create an default bus
-        bus = new PhasorDynamics::Bus<ScalarT, IdxT>();
+        bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>();
         bus->allocate();
         bus->initialize();
         success *= isEqual(bus->Vr(), 0.0);
         success *= isEqual(bus->Vi(), 0.0);
         delete bus;
 
-        bus = new PhasorDynamics::Bus<ScalarT, IdxT>(Vr, Vi);
+        bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>(Vr, Vi);
         bus->allocate();
         bus->initialize();
         success *= isEqual(bus->Vr(), Vr);
@@ -78,7 +79,7 @@ namespace GridKit
         success *= isEqual(bus_inf.Ir(), 0.0);
         success *= isEqual(bus_inf.Ii(), 0.0);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(Vr, Vi);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT> bus(Vr, Vi);
         bus.allocate();
         bus.initialize();
         success *= isEqual(bus.Vr(), Vr);

@@ -12,8 +12,8 @@
 
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
@@ -38,7 +38,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+        auto* bus = new PhasorDynamics::BusNetwork<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
             new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, 1);
@@ -77,7 +77,7 @@ namespace GridKit
                                                  0.0,
                                                  -4.0};
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
@@ -144,7 +144,7 @@ namespace GridKit
             2.0,              // Ii
         };
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
@@ -191,7 +191,7 @@ namespace GridKit
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::BusNetwork<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();

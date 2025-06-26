@@ -12,7 +12,7 @@
 #include <cmath>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
 
 namespace GridKit
 {

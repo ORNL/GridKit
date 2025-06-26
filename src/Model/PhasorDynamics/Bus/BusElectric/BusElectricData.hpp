@@ -1,7 +1,7 @@
 /**
- * @file BusData.hpp
+ * @file BusElectricData.hpp
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Modeling data for buses (nodes)
+ * @brief Modeling data for buses (electrical)
  *
  */
 #pragma once
@@ -21,14 +21,13 @@ namespace GridKit
      * @todo Decide on naming scheme for model parameters.
      */
     template <typename RealT, typename IdxT>
-    struct BusData
+    struct BusElectricData
     {
       enum BusType
       {
         INVALID = 0,
-        DEFAULT,    ///< Electrical, Infinite
+        DEFAULT,    ///< Electrical, Network
         SLACK,      ///< Electrical, Infinite
-        SIGNAL      ///< Control   , Signal
       };
 
       RealT Vr0{0.0}; ///< Initial value for real bus voltage

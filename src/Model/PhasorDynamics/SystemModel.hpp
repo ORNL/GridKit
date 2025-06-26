@@ -4,13 +4,15 @@
 #include <iostream>
 #include <vector>
 
-#include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <ScalarTraits.hpp>
 
 // Temporary
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusNetwork.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusInfinite.hpp>
 #include <Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
@@ -34,7 +36,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class SystemModel : public PhasorDynamics::Component<ScalarT, IdxT>
     {
-      using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
+      using bus_type       = PhasorDynamics::BusElectric<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using real_type      = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
@@ -94,7 +96,7 @@ namespace GridKit
         // Add electrical buses
         for (const auto& busdata : data.bus)
         {
-          BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
+          auto* bus = BusFactory<ScalarT, IdxT>::create(busdata);
           addBus(bus);
         }
 

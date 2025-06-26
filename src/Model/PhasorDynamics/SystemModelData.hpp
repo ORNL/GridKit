@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusElectricData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
@@ -14,7 +14,7 @@ namespace GridKit
     struct SystemModelData
     {
       using BranchDataT   = BranchData<RealT, IdxT>;
-      using BusDataT      = BusData<RealT, IdxT>;
+      using BusDataT      = BusElectricData<RealT, IdxT>;
       using BusFaultDataT = BusFaultData<RealT, IdxT>;
       using GenrouDataT   = GenrouData<RealT, IdxT>;
       using LoadDataT     = LoadData<RealT, IdxT>;

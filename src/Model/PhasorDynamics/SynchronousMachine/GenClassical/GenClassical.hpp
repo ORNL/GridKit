@@ -14,7 +14,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
-    class BusBase;
+    class BusElectric;
   }
 } // namespace GridKit
 
@@ -41,7 +41,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
+      using bus_type  = BusElectric<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
 
     public:

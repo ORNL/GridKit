@@ -17,9 +17,7 @@
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite/BusInfinite.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric/BusElectricData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
@@ -99,19 +97,19 @@ int main()
 
   // Bus 0
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::SLACK;
+  data.bus[0].bus_type = BusElectricData<scalar_type, index_type>::SLACK;
   data.bus[0].Vr0      = 1.06;
   data.bus[0].Vi0      = 0.0;
 
   // Bus 1
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[1].bus_type = BusElectricData<scalar_type, index_type>::DEFAULT;
   data.bus[1].Vr0      = 1.0599558398065716;
   data.bus[1].Vi0      = -0.009675621941024773;
 
   // Bus 2
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[2].bus_type = BusElectricData<scalar_type, index_type>::DEFAULT;
   data.bus[2].Vr0      = 0.9610827543495831;
   data.bus[2].Vi0      = -0.13122476630506485;
 

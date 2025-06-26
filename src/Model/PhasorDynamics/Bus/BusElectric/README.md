@@ -28,5 +28,7 @@ should have associated Nominal Voltage value.
 
 ## Electric Bus Types
 
-- Network Bus  (See [BusNetwork](./BusNetwork/))
-- Infinite Bus (See [BusInfinite](./BusInfinite/))
+- Network Bus 
+  - A network bus is a traditional bus in an electrical network subject to KVL and KCL laws.
+- Infinite Bus
+  - An infinite bus is an electric bus that is an ideal voltage source.

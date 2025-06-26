@@ -1,7 +1,7 @@
 /* Bus Fault Component - Adam Birchfield */
 #pragma once
 
-#include <Model/PhasorDynamics/BusBase.hpp>
+#include <Model/PhasorDynamics/Bus/BusElectric.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 
 // Forward declaration of BusData structure
@@ -36,7 +36,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::ypB_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
+      using bus_type  = BusElectric<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
       using DataT     = BusFaultData<real_type, IdxT>;
 
