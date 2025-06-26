@@ -172,10 +172,10 @@ excitation limiters are non-existant.
     V_{f}  &= 0 \\
     V_{E}   &= 0 \\
     k_{sat} &= 0 \\
-    V_{fx}   &= \dfrac{K_F}{T_F} E_{fd} \\
+    V_{fx}  &= \dfrac{K_F}{T_F} E_{fd} \\
     V_R     &= K_E E_{fd} \\
     V_{tr}  &= \dfrac{1}{K_{a}}V_{R} \\
-    E_C     &= V_{ref}-V_f - V_{tr}  \\
+    E_C     &= V_{ref}  \\
     V_{ts}  &= E_C \\
 \end{aligned}
 ```
