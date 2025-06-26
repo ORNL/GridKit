@@ -40,7 +40,7 @@ namespace GridKit
     public:
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
       using DataT     = BusData<real_type, IdxT>;
-      using BusTypeT = typename BusData<real_type, IdxT>::BusType;
+      using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
 
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);

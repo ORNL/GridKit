@@ -240,7 +240,6 @@ namespace GridKit
 
       j.at("id").get_to(gd.disambiguation_string);
 
-
       if (j.contains("mon"))
       {
         for (auto& raw_monitored_variable : j.at("mon"))

@@ -8,6 +8,8 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include "example2.hpp"
+
 #include <cstdio>
 #include <ctime>
 #include <fstream>
