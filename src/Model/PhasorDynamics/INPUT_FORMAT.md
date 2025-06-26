@@ -142,7 +142,8 @@ connected to a constant value. This list is subject to change.
               "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
        { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
    ]
-}```
+}
+```
 
 ## Appendix: Output file format
 

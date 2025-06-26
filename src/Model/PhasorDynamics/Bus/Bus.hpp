@@ -3,16 +3,6 @@
 
 #include <Model/PhasorDynamics/BusBase.hpp>
 
-// Forward declaration of BusData structure
-/*namespace GridKit
-{
-  namespace PhasorDynamics
-  {
-    template <typename RealT, typename IdxT>
-    struct BusData;
-  }
-} // namespace GridKit
-*/
 namespace GridKit
 {
   namespace PhasorDynamics
