@@ -21,15 +21,15 @@ $K_a$       | [p.u.] | Coefficient for voltage regulation                | 50   
 $T_a$       | [sec]  | Time constant for voltage regulation              | 0.04    |
 $K_e$       | [p.u.] | Coefficient for excitation system                 | -0.06   |
 $T_e$       | [sec]  | Time constant for excitation system               | 0.6     | 
-$K_f$       | [p.u.] | Tand time constant                                | 0.09    | 
-$T_f$       | [sec]  | Coefficient for feedback                          | 1.46    | 
+$K_f$       | [p.u.] | Coefficient for feedback                          | 0.09    | 
+$T_f$       | [sec]  | Time constant for feedback                        | 1.46    | 
 $V_{rmin}$  | [p.u.] | Lower limit to voltage regulation                 | -1      | 
 $V_{rmax}$  | [p.u.] | Upper limit to voltage regulation                 | 1       | 
 $E_1$       | [p.u.] | Saturation Parameter                              | 2.8     | 
 $E_2$       | [p.u.] | Saturation Parameter                              | 3.73    | 
 $S_{e1}$    | [p.u.] | Saturation Parameter                              | 0.04    | 
 $S_{e2}$    | [p.u.] | Saturation Parameter                              | 0.33    | 
-$I_{spdlm}$ | [binary] | Speed Limit flag indicator                        | 0       | 
+$I_{spdlm}$ | [binary] | Speed Limit flag indicator                      | 0       | 
 
 
 ## Model Variables 
