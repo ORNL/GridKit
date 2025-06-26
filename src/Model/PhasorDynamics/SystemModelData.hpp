@@ -3,6 +3,7 @@
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
@@ -16,6 +17,7 @@ namespace GridKit
       using BranchDataT   = BranchData<RealT, IdxT>;
       using BusDataT      = BusData<RealT, IdxT>;
       using BusFaultDataT = BusFaultData<RealT, IdxT>;
+      using Tgov1DataT    = Governor::Tgov1Data<RealT, IdxT>;
       using GenrouDataT   = GenrouData<RealT, IdxT>;
       using LoadDataT     = LoadData<RealT, IdxT>;
 
@@ -36,6 +38,7 @@ namespace GridKit
       std::vector<BranchDataT>   branch;
       std::vector<BusFaultDataT> bus_fault;
       std::vector<GenrouDataT>   genrou;
+      std::vector<Tgov1DataT>    gov;
       std::vector<LoadDataT>     load;
     };
   } // namespace PhasorDynamics

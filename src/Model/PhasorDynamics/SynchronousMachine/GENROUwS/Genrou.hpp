@@ -18,6 +18,9 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class BusBase;
 
+    template <class ScalarT, typename IdxT>
+    class GovernorBase; // <- TODO: Temporary, to be removed.
+
     template <typename RealT, typename IdxT>
     struct GenrouData;
   } // namespace PhasorDynamics
@@ -47,6 +50,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::ypB_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using gov_type        = GovernorBase<ScalarT, IdxT>;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
 
@@ -96,6 +100,9 @@ namespace GridKit
       ScalarT getSpeed();
       ScalarT getTorque();
 
+      // Temporary set governor function until SignalBus implemented
+      void setgovenor(gov_type* gov);
+
     private:
       void setDerivedParams();
 
@@ -124,6 +131,9 @@ namespace GridKit
       bus_type* bus_;
       const int busID_;
       IdxT      unit_id_;
+
+      // Governor Pointer
+      gov_type* gov_;
 
       /* Initial terminal conditions */
       ScalarT p0_;
