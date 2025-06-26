@@ -225,7 +225,7 @@ int main()
 
     output.push_back(OutputData{t,
                                 1.0 + y_val[5],
-                                1.0 + y_val[26],
+                                1.0 + y_val[25],
                                 std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),
                                 std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])});
   };
