@@ -142,7 +142,7 @@ jobs:
               mumps:
                 require: ~mpi~openmp
               sundials:
-                require: '@develop'
+                require: '@7.4.0'
               llvm:
                 externals:
                 - spec: llvm@${{ matrix.llvm }}
