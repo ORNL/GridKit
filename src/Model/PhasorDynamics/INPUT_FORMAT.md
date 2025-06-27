@@ -109,12 +109,12 @@ represent a device and has the following fields:
 As of the current version and revision, the following device classes
 are specified:
 
-  Device class  | Description                                          | Ports                                         | Initialization parameters | Variables available to monitor
-  --------------|------------------------------------------------------|-----------------------------------------------|---------------------------- | -------------------------
-  `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                             | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
-  `static_load` | a basic static ZIP load                              | `bus`                                      | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
-  `GENROU`      | 6th order machine model                              | `bus`, `exciter_signal`\*, `governor_signal`\* | `unit_id`, `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
-  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `control_signal`\*                    | `state0`, `R`, `X` | `state`, `ir`, `ii`
+  Device class  | Description                                          | Ports                                          | Initialization parameters | Variables available to monitor
+  --------------|------------------------------------------------------|------------------------------------------------|---------------------------- | -------------------------
+  `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                                 | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `static_load` | a basic static ZIP load                              | `bus`                                          | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
+  `GENROU`      | 6th order machine model                              | `bus`, `exciter_signal`\*, `governor_signal`\* | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `control_signal`\*                      | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.
@@ -138,7 +138,7 @@ connected to a constant value. This list is subject to change.
    ],
    "devices": [
        { "class": "branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
-       { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"unit_id": 1, "p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
+       { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
               "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
        { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
    ]

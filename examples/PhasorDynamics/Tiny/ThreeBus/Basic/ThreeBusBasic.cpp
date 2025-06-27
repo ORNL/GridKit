@@ -149,7 +149,6 @@ int main()
 
   // Generator on bus 1
   data.genrou[0].bus_id  = 1;
-  data.genrou[0].unit_id = 0;
   data.genrou[0].p0      = 0.5;
   data.genrou[0].q0      = -0.07588;
   data.genrou[0].H       = 2.7;
@@ -171,7 +170,6 @@ int main()
 
   // Generator on bus 2
   data.genrou[1].bus_id  = 2;
-  data.genrou[1].unit_id = 1;
   data.genrou[1].p0      = 0.25;
   data.genrou[1].q0      = 0.26587;
   data.genrou[1].H       = 1.6;

@@ -125,7 +125,7 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
         busID_(0),
-        unit_id_(data.unit_id),
+        unit_id_(1),
         gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(data.p0),
         q0_(data.q0),

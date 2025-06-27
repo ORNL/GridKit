@@ -30,7 +30,6 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct GenrouData
     {
-      IdxT  unit_id{0}; ///< Unique unit ID
       RealT p0{0.0};    ///< Initial active power
       RealT q0{0.0};    ///< Initial reactive power
       RealT H{0.0};     ///< Rotor inertia
@@ -82,11 +81,7 @@ namespace GridKit
     {
       for (auto& raw_parameter : j.at("params").items())
       {
-        if (raw_parameter.key() == "unit_id")
-        {
-          raw_parameter.value().get_to(gd.unit_id);
-        }
-        else if (raw_parameter.key() == "p0")
+        if (raw_parameter.key() == "p0")
         {
           raw_parameter.value().get_to(gd.p0);
         }

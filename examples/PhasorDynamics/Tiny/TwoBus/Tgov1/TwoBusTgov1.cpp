@@ -85,7 +85,6 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
-  data.genrou[0].unit_id = 1;
   data.genrou[0].p0      = 1.;
   data.genrou[0].q0      = 0.05013;
   data.genrou[0].H       = 3.;
