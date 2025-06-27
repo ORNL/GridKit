@@ -42,11 +42,12 @@ namespace GridKit
       /// Enumeration over the kinds of bus this data structure can be for
       enum class BusType
       {
+        INVALID,
         DEFAULT,
         SLACK,
       };
 
-      BusType bus_type{BusType::DEFAULT}; ///< The kind of bus this data is for
+      BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for
 
       RealT                v_base{1.0}; ///< Voltage base in volts
       std::optional<RealT> freq_base;   ///< Override for the system-wide base frequency
