@@ -1,29 +1,30 @@
-#ifndef COO_MATRIX_HPP
-#define COO_MATRIX_HPP
+#pragma once
 
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
-/**
- * @brief Quick class to provide sparse matrices of COO type.
- *
- * Simplifies data movement
- *
- * @todo add functionality to keep track of multiple sorted lists. Faster
- * adding of new entries and will have a threshold to sort completely.
- *
- * m x n sparse matrix
- */
 namespace GridKit
 {
   namespace LinearAlgebra
   {
+    /**
+     * @brief Quick class to provide sparse matrices of COO type.
+     *
+     * Simplifies data movement
+     *
+     * @todo add functionality to keep track of multiple sorted lists. Faster
+     * adding of new entries and will have a threshold to sort completely.
+     *
+     * m x n sparse matrix
+     */
     template <class ScalarT, typename IdxT>
     class COO_Matrix
     {
@@ -77,6 +78,8 @@ namespace GridKit
       std::tuple<IdxT, IdxT> getDimensions();
 
       void printMatrix(std::string name = "");
+
+      void printMatrixMarket(const std::string& filename, const std::string& comment);
 
       static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<ScalarT>& values);
 
@@ -193,12 +196,12 @@ namespace GridKit
     {
       if (!this->isSorted())
         this->sortSparse();
-      std::vector<IdxT> row_size_vec(static_cast<size_t>(this->rows_size_ + 1), 0);
-      size_t            counter = 0;
-      for (size_t i = 0; i < row_size_vec.size() - 1; i++)
+      std::vector<IdxT> row_size_vec(this->rows_size_ + 1, 0);
+      IdxT              counter = 0;
+      for (IdxT i = 0; i < static_cast<IdxT>(row_size_vec.size() - 1); i++)
       {
         row_size_vec[i + 1] = row_size_vec[i];
-        while (counter < this->row_indices_.size() && i == static_cast<size_t>(this->row_indices_[counter]))
+        while (counter < static_cast<IdxT>(this->row_indices_.size()) && i == this->row_indices_[counter])
         {
           row_size_vec[i + 1]++;
           counter++;
@@ -230,12 +233,12 @@ namespace GridKit
       this->sortSparseCOO(r, c, v);
 
       // Duplicated with axpy. Could replace with function depdent on lambda expression
-      size_t a_iter = 0;
+      IdxT a_iter = 0;
       // iterate for all current values_ in matrix
-      for (size_t i = 0; i < this->row_indices_.size(); i++)
+      for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
       {
         // pushback values_ when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+        while (a_iter < static_cast<IdxT>(r.size()) && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
         {
           this->row_indices_.push_back(r[a_iter]);
           this->column_indices_.push_back(c[a_iter]);
@@ -243,8 +246,7 @@ namespace GridKit
           this->checkIncreaseSize(r[a_iter], c[a_iter]);
           a_iter++;
         }
-
-        if (a_iter >= r.size())
+        if (a_iter >= static_cast<IdxT>(r.size()))
         {
           break;
         }
@@ -256,7 +258,7 @@ namespace GridKit
         }
       }
       // push back rest that was not found sorted
-      for (size_t i = a_iter; i < r.size(); i++)
+      for (IdxT i = a_iter; i < static_cast<IdxT>(r.size()); i++)
       {
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
@@ -304,12 +306,12 @@ namespace GridKit
       this->rows_size_    = this->rows_size_ > m ? this->rows_size_ : m;
       this->columns_size_ = this->columns_size_ > n ? this->columns_size_ : n;
 
-      size_t a_iter = 0;
+      IdxT a_iter = 0;
       // iterate for all current values in matrix
-      for (size_t i = 0; i < this->row_indices_.size(); i++)
+      for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
       {
         // pushback values when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+        while (a_iter < static_cast<IdxT>(r.size()) && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
         {
           this->row_indices_.push_back(r[a_iter]);
           this->column_indices_.push_back(c[a_iter]);
@@ -318,7 +320,7 @@ namespace GridKit
           this->checkIncreaseSize(r[a_iter], c[a_iter]);
           a_iter++;
         }
-        if (a_iter >= r.size())
+        if (a_iter >= static_cast<IdxT>(r.size()))
         {
           break;
         }
@@ -330,7 +332,7 @@ namespace GridKit
         }
       }
       // push back rest that was not found sorted_
-      for (size_t i = a_iter; i < r.size(); i++)
+      for (IdxT i = a_iter; i < static_cast<IdxT>(r.size()); i++)
       {
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
@@ -371,12 +373,12 @@ namespace GridKit
       // sort input
       this->sortSparseCOO(r, c, v);
 
-      size_t a_iter = 0;
+      IdxT a_iter = 0;
       // iterate for all current values_ in matrix
-      for (size_t i = 0; i < this->row_indices_.size(); i++)
+      for (IdxT i = 0; i < static_cast<IdxT>(this->row_indices_.size()); i++)
       {
         // pushback values_ when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+        while (a_iter < static_cast<IdxT>(r.size()) && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
         {
           this->row_indices_.push_back(r[a_iter]);
           this->column_indices_.push_back(c[a_iter]);
@@ -385,7 +387,7 @@ namespace GridKit
           this->checkIncreaseSize(r[a_iter], c[a_iter]);
           a_iter++;
         }
-        if (a_iter >= r.size())
+        if (a_iter >= static_cast<IdxT>(r.size()))
         {
           break;
         }
@@ -397,7 +399,7 @@ namespace GridKit
         }
       }
       // push back rest that was not found sorted_
-      for (IdxT i = a_iter; i < r.size(); i++)
+      for (IdxT i = a_iter; i < static_cast<IdxT>(r.size()); i++)
       {
         this->row_indices_.push_back(r[i]);
         this->column_indices_.push_back(c[i]);
@@ -494,7 +496,7 @@ namespace GridKit
       this->rows_size_    = m;
       this->columns_size_ = n;
 
-      for (size_t i = 0; i < this->values_.size(); i++)
+      for (int i = 0; i < this->values_.size(); i++)
       {
         if (row_perm[this->row_indices_[i]] == -1 || col_perm[this->column_indices_[i]] == -1)
         {
@@ -519,7 +521,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     inline void COO_Matrix<ScalarT, IdxT>::zeroMatrix()
     {
-      // resize doesn't affect capacity if smaller
+      // resize doesn't effect capacity if smaller
       this->column_indices_.resize(0);
       this->row_indices_.resize(0);
       this->values_.resize(0);
@@ -626,6 +628,72 @@ namespace GridKit
                   << ", " << this->values_[i] << ")\n";
       }
       std::cout << std::flush;
+    }
+
+    /**
+     * @brief Print matrix to file in Matrix Market format
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     *
+     * @param[in] filename Output file path
+     * @param[in] comment Optional comment for the Matrix Market file
+     */
+    template <class ScalarT, typename IdxT>
+    void COO_Matrix<ScalarT, IdxT>::printMatrixMarket(const std::string& filename, const std::string& comment)
+    {
+      if (this->sorted_ == false)
+      {
+        this->sortSparse();
+      }
+
+      std::ofstream outfile(filename);
+      if (!outfile.is_open())
+      {
+        std::cerr << "Error: Unable to open file " << filename << " for writing." << std::endl;
+        return;
+      }
+
+      // Write Matrix Market header
+      outfile << "%%MatrixMarket matrix coordinate ";
+
+      if (!std::is_floating_point<ScalarT>::value)
+      {
+        // error message
+        return;
+      }
+
+      outfile << "general" << std::endl;
+
+      // Write comment if provided
+      if (!comment.empty())
+        outfile << "% " << comment << std::endl;
+
+      // Write dimensions and number of entries
+      // Get max row and column indices to determine matrix dimensions
+      IdxT max_row = 0;
+      IdxT max_col = 0;
+      for (size_t i = 0; i < this->values_.size(); i++)
+      {
+        max_row = std::max(max_row, this->row_indices_[i]);
+        max_col = std::max(max_col, this->column_indices_[i]);
+      }
+
+      // Matrix Market uses 1-based indexing, so add 1 to dimensions
+      outfile << (max_row + 1) << " " << (max_col + 1) << " " << this->values_.size() << std::endl;
+
+      // Write the matrix entries
+      for (size_t i = 0; i < this->values_.size(); i++)
+      {
+        // Matrix Market uses 1-based indexing, so add 1 to indices
+        outfile << (this->row_indices_[i] + 1) << " "
+                << (this->column_indices_[i] + 1) << " "
+                << this->values_[i] << std::endl;
+      }
+
+      outfile.close();
+
+      std::cout << "Matrix Market file written to: " << filename << std::endl;
     }
 
     /**
@@ -784,7 +852,7 @@ namespace GridKit
       // Sort by row first then column.
       std::sort(std::begin(ordervec),
                 std::end(ordervec),
-                [&](auto i1, auto i2)
+                [&](int i1, int i2)
                 { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
 
       // reorder based of index-sorting. Only swap cost no extra memory.
@@ -881,7 +949,5 @@ namespace GridKit
     COO_Matrix<ScalarT, IdxT>::~COO_Matrix()
     {
     }
-
   } // namespace LinearAlgebra
 } // namespace GridKit
-#endif
