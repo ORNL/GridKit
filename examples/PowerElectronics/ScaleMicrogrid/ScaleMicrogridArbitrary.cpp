@@ -64,9 +64,6 @@ int printMicrogridSystems(index_type N_size)
 
   bool use_jac = true;
 
-  real_type t_init  = 0.0;
-  real_type t_final = 1.0;
-
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
@@ -301,8 +298,6 @@ int printMicrogridSystems(index_type N_size)
   // print the residual in matrix market format
   sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
                                        "ScaleMicrogrid Residual N" + size_suffix);
-
-  std::vector<real_type>& fres = sys_model->getResidual();
 
   sys_model->updateTime(0.0, 1.0e-8);
   sys_model->evaluateJacobian();
