@@ -68,10 +68,10 @@ int printMicrogridSystems(index_type N_size)
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                     abs_tol,
-                                                                     use_jac,
-                                                                     SCALE_MICROGRID_MAX_STEPS);
+  PowerElectronicsModel<real_type, index_type> sys_model(rel_tol,
+                                                         abs_tol,
+                                                         use_jac,
+                                                         SCALE_MICROGRID_MAX_STEPS);
 
   // Ensure minimum size requirement
   if (N_size < 1)
@@ -188,7 +188,7 @@ int printMicrogridSystems(index_type N_size)
   {
     dg_ref->setExternalConnectionNodes(4 + i, i);
   }
-  sys_model->addComponent(dg_ref);
+  sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
   index_type indexv   = 12;
@@ -211,7 +211,7 @@ int printMicrogridSystems(index_type N_size)
       dg->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 13;
-    sys_model->addComponent(dg);
+    sys_model.addComponent(dg);
   }
 
   // Load all the Line components
@@ -235,7 +235,7 @@ int printMicrogridSystems(index_type N_size)
       line_model->setExternalConnectionNodes(5 + j, indexv + j);
     }
     indexv += 2;
-    sys_model->addComponent(line_model);
+    sys_model.addComponent(line_model);
   }
 
   //  Load all the Load components
@@ -255,7 +255,7 @@ int printMicrogridSystems(index_type N_size)
       load_model->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 2;
-    sys_model->addComponent(load_model);
+    sys_model.addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
@@ -265,43 +265,44 @@ int printMicrogridSystems(index_type N_size)
 
     virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
     virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
-    sys_model->addComponent(virDQbus_model);
+    sys_model.addComponent(virDQbus_model);
   }
 
   // allocate all the initial conditions
-  sys_model->allocate(vec_size_total);
+  sys_model.allocate(vec_size_total);
 
   // Create Initial points for states. Every state is set to zero initially
   for (index_type i = 0; i < vec_size_total; i++)
   {
-    sys_model->y()[i]  = 0.0;
-    sys_model->yp()[i] = 0.0;
+    sys_model.y()[i]  = 0.0;
+    sys_model.yp()[i] = 0.0;
   }
 
   // Create Initial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    sys_model->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    sys_model.yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
+    sys_model.yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    sys_model.yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
   // since the initial P_com = 0, set the initial vector to the reference frame
-  sys_model->y()[vec_size_internals] = DG_parms1.wb_;
+  sys_model.y()[vec_size_internals] = DG_parms1.wb_;
 
-  sys_model->initialize();
-  sys_model->evaluateResidual();
+  sys_model.initialize();
+  sys_model.evaluateResidual();
 
   // Output file names based on grid size
   std::string size_suffix = std::to_string(N_size);
 
   // print the residual in matrix market format
-  sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
-                                       "ScaleMicrogrid Residual N" + size_suffix);
+  sys_model.printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
+                                      "ScaleMicrogrid Residual N" + size_suffix);
 
-  sys_model->updateTime(0.0, 1.0e-8);
-  sys_model->evaluateJacobian();
-  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx",
-                                       "ScaleMicrogrid Jacobian N" + size_suffix);
+  sys_model.updateTime(0.0, 1.0e-8);
+  sys_model.evaluateJacobian();
+  sys_model.printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx",
+                                      "ScaleMicrogrid Jacobian N" + size_suffix);
+
   return 0;
 }
