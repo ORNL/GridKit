@@ -85,24 +85,24 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
-  data.genrou[0].p0      = 1.;
-  data.genrou[0].q0      = 0.05013;
-  data.genrou[0].H       = 3.;
-  data.genrou[0].D       = 0.;
-  data.genrou[0].Ra      = 0.;
-  data.genrou[0].Tdop    = 7.;
-  data.genrou[0].Tdopp   = .04;
-  data.genrou[0].Tqopp   = .05;
-  data.genrou[0].Tqop    = .75;
-  data.genrou[0].Xd      = 2.1;
-  data.genrou[0].Xdp     = 0.2;
-  data.genrou[0].Xdpp    = 0.18;
-  data.genrou[0].Xq      = 0.5;
-  data.genrou[0].Xqp     = 0.5;
-  data.genrou[0].Xqpp    = 0.18;
-  data.genrou[0].Xl      = 0.15;
-  data.genrou[0].S10     = 0.;
-  data.genrou[0].S12     = 0.;
+  data.genrou[0].p0    = 1.;
+  data.genrou[0].q0    = 0.05013;
+  data.genrou[0].H     = 3.;
+  data.genrou[0].D     = 0.;
+  data.genrou[0].Ra    = 0.;
+  data.genrou[0].Tdop  = 7.;
+  data.genrou[0].Tdopp = .04;
+  data.genrou[0].Tqopp = .05;
+  data.genrou[0].Tqop  = .75;
+  data.genrou[0].Xd    = 2.1;
+  data.genrou[0].Xdp   = 0.2;
+  data.genrou[0].Xdpp  = 0.18;
+  data.genrou[0].Xq    = 0.5;
+  data.genrou[0].Xqp   = 0.5;
+  data.genrou[0].Xqpp  = 0.18;
+  data.genrou[0].Xl    = 0.15;
+  data.genrou[0].S10   = 0.;
+  data.genrou[0].S12   = 0.;
 
   data.gov.resize(1);
 
