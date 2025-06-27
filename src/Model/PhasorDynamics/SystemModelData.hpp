@@ -74,6 +74,22 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
+      // NOTE: to be abundantly clear, the JSON parser we're using here is
+      //       https://github.com/nlohmann/json. if any of these operations seem unclear, the
+      //       API reference can be found here: https://json.nlohmann.me/api/basic_json (this is
+      //       the index page for the `json` type you see above in this function signature).
+      //
+      //       some documentation of methods of note:
+      //       - `.at`: https://json.nlohmann.me/api/basic_json/at/
+      //       - `.items`: https://json.nlohmann.me/api/basic_json/items/
+      //       - `.get_to`: https://json.nlohmann.me/api/basic_json/get_to/
+      //
+      //       finally, the reason we don't just use `operator[]` to index the `json` structure
+      //       below when transferring the data over to the `SystemModelData` is because it does
+      //       not perform a bounds check. additionally, this allows us to check for unrecognized
+      //       fields which is useful for the end user so that it is easier for them to know if
+      //       they have made a mistake.
+
       auto header = j.at("header");
 
       if (header.contains("format_version"))
