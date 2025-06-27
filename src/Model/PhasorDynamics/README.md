@@ -2,8 +2,8 @@
 
 This directory contains an implementation of a system model using phasor
 dynamics. Aside from all of the modeling aspects, one additional part of
-note is the experimental JSON parsing functionality which can take in a
-JSON object (described in `INPUT_FORMAT.md` and yields a system model. This
+note is the experimental JSON parsing functionality which can take in a JSON
+object (described in `INPUT_FORMAT.md`) and yields a system model. This
 is implemented with the [nlohmann/json](https://github.com/nlohmann/json)
 parser by adding a `from_json` function for each data structure of note
 with the signature `void from_json(const nlohmann::json&, SomeType&)`.
