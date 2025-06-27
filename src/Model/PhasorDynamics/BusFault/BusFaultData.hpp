@@ -57,6 +57,9 @@ namespace GridKit
           monitored_variables;
     };
 
+    /// JSON parser function implementation for the `BusFaultData` type
+    ///
+    /// See the `README.md` in `src/Model/PhasorDynamics` for more information
     template <typename RealT, typename IdxT>
     void from_json(const json& j, BusFaultData<RealT, IdxT>& bf)
     {
