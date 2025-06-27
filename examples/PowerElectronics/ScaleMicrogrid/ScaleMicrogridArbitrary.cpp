@@ -1,6 +1,5 @@
 
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -22,82 +21,67 @@ using real_type  = double;
 // Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
 #include "SolutionKeys.hpp"
 
-static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false);
+int printMicrogridSystems(index_type N_size);
 
 /**
- * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
+ * @brief Run Scale Microgrid for a specific N given by the user.
  *
- * @param argc unused
- * @param argv unsued
+ * @param[in] argc should be 1 if no N given, 2 if N given
+ * @param[in] argv can contain the N value (argv[1])
  * @return int
  */
-int main(int /* argc */, char const** /* argv */)
+int main(int argc, char const* argv[])
 {
-  int       retval    = 0;
-  bool      debug_out = false;
-  real_type tol       = SCALE_MICROGRID_ERROR_TOL;
+  // Default value
+  index_type N_size = 4;
 
-  retval += test(2, tol, debug_out);
-  retval += test(4, tol, debug_out);
-  retval += test(8, tol, debug_out);
-  if (retval > 0)
+  // Parse command line arguments if provided
+  if (argc > 1)
   {
-    std::cout << "Some tests fail!!\n";
+    try
+    {
+      N_size = std::stoi(argv[1]);
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "Error parsing grid size argument: " << e.what() << std::endl;
+      std::cerr << "Using default grid size = " << N_size << std::endl;
+    }
   }
-  else
-  {
-    std::cout << "All tests pass!!\n";
-  }
-  return retval;
+
+  return printMicrogridSystems(N_size);
 }
 
 /**
  * @brief Tests network of distributed generators.
  *
- * @param Nsize - The number of DG line load cobinations to generate for scale
- * @param error_tol - The tolerance for the model to meet to pass
- * @param debug_output - Enable debug output
- * @param use_DAE_keys - Choice between using DAE or ODE keys
+ * @param[in] N_size - The number of DG line load cobinations to generate for scale
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(index_type Nsize, real_type error_tol, bool debug_output)
+int printMicrogridSystems(index_type N_size)
 {
   using namespace GridKit;
 
   bool use_jac = true;
 
-  real_type t_init  = 0.0;
-  real_type t_final = 1.0;
-
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                     abs_tol,
-                                                                     use_jac,
-                                                                     SCALE_MICROGRID_MAX_STEPS);
+  PowerElectronicsModel<real_type, index_type> sys_model(rel_tol,
+                                                         abs_tol,
+                                                         use_jac,
+                                                         SCALE_MICROGRID_MAX_STEPS);
 
-  const std::vector<real_type>* true_vec = &answer_key_N8;
-
-  switch (Nsize)
+  // Ensure minimum size requirement
+  if (N_size < 1)
   {
-  case 2:
-    true_vec = &answer_key_N2;
-    break;
-  case 4:
-    true_vec = &answer_key_N4;
-    break;
-  case 8:
-    true_vec = &answer_key_N8;
-    break;
-  default:
-    std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
-    std::cout << "Using default Nsize = 8.\n";
+    std::cout << "N_size must be at least 1.\n";
+    return 1;
   }
 
   // Modeled after the problem in the paper
-  // Every Bus has the same virtual resistance. This is due to the numerical stability as mentioned in the paper.
+  // Every Bus has the same virtual resistance. This is due to numerical stability as mentioned in the paper.
   real_type RN = 1.0e4;
 
   // DG Params Vector
@@ -136,10 +120,13 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   DG_parms2.rLc_ = 0.03;
   DG_parms2.Lc_  = 0.35e-3;
 
-  std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2 * Nsize, DG_parms2);
+  std::vector<GridKit::DistributedGeneratorParameters<real_type, index_type>> DGParams_list(2 * N_size, DG_parms2);
 
-  DGParams_list[0] = DG_parms1;
-  DGParams_list[1] = DG_parms1;
+  // First two generators use parameters 1
+  if (DGParams_list.size() >= 1)
+    DGParams_list[0] = DG_parms1;
+  if (DGParams_list.size() >= 2)
+    DGParams_list[1] = DG_parms1;
 
   // line vector params
   // Every odd line has the same parameters and every even line has the same parameters
@@ -147,8 +134,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type              Lline1 = 0.1 / (2.0 * M_PI * 50.0);
   real_type              rline2 = 0.35;
   real_type              Lline2 = 0.58 / (2.0 * M_PI * 50.0);
-  std::vector<real_type> rline_list(2 * Nsize - 1, 0.0);
-  std::vector<real_type> Lline_list(2 * Nsize - 1, 0.0);
+  std::vector<real_type> rline_list(2 * N_size - 1, 0.0);
+  std::vector<real_type> Lline_list(2 * N_size - 1, 0.0);
   for (index_type i = 0; i < rline_list.size(); i++)
   {
     rline_list[i] = (i % 2) ? rline2 : rline1;
@@ -162,17 +149,20 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type rload2 = 2.0;
   real_type Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  std::vector<real_type> rload_list(Nsize, rload2);
-  std::vector<real_type> Lload_list(Nsize, Lload2);
-  rload_list[0] = rload1;
-  Lload_list[0] = Lload1;
+  std::vector<real_type> rload_list(N_size, rload2);
+  std::vector<real_type> Lload_list(N_size, Lload2);
+  if (rload_list.size() >= 1)
+  {
+    rload_list[0] = rload1;
+    Lload_list[0] = Lload1;
+  }
 
   //							DGs	+		- refframe	   Lines +				Loads
-  index_type vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
+  index_type vec_size_internals = 13 * (2 * N_size) - 1 + (2 + 4 * (N_size - 1)) + 2 * N_size;
   //							\omegaref + BusDQ
-  index_type vec_size_externals = 1 + 2 * (2 * Nsize);
+  index_type vec_size_externals = 1 + 2 * (2 * N_size);
 
-  std::vector<index_type> vdqbus_index(2 * Nsize, 0);
+  std::vector<index_type> vdqbus_index(2 * N_size, 0);
   vdqbus_index[0] = vec_size_internals + 1;
   for (index_type i = 1; i < vdqbus_index.size(); i++)
   {
@@ -192,19 +182,19 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
   dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
   //"grounding" of the difference
-  dg_ref->setExternalConnectionNodes(3, static_cast<index_type>(-1));
+  dg_ref->setExternalConnectionNodes(3, -1);
   // internal connections
   for (index_type i = 0; i < 12; i++)
   {
     dg_ref->setExternalConnectionNodes(4 + i, i);
   }
-  sys_model->addComponent(dg_ref);
+  sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
   index_type indexv   = 12;
   index_type model_id = 1;
   // Add all other DGs
-  for (index_type i = 1; i < 2 * Nsize; i++)
+  for (index_type i = 1; i < 2 * N_size; i++)
   {
     // current DG to add
     auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
@@ -221,11 +211,11 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       dg->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 13;
-    sys_model->addComponent(dg);
+    sys_model.addComponent(dg);
   }
 
-  // Load all the Line compoenents
-  for (index_type i = 0; i < 2 * Nsize - 1; i++)
+  // Load all the Line components
+  for (index_type i = 0; i < 2 * N_size - 1; i++)
   {
     // line
     auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
@@ -245,11 +235,11 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       line_model->setExternalConnectionNodes(5 + j, indexv + j);
     }
     indexv += 2;
-    sys_model->addComponent(line_model);
+    sys_model.addComponent(line_model);
   }
 
   //  Load all the Load components
-  for (index_type i = 0; i < Nsize; i++)
+  for (index_type i = 0; i < N_size; i++)
   {
     auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
                                                                 rload_list[i],
@@ -265,122 +255,54 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
       load_model->setExternalConnectionNodes(3 + j, indexv + j);
     }
     indexv += 2;
-    sys_model->addComponent(load_model);
+    sys_model.addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
-  for (index_type i = 0; i < 2 * Nsize; i++)
+  for (index_type i = 0; i < 2 * N_size; i++)
   {
     auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
 
     virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
     virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
-    sys_model->addComponent(virDQbus_model);
+    sys_model.addComponent(virDQbus_model);
   }
 
-  // allocate all the intial conditions
-  sys_model->allocate(vec_size_total);
+  // allocate all the initial conditions
+  sys_model.allocate(vec_size_total);
 
-  if (debug_output)
-  {
-    std::cout << sys_model->y().size() << std::endl;
-    std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
-  }
-
-  // Create Intial points for states. Every state is to specified to the zero intially
+  // Create Initial points for states. Every state is set to zero initially
   for (index_type i = 0; i < vec_size_total; i++)
   {
-    sys_model->y()[i]  = 0.0;
-    sys_model->yp()[i] = 0.0;
+    sys_model.y()[i]  = 0.0;
+    sys_model.yp()[i] = 0.0;
   }
 
-  // Create Intial derivatives specifics generated in MATLAB
-  for (index_type i = 0; i < 2 * Nsize; i++)
+  // Create Initial derivatives specifics generated in MATLAB
+  for (index_type i = 0; i < 2 * N_size; i++)
   {
-    sys_model->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    sys_model.yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
+    sys_model.yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    sys_model.yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
-  // since the intial P_com = 0, the set the intial vector to the reference frame
-  sys_model->y()[vec_size_internals] = DG_parms1.wb_;
+  // since the initial P_com = 0, set the initial vector to the reference frame
+  sys_model.y()[vec_size_internals] = DG_parms1.wb_;
 
-  sys_model->initialize();
-  sys_model->evaluateResidual();
+  sys_model.initialize();
+  sys_model.evaluateResidual();
+
+  // Output file names based on grid size
+  std::string size_suffix = std::to_string(N_size);
+
   // print the residual in matrix market format
-  sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Residual N" + std::to_string(Nsize));
-  std::vector<real_type>& fres = sys_model->getResidual();
-  if (debug_output)
-  {
-    std::cout << "Verify Intial Resisdual is Zero: {\n";
-    for (index_type i = 0; i < fres.size(); i++)
-    {
-      std::cout << i << " : " << fres[i] << "\n";
-    }
-    std::cout << "}\n";
-  }
+  sys_model.printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
+                                      "ScaleMicrogrid Residual N" + size_suffix);
 
-  sys_model->updateTime(0.0, 1.0e-8);
-  sys_model->evaluateJacobian();
-  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Jacobian N" + std::to_string(Nsize));
-  // print the jacobian in matrix market format
+  sys_model.updateTime(0.0, 1.0e-8);
+  sys_model.evaluateJacobian();
+  sys_model.printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx",
+                                      "ScaleMicrogrid Jacobian N" + size_suffix);
 
-  if (debug_output)
-    std::cout << "Intial Jacobian with alpha:\n";
-
-  // Create numerical integrator and configure it for the generator model
-  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
-
-  // setup simulation
-  idas->configureSimulation();
-  idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init);
-
-  idas->runSimulation(t_final);
-
-  std::vector<real_type>& yfinal = sys_model->y();
-
-  if (debug_output)
-  {
-    std::cout << "Final Vector y\n";
-    for (index_type i = 0; i < yfinal.size(); i++)
-    {
-      std::cout << i << " : " << yfinal[i] << "\n";
-    }
-  }
-
-  bool test_pass = true;
-
-  real_type sum_top    = 0.0;
-  real_type sum_bottom = 0.0;
-
-  // check relative error
-  std::cout << "Test the Relative Error for N = " << Nsize << "\n";
-  for (index_type i = 0; i < true_vec->size(); i++)
-  {
-    // Print the Elementwise Relative Error
-    if (debug_output)
-      std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
-
-    sum_top    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
-    sum_bottom += (true_vec->at(i) * true_vec->at(i));
-  }
-
-  real_type norm2error = (sqrt(sum_top) / sqrt(sum_bottom));
-  std::cout << "2-Norm Relative Error: " << norm2error << std::endl;
-  test_pass = norm2error < error_tol;
-
-  delete idas;
-  delete sys_model;
-
-  if (test_pass)
-  {
-    std::cout << "Test with Nsize = " << Nsize << " passes!\n";
-    return 0;
-  }
-  else
-  {
-    std::cout << "Test with Nsize = " << Nsize << " fails!\n";
-    return 1;
-  }
+  return 0;
 }
