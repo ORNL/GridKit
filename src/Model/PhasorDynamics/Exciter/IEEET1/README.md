@@ -107,6 +107,82 @@ The IEEET1 differential equations, as derived from the model diagram.  By defini
 \end{aligned}
 ```
 
+
+#### Smooth Piecewise Approximation (Differential) 
+
+The domain of the state variable $V_{R}\in(V_{rmin}, V_{rmax})$ is enforced
+through the piece-wise definition above. This may need to be expressed as a
+smooth approximation (smooth indicator $\phi$) expressed generically as follows.
+```math
+\begin{aligned}
+   f(V_R)     
+            &= 
+            \dfrac{1}{T_A}
+            \left[
+               -V_{R}+K_{a}V_{tr}
+            \right] \\
+   \dot{V}_R &= 
+            \phi(V_R, f) \cdot f(V_R)
+\end{aligned}
+```
+
+The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $V_R$ limits $(V_{rmin}, V_{rmax})$.
+```math
+\begin{aligned}
+   \phi_L(V_R,f)&= \sigma(V_{rmin}-V_R)\sigma(-f)            \\
+   \phi_U(V_R,f)&= \sigma(V_R-V_{rmax})\sigma(f)             \\
+   \phi(V_R,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
+\end{aligned}
+```
+
+The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
+```math
+\begin{aligned}
+   \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}\approx \dfrac{1}{2}\left(\dfrac{\alpha x}{1+|\alpha x|}\right)
+\end{aligned}
+```
+
+Applying these approximations produces a smooth approximation of the explicit differential equation of $V_R$. The approximation written out below approaches an exact solution as $\alpha\to\infty$.
+
+<!--
+Very explicit version, if prefered
+```math
+\begin{aligned}
+   \dot{V}_R 
+   &\approx \dfrac{K_{a}V_{tr}-V_{R}}{T_A}
+      \left[
+         1 +
+         \dfrac{\alpha^2(V_{rmin}\text{-}V_R)(K_{a}V_{tr}-V_{R})}
+         {4(1+\alpha |V_{rmin}\text{-}V_R|)(T_A+\alpha |K_{a}V_{tr}-V_{R}|)}
+      \right]
+      \left[
+         1-
+            \dfrac{\alpha^2(V_R\text{-}V_{rmax})(K_{a}V_{tr}-V_{R})}
+            {4(1+\alpha| V_R\text{-}V_{rmax}|)(T_A+\alpha |K_{a}V_{tr}-V_{R}|)}
+      \right]\\
+\end{aligned}
+```
+-->
+```math
+\begin{aligned}
+   \dot{V}_R 
+   &\approx f
+      \left[
+         1 +
+         \dfrac{\alpha^2}{4}
+         \dfrac{V_{rmin}\text{-}V_R}
+         {1+\alpha |V_{rmin}\text{-}V_R|}
+         \dfrac{f}{1+\alpha |f|}
+      \right]
+      \left[
+         1-
+         \dfrac{\alpha^2}{4}
+         \dfrac{V_R\text{-}V_{rmax}}
+            {1+\alpha| V_R\text{-}V_{rmax}|}
+            \dfrac{f}{1+\alpha |f|}
+      \right]\\
+\end{aligned}
+```
 ### Algebraic Equations
 The algebraic equations of the exciter.
 ```math
@@ -125,45 +201,18 @@ The algebraic equations of the exciter.
 \end{aligned}
 ```
 
-
-#### Smooth Piecewise Approximation 
-
-The domain of the state variable $V_{R}\in(V_{rmin}, V_{rmax})$ is enforced
-through the piece-wise definition above. This may need to be expressed as a
-smooth approximation (smooth indicator $\phi$) expressed generically as follows.
+#### Smooth Piecewise Approximation (Algebraic) 
+For the algebraic piecewise functions (non-flags), this implementation is straightforward when the approximation above is used.
 ```math
 \begin{aligned}
-   f(V_R)     
-            &= 
-            \phi(V_R)\cdot \dfrac{1}{T_A}
-            \left[
-               -V_{R}+K_{a}V_{tr}
-            \right] \\
-   \dot{V}_R &= 
-            \phi(V_R, f) \cdot f(V_R)
+    k_{sat}
+    &=\sigma (E_{fd}' -S_A) \cdot S_B(E_{fd}' -S_A)^2   
 \end{aligned}
 ```
-
-The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $P_v$ limits $(P_{vmin}, P_{vmax})$.
+The approximation written out below approaches an exact solution as $\alpha\to\infty$.
 ```math
 \begin{aligned}
-   \phi_L(V_R,f)&= \sigma(V_{rmin}-V_R)\sigma(-f)            \\
-   \phi_U(V_R,f)&= \sigma(V_R-V_{rmax})\sigma(f)             \\
-   \phi(V_R,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
-\end{aligned}
-```
-
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
-```math
-\begin{aligned}
-   \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}\approx \dfrac{1}{2}\left(\dfrac{\alpha x}{1+|\alpha x|}\right)
-\end{aligned}
-```
-
-Lastly for the algebraic (continuous) piecewise functions, this implementation is straightforward when the approximation above is used.
-```math
-\begin{aligned}
-    k_{sat}&=\sigma (E_{fd}' -S_A) \cdot S_B(E_{fd}' -S_A)^2   
+    k_{sat}&\approx\dfrac{\alpha S_B}{2} \dfrac{(E_{fd}' -S_A)^3}{1+\alpha|E_{fd}' -S_A|}
 \end{aligned}
 ```
 
