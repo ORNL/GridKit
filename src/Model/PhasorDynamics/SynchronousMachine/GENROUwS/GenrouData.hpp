@@ -30,95 +30,51 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct GenrouData
     {
-      /// Unique unit ID
-      IdxT unit_id{0};
+      IdxT  unit_id{0}; ///< Unique unit ID
+      RealT p0{0.0};    ///< Initial active power
+      RealT q0{0.0};    ///< Initial reactive power
+      RealT H{0.0};     ///< Rotor inertia
+      RealT D{0.0};     ///< Damping coefficient
+      RealT Ra{0.0};    ///< Winding resistance
+      RealT Tdop{0.0};  ///< Open circuit direct axis transient time
+      RealT Tdopp{0.0}; ///< Open circuit direct axis sub-transient time
+      RealT Tqop{0.0};  ///< Open circuit quadrature axis transient
+      RealT Tqopp{0.0}; ///< Open circuit quadrature axis sub-transient time
+      RealT Xd{0.0};    ///< Direct axis synchronous reactance
+      RealT Xdp{0.0};   ///< Direct axis transient reactance
+      RealT Xdpp{0.0};  ///< Direct axis sub-transient reactance
+      RealT Xq{0.0};    ///< Quadrature axis synchronous reactance
+      RealT Xqp{0.0};   ///< Quadrature axis transient reactance
+      RealT Xqpp{0.0};  ///< Quadrature axis sub-transient reactance
+      RealT Xl{0.0};    ///< Stator leakage reactance
+      RealT S10{0.0};   ///< Saturation factor at 1.0 pu flux
+      RealT S12{0.0};   ///< Saturation factor at 1.2 pu flux
 
-      /// Initial active power
-      RealT p0{0.0};
+      IdxT                bus_id{0};       ///< Unique ID of the connecting bus
+      std::optional<IdxT> exciter_signal;  ///< Unique ID of the bus providing the exciter signal
+      std::optional<IdxT> governor_signal; ///< Unique ID of the bus providing the governor signal
 
-      /// Initial reactive power
-      RealT q0{0.0};
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
 
-      /// Rotor inertia
-      RealT H{0.0};
-
-      /// Damping coefficient
-      RealT D{0.0};
-
-      /// Winding resistance
-      RealT Ra{0.0};
-
-      /// Open circuit direct axis transient time
-      RealT Tdop{0.0};
-
-      /// Open circuit direct axis sub-transient time
-      RealT Tdopp{0.0};
-
-      /// Open circuit quadrature axis transient
-      RealT Tqop{0.0};
-
-      /// Open circuit quadrature axis sub-transient time
-      RealT Tqopp{0.0};
-
-      /// Direct axis synchronous reactance
-      RealT Xd{0.0};
-
-      /// Direct axis transient reactance
-      RealT Xdp{0.0};
-
-      /// Direct axis sub-transient reactance
-      RealT Xdpp{0.0};
-
-      /// Quadrature axis synchronous reactance
-      RealT Xq{0.0};
-
-      /// Quadrature axis transient reactance
-      RealT Xqp{0.0};
-
-      /// Quadrature axis sub-transient reactance
-      RealT Xqpp{0.0};
-
-      /// Stator leakage reactance
-      RealT Xl{0.0};
-
-      /// Saturation factor at 1.0 pu flux
-      RealT S10{0.0};
-
-      /// Saturation factor at 1.2 pu flux
-      RealT S12{0.0};
-
-      /// Unique ID of the connecting bus
-      IdxT bus_id{0};
-
-      /// Unique ID of the bus where the exciter signal comes from
-      std::optional<IdxT> exciter_signal;
-
-      /// Unique ID of the bus where the governor signal comes from
-      std::optional<IdxT> governor_signal;
-
-      /// Override for the system-wide base frequency
-      std::optional<RealT> freq_base;
-
-      /// Override for the system-wide power base
-      std::optional<RealT> va_base;
-
-      /// Disambiguation string for this device
-      std::string disambiguation_string;
+      std::string disambiguation_string; ///< Disambiguation string for this device
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t
       {
-        Ir,
-        Ii,
+        IR,
+        II,
         P,
         Q,
-        Delta,
-        Omega,
-        Maximum,
+        DELTA,
+        OMEGA,
+        MAXIMUM,
       };
 
       /// Set of variables being monitored
-      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum)> monitored_variables;
+      std::bitset<static_cast<
+          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
+          monitored_variables;
     };
 
     template <typename RealT, typename IdxT>
@@ -247,27 +203,33 @@ namespace GridKit
           auto monitored = raw_monitored_variable.get<std::string>();
           if (monitored == "ir")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::Ir));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::IR));
           }
           else if (monitored == "ii")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::Ii));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::II));
           }
           else if (monitored == "p")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::P));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::P));
           }
           else if (monitored == "q")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::Q));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::Q));
           }
           else if (monitored == "delta")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::Delta));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::DELTA));
           }
           else if (monitored == "omega")
           {
-            gd.monitored_variables.set(static_cast<size_t>(GenrouData<RealT, IdxT>::MonitorableVariables::Omega));
+            gd.monitored_variables.set(static_cast<size_t>(
+                GenrouData<RealT, IdxT>::MonitorableVariables::OMEGA));
           }
           else
           {

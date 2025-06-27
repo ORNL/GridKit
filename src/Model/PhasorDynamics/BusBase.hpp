@@ -59,7 +59,7 @@ namespace GridKit
       /// Pure virtual function, returns bus type (DEFAULT or SLACK).
       virtual BusTypeT BusType() const
       {
-        return BusTypeT::Default;
+        return BusTypeT::DEFAULT;
       }
 
       virtual IdxT size() override

@@ -26,25 +26,17 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct LoadData
     {
-      /// Load resistance
-      RealT R{0.0};
+      RealT R{0.0}; ///< Load resistance
+      RealT X{0.0}; ///< Load reactance
 
-      /// Load reactance
-      RealT X{0.0};
+      IdxT bus_id{0}; ///< Unique ID of bus to which the load is connnected
 
-      /// Override for the system-wide base frequency
-      std::optional<RealT> freq_base;
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
 
-      /// Override for the system-wide power base
-      std::optional<RealT> va_base;
-
-      /// Disambiguation string for this device
-      std::string disambiguation_string;
+      std::string disambiguation_string; ///< Disambiguation string for this device
 
       // TODO: add the monitorable variables to this
-
-      /// Unique ID of bus to which the load is connnected
-      IdxT bus_id{0};
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

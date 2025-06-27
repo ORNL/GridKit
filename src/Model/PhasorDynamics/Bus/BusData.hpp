@@ -32,51 +32,40 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusData
     {
-      /// Enumeration over the kinsd of bus this data structure
-      /// can be for
+      std::string name; ///< A name given to this bus
+
+      RealT Vr0{1.0}; ///< Initial value for the real bus voltage
+      RealT Vi0{0.0}; ///< Initial value for the imaginary bus voltage
+
+      IdxT bus_id{0}; ///< The unique ID of the bus
+
+      /// Enumeration over the kinds of bus this data structure can be for
       enum class BusType
       {
-        Default,
-        Slack,
+        DEFAULT,
+        SLACK,
       };
 
-      /// A name given to this bus
-      std::string name;
+      BusType bus_type{BusType::DEFAULT}; ///< The kind of bus this data is for
 
-      /// Initial value for the real bus voltage
-      RealT Vr0{1.0};
+      RealT                v_base{1.0}; ///< Voltage base in volts
+      std::optional<RealT> freq_base;   ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;     ///< Override for the system-wide power base
 
-      /// Initial value for the imaginary bus voltage
-      RealT Vi0{0.0};
-
-      /// The unique ID of the bus
-      IdxT bus_id{0};
-
-      /// The kind of bus this data is for
-      BusType bus_type{BusType::Default};
-
-      /// Voltage base in volts
-      RealT v_base{1.0};
-
-      /// Override for the system-wide base frequency
-      std::optional<RealT> freq_base;
-
-      /// Override for the system-wide power base
-      std::optional<RealT> va_base;
-
-      /// Indices of the variables able to be monitored on this
-      /// component
+      /// Indices of the variables able to be monitored on this component
       enum class MonitorableVariables : size_t
       {
-        Vr,
-        Vi,
-        Vm,
-        Va,
-        Maximum,
+        VR,
+        VI,
+        VM,
+        VA,
+        MAXIMUM,
       };
 
-      /// Set indicating the variables which are monitored
-      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum)> monitored_variables;
+      /// Set indicating the variables being monitored
+      std::bitset<static_cast<
+          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
+          monitored_variables;
     };
 
     template <typename RealT, typename IdxT>
@@ -108,11 +97,11 @@ namespace GridKit
       auto string_class = j.at("class").get<std::string>();
       if (string_class == "bus")
       {
-        bd.bus_type = BusData<RealT, IdxT>::BusType::Default;
+        bd.bus_type = BusData<RealT, IdxT>::BusType::DEFAULT;
       }
       else if (string_class == "infinite_bus")
       {
-        bd.bus_type = BusData<RealT, IdxT>::BusType::Slack;
+        bd.bus_type = BusData<RealT, IdxT>::BusType::SLACK;
       }
       else
       {
@@ -138,19 +127,23 @@ namespace GridKit
           auto monitored = raw_monitored_variable.get<std::string>();
           if (monitored == "Vr")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BusData<RealT, IdxT>::MonitorableVariables::Vr));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BusData<RealT, IdxT>::MonitorableVariables::VR));
           }
           else if (monitored == "Vi")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BusData<RealT, IdxT>::MonitorableVariables::Vi));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BusData<RealT, IdxT>::MonitorableVariables::VI));
           }
           else if (monitored == "Vm")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BusData<RealT, IdxT>::MonitorableVariables::Vm));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BusData<RealT, IdxT>::MonitorableVariables::VM));
           }
           else if (monitored == "Va")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BusData<RealT, IdxT>::MonitorableVariables::Va));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BusData<RealT, IdxT>::MonitorableVariables::VA));
           }
           else
           {

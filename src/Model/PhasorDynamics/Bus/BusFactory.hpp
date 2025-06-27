@@ -25,10 +25,10 @@ namespace GridKit
 
         switch (data.bus_type)
         {
-        case BusTypeT::Default:
+        case BusTypeT::DEFAULT:
           bus = new Bus<ScalarT, IdxT>(data);
           break;
-        case BusTypeT::Slack:
+        case BusTypeT::SLACK:
           bus = new BusInfinite<ScalarT, IdxT>(data);
           break;
         default:

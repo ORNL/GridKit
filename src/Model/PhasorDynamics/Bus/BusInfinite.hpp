@@ -47,7 +47,7 @@ namespace GridKit
 
       virtual BusTypeT BusType() const override
       {
-        return BusTypeT::Slack;
+        return BusTypeT::SLACK;
       }
 
       virtual ScalarT& Vr() override

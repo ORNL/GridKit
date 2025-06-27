@@ -32,51 +32,39 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BranchData
     {
-      /// Line series resistance
-      RealT R{0.0};
+      RealT R{0.0}; ///< Line series resistance
+      RealT X{0.0}; ///< Line series reactance
+      RealT G{0.0}; ///< Line shunt conductance
+      RealT B{0.0}; ///< Line shunt charging
 
-      /// Line series reactance
-      RealT X{0.0};
+      IdxT bus1_id{0}; ///< Unique ID of bus 1
+      IdxT bus2_id{0}; ///< Unique ID of bus 2
 
-      /// Line shunt conductance
-      RealT G{0.0};
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
 
-      /// Line shunt charging
-      RealT B{0.0};
-
-      /// Unique ID of bus 1
-      IdxT bus1_id{0};
-
-      /// Unique ID of bus 2
-      IdxT bus2_id{0};
-
-      /// Override for the system-wide base frequency
-      std::optional<RealT> freq_base;
-
-      /// Override for the system-wide power base
-      std::optional<RealT> va_base;
-
-      /// Disambiguation string for this device
-      std::string disambiguation_string;
+      std::string disambiguation_string; ///< Disambiguation string for this device
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t
       {
-        Ir1,
-        Ii1,
-        Im1,
+        IR1,
+        II1,
+        IM1,
         P1,
         Q1,
-        Ir2,
-        Ii2,
-        Im2,
+        IR2,
+        II2,
+        IM2,
         P2,
         Q2,
-        Maximum,
+        MAXIMUM,
       };
 
-      /// Set of variables being monitored
-      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum)> monitored_variables;
+      /// Set indicating the variables being monitored
+      std::bitset<static_cast<
+          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
+          monitored_variables;
     };
 
     template <typename RealT, typename IdxT>
@@ -141,43 +129,53 @@ namespace GridKit
           auto monitored = raw_monitored_variable.get<std::string>();
           if (monitored == "ir1")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Ir1));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::IR1));
           }
           else if (monitored == "ii1")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Ii1));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::II1));
           }
           else if (monitored == "im1")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Im1));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::IM1));
           }
           else if (monitored == "p1")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::P1));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::P1));
           }
           else if (monitored == "q1")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Q1));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::Q1));
           }
           else if (monitored == "ir2")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Ir2));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::IR2));
           }
           else if (monitored == "ii2")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Ii2));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::II2));
           }
           else if (monitored == "im2")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Im2));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::IM2));
           }
           else if (monitored == "p2")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::P2));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::P2));
           }
           else if (monitored == "q2")
           {
-            bd.monitored_variables.set(static_cast<size_t>(BranchData<RealT, IdxT>::MonitorableVariables::Q2));
+            bd.monitored_variables.set(static_cast<size_t>(
+                BranchData<RealT, IdxT>::MonitorableVariables::Q2));
           }
           else
           {

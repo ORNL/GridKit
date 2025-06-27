@@ -30,41 +30,31 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusFaultData
     {
-      /// Short to ground resistance
-      RealT R{0.0};
+      RealT R{0.0};        ///< Short to ground resistance
+      RealT X{0.0};        ///< Short to ground reactance
+      bool  status{false}; ///< If the fault has happened
 
-      /// Short to ground reactance
-      RealT X{0.0};
+      std::optional<IdxT> control_signal; ///< Unique ID of the bus providing a control signal
+      IdxT                bus_id{0};      ///< Unique ID of the bus where the fault occurs
 
-      /// If the fault has happened
-      bool status{false};
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
 
-      /// Unique ID of the bus where a control signal comes from
-      std::optional<IdxT> control_signal;
-
-      /// Unique ID of the bus where the fault occurs
-      IdxT bus_id{0};
-
-      /// Override for the system-wide base frequency
-      std::optional<RealT> freq_base;
-
-      /// Override for the system-wide power base
-      std::optional<RealT> va_base;
-
-      /// Disambiguation string for this device
-      std::string disambiguation_string;
+      std::string disambiguation_string; ///< Disambiguation string for this device
 
       /// Indices of the variables able to be monitored in the bitset
       enum class MonitorableVariables : size_t
       {
-        State,
-        Ir,
-        Ii,
-        Maximum,
+        STATE,
+        IR,
+        II,
+        MAXIMUM,
       };
 
       /// Set of variables being monitored
-      std::bitset<static_cast<std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::Maximum)> monitored_variables;
+      std::bitset<static_cast<
+          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
+          monitored_variables;
     };
 
     template <typename RealT, typename IdxT>
@@ -125,15 +115,18 @@ namespace GridKit
           auto monitored = raw_monitored_variable.get<std::string>();
           if (monitored == "state")
           {
-            bf.monitored_variables.set(static_cast<size_t>(BusFaultData<RealT, IdxT>::MonitorableVariables::State));
+            bf.monitored_variables.set(static_cast<size_t>(
+                BusFaultData<RealT, IdxT>::MonitorableVariables::STATE));
           }
           else if (monitored == "ir")
           {
-            bf.monitored_variables.set(static_cast<size_t>(BusFaultData<RealT, IdxT>::MonitorableVariables::Ir));
+            bf.monitored_variables.set(static_cast<size_t>(
+                BusFaultData<RealT, IdxT>::MonitorableVariables::IR));
           }
           else if (monitored == "ii")
           {
-            bf.monitored_variables.set(static_cast<size_t>(BusFaultData<RealT, IdxT>::MonitorableVariables::Ii));
+            bf.monitored_variables.set(static_cast<size_t>(
+                BusFaultData<RealT, IdxT>::MonitorableVariables::II));
           }
           else
           {

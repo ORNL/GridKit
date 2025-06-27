@@ -8,11 +8,11 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "TwoBusTgov1.hpp"
-
 #include <ctime>
 #include <iostream>
 
+#include "TwoBusTgov1.hpp"
+#include "example1_tgov1.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -50,12 +50,12 @@ int main()
   data.bus.resize(2);
 
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
   data.bus[0].Vr0      = 0.9949877346411762;
   data.bus[0].Vi0      = 0.09999703952427966;
 
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::SLACK;
+  data.bus[1].bus_type = BusData<scalar_type, index_type>::BusType::SLACK;
   data.bus[1].Vr0      = 1.0;
   data.bus[1].Vi0      = 0.0;
 

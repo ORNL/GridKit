@@ -64,15 +64,15 @@ namespace GridKit
         success *= result.load.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
-        success *= result.bus[0].bus_type == SystemModelDataT::BusDataT::BusType::Default;
+        success *= result.bus[0].bus_type == SystemModelDataT::BusDataT::BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::Vr)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::Vi)];
+        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::VR)];
+        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::VI)];
         success *= result.bus[1].bus_id == 2;
-        success *= result.bus[1].bus_type == SystemModelDataT::BusDataT::BusType::Slack;
+        success *= result.bus[1].bus_type == SystemModelDataT::BusDataT::BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
@@ -109,8 +109,8 @@ namespace GridKit
         success *= result.genrou[0].S12 == 0.0;
         success *= result.genrou[0].bus_id == 1;
         success *= result.genrou[0].disambiguation_string == "1";
-        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::Delta)];
-        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::Omega)];
+        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::DELTA)];
+        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::OMEGA)];
 
         success *= result.bus_fault[0].R == 0.0;
         success *= result.bus_fault[0].X == 1e-3;

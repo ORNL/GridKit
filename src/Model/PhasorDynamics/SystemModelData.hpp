@@ -60,29 +60,15 @@ namespace GridKit
       /// Additional comments about the case being described by this model
       std::string case_comments;
 
-      /// System frequency base in Hz
-      RealT freq_base;
+      RealT freq_base; ///< System frequency base in Hz
+      RealT va_base;   ///< System power base in VA
 
-      /// System power base in VA
-      RealT va_base;
-
-      /// Buses within the model
-      std::vector<BusDataT> bus;
-
-      // Branches within the model
-      std::vector<BranchDataT> branch;
-
-      /// Bus faults within the model
-      std::vector<BusFaultDataT> bus_fault;
-
-      /// Governors within the model
-      std::vector<Tgov1DataT> gov;
-
-      /// GENROU synchronous machine model instances within the model
-      std::vector<GenrouDataT> genrou;
-
-      /// Loads within the model
-      std::vector<LoadDataT> load;
+      std::vector<BusDataT>      bus;       ///< Buses within the model
+      std::vector<BranchDataT>   branch;    ///< Branches within the model
+      std::vector<BusFaultDataT> bus_fault; ///< Bus faults within the model
+      std::vector<GenrouDataT>   genrou;    ///< GENROU instances within the model
+      std::vector<LoadDataT>     load;      ///< Loads within the model
+      std::vector<Tgov1DataT>    gov;       ///< Governors within the model
     };
 
     template <typename RealT = double, typename IdxT = size_t>
