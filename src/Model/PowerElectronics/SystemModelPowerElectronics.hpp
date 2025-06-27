@@ -3,9 +3,9 @@
 #pragma once
 
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <vector>
-#include <iomanip>
 
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 #include <Model/PowerElectronics/CircuitGraph.hpp>
