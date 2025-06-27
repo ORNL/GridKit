@@ -40,7 +40,7 @@ int main(int argc, char const* argv[])
   {
     try
     {
-      N_size = std::stoi(argv[1]);
+      N_size = static_cast<index_type>(std::stoi(argv[1]));
     }
     catch (const std::exception& e)
     {
@@ -182,7 +182,7 @@ int printMicrogridSystems(index_type N_size)
   dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
   dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
   //"grounding" of the difference
-  dg_ref->setExternalConnectionNodes(3, -1);
+  dg_ref->setExternalConnectionNodes(3, static_cast<size_t>(-1));
   // internal connections
   for (index_type i = 0; i < 12; i++)
   {
