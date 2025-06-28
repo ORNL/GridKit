@@ -1,5 +1,5 @@
 /**
- * @file example1.cpp
+ * @file TwoBusBasic.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 2-bus system
@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "example1.hpp"
+#include "TwoBusBasic.hpp"
 
 #include <ctime>
 #include <iostream>
@@ -36,7 +36,7 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  std::cout << "Example 1 version 2\n";
+  std::cout << "Example: TwoBusBasic\n";
 
   //
   // Create model data
@@ -179,7 +179,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example1::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = reference_solution[i + 1];
 
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
