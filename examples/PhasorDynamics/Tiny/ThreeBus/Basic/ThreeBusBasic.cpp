@@ -1,5 +1,5 @@
 /**
- * @file example2.cpp
+ * @file ThreeBusBasic.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 3-bus system
@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "example2.hpp"
+#include "ThreeBusBasic.hpp"
 
 #include <cstdio>
 #include <ctime>
@@ -45,7 +45,7 @@ struct OutputData
 
   OutputData& operator-=(const OutputData& other)
   {
-    assert(GridKit::Testing::isEqual(t, other.t, Example2::reference_tol));
+    assert(GridKit::Testing::isEqual(t, other.t, reference_tol));
     gen2speed -= other.gen2speed;
     gen3speed -= other.gen3speed;
     v2mag     -= other.v2mag;
@@ -86,7 +86,7 @@ int main()
 
   auto error_allowed = static_cast<real_type>(1e-4);
 
-  std::cout << "Example 2 version 1\n";
+  std::cout << "Example: ThreeBusBasic\n";
 
   //
   // Create model data
@@ -264,7 +264,7 @@ int main()
 
   // // Uncomment code below to print output to a file:
   // std::ofstream fileout;
-  // fileout.open("example2_results.csv");
+  // fileout.open("Example_ThreeBus_Basic_results.csv");
   // std::ostream& out = fileout;
 
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
@@ -272,11 +272,11 @@ int main()
 
   for (index_type i = 0; i < output.size(); ++i)
   {
-    OutputData ref{Example2::reference_solution[i + 1][0],
-                   Example2::reference_solution[i + 1][1],
-                   Example2::reference_solution[i + 1][2],
-                   Example2::reference_solution[i + 1][4],
-                   Example2::reference_solution[i + 1][5]};
+    OutputData ref{reference_solution[i + 1][0],
+                   reference_solution[i + 1][1],
+                   reference_solution[i + 1][2],
+                   reference_solution[i + 1][4],
+                   reference_solution[i + 1][5]};
     OutputData out_data = output[i];
 
     out << out_data << '\n';

@@ -1,12 +1,12 @@
 /**
- * @file example3.cpp
+ * @file TenGenClassical.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
- * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 10-bus system
  *
- * Simulates a 11-bus system with 10 Genrou 6th order generator models
+ * Simulates a 11-bus system with 10 GenClassical 2nd order generator models
  * split in two groups of five generators. The two groups are connected
  * by a high-impedance branch, which makes connection between them weak.
+ * It is the same as Example_TenGen_Genrou but with simpler generator models
  *
  */
 #include <cstdio>
@@ -14,13 +14,13 @@
 #include <fstream>
 #include <vector>
 
-// #include "example3.hpp"
+// #include "TenGenClassical.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
@@ -57,15 +57,15 @@ int main()
   Branch<scalar_type, index_type> branch89(&bus8, &bus9, 0.001, 0.005, 0, 0);
   Branch<scalar_type, index_type> branch910(&bus9, &bus10, 0.001, 0.005, 0, 0);
 
-  Genrou<scalar_type, index_type> gen2(&bus2, 1, 0.5, -0.00442101, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen3(&bus3, 1, 0.5, -0.02510812, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen4(&bus4, 1, 0.5, -0.04339553, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen5(&bus5, 1, 0.5, -0.2334993, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen6(&bus6, 1, 0.5, 0.69907194, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen7(&bus7, 1, 0.5, -0.08318208, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen8(&bus8, 1, 0.5, -0.09123614, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen9(&bus9, 1, 0.5, -0.09662372, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
-  Genrou<scalar_type, index_type> gen10(&bus10, 1, 0.5, -0.09932297, 3., 0., 0., 7., .04, .05, .75, 2.1, 0.2, 0.18, 0.5, 0.5, 0.18, 0.15, 0., 0.);
+  GenClassical<scalar_type, index_type> gen2(&bus2, 1, 0.5, -0.00442101, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen3(&bus3, 1, 0.5, -0.02510812, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen4(&bus4, 1, 0.5, -0.04339553, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen5(&bus5, 1, 0.5, -0.2334993, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen6(&bus6, 1, 0.5, 0.69907194, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen7(&bus7, 1, 0.5, -0.08318208, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen8(&bus8, 1, 0.5, -0.09123614, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen9(&bus9, 1, 0.5, -0.09662372, 3., 0.1, 0., 0.2);
+  GenClassical<scalar_type, index_type> gen10(&bus10, 1, 0.5, -0.09932297, 3., 0.1, 0., 0.2);
 
   BusFault<scalar_type, index_type> fault(&bus10, 0, 1e-5, 0);
 
@@ -107,7 +107,7 @@ int main()
 
   // Uncomment code below to print output to a file:
   std::ofstream fileout;
-  fileout.open("example3_results.csv");
+  fileout.open("TenGenClassical_results.csv");
   std::ostream& out = fileout;
 
   // Create header for the CSV output file
@@ -119,6 +119,10 @@ int main()
   for (size_t i = 0; i < 9; ++i)
   {
     out << "omega" << i + 2 << ",";
+  }
+  for (size_t i = 0; i < 9; ++i)
+  {
+    out << "delta" << i + 2 << ",";
   }
   out << "\n";
 
@@ -141,9 +145,18 @@ int main()
     for (size_t i = 0; i < 9; ++i)
     {
       // 18 is offset for variables of 9 buses.
-      // Each generator has 21 equations.
-      // We are outputting second equation of each generator.
-      out << yval[18 + 21 * i + 1] << ",";
+      // Each generator has 5 variables.
+      // We are outputting second variables of each generator.
+      out << yval[18 + 5 * i + 1] << ",";
+    }
+
+    // Output generator angles
+    for (size_t i = 0; i < 9; ++i)
+    {
+      // 18 is offset for variables of 9 buses.
+      // Each generator has 5 variables.
+      // We are outputting first variables of each generator.
+      out << yval[18 + 5 * i] << ",";
     }
     out << "\n";
   };

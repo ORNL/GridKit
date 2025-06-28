@@ -1,5 +1,5 @@
 /**
- * @file example1.cpp
+ * @file TwoBusTgov1.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 2-bus system
@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "example1_tgov1.hpp"
+#include "TwoBusTgov1.hpp"
 
 #include <ctime>
 #include <iostream>
@@ -38,7 +38,7 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  std::cout << "Example 1 ( + TGOV1 ) \n";
+  std::cout << "Example: TwoBusTgov1 \n";
 
   //
   // Create model data
@@ -215,7 +215,7 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example1_Tgov1::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = reference_solution[i + 1];
 
     // Review Note: I believe the denominator should not have +1
     real_type err =
