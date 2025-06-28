@@ -1,5 +1,5 @@
 /**
- * @file Example_TwoBus_TGov1.cpp
+ * @file TwoBusBasic.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 2-bus system
@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "Example_TwoBus_TGov1.hpp"
+#include "TwoBusBasic.hpp"
 
 #include <ctime>
 #include <iostream>
@@ -20,8 +20,6 @@
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -38,7 +36,7 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  std::cout << "Example_TwoBus_TGov1 \n";
+  std::cout << "Example: TwoBusBasic\n";
 
   //
   // Create model data
@@ -69,19 +67,6 @@ int main()
   data.branch[0].G       = 0.0;
   data.branch[0].B       = 0.0;
 
-  // Add faults
-  data.bus_fault.resize(1);
-
-  data.bus_fault[0].R      = 0.0;
-  data.bus_fault[0].X      = 1e-3;
-  data.bus_fault[0].status = false;
-
-  //
-  // Instantiate system model
-  //
-
-  SystemModel<scalar_type, index_type> sys(data);
-
   // Set generator data
   data.genrou.resize(1);
 
@@ -105,39 +90,18 @@ int main()
   data.genrou[0].S10     = 0.;
   data.genrou[0].S12     = 0.;
 
-  data.gov.resize(1);
+  // Add faults
+  data.bus_fault.resize(1);
 
-  // Set Gov data (Default PW values)
-  data.gov[0].R     = 0.05;
-  data.gov[0].Pvmin = 0;
-  data.gov[0].Pvmax = 1.0;
-  data.gov[0].T1    = 0.5;
-  data.gov[0].T2    = 2.5;
-  data.gov[0].T3    = 7.5;
-  data.gov[0].Dt    = 0;
+  data.bus_fault[0].R      = 0.0;
+  data.bus_fault[0].X      = 1e-3;
+  data.bus_fault[0].status = false;
 
-  // Manual add gen & gov components
-  // This is a hack  since SignalBus not implemented
+  //
+  // Instantiate system model
+  //
 
-  // Create Pointers first
-  Genrou<scalar_type, index_type>*          gen;
-  Governor::Tgov1<scalar_type, index_type>* gov;
-
-  // Instatiate Genrou & add to system model
-  gen = new Genrou<scalar_type, index_type>(
-      sys.getBus(0),
-      data.genrou[0]);
-
-  // Instatiate GovernorTgov1 & add to system model
-  gov = new Governor::Tgov1<scalar_type, index_type>(
-      gen,
-      data.gov[0]);
-  gen->setgovenor(gov);
-
-  // Add Generator and Governor to System
-  sys.addComponent(gen);
-  sys.addComponent(gov);
-
+  SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
   // Get access to the fault
@@ -215,16 +179,14 @@ int main()
   for (size_t i = 0; i < output.size(); i++)
   {
     OutputData              data    = output[i];
-    std::vector<real_type>& ref_sol = Example_TwoBus_TGov1::reference_solution[i + 1];
+    std::vector<real_type>& ref_sol = reference_solution[i + 1];
 
-    // Review Note: I believe the denominator should not have +1
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
         / (1.0 + std::abs(ref_sol[2]));
     if (err > error_V)
       error_V = err;
 
-    // Review Note: I believe the denominator should not have +1
     err = std::abs(1.0 + data.dw - ref_sol[1]) / (1.0 + ref_sol[1]);
     if (err > error_w)
       error_w = err;

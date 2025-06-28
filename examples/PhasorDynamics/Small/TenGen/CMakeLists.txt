@@ -1,2 +1,2 @@
-add_subdirectory(TenGen_GenClassical)
-add_subdirectory(TenGen_Genrou)
+add_subdirectory(Classical)
+add_subdirectory(Genrou)

@@ -1,2 +1,2 @@
-add_subdirectory(TwoBus_Basic)
-add_subdirectory(TwoBus_TGov1)
+add_subdirectory(Basic)
+add_subdirectory(Tgov1)

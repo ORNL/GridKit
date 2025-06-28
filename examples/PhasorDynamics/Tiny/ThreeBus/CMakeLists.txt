@@ -1,1 +1,1 @@
-add_subdirectory(ThreeBus_Basic)
+add_subdirectory(Basic)
