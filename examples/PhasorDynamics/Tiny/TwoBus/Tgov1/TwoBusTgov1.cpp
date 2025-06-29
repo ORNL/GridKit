@@ -12,7 +12,6 @@
 #include <iostream>
 
 #include "TwoBusTgov1.hpp"
-#include "example1_tgov1.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
