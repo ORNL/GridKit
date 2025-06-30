@@ -2,3 +2,6 @@
 	path = buildsystem/spack/spack
 	url = https://github.com/nkoukpaizan/spack.git
 	branch = Gridkit-package-dev+enzyme
+[submodule "third-party/nlohmann-json"]
+	path = third-party/nlohmann-json
+	url = https://github.com/nlohmann/json

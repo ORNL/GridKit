@@ -15,6 +15,7 @@ namespace GridKit
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
       using BusData   = GridKit::PhasorDynamics::BusData<real_type, IdxT>;
+      using BusTypeT  = typename GridKit::PhasorDynamics::BusData<real_type, IdxT>::BusType;
 
       BusFactory() = delete;
 
@@ -24,15 +25,15 @@ namespace GridKit
 
         switch (data.bus_type)
         {
-        case BusData::DEFAULT:
+        case BusTypeT::DEFAULT:
           bus = new Bus<ScalarT, IdxT>(data);
           break;
-        case BusData::SLACK:
+        case BusTypeT::SLACK:
           bus = new BusInfinite<ScalarT, IdxT>(data);
           break;
         default:
           // Throw exception
-          std::cout << "Bus type " << data.bus_type << " unrecognized.\n";
+          std::cout << "Bus type " << static_cast<int>(data.bus_type) << " unrecognized.\n";
         }
         return bus;
       }

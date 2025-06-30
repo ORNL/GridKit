@@ -52,13 +52,13 @@ namespace GridKit
 
         // Bus 0
         data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
         data.bus[0].Vr0      = 10.0;
         data.bus[0].Vi0      = 20.0;
 
         // Bus 1
         data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::SLACK;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
         data.bus[1].Vr0      = 30.0;
         data.bus[1].Vi0      = 40.0;
 
