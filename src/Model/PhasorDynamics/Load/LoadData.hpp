@@ -6,6 +6,9 @@
  */
 #pragma once
 
+#include <optional>
+#include <string>
+
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,10 +26,17 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct LoadData
     {
-      RealT R{0.0}; ///< load resistance
-      RealT X{0.0}; ///< load reactance
+      RealT R{0.0}; ///< Load resistance
+      RealT X{0.0}; ///< Load reactance
 
-      IdxT bus_id{0}; ///< Unique ID of bus to which the load is connnected.
+      IdxT bus_id{0}; ///< Unique ID of bus to which the load is connnected
+
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
+
+      std::string disambiguation_string; ///< Disambiguation string for this device
+
+      // TODO: add the monitorable variables to this
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -99,19 +99,19 @@ int main()
 
   // Bus 0
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::SLACK;
+  data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::SLACK;
   data.bus[0].Vr0      = 1.06;
   data.bus[0].Vi0      = 0.0;
 
   // Bus 1
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[1].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
   data.bus[1].Vr0      = 1.0599558398065716;
   data.bus[1].Vi0      = -0.009675621941024773;
 
   // Bus 2
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[2].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
   data.bus[2].Vr0      = 0.9610827543495831;
   data.bus[2].Vi0      = -0.13122476630506485;
 
@@ -146,48 +146,46 @@ int main()
   data.genrou.resize(2);
 
   // Generator on bus 1
-  data.genrou[0].bus_id  = 1;
-  data.genrou[0].unit_id = 0;
-  data.genrou[0].p0      = 0.5;
-  data.genrou[0].q0      = -0.07588;
-  data.genrou[0].H       = 2.7;
-  data.genrou[0].D       = 0.;
-  data.genrou[0].Ra      = 0.;
-  data.genrou[0].Tdop    = 7.;
-  data.genrou[0].Tdopp   = .04;
-  data.genrou[0].Tqopp   = .05;
-  data.genrou[0].Tqop    = .75;
-  data.genrou[0].Xd      = 1.9;
-  data.genrou[0].Xdp     = 0.17;
-  data.genrou[0].Xdpp    = 0.15;
-  data.genrou[0].Xq      = 0.4;
-  data.genrou[0].Xqp     = 0.35;
-  data.genrou[0].Xqpp    = 0.15;
-  data.genrou[0].Xl      = 0.14999;
-  data.genrou[0].S10     = 0.;
-  data.genrou[0].S12     = 0.;
+  data.genrou[0].bus_id = 1;
+  data.genrou[0].p0     = 0.5;
+  data.genrou[0].q0     = -0.07588;
+  data.genrou[0].H      = 2.7;
+  data.genrou[0].D      = 0.;
+  data.genrou[0].Ra     = 0.;
+  data.genrou[0].Tdop   = 7.;
+  data.genrou[0].Tdopp  = .04;
+  data.genrou[0].Tqopp  = .05;
+  data.genrou[0].Tqop   = .75;
+  data.genrou[0].Xd     = 1.9;
+  data.genrou[0].Xdp    = 0.17;
+  data.genrou[0].Xdpp   = 0.15;
+  data.genrou[0].Xq     = 0.4;
+  data.genrou[0].Xqp    = 0.35;
+  data.genrou[0].Xqpp   = 0.15;
+  data.genrou[0].Xl     = 0.14999;
+  data.genrou[0].S10    = 0.;
+  data.genrou[0].S12    = 0.;
 
   // Generator on bus 2
-  data.genrou[1].bus_id  = 2;
-  data.genrou[1].unit_id = 1;
-  data.genrou[1].p0      = 0.25;
-  data.genrou[1].q0      = 0.26587;
-  data.genrou[1].H       = 1.6;
-  data.genrou[1].D       = 0.;
-  data.genrou[1].Ra      = 0.;
-  data.genrou[1].Tdop    = 7.5;
-  data.genrou[1].Tdopp   = .04;
-  data.genrou[1].Tqopp   = .05;
-  data.genrou[1].Tqop    = .75;
-  data.genrou[1].Xd      = 2.3;
-  data.genrou[1].Xdp     = 0.2;
-  data.genrou[1].Xdpp    = 0.18;
-  data.genrou[1].Xq      = 0.5;
-  data.genrou[1].Xqp     = 0.5;
-  data.genrou[1].Xqpp    = 0.18;
-  data.genrou[1].Xl      = 0.15;
-  data.genrou[1].S10     = 0.;
-  data.genrou[1].S12     = 0.;
+  data.genrou[1].bus_id = 2;
+  data.genrou[1].p0     = 0.25;
+  data.genrou[1].q0     = 0.26587;
+  data.genrou[1].H      = 1.6;
+  data.genrou[1].D      = 0.;
+  data.genrou[1].Ra     = 0.;
+  data.genrou[1].Tdop   = 7.5;
+  data.genrou[1].Tdopp  = .04;
+  data.genrou[1].Tqopp  = .05;
+  data.genrou[1].Tqop   = .75;
+  data.genrou[1].Xd     = 2.3;
+  data.genrou[1].Xdp    = 0.2;
+  data.genrou[1].Xdpp   = 0.18;
+  data.genrou[1].Xq     = 0.5;
+  data.genrou[1].Xqp    = 0.5;
+  data.genrou[1].Xqpp   = 0.18;
+  data.genrou[1].Xl     = 0.15;
+  data.genrou[1].S10    = 0.;
+  data.genrou[1].S12    = 0.;
 
   // Set load data
   data.load.resize(1);

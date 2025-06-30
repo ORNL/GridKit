@@ -48,12 +48,12 @@ int main()
   data.bus.resize(2);
 
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::DEFAULT;
+  data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
   data.bus[0].Vr0      = 0.9949877346411762;
   data.bus[0].Vi0      = 0.09999703952427966;
 
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::SLACK;
+  data.bus[1].bus_type = BusData<scalar_type, index_type>::BusType::SLACK;
   data.bus[1].Vr0      = 1.0;
   data.bus[1].Vi0      = 0.0;
 
@@ -70,25 +70,24 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
-  data.genrou[0].unit_id = 1;
-  data.genrou[0].p0      = 1.;
-  data.genrou[0].q0      = 0.05013;
-  data.genrou[0].H       = 3.;
-  data.genrou[0].D       = 0.;
-  data.genrou[0].Ra      = 0.;
-  data.genrou[0].Tdop    = 7.;
-  data.genrou[0].Tdopp   = .04;
-  data.genrou[0].Tqopp   = .05;
-  data.genrou[0].Tqop    = .75;
-  data.genrou[0].Xd      = 2.1;
-  data.genrou[0].Xdp     = 0.2;
-  data.genrou[0].Xdpp    = 0.18;
-  data.genrou[0].Xq      = 0.5;
-  data.genrou[0].Xqp     = 0.5;
-  data.genrou[0].Xqpp    = 0.18;
-  data.genrou[0].Xl      = 0.15;
-  data.genrou[0].S10     = 0.;
-  data.genrou[0].S12     = 0.;
+  data.genrou[0].p0    = 1.;
+  data.genrou[0].q0    = 0.05013;
+  data.genrou[0].H     = 3.;
+  data.genrou[0].D     = 0.;
+  data.genrou[0].Ra    = 0.;
+  data.genrou[0].Tdop  = 7.;
+  data.genrou[0].Tdopp = .04;
+  data.genrou[0].Tqopp = .05;
+  data.genrou[0].Tqop  = .75;
+  data.genrou[0].Xd    = 2.1;
+  data.genrou[0].Xdp   = 0.2;
+  data.genrou[0].Xdpp  = 0.18;
+  data.genrou[0].Xq    = 0.5;
+  data.genrou[0].Xqp   = 0.5;
+  data.genrou[0].Xqpp  = 0.18;
+  data.genrou[0].Xl    = 0.15;
+  data.genrou[0].S10   = 0.;
+  data.genrou[0].S12   = 0.;
 
   // Add faults
   data.bus_fault.resize(1);
