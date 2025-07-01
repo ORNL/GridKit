@@ -117,7 +117,7 @@ namespace AnalysisManager
       if (model_->hasJacobian())
       {
         sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
-        JacobianMat_ = SUNSparseMatrix(static_cast<sunindextype>(model_->size()),
+        JacobianMat_     = SUNSparseMatrix(static_cast<sunindextype>(model_->size()),
                                        static_cast<sunindextype>(model_->size()),
                                        nnz,
                                        CSR_MAT,
