@@ -62,7 +62,7 @@ int printMicrogridSystems(index_type N_size)
 
   bool use_jac = true;
 
-  real_type t_init = 0.0;
+  real_type t_init  = 0.0;
   real_type t_final = 1.0;
 
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
