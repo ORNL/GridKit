@@ -116,9 +116,10 @@ namespace AnalysisManager
       int retval = 0;
       if (model_->hasJacobian())
       {
+        sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
         JacobianMat_ = SUNSparseMatrix(static_cast<sunindextype>(model_->size()),
                                        static_cast<sunindextype>(model_->size()),
-                                       static_cast<sunindextype>(model_->size() * model_->size()),
+                                       nnz,
                                        CSR_MAT,
                                        context_);
         checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
@@ -589,7 +590,7 @@ namespace AnalysisManager
       copyVec(yp, model->yp());
 
       model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> Jac = model->getJacobian();
+      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
 
       // Get reference to the jacobian entries
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
