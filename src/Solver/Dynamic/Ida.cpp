@@ -116,9 +116,11 @@ namespace AnalysisManager
       int retval = 0;
       if (model_->hasJacobian())
       {
+        sunindextype n   = static_cast<sunindextype>(model_->size());
         sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
-        JacobianMat_     = SUNSparseMatrix(static_cast<sunindextype>(model_->size()),
-                                       static_cast<sunindextype>(model_->size()),
+
+        JacobianMat_ = SUNSparseMatrix(n,
+                                       n,
                                        nnz,
                                        CSR_MAT,
                                        context_);
