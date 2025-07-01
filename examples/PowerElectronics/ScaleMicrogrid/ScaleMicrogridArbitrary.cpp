@@ -1,5 +1,3 @@
-
-
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -63,6 +61,9 @@ int printMicrogridSystems(index_type N_size)
   using namespace GridKit;
 
   bool use_jac = true;
+
+  real_type t_init = 0.0;
+  real_type t_final = 1.0;
 
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
@@ -296,13 +297,22 @@ int printMicrogridSystems(index_type N_size)
   std::string size_suffix = std::to_string(N_size);
 
   // print the residual in matrix market format
-  sys_model.printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + ".mtx",
-                                      "ScaleMicrogrid Residual N" + size_suffix);
+  /*sys_model.printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + "_iter" + std::to_string(mat_num) + ".mtx",
+                                      "ScaleMicrogrid Residual N" + size_suffix + " Iteration " + std::to_string(mat_num));*/
 
   sys_model.updateTime(0.0, 1.0e-8);
   sys_model.evaluateJacobian();
-  sys_model.printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + ".mtx",
-                                      "ScaleMicrogrid Jacobian N" + size_suffix);
+  /*sys_model.printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + "_iter" + std::to_string(mat_num) + ".mtx",
+                                      "ScaleMicrogrid Jacobian N" + size_suffix + " Iteration " + std::to_string(mat_num));*/
+
+  // Create numerical integrator and configure it for the generator model
+  AnalysisManager::Sundials::Ida<real_type, index_type> idas(&sys_model);
+
+  // setup simulation
+  idas.configureSimulation();
+  idas.getDefaultInitialCondition();
+  idas.initializeSimulation(t_init);
+  idas.runSimulation(t_final);
 
   return 0;
 }

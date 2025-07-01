@@ -156,7 +156,8 @@ namespace AnalysisManager
 
       real_type t_init_{};
       real_type t_final_{};
-      int       nout_{}; ///< Number of integration outputs
+      int       nout_{};             ///< Number of integration outputs
+      int       num_jacobian_evals_; ///< Number of Jacobian evaluations
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector

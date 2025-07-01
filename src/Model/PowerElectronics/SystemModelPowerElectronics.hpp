@@ -11,6 +11,8 @@
 #include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <ScalarTraits.hpp>
 
+static int jacobianCallCount = 0;
+
 namespace GridKit
 {
   /**
@@ -266,6 +268,9 @@ namespace GridKit
         }
       }
 
+      // Print the residual in matrix market format
+      writeVectorToMatrixMarket(f_, "ScaleMicrogrid_Residual_N2_number" + std::to_string(jacobianCallCount) + ".mtx", "Residual N2 number " + std::to_string(jacobianCallCount));
+
       return 0;
     }
 
@@ -306,6 +311,10 @@ namespace GridKit
         // elementwise jac_(rgr, cgr) += vgr
         jac_.axpy(1.0, rgr, cgr, vgr);
       }
+
+      // TODO: finish adding the writing out part stuff
+      jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jacobianCallCount) + ".mtx", "Jacobian N2 number " + std::to_string(jacobianCallCount));
+      jacobianCallCount++;
 
       return 0;
     }
