@@ -1,6 +1,7 @@
 /**
  * @file GenClassical.cpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
+ * @author Slaven Peles (peless@ornl.gov)
  *
  */
 
@@ -15,6 +16,9 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
+
+    template <typename RealT, typename IdxT>
+    struct GenClassicalData;
   }
 } // namespace GridKit
 
@@ -37,6 +41,7 @@ namespace GridKit
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
+      using DataT = GenClassicalData<real_type, IdxT>;
 
     public:
       GenClassical(bus_type* bus, int unit_id);
@@ -48,6 +53,7 @@ namespace GridKit
                    real_type D,
                    real_type Ra,
                    real_type Xdp);
+      GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 
       int allocate() override;
