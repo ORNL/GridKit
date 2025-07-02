@@ -64,8 +64,8 @@ namespace GridKit
         auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
         if (key.has_value())
         {
-          //NOTE: this is necessary because it doesn't seem like nlohmann/json handles std::variant
-          //      out of the box
+          // NOTE: this is necessary because it doesn't seem like nlohmann/json handles std::variant
+          //       out of the box
           if (raw_parameter.value().is_boolean())
           {
             c.parameters[key.value()] = raw_parameter.value().template get<bool>();

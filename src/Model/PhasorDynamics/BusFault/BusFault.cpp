@@ -7,10 +7,11 @@
  *
  */
 
+#include "BusFault.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "BusFault.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 
