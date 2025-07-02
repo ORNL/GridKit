@@ -8,13 +8,12 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "ThreeBusBasic.hpp"
-
 #include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <vector>
 
+#include "ThreeBusBasic.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -198,10 +197,10 @@ int main()
   // Set fault data
   data.bus_fault.resize(1);
 
-  data.bus_fault[0].bus_id = 2;
-  data.bus_fault[0].R      = 0.0;
-  data.bus_fault[0].X      = 1e-5;
-  data.bus_fault[0].status = false;
+  data.bus_fault[0].ports[BusFaultData<real_type, index_type>::Ports::bus]              = 2;
+  data.bus_fault[0].parameters[BusFaultData<real_type, index_type>::Parameters::R]      = 0.0;
+  data.bus_fault[0].parameters[BusFaultData<real_type, index_type>::Parameters::X]      = 1e-5;
+  data.bus_fault[0].parameters[BusFaultData<real_type, index_type>::Parameters::state0] = false;
 
   //
   // Instantiate system

@@ -111,12 +111,12 @@ namespace GridKit
         success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::DELTA)];
         success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::OMEGA)];
 
-        success *= result.bus_fault[0].R == 0.0;
-        success *= result.bus_fault[0].X == 1e-3;
-        success *= result.bus_fault[0].status == false;
-        success *= result.bus_fault[0].bus_id == 1;
+        success *= std::get<IdxT>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::R]) == 0;
+        success *= std::get<RealT>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::X]) == 1e-3;
+        success *= std::get<bool>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::state0]) == false;
+        success *= result.bus_fault[0].ports[SystemModelDataT::BusFaultDataT::Ports::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
-        success *= result.bus_fault[0].monitored_variables.none();
+        success *= result.bus_fault[0].monitored_variables.empty();
 
         return success.report(__func__);
       }

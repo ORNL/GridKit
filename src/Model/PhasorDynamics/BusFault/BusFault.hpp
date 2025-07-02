@@ -88,11 +88,11 @@ namespace GridKit
       }
 
     private:
-      bus_type*  bus_;
-      real_type  R_;
-      real_type  X_;
-      bool       status_;
-      const IdxT busID_;
+      bus_type* bus_;
+      real_type R_{0.0};
+      real_type X_{0.0};
+      bool      status_{false};
+      IdxT      busID_{0};
     };
 
   } // namespace PhasorDynamics

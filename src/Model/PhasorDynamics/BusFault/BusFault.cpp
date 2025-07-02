@@ -7,11 +7,10 @@
  *
  */
 
-#include "BusFault.hpp"
-
 #include <cmath>
 #include <iostream>
 
+#include "BusFault.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 
@@ -63,12 +62,50 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, const DataT& data)
-      : bus_(bus),
-        R_(data.R),
-        X_(data.X),
-        status_(data.status),
-        busID_(data.bus_id)
+      : bus_(bus)
     {
+      if (data.parameters.contains(DataT::Parameters::R))
+      {
+        if (const real_type* R = std::get_if<real_type>(&data.parameters.at(DataT::Parameters::R)))
+        {
+          R_ = *R;
+        }
+        else if (const IdxT* R = std::get_if<IdxT>(&data.parameters.at(DataT::Parameters::R)))
+        {
+          R_ = static_cast<real_type>(*R);
+        }
+        else
+        {
+          throw "Invalid type for R";
+        }
+      }
+
+      if (data.parameters.contains(DataT::Parameters::X))
+      {
+        if (const real_type* X = std::get_if<real_type>(&data.parameters.at(DataT::Parameters::X)))
+        {
+          X_ = *X;
+        }
+        else if (const IdxT* X = std::get_if<IdxT>(&data.parameters.at(DataT::Parameters::X)))
+        {
+          X_ = static_cast<real_type>(*X);
+        }
+        else
+        {
+          throw "Invalid type for X";
+        }
+      }
+
+      if (data.parameters.contains(DataT::Parameters::state0))
+      {
+        status_ = std::get<bool>(data.parameters.at(DataT::Parameters::state0));
+      }
+
+      if (data.ports.contains(DataT::Ports::bus))
+      {
+        busID_ = data.ports.at(DataT::Ports::bus);
+      }
+
       size_ = 0;
     }
 

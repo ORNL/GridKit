@@ -120,7 +120,12 @@ namespace GridKit
         // Add faults
         for (const auto& faultdata : data.bus_fault)
         {
-          auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
+          IdxT bus_index = 0;
+          if (faultdata.ports.contains(BusFaultData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = faultdata.ports.at(BusFaultData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
           addFault(fault);
         }
       }

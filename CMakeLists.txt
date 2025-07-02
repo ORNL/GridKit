@@ -20,7 +20,7 @@ set(PACKAGE_VERSION_PATCH "0")
 
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if (MSVC)
   set(CMAKE_CXX_FLAGS "/Wall")
@@ -84,6 +84,7 @@ endif("${isSystemDir}" STREQUAL "-1")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/nlohmann-json/single_include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/magic-enum/include)
 
 option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
