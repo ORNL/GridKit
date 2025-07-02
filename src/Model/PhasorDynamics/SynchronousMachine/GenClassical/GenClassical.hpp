@@ -19,7 +19,7 @@ namespace GridKit
 
     template <typename RealT, typename IdxT>
     struct GenClassicalData;
-  }
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
@@ -41,7 +41,7 @@ namespace GridKit
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
-      using DataT = GenClassicalData<real_type, IdxT>;
+      using DataT     = GenClassicalData<real_type, IdxT>;
 
     public:
       GenClassical(bus_type* bus, int unit_id);
