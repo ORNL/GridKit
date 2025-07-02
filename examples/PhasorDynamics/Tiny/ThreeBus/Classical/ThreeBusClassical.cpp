@@ -234,12 +234,12 @@ int main()
   real_type worst_error_time = 0;
 
   std::ostream nullout(nullptr);
-  // std::ostream& out = nullout;
+  std::ostream& out = nullout;
 
-  // Uncomment code below to print output to a file:
-  std::ofstream fileout;
-  fileout.open("Example_ThreeBus_Classical_results.csv");
-  std::ostream& out = fileout;
+  // // Uncomment code below to print output to a file:
+  // std::ofstream fileout;
+  // fileout.open("Example_ThreeBus_Classical_results.csv");
+  // std::ostream& out = fileout;
 
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
   out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";
@@ -262,7 +262,7 @@ int main()
       worst_error_time = out_data.t;
     }
   }
-  fileout.close();
+  // fileout.close();
 
   std::cout << "Max error " << worst_error
             << " at time t = " << worst_error_time << "\n";
