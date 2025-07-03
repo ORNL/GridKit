@@ -235,6 +235,7 @@ namespace GridKit
       // To do make this from init function
       pmech_set_ = Te;
       this->safeInit(pmech_, Te);
+      this->safeInit(omega_, omega);
 
 
       return 0;

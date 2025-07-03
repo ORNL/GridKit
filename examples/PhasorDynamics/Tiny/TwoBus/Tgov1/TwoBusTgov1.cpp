@@ -142,7 +142,7 @@ int main()
   {
     std::vector<scalar_type>& y_val = sys.y();
 
-    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
+    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[5]});
   };
 
   // Set up simulation
