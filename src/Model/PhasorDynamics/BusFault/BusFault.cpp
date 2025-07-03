@@ -67,34 +67,12 @@ namespace GridKit
     {
       if (data.parameters.contains(DataT::Parameters::R))
       {
-        if (const real_type* R = std::get_if<real_type>(&data.parameters.at(DataT::Parameters::R)))
-        {
-          R_ = *R;
-        }
-        else if (const IdxT* R = std::get_if<IdxT>(&data.parameters.at(DataT::Parameters::R)))
-        {
-          R_ = static_cast<real_type>(*R);
-        }
-        else
-        {
-          throw "Invalid type for R";
-        }
+        R_ = std::get<real_type>(data.parameters.at(DataT::Parameters::R));
       }
 
       if (data.parameters.contains(DataT::Parameters::X))
       {
-        if (const real_type* X = std::get_if<real_type>(&data.parameters.at(DataT::Parameters::X)))
-        {
-          X_ = *X;
-        }
-        else if (const IdxT* X = std::get_if<IdxT>(&data.parameters.at(DataT::Parameters::X)))
-        {
-          X_ = static_cast<real_type>(*X);
-        }
-        else
-        {
-          throw "Invalid type for X";
-        }
+        X_ = std::get<real_type>(data.parameters.at(DataT::Parameters::X));
       }
 
       if (data.parameters.contains(DataT::Parameters::state0))
