@@ -97,9 +97,6 @@ namespace GridKit
       const int busID_;
       IdxT      unit_id_;
 
-      // Governor Pointer
-      gov_type* gov_;
-
       /* Initial terminal conditions */
       ScalarT p0_;
       ScalarT q0_;
