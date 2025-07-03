@@ -175,9 +175,12 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::initialize()
     {
-      /* Initialization tricks -- assuming NO saturation */
+
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
+
+      /* Initialization tricks -- assuming NO saturation */
+
       ScalarT p      = p0_;
       ScalarT q      = q0_;
       ScalarT vm2    = vr * vr + vi * vi;
@@ -237,8 +240,10 @@ namespace GridKit
       // Initialize External Inputs
       // To do make this from init function
       pmech_set_ = Te;
-      this->safeInit(pmech_, Te);
-      this->safeInit(omega_, omega);
+      if (pmech_)
+      {
+        pmech_->initial_value(Te);
+      }
 
 
       return 0;
@@ -269,8 +274,18 @@ namespace GridKit
       // Inputs
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
-      ScalarT pmech  = this->safeRead(pmech_, pmech_set_);
 
+      ScalarT pmech  = pmech_set_;
+      if (pmech_)
+      {
+        pmech = pmech_->read();
+      }
+
+      // Outputs
+      if (omega_)
+      {
+        omega_->send(y[1]);
+      }
 
       /* Read variables */
       ScalarT delta  = y_[0];
@@ -334,8 +349,7 @@ namespace GridKit
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
 
-      // Outputs
-      this->safeSend(omega_, omega);
+
 
       return 0;
     }
