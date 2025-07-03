@@ -32,6 +32,10 @@ namespace GridKit
         RealT Pvmax{1.0}; ///< Max Valve Power
         RealT Pvmin{0.0}; ///< Min Valve Power
         RealT Dt{0.0};    ///<
+
+        IdxT signal_pmech; ///< Unique ID of the bus providing the pmech signal
+        IdxT signal_speed; ///< Unique ID of the bus providing the speed signal
+
       };
     } // namespace Governor
   } // namespace PhasorDynamics

@@ -14,7 +14,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
+#include <Model/PhasorDynamics/Bus/BusSignal.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 #define _USE_MATH_DEFINES
@@ -23,21 +23,14 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Constructor for a pi-model branch
-     *
-     * Arguments passed to ModelEvaluatorImpl:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
-     */
+ 
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
+        pmech_(nullptr),
+        omega_(nullptr),
         busID_(0),
         unit_id_(unit_id),
-        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -66,67 +59,20 @@ namespace GridKit
     }
 
     /*!
-     * @brief Constructor for a pi-model branch
-     *
-     */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
-                                  IdxT      unit_id,
-                                  ScalarT   p0,
-                                  ScalarT   q0,
-                                  real_type H,
-                                  real_type D,
-                                  real_type Ra,
-                                  real_type Tdop,
-                                  real_type Tdopp,
-                                  real_type Tqopp,
-                                  real_type Tqop,
-                                  real_type Xd,
-                                  real_type Xdp,
-                                  real_type Xdpp,
-                                  real_type Xq,
-                                  real_type Xqp,
-                                  real_type Xqpp,
-                                  real_type Xl,
-                                  real_type S10,
-                                  real_type S12)
-      : bus_(bus),
-        busID_(0),
-        unit_id_(unit_id),
-        gov_(nullptr), // <- TODO: Temporary, to be removed.
-        p0_(p0),
-        q0_(q0),
-        H_(H),
-        D_(D),
-        Ra_(Ra),
-        Tdop_(Tdop),
-        Tdopp_(Tdopp),
-        Tqopp_(Tqopp),
-        Tqop_(Tqop),
-        Xd_(Xd),
-        Xdp_(Xdp),
-        Xdpp_(Xdpp),
-        Xq_(Xq),
-        Xqp_(Xqp),
-        Xqpp_(Xqpp),
-        Xl_(Xl),
-        S10_(S10),
-        S12_(S12)
-    {
-      size_ = 20;
-      setDerivedParams();
-    }
-
-    /*!
      * @brief Constructor for the GENROU generator with saturation.
      *
      */
     template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
+    Genrou<ScalarT, IdxT>::Genrou(
+      bus_type* bus, 
+      bus_type* pmech, 
+      bus_type* omega, 
+      const model_data_type& data)
       : bus_(bus),
+        pmech_(pmech),
+        omega_(omega),
         busID_(0),
         unit_id_(1),
-        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(data.p0),
         q0_(data.q0),
         H_(data.H),
@@ -150,17 +96,6 @@ namespace GridKit
       setDerivedParams();
     }
 
-    // /**
-    //  * @brief Destroy the Genrou
-    //  *
-    //  * @tparam ScalarT
-    //  * @tparam IdxT
-    //  */
-    // template <class ScalarT, typename IdxT>
-    // Genrou<ScalarT, IdxT>::~Genrou()
-    // {
-    //   // std::cout << "Destroy Genrou..." << std::endl;
-    // }
 
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
@@ -236,11 +171,16 @@ namespace GridKit
       y_[19] = B_ * (vd * sin(delta) + vq * cos(delta))
                + G_ * (vd * -cos(delta) + vq * sin(delta)); /* inort, imag */
 
-      // Set Setpoint mechanical power, which may or may not be used
-      pmech_set_ = Te;
 
       for (IdxT i = 0; i < size_; ++i)
         yp_[static_cast<size_t>(i)] = 0.0;
+
+      
+      // Initialize External Inputs
+      // To do make this from init function
+      pmech_set_ = Te;
+      this->safeInit(pmech_, Te);
+
 
       return 0;
     }
@@ -266,6 +206,13 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::evaluateResidual()
     {
+
+      // Inputs
+      ScalarT vr     = Vr();
+      ScalarT vi     = Vi();
+      ScalarT pmech  = this->safeRead(pmech_, pmech_set_);
+
+
       /* Read variables */
       ScalarT delta  = y_[0];
       ScalarT omega  = y_[1];
@@ -287,17 +234,6 @@ namespace GridKit
       ScalarT efd    = y_[17];
       ScalarT inr    = y_[18];
       ScalarT ini    = y_[19];
-      ScalarT vr     = Vr();
-      ScalarT vi     = Vi();
-      ScalarT pmech;
-      if (gov_)
-      {
-        pmech = gov_->Pmech();
-      }
-      else
-      {
-        pmech = pmech_set_;
-      }
 
       /* Read derivatives */
       ScalarT delta_dot = yp_[0];
@@ -339,6 +275,9 @@ namespace GridKit
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
 
+      // Outputs
+      this->safeSend(omega_, omega);
+
       return 0;
     }
 
@@ -357,30 +296,7 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Access generator relative speed
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getSpeed()
-    {
-      return y_[1];
-    }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getTorque()
-    {
-      return y_[12];
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::setgovenor(gov_type* gov)
-    {
-      gov_ = gov;
-    }
 
     template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::setDerivedParams()

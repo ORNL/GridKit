@@ -12,7 +12,6 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -30,8 +29,9 @@ namespace GridKit
        * @param data    TGOV1 Data Object
        */
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : machine_(machine),
+      Tgov1<ScalarT, IdxT>::Tgov1()
+        : pmech_(nullptr), 
+          omega_(nullptr),
           R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
@@ -46,8 +46,9 @@ namespace GridKit
       }
 
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine)
-        : machine_(machine),
+      Tgov1<ScalarT, IdxT>::Tgov1()
+        : pmech_(nullptr), 
+          omega_(nullptr),
           R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
@@ -85,7 +86,7 @@ namespace GridKit
       {
 
         // Initial mechanical = initial electric torque
-        ScalarT p0 = machine_->getTorque();
+        ScalarT p0 = this->safeRead(pmech_, 1);
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -167,8 +168,9 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::evaluateResidual()
       {
 
-        // Input Variables
-        ScalarT omega = machine_->getSpeed();
+        // Ext Variables
+        ScalarT omega0 = 0;
+        ScalarT omega = this->safeRead(omega_, omega0);
 
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
@@ -183,12 +185,13 @@ namespace GridKit
         ScalarT f        = (-pv + (pref_ - omega) / R_) / T1_;
         ScalarT valv_ind = this->indicator(pv, f);
 
-        // Internal Differential Equations
+        // Equations
         f_[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
         f_[1] = -pv_dot + valv_ind * f;
-
-        // Internal Algebraic Equations
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+
+        // Write External
+        this->safeSend(pmech_, pmech);
 
         return 0;
       }
@@ -207,17 +210,6 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief The mechanical power output.
-       * @warning This is not yet accessed by anything. The Genrou class will
-       *          need to access this instead of a constant Pmech.
-       * @return ScalarT - Mechanical output power value.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT& Tgov1<ScalarT, IdxT>::Pmech()
-      {
-        return y_[2];
-      }
 
       // Available template instantiations
       template class Tgov1<double, long int>;

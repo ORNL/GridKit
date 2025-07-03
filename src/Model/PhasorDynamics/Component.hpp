@@ -26,6 +26,38 @@ namespace GridKit
       {
       }
 
+      // Adds the generic input signal to the component
+      void safeSend(bus_type* signal, ScalarT value)
+      {
+        if (signal)
+        {
+          signal->send(value);
+        }
+        
+      }
+
+      void safeInit(bus_type* signal, ScalarT value)
+      {
+        if (signal)
+        {
+          signal->y()[0] = value;
+        }
+        
+      }
+
+      ScalarT safeRead(bus_type* signal, ScalarT default_val)
+      {
+        if (signal)
+        {
+          return signal->read();
+        }
+        else 
+        {
+          return default_val;
+        }
+        
+      }
+
       virtual IdxT size() override
       {
         return size_;
