@@ -7,14 +7,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Implementation of an "infinite" bus.
-     *
-     *
-     *
-     */
+    
+    // TODO change base class so there is no Vr and Vi
+
     template <class ScalarT, typename IdxT>
-    class BusInfinite : public BusBase<ScalarT, IdxT>
+    class BusSignal : public BusBase<ScalarT, IdxT>
     {
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
@@ -26,14 +23,15 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::tag_;
 
     public:
+
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
       using DataT     = BusData<real_type, IdxT>;
-      using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
 
-      BusInfinite();
-      BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(const DataT& data);
-      virtual ~BusInfinite();
+      BusSignal(const DataT& data);
+      
+      ~BusSignal()
+      {
+      }
 
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
@@ -45,71 +43,58 @@ namespace GridKit
       virtual int evaluateAdjointIntegrand() override;
       virtual int evaluateAdjointResidual() override;
 
-      virtual BusTypeT BusType() const override
-      {
-        return BusTypeT::SLACK;
-      }
-
-      // TODO Need to remove these
       ScalarT& read() override
       {
         return y_[0];
       }
 
+      // Not a hard write -> adds to equality constraint
       void send(ScalarT& value) override
       {
+        f_[0] += value;
       }
 
-      virtual ScalarT& Vr() override
+
+      // TODO remove jsut junk so it compiles
+      ScalarT& Vr() override
       {
-        return Vr_;
+        return y_[0];
       }
-
-      virtual const ScalarT& Vr() const override
+      const ScalarT& Vr() const override
       {
-        return Vr_;
+        return y_[0];
       }
-
-      virtual ScalarT& Vi() override
+      ScalarT& Vi() override
       {
-        return Vi_;
+        return y_[0];
       }
 
-      virtual const ScalarT& Vi() const override
+      const ScalarT& Vi() const override
       {
-        return Vi_;
+        return y_[0];
       }
 
-      virtual ScalarT& Ir() override
+      ScalarT& Ir() override
       {
-        return Ir_;
+        return y_[0];
       }
 
-      virtual const ScalarT& Ir() const override
+      const ScalarT& Ir() const override
       {
-        return Ir_;
+        return y_[0];
       }
 
-      virtual ScalarT& Ii() override
+      ScalarT& Ii() override
       {
-        return Ii_;
+        return y_[0];
       }
 
-      virtual const ScalarT& Ii() const override
+      const ScalarT& Ii() const override
       {
-        return Ii_;
+        return y_[0];
       }
 
-    private:
-      ScalarT Vr_{0.0};
-      ScalarT Vi_{0.0};
-      ScalarT Ir_{0.0};
-      ScalarT Ii_{0.0};
 
-      ScalarT VrB_{0.0};
-      ScalarT ViB_{0.0};
-      ScalarT IrB_{0.0};
-      ScalarT IiB_{0.0};
     };
 
   } // namespace PhasorDynamics

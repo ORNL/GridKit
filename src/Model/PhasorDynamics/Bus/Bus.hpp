@@ -51,6 +51,17 @@ namespace GridKit
       {
         return BusTypeT::DEFAULT;
       }
+      
+      // TODO Need to remove these
+      ScalarT& read() override
+      {
+        return y_[0];
+      }
+
+      void send(ScalarT& value) override
+      {
+      }
+
 
       virtual ScalarT& Vr() override
       {
