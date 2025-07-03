@@ -125,7 +125,7 @@ namespace GridKit
     
     private:
 
-      bool is_initialized_;
+      bool is_initialized_{false};
 
     };
 
