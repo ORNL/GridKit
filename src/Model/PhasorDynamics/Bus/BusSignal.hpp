@@ -50,7 +50,7 @@ namespace GridKit
        * 
        * @return state value of signal
        */
-      void initial_value(ScalarT& value) override
+      void initial_value(ScalarT value) override
       {
         if(is_initialized_)
         {
