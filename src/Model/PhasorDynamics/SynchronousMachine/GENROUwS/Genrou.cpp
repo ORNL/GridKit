@@ -48,7 +48,9 @@ namespace GridKit
         Xqpp_(.18),
         Xl_(.15),
         S10_(0.),
-        S12_(0.)
+        S12_(0.),
+        pmech_set_(0),
+        efd_set_(0)
     {
       size_ = 20;
       setDerivedParams();
@@ -90,7 +92,9 @@ namespace GridKit
         Xqpp_(data.Xqpp),
         Xl_(data.Xl),
         S10_(data.S10),
-        S12_(data.S12)
+        S12_(data.S12),
+        pmech_set_(0),
+        efd_set_(0)
     {
       size_ = 20;
       setDerivedParams();
@@ -139,7 +143,9 @@ namespace GridKit
         Xqpp_(Xqpp),
         Xl_(Xl),
         S10_(S10),
-        S12_(S12)
+        S12_(S12),
+        pmech_set_(0),
+        efd_set_(0) 
     {
       size_ = 20;
       setDerivedParams();
