@@ -52,7 +52,7 @@ namespace GridKit
         return BusTypeT::DEFAULT;
       }
 
-      void initial_value(ScalarT& value) override
+      void initial_value(ScalarT value) override
       {
       }
       
