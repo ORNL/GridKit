@@ -281,7 +281,7 @@ namespace GridKit
       // Outputs
       if (omega_)
       {
-        omega_->send(y[1]);
+        omega_->send(y_[1]);
       }
 
       /* Read variables */
