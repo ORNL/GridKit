@@ -172,9 +172,6 @@ namespace GridKit
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
-      fB_.resize(static_cast<size_t>(size_));
-      yB_.resize(static_cast<size_t>(size_));
-      ypB_.resize(static_cast<size_t>(size_));
       return 0;
     }
 
@@ -357,62 +354,6 @@ namespace GridKit
     {
       std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
       std::cout << "Jacobian evaluation not implemented!" << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      // std::cout << "Evaluate Integrand for Genrou..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint initialization not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize adjoint for Genrou..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint residual evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      // std::cout << "Evaluate adjoint residual for Genrou..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::evaluateAdjointIntegrand()
-    {
-      // std::cout << "Evaluate adjoint Integrand for Genrou..." << std::endl;
       return 0;
     }
 
