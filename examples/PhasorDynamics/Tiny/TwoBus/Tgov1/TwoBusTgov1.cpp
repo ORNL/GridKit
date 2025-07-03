@@ -47,7 +47,7 @@ int main()
   SystemModelData<scalar_type, index_type> data;
 
   // Set bus data
-  data.bus.resize(2);
+  data.bus.resize(4);
 
   data.bus[0].bus_id   = 0;
   data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
@@ -60,13 +60,12 @@ int main()
   data.bus[1].Vi0      = 0.0;
 
   // Pmech Signal Bus
-  data.bus[2].bus_id      = 2;
+  data.bus[2].bus_id   = 2;
   data.bus[2].bus_type    = BusData<scalar_type, index_type>::BusType::SIGNAL;
 
   // Speed Signal Bus
-  data.bus[3].bus_id      = 3;
-  data.bus[3].bus_type    = BusData<scalar_type, index_type>::BusType::SIGNAL;
-
+  data.bus[3].bus_id   = 3;
+  data.bus[3].bus_type = BusData<scalar_type, index_type>::BusType::SIGNAL;
 
 
   // Set branch data
