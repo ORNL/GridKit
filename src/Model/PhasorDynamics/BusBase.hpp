@@ -31,15 +31,6 @@ namespace GridKit
       {
       }
 
-      BusBase(IdxT size, IdxT size_quad, IdxT size_param)
-        : size_(size),
-          y_(size_),
-          yp_(size_),
-          f_(size_),
-          J_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>())
-      {
-      }
-
       virtual ~BusBase()
       {
       }

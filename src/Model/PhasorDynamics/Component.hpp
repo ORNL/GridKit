@@ -22,28 +22,7 @@ namespace GridKit
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
       Component()
-        : size_(0),
-          size_quad_(0),
-          size_param_(0)
-      {
-      }
-
-      Component(IdxT size, IdxT size_quad, IdxT size_param)
-        : size_(size),
-          // size_quad_(size_quad),
-          // size_param_(size_param),
-          y_(size_),
-          yp_(size_),
-          f_(size_),
-          // g_(size_quad_),
-          // yB_(size_),
-          // ypB_(size_),
-          // fB_(size_),
-          // gB_(size_param_),
-          J_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>())
-          // param_(size_param_),
-          // param_up_(size_param_),
-          // param_lo_(size_param_)
+        : size_(0)
       {
       }
 
@@ -61,16 +40,6 @@ namespace GridKit
       virtual bool hasJacobian() override
       {
         return false;
-      }
-
-      virtual IdxT sizeQuadrature() override
-      {
-        return size_quad_;
-      }
-
-      virtual IdxT sizeParams() override
-      {
-        return size_param_;
       }
 
       // virtual void updateTime(real_type t, real_type a)
@@ -167,9 +136,6 @@ namespace GridKit
       // Adjoint sensitivity members
       //
 
-      IdxT size_quad_;
-      IdxT size_param_;
-
       std::vector<ScalarT> yB_{};
       std::vector<ScalarT> ypB_{};
       std::vector<ScalarT> fB_{};
@@ -184,6 +150,18 @@ namespace GridKit
       //
 
     public:
+      virtual IdxT sizeQuadrature() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 0;
+      }
+
+      virtual IdxT sizeParams() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 0;
+      }
+
       std::vector<ScalarT>& yB() override
       {
         throw "ERROR: Method not implemented!\n";
@@ -304,7 +282,6 @@ namespace GridKit
         return gB_;
       }
 
-      //@todo Fix ID naming
       IdxT getComponentID() const
       {
         return component_id_;
