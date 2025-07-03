@@ -6,6 +6,8 @@
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
 
+#include "BusBase.hpp"
+
 namespace GridKit
 {
   namespace PhasorDynamics

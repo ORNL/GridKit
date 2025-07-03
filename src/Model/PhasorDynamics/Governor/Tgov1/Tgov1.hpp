@@ -35,7 +35,7 @@ namespace GridKit
     {
 
       template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>, public GovernorBase<ScalarT, IdxT>
+      class Tgov1 : public Component<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
