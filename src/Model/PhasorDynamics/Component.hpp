@@ -50,7 +50,7 @@ namespace GridKit
       }
 
       // Adds the generic input signal to the component
-      void safeSend(bus_type* signal, ScalarT value)
+      void safeSend(bus_type* signal, ScalarT& value)
       {
         if (signal)
         {
@@ -59,7 +59,7 @@ namespace GridKit
         
       }
 
-      void safeInit(bus_type* signal, ScalarT value)
+      void safeInit(bus_type* signal, ScalarT& value)
       {
         if (signal)
         {
@@ -68,7 +68,7 @@ namespace GridKit
         
       }
 
-      ScalarT safeRead(bus_type* signal, ScalarT default_val)
+      ScalarT safeRead(bus_type* signal, ScalarT& default_val)
       {
         if (signal)
         {
