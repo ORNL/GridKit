@@ -52,14 +52,16 @@ namespace GridKit
        */
       void initial_value(ScalarT value) override
       {
-        if(is_initialized_)
-        {
-          std::cout << "ERROR!";
-        }
-        else{
-          y_[0] = value;
-          is_initialized_ = true;
-        }
+
+        y_[0] = value;
+        //if(is_initialized_)
+        //{
+        //  std::cout << "ERROR!";
+        //}
+        //else{
+        //  y_[0] = value;
+        //  is_initialized_ = true;
+        //}
       }
 
        /**
@@ -125,7 +127,7 @@ namespace GridKit
     
     private:
 
-      bool is_initialized_{false};
+      //bool is_initialized_{false};
 
     };
 
