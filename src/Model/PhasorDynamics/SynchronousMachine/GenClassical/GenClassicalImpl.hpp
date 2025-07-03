@@ -1,5 +1,5 @@
 /**
- * @file GenClassical.cpp
+ * @file GenClassicalImpl.hpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of a Classical generator model.
