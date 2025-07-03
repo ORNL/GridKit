@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
