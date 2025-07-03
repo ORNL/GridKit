@@ -44,6 +44,10 @@ namespace GridKit
       {
         return BusTypeT::DEFAULT;
       }
+
+      void initial_value(ScalarT& value) override
+      {
+      }
       
       // TODO Need to remove these
       const ScalarT& read() override

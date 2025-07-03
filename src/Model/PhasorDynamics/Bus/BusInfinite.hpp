@@ -42,6 +42,10 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
+      void initial_value(ScalarT& value) override
+      {
+      }
+
       // TODO Need to remove these
       const ScalarT& read() override
       {
