@@ -22,9 +22,7 @@ namespace GridKit
       using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
 
       BusBase()
-        : size_(0),
-          size_quad_(0),
-          size_param_(0)
+        : size_(0)
       {
       }
 
@@ -35,8 +33,6 @@ namespace GridKit
 
       BusBase(IdxT size, IdxT size_quad, IdxT size_param)
         : size_(size),
-          size_quad_(size_quad),
-          size_param_(size_param),
           y_(size_),
           yp_(size_),
           f_(size_),
@@ -139,14 +135,11 @@ namespace GridKit
 
       IdxT size_{0};
       IdxT nnz_{0};
-      IdxT size_quad_{0};
-      IdxT size_param_{0};
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
       std::vector<ScalarT> f_;
-      std::vector<ScalarT> g_;
 
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
 
@@ -162,6 +155,7 @@ namespace GridKit
       // Adjoint sensitivity members
       //
 
+      std::vector<ScalarT> g_{};
       std::vector<ScalarT> yB_{};
       std::vector<ScalarT> ypB_{};
       std::vector<ScalarT> fB_{};
@@ -179,13 +173,13 @@ namespace GridKit
       virtual IdxT sizeQuadrature() override
       {
         throw "ERROR: Method not implemented!\n";
-        return size_quad_;
+        return 0;
       }
 
       virtual IdxT sizeParams() override
       {
         throw "ERROR: Method not implemented!\n";
-        return size_param_;
+        return 0;
       }
 
       std::vector<ScalarT>& yB() override
@@ -246,6 +240,30 @@ namespace GridKit
       {
         throw "ERROR: Method not implemented!\n";
         return param_lo_;
+      }
+
+      int evaluateIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 1;
+      }
+
+      int initializeAdjoint() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 1;
+      }
+
+      int evaluateAdjointResidual() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 1;
+      }
+
+      int evaluateAdjointIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 1;
       }
 
       std::vector<ScalarT>& getResidual() override
