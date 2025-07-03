@@ -45,6 +45,7 @@ namespace GridKit
         INVALID,
         DEFAULT,
         SLACK,
+        SIGNAL
       };
 
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for
