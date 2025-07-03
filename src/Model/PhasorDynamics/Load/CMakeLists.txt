@@ -12,6 +12,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       LoadEnzyme.cpp
     LINK_LIBRARIES
       ClangEnzymeFlags
+    COMPILE_OPTIONS
+      -mllvm -enzyme-auto-sparsity=1
     OUTPUT_NAME
       gridkit_phasor_dynamics_load)
 else()
