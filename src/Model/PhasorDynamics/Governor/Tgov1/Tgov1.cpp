@@ -29,9 +29,12 @@ namespace GridKit
        * @param data    TGOV1 Data Object
        */
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1()
-        : pmech_(nullptr), 
-          omega_(nullptr),
+      Tgov1<ScalarT, IdxT>::Tgov1(
+        bus_type* pmech, 
+        bus_type* omega,
+        const model_data_type& data)
+        : pmech_(pmech), 
+          omega_(omega),
           R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
@@ -44,7 +47,6 @@ namespace GridKit
         // 3 Internal Variables
         size_ = 3;
       }
-
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1()
         : pmech_(nullptr), 
