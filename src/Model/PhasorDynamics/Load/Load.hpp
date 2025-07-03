@@ -55,12 +55,6 @@ namespace GridKit
       virtual int tagDifferentiable() override;
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;
-      virtual int evaluateIntegrand() override;
-
-      virtual int initializeAdjoint() override;
-      virtual int evaluateAdjointResidual() override;
-      // virtual int evaluateAdjointJacobian() override;
-      virtual int evaluateAdjointIntegrand() override;
 
       virtual void updateTime(real_type /* t */, real_type /* a */) override
       {
