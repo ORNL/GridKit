@@ -22,9 +22,8 @@ namespace GridKit
     }
 
     // Available template instantiations
-    template class GenClassical<double, long int>;
-    template class GenClassical<double, size_t>;
+    template class GenClassical<DependencyTracking::Variable, long int>;
+    template class GenClassical<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
-

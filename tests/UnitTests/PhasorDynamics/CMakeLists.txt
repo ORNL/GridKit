@@ -27,6 +27,7 @@ target_link_libraries(test_phasor_governortgov1 GRIDKIT::phasor_dynamics_genrou
 
 add_executable(test_phasor_gen_classical runGenClassicalTests.cpp)
 target_link_libraries(test_phasor_gen_classical GRIDKIT::phasor_dynamics_gen_classical
+                                                GRIDKIT::phasor_dynamics_gen_classical_dependency_tracking
                                                 GRIDKIT::phasor_dynamics_bus)
 
 

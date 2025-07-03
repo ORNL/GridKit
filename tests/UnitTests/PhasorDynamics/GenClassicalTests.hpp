@@ -10,8 +10,7 @@
 #include <iostream>
 #include <limits>
 
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.cpp>
-
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
@@ -61,7 +60,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // classical generator parameters
+        // Classical generator parameters
         real_type H{0.5};
         real_type D{-1.0};
         real_type Ra{0.5};
@@ -130,7 +129,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // classical generator parameters
+        // Classical generator parameters
         real_type p0{3.0};
         real_type q0{-1.0};
         real_type H{1.0};
@@ -186,7 +185,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // classical generator parameters
+        // Classical generator parameters
         real_type p0{3.0};
         real_type q0{-1.0};
         real_type H{1.0};
@@ -219,6 +218,73 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /**
+       * A test case to verify Jacobian values
+       */
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        // Classical generator parameters
+        real_type H{0.5};
+        real_type D{-1.0};
+        real_type Ra{0.5};
+        real_type Xdp{0.5};
+
+        // Separate section for DependencyTracking for now
+        {
+          DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
+          DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
+
+          PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
+          PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+          bus.allocate();
+          bus.initialize();
+          gen.allocate();
+          gen.initialize(); 
+
+          (gen.y()[0]).setVariableNumber(0); ///< Independent variables: first
+          (gen.y()[1]).setVariableNumber(1); ///< Independent variables: second
+          (gen.y()[2]).setVariableNumber(2); ///< Independent variables: third
+          (gen.y()[3]).setVariableNumber(3); ///< Independent variables: fourth
+          (gen.y()[4]).setVariableNumber(4); ///< Independent variables: fifth
+
+          gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
+                                  ///< the dependencies
+          std::vector<DependencyTracking::Variable> residual = gen.getResidual();
+
+          /// Print the dependencies
+          for (size_t i = 0; i < residual.size(); ++i)
+          {
+            std::cout << i << "th residual: ";
+            (residual[i]).print(std::cout);
+            std::cout << "\n";
+          }
+        }
+
+        // Separate section for Enzyme for now
+        {
+          ScalarT Vr1{1.0}; ///< Bus-1 real voltage
+          ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
+
+          PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+          PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+          bus.allocate();
+          bus.initialize();
+          gen.allocate();
+          gen.initialize(); 
+
+          gen.evaluateResidual();
+          gen.evaluateJacobian();
+          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gen.getJacobian();
+          model_jacobian.printMatrix("Model Jacobian");
+        }
+
+        return success.report(__func__);
+      }
+#endif
 
     }; // class GenClassicalTests
 

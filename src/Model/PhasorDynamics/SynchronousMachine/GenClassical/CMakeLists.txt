@@ -4,8 +4,24 @@
 #    - Slaven Peles <peless@ornl.gov>
 # ]]
 
-gridkit_add_library(phasor_dynamics_gen_classical
-  SOURCES
-    GenClassical.cpp
-  OUTPUT_NAME
-    gridkit_phasor_dynamics_gen_classical)
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(phasor_dynamics_gen_classical
+    SOURCES
+      GenClassicalEnzyme.cpp
+    LINK_LIBRARIES
+      ClangEnzymeFlags
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_gen_classical)
+else()
+  gridkit_add_library(phasor_dynamics_gen_classical
+    SOURCES
+      GenClassical.cpp
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_gen_classical)
+endif()
+
+  gridkit_add_library(phasor_dynamics_gen_classical_dependency_tracking
+    SOURCES
+      GenClassicalDependencyTracking.cpp
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_gen_classical_dependency_tracking)
