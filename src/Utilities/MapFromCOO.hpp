@@ -32,5 +32,5 @@ namespace GridKit
 
       return dependencies;
     }
-  }
-}
+  } // namespace Testing
+} // namespace GridKit

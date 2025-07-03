@@ -263,7 +263,7 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
         gen.allocate();
-        gen.initialize(); 
+        gen.initialize();
 
         (gen.y()[0]).setVariableNumber(0); ///< Independent variables: first
         (gen.y()[1]).setVariableNumber(1); ///< Independent variables: second
@@ -297,7 +297,7 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
         gen.allocate();
-        gen.initialize(); 
+        gen.initialize();
 
         gen.evaluateResidual();
         gen.evaluateJacobian();
