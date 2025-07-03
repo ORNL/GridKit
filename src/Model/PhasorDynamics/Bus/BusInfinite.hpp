@@ -42,7 +42,7 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
-      void initial_value(ScalarT& value) override
+      void initial_value(ScalarT value) override
       {
       }
 
