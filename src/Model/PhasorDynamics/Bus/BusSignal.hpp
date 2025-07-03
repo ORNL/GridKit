@@ -69,7 +69,7 @@ namespace GridKit
        * 
        * @return state value of signal
        */
-      ScalarT& read() override
+      ScalarT read() override
       {
         return y_[0];
       }
