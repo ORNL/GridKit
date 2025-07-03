@@ -7,11 +7,11 @@
  */
 #include <vector>
 
-double reference_tol = 1e-6;
+static constexpr double reference_tol = 1e-6;
 
 // Columns:
 // Time, Gen 2 #1 Speed, Gen 3 #1 Speed, Bus 1 V pu, Bus 2 V pu, Bus 3 V pu
-std::vector<std::vector<double>> reference_solution = {
+static const std::vector<std::vector<double>> reference_solution = {
     {0, 1, 1, 1.059999943, 1.059997797, 0.969999611},
     {0.004167, 0.99999994, 0.99999994, 1.059999943, 1.059997797, 0.969999611},
     {0.008333, 0.999999881, 0.99999994, 1.059999943, 1.059997797, 0.969999611},

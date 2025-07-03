@@ -200,8 +200,8 @@ int main()
     output.push_back(OutputData{t,
                                 y_val[5],
                                 y_val[10],
-                                std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),
-                                std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])});
+                                std::hypot(y_val[0], y_val[1]),
+                                std::hypot(y_val[2], y_val[3])});
   };
 
   // Set up simulation
