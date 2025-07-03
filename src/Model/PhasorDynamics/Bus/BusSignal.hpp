@@ -43,12 +43,41 @@ namespace GridKit
       virtual int evaluateAdjointIntegrand() override;
       virtual int evaluateAdjointResidual() override;
 
-      ScalarT& read() override
+      
+       /**
+       * @brief A one-time initialization function
+       * that can be called by any.
+       * 
+       * @return state value of signal
+       */
+      void initial_value(ScalarT& value)
+      {
+        if(is_initialized_)
+        {
+          std::cout << "ERROR!";
+        }
+        else{
+          y_[0] = value;
+          is_initialized_ = true;
+        }
+      }
+
+       /**
+       * @brief A read only accessor to the signal state
+       * 
+       * @return state value of signal
+       */
+      const ScalarT& read() override
       {
         return y_[0];
       }
 
-      // Not a hard write -> adds to equality constraint
+       /**
+       * @brief A write operation only available
+       * to the source signal
+       * 
+       * @param value The value of the signal
+       */
       void send(ScalarT& value) override
       {
         f_[0] += value;
@@ -93,7 +122,10 @@ namespace GridKit
       {
         return y_[0];
       }
+    
+    private:
 
+      bool is_initialized_;
 
     };
 
