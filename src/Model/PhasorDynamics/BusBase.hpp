@@ -307,7 +307,6 @@ namespace GridKit
       {
         return bus_id_;
       }
-
     };
 
   } // namespace PhasorDynamics

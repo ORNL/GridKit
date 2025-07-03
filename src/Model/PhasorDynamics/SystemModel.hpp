@@ -153,20 +153,20 @@ namespace GridKit
        */
       int allocate()
       {
-        size_       = 0;
+        size_ = 0;
 
         // Allocate all buses
         for (const auto& bus : buses_)
         {
           bus->allocate();
-          size_       += bus->size();
+          size_ += bus->size();
         }
 
         // Allocate all components
         for (const auto& component : components_)
         {
           component->allocate();
-          size_       += component->size();
+          size_ += component->size();
         }
 
         // Allocate global vectors
@@ -359,7 +359,6 @@ namespace GridKit
       {
         return 0;
       }
-
 
       void updateTime(real_type t, real_type a)
       {
