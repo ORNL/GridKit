@@ -102,7 +102,7 @@ namespace GridKit
       ScalarT ii    = (p * vi - q * vr) / vm2;
       ScalarT Er    = Ra_ * ir - Xdp_ * ii + vr;
       ScalarT Ei    = Ra_ * ii + Xdp_ * ir + vi;
-      ScalarT delta = std::atan(Ei / Er);
+      ScalarT delta = std::atan2(Ei, Er);
       ScalarT omega = static_cast<ScalarT>(1.0);
       ScalarT Ep    = std::sqrt(Er * Er + Ei * Ei);
       ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + -B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
