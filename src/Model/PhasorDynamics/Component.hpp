@@ -36,7 +36,7 @@ namespace GridKit
        * @param signal The signal bus object pointer
        * @param value The value to send to the equality constraint
        */
-      void safeSend(bus_type* signal, ScalarT& value)
+      void safeSend(bus_type* signal, ScalarT value)
       {
         if (signal)
         {
@@ -53,7 +53,7 @@ namespace GridKit
        * in such a way that any component can call 
        * this function and write
        */
-      void safeInit(bus_type* signal, ScalarT& value)
+      void safeInit(bus_type* signal, ScalarT value)
       {
         if (signal)
         {
@@ -70,7 +70,7 @@ namespace GridKit
        * @param signal The signal bus object pointer
        * @param default_val The value to return if no signal
        */
-      ScalarT safeRead(bus_type* signal, ScalarT& default_val)
+      ScalarT safeRead(bus_type* signal, ScalarT default_val)
       {
         if (signal)
         {
