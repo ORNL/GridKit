@@ -72,7 +72,7 @@ namespace GridKit
         msa = max_steps_;
       }
 
-      virtual ScalarT& read() = 0;
+      virtual const ScalarT& read() = 0;
       virtual void send(ScalarT& value) = 0;
 
       virtual ScalarT&       Vr()       = 0;
