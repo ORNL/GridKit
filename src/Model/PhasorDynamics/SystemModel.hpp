@@ -146,9 +146,7 @@ namespace GridKit
        * and computes system size (number of unknowns). Once the size is
        * computed, system global objects are allocated.
        *
-       * @post size_quad_ == 0 or 1
        * @post size_ >= 1
-       * @post size_param_ >= 0
        *
        */
       int allocate()
@@ -173,7 +171,6 @@ namespace GridKit
         y_.resize(size_);
         yp_.resize(size_);
         f_.resize(size_);
-        // fB_.resize(size_);
         tag_.resize(size_);
 
         return 0;
@@ -286,11 +283,11 @@ namespace GridKit
        * then copy values to the global residual vector.
        *
        * @warning Residuals must be computed for buses, before component
-       * residuals are computed. Buses own residuals for active and
-       * power P and Q, but the contributions to these residuals come
+       * residuals are computed. Buses own residuals for currents
+       * Ir and Ii, but the contributions to these residuals come
        * from components. Buses assign their residual values, while components
-       * add to those values by in-place adition. This is why bus residuals
-       * need to be computed first.
+       * add to those values by in-place adition. This is why (for now) bus
+       * residuals need to be computed first.
        *
        * @todo Here, components write to local values, which are then copied
        * to global system vectors. Make components write to the system
