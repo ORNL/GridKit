@@ -73,7 +73,7 @@ namespace GridKit
       }
 
       virtual void initial_value(ScalarT& value) = 0;
-      virtual const ScalarT& read() = 0;
+      virtual ScalarT& read() = 0;
       virtual void send(ScalarT& value) = 0;
 
       virtual ScalarT&       Vr()       = 0;

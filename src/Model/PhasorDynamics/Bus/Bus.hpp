@@ -50,7 +50,7 @@ namespace GridKit
       }
       
       // TODO Need to remove these
-      const ScalarT& read() override
+      ScalarT& read() override
       {
         return y_[0];
       }
