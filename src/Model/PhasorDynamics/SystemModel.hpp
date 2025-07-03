@@ -39,25 +39,15 @@ namespace GridKit
       using real_type      = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::size_quad_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::size_param_;
       using PhasorDynamics::Component<ScalarT, IdxT>::nnz_;
       using PhasorDynamics::Component<ScalarT, IdxT>::time_;
       using PhasorDynamics::Component<ScalarT, IdxT>::alpha_;
       using PhasorDynamics::Component<ScalarT, IdxT>::y_;
       using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::yB_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::ypB_;
       using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::fB_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::g_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::gB_;
       using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::param_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::param_up_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::param_lo_;
 
     public:
       /**
@@ -164,16 +154,12 @@ namespace GridKit
       int allocate()
       {
         size_       = 0;
-        size_quad_  = 0;
-        size_param_ = 0;
 
         // Allocate all buses
         for (const auto& bus : buses_)
         {
           bus->allocate();
           size_       += bus->size();
-          size_quad_  += bus->sizeQuadrature();
-          size_param_ += bus->sizeParams();
         }
 
         // Allocate all components
@@ -181,27 +167,14 @@ namespace GridKit
         {
           component->allocate();
           size_       += component->size();
-          size_quad_  += component->sizeQuadrature();
-          size_param_ += component->sizeParams();
         }
 
         // Allocate global vectors
         y_.resize(size_);
         yp_.resize(size_);
-        yB_.resize(size_);
-        ypB_.resize(size_);
         f_.resize(size_);
-        fB_.resize(size_);
+        // fB_.resize(size_);
         tag_.resize(size_);
-
-        g_.resize(size_quad_);
-        gB_.resize(size_quad_ * size_param_);
-
-        param_.resize(size_param_);
-        param_lo_.resize(size_param_);
-        param_up_.resize(size_param_);
-
-        assert(size_quad_ == 1 or size_quad_ == 0);
 
         return 0;
       }
@@ -236,7 +209,6 @@ namespace GridKit
       {
         // Set initial values for global solution vectors
         IdxT varOffset = 0;
-        IdxT optOffset = 0;
 
         for (const auto& bus : buses_)
         {
@@ -251,14 +223,6 @@ namespace GridKit
             yp_[varOffset + j] = bus->yp()[j];
           }
           varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            param_[optOffset + j]    = bus->param()[j];
-            param_lo_[optOffset + j] = bus->param_lo()[j];
-            param_up_[optOffset + j] = bus->param_up()[j];
-          }
-          optOffset += bus->sizeParams();
         }
 
         // Initialize components
@@ -275,14 +239,6 @@ namespace GridKit
             yp_[varOffset + j] = component->yp()[j];
           }
           varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            param_[optOffset + j]    = component->param()[j];
-            param_lo_[optOffset + j] = component->param_lo()[j];
-            param_up_[optOffset + j] = component->param_up()[j];
-          }
-          optOffset += component->sizeParams();
         }
 
         return 0;
@@ -344,7 +300,6 @@ namespace GridKit
       {
         // Update variables
         IdxT varOffset = 0;
-        IdxT optOffset = 0;
         for (const auto& bus : buses_)
         {
           for (IdxT j = 0; j < bus->size(); ++j)
@@ -353,12 +308,6 @@ namespace GridKit
             bus->yp()[j] = yp_[varOffset + j];
           }
           varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
 
           bus->evaluateResidual();
         }
@@ -371,12 +320,6 @@ namespace GridKit
             component->yp()[j] = yp_[varOffset + j];
           }
           varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
 
           component->evaluateResidual();
         }
@@ -417,297 +360,6 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief Evaluate integrands for the system quadratures.
-       */
-      int evaluateIntegrand()
-      {
-        // Update variables
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[varOffset + j];
-            bus->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-
-          bus->evaluateIntegrand();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[varOffset + j];
-            component->yp()[j] = yp_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-
-          component->evaluateIntegrand();
-        }
-
-        // Update integrand vector
-        IdxT intOffset = 0;
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->sizeQuadrature(); ++j)
-          {
-            g_[intOffset + j] = bus->getIntegrand()[j];
-          }
-          intOffset += bus->sizeQuadrature();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->sizeQuadrature(); ++j)
-          {
-            g_[intOffset + j] = component->getIntegrand()[j];
-          }
-          intOffset += component->sizeQuadrature();
-        }
-
-        return 0;
-      }
-
-      /**
-       * @brief Initialize system adjoint.
-       *
-       * Updates variables and optimization parameters, then initializes
-       * adjoints locally and copies them to the system adjoint vector.
-       */
-      int initializeAdjoint()
-      {
-        IdxT offset    = 0;
-        IdxT optOffset = 0;
-
-        // Update bus variables and optimization parameters
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[offset + j];
-            bus->yp()[j] = yp_[offset + j];
-          }
-          offset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        // Update component variables and optimization parameters
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[offset + j];
-            component->yp()[j] = yp_[offset + j];
-          }
-          offset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
-
-        // Reset counter
-        offset = 0;
-
-        // Initialize bus adjoints
-        for (const auto& bus : buses_)
-        {
-          bus->initializeAdjoint();
-
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            yB_[offset + j]  = bus->yB()[j];
-            ypB_[offset + j] = bus->ypB()[j];
-          }
-          offset += bus->size();
-        }
-
-        // Initialize component adjoints
-        for (const auto& component : components_)
-        {
-          component->initializeAdjoint();
-
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            yB_[offset + j]  = component->yB()[j];
-            ypB_[offset + j] = component->ypB()[j];
-          }
-          offset += component->size();
-        }
-
-        return 0;
-      }
-
-      /**
-       * @brief Compute adjoint residual for the system model.
-       *
-       * @warning Components write to bus residuals. Do not copy bus residuals
-       * to system vectors before components computed their residuals.
-       *
-       */
-      int evaluateAdjointResidual()
-      {
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
-
-        // Update variables in component models
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]   = y_[varOffset + j];
-            bus->yp()[j]  = yp_[varOffset + j];
-            bus->yB()[j]  = yB_[varOffset + j];
-            bus->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]   = y_[varOffset + j];
-            component->yp()[j]  = yp_[varOffset + j];
-            component->yB()[j]  = yB_[varOffset + j];
-            component->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
-
-        for (const auto& bus : buses_)
-        {
-          bus->evaluateAdjointResidual();
-        }
-
-        for (const auto& component : components_)
-        {
-          component->evaluateAdjointResidual();
-        }
-
-        // Update residual vector
-        IdxT resOffset = 0;
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            fB_[resOffset + j] = bus->getAdjointResidual()[j];
-          }
-          resOffset += bus->size();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            fB_[resOffset + j] = component->getAdjointResidual()[j];
-          }
-          resOffset += component->size();
-        }
-
-        return 0;
-      }
-
-      // int evaluateAdjointJacobian(){return 0;}
-
-      /**
-       * @brief Evaluate adjoint integrand for the system model.
-       *
-       * @pre Assumes there are no integrands in bus models.
-       * @pre Assumes integrand is implemented in only _one_ component.
-       *
-       */
-      int evaluateAdjointIntegrand()
-      {
-        // First, update variables
-        IdxT varOffset = 0;
-        IdxT optOffset = 0;
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]   = y_[varOffset + j];
-            bus->yp()[j]  = yp_[varOffset + j];
-            bus->yB()[j]  = yB_[varOffset + j];
-            bus->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += bus->size();
-
-          for (IdxT j = 0; j < bus->sizeParams(); ++j)
-          {
-            bus->param()[j] = param_[optOffset + j];
-          }
-          optOffset += bus->sizeParams();
-        }
-
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]   = y_[varOffset + j];
-            component->yp()[j]  = yp_[varOffset + j];
-            component->yB()[j]  = yB_[varOffset + j];
-            component->ypB()[j] = ypB_[varOffset + j];
-          }
-          varOffset += component->size();
-
-          for (IdxT j = 0; j < component->sizeParams(); ++j)
-          {
-            component->param()[j] = param_[optOffset + j];
-          }
-          optOffset += component->sizeParams();
-        }
-
-        // Evaluate integrand and update global vector
-        for (const auto& component : components_)
-        {
-          if (component->sizeQuadrature() == 1)
-          {
-            component->evaluateAdjointIntegrand();
-            for (IdxT j = 0; j < size_param_; ++j)
-            {
-              gB_[j] = component->getAdjointIntegrand()[j];
-            }
-            break;
-          }
-        }
-        return 0;
-      }
 
       void updateTime(real_type t, real_type a)
       {

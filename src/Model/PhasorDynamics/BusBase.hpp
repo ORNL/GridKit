@@ -40,15 +40,7 @@ namespace GridKit
           y_(size_),
           yp_(size_),
           f_(size_),
-          g_(size_quad_),
-          yB_(size_),
-          ypB_(size_),
-          fB_(size_),
-          gB_(size_param_),
-          J_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>()),
-          param_(size_param_),
-          param_up_(size_param_),
-          param_lo_(size_param_)
+          J_(GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>())
       {
       }
 
@@ -75,16 +67,6 @@ namespace GridKit
       virtual bool hasJacobian() override
       {
         return false;
-      }
-
-      virtual IdxT sizeQuadrature() override
-      {
-        return size_quad_;
-      }
-
-      virtual IdxT sizeParams() override
-      {
-        return size_param_;
       }
 
       virtual void updateTime(real_type /* t */, real_type /* a */) override
@@ -142,66 +124,6 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& yB() override
-      {
-        return yB_;
-      }
-
-      const std::vector<ScalarT>& yB() const override
-      {
-        return yB_;
-      }
-
-      std::vector<ScalarT>& ypB() override
-      {
-        return ypB_;
-      }
-
-      const std::vector<ScalarT>& ypB() const override
-      {
-        return ypB_;
-      }
-
-      std::vector<ScalarT>& param() override
-      {
-        return param_;
-      }
-
-      const std::vector<ScalarT>& param() const override
-      {
-        return param_;
-      }
-
-      std::vector<ScalarT>& param_up() override
-      {
-        return param_up_;
-      }
-
-      const std::vector<ScalarT>& param_up() const override
-      {
-        return param_up_;
-      }
-
-      std::vector<ScalarT>& param_lo() override
-      {
-        return param_lo_;
-      }
-
-      const std::vector<ScalarT>& param_lo() const override
-      {
-        return param_lo_;
-      }
-
-      std::vector<ScalarT>& getResidual() override
-      {
-        return f_;
-      }
-
-      const std::vector<ScalarT>& getResidual() const override
-      {
-        return f_;
-      }
-
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() override
       {
         return J_;
@@ -210,41 +132,6 @@ namespace GridKit
       const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const override
       {
         return J_;
-      }
-
-      std::vector<ScalarT>& getIntegrand() override
-      {
-        return g_;
-      }
-
-      const std::vector<ScalarT>& getIntegrand() const override
-      {
-        return g_;
-      }
-
-      std::vector<ScalarT>& getAdjointResidual() override
-      {
-        return fB_;
-      }
-
-      const std::vector<ScalarT>& getAdjointResidual() const override
-      {
-        return fB_;
-      }
-
-      std::vector<ScalarT>& getAdjointIntegrand() override
-      {
-        return gB_;
-      }
-
-      const std::vector<ScalarT>& getAdjointIntegrand() const override
-      {
-        return gB_;
-      }
-
-      virtual const IdxT busID() const
-      {
-        return bus_id_;
       }
 
     protected:
@@ -261,16 +148,7 @@ namespace GridKit
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
-      std::vector<ScalarT> yB_;
-      std::vector<ScalarT> ypB_;
-      std::vector<ScalarT> fB_;
-      std::vector<ScalarT> gB_;
-
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
-
-      std::vector<ScalarT> param_;
-      std::vector<ScalarT> param_up_;
-      std::vector<ScalarT> param_lo_;
 
       real_type time_;
       real_type alpha_;
@@ -279,6 +157,148 @@ namespace GridKit
       real_type atol_;
 
       IdxT max_steps_;
+
+      //
+      // Adjoint sensitivity members
+      //
+
+      std::vector<ScalarT> yB_{};
+      std::vector<ScalarT> ypB_{};
+      std::vector<ScalarT> fB_{};
+      std::vector<ScalarT> gB_{};
+
+      std::vector<ScalarT> param_{};
+      std::vector<ScalarT> param_up_{};
+      std::vector<ScalarT> param_lo_{};
+
+      //
+      // Public adjoint sensitivity methods (not yet implemented in components)
+      //
+
+    public:
+      virtual IdxT sizeQuadrature() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return size_quad_;
+      }
+
+      virtual IdxT sizeParams() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return size_param_;
+      }
+
+      std::vector<ScalarT>& yB() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return yB_;
+      }
+
+      const std::vector<ScalarT>& yB() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return yB_;
+      }
+
+      std::vector<ScalarT>& ypB() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return ypB_;
+      }
+
+      const std::vector<ScalarT>& ypB() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return ypB_;
+      }
+
+      std::vector<ScalarT>& param() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_;
+      }
+
+      const std::vector<ScalarT>& param() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_;
+      }
+
+      std::vector<ScalarT>& param_up() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_up_;
+      }
+
+      const std::vector<ScalarT>& param_up() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_up_;
+      }
+
+      std::vector<ScalarT>& param_lo() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_lo_;
+      }
+
+      const std::vector<ScalarT>& param_lo() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return param_lo_;
+      }
+
+      std::vector<ScalarT>& getResidual() override
+      {
+        return f_;
+      }
+
+      const std::vector<ScalarT>& getResidual() const override
+      {
+        return f_;
+      }
+
+      std::vector<ScalarT>& getIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return g_;
+      }
+
+      const std::vector<ScalarT>& getIntegrand() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return g_;
+      }
+
+      std::vector<ScalarT>& getAdjointResidual() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return fB_;
+      }
+
+      const std::vector<ScalarT>& getAdjointResidual() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return fB_;
+      }
+
+      std::vector<ScalarT>& getAdjointIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return gB_;
+      }
+
+      const std::vector<ScalarT>& getAdjointIntegrand() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return gB_;
+      }
+
+      virtual const IdxT busID() const
+      {
+        return bus_id_;
+      }
+
     };
 
   } // namespace PhasorDynamics
