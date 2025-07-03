@@ -17,6 +17,7 @@ namespace GridKit
         : BusBase<ScalarT, IdxT>(data.bus_id)
     {
       size_ = 1;
+      is_initialized_ = false;
     }
 
 
