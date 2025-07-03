@@ -88,7 +88,8 @@ namespace GridKit
       {
 
         // Initial mechanical = initial electric torque
-        ScalarT p0 = this->safeRead(pmech_, 1);
+        ScalarT pdef = 1;
+        ScalarT p0 = this->safeRead(pmech_, pdef);
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
