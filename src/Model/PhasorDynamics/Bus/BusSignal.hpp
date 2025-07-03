@@ -125,7 +125,6 @@ namespace GridKit
         return y_[0];
       }
     
-    private:
 
       //bool is_initialized_{false};
 

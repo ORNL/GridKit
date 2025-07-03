@@ -45,22 +45,6 @@ namespace GridKit
         
       }
 
-      /**
-       * @brief A helper function to easily init
-       * a signal value wiithout needing to check if initialized
-       * 
-       * This is implemented
-       * in such a way that any component can call 
-       * this function and write
-       */
-      void safeInit(bus_type* signal, ScalarT value)
-      {
-        if (signal)
-        {
-          signal->initial_value(value);
-        }
-        
-      }
 
       /**
        * @brief A helper function to easily read
