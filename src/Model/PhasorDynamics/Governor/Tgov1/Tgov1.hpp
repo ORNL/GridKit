@@ -9,7 +9,6 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
-#include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -23,7 +22,7 @@ namespace GridKit
     } // namespace Governor
 
     template <class ScalarT, typename IdxT>
-    class Genrou;
+    class BusBase;
 
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -54,13 +53,15 @@ namespace GridKit
         using Component<ScalarT, IdxT>::yp_;
         using Component<ScalarT, IdxT>::ypB_;
 
-        using machine_type    = Genrou<ScalarT, IdxT>;
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
+        using bus_type        = BusBase<ScalarT, IdxT>;
 
       public:
-        Tgov1(machine_type* machine, const model_data_type& data);
-        Tgov1(machine_type* machine);
+        Tgov1();
+        Tgov1(bus_type* pmech, 
+              bus_type* omega, 
+              const model_data_type& data);
         ~Tgov1() = default;
 
         int allocate() override;
@@ -79,12 +80,10 @@ namespace GridKit
         {
         }
 
-        // Read Access to Pmech
-        ScalarT& Pmech() override;
-
       private:
         // Associated Machine Model
-        machine_type* machine_;
+        bus_type* pmech_;
+        bus_type* omega_;
 
         // Input parameters
         real_type R_;

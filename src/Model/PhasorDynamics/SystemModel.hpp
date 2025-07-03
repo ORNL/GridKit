@@ -15,6 +15,7 @@
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 
 namespace GridKit
 {
@@ -115,8 +116,41 @@ namespace GridKit
         // Add generators
         for (const auto& gendata : data.genrou)
         {
-          auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
+
+          // Simplify this block
+          Genrou<ScalarT, IdxT>* gen;
+          if (gendata.signal_pmech > 0)
+          {
+            gen = new Genrou<ScalarT, IdxT>(
+            getBus(gendata.bus_id), 
+            getBus(gendata.signal_pmech), 
+            getBus(gendata.signal_speed), 
+            gendata);
+          }
+          else 
+          {
+            gen = new Genrou<ScalarT, IdxT>(
+            getBus(gendata.bus_id), 
+            nullptr, 
+            nullptr, 
+            gendata);
+          }
+          /* Need to add signals to gendata class */
+          
           addComponent(gen);
+        }
+
+        // Add governors
+        for (const auto& govdata : data.gov)
+        {
+          
+          /* Need to add signals to gendata class */
+          auto* gov = new Governor::Tgov1<ScalarT, IdxT>(
+            getBus(govdata.signal_pmech), 
+            getBus(govdata.signal_speed),
+            govdata);
+       
+          addComponent(gov);
         }
 
         // Add faults

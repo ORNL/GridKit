@@ -32,26 +32,26 @@ namespace GridKit
     {
       RealT p0{0.0};    ///< Initial active power
       RealT q0{0.0};    ///< Initial reactive power
-      RealT H{0.0};     ///< Rotor inertia
+      RealT H{3.0};     ///< Rotor inertia
       RealT D{0.0};     ///< Damping coefficient
       RealT Ra{0.0};    ///< Winding resistance
-      RealT Tdop{0.0};  ///< Open circuit direct axis transient time
-      RealT Tdopp{0.0}; ///< Open circuit direct axis sub-transient time
-      RealT Tqop{0.0};  ///< Open circuit quadrature axis transient
-      RealT Tqopp{0.0}; ///< Open circuit quadrature axis sub-transient time
-      RealT Xd{0.0};    ///< Direct axis synchronous reactance
-      RealT Xdp{0.0};   ///< Direct axis transient reactance
-      RealT Xdpp{0.0};  ///< Direct axis sub-transient reactance
-      RealT Xq{0.0};    ///< Quadrature axis synchronous reactance
-      RealT Xqp{0.0};   ///< Quadrature axis transient reactance
-      RealT Xqpp{0.0};  ///< Quadrature axis sub-transient reactance
-      RealT Xl{0.0};    ///< Stator leakage reactance
+      RealT Tdop{7.0};  ///< Open circuit direct axis transient time
+      RealT Tdopp{0.04}; ///< Open circuit direct axis sub-transient time
+      RealT Tqop{0.75};  ///< Open circuit quadrature axis transient
+      RealT Tqopp{0.05}; ///< Open circuit quadrature axis sub-transient time
+      RealT Xd{2.1};    ///< Direct axis synchronous reactance
+      RealT Xdp{0.2};   ///< Direct axis transient reactance
+      RealT Xdpp{0.18};  ///< Direct axis sub-transient reactance
+      RealT Xq{0.5};    ///< Quadrature axis synchronous reactance
+      RealT Xqp{0.5};   ///< Quadrature axis transient reactance
+      RealT Xqpp{0.18};  ///< Quadrature axis sub-transient reactance
+      RealT Xl{0.15};    ///< Stator leakage reactance
       RealT S10{0.0};   ///< Saturation factor at 1.0 pu flux
       RealT S12{0.0};   ///< Saturation factor at 1.2 pu flux
 
       IdxT                bus_id{0};       ///< Unique ID of the connecting bus
-      std::optional<IdxT> exciter_signal;  ///< Unique ID of the bus providing the exciter signal
-      std::optional<IdxT> governor_signal; ///< Unique ID of the bus providing the governor signal
+      IdxT signal_pmech{0}; ///< Unique ID of the bus providing the pmech signal
+      IdxT signal_speed{0}; ///< Unique ID of the bus providing the speed signal
 
       std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
       std::optional<RealT> va_base;   ///< Override for the system-wide power base

@@ -18,9 +18,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class BusBase;
 
-    template <class ScalarT, typename IdxT>
-    class GovernorBase; // <- TODO: Temporary, to be removed.
-
     template <typename RealT, typename IdxT>
     struct GenrouData;
   } // namespace PhasorDynamics
@@ -50,33 +47,15 @@ namespace GridKit
       using Component<ScalarT, IdxT>::ypB_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
-      using gov_type        = GovernorBase<ScalarT, IdxT>;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
 
     public:
       Genrou(bus_type* bus, IdxT unit_id);
-      Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
-             IdxT      unit_id,
-             ScalarT   p0,
-             ScalarT   q0,
-             real_type H,
-             real_type D,
-             real_type Ra,
-             real_type Tdop,
-             real_type Tdopp,
-             real_type Tqopp,
-             real_type Tqop,
-             real_type Xd,
-             real_type Xdp,
-             real_type Xdpp,
-             real_type Xq,
-             real_type Xqp,
-             real_type Xqpp,
-             real_type Xl,
-             real_type S10,
-             real_type S12);
+             bus_type* pmech_, 
+             bus_type* omega_, 
+             const model_data_type& data);
       ~Genrou() = default;
 
       int allocate() override;
@@ -95,13 +74,7 @@ namespace GridKit
       {
       }
 
-      // Temporary access functions for governor
-      // Should be abstracted
-      ScalarT getSpeed();
-      ScalarT getTorque();
 
-      // Temporary set governor function until SignalBus implemented
-      void setgovenor(gov_type* gov);
 
     private:
       void setDerivedParams();
@@ -129,6 +102,8 @@ namespace GridKit
     private:
       /* Identification */
       bus_type* bus_;
+      bus_type* pmech_;
+      bus_type* omega_;
       const int busID_;
       IdxT      unit_id_;
 
