@@ -72,38 +72,6 @@ namespace GridKit
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    int BusSignal<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize BusSignal..." << std::endl;
-      yB_[0]  = 0.0;
-      ypB_[0] = 0.0;
-
-      return 0;
-    }
-
- 
-    template <class ScalarT, typename IdxT>
-    int BusSignal<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      fB_[0] = 0.0;
-
-      return 0;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int BusSignal<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      return 0;
-    }
-
-  
-    template <class ScalarT, typename IdxT>
-    int BusSignal<ScalarT, IdxT>::evaluateAdjointIntegrand()
-    {
-      return 0;
-    }
-
     // Available template instantiations
     template class BusSignal<double, long int>;
     template class BusSignal<double, size_t>;

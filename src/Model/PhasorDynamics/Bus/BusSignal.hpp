@@ -39,11 +39,7 @@ namespace GridKit
       virtual int evaluateResidual() override;
       virtual int evaluateIntegrand() override;
       virtual int evaluateJacobian() override;
-      virtual int initializeAdjoint() override;
-      virtual int evaluateAdjointIntegrand() override;
-      virtual int evaluateAdjointResidual() override;
 
-      
        /**
        * @brief A one-time initialization function
        * that can be called by any.
