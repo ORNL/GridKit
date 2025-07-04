@@ -22,11 +22,9 @@ namespace GridKit
     /*!
      * @brief Constructor for a pi-model branch
      *
-     * Arguments passed to ModelEvaluatorImpl:
+     * Model size:
      * - Number of equations = 0
-     * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
+     * - Number of internal variables = 0
      */
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
@@ -159,62 +157,6 @@ namespace GridKit
     {
       std::cout << "Evaluate Jacobian for Branch..." << std::endl;
       std::cout << "Jacobian evaluation not implemented!" << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      // std::cout << "Evaluate Integrand for Branch..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint initialization not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize adjoint for Branch..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint residual evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      // std::cout << "Evaluate adjoint residual for Branch..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateAdjointIntegrand()
-    {
-      // std::cout << "Evaluate adjoint Integrand for Branch..." << std::endl;
       return 0;
     }
 

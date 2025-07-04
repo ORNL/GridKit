@@ -21,10 +21,7 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
       using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::yB_;
-      using BusBase<ScalarT, IdxT>::ypB_;
       using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::fB_;
       using BusBase<ScalarT, IdxT>::tag_;
 
     public:
@@ -41,11 +38,7 @@ namespace GridKit
       virtual int tagDifferentiable() override;
       virtual int initialize() override;
       virtual int evaluateResidual() override;
-      virtual int evaluateIntegrand() override;
       virtual int evaluateJacobian() override;
-      virtual int initializeAdjoint() override;
-      virtual int evaluateAdjointIntegrand() override;
-      virtual int evaluateAdjointResidual() override;
 
       virtual BusTypeT BusType() const override
       {

@@ -26,9 +26,6 @@ namespace GridKit
     Bus<ScalarT, IdxT>::Bus()
       : Vr0_(0.0), Vi0_(0.0)
     {
-      // std::cout << "Create Bus..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
       size_ = 2;
     }
 
@@ -47,9 +44,6 @@ namespace GridKit
     Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
       : Vr0_(Vr), Vi0_(Vi)
     {
-      // std::cout << "Create Bus..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
       size_ = 2;
     }
 
@@ -92,10 +86,6 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
-
-      fB_.resize(size);
-      yB_.resize(size);
-      ypB_.resize(size);
 
       return 0;
     }
@@ -151,63 +141,6 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     int Bus<ScalarT, IdxT>::evaluateJacobian()
-    {
-      return 0;
-    }
-
-    /*!
-     * @brief initialize method sets bus variables to stored initial values.
-     */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize Bus..." << std::endl;
-      yB_[0]  = 0.0;
-      yB_[1]  = 0.0;
-      ypB_[0] = 0.0;
-      ypB_[1] = 0.0;
-
-      return 0;
-    }
-
-    /**
-     * @brief Bus only initializes adjoint residual elements to zero.
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      fB_[0] = 0.0;
-      fB_[1] = 0.0;
-
-      return 0;
-    }
-
-    /**
-     * @brief Quadrature evaluation not implemented
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint quadrature evaluation not implemented
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {
       return 0;
     }

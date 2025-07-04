@@ -19,15 +19,10 @@ namespace GridKit
      * Arguments to be passed to BusBase:
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite()
     {
-      // std::cout << "Create BusInfinite..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
       size_ = 0;
     }
 
@@ -39,16 +34,11 @@ namespace GridKit
      * Arguments to be passed to BusBase:
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite(ScalarT Vr, ScalarT Vi)
       : Vr_(Vr), Vi_(Vi)
     {
-      // std::cout << "Create BusInfinite..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
       size_ = 0;
     }
 
@@ -58,8 +48,6 @@ namespace GridKit
      * Arguments to be set in BusBase:
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
 
      * @tparam ScalarT - type of scalar variables
      * @tparam IdxT    - type for vector/matrix indices
@@ -77,7 +65,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::~BusInfinite()
     {
-      // std::cout << "Destroy PQ bus ..." << std::endl;
     }
 
     /*!
@@ -86,8 +73,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusInfinite<ScalarT, IdxT>::allocate()
     {
-      // std::cout << "Nothing to allocate for infinite bus ..." << std::endl;
-
       return 0;
     }
 
@@ -103,8 +88,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusInfinite<ScalarT, IdxT>::initialize()
     {
-      // std::cout << "Initialize BusInfinite..." << std::endl;
-
       return 0;
     }
 
@@ -123,7 +106,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusInfinite<ScalarT, IdxT>::evaluateResidual()
     {
-      // std::cout << "Evaluating residual of a PQ bus ...\n";
       Ir_ = 0.0;
       Ii_ = 0.0;
       return 0;
@@ -138,56 +120,6 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     int BusInfinite<ScalarT, IdxT>::evaluateJacobian()
-    {
-      return 0;
-    }
-
-    /*!
-     * @brief initialize method sets bus variables to stored initial values.
-     */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize BusInfinite..." << std::endl;
-
-      return 0;
-    }
-
-    /**
-     * @brief BusInfinite only initializes adjoint residual elements to zero.
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Quadrature evaluation not implemented
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint quadrature evaluation not implemented
-     *
-     * @tparam ScalarT - data type for the integrand
-     * @tparam IdxT    - data type for matrix/vector indices
-     * @return int - error code
-     */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::evaluateAdjointIntegrand()
     {
       return 0;
     }
