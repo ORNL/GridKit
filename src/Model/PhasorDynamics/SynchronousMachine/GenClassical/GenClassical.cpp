@@ -27,4 +27,3 @@ namespace GridKit
 
   } // namespace PhasorDynamics
 } // namespace GridKit
-
