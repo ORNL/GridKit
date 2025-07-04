@@ -3,6 +3,7 @@
  * @file MapToCOO.hpp
  *
  * @author Nicholson Koukpaizan <koukpaizannk@ornl.gov>, ORNL
+ * @todo This should go away once we settle on a sparse format
  *
  */
 #pragma once
