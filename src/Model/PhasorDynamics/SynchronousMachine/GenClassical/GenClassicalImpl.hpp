@@ -79,9 +79,6 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
-      fB_.resize(size);
-      yB_.resize(size);
-      ypB_.resize(size);
       return 0;
     }
 
@@ -182,62 +179,6 @@ namespace GridKit
       Ir() += ir_;
       Ii() += ii_;
 
-      return 0;
-    }
-
-    /**
-     * @brief Integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      // std::cout << "Evaluate Integrand for GenClassical..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint initialization not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize adjoint for GenClassical..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint residual evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      // std::cout << "Evaluate adjoint residual for GenClassical..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::evaluateAdjointIntegrand()
-    {
-      // std::cout << "Evaluate adjoint Integrand for GenClassical..." << std::endl;
       return 0;
     }
 
