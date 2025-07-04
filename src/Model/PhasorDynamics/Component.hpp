@@ -66,6 +66,43 @@ namespace GridKit
         
       }
 
+      /**
+       * @brief A helper function to easily init
+       * a signal value wiithout needing to check if initialized
+       * 
+       * @param signal The signal bus object pointer
+       * @param value The value to send to the equality constraint
+       */
+      void safeSend(bus_type* signal, ScalarT value)
+      {
+        if (signal)
+        {
+          signal->send(value);
+        }
+        
+      }
+
+      /**
+       * @brief A helper function to easily read
+       * the state of the signal without checking nullptr
+       * 
+       * 
+       * @param signal The signal bus object pointer
+       * @param default_val The value to return if no signal
+       */
+      ScalarT safeRead(bus_type* signal, ScalarT default_val)
+      {
+        if (signal)
+        {
+          return signal->read();
+        }
+        else 
+        {
+          return default_val;
+        }
+        
+      }
+
       virtual IdxT size() override
       {
         return size_;
