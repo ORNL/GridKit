@@ -37,7 +37,6 @@ namespace GridKit
       virtual int tagDifferentiable() override;
       virtual int initialize() override;
       virtual int evaluateResidual() override;
-      virtual int evaluateIntegrand() override;
       virtual int evaluateJacobian() override;
 
        /**
