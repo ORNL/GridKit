@@ -28,18 +28,12 @@ namespace GridKit
     {
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::fB_;
-      using Component<ScalarT, IdxT>::g_;
-      using Component<ScalarT, IdxT>::gB_;
       using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::param_;
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yB_;
       using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::ypB_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
@@ -63,10 +57,6 @@ namespace GridKit
 
       // Still to be implemented
       int evaluateJacobian() override;
-      int evaluateIntegrand() override;
-      int initializeAdjoint() override;
-      int evaluateAdjointResidual() override;
-      int evaluateAdjointIntegrand() override;
 
       void updateTime(real_type /* t */, real_type /* a */) override
       {

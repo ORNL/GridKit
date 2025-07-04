@@ -22,11 +22,9 @@ namespace GridKit
     /*!
      * @brief Constructor for a pi-model branch
      *
-     * Arguments passed to ModelEvaluatorImpl:
+     * Model sizes:
      * - Number of equations = 0
      * - Number of independent variables = 0
-     * - Number of quadratures = 0
-     * - Number of optimization parameters = 0
      */
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus)
@@ -134,62 +132,6 @@ namespace GridKit
     {
       std::cout << "Evaluate Jacobian for BusFault..." << std::endl;
       std::cout << "Jacobian evaluation not implemented!" << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::evaluateIntegrand()
-    {
-      // std::cout << "Evaluate Integrand for BusFault..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint initialization not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::initializeAdjoint()
-    {
-      // std::cout << "Initialize adjoint for BusFault..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint residual evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::evaluateAdjointResidual()
-    {
-      // std::cout << "Evaluate adjoint residual for BusFault..." << std::endl;
-      return 0;
-    }
-
-    /**
-     * @brief Adjoint integrand (objective) evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::evaluateAdjointIntegrand()
-    {
-      // std::cout << "Evaluate adjoint Integrand for BusFault..." << std::endl;
       return 0;
     }
 
