@@ -27,8 +27,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
-        pmech_(nullptr),
-        omega_(nullptr),
+        pmech_signal_(nullptr),
+        omega_signal_(nullptr),
         busID_(0),
         unit_id_(unit_id),
         p0_(0.),
@@ -67,12 +67,12 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(
       bus_type* bus, 
-      bus_type* pmech, 
-      bus_type* omega, 
+      bus_type* pmech_signal, 
+      bus_type* omega_signal, 
       const model_data_type& data)
       : bus_(bus),
-        pmech_(pmech),
-        omega_(omega),
+        pmech_signal_(pmech_signal),
+        omega_signal_(omega_signal),
         busID_(0),
         unit_id_(1),
         p0_(data.p0),
@@ -122,8 +122,8 @@ namespace GridKit
                                   real_type S10,
                                   real_type S12)
       : bus_(bus),
-        pmech_(nullptr),
-        omega_(nullptr),
+        pmech_signal_(nullptr),
+        omega_signal_(nullptr),
         busID_(0),
         unit_id_(unit_id),
         p0_(p0),
@@ -237,9 +237,14 @@ namespace GridKit
       // Initialize External Inputs
       // To do make this from init function
       pmech_set_ = Te;
-      if (pmech_)
+      if (pmech_signal_)
       {
-        pmech_->initial_value(Te);
+        pmech_signal_->initial_value(Te);
+      }
+
+      if (omega_signal_)
+      {
+        omega_signal_->initial_value(omega);
       }
 
 
@@ -271,18 +276,11 @@ namespace GridKit
       // Inputs
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
-
-      ScalarT pmech  = pmech_set_;
-      if (pmech_)
-      {
-        pmech = pmech_->read();
-      }
+      ScalarT pmech  = safeRead(pmech_signal_, pmech_set_);
 
       // Outputs
-      if (omega_)
-      {
-        omega_->send(y_[1]);
-      }
+      safeSend(omega_signal_, y_[1]);
+
 
       /* Read variables */
       ScalarT delta  = y_[0];
@@ -345,8 +343,6 @@ namespace GridKit
       /* Current balance */
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
-
-
 
       return 0;
     }
