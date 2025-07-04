@@ -4,7 +4,6 @@
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Definition of a GENROU generator model.
  *
- *
  */
 
 #define _USE_MATH_DEFINES
@@ -237,16 +236,8 @@ namespace GridKit
       // Initialize External Inputs
       // To do make this from init function
       pmech_set_ = Te;
-      if (pmech_signal_)
-      {
-        pmech_signal_->initial_value(Te);
-      }
-
-      if (omega_signal_)
-      {
-        omega_signal_->initial_value(omega);
-      }
-
+      this->safeInit(pmech_signal_, Te);
+      this->safeInit(omega_signal_, omega);
 
       return 0;
     }
