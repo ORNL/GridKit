@@ -34,8 +34,8 @@ namespace GridKit
         bus_type* pmech_signal, 
         bus_type* omega_signal,
         const model_data_type& data)
-        : pmech_signal_(pmech), 
-          omega_signal_(omega),
+        : pmech_signal_(pmech_signal), 
+          omega_signal_(omega_signal),
           R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
