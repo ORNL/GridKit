@@ -65,7 +65,6 @@ namespace GridKit
         
       }
 
-
       /**
        * @brief A helper function to easily read
        * the state of the signal without checking nullptr

@@ -208,12 +208,12 @@ namespace GridKit
       ScalarT ksat;
       ScalarT psipp;
 
-      y_[0] = delta; //= 0.55399038;
-      y_[1] = omega; // = 0;
-      y_[2] = Eqp;   // = 0.995472581;
-      y_[3] = psidp; // = 0.971299567;
-      y_[4] = psiqp; // = 0.306880069;
-      y_[5] = Edp;   // = 0;
+      y_[0] = delta; 
+      y_[1] = omega;
+      y_[2] = Eqp;   
+      y_[3] = psidp; 
+      y_[4] = psiqp; 
+      y_[5] = Edp;  
 
       y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
@@ -268,7 +268,7 @@ namespace GridKit
     }
 
     /**
-     * \brief Residual contribution of the branch is pushed to the
+     * @brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      *
      */
@@ -279,10 +279,10 @@ namespace GridKit
       // Inputs
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
-      ScalarT pmech  = safeRead(pmech_signal_, pmech_set_);
+      ScalarT pmech  = this->safeRead(pmech_signal_, pmech_set_);
 
       // Outputs
-      safeSend(omega_signal_, y_[1]);
+      this->safeSend(omega_signal_, y_[1]);
 
 
       /* Read variables */
