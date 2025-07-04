@@ -107,7 +107,9 @@ namespace GridKit
         for (const auto& gendata : data.genrou)
         {
 
-          // Simplify this block
+          // PR NOTE:
+          // Can we make getBus return nullptr if none exists?
+          // I don't know if it will break things
           Genrou<ScalarT, IdxT>* gen;
           if (gendata.signal_pmech > 0)
           {

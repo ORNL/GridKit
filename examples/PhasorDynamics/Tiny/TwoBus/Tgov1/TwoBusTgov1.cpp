@@ -144,6 +144,7 @@ int main()
   {
     std::vector<scalar_type>& y_val = sys.y();
 
+    // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
     output.push_back(OutputData{t, y_val[0], y_val[1], y_val[5]});
   };
 
