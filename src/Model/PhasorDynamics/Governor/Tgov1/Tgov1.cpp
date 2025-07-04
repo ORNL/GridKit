@@ -25,16 +25,17 @@ namespace GridKit
       /*!
        * @brief Constructor for Governor
        *
-       * @param machine Generator Object
+       * @param pmech Bus signal pointer
+       * @param omega Bus signal pointer
        * @param data    TGOV1 Data Object
        */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(
-        bus_type* pmech, 
-        bus_type* omega,
+        bus_type* pmech_signal, 
+        bus_type* omega_signal,
         const model_data_type& data)
-        : pmech_(pmech), 
-          omega_(omega),
+        : pmech_signal_(pmech), 
+          omega_signal_(omega),
           R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
@@ -50,8 +51,8 @@ namespace GridKit
       }
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1()
-        : pmech_(nullptr), 
-          omega_(nullptr),
+        : pmech_signal_(nullptr), 
+          omega_signal_(nullptr),
           R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
@@ -94,7 +95,7 @@ namespace GridKit
 
         // Initial mechanical = initial electric torque
         ScalarT pdef = 1;
-        ScalarT p0 = this->safeRead(pmech_, pdef);
+        ScalarT p0 = this->safeRead(pmech_signal_, pdef);
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -178,7 +179,7 @@ namespace GridKit
 
         // Ext Variables
         ScalarT omega0 = 0;
-        ScalarT omega = this->safeRead(omega_, omega0);
+        ScalarT omega = this->safeRead(omega_signal_, omega0);
 
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
@@ -199,7 +200,7 @@ namespace GridKit
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         // Write External
-        this->safeSend(pmech_, pmech);
+        this->safeSend(pmech_signal_, pmech);
 
         return 0;
       }

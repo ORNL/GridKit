@@ -53,8 +53,8 @@ namespace GridKit
     public:
       Genrou(bus_type* bus, IdxT unit_id);
       Genrou(bus_type* bus,
-             bus_type* pmech_, 
-             bus_type* omega_, 
+             bus_type* pmech_signal, 
+             bus_type* omega_signal, 
              const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
@@ -122,8 +122,9 @@ namespace GridKit
     private:
       /* Identification */
       bus_type* bus_;
-      bus_type* pmech_;
-      bus_type* omega_;
+      bus_type* pmech_signal_;
+      bus_type* omega_signal_;
+
       const int busID_;
       IdxT      unit_id_;
 

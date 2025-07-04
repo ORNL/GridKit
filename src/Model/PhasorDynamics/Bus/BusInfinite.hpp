@@ -50,17 +50,19 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
-      void initial_value(ScalarT value) override
+      // TODO remove, uneeded
+      void initial_value(ScalarT) override
       {
       }
 
-      // TODO Need to remove these
+      // TODO remove, uneeded
       ScalarT& read() override
       {
         return y_[0];
       }
 
-      void send(ScalarT& value) override
+      // TODO remove, uneeded
+      void send(ScalarT&) override
       {
       }
 

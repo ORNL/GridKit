@@ -59,8 +59,8 @@ namespace GridKit
 
       public:
         Tgov1();
-        Tgov1(bus_type* pmech, 
-              bus_type* omega, 
+        Tgov1(bus_type* pmech_signal, 
+              bus_type* omega_signal, 
               const model_data_type& data);
         ~Tgov1() = default;
 
@@ -82,8 +82,8 @@ namespace GridKit
 
       private:
         // Associated Machine Model
-        bus_type* pmech_;
-        bus_type* omega_;
+        bus_type* pmech_signal_;
+        bus_type* omega_signal_;
 
         // Input parameters
         real_type R_;
