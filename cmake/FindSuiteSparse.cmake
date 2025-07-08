@@ -1,4 +1,4 @@
-# 
+#
 #[[
 
 Finds Sutiesparse include directory and libraries and exports target `Suitesparse`
@@ -30,7 +30,7 @@ if(SUITESPARSE_LIBRARY)
   get_filename_component(SUITESPARSE_LIBRARY_DIR ${SUITESPARSE_LIBRARY} DIRECTORY CACHE "Suitesparse library directory")
   message(STATUS "Found Suitesparse libraries in: " ${SUITESPARSE_LIBRARY_DIR})
   mark_as_advanced(SUITESPARSE_LIBRARY SUITESPARSE_LIBRARY_DIR)
-  if(NOT SUITESPARSE_DIR) 
+  if(NOT SUITESPARSE_DIR)
     get_filename_component(SUITESPARSE_DIR ${SUITESPARSE_LIBRARY_DIR} DIRECTORY CACHE)
   endif()
 endif()
@@ -45,7 +45,8 @@ find_path(SUITESPARSE_INCLUDE_DIR
   PATHS
   ${SUITESPARSE_DIR} $ENV{SUITESPARSE_DIR} ${SUITESPARSE_ROOT_DIR} ${SUITESPARSE_LIBRARY_DIR}/..
   PATH_SUFFIXES
-  include)
+  include
+  include/suitesparse)
 
 if(SUITESPARSE_LIBRARY)
   message(STATUS "Found Suitesparse include: ${SUITESPARSE_INCLUDE_DIR}")
@@ -54,7 +55,7 @@ if(SUITESPARSE_LIBRARY)
   add_library(SUITESPARSE INTERFACE IMPORTED)
   target_include_directories(SUITESPARSE INTERFACE ${SUITESPARSE_INCLUDE_DIR})
   foreach(mod ${SUITESPARSE_MODULES})
-    find_library(suitesparse_${mod} 
+    find_library(suitesparse_${mod}
       NAMES ${mod}
       HINTS ${SUITESPARSE_LIBRARY_DIR})
     if(suitesparse_${mod})
