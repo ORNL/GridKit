@@ -123,7 +123,7 @@ namespace GridKit
         else if (kind == "bus_fault")
         {
           typename SystemModelData<RealT, IdxT>::BusFaultDataT bus_fault;
-          raw_component.get_to((bus_fault));
+          raw_component.get_to(bus_fault);
           sm.bus_fault.push_back(bus_fault);
         }
         else
