@@ -272,7 +272,7 @@ int main()
   if (worst_error < error_allowed)
   {
     std::cout << "Test result: PASS\n\n";
-  } 
+  }
   else
   {
     std::cout << "Test result: FAIL\n\n";
