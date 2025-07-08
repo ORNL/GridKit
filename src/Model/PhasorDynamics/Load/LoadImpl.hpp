@@ -9,7 +9,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*
+    /**
      * @brief Constructor for a pi-model load
      *
      * System sizes:
