@@ -52,7 +52,11 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename RealT, typename IdxT>
-    struct BusFaultData : public ComponentData<RealT, IdxT, BusFaultParameters, BusFaultPorts, BusFaultMonitorableVariables>
+    struct BusFaultData : public ComponentData<RealT,
+                                               IdxT,
+                                               BusFaultParameters,
+                                               BusFaultPorts,
+                                               BusFaultMonitorableVariables>
     {
       BusFaultData() = default;
 
