@@ -1,6 +1,10 @@
 #include <iostream>
 
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <Model/PhasorDynamics/Bus/BusData.hpp>
+#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/ComponentDataJSONParser.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
@@ -15,14 +19,16 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     class CaseFormatTests
     {
-      using SystemModelDataT = PhasorDynamics::SystemModelData<RealT, IdxT>;
-
     public:
       CaseFormatTests()  = default;
       ~CaseFormatTests() = default;
 
       TestOutcome simpleParse()
       {
+        using namespace GridKit::PhasorDynamics;
+        using BusData = BusData<RealT, IdxT>;
+        using BusType = BusData::BusType;
+
         const char data[] =
             R"({
                "header": {
@@ -46,8 +52,8 @@ namespace GridKit
                ]
             })";
 
-        TestStatus       success = true;
-        SystemModelDataT result  = json::parse(data);
+        TestStatus                   success = true;
+        SystemModelData<RealT, IdxT> result  = json::parse(data);
 
         success *= result.format_version == 0;
         success *= result.format_revision == 1;
@@ -65,57 +71,57 @@ namespace GridKit
         success *= result.load.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
-        success *= result.bus[0].bus_type == SystemModelDataT::BusDataT::BusType::DEFAULT;
+        success *= result.bus[0].bus_type == BusType::DEFAULT;
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::VR)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(SystemModelDataT::BusDataT::MonitorableVariables::VI)];
+        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VR)];
+        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VI)];
         success *= result.bus[1].bus_id == 2;
-        success *= result.bus[1].bus_type == SystemModelDataT::BusDataT::BusType::SLACK;
+        success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
         success *= result.bus[1].v_base == 115e3;
         success *= result.bus[1].monitored_variables.none();
 
-        success *= result.branch[0].R == 0.0;
-        success *= result.branch[0].X == 0.1;
-        success *= result.branch[0].G == 0.0;
-        success *= result.branch[0].B == 0.0;
-        success *= result.branch[0].bus1_id == 1;
-        success *= result.branch[0].bus2_id == 2;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
+        success *= result.branch[0].ports[BranchPorts::bus1] == 1;
+        success *= result.branch[0].ports[BranchPorts::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "1";
-        success *= result.branch[0].monitored_variables.none();
+        success *= result.branch[0].monitored_variables.empty();
 
-        success *= result.genrou[0].p0 == 1.0;
-        success *= result.genrou[0].q0 == 0.05013;
-        success *= result.genrou[0].H == 3.0;
-        success *= result.genrou[0].D == 0.0;
-        success *= result.genrou[0].Ra == 0.0;
-        success *= result.genrou[0].Tdop == 7.0;
-        success *= result.genrou[0].Tdopp == 0.04;
-        success *= result.genrou[0].Tqop == 0.75;
-        success *= result.genrou[0].Tqopp == 0.05;
-        success *= result.genrou[0].Xd == 2.1;
-        success *= result.genrou[0].Xdp == 0.2;
-        success *= result.genrou[0].Xdpp == 0.18;
-        success *= result.genrou[0].Xq == 0.5;
-        success *= result.genrou[0].Xqp == 0.0;
-        success *= result.genrou[0].Xqpp == 0.18;
-        success *= result.genrou[0].Xl == 0.15;
-        success *= result.genrou[0].S10 == 0.0;
-        success *= result.genrou[0].S12 == 0.0;
-        success *= result.genrou[0].bus_id == 1;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::q0]) == 0.05013;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::H]) == 3.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::D]) == 0.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Ra]) == 0.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdop]) == 7.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tdopp]) == 0.04;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqop]) == 0.75;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Tqopp]) == 0.05;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xd]) == 2.1;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdp]) == 0.2;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xdpp]) == 0.18;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xq]) == 0.5;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqp]) == 0.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xqpp]) == 0.18;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl]) == 0.15;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
+        success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
+        success *= result.genrou[0].ports[GenrouPorts::bus] == 1;
         success *= result.genrou[0].disambiguation_string == "1";
-        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::DELTA)];
-        success *= result.genrou[0].monitored_variables[static_cast<size_t>(SystemModelDataT::GenrouDataT::MonitorableVariables::OMEGA)];
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
 
-        success *= std::get<RealT>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::R]) == 0.0;
-        success *= std::get<RealT>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::X]) == 1e-3;
-        success *= std::get<bool>(result.bus_fault[0].parameters[SystemModelDataT::BusFaultDataT::Parameters::state0]) == false;
-        success *= result.bus_fault[0].ports[SystemModelDataT::BusFaultDataT::Ports::bus] == 1;
+        success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
+        success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
+        success *= !std::get<bool>(result.bus_fault[0].parameters[BusFaultParameters::state0]);
+        success *= result.bus_fault[0].ports[BusFaultPorts::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();
 

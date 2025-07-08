@@ -92,21 +92,43 @@ namespace GridKit
         // Add branches
         for (const auto& branchdata : data.branch)
         {
-          auto* branch = new Branch<ScalarT, IdxT>(getBus(branchdata.bus1_id), getBus(branchdata.bus2_id), branchdata);
+          IdxT bus1_index = 0;
+          if (branchdata.ports.contains(BranchData<ScalarT, IdxT>::Ports::bus1))
+          {
+            bus1_index = branchdata.ports.at(BranchData<ScalarT, IdxT>::Ports::bus1);
+          }
+
+          IdxT bus2_index = 0;
+          if (branchdata.ports.contains(BranchData<ScalarT, IdxT>::Ports::bus2))
+          {
+            bus2_index = branchdata.ports.at(BranchData<ScalarT, IdxT>::Ports::bus2);
+          }
+
+          auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index), getBus(bus2_index), branchdata);
           addComponent(branch);
         }
 
         // Add loads
         for (const auto& loaddata : data.load)
         {
-          auto* load = new Load<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
+          IdxT bus_index = 0;
+          if (loaddata.ports.contains(LoadData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = loaddata.ports.at(LoadData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* load = new Load<ScalarT, IdxT>(getBus(bus_index), loaddata);
           addComponent(load);
         }
 
         // Add GENROU generators
         for (const auto& gendata : data.genrou)
         {
-          auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
+          IdxT bus_index = 0;
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
           addComponent(gen);
         }
 

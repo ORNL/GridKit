@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <iostream>
 
@@ -10,14 +9,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
+    /*
      * @brief Constructor for a pi-model load
      *
      * System sizes:
      * - Number of equations = 0
      * - Number of independent variables = 0
      */
-
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type* bus)
       : bus_(bus)
@@ -38,10 +36,17 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type*              bus,
                               const model_data_type& data)
-      : bus_(bus),
-        R_(data.R),
-        X_(data.X)
+      : bus_(bus)
     {
+      if (data.parameters.contains(model_data_type::Parameters::R))
+      {
+        R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::X))
+      {
+        X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
+      }
     }
 
     template <class ScalarT, typename IdxT>
@@ -120,6 +125,5 @@ namespace GridKit
 
       return 0;
     }
-
   } // namespace PhasorDynamics
 } // namespace GridKit
