@@ -9,5 +9,4 @@ target_link_libraries(ThreeBusClassical
 	GRIDKIT::solvers_dyn)
 install(TARGETS ThreeBusClassical RUNTIME DESTINATION bin)
 
-# TODO: add correct answer key and then enable as a test
-# add_test(NAME ThreeBusClassicalTest COMMAND $<TARGET_FILE:ThreeBusClassical>)
+add_test(NAME ThreeBusClassicalTest COMMAND $<TARGET_FILE:ThreeBusClassical>)

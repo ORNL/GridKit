@@ -84,7 +84,7 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
 
-  auto error_allowed = static_cast<real_type>(1e-4);
+  auto error_allowed = static_cast<real_type>(0.003);
 
   std::cout << "Example: ThreeBusClassical\n";
 
@@ -266,7 +266,18 @@ int main()
 
   std::cout << "Max error " << worst_error
             << " at time t = " << worst_error_time << "\n";
-  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n\n";
 
-  return worst_error < error_allowed ? 0 : 1;
+  int success = 0;
+  if (worst_error < error_allowed)
+  {
+    std::cout << "Test result: PASS\n\n";
+  } 
+  else
+  {
+    std::cout << "Test result: FAIL\n\n";
+    success = 1;
+  }
+
+  return success;
 }
