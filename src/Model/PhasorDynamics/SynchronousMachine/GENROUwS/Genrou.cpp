@@ -8,10 +8,11 @@
  */
 
 #define _USE_MATH_DEFINES
+#include "Genrou.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Genrou.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>

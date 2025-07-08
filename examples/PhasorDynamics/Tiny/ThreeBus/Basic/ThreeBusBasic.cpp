@@ -8,12 +8,13 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include "ThreeBusBasic.hpp"
+
 #include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <vector>
 
-#include "ThreeBusBasic.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>

@@ -7,10 +7,11 @@
  *
  */
 
+#include "Branch.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Branch.hpp"
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 

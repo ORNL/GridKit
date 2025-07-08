@@ -8,10 +8,11 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include "TwoBusBasic.hpp"
+
 #include <ctime>
 #include <iostream>
 
-#include "TwoBusBasic.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
