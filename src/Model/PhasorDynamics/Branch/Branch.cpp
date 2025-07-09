@@ -19,7 +19,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
+    /**
      * @brief Constructor for a pi-model branch
      *
      * Model size:
@@ -73,14 +73,38 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data)
       : bus1_(bus1),
-        bus2_(bus2),
-        R_(data.R),
-        X_(data.X),
-        G_(data.G),
-        B_(data.B),
-        bus1_id_(data.bus1_id),
-        bus2_id_(data.bus2_id)
+        bus2_(bus2)
     {
+      if (data.parameters.contains(model_data_type::Parameters::R))
+      {
+        R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::X))
+      {
+        X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::G))
+      {
+        G_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::G));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::B))
+      {
+        B_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::B));
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus1))
+      {
+        bus1_id_ = data.ports.at(model_data_type::Ports::bus1);
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus2))
+      {
+        bus2_id_ = data.ports.at(model_data_type::Ports::bus2);
+      }
+
       size_ = 0;
     }
 

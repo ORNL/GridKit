@@ -104,18 +104,18 @@ namespace GridKit
     private:
       /* Identification */
       bus_type* bus_;
-      const int busID_;
-      int       unit_id_;
+      IdxT      busID_{0};
+      int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
-      ScalarT p0_;
-      ScalarT q0_;
+      ScalarT p0_{0.0};
+      ScalarT q0_{0.0};
 
       /* Input parameters */
-      real_type H_;
-      real_type D_;
-      real_type Ra_;
-      real_type Xdp_;
+      real_type H_{0.0};
+      real_type D_{0.0};
+      real_type Ra_{0.0};
+      real_type Xdp_{0.0};
 
       /* Derivied parameters */
       real_type G_;

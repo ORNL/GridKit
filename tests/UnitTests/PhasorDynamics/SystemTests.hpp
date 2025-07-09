@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
+#include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
@@ -15,6 +16,9 @@ namespace GridKit
 {
   namespace Testing
   {
+    using GridKit::PhasorDynamics::BranchParameters;
+    using GridKit::PhasorDynamics::BranchPorts;
+
     template <class ScalarT, typename IdxT>
     class SystemTests
     {
@@ -66,12 +70,12 @@ namespace GridKit
         data.branch.resize(1);
 
         // Branch 0-1
-        data.branch[0].bus1_id = data.bus[0].bus_id;
-        data.branch[0].bus2_id = data.bus[1].bus_id;
-        data.branch[0].R       = 2.0;
-        data.branch[0].X       = 4.0;
-        data.branch[0].G       = 0.2;
-        data.branch[0].B       = 1.2;
+        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
 
         // Create an empty system model
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);

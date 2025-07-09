@@ -119,33 +119,33 @@ namespace GridKit
     private:
       /* Identification */
       bus_type* bus_;
-      const int busID_;
-      IdxT      unit_id_;
+      IdxT      busID_{0};
+      IdxT      unit_id_; //< @todo this should be removed
 
       // Governor Pointer
       gov_type* gov_;
 
       /* Initial terminal conditions */
-      ScalarT p0_;
-      ScalarT q0_;
+      ScalarT p0_{0.0};
+      ScalarT q0_{0.0};
 
       /* Input parameters */
-      real_type H_;
-      real_type D_;
-      real_type Ra_;
-      real_type Tdop_;
-      real_type Tdopp_;
-      real_type Tqopp_;
-      real_type Tqop_;
-      real_type Xd_;
-      real_type Xdp_;
-      real_type Xdpp_;
-      real_type Xq_;
-      real_type Xqp_;
-      real_type Xqpp_;
-      real_type Xl_;
-      real_type S10_;
-      real_type S12_;
+      real_type H_{0.0};
+      real_type D_{0.0};
+      real_type Ra_{0.0};
+      real_type Tdop_{0.0};
+      real_type Tdopp_{0.0};
+      real_type Tqopp_{0.0};
+      real_type Tqop_{0.0};
+      real_type Xd_{0.0};
+      real_type Xdp_{0.0};
+      real_type Xdpp_{0.0};
+      real_type Xq_{0.0};
+      real_type Xqp_{0.0};
+      real_type Xqpp_{0.0};
+      real_type Xl_{0.0};
+      real_type S10_{0.0};
+      real_type S12_{0.0};
 
       /* Derivied parameters */
       real_type SA_;
