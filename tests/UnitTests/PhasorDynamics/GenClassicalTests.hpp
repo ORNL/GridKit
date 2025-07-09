@@ -67,15 +67,19 @@ namespace GridKit
         real_type Ra{0.5};
         real_type Xdp{0.5};
 
+        // Classical generator inputs
+        real_type Pm{1.0};
+        real_type Ep{2.0};
+
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
-                                                 0.0,
+                                                 -0.5,
+                                                 -6.0,
                                                  2.0,
-                                                 0.0,
-                                                 -4.0};
+                                                 -6.0};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
@@ -84,6 +88,8 @@ namespace GridKit
 
         // Allocate but not initialize genrator model
         gen.allocate();
+        gen.setPmech(Pm);
+        gen.setEp(Ep);
 
         // Set variable values matching the answer key
         gen.y()[0] = M_PI; // delta
@@ -106,7 +112,7 @@ namespace GridKit
         {
           if (!isEqual(residual[i], res_answer[i], tol_))
           {
-            std::cout << "Incorrect result: "
+            std::cout << "Incorrect result for residual " << i << ": "
                       << residual[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
