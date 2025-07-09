@@ -8,13 +8,12 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "ThreeBusClassical.hpp"
-
 #include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <vector>
 
+#include "ThreeBusClassical.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -34,6 +33,8 @@
 using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
+
+using BusType = GridKit::PhasorDynamics::BusData<scalar_type, index_type>::BusType;
 
 struct OutputData
 {
@@ -99,13 +100,13 @@ int main()
 
   // Bus 0
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::SLACK;
+  data.bus[0].bus_type = BusType::SLACK;
   data.bus[0].Vr0      = 1.06;
   data.bus[0].Vi0      = 0.0;
 
   // Bus 1
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
+  data.bus[1].bus_type = BusType::DEFAULT;
   data.bus[1].Vr0      = 1.0599558398065716;
   data.bus[1].Vi0      = -0.009675621941024773;
 
@@ -119,28 +120,28 @@ int main()
   data.branch.resize(3);
 
   // Branch 0-1
-  data.branch[0].bus1_id = data.bus[0].bus_id;
-  data.branch[0].bus2_id = data.bus[1].bus_id;
-  data.branch[0].R       = 0.05;
-  data.branch[0].X       = 0.21;
-  data.branch[0].G       = 0;
-  data.branch[0].B       = 0.1;
+  data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+  data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+  data.branch[0].parameters[BranchParameters::R] = 0.05;
+  data.branch[0].parameters[BranchParameters::X] = 0.21;
+  data.branch[0].parameters[BranchParameters::G] = 0.0;
+  data.branch[0].parameters[BranchParameters::B] = 0.1;
 
   // Branch 0-2
-  data.branch[1].bus1_id = data.bus[0].bus_id;
-  data.branch[1].bus2_id = data.bus[2].bus_id;
-  data.branch[1].R       = 0.06;
-  data.branch[1].X       = 0.15;
-  data.branch[1].G       = 0;
-  data.branch[1].B       = 0.12;
+  data.branch[1].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+  data.branch[1].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
+  data.branch[1].parameters[BranchParameters::R] = 0.06;
+  data.branch[1].parameters[BranchParameters::X] = 0.15;
+  data.branch[1].parameters[BranchParameters::G] = 0.0;
+  data.branch[1].parameters[BranchParameters::B] = 0.12;
 
   // Branch 1-2
-  data.branch[2].bus1_id = data.bus[1].bus_id;
-  data.branch[2].bus2_id = data.bus[2].bus_id;
-  data.branch[2].R       = 0.08;
-  data.branch[2].X       = 0.27;
-  data.branch[2].G       = 0;
-  data.branch[2].B       = 0.45;
+  data.branch[2].ports[BranchPorts::bus1]        = data.bus[1].bus_id;
+  data.branch[2].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
+  data.branch[2].parameters[BranchParameters::R] = 0.08;
+  data.branch[2].parameters[BranchParameters::X] = 0.27;
+  data.branch[2].parameters[BranchParameters::G] = 0.0;
+  data.branch[2].parameters[BranchParameters::B] = 0.45;
 
   // Set generator data
   data.genclassical.resize(2);
@@ -167,17 +168,17 @@ int main()
   data.load.resize(1);
 
   // Load on bus 2
-  data.load[0].bus_id = 2;
-  data.load[0].R      = 0.4447197839297772;
-  data.load[0].X      = 0.20330047265361242;
+  data.load[0].ports[LoadPorts::bus]         = 2;
+  data.load[0].parameters[LoadParameters::R] = 0.4447197839297772;
+  data.load[0].parameters[LoadParameters::X] = 0.20330047265361242;
 
   // Set fault data
   data.bus_fault.resize(1);
 
-  data.bus_fault[0].bus_id = 2;
-  data.bus_fault[0].R      = 0.0;
-  data.bus_fault[0].X      = 1e-5;
-  data.bus_fault[0].status = false;
+  data.bus_fault[0].ports[BusFaultPorts::bus]              = 2;
+  data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
+  data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
+  data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
   //
   // Instantiate system
