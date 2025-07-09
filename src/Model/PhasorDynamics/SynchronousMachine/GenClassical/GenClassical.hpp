@@ -68,6 +68,16 @@ namespace GridKit
       {
       }
 
+      void setPmech(real_type pmech)
+      {
+        pmech_set_ = pmech;
+      }
+
+      void setEp(real_type ep)
+      {
+        ep_set_ = ep;
+      }
+
     private:
       void setDerivedParams();
 

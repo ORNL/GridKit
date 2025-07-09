@@ -178,7 +178,7 @@ namespace GridKit
       f_[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       // GenClassical algebraic equations
-      f_[2] = telec - (G_ * ep * ep - ep * ((G_ * Vr() + -B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
+      f_[2] = telec - (G_ * ep * ep - ep * ((G_ * Vr() - B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
 
       f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
       f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));
