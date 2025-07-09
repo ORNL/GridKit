@@ -8,11 +8,10 @@
  */
 #define _USE_MATH_DEFINES
 
-#include "GenClassical.hpp"
-
 #include <cmath>
 #include <iostream>
 
+#include "GenClassical.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
@@ -21,8 +20,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Constructor for a classical generator model.
-     *
+     * @brief Constructor for a classical generator model
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
@@ -38,15 +36,10 @@ namespace GridKit
     {
       size_ = 5;
       setDerivedParams();
-
-      // Temporary, to eliminate compiler warnings
-      (void) busID_;
-      (void) unit_id_;
     }
 
-    /*!
-     * @brief Constructor for a pi-model branch
-     *
+    /**
+     * @brief Constructor for a classical generator model
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
@@ -71,9 +64,8 @@ namespace GridKit
       setDerivedParams();
     }
 
-    /*!
+    /**
      * @brief Constructor for a classical generator model
-     *
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
@@ -91,7 +83,7 @@ namespace GridKit
       setDerivedParams();
     }
 
-    /*!
+    /**
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
@@ -107,7 +99,6 @@ namespace GridKit
 
     /**
      * Initialization of the generator model
-     *
      */
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::initialize()
@@ -155,7 +146,6 @@ namespace GridKit
 
     /**
      * \brief Residual for the generator model.
-     *
      */
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::evaluateResidual()
@@ -213,6 +203,5 @@ namespace GridKit
     // Available template instantiations
     template class GenClassical<double, long int>;
     template class GenClassical<double, size_t>;
-
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -23,8 +23,8 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /*!
-     * @brief Constructor for a pi-model branch
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
      *
      * Arguments passed to ModelEvaluatorImpl:
      * - Number of equations = 0
@@ -59,15 +59,10 @@ namespace GridKit
     {
       size_ = 20;
       setDerivedParams();
-
-      // Temporary, to eliminate compiler warnings
-      (void) busID_;
-      (void) unit_id_;
     }
 
-    /*!
-     * @brief Constructor for a pi-model branch
-     *
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
      */
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
@@ -117,9 +112,8 @@ namespace GridKit
       setDerivedParams();
     }
 
-    /*!
-     * @brief Constructor for the GENROU generator with saturation.
-     *
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
      */
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
