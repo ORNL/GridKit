@@ -7,12 +7,14 @@
  *
  */
 #define _USE_MATH_DEFINES
+
 #include "GenClassical.hpp"
 
 #include <cmath>
 #include <iostream>
 
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
 namespace GridKit
 {
@@ -64,6 +66,26 @@ namespace GridKit
         D_(D),
         Ra_(Ra),
         Xdp_(Xdp)
+    {
+      size_ = 5;
+      setDerivedParams();
+    }
+
+    /*!
+     * @brief Constructor for a classical generator model
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
+      : bus_(bus),
+        busID_(0),
+        unit_id_(0),
+        p0_(data.p0),
+        q0_(data.q0),
+        H_(data.H),
+        D_(data.D),
+        Ra_(data.Ra),
+        Xdp_(data.Xdp)
     {
       size_ = 5;
       setDerivedParams();
@@ -156,7 +178,7 @@ namespace GridKit
       f_[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       // GenClassical algebraic equations
-      f_[2] = telec - (G_ * ep * ep - ep * ((G_ * Vr() + -B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
+      f_[2] = telec - (G_ * ep * ep - ep * ((G_ * Vr() - B_ * Vi()) * cos(delta) + (B_ * Vr() + G_ * Vi()) * sin(delta)));
 
       f_[3] = ir + G_ * Vr() - B_ * Vi() - ep * (G_ * cos(delta) - B_ * sin(delta));
       f_[4] = ii + B_ * Vr() + G_ * Vi() - ep * (B_ * cos(delta) + G_ * sin(delta));

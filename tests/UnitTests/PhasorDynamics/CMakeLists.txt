@@ -36,6 +36,7 @@ add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
                                          GRIDKIT::phasor_dynamics_branch
                                          GRIDKIT::phasor_dynamics_genrou
+                                         GRIDKIT::phasor_dynamics_gen_classical
                                          GRIDKIT::phasor_dynamics_bus_fault
                                          GRIDKIT::phasor_dynamics_bus)
 

@@ -15,6 +15,7 @@
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 
 namespace GridKit
 {
@@ -102,10 +103,17 @@ namespace GridKit
           addComponent(load);
         }
 
-        // Add generators
+        // Add GENROU generators
         for (const auto& gendata : data.genrou)
         {
           auto* gen = new Genrou<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
+          addComponent(gen);
+        }
+
+        // Add classical generators
+        for (const auto& gendata : data.genclassical)
+        {
+          auto* gen = new GenClassical<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
           addComponent(gen);
         }
 

@@ -8,6 +8,7 @@
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <nlohmann/json.hpp>
 
 namespace GridKit
@@ -24,12 +25,13 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     struct SystemModelData
     {
-      using BranchDataT   = BranchData<RealT, IdxT>;
-      using BusDataT      = BusData<RealT, IdxT>;
-      using BusFaultDataT = BusFaultData<RealT, IdxT>;
-      using Tgov1DataT    = Governor::Tgov1Data<RealT, IdxT>;
-      using GenrouDataT   = GenrouData<RealT, IdxT>;
-      using LoadDataT     = LoadData<RealT, IdxT>;
+      using BranchDataT       = BranchData<RealT, IdxT>;
+      using BusDataT          = BusData<RealT, IdxT>;
+      using BusFaultDataT     = BusFaultData<RealT, IdxT>;
+      using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
+      using GenrouDataT       = GenrouData<RealT, IdxT>;
+      using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
+      using LoadDataT         = LoadData<RealT, IdxT>;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from
@@ -63,12 +65,13 @@ namespace GridKit
       RealT freq_base; ///< System frequency base in Hz
       RealT va_base;   ///< System power base in VA
 
-      std::vector<BusDataT>      bus;       ///< Buses within the model
-      std::vector<BranchDataT>   branch;    ///< Branches within the model
-      std::vector<BusFaultDataT> bus_fault; ///< Bus faults within the model
-      std::vector<GenrouDataT>   genrou;    ///< GENROU instances within the model
-      std::vector<LoadDataT>     load;      ///< Loads within the model
-      std::vector<Tgov1DataT>    gov;       ///< Governors within the model
+      std::vector<BusDataT>          bus;          ///< Buses within the model
+      std::vector<BranchDataT>       branch;       ///< Branches within the model
+      std::vector<BusFaultDataT>     bus_fault;    ///< Bus faults within the model
+      std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
+      std::vector<GenClassicalDataT> genclassical; ///< GENROU instances within the model
+      std::vector<LoadDataT>         load;         ///< Loads within the model
+      std::vector<Tgov1DataT>        gov;          ///< Governors within the model
     };
 
     /// JSON parser function implementation for the `SystemModelData` type
