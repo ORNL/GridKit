@@ -8,13 +8,12 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "ThreeBusClassical.hpp"
-
 #include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <vector>
 
+#include "ThreeBusClassical.hpp"
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -148,22 +147,22 @@ int main()
   data.genclassical.resize(2);
 
   // Generator on bus 1
-  data.genclassical[0].bus_id = data.bus[1].bus_id;
-  data.genclassical[0].p0     = 0.5;
-  data.genclassical[0].q0     = -0.07588;
-  data.genclassical[0].H      = 2.7;
-  data.genclassical[0].D      = 0.;
-  data.genclassical[0].Ra     = 0.;
-  data.genclassical[0].Xdp    = 0.17;
+  data.genclassical[0].ports[GenClassicalPorts::bus]           = data.bus[1].bus_id;
+  data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
+  data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
+  data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
+  data.genclassical[0].parameters[GenClassicalParameters::D]   = 0.;
+  data.genclassical[0].parameters[GenClassicalParameters::Ra]  = 0.;
+  data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
 
   // Generator on bus 2
-  data.genclassical[1].bus_id = data.bus[2].bus_id;
-  data.genclassical[1].p0     = 0.25;
-  data.genclassical[1].q0     = 0.26587;
-  data.genclassical[1].H      = 1.6;
-  data.genclassical[1].D      = 0.;
-  data.genclassical[1].Ra     = 0.;
-  data.genclassical[1].Xdp    = 0.2;
+  data.genclassical[1].ports[GenClassicalPorts::bus]           = data.bus[2].bus_id;
+  data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
+  data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
+  data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
+  data.genclassical[1].parameters[GenClassicalParameters::D]   = 0.;
+  data.genclassical[1].parameters[GenClassicalParameters::Ra]  = 0.;
+  data.genclassical[1].parameters[GenClassicalParameters::Xdp] = 0.2;
 
   // Set load data
   data.load.resize(1);

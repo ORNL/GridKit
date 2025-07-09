@@ -135,7 +135,12 @@ namespace GridKit
         // Add classical generators
         for (const auto& gendata : data.genclassical)
         {
-          auto* gen = new GenClassical<ScalarT, IdxT>(getBus(gendata.bus_id), gendata);
+          IdxT bus_index = 0;
+          if (gendata.ports.contains(GenClassicalData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = gendata.ports.at(GenClassicalData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
           addComponent(gen);
         }
 

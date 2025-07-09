@@ -15,18 +15,14 @@ namespace GridKit
     /// Initial parameters for a load
     enum class LoadParameters
     {
-      /// Load resistance
-      R,
-
-      /// Load reactance
-      X,
+      R, ///< Load resistance
+      X, ///< Load reactance
     };
 
     /// Ports for a load
     enum class LoadPorts
     {
-      /// Unique ID of the bus to which the load is connected
-      bus,
+      bus, ///< Unique ID of the bus to which the load is connected
     };
 
     /// Variables able to be monitored for a load

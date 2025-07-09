@@ -15,27 +15,17 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters
     {
-      /// Line series resistance
-      R,
-
-      /// Line series reactance
-      X,
-
-      /// Line shunt conductance
-      G,
-
-      /// Line shunt charging
-      B,
+      R, ///< Line series resistance
+      X, ///< Line series reactance
+      G, ///< Line shunt conductance
+      B, ///< Line shunt charging
     };
 
     /// Ports for a branch
     enum class BranchPorts
     {
-      /// Unique ID of bus 1
-      bus1,
-
-      /// Unique ID of bus 2
-      bus2,
+      bus1, ///< Unique ID of bus 1
+      bus2, ///< Unique ID of bus 2
     };
 
     /// Variables able to be monitored for a branch

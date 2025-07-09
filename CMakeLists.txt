@@ -83,8 +83,6 @@ endif("${isSystemDir}" STREQUAL "-1")
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/nlohmann-json/single_include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/magic-enum/include)
 
 option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
@@ -108,6 +106,13 @@ if(${GRIDKIT_ENABLE_ENZYME})
   # todo Add a centralized configuration file
   add_definitions(-DGRIDKIT_ENABLE_ENZYME)
 endif()
+
+# add third-party libraries
+
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+
+add_subdirectory(third-party/nlohmann-json)
+add_subdirectory(third-party/magic-enum)
 
 # Macro that adds libraries
 include(GridkitAddLibrary)

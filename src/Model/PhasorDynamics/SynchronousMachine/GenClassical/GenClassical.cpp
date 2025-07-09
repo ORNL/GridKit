@@ -8,11 +8,10 @@
  */
 #define _USE_MATH_DEFINES
 
-#include "GenClassical.hpp"
-
 #include <cmath>
 #include <iostream>
 
+#include "GenClassical.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
@@ -71,15 +70,43 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
       : bus_(bus),
-        busID_(0),
-        unit_id_(0),
-        p0_(data.p0),
-        q0_(data.q0),
-        H_(data.H),
-        D_(data.D),
-        Ra_(data.Ra),
-        Xdp_(data.Xdp)
+        unit_id_(1)
     {
+      if (data.parameters.contains(DataT::Parameters::p0))
+      {
+        p0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::p0));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::q0))
+      {
+        q0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::q0));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::H))
+      {
+        H_ = std::get<real_type>(data.parameters.at(DataT::Parameters::H));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::D))
+      {
+        D_ = std::get<real_type>(data.parameters.at(DataT::Parameters::D));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::Ra))
+      {
+        Ra_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::Xdp))
+      {
+        Xdp_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Xdp));
+      }
+
+      if (data.ports.contains(DataT::Ports::bus))
+      {
+        busID_ = data.ports.at(DataT::Ports::bus);
+      }
+
       size_ = 5;
       setDerivedParams();
     }

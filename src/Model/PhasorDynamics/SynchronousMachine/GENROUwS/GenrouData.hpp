@@ -15,72 +15,32 @@ namespace GridKit
     /// Initial parameters for a Genrou generator model
     enum class GenrouParameters
     {
-      /// Initial active power
-      p0,
-
-      /// Initial reactive power
-      q0,
-
-      /// Rotor inertia
-      H,
-
-      /// Damping coefficient
-      D,
-
-      /// Winding resistance
-      Ra,
-
-      /// Open circuit direct axis transient time
-      Tdop,
-
-      /// Open circuit direct axis sub-transient time
-      Tdopp,
-
-      /// Open circuit quadrature axis transient
-      Tqop,
-
-      /// Open circuit quadrature axis sub-transient time
-      Tqopp,
-
-      /// Direct axis synchronous reactance
-      Xd,
-
-      /// Direct axis transient reactance
-      Xdp,
-
-      /// Direct axis sub-transient reactance
-      Xdpp,
-
-      /// Quadrature axis synchronous reactance
-      Xq,
-
-      /// Quadrature axis transient reactance
-      Xqp,
-
-      /// Quadrature axis sub-transient reactance
-      Xqpp,
-
-      /// Stator leakage reactance
-      Xl,
-
-      /// Saturation factor at 1.0 pu flux
-      S10,
-
-      /// Saturation factor at 1.2 pu flux
-      S12,
+      p0,    ///< Initial active power
+      q0,    ///< Initial reactive power
+      H,     ///< Rotor inertia
+      D,     ///< Damping coefficient
+      Ra,    ///< Winding resistance
+      Tdop,  ///< Open circuit direct axis transient time
+      Tdopp, ///< Open circuit direct axis sub-transient time
+      Tqop,  ///< Open circuit quadrature axis transient
+      Tqopp, ///< Open circuit quadrature axis sub-transient time
+      Xd,    ///< Direct axis synchronous reactance
+      Xdp,   ///< Direct axis transient reactance
+      Xdpp,  ///< Direct axis sub-transient reactance
+      Xq,    ///< Quadrature axis synchronous reactance
+      Xqp,   ///< Quadrature axis transient reactance
+      Xqpp,  ///< Quadrature axis sub-transient reactance
+      Xl,    ///< Stator leakage reactance
+      S10,   ///< Saturation factor at 1.0 pu flux
+      S12,   ///< Saturation factor at 1.2 pu flux
     };
 
     /// Ports for a Genrou generator model
     enum class GenrouPorts
     {
-      /// Unique ID of the connecting bus
-      bus,
-
-      /// Unique ID of the bus providing the exciter signal
-      exciter_signal,
-
-      /// Unique ID of the bus providing the governor signal
-      governor_signal,
+      bus,             ///< Unique ID of the connecting bus
+      exciter_signal,  ///< Unique ID of the bus providing the exciter signal
+      governor_signal, ///< Unique ID of the bus providing the governor signal
     };
 
     /// Variables able to be monitored for a Genrou generator model
