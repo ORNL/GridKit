@@ -8,10 +8,11 @@
  */
 #define _USE_MATH_DEFINES
 
+#include "GenClassical.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "GenClassical.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
