@@ -24,21 +24,21 @@ You should have all of the following installed before installing GridKit™
     - [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
     - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.131 (optional)
         - [LLVM](https://github.com/llvm/llvm-project) >= 15.x. GridKit is
-          currently tested with LLVM 16. 
+          currently tested with LLVM 16.
 - [CMake](https://cmake.org/) >= 3.12
-- C++ 17 compliant compiler
+- C++ 20 compliant compiler
 
 ### Installing
 
-GridKit™ uses CMake for build configuration. Per CMake best practices it is recommended 
+GridKit™ uses CMake for build configuration. Per CMake best practices it is recommended
 to build GridKit™ outside the source directory. Building GridKit™ can be as simple as executing
 ```bash
 cmake source_dir
 make
 make install
 ```
-in the build directory. Dependencies should be autodetected if they are installed in 
-standard locations, otherwise you need to specify the location of the dependency 
+in the build directory. Dependencies should be autodetected if they are installed in
+standard locations, otherwise you need to specify the location of the dependency
 manually. For example:
 ```bash
 cmake -DSUNDIALS_DIR=/path/to/sundials/install source_dir
