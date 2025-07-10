@@ -50,27 +50,6 @@ namespace GridKit
              bus_type*              pmech_signal,
              bus_type*              omega_signal,
              const model_data_type& data);
-      Genrou(bus_type* bus,
-             IdxT      unit_id,
-             ScalarT   p0,
-             ScalarT   q0,
-             real_type H,
-             real_type D,
-             real_type Ra,
-             real_type Tdop,
-             real_type Tdopp,
-             real_type Tqopp,
-             real_type Tqop,
-             real_type Xd,
-             real_type Xdp,
-             real_type Xdpp,
-             real_type Xq,
-             real_type Xqp,
-             real_type Xqpp,
-             real_type Xl,
-             real_type S10,
-             real_type S12);
-      Genrou(bus_type* bus, const model_data_type& data);
       ~Genrou() = default;
 
       int allocate() override;

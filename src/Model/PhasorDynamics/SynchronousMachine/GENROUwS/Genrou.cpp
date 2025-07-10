@@ -55,103 +55,18 @@ namespace GridKit
       setDerivedParams();
     }
 
-    /*!
-     * @brief Constructor for the GENROU generator with saturation.
-     *
-     */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(
-        bus_type*              bus,
-        bus_type*              pmech_signal,
-        bus_type*              omega_signal,
-        const model_data_type& data)
-      : bus_(bus),
-        pmech_signal_(pmech_signal),
-        omega_signal_(omega_signal),
-        busID_(0),
-        unit_id_(1),
-        p0_(data.p0),
-        q0_(data.q0),
-        H_(data.H),
-        D_(data.D),
-        Ra_(data.Ra),
-        Tdop_(data.Tdop),
-        Tdopp_(data.Tdopp),
-        Tqopp_(data.Tqopp),
-        Tqop_(data.Tqop),
-        Xd_(data.Xd),
-        Xdp_(data.Xdp),
-        Xdpp_(data.Xdpp),
-        Xq_(data.Xq),
-        Xqp_(data.Xqp),
-        Xqpp_(data.Xqpp),
-        Xl_(data.Xl),
-        S10_(data.S10),
-        S12_(data.S12),
-        pmech_set_(0),
-        efd_set_(0)
-    {
-      size_ = 20;
-      setDerivedParams();
-    }
-
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
-                                  IdxT      unit_id,
-                                  ScalarT   p0,
-                                  ScalarT   q0,
-                                  real_type H,
-                                  real_type D,
-                                  real_type Ra,
-                                  real_type Tdop,
-                                  real_type Tdopp,
-                                  real_type Tqopp,
-                                  real_type Tqop,
-                                  real_type Xd,
-                                  real_type Xdp,
-                                  real_type Xdpp,
-                                  real_type Xq,
-                                  real_type Xqp,
-                                  real_type Xqpp,
-                                  real_type Xl,
-                                  real_type S10,
-                                  real_type S12)
-      : bus_(bus),
-        pmech_signal_(nullptr),
-        omega_signal_(nullptr),
-        busID_(0),
-        unit_id_(unit_id),
-        p0_(p0),
-        q0_(q0),
-        H_(H),
-        D_(D),
-        Ra_(Ra),
-        Tdop_(Tdop),
-        Tdopp_(Tdopp),
-        Tqopp_(Tqopp),
-        Tqop_(Tqop),
-        Xd_(Xd),
-        Xdp_(Xdp),
-        Xdpp_(Xdpp),
-        Xq_(Xq),
-        Xqp_(Xqp),
-        Xqpp_(Xqpp),
-        Xl_(Xl),
-        S10_(S10),
-        S12_(S12)
-        pmech_set_(0),
-        efd_set_(0)
-    {
-      size_ = 20;
-      setDerivedParams();
-    }
-
     /**
      * @brief Constructor for a GENROU generator model with saturation
      */
     template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
+    Genrou<ScalarT, IdxT>::Genrou(
+        bus_type* bus, 
+        bus_type* pmech_signal,
+        bus_type* omega_signal,
+        const model_data_type& data)
       : bus_(bus),
+        pmech_signal_(pmech_signal),
+        omega_signal_(omega_signal),
         unit_id_(1)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
