@@ -39,6 +39,8 @@ namespace GridKit
     enum class GenrouPorts
     {
       bus,             ///< Unique ID of the connecting bus
+      pmech_signal,    ///< Unique ID of the governor Pmech signal.
+      speed_signal,    ///< Unique ID of the speed signal of the machine.
       exciter_signal,  ///< Unique ID of the bus providing the exciter signal
       governor_signal, ///< Unique ID of the bus providing the governor signal
     };

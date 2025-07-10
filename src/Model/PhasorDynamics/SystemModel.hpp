@@ -129,7 +129,19 @@ namespace GridKit
           {
             bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
           }
-          auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::pmech_signal))
+          {
+            pmech_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::pmech_signal);
+          }
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::speed_signal))
+          {
+            pmech_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::speed_signal);
+          }
+          auto* gen = new Genrou<ScalarT, IdxT>(
+            getBus(bus_index), 
+            getBus(pmech_indx),
+            getBus(speed_index),
+            gendata);
           addComponent(gen);
         }
 
