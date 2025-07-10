@@ -18,6 +18,8 @@ set(PACKAGE_VERSION_MAJOR "0")
 set(PACKAGE_VERSION_MINOR "1")
 set(PACKAGE_VERSION_PATCH "0")
 
+set(THIRD_PARTY_DIR "${PROJECT_SOURCE_DIR}/third-party")
+
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
 set(CMAKE_CXX_STANDARD 20)
@@ -106,13 +108,6 @@ if(${GRIDKIT_ENABLE_ENZYME})
   # todo Add a centralized configuration file
   add_definitions(-DGRIDKIT_ENABLE_ENZYME)
 endif()
-
-# add third-party libraries
-
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-
-add_subdirectory(third-party/nlohmann-json)
-add_subdirectory(third-party/magic-enum)
 
 # Macro that adds libraries
 include(GridkitAddLibrary)
