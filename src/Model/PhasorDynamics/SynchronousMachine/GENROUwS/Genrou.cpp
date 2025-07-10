@@ -139,6 +139,8 @@ namespace GridKit
         Xl_(Xl),
         S10_(S10),
         S12_(S12)
+        pmech_set_(0),
+        efd_set_(0)
     {
       size_ = 20;
       setDerivedParams();
@@ -150,8 +152,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
-        unit_id_(1),
-        gov_(nullptr) // <- TODO: Temporary, to be removed.
+        unit_id_(1)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {
@@ -248,13 +249,9 @@ namespace GridKit
         busID_ = data.ports.at(model_data_type::Ports::bus);
       }
 
-      S12_(S12),
-          pmech_set_(0),
-          efd_set_(0)
-      {
-        size_ = 20;
-        setDerivedParams();
-      }
+      size_ = 20;
+      setDerivedParams();
+    }
 
       /*!
        * @brief allocate method computes sparsity pattern of the Jacobian.

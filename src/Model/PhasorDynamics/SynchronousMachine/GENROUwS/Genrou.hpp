@@ -70,6 +70,7 @@ namespace GridKit
              real_type Xl,
              real_type S10,
              real_type S12);
+      Genrou(bus_type* bus, const model_data_type& data);
       ~Genrou() = default;
 
       int allocate() override;
