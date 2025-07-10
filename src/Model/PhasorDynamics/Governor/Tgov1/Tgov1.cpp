@@ -198,7 +198,7 @@ namespace GridKit
         f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         // Write External
-        this->safeSend(pmech_signal_, pmech);
+        this->safeWrite(pmech_signal_, pmech);
 
         return 0;
       }

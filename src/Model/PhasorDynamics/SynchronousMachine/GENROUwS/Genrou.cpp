@@ -335,7 +335,7 @@ namespace GridKit
         ScalarT pmech = this->safeRead(pmech_signal_, pmech_set_);
 
         // Outputs
-        this->safeSend(omega_signal_, y_[1]);
+        this->safeWrite(omega_signal_, y_[1]);
 
         /* Read variables */
         ScalarT delta  = y_[0];

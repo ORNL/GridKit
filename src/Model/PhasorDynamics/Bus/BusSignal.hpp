@@ -74,7 +74,7 @@ namespace GridKit
        *
        * @param value The value of the signal
        */
-      void send(ScalarT& value) override
+      void write(ScalarT& value) override
       {
         f_[0] += value;
       }

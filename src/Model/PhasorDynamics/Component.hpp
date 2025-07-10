@@ -50,11 +50,11 @@ namespace GridKit
        * @param signal The signal bus object pointer
        * @param value The value to send to the equality constraint
        */
-      void safeSend(bus_type* signal, ScalarT value)
+      void safeWrite(bus_type* signal, ScalarT value)
       {
         if (signal)
         {
-          signal->send(value);
+          signal->write(value);
         }
       }
 

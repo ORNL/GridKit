@@ -57,7 +57,7 @@ namespace GridKit
       }
 
       // TODO remove, uneeded
-      void send(ScalarT&) override
+      void write(ScalarT&) override
       {
       }
 
