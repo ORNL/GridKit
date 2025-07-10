@@ -63,11 +63,11 @@ int main()
 
   // Pmech Signal Bus
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type = BusData<scalar_type, index_type>::BusType::SIGNAL;
+  data.bus[2].bus_type = BusType::SIGNAL;
 
   // Speed Signal Bus
   data.bus[3].bus_id   = 3;
-  data.bus[3].bus_type = BusData<scalar_type, index_type>::BusType::SIGNAL;
+  data.bus[3].bus_type = BusType::SIGNAL;
 
   // Set branch data
   data.branch.resize(1);
@@ -86,27 +86,12 @@ int main()
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
-  // Set generator data
-  data.genrou.resize(1);
-  data.genrou[0].p0           = 1.;
-  data.genrou[0].q0           = 0.05013;
-  data.genrou[0].signal_pmech = 2;
-  data.genrou[0].signal_speed = 3;
-
-  // Governor
-  data.gov.resize(1);
-  data.gov[0].signal_speed = 3;
-  data.gov[0].signal_pmech = 2; // Signal Bus ID
-
-  //
-  // Instantiate system model
-  //
-
-  SystemModel<scalar_type, index_type> sys(data);
 
   // Set generator data
   data.genrou.resize(1);
 
+  data.genrou[0].ports[GenrouPorts::pmech_signal] = 2;
+  data.genrou[0].ports[GenrouPorts::speed_signal] = 3;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
   data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
   data.genrou[0].parameters[GenrouParameters::H]     = 3.;
@@ -126,9 +111,11 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
+  // Governor TODO use new data structure
   data.gov.resize(1);
 
-  // Set Gov data (Default PW values)
+  data.gov[0].signal_speed = 3;
+  data.gov[0].signal_pmech = 2; 
   data.gov[0].R     = 0.05;
   data.gov[0].Pvmin = 0;
   data.gov[0].Pvmax = 1.0;
@@ -137,27 +124,8 @@ int main()
   data.gov[0].T3    = 7.5;
   data.gov[0].Dt    = 0;
 
-  // Manual add gen & gov components
-  // This is a hack  since SignalBus not implemented
-
-  // Create Pointers first
-  Genrou<scalar_type, index_type>*          gen;
-  Governor::Tgov1<scalar_type, index_type>* gov;
-
-  // Instatiate Genrou & add to system model
-  gen = new Genrou<scalar_type, index_type>(
-      sys.getBus(0),
-      data.genrou[0]);
-
-  // Instatiate GovernorTgov1 & add to system model
-  gov = new Governor::Tgov1<scalar_type, index_type>(
-      gen,
-      data.gov[0]);
-  gen->setgovenor(gov);
-
-  // Add Generator and Governor to System
-  sys.addComponent(gen);
-  sys.addComponent(gov);
+  // Instantiate system model
+  SystemModel<scalar_type, index_type> sys(data);
 
   sys.allocate();
 
