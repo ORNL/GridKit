@@ -12,14 +12,14 @@
 
 #include "GenClassical.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     /**
-     * @brief Constructor for a classical generator model.
-     *
+     * @brief Constructor for a classical generator model
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
@@ -35,15 +35,10 @@ namespace GridKit
     {
       size_ = 5;
       setDerivedParams();
-
-      // Temporary, to eliminate compiler warnings
-      (void) busID_;
-      (void) unit_id_;
     }
 
-    /*!
-     * @brief Constructor for a pi-model branch
-     *
+    /**
+     * @brief Constructor for a classical generator model
      */
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
@@ -68,7 +63,54 @@ namespace GridKit
       setDerivedParams();
     }
 
-    /*!
+    /**
+     * @brief Constructor for a classical generator model
+     */
+    template <class ScalarT, typename IdxT>
+    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
+      : bus_(bus),
+        unit_id_(1)
+    {
+      if (data.parameters.contains(DataT::Parameters::p0))
+      {
+        p0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::p0));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::q0))
+      {
+        q0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::q0));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::H))
+      {
+        H_ = std::get<real_type>(data.parameters.at(DataT::Parameters::H));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::D))
+      {
+        D_ = std::get<real_type>(data.parameters.at(DataT::Parameters::D));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::Ra))
+      {
+        Ra_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::Xdp))
+      {
+        Xdp_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Xdp));
+      }
+
+      if (data.ports.contains(DataT::Ports::bus))
+      {
+        busID_ = data.ports.at(DataT::Ports::bus);
+      }
+
+      size_ = 5;
+      setDerivedParams();
+    }
+
+    /**
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
@@ -84,7 +126,6 @@ namespace GridKit
 
     /**
      * Initialization of the generator model
-     *
      */
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::initialize()
@@ -101,7 +142,7 @@ namespace GridKit
       ScalarT delta = std::atan2(Ei, Er);
       ScalarT omega = static_cast<ScalarT>(1.0);
       ScalarT Ep    = std::sqrt(Er * Er + Ei * Ei);
-      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr + -B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
+      ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
 
       y_[0]      = delta;
       y_[1]      = omega;
@@ -155,7 +196,7 @@ namespace GridKit
       f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       // GenClassical algebraic equations
-      f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr_ + -B_ * vi_) * std::cos(delta) + (B_ * vr_ + G_ * vi_) * std::sin(delta)));
+      f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr_ - B_ * vi_) * std::cos(delta) + (B_ * vr_ + G_ * vi_) * std::sin(delta)));
 
       f[3] = ir_ + G_ * vr_ - B_ * vi_ - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
       f[4] = ii_ + B_ * vr_ + G_ * vi_ - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));

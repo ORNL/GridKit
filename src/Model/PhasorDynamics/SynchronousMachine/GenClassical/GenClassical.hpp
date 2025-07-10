@@ -112,8 +112,8 @@ namespace GridKit
       int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
-      ScalarT p0_{0.0};
-      ScalarT q0_{0.0};
+      real_type p0_{0.0};
+      real_type q0_{0.0};
 
       /* Input parameters */
       real_type H_{0.0};

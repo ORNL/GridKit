@@ -24,6 +24,5 @@ namespace GridKit
     // Available template instantiations
     template class GenClassical<double, long int>;
     template class GenClassical<double, size_t>;
-
   } // namespace PhasorDynamics
 } // namespace GridKit
