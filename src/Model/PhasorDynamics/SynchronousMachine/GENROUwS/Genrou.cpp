@@ -168,6 +168,54 @@ namespace GridKit
       setDerivedParams();
     }
 
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
+                                  IdxT      unit_id,
+                                  ScalarT   p0,
+                                  ScalarT   q0,
+                                  real_type H,
+                                  real_type D,
+                                  real_type Ra,
+                                  real_type Tdop,
+                                  real_type Tdopp,
+                                  real_type Tqopp,
+                                  real_type Tqop,
+                                  real_type Xd,
+                                  real_type Xdp,
+                                  real_type Xdpp,
+                                  real_type Xq,
+                                  real_type Xqp,
+                                  real_type Xqpp,
+                                  real_type Xl,
+                                  real_type S10,
+                                  real_type S12)
+      : bus_(bus),
+        pmech_signal_(nullptr),
+        omega_signal_(nullptr),
+        busID_(0),
+        unit_id_(unit_id),
+        p0_(p0),
+        q0_(q0),
+        H_(H),
+        D_(D),
+        Ra_(Ra),
+        Tdop_(Tdop),
+        Tdopp_(Tdopp),
+        Tqopp_(Tqopp),
+        Tqop_(Tqop),
+        Xd_(Xd),
+        Xdp_(Xdp),
+        Xdpp_(Xdpp),
+        Xq_(Xq),
+        Xqp_(Xqp),
+        Xqpp_(Xqpp),
+        Xl_(Xl),
+        S10_(S10),
+        S12_(S12)
+    {
+      size_ = 20;
+      setDerivedParams();
+    }
       /*!
        * @brief allocate method computes sparsity pattern of the Jacobian.
        */
