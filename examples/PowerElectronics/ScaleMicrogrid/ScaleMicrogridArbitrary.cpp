@@ -296,14 +296,8 @@ int printMicrogridSystems(index_type N_size)
   // Output file names based on grid size
   std::string size_suffix = std::to_string(N_size);
 
-  // print the residual in matrix market format
-  /*sys_model.printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + size_suffix + "_iter" + std::to_string(mat_num) + ".mtx",
-                                      "ScaleMicrogrid Residual N" + size_suffix + " Iteration " + std::to_string(mat_num));*/
-
   sys_model.updateTime(0.0, 1.0e-8);
   sys_model.evaluateJacobian();
-  /*sys_model.printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + size_suffix + "_iter" + std::to_string(mat_num) + ".mtx",
-                                      "ScaleMicrogrid Jacobian N" + size_suffix + " Iteration " + std::to_string(mat_num));*/
 
   // Create numerical integrator and configure it for the generator model
   AnalysisManager::Sundials::Ida<real_type, index_type> idas(&sys_model);
