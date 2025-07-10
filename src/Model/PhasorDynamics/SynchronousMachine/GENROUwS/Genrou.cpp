@@ -67,7 +67,9 @@ namespace GridKit
       : bus_(bus),
         pmech_signal_(pmech_signal),
         omega_signal_(omega_signal),
-        unit_id_(1)
+        unit_id_(1),
+        pmech_set_(0),
+        efd_set_(0)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {

@@ -133,6 +133,9 @@ namespace GridKit
           bool has_speed_signal = gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::speed_signal);
 
           // has_bus && !has_pmech_signal && !has_speed_signal
+          std::cout << "has bus " << has_bus 
+                    << " has pmech " << has_pmech_signal
+                    << " has speed " << has_speed_signal;
 
           if (has_pmech_signal)
           {
