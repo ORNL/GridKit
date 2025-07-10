@@ -128,31 +128,34 @@ namespace GridKit
           IdxT pmech_index = 0;
           IdxT speed_index = 0;
 
-          bus_type* genrou_bus = nullptr;
-          bus_type* pmech_bus  = nullptr;
-          bus_type* speed_bus  = nullptr;
+          bool has_pmech_signal = gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::pmech_signal);
+          bool has_speed_signal = gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::speed_signal);
 
           if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::bus))
           {
+            
             bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
-            genrou_bus = getBus(bus_index);
+            
+            auto* gen = new Genrou<ScalarT, IdxT>(
+              getBus(bus_index), 
+              nullptr,
+              nullptr,
+              gendata);
+            addComponent(gen);
           }
-          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::pmech_signal))
+          if (has_pmech_signal & has_speed_signal)
           {
+
+            bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
             pmech_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::pmech_signal);
-            pmech_bus  = getBus(pmech_index);
-          }
-          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::speed_signal))
-          {
             speed_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::speed_signal);
-            speed_bus  = getBus(speed_index);
-          }
-          auto* gen = new Genrou<ScalarT, IdxT>(
-            genrou_bus, 
-            pmech_bus,
-            speed_bus,
-            gendata);
-          addComponent(gen);
+
+            auto* gen = new Genrou<ScalarT, IdxT>(
+              getBus(bus_index), 
+              getBus(pmech_index),
+              getBus(speed_index),
+              gendata);
+            addComponent(gen);
         }
 
         // Add classical generators
