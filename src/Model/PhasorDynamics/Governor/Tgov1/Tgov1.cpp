@@ -31,10 +31,10 @@ namespace GridKit
        */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(
-        bus_type* pmech_signal, 
-        bus_type* omega_signal,
-        const model_data_type& data)
-        : pmech_signal_(pmech_signal), 
+          bus_type*              pmech_signal,
+          bus_type*              omega_signal,
+          const model_data_type& data)
+        : pmech_signal_(pmech_signal),
           omega_signal_(omega_signal),
           R_(data.R),
           Pvmin_(data.Pvmin),
@@ -49,9 +49,10 @@ namespace GridKit
         // 3 Internal Variables
         size_ = 3;
       }
+
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1()
-        : pmech_signal_(nullptr), 
+        : pmech_signal_(nullptr),
           omega_signal_(nullptr),
           R_(0.05),
           Pvmin_(0),
@@ -92,7 +93,7 @@ namespace GridKit
 
         // Initial mechanical = initial electric torque
         ScalarT pdef = 1;
-        ScalarT p0 = this->safeRead(pmech_signal_, pdef);
+        ScalarT p0   = this->safeRead(pmech_signal_, pdef);
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -176,7 +177,7 @@ namespace GridKit
 
         // Ext Variables
         ScalarT omega0 = 0;
-        ScalarT omega = this->safeRead(omega_signal_, omega0);
+        ScalarT omega  = this->safeRead(omega_signal_, omega0);
 
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
@@ -215,7 +216,6 @@ namespace GridKit
         std::cout << "Jacobian evaluation not implemented!" << std::endl;
         return 0;
       }
-
 
       // Available template instantiations
       template class Tgov1<double, long int>;

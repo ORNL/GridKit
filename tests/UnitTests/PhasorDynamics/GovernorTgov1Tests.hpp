@@ -54,7 +54,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(1.0, 0.0);
-        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus,1);
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, 1);
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov;
 
         bus.allocate();

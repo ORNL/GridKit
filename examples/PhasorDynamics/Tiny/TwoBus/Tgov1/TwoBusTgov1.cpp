@@ -63,12 +63,11 @@ int main()
 
   // Pmech Signal Bus
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type    = BusData<scalar_type, index_type>::BusType::SIGNAL;
+  data.bus[2].bus_type = BusData<scalar_type, index_type>::BusType::SIGNAL;
 
   // Speed Signal Bus
   data.bus[3].bus_id   = 3;
   data.bus[3].bus_type = BusData<scalar_type, index_type>::BusType::SIGNAL;
-
 
   // Set branch data
   data.branch.resize(1);
@@ -89,16 +88,16 @@ int main()
 
   // Set generator data
   data.genrou.resize(1);
-  data.genrou[0].p0    = 1.;
-  data.genrou[0].q0    = 0.05013;
-  data.genrou[0].signal_pmech = 2;  
-  data.genrou[0].signal_speed = 3; 
+  data.genrou[0].p0           = 1.;
+  data.genrou[0].q0           = 0.05013;
+  data.genrou[0].signal_pmech = 2;
+  data.genrou[0].signal_speed = 3;
 
   // Governor
   data.gov.resize(1);
-  data.gov[0].signal_speed  = 3;
-  data.gov[0].signal_pmech  = 2; // Signal Bus ID
-  
+  data.gov[0].signal_speed = 3;
+  data.gov[0].signal_pmech = 2; // Signal Bus ID
+
   //
   // Instantiate system model
   //
@@ -161,7 +160,6 @@ int main()
   sys.addComponent(gov);
 
   sys.allocate();
-
 
   // Get access to the fault
   auto* fault = sys.getBusFault(0);

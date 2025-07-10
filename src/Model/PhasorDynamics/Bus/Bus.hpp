@@ -49,16 +49,17 @@ namespace GridKit
       void initial_value(ScalarT) override
       {
       }
+
       // TODO remove, uneeded
       ScalarT& read() override
       {
         return y_[0];
       }
+
       // TODO remove, uneeded
       void send(ScalarT&) override
       {
       }
-
 
       virtual ScalarT& Vr() override
       {

@@ -7,7 +7,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    
+
     // TODO change base class so there is no Vr and Vi
 
     template <class ScalarT, typename IdxT>
@@ -23,12 +23,11 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::tag_;
 
     public:
-
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
       using DataT     = BusData<real_type, IdxT>;
 
       BusSignal(const DataT& data);
-      
+
       ~BusSignal()
       {
       }
@@ -39,29 +38,29 @@ namespace GridKit
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;
 
-       /**
+      /**
        * @brief A one-time initialization function
        * that can be called by any.
-       * 
+       *
        * @return state value of signal
        */
       void initial_value(ScalarT value) override
       {
 
         y_[0] = value;
-        //if(is_initialized_)
+        // if(is_initialized_)
         //{
-        //  std::cout << "ERROR!";
-        //}
-        //else{
-        //  y_[0] = value;
-        //  is_initialized_ = true;
-        //}
+        //   std::cout << "ERROR!";
+        // }
+        // else{
+        //   y_[0] = value;
+        //   is_initialized_ = true;
+        // }
       }
 
-       /**
+      /**
        * @brief A read only accessor to the signal state
-       * 
+       *
        * @return state value of signal
        */
       ScalarT& read() override
@@ -69,10 +68,10 @@ namespace GridKit
         return y_[0];
       }
 
-       /**
+      /**
        * @brief A write operation only available
        * to the source signal
-       * 
+       *
        * @param value The value of the signal
        */
       void send(ScalarT& value) override
@@ -80,16 +79,17 @@ namespace GridKit
         f_[0] += value;
       }
 
-
       // TODO remove jsut junk so it compiles
       ScalarT& Vr() override
       {
         return y_[0];
       }
+
       const ScalarT& Vr() const override
       {
         return y_[0];
       }
+
       ScalarT& Vi() override
       {
         return y_[0];
@@ -119,10 +119,8 @@ namespace GridKit
       {
         return y_[0];
       }
-    
 
-      //bool is_initialized_{false};
-
+      // bool is_initialized_{false};
     };
 
   } // namespace PhasorDynamics

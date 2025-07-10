@@ -46,9 +46,9 @@ namespace GridKit
 
     public:
       Genrou(bus_type* bus, IdxT unit_id);
-      Genrou(bus_type* bus,
-             bus_type* pmech_signal, 
-             bus_type* omega_signal, 
+      Genrou(bus_type*              bus,
+             bus_type*              pmech_signal,
+             bus_type*              omega_signal,
              const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
@@ -84,8 +84,6 @@ namespace GridKit
       {
       }
 
-
-
     private:
       void setDerivedParams();
 
@@ -115,8 +113,8 @@ namespace GridKit
       bus_type* pmech_signal_;
       bus_type* omega_signal_;
 
-      IdxT      busID_{0};
-      IdxT      unit_id_; //< @todo this should be removed
+      IdxT busID_{0};
+      IdxT unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       ScalarT p0_{0.0};

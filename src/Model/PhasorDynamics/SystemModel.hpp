@@ -13,9 +13,9 @@
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 
 namespace GridKit
@@ -148,13 +148,13 @@ namespace GridKit
         // Add governors
         for (const auto& govdata : data.gov)
         {
-          
+
           /* Need to add signals to gendata class */
           auto* gov = new Governor::Tgov1<ScalarT, IdxT>(
-            getBus(govdata.signal_pmech), 
-            getBus(govdata.signal_speed),
-            govdata);
-       
+              getBus(govdata.signal_pmech),
+              getBus(govdata.signal_speed),
+              govdata);
+
           addComponent(gov);
         }
 

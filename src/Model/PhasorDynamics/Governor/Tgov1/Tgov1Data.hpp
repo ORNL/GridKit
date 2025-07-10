@@ -35,7 +35,6 @@ namespace GridKit
 
         IdxT signal_pmech; ///< Unique ID of the bus providing the pmech signal
         IdxT signal_speed; ///< Unique ID of the bus providing the speed signal
-
       };
     } // namespace Governor
   } // namespace PhasorDynamics

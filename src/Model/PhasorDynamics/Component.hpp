@@ -3,10 +3,9 @@
 #include <exception>
 #include <vector>
 
+#include "BusBase.hpp"
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
-
-#include "BusBase.hpp"
 
 namespace GridKit
 {
@@ -23,7 +22,7 @@ namespace GridKit
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
       using bus_type  = BusBase<ScalarT, IdxT>;
-      
+
       Component()
         : size_(0)
       {
@@ -32,7 +31,7 @@ namespace GridKit
       /**
        * @brief A helper function to easily init
        * a signal value wiithout needing to check if initialized
-       * 
+       *
        * @param signal The signal bus object pointer
        * @param value The value to send to the equality constraint
        */
@@ -42,13 +41,12 @@ namespace GridKit
         {
           signal->initial_value(value);
         }
-        
       }
 
       /**
        * @brief A helper function to easily init
        * a signal value wiithout needing to check if initialized
-       * 
+       *
        * @param signal The signal bus object pointer
        * @param value The value to send to the equality constraint
        */
@@ -58,14 +56,13 @@ namespace GridKit
         {
           signal->send(value);
         }
-        
       }
 
       /**
        * @brief A helper function to easily read
        * the state of the signal without checking nullptr
-       * 
-       * 
+       *
+       *
        * @param signal The signal bus object pointer
        * @param default_val The value to return if no signal
        */
@@ -75,11 +72,10 @@ namespace GridKit
         {
           return signal->read();
         }
-        else 
+        else
         {
           return default_val;
         }
-        
       }
 
       virtual IdxT size() override

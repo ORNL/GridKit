@@ -11,14 +11,12 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-
     template <class ScalarT, typename IdxT>
     BusSignal<ScalarT, IdxT>::BusSignal(const DataT& data)
-        : BusBase<ScalarT, IdxT>(data.bus_id)
+      : BusBase<ScalarT, IdxT>(data.bus_id)
     {
       size_ = 1;
     }
-
 
     template <class ScalarT, typename IdxT>
     int BusSignal<ScalarT, IdxT>::allocate()
@@ -61,7 +59,7 @@ namespace GridKit
     {
       // One side of equality of signal. Reference component
       // must add to this residual after this function has been called.
-      f_[0] = - y_[0]; 
+      f_[0] = -y_[0];
 
       return 0;
     }

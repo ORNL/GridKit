@@ -52,8 +52,8 @@ namespace GridKit
 
       public:
         Tgov1();
-        Tgov1(bus_type* pmech_signal, 
-              bus_type* omega_signal, 
+        Tgov1(bus_type*              pmech_signal,
+              bus_type*              omega_signal,
               const model_data_type& data);
         ~Tgov1() = default;
 
