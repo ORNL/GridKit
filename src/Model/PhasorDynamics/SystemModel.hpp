@@ -16,6 +16,7 @@
 #include <Model/PhasorDynamics/Load/Load.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 
 namespace GridKit
 {
@@ -92,43 +93,55 @@ namespace GridKit
         // Add branches
         for (const auto& branchdata : data.branch)
         {
-          auto* branch = new Branch<ScalarT, IdxT>(getBus(branchdata.bus1_id), getBus(branchdata.bus2_id), branchdata);
+          IdxT bus1_index = 0;
+          if (branchdata.ports.contains(BranchData<ScalarT, IdxT>::Ports::bus1))
+          {
+            bus1_index = branchdata.ports.at(BranchData<ScalarT, IdxT>::Ports::bus1);
+          }
+
+          IdxT bus2_index = 0;
+          if (branchdata.ports.contains(BranchData<ScalarT, IdxT>::Ports::bus2))
+          {
+            bus2_index = branchdata.ports.at(BranchData<ScalarT, IdxT>::Ports::bus2);
+          }
+
+          auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index), getBus(bus2_index), branchdata);
           addComponent(branch);
         }
 
         // Add loads
         for (const auto& loaddata : data.load)
         {
-          auto* load = new Load<ScalarT, IdxT>(getBus(loaddata.bus_id), loaddata);
+          IdxT bus_index = 0;
+          if (loaddata.ports.contains(LoadData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = loaddata.ports.at(LoadData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* load = new Load<ScalarT, IdxT>(getBus(bus_index), loaddata);
           addComponent(load);
         }
 
-        // Add generators
+        // Add GENROU generators
         for (const auto& gendata : data.genrou)
         {
+          IdxT bus_index = 0;
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+          addComponent(gen);
+        }
 
-          // PR NOTE:
-          // Can we make getBus return nullptr if none exists?
-          // I don't know if it will break things
-          Genrou<ScalarT, IdxT>* gen;
-          if (gendata.signal_pmech > 0)
+        // Add classical generators
+        for (const auto& gendata : data.genclassical)
+        {
+          IdxT bus_index = 0;
+          if (gendata.ports.contains(GenClassicalData<ScalarT, IdxT>::Ports::bus))
           {
-            gen = new Genrou<ScalarT, IdxT>(
-            getBus(gendata.bus_id), 
-            getBus(gendata.signal_pmech), 
-            getBus(gendata.signal_speed), 
-            gendata);
+            bus_index = gendata.ports.at(GenClassicalData<ScalarT, IdxT>::Ports::bus);
           }
-          else 
-          {
-            gen = new Genrou<ScalarT, IdxT>(
-            getBus(gendata.bus_id), 
-            nullptr, 
-            nullptr, 
-            gendata);
-          }
-          /* Need to add signals to gendata class */
-          
+          auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
           addComponent(gen);
         }
 
@@ -148,7 +161,12 @@ namespace GridKit
         // Add faults
         for (const auto& faultdata : data.bus_fault)
         {
-          auto* fault = new BusFault<ScalarT, IdxT>(getBus(faultdata.bus_id), faultdata);
+          IdxT bus_index = 0;
+          if (faultdata.ports.contains(BusFaultData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = faultdata.ports.at(BusFaultData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
           addFault(fault);
         }
       }

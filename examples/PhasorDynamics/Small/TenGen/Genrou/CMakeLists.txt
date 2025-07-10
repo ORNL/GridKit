@@ -4,6 +4,7 @@ target_link_libraries(TenGenGenrou
 	GRIDKIT::phasor_dynamics_bus_fault 
 	GRIDKIT::phasor_dynamics_branch
 	GRIDKIT::phasor_dynamics_genrou
+	GRIDKIT::phasor_dynamics_gen_classical
 	GRIDKIT::phasor_dynamics_governortgov1
 	GRIDKIT::phasor_dynamics_load
 	GRIDKIT::solvers_dyn)

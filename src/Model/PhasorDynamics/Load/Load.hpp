@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>

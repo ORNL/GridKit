@@ -53,10 +53,6 @@ namespace GridKit
     {
       size_ = 20;
       setDerivedParams();
-
-      // Temporary, to eliminate compiler warnings
-      (void) busID_;
-      (void) unit_id_;
     }
 
     /*!
@@ -142,6 +138,116 @@ namespace GridKit
         Xqpp_(Xqpp),
         Xl_(Xl),
         S10_(S10),
+        S12_(S12)
+    {
+      size_ = 20;
+      setDerivedParams();
+    }
+
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
+      : bus_(bus),
+        unit_id_(1),
+        gov_(nullptr) // <- TODO: Temporary, to be removed.
+    {
+      if (data.parameters.contains(model_data_type::Parameters::p0))
+      {
+        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::q0))
+      {
+        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::H))
+      {
+        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::D))
+      {
+        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Ra))
+      {
+        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdop))
+      {
+        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
+      {
+        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
+      {
+        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqop))
+      {
+        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xd))
+      {
+        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdp))
+      {
+        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
+      {
+        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xq))
+      {
+        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqp))
+      {
+        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
+      {
+        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xl))
+      {
+        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S10))
+      {
+        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S12))
+      {
+        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus))
+      {
+        busID_ = data.ports.at(model_data_type::Ports::bus);
+      }
+
         S12_(S12),
         pmech_set_(0),
         efd_set_(0) 

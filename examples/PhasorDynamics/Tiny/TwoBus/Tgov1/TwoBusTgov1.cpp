@@ -38,6 +38,8 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
+  using BusType = BusData<scalar_type, index_type>::BusType;
+
   std::cout << "Example: TwoBusTgov1 \n";
 
   //
@@ -50,12 +52,12 @@ int main()
   data.bus.resize(4);
 
   data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
+  data.bus[0].bus_type = BusType::DEFAULT;
   data.bus[0].Vr0      = 0.9949877346411762;
   data.bus[0].Vi0      = 0.09999703952427966;
 
   data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusData<scalar_type, index_type>::BusType::SLACK;
+  data.bus[1].bus_type = BusType::SLACK;
   data.bus[1].Vr0      = 1.0;
   data.bus[1].Vi0      = 0.0;
 
@@ -71,19 +73,19 @@ int main()
   // Set branch data
   data.branch.resize(1);
 
-  data.branch[0].bus1_id = data.bus[0].bus_id;
-  data.branch[0].bus2_id = data.bus[1].bus_id;
-  data.branch[0].R       = 0.0;
-  data.branch[0].X       = 0.1;
-  data.branch[0].G       = 0.0;
-  data.branch[0].B       = 0.0;
+  data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+  data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+  data.branch[0].parameters[BranchParameters::R] = 0.0;
+  data.branch[0].parameters[BranchParameters::X] = 0.1;
+  data.branch[0].parameters[BranchParameters::G] = 0.0;
+  data.branch[0].parameters[BranchParameters::B] = 0.0;
 
   // Add faults
   data.bus_fault.resize(1);
 
-  data.bus_fault[0].R      = 0.0;
-  data.bus_fault[0].X      = 1e-3;
-  data.bus_fault[0].status = false;
+  data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
+  data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
+  data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
 
   // Set generator data
   data.genrou.resize(1);
@@ -102,6 +104,61 @@ int main()
   //
 
   SystemModel<scalar_type, index_type> sys(data);
+
+  // Set generator data
+  data.genrou.resize(1);
+
+  data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
+  data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
+  data.genrou[0].parameters[GenrouParameters::H]     = 3.;
+  data.genrou[0].parameters[GenrouParameters::D]     = 0.;
+  data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
+  data.genrou[0].parameters[GenrouParameters::Tdop]  = 7.;
+  data.genrou[0].parameters[GenrouParameters::Tdopp] = .04;
+  data.genrou[0].parameters[GenrouParameters::Tqopp] = .05;
+  data.genrou[0].parameters[GenrouParameters::Tqop]  = .75;
+  data.genrou[0].parameters[GenrouParameters::Xd]    = 2.1;
+  data.genrou[0].parameters[GenrouParameters::Xdp]   = 0.2;
+  data.genrou[0].parameters[GenrouParameters::Xdpp]  = 0.18;
+  data.genrou[0].parameters[GenrouParameters::Xq]    = 0.5;
+  data.genrou[0].parameters[GenrouParameters::Xqp]   = 0.5;
+  data.genrou[0].parameters[GenrouParameters::Xqpp]  = 0.18;
+  data.genrou[0].parameters[GenrouParameters::Xl]    = 0.15;
+  data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
+  data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
+
+  data.gov.resize(1);
+
+  // Set Gov data (Default PW values)
+  data.gov[0].R     = 0.05;
+  data.gov[0].Pvmin = 0;
+  data.gov[0].Pvmax = 1.0;
+  data.gov[0].T1    = 0.5;
+  data.gov[0].T2    = 2.5;
+  data.gov[0].T3    = 7.5;
+  data.gov[0].Dt    = 0;
+
+  // Manual add gen & gov components
+  // This is a hack  since SignalBus not implemented
+
+  // Create Pointers first
+  Genrou<scalar_type, index_type>*          gen;
+  Governor::Tgov1<scalar_type, index_type>* gov;
+
+  // Instatiate Genrou & add to system model
+  gen = new Genrou<scalar_type, index_type>(
+      sys.getBus(0),
+      data.genrou[0]);
+
+  // Instatiate GovernorTgov1 & add to system model
+  gov = new Governor::Tgov1<scalar_type, index_type>(
+      gen,
+      data.gov[0]);
+  gen->setgovenor(gov);
+
+  // Add Generator and Governor to System
+  sys.addComponent(gen);
+  sys.addComponent(gov);
 
   sys.allocate();
 

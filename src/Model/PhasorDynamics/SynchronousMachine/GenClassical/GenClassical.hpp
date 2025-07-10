@@ -1,6 +1,7 @@
 /**
  * @file GenClassical.cpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
+ * @author Slaven Peles (peless@ornl.gov)
  *
  */
 
@@ -15,7 +16,10 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     class BusBase;
-  }
+
+    template <typename RealT, typename IdxT>
+    struct GenClassicalData;
+  } // namespace PhasorDynamics
 } // namespace GridKit
 
 namespace GridKit
@@ -37,6 +41,7 @@ namespace GridKit
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
+      using DataT     = GenClassicalData<real_type, IdxT>;
 
     public:
       GenClassical(bus_type* bus, int unit_id);
@@ -48,6 +53,7 @@ namespace GridKit
                    real_type D,
                    real_type Ra,
                    real_type Xdp);
+      GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 
       int allocate() override;
@@ -60,6 +66,16 @@ namespace GridKit
 
       void updateTime(real_type /* t */, real_type /* a */) override
       {
+      }
+
+      void setPmech(real_type pmech)
+      {
+        pmech_set_ = pmech;
+      }
+
+      void setEp(real_type ep)
+      {
+        ep_set_ = ep;
       }
 
     private:
@@ -88,18 +104,18 @@ namespace GridKit
     private:
       /* Identification */
       bus_type* bus_;
-      const int busID_;
-      int       unit_id_;
+      IdxT      busID_{0};
+      int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
-      ScalarT p0_;
-      ScalarT q0_;
+      ScalarT p0_{0.0};
+      ScalarT q0_{0.0};
 
       /* Input parameters */
-      real_type H_;
-      real_type D_;
-      real_type Ra_;
-      real_type Xdp_;
+      real_type H_{0.0};
+      real_type D_{0.0};
+      real_type Ra_{0.0};
+      real_type Xdp_{0.0};
 
       /* Derivied parameters */
       real_type G_;

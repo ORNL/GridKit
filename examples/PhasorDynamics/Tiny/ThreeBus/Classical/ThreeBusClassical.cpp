@@ -1,5 +1,5 @@
 /**
- * @file ThreeBusBasic.cpp
+ * @file ThreeBusClassical.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 3-bus system
@@ -8,7 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "ThreeBusBasic.hpp"
+#include "ThreeBusClassical.hpp"
 
 #include <cstdio>
 #include <ctime>
@@ -34,6 +34,8 @@
 using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
+
+using BusType = GridKit::PhasorDynamics::BusData<scalar_type, index_type>::BusType;
 
 struct OutputData
 {
@@ -83,11 +85,10 @@ int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
-  using BusType = BusData<scalar_type, index_type>::BusType;
 
-  auto error_allowed = static_cast<real_type>(1e-4);
+  auto error_allowed = static_cast<real_type>(0.003);
 
-  std::cout << "Example: ThreeBusBasic\n";
+  std::cout << "Example: ThreeBusClassical\n";
 
   //
   // Create model data
@@ -112,7 +113,7 @@ int main()
 
   // Bus 2
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type = BusType::DEFAULT;
+  data.bus[2].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
   data.bus[2].Vr0      = 0.9610827543495831;
   data.bus[2].Vi0      = -0.13122476630506485;
 
@@ -124,7 +125,7 @@ int main()
   data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
   data.branch[0].parameters[BranchParameters::R] = 0.05;
   data.branch[0].parameters[BranchParameters::X] = 0.21;
-  data.branch[0].parameters[BranchParameters::G] = 0.;
+  data.branch[0].parameters[BranchParameters::G] = 0.0;
   data.branch[0].parameters[BranchParameters::B] = 0.1;
 
   // Branch 0-2
@@ -132,7 +133,7 @@ int main()
   data.branch[1].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
   data.branch[1].parameters[BranchParameters::R] = 0.06;
   data.branch[1].parameters[BranchParameters::X] = 0.15;
-  data.branch[1].parameters[BranchParameters::G] = 0.;
+  data.branch[1].parameters[BranchParameters::G] = 0.0;
   data.branch[1].parameters[BranchParameters::B] = 0.12;
 
   // Branch 1-2
@@ -140,53 +141,29 @@ int main()
   data.branch[2].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
   data.branch[2].parameters[BranchParameters::R] = 0.08;
   data.branch[2].parameters[BranchParameters::X] = 0.27;
-  data.branch[2].parameters[BranchParameters::G] = 0.;
+  data.branch[2].parameters[BranchParameters::G] = 0.0;
   data.branch[2].parameters[BranchParameters::B] = 0.45;
 
   // Set generator data
-  data.genrou.resize(2);
+  data.genclassical.resize(2);
 
   // Generator on bus 1
-  data.genrou[0].ports[GenrouPorts::bus]             = 1;
-  data.genrou[0].parameters[GenrouParameters::p0]    = 0.5;
-  data.genrou[0].parameters[GenrouParameters::q0]    = -0.07588;
-  data.genrou[0].parameters[GenrouParameters::H]     = 2.7;
-  data.genrou[0].parameters[GenrouParameters::D]     = 0.;
-  data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
-  data.genrou[0].parameters[GenrouParameters::Tdop]  = 7.;
-  data.genrou[0].parameters[GenrouParameters::Tdopp] = .04;
-  data.genrou[0].parameters[GenrouParameters::Tqopp] = .05;
-  data.genrou[0].parameters[GenrouParameters::Tqop]  = .75;
-  data.genrou[0].parameters[GenrouParameters::Xd]    = 1.9;
-  data.genrou[0].parameters[GenrouParameters::Xdp]   = 0.17;
-  data.genrou[0].parameters[GenrouParameters::Xdpp]  = 0.15;
-  data.genrou[0].parameters[GenrouParameters::Xq]    = 0.4;
-  data.genrou[0].parameters[GenrouParameters::Xqp]   = 0.35;
-  data.genrou[0].parameters[GenrouParameters::Xqpp]  = 0.15;
-  data.genrou[0].parameters[GenrouParameters::Xl]    = 0.14999;
-  data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
-  data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
+  data.genclassical[0].ports[GenClassicalPorts::bus]           = data.bus[1].bus_id;
+  data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
+  data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
+  data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
+  data.genclassical[0].parameters[GenClassicalParameters::D]   = 0.;
+  data.genclassical[0].parameters[GenClassicalParameters::Ra]  = 0.;
+  data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
 
   // Generator on bus 2
-  data.genrou[1].ports[GenrouPorts::bus]             = 2;
-  data.genrou[1].parameters[GenrouParameters::p0]    = 0.25;
-  data.genrou[1].parameters[GenrouParameters::q0]    = 0.26587;
-  data.genrou[1].parameters[GenrouParameters::H]     = 1.6;
-  data.genrou[1].parameters[GenrouParameters::D]     = 0.;
-  data.genrou[1].parameters[GenrouParameters::Ra]    = 0.;
-  data.genrou[1].parameters[GenrouParameters::Tdop]  = 7.5;
-  data.genrou[1].parameters[GenrouParameters::Tdopp] = .04;
-  data.genrou[1].parameters[GenrouParameters::Tqopp] = .05;
-  data.genrou[1].parameters[GenrouParameters::Tqop]  = .75;
-  data.genrou[1].parameters[GenrouParameters::Xd]    = 2.3;
-  data.genrou[1].parameters[GenrouParameters::Xdp]   = 0.2;
-  data.genrou[1].parameters[GenrouParameters::Xdpp]  = 0.18;
-  data.genrou[1].parameters[GenrouParameters::Xq]    = 0.5;
-  data.genrou[1].parameters[GenrouParameters::Xqp]   = 0.5;
-  data.genrou[1].parameters[GenrouParameters::Xqpp]  = 0.18;
-  data.genrou[1].parameters[GenrouParameters::Xl]    = 0.15;
-  data.genrou[1].parameters[GenrouParameters::S10]   = 0.;
-  data.genrou[1].parameters[GenrouParameters::S12]   = 0.;
+  data.genclassical[1].ports[GenClassicalPorts::bus]           = data.bus[2].bus_id;
+  data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
+  data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
+  data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
+  data.genclassical[1].parameters[GenClassicalParameters::D]   = 0.;
+  data.genclassical[1].parameters[GenClassicalParameters::Ra]  = 0.;
+  data.genclassical[1].parameters[GenClassicalParameters::Xdp] = 0.2;
 
   // Set load data
   data.load.resize(1);
@@ -223,10 +200,10 @@ int main()
     std::vector<double>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                1.0 + y_val[5],
-                                1.0 + y_val[25],
-                                std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),
-                                std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])});
+                                y_val[5],
+                                y_val[10],
+                                std::hypot(y_val[0], y_val[1]),
+                                std::hypot(y_val[2], y_val[3])});
   };
 
   // Set up simulation
@@ -263,7 +240,7 @@ int main()
 
   // // Uncomment code below to print output to a file:
   // std::ofstream fileout;
-  // fileout.open("Example_ThreeBus_Basic_results.csv");
+  // fileout.open("Example_ThreeBus_Classical_results.csv");
   // std::ostream& out = fileout;
 
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
@@ -291,7 +268,18 @@ int main()
 
   std::cout << "Max error " << worst_error
             << " at time t = " << worst_error_time << "\n";
-  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n\n";
 
-  return worst_error < error_allowed ? 0 : 1;
+  int success = 0;
+  if (worst_error < error_allowed)
+  {
+    std::cout << "Test result: PASS\n\n";
+  }
+  else
+  {
+    std::cout << "Test result: FAIL\n\n";
+    success = 1;
+  }
+
+  return success;
 }
