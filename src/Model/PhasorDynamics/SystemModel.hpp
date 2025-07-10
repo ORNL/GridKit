@@ -133,7 +133,7 @@ namespace GridKit
 
           if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::bus))
           {
-            
+
             bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
             
             auto* gen = new Genrou<ScalarT, IdxT>(
@@ -156,6 +156,7 @@ namespace GridKit
               getBus(speed_index),
               gendata);
             addComponent(gen);
+          }
         }
 
         // Add classical generators
