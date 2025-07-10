@@ -72,6 +72,7 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
+  data.genrou[0].ports[GenrouPorts::bus] = data.bus[0].bus_id;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
   data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
   data.genrou[0].parameters[GenrouParameters::H]     = 3.;

@@ -90,6 +90,7 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
+  data.genrou[0].ports[GenrouPorts::bus] = data.bus[0].bus_id;
   data.genrou[0].ports[GenrouPorts::pmech_signal] = 2;
   data.genrou[0].ports[GenrouPorts::speed_signal] = 3;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
