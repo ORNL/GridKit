@@ -130,8 +130,6 @@ namespace GridKit
       ScalarT ep_set_;
 
       /* Local copies of bus variables */
-      ScalarT ir_;
-      ScalarT ii_;
       ScalarT vr_;
       ScalarT vi_;
     };

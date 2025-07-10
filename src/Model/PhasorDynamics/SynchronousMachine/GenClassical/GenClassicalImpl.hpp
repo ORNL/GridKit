@@ -182,8 +182,8 @@ namespace GridKit
       const ScalarT delta = y[0];
       const ScalarT omega = y[1];
       const ScalarT telec = y[2];
-      const ScalarT ir_   = y[3];
-      const ScalarT ii_   = y[4];
+      const ScalarT ir    = y[3];
+      const ScalarT ii    = y[4];
       const ScalarT pmech = pmech_set_; /* Later optionally acquire from governor */
       const ScalarT ep    = ep_set_;    /* Later optionally acquire from exciter */
 
@@ -198,8 +198,8 @@ namespace GridKit
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr_ - B_ * vi_) * std::cos(delta) + (B_ * vr_ + G_ * vi_) * std::sin(delta)));
 
-      f[3] = ir_ + G_ * vr_ - B_ * vi_ - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
-      f[4] = ii_ + B_ * vr_ + G_ * vi_ - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
+      f[3] = ir + G_ * vr_ - B_ * vi_ - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
+      f[4] = ii + B_ * vr_ + G_ * vi_ - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
 
       return 0;
     }
@@ -217,8 +217,8 @@ namespace GridKit
       evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
       // GenClassical contribution to bus algebraic equations
-      Ir() += ir_;
-      Ii() += ii_;
+      Ir() += y_[3];
+      Ii() += y_[4];
 
       return 0;
     }
