@@ -11,8 +11,6 @@
 #include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <ScalarTraits.hpp>
 
-static int jacobianCallCount = 0;
-
 namespace GridKit
 {
   /**
@@ -34,8 +32,8 @@ namespace GridKit
       return;
     }
 
-    // Write Matrix Market header
-    outFile << "%%MatrixMarket vector array real general" << std::endl;
+    // Uncomment to write Matrix Market header
+    // outFile << "%%MatrixMarket vector array real general" << std::endl;
 
     // Write additional header information as comments
     if (!header.empty())
@@ -268,8 +266,8 @@ namespace GridKit
         }
       }
 
-      // Print the residual in matrix market format
-      writeVectorToMatrixMarket(f_, "ScaleMicrogrid_Residual_N2_number" + std::to_string(jacobianCallCount) + ".mtx", "Residual N2 number " + std::to_string(jacobianCallCount));
+      // Uncomment to print the residual in matrix market format
+      // writeVectorToMatrixMarket(f_, "ScaleMicrogrid_Residual_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Residual N2 number " + std::to_string(jac_call_count_));
 
       return 0;
     }
@@ -313,8 +311,8 @@ namespace GridKit
       }
 
       // TODO: finish adding the writing out part stuff
-      jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jacobianCallCount) + ".mtx", "Jacobian N2 number " + std::to_string(jacobianCallCount));
-      jacobianCallCount++;
+      // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
+      jac_call_count_++;
 
       return 0;
     }
@@ -407,7 +405,9 @@ namespace GridKit
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
     std::vector<component_type*> components_;
-    bool                         use_jac_;
+
+    int  jac_call_count_{0};
+    bool use_jac_;
 
   }; // class PowerElectronicsModel
 
