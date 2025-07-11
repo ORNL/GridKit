@@ -32,8 +32,8 @@ namespace GridKit
       return;
     }
 
-    // Write Matrix Market header
-    outFile << "%%MatrixMarket vector array real general" << std::endl;
+    // Uncomment to write Matrix Market header
+    // outFile << "%%MatrixMarket vector array real general" << std::endl;
 
     // Write additional header information as comments
     if (!header.empty())
@@ -266,6 +266,9 @@ namespace GridKit
         }
       }
 
+      // Uncomment to print the residual in matrix market format
+      // writeVectorToMatrixMarket(f_, "ScaleMicrogrid_Residual_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Residual N2 number " + std::to_string(jac_call_count_));
+
       return 0;
     }
 
@@ -306,6 +309,9 @@ namespace GridKit
         // elementwise jac_(rgr, cgr) += vgr
         jac_.axpy(1.0, rgr, cgr, vgr);
       }
+
+      // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
+      jac_call_count_++;
 
       return 0;
     }
@@ -398,7 +404,9 @@ namespace GridKit
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
     std::vector<component_type*> components_;
-    bool                         use_jac_;
+
+    int  jac_call_count_{0};
+    bool use_jac_;
 
   }; // class PowerElectronicsModel
 
