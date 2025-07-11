@@ -73,6 +73,16 @@ namespace GridKit
              real_type S12);
       ~Genrou() = default;
 
+      constexpr virtual IdxT nEquations() override
+      {
+        return 17;
+      }
+
+      constexpr virtual IdxT nVariables() override
+      {
+        return 21;
+      }
+
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;
@@ -165,8 +175,8 @@ namespace GridKit
       real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
-      real_type pmech_set_;
-      real_type efd_set_;
+      ScalarT pmech_set_;
+      ScalarT efd_set_;
     };
 
   } // namespace PhasorDynamics

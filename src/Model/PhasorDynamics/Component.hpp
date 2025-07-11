@@ -10,10 +10,8 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-
-    /*!
+    /**
      * @brief Component model implementation base class.
-     *
      */
     template <class ScalarT, typename IdxT>
     class Component : public Model::Evaluator<ScalarT, IdxT>
@@ -29,6 +27,18 @@ namespace GridKit
       virtual IdxT size() override
       {
         return size_;
+      }
+
+      /// Returns a number indicating the number of equations associated with this component
+      constexpr virtual IdxT nEquations()
+      {
+        return 0;
+      }
+
+      /// Returns a number indicating the number of variables associated with this component
+      constexpr virtual IdxT nVariables()
+      {
+        return 0;
       }
 
       virtual IdxT nnz() override

@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -99,6 +100,56 @@ namespace GridKit
 
         delete system;
         system = nullptr;
+
+        return success.report(__func__);
+      }
+
+      TestOutcome dependencyTracking()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
+
+        // Create an empty system model
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+
+        auto* bus0 = system.getBus(0);
+        bus0->Vr().setVariableNumber(0);
+        bus0->Vi().setVariableNumber(1);
+
+        auto* bus1 = system.getBus(1);
+        bus1->Vr().setVariableNumber(2);
+        bus1->Vi().setVariableNumber(3);
+
+        system.allocate();
+        system.initialize();
+        system.evaluateResidual();
 
         return success.report(__func__);
       }
