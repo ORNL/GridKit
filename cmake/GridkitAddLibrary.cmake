@@ -10,7 +10,7 @@ macro(gridkit_add_library target)
 
   set(options STATIC_ONLY SHARED_ONLY)
   set(oneValueArgs OUTPUT_NAME)
-  set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES COMPILE_OPTIONS)
 
   # parse arguments
   cmake_parse_arguments(gridkit_add_library
@@ -43,6 +43,10 @@ macro(gridkit_add_library target)
     # -- Create object library --
 
     add_library(${obj_target} OBJECT ${sources})
+
+    if(gridkit_add_library_COMPILE_OPTIONS)
+      target_compile_options(${obj_target} PUBLIC ${gridkit_add_library_COMPILE_OPTIONS})
+    endif()
     
     if(gridkit_add_library_LINK_LIBRARIES)
       if(${_lib_type} MATCHES "STATIC")

@@ -92,7 +92,7 @@ namespace GridKit
       }
 
     public:
-      int evaluateResidualLocally(ScalarT*, ScalarT*);
+      int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};

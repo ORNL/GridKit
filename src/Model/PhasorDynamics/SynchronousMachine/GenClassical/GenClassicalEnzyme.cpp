@@ -1,12 +1,13 @@
 
 #include "GenClassicalImpl.hpp"
+#include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented
+     * @brief Jacobian evaluation experimental
      *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
@@ -16,7 +17,9 @@ namespace GridKit
     int GenClassical<ScalarT, IdxT>::evaluateJacobian()
     {
       std::cout << "Evaluate Jacobian for GenClassical..." << std::endl;
-      std::cout << "Jacobian evaluation is not implemented!" << std::endl;
+      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+
+      GridKit::Enzyme::Sparse::EnzymeSparseModelJacobian<GenClassical<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.data(), yp_.data(), J_);
 
       return 0;
     }
@@ -24,5 +27,6 @@ namespace GridKit
     // Available template instantiations
     template class GenClassical<double, long int>;
     template class GenClassical<double, size_t>;
+
   } // namespace PhasorDynamics
 } // namespace GridKit

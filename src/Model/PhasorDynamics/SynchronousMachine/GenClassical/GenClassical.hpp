@@ -38,6 +38,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::J_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
@@ -47,8 +48,8 @@ namespace GridKit
       GenClassical(bus_type* bus, int unit_id);
       GenClassical(bus_type* bus,
                    int       unit_id,
-                   ScalarT   p0,
-                   ScalarT   q0,
+                   real_type p0,
+                   real_type q0,
                    real_type H,
                    real_type D,
                    real_type Ra,
@@ -101,6 +102,9 @@ namespace GridKit
         return bus_->Ii();
       }
 
+    public:
+      int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+
     private:
       /* Identification */
       bus_type* bus_;
@@ -108,8 +112,8 @@ namespace GridKit
       int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
-      ScalarT p0_{0.0};
-      ScalarT q0_{0.0};
+      real_type p0_{0.0};
+      real_type q0_{0.0};
 
       /* Input parameters */
       real_type H_{0.0};
@@ -122,8 +126,12 @@ namespace GridKit
       real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
-      real_type pmech_set_;
-      real_type ep_set_;
+      ScalarT pmech_set_;
+      ScalarT ep_set_;
+
+      /* Local copies of bus variables */
+      ScalarT vr_;
+      ScalarT vi_;
     };
 
   } // namespace PhasorDynamics

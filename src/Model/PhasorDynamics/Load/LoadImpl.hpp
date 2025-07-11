@@ -97,7 +97,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* f)
+    int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* f)
     {
       real_type b = -X_ / (R_ * R_ + X_ * X_);
       real_type g = R_ / (R_ * R_ + X_ * X_);
@@ -116,14 +116,16 @@ namespace GridKit
     int Load<ScalarT, IdxT>::evaluateResidual()
     {
       std::vector<ScalarT> y(2);
+      std::vector<ScalarT> yp(2);
       std::vector<ScalarT> f(2);
       y[0] = Vr();
       y[1] = Vi();
-      evaluateResidualLocally(y.data(), f.data());
+      evaluateResidualLocally(y.data(), yp.data(), f.data());
       Ir() += f[0];
       Ii() += f[1];
 
       return 0;
     }
+
   } // namespace PhasorDynamics
 } // namespace GridKit
