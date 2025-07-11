@@ -33,10 +33,14 @@ target_link_libraries(test_phasor_gen_classical GRIDKIT::phasor_dynamics_gen_cla
 
 add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
+                                         GRIDKIT::phasor_dynamics_load_dependency_tracking
                                          GRIDKIT::phasor_dynamics_branch
                                          GRIDKIT::phasor_dynamics_genrou
+                                         GRIDKIT::phasor_dynamics_genrou_dependency_tracking
                                          GRIDKIT::phasor_dynamics_gen_classical
+                                         GRIDKIT::phasor_dynamics_gen_classical_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus_fault
+                                         GRIDKIT::phasor_dynamics_bus_fault_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
