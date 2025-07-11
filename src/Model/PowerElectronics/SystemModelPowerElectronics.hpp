@@ -310,7 +310,6 @@ namespace GridKit
         jac_.axpy(1.0, rgr, cgr, vgr);
       }
 
-      // TODO: finish adding the writing out part stuff
       // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
       jac_call_count_++;
 
