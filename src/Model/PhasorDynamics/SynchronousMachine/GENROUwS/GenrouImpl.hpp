@@ -7,6 +7,7 @@
 #include "Genrou.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
+#include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
 namespace GridKit
@@ -25,7 +26,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
       : bus_(bus),
-        busID_(0),
+        bus_id_(0),
         unit_id_(unit_id),
         gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(0.),
@@ -76,7 +77,7 @@ namespace GridKit
                                   real_type S10,
                                   real_type S12)
       : bus_(bus),
-        busID_(0),
+        bus_id_(0),
         unit_id_(unit_id),
         gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(p0),
@@ -203,7 +204,117 @@ namespace GridKit
 
       if (data.ports.contains(model_data_type::Ports::bus))
       {
-        busID_ = data.ports.at(model_data_type::Ports::bus);
+        bus_id_ = data.ports.at(model_data_type::Ports::bus);
+      }
+
+      size_ = 20;
+      setDerivedParams();
+    }
+
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data)
+      : bus_(bus),
+        pmech_(pmech),
+        omega_(omega),
+        unit_id_(1),
+        gov_(nullptr) // <- TODO: Temporary, to be removed.
+    {
+      if (data.parameters.contains(model_data_type::Parameters::p0))
+      {
+        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::q0))
+      {
+        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::H))
+      {
+        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::D))
+      {
+        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Ra))
+      {
+        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdop))
+      {
+        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
+      {
+        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
+      {
+        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqop))
+      {
+        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xd))
+      {
+        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdp))
+      {
+        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
+      {
+        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xq))
+      {
+        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqp))
+      {
+        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
+      {
+        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xl))
+      {
+        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S10))
+      {
+        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S12))
+      {
+        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus))
+      {
+        bus_id_ = data.ports.at(model_data_type::Ports::bus);
       }
 
       size_ = 20;
@@ -232,6 +343,12 @@ namespace GridKit
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
+
+      if (omega_)
+      {
+        omega_->set(&y_[1]);
+      }
+
       return 0;
     }
 
@@ -298,6 +415,10 @@ namespace GridKit
 
       // Set Setpoint mechanical power, which may or may not be used
       pmech_set_ = Te;
+      if (pmech_)
+      {
+        pmech_->init(Te);
+      }
 
       for (IdxT i = 0; i < size_; ++i)
         yp_[static_cast<size_t>(i)] = 0.0;
@@ -353,6 +474,10 @@ namespace GridKit
       if (gov_)
       {
         pmech = gov_->Pmech();
+      }
+      else if (pmech_)
+      {
+        pmech = pmech_->read();
       }
       else
       {

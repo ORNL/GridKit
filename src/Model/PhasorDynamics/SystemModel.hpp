@@ -4,18 +4,14 @@
 #include <iostream>
 #include <vector>
 
+#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <ScalarTraits.hpp>
 
-// Temporary
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Bus/BusFactory.hpp>
-#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
-#include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
+// Include all components
+#include <Model/PhasorDynamics/ComponentLibrary.hpp>
 
 namespace GridKit
 {
@@ -36,6 +32,7 @@ namespace GridKit
     class SystemModel : public PhasorDynamics::Component<ScalarT, IdxT>
     {
       using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
+      using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using real_type      = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
@@ -87,6 +84,12 @@ namespace GridKit
         {
           BusBase<ScalarT, IdxT>* bus = BusFactory<ScalarT, IdxT>::create(busdata);
           addBus(bus);
+        }
+
+        for (const auto& signaldata : data.signal)
+        {
+          SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>();
+          addSignal(signal);
         }
 
         // Add branches
@@ -410,6 +413,11 @@ namespace GridKit
         buses_.push_back(bus);
       }
 
+      void addSignal(signal_type* signal)
+      {
+        signals_.push_back(signal);
+      }
+
       void addComponent(component_type* component)
       {
         components_.push_back(component);
@@ -428,6 +436,13 @@ namespace GridKit
         return buses_[busid];
       }
 
+      signal_type* getSignal(IdxT signalid)
+      {
+        // Need to implement mapping of signal IDs to signals in the system model
+        assert((signals_[signalid])->signalId() == signalid);
+        return signals_[signalid];
+      }
+
       /**
        * @brief Return pointer to a bus fault model
        *
@@ -444,6 +459,7 @@ namespace GridKit
 
     private:
       std::vector<bus_type*>       buses_;
+      std::vector<signal_type*>    signals_;
       std::vector<component_type*> components_;
       std::vector<component_type*> faults_;
 

@@ -5,5 +5,6 @@
 #include <Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <Model/PhasorDynamics/Load/Load.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>

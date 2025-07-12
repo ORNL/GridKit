@@ -9,6 +9,7 @@ int main()
   result += test.constructor();
   result += test.accessors();
   result += test.residual();
+  result += test.residualWithSignalNode();
 
   return result.summary();
 }

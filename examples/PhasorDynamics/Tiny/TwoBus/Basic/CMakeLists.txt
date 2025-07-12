@@ -4,4 +4,4 @@ target_link_libraries(TwoBusBasic
 	GRIDKIT::solvers_dyn)
 install(TARGETS TwoBusBasic RUNTIME DESTINATION bin)
 
-add_test(NAME GenrouTest1 COMMAND $<TARGET_FILE:TwoBusBasic>)
+add_test(NAME TwoBusBasicTest COMMAND $<TARGET_FILE:TwoBusBasic>)
