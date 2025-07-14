@@ -157,13 +157,13 @@ namespace GridKit
         /// We are less concerned with the values here, as the goal is to get the sparsity pattern.
         for (size_t i = 0; i < residuals.size(); ++i)
         {
-          DependencyTracking::Variable res = residuals[i];
+          DependencyTracking::Variable                       res           = residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success *= (dependencies.size() == 4);
-          success *= (dependencies.find(0) != dependencies.end());
-          success *= (dependencies.find(1) != dependencies.end());
-          success *= (dependencies.find(2) != dependencies.end());
-          success *= (dependencies.find(3) != dependencies.end());
+          success                                                         *= (dependencies.size() == 4);
+          success                                                         *= (dependencies.find(0) != dependencies.end());
+          success                                                         *= (dependencies.find(1) != dependencies.end());
+          success                                                         *= (dependencies.find(2) != dependencies.end());
+          success                                                         *= (dependencies.find(3) != dependencies.end());
         }
 
         return success.report(__func__);
