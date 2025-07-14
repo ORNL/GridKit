@@ -152,15 +152,7 @@ namespace GridKit
         system.evaluateResidual();
         std::vector<DependencyTracking::Variable> residuals{bus0->Ir(), bus0->Ii(), bus1->Ir(), bus1->Ii()};
 
-        /// Print the dependencies
-        for (size_t i = 0; i < residuals.size(); ++i)
-        {
-          std::cout << i << "th residual: ";
-          (residuals[i]).print(std::cout);
-          std::cout << "\n";
-        }
-
-        /// Verify the size and structure of the residuals.
+        /// Verify the size and structure of the residual dependencies.
         /// We expect the Jacobian of the branch (dense 4x4).
         /// We are less concerned with the values here, as the goal is to get the sparsity pattern.
         for (size_t i = 0; i < residuals.size(); ++i)
