@@ -1,11 +1,6 @@
 add_executable(ThreeBusBasic ThreeBusBasic.cpp)
-target_link_libraries(ThreeBusBasic 
-	GRIDKIT::phasor_dynamics_bus 
-	GRIDKIT::phasor_dynamics_bus_fault 
-	GRIDKIT::phasor_dynamics_branch
-	GRIDKIT::phasor_dynamics_genrou
-	GRIDKIT::phasor_dynamics_gen_classical
-	GRIDKIT::phasor_dynamics_load
+target_link_libraries(ThreeBusBasic
+	GRIDKIT::phasor_dynamics_components
 	GRIDKIT::solvers_dyn)
 install(TARGETS ThreeBusBasic RUNTIME DESTINATION bin)
 

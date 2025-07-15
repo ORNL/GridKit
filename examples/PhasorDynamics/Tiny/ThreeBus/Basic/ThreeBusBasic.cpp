@@ -15,17 +15,7 @@
 #include <fstream>
 #include <vector>
 
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
-#include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
-#include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Model/PhasorDynamics/Load/LoadData.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Solver/Dynamic/Ida.hpp>

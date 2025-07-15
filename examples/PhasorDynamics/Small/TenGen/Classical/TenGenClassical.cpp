@@ -15,12 +15,7 @@
 #include <vector>
 
 // #include "TenGenClassical.hpp"
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/BusFault/BusFault.hpp>
-#include <Model/PhasorDynamics/Load/Load.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
+#include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
