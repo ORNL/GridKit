@@ -1,10 +1,13 @@
 /**
  * @file Tgov1Data.hpp
- * @author Luke Lowery (lukel@tamu.edu)
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
+ * @author Luke Lowery (lukel@tamu.edu) 
  * @brief Modeling data for TGOV1
- *
  */
+
 #pragma once
+
+#include <Model/PhasorDynamics/ComponentData.hpp>
 
 namespace GridKit
 {
@@ -13,26 +16,48 @@ namespace GridKit
     namespace Governor
     {
       /**
-       * @brief Contains modeling data for a TGOV1 Governor model.
+       * @brief Parameter keys for TGOV1 Governor model.
        *
-       * @tparam RealT Real parameter data type
-       * @tparam IdxT  Integer parameter data type
-       *
-       * Integer parameters are of the same type as matrix and vector indices.
-       *
-       * @todo Decide on naming scheme for model parameters.
+       * These enum values serve as keys for the parameters map in ComponentData.
        */
-      template <typename RealT, typename IdxT>
-      struct Tgov1Data
+      enum class Tgov1Parameters
       {
-        RealT R{0.05};    ///< Droop Constant
-        RealT T1{0.5};    ///< Valve Time Delay
-        RealT T2{2.5};    ///< Turbine Numerator Time Constant
-        RealT T3{7.5};    ///< Turbine Delay
-        RealT Pvmax{1.0}; ///< Max Valve Power
-        RealT Pvmin{0.0}; ///< Min Valve Power
-        RealT Dt{0.0};    ///<
+        R,      ///< Droop Constant
+        T1,     ///< Valve Time Delay
+        T2,     ///< Turbine Numerator Time Constant
+        T3,     ///< Turbine Delay
+        Pvmax,  ///< Max Valve Power
+        Pvmin,  ///< Min Valve Power
+        Dt      ///< Damping Coefficient
       };
+
+      /**
+       * @brief Placeholder enum for TGOV1 ports.
+       */ 
+      enum class Tgov1Ports {};
+
+      /**
+       * @brief Placeholder enum for TGOV1 monitorable variables.
+       */
+      enum class Tgov1MonitorableVariables {};
+
+      /**
+       * @brief Modeling data for TGOV1 Governor using ComponentData base.
+       *
+       * @tparam RealT Real number type (e.g., double)
+       * @tparam IdxT  Index type (e.g., size_t)
+       */      
+      template <typename RealT, typename IdxT>
+      struct Tgov1Data : public ComponentData<RealT, IdxT, Tgov1Parameters, Tgov1Ports, Tgov1MonitorableVariables>
+      {
+        Tgov1Data() = default;
+
+        using Parameters = Tgov1Parameters;
+        using Ports = Tgov1Ports;
+        using MonitorableVariables = Tgov1MonitorableVariables;
+      };
+
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
+

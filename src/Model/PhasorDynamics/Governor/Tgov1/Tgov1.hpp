@@ -1,5 +1,6 @@
 /**
  * @file Tgov1.hpp
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @brief Declaration of a Turbine Governor Model (IEEET1).
@@ -73,22 +74,22 @@ namespace GridKit
 
       private:
         // Associated Machine Model
-        machine_type* machine_;
+        machine_type* machine_{nullptr};
 
         // Input parameters
-        real_type R_;
-        real_type Pvmin_;
-        real_type Pvmax_;
-        real_type T1_;
-        real_type T2_;
-        real_type T3_;
-        real_type Dt_;
+  	real_type R_{0.05};
+  	real_type Pvmin_{0.0};
+  	real_type Pvmax_{1.0};
+  	real_type T1_{0.5};
+  	real_type T2_{2.5};
+  	real_type T3_{7.5};
+  	real_type Dt_{0.0};
 
         // Input States (which can be parameters)
-        ScalarT pref_;
+        ScalarT pref_{0};
 
         // Scale of Sigmoid function (temporary local implementation)
-        const ScalarT mu_ = 4000.0;
+        const ScalarT mu_{4000.0};
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);

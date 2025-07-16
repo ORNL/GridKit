@@ -1,5 +1,6 @@
 /**
  * @file Tgov1.cpp
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @brief Definition of a Turbine Governor Model (IEEET1).
@@ -31,15 +32,22 @@ namespace GridKit
        */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : machine_(machine),
-          R_(data.R),
-          Pvmin_(data.Pvmin),
-          Pvmax_(data.Pvmax),
-          T1_(data.T1),
-          T2_(data.T2),
-          T3_(data.T3),
-          Dt_(data.Dt)
+        : machine_(machine)
       {
+        if (data.parameters.contains(model_data_type::Parameters::R))
+          R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+        if (data.parameters.contains(model_data_type::Parameters::Pvmin))
+          Pvmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmin));
+        if (data.parameters.contains(model_data_type::Parameters::Pvmax))
+          Pvmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmax));
+        if (data.parameters.contains(model_data_type::Parameters::T1))
+          T1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T1));
+        if (data.parameters.contains(model_data_type::Parameters::T2))
+          T2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T2));
+        if (data.parameters.contains(model_data_type::Parameters::T3))
+          T3_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T3));
+        if (data.parameters.contains(model_data_type::Parameters::Dt))
+          Dt_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Dt));
 
         // 3 Internal Variables
         size_ = 3;
