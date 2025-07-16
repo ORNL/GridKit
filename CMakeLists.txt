@@ -104,10 +104,8 @@ if(TARGET SUNDIALS::KLU)
   message(STATUS "KLU support enabled in SUNDIALS.")
 endif()
 
-if(${GRIDKIT_ENABLE_ENZYME})
+if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
-  # todo Add a centralized configuration file
-  add_definitions(-DGRIDKIT_ENABLE_ENZYME)
 endif()
 
 # The binary dir is already a global include directory

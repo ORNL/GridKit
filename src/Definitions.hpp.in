@@ -3,28 +3,15 @@
 #ifndef __GRIDKIT_DEFINITIONS_HPP__
 #define __GRIDKIT_DEFINITIONS_HPP__
 
-// #cmakedefine GRIDKIT_USE_GPU
-// #cmakedefine GRIDKIT_USE_CUDA
-// #cmakedefine GRIDKIT_USE_HIP
-// #cmakedefine GRIDKIT_USE_MPI
-// #cmakedefine GRIDKIT_USE_RAJA
-// #cmakedefine GRIDKIT_USE_EIGEN
+#cmakedefine GRIDKIT_ENABLE_ENZYME
 #cmakedefine GRIDKIT_ENABLE_SUNDIALS_SPARSE
-// #cmakedefine GRIDKIT_USE_PROFILING
+
 #define GRIDKIT_VERSION  "@PACKAGE_VERSION@"
 
 #define GRIDKIT_VERSION_MAJOR "@PACKAGE_VERSION_MAJOR@"
 #define GRIDKIT_VERSION_MINOR "@PACKAGE_VERSION_MINOR@"
 #define GRIDKIT_VERSION_PATCH "@PACKAGE_VERSION_PATCH@"
 
-// /// Date of build with the format "%Y-%m-%d"
-// #define GRIDKIT_RELEASE_DATE "@GRIDKIT_RELEASE_DATE@"
-
-// #ifdef GRIDKIT_USE_HIP
-// #ifndef __HIP_PLATFORM_AMD__
-// #define __HIP_PLATFORM_AMD__
-// #endif
-// #endif
 
 
 #endif // __GRIDKIT_DEFINITIONS_HPP__
