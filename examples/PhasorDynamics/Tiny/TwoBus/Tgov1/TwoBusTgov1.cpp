@@ -107,15 +107,17 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
   data.gov.resize(1);
+  using P = GridKit::PhasorDynamics::Governor::Tgov1Parameters;
 
-  // Set Gov data (Default PW values)
-  data.gov[0].R     = 0.05;
-  data.gov[0].Pvmin = 0;
-  data.gov[0].Pvmax = 1.0;
-  data.gov[0].T1    = 0.5;
-  data.gov[0].T2    = 2.5;
-  data.gov[0].T3    = 7.5;
-  data.gov[0].Dt    = 0;
+  auto& gov0 = data.gov[0];
+  gov0.parameters[P::R]     = 0.05;
+  gov0.parameters[P::Pvmin] = 0.0;
+  gov0.parameters[P::Pvmax] = 1.0;
+  gov0.parameters[P::T1]    = 0.5;
+  gov0.parameters[P::T2]    = 2.5;
+  gov0.parameters[P::T3]    = 7.5;
+  gov0.parameters[P::Dt]    = 0.0;
+
 
   // Manual add gen & gov components
   // This is a hack  since SignalBus not implemented
