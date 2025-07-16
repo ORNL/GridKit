@@ -18,7 +18,7 @@ set(PACKAGE_VERSION_MAJOR "0")
 set(PACKAGE_VERSION_MINOR "1")
 set(PACKAGE_VERSION_PATCH "0")
 
-set(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
+set(GRIDKIT_THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
 
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
@@ -34,10 +34,10 @@ endif()
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is enabled by default
-option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
+option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
 
 # Enable KLU
-option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON)
+option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" OFF)
 
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
@@ -84,7 +84,7 @@ if("${isSystemDir}" STREQUAL "-1")
 endif("${isSystemDir}" STREQUAL "-1")
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
 
 option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
@@ -99,15 +99,23 @@ if(GRIDKIT_ENABLE_SUNDIALS)
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
 endif()
-if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
-  include(FindSuiteSparse)
+if(TARGET SUNDIALS::KLU)
+  set(GRIDKIT_ENABLE_SUNDIALS_SPARSE ON CACHE BOOL "Sparse solver enabled in SUNDIALS." FORCE)
+  message(STATUS "KLU support enabled in SUNDIALS.")
 endif()
 
-if(${GRIDKIT_ENABLE_ENZYME})
+if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
-  # todo Add a centralized configuration file
-  add_definitions(-DGRIDKIT_ENABLE_ENZYME)
 endif()
+
+# The binary dir is already a global include directory
+configure_file(
+  ${CMAKE_SOURCE_DIR}/src/Definitions.hpp.in
+  ${CMAKE_BINARY_DIR}/Definitions.hpp)
+install(
+  FILES ${CMAKE_BINARY_DIR}/Definitions.hpp
+  DESTINATION include
+  )
 
 # Macro that adds libraries
 include(GridkitAddLibrary)
