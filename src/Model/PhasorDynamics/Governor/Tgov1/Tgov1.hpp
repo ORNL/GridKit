@@ -77,13 +77,13 @@ namespace GridKit
         machine_type* machine_{nullptr};
 
         // Input parameters
-  	real_type R_{0.05};
-  	real_type Pvmin_{0.0};
-  	real_type Pvmax_{1.0};
-  	real_type T1_{0.5};
-  	real_type T2_{2.5};
-  	real_type T3_{7.5};
-  	real_type Dt_{0.0};
+        real_type R_{0.05};
+        real_type Pvmin_{0.0};
+        real_type Pvmax_{1.0};
+        real_type T1_{0.5};
+        real_type T2_{2.5};
+        real_type T3_{7.5};
+        real_type Dt_{0.0};
 
         // Input States (which can be parameters)
         ScalarT pref_{0};
