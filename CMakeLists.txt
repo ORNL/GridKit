@@ -34,10 +34,10 @@ endif()
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is enabled by default
-option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
+option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
 
 # Enable KLU
-option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" ON)
+option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" OFF)
 
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
