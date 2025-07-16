@@ -63,7 +63,7 @@ namespace GridKit
 
         // Bus 1
         data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
         data.bus[1].Vr0      = 30.0;
         data.bus[1].Vi0      = 40.0;
 
@@ -121,7 +121,7 @@ namespace GridKit
 
         // Bus 1
         data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
         data.bus[1].Vr0      = 30.0;
         data.bus[1].Vi0      = 40.0;
 
@@ -139,31 +139,32 @@ namespace GridKit
         // Create an empty system model
         PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
 
-        auto* bus0 = system.getBus(0);
-        bus0->Vr().setVariableNumber(0);
-        bus0->Vi().setVariableNumber(1);
-
-        auto* bus1 = system.getBus(1);
-        bus1->Vr().setVariableNumber(2);
-        bus1->Vi().setVariableNumber(3);
-
+        // Allocate and initialize the system
         system.allocate();
         system.initialize();
+
+        // Set independent variables
+        success *= (system.size() == 2);
+        for (size_t i = 0; i < system.size(); ++i)
+        {
+          system.y()[i].setVariableNumber(i);
+        }
+
+        // Evaluate and get the system residuals
         system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residuals{bus0->Ir(), bus0->Ii(), bus1->Ir(), bus1->Ii()};
+        std::vector<DependencyTracking::Variable> residuals = system.getResidual();
 
         /// Verify the size and structure of the residual dependencies.
-        /// We expect the Jacobian of the branch (dense 4x4).
+        /// We expect a 2x2 dense Jacobian for a branch connecting a slack bus and a default bus.
         /// We are less concerned with the values here, as the goal is to get the sparsity pattern.
+        success *= (residuals.size() == 2);
         for (size_t i = 0; i < residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (dependencies.size() == 4);
+          success                                                         *= (dependencies.size() == 2);
           success                                                         *= (dependencies.find(0) != dependencies.end());
           success                                                         *= (dependencies.find(1) != dependencies.end());
-          success                                                         *= (dependencies.find(2) != dependencies.end());
-          success                                                         *= (dependencies.find(3) != dependencies.end());
         }
 
         return success.report(__func__);
@@ -196,8 +197,8 @@ namespace GridKit
         system.addBus(&bus1);
 
         // Add a bus
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus2(Vr2, Vi2);
-        system.addBus(&bus1);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
+        system.addBus(&bus2);
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
         system.addComponent(&branch);
