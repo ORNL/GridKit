@@ -57,16 +57,6 @@ namespace GridKit
       GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 
-      constexpr virtual IdxT nEquations() override
-      {
-        return 5;
-      }
-
-      constexpr virtual IdxT nVariables() override
-      {
-        return 9;
-      }
-
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;

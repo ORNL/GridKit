@@ -73,16 +73,6 @@ namespace GridKit
              real_type S12);
       ~Genrou() = default;
 
-      constexpr virtual IdxT nEquations() override
-      {
-        return 17;
-      }
-
-      constexpr virtual IdxT nVariables() override
-      {
-        return 21;
-      }
-
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;
