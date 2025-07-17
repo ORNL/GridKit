@@ -21,7 +21,6 @@ namespace GridKit
     class CsrMatrix : public CsrMatrixRef<ScalarT, IdxT>
     {
     protected:
-
     public:
       // ok
     };
