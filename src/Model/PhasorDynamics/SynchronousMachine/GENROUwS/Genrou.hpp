@@ -165,8 +165,8 @@ namespace GridKit
       real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
-      real_type pmech_set_;
-      real_type efd_set_;
+      ScalarT pmech_set_;
+      ScalarT efd_set_;
     };
 
   } // namespace PhasorDynamics

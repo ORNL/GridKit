@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
@@ -62,7 +63,7 @@ namespace GridKit
 
         // Bus 1
         data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
         data.bus[1].Vr0      = 30.0;
         data.bus[1].Vi0      = 40.0;
 
@@ -103,6 +104,72 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome dependencyTracking()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
+
+        // Create an empty system model
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+
+        // Allocate and initialize the system
+        system.allocate();
+        system.initialize();
+
+        // Set independent variables
+        success *= (system.size() == 2);
+        for (size_t i = 0; i < system.size(); ++i)
+        {
+          system.y()[i].setVariableNumber(i);
+        }
+
+        // Evaluate and get the system residuals
+        system.evaluateResidual();
+        std::vector<DependencyTracking::Variable> residuals = system.getResidual();
+
+        /// Verify the size and structure of the residual dependencies.
+        /// We expect a 2x2 dense Jacobian for a branch connecting a slack bus and a default bus.
+        /// We are less concerned with the values here, as the goal is to get the sparsity pattern.
+        success *= (residuals.size() == 2);
+        for (size_t i = 0; i < residuals.size(); ++i)
+        {
+          DependencyTracking::Variable                       res           = residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                                         *= (dependencies.size() == 2);
+          success                                                         *= (dependencies.find(0) != dependencies.end());
+          success                                                         *= (dependencies.find(1) != dependencies.end());
+        }
+
+        return success.report(__func__);
+      }
+
       TestOutcome composer()
       {
         TestStatus success = true;
@@ -130,8 +197,8 @@ namespace GridKit
         system.addBus(&bus1);
 
         // Add a bus
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus2(Vr2, Vi2);
-        system.addBus(&bus1);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(Vr2, Vi2);
+        system.addBus(&bus2);
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
         system.addComponent(&branch);

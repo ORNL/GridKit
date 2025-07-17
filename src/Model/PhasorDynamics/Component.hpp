@@ -10,10 +10,8 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-
-    /*!
+    /**
      * @brief Component model implementation base class.
-     *
      */
     template <class ScalarT, typename IdxT>
     class Component : public Model::Evaluator<ScalarT, IdxT>
