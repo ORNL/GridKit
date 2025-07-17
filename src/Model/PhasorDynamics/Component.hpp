@@ -29,18 +29,6 @@ namespace GridKit
         return size_;
       }
 
-      /// Returns a number indicating the number of equations associated with this component
-      constexpr virtual IdxT nEquations()
-      {
-        return 0;
-      }
-
-      /// Returns a number indicating the number of variables associated with this component
-      constexpr virtual IdxT nVariables()
-      {
-        return 0;
-      }
-
       virtual IdxT nnz() override
       {
         return nnz_;
