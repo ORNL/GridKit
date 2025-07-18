@@ -15,9 +15,9 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    SignalNode<ScalarT, IdxT>::SignalNode(const SignalNodeData<ScalarT, IdxT>& data)
-      : size_(0),
-        signal_id_(data.signal_id)
+    SignalNode<ScalarT, IdxT>::SignalNode(const SignalNodeData<real_type, IdxT>& data)
+      : signal_id_(data.signal_id),
+        size_(0)
     {
     }
 

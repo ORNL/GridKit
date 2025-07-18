@@ -29,7 +29,7 @@ namespace GridKit
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
       SignalNode();
-      SignalNode(const SignalNodeData<ScalarT, IdxT>& data);
+      SignalNode(const SignalNodeData<real_type, IdxT>& data);
 
       virtual ~SignalNode() = default;
 

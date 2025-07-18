@@ -88,7 +88,7 @@ namespace GridKit
 
         for (const auto& signaldata : data.signal)
         {
-          SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>();
+          SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>(signaldata);
           addSignal(signal);
         }
 
