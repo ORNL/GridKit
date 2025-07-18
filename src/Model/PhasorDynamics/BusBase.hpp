@@ -307,7 +307,6 @@ namespace GridKit
         throw "ERROR: Method not implemented!\n";
         return gB_;
       }
-
     };
 
   } // namespace PhasorDynamics

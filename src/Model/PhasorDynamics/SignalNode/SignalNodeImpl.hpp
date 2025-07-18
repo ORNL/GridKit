@@ -2,7 +2,6 @@
  * @file SignalNode model implementation.
  */
 #include "SignalNode.hpp"
-
 #include <Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 
 namespace GridKit

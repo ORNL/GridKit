@@ -3,7 +3,6 @@
  */
 #include "SignalNodeImpl.hpp"
 
-
 namespace GridKit
 {
   namespace PhasorDynamics
