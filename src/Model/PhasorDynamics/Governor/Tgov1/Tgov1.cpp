@@ -23,28 +23,6 @@ namespace GridKit
   {
     namespace Governor
     {
-
-      /*!
-       * @brief Constructor for Governor
-       *
-       * @param machine Generator Object
-       * @param data    TGOV1 Data Object
-       */
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : R_(data.R),
-          Pvmin_(data.Pvmin),
-          Pvmax_(data.Pvmax),
-          T1_(data.T1),
-          T2_(data.T2),
-          T3_(data.T3),
-          Dt_(data.Dt)
-      {
-
-        // 3 Internal Variables
-        size_ = 3;
-      }
-
       /**
        *
        */
@@ -60,22 +38,6 @@ namespace GridKit
           T3_(data.T3),
           Dt_(data.Dt)
       {
-
-        // 3 Internal Variables
-        size_ = 3;
-      }
-
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine)
-        : R_(0.05),
-          Pvmin_(0),
-          Pvmax_(1),
-          T1_(0.5),
-          T2_(2.5),
-          T3_(7.5),
-          Dt_(0)
-      {
-
         // 3 Internal Variables
         size_ = 3;
       }
@@ -92,7 +54,6 @@ namespace GridKit
           T3_(7.5),
           Dt_(0)
       {
-
         // 3 Internal Variables
         size_ = 3;
       }
