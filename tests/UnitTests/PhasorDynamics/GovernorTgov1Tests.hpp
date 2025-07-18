@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <Definitions.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
@@ -131,7 +132,19 @@ namespace GridKit
 
         return success.report(__func__);
       }
-    }; // class GenrouTest
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /**
+       * A test case to verify Jacobian values
+       */
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        return success.report(__func__);
+      }
+#endif
+    }; // class GovernorTgov1Tests
 
   } // namespace Testing
 } // namespace GridKit

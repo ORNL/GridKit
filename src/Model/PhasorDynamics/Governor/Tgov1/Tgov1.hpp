@@ -66,6 +66,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
+        using Component<ScalarT, IdxT>::J_;
 
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
@@ -97,6 +98,9 @@ namespace GridKit
         {
           return signals_;
         }
+
+      public:
+        int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
       private:
         // Input parameters
