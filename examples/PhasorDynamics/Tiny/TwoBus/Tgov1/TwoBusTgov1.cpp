@@ -1,5 +1,5 @@
 /**
- * @file TwoBusTgov1.cpp
+ * @file TwoBusTgov1Signal.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 2-bus system
@@ -51,6 +51,15 @@ int main()
   data.bus[1].Vr0      = 1.0;
   data.bus[1].Vi0      = 0.0;
 
+  // Set signal nodes data
+  data.signal.resize(2);
+
+  data.signal[0].name      = "omega";
+  data.signal[0].signal_id = 0;
+
+  data.signal[1].name      = "Pm";
+  data.signal[1].signal_id = 1;
+
   // Set branch data
   data.branch.resize(1);
 
@@ -67,12 +76,6 @@ int main()
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
-  //
-  // Instantiate system model
-  //
-
-  SystemModel<scalar_type, index_type> sys(data);
 
   // Set generator data
   data.genrou.resize(1);
@@ -96,9 +99,9 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
+  // Set governor data (Default PW values)
   data.gov.resize(1);
 
-  // Set Gov data (Default PW values)
   data.gov[0].R     = 0.05;
   data.gov[0].Pvmin = 0;
   data.gov[0].Pvmax = 1.0;
@@ -107,32 +110,50 @@ int main()
   data.gov[0].T3    = 7.5;
   data.gov[0].Dt    = 0;
 
-  // Manual add gen & gov components
-  // This is a hack  since SignalBus not implemented
+  // Manually add components
+  // This is a workaround since signal connections are not implemented in parser
 
-  // Create Pointers first
-  Genrou<scalar_type, index_type>*          gen;
-  Governor::Tgov1<scalar_type, index_type>* gov;
+  // Create buses
+  auto* bus0 = BusFactory<scalar_type, index_type>::create(data.bus[0]);
+  auto* bus1 = BusFactory<scalar_type, index_type>::create(data.bus[1]);
 
-  // Instatiate Genrou & add to system model
-  gen = new Genrou<scalar_type, index_type>(
-      sys.getBus(0),
-      data.genrou[0]);
+  // Create signal nodes
+  auto* omega = new SignalNode<scalar_type, index_type>(data.signal[0]);
+  auto* pmech = new SignalNode<scalar_type, index_type>(data.signal[1]);
 
-  // Instatiate GovernorTgov1 & add to system model
-  gov = new Governor::Tgov1<scalar_type, index_type>(
-      gen,
-      data.gov[0]);
-  gen->setgovenor(gov);
+  // Create branch
+  Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
 
-  // Add Generator and Governor to System
-  sys.addComponent(gen);
-  sys.addComponent(gov);
+  // Add bus fault to bus0
+  BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
+
+  // Create generator
+  Genrou<scalar_type, index_type> gen(bus0,
+                                      omega,
+                                      pmech,
+                                      data.genrou[0]);
+
+  // Create governor
+  Governor::Tgov1<scalar_type, index_type> gov(pmech, omega);
+
+  //
+  // Instantiate system model and add components to it
+  //
+
+  SystemModel<scalar_type, index_type> sys;
+  sys.addBus(bus0);
+  sys.addBus(bus1);
+  sys.addSignal(omega);
+  sys.addSignal(pmech);
+  sys.addComponent(&branch);
+  sys.addComponent(&gen);
+  sys.addComponent(&gov);
+  sys.addFault(&fault);
 
   sys.allocate();
 
   // Get access to the fault
-  auto* fault = sys.getBusFault(0);
+  // auto* fault = sys.getBusFault(0);
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -185,13 +206,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault->setStatus(true);
+  fault.setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault->setStatus(false);
+  fault.setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
@@ -254,6 +275,12 @@ int main()
   }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  // Delete connectors created on heap
+  delete bus0;
+  delete bus1;
+  delete omega;
+  delete pmech;
 
   return status;
 }

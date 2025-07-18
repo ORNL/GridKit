@@ -22,8 +22,9 @@ target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
 target_link_libraries(test_phasor_governortgov1 GRIDKIT::phasor_dynamics_genrou
-                                         GRIDKIT::phasor_dynamics_governortgov1
-                                         GRIDKIT::phasor_dynamics_bus)
+                                                GRIDKIT::phasor_dynamics_governortgov1
+                                                GRIDKIT::phasor_dynamics_signal
+                                                GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_gen_classical runGenClassicalTests.cpp)
 target_link_libraries(test_phasor_gen_classical GRIDKIT::phasor_dynamics_gen_classical
@@ -33,16 +34,12 @@ target_link_libraries(test_phasor_gen_classical GRIDKIT::phasor_dynamics_gen_cla
 
 add_executable(test_phasor_system runSystemTests.cpp)
 
-target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_load
+target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_components
                                          GRIDKIT::phasor_dynamics_load_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_branch
-                                         GRIDKIT::phasor_dynamics_genrou
                                          GRIDKIT::phasor_dynamics_genrou_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_gen_classical
                                          GRIDKIT::phasor_dynamics_gen_classical_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_bus_fault
-                                         GRIDKIT::phasor_dynamics_bus_fault_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_bus)
+                                         GRIDKIT::phasor_dynamics_signal_dependency_tracking
+                                         GRIDKIT::phasor_dynamics_bus_fault_dependency_tracking)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
 add_test(NAME PhasorDynamicsBranchTest COMMAND $<TARGET_FILE:test_phasor_branch>)

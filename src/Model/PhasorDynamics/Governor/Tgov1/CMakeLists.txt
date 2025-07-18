@@ -9,6 +9,7 @@ gridkit_add_library(phasor_dynamics_governortgov1
     Tgov1.cpp
   LINK_LIBRARIES
     GRIDKIT::phasor_dynamics_genrou
+    GRIDKIT::phasor_dynamics_signal
   OUTPUT_NAME
     gridkit_phasor_dynamics_governortgov1)
 

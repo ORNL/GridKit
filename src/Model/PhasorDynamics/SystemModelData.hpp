@@ -9,6 +9,7 @@
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 
@@ -31,6 +32,7 @@ namespace GridKit
       using GenrouDataT       = GenrouData<RealT, IdxT>;
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
+      using SignalDataT       = SignalNodeData<RealT, IdxT>;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from
@@ -68,9 +70,10 @@ namespace GridKit
       std::vector<BranchDataT>       branch;       ///< Branches within the model
       std::vector<BusFaultDataT>     bus_fault;    ///< Bus faults within the model
       std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
-      std::vector<GenClassicalDataT> genclassical; ///< GENROU instances within the model
+      std::vector<GenClassicalDataT> genclassical; ///< Classical generator instances within the model
       std::vector<LoadDataT>         load;         ///< Loads within the model
       std::vector<Tgov1DataT>        gov;          ///< Governors within the model
+      std::vector<SignalDataT>       signal;       ///< Signal nodes
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

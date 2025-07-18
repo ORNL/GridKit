@@ -19,6 +19,9 @@ namespace GridKit
     class BusBase;
 
     template <class ScalarT, typename IdxT>
+    class SignalNode;
+
+    template <class ScalarT, typename IdxT>
     class GovernorBase; // <- TODO: Temporary, to be removed.
 
     template <typename RealT, typename IdxT>
@@ -47,9 +50,11 @@ namespace GridKit
       using gov_type        = GovernorBase<ScalarT, IdxT>;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
+      using signal_type     = SignalNode<ScalarT, IdxT>;
 
     public:
       Genrou(bus_type* bus, IdxT unit_id);
+      Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data);
       Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
@@ -90,9 +95,6 @@ namespace GridKit
       ScalarT getSpeed();
       ScalarT getTorque();
 
-      // Temporary set governor function until SignalBus implemented
-      void setgovenor(gov_type* gov);
-
     private:
       void setDerivedParams();
 
@@ -118,12 +120,11 @@ namespace GridKit
 
     private:
       /* Identification */
-      bus_type* bus_;
-      IdxT      busID_{0};
-      IdxT      unit_id_; //< @todo this should be removed
-
-      // Governor Pointer
-      gov_type* gov_;
+      bus_type*    bus_;
+      signal_type* pmech_{nullptr};
+      signal_type* omega_{nullptr};
+      IdxT         bus_id_{0};
+      IdxT         unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       ScalarT p0_{0.0};

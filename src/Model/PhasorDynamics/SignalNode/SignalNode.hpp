@@ -4,41 +4,48 @@
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    template <typename RealT, typename IdxT>
+    struct SignalNodeData;
+  } // namespace PhasorDynamics
+} // namespace GridKit
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     /*!
-     * @brief BusBase model implementation base class.
+     * @brief SignalNode model implementation base class.
      *
      */
     template <class ScalarT, typename IdxT>
-    class BusBase : public Model::Evaluator<ScalarT, IdxT>
+    class SignalNode : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
-      using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
 
-      BusBase()
-        : size_(0)
-      {
-      }
+      SignalNode();
+      SignalNode(const SignalNodeData<real_type, IdxT>& data);
 
-      BusBase(IdxT bus_id)
-        : bus_id_(bus_id)
-      {
-      }
+      virtual ~SignalNode() = default;
 
-      virtual ~BusBase()
-      {
-      }
+      virtual int allocate() override;
+      virtual int initialize() override;
+      virtual int tagDifferentiable() override;
+      virtual int evaluateResidual() override;
+      virtual int evaluateJacobian() override;
 
-      /// Pure virtual function, returns bus type (DEFAULT or SLACK).
-      virtual BusTypeT BusType() const
+      void    set(ScalarT* signal_in);
+      ScalarT read() const;
+      void    init(ScalarT signal_in);
+
+      const IdxT signalId() const
       {
-        return BusTypeT::DEFAULT;
+        return signal_id_;
       }
 
       virtual IdxT size() override
@@ -71,15 +78,6 @@ namespace GridKit
       {
         msa = max_steps_;
       }
-
-      virtual ScalarT&       Vr()       = 0;
-      virtual const ScalarT& Vr() const = 0;
-      virtual ScalarT&       Vi()       = 0;
-      virtual const ScalarT& Vi() const = 0;
-      virtual ScalarT&       Ir()       = 0;
-      virtual const ScalarT& Ir() const = 0;
-      virtual ScalarT&       Ii()       = 0;
-      virtual const ScalarT& Ii() const = 0;
 
       std::vector<ScalarT>& y() override
       {
@@ -121,10 +119,9 @@ namespace GridKit
         return J_;
       }
 
-      virtual const IdxT busID() const
-      {
-        return bus_id_;
-      }
+    private:
+      ScalarT* signal_{nullptr};
+      IdxT     signal_id_{0};
 
     protected:
       const IdxT bus_id_{static_cast<IdxT>(-1)};
@@ -306,6 +303,11 @@ namespace GridKit
       {
         throw "ERROR: Method not implemented!\n";
         return gB_;
+      }
+
+      virtual const IdxT busID() const
+      {
+        return bus_id_;
       }
     };
 

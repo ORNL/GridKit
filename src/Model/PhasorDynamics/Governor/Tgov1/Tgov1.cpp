@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 
 #define _USE_MATH_DEFINES
@@ -22,16 +23,13 @@ namespace GridKit
   {
     namespace Governor
     {
-
-      /*!
-       * @brief Constructor for Governor
+      /**
        *
-       * @param machine Generator Object
-       * @param data    TGOV1 Data Object
        */
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : machine_(machine),
+      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega, const model_data_type& data)
+        : pmech_(pmech),
+          omega_(omega),
           R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
@@ -40,14 +38,14 @@ namespace GridKit
           T3_(data.T3),
           Dt_(data.Dt)
       {
-
         // 3 Internal Variables
         size_ = 3;
       }
 
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine)
-        : machine_(machine),
+      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega)
+        : pmech_(pmech),
+          omega_(omega),
           R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
@@ -56,7 +54,6 @@ namespace GridKit
           T3_(7.5),
           Dt_(0)
       {
-
         // 3 Internal Variables
         size_ = 3;
       }
@@ -68,11 +65,19 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::allocate()
       {
+        // Allocate local component data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
         f_.resize(size);
         y_.resize(size);
         yp_.resize(size);
         tag_.resize(size);
+
+        // Set output signal after allocation
+        // The signal is accessible to the generator
+        if (pmech_)
+        {
+          pmech_->set(&y_[2]);
+        }
         return 0;
       }
 
@@ -83,9 +88,13 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::initialize()
       {
+        ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
-        ScalarT p0 = machine_->getTorque();
+        if (pmech_)
+        {
+          p0 = y_[2]; //<- generator needs to be initialized first
+        }
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
@@ -166,10 +175,12 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::evaluateResidual()
       {
-
         // Input Variables
-        ScalarT omega = machine_->getSpeed();
-
+        ScalarT omega{0};
+        if (omega_)
+        {
+          omega = omega_->read();
+        }
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
         ScalarT pv    = y_[1]; // y1 - Pv
