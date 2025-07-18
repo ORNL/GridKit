@@ -78,8 +78,8 @@ namespace GridKit
         ScalarT& Pmech() override;
 
       private:
-        signal_type*  pmech_{nullptr};
-        signal_type*  omega_{nullptr};
+        signal_type* pmech_{nullptr};
+        signal_type* omega_{nullptr};
 
         // Input parameters
         real_type R_;
