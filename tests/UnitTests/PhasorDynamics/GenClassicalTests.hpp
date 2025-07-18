@@ -10,8 +10,8 @@
 #include <iostream>
 #include <limits>
 
-#include <Definitions.hpp>
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <Definitions.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
