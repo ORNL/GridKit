@@ -78,8 +78,6 @@ namespace GridKit
         ScalarT& Pmech() override;
 
       private:
-        // Associated Machine Model
-        machine_type* machine_{nullptr};
         signal_type*  pmech_{nullptr};
         signal_type*  omega_{nullptr};
 

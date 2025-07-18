@@ -32,8 +32,7 @@ namespace GridKit
        */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine, const model_data_type& data)
-        : machine_(machine),
-          R_(data.R),
+        : R_(data.R),
           Pvmin_(data.Pvmin),
           Pvmax_(data.Pvmax),
           T1_(data.T1),
@@ -68,8 +67,7 @@ namespace GridKit
 
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(machine_type* machine)
-        : machine_(machine),
-          R_(0.05),
+        : R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
           T1_(0.5),
@@ -132,11 +130,7 @@ namespace GridKit
         ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
-        if (machine_)
-        {
-          p0 = machine_->getTorque();
-        }
-        else if (pmech_)
+        if (pmech_)
         {
           p0 = y_[2]; //<- generator needs to be initialized first
         }
@@ -222,11 +216,7 @@ namespace GridKit
       {
         // Input Variables
         ScalarT omega{0};
-        if (machine_)
-        {
-          omega = machine_->getSpeed();
-        }
-        else if (omega_)
+        if (omega_)
         {
           omega = omega_->read();
         }

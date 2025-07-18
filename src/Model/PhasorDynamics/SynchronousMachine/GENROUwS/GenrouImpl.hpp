@@ -28,7 +28,6 @@ namespace GridKit
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
-        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -79,7 +78,6 @@ namespace GridKit
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
-        gov_(nullptr), // <- TODO: Temporary, to be removed.
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -109,8 +107,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
-        unit_id_(1),
-        gov_(nullptr) // <- TODO: Temporary, to be removed.
+        unit_id_(1)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {
@@ -219,8 +216,7 @@ namespace GridKit
       : bus_(bus),
         pmech_(pmech),
         omega_(omega),
-        unit_id_(1),
-        gov_(nullptr) // <- TODO: Temporary, to be removed.
+        unit_id_(1)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {
@@ -471,11 +467,7 @@ namespace GridKit
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
       ScalarT pmech;
-      if (gov_)
-      {
-        pmech = gov_->Pmech();
-      }
-      else if (pmech_)
+      if (pmech_)
       {
         pmech = pmech_->read();
       }
@@ -559,12 +551,6 @@ namespace GridKit
     ScalarT Genrou<ScalarT, IdxT>::getTorque()
     {
       return y_[12];
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::setgovenor(gov_type* gov)
-    {
-      gov_ = gov;
     }
 
     template <class ScalarT, typename IdxT>
