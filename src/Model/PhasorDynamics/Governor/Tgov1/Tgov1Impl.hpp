@@ -1,5 +1,7 @@
+#pragma once
+
 /**
- * @file Tgov1.cpp
+ * @file Tgov1Impl.cpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
@@ -214,6 +216,36 @@ namespace GridKit
       }
 
       /**
+       * @brief Residuals of system equations evaluated locally
+       *
+       */
+      template <class ScalarT, typename IdxT>
+      int Tgov1<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+      {
+        // Read Internal Variables
+        ScalarT ptx   = y[0]; // y0 - Ptx
+        ScalarT pv    = y[1]; // y1 - Pv
+        ScalarT pmech = y[2]; // y2 - Pmech
+
+        // Read Internal Derivatives
+        ScalarT ptx_dot = yp[0];
+        ScalarT pv_dot  = yp[1];
+
+        // The 'pre-limit' derivative of Pv
+        ScalarT func     = (-pv + (pref_ - omega_) / R_) / T1_;
+        ScalarT valv_ind = this->indicator(pv, func);
+
+        // Internal Differential Equations
+        f[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
+        f[1] = -pv_dot + valv_ind * func;
+
+        // Internal Algebraic Equations
+        f[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega_);
+
+        return 0;
+      }
+
+      /**
        * @brief Residuals of system equations
        *
        */
@@ -221,49 +253,15 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::evaluateResidual()
       {
         // Input Variables
-
-        ScalarT omega{0};
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          omega = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          omega_ = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        // Read Internal Variables
-        ScalarT ptx   = y_[0]; // y0 - Ptx
-        ScalarT pv    = y_[1]; // y1 - Pv
-        ScalarT pmech = y_[2]; // y2 - Pmech
-
-        // Read Internal Derivatives
-        ScalarT ptx_dot = yp_[0];
-        ScalarT pv_dot  = yp_[1];
-
-        // The 'pre-limit' derivative of Pv
-        ScalarT f        = (-pv + (pref_ - omega) / R_) / T1_;
-        ScalarT valv_ind = this->indicator(pv, f);
-
-        // Internal Differential Equations
-        f_[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
-        f_[1] = -pv_dot + valv_ind * f;
-
-        // Internal Algebraic Equations
-        f_[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+        evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
         return 0;
       }
-
-      /**
-       * @brief Jacobian evaluation not implemented yet
-       *
-       * @tparam ScalarT - Scalar data type
-       * @tparam IdxT    - Index data type
-       * @return int - error code, 0 = success
-       */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::evaluateJacobian()
-      {
-        std::cout << "Jacobian evaluation not implemented!" << std::endl;
-        return 0;
-      }
-    } // namespace Governor
+   } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
