@@ -10,6 +10,9 @@
 #include <cmath>
 #include <iostream>
 
+
+#include <Model/PhasorDynamics/Bus/Bus.hpp>
+
 #include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 
@@ -292,7 +295,7 @@ namespace GridKit
         ScalarT vtr   = y_[4]; // y4 - Term Volt Err
         ScalarT vf    = y_[5]; // y5 - Feedback volt
         ScalarT ve    = y_[6]; // y6 - Excit. Cntrl Volt
-        ScalarT efd   = y_[7]; // y7 - Efd
+        ScalarT efd   = y_[7]; // y7 - Efd (EXTERNALLY ACCESSABLE)
         ScalarT ksat  = y_[8]; // y8 - Saturation
 
         // Read Internal Derivatives
