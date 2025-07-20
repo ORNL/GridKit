@@ -2,7 +2,7 @@
  * @file   Ieeet1.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
- * 
+ *
  * @brief Declaration of a IEEET1 Exciter Model.
  *
  */
@@ -56,31 +56,28 @@ namespace GridKit
         using bus_type        = BusBase<ScalarT, IdxT>;
 
       public:
-      
         Ieeet1(
-          signal_type* efd_signal,
-          signal_type* speed_signal,
-          bus_type* bus,
-          const model_data_type& data
-        );
+            signal_type*           efd_signal,
+            signal_type*           speed_signal,
+            bus_type*              bus,
+            const model_data_type& data);
         ~Ieeet1() = default;
 
-        int allocate()                  override;
-        int initialize()                override;
-        int tagDifferentiable()         override;
-        int evaluateResidual()          override;
-        int evaluateJacobian()          override;
+        int allocate() override;
+        int initialize() override;
+        int tagDifferentiable() override;
+        int evaluateResidual() override;
+        int evaluateJacobian() override;
 
         void updateTime(real_type /* t */, real_type /* a */) override
         {
         }
 
       private:
-
         // Signal pointers
         signal_type* efd_signal_;
         signal_type* speed_signal_;
-        bus_type* bus_;
+        bus_type*    bus_;
 
         // Model Input parameters
         real_type Tr_;      ///< Time constant for voltage sensing
@@ -111,7 +108,7 @@ namespace GridKit
         ScalarT vS_{0};
         ScalarT Ec_{0}; // "Compensated" terminal measurment
 
-        // Scale of Sigmoid function 
+        // Scale of Sigmoid function
         // (temporary local implementation)
         // This value gave higher precision.
         const ScalarT mu_ = 400000.0;

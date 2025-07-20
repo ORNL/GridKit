@@ -502,11 +502,11 @@ namespace GridKit
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      //y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      y_[17] = G_ * (vd *  std::sin(delta) + vq * std::cos(delta))
-             - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
-      y_[18] = B_ * (vd *  std::sin(delta) + vq * std::cos(delta))
-             + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
+      // y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      y_[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
+      y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
 
       // Set Setpoint mechanical power, which may or may not be used
       pmech_set_ = Te;
@@ -624,7 +624,7 @@ namespace GridKit
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      //f_[17] = efd - efd_set_;
+      // f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */
       f_[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));

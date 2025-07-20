@@ -19,7 +19,6 @@
 // Temp, remove
 #include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 
-
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -32,7 +31,7 @@ int main()
   using BusType      = BusData<scalar_type, index_type>::BusType;
   using signal_type  = SignalNode<scalar_type, index_type>;
   using machine_type = Genrou<scalar_type, index_type>;
-  using gov_type     = Governor::Tgov1<scalar_type, index_type>; 
+  using gov_type     = Governor::Tgov1<scalar_type, index_type>;
   using exc_type     = Exciter::Ieeet1<scalar_type, index_type>;
 
   std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
@@ -65,7 +64,6 @@ int main()
   data.signal[1].name      = "Efd";
   data.signal[1].signal_id = 2;
 
-
   // Set branch data
   data.branch.resize(1);
 
@@ -76,14 +74,12 @@ int main()
   data.branch[0].parameters[BranchParameters::G] = 0.0;
   data.branch[0].parameters[BranchParameters::B] = 0.0;
 
-
   // Add faults
   data.bus_fault.resize(1);
 
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
 
   // ------------- MODEL GROUP ------------------
 
@@ -112,7 +108,7 @@ int main()
   // Governor
   data.gov.resize(1);
 
-  // Exciter    
+  // Exciter
   data.exciter.resize(1);
 
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
@@ -129,7 +125,6 @@ int main()
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]     = 0.04;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]     = 0.33;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim] = 0.;
-
 
   // -------------- END MODEL DATA ------------------
 
@@ -159,10 +154,10 @@ int main()
                    data.genrou[0]);
 
   // Create governor (w/ Pmech and Speed signals)
-  gov_type     gov(pmech, omega);
+  gov_type gov(pmech, omega);
 
   // Create exciter (w/ Efd, speed, and bus signals)
-  exc_type     exc(efd, omega, bus0, data.exciter[0]);
+  exc_type exc(efd, omega, bus0, data.exciter[0]);
 
   // Instantiate system model and add components to it
   SystemModel<scalar_type, index_type> sys;
@@ -178,7 +173,6 @@ int main()
   sys.addFault(&fault);
 
   sys.allocate();
-
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -221,12 +215,12 @@ int main()
     // Gov              -> 3 States  -> Start Idx 21
     // Exc              -> 9 States  -> Start Idx 24
     output.push_back(OutputData{
-      t, 
-      y_val[0],   // Bus Vr
-      y_val[1],   // Bus Vi
-      y_val[3],   // Gen Speed
-      y_val[23],  // Gov Pmech 
-      y_val[26],  // Exc Efd 
+        t,
+        y_val[0],  // Bus Vr
+        y_val[1],  // Bus Vi
+        y_val[3],  // Gen Speed
+        y_val[23], // Gov Pmech
+        y_val[26], // Exc Efd
     });
   };
 
@@ -295,9 +289,9 @@ int main()
     std::cout  << data.ti
                << " " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
                << " " << (1.0 + data.dw)
-               << " " << (data.Pm) 
-               << " " << (data.Efd) 
-               << " " << (data.VR) 
+               << " " << (data.Pm)
+               << " " << (data.Efd)
+               << " " << (data.VR)
                << " " << (data.ksat)
                << "\n";
     // std::cout << "Ref    : t = " << ref_sol[0]

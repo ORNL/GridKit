@@ -1,7 +1,7 @@
 /**
  * @file Ieeet1Data.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * 
+ *
  * @brief Data structure for IEEET1 Data
  *
  */
@@ -18,29 +18,28 @@ namespace GridKit
       /// Initial parameters for a Genrou generator model
       enum class Ieeet1Parameters
       {
-          Tr,     ///< Time constant for voltage sensing
-          Ka,     ///< Coefficient for voltage regulation
-          Ta,     ///< Time constant for voltage regulation
-          Ke,     ///< Coefficient for excitation system
-          Te,     ///< Time constant for excitation system
-          Kf,     ///< Coefficient for feedback
-          Tf,     ///< Time constant for feedback
-          Vrmin,  ///< LL to voltage regulation
-          Vrmax,  ///< HH to voltage regulation
-          E1,     ///< Saturation parameter
-          E2,     ///< Saturation parameter
-          Se1,    ///< Saturation parameter
-          Se2,    ///< Saturation parameter
-          Ispdlim ///< Speed limit flag indicator
-
+        Tr,     ///< Time constant for voltage sensing
+        Ka,     ///< Coefficient for voltage regulation
+        Ta,     ///< Time constant for voltage regulation
+        Ke,     ///< Coefficient for excitation system
+        Te,     ///< Time constant for excitation system
+        Kf,     ///< Coefficient for feedback
+        Tf,     ///< Time constant for feedback
+        Vrmin,  ///< LL to voltage regulation
+        Vrmax,  ///< HH to voltage regulation
+        E1,     ///< Saturation parameter
+        E2,     ///< Saturation parameter
+        Se1,    ///< Saturation parameter
+        Se2,    ///< Saturation parameter
+        Ispdlim ///< Speed limit flag indicator
       };
 
       /// Ports for a Genrou generator model
       enum class Ieeet1Ports
       {
-        bus,           ///< Unique ID of the terminal bus
-        speed_signal,  ///< Unique ID of the generator speed signal
-        efd_signal,    ///< Unique ID of the output efd signal
+        bus,          ///< Unique ID of the terminal bus
+        speed_signal, ///< Unique ID of the generator speed signal
+        efd_signal,   ///< Unique ID of the output efd signal
       };
 
       /// Variables able to be monitored for a Genrou generator model
@@ -60,10 +59,10 @@ namespace GridKit
        */
       template <typename RealT, typename IdxT>
       struct Ieeet1Data : public ComponentData<RealT,
-                                              IdxT,
-                                              Ieeet1Parameters,
-                                              Ieeet1Ports,
-                                              Ieeet1MonitorableVariables>
+                                               IdxT,
+                                               Ieeet1Parameters,
+                                               Ieeet1Ports,
+                                               Ieeet1MonitorableVariables>
       {
         Ieeet1Data() = default;
 

@@ -217,10 +217,10 @@ int main()
     // Gen 1 -> +19 (Start Idx: 4)
     // Gen 2 -> +19 (Start Idx: 23)
 
-    // 
+    //
     output.push_back(OutputData{t,
-                                1.0 + y_val[5],  // Gen 1 Speed -> 4 + 1
-                                1.0 + y_val[24], // Gen 2 Speed -> 23 + 1
+                                1.0 + y_val[5],                                         // Gen 1 Speed -> 4 + 1
+                                1.0 + y_val[24],                                        // Gen 2 Speed -> 23 + 1
                                 std::sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1]),   // Bus 1 Vmag
                                 std::sqrt(y_val[2] * y_val[2] + y_val[3] * y_val[3])}); // Bus 2 Vmag
   };

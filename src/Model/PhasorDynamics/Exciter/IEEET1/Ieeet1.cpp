@@ -2,21 +2,19 @@
  * @file Ieeet1.cpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
- * 
+ *
  * @brief Definition of a IEEET1 Exciter.
  *
  */
 
+#include "Ieeet1.hpp"
+
 #include <cmath>
 #include <iostream>
 
-
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-
 #include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-
-#include "Ieeet1.hpp"
 
 #define _USE_MATH_DEFINES
 
@@ -38,11 +36,11 @@ namespace GridKit
        * @tparam IdxT Index data type
        */
       template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(signal_type* efd_signal,
-                                    signal_type* speed_signal,
-                                    bus_type* bus, 
+      Ieeet1<ScalarT, IdxT>::Ieeet1(signal_type*           efd_signal,
+                                    signal_type*           speed_signal,
+                                    bus_type*              bus,
                                     const model_data_type& data)
-      :   efd_signal_(efd_signal),
+        : efd_signal_(efd_signal),
           speed_signal_(speed_signal),
           bus_(bus)
       {
@@ -94,7 +92,7 @@ namespace GridKit
         if (data.parameters.contains(model_data_type::Parameters::Se1))
         {
           Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
-        }  
+        }
         if (data.parameters.contains(model_data_type::Parameters::Se2))
         {
           Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
@@ -102,25 +100,22 @@ namespace GridKit
         if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
         {
           Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
-        } 
+        }
 
         // 9 Internal Variables
         size_ = 9;
 
         // Derived Parameters
-        ScalarT SR = std::sqrt( Se2_ / Se1_);
+        ScalarT SR = std::sqrt(Se2_ / Se1_);
 
         // Solution 1 (Aligned with PW)
         SA_ = (SR * E1_ - E2_) / (SR - 1);
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
 
-        
         // Solution 2
         // SA_ = (SR * E1_ + E2_) / (SR + 1);
         // SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
-
       }
-
 
       /**
        * @brief Allocate memory for model
@@ -146,7 +141,7 @@ namespace GridKit
 
       /**
        * @brief Initialization of the Exciter
-       * 
+       *
        * Sets/configures all of the initial values of the exciter
        * by assuming no saturation and steady-state.
        *
@@ -165,19 +160,18 @@ namespace GridKit
         // Terminal Voltage
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
-        Ec_  = std::sqrt(vreal*vreal + vimag*vimag);
-
+        Ec_           = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Derived from External initial values
-        ScalarT vr    = Ke_       * efd0;        
-        ScalarT vfx   = Kf_ / Tf_ * efd0;  
-        ScalarT vtr   = Ke_ / Ka_ * efd0;          
+        ScalarT vr  = Ke_ * efd0;
+        ScalarT vfx = Kf_ / Tf_ * efd0;
+        ScalarT vtr = Ke_ / Ka_ * efd0;
 
         // Vref (setpoint = terminal + error)
         vref_ = Ec_ + vtr;
 
         // IVP for Internal Variables
-        y_[0] = Ec_;  // y0 - vts  - Sensed term volt 
+        y_[0] = Ec_;  // y0 - vts  - Sensed term volt
         y_[1] = vr;   // y1 - vr   - Votlage reg
         y_[2] = efd0; // y2 - efdp - Efd pre mult
         y_[3] = vfx;  // y3 - vfx  - Exciter feedback
@@ -188,13 +182,13 @@ namespace GridKit
         y_[8] = 0;    // y8 - ksat - Saturation
 
         // Steady State Conditions
-        yp_[0] = 0.0; 
-        yp_[1] = 0.0; 
-        yp_[2] = 0.0; 
-        yp_[3] = 0.0; 
-        yp_[4] = 0.0; 
+        yp_[0] = 0.0;
+        yp_[1] = 0.0;
+        yp_[2] = 0.0;
+        yp_[3] = 0.0;
+        yp_[4] = 0.0;
         yp_[5] = 0.0;
-        yp_[6] = 0.0; 
+        yp_[6] = 0.0;
         yp_[7] = 0.0;
         yp_[8] = 0.0;
 
@@ -212,7 +206,7 @@ namespace GridKit
       int Ieeet1<ScalarT, IdxT>::tagDifferentiable()
       {
 
-        tag_[0] = true;  // y0 - vts  - Sensed term volt 
+        tag_[0] = true;  // y0 - vts  - Sensed term volt
         tag_[1] = true;  // y1 - vr   - Votlage reg
         tag_[2] = true;  // y2 - efdp - Efd pre mult
         tag_[3] = true;  // y3 - vfx  - Exciter feedback
@@ -236,7 +230,7 @@ namespace GridKit
        * @warning This needs to be abstracted to be used
        *          across phasor dynamics. Identical pattern is
        *          being used in TGOV1 model.
-       * 
+       *
        *   Algebraic approximation of transcendental sigmoid.
        */
       template <class ScalarT, typename IdxT>
@@ -244,7 +238,6 @@ namespace GridKit
       {
         return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
       }
-
 
       /**
        * @brief Net Indicator function for regulator limits
@@ -284,7 +277,7 @@ namespace GridKit
           // This seems to be very slow,
           // but I see how read/write ownership may require this
           //
-          // I believe implementing the equivilent to signal->read() 
+          // I believe implementing the equivilent to signal->read()
           // at the system level would address this, by routing
           // external signals into a generic inputs_ vector
           // at the same time as the internal state values y_
@@ -295,18 +288,18 @@ namespace GridKit
         // Read E comp (terminal voltage, unless compensation impedence)
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
-        Ec_  = std::sqrt(vreal*vreal + vimag*vimag);
+        Ec_           = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Read Internal Variables
-        ScalarT vts   = y_[0]; // y0 - Sensed term volt
-        ScalarT vr    = y_[1]; // y1 - Votlage reg
-        ScalarT efdp  = y_[2]; // y2 - Efd pre mult
-        ScalarT vfx   = y_[3]; // y3 - Exciter feedback
-        ScalarT vtr   = y_[4]; // y4 - Term Volt Err
-        ScalarT vf    = y_[5]; // y5 - Feedback volt
-        ScalarT ve    = y_[6]; // y6 - Excit. Cntrl Volt
-        ScalarT efd   = y_[7]; // y7 - Efd
-        ScalarT ksat  = y_[8]; // y8 - Saturation
+        ScalarT vts  = y_[0]; // y0 - Sensed term volt
+        ScalarT vr   = y_[1]; // y1 - Votlage reg
+        ScalarT efdp = y_[2]; // y2 - Efd pre mult
+        ScalarT vfx  = y_[3]; // y3 - Exciter feedback
+        ScalarT vtr  = y_[4]; // y4 - Term Volt Err
+        ScalarT vf   = y_[5]; // y5 - Feedback volt
+        ScalarT ve   = y_[6]; // y6 - Excit. Cntrl Volt
+        ScalarT efd  = y_[7]; // y7 - Efd
+        ScalarT ksat = y_[8]; // y8 - Saturation
 
         // Read Internal Derivatives
         ScalarT vts_dot  = yp_[0];
@@ -315,27 +308,26 @@ namespace GridKit
         ScalarT vfx_dot  = yp_[3];
 
         // The 'pre-limit' derivative of Pv
-        ScalarT f        = -vr + Ka_ * vtr;
-        ScalarT vr_ind   = this->indicator(vr, f);
+        ScalarT f      = -vr + Ka_ * vtr;
+        ScalarT vr_ind = this->indicator(vr, f);
 
         // Internal Differential Equations
-        f_[0] = -vts_dot  + (Ec_ - vts) / Tr_; 
-        f_[1] = -vr_dot   + vr_ind * f  / Ta_;
+        f_[0] = -vts_dot + (Ec_ - vts) / Tr_;
+        f_[1] = -vr_dot + vr_ind * f / Ta_;
         f_[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
-        f_[3] = -vfx_dot  + vf / Tf_;
+        f_[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
-        f_[4] = -vtr      + vref_ + vUEL_ + vOEL_ + vS_ - vf - vts;
-        f_[5] = -vf       + (efdp * Kf_) / Tf_ - vfx;
-        f_[6] = -ve       + ksat * efdp;
-        f_[7] = -efd      + efdp + omega * efdp * Ispdlim_;
-        
+        f_[4] = -vtr + vref_ + vUEL_ + vOEL_ + vS_ - vf - vts;
+        f_[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
+        f_[6] = -ve + ksat * efdp;
+        f_[7] = -efd + efdp + omega * efdp * Ispdlim_;
+
         // TODO smooth approaximation for Enzyme
         // NOTE seems about double PW saturation.
         f_[8] = -ksat;
         if (efdp > SA_)
-          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //  
-
+          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //
 
         return 0;
       }
@@ -358,6 +350,6 @@ namespace GridKit
       template class Ieeet1<double, long int>;
       template class Ieeet1<double, size_t>;
 
-    } // namespace Governor
+    } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit
