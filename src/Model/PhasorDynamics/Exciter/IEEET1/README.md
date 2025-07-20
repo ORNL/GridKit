@@ -32,10 +32,33 @@ $S_{e2}$    | [p.u.] | Saturation Parameter                              | 0.33 
 $I_{spdlm}$ | [binary] | Speed Limit flag indicator                      | 0       | 
 
 ### Model Derived Parameters
+
+The relationship of the derived parameters is defined by the following.
 ``` math
 \begin{aligned}
   S_{e1} &= S_B(E_1-S_A)^2 \\
-  S_{e2} &= S_B(E_2-S_A)^2
+  S_{e2} &= S_B(E_2-S_A)^2 \\
+\end{aligned}
+```
+
+This system has two solutions, but the prefered solution is as follows.
+``` math
+\begin{aligned}
+  C &=  \sqrt{
+   \dfrac
+   {S_{e2}}
+   {S_{e1}}
+  } 
+  \\
+  S_A &= 
+   \dfrac
+   {C E_1 - E_2}
+   {C - 1} 
+  \\
+  S_B &= 
+   \dfrac
+   {S_{e1}}
+   {(E_1-S_A)^2}
 \end{aligned}
 ```
 
@@ -50,7 +73,7 @@ Symbol    | Units  | Description                       | Note
 $V_{ts}$  | [p.u.] | Sensed terminal voltage           |
 $V_{R}$   | [p.u.] | Voltage regulator                 | 
 $E_{fd}'$ | [p.u.] | Field-current pre-speed multiplier| 
-$V_{fx}$ | [p.u.] | Exciter feedback internal state   | 
+$V_{fx}$  | [p.u.] | Exciter feedback internal state   | 
 
 
 #### Algebraic
@@ -217,21 +240,23 @@ The approximation written out below approaches an exact solution as $\alpha\to\i
 ```
 
 ## Initialization
+
 At steady state we assume that $V_R$ is at or within its limits, 
 and that the exciter is not saturated. The field $E_{fd}$ can be 
 obtained through the steady-state conditions of the machine. 
 We also assume for the moment that the stabilizer and over/under 
-excitation limiters are non-existant.
+excitation limiters are non-existant. As of now, we assume there is no compensation impedence and that $E_C$ is simply the terminal voltage magnitude.
 ```math
 \begin{aligned}
     E_{fd}' &= E_{fd}  \\
-    V_{f}  &= 0 \\
+    V_R     &= K_E E_{fd} \\
+    V_{fx}  &= \dfrac{K_F}{T_F} E_{fd} \\
+    V_{tr}  &= \dfrac{K_E}{K_{a}} E_{fd} \\
+    E_C     &= V_{term}\\
+    V_{ts}  &= V_{term}\\
+    V_{ref} &= E_c + V_{tr} \\
+    V_{f}   &= 0 \\
     V_{E}   &= 0 \\
     k_{sat} &= 0 \\
-    V_{fx}  &= \dfrac{K_F}{T_F} E_{fd} \\
-    V_R     &= K_E E_{fd} \\
-    V_{tr}  &= \dfrac{1}{K_{a}}V_{R} \\
-    V_{ts}  &= V_{ref} - V_{tr} \\
-    E_C     &= V_{ts}\\
 \end{aligned}
 ```
