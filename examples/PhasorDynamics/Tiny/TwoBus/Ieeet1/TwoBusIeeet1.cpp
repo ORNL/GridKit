@@ -31,8 +31,6 @@ int main()
 
   using BusType      = BusData<scalar_type, index_type>::BusType;
   using signal_type  = SignalNode<scalar_type, index_type>;
-  using ExciterData  = Exciter::Ieeet1Data<scalar_type, index_type>;
-
   using machine_type = Genrou<scalar_type, index_type>;
   using gov_type     = Governor::Tgov1<scalar_type, index_type>; 
   using exc_type     = Exciter::Ieeet1<scalar_type, index_type>;
@@ -114,14 +112,24 @@ int main()
   // Governor
   data.gov.resize(1);
 
-  // Exciter
-  //data.exciter.resize(1);
-  ExciterData exdata;
+  // Exciter    
+  data.exciter.resize(1);
 
-  // BUG: Nonfunctional if Tr = 0
-  // Determine how to handle certain parameter edge cases.
-  // data.exciter[0].Tr = 0.001;
-  exdata.Tr = 0.001;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]      = -0.06;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]      = 0.6;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]      = 0.09;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]      = 1.46;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]   = -1.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]   = 1.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]      = 2.8;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]      = 3.373;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]     = 0.04;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]     = 0.33;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim] = 0.;
+
 
   // -------------- END MODEL DATA ------------------
 
@@ -145,16 +153,16 @@ int main()
 
   // Create generator
   machine_type gen(bus0,  // Bus
-                   omega, // Speed Signal
-                   pmech, // Pmech Signal
-                   efd,   // Exciter Signal
+                   omega, // Machine  Speed Signal
+                   pmech, // Governor Pmech Signal
+                   efd,   // Exciter  Efd   Signal
                    data.genrou[0]);
-                   
+
   // Create governor (w/ Pmech and Speed signals)
   gov_type     gov(pmech, omega);
 
   // Create exciter (w/ Efd, speed, and bus signals)
-  exc_type     exc(efd, omega, bus0, exdata);
+  exc_type     exc(efd, omega, bus0, data.exciter[0]);
 
   // Instantiate system model and add components to it
   SystemModel<scalar_type, index_type> sys;
@@ -187,7 +195,7 @@ int main()
   {
     // Output variables are time, real and imaginary voltage and
     // frequency deviation
-    real_type ti, Vr, Vi, dw, Pm, Vts, VR, Efd, Vtr, Vf, Ve, ksat;
+    real_type ti, Vr, Vi, dw, Pm, Efd;
   };
 
   // A list of output for each time step.
@@ -208,11 +216,7 @@ int main()
     std::vector<scalar_type>& y_val = sys.y();
 
     // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
-    // Electric Bus     -> 2 States
-    // Slack Bus        -> 0 States
-    // Signal Bus Pmech -> 0 State
-    // Signal Bus speed -> 0 State
-    // Signal Bus efd   -> 0 State
+    // Bus              -> 2 States
     // Genrou           -> 19 States -> Start Idx 2
     // Gov              -> 3 States  -> Start Idx 21
     // Exc              -> 9 States  -> Start Idx 24
@@ -222,13 +226,7 @@ int main()
       y_val[1],   // Bus Vi
       y_val[3],   // Gen Speed
       y_val[23],  // Gov Pmech 
-      y_val[24],  // Exc Vts 
-      y_val[25],  // Exc Vr 
-      y_val[26],  // Exc Efd + 2
-      y_val[28],  // Exc Vtr
-      y_val[29],  // Exc Vf
-      y_val[30],  // Exc Ve
-      y_val[32]   // Exc ksat
+      y_val[26],  // Exc Efd 
     });
   };
 

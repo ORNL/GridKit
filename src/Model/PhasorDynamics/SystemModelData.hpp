@@ -8,6 +8,7 @@
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <Model/PhasorDynamics/Load/LoadData.hpp>
 #include <Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
@@ -29,6 +30,7 @@ namespace GridKit
       using BusDataT          = BusData<RealT, IdxT>;
       using BusFaultDataT     = BusFaultData<RealT, IdxT>;
       using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
+      using Ieeet1DataT       = Exciter::Ieeet1Data<RealT, IdxT>;
       using GenrouDataT       = GenrouData<RealT, IdxT>;
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
@@ -73,6 +75,7 @@ namespace GridKit
       std::vector<GenClassicalDataT> genclassical; ///< Classical generator instances within the model
       std::vector<LoadDataT>         load;         ///< Loads within the model
       std::vector<Tgov1DataT>        gov;          ///< Governors within the model
+      std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes
     };
   } // namespace PhasorDynamics

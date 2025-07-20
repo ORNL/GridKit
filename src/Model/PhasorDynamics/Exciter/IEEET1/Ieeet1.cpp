@@ -38,29 +38,71 @@ namespace GridKit
        * @tparam IdxT Index data type
        */
       template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(          
-          signal_type* efd_signal,
-          signal_type* speed_signal,
-          bus_type* bus,
-          const model_data_type& data)
+      Ieeet1<ScalarT, IdxT>::Ieeet1(signal_type* efd_signal,
+                                    signal_type* speed_signal,
+                                    bus_type* bus, 
+                                    const model_data_type& data)
       :   efd_signal_(efd_signal),
           speed_signal_(speed_signal),
-          bus_(bus),
-          Tr_(data.Tr),  
-          Ka_(data.Ka),  
-          Ta_(data.Ta),
-          Ke_(data.Ke),  
-          Te_(data.Te), 
-          Kf_(data.Kf),
-          Tf_(data.Tf),  
-          Vrmin_(data.Vrmin),   
-          Vrmax_(data.Vrmax), 
-          E1_(data.E1), 
-          E2_(data.E2),  
-          Se1_(data.Se1),  
-          Se2_(data.Se2),  
-          Ispdlim_(data.Ispdlim)
+          bus_(bus)
       {
+
+        if (data.parameters.contains(model_data_type::Parameters::Tr))
+        {
+          Tr_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tr));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ka))
+        {
+          Ka_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ka));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ta))
+        {
+          Ta_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ta));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ke))
+        {
+          Ke_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ke));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Te))
+        {
+          Te_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Te));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Kf))
+        {
+          Kf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Kf));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Tf))
+        {
+          Tf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tf));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Vrmin))
+        {
+          Vrmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmin));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Vrmax))
+        {
+          Vrmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmax));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::E1))
+        {
+          E1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E1));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::E2))
+        {
+          E2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E2));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Se1))
+        {
+          Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
+        }  
+        if (data.parameters.contains(model_data_type::Parameters::Se2))
+        {
+          Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
+        {
+          Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
+        } 
 
         // 9 Internal Variables
         size_ = 9;
@@ -68,15 +110,15 @@ namespace GridKit
         // Derived Parameters
         ScalarT SR = std::sqrt( Se2_ / Se1_);
 
-        // Technically two solutions
-        
         // Solution 1 (Aligned with PW)
         SA_ = (SR * E1_ - E2_) / (SR - 1);
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
 
+        
         // Solution 2
         // SA_ = (SR * E1_ + E2_) / (SR + 1);
         // SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
+
       }
 
 
@@ -95,7 +137,6 @@ namespace GridKit
 
         // Set output signal after allocation
         // The signal is accessible to the generator
-        // y_[7] is output efd state
         if (efd_signal_)
         {
           efd_signal_->set(&y_[7]);
@@ -114,12 +155,11 @@ namespace GridKit
       int Ieeet1<ScalarT, IdxT>::initialize()
       {
 
-        // Read External Variables
-
+        // External Variables
         ScalarT efd0{0};
         if (efd_signal_)
         {
-          efd0 = y_[7]; //<- TODO generator needs to set efd initial value
+          efd0 = y_[7]; //<- TODO generator sets efd initial value
         }
 
         // Terminal Voltage
@@ -205,43 +245,6 @@ namespace GridKit
         return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
       }
 
-      /**
-       * @brief  Indicator function for lower valve limit violation.
-       *
-       * @param[in] x State variable
-       * @param[in] f Conditional derivative of state variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Lower Smooth Indicator value at coordinates (x, f(x))
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::indicator_low(ScalarT x, ScalarT f)
-      {
-        return (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
-      }
-
-      /**
-       * @brief Indicator function for high valve limit violation.
-       *
-       * @param[in] x State variable
-       * @param[in] f Conditional derivative of state variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Higher Smooth Indicator value at coordinates (x, f(x))
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::indicator_high(ScalarT x, ScalarT f)
-      {
-        return (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
-      }
 
       /**
        * @brief Net Indicator function for regulator limits
@@ -250,7 +253,7 @@ namespace GridKit
        * @param[in] f Conditional derivative of state variable
        * @tparam ScalarT Scalar data type
        * @tparam IdxT Index data type
-       * @return <DESCRIPTION OF RETURN VALUE>
+       * @return Scalar value indicating limit activation.
        *
        * @warning This needs to be abstracted to be used
        *          across phasor dynamics. Identical pattern is
@@ -259,7 +262,10 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Ieeet1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
-        return (1 - this->indicator_low(x, f)) * (1 - this->indicator_high(x, f));
+
+        ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
+        ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
+        return (1 - ind_low) * (1 - ind_high);
       }
 
       /**
@@ -274,13 +280,17 @@ namespace GridKit
         ScalarT omega{0};
         if (speed_signal_)
         {
+          // Meta PR Note
+          // This seems to be very slow,
+          // but I see how read/write ownership may require this
+          //
+          // I believe implementing the equivilent to signal->read() 
+          // at the system level would address this, by routing
+          // external signals into a generic inputs_ vector
+          // at the same time as the internal state values y_
+          // are recieved from IDA.
           omega = speed_signal_->read();
         }
-
-        // NOTE
-        // No external variable 'write' needed,
-        // as it is available to others dierctly throguh 
-        // pointer.
 
         // Read E comp (terminal voltage, unless compensation impedence)
         ScalarT vreal = bus_->Vr();
@@ -295,7 +305,7 @@ namespace GridKit
         ScalarT vtr   = y_[4]; // y4 - Term Volt Err
         ScalarT vf    = y_[5]; // y5 - Feedback volt
         ScalarT ve    = y_[6]; // y6 - Excit. Cntrl Volt
-        ScalarT efd   = y_[7]; // y7 - Efd (EXTERNALLY ACCESSABLE)
+        ScalarT efd   = y_[7]; // y7 - Efd
         ScalarT ksat  = y_[8]; // y8 - Saturation
 
         // Read Internal Derivatives
@@ -324,7 +334,7 @@ namespace GridKit
         // NOTE seems about double PW saturation.
         f_[8] = -ksat;
         if (efdp > SA_)
-          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //  / 2 ?
+          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //  
 
 
         return 0;
