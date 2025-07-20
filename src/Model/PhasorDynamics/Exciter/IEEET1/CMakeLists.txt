@@ -7,5 +7,10 @@
 gridkit_add_library(phasor_dynamics_exciter_ieeet1
   SOURCES
     Ieeet1.cpp
+  LINK_LIBRARIES
+    GRIDKIT::phasor_dynamics_signal
   OUTPUT_NAME
     gridkit_phasor_dynamics_exciter_ieeet1)
+
+# Link to interface target for all components
+target_link_libraries(gridkit_phasor_dynamics_components INTERFACE GRIDKIT::phasor_dynamics_exciter_ieeet1)

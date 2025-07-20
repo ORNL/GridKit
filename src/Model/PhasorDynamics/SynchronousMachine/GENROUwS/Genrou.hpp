@@ -54,7 +54,15 @@ namespace GridKit
 
     public:
       Genrou(bus_type* bus, IdxT unit_id);
-      Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data);
+      Genrou(bus_type* bus, 
+             signal_type* omega, 
+             signal_type* pmech,
+             const model_data_type& data);
+      Genrou(bus_type* bus, 
+             signal_type* omega, 
+             signal_type* pmech,
+             signal_type* efd,
+             const model_data_type& data);
       Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
@@ -123,6 +131,7 @@ namespace GridKit
       bus_type*    bus_;
       signal_type* pmech_{nullptr};
       signal_type* omega_{nullptr};
+      signal_type* efd_signal_{nullptr};
       IdxT         bus_id_{0};
       IdxT         unit_id_; //< @todo this should be removed
 
