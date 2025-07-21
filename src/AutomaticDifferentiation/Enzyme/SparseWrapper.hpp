@@ -144,7 +144,7 @@ namespace GridKit
        * @tparam IdxT    - matrix index data type
        */
       template <typename ModelT, class ScalarT, typename IdxT>
-      __attribute__((noinline)) void EnzymeSparseModelJacobian(ModelT* model, size_t n, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      __attribute__((noinline)) void ModelJacobian(ModelT* model, size_t n, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
       {
         std::vector<Triple<ScalarT>> triplets;
         for (size_t i = 0; i < n; i++)
