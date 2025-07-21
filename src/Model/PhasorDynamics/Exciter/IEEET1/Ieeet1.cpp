@@ -277,7 +277,7 @@ namespace GridKit
           // This seems to be very slow,
           // but I see how read/write ownership may require this
           //
-          // I believe implementing the equivilent to signal->read()
+          // I believe implementing the equivalent to signal->read()
           // at the system level would address this, by routing
           // external signals into a generic inputs_ vector
           // at the same time as the internal state values y_
