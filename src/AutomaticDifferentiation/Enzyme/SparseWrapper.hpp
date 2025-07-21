@@ -144,14 +144,24 @@ namespace GridKit
        * @tparam IdxT    - matrix index data type
        */
       template <typename ModelT, class ScalarT, typename IdxT>
-      __attribute__((noinline)) void ModelJacobian(ModelT* model, size_t n, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      __attribute__((noinline)) void ModelJacobian(ModelT* model, size_t n_res, size_t n_state, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
       {
         std::vector<Triple<ScalarT>> triplets;
-        for (size_t i = 0; i < n; i++)
+        std::vector<ScalarT> elementary_v(n_state);
+        for (size_t res_i = 0; res_i < n_res; ++res_i)
         {
-          ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, i);
-          ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, i, &triplets);
+          // Sparse storage
+          ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
+          ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+          
+          // Elementary vector for Jacobian-vector product
+          for (size_t state_i = 0; state_i < n_state; ++state_i)
+          {
+            elementary_v[state_i] = 0.0;
+          }
+          elementary_v[res_i] = 1.0;
 
+          // Autodiff
           __enzyme_fwddiff<void>((void*) residual_wrapper<ModelT, ScalarT>,
                                  enzyme_const,
                                  model,
@@ -161,10 +171,11 @@ namespace GridKit
                                  enzyme_const,
                                  yp,
                                  enzyme_dupnoneed,
-                                 (ScalarT*) 0x1,
+                                 elementary_v.data(),
                                  d_output);
         }
 
+        // Store result
         std::vector<IdxT>    ctemp{};
         std::vector<IdxT>    rtemp{};
         std::vector<ScalarT> valtemp{};

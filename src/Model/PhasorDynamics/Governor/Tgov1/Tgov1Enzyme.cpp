@@ -23,7 +23,7 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::evaluateJacobian()
       {
         std::cout << "Jacobian evaluation is experimental!" << std::endl;
-        GridKit::Enzyme::Sparse::ModelJacobian<Tgov1<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.data(), yp_.data(), J_);
+        GridKit::Enzyme::Sparse::ModelJacobian<Tgov1<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
 
         return 0;
       }
