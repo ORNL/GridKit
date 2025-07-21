@@ -207,7 +207,7 @@ namespace GridKit
       {
 
         tag_[0] = true;  // y0 - vts  - Sensed term volt
-        tag_[1] = true;  // y1 - vr   - Votlage reg
+        tag_[1] = true;  // y1 - vr   - Voltage reg
         tag_[2] = true;  // y2 - efdp - Efd pre mult
         tag_[3] = true;  // y3 - vfx  - Exciter feedback
         tag_[4] = false; // y4 - vtr  - Term Volt Err
