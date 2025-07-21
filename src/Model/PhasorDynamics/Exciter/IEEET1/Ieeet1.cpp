@@ -172,7 +172,7 @@ namespace GridKit
 
         // IVP for Internal Variables
         y_[0] = Ec_;  // y0 - vts  - Sensed term volt
-        y_[1] = vr;   // y1 - vr   - Votlage reg
+        y_[1] = vr;   // y1 - vr   - Voltage reg
         y_[2] = efd0; // y2 - efdp - Efd pre mult
         y_[3] = vfx;  // y3 - vfx  - Exciter feedback
         y_[4] = vtr;  // y4 - vtr  - Term Volt Err
