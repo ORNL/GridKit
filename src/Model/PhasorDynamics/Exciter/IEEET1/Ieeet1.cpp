@@ -45,76 +45,12 @@ namespace GridKit
           bus_(bus)
       {
 
-        if (data.parameters.contains(model_data_type::Parameters::Tr))
-        {
-          Tr_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tr));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Ka))
-        {
-          Ka_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ka));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Ta))
-        {
-          Ta_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ta));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Ke))
-        {
-          Ke_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ke));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Te))
-        {
-          Te_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Te));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Kf))
-        {
-          Kf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Kf));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Tf))
-        {
-          Tf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tf));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Vrmin))
-        {
-          Vrmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmin));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Vrmax))
-        {
-          Vrmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmax));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::E1))
-        {
-          E1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E1));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::E2))
-        {
-          E2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E2));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Se1))
-        {
-          Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Se2))
-        {
-          Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
-        }
-        if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
-        {
-          Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
-        }
+        // Parse data struct into model
+        this->initModelParams(data);
 
         // 9 Internal Variables
         size_ = 9;
 
-        // Derived Parameters
-        ScalarT SR = std::sqrt(Se2_ / Se1_);
-
-        // Solution 1 (Aligned with PW)
-        SA_ = (SR * E1_ - E2_) / (SR - 1);
-        SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
-
-        // Solution 2
-        // SA_ = (SR * E1_ + E2_) / (SR + 1);
-        // SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
       }
 
       /**
@@ -344,6 +280,79 @@ namespace GridKit
       {
         std::cout << "Jacobian evaluation not implemented!" << std::endl;
         return 0;
+      }
+
+       /**
+       * @brief Initialization Exciter Parameters from data structure
+       */
+      template <class ScalarT, typename IdxT>
+      void Ieeet1<ScalarT, IdxT>::initModelParams(const model_data_type& data)
+      {
+        
+        if (data.parameters.contains(model_data_type::Parameters::Tr))
+        {
+          Tr_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tr));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ka))
+        {
+          Ka_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ka));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ta))
+        {
+          Ta_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ta));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ke))
+        {
+          Ke_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ke));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Te))
+        {
+          Te_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Te));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Kf))
+        {
+          Kf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Kf));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Tf))
+        {
+          Tf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tf));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Vrmin))
+        {
+          Vrmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmin));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Vrmax))
+        {
+          Vrmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmax));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::E1))
+        {
+          E1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E1));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::E2))
+        {
+          E2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E2));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Se1))
+        {
+          Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
+        }  
+        if (data.parameters.contains(model_data_type::Parameters::Se2))
+        {
+          Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
+        }
+        if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
+        {
+          Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
+        } 
+
+        // Derived Parameters
+        ScalarT SR = std::sqrt( Se2_ / Se1_);
+
+        // Solution 1 (Aligned with PW)
+        SA_ = (SR * E1_ - E2_) / (SR - 1);
+        SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
+
       }
 
       // Available template instantiations

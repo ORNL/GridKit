@@ -15,7 +15,7 @@ namespace GridKit
   {
     namespace Exciter
     {
-      /// Initial parameters for a Genrou generator model
+      /// Initial parameters for IEEET1 Exciter model
       enum class Ieeet1Parameters
       {
         Tr,     ///< Time constant for voltage sensing
@@ -34,7 +34,7 @@ namespace GridKit
         Ispdlim ///< Speed limit flag indicator
       };
 
-      /// Ports for a Genrou generator model
+      /// Ports for a IEEET1 Exciter model
       enum class Ieeet1Ports
       {
         bus,          ///< Unique ID of the terminal bus
@@ -42,7 +42,7 @@ namespace GridKit
         efd_signal,   ///< Unique ID of the output efd signal
       };
 
-      /// Variables able to be monitored for a Genrou generator model
+      /// Variables able to be monitored for a IEEET1 Exciter model
       enum class Ieeet1MonitorableVariables
       {
         efd,
@@ -50,7 +50,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Contains modeling data for a Genrou generator model.
+       * @brief Contains modeling data for a IEEET1 Exciter model.
        *
        * @tparam RealT Real parameter data type
        * @tparam IdxT  Integer parameter data type

@@ -116,6 +116,9 @@ namespace GridKit
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);
         ScalarT indicator(ScalarT x, ScalarT f);
+
+        // Parameter initialization function
+        void initModelParams(const model_data_type& data);
       };
 
     } // namespace Exciter
