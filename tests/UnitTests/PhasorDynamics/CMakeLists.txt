@@ -18,6 +18,7 @@ target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
 
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
+                                         GRIDKIT::phasor_dynamics_genrou_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
