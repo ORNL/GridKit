@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <Definitions.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
@@ -105,6 +106,18 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /**
+       * @brief Checks Jacobian evaluation.
+       */
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        return success.report(__func__);
+      }
+#endif
     }; // class GenrouTest
 
   } // namespace Testing

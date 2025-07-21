@@ -365,6 +365,73 @@ namespace GridKit
     }
 
     /**
+     * @brief Residual contribution computed locally
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    int Genrou<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    {
+      /* Read variables */
+      ScalarT delta  = y[0];
+      ScalarT omega  = y[1];
+      ScalarT Eqp    = y[2];
+      ScalarT psidp  = y[3];
+      ScalarT psiqp  = y[4];
+      ScalarT Edp    = y[5];
+      ScalarT psiqpp = y[6];
+      ScalarT psidpp = y[7];
+      ScalarT psipp  = y[8];
+      ScalarT ksat   = y[9];
+      ScalarT vd     = y[10];
+      ScalarT vq     = y[11];
+      ScalarT telec  = y[12];
+      ScalarT id     = y[13];
+      ScalarT iq     = y[14];
+      ScalarT ir     = y[15];
+      ScalarT ii     = y[16];
+      ScalarT inr    = y[17];
+      ScalarT ini    = y[18];
+
+      /* Read derivatives */
+      ScalarT delta_dot = yp[0];
+      ScalarT omega_dot = yp[1];
+      ScalarT Eqp_dot   = yp[2];
+      ScalarT psidp_dot = yp[3];
+      ScalarT psiqp_dot = yp[4];
+      ScalarT Edp_dot   = yp[5];
+
+      /* 6 Genrou differential equations */
+      f[0] = delta_dot - omega * (2 * M_PI * 60);
+      f[1] = omega_dot - (1 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
+      f[2] = Eqp_dot - (1 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
+      f[3] = psidp_dot - (1 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4] = psiqp_dot - (1 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
+      f[5] = Edp_dot - (1 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+
+      /* 11 Genrou algebraic equations */
+      f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
+      f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
+      f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
+      f[10] = vd + psiqpp * (1 + omega);
+      f[11] = vq - psidpp * (1 + omega);
+      f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
+      f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
+      f[15] = ir + G_ * vr - B_ * vi - inr;
+      f[16] = ii + B_ * vr + G_ * vi - ini;
+
+      /* 2 Genrou control inputs are set to constant for this example */
+      // f[17] = efd - efd_set_;
+
+      /* 2 Genrou current source definitions */
+      f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+      f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+
+      return 0;
+    }
+
+    /**
      * \brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      *
@@ -372,29 +439,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::evaluateResidual()
     {
-      /* Read variables */
-      ScalarT delta  = y_[0];
-      ScalarT omega  = y_[1];
-      ScalarT Eqp    = y_[2];
-      ScalarT psidp  = y_[3];
-      ScalarT psiqp  = y_[4];
-      ScalarT Edp    = y_[5];
-      ScalarT psiqpp = y_[6];
-      ScalarT psidpp = y_[7];
-      ScalarT psipp  = y_[8];
-      ScalarT ksat   = y_[9];
-      ScalarT vd     = y_[10];
-      ScalarT vq     = y_[11];
-      ScalarT telec  = y_[12];
-      ScalarT id     = y_[13];
-      ScalarT iq     = y_[14];
-      ScalarT ir     = y_[15];
-      ScalarT ii     = y_[16];
-      ScalarT inr    = y_[17];
-      ScalarT ini    = y_[18];
-      ScalarT vr     = Vr();
-      ScalarT vi     = Vi();
-
       // Mechanmical Power
       ScalarT pmech;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
@@ -416,63 +460,22 @@ namespace GridKit
       {
         efd = efd_set_;
       }
+      
+      // Bus voltages
+      vr_ = Vr();
+      vi_ = Vi();
 
-      /* Read derivatives */
-      ScalarT delta_dot = yp_[0];
-      ScalarT omega_dot = yp_[1];
-      ScalarT Eqp_dot   = yp_[2];
-      ScalarT psidp_dot = yp_[3];
-      ScalarT psiqp_dot = yp_[4];
-      ScalarT Edp_dot   = yp_[5];
+      // Residual evaluation
+      evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
-      /* 6 Genrou differential equations */
-      f_[0] = delta_dot - omega * (2 * M_PI * 60);
-      f_[1] = omega_dot - (1 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
-      f_[2] = Eqp_dot - (1 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f_[3] = psidp_dot - (1 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f_[4] = psiqp_dot - (1 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f_[5] = Edp_dot - (1 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
-
-      /* 11 Genrou algebraic equations */
-      f_[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
-      f_[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f_[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
-      f_[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f_[10] = vd + psiqpp * (1 + omega);
-      f_[11] = vq - psidpp * (1 + omega);
-      f_[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f_[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f_[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f_[15] = ir + G_ * vr - B_ * vi - inr;
-      f_[16] = ii + B_ * vr + G_ * vi - ini;
-
-      /* 2 Genrou control inputs are set to constant for this example */
-      // f_[17] = efd - efd_set_;
-
-      /* 2 Genrou current source definitions */
-      f_[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
-      f_[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
-
-      /* Current balance */
+      // Genrou contribution to bus algebraic equations
+      ScalarT inr = y_[18];
+      ScalarT ini = y_[19];
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
-
+      
       return 0;
-    }
 
-    /**
-     * @brief Jacobian evaluation not implemented yet
-     *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
-     */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::evaluateJacobian()
-    {
-      std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
-      return 0;
     }
 
     /**

@@ -120,15 +120,9 @@ namespace GridKit
 
         // Set output signal after allocation
         // The signal is accessible to the generator
-<<<<<<< HEAD
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2]);
-=======
-        if (pmech_signal_)
-        {
-          pmech_signal_->set(&y_[2]);
->>>>>>> 4929c907 (Signal name (pmech_, omega_) disambiguation.)
         }
 
         return 0;
@@ -144,11 +138,7 @@ namespace GridKit
         ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
-<<<<<<< HEAD
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
-=======
-        if (pmech_signal_)
->>>>>>> 4929c907 (Signal name (pmech_, omega_) disambiguation.)
         {
           p0 = y_[2]; //<- generator needs to be initialized first
         }
