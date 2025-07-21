@@ -285,7 +285,7 @@ namespace GridKit
           omega = speed_signal_->read();
         }
 
-        // Read E comp (terminal voltage, unless compensation impedence)
+        // Read E comp (terminal voltage, unless compensation impedance)
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
         Ec_           = std::sqrt(vreal * vreal + vimag * vimag);
