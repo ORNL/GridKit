@@ -292,7 +292,7 @@ namespace GridKit
 
         // Read Internal Variables
         ScalarT vts  = y_[0]; // y0 - Sensed term volt
-        ScalarT vr   = y_[1]; // y1 - Votlage reg
+        ScalarT vr   = y_[1]; // y1 - Voltage reg
         ScalarT efdp = y_[2]; // y2 - Efd pre mult
         ScalarT vfx  = y_[3]; // y3 - Exciter feedback
         ScalarT vtr  = y_[4]; // y4 - Term Volt Err
