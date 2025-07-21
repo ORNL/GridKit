@@ -6,7 +6,8 @@ if(GRIDKIT_ENABLE_ENZYME)
     LINK_LIBRARIES
       PUBLIC GRIDKIT::phasor_dynamics_signal ClangEnzymeFlags
     COMPILE_OPTIONS
-      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno
+      -fno-math-errno
+      #-mllvm -enzyme-auto-sparsity=1 -fno-math-errno
     OUTPUT_NAME
       gridkit_phasor_dynamics_genrou)
 else()
