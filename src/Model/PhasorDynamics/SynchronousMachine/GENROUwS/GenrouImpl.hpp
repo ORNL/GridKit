@@ -401,20 +401,20 @@ namespace GridKit
       ScalarT Edp_dot   = yp[5];
 
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (2 * M_PI * 60);
-      f[1] = omega_dot - (1 / (2 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
-      f[2] = Eqp_dot - (1 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f[3] = psidp_dot - (1 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqp_dot - (1 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f[5] = Edp_dot - (1 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+      f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
+      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech_ - D_ * omega) / (1.0 + omega) - telec);
+      f[2] = Eqp_dot - (1.0 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
+      f[3] = psidp_dot - (1.0 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4] = psiqp_dot - (1.0 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
+      f[5] = Edp_dot - (1.0 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
       f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f[10] = vd + psiqpp * (1 + omega);
-      f[11] = vq - psidpp * (1 + omega);
+      f[10] = vd + psiqpp * (1.0 + omega);
+      f[11] = vq - psidpp * (1.0 + omega);
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));

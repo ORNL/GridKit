@@ -140,6 +140,7 @@ namespace GridKit
       TestOutcome jacobian()
       {
         TestStatus success = true;
+        success.skipTest();
 
         return success.report(__func__);
       }
