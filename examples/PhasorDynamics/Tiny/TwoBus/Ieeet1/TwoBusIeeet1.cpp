@@ -53,7 +53,7 @@ int main()
   data.bus[1].Vi0      = 0.0;
 
   // Set signal nodes data
-  data.signal.resize(2);
+  data.signal.resize(3);
 
   data.signal[0].name      = "omega";
   data.signal[0].signal_id = 0;
@@ -61,8 +61,8 @@ int main()
   data.signal[1].name      = "Pm";
   data.signal[1].signal_id = 1;
 
-  data.signal[1].name      = "Efd";
-  data.signal[1].signal_id = 2;
+  data.signal[2].name      = "Efd";
+  data.signal[2].signal_id = 2;
 
   // Set branch data
   data.branch.resize(1);
