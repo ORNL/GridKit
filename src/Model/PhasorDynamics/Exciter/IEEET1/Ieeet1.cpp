@@ -50,7 +50,6 @@ namespace GridKit
 
         // 9 Internal Variables
         size_ = 9;
-
       }
 
       /**
@@ -282,13 +281,13 @@ namespace GridKit
         return 0;
       }
 
-       /**
+      /**
        * @brief Initialization Exciter Parameters from data structure
        */
       template <class ScalarT, typename IdxT>
       void Ieeet1<ScalarT, IdxT>::initModelParams(const model_data_type& data)
       {
-        
+
         if (data.parameters.contains(model_data_type::Parameters::Tr))
         {
           Tr_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tr));
@@ -336,7 +335,7 @@ namespace GridKit
         if (data.parameters.contains(model_data_type::Parameters::Se1))
         {
           Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
-        }  
+        }
         if (data.parameters.contains(model_data_type::Parameters::Se2))
         {
           Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
@@ -344,15 +343,14 @@ namespace GridKit
         if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
         {
           Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
-        } 
+        }
 
         // Derived Parameters
-        ScalarT SR = std::sqrt( Se2_ / Se1_);
+        ScalarT SR = std::sqrt(Se2_ / Se1_);
 
         // Solution 1 (Aligned with PW)
         SA_ = (SR * E1_ - E2_) / (SR - 1);
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
-
       }
 
       // Available template instantiations
