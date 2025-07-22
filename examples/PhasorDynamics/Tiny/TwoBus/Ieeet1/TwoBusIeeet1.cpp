@@ -147,7 +147,7 @@ int main()
   BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
 
   // Create generator
-  machine_type gen(bus0,  // Bus
+  machine_type gen(bus0,   // Bus
                    &omega, // Machine  Speed Signal
                    &pmech, // Governor Pmech Signal
                    &efd,   // Exciter  Efd   Signal
