@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -35,7 +36,8 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>
+    class Branch : public Component<ScalarT, IdxT>,
+                   public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>
     {
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::nnz_;

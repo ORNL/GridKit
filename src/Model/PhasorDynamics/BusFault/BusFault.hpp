@@ -3,6 +3,7 @@
 
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
@@ -19,7 +20,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
-    class BusFault : public Component<ScalarT, IdxT>
+    class BusFault : public Component<ScalarT, IdxT>,
+                     public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>
     {
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;

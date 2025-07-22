@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 #include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
@@ -39,7 +40,9 @@ namespace GridKit
     {
 
       template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>, public GovernorBase<ScalarT, IdxT>
+      class Tgov1 : public Component<ScalarT, IdxT>,
+                    public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>,
+                    public GovernorBase<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
