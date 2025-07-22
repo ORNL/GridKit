@@ -136,9 +136,9 @@ int main()
   auto* bus1 = BusFactory<scalar_type, index_type>::create(data.bus[1]);
 
   // Create signal nodes
-  auto* omega = new signal_type(data.signal[0]);
-  auto* pmech = new signal_type(data.signal[1]);
-  auto* efd   = new signal_type(data.signal[2]);
+  signal_type omega(data.signal[0]);
+  signal_type pmech(data.signal[1]);
+  signal_type efd(data.signal[2]);
 
   // Create branch
   Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
@@ -148,24 +148,24 @@ int main()
 
   // Create generator
   machine_type gen(bus0,  // Bus
-                   omega, // Machine  Speed Signal
-                   pmech, // Governor Pmech Signal
-                   efd,   // Exciter  Efd   Signal
+                   &omega, // Machine  Speed Signal
+                   &pmech, // Governor Pmech Signal
+                   &efd,   // Exciter  Efd   Signal
                    data.genrou[0]);
 
   // Create governor (w/ Pmech and Speed signals)
-  gov_type gov(pmech, omega);
+  gov_type gov(&pmech, &omega);
 
   // Create exciter (w/ Efd, speed, and bus signals)
-  exc_type exc(efd, omega, bus0, data.exciter[0]);
+  exc_type exc(&efd, &omega, bus0, data.exciter[0]);
 
   // Instantiate system model and add components to it
   SystemModel<scalar_type, index_type> sys;
   sys.addBus(bus0);
   sys.addBus(bus1);
-  sys.addSignal(omega);
-  sys.addSignal(pmech);
-  sys.addSignal(efd);
+  sys.addSignal(&omega);
+  sys.addSignal(&pmech);
+  sys.addSignal(&efd);
   sys.addComponent(&branch);
   sys.addComponent(&gen);
   sys.addComponent(&gov);
@@ -332,6 +332,10 @@ int main()
   }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  // Free Bus pointers manually
+  delete bus0;
+  delete bus1;
 
   return status;
 }
