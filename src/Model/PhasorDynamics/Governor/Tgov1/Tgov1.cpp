@@ -47,32 +47,32 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       void Tgov1<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
       {
-        if (data.parameters.contains(model_data_type::Parameters::R)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::R))
+        {
           R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Pvmin)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::Pvmin))
+        {
           Pvmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmin));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Pvmax)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::Pvmax))
+        {
           Pvmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmax));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T1)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::T1))
+        {
           T1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T1));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T2)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::T2))
+        {
           T2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T2));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T3)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::T3))
+        {
           T3_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T3));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Dt)) 
-	{
+        if (data.parameters.contains(model_data_type::Parameters::Dt))
+        {
           Dt_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Dt));
         }
       }
@@ -89,9 +89,9 @@ namespace GridKit
           T3_(7.5),
           Dt_(0)
       {
-	// 3 Internal Variables
+        // 3 Internal Variables
         size_ = 3;
-      }	
+      }
 
       /*!
        * @brief Allocate memory for model

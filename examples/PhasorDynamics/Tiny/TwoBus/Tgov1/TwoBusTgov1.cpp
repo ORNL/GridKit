@@ -100,9 +100,9 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
   // Set governor data (Default PW values)
-  data.gov.resize(1);   
+  data.gov.resize(1);
   using namespace GridKit::PhasorDynamics::Governor;
- 
+
   data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
   data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
   data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;
