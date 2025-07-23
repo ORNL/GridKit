@@ -123,7 +123,7 @@ int main()
   auto* pmech = new SignalNode<scalar_type, index_type>(data.signal[1]);
 
   // Manual add gen & gov components
-  // This is a hack  since SignalBus not implemented
+  // This is a hack since SignalBus not implemented
 
   // Create branch
   Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
