@@ -54,12 +54,10 @@ namespace GridKit
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
-        using machine_type    = Genrou<ScalarT, IdxT>;
 
       public:
         Tgov1(signal_type* pmech, signal_type* omega, const model_data_type& data);
         Tgov1(signal_type* pmech, signal_type* omega);
-        Tgov1(machine_type* machine, const model_data_type& data);
         ~Tgov1() = default;
 
         int allocate() override;
@@ -79,7 +77,6 @@ namespace GridKit
 
       private:
         // Associated Machine Model
-        machine_type* machine_{nullptr};
         signal_type*  pmech_{nullptr};
         signal_type*  omega_{nullptr};
 
