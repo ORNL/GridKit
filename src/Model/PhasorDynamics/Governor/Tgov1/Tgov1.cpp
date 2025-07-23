@@ -101,7 +101,7 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::allocate()
       {
         // Allocate local component data
-        auto size = static_cast<size_t>(size_); // Avoid compiler warnings
+        auto size = static_cast<size_t>(size_); // avoid compiler warnings
         f_.resize(size);
         y_.resize(size);
         yp_.resize(size);
