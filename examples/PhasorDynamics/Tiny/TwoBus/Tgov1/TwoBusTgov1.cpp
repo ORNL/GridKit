@@ -100,15 +100,16 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
   // Set governor data (Default PW values)
-  data.gov.resize(1);
-
-  data.gov[0].R     = 0.05;
-  data.gov[0].Pvmin = 0;
-  data.gov[0].Pvmax = 1.0;
-  data.gov[0].T1    = 0.5;
-  data.gov[0].T2    = 2.5;
-  data.gov[0].T3    = 7.5;
-  data.gov[0].Dt    = 0;
+  data.gov.resize(1);   
+  using namespace GridKit::PhasorDynamics::Governor;
+ 
+  data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
+  data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
+  data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;
+  data.gov[0].parameters[Tgov1Parameters::T1]    = 0.5;
+  data.gov[0].parameters[Tgov1Parameters::T2]    = 2.5;
+  data.gov[0].parameters[Tgov1Parameters::T3]    = 7.5;
+  data.gov[0].parameters[Tgov1Parameters::Dt]    = 0.0;
 
   // Manually add components
   // This is a workaround since signal connections are not implemented in parser
@@ -120,6 +121,9 @@ int main()
   // Create signal nodes
   auto* omega = new SignalNode<scalar_type, index_type>(data.signal[0]);
   auto* pmech = new SignalNode<scalar_type, index_type>(data.signal[1]);
+
+  // Manual add gen & gov components
+  // This is a hack  since SignalBus not implemented
 
   // Create branch
   Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
