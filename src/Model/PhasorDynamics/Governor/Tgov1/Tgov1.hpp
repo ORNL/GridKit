@@ -77,8 +77,8 @@ namespace GridKit
 
       private:
         // Associated Machine Model
-        signal_type*  pmech_{nullptr};
-        signal_type*  omega_{nullptr};
+        signal_type* pmech_{nullptr};
+        signal_type* omega_{nullptr};
 
         // Input parameters
         real_type R_{0.05};

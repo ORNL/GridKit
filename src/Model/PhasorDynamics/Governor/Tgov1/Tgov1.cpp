@@ -27,15 +27,15 @@ namespace GridKit
       /**
        *
        */
-     /**
-     * @brief Constructs a Tgov1 governor model using signal inputs directly.
-     * 
-     * Initializes the model parameters and sets the internal model size.
-     *
-     * @param pmech Pointer to the mechanical power signal.
-     * @param omega Pointer to the rotor speed signal.
-     * @param data Model data containing parameter values for initialization.
-     */
+      /**
+       * @brief Constructs a Tgov1 governor model using signal inputs directly.
+       *
+       * Initializes the model parameters and sets the internal model size.
+       *
+       * @param pmech Pointer to the mechanical power signal.
+       * @param omega Pointer to the rotor speed signal.
+       * @param data Model data containing parameter values for initialization.
+       */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega, const model_data_type& data)
         : pmech_(pmech),
@@ -51,7 +51,7 @@ namespace GridKit
        * Parses values from the model_data_type and assigns them to internal parameters.
        *
        * @param data Structure containing model parameters.
-       */      
+       */
       template <class ScalarT, typename IdxT>
       void Tgov1<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
       {
