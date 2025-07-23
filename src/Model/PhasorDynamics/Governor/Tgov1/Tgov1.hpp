@@ -80,7 +80,7 @@ namespace GridKit
         signal_type* pmech_{nullptr};
         signal_type* omega_{nullptr};
 
-        // Input Parameters
+        // Input parameters
         real_type R_{0.05};
         real_type Pvmin_{0.0};
         real_type Pvmax_{1.0};
