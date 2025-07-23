@@ -23,7 +23,8 @@ int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
-
+  using namespace GridKit::PhasorDynamics::Governor;
+  
   using scalar_type = double;
   using real_type   = double;
   using index_type  = size_t;
@@ -101,7 +102,6 @@ int main()
 
   // Set governor data (Default PW values)
   data.gov.resize(1);
-  using namespace GridKit::PhasorDynamics::Governor;
 
   data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
   data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
