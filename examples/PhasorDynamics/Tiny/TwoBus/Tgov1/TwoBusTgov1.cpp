@@ -24,7 +24,7 @@ int main()
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
   using namespace GridKit::PhasorDynamics::Governor;
-  
+
   using scalar_type = double;
   using real_type   = double;
   using index_type  = size_t;
