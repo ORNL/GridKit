@@ -41,7 +41,6 @@ namespace GridKit
 
       template <class ScalarT, typename IdxT>
       class Tgov1 : public Component<ScalarT, IdxT>,
-                    public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>,
                     public GovernorBase<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;

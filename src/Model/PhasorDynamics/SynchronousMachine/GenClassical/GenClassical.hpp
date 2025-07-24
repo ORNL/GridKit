@@ -29,8 +29,7 @@ namespace GridKit
   {
 
     template <class ScalarT, typename IdxT>
-    class GenClassical : public Component<ScalarT, IdxT>,
-                         public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>
+    class GenClassical : public Component<ScalarT, IdxT>
     {
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;

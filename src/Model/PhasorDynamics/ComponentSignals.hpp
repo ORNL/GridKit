@@ -38,7 +38,7 @@ namespace GridKit
     public:
       /// Attaches a signal node to an external variable on this component
       template <ExternalVariables variable>
-      auto attachSignalNode(const SignalNode<ScalarT, IdxT>& signal)
+      auto attachSignalNode(const SignalNode<ScalarT, IdxT>* signal)
       {
         external_variable_signals_[static_cast<size_t>(variable)] = signal;
       }
@@ -46,7 +46,7 @@ namespace GridKit
       /// Returns a signal node for attaching to an external variable on
       /// another component
       template <InternalVariables variable>
-      auto getSignalNode() -> const SignalNode<ScalarT, IdxT>&
+      auto getSignalNode() -> const SignalNode<ScalarT, IdxT>*
       {
         if (!internal_variable_signals_[static_cast<size_t>(variable)])
         {
@@ -58,7 +58,7 @@ namespace GridKit
 
       /// Assigns a signal node to an internal variable
       template <InternalVariables variable>
-      auto assignSignalVariable(const SignalNodeData<ScalarT, IdxT>& data)
+      auto assignSignalVariable(const SignalNodeData<ScalarT, IdxT>* data)
       {
         internal_variable_signals_[static_cast<size_t>(variable)] = SignalNode(data);
       }
@@ -72,7 +72,7 @@ namespace GridKit
 
       /// External variables which may have a signal associated with them for
       /// use internally
-      std::array<std::optional<const SignalNode<ScalarT, IdxT>&>,
+      std::array<std::optional<const SignalNode<ScalarT, IdxT>*>,
                  static_cast<size_t>(ExternalVariables::MAXIMUM)>
           external_variable_signals_;
     };

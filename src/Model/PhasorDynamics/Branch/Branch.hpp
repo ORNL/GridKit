@@ -36,8 +36,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>,
-                   public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>
+    class Branch : public Component<ScalarT, IdxT>
     {
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::nnz_;

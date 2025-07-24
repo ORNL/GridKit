@@ -20,8 +20,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     template <class ScalarT, typename IdxT>
-    class BusFault : public Component<ScalarT, IdxT>,
-                     public ComponentSignalExtension<ScalarT, IdxT, NoVariables, NoVariables>
+    class BusFault : public Component<ScalarT, IdxT>
     {
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;
