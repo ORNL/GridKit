@@ -2,6 +2,7 @@
  * @file Tgov1.hpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @brief Declaration of a Turbine Governor Model (IEEET1).
  *
  */
@@ -9,7 +10,6 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
-#include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -39,7 +39,7 @@ namespace GridKit
     {
 
       template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>, public GovernorBase<ScalarT, IdxT>
+      class Tgov1 : public Component<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
@@ -71,27 +71,25 @@ namespace GridKit
         {
         }
 
-        // Read Access to Pmech
-        ScalarT& Pmech() override;
-
       private:
+        // Associated Machine Model
         signal_type* pmech_{nullptr};
         signal_type* omega_{nullptr};
 
         // Input parameters
-        real_type R_;
-        real_type Pvmin_;
-        real_type Pvmax_;
-        real_type T1_;
-        real_type T2_;
-        real_type T3_;
-        real_type Dt_;
+        real_type R_{0};
+        real_type Pvmin_{0};
+        real_type Pvmax_{0};
+        real_type T1_{0};
+        real_type T2_{0};
+        real_type T3_{0};
+        real_type Dt_{0};
 
         // Input States (which can be parameters)
-        ScalarT pref_;
+        ScalarT pref_{0};
 
         // Scale of Sigmoid function (temporary local implementation)
-        const ScalarT mu_ = 4000.0;
+        const ScalarT mu_{4000.0};
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);
@@ -100,6 +98,8 @@ namespace GridKit
         ScalarT indicator_low(ScalarT x, ScalarT f);
         ScalarT indicator_high(ScalarT x, ScalarT f);
         ScalarT indicator(ScalarT x, ScalarT f);
+
+        void initializeParameters(const model_data_type& data);
       };
 
     } // namespace Governor
