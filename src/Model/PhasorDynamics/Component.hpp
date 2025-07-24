@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <optional>
+#include <vector>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
