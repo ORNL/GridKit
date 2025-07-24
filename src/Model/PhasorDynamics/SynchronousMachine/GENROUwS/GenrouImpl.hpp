@@ -47,7 +47,7 @@ namespace GridKit
         S10_(0.),
         S12_(0.)
     {
-      size_ = 20;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -97,7 +97,7 @@ namespace GridKit
         S10_(S10),
         S12_(S12)
     {
-      size_ = 20;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -204,7 +204,7 @@ namespace GridKit
         bus_id_ = data.ports.at(model_data_type::Ports::bus);
       }
 
-      size_ = 20;
+      size_ = 19;
       setDerivedParams();
     }
 
@@ -216,6 +216,7 @@ namespace GridKit
       : bus_(bus),
         pmech_(pmech),
         omega_(omega),
+        efd_signal_(nullptr),
         unit_id_(1)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
@@ -313,21 +314,119 @@ namespace GridKit
         bus_id_ = data.ports.at(model_data_type::Ports::bus);
       }
 
-      size_ = 20;
+      size_ = 19;
       setDerivedParams();
     }
 
-    // /**
-    //  * @brief Destroy the Genrou
-    //  *
-    //  * @tparam ScalarT
-    //  * @tparam IdxT
-    //  */
-    // template <class ScalarT, typename IdxT>
-    // Genrou<ScalarT, IdxT>::~Genrou()
-    // {
-    //   // std::cout << "Destroy Genrou..." << std::endl;
-    // }
+    /**
+     * @brief Constructor for a GENROU generator model with saturation
+     */
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, signal_type* efd, const model_data_type& data)
+      : bus_(bus),
+        pmech_(pmech),
+        omega_(omega),
+        efd_signal_(efd),
+        unit_id_(1)
+    {
+      if (data.parameters.contains(model_data_type::Parameters::p0))
+      {
+        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::q0))
+      {
+        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::H))
+      {
+        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::D))
+      {
+        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Ra))
+      {
+        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdop))
+      {
+        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
+      {
+        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
+      {
+        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Tqop))
+      {
+        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xd))
+      {
+        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdp))
+      {
+        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
+      {
+        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xq))
+      {
+        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqp))
+      {
+        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
+      {
+        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xl))
+      {
+        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S10))
+      {
+        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::S12))
+      {
+        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus))
+      {
+        bus_id_ = data.ports.at(model_data_type::Ports::bus);
+      }
+
+      size_ = 19;
+      setDerivedParams();
+    }
 
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
@@ -403,10 +502,10 @@ namespace GridKit
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      y_[18]            = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+      // y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      y_[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
                - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
-      y_[19] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+      y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
                + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
 
       // Set Setpoint mechanical power, which may or may not be used
@@ -414,6 +513,13 @@ namespace GridKit
       if (pmech_)
       {
         pmech_->init(Te);
+      }
+
+      // Set Efield signal (may or may not exist)
+      efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
+      if (efd_signal_)
+      {
+        efd_signal_->init(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -461,11 +567,12 @@ namespace GridKit
       ScalarT iq     = y_[14];
       ScalarT ir     = y_[15];
       ScalarT ii     = y_[16];
-      ScalarT efd    = y_[17];
-      ScalarT inr    = y_[18];
-      ScalarT ini    = y_[19];
+      ScalarT inr    = y_[17];
+      ScalarT ini    = y_[18];
       ScalarT vr     = Vr();
       ScalarT vi     = Vi();
+
+      // Mechanmical Power
       ScalarT pmech;
       if (pmech_)
       {
@@ -474,6 +581,17 @@ namespace GridKit
       else
       {
         pmech = pmech_set_;
+      }
+
+      // Exciter Efield
+      ScalarT efd;
+      if (efd_signal_)
+      {
+        efd = efd_signal_->read();
+      }
+      else
+      {
+        efd = efd_set_;
       }
 
       /* Read derivatives */
@@ -506,11 +624,11 @@ namespace GridKit
       f_[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      f_[17] = efd - efd_set_;
+      // f_[17] = efd - efd_set_;
 
       /* 2 Genrou current source definitions */
-      f_[18] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
-      f_[19] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+      f_[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+      f_[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
 
       /* Current balance */
       Ir() += inr - Vr() * G_ + Vi() * B_;

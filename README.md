@@ -27,6 +27,13 @@ You should have all of the following installed before installing GridKit™
 - [CMake](https://cmake.org/) >= 3.13
 - C++ 20 compliant compiler
 
+### Cloning and special instructions
+```
+git clone git@github.com:ORNL/GridKit.git
+git submodule update --init third-party/
+```
+Note, you may need to run the second step periodically as our third party dependencies change.
+
 ### Installing
 
 GridKit™ uses CMake for build configuration. Per CMake best practices it is recommended
@@ -53,6 +60,6 @@ as functionality test and executed by running `ctest` in the build directory.
 
 GridKit™ is written by Slaven Peles (peless@ornl.gov) and has received
 contribution from Abdourahman Barry (Virginia Tech), Tamara Becejac (Avangrid),
-Adam Birchfield (Texas A&M), Reid Gomillion (Virginia Tech), Nicholson
+Adam Birchfield (Texas A&M), Kaleb Brunhoeber (ORNL), Reid Gomillion (Virginia Tech), Nicholson
 Koukpaizan (ORNL), Asher J. Mancinelli (NVIDIA), Alex Novotny (Virginia Tech),
-Shaked Regev (ORNL), and R. Cameron Rutherford (PNNL).
+Shaked Regev (ORNL), R. Cameron Rutherford (PNNL), and Wiktoria Zielinska (ORNL).

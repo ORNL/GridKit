@@ -1,14 +1,11 @@
 /**
- * @file TwoBusTgov1Signal.cpp
+ * @file TwoBusIeeet1.cpp
+ * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
- * @author Slaven Peles (peless@ornl.gov)
- * @brief Example running a 2-bus system
- *
- * Simulates a 2-bus system with Genrou 6th order generator model and
- * compares results with data generated for the same system by Poweworld.
+ * @brief Example running a 2-bus system with exciter and governor
  *
  */
-#include "TwoBusTgov1.hpp"
+#include "TwoBusIeeet1.hpp"
 
 #include <ctime>
 #include <iostream>
@@ -19,24 +16,27 @@
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
+// Temp, remove
+#include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
+
 int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
-  using namespace GridKit::PhasorDynamics::Governor;
 
   using scalar_type = double;
   using real_type   = double;
   using index_type  = size_t;
 
-  using BusType = BusData<scalar_type, index_type>::BusType;
+  using BusType      = BusData<scalar_type, index_type>::BusType;
+  using signal_type  = SignalNode<scalar_type, index_type>;
+  using machine_type = Genrou<scalar_type, index_type>;
+  using gov_type     = Governor::Tgov1<scalar_type, index_type>;
+  using exc_type     = Exciter::Ieeet1<scalar_type, index_type>;
 
-  std::cout << "Example: TwoBusTgov1 \n";
+  std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
 
-  //
-  // Create model data
-  //
-
+  // Model Data
   SystemModelData<scalar_type, index_type> data;
 
   // Set bus data
@@ -53,13 +53,16 @@ int main()
   data.bus[1].Vi0      = 0.0;
 
   // Set signal nodes data
-  data.signal.resize(2);
+  data.signal.resize(3);
 
   data.signal[0].name      = "omega";
   data.signal[0].signal_id = 0;
 
   data.signal[1].name      = "Pm";
   data.signal[1].signal_id = 1;
+
+  data.signal[2].name      = "Efd";
+  data.signal[2].signal_id = 2;
 
   // Set branch data
   data.branch.resize(1);
@@ -77,6 +80,8 @@ int main()
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+
+  // ------------- MODEL GROUP ------------------
 
   // Set generator data
   data.genrou.resize(1);
@@ -100,16 +105,28 @@ int main()
   data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
 
-  // Set governor data (Default PW values)
+  // Governor
   data.gov.resize(1);
 
-  data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
-  data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
-  data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;
-  data.gov[0].parameters[Tgov1Parameters::T1]    = 0.5;
-  data.gov[0].parameters[Tgov1Parameters::T2]    = 2.5;
-  data.gov[0].parameters[Tgov1Parameters::T3]    = 7.5;
-  data.gov[0].parameters[Tgov1Parameters::Dt]    = 0.0;
+  // Exciter
+  data.exciter.resize(1);
+
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]      = -0.06;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]      = 0.6;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]      = 0.09;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]      = 1.46;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]   = -1.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]   = 1.;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]      = 2.8;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]      = 3.373;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]     = 0.04;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]     = 0.33;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim] = 0.;
+
+  // -------------- END MODEL DATA ------------------
 
   // Manually add components
   // This is a workaround since signal connections are not implemented in parser
@@ -119,11 +136,9 @@ int main()
   auto* bus1 = BusFactory<scalar_type, index_type>::create(data.bus[1]);
 
   // Create signal nodes
-  auto* omega = new SignalNode<scalar_type, index_type>(data.signal[0]);
-  auto* pmech = new SignalNode<scalar_type, index_type>(data.signal[1]);
-
-  // Manual add gen & gov components
-  // This is a hack since SignalBus not implemented
+  signal_type omega(data.signal[0]);
+  signal_type pmech(data.signal[1]);
+  signal_type efd(data.signal[2]);
 
   // Create branch
   Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
@@ -132,32 +147,32 @@ int main()
   BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
 
   // Create generator
-  Genrou<scalar_type, index_type> gen(bus0,
-                                      omega,
-                                      pmech,
-                                      data.genrou[0]);
+  machine_type gen(bus0,   // Bus
+                   &omega, // Machine  Speed Signal
+                   &pmech, // Governor Pmech Signal
+                   &efd,   // Exciter  Efd   Signal
+                   data.genrou[0]);
 
-  // Create governor
-  Governor::Tgov1<scalar_type, index_type> gov(pmech, omega);
+  // Create governor (w/ Pmech and Speed signals)
+  gov_type gov(&pmech, &omega);
 
-  //
+  // Create exciter (w/ Efd, speed, and bus signals)
+  exc_type exc(&efd, &omega, bus0, data.exciter[0]);
+
   // Instantiate system model and add components to it
-  //
-
   SystemModel<scalar_type, index_type> sys;
   sys.addBus(bus0);
   sys.addBus(bus1);
-  sys.addSignal(omega);
-  sys.addSignal(pmech);
+  sys.addSignal(&omega);
+  sys.addSignal(&pmech);
+  sys.addSignal(&efd);
   sys.addComponent(&branch);
   sys.addComponent(&gen);
   sys.addComponent(&gov);
+  sys.addComponent(&exc);
   sys.addFault(&fault);
 
   sys.allocate();
-
-  // Get access to the fault
-  // auto* fault = sys.getBusFault(0);
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -174,7 +189,7 @@ int main()
   {
     // Output variables are time, real and imaginary voltage and
     // frequency deviation
-    real_type ti, Vr, Vi, dw;
+    real_type ti, Vr, Vi, dw, Pm, Efd;
   };
 
   // A list of output for each time step.
@@ -194,7 +209,19 @@ int main()
   {
     std::vector<scalar_type>& y_val = sys.y();
 
-    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
+    // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
+    // Bus              -> 2 States
+    // Genrou           -> 19 States -> Start Idx 2
+    // Gov              -> 3 States  -> Start Idx 21
+    // Exc              -> 9 States  -> Start Idx 24
+    output.push_back(OutputData{
+        t,
+        y_val[0],  // Bus Vr
+        y_val[1],  // Bus Vi
+        y_val[3],  // Gen Speed
+        y_val[23], // Gov Pmech
+        y_val[26], // Exc Efd
+    });
   };
 
   // Set up simulation
@@ -222,8 +249,15 @@ int main()
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
-  real_type error_V = 0.0; // error in |V|
-  real_type error_w = 0.0; // error in rotor speed
+  real_type error_V   = 0.0; // error in |V|
+  real_type error_w   = 0.0; // error in rotor speed
+  real_type error_Efd = 0.0; // error in exciter Efd
+
+  // Output Headers
+  // std::cout << "Time\t|V|\tSpeed\tPm\tEfd\tVreg" << "\n";
+  // ref_sol[1] -> Speed
+  // ref_sol[2] -> |V|
+  // ref_sol[3] -> Efd
 
   // Read through the simulation data stored in the buffer.
   // Since we captured by reference, output should be available
@@ -245,10 +279,21 @@ int main()
     if (err > error_w)
       error_w = err;
 
-    // // Optional output
-    // std::cout << "GridKit: t = " << data.ti
-    //           << ", |V| = " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
-    //           << ", w = " << (1.0 + data.dw) << "\n";
+    // Exciter Error
+    err = std::abs(data.Efd - ref_sol[3]) / (ref_sol[3]);
+    if (err > error_Efd)
+      error_Efd = err;
+
+    // Optional output
+    /*
+    std::cout  << data.ti
+               << " " << std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi)
+               << " " << (1.0 + data.dw)
+               << " " << (data.Pm)
+               << " " << (data.Efd)
+               << " " << (data.VR)
+               << " " << (data.ksat)
+               << "\n";
     // std::cout << "Ref    : t = " << ref_sol[0]
     //           << ", |V| = " << ref_sol[2]
     //           << ", w = " << ref_sol[1]
@@ -257,11 +302,13 @@ int main()
     //           << err
     //           << "\n";
     // std::cout << "\n";
+    */
   }
 
   // Errors allowed for agreement with Powerworld results
-  real_type error_V_allowed = 2e-4;
-  real_type error_w_allowed = 1e-4;
+  real_type error_V_allowed   = 2e-4;
+  real_type error_w_allowed   = 1e-4;
+  real_type error_Efd_allowed = 1e-2;
 
   // Tolerances based on Powerworld reference accuracy
   int status = 0;
@@ -277,14 +324,18 @@ int main()
     std::cout << "Test failed with error too large!\n";
     status = 1;
   }
+  std::cout << "Max error in  Efd  = " << error_Efd << "\n";
+  if (error_Efd > error_Efd_allowed)
+  {
+    std::cout << "Test failed with error too large!\n";
+    status = 1;
+  }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  // Delete connectors created on heap
+  // Free Bus pointers manually
   delete bus0;
   delete bus1;
-  delete omega;
-  delete pmech;
 
   return status;
 }
