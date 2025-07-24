@@ -1,7 +1,7 @@
 # **Exciter Models**
 
 > [!NOTE]  
-> No implementation yet.
+> Only the IEEET1 Exciter is currently implemented.
 
 
 ## Introduction
