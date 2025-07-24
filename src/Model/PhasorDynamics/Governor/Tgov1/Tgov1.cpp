@@ -1,8 +1,8 @@
 /**
  * @file Tgov1.cpp
- * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @brief Definition of a Turbine Governor Model (IEEET1).
  *
  */
@@ -259,18 +259,6 @@ namespace GridKit
       {
         std::cout << "Jacobian evaluation not implemented!" << std::endl;
         return 0;
-      }
-
-      /**
-       * @brief The mechanical power output.
-       * @warning This is not yet accessed by anything. The Genrou class will
-       *          need to access this instead of a constant Pmech.
-       * @return ScalarT - Mechanical output power value.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT& Tgov1<ScalarT, IdxT>::Pmech()
-      {
-        return y_[2];
       }
 
       // Available template instantiations

@@ -1,8 +1,8 @@
 /**
  * @file Tgov1.hpp
- * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
+ * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @brief Declaration of a Turbine Governor Model (IEEET1).
  *
  */
@@ -10,7 +10,6 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
-#include <Model/PhasorDynamics/GovernorBase.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -40,7 +39,7 @@ namespace GridKit
     {
 
       template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>, public GovernorBase<ScalarT, IdxT>
+      class Tgov1 : public Component<ScalarT, IdxT>
       {
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
@@ -71,9 +70,6 @@ namespace GridKit
         void updateTime(real_type /* t */, real_type /* a */) override
         {
         }
-
-        // Read Access to Pmech
-        ScalarT& Pmech() override;
 
       private:
         // Associated Machine Model
