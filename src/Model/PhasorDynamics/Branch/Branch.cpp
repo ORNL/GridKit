@@ -7,11 +7,11 @@
  *
  */
 
-#include "Branch.hpp"
-
+#include <cassert>
 #include <cmath>
 #include <iostream>
 
+#include "Branch.hpp"
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 
@@ -68,6 +68,8 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
+      // we have four external variables (V_r1, V_i1, V_r2, V_i2)
+      external_variable_signals_.resize(4);
     }
 
     template <class ScalarT, typename IdxT>
@@ -182,6 +184,23 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for Branch..." << std::endl;
       std::cout << "Jacobian evaluation not implemented!" << std::endl;
       return 0;
+    }
+
+    /// Attaches a signal node to an external variable on this component
+    ///
+    /// See the documentation on `Component::attachSignalNode` for more details. The signals
+    /// available to be set on this component are:
+    /// - 0: Vr1
+    /// - 1: Vi1
+    /// - 2: Vr2
+    /// - 3: Vi2
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::attachSignalNode(size_t variable, const SignalNode<ScalarT, IdxT>* signal)
+    {
+      // we have four external variables
+      assert(variable <= 3);
+
+      external_variable_signals_[variable] = signal;
     }
 
     // Available template instantiations

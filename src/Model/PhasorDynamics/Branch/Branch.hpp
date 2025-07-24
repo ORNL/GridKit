@@ -45,6 +45,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::external_variable_signals_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
@@ -61,6 +62,8 @@ namespace GridKit
       virtual int tagDifferentiable() override;
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;
+
+      virtual void attachSignalNode(size_t, const SignalNode<ScalarT, IdxT>*) override;
 
       virtual void updateTime(real_type /* t */, real_type /* a */) override
       {

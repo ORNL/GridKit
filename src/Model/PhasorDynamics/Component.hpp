@@ -1,10 +1,11 @@
 #pragma once
 
-#include <exception>
 #include <vector>
+#include <optional>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <Model/Evaluator.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 
 namespace GridKit
 {
@@ -38,6 +39,38 @@ namespace GridKit
       virtual bool hasJacobian() override
       {
         return false;
+      }
+
+      /// Attaches a signal node to an external variable on this component
+      ///
+      /// @pre The object is initialized
+      /// @post The signal node index corresponding to the variable specified is set to the
+      ///       provided signal
+      virtual void attachSignalNode([[maybe_unused]] size_t                           variable,
+                                    [[maybe_unused]] const SignalNode<ScalarT, IdxT>* signal)
+      {
+        /// TODO: replace this interface with something significantly better. this interface has
+        ///       many, many issues, among them being that there is no type safety in the way
+        ///       the variable is specified; the callee must cast the variable enumeration to
+        ///       the variable itself (which requires more work) or specify the integer directly
+        ///       (also bad, as it makes the code harder to read and doesn't automatically update
+        ///       the index when changes are made to the enumeration. additionally, since errors
+        ///       resulting from this will only be caught at runtime, it is harder to debug).
+        ///
+        ///       another problem with this interface is that like many other methods in gridkit,
+        ///       we assume that it semantically makes sense for all components to provide them
+        ///       and narrow them down with runtime errors.
+        ///
+        ///       finally, this implementation also suffers from the problem that it requires the
+        ///       non-stub implementations to write lots of boilerplate code to actually implement
+        ///       it.
+        ///
+        ///       a prototype of a better implementation for this can be found here:
+        ///       https://github.com/ORNL/GridKit/pull/193/commits/d9158691c8e4de3d5bd0269c415a76f3b7ca76c0
+        ///
+        ///       this implementation suffers from none of the issues described above.
+
+        throw "No signals exist for this component";
       }
 
       // virtual void updateTime(real_type t, real_type a)
@@ -142,6 +175,9 @@ namespace GridKit
       std::vector<ScalarT> param_{};
       std::vector<ScalarT> param_up_{};
       std::vector<ScalarT> param_lo_{};
+
+      /// Vector containing signals attached to external variables
+      std::vector<std::optional<const SignalNode<ScalarT, IdxT>*>> external_variable_signals_;
 
       //
       // Public adjoint sensitivity methods (not yet implemented in components)
