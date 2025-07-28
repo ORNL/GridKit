@@ -343,7 +343,8 @@ namespace GridKit
         signals_.template writeExternalVariable<GenrouExternalVariables::EFD>(efd_set_);
       }
 
-      for (IdxT i = 0; i < size_; ++i) {
+      for (IdxT i = 0; i < size_; ++i)
+      {
         yp_[static_cast<size_t>(i)] = 0.0;
       }
 

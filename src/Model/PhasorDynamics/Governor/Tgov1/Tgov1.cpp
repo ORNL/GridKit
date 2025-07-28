@@ -6,10 +6,11 @@
  * @brief Definition of a Turbine Governor Model (IEEET1).
  */
 
+#include "Tgov1.hpp"
+
 #include <cmath>
 #include <iostream>
 
-#include "Tgov1.hpp"
 #include <Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>

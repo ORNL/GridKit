@@ -171,9 +171,9 @@ namespace GridKit
       }
 
       /* Identification */
-      bus_type*    bus_;
-      IdxT         bus_id_{0};
-      IdxT         unit_id_; //< @todo this should be removed
+      bus_type* bus_;
+      IdxT      bus_id_{0};
+      IdxT      unit_id_; //< @todo this should be removed
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
