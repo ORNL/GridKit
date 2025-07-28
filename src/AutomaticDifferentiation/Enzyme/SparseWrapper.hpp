@@ -121,7 +121,7 @@ namespace GridKit
       template <typename ScalarT>
       __attribute__((always_inline)) static void ident_store(ScalarT, size_t, size_t)
       {
-        assert(0 && "should never load");
+        assert(0 && "should never store");
       }
 
       /**
@@ -144,7 +144,7 @@ namespace GridKit
        * @tparam IdxT    - matrix index data type
        */
       template <typename ModelT, class ScalarT, typename IdxT>
-      __attribute__((noinline)) void ModelJacobian(ModelT* model, size_t n_res, size_t n_state, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      void ModelJacobian(ModelT* model, size_t n_res, size_t n_state, ScalarT* y, ScalarT* yp, GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
       {
         std::vector<Triple<ScalarT>> triplets;
         std::vector<ScalarT> elementary_v(n_state);
