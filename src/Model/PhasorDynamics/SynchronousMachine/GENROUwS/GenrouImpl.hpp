@@ -109,100 +109,7 @@ namespace GridKit
       : bus_(bus),
         unit_id_(1)
     {
-      if (data.parameters.contains(model_data_type::Parameters::p0))
-      {
-        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::q0))
-      {
-        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::H))
-      {
-        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::D))
-      {
-        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Ra))
-      {
-        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tdop))
-      {
-        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
-      {
-        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
-      {
-        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tqop))
-      {
-        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xd))
-      {
-        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xdp))
-      {
-        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
-      {
-        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xq))
-      {
-        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xqp))
-      {
-        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
-      {
-        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xl))
-      {
-        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::S10))
-      {
-        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::S12))
-      {
-        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus))
-      {
-        bus_id_ = data.ports.at(model_data_type::Ports::bus);
-      }
+      initializeParameters(data);
 
       size_ = 19;
       setDerivedParams();
@@ -214,105 +121,11 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data)
       : bus_(bus),
-        pmech_(pmech),
-        omega_(omega),
-        efd_signal_(nullptr),
         unit_id_(1)
     {
-      if (data.parameters.contains(model_data_type::Parameters::p0))
-      {
-        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::q0))
-      {
-        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::H))
-      {
-        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::D))
-      {
-        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Ra))
-      {
-        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tdop))
-      {
-        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
-      {
-        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
-      {
-        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Tqop))
-      {
-        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xd))
-      {
-        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xdp))
-      {
-        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
-      {
-        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xq))
-      {
-        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xqp))
-      {
-        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
-      {
-        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::Xl))
-      {
-        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::S10))
-      {
-        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::S12))
-      {
-        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus))
-      {
-        bus_id_ = data.ports.at(model_data_type::Ports::bus);
-      }
+      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
+      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
+      initializeParameters(data);
 
       size_ = 19;
       setDerivedParams();
@@ -324,10 +137,21 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, signal_type* efd, const model_data_type& data)
       : bus_(bus),
-        pmech_(pmech),
-        omega_(omega),
-        efd_signal_(efd),
         unit_id_(1)
+    {
+      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
+      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
+      signals_.template attachSignalNode<GenrouExternalVariables::EFD>(efd);
+      initializeParameters(data);
+
+      size_ = 19;
+      setDerivedParams();
+    }
+
+    /// Helper function to extract and assign model parameters from the model's associated
+    /// data structure.
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {
@@ -423,9 +247,6 @@ namespace GridKit
       {
         bus_id_ = data.ports.at(model_data_type::Ports::bus);
       }
-
-      size_ = 19;
-      setDerivedParams();
     }
 
     /*!
@@ -439,9 +260,9 @@ namespace GridKit
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
 
-      if (omega_)
+      if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
       {
-        omega_->set(&y_[1]);
+        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1]);
       }
 
       return 0;
@@ -510,20 +331,21 @@ namespace GridKit
 
       // Set Setpoint mechanical power, which may or may not be used
       pmech_set_ = Te;
-      if (pmech_)
+      if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        pmech_->init(Te);
+        signals_.template writeExternalVariable<GenrouExternalVariables::PM>(Te);
       }
 
       // Set Efield signal (may or may not exist)
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      if (efd_signal_)
+      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        efd_signal_->init(efd_set_);
+        signals_.template writeExternalVariable<GenrouExternalVariables::EFD>(efd_set_);
       }
 
-      for (IdxT i = 0; i < size_; ++i)
+      for (IdxT i = 0; i < size_; ++i) {
         yp_[static_cast<size_t>(i)] = 0.0;
+      }
 
       return 0;
     }
@@ -574,9 +396,9 @@ namespace GridKit
 
       // Mechanmical Power
       ScalarT pmech;
-      if (pmech_)
+      if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        pmech = pmech_->read();
+        pmech = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
       }
       else
       {
@@ -585,9 +407,9 @@ namespace GridKit
 
       // Exciter Efield
       ScalarT efd;
-      if (efd_signal_)
+      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        efd = efd_signal_->read();
+        efd = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
       }
       else
       {

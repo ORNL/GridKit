@@ -24,29 +24,42 @@ namespace GridKit
                                             && std::is_same_v<std::underlying_type_t<T>, size_t>
                                             && requires { T::MAXIMUM; };
 
-    /// "Extension" class for `Component`s adding methods and member variables
+    /// Extension object for `Component`s adding methods and member variables
     /// related to signal bus management
     ///
-    /// This was implemented in a separate class to avoid requiring users to
-    /// declare signal variable enumerations when declaring a `real_type` type
-    /// alias, among other things
+    /// This is used by adding an instance in a field to your class and
+    /// exposing this field to others
     template <class ScalarT, typename IdxT, typename InternalVariables, typename ExternalVariables>
       requires EnumHasMaximumValueAndIsSizeT<InternalVariables>
                && EnumHasMaximumValueAndIsSizeT<ExternalVariables>
-    class ComponentSignalExtension
+    class ComponentSignals
     {
     public:
       /// Attaches a signal node to an external variable on this component
       template <ExternalVariables variable>
-      auto attachSignalNode(const SignalNode<ScalarT, IdxT>* signal)
+      auto attachSignalNode(SignalNode<ScalarT, IdxT>* signal)
       {
         external_variable_signals_[static_cast<size_t>(variable)] = signal;
       }
 
-      /// Returns a signal node for attaching to an external variable on
-      /// another component
+      /// Check if a signal node has been attached to an external variable
+      template <ExternalVariables variable>
+      auto isAttached() -> bool
+      {
+        return static_cast<bool>(external_variable_signals_[static_cast<size_t>(variable)]);
+      }
+
+      /// Check if a signal node has been assigned to an internal variable
       template <InternalVariables variable>
-      auto getSignalNode() -> const SignalNode<ScalarT, IdxT>*
+      auto isAssigned() -> bool
+      {
+        return static_cast<bool>(internal_variable_signals_[static_cast<size_t>(variable)]);
+      }
+
+      /// Returns a signal node for an internal signal variable to be
+      /// attached to an external variable on another component
+      template <InternalVariables variable>
+      auto getSignalNode() -> SignalNode<ScalarT, IdxT>*
       {
         if (!internal_variable_signals_[static_cast<size_t>(variable)])
         {
@@ -56,23 +69,47 @@ namespace GridKit
         return *internal_variable_signals_[static_cast<size_t>(variable)];
       }
 
-      /// Assigns a signal node to an internal variable
-      template <InternalVariables variable>
-      auto assignSignalVariable(const SignalNodeData<ScalarT, IdxT>* data)
+      /// Returns the value of the specified external variable
+      template <ExternalVariables variable>
+      auto readExternalVariable() const -> ScalarT
       {
-        internal_variable_signals_[static_cast<size_t>(variable)] = SignalNode(data);
+        if (!external_variable_signals_[static_cast<size_t>(variable)])
+        {
+          throw "A signal node has not been assigned to this external variable";
+        }
+
+        return (*external_variable_signals_[static_cast<size_t>(variable)])->read();
+      }
+
+      /// Writes a value to the specified external variable
+      template <ExternalVariables variable>
+      auto writeExternalVariable(ScalarT value)
+      {
+        if (!external_variable_signals_[static_cast<size_t>(variable)])
+        {
+          throw "A signal node has not been assigned to this external variable";
+        }
+
+        (*external_variable_signals_[static_cast<size_t>(variable)])->init(value);
+      }
+
+      /// Assign a signal node to an internal variable
+      template <InternalVariables variable>
+      auto assignSignalNode(SignalNode<ScalarT, IdxT>* node)
+      {
+        internal_variable_signals_[static_cast<size_t>(variable)] = node;
       }
 
     private:
       /// Internal variables which may have a signal associated with them for
       /// use elsewhere
-      std::array<std::optional<SignalNode<ScalarT, IdxT>>,
+      std::array<std::optional<SignalNode<ScalarT, IdxT>*>,
                  static_cast<size_t>(InternalVariables::MAXIMUM)>
           internal_variable_signals_;
 
       /// External variables which may have a signal associated with them for
       /// use internally
-      std::array<std::optional<const SignalNode<ScalarT, IdxT>*>,
+      std::array<std::optional<SignalNode<ScalarT, IdxT>*>,
                  static_cast<size_t>(ExternalVariables::MAXIMUM)>
           external_variable_signals_;
     };
