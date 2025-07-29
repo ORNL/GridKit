@@ -25,6 +25,9 @@ namespace GridKit
     {
       /**
        * @brief Constructs a Tgov1 governor model from its parameters
+       *
+       * @param pmech $P_m$ internal variable signal node
+       * @param omega $\Delta_\omega$ external variable signal node
        */
       template <class ScalarT, typename IdxT>
       Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega)
