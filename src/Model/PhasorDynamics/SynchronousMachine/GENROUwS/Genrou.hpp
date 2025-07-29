@@ -172,6 +172,7 @@ namespace GridKit
       }
 
     public:
+      __attribute__((always_inline))
       int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
     private:
