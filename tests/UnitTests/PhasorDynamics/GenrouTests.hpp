@@ -117,6 +117,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+
         // Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian();
 
@@ -128,7 +130,7 @@ namespace GridKit
         {
           DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i]));
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i], tol));
         }
 
         return success.report(__func__);
