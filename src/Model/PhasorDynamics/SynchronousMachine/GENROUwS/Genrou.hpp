@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -33,6 +34,38 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `Genrou`
+    enum class GenrouInternalVariables : size_t
+    {
+      DELTA,  ///< $\delta$
+      OMEGA,  ///< $\omega$
+      PSIPD,  ///< $\psi'_d$
+      PSIPQ,  ///< $\psi'_q$
+      EPD,    ///< $E'_d$
+      EPQ,    ///< $E'_q$
+      VD,     ///< $V_d$
+      VQ,     ///< $V_q$
+      ID,     ///< $I_d$
+      IQ,     ///< $I_q$
+      IR,     ///< $I_r$
+      II,     ///< $I_i$
+      PSIPPQ, ///< $\psi''_q$
+      PSIPPD, ///< $\psi''_d$
+      PSIPP,  ///< $\psi''$
+      TE,     ///< $T_e$
+      KSAT,   ///< $k_{sat}$
+      MAXIMUM,
+    };
+
+    /// External variables of a `Genrou`
+    enum class GenrouExternalVariables : size_t
+    {
+      VR,  ///< $V_r$
+      VI,  ///< $V_i$
+      PM,  ///< $P_m$
+      EFD, ///< $E_{fd}$
+      MAXIMUM,
+    };
 
     template <class ScalarT, typename IdxT>
     class Genrou : public Component<ScalarT, IdxT>
@@ -103,7 +136,18 @@ namespace GridKit
       ScalarT getSpeed();
       ScalarT getTorque();
 
+      /// Get the `ComponentSignals` from this `Genrou`
+      auto getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              GenrouInternalVariables,
+                              GenrouExternalVariables>&
+      {
+        return signals_;
+      }
+
     private:
+      void initializeParameters(const model_data_type& data);
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -126,14 +170,13 @@ namespace GridKit
         return bus_->Ii();
       }
 
-    private:
       /* Identification */
-      bus_type*    bus_;
-      signal_type* pmech_{nullptr};
-      signal_type* omega_{nullptr};
-      signal_type* efd_signal_{nullptr};
-      IdxT         bus_id_{0};
-      IdxT         unit_id_; //< @todo this should be removed
+      bus_type* bus_;
+      IdxT      bus_id_{0};
+      IdxT      unit_id_; //< @todo this should be removed
+
+      /// Component signal extension
+      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
 
       /* Initial terminal conditions */
       ScalarT p0_{0.0};

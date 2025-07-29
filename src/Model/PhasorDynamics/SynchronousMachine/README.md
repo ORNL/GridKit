@@ -1,16 +1,14 @@
-# **General Synchronous Machine Model**
+# General Synchronous Machine Model
 
-> [!NOTE]  
-> Only the GENROU model has been implemented.
+> [!NOTE]
+> Only the GENROU and classical generator models have been implemented.
 
 ## Convention
 
-
 <div align="center">
-   <img align="center" src="../../../../docs/Figures/SM1.JPG">
-   
-  Figure 1: Synchronous Machine. 
-  Figure courtesy of 
+  <img align="center" src="../../../../docs/Figures/SM1.JPG">
+  Figure 1: Synchronous Machine.
+  Figure courtesy of
   [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
 </div>
 
@@ -19,7 +17,7 @@ The following conventions are used for the d-q reference frame.
 - The Rotor angle is w.r.t. to q-axis
 
 ## Types
-There are two main variations 
+
 - Round Rotor (See [GENROU](GENROUwS/README.md))
 - Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
 - GENPWS
@@ -29,19 +27,22 @@ There are two main variations
 - GenClassical
 
 ### Per-Unit Basis
+
 In relevant models, the terminal impedences are on the generator impedance base.
- To convert to network base, the following must be performed.
-``` math
+To convert to network base, the following must be performed.
+
+```math
 \begin{aligned}
   Z_{term} &
   \mapsto Z_{term}\dfrac{S_{base,sys}}{S_{base,machine}}
 \end{aligned}
 ```
 
-For example, say the terminal impedence is $Z=0.05$ in per-unit on the 
-machine's base of $S_{base,machine}=50$  MW, and the system base is 
-$S_{base,sys}=100$ MW. Then the terminal impedence on the the system 
+For example, say the terminal impedence is $Z=0.05$ in per-unit on the
+machine's base of $S_{base,machine}=50$  MW, and the system base is
+$S_{base,sys}=100$ MW. Then the terminal impedence on the the system
 base is calculated as follows.
+
 ``` math
 \begin{aligned}
   Z_{sys} = 0.05\dfrac{100 \text{MW}}{50 \text{MW}} = 0.1
@@ -49,11 +50,12 @@ base is calculated as follows.
 ```
 
 #### Saturation
-Saturation means increasingly large amounts of current are needed to increase 
+
+Saturation means increasingly large amounts of current are needed to increase
 the flux density. The Scaled Quadratic saturation model is currently implemented.
 ``` math
 \begin{aligned}
-  k_{sat} = 
+  k_{sat} =
   \begin{cases}
     S_B(\psi''-S_A)^2 &\text{if } \psi''>S_A \\
     0 &\text{if } \psi''\leq S_A

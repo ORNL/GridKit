@@ -10,6 +10,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -37,6 +38,22 @@ namespace GridKit
   {
     namespace Governor
     {
+      /// Internal variables of a `Tgov1`
+      enum class Tgov1InternalVariables : size_t
+      {
+        PTX, ///< $P_{tx}$
+        PV,  ///< $P_v$
+        PM,  ///< $P_m$
+        MAXIMUM,
+      };
+
+      /// External variables of a `Tgov1`
+      enum class Tgov1ExternalVariables : size_t
+      {
+        DELTAOMEGA, ///< $\Delta_\omega$
+        PREF,       ///< $P_{ref}$
+        MAXIMUM,
+      };
 
       template <class ScalarT, typename IdxT>
       class Tgov1 : public Component<ScalarT, IdxT>
@@ -55,8 +72,8 @@ namespace GridKit
         using signal_type     = SignalNode<ScalarT, IdxT>;
 
       public:
-        Tgov1(signal_type* pmech, signal_type* omega, const model_data_type& data);
-        Tgov1(signal_type* pmech, signal_type* omega);
+        Tgov1(signal_type*, signal_type*);
+        Tgov1(const model_data_type&);
         ~Tgov1() = default;
 
         int allocate() override;
@@ -71,11 +88,17 @@ namespace GridKit
         {
         }
 
-      private:
-        // Associated Machine Model
-        signal_type* pmech_{nullptr};
-        signal_type* omega_{nullptr};
+        /// Get the `ComponentSignals` from this `GenClassical`
+        auto getSignals()
+            -> ComponentSignals<ScalarT,
+                                IdxT,
+                                Tgov1InternalVariables,
+                                Tgov1ExternalVariables>&
+        {
+          return signals_;
+        }
 
+      private:
         // Input parameters
         real_type R_{0};
         real_type Pvmin_{0};
@@ -90,6 +113,9 @@ namespace GridKit
 
         // Scale of Sigmoid function (temporary local implementation)
         const ScalarT mu_{4000.0};
+
+        /// Component signal extension
+        ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);

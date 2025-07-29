@@ -4,7 +4,6 @@
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Wiktoria Zielinska (zielinskawa@ORNL.gov)
  * @brief Definition of a Turbine Governor Model (IEEET1).
- *
  */
 
 #include "Tgov1.hpp"
@@ -25,21 +24,35 @@ namespace GridKit
     namespace Governor
     {
       /**
+       * @brief Constructs a Tgov1 governor model from its parameters
        *
-       */
-      /**
-       * @brief Constructs a Tgov1 governor model using signal inputs directly.
-       *
-       * Initializes the model parameters and sets the internal model size.
-       *
-       * @param pmech Pointer to the mechanical power signal.
-       * @param omega Pointer to the rotor speed signal.
-       * @param data Model data containing parameter values for initialization.
+       * @param pmech $P_m$ internal variable signal node
+       * @param omega $\Delta_\omega$ external variable signal node
        */
       template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega, const model_data_type& data)
-        : pmech_(pmech),
-          omega_(omega)
+      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega)
+        : R_(0.05),
+          Pvmin_(0),
+          Pvmax_(1),
+          T1_(0.5),
+          T2_(2.5),
+          T3_(7.5),
+          Dt_(0)
+      {
+        signals_.template assignSignalNode<Tgov1InternalVariables::PM>(pmech);
+        signals_.template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(omega);
+
+        // 3 internal variables
+        size_ = 3;
+      }
+
+      /**
+       * @brief Constructs a Tgov1 governor model from its parameters
+       *
+       * @param data Data to initialize the model from.
+       */
+      template <class ScalarT, typename IdxT>
+      Tgov1<ScalarT, IdxT>::Tgov1(const model_data_type& data)
       {
         initializeParameters(data);
         size_ = 3;
@@ -48,7 +61,8 @@ namespace GridKit
       /**
        * @brief Helper function to extract and assign model parameters.
        *
-       * Parses values from the model_data_type and assigns them to internal parameters.
+       * Parses values from the model_data_type and assigns them to internal
+       * parameters.
        *
        * @param data Structure containing model parameters.
        */
@@ -59,51 +73,40 @@ namespace GridKit
         {
           R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::Pvmin))
         {
           Pvmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmin));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::Pvmax))
         {
           Pvmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmax));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::T1))
         {
           T1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T1));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::T2))
         {
           T2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T2));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::T3))
         {
           T3_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T3));
         }
+
         if (data.parameters.contains(model_data_type::Parameters::Dt))
         {
           Dt_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Dt));
         }
       }
 
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega)
-        : pmech_(pmech),
-          omega_(omega),
-          R_(0.05),
-          Pvmin_(0),
-          Pvmax_(1),
-          T1_(0.5),
-          T2_(2.5),
-          T3_(7.5),
-          Dt_(0)
-      {
-        // 3 Internal Variables
-        size_ = 3;
-      }
-
       /*!
        * @brief Allocate memory for model
-       *
        */
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::allocate()
@@ -117,10 +120,11 @@ namespace GridKit
 
         // Set output signal after allocation
         // The signal is accessible to the generator
-        if (pmech_)
+        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          pmech_->set(&y_[2]);
+          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2]);
         }
+
         return 0;
       }
 
@@ -134,7 +138,7 @@ namespace GridKit
         ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
-        if (pmech_)
+        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           p0 = y_[2]; //<- generator needs to be initialized first
         }
@@ -219,11 +223,13 @@ namespace GridKit
       int Tgov1<ScalarT, IdxT>::evaluateResidual()
       {
         // Input Variables
+
         ScalarT omega{0};
-        if (omega_)
+        if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          omega = omega_->read();
+          omega = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
         }
+
         // Read Internal Variables
         ScalarT ptx   = y_[0]; // y0 - Ptx
         ScalarT pv    = y_[1]; // y1 - Pv

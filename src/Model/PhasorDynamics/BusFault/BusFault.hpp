@@ -3,6 +3,7 @@
 
 #include <Model/PhasorDynamics/BusBase.hpp>
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit

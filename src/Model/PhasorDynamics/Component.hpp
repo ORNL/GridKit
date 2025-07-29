@@ -1,6 +1,5 @@
 #pragma once
 
-#include <exception>
 #include <vector>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
