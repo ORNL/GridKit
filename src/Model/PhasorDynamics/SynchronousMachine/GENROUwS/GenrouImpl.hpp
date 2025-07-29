@@ -369,6 +369,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
+    __attribute__((always_inline))
     int Genrou<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
     {
       /* Read variables */
