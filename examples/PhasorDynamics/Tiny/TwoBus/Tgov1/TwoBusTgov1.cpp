@@ -8,11 +8,10 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "TwoBusTgov1.hpp"
-
 #include <ctime>
 #include <iostream>
 
+#include "TwoBusTgov1.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
@@ -131,14 +130,15 @@ int main()
   // Add bus fault to bus0
   BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
 
-  // Create generator
-  Genrou<scalar_type, index_type> gen(bus0,
-                                      omega,
-                                      pmech,
-                                      data.genrou[0]);
+  // Create generator and make its signal connections
+  Genrou<scalar_type, index_type> gen(bus0, data.genrou[0]);
+  gen.getSignals().template attachSignalNode<GenrouExternalVariables::PM>(pmech);
+  gen.getSignals().template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
 
-  // Create governor
-  Governor::Tgov1<scalar_type, index_type> gov(pmech, omega);
+  // Create governor and make its signal connections
+  Governor::Tgov1<scalar_type, index_type> gov(data.gov[0]);
+  gov.getSignals().template assignSignalNode<Tgov1InternalVariables::PM>(pmech);
+  gov.getSignals().template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(omega);
 
   //
   // Instantiate system model and add components to it
