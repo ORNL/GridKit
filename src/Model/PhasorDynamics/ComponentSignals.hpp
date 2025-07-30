@@ -39,10 +39,10 @@ namespace GridKit
     /// @tparam ExternalVariables An enumeration satisfying
     ///         `EnumHasMaximumValueAndIsSizeT` enumerating external variables
     ///         for the component
-    /// @invariant InternalVariables::MAXIMUM is equal to the maximum integer
-    ///            value of the enum + 1
-    /// @invariant ExternalVariables::MAXIMUM is equal to the maximum integer
-    ///            value of the enum + 1
+    /// @invariant InternalVariables::MAXIMUM is the greatest attainable
+    ///            integer value of the enum
+    /// @invariant ExternalVariables::MAXIMUM is the greatest attainable
+    ///            integer value of the enum
     template <class ScalarT, typename IdxT, typename InternalVariables, typename ExternalVariables>
       requires EnumHasMaximumValueAndIsSizeT<InternalVariables>
                && EnumHasMaximumValueAndIsSizeT<ExternalVariables>
@@ -67,6 +67,7 @@ namespace GridKit
         }
 #endif
 
+        static_assert(variable < ExternalVariables::MAXIMUM);
         external_variable_signals_[static_cast<size_t>(variable)] = node;
       }
 
@@ -76,6 +77,7 @@ namespace GridKit
       template <ExternalVariables variable>
       auto isAttached() const -> bool
       {
+        static_assert(variable < ExternalVariables::MAXIMUM);
         return static_cast<bool>(external_variable_signals_[static_cast<size_t>(variable)]);
       }
 
@@ -85,6 +87,7 @@ namespace GridKit
       template <InternalVariables variable>
       auto isAssigned() const -> bool
       {
+        static_assert(variable < InternalVariables::MAXIMUM);
         return static_cast<bool>(internal_variable_signals_[static_cast<size_t>(variable)]);
       }
 
@@ -98,6 +101,7 @@ namespace GridKit
       template <InternalVariables variable>
       auto getSignalNode() -> SignalNode<ScalarT, IdxT>*
       {
+        static_assert(variable < InternalVariables::MAXIMUM);
         if (!internal_variable_signals_[static_cast<size_t>(variable)])
         {
           throw std::logic_error("A signal node has not been assigned to this internal variable");
@@ -114,6 +118,7 @@ namespace GridKit
       template <ExternalVariables variable>
       auto readExternalVariable() const -> ScalarT
       {
+        static_assert(variable < ExternalVariables::MAXIMUM);
         if (!external_variable_signals_[static_cast<size_t>(variable)])
         {
           throw std::logic_error("A signal node has not been assigned to this external variable");
@@ -133,6 +138,7 @@ namespace GridKit
       template <ExternalVariables variable>
       auto writeExternalVariable(ScalarT value)
       {
+        static_assert(variable < ExternalVariables::MAXIMUM);
         if (!external_variable_signals_[static_cast<size_t>(variable)])
         {
           throw std::logic_error("A signal node has not been assigned to this external variable");
@@ -158,6 +164,7 @@ namespace GridKit
         }
 #endif
 
+        static_assert(variable < InternalVariables::MAXIMUM);
         internal_variable_signals_[static_cast<size_t>(variable)] = node;
       }
 
