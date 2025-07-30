@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include <Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
@@ -65,7 +67,7 @@ namespace GridKit
         }
         else
         {
-          throw "Invalid device class";
+          throw std::runtime_error("Invalid device class");
         }
       }
     }
