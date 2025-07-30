@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include <Model/PhasorDynamics/Bus/BusData.hpp>
 #include <nlohmann/json.hpp>
 
@@ -31,7 +33,7 @@ namespace GridKit
           }
           else
           {
-            throw "Invalid initial parameter";
+            throw std::runtime_error("Invalid initial parameter");
           }
         }
       }
@@ -49,7 +51,7 @@ namespace GridKit
       }
       else
       {
-        throw "Invalid bus class";
+        throw std::runtime_error("Invalid bus class");
       }
 
       j.at("v_base").get_to(bd.v_base);
@@ -91,7 +93,7 @@ namespace GridKit
           }
           else
           {
-            throw "Invalid monitored variable";
+            throw std::runtime_error("Invalid monitored variable");
           }
         }
       }

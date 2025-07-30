@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include <Model/PhasorDynamics/ComponentData.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
@@ -44,12 +46,12 @@ namespace GridKit
           }
           else
           {
-            throw "Invalid initial parameter";
+            throw std::runtime_error("Invalid initial parameter");
           }
         }
         else
         {
-          throw "Invalid initial parameter";
+          throw std::runtime_error("Invalid initial parameter");
         }
       }
 
@@ -62,7 +64,7 @@ namespace GridKit
         }
         else
         {
-          throw "Invalid port mapping";
+          throw std::runtime_error("Invalid port mapping");
         }
       }
 
@@ -89,7 +91,7 @@ namespace GridKit
           }
           else
           {
-            throw "Invalid monitored variable";
+            throw std::runtime_error("Invalid monitored variable");
           }
         }
       }
