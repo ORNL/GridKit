@@ -220,8 +220,7 @@ namespace GridKit
        *
        */
       template <class ScalarT, typename IdxT>
-      __attribute__((always_inline))
-      int Tgov1<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+      __attribute__((always_inline)) int Tgov1<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
       {
         // Read Internal Variables
         ScalarT ptx   = y[0]; // y0 - Ptx

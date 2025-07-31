@@ -369,8 +369,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline))
-    int Genrou<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int Genrou<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
     {
       /* Read variables */
       ScalarT delta  = y[0];
@@ -459,7 +458,7 @@ namespace GridKit
       {
         efd_ = efd_set_;
       }
-      
+
       // Bus voltages
       vr_ = Vr();
       vi_ = Vi();
@@ -468,13 +467,12 @@ namespace GridKit
       evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
       // Genrou contribution to bus algebraic equations
-      ScalarT inr = y_[17];
-      ScalarT ini = y_[18];
-      Ir() += inr - Vr() * G_ + Vi() * B_;
-      Ii() += ini - Vr() * B_ - Vi() * G_;
-      
-      return 0;
+      ScalarT inr  = y_[17];
+      ScalarT ini  = y_[18];
+      Ir()        += inr - Vr() * G_ + Vi() * B_;
+      Ii()        += ini - Vr() * B_ - Vi() * G_;
 
+      return 0;
     }
 
     /**
