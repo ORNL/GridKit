@@ -8,10 +8,11 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include "TwoBusTgov1.hpp"
+
 #include <ctime>
 #include <iostream>
 
-#include "TwoBusTgov1.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
