@@ -176,8 +176,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline))
-    int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
     {
       // Set variable aliases for better reliability
       const ScalarT delta = y[0];

@@ -139,8 +139,8 @@ namespace GridKit
     private:
       std::vector<DependencyTracking::Variable> DependencyTrackingJacobian()
       {
-        DependencyTracking::Variable Vr1{1.0}; ///< Bus real voltage
-        DependencyTracking::Variable Vi1{0.0}; ///< Bus imaginary voltage
+        DependencyTracking::Variable                               Vr1{1.0}; ///< Bus real voltage
+        DependencyTracking::Variable                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus,
                                                                        1,
@@ -192,8 +192,8 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
       {
-        ScalarT Vr1{1.0}; ///< Bus real voltage
-        ScalarT Vi1{0.0}; ///< Bus imaginary voltage
+        ScalarT                               Vr1{1.0}; ///< Bus real voltage
+        ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
                                                   1,

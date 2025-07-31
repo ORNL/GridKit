@@ -189,14 +189,13 @@ namespace GridKit
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
           success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i], tol));
         }
-        
+
         return success.report(__func__);
       }
+
     private:
-
-
       std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
-          PhasorDynamics::BusData<ScalarT, IdxT> busdata, 
+          PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
           PhasorDynamics::GenrouData<ScalarT, IdxT> gendata)
       {
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(busdata);
@@ -237,7 +236,7 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          PhasorDynamics::BusData<ScalarT, IdxT> busdata, 
+          PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
           PhasorDynamics::GenrouData<ScalarT, IdxT> gendata)
       {
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
@@ -257,13 +256,14 @@ namespace GridKit
 
         bus.evaluateResidual();
         gen.evaluateResidual();
-        gov.evaluateResidual(); 
+        gov.evaluateResidual();
 
         gov.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gov.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");
 
-        return GridKit::Testing::MapFromCOO(model_jacobian);      }
+        return GridKit::Testing::MapFromCOO(model_jacobian);
+      }
 #endif
     }; // class GovernorTgov1Tests
 
