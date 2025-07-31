@@ -7,8 +7,8 @@ namespace GridKit
     namespace Governor
     {
       // Available template instantiations
-      template class Tgov1<double, long int>;
-      template class Tgov1<double, size_t>;
+      template class Tgov1<DependencyTracking::Variable, long int>;
+      template class Tgov1<DependencyTracking::Variable, size_t>;
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit

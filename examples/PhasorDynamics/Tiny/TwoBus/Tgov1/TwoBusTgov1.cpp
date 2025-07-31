@@ -8,11 +8,10 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
-#include "TwoBusTgov1.hpp"
-
 #include <ctime>
 #include <iostream>
 
+#include "TwoBusTgov1.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
@@ -81,6 +80,8 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
+  data.genrou[0].ports[GenrouPorts::signal_in]       = 1;
+  data.genrou[0].ports[GenrouPorts::signal_out]      = 0;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
   data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
   data.genrou[0].parameters[GenrouParameters::H]     = 3.;
@@ -103,6 +104,8 @@ int main()
   // Set governor data (Default PW values)
   data.gov.resize(1);
 
+  data.gov[0].ports[Tgov1Ports::signal_in]       = 0;
+  data.gov[0].ports[Tgov1Ports::signal_out]      = 1;
   data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
   data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
   data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;
@@ -111,54 +114,11 @@ int main()
   data.gov[0].parameters[Tgov1Parameters::T3]    = 7.5;
   data.gov[0].parameters[Tgov1Parameters::Dt]    = 0.0;
 
-  // Manually add components
-  // This is a workaround since signal connections are not implemented in parser
-
-  // Create buses
-  auto* bus0 = BusFactory<scalar_type, index_type>::create(data.bus[0]);
-  auto* bus1 = BusFactory<scalar_type, index_type>::create(data.bus[1]);
-
-  // Create signal nodes
-  auto* omega = new SignalNode<scalar_type, index_type>(data.signal[0]);
-  auto* pmech = new SignalNode<scalar_type, index_type>(data.signal[1]);
-
-  // Manual add gen & gov components
-  // This is a hack since SignalBus not implemented
-
-  // Create branch
-  Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
-
-  // Add bus fault to bus0
-  BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
-
-  // Create generator and make its signal connections
-  Genrou<scalar_type, index_type> gen(bus0, data.genrou[0]);
-  gen.getSignals().template attachSignalNode<GenrouExternalVariables::PM>(pmech);
-  gen.getSignals().template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
-
-  // Create governor and make its signal connections
-  Governor::Tgov1<scalar_type, index_type> gov(data.gov[0]);
-  gov.getSignals().template assignSignalNode<Tgov1InternalVariables::PM>(pmech);
-  gov.getSignals().template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(omega);
-
-  //
-  // Instantiate system model and add components to it
-  //
-
-  SystemModel<scalar_type, index_type> sys;
-  sys.addBus(bus0);
-  sys.addBus(bus1);
-  sys.addSignal(omega);
-  sys.addSignal(pmech);
-  sys.addComponent(&branch);
-  sys.addComponent(&gen);
-  sys.addComponent(&gov);
-  sys.addFault(&fault);
-
+  SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
   // Get access to the fault
-  // auto* fault = sys.getBusFault(0);
+  auto* fault = sys.getBusFault(0);
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -211,13 +171,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault.setStatus(true);
+  fault->setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault.setStatus(false);
+  fault->setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
@@ -280,12 +240,6 @@ int main()
   }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
-
-  // Delete connectors created on heap
-  delete bus0;
-  delete bus1;
-  delete omega;
-  delete pmech;
 
   return status;
 }

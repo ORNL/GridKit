@@ -113,9 +113,9 @@ are specified:
   --------------|------------------------------------------------------|------------------------------------------------|---------------------------- | -------------------------
   `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                                 | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `static_load` | a basic static ZIP load                              | `bus`                                          | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
-  `GENROU`      | 6th order machine model                              | `bus`, `exciter_signal`\*, `governor_signal`\* | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `GENROU`      | 6th order machine model                              | `bus`, `signal_in`\*, `signal_out`\*           | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `IEEET1`      | a basic exciter model                                | `bus`, `speed_signal`, `efd_signal`            | `Efd` | `Efd`, `ksat`
-  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `control_signal`\*                      | `state0`, `R`, `X` | `state`, `ir`, `ii`
+  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `signal_in`\*                           | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.

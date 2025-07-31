@@ -36,6 +36,8 @@ namespace GridKit
        */
       enum class Tgov1Ports
       {
+        signal_in,
+        signal_out,
       };
 
       /**
