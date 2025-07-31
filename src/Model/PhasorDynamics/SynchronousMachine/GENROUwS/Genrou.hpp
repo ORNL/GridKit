@@ -233,6 +233,7 @@ namespace GridKit
 
       /* Local copies of signal variables */
       ScalarT pmech_;
+      ScalarT efd_;
     };
 
   } // namespace PhasorDynamics

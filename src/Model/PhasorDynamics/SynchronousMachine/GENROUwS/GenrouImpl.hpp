@@ -278,8 +278,8 @@ namespace GridKit
       /* Initialization tricks -- assuming NO saturation */
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = p0_;
-      ScalarT q     = q0_;
+      ScalarT p     = static_cast<ScalarT>(p0_);
+      ScalarT q     = static_cast<ScalarT>(q0_);
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT Er    = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
       ScalarT Ei    = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
@@ -404,7 +404,7 @@ namespace GridKit
       /* 6 Genrou differential equations */
       f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
       f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech_ - D_ * omega) / (1.0 + omega) - telec);
-      f[2] = Eqp_dot - (1.0 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
+      f[2] = Eqp_dot - (1.0 / Tdop_) * (efd_ - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
       f[3] = psidp_dot - (1.0 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
       f[4] = psiqp_dot - (1.0 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
       f[5] = Edp_dot - (1.0 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
@@ -419,11 +419,11 @@ namespace GridKit
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir + G_ * vr - B_ * vi - inr;
-      f[16] = ii + B_ * vr + G_ * vi - ini;
+      f[15] = ir + G_ * vr_ - B_ * vi_ - inr;
+      f[16] = ii + B_ * vr_ + G_ * vi_ - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
-      // f[17] = efd - efd_set_;
+      // f[17] = efd_ - efd_set_;
 
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
@@ -441,25 +441,23 @@ namespace GridKit
     int Genrou<ScalarT, IdxT>::evaluateResidual()
     {
       // Mechanmical Power
-      ScalarT pmech;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        pmech = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
+        pmech_ = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
       }
       else
       {
-        pmech = pmech_set_;
+        pmech_ = pmech_set_;
       }
 
       // Exciter Efield
-      ScalarT efd;
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        efd = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
+        efd_ = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
       }
       else
       {
-        efd = efd_set_;
+        efd_ = efd_set_;
       }
       
       // Bus voltages
@@ -470,8 +468,8 @@ namespace GridKit
       evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
       // Genrou contribution to bus algebraic equations
-      ScalarT inr = y_[18];
-      ScalarT ini = y_[19];
+      ScalarT inr = y_[17];
+      ScalarT ini = y_[18];
       Ir() += inr - Vr() * G_ + Vi() * B_;
       Ii() += ini - Vr() * B_ - Vi() * G_;
       

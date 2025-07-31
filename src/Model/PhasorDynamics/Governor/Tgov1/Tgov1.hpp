@@ -131,6 +131,9 @@ namespace GridKit
         ScalarT indicator(ScalarT x, ScalarT f);
 
         void initializeParameters(const model_data_type& data);
+
+        /* Local copies of signal variables */
+        ScalarT omega_{0};
       };
 
     } // namespace Governor
