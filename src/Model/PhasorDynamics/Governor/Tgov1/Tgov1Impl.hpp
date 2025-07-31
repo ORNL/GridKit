@@ -263,6 +263,6 @@ namespace GridKit
 
         return 0;
       }
-   } // namespace Governor
+    } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
