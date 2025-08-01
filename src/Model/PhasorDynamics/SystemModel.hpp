@@ -72,6 +72,8 @@ namespace GridKit
        */
       SystemModel(SystemModelData<real_type, IdxT>& data)
       {
+        using namespace Governor;
+
         // Set system model tolerances
         rel_tol_         = 1e-7;
         abs_tol_         = 1e-9;
@@ -131,7 +133,21 @@ namespace GridKit
           {
             bus_index = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::bus);
           }
+
           auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
+
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::signal_out))
+          {
+            IdxT signal_out = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::signal_out);
+            gen->getSignals().template assignSignalNode<GenrouInternalVariables::OMEGA>(getSignal(signal_out));
+          }
+
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::signal_in))
+          {
+            IdxT signal_in = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::signal_in);
+            gen->getSignals().template attachSignalNode<GenrouExternalVariables::PM>(getSignal(signal_in));
+          }
+
           addComponent(gen);
         }
 
@@ -145,6 +161,26 @@ namespace GridKit
           }
           auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
           addComponent(gen);
+        }
+
+        // Add Tgov1 governors
+        for (const auto& govdata : data.gov)
+        {
+          auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
+
+          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::signal_in))
+          {
+            IdxT signal_in = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::signal_in);
+            gov->getSignals().template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(getSignal(signal_in));
+          }
+
+          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::signal_out))
+          {
+            IdxT signal_out = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::signal_out);
+            gov->getSignals().template assignSignalNode<Tgov1InternalVariables::PM>(getSignal(signal_out));
+          }
+
+          addComponent(gov);
         }
 
         // Add faults
@@ -178,6 +214,11 @@ namespace GridKit
           for (auto bus : buses_)
           {
             delete bus;
+          }
+
+          for (auto signal : signals_)
+          {
+            delete signal;
           }
         }
       }
