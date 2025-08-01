@@ -9,7 +9,6 @@ if(GRIDKIT_ENABLE_ENZYME)
     SOURCES
       Tgov1Enzyme.cpp
     LINK_LIBRARIES
-      GRIDKIT::phasor_dynamics_genrou
       GRIDKIT::phasor_dynamics_signal
       ClangEnzymeFlags
     COMPILE_OPTIONS
@@ -21,7 +20,6 @@ else()
     SOURCES
       Tgov1.cpp
     LINK_LIBRARIES
-      GRIDKIT::phasor_dynamics_genrou
       GRIDKIT::phasor_dynamics_signal
     OUTPUT_NAME
       gridkit_phasor_dynamics_governortgov1)
