@@ -229,6 +229,8 @@ namespace GridKit
       /* Local copies of bus variables */
       ScalarT vr_;
       ScalarT vi_;
+      ScalarT ir_;
+      ScalarT ii_;
 
       /* Local copies of signal variables */
       ScalarT pmech_;

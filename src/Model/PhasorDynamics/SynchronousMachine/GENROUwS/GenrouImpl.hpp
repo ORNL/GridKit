@@ -428,12 +428,15 @@ namespace GridKit
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
       f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
 
+      /* Bus current injection */
+      ir_ = inr - vr_ * G_ + vi_ * B_;
+      ii_ = ini - vr_ * B_ - vi_ * G_;
+
       return 0;
     }
 
     /**
-     * \brief Residual contribution of the branch is pushed to the
-     * two terminal buses.
+     * \brief Residual evaluation and contribution to the connected bus
      *
      */
     template <class ScalarT, typename IdxT>
@@ -467,10 +470,8 @@ namespace GridKit
       evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
       // Genrou contribution to bus algebraic equations
-      ScalarT inr  = y_[17];
-      ScalarT ini  = y_[18];
-      Ir()        += inr - Vr() * G_ + Vi() * B_;
-      Ii()        += ini - Vr() * B_ - Vi() * G_;
+      Ir() += ir_;
+      Ii() += ii_;
 
       return 0;
     }
