@@ -99,7 +99,7 @@ jobs:
         llvm: ["16"]
         # Minimal Build(s) - GHCR mirror speeds these up a lot!
         spack_spec:
-          - gridkit@develop ~asan+enzyme+ipopt~ubsan ^enzyme@main
+          - gridkit@develop ~asan+enzyme+ipopt~ubsan
           - gridkit@develop +asan~enzyme+ipopt+ubsan
 
     steps:
