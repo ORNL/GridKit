@@ -23,6 +23,7 @@ target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
 target_link_libraries(test_phasor_governortgov1 GRIDKIT::phasor_dynamics_genrou
+                                                GRIDKIT::phasor_dynamics_genrou_dependency_tracking
                                                 GRIDKIT::phasor_dynamics_governortgov1
                                                 GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                                 GRIDKIT::phasor_dynamics_signal
@@ -41,7 +42,6 @@ target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_components
                                          GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                          GRIDKIT::phasor_dynamics_gen_classical_dependency_tracking
                                          GRIDKIT::phasor_dynamics_signal_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus_fault_dependency_tracking)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)
