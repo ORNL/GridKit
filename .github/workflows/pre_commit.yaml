@@ -1,7 +1,7 @@
 name: gridkit-bot pre-commit
 
 # Won't run on develop/main directly
-on: [pull_request]
+#on: [pull_request]
 
 jobs:
   pre-commit:
