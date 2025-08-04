@@ -4,18 +4,18 @@
 #    - Adam Birchfield <abirchfield@tamu.edu>
 # ]]
 
-if(GRIDKIT_ENABLE_ENZYME)
-  gridkit_add_library(phasor_dynamics_governortgov1
-    SOURCES
-      Tgov1Enzyme.cpp
-    LINK_LIBRARIES
-      GRIDKIT::phasor_dynamics_signal
-      ClangEnzymeFlags
-    COMPILE_OPTIONS
-      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno
-    OUTPUT_NAME
-      gridkit_phasor_dynamics_governortgov1)
-else()
+#if(GRIDKIT_ENABLE_ENZYME)
+#  gridkit_add_library(phasor_dynamics_governortgov1
+#    SOURCES
+#      Tgov1Enzyme.cpp
+#    LINK_LIBRARIES
+#      GRIDKIT::phasor_dynamics_signal
+#      ClangEnzymeFlags
+#    COMPILE_OPTIONS
+#      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno
+#    OUTPUT_NAME
+#      gridkit_phasor_dynamics_governortgov1)
+#else()
   gridkit_add_library(phasor_dynamics_governortgov1
     SOURCES
       Tgov1.cpp
@@ -23,7 +23,7 @@ else()
       GRIDKIT::phasor_dynamics_signal
     OUTPUT_NAME
       gridkit_phasor_dynamics_governortgov1)
-endif()
+#endif()
 
 gridkit_add_library(phasor_dynamics_governortgov1_dependency_tracking
   SOURCES

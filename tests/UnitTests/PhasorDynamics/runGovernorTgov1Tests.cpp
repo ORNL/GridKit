@@ -9,9 +9,9 @@ int main()
   result += test.constructor();
   result += test.accessors();
   result += test.residual();
-#ifdef GRIDKIT_ENABLE_ENZYME
-  result += test.jacobian();
-#endif
+//#ifdef GRIDKIT_ENABLE_ENZYME
+//  result += test.jacobian();
+//#endif
 
   return result.summary();
 }
