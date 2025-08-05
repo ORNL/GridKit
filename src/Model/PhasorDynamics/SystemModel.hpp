@@ -88,6 +88,8 @@ namespace GridKit
           addBus(bus);
         }
 
+        /// @todo Signal data needs to be populated by the parser.
+        /// See TODOs in SystemModelDataJSONParser
         for (const auto& signaldata : data.signal)
         {
           SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>(signaldata);
@@ -114,6 +116,7 @@ namespace GridKit
         }
 
         // Add loads
+        /// @todo Add loads to JSON parser
         for (const auto& loaddata : data.load)
         {
           IdxT bus_index = 0;
@@ -136,6 +139,9 @@ namespace GridKit
 
           auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
 
+          /// @todo Genrou (and likely other components) would need to name multiple
+          /// signal inlets and outlets. For now we have only speed out and mechanical
+          /// power in.
           if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::signal_out))
           {
             IdxT signal_out = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::signal_out);

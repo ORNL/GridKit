@@ -129,6 +129,9 @@ namespace GridKit
 
       /// Writes a value to the specified external variable
       ///
+      /// @warning This method should be used only in component initialization
+      /// methods. Use only if you know what you are doing.
+      ///
       /// @tparam variable The external variable to write to
       /// @param[in] value The value to write to the signal node
       /// @pre A signal node has been assigned to the requested external

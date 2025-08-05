@@ -42,8 +42,17 @@ namespace GridKit
       header.at("case_comments").get_to(sm.case_comments);
       header.at("freq_base").get_to(sm.freq_base);
       header.at("va_base").get_to(sm.va_base);
+
+      /// @todo Give signal nodes their own array!!!
+      /// Modify JSON format accordingly
+
+      /// Gets all electrical buses
       j.at("buses").get_to(sm.bus);
 
+      /// Gets all components
+      /// @todo So far handling only branches, Genrous, and bus faults
+      /// For 2-bus Tgov1, for example, we need to add support for Tgov1
+      /// governor and support for signal nodes.
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class");
