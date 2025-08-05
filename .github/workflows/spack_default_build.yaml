@@ -101,7 +101,7 @@ jobs:
         spack_spec:
           - gridkit@develop ~asan~enzyme~ipopt~klu~sundials~ubsan
           - gridkit@develop ~asan~enzyme~ipopt~klu+sundials~ubsan
-          - gridkit@develop ~asan+enzyme+ipopt+klu+sundials~ubsan
+          - gridkit@develop ~asan+enzyme+ipopt+klu+sundials~ubsan build_type=RelWithDebInfo
           - gridkit@develop +asan~enzyme+ipopt+klu+sundials+ubsan
 
     steps:
