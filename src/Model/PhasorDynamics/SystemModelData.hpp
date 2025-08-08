@@ -68,6 +68,11 @@ namespace GridKit
       RealT freq_base; ///< System frequency base in Hz
       RealT va_base;   ///< System power base in VA
 
+      /// @todo Create an enum identifying all available component models and
+      /// consolidate components in a single container.
+      /// - Convert string to enum
+      /// - Associate component type to its corresponding enum
+      /// - Consolidate components to allow writing to them using the enum as the argument
       std::vector<BusDataT>          bus;          ///< Buses within the model
       std::vector<BranchDataT>       branch;       ///< Branches within the model
       std::vector<BusFaultDataT>     bus_fault;    ///< Bus faults within the model
