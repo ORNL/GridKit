@@ -88,6 +88,32 @@ specified:
 For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
 `0.0`. This list is subject to change.
 
+### Signals
+
+Contained in the `signals` key is an array of objects, each of which represent
+a signal and has the following fields:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `number`           | Unique positive (> 0) integer identifying the node
+  `class`            | A string indicating the class of node. See the table below for more information
+  `name`             | Optional string containing the name of the node. This may be empty or non-unique
+  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
+  `extension`        | Optional field containing an object with implementation-defined keys
+
+#### Signal classes
+
+As of the current version and revision, the following bus classes are
+specified:
+
+  Signal class          | Description                                                | Initialization variables | Other variables available to monitor
+  -------------------|------------------------------------------------------------|------------------------- | -------------------------
+  `signal_node`              | A single channel value for intra model variables                    | `Vr`, `Vi`               | `Vm`, `Va`
+
+
+For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
+`0.0`. This list is subject to change.
+
 ### Devices
 
 Contained in the `devices` section is an array of objects, each of which
@@ -114,7 +140,7 @@ are specified:
   `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                                 | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `static_load` | a basic static ZIP load                              | `bus`                                          | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
   `GENROU`      | 6th order machine model                              | `bus`, `signal_in`\*, `signal_out`\*           | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
-  `IEEET1`      | a basic exciter model                                | `bus`, `speed_signal`, `efd_signal`            | `Efd` | `Efd`, `ksat`
+  `IEEET1`      | a basic exciter model                                | `bus`, `speed`, `efd`            | `Efd` | `Efd`, `ksat`
   `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `signal_in`\*                           | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
