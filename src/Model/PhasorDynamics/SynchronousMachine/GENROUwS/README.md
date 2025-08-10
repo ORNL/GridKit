@@ -62,7 +62,7 @@ $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
 $\delta$  | [rad]  | Machine internal rotor angle      |
-$\omega$  | [p.u.] | Machine speed | Optionally read by governor or stabilizer component
+$\omega$  | [p.u.] | Machine Speed Deviation           | Optionally read by governor or stabilizer component
 $\psi'_d$ | [p.u.] | Direct axis subtransient flux     | 
 $\psi'_q$ | [p.u.] | Quadrature axis subtransient flux | 
 $E'_d$    | [p.u.] | Direct axis transient flux        | 
@@ -101,8 +101,8 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 ### Differential Equations
 ``` math
 \begin{aligned}
-  \dot\delta      &= (\omega-1)\cdot\omega_0 \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D(\omega-1)}{\omega}
+  \dot\delta      &= \omega\cdot\omega_0 \\
+  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}
                    - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
@@ -127,8 +127,8 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
   0 &= -\psi'' +\sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  0 &= -V_{d} -\psi''_{q}\omega\\
-  0 &= -V_{q}  +\psi''_{d}\omega\\
+  0 &= -V_{d} -\psi''_{q}(1+\omega)\\
+  0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   0 &= -k_{sat} + S_B (\psi''-S_A)^2 \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\

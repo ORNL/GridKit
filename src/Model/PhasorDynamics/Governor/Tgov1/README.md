@@ -43,7 +43,7 @@ $P_{m}$         | [p.u.] | Mechnical Power to Generator      | Read by a Machine
 #### Differential
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$\omega$  | [p.u.] | Speed Deviation                   | Read from a Machine Model
+$\omega$  | [p.u.] | Machine Speed Deviation                   | Read from a Machine Model
 
 #### Algebraic
 Symbol          | Units  | Description                       | Note

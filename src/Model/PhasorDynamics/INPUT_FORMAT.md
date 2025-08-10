@@ -88,32 +88,6 @@ specified:
 For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
 `0.0`. This list is subject to change.
 
-### Signals
-
-Contained in the `signals` key is an array of objects, each of which represent
-a signal and has the following fields:
-
-  Name               | Description
-  -------------------|------------------------------------------------------
-  `number`           | Unique positive (> 0) integer identifying the node
-  `class`            | A string indicating the class of node. See the table below for more information
-  `name`             | Optional string containing the name of the node. This may be empty or non-unique
-  `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
-  `extension`        | Optional field containing an object with implementation-defined keys
-
-#### Signal classes
-
-As of the current version and revision, the following bus classes are
-specified:
-
-  Signal class          | Description                                                | Initialization variables | Other variables available to monitor
-  -------------------|------------------------------------------------------------|------------------------- | -------------------------
-  `signal_node`              | A single channel value for intra model variables                    | `Vr`, `Vi`               | `Vm`, `Va`
-
-
-For fields named `Vr` or `Va`, the default value is `1.0`, otherwise it is
-`0.0`. This list is subject to change.
-
 ### Devices
 
 Contained in the `devices` section is an array of objects, each of which
@@ -139,12 +113,25 @@ are specified:
   --------------|------------------------------------------------------|------------------------------------------------|---------------------------- | -------------------------
   `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                                 | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `static_load` | a basic static ZIP load                              | `bus`                                          | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
-  `GENROU`      | 6th order machine model                              | `bus`, `signal_in`\*, `signal_out`\*           | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `GENROU`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*           | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `IEEET1`      | a basic exciter model                                | `bus`, `speed`, `efd`            | `Efd` | `Efd`, `ksat`
-  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `signal_in`\*                           | `state0`, `R`, `X` | `state`, `ir`, `ii`
+  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `status`\*                           | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.
+
+
+### Signals
+
+Contained in the `signals` key is an array of objects, each of which represent
+a signal and has the following fields:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `signal_id`        | Unique positive (> 0) integer identifying the node
+  `name`             | Optional string containing the name of the node. This may be empty or non-unique
+  `extension`        | Optional field containing an object with implementation-defined keys
+
 
 ## Example File for a 2-Bus System
 
@@ -168,7 +155,11 @@ connected to a constant value. This list is subject to change.
        { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
               "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
        { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
-   ]
+   ],
+   "signals": [
+       { "signal_id": 1, "name": "Governor Pmech Signal"},
+       { "signal_id": 2, "name": "Exciter Efd Signal"}
+   ],
 }
 ```
 
