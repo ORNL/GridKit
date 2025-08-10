@@ -4,7 +4,7 @@ This synchronous machine model is 6th order and is specifically designed for rou
 See the [General Synchronous Machine Model](../README.md) for general synchronous machine information.
 
 Notes:
-- $X''_{q}=X''_{d}$  (round rotor assumptions)
+- $X_q''=X_d''$  (round rotor assumptions)
 - $X''_{d}$ does not saturate
 - Same relative amount of saturation occurs on both $d$ and $q$ axis
 
@@ -41,8 +41,8 @@ $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R_a}{R_a^2+(X''_q)^2}&
-  B   &= -\dfrac{X''_q}{R_a^2+(X''_q)^2}\\
+  G   &=\dfrac{R_a}{R_a^2+(X_q'')^2}&
+  B   &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
   S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
   S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
   X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
@@ -102,7 +102,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 ``` math
 \begin{aligned}
   \dot\delta      &= \omega\cdot\omega_0 \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{mech}-D\omega}{1+\omega}
+  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
                    - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
   \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
@@ -157,7 +157,7 @@ from the steady-state initial conditions.
   \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
-  P_{mech}    &= T_{elec} \\
+  P_{m}    &= T_{elec} \\
   \psi^{'}_d  &=
   \dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
   \psi^{'}_q  &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\

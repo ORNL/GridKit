@@ -109,13 +109,15 @@ represent a device and has the following fields:
 As of the current version and revision, the following device classes
 are specified:
 
-  Device class  | Description                                          | Ports                                          | Initialization parameters | Variables available to monitor
-  --------------|------------------------------------------------------|------------------------------------------------|---------------------------- | -------------------------
-  `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                                 | `R`, `X`, `G`, `B` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
-  `static_load` | a basic static ZIP load                              | `bus`                                          | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
-  `GENROU`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*           | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
-  `IEEET1`      | a basic exciter model                                | `bus`, `speed`, `efd`            | `Efd` | `Efd`, `ksat`
-  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `status`\*                           | `state0`, `R`, `X` | `state`, `ir`, `ii`
+  Device class  | Description                                          | Ports                            | Initialization parameters   | Variables available to monitor
+  --------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
+  `branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`          | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `static_load` | a basic static ZIP load                              | `bus`                            | `Pz`, `Qz`, `Pi`, `Qi`, `Pp`, `Qp` | `ir`, `ii`, `p`, `q`
+  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
+  `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`            | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlm` | `efd`, `ksat`
+  `bus_fault`   | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.
@@ -128,9 +130,11 @@ a signal and has the following fields:
 
   Name               | Description
   -------------------|------------------------------------------------------
-  `signal_id`        | Unique positive (> 0) integer identifying the node
-  `name`             | Optional string containing the name of the node. This may be empty or non-unique
+  `signal_id`        | Unique positive (> 0) integer identifying the signal
+  `name`             | Optional string containing the name or description of the signal. This may be empty or non-unique
   `extension`        | Optional field containing an object with implementation-defined keys
+
+All interactions with signals are handled by `devices`, which reference signals via `signal_id`
 
 
 ## Example File for a 2-Bus System
@@ -151,14 +155,17 @@ a signal and has the following fields:
        { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
    ],
    "devices": [
-       { "class": "branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
-       { "class": "GENROU", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
+       { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
+       { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
               "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
+       { "class": "Tgov1", "ports": {"bus":1, "speed": 1, "pmech":2}, "id": "1", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":0, "Pvmin":1, "Dt":0}},
+       { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "1", "params": {"Tr":0.001, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1, "Vrmax":1, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlm":0}, "mon": ["efd"] },
        { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
    ],
    "signals": [
-       { "signal_id": 1, "name": "Governor Pmech Signal"},
-       { "signal_id": 2, "name": "Exciter Efd Signal"}
+       { "signal_id": 1, "name": "Machine Speed Deviation"},
+       { "signal_id": 2, "name": "Mechanical Power"},
+       { "signal_id": 3, "name": "Excitation Field"}
    ],
 }
 ```
