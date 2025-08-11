@@ -25,7 +25,8 @@ namespace GridKit
        * @brief Cannot be constructed, except as a base class
        * @param isSorted Whether or not it should start sorted.
        */
-      MaybeSorted(bool isSorted) : sorted_(isSorted)
+      MaybeSorted(bool isSorted)
+        : sorted_(isSorted)
       {
       }
 
@@ -177,7 +178,8 @@ namespace GridKit
      * @brief Create a new (empty) `CSRMatrix` of a specific size.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols) : CSRMatrix(num_rows, num_cols, 0)
+    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols)
+      : CSRMatrix(num_rows, num_cols, 0)
     {
     }
 
@@ -186,7 +188,8 @@ namespace GridKit
      * and allocate enough space for a given amount of nonzero elements.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero) : Sorted<KEEP_SORTED>(true), row_indices_(num_rows, 0), num_cols_(num_cols)
+    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero)
+      : Sorted<KEEP_SORTED>(true), row_indices_(num_rows, 0), num_cols_(num_cols)
     {
       values_.reserve(num_nonzero);
       col_indices_.reserve(num_nonzero);
