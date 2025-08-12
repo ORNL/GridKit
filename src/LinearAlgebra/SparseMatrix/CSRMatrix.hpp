@@ -103,13 +103,14 @@ namespace GridKit
        */
       IdxT                 num_cols_;
 
-      CSRMatrix(std::vector<ScalarT> values, std::vector<IdxT> row_indices, std::vector<IdxT> col_indices, IdxT num_cols, bool sorted);
+      CSRMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted);
 
     public:
       CSRMatrix(size_t num_rows, IdxT num_cols);
       CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero);
 
       static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>& coo);
+      static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
 
       /**
        * @see `values_`
@@ -141,7 +142,7 @@ namespace GridKit
        */
       size_t numRows() const noexcept
       {
-        return row_indices_.size();
+        return row_indices_.size() - 1;
       }
 
       /**
@@ -150,6 +151,14 @@ namespace GridKit
       size_t numCols() const noexcept
       {
         return num_cols_;
+      }
+
+      /**
+       * @brief The number of (potentially) nonzero elements.
+       */
+      size_t numNonZero() const noexcept
+      {
+        return values_.size();
       }
 
       /**
@@ -164,6 +173,8 @@ namespace GridKit
       }
 
       void sort();
+
+      ScalarT valueAt(size_t row, IdxT col) const;
     };
 
     /**
@@ -171,7 +182,7 @@ namespace GridKit
      * @param sorted - Whether or not the `col_indices` array is sorted within each row.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(std::vector<ScalarT> values, std::vector<IdxT> row_indices, std::vector<IdxT> col_indices, IdxT num_cols, bool sorted)
+    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted)
       : Sorted<KEEP_SORTED>(sorted), values_(values), row_indices_(row_indices), col_indices_(col_indices), num_cols_(num_cols)
     {
     }
@@ -206,7 +217,69 @@ namespace GridKit
       auto [row_indices, col_indices, values] = coo.setDataToCSR();
       auto [_num_rows, num_cols]              = coo.getDimensions();
 
-      return CSRMatrix(values, row_indices, col_indices, num_cols, true);
+      return CSRMatrix(std::move(values), std::move(row_indices), std::move(col_indices), std::move(num_cols), true);
+    }
+
+    /**
+     * @brief Construct a new `CSRMatrix` from the given `COO_Matrix`. Faster with an r-value,
+     * since we can repurpose `COO_Matrix::column_indices_` for our own `::col_indices_`.
+     */
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    CSRMatrix<ScalarT, IdxT, KEEP_SORTED> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>&& coo)
+    {
+      auto row_indices           = coo.getCSRRowData();
+      auto [_num_rows, num_cols] = coo.getDimensions();
+
+      return CSRMatrix(std::move(coo.values_), std::move(row_indices), std::move(coo.column_indices_), std::move(num_cols), true);
+    }
+
+    /**
+     * @brief Return the value of a particular element.
+     * @param row The row of the element. This is bounds-checked in debug mode,
+     *            but an out-of-bounds access otherwise is UB.
+     * @param col The column of the elements. Bounds-checked always, since it needs to be searched for.
+     * @return If the element exists in the matrix, returns its value. Otherwise return 0.
+     * @note This access incurs a significant search cost, especially if the matrix is unsorted.
+     */
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    inline ScalarT CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::valueAt(size_t row, IdxT col) const
+    {
+      // Bounds check for debug builds
+      assert(row < numRows());
+
+      // The indices in the values/col indices arrays that this row starts and ends at.
+      // Our search for the element will be between these two spots
+      IdxT row_start_idx = row_indices_[row];
+      IdxT row_end_idx   = row_indices_[row + 1];
+
+      auto row_start = col_indices_.begin() + row_start_idx;
+      auto row_end   = col_indices_.begin() + row_end_idx;
+
+      // The index in the values/col indices arrays we suspect the element may be found at.
+      size_t found_idx;
+
+      if (isSorted())
+      {
+        // Binary search can be used if the rows are sorted
+        found_idx = std::lower_bound(row_start, row_end, col) - col_indices_.begin();
+      }
+      else
+      {
+        // If the rows aren't sorted, then we must do linear search
+        found_idx = std::find(row_start, row_end, col) - col_indices_.begin();
+      }
+
+      // If the col we're trying to find wasn't found (either beyond the end of the row
+      // or because we found a larger column index), the element isn't present in the
+      // matrix, and we return 0.
+      if (found_idx >= row_indices_[row + 1] || col_indices_[found_idx] != col)
+      {
+        return 0;
+      }
+      else
+      {
+        return values_[found_idx];
+      }
     }
   } // namespace LinearAlgebra
 } // namespace GridKit
