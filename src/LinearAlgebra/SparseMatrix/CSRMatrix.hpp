@@ -79,6 +79,8 @@ namespace GridKit
     private:
       /**
        * @brief The array of (potentially) nonzero values.
+       * @note Some of the values may be zero, due to calculations working out that way.
+       * This array stores exactly the values which *may* be nonzero.
        */
       std::vector<ScalarT> values_;
       /**
