@@ -191,7 +191,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
     CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero)
-      : Sorted<KEEP_SORTED>(true), row_indices_(num_rows, 0), num_cols_(num_cols)
+      : Sorted<KEEP_SORTED>(true), row_indices_(num_rows + 1, 0), num_cols_(num_cols)
     {
       values_.reserve(num_nonzero);
       col_indices_.reserve(num_nonzero);
