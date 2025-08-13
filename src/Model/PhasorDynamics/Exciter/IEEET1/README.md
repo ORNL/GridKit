@@ -93,7 +93,7 @@ $k_{sat}$       | [p.u.] | Saturation variable               |
 #### Differential
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$\Delta\omega$  | [p.u.] | Speed Deviation                   | Read from a Machine Model
+$\omega$  | [p.u.] | Machine Speed Deviation                   | Read from a Machine Model
 
 #### Algebraic
 
@@ -219,7 +219,7 @@ The algebraic equations of the exciter.
     V_{f} &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
     V_{E} &= k_{sat}\cdot E_{fd}' \\
     E_{fd}&= \begin{cases}
-        (1+\Delta \omega)E_{fd}'           &  \text{if } I_{spdlm}=1\\
+        (1+\omega)E_{fd}'           &  \text{if } I_{spdlm}=1\\
          E_{fd}' &  \text{else} \\
    \end{cases}\\
     k_{sat}&= \begin{cases}

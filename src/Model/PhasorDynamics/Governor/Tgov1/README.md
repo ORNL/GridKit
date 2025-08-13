@@ -43,7 +43,7 @@ $P_{m}$         | [p.u.] | Mechnical Power to Generator      | Read by a Machine
 #### Differential
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$\Delta\omega$  | [p.u.] | Speed Deviation                   | Read from a Machine Model
+$\omega$  | [p.u.] | Machine Speed Deviation                   | Read from a Machine Model
 
 #### Algebraic
 Symbol          | Units  | Description                       | Note
@@ -53,13 +53,13 @@ $P_{ref}$       | [p.u.] | Reference Power                   | Either a constant
 ## Model Equations
 
 ### Differential Equations
-The TGOV1 differential equations, as derived from the model diagram. By defining an auxillary valve function $f=-P_{v} + (P_{ref}-\Delta\omega)/R$ one can write the piecewise definition of $\dot P_v$ compactly.
+The TGOV1 differential equations, as derived from the model diagram. By defining an auxillary valve function $f=-P_{v} + (P_{ref}-\omega)/R$ one can write the piecewise definition of $\dot P_v$ compactly.
 ```math
 \begin{aligned}
    \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
    \dot{P}_{v}    &= \dfrac{1}{T_1}
    \begin{cases}
-      -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
+      -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
          &  \text{if } (P_{vmin} < P_v < P_{vmax}) & \lor \\
          &  \quad (P_v \leq P_{vmin} \land f>0)    & \lor \\
          &  \quad(P_v \geq P_{vmax} \land f<0)            \\
@@ -73,7 +73,7 @@ The TGOV1 differential equations, as derived from the model diagram. By defining
 The algebraic equation dictating the mechnical power output.
 ```math
 \begin{aligned}
-   P_{m} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \Delta\omega \\
+   P_{m} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
 \end{aligned}
 ```
 
@@ -85,7 +85,7 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 \begin{aligned}
    f(P_v)      &= \dfrac{1}{T_1}
       \left[
-         -P_{v} + \dfrac{1}{R}(P_{ref}-\Delta\omega)
+         -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
       \right] \\
    \dot{P}_{v} &= 
             \phi(P_v, f) \cdot f(P_v)

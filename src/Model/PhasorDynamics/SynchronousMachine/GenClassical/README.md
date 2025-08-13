@@ -31,7 +31,7 @@ $X_{dp}$    | [p.u.]  | machine reactance parameter     |
 Symbol      | Units   | Description         | Note
 ------------|---------|---------------------|----------------------
 $\delta$    | [rad]   | machine power angle |
-$\omega$    | [p.u]   | machine speed       | Optionally read by a governor or a stabilizer component
+$\omega$    | [p.u]   | machine speed deviation       | Optionally read by a governor or a stabilizer component
 
 #### Algebraic
 
@@ -74,8 +74,8 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 
 ```math 
 \begin{aligned}
-\dot{\delta} &= (\omega - 1) \cdot \omega_0 \\
-\dot{\omega} &= \frac{1}{2H}\left( \frac{P_{m} - D(\omega - 1)}{\omega}   - T_{e}\right)
+\dot{\delta} &= \omega \cdot \omega_0 \\
+\dot{\omega} &= \frac{1}{2H}\left( \frac{P_{m} - D\omega}{1+\omega}   - T_{e}\right)
 \end{aligned}
 ```
 
