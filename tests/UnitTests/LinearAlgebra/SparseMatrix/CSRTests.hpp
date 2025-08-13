@@ -35,9 +35,24 @@ namespace GridKit
         success *= csr.numCols() == num_cols;
         success *= csr.numNonZero() == vals.size();
 
-        for (size_t i = 0; i < rows.size(); i++)
+        ScalarT target;
+        // Test all elements - make sure they match
+        for (size_t i = 0; i < num_rows; i++)
         {
-          success *= csr.valueAt(rows[i], cols[i]) == vals[i];
+          for (IdxT j = 0; j < num_cols; j++)
+          {
+            target = 0;
+            for (size_t k = 0; k < vals.size(); k++)
+            {
+              if (rows[k] == i && cols[k] == j)
+              {
+                target = vals[k];
+                break;
+              }
+            }
+
+            success *= csr.valueAt(i, j) == target;
+          }
         }
 
         return success.report(__func__);
