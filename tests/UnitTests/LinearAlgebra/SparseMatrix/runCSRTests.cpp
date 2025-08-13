@@ -10,6 +10,7 @@ int main()
   CSRTests<double, unsigned> test;
 
   result += test.cooToCsrTest();
+  result += test.testCooMove();
 
   return result.summary();
 }

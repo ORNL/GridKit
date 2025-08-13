@@ -92,8 +92,8 @@ namespace GridKit
       IdxT sparseCordBinarySearch(const std::vector<IdxT>& rows, const std::vector<IdxT>& columns, IdxT ri, IdxT ci);
       bool checkIncreaseSize(IdxT r, IdxT c);
 
-      template <bool KEEP_SORTED>
-      friend CSRMatrix<ScalarT, IdxT, KEEP_SORTED> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
+      template <class, typename, bool>
+      friend class CSRMatrix;
     };
 
     /**

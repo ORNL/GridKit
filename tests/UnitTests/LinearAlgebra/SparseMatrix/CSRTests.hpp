@@ -57,6 +57,60 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      /**
+       * @brief Verifies that you can properly move a COO matrix without copying all of the values
+       */
+      TestOutcome testCooMove()
+      {
+        using namespace LinearAlgebra;
+
+        // A dummy struct which simply counts the number of times it has been copied
+        struct CopyCounter
+        {
+          unsigned* counter;
+
+          CopyCounter(unsigned* counter) : counter(counter)
+          {
+          }
+
+          CopyCounter(const CopyCounter& other) : counter(other.counter)
+          {
+            (*counter)++;
+          }
+
+          CopyCounter& operator=(const CopyCounter& other)
+          {
+            counter = other.counter;
+            (*counter)++;
+            return *this;
+          }
+        };
+
+        using COO_Matrix = COO_Matrix<CopyCounter, IdxT>;
+        using CSRMatrix  = CSRMatrix<CopyCounter, IdxT>;
+
+        TestStatus success = true;
+
+        unsigned counter = 0;
+
+        std::vector<IdxT>        rows = {2, 3, 2};
+        std::vector<IdxT>        cols = {3, 3, 2};
+        std::vector<CopyCounter> vals(3, CopyCounter(&counter));
+        const size_t             num_rows = 4;
+        const size_t             num_cols = 5;
+
+        COO_Matrix coo(rows, cols, vals, num_rows, num_cols);
+        coo.sortSparse();
+
+        // There should be no copies needed to construct the CSR matrix,
+        // since the COO matrix is already sorted.
+        counter        = 0;
+        CSRMatrix csr  = CSRMatrix::fromCOO(std::move(coo));
+        success       *= counter == 0;
+
+        return success.report(__func__);
+      }
     };
   } // namespace Testing
 } // namespace GridKit
