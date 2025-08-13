@@ -183,7 +183,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
     CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted)
-      : Sorted<KEEP_SORTED>(sorted), values_(values), row_indices_(row_indices), col_indices_(col_indices), num_cols_(num_cols)
+      : Sorted<KEEP_SORTED>(sorted), values_(std::move(values)), row_indices_(std::move(row_indices)), col_indices_(std::move(col_indices)), num_cols_(num_cols)
     {
     }
 
