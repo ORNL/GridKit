@@ -15,7 +15,7 @@ namespace GridKit
   {
     namespace Exciter
     {
-      
+
       // Available template instantiations
       template class Ieeet1<double, long int>;
       template class Ieeet1<double, size_t>;
