@@ -9,6 +9,7 @@ target_link_libraries(test_phasor_bus GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_branch runBranchTests.cpp)
 target_link_libraries(test_phasor_branch GRIDKIT::phasor_dynamics_branch
+                                         GRIDKIT::phasor_dynamics_branch_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_load runLoadTests.cpp)
@@ -18,11 +19,14 @@ target_link_libraries(test_phasor_load GRIDKIT::phasor_dynamics_load
 
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GRIDKIT::phasor_dynamics_genrou
+                                         GRIDKIT::phasor_dynamics_genrou_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus)
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
 target_link_libraries(test_phasor_governortgov1 GRIDKIT::phasor_dynamics_genrou
+                                                GRIDKIT::phasor_dynamics_genrou_dependency_tracking
                                                 GRIDKIT::phasor_dynamics_governortgov1
+                                                GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                                 GRIDKIT::phasor_dynamics_signal
                                                 GRIDKIT::phasor_dynamics_bus)
 
@@ -34,11 +38,12 @@ target_link_libraries(test_phasor_gen_classical GRIDKIT::phasor_dynamics_gen_cla
 
 add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GRIDKIT::phasor_dynamics_components
+                                         GRIDKIT::phasor_dynamics_branch_dependency_tracking
                                          GRIDKIT::phasor_dynamics_load_dependency_tracking
                                          GRIDKIT::phasor_dynamics_genrou_dependency_tracking
+                                         GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                          GRIDKIT::phasor_dynamics_gen_classical_dependency_tracking
                                          GRIDKIT::phasor_dynamics_signal_dependency_tracking
-                                         GRIDKIT::phasor_dynamics_governortgov1_dependency_tracking
                                          GRIDKIT::phasor_dynamics_bus_fault_dependency_tracking)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND $<TARGET_FILE:test_phasor_bus>)

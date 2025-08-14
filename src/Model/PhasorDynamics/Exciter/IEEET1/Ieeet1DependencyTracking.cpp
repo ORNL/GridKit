@@ -1,5 +1,5 @@
 /**
- * @file Ieeet1.cpp
+ * @file Ieeet1DependencyTracking.cpp
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  *
@@ -17,8 +17,8 @@ namespace GridKit
     {
       
       // Available template instantiations
-      template class Ieeet1<double, long int>;
-      template class Ieeet1<double, size_t>;
+      template class Ieeet1<DependencyTracking::Variable, long int>;
+      template class Ieeet1<DependencyTracking::Variable, size_t>;
 
     } // namespace Exciter
   } // namespace PhasorDynamics
