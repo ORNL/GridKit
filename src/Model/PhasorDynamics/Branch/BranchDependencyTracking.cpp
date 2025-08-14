@@ -1,5 +1,5 @@
 /**
- * @file Branch.cpp
+ * @file BranchDependencyTracking.cpp
  * @author Slaven Peles (peless@ornl.gov)
  *
  */
@@ -11,8 +11,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     // Available template instantiations
-    template class Branch<double, long int>;
-    template class Branch<double, size_t>;
+    template class Branch<DependencyTracking::Variable, long int>;
+    template class Branch<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

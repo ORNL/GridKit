@@ -97,8 +97,8 @@ namespace GridKit
 
         // Model Derived parameters
         // TODO -> Need to be solved for in instantiation!
-        ScalarT SA_{0};
-        ScalarT SB_{0};
+        real_type SA_{0};
+        real_type SB_{0};
 
         // External Variables that don't have models yet.
         // They are constants until then.
@@ -111,7 +111,7 @@ namespace GridKit
         // Scale of Sigmoid function
         // (temporary local implementation)
         // This value gave higher precision.
-        const ScalarT mu_ = 400000.0;
+        const real_type mu_{400000.0};
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);
