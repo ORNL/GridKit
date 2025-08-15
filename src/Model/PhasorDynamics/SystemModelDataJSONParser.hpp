@@ -4,6 +4,7 @@
 
 #include <Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <Model/PhasorDynamics/ComponentDataJSONParser.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <nlohmann/json.hpp>
 
@@ -48,6 +49,12 @@ namespace GridKit
 
       /// Gets all electrical buses
       j.at("buses").get_to(sm.bus);
+
+      /// Gets all signal nodes (allows for systems without signals)
+      if (j.contains("signals"))
+      {
+        j.at("signals").get_to(sm.signal);
+      }
 
       /// Gets all components
       /// @todo So far handling only branches, Genrous, and bus faults

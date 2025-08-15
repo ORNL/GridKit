@@ -6,6 +6,7 @@ int main()
   GridKit::Testing::CaseFormatTests<double, size_t> test;
 
   result += test.simpleParse();
+  result += test.signalParse();
 
   return result.summary();
 }
