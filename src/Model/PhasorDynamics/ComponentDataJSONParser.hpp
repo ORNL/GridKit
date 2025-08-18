@@ -64,6 +64,7 @@ namespace GridKit
         }
         else
         {
+          std::cout << raw_port.key() << "\n";
           throw std::runtime_error("Invalid port mapping");
         }
       }

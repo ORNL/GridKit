@@ -39,8 +39,8 @@ namespace GridKit
     enum class GenrouPorts
     {
       bus,        ///< Unique ID of the connecting bus
-      signal_in,  ///< Unique ID of the bus providing the exciter signal
-      signal_out, ///< Unique ID of the bus providing the governor signal
+      pmech,  ///< Unique ID of the bus providing the exciter signal
+      speed, ///< Unique ID of the bus providing the governor signal
     };
 
     /// Variables able to be monitored for a Genrou generator model
