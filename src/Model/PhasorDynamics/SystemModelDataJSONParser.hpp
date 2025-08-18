@@ -63,17 +63,35 @@ namespace GridKit
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class");
-        if (kind == "branch")
+        if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;
           raw_component.get_to(branch);
           sm.branch.push_back(branch);
         }
-        else if (kind == "GENROU")
+        else if (kind == "Genrou")
         {
           typename SystemModelData<RealT, IdxT>::GenrouDataT genrou;
           raw_component.get_to(genrou);
           sm.genrou.push_back(genrou);
+        }
+        else if (kind == "Load")
+        {
+          typename SystemModelData<RealT, IdxT>::LoadDataT load;
+          raw_component.get_to(load);
+          sm.load.push_back(load);
+        }
+        else if (kind == "Tgov1")
+        {
+          typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
+          raw_component.get_to(gov);
+          sm.gov.push_back(gov);
+        }
+        else if (kind == "Ieeet1")
+        {
+          typename SystemModelData<RealT, IdxT>::Ieeet1DataT exciter;
+          raw_component.get_to(exciter);
+          sm.exciter.push_back(exciter);
         }
         else if (kind == "bus_fault")
         {

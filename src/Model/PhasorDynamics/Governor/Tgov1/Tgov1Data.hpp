@@ -45,6 +45,7 @@ namespace GridKit
        */
       enum class Tgov1MonitorableVariables
       {
+        NONE,
       };
 
       /**
