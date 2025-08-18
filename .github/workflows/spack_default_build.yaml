@@ -159,7 +159,7 @@ jobs:
         run: spack -e . external find --all --exclude llvm
 
       - name: Spack add repos
-        run: spack -e repo add buildsystem/spack_repo/gridkit
+        run: spack -e . repo add buildsystem/spack_repo/gridkit
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop
