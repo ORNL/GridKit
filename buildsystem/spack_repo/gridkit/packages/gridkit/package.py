@@ -18,8 +18,8 @@ class Gridkit(CMakePackage):
     variant("asan", default=False, description="Enable/Disable address sanitizer")
     variant("enzyme", default=False, description="Enable/Disable Enzyme")
     variant("ipopt", default=False, description="Enable/Disable Ipopt")
-    variant("klu", default=True, description="Enable/Disable KLU")
-    variant("sundials", default=True, description="Enable/Disable SUNDIALS")
+    variant("klu", default=False, description="Enable/Disable KLU")
+    variant("sundials", default=False, description="Enable/Disable SUNDIALS")
     variant("ubsan", default=False, description="Enable/Disable undefined behavir sanitizer")
 
     conflicts("+klu", when="~sundials")
