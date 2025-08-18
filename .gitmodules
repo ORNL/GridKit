@@ -1,10 +1,9 @@
-[submodule "buildsystem/spack/spack"]
-	path = buildsystem/spack/spack
-	url = https://github.com/nkoukpaizan/spack.git
-	branch = Gridkit-package-dev+enzyme
 [submodule "third-party/nlohmann-json"]
 	path = third-party/nlohmann-json
 	url = https://github.com/nlohmann/json
 [submodule "third-party/magic-enum"]
 	path = third-party/magic-enum
 	url = https://github.com/Neargye/magic_enum
+[submodule "buildsystem/spack"]
+	path = buildsystem/spack
+	url = https://github.com/spack/spack.git

@@ -118,7 +118,7 @@ jobs:
           submodules: true
 
       - name: Setup Spack
-        run: echo "$PWD/buildsystem/spack/spack/bin" >> "$GITHUB_PATH"
+        run: echo "$PWD/buildsystem/spack/bin" >> "$GITHUB_PATH"
 
       - name: Create heredoc spack.yaml
         run: |
@@ -157,6 +157,9 @@ jobs:
 
       - name: Find external packages
         run: spack -e . external find --all --exclude llvm
+
+      - name: Spack add repos
+        run: spack -e repo add buildsystem/spack_repo/gridkit
 
       - name: Spack develop gridkit
         run: spack -e . develop --path=$(pwd) gridkit@develop

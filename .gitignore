@@ -4,6 +4,6 @@
 .vscode/
 *.DS_Store
 build/
-*.DS_Store
 *.swp
 doxygen-docs/
+__pycache__
