@@ -111,6 +111,56 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      /**
+       * @brief Test the basic usage of the `LinearAlgebra::CSRBuilder` class with a template matrix
+       */
+      TestOutcome testCsrBuilderTemplate()
+      {
+        using namespace LinearAlgebra;
+
+        using COO_Matrix = COO_Matrix<ScalarT, IdxT>;
+        using CSRBuilder = CSRBuilder<ScalarT, IdxT>;
+        using CSRMatrix  = CSRMatrix<ScalarT, IdxT>;
+
+        TestStatus success = true;
+
+        // Make sure main diagonal elements are added
+        std::vector<IdxT>    rows     = {2, 3, 2, 0, 1};
+        std::vector<IdxT>    cols     = {3, 3, 2, 0, 1};
+        std::vector<ScalarT> vals     = {1, 2, 3, 0, 0};
+        const size_t         num_rows = 4;
+        const size_t         num_cols = 5;
+
+        COO_Matrix coo(rows, cols, vals, num_rows, num_cols);
+        CSRMatrix  csr = CSRMatrix::fromCOO(coo);
+
+        CSRBuilder builder(csr);
+        builder.row(2).elem(2, 3).elem(3, 1);
+        builder.row(3).elem(3, 2);
+
+        ScalarT target;
+        // Test all elements - make sure they match
+        for (size_t i = 0; i < num_rows; i++)
+        {
+          for (IdxT j = 0; j < num_cols; j++)
+          {
+            target = 0;
+            for (size_t k = 0; k < vals.size(); k++)
+            {
+              if (rows[k] == i && cols[k] == j)
+              {
+                target = vals[k];
+                break;
+              }
+            }
+
+            success *= csr.valueAt(i, j) == target;
+          }
+        }
+
+        return success.report(__func__);
+      }
     };
   } // namespace Testing
 } // namespace GridKit

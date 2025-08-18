@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <numeric>
+#include <optional>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -65,6 +67,10 @@ namespace GridKit
         return true;
       }
     };
+
+    // Forward-declaration
+    template <class, typename, bool, bool, bool>
+    class CSRBuilder;
 
     /**
      * @brief Helper type - derive from this depending on whether your type is always sorted or not
@@ -175,6 +181,9 @@ namespace GridKit
       void sort();
 
       ScalarT valueAt(size_t row, IdxT col) const;
+
+      template <class, typename, bool, bool, bool>
+      friend class CSRBuilder;
     };
 
     /**
@@ -281,5 +290,187 @@ namespace GridKit
         return values_[found_idx];
       }
     }
+
+    /**
+     * @brief A helpful builder utility to help build CSR matrices from their components. When built in debug mode,
+     * enables several checks which ensure that you are building the CSR matrix correctly.
+     * @tparam INCLUDE_DIAGONALS Whether or not we should ensure that empty diagonal elements are created, even if
+     *                           not specified. This way if we axpy with a diagonal matrix later (a common operation
+     *                           with Jacobian matrices) we can do it quickly.
+     * @tparam USE_TEMPLATE      Whether or not a template matrix should be used. A template matrix should ideally be
+     *                           one originally created using this utility, and whose internal buffers can be reused
+     *                           for fast matrix construction.
+     */
+    template <class ScalarT, typename IdxT, bool INCLUDE_DIAGONALS = true, bool KEEP_SORTED = false, bool USE_TEMPLATE = true>
+    class CSRBuilder
+    {
+      /**
+       * @brief The matrix being built.
+       */
+      CSRMatrix<ScalarT, IdxT, KEEP_SORTED>& mat_;
+      /**
+       * @brief The current row the builder is working on. Used to ensure we work on rows in ascending order,
+       * and to insert extra diagonal elements if we skip rows.
+       */
+      size_t                                 curr_row_       = 0;
+      /**
+       * @brief Keeps track of whether we have added a diagonal element in the row we're currently working on.
+       * @todo  This can be removed from the class if `INCLUDE_DIAGONALS` is false. Maybe not necessary but an extra
+       * little bit of performance/memory.
+       */
+      bool                                   added_diagonal_ = false;
+
+    public:
+      CSRBuilder(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>& mat) : mat_(mat)
+      {
+        mat_.values_.clear();
+
+        if constexpr (!USE_TEMPLATE)
+        {
+          mat_.col_indices_.clear();
+          mat_.row_indices_.clear();
+        }
+      }
+
+      /**
+       * @brief Ensure that, if we were building from a template, we added all values we were expected to add.
+       */
+      ~CSRBuilder()
+      {
+        if constexpr (USE_TEMPLATE)
+        {
+          assert(mat_.numNonZero() == mat_.colIndices().size());
+        }
+      }
+
+      /**
+       * @brief Construct an empty CSR matrix in place of an optional matrix
+       * @param mat The matrix to construct
+       * @param num_rows The number of rows of the matrix
+       * @param num_cols The number of columns of the matrix
+       * @return A new builder for the new matrix.
+       */
+      static CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, false> fromEmpty(
+          std::optional<CSRMatrix<ScalarT, IdxT, KEEP_SORTED>>& mat, size_t num_rows, size_t num_cols)
+      {
+        mat = CSRMatrix<ScalarT, IdxT, KEEP_SORTED>(num_rows, num_cols);
+        return CSRBuilder(*mat);
+      }
+
+      /**
+       * @brief Start constructing a row. Must be called before adding elements to the row.
+       * @note Must be called in ascending order of rows. If `INCLUDE_DIAGONALS` is true, then this will add any skiped diagonal elements.
+       * @return A reference to this builder, for builder chaining.
+       */
+      CSRBuilder& row(size_t new_row)
+      {
+        // Make sure this row is in-bounds
+        assert(new_row < mat_.numRows());
+
+        // Make sure to include diagonal entries for any previous rows we've skipped
+        if constexpr (INCLUDE_DIAGONALS)
+        {
+          // Determine which rows we need to add diagonal elements for.
+          // If we've already added the diagonal for the current row, start from the next row
+          // Otherwise start from the current row
+          size_t start_row = added_diagonal_ ? (curr_row_ + 1) : curr_row_;
+          for (size_t row = start_row; row < new_row; row++)
+          {
+            curr_row_ = row;
+            currRowIndex(mat_.numNonZero());
+            elem(row, 0);
+          }
+        }
+
+        if (new_row == 0)
+        {
+          // Ensure we haven't started adding values yet.
+          assert(mat_.values_.empty());
+        }
+        else
+        {
+          // Otherwise ensure we're working in ascending order of rows
+          assert(new_row > curr_row_);
+          // Make sure all new values will be place correctly after the incoming row index
+          assert(mat_.values_.size() > mat_.rowIndices()[new_row - 1]);
+        }
+
+        // Set new row
+        curr_row_ = new_row;
+        currRowIndex(mat_.numNonZero());
+
+        added_diagonal_ = false;
+
+        return *this;
+      }
+
+      /**
+       * @brief Insert a new element with a given value at the given column
+       * @note Must be called in ascending order of column. Not strictly required if `KEEP_SORTED` is false, but this can have
+       * potential benefits, and there's never really a reason that you can't just re-order the calls to `elem` to be sorted properly.
+       * @return A reference to this builder, for builder chaining.
+       */
+      CSRBuilder& elem(IdxT column, ScalarT value)
+      {
+        if constexpr (INCLUDE_DIAGONALS)
+        {
+          // Insert diagonal element if we've gone past the diagonal
+          if (!added_diagonal_ && column > curr_row_)
+          {
+            nextCol(curr_row_);
+            mat_.values_.push_back(0);
+
+            added_diagonal_ = true;
+          }
+          else
+          {
+            // We may be about to update the diagonal element
+            added_diagonal_ = added_diagonal_ || (column == curr_row_);
+          }
+        }
+
+        // Enforce ascending order of column
+        assert(mat_.rowIndices()[curr_row_] == mat_.numNonZero() || mat_.colIndices()[mat_.numNonZero() - 1] < column);
+
+        // Insert new column and value
+        nextCol(column);
+        mat_.values_.push_back(value);
+
+        return *this;
+      }
+
+    private:
+      /**
+       * @brief Process the next column. Depending on the mode (`USE_TEMPLATE`), either inserts in column
+       * or checks template and ensures the new column is as expected.
+       */
+      void nextCol(IdxT col)
+      {
+        if constexpr (USE_TEMPLATE)
+        {
+          assert(mat_.colIndices()[mat_.numNonZero()] == col);
+        }
+        else
+        {
+          mat_.colIndices().push_back(col);
+        }
+      }
+
+      /**
+       * @brief Process the index for the current row. Depending on the mode (`USE_TEMPLATE`), either inserts
+       * new row index, or checks template and ensures the row index is as expected.
+       */
+      void currRowIndex(IdxT idx)
+      {
+        if constexpr (USE_TEMPLATE)
+        {
+          assert(mat_.rowIndices()[curr_row_] == idx);
+        }
+        else
+        {
+          mat_.rowIndices().push_back(idx);
+        }
+      }
+    };
   } // namespace LinearAlgebra
 } // namespace GridKit
