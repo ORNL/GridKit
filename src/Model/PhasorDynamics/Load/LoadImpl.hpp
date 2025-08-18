@@ -99,7 +99,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* f)
     {
       real_type b = -X_ / (R_ * R_ + X_ * X_);
       real_type g = R_ / (R_ * R_ + X_ * X_);

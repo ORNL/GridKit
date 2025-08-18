@@ -176,7 +176,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
     {
       // Set variable aliases for better reliability
       const ScalarT delta = y[0];
@@ -201,6 +201,10 @@ namespace GridKit
       f[3] = ir + G_ * vr_ - B_ * vi_ - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
       f[4] = ii + B_ * vr_ + G_ * vi_ - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
 
+      // Bus current injection
+      ir_ = ir;
+      ii_ = ii;
+
       return 0;
     }
 
@@ -217,8 +221,8 @@ namespace GridKit
       evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
 
       // GenClassical contribution to bus algebraic equations
-      Ir() += y_[3];
-      Ii() += y_[4];
+      Ir() += ir_;
+      Ii() += ii_;
 
       return 0;
     }

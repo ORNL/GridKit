@@ -99,8 +99,8 @@ namespace GridKit
       Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
-             ScalarT   p0,
-             ScalarT   q0,
+             real_type p0,
+             real_type q0,
              real_type H,
              real_type D,
              real_type Ra,
@@ -179,8 +179,8 @@ namespace GridKit
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
 
       /* Initial terminal conditions */
-      ScalarT p0_{0.0};
-      ScalarT q0_{0.0};
+      real_type p0_{0.0};
+      real_type q0_{0.0};
 
       /* Input parameters */
       real_type H_{0.0};
