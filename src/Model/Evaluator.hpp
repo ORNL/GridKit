@@ -95,6 +95,27 @@ namespace GridKit
 
       virtual std::vector<ScalarT>&       getAdjointIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getAdjointIntegrand() const = 0;
+
+      using CSRJacobian = LinearAlgebra::CSRMatrix<ScalarT, IdxT, false>;
+
+      virtual bool hasCSRJacobian()
+      {
+        return false;
+      }
+
+      virtual void evaluateCSRJacobian()
+      {
+      }
+
+      virtual CSRJacobian& getCSRJacobian()
+      {
+        throw "Not implemented";
+      }
+
+      virtual const CSRJacobian& getCSRJacobian() const
+      {
+        throw "Not implemented";
+      }
     };
 
   } // namespace Model
