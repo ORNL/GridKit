@@ -1,6 +1,6 @@
 One way to build GridKit and its dependencies is by using Spack. 
 We include Spack as a submodule to the Gridkit repository and use it for our CI builds. 
-For more information on how to use Spack, [please refer to their documentation](https://spack-tutorial.readthedocs.io/en/latest).
+For more information on how to use Spack, please refer to their [documentation](https://spack-tutorial.readthedocs.io/en/latest).
 
 Example steps to build using Spack with an environment created on the fly:
 ```
