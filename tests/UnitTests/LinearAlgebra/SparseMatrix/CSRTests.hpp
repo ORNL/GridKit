@@ -133,11 +133,12 @@ namespace GridKit
         const size_t         num_cols = 5;
 
         COO_Matrix coo(rows, cols, vals, num_rows, num_cols);
-        CSRMatrix  csr = CSRMatrix::fromCOO(coo);
 
-        CSRBuilder builder(csr);
+        auto builder = CSRBuilder::fromTemplate(CSRMatrix::fromCOO(coo));
         builder.row(2).elem(2, 3).elem(3, 1);
         builder.row(3).elem(3, 2);
+
+        CSRMatrix csr = std::move(builder);
 
         ScalarT target;
         // Test all elements - make sure they match
@@ -156,6 +157,46 @@ namespace GridKit
             }
 
             success *= csr.valueAt(i, j) == target;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Test building a CSR matrix the recommended way - from empty at first, then using
+       * the original as a template after, with the same building pattern.
+       */
+      TestOutcome testCsrBuilderComplete()
+      {
+        using namespace LinearAlgebra;
+
+        using CSRBuilder = CSRBuilder<ScalarT, IdxT>;
+        using CSRMatrix  = CSRMatrix<ScalarT, IdxT>;
+
+        TestStatus success = true;
+
+        // Lambda so that we can use both types of builders
+        auto build = [](auto builder)
+        {
+          builder.row(0).elem(2, 3).elem(3, 4).elem(5, 6);
+          builder.row(1).elem(0, 1).elem(2, 2);
+          builder.row(3).elem(1, 2).elem(3, 3);
+          return builder;
+        };
+
+        CSRMatrix original_mat = build(CSRBuilder::fromEmpty(4, 6));
+        CSRMatrix new_mat      = build(CSRBuilder::fromTemplate(original_mat.clone()));
+
+        success *= original_mat.numRows() == new_mat.numRows();
+        success *= original_mat.numCols() == new_mat.numCols();
+        success *= original_mat.numNonZero() == new_mat.numNonZero();
+
+        for (size_t i = 0; i < original_mat.numRows(); i++)
+        {
+          for (IdxT j = 0; j < original_mat.numCols(); j++)
+          {
+            success *= original_mat.valueAt(i, j) == new_mat.valueAt(i, j);
           }
         }
 

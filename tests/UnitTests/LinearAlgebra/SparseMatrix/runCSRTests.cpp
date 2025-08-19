@@ -11,6 +11,8 @@ int main()
 
   result += test.cooToCsrTest();
   result += test.testCooMove();
+  result += test.testCsrBuilderTemplate();
+  result += test.testCsrBuilderComplete();
 
   return result.summary();
 }
