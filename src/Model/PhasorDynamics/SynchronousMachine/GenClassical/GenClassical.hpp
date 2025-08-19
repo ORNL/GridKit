@@ -104,7 +104,7 @@ namespace GridKit
       }
 
     public:
-      int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
     private:
       /* Identification */
@@ -133,6 +133,8 @@ namespace GridKit
       /* Local copies of bus variables */
       ScalarT vr_;
       ScalarT vi_;
+      ScalarT ir_;
+      ScalarT ii_;
     };
 
   } // namespace PhasorDynamics

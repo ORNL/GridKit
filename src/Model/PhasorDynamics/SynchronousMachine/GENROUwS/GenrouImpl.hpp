@@ -57,8 +57,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
                                   IdxT      unit_id,
-                                  ScalarT   p0,
-                                  ScalarT   q0,
+                                  real_type p0,
+                                  real_type q0,
                                   real_type H,
                                   real_type D,
                                   real_type Ra,
@@ -278,8 +278,8 @@ namespace GridKit
       /* Initialization tricks -- assuming NO saturation */
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = p0_;
-      ScalarT q     = q0_;
+      ScalarT p     = static_cast<ScalarT>(p0_);
+      ScalarT q     = static_cast<ScalarT>(q0_);
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT Er    = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
       ScalarT Ei    = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
@@ -503,8 +503,8 @@ namespace GridKit
       {
         real_type s112 = std::sqrt(S10_ / S12_);
 
-        SA_ = (1.2 * s112 + 1) / (s112 + 1);
-        SB_ = (1.2 * s112 - 1) / (s112 - 1);
+        SA_ = (1.2 * s112 + 1.0) / (s112 + 1.0);
+        SB_ = (1.2 * s112 - 1.0) / (s112 - 1.0);
         if (SB_ < SA_)
           SA_ = SB_;
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));

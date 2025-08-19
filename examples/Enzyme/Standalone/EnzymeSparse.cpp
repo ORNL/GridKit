@@ -73,7 +73,7 @@ __attribute__((always_inline)) static ScalarT sparse_load(size_t, size_t, std::v
 template <typename ScalarT>
 __attribute__((always_inline)) static void ident_store(ScalarT, size_t, size_t)
 {
-  assert(0 && "should never load");
+  assert(0 && "should never store");
 }
 
 template <typename ScalarT>
