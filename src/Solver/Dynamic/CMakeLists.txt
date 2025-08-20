@@ -6,6 +6,7 @@
 #]]
 
 gridkit_add_library(solvers_dyn
+  OPTIONAL
   SOURCES
     Ida.cpp
   LINK_LIBRARIES

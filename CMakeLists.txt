@@ -36,9 +36,6 @@ option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 # SUNDIALS support is enabled by default
 option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
 
-# Enable KLU
-option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" OFF)
-
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
@@ -99,10 +96,6 @@ if(GRIDKIT_ENABLE_SUNDIALS)
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
 endif()
-if(TARGET SUNDIALS::KLU)
-  set(GRIDKIT_ENABLE_SUNDIALS_SPARSE ON CACHE BOOL "Sparse solver enabled in SUNDIALS." FORCE)
-  message(STATUS "KLU support enabled in SUNDIALS.")
-endif()
 
 if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
@@ -118,6 +111,7 @@ install(
   )
 
 # Macro that adds libraries
+include(GridkitAddExecutable)
 include(GridkitAddLibrary)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

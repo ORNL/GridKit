@@ -8,13 +8,28 @@
 
 macro(gridkit_add_library target)
 
-  set(options STATIC_ONLY SHARED_ONLY)
+  set(options STATIC_ONLY SHARED_ONLY OPTIONAL)
   set(oneValueArgs OUTPUT_NAME)
   set(multiValueArgs SOURCES LINK_LIBRARIES INCLUDE_DIRECTORIES COMPILE_OPTIONS)
 
   # parse arguments
   cmake_parse_arguments(gridkit_add_library
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # Before going any further and configuring this library - make sure we can actually link its requirements
+  foreach(_add_lib ${gridkit_add_library_LINK_LIBRARIES})
+    if(NOT (${_add_lib} STREQUAL "PUBLIC" OR ${_add_lib} STREQUAL "PRIVATE" OR ${_add_lib} STREQUAL "INTERFACE"))
+      if(NOT TARGET ${_add_lib})
+        if(gridkit_add_library_OPTIONAL)
+          message(STATUS "Disabling optional GridKit library ${target} due to missing library: ${_add_lib}")
+          set_property(GLOBAL APPEND PROPERTY GRIDKIT_SKIPPED_OPTIONAL_LIBS GRIDKIT::${target})
+          return()
+        else()
+          message(SEND_ERROR "Failed to configure required GridKit library ${target} due to missing library: ${_add_lib}")
+        endif()
+      endif()
+    endif()
+  endforeach()
 
   # library types to create
   set(_libtypes "")
