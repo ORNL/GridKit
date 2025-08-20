@@ -71,6 +71,8 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
+    using Model::Evaluator<ScalarT, IdxT>::CSRJacobian;
+
   public:
     /**
      * @brief Default constructor for the system model
@@ -156,6 +158,11 @@ namespace GridKit
           return false;
         }
       }
+      return true;
+    }
+
+    bool hasCSRJacobian() override
+    {
       return true;
     }
 
@@ -283,7 +290,7 @@ namespace GridKit
       distributeVectors();
 
       // Evaluate component jacs
-      for (const auto& component : components_)
+      for (auto component : components_)
       {
         component->evaluateJacobian();
 
@@ -313,6 +320,29 @@ namespace GridKit
       // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
       jac_call_count_++;
 
+      return 0;
+    }
+
+    int evaluateCSRJacobian() override
+    {
+      for (auto component : components_)
+      {
+        auto get_csr_jac = [&component]()
+        {
+          if (component->hasCSRJacobian())
+          {
+            component->evaluateCSRJacobian();
+            return component->getCSRJacobian();
+          }
+          else
+          {
+            component->evaluateJacobian();
+            return CSRJacobian::fromCOO(component->getJacobian());
+          }
+        };
+
+        CSRJacobian comp_jac = get_csr_jac();
+      }
       return 0;
     }
 

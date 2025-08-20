@@ -2,8 +2,9 @@
 
 #include <vector>
 
-#include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <ScalarTraits.hpp>
+#include "LinearAlgebra/SparseMatrix/COO_Matrix.hpp"
+#include "LinearAlgebra/SparseMatrix/CSRMatrix.hpp"
+#include "ScalarTraits.hpp"
 
 namespace GridKit
 {
@@ -103,8 +104,9 @@ namespace GridKit
         return false;
       }
 
-      virtual void evaluateCSRJacobian()
+      virtual int evaluateCSRJacobian()
       {
+        return 0;
       }
 
       virtual CSRJacobian& getCSRJacobian()

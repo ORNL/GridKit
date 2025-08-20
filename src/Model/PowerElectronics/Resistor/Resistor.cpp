@@ -19,7 +19,7 @@ namespace GridKit
   Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
     : R_(R)
   {
-    size_           = 2;
+    size_           = SIZE;
     n_intern_       = 0;
     n_extern_       = 2;
     extern_indices_ = {0, 1};
@@ -88,6 +88,14 @@ namespace GridKit
     jac_.setValues(rcord, ccord, vals);
 
     return 0;
+  }
+
+  template <class ScalarT, typename IdxT, bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  typename Resistor<ScalarT, IdxT>::CSRJacobian Resistor<ScalarT, IdxT>::buildCSRJacobian(CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
+  {
+    builder.row(0).elem(0, 1.0 / R_).elem(1, -1.0 / R_);
+    builder.row(1).elem(0, -1.0 / R_).elem(1, 1.0 / R_);
+    return builder;
   }
 
   template <class ScalarT, typename IdxT>

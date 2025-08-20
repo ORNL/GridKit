@@ -3,7 +3,8 @@
 #ifndef _RES_HPP_
 #define _RES_HPP_
 
-#include <Model/PowerElectronics/CircuitComponent.hpp>
+#include "Model/EvaluatorMixins.hpp"
+#include "Model/PowerElectronics/CircuitComponent.hpp"
 
 namespace GridKit
 {
@@ -18,7 +19,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  class Resistor : public CircuitComponent<ScalarT, IdxT>
+  class Resistor : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CSRJacobian<ScalarT, IdxT, Resistor>
   {
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -41,6 +42,10 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
+    using Model::Evaluator<ScalarT, IdxT>::CSRJacobian;
+
+    const size_t SIZE = 2;
+
   public:
     Resistor(IdxT id, ScalarT R);
     virtual ~Resistor();
@@ -56,6 +61,9 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+
+    template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+    CSRJacobian buildCSRJacobian(CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
 
   private:
     ScalarT R_;

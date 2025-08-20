@@ -588,31 +588,47 @@ namespace AnalysisManager
 
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
+      using typename GridKit::Model::Evaluator<ScalarT, IdxT>::CSRJacobian;
+
       model->updateTime(t, cj);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
 
-      model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
-
-      // Get reference to the jacobian entries
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
-      const auto [r, c, val]                                                        = tpm;
-
-      // get the CSR row pointers from COO matrix
-      std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
-
       SUNMatZero(J);
 
-      // Set row pointers
       sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
-      std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
-
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
       real_type*    data    = SUNSparseMatrix_Data(J);
-      // Copy data from model jac to sundials
-      std::copy(c.cbegin(), c.cend(), colvals);
-      std::copy(val.cbegin(), val.cend(), data);
+
+      if (model->hasCSRJacobian())
+      {
+        model->evaluateCSRJacobian();
+        CSRJacobian& jac = model->getCSRJacobian();
+
+        std::copy(jac.rowIndices().cbegin(), jac.rowIndices().cend(), rowptrs);
+        std::copy(jac.colIndices().cbegin(), jac.colIndices().cend(), colvals);
+        std::copy(jac.values().cbegin(), jac.values().cend(), data);
+      }
+      else
+      {
+        model->evaluateJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
+
+        // Get reference to the jacobian entries
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
+        const auto [r, c, val]                                                        = tpm;
+
+        // get the CSR row pointers from COO matrix
+        std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
+
+        // Set row pointers
+
+        std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
+
+        // Copy data from model jac to sundials
+        std::copy(c.cbegin(), c.cend(), colvals);
+        std::copy(val.cbegin(), val.cend(), data);
+      }
 
       return 0;
     }
