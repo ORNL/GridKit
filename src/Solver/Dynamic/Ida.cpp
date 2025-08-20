@@ -6,6 +6,7 @@
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
+#include <sunlinsol/sunlinsol_klu.h>
 
 #include "Model/Evaluator.hpp"
 
