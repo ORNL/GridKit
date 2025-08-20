@@ -404,6 +404,12 @@ namespace GridKit
           nextRow(i);
         }
 
+        // Builder enforces sorting
+        if constexpr (!KEEP_SORTED)
+        {
+          mat_.sorted_ = true;
+        }
+
         validate();
         return std::move(mat_);
       }
