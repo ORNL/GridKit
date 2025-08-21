@@ -16,7 +16,7 @@ macro(gridkit_add_library target)
   cmake_parse_arguments(gridkit_add_library
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  # Before going any further and configuring this library - make sure we can actually link its requirements
+  # Before going any further and configuring this library, make sure we can actually link its requirements.
   foreach(_add_lib ${gridkit_add_library_LINK_LIBRARIES})
     if(NOT (${_add_lib} STREQUAL "PUBLIC" OR ${_add_lib} STREQUAL "PRIVATE" OR ${_add_lib} STREQUAL "INTERFACE"))
       if(NOT TARGET ${_add_lib})
