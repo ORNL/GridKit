@@ -11,14 +11,9 @@
 #include <sunlinsol/sunlinsol_dense.h>  /* access to dense linear solver        */
 #include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 
-#include <Definitions.hpp>
-
-#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
-#include <sunlinsol/sunlinsol_klu.h> /* access to KLU linear solver          */
-#endif
-
 #include "DynamicSolver.hpp"
 #include "Model/Evaluator.hpp"
+#include <Definitions.hpp>
 
 namespace AnalysisManager
 {
