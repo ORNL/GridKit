@@ -3,6 +3,6 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-if(TARGET SUNDIALS::idas)
+if(TARGET GRIDKIT::solvers_dyn)
     add_subdirectory(Dynamic)
 endif()

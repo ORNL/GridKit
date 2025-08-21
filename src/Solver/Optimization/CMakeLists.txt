@@ -6,6 +6,7 @@
 #]]
 
 gridkit_add_library(solvers_opt
+  OPTIONAL
   SOURCES
     DynamicObjective.cpp
     DynamicConstraint.cpp

@@ -9,7 +9,7 @@ add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
 add_subdirectory(Experimental)
 
-if(TARGET SUNDIALS::idas)
+if(TARGET GRIDKIT::solvers_dyn)
   add_subdirectory(PhasorDynamics)
 endif()
 

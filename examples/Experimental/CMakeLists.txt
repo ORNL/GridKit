@@ -3,7 +3,7 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-if(TARGET SUNDIALS::idas)
+if(TARGET GRIDKIT::solvers_dyn)
   add_subdirectory(AdjointSensitivity)
   if(GRIDKIT_ENABLE_IPOPT)
     add_subdirectory(DynamicConstrainedOpt)
