@@ -6,7 +6,6 @@
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
-#include <sunlinsol/sunlinsol_klu.h>
 
 #include "Model/Evaluator.hpp"
 
@@ -115,6 +114,7 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::configureLinearSolver()
     {
       int retval = 0;
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
       if (model_->hasJacobian())
       {
         sunindextype n   = static_cast<sunindextype>(model_->size());
@@ -149,6 +149,18 @@ namespace AnalysisManager
         retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
         checkOutput(retval, "IDASetLinearSolver");
       }
+#else
+        JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                      static_cast<sunindextype>(model_->size()),
+                                      context_);
+        checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+
+        linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
+        checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
+
+        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+        checkOutput(retval, "IDASetLinearSolver");
+#endif
 
       return retval;
     }
