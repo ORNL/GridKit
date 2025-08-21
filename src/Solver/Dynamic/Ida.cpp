@@ -150,16 +150,16 @@ namespace AnalysisManager
         checkOutput(retval, "IDASetLinearSolver");
       }
 #else
-        JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                      static_cast<sunindextype>(model_->size()),
-                                      context_);
-        checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+      JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                    static_cast<sunindextype>(model_->size()),
+                                    context_);
+      checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
 
-        linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-        checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
+      linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
+      checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
 
-        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
-        checkOutput(retval, "IDASetLinearSolver");
+      retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+      checkOutput(retval, "IDASetLinearSolver");
 #endif
 
       return retval;
