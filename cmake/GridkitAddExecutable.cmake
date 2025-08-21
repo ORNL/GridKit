@@ -9,7 +9,7 @@ macro(gridkit_add_executable target)
   cmake_parse_arguments(gridkit_add_executable
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  # Before going any further and configuring this library - make sure we can actually link its requirements
+  # Before going any further and configuring this library, make sure we can actually link its requirements.
   foreach(_add_lib ${gridkit_add_executable_LINK_LIBRARIES})
     if(NOT (${_add_lib} MATCHES "PUBLIC" OR ${_add_lib} MATCHES "PRIVATE" OR ${_add_lib} MATCHES "INTERFACE"))
       if(NOT TARGET ${_add_lib})
