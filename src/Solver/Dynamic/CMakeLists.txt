@@ -5,23 +5,25 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-if (TARGET SUNDIALS::sunlinsolklu)
-  gridkit_add_library(solvers_dyn
-    SOURCES
-      Ida.cpp
-    LINK_LIBRARIES
-      PUBLIC SUNDIALS::nvecserial
-      PUBLIC SUNDIALS::idas
-      PUBLIC SUNDIALS::sunlinsolklu
-    OUTPUT_NAME
-      gridkit_solvers_dyn)
-else()
-  gridkit_add_library(solvers_dyn
-    SOURCES
-      Ida.cpp
-    LINK_LIBRARIES
-      PUBLIC SUNDIALS::nvecserial
-      PUBLIC SUNDIALS::idas
-    OUTPUT_NAME
-      gridkit_solvers_dyn)
+if (TARGET SUNDIALS::idas)
+  if (TARGET SUNDIALS::sunlinsolklu)
+    gridkit_add_library(solvers_dyn
+      SOURCES
+        Ida.cpp
+      LINK_LIBRARIES
+        PUBLIC SUNDIALS::nvecserial
+        PUBLIC SUNDIALS::idas
+        PUBLIC SUNDIALS::sunlinsolklu
+      OUTPUT_NAME
+        gridkit_solvers_dyn)
+  else()
+    gridkit_add_library(solvers_dyn
+      SOURCES
+        Ida.cpp
+      LINK_LIBRARIES
+        PUBLIC SUNDIALS::nvecserial
+        PUBLIC SUNDIALS::idas
+      OUTPUT_NAME
+        gridkit_solvers_dyn)
+  endif()
 endif()
