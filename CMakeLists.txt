@@ -33,11 +33,8 @@ endif()
 # Ipopt support is disabled by default
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
-# SUNDIALS support is enabled by default
+# SUNDIALS support is disabled by default
 option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
-
-# Enable KLU
-option(GRIDKIT_ENABLE_SUNDIALS_SPARSE "Enable SUNDIALS sparse linear solvers" OFF)
 
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
@@ -99,7 +96,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
   if(TARGET SUNDIALS::sunlinsolklu)
-    set(GRIDKIT_ENABLE_SUNDIALS_SPARSE ON CACHE BOOL "Sparse solver enabled in SUNDIALS." FORCE)
+    set(GRIDKIT_ENABLE_SUNDIALS_SPARSE ON CACHE INTERNAL BOOL "Sparse solver enabled in SUNDIALS.")
     message(STATUS "KLU support enabled in SUNDIALS.")
   endif()
 endif()
