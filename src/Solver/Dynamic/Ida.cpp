@@ -114,40 +114,76 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::configureLinearSolver()
     {
       int retval = 0;
+
+/// Todo - Implement a cleaner way to handle the Sparse versus Dense solvers
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
       if (model_->hasJacobian())
       {
-        sunindextype n   = static_cast<sunindextype>(model_->size());
-        sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
-
-        JacobianMat_ = SUNSparseMatrix(n,
-                                       n,
-                                       nnz,
-                                       CSR_MAT,
-                                       context_);
-        checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
-
-        linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
-        checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
-
-        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
-        checkOutput(retval, "IDASetLinearSolver");
-
-        retval = IDASetJacFn(solver_, this->Jac);
-        checkOutput(retval, "IDASetJacFn");
+        this->configureLinearSolverSparse();
       }
       else
       {
-        JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
-                                      static_cast<sunindextype>(model_->size()),
-                                      context_);
-        checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
-
-        linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
-        checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
-
-        retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
-        checkOutput(retval, "IDASetLinearSolver");
+        this->configureLinearSolverDense();
       }
+#else
+      if (model_->hasJacobian())
+      {
+        /// Todo - Improve error handling capabilities and hasJacobian_ ownership
+        throw std::runtime_error("SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian.");
+      }
+      else
+      {
+        this->configureLinearSolverDense();
+      }
+#endif
+
+      return retval;
+    }
+
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::configureLinearSolverSparse()
+    {
+      int retval = 0;
+
+      sunindextype n   = static_cast<sunindextype>(model_->size());
+      sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+
+      JacobianMat_ = SUNSparseMatrix(n,
+                                     n,
+                                     nnz,
+                                     CSR_MAT,
+                                     context_);
+      checkAllocation((void*) JacobianMat_, "SUNSparseMatrix");
+
+      linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
+      checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
+
+      retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+      checkOutput(retval, "IDASetLinearSolver");
+
+      retval = IDASetJacFn(solver_, this->Jac);
+      checkOutput(retval, "IDASetJacFn");
+
+      return retval;
+    }
+#endif
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::configureLinearSolverDense()
+    {
+      int retval = 0;
+
+      JacobianMat_ = SUNDenseMatrix(static_cast<sunindextype>(model_->size()),
+                                    static_cast<sunindextype>(model_->size()),
+                                    context_);
+      checkAllocation((void*) JacobianMat_, "SUNDenseMatrix");
+
+      linearSolver_ = SUNLinSol_Dense(yy_, JacobianMat_, context_);
+      checkAllocation((void*) linearSolver_, "SUNLinSol_Dense");
+
+      retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
+      checkOutput(retval, "IDASetLinearSolver");
 
       return retval;
     }
