@@ -45,6 +45,12 @@ namespace AnalysisManager
       SUNContext_Free(&context_);
     }
 
+    /**
+     * @brief Configure the simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureSimulation()
     {
@@ -110,6 +116,15 @@ namespace AnalysisManager
       return this->configureLinearSolver();
     }
 
+    /**
+     * @brief Configure the linear solver
+     *
+     * @note This currently uses pre-processor directives to set dense or sparse
+     * linear solvers
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureLinearSolver()
     {
@@ -141,6 +156,14 @@ namespace AnalysisManager
     }
 
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+    /**
+     * @brief Configure a sparse linear solver
+     *
+     * @note This method is only available if SUNDIALS is configured with KLU
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureLinearSolverSparse()
     {
@@ -169,6 +192,12 @@ namespace AnalysisManager
     }
 #endif
 
+    /**
+     * @brief Configure a dense linear solver
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureLinearSolverDense()
     {
@@ -188,6 +217,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Get default initial condition
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::getDefaultInitialCondition()
     {
@@ -199,6 +234,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Set integration time
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::setIntegrationTime(real_type t_init, real_type t_final, int nout)
     {
@@ -208,6 +249,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Initialize the simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeSimulation(real_type t0, bool findConsistent)
     {
@@ -303,6 +350,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Delete the simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteSimulation()
     {
@@ -317,6 +370,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Configure quadrature
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureQuadrature()
     {
@@ -345,6 +404,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Initialize quadrature
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeQuadrature()
     {
@@ -360,6 +425,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Run simulation with quadrature
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(real_type tf, int nout)
     {
@@ -396,6 +467,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Delete quadrature
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteQuadrature()
     {
@@ -405,6 +482,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Configure adjoint
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureAdjoint()
     {
@@ -421,6 +504,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Initialize adjoint
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeAdjoint(IdxT steps)
     {
@@ -433,6 +522,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Initialize backward simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
     {
@@ -499,6 +594,14 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Configure linear solver for backward simulation
+     *
+     * @note This only supports dense linear solvers at the moment
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::configureLinearSolverBackward()
     {
@@ -521,6 +624,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Run forward simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runForwardSimulation(real_type tf, int nout)
     {
@@ -554,6 +663,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Run backward simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runBackwardSimulation(real_type t_init)
     {
@@ -582,6 +697,12 @@ namespace AnalysisManager
       return retval;
     }
 
+    /**
+     * @brief Delete adjoint
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteAdjoint()
     {
@@ -589,6 +710,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Delete backward simulation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::deleteBackwardSimulation()
     {
@@ -601,6 +728,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Residual evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
@@ -617,6 +750,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Jacobian evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Jac(real_type t, real_type cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
@@ -652,6 +791,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Integrand evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
@@ -668,6 +813,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Adjoint residual evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointResidual(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
@@ -686,6 +837,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Adjoint integrand evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointIntegrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
@@ -704,6 +861,12 @@ namespace AnalysisManager
       return 0;
     }
 
+    /**
+     * @brief Copy SUNDIALS N_Vector to std::vector
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
@@ -711,6 +874,12 @@ namespace AnalysisManager
       std::copy_n(xdata, y.size(), y.begin());
     }
 
+    /**
+     * @brief Copy std::vector to SUNDIALS N_Vector
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
@@ -718,6 +887,12 @@ namespace AnalysisManager
       std::copy(x.cbegin(), x.cend(), ydata);
     }
 
+    /**
+     * @brief Copy std::vector to SUNDIALS N_Vector
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
@@ -725,6 +900,12 @@ namespace AnalysisManager
       std::copy(x.cbegin(), x.cend(), ydata);
     }
 
+    /**
+     * @brief Print output
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printOutput(real_type t)
     {
@@ -743,6 +924,12 @@ namespace AnalysisManager
       std::cout << "\n";
     }
 
+    /**
+     * @brief Special print
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printSpecial(real_type t, N_Vector y)
     {
@@ -757,6 +944,12 @@ namespace AnalysisManager
       std::cout << "},\n";
     }
 
+    /**
+     * @brief Print final stats
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::printFinalStats()
     {
@@ -764,6 +957,12 @@ namespace AnalysisManager
       checkOutput(retval, "IDAPrintAllStats");
     }
 
+    /**
+     * @brief Check SUNDIALS allocation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::checkAllocation(void* v, const char* functionName)
     {
@@ -774,6 +973,12 @@ namespace AnalysisManager
       }
     }
 
+    /**
+     * @brief Check SUNDIALS output
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::checkOutput(int retval, const char* functionName)
     {
