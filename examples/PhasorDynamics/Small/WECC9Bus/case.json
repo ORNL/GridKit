@@ -1,9 +1,9 @@
 {
     "header": {
-        "format_version": 0,
+        "format_version": 0.1,
         "format_revision": 1,
-        "case_name": "CASE NAME",
-        "case_description": "CASE Description",
+        "case_name": "two_area_case",
+        "case_description": "None",
         "case_comments": "CASE COMMENTS",
         "freq_base": 60.0,
         "va_base": 100000000.0
@@ -150,7 +150,56 @@
             ]
         }
     ],
-    "signals": [],
+    "signals": [
+        {
+            "signal_id": 1,
+            "name": "1_1_speed"
+        },
+        {
+            "signal_id": 2,
+            "name": "1_1_pmech"
+        },
+        {
+            "signal_id": 3,
+            "name": "1_1_efd"
+        },
+        {
+            "signal_id": 4,
+            "name": "2_1_speed"
+        },
+        {
+            "signal_id": 5,
+            "name": "2_1_pmech"
+        },
+        {
+            "signal_id": 6,
+            "name": "2_1_efd"
+        },
+        {
+            "signal_id": 7,
+            "name": "3_1_speed"
+        },
+        {
+            "signal_id": 8,
+            "name": "3_1_pmech"
+        },
+        {
+            "signal_id": 9,
+            "name": "3_1_efd"
+        },
+        {
+            "signal_id": 10,
+            "name": "4_1_speed"
+        },
+        {
+            "signal_id": 11,
+            "name": "4_1_pmech"
+        },
+        {
+            "signal_id": 12,
+            "name": "4_1_efd"
+        }
+    ],
     "devices": [
         {
             "class": "Branch",
@@ -158,7 +207,7 @@
                 "bus1": 1,
                 "bus2": 5
             },
-            "id": "BR1",
+            "id": "BR_1_5",
             "params": {
                 "R": 0.001,
                 "X": 0.012,
@@ -172,7 +221,7 @@
                 "bus1": 2,
                 "bus2": 6
             },
-            "id": "BR1",
+            "id": "BR_2_6",
             "params": {
                 "R": 0.001,
                 "X": 0.012,
@@ -186,7 +235,7 @@
                 "bus1": 3,
                 "bus2": 9
             },
-            "id": "BR1",
+            "id": "BR_3_9",
             "params": {
                 "R": 0.001,
                 "X": 0.012,
@@ -200,7 +249,7 @@
                 "bus1": 4,
                 "bus2": 10
             },
-            "id": "BR1",
+            "id": "BR_4_10",
             "params": {
                 "R": 0.001,
                 "X": 0.012,
@@ -214,7 +263,7 @@
                 "bus1": 5,
                 "bus2": 6
             },
-            "id": "BR1",
+            "id": "BR_5_6",
             "params": {
                 "R": 0.005,
                 "X": 0.05,
@@ -228,7 +277,7 @@
                 "bus1": 5,
                 "bus2": 6
             },
-            "id": "BR1",
+            "id": "BR_5_6",
             "params": {
                 "R": 0.00501,
                 "X": 0.05001,
@@ -242,7 +291,7 @@
                 "bus1": 6,
                 "bus2": 7
             },
-            "id": "BR1",
+            "id": "BR_6_7",
             "params": {
                 "R": 0.002,
                 "X": 0.02,
@@ -256,7 +305,7 @@
                 "bus1": 6,
                 "bus2": 7
             },
-            "id": "BR1",
+            "id": "BR_6_7",
             "params": {
                 "R": 0.00201,
                 "X": 0.02001,
@@ -270,7 +319,7 @@
                 "bus1": 7,
                 "bus2": 8
             },
-            "id": "BR1",
+            "id": "BR_7_8",
             "params": {
                 "R": 0.02201,
                 "X": 0.22001,
@@ -284,7 +333,7 @@
                 "bus1": 7,
                 "bus2": 8
             },
-            "id": "BR1",
+            "id": "BR_7_8",
             "params": {
                 "R": 0.02202,
                 "X": 0.22002,
@@ -298,7 +347,7 @@
                 "bus1": 7,
                 "bus2": 8
             },
-            "id": "BR1",
+            "id": "BR_7_8",
             "params": {
                 "R": 0.022,
                 "X": 0.22,
@@ -312,7 +361,7 @@
                 "bus1": 8,
                 "bus2": 9
             },
-            "id": "BR1",
+            "id": "BR_8_9",
             "params": {
                 "R": 0.002,
                 "X": 0.02,
@@ -326,7 +375,7 @@
                 "bus1": 8,
                 "bus2": 9
             },
-            "id": "BR1",
+            "id": "BR_8_9",
             "params": {
                 "R": 0.00201,
                 "X": 0.02001,
@@ -340,7 +389,7 @@
                 "bus1": 9,
                 "bus2": 10
             },
-            "id": "BR1",
+            "id": "BR_9_10",
             "params": {
                 "R": 0.005,
                 "X": 0.05,
@@ -354,7 +403,7 @@
                 "bus1": 9,
                 "bus2": 10
             },
-            "id": "BR1",
+            "id": "BR_9_10",
             "params": {
                 "R": 0.00501,
                 "X": 0.05001,
@@ -370,7 +419,7 @@
                 "pmech": 2,
                 "efd": 3
             },
-            "id": "DV1",
+            "id": "genrou_1_1",
             "params": {
                 "p0": 1.0,
                 "q0": 0.05013,
@@ -400,11 +449,11 @@
             "class": "Genrou",
             "ports": {
                 "bus": 2,
-                "speed": 1,
-                "pmech": 2,
-                "efd": 3
+                "speed": 4,
+                "pmech": 5,
+                "efd": 6
             },
-            "id": "DV1",
+            "id": "genrou_2_1",
             "params": {
                 "p0": 1.0,
                 "q0": 0.05013,
@@ -434,11 +483,11 @@
             "class": "Genrou",
             "ports": {
                 "bus": 3,
-                "speed": 1,
-                "pmech": 2,
-                "efd": 3
+                "speed": 7,
+                "pmech": 8,
+                "efd": 9
             },
-            "id": "DV1",
+            "id": "genrou_3_1",
             "params": {
                 "p0": 1.0,
                 "q0": 0.05013,
@@ -468,11 +517,11 @@
             "class": "Genrou",
             "ports": {
                 "bus": 4,
-                "speed": 1,
-                "pmech": 2,
-                "efd": 3
+                "speed": 10,
+                "pmech": 11,
+                "efd": 12
             },
-            "id": "DV1",
+            "id": "genrou_4_1",
             "params": {
                 "p0": 1.0,
                 "q0": 0.05013,
@@ -498,86 +547,78 @@
                 "omega"
             ]
         },
-        [
-            {
-                "class": "Tgov1",
-                "ports": {
-                    "bus": 1,
-                    "speed": 1,
-                    "pmech": 2
-                },
-                "id": "DV2",
-                "params": {
-                    "R": 0.22,
-                    "T1": 0.1,
-                    "T2": 0,
-                    "T3": 0.5,
-                    "Pvmax": 0,
-                    "Pvmin": 1,
-                    "Dt": 10
-                }
+        {
+            "class": "Tgov1",
+            "ports": {
+                "bus": 1,
+                "speed": 1,
+                "pmech": 2
+            },
+            "id": "tgov1_1_1",
+            "params": {
+                "R": 0.22,
+                "T1": 0.1,
+                "T2": 0,
+                "T3": 0.5,
+                "Pvmax": 0,
+                "Pvmin": 1,
+                "Dt": 10
             }
-        ],
-        [
-            {
-                "class": "Tgov1",
-                "ports": {
-                    "bus": 1,
-                    "speed": 1,
-                    "pmech": 2
-                },
-                "id": "DV2",
-                "params": {
-                    "R": 0.22,
-                    "T1": 0.1,
-                    "T2": 0,
-                    "T3": 0.5,
-                    "Pvmax": 0,
-                    "Pvmin": 1,
-                    "Dt": 10
-                }
+        },
+        {
+            "class": "Tgov1",
+            "ports": {
+                "bus": 2,
+                "speed": 4,
+                "pmech": 5
+            },
+            "id": "tgov1_2_1",
+            "params": {
+                "R": 0.22,
+                "T1": 0.1,
+                "T2": 0,
+                "T3": 0.5,
+                "Pvmax": 0,
+                "Pvmin": 1,
+                "Dt": 10
             }
-        ],
-        [
-            {
-                "class": "Tgov1",
-                "ports": {
-                    "bus": 1,
-                    "speed": 1,
-                    "pmech": 2
-                },
-                "id": "DV2",
-                "params": {
-                    "R": 0.22,
-                    "T1": 0.1,
-                    "T2": 0,
-                    "T3": 0.5,
-                    "Pvmax": 0,
-                    "Pvmin": 1,
-                    "Dt": 10
-                }
+        },
+        {
+            "class": "Tgov1",
+            "ports": {
+                "bus": 3,
+                "speed": 7,
+                "pmech": 8
+            },
+            "id": "tgov1_3_1",
+            "params": {
+                "R": 0.22,
+                "T1": 0.1,
+                "T2": 0,
+                "T3": 0.5,
+                "Pvmax": 0,
+                "Pvmin": 1,
+                "Dt": 10
             }
-        ],
-        [
-            {
-                "class": "Tgov1",
-                "ports": {
-                    "bus": 1,
-                    "speed": 1,
-                    "pmech": 2
-                },
-                "id": "DV2",
-                "params": {
-                    "R": 0.22,
-                    "T1": 0.1,
-                    "T2": 0,
-                    "T3": 0.5,
-                    "Pvmax": 0,
-                    "Pvmin": 1,
-                    "Dt": 10
-                }
+        },
+        {
+            "class": "Tgov1",
+            "ports": {
+                "bus": 4,
+                "speed": 10,
+                "pmech": 11
+            },
+            "id": "tgov1_4_1",
+            "params": {
+                "R": 0.22,
+                "T1": 0.1,
+                "T2": 0,
+                "T3": 0.5,
+                "Pvmax": 0,
+                "Pvmin": 1,
+                "Dt": 10
             }
-        ],
+        },
         {
             "class": "Ieeet1",
             "ports": {
@@ -585,9 +626,9 @@
                 "speed": 1,
                 "efd": 3
             },
-            "id": "DV3",
+            "id": "ieeet1_1_1",
             "params": {
-                "Tr": 0,
+                "Tr": 0.01,
                 "Ka": 200,
                 "Ta": 1,
                 "Ke": 0,
@@ -606,13 +647,13 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 1,
-                "speed": 1,
-                "efd": 3
+                "bus": 2,
+                "speed": 4,
+                "efd": 6
             },
-            "id": "DV3",
+            "id": "ieeet1_2_1",
             "params": {
-                "Tr": 0,
+                "Tr": 0.01,
                 "Ka": 200,
                 "Ta": 1,
                 "Ke": 0,
@@ -631,13 +672,13 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 1,
-                "speed": 1,
-                "efd": 3
+                "bus": 3,
+                "speed": 7,
+                "efd": 9
             },
-            "id": "DV3",
+            "id": "ieeet1_3_1",
             "params": {
-                "Tr": 0,
+                "Tr": 0.01,
                 "Ka": 200,
                 "Ta": 1,
                 "Ke": 0,
@@ -656,13 +697,13 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 1,
-                "speed": 1,
-                "efd": 3
+                "bus": 4,
+                "speed": 10,
+                "efd": 12
             },
-            "id": "DV3",
+            "id": "ieeet1_4_1",
             "params": {
-                "Tr": 0,
+                "Tr": 0.01,
                 "Ka": 200,
                 "Ta": 1,
                 "Ke": 0,
