@@ -37,6 +37,10 @@ namespace AnalysisManager
 
       int configureSimulation();
       int configureLinearSolver();
+#ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
+      int configureLinearSolverSparse();
+#endif
+      int configureLinearSolverDense();
       int getDefaultInitialCondition();
       int setIntegrationTime(real_type t_init, real_type t_final, int nout);
       int initializeSimulation(real_type t0, bool findConsistent = false);
