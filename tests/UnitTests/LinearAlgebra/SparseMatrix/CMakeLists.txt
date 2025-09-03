@@ -1,8 +1,9 @@
-add_executable(test_sparse runSparseTests.cpp)
-target_link_libraries(test_sparse GridKit::CsrMatrix)
-                                
-add_test(NAME SparseTest COMMAND $<TARGET_FILE:test_sparse>)
+# 
 
+add_executable(test_csr runCSRTests.cpp)
+target_include_directories(test_csr PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>)
 
-install(TARGETS test_sparse 
+add_test(NAME IDATest COMMAND $<TARGET_FILE:test_csr>)
+
+install(TARGETS test_csr 
         RUNTIME DESTINATION bin)
