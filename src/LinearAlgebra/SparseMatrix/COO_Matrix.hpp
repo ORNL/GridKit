@@ -15,6 +15,10 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
+    // Forward-declaration
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    class CSRMatrix;
+
     /**
      * @brief Quick class to provide sparse matrices of COO type.
      *
@@ -87,6 +91,9 @@ namespace GridKit
       IdxT indexStartRow(const std::vector<IdxT>& rows, IdxT r);
       IdxT sparseCordBinarySearch(const std::vector<IdxT>& rows, const std::vector<IdxT>& columns, IdxT ri, IdxT ci);
       bool checkIncreaseSize(IdxT r, IdxT c);
+
+      template <class, typename, bool>
+      friend class CSRMatrix;
     };
 
     /**
