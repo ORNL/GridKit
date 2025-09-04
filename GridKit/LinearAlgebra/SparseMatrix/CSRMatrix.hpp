@@ -76,7 +76,7 @@ namespace GridKit
 
     /**
      * @brief Helper type - derive from this depending on whether your type is always sorted or not
-     * @tparam KEEP_SORTED Whether your type is always sorted
+     * @tparam KEEP_SORTED Whether your type is always sorted.
      */
     template <bool KEEP_SORTED>
     using Sorted = std::conditional<KEEP_SORTED, AlwaysSorted, MaybeSorted>::type;
