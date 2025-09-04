@@ -183,6 +183,38 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Test the conversion of a matrix from `IS_SORTED == false` to `IS_SORTED == true`.
+       */
+      TestOutcome testUnsortedToSorted()
+      {
+        using namespace LinearAlgebra;
+
+        using CSRBuilder = CSRBuilder<ScalarT, IdxT, true, false>;
+
+        TestStatus success = true;
+
+        auto build = [](auto builder)
+        {
+          builder.row(0).elem(2, 3).elem(1, 4).elem(3, 6);
+          builder.row(2).elem(3, 1).elem(0, 2).elem(2, 4);
+
+          return builder;
+        };
+
+        CSRMatrix<ScalarT, IdxT, false> original_mat = build(CSRBuilder::fromEmpty(4, 6));
+
+        success *= !original_mat.isSorted();
+        success *= !isSorted(original_mat);
+
+        CSRMatrix<ScalarT, IdxT, true> sorted_mat = std::move(original_mat).toSorted();
+
+        success *= sorted_mat.isSorted();
+        success *= isSorted(sorted_mat);
+
+        return success.report(__func__);
+      }
+
     private:
       bool compare(LinearAlgebra::CSRMatrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CSRMatrix<ScalarT, IdxT>& new_mat)
       {
@@ -244,6 +276,27 @@ namespace GridKit
         }
 
         return comparison;
+      }
+
+      template <bool IS_SORTED>
+      bool isSorted(LinearAlgebra::CSRMatrix<ScalarT, IdxT, IS_SORTED>& mat)
+      {
+        for (size_t i = 1; i < mat.numRows(); i++)
+        {
+          if (mat.rowIndices()[i + 1] > mat.rowIndices()[i])
+          {
+            for (IdxT j = mat.rowIndices()[i]; j < mat.rowIndices()[i + 1] - 1; j++)
+            {
+              // Ascending order of columns
+              if (mat.colIndices()[j] >= mat.colIndices()[j + 1])
+              {
+                return false;
+              }
+            }
+          }
+        }
+
+        return true;
       }
     };
   } // namespace Testing

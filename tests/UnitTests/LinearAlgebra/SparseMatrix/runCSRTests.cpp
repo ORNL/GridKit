@@ -14,6 +14,7 @@ int main()
   result += test.testCsrBuilderTemplate();
   result += test.testCsrBuilderComplete();
   result += test.testUnsortedMatrix();
+  result += test.testUnsortedToSorted();
 
   return result.summary();
 }
