@@ -102,6 +102,7 @@ namespace GridKit
        * @brief The array of (potentially) nonzero values.
        * @note Some of the values may be zero, due to calculations working out that way.
        * This array stores exactly the values which *may* be nonzero.
+       * @invariant Must be the same length as `::col_indices_`.
        */
       std::vector<ScalarT> values_;
       /**
@@ -109,13 +110,19 @@ namespace GridKit
        * that each row starts at. All values on a row exist purely
        * between that index (inclusive) and the next row's index (exclusive).
        * @note Some indices may be beyond the end of the `::values_` array -
-       * this indicates that and all greater rows are all zero.
+       * this indicates that and all greater rows are all zero. There is an additional index
+       * at the end which does not relate to a row of the matrix. This represents the start of
+       * a row "beyond the end" of the matrix, and exists only for algorithmic simplicity, but
+       * is a required part of the CSR matrix format.
+       * @invariant Must be non-decreasing. The first index must be 0. The last index must be
+       * the size of `::values_`.
        */
       std::vector<IdxT>    row_indices_;
       /**
        * @brief The array of column indices for each value
-       * in the `::values_` array. Each index must be strictly smaller than
-       * `::num_cols_`.
+       * in the `::values_` array.
+       * @invariant Each index must be strictly smaller than `::num_cols_`. Each index must be unique.
+       * If `KEEP_SORTED` is true, then must be strictly increasing within each row.
        */
       std::vector<IdxT>    col_indices_;
       /**
@@ -172,7 +179,7 @@ namespace GridKit
 
       /**
        * @brief The number of rows in the matrix. Expected to be
-       * the size of `::row_indices_`.
+       * the size of `::row_indices_` minus 1 (due to its "beyond the end" behavior).
        */
       size_t numRows() const noexcept
       {
@@ -400,6 +407,9 @@ namespace GridKit
     {
       /**
        * @brief The matrix being built.
+       * @note While being built, the invariants of `CSRMatrix` are not necessarily maintained. For that reason,
+       * this matrix cannot be given to anyone before "finalizing" it and verifying the invariants.
+       * See @ref ::operator CSRMatrix<ScalarT, IdxT, KEEP_SORTED>() &&
        */
       CSRMatrix<ScalarT, IdxT, KEEP_SORTED> mat_;
       /**
