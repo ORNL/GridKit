@@ -153,6 +153,36 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Test building a CSR Matrix with unsorted elements in rows.
+       */
+      TestOutcome testUnsortedMatrix()
+      {
+        using namespace LinearAlgebra;
+
+        using CSRBuilder = CSRBuilder<ScalarT, IdxT, true, false>;
+        using CSRMatrix  = CSRMatrix<ScalarT, IdxT, false>;
+
+        TestStatus success = true;
+
+        auto build = [](auto builder)
+        {
+          builder.row(0).elem(2, 3).elem(1, 4).elem(3, 6);
+          builder.row(2).elem(3, 1).elem(0, 2).elem(2, 4);
+
+          return builder;
+        };
+
+        CSRMatrix original_mat = build(CSRBuilder::fromEmpty(4, 6));
+        CSRMatrix new_mat      = build(CSRBuilder::fromTemplate(original_mat.clone()));
+
+        success *= !original_mat.isSorted();
+        success *= !new_mat.isSorted();
+        success *= compare(original_mat, new_mat);
+
+        return success.report(__func__);
+      }
+
     private:
       bool compare(LinearAlgebra::CSRMatrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CSRMatrix<ScalarT, IdxT>& new_mat)
       {
@@ -167,7 +197,12 @@ namespace GridKit
         {
           for (IdxT j = 0; j < original_mat.numCols(); j++)
           {
-            comparison = comparison && original_mat.valueAt(i, j) == new_mat.valueAt(i, j);
+            if (original_mat.valueAt(i, j) != new_mat.valueAt(i, j))
+            {
+              comparison = false;
+
+              std::cerr << "Mismatch at (" << i << "," << j << "): " << original_mat.valueAt(i, j) << " v.s. " << new_mat.valueAt(i, j) << std::endl;
+            }
           }
         }
 
