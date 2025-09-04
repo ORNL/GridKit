@@ -336,9 +336,9 @@ namespace GridKit
 
     /**
      * @brief Return the value of a particular element.
-     * @param row The row of the element. This is bounds-checked in debug mode,
+     * @param[in] row - The row of the element. This is bounds-checked in debug mode,
      *            but an out-of-bounds access otherwise is UB.
-     * @param col The column of the elements. Bounds-checked always, since it needs to be searched for.
+     * @param[in] col - The column of the elements. Bounds-checked always, since it needs to be searched for.
      * @return If the element exists in the matrix, returns its value. Otherwise return 0.
      * @note This access incurs a significant search cost, especially if the matrix is unsorted.
      */
