@@ -13,6 +13,7 @@ int main()
   result += test.testCooMove();
   result += test.testCsrBuilderTemplate();
   result += test.testCsrBuilderComplete();
+  result += test.testUnsortedMatrix();
 
   return result.summary();
 }

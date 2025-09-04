@@ -316,6 +316,8 @@ namespace GridKit
      * @tparam INCLUDE_DIAGONALS Whether or not we should ensure that empty diagonal elements are created, even if
      *                           not specified. This way if we axpy with a diagonal matrix later (a common operation
      *                           with Jacobian matrices) we can do it quickly.
+     * @tparam KEEP_SORTED       Whether or not the sorting of rows should be enforced. If false, then elements in a row
+     *                           can be inserted in arbitrary order.
      * @tparam USE_TEMPLATE      Whether or not a template matrix should be used. A template matrix should ideally be
      *                           one originally created using this utility, and whose internal buffers can be reused
      *                           for fast matrix construction.
@@ -350,6 +352,11 @@ namespace GridKit
         {
           mat_.values_.clear();
           mat_.col_indices_.clear();
+        }
+
+        if constexpr (!KEEP_SORTED)
+        {
+          mat_.sorted_ = false;
         }
       }
 
@@ -398,11 +405,11 @@ namespace GridKit
        */
       operator CSRMatrix<ScalarT, IdxT, KEEP_SORTED>() &&
       {
-        // Finish up all of the remaining row indices
-        for (size_t i = curr_row_ + 1; i <= mat_.numRows(); i++)
-        {
-          nextRow(i);
-        }
+        // We may have skipped some rows at the end - finish those entries up
+        skipRows(mat_.numRows());
+
+        // Setup the row index for the row beyond the last row
+        nextRow(mat_.numRows());
 
         validate();
         return std::move(mat_);
@@ -418,30 +425,7 @@ namespace GridKit
         // Make sure this row is in-bounds
         assert(new_row < mat_.numRows());
 
-        // Make sure to include diagonal entries for any previous rows we've skipped
-        if constexpr (INCLUDE_DIAGONALS)
-        {
-          // Add the diagonal for the current row, if we missed it
-          if (!added_diagonal_ && new_row > curr_row_)
-          {
-            elem(static_cast<IdxT>(curr_row_), 0);
-          }
-
-          // Add diagonals for skipped rows
-          for (size_t row = curr_row_ + 1; row < new_row; row++)
-          {
-            nextRow(row);
-            elem(static_cast<IdxT>(row), 0);
-          }
-        }
-        else
-        {
-          // Make sure to set row indices for any skipped rows
-          for (size_t row = curr_row_ + 1; row < new_row; row++)
-          {
-            nextRow(row);
-          }
-        }
+        skipRows(new_row);
 
         if (new_row == 0)
         {
@@ -578,6 +562,35 @@ namespace GridKit
       }
 
       /**
+       * @brief A helper function for skipping rows. Sometimes a row gets skipped, such as when calling `row(1)` followed by `row(2)` or
+       * by converting to a matrix before all rows have been entered in. This function will ensure the skipped rows properly have their
+       * indices and diagonals added.
+       */
+      void skipRows(size_t until_row)
+      {
+        if constexpr (INCLUDE_DIAGONALS)
+        {
+          // Add the diagonal for the current row, if we missed it
+          if (!added_diagonal_ && until_row > curr_row_)
+          {
+            elem(static_cast<IdxT>(curr_row_), 0);
+          }
+        }
+
+        // Skipped rows
+        for (size_t row = curr_row_ + 1; row < until_row; row++)
+        {
+          nextRow(row);
+
+          // Add diagonals for skipped rows if needed
+          if constexpr (INCLUDE_DIAGONALS)
+          {
+            elem(static_cast<IdxT>(row), 0);
+          }
+        }
+      }
+
+      /**
        * @brief Ensure that the matrix under construction is valid, and that, if using a template,
        * the template was used as expected.
        */
@@ -591,7 +604,7 @@ namespace GridKit
           // Ascending order of rows
           assert(mat_.rowIndices()[i] >= mat_.rowIndices()[i - 1]);
           // In-bounds
-          assert(static_cast<size_t>(mat_.rowIndices()[i]) < numNonZero());
+          assert(static_cast<size_t>(mat_.rowIndices()[i]) <= numNonZero());
 
           bool check_diagonal = !INCLUDE_DIAGONALS;
           for (IdxT j = mat_.rowIndices()[i]; j < mat_.rowIndices()[i + 1]; j++)
@@ -623,6 +636,23 @@ namespace GridKit
           assert(numNonZero() == mat_.colIndices().size());
           // Make sure we went through as many rows as the template had
           assert(curr_row_ == mat_.numRows());
+        }
+
+        // If we aren't ensuring the building is done in ascending order of column,
+        // then there isn't anything checking that each column is present at most once
+        // in each row. Check that here.
+        if constexpr (!KEEP_SORTED)
+        {
+          std::vector<IdxT> col_indices = mat_.col_indices_;
+          for (size_t i = 0; i < mat_.numRows(); i++)
+          {
+            std::sort(col_indices.begin() + mat_.row_indices_[i], col_indices.begin() + mat_.row_indices_[i + 1]);
+
+            for (size_t j = mat_.row_indices_[i]; j < mat_.row_indices_[i + 1] - 1; j++)
+            {
+              assert(col_indices[j] != col_indices[j + 1]);
+            }
+          }
         }
       }
     };
