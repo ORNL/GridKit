@@ -405,29 +405,35 @@ namespace GridKit
     template <class ScalarT, typename IdxT, bool INCLUDE_DIAGONALS = true, bool KEEP_SORTED = false, bool USE_TEMPLATE = true>
     class CSRBuilder
     {
+
+      /**
+       * @brief The type of matrix being built. Not strictly needed, but Doxygen chokes on some stuff without this.
+       */
+      using Matrix = CSRMatrix<ScalarT, IdxT, KEEP_SORTED>;
+
       /**
        * @brief The matrix being built.
        * @note While being built, the invariants of `CSRMatrix` are not necessarily maintained. For that reason,
        * this matrix cannot be given to anyone before "finalizing" it and verifying the invariants.
-       * See @ref ::operator CSRMatrix<ScalarT, IdxT, KEEP_SORTED>() &&
+       * @see CSRBuilder::operator Matrix()
        */
-      CSRMatrix<ScalarT, IdxT, KEEP_SORTED> mat_;
+      Matrix mat_;
       /**
        * @brief The current row the builder is working on. Used to ensure we work on rows in ascending order,
        * and to insert extra diagonal elements if we skip rows.
        */
-      size_t                                curr_row_       = 0;
+      size_t curr_row_       = 0;
       /**
        * @brief Keeps track of whether we have added a diagonal element in the row we're currently working on.
        * @todo  This can be removed from the class if `INCLUDE_DIAGONALS` is false. Maybe not necessary but an extra
        * little bit of performance/memory.
        */
-      bool                                  added_diagonal_ = false;
+      bool   added_diagonal_ = false;
       /**
        * @brief Keeps track of the next value to insert.
        * @todo  This can be removed from the class if `USE_TEMPLATE` is false.
        */
-      size_t                                curr_val_       = 0;
+      size_t curr_val_       = 0;
 
       CSRBuilder(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
         : mat_(std::move(mat))
@@ -487,7 +493,7 @@ namespace GridKit
        * @note  This irreparably finalizes the matrix being built - if an attempt is made to continue building the matrix after calling this,
        *        it will not work. In that way, we must move the builder to signal it is no longer usable afterwards.
        */
-      operator CSRMatrix<ScalarT, IdxT, KEEP_SORTED>() &&
+      operator Matrix() &&
       {
         // We may have skipped some rows at the end - finish those entries up
         skipRows(mat_.numRows());
