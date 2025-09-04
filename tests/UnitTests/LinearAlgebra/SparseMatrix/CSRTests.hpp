@@ -48,11 +48,13 @@ namespace GridKit
         {
           unsigned* counter;
 
-          CopyCounter(unsigned* counter) : counter(counter)
+          CopyCounter(unsigned* counter)
+            : counter(counter)
           {
           }
 
-          CopyCounter(const CopyCounter& other) : counter(other.counter)
+          CopyCounter(const CopyCounter& other)
+            : counter(other.counter)
           {
             (*counter)++;
           }

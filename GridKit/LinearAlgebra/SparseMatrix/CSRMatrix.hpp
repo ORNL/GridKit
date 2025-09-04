@@ -144,7 +144,7 @@ namespace GridKit
       static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
 
       CSRMatrix<ScalarT, IdxT, true> toSorted() &&;
-      CSRMatrix clone() const;
+      CSRMatrix                      clone() const;
 
       /**
        * @see `values_`
@@ -419,7 +419,8 @@ namespace GridKit
        */
       size_t                                curr_val_       = 0;
 
-      CSRBuilder(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat) : mat_(std::move(mat))
+      CSRBuilder(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
+        : mat_(std::move(mat))
       {
         if constexpr (!USE_TEMPLATE)
         {
