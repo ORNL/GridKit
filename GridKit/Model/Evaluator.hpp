@@ -4,6 +4,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -96,6 +97,28 @@ namespace GridKit
 
       virtual std::vector<ScalarT>&       getAdjointIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getAdjointIntegrand() const = 0;
+
+      using CsrJacobian = LinearAlgebra::CsrMatrix<RealT, IdxT, false>;
+
+      virtual bool hasCsrJacobian()
+      {
+        return false;
+      }
+
+      virtual int evaluateCsrJacobian()
+      {
+        return 0;
+      }
+
+      virtual CsrJacobian& getCsrJacobian()
+      {
+        throw "Not implemented";
+      }
+
+      virtual const CsrJacobian& getCsrJacobian() const
+      {
+        throw "Not implemented";
+      }
     };
 
   } // namespace Model
