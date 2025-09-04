@@ -27,7 +27,7 @@ namespace GridKit
 
       /**
        * @brief Cannot be constructed, except as a base class
-       * @param isSorted Whether or not it should start sorted.
+       * @param[in] isSorted - Boolean indicating if it should start sorted.
        */
       MaybeSorted(bool isSorted)
         : sorted_(isSorted)
