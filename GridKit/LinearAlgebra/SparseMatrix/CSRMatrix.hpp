@@ -79,6 +79,19 @@ namespace GridKit
     template <bool KEEP_SORTED>
     using Sorted = std::conditional<KEEP_SORTED, AlwaysSorted, MaybeSorted>::type;
 
+    /**
+     * @brief A compressed sparse row (CSR) matrix, which is used by many sparse linear algebra algorithms, such as KLU.
+     *        Like COO matrices (see `COO_Matrix`), we store only the potentially nonzero elements and their corresponding column.
+     *        Unlike COO, we store all of the elements of a single row contiguously in memory, then keep track of where each row
+     *        starts and ends.
+     * @tparam ScalarT The type of the nonzero values of the matrix.
+     * @tparam IdxT    The type of the indices stored for the columns and rows of the elements. This may differ depending on
+     *                 the algorithm which consumes the matrix.
+     * @invariant If `KEEP_SORTED` is true, then the elements of each row are sorted in ascending order of their column.
+     *            This is sometimes needed for algorithms which consume the matrix, but represents extra work.
+     *            Public methods will expect the invariant to be held when calling the function and should maintain the
+     *            invariant after returning. Private methods may not have this expectation, but it should be made clear if this isn't the case.
+     */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED = false>
     class CSRMatrix : Sorted<KEEP_SORTED>
     {
@@ -115,6 +128,9 @@ namespace GridKit
       CSRMatrix(const CSRMatrix& other)            = default;
       CSRMatrix& operator=(const CSRMatrix& other) = default;
 
+      template <class, typename, bool>
+      friend class CSRMatrix;
+
     public:
       CSRMatrix(CSRMatrix&& other) = default;
       CSRMatrix(size_t num_rows, IdxT num_cols);
@@ -125,6 +141,7 @@ namespace GridKit
       static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>& coo);
       static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
 
+      CSRMatrix<ScalarT, IdxT, true> toSorted() &&;
       CSRMatrix clone() const;
 
       /**
@@ -262,6 +279,60 @@ namespace GridKit
     }
 
     /**
+     * @brief Sort the matrix, ensuring that each row's values are in ascending order of column.
+     * @note  Should be a no-op if `KEEP_SORTED` is true, since there is an invariant that the matrix is already sorted.
+     */
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    void CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::sort()
+    {
+      if constexpr (!KEEP_SORTED)
+      {
+        // A vector keeping track of where sorted elements should end up.
+        // Starts as [0, 1, 2, ..., n]
+        std::vector<size_t> sorted_indices(col_indices_.size());
+        std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
+
+        // "Sort" sorted_indices by column within each row
+        for (size_t row = 0; row < numRows(); row++)
+        {
+          std::sort(
+              sorted_indices.begin() + row_indices_[row],
+              sorted_indices.begin() + row_indices_[row + 1],
+              [&](size_t a, size_t b)
+              { return col_indices_[a] < col_indices_[b]; });
+        }
+
+        // Create the new col_indices_ and values_ array which hold the same elements,
+        // but are instead sorted.
+        std::vector<IdxT>    new_col_indices(col_indices_.size());
+        std::vector<ScalarT> new_values(values_.size());
+        for (size_t i = 0; i < numNonZero(); i++)
+        {
+          new_col_indices[i] = col_indices_[sorted_indices[i]];
+          new_values[i]      = values_[sorted_indices[i]];
+        }
+
+        col_indices_ = std::move(new_col_indices);
+        values_      = std::move(new_values);
+
+        // Make sure to mark this matrix as sorted.
+        MaybeSorted::sorted_ = true;
+      }
+    }
+
+    /**
+     * @brief Convert to a matrix which holds the `KEEP_SORTED` invariant. To ensure this invariant is
+     * held, sorts the matrix.
+     */
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    CSRMatrix<ScalarT, IdxT, true> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::toSorted() &&
+    {
+      sort();
+
+      return CSRMatrix<ScalarT, IdxT, true>(std::move(values_), std::move(row_indices_), std::move(col_indices_), num_cols_, true);
+    }
+
+    /**
      * @brief Return the value of a particular element.
      * @param row The row of the element. This is bounds-checked in debug mode,
      *            but an out-of-bounds access otherwise is UB.
@@ -311,7 +382,7 @@ namespace GridKit
     }
 
     /**
-     * @brief A helpful builder utility to help build CSR matrices from their components. When built in debug mode,
+     * @brief A helpful builder utility to help build `CSRMatrix` from their components. When built in debug mode,
      * enables several checks which ensure that you are building the CSR matrix correctly.
      * @tparam INCLUDE_DIAGONALS Whether or not we should ensure that empty diagonal elements are created, even if
      *                           not specified. This way if we axpy with a diagonal matrix later (a common operation
@@ -612,7 +683,7 @@ namespace GridKit
             if constexpr (KEEP_SORTED)
             {
               // Ascending order of columns
-              if (j < mat_.rowIndices()[i + 1] - 1)
+              if (mat_.rowIndices()[i] < mat_.rowIndices()[i + 1] && j < mat_.rowIndices()[i + 1] - 1)
               {
                 assert(mat_.colIndices()[j] < mat_.colIndices()[j + 1]);
               }
@@ -648,9 +719,12 @@ namespace GridKit
           {
             std::sort(col_indices.begin() + mat_.row_indices_[i], col_indices.begin() + mat_.row_indices_[i + 1]);
 
-            for (size_t j = mat_.row_indices_[i]; j < mat_.row_indices_[i + 1] - 1; j++)
+            if (mat_.row_indices_[i] < mat_.row_indices_[i + 1])
             {
-              assert(col_indices[j] != col_indices[j + 1]);
+              for (size_t j = mat_.row_indices_[i]; j < mat_.row_indices_[i + 1] - 1; j++)
+              {
+                assert(col_indices[j] != col_indices[j + 1]);
+              }
             }
           }
         }
