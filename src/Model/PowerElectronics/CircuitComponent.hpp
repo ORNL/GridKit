@@ -14,7 +14,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
+  class CircuitComponent : public virtual Model::Evaluator<ScalarT, IdxT>
   {
   public:
     typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
