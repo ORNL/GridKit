@@ -92,7 +92,8 @@ namespace GridKit
 
   template <class ScalarT, typename IdxT>
   template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
-  Resistor<ScalarT, IdxT>::CsrJacobian Resistor<ScalarT, IdxT>::buildCsrJacobian(LinearAlgebra::CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
+  Resistor<ScalarT, IdxT>::CsrJacobian Resistor<ScalarT, IdxT>::buildCsrJacobian(
+      LinearAlgebra::CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
   {
     builder.row(0).elem(0, 1.0 / R_).elem(1, -1.0 / R_);
     builder.row(1).elem(0, -1.0 / R_).elem(1, 1.0 / R_);
