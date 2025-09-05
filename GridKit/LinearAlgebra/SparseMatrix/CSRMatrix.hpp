@@ -778,7 +778,7 @@ namespace GridKit
 
             if (mat_.row_indices_[i] < mat_.row_indices_[i + 1])
             {
-              for (size_t j = mat_.row_indices_[i]; j < mat_.row_indices_[i + 1] - 1; j++)
+              for (size_t j = mat_.row_indices_[i]; j < static_cast<size_t>(mat_.row_indices_[i + 1] - 1); j++)
               {
                 assert(col_indices[j] != col_indices[j + 1]);
               }
