@@ -311,18 +311,56 @@ namespace GridKit
               { return col_indices_[a] < col_indices_[b]; });
         }
 
-        // Create the new col_indices_ and values_ array which hold the same elements,
-        // but are instead sorted.
-        std::vector<IdxT>    new_col_indices(col_indices_.size());
-        std::vector<ScalarT> new_values(values_.size());
-        for (size_t i = 0; i < numNonZero(); i++)
-        {
-          new_col_indices[i] = col_indices_[sorted_indices[i]];
-          new_values[i]      = values_[sorted_indices[i]];
-        }
+        // Keep track of which indices have been sorted - i.e. which
+        // elements have their correct final values.
+        std::vector<bool> is_sorted(sorted_indices.size(), false);
 
-        col_indices_ = std::move(new_col_indices);
-        values_      = std::move(new_values);
+        // Sort each element
+        for (size_t i = 0; i < col_indices_.size(); i++)
+        {
+          // If this element is correct, no need to sort it
+          if (is_sorted[i])
+            continue;
+
+          IdxT    temp_col = std::move(col_indices_[i]);
+          ScalarT temp_val = std::move(values_[i]);
+
+          // The sorted_indices array keeps track of a mapping of old indices to new indices such that
+          // the resulting vectors are sorted. I.e. if we assigned col_indices_new[i] = col_indices_[sorted_indices[i]]
+          // and values_new[i] = values_[sorted_indices[i]], then the resulting col_indices_new, values_new would be sorted.
+          // If we think of a directed graph which indicates the direction in which this indices move, each edge in the graph would be
+          // sorted_indices[i] -> i. Every connected component in this graph then would look like ... ->
+          // sorted_indices[sorted_indices[sorted_indices[i]]] -> sorted_indices[sorted_indices[i]] -> sorted_indices[i] -> i,
+          // and since every element in sorted_indices is unique, these components form cycles.
+          //
+          // To sort the matrix, then, we must simply "shift" each element along in these cycles. We do this by noting the first
+          // element in the cycle we encounter, then shifting the next element of the cycle into its place. We continue to do this until
+          // the next element in the cycle is the original element, and we simply assign the noted element into the last element of the cycle.
+          //
+          // To ensure we only shift each cycle once, we note all of the elements we have already encountered during this process in
+          // is_sorted.
+          size_t prev_elem = i;
+          size_t next_elem = sorted_indices[i];
+          while (next_elem != i) // Follow the cycle
+          {
+            // Shift the "next" element in the cycle into the previous one.
+            col_indices_[prev_elem] = std::move(col_indices_[next_elem]);
+            values_[prev_elem]      = std::move(values_[next_elem]);
+
+            // Mark the previous element as a member of the cycle
+            is_sorted[prev_elem] = true;
+
+            prev_elem = next_elem;
+            next_elem = sorted_indices[next_elem];
+          }
+
+          // At this point, next_elem should point to the first element in the cycle we encountered (i).
+          // So prev_elem is the last element in the cycle. Move our previously noted element into it,
+          // and mark it as part of the cycle.
+          col_indices_[prev_elem] = std::move(temp_col);
+          values_[prev_elem]      = std::move(temp_val);
+          is_sorted[prev_elem]    = true;
+        }
 
         // Make sure to mark this matrix as sorted.
         MaybeSorted::sorted_ = true;
