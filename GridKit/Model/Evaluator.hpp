@@ -100,11 +100,17 @@ namespace GridKit
 
       using CsrJacobian = LinearAlgebra::CsrMatrix<RealT, IdxT, false>;
 
+      /**
+       * @brief Whether or not a CSR Jacobian is available
+       */
       virtual bool hasCsrJacobian()
       {
         return false;
       }
 
+      /**
+       * @brief Evaluate the internal representation of the CSR jacobian
+       */
       virtual int evaluateCsrJacobian()
       {
         return 0;
