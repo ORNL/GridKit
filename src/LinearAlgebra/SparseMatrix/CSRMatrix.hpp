@@ -294,35 +294,39 @@ namespace GridKit
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
     void CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::sort()
     {
-      if constexpr (KEEP_SORTED) {
+      if constexpr (KEEP_SORTED)
+      {
         return;
       }
 
       const auto max_nnz_row = std::transform_reduce(
-        std::next(row_indices_.cbegin()),
-        row_indices_.cend(),
-        row_indices_.cbegin(),
-        IdxT{0},
-        [](auto a, auto b) { return std::max(a, b); },
-        std::minus<IdxT>{}  
-      );
+          std::next(row_indices_.cbegin()),
+          row_indices_.cend(),
+          row_indices_.cbegin(),
+          IdxT{0},
+          [](auto a, auto b)
+          { return std::max(a, b); },
+          std::minus<IdxT>{});
       std::vector<size_t> sorted_indices(max_nnz_row);
       std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
 
       for (size_t row_idx = 0; row_idx < numRows(); row_idx++)
       {
         const auto row_start = row_indices_[row_idx];
-        const auto nnz_row = row_indices_[row_idx + 1] - row_start;
+        const auto nnz_row   = row_indices_[row_idx + 1] - row_start;
         std::sort(
-          sorted_indices.begin(),
-          std::next(sorted_indices.begin(), nnz_row),
-          [&](auto a, auto b) {
-            return col_indices_[a + row_start] < col_indices_[b + row_start];
-        });
+            sorted_indices.begin(),
+            std::next(sorted_indices.begin(), nnz_row),
+            [&](auto a, auto b)
+            {
+              return col_indices_[a + row_start] < col_indices_[b + row_start];
+            });
 
-        for (size_t col_idx = 0; col_idx < nnz_row; col_idx++) {
+        for (size_t col_idx = 0; col_idx < nnz_row; col_idx++)
+        {
           auto cur_col_idx = col_idx;
-          while (col_idx != sorted_indices[col_idx]) {
+          while (col_idx != sorted_indices[col_idx])
+          {
             const auto new_col_idx = sorted_indices[col_idx];
             std::swap(col_indices_[cur_col_idx + row_start], col_indices_[new_col_idx + row_start]);
             std::swap(values_[cur_col_idx + row_start], values_[new_col_idx + row_start]);
