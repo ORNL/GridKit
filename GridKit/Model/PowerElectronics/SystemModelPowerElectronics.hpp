@@ -72,6 +72,24 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
+    using typename Model::Evaluator<ScalarT, IdxT>::CSRJacobian;
+
+    struct JacobianAssemblyPlan
+    {
+      struct Element
+      {
+        std::vector<std::tuple<size_t, size_t>> component_indices_;
+        std::vector<IdxT>                       original_column_;
+        IdxT                                    column_;
+      };
+
+      std::vector<Element> elements_;
+      std::vector<size_t>  row_indices_;
+
+      size_t num_components_;
+      size_t system_size_;
+    };
+
   public:
     /**
      * @brief Default constructor for the system model
@@ -157,6 +175,11 @@ namespace GridKit
           return false;
         }
       }
+      return true;
+    }
+
+    bool hasCSRJacobian() override
+    {
       return true;
     }
 
@@ -284,7 +307,7 @@ namespace GridKit
       distributeVectors();
 
       // Evaluate component jacs
-      for (const auto& component : components_)
+      for (auto component : components_)
       {
         component->evaluateJacobian();
 
@@ -315,6 +338,40 @@ namespace GridKit
       jac_call_count_++;
 
       return 0;
+    }
+
+    int evaluateCSRJacobian() override
+    {
+      std::vector<CSRJacobian> component_jacobians;
+      component_jacobians.reserve(components_.size());
+
+      for (auto component : components_)
+      {
+        if (component->hasCSRJacobian())
+        {
+          component->evaluateCSRJacobian();
+          component_jacobians.push_back(component->getCSRJacobian().clone());
+        }
+        else
+        {
+          component->evaluateJacobian();
+          component_jacobians.push_back(CSRJacobian::fromCOO(component->getJacobian()));
+        }
+      }
+
+      return 0;
+    }
+
+    CSRJacobian& getCSRJacobian() override
+    {
+      assert(csr_jacobian_);
+      return *csr_jacobian_;
+    }
+
+    const CSRJacobian& getCSRJacobian() const override
+    {
+      assert(csr_jacobian_);
+      return *csr_jacobian_;
     }
 
     /**
@@ -404,10 +461,23 @@ namespace GridKit
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    std::vector<component_type*> components_;
+    std::vector<component_type*>        components_;
+    std::optional<JacobianAssemblyPlan> jacobian_assembly_plan_;
+    CSRJacobian                         csr_jacobian_(0, 0);
 
     int  jac_call_count_{0};
     bool use_jac_;
+
+    void createJacobianAssemblyPlan()
+    {
+      JacobianAssemblyPlan plan;
+
+      plan.num_components_ = components_.size();
+      plan.system_size_    = size();
+      plan.row_indices_    = std::vector<size_t>(0, plan.system_size_ + 1);
+
+      jacobian_assembly_plan_ = plan;
+    }
 
   }; // class PowerElectronicsModel
 
