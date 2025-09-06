@@ -294,77 +294,45 @@ namespace GridKit
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
     void CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::sort()
     {
-      if constexpr (!KEEP_SORTED)
-      {
-        // A vector keeping track of where sorted elements should end up.
-        // Starts as [0, 1, 2, ..., n]
-        std::vector<size_t> sorted_indices(col_indices_.size());
-        std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
-
-        // "Sort" sorted_indices by column within each row
-        for (size_t row = 0; row < numRows(); row++)
-        {
-          std::sort(
-              sorted_indices.begin() + row_indices_[row],
-              sorted_indices.begin() + row_indices_[row + 1],
-              [&](size_t a, size_t b)
-              { return col_indices_[a] < col_indices_[b]; });
-        }
-
-        // Keep track of which indices have been sorted - i.e. which
-        // elements have their correct final values.
-        std::vector<bool> is_sorted(sorted_indices.size(), false);
-
-        // Sort each element
-        for (size_t i = 0; i < col_indices_.size(); i++)
-        {
-          // If this element is correct, no need to sort it
-          if (is_sorted[i])
-            continue;
-
-          IdxT    temp_col = std::move(col_indices_[i]);
-          ScalarT temp_val = std::move(values_[i]);
-
-          // The sorted_indices array keeps track of a mapping of old indices to new indices such that
-          // the resulting vectors are sorted. I.e. if we assigned col_indices_new[i] = col_indices_[sorted_indices[i]]
-          // and values_new[i] = values_[sorted_indices[i]], then the resulting col_indices_new, values_new would be sorted.
-          // If we think of a directed graph which indicates the direction in which this indices move, each edge in the graph would be
-          // sorted_indices[i] -> i. Every connected component in this graph then would look like ... ->
-          // sorted_indices[sorted_indices[sorted_indices[i]]] -> sorted_indices[sorted_indices[i]] -> sorted_indices[i] -> i,
-          // and since every element in sorted_indices is unique, these components form cycles.
-          //
-          // To sort the matrix, then, we must simply "shift" each element along in these cycles. We do this by noting the first
-          // element in the cycle we encounter, then shifting the next element of the cycle into its place. We continue to do this until
-          // the next element in the cycle is the original element, and we simply assign the noted element into the last element of the cycle.
-          //
-          // To ensure we only shift each cycle once, we note all of the elements we have already encountered during this process in
-          // is_sorted.
-          size_t prev_elem = i;
-          size_t next_elem = sorted_indices[i];
-          while (next_elem != i) // Follow the cycle
-          {
-            // Shift the "next" element in the cycle into the previous one.
-            col_indices_[prev_elem] = std::move(col_indices_[next_elem]);
-            values_[prev_elem]      = std::move(values_[next_elem]);
-
-            // Mark the previous element as a member of the cycle
-            is_sorted[prev_elem] = true;
-
-            prev_elem = next_elem;
-            next_elem = sorted_indices[next_elem];
-          }
-
-          // At this point, next_elem should point to the first element in the cycle we encountered (i).
-          // So prev_elem is the last element in the cycle. Move our previously noted element into it,
-          // and mark it as part of the cycle.
-          col_indices_[prev_elem] = std::move(temp_col);
-          values_[prev_elem]      = std::move(temp_val);
-          is_sorted[prev_elem]    = true;
-        }
-
-        // Make sure to mark this matrix as sorted.
-        MaybeSorted::sorted_ = true;
+      if constexpr (KEEP_SORTED) {
+        return;
       }
+
+      const auto max_nnz_row = std::transform_reduce(
+        std::next(row_indices_.cbegin()),
+        row_indices_.cend(),
+        row_indices_.cbegin(),
+        IdxT{0},
+        [](auto a, auto b) { return std::max(a, b); },
+        std::minus<IdxT>{}  
+      );
+      std::vector<size_t> sorted_indices(max_nnz_row);
+      std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
+
+      for (size_t row_idx = 0; row_idx < numRows(); row_idx++)
+      {
+        const auto row_start = row_indices_[row_idx];
+        const auto nnz_row = row_indices_[row_idx + 1] - row_start;
+        std::sort(
+          sorted_indices.begin(),
+          std::next(sorted_indices.begin(), nnz_row),
+          [&](auto a, auto b) {
+            return col_indices_[a + row_start] < col_indices_[b + row_start];
+        });
+
+        for (size_t col_idx = 0; col_idx < nnz_row; col_idx++) {
+          auto cur_col_idx = col_idx;
+          while (col_idx != sorted_indices[col_idx]) {
+            const auto new_col_idx = sorted_indices[col_idx];
+            std::swap(col_indices_[cur_col_idx + row_start], col_indices_[new_col_idx + row_start]);
+            std::swap(values_[cur_col_idx + row_start], values_[new_col_idx + row_start]);
+            std::swap(sorted_indices[col_idx], sorted_indices[new_col_idx]);
+            cur_col_idx = new_col_idx;
+          }
+        }
+      }
+
+      MaybeSorted::sorted_ = true;
     }
 
     /**
