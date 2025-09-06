@@ -299,21 +299,31 @@ namespace GridKit
         return;
       }
 
+      // Calculate the maximum number of nonzero elements of a single row, over all rows of the matrix.
+      // transform_reduce does two steps:
+      // 1) Transform by subtracting neigboring elements of row_indices to calculate the number of nonzero elements of each row
+      // 2) Reduce by taking the maximum over all of them, starting with 0
       const auto max_nnz_row = std::transform_reduce(
-          std::next(row_indices_.cbegin()),
-          row_indices_.cend(),
-          row_indices_.cbegin(),
-          IdxT{0},
-          [](auto a, auto b)
-          { return std::max(a, b); },
-          std::minus<IdxT>{});
+          std::next(row_indices_.cbegin()), // The start of the range for elements "a"
+          row_indices_.cend(),              // The end of the range for elements "a"
+          row_indices_.cbegin(),            // The start of the range for elements "b"
+          IdxT{0},                          // The starting accumulator value, here the minimum size of a row
+          [](auto a, auto b)                //
+          { return std::max(a, b); },       // Reduce, which is appled after transform. Take the maximum row size
+          std::minus<IdxT>{});              // Transform each a,b pair. Since a is a sequence of row indices which starts one after b, their difference is the size of each row
+
+      // A vector keeping track of where sorted elements in a row should end up.
+      // Only holds enough elements as the largest row.
       std::vector<size_t> sorted_indices(max_nnz_row);
       std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
 
+      // Sort each row
       for (size_t row_idx = 0; row_idx < numRows(); row_idx++)
       {
         const auto row_start = row_indices_[row_idx];
         const auto nnz_row   = row_indices_[row_idx + 1] - row_start;
+
+        // Sort sorted_indices according to the column indices of the elements of the current row
         std::sort(
             sorted_indices.begin(),
             std::next(sorted_indices.begin(), nnz_row),
@@ -322,20 +332,51 @@ namespace GridKit
               return col_indices_[a + row_start] < col_indices_[b + row_start];
             });
 
+        // Move each element into its correct sorted spot. After sorting sorted_indices,
+        // it now lists the index of the element currently in col_indices_ and values_
+        // that should go in each element of the row. So for each element in the row, we
+        // reference sorted_indices to check which element we should move into it. This forms
+        // a cycle of moves, which we can shuffle around to move everything where it needs to be.
         for (size_t col_idx = 0; col_idx < nnz_row; col_idx++)
         {
+          // The index of the element we're currently trying to "sort" by finding the element that belongs in this index
           auto cur_col_idx = col_idx;
-          while (col_idx != sorted_indices[col_idx])
+          // The index of the element that belongs in the index given by cur_col_idx
+          auto new_col_idx = sorted_indices[col_idx];
+
+          if (new_col_idx != col_idx)
           {
-            const auto new_col_idx = sorted_indices[col_idx];
-            std::swap(col_indices_[cur_col_idx + row_start], col_indices_[new_col_idx + row_start]);
-            std::swap(values_[cur_col_idx + row_start], values_[new_col_idx + row_start]);
-            std::swap(sorted_indices[col_idx], sorted_indices[new_col_idx]);
-            cur_col_idx = new_col_idx;
+            do
+            {
+              // Move the value and column index where they need to go. We can put the old value into the space
+              // left by the new value, since it's empty now. As a bonus, when the space of the new value needs to be
+              // occupied by the original one we found in the cycle (when new_col_idx == col_idx) - we'll have already
+              // moved the correct value into it!
+              std::swap(col_indices_[cur_col_idx + row_start], col_indices_[new_col_idx + row_start]);
+              std::swap(values_[cur_col_idx + row_start], values_[new_col_idx + row_start]);
+
+              // Mark the element we just sorted as sorted.
+              sorted_indices[cur_col_idx] = cur_col_idx;
+
+              // Move along through the cycle. We just sorted cur_col_idx, and new_col_idx
+              // is in need of sorting (and contains the original value which needs to eventually
+              // end up at the end of the cycle).
+              cur_col_idx = new_col_idx;
+              new_col_idx = sorted_indices[cur_col_idx];
+            } while (new_col_idx != col_idx); // Cycle is complete
+
+            // Mark the last element in the cycle as sorted. We already moved the correct column
+            // index and value into it last iteration.
+            sorted_indices[cur_col_idx] = cur_col_idx;
           }
         }
+
+        // Since sorted_indices keeps track of which elements need to be moved to make the row sorted,
+        // and the row is now sorted, sorted_indices has returned to its original form of {1, 2, ..., n}
+        // (AKA - nothing needs to be moved to sort) and is ready to be sorted for the next row (no std::iota needed!).
       }
 
+      // Mark the matrix as sorted
       MaybeSorted::sorted_ = true;
     }
 
