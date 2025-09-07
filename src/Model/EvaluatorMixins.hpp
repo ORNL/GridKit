@@ -21,25 +21,25 @@ namespace GridKit
        *         previously computed jacobian as a template.
        * @tparam Derived The class which is inheriting this mixin. Must declare a static constant `SIZE` which
        *                 is the size of the component. For that reason, this mixin cannot be used with dynamically
-       *                 sized components. Must also declare a member `buildCSRJacobian()` which takes a `LinearAlgebra::CSRBuilder` as
+       *                 sized components. Must also declare a member `buildCsrJacobian()` which takes a `LinearAlgebra::CSRBuilder` as
        *                 a single argument, which then constructs the matrix and returns something convertible to a `JacT`.
        *
        * An example of how a component might use the mixin:
        * @code{.cpp}
        * template <class ScalarT, typename IdxT>
-       * class Component : public virtual Evaluator<ScalarT, IdxT>, public Mixin::Evaluator::CSRJacobian<ScalarT, IdxT, Resistor<ScalarT, IdxT>>
+       * class Component : public virtual Evaluator<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, Resistor<ScalarT, IdxT>>
        * {
        *  public:
        *    const static size_t SIZE = 2;
        *
        *    template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
-       *    CSRJacobian buildCSRJacobian(LinearAlgebra::CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
+       *    CsrJacobian buildCsrJacobian(LinearAlgebra::CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
        * };
        * @endcode
        *
-       * @note   Assumes that if `::csr_jacobian_` is non-empty that the next call to `buildCSRJacobian()` will have the same
+       * @note   Assumes that if `::csr_jacobian_` is non-empty that the next call to `buildCsrJacobian()` will have the same
        *         sparsity pattern as the last call. If this is not true, this mixin cannot be used correctly.
-       * @note   Since `CSRJacobian` only partially implements `Model::Evaluator`, any component which wishes to use this mixin
+       * @note   Since `CsrJacobian` only partially implements `Model::Evaluator`, any component which wishes to use this mixin
        *         must inherit `Model::Evaluator` virtually, and implement the remaining members.
        */
       template <class ScalarT, typename IdxT, class Derived>
@@ -63,7 +63,7 @@ namespace GridKit
         /**
          * @brief Evaluate the jacobian using a common pattern for components - if the jacobian is empty, use
          * `LinearAlgebra::CSRBuilder::fromEmpty()` and if the jacobian has been previously computed, use it as
-         * a template. Calls `Derived::buildCSRJacobian()` with a builder, and expects something convertible to
+         * a template. Calls `Derived::buildCsrJacobian()` with a builder, and expects something convertible to
          * `JacT` as a returned value for the value of the Jacobian.
          */
         int evaluateCsrJacobian() override
