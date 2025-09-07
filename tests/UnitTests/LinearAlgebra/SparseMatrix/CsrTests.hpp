@@ -1,4 +1,4 @@
-#include "LinearAlgebra/SparseMatrix/CSRMatrix.hpp"
+#include "LinearAlgebra/SparseMatrix/CsrMatrix.hpp"
 #include "Utilities/TestHelpers.hpp"
 #include "Utilities/Testing.hpp"
 
@@ -7,7 +7,7 @@ namespace GridKit
   namespace Testing
   {
     template <class ScalarT, typename IdxT>
-    class CSRTests
+    class CsrTests
     {
     public:
       /**
@@ -18,7 +18,7 @@ namespace GridKit
         using namespace LinearAlgebra;
 
         using COO_Matrix = COO_Matrix<ScalarT, IdxT>;
-        using CSRMatrix  = CSRMatrix<ScalarT, IdxT>;
+        using CsrMatrix  = CsrMatrix<ScalarT, IdxT>;
 
         TestStatus success = true;
 
@@ -29,7 +29,7 @@ namespace GridKit
         const size_t         num_cols = 5;
 
         COO_Matrix coo(rows, cols, vals, num_rows, num_cols);
-        CSRMatrix  csr = CSRMatrix::fromCOO(coo);
+        CsrMatrix  csr = CsrMatrix::fromCOO(coo);
 
         success *= compare(coo, csr);
 
@@ -68,7 +68,7 @@ namespace GridKit
         };
 
         using COO_Matrix = COO_Matrix<CopyCounter, IdxT>;
-        using CSRMatrix  = CSRMatrix<CopyCounter, IdxT>;
+        using CsrMatrix  = CsrMatrix<CopyCounter, IdxT>;
 
         TestStatus success = true;
 
@@ -86,22 +86,22 @@ namespace GridKit
         // There should be no copies needed to construct the CSR matrix,
         // since the COO matrix is already sorted.
         counter        = 0;
-        CSRMatrix csr  = CSRMatrix::fromCOO(std::move(coo));
+        CsrMatrix csr  = CsrMatrix::fromCOO(std::move(coo));
         success       *= counter == 0;
 
         return success.report(__func__);
       }
 
       /**
-       * @brief Test the basic usage of the `LinearAlgebra::CSRBuilder` class with a template matrix
+       * @brief Test the basic usage of the `LinearAlgebra::CsrBuilder` class with a template matrix
        */
       TestOutcome testCsrBuilderTemplate()
       {
         using namespace LinearAlgebra;
 
         using COO_Matrix = COO_Matrix<ScalarT, IdxT>;
-        using CSRBuilder = CSRBuilder<ScalarT, IdxT>;
-        using CSRMatrix  = CSRMatrix<ScalarT, IdxT>;
+        using CsrBuilder = CsrBuilder<ScalarT, IdxT>;
+        using CsrMatrix  = CsrMatrix<ScalarT, IdxT>;
 
         TestStatus success = true;
 
@@ -114,11 +114,11 @@ namespace GridKit
 
         COO_Matrix coo(rows, cols, vals, num_rows, num_cols);
 
-        auto builder = CSRBuilder::fromTemplate(CSRMatrix::fromCOO(coo));
+        auto builder = CsrBuilder::fromTemplate(CsrMatrix::fromCOO(coo));
         builder.row(2).elem(2, 3).elem(3, 1);
         builder.row(3).elem(3, 2);
 
-        CSRMatrix csr = std::move(builder);
+        CsrMatrix csr = std::move(builder);
 
         success *= compare(coo, csr);
 
@@ -133,8 +133,8 @@ namespace GridKit
       {
         using namespace LinearAlgebra;
 
-        using CSRBuilder = CSRBuilder<ScalarT, IdxT>;
-        using CSRMatrix  = CSRMatrix<ScalarT, IdxT>;
+        using CsrBuilder = CsrBuilder<ScalarT, IdxT>;
+        using CsrMatrix  = CsrMatrix<ScalarT, IdxT>;
 
         TestStatus success = true;
 
@@ -147,8 +147,8 @@ namespace GridKit
           return builder;
         };
 
-        CSRMatrix original_mat = build(CSRBuilder::fromEmpty(4, 6));
-        CSRMatrix new_mat      = build(CSRBuilder::fromTemplate(original_mat.clone()));
+        CsrMatrix original_mat = build(CsrBuilder::fromEmpty(4, 6));
+        CsrMatrix new_mat      = build(CsrBuilder::fromTemplate(original_mat.clone()));
 
         success *= compare(original_mat, new_mat);
 
@@ -162,8 +162,8 @@ namespace GridKit
       {
         using namespace LinearAlgebra;
 
-        using CSRBuilder = CSRBuilder<ScalarT, IdxT, true, false>;
-        using CSRMatrix  = CSRMatrix<ScalarT, IdxT, false>;
+        using CsrBuilder = CsrBuilder<ScalarT, IdxT, true, false>;
+        using CsrMatrix  = CsrMatrix<ScalarT, IdxT, false>;
 
         TestStatus success = true;
 
@@ -175,8 +175,8 @@ namespace GridKit
           return builder;
         };
 
-        CSRMatrix original_mat = build(CSRBuilder::fromEmpty(4, 6));
-        CSRMatrix new_mat      = build(CSRBuilder::fromTemplate(original_mat.clone()));
+        CsrMatrix original_mat = build(CsrBuilder::fromEmpty(4, 6));
+        CsrMatrix new_mat      = build(CsrBuilder::fromTemplate(original_mat.clone()));
 
         success *= !original_mat.isSorted();
         success *= !new_mat.isSorted();
@@ -192,7 +192,7 @@ namespace GridKit
       {
         using namespace LinearAlgebra;
 
-        using CSRBuilder = CSRBuilder<ScalarT, IdxT, true, false>;
+        using CsrBuilder = CsrBuilder<ScalarT, IdxT, true, false>;
 
         TestStatus success = true;
 
@@ -204,12 +204,12 @@ namespace GridKit
           return builder;
         };
 
-        CSRMatrix<ScalarT, IdxT, false> original_mat = build(CSRBuilder::fromEmpty(4, 6));
+        CsrMatrix<ScalarT, IdxT, false> original_mat = build(CsrBuilder::fromEmpty(4, 6));
 
         success *= !original_mat.isSorted();
         success *= !isSorted(original_mat);
 
-        CSRMatrix<ScalarT, IdxT, true> sorted_mat = std::move(original_mat).toSorted();
+        CsrMatrix<ScalarT, IdxT, true> sorted_mat = std::move(original_mat).toSorted();
 
         success *= sorted_mat.isSorted();
         success *= isSorted(sorted_mat);
@@ -218,7 +218,7 @@ namespace GridKit
       }
 
     private:
-      bool compare(LinearAlgebra::CSRMatrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CSRMatrix<ScalarT, IdxT>& new_mat)
+      bool compare(LinearAlgebra::CsrMatrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
       {
         bool comparison = true;
 
@@ -243,7 +243,7 @@ namespace GridKit
         return comparison;
       }
 
-      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CSRMatrix<ScalarT, IdxT>& new_mat)
+      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
       {
         bool comparison = true;
 
@@ -281,7 +281,7 @@ namespace GridKit
       }
 
       template <bool IS_SORTED>
-      bool isSorted(LinearAlgebra::CSRMatrix<ScalarT, IdxT, IS_SORTED>& mat)
+      bool isSorted(LinearAlgebra::CsrMatrix<ScalarT, IdxT, IS_SORTED>& mat)
       {
         for (size_t i = 1; i < mat.numRows(); i++)
         {

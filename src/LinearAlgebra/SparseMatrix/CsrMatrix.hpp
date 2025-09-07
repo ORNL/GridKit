@@ -72,7 +72,7 @@ namespace GridKit
 
     // Forward-declaration
     template <class, typename, bool, bool, bool>
-    class CSRBuilder;
+    class CsrBuilder;
 
     /**
      * @brief Helper type - derive from this depending on whether your type is always sorted or not
@@ -95,7 +95,7 @@ namespace GridKit
      *            invariant after returning. Private methods may not have this expectation, but it should be made clear if this isn't the case.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED = false>
-    class CSRMatrix : Sorted<KEEP_SORTED>
+    class CsrMatrix : Sorted<KEEP_SORTED>
     {
     private:
       /**
@@ -131,27 +131,27 @@ namespace GridKit
        */
       IdxT                 num_cols_;
 
-      CSRMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted);
+      CsrMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted);
 
       // Explicit copying
-      CSRMatrix(const CSRMatrix& other)            = default;
-      CSRMatrix& operator=(const CSRMatrix& other) = default;
+      CsrMatrix(const CsrMatrix& other)            = default;
+      CsrMatrix& operator=(const CsrMatrix& other) = default;
 
       template <class, typename, bool>
-      friend class CSRMatrix;
+      friend class CsrMatrix;
 
     public:
-      CSRMatrix(CSRMatrix&& other) = default;
-      CSRMatrix(size_t num_rows, IdxT num_cols);
-      CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero);
+      CsrMatrix(CsrMatrix&& other) = default;
+      CsrMatrix(size_t num_rows, IdxT num_cols);
+      CsrMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero);
 
-      CSRMatrix& operator=(CSRMatrix&& other) = default;
+      CsrMatrix& operator=(CsrMatrix&& other) = default;
 
-      static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>& coo);
-      static CSRMatrix fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
+      static CsrMatrix fromCOO(COO_Matrix<ScalarT, IdxT>& coo);
+      static CsrMatrix fromCOO(COO_Matrix<ScalarT, IdxT>&& coo);
 
-      CSRMatrix<ScalarT, IdxT, true> toSorted() &&;
-      CSRMatrix                      clone() const;
+      CsrMatrix<ScalarT, IdxT, true> toSorted() &&;
+      CsrMatrix                      clone() const;
 
       /**
        * @see `values_`
@@ -218,34 +218,34 @@ namespace GridKit
       ScalarT valueAt(size_t row, IdxT col) const;
 
       template <class, typename, bool, bool, bool>
-      friend class CSRBuilder;
+      friend class CsrBuilder;
     };
 
     /**
-     * @brief Construct a `CSRMatrix` from its parts.
+     * @brief Construct a `CsrMatrix` from its parts.
      * @param sorted - Whether or not the `col_indices` array is sorted within each row.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted)
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::CsrMatrix(std::vector<ScalarT>&& values, std::vector<IdxT>&& row_indices, std::vector<IdxT>&& col_indices, IdxT num_cols, bool sorted)
       : Sorted<KEEP_SORTED>(sorted), values_(std::move(values)), row_indices_(std::move(row_indices)), col_indices_(std::move(col_indices)), num_cols_(num_cols)
     {
     }
 
     /**
-     * @brief Create a new (empty) `CSRMatrix` of a specific size.
+     * @brief Create a new (empty) `CsrMatrix` of a specific size.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols)
-      : CSRMatrix(num_rows, num_cols, 0)
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::CsrMatrix(size_t num_rows, IdxT num_cols)
+      : CsrMatrix(num_rows, num_cols, 0)
     {
     }
 
     /**
-     * @brief Create a new (empty) `CSRMatrix` of a specific size,
+     * @brief Create a new (empty) `CsrMatrix` of a specific size,
      * and allocate enough space for a given amount of nonzero elements.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::CSRMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero)
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::CsrMatrix(size_t num_rows, IdxT num_cols, size_t num_nonzero)
       : Sorted<KEEP_SORTED>(true), row_indices_(num_rows + 1, 0), num_cols_(num_cols)
     {
       values_.reserve(num_nonzero);
@@ -253,28 +253,28 @@ namespace GridKit
     }
 
     /**
-     * @brief Construct a new `CSRMatrix` from the given `COO_Matrix`
+     * @brief Construct a new `CsrMatrix` from the given `COO_Matrix`
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>& coo)
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED> CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>& coo)
     {
       auto [row_indices, col_indices, values] = coo.setDataToCSR();
       auto [_num_rows, num_cols]              = coo.getDimensions();
 
-      return CSRMatrix(std::move(values), std::move(row_indices), std::move(col_indices), std::move(num_cols), true);
+      return CsrMatrix(std::move(values), std::move(row_indices), std::move(col_indices), std::move(num_cols), true);
     }
 
     /**
-     * @brief Construct a new `CSRMatrix` from the given `COO_Matrix`. Faster with an r-value,
+     * @brief Construct a new `CsrMatrix` from the given `COO_Matrix`. Faster with an r-value,
      * since we can repurpose `COO_Matrix::column_indices_` for our own `::col_indices_`.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>&& coo)
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED> CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::fromCOO(COO_Matrix<ScalarT, IdxT>&& coo)
     {
       auto row_indices           = coo.getCSRRowData();
       auto [_num_rows, num_cols] = coo.getDimensions();
 
-      return CSRMatrix(std::move(coo.values_), std::move(row_indices), std::move(coo.column_indices_), std::move(num_cols), true);
+      return CsrMatrix(std::move(coo.values_), std::move(row_indices), std::move(coo.column_indices_), std::move(num_cols), true);
     }
 
     /**
@@ -282,7 +282,7 @@ namespace GridKit
      * it should be done explicitly.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, KEEP_SORTED> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::clone() const
+    CsrMatrix<ScalarT, IdxT, KEEP_SORTED> CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::clone() const
     {
       return *this;
     }
@@ -292,7 +292,7 @@ namespace GridKit
      * @note  Should be a no-op if `KEEP_SORTED` is true, since there is an invariant that the matrix is already sorted.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    void CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::sort()
+    void CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::sort()
     {
       if constexpr (KEEP_SORTED)
       {
@@ -385,11 +385,11 @@ namespace GridKit
      * held, sorts the matrix.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    CSRMatrix<ScalarT, IdxT, true> CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::toSorted() &&
+    CsrMatrix<ScalarT, IdxT, true> CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::toSorted() &&
     {
       sort();
 
-      return CSRMatrix<ScalarT, IdxT, true>(std::move(values_), std::move(row_indices_), std::move(col_indices_), num_cols_, true);
+      return CsrMatrix<ScalarT, IdxT, true>(std::move(values_), std::move(row_indices_), std::move(col_indices_), num_cols_, true);
     }
 
     /**
@@ -401,7 +401,7 @@ namespace GridKit
      * @note This access incurs a significant search cost, especially if the matrix is unsorted.
      */
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    inline ScalarT CSRMatrix<ScalarT, IdxT, KEEP_SORTED>::valueAt(size_t row, IdxT col) const
+    inline ScalarT CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::valueAt(size_t row, IdxT col) const
     {
       // Bounds check for debug builds
       assert(row < numRows());
@@ -442,7 +442,7 @@ namespace GridKit
     }
 
     /**
-     * @brief A helpful builder utility to help build `CSRMatrix` from their components. When built in debug mode,
+     * @brief A helpful builder utility to help build `CsrMatrix` from their components. When built in debug mode,
      * enables several checks which ensure that you are building the CSR matrix correctly.
      * @tparam INCLUDE_DIAGONALS Whether or not we should ensure that empty diagonal elements are created, even if
      *                           not specified. This way if we axpy with a diagonal matrix later (a common operation
@@ -454,19 +454,19 @@ namespace GridKit
      *                           for fast matrix construction.
      */
     template <class ScalarT, typename IdxT, bool INCLUDE_DIAGONALS = true, bool KEEP_SORTED = false, bool USE_TEMPLATE = true>
-    class CSRBuilder
+    class CsrBuilder
     {
 
       /**
        * @brief The type of matrix being built. Not strictly needed, but Doxygen chokes on some stuff without this.
        */
-      using Matrix = CSRMatrix<ScalarT, IdxT, KEEP_SORTED>;
+      using Matrix = CsrMatrix<ScalarT, IdxT, KEEP_SORTED>;
 
       /**
        * @brief The matrix being built.
-       * @note While being built, the invariants of `CSRMatrix` are not necessarily maintained. For that reason,
+       * @note While being built, the invariants of `CsrMatrix` are not necessarily maintained. For that reason,
        * this matrix cannot be given to anyone before "finalizing" it and verifying the invariants.
-       * @see CSRBuilder::operator Matrix()
+       * @see CsrBuilder::operator Matrix()
        */
       Matrix mat_;
       /**
@@ -486,7 +486,7 @@ namespace GridKit
        */
       size_t curr_val_       = 0;
 
-      CSRBuilder(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
+      CsrBuilder(CsrMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
         : mat_(std::move(mat))
       {
         if constexpr (!USE_TEMPLATE)
@@ -502,18 +502,18 @@ namespace GridKit
       }
 
       // Delete copy stuff - we're holding on to an expensive-to-copy matrix.
-      CSRBuilder(const CSRBuilder& other)            = delete;
-      CSRBuilder& operator=(const CSRBuilder& other) = delete;
+      CsrBuilder(const CsrBuilder& other)            = delete;
+      CsrBuilder& operator=(const CsrBuilder& other) = delete;
 
-      // (Weirdly) needed so that we can use constructors and such from instances of CSRBuilder with different
+      // (Weirdly) needed so that we can use constructors and such from instances of CsrBuilder with different
       // template values. See: fromEmpty and fromTemplate (which override USE_TEMPLATE). Not strictly necessary,
       // but this allows for a little bit of a better user experience.
       template <class, typename, bool, bool, bool>
-      friend class CSRBuilder;
+      friend class CsrBuilder;
 
     public:
-      CSRBuilder(CSRBuilder&& other)            = default;
-      CSRBuilder& operator=(CSRBuilder&& other) = default;
+      CsrBuilder(CsrBuilder&& other)            = default;
+      CsrBuilder& operator=(CsrBuilder&& other) = default;
 
       /**
        * @brief Start building a CSR matrix from an empty matrix of a specific size. Use this if you don't know what the final matrix
@@ -523,9 +523,9 @@ namespace GridKit
        * @param num_cols The number of columns of the matrix
        * @return A new builder for the new matrix.
        */
-      static CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, false> fromEmpty(size_t num_rows, IdxT num_cols)
+      static CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, false> fromEmpty(size_t num_rows, IdxT num_cols)
       {
-        return CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, false>(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>(num_rows, num_cols));
+        return CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, false>(CsrMatrix<ScalarT, IdxT, KEEP_SORTED>(num_rows, num_cols));
       }
 
       /**
@@ -534,9 +534,9 @@ namespace GridKit
        * only values will be inserted (rows and columns will be ignored).
        * @param mat The matrix to use as a template.
        */
-      static CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, true> fromTemplate(CSRMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
+      static CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, true> fromTemplate(CsrMatrix<ScalarT, IdxT, KEEP_SORTED>&& mat)
       {
-        return CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, true>(std::move(mat));
+        return CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, true>(std::move(mat));
       }
 
       /**
@@ -561,7 +561,7 @@ namespace GridKit
        * @note Must be called in ascending order of rows. If `INCLUDE_DIAGONALS` is true, then this will add any skiped diagonal elements.
        * @return A reference to this builder, for builder chaining.
        */
-      CSRBuilder& row(size_t new_row)
+      CsrBuilder& row(size_t new_row)
       {
         // Make sure this row is in-bounds
         assert(new_row < mat_.numRows());
@@ -594,7 +594,7 @@ namespace GridKit
        * @note If `KEEP_SORTED` is true, must be called in ascending order of column.
        * @return A reference to this builder, for builder chaining.
        */
-      CSRBuilder& elem(IdxT column, ScalarT value)
+      CsrBuilder& elem(IdxT column, ScalarT value)
       {
         if constexpr (INCLUDE_DIAGONALS)
         {
@@ -687,7 +687,7 @@ namespace GridKit
 
       /**
        * @brief The number of nonzero values we've inserted so far. Since we are re-using the
-       * `CSRMatrix::values_` array when `USE_TEMPLATE` is true, `CSRMatrix::numNonZero()` will report
+       * `CsrMatrix::values_` array when `USE_TEMPLATE` is true, `CsrMatrix::numNonZero()` will report
        * incorrectly.
        */
       size_t numNonZero() const noexcept

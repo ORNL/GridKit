@@ -17,7 +17,7 @@ namespace GridKit
   {
     // Forward-declaration
     template <class ScalarT, typename IdxT, bool KEEP_SORTED>
-    class CSRMatrix;
+    class CsrMatrix;
 
     /**
      * @brief Quick class to provide sparse matrices of COO type.
@@ -93,7 +93,7 @@ namespace GridKit
       bool checkIncreaseSize(IdxT r, IdxT c);
 
       template <class, typename, bool>
-      friend class CSRMatrix;
+      friend class CsrMatrix;
     };
 
     /**

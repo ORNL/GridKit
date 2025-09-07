@@ -1,6 +1,6 @@
 # 
 
-add_executable(test_csr runCSRTests.cpp)
+add_executable(test_csr runCsrTests.cpp)
 target_link_libraries(test_csr GRIDKIT::SparseMatrix)
                                 
 

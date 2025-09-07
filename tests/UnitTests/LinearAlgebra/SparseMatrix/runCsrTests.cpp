@@ -1,4 +1,4 @@
-#include "CSRTests.hpp"
+#include "CsrTests.hpp"
 
 int main()
 {
@@ -7,7 +7,7 @@ int main()
   using namespace GridKit::LinearAlgebra;
 
   TestingResults             result;
-  CSRTests<double, unsigned> test;
+  CsrTests<double, unsigned> test;
 
   result += test.cooToCsrTest();
   result += test.testCooMove();
