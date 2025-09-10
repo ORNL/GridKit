@@ -37,7 +37,7 @@ namespace GridKit
       /// Ports for a IEEET1 Exciter model
       enum class Ieeet1Ports
       {
-        bus,          ///< Unique ID of the terminal bus
+        bus,   ///< Unique ID of the terminal bus
         speed, ///< Unique ID of the generator speed signal
         efd,   ///< Unique ID of the output efd signal
       };
