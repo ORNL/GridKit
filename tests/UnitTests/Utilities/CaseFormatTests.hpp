@@ -128,7 +128,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-
       TestOutcome signalParse()
       {
         using namespace GridKit::PhasorDynamics;
@@ -210,7 +209,7 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
         success *= result.branch[0].ports[BranchPorts::bus1] == 1;
         success *= result.branch[0].ports[BranchPorts::bus2] == 2;
-        success *= result.branch[0].disambiguation_string == "1";
+        success *= result.branch[0].disambiguation_string == "BR1";
         success *= result.branch[0].monitored_variables.empty();
 
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::p0]) == 1.0;
@@ -232,7 +231,7 @@ namespace GridKit
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
         success *= result.genrou[0].ports[GenrouPorts::bus] == 1;
-        success *= result.genrou[0].disambiguation_string == "1";
+        success *= result.genrou[0].disambiguation_string == "DV1";
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
 
