@@ -17,11 +17,11 @@ namespace GridKit
       /**
        * @brief  Implements the common pattern of how many components will want to compute their CSR Jacobian.
        *         Store a square CSR matrix based on the component size, and the first time `evaluateJacobian()`
-       *         is called, use `LinearAlgebra::CSRBuilder::fromEmpty()`. After that, use `LinearAlgebra::CSRBuilder::fromTemplate`, using the
+       *         is called, use `LinearAlgebra::CsrBuilder::fromEmpty()`. After that, use `LinearAlgebra::CsrBuilder::fromTemplate`, using the
        *         previously computed jacobian as a template.
        * @tparam Derived The class which is inheriting this mixin. Must declare a static constant `SIZE` which
        *                 is the size of the component. For that reason, this mixin cannot be used with dynamically
-       *                 sized components. Must also declare a member `buildCsrJacobian()` which takes a `LinearAlgebra::CSRBuilder` as
+       *                 sized components. Must also declare a member `buildCsrJacobian()` which takes a `LinearAlgebra::CsrBuilder` as
        *                 a single argument, which then constructs the matrix and returns something convertible to a `JacT`.
        *
        * An example of how a component might use the mixin:
@@ -33,7 +33,7 @@ namespace GridKit
        *    const static size_t SIZE = 2;
        *
        *    template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
-       *    CsrJacobian buildCsrJacobian(LinearAlgebra::CSRBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
+       *    CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<ScalarT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
        * };
        * @endcode
        *
@@ -62,7 +62,7 @@ namespace GridKit
 
         /**
          * @brief Evaluate the jacobian using a common pattern for components - if the jacobian is empty, use
-         * `LinearAlgebra::CSRBuilder::fromEmpty()` and if the jacobian has been previously computed, use it as
+         * `LinearAlgebra::CsrBuilder::fromEmpty()` and if the jacobian has been previously computed, use it as
          * a template. Calls `Derived::buildCsrJacobian()` with a builder, and expects something convertible to
          * `JacT` as a returned value for the value of the Jacobian.
          */
