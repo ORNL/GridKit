@@ -159,6 +159,7 @@ namespace GridKit
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
                    { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Tgov1", "ports": {"bus":1, "speed": 1, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":0.0, "Pvmin":1.0, "Dt":0.0}},
+                   { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.001, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
                    { "class": "bus_fault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
                ]
             })";
@@ -181,6 +182,7 @@ namespace GridKit
         success *= result.genrou.size() == 1;
         success *= result.gov.size() == 1;
         success *= result.load.size() == 0;
+        success *= result.exciter.size() == 1;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
@@ -251,6 +253,25 @@ namespace GridKit
         success *= result.gov[0].ports[Governor::Tgov1Ports::speed] == 1;
         success *= result.gov[0].ports[Governor::Tgov1Ports::pmech] == 2;
         success *= result.gov[0].disambiguation_string == "DV2";
+        
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]) == 0.001;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]) == 50.0;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]) == 0.04;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]) == -0.06;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]) == 0.6;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]) == 0.09;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]) == 1.46;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]) == -1.0;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]) == 1.0;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]) == 2.8;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]) == 3.373;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]) == 0.04;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]) == 0.33;
+        success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim]) == 0.0;
+        success *= result.exciter[0].ports[Exciter::Ieeet1Ports::bus] == 1;
+        success *= result.exciter[0].ports[Exciter::Ieeet1Ports::speed] == 1;
+        success *= result.exciter[0].ports[Exciter::Ieeet1Ports::efd] == 3;
+        success *= result.exciter[0].disambiguation_string == "DV3";
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;

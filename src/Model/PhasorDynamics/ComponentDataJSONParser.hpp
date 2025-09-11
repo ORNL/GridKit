@@ -45,12 +45,13 @@ namespace GridKit
             c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
           }
           else
-          {
+          {            
             throw std::runtime_error("Invalid initial parameter");
           }
         }
         else
         {
+          // std::cout << "Key " << raw_parameter.key() << " has no value!\n";
           throw std::runtime_error("Invalid initial parameter");
         }
       }
@@ -64,7 +65,7 @@ namespace GridKit
         }
         else
         {
-          std::cout << raw_port.key() << "\n";
+          // std::cout << raw_port.key() << "\n";
           throw std::runtime_error("Invalid port mapping");
         }
       }
