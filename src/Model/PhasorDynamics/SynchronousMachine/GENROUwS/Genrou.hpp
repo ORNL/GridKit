@@ -78,6 +78,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::J_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using gov_type        = GovernorBase<ScalarT, IdxT>;
@@ -170,6 +171,10 @@ namespace GridKit
         return bus_->Ii();
       }
 
+    public:
+      __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+
+    private:
       /* Identification */
       bus_type* bus_;
       IdxT      bus_id_{0};
@@ -220,6 +225,16 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT efd_set_;
+
+      /* Local copies of bus variables */
+      ScalarT vr_;
+      ScalarT vi_;
+      ScalarT ir_;
+      ScalarT ii_;
+
+      /* Local copies of signal variables */
+      ScalarT pmech_;
+      ScalarT efd_;
     };
 
   } // namespace PhasorDynamics

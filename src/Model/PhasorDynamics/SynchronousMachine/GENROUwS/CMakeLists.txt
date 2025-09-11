@@ -1,10 +1,23 @@
-gridkit_add_library(phasor_dynamics_genrou
-  SOURCES
-    Genrou.cpp
-  LINK_LIBRARIES
-    PUBLIC GRIDKIT::phasor_dynamics_signal
-  OUTPUT_NAME
-    gridkit_phasor_dynamics_genrou)
+
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(phasor_dynamics_genrou
+    SOURCES
+      GenrouEnzyme.cpp
+    LINK_LIBRARIES
+      PUBLIC GRIDKIT::phasor_dynamics_signal ClangEnzymeFlags
+    COMPILE_OPTIONS
+      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_genrou)
+else()
+  gridkit_add_library(phasor_dynamics_genrou
+    SOURCES
+      Genrou.cpp
+    LINK_LIBRARIES
+      PUBLIC GRIDKIT::phasor_dynamics_signal
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_genrou)
+endif()
 
 gridkit_add_library(phasor_dynamics_genrou_dependency_tracking
   SOURCES

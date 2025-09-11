@@ -1,9 +1,10 @@
 /**
- * @file Tgov1.cpp
+ * @file Tgov1Enzyme.cpp
  *
  */
 
 #include "Tgov1Impl.hpp"
+#include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
 
 namespace GridKit
 {
@@ -12,7 +13,7 @@ namespace GridKit
     namespace Governor
     {
       /**
-       * @brief Jacobian evaluation not implemented yet
+       * @brief Jacobian evaluation experimental
        *
        * @tparam ScalarT - Scalar data type
        * @tparam IdxT    - Index data type
@@ -21,13 +22,16 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::evaluateJacobian()
       {
-        std::cout << "Jacobian evaluation not implemented!" << std::endl;
+        std::cout << "Jacobian evaluation is experimental!" << std::endl;
+        GridKit::Enzyme::Sparse::ModelJacobian<Tgov1<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
+
         return 0;
       }
 
       // Available template instantiations
       template class Tgov1<double, long int>;
       template class Tgov1<double, size_t>;
+
     } // namespace Governor
   } // namespace PhasorDynamics
 } // namespace GridKit
