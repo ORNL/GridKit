@@ -253,7 +253,7 @@ namespace GridKit
         success *= result.gov[0].ports[Governor::Tgov1Ports::speed] == 1;
         success *= result.gov[0].ports[Governor::Tgov1Ports::pmech] == 2;
         success *= result.gov[0].disambiguation_string == "DV2";
-        
+
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]) == 0.001;
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]) == 50.0;
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]) == 0.04;

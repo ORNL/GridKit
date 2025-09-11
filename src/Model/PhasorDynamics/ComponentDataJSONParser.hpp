@@ -45,7 +45,7 @@ namespace GridKit
             c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
           }
           else
-          {            
+          {
             throw std::runtime_error("Invalid initial parameter");
           }
         }
