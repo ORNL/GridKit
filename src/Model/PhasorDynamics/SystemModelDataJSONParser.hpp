@@ -4,6 +4,7 @@
 
 #include <Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <Model/PhasorDynamics/ComponentDataJSONParser.hpp>
+#include <Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <nlohmann/json.hpp>
 
@@ -49,6 +50,12 @@ namespace GridKit
       /// Gets all electrical buses
       j.at("buses").get_to(sm.bus);
 
+      /// Gets all signal nodes (allows for systems without signals)
+      if (j.contains("signals"))
+      {
+        j.at("signals").get_to(sm.signal);
+      }
+
       /// Gets all components
       /// @todo So far handling only branches, Genrous, and bus faults
       /// For 2-bus Tgov1, for example, we need to add support for Tgov1
@@ -56,17 +63,35 @@ namespace GridKit
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class");
-        if (kind == "branch")
+        if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;
           raw_component.get_to(branch);
           sm.branch.push_back(branch);
         }
-        else if (kind == "GENROU")
+        else if (kind == "Genrou")
         {
           typename SystemModelData<RealT, IdxT>::GenrouDataT genrou;
           raw_component.get_to(genrou);
           sm.genrou.push_back(genrou);
+        }
+        else if (kind == "Load")
+        {
+          typename SystemModelData<RealT, IdxT>::LoadDataT load;
+          raw_component.get_to(load);
+          sm.load.push_back(load);
+        }
+        else if (kind == "Tgov1")
+        {
+          typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
+          raw_component.get_to(gov);
+          sm.gov.push_back(gov);
+        }
+        else if (kind == "Ieeet1")
+        {
+          typename SystemModelData<RealT, IdxT>::Ieeet1DataT exciter;
+          raw_component.get_to(exciter);
+          sm.exciter.push_back(exciter);
         }
         else if (kind == "bus_fault")
         {

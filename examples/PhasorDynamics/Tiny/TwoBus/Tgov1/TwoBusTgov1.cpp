@@ -81,8 +81,8 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
-  data.genrou[0].ports[GenrouPorts::signal_in]       = 1;
-  data.genrou[0].ports[GenrouPorts::signal_out]      = 0;
+  data.genrou[0].ports[GenrouPorts::pmech]           = 1;
+  data.genrou[0].ports[GenrouPorts::speed]           = 0;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
   data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
   data.genrou[0].parameters[GenrouParameters::H]     = 3.;
@@ -105,8 +105,8 @@ int main()
   // Set governor data (Default PW values)
   data.gov.resize(1);
 
-  data.gov[0].ports[Tgov1Ports::signal_in]       = 0;
-  data.gov[0].ports[Tgov1Ports::signal_out]      = 1;
+  data.gov[0].ports[Tgov1Ports::speed]           = 0;
+  data.gov[0].ports[Tgov1Ports::pmech]           = 1;
   data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
   data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
   data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;

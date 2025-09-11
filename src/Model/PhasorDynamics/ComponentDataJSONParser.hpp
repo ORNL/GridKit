@@ -51,6 +51,7 @@ namespace GridKit
         }
         else
         {
+          // std::cout << "Key " << raw_parameter.key() << " has no value!\n";
           throw std::runtime_error("Invalid initial parameter");
         }
       }
@@ -64,6 +65,7 @@ namespace GridKit
         }
         else
         {
+          // std::cout << raw_port.key() << "\n";
           throw std::runtime_error("Invalid port mapping");
         }
       }

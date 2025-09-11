@@ -36,8 +36,9 @@ namespace GridKit
        */
       enum class Tgov1Ports
       {
-        signal_in,
-        signal_out,
+        bus,
+        speed,
+        pmech,
       };
 
       /**
@@ -45,6 +46,7 @@ namespace GridKit
        */
       enum class Tgov1MonitorableVariables
       {
+        NONE,
       };
 
       /**
