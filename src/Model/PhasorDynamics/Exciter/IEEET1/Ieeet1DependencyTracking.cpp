@@ -15,7 +15,6 @@ namespace GridKit
   {
     namespace Exciter
     {
-
       // Available template instantiations
       template class Ieeet1<DependencyTracking::Variable, long int>;
       template class Ieeet1<DependencyTracking::Variable, size_t>;

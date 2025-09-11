@@ -142,16 +142,16 @@ namespace GridKit
           /// @todo Genrou (and likely other components) would need to name multiple
           /// signal inlets and outlets. For now we have only speed out and mechanical
           /// power in.
-          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::signal_out))
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::speed))
           {
-            IdxT signal_out = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::signal_out);
-            gen->getSignals().template assignSignalNode<GenrouInternalVariables::OMEGA>(getSignal(signal_out));
+            IdxT speed = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::speed);
+            gen->getSignals().template assignSignalNode<GenrouInternalVariables::OMEGA>(getSignal(speed));
           }
 
-          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::signal_in))
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::pmech))
           {
-            IdxT signal_in = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::signal_in);
-            gen->getSignals().template attachSignalNode<GenrouExternalVariables::PM>(getSignal(signal_in));
+            IdxT pmech = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::pmech);
+            gen->getSignals().template attachSignalNode<GenrouExternalVariables::PM>(getSignal(pmech));
           }
 
           addComponent(gen);
@@ -174,16 +174,16 @@ namespace GridKit
         {
           auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
 
-          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::signal_in))
+          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::speed))
           {
-            IdxT signal_in = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::signal_in);
-            gov->getSignals().template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(getSignal(signal_in));
+            IdxT speed = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::speed);
+            gov->getSignals().template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(getSignal(speed));
           }
 
-          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::signal_out))
+          if (govdata.ports.contains(Tgov1Data<ScalarT, IdxT>::Ports::pmech))
           {
-            IdxT signal_out = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::signal_out);
-            gov->getSignals().template assignSignalNode<Tgov1InternalVariables::PM>(getSignal(signal_out));
+            IdxT pmech = govdata.ports.at(Tgov1Data<ScalarT, IdxT>::Ports::pmech);
+            gov->getSignals().template assignSignalNode<Tgov1InternalVariables::PM>(getSignal(pmech));
           }
 
           addComponent(gov);

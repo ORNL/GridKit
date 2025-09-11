@@ -29,6 +29,7 @@ namespace GridKit
     enum class LoadMonitorableVariables
     {
       // TODO: presumably some variables would make sense to monitor here
+      NONE
     };
 
     /**
