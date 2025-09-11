@@ -182,7 +182,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(busdata, gendata);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        auto tol = 1000 * std::numeric_limits<real_type>::epsilon(); ///< Todo: Check why the results don't match to machine precision
+        auto tol = 1000 * std::numeric_limits<real_type>::epsilon(); ///< Todo: Resolve mismatch from sigmoid approximation
         for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
