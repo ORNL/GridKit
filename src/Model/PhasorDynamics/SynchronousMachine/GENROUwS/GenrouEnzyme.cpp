@@ -1,11 +1,13 @@
+
 #include "GenrouImpl.hpp"
+#include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation not implemented yet
+     * @brief Jacobian evaluation experimental
      *
      * @tparam ScalarT - scalar data type
      * @tparam IdxT    - matrix index data type
@@ -15,12 +17,16 @@ namespace GridKit
     int Genrou<ScalarT, IdxT>::evaluateJacobian()
     {
       std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
+      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+
+      GridKit::Enzyme::Sparse::ModelJacobian<Genrou<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
+
       return 0;
     }
 
     // Available template instantiations
-    template class Genrou<DependencyTracking::Variable, long int>;
-    template class Genrou<DependencyTracking::Variable, size_t>;
+    template class Genrou<double, long int>;
+    template class Genrou<double, size_t>;
+
   } // namespace PhasorDynamics
 } // namespace GridKit

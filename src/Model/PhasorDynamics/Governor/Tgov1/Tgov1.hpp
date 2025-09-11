@@ -66,6 +66,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
+        using Component<ScalarT, IdxT>::J_;
 
         using real_type       = typename Component<ScalarT, IdxT>::real_type;
         using model_data_type = Tgov1Data<real_type, IdxT>;
@@ -98,6 +99,9 @@ namespace GridKit
           return signals_;
         }
 
+      public:
+        __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+
       private:
         // Input parameters
         real_type R_{0};
@@ -126,6 +130,9 @@ namespace GridKit
         ScalarT indicator(ScalarT x, ScalarT f);
 
         void initializeParameters(const model_data_type& data);
+
+        /* Local copies of signal variables */
+        ScalarT omega_{0};
       };
 
     } // namespace Governor

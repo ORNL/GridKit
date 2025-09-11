@@ -21,7 +21,8 @@ You should have all of the following installed before installing GridKit™
     - [SUNDIALS](https://github.com/LLNL/sundials) >= 7.4.0 (optional)
         - To support sparse linear algebra, SUNDIALS must also be built with [KLU support](https://sundials.readthedocs.io/en/latest/sundials/Install_link.html#cmakeoption-ENABLE_KLU). You most likely want this.
     - [Ipopt](https://github.com/coin-or/Ipopt) >= 3.x (optional)
-    - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.131 (optional)
+    - [Enzyme](https://github.com/EnzymeAD/Enzyme) >=0.0.196 (optional). Note
+      that the use of Enzyme is experimental, and some versions of it have been found to break GridKit code.
         - [LLVM](https://github.com/llvm/llvm-project) >= 15.x. GridKit is
           currently tested with LLVM 16.
 - [CMake](https://cmake.org/) >= 3.13
