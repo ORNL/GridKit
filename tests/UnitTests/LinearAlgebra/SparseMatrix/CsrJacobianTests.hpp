@@ -10,7 +10,7 @@ namespace GridKit
   namespace Testing
   {
     template <class ScalarT, typename IdxT>
-    class CSRJacobianTests
+    class CsrJacobianTests
     {
     public:
       /**
@@ -25,7 +25,7 @@ namespace GridKit
         using namespace LinearAlgebra;
 
         using COO_Matrix  = COO_Matrix<ScalarT, IdxT>;
-        using CSRJacobian = Evaluator<ScalarT, IdxT>::CSRJacobian;
+        using CsrJacobian = Evaluator<ScalarT, IdxT>::CsrJacobian;
 
         TestStatus success = true;
 
@@ -37,17 +37,17 @@ namespace GridKit
           success = false;
         }
 
-        if (!comp.hasCSRJacobian())
+        if (!comp.hasCsrJacobian())
         {
           std::cerr << "Testing CSR Jacobian of " << comp_name << ", but none was available." << std::endl;
           success = false;
         }
 
         comp.evaluateJacobian();
-        comp.evaluateCSRJacobian();
+        comp.evaluateCsrJacobian();
 
         COO_Matrix&  coo_jac = comp.getJacobian();
-        CSRJacobian& csr_jac = comp.getCSRJacobian();
+        CsrJacobian& csr_jac = comp.getCsrJacobian();
 
         success *= compare(coo_jac, csr_jac);
 
@@ -56,8 +56,31 @@ namespace GridKit
         return success.report(test_name.str().c_str());
       }
 
+      TestOutcome testSystemCooVsCsrJacobian(std::string model_name, Model::Evaluator<ScalarT, IdxT>& model)
+      {
+        using namespace Model;
+        using namespace LinearAlgebra;
+
+        using COO_Matrix  = COO_Matrix<ScalarT, IdxT>;
+        using CsrJacobian = Evaluator<ScalarT, IdxT>::CsrJacobian;
+
+        TestStatus success = true;
+
+        model.evaluateJacobian();
+        model.evaluateCsrJacobian();
+
+        COO_Matrix&  coo_jac = model.getJacobian();
+        CsrJacobian& csr_jac = model.getCsrJacobian();
+
+        success *= compare(coo_jac, csr_jac);
+
+        std::stringstream test_name;
+        test_name << __func__ << " <" << model_name << ">";
+        return success.report(test_name.str().c_str());
+      }
+
     private:
-      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CSRMatrix<ScalarT, IdxT>& new_mat)
+      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
       {
         bool comparison = true;
 
