@@ -686,7 +686,10 @@ namespace GridKit
         {
           size_t global_idx = static_cast<size_t>(comp->getNodeConnection(local_idx));
 
-          map[global_idx].push_back({comp_idx, local_idx});
+          if (global_idx != static_cast<size_t>(-1))
+          {
+            map[global_idx].push_back({comp_idx, local_idx});
+          }
         }
       }
 
@@ -711,14 +714,17 @@ namespace GridKit
           IdxT   local_col_idx  = comp_jac.colIndices()[elem_idx];
           size_t global_col_idx = components_[comp_idx]->getNodeConnection(local_col_idx);
 
-          if (component_elements[global_col_idx].empty())
+          if (global_col_idx != static_cast<size_t>(-1))
           {
-            nnz++;
-          }
+            if (component_elements[global_col_idx].empty())
+            {
+              nnz++;
+            }
 
-          component_elements[global_col_idx].push_back({.component_idx_ = comp_idx,
-                                                        .element_idx_   = elem_idx,
-                                                        .column_idx_    = local_col_idx});
+            component_elements[global_col_idx].push_back({.component_idx_ = comp_idx,
+                                                          .element_idx_   = elem_idx,
+                                                          .column_idx_    = local_col_idx});
+          }
         }
       }
 

@@ -115,6 +115,8 @@ namespace AnalysisManager
       void printSpecial(RealT t, N_Vector x);
       void printFinalStats();
 
+      void setUseCsr(bool use_csr);
+
     private:
       static int Residual(RealT    t,
                           N_Vector yy,
@@ -180,6 +182,12 @@ namespace AnalysisManager
       N_Vector qB_{};  ///< Backward integrand vector
 
       int backwardID_{};
+
+      struct UserData
+      {
+        bool                                      use_csr_   = false;
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model_ptr_ = nullptr;
+      } user_data_;
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);

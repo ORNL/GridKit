@@ -56,6 +56,29 @@ namespace GridKit
         return success.report(test_name.str().c_str());
       }
 
+      TestOutcome testSystemCooVsCsrJacobian(std::string model_name, Model::Evaluator<ScalarT, IdxT>& model)
+      {
+        using namespace Model;
+        using namespace LinearAlgebra;
+
+        using COO_Matrix  = COO_Matrix<ScalarT, IdxT>;
+        using CsrJacobian = Evaluator<ScalarT, IdxT>::CsrJacobian;
+
+        TestStatus success = true;
+
+        model.evaluateJacobian();
+        model.evaluateCsrJacobian();
+
+        COO_Matrix&  coo_jac = model.getJacobian();
+        CsrJacobian& csr_jac = model.getCsrJacobian();
+
+        success *= compare(coo_jac, csr_jac);
+
+        std::stringstream test_name;
+        test_name << __func__ << " <" << model_name << ">";
+        return success.report(test_name.str().c_str());
+      }
+
     private:
       bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
       {
