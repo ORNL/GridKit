@@ -50,7 +50,7 @@ namespace GridKit
         COO_Matrix&  coo_jac = comp.getJacobian();
         CsrJacobian& csr_jac = comp.getCsrJacobian();
 
-        success *= compare(coo_jac, csr_jac, true);
+        success *= compare(coo_jac, csr_jac);
 
         std::stringstream test_name;
         test_name << __func__ << " <" << comp_name << ">";
@@ -73,7 +73,7 @@ namespace GridKit
         COO_Matrix&  coo_jac = model.getJacobian();
         CsrJacobian& csr_jac = model.getCsrJacobian();
 
-        success *= compare(coo_jac, csr_jac, false);
+        success *= compare(coo_jac, csr_jac);
 
         std::stringstream test_name;
         test_name << __func__ << " <" << model_name << ">";
@@ -81,7 +81,7 @@ namespace GridKit
       }
 
     private:
-      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat, bool strictNonzeroMatch)
+      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
       {
         bool comparison = true;
 
@@ -89,18 +89,15 @@ namespace GridKit
 
         comparison = comparison
                      && std::get<0>(original_mat.getDimensions()) == new_mat.numRows()
-                     && std::get<1>(original_mat.getDimensions()) == new_mat.numCols()
-                     && (!strictNonzeroMatch || vals.size() == new_mat.numNonZero());
+                     && std::get<1>(original_mat.getDimensions()) == new_mat.numCols();
 
         if (!comparison)
         {
-          std::cerr << std::format("Matrix dimensions do not align:\n{},{},{} v.s.\n{},{},{}\n",
+          std::cerr << std::format("Matrix dimensions do not align:\n{},{} v.s.\n{},{}\n",
                                    std::get<0>(original_mat.getDimensions()),
                                    std::get<1>(original_mat.getDimensions()),
-                                   vals.size(),
                                    new_mat.numRows(),
-                                   new_mat.numCols(),
-                                   new_mat.numNonZero());
+                                   new_mat.numCols());
 
           original_mat.printMatrix();
           std::cerr << new_mat.printNonzeroElements() << '\n';

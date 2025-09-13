@@ -20,6 +20,8 @@ int main()
 
   result += test.testCooVsCsrJacobian<Resistor>("Resistor", 1, 1.0);
   result += test.testCooVsCsrJacobian<Resistor>("Resistor", 1, 2.0);
+  result += test.testCooVsCsrJacobian<Inductor>("Inductor", 1, 1.0);
+  result += test.testCooVsCsrJacobian<Inductor>("Inductor", 1, 2.0);
 
   auto rl_circuit_system  = rlCircuitSystem();
   result                 += test.testSystemCooVsCsrJacobian("RLCircuit", *rl_circuit_system);

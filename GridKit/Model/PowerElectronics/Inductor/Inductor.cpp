@@ -19,7 +19,7 @@ namespace GridKit
   Inductor<ScalarT, IdxT>::Inductor(IdxT id, RealT L)
     : L_(L)
   {
-    size_           = 3;
+    size_           = SIZE;
     n_intern_       = 1;
     n_extern_       = 2;
     extern_indices_ = {0, 1};
@@ -107,6 +107,18 @@ namespace GridKit
     jac_.axpy(alpha_, Jacder);
 
     return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  Inductor<ScalarT, IdxT>::CsrJacobian Inductor<ScalarT, IdxT>::buildCsrJacobian(
+      LinearAlgebra::CsrBuilder<Inductor<ScalarT, IdxT>::RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
+  {
+    builder.row(0).elem(2, -1.0);
+    builder.row(1).elem(2, 1.0);
+    builder.row(2).elem(0, -1.0).elem(1, 1.0).elem(2, alpha_ * (-L_));
+
+    return builder;
   }
 
   template <class ScalarT, typename IdxT>
