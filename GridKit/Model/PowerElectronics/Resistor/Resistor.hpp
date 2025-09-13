@@ -18,7 +18,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  class Resistor : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, Resistor<ScalarT, IdxT>>
+  class Resistor : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, Resistor>
   {
     using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
