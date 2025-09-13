@@ -4,7 +4,9 @@
  */
 #pragma once
 
+#include <concepts>
 #include <optional>
+#include <utility>
 
 #include "Evaluator.hpp"
 
@@ -15,14 +17,21 @@ namespace GridKit
     namespace Evaluator
     {
       /**
+       * @brief Describes types which may use `GridKit::Mixin::Evaluator::CsrJacobian` as a mixin.
+       */
+      template <class Derived, class CsrBuilder, class CsrJacobian>
+      concept CanMixinCsrJacobian = requires(Derived d, CsrJacobian j) {
+        { Derived::SIZE } -> std::convertible_to<size_t>;
+        { d.buildCsrJacobian(CsrBuilder::fromEmpty(Derived::SIZE, Derived::SIZE)) } -> std::convertible_to<CsrJacobian>;
+        { d.buildCsrJacobian(CsrBuilder::fromTemplate(std::move(j))) } -> std::convertible_to<CsrJacobian>;
+      };
+
+      /**
        * @brief  Implements the common pattern of how many components will want to compute their CSR Jacobian.
        *         Store a square CSR matrix based on the component size, and the first time `evaluateJacobian()`
        *         is called, use `LinearAlgebra::CsrBuilder::fromEmpty()`. After that, use `LinearAlgebra::CsrBuilder::fromTemplate`, using the
        *         previously computed jacobian as a template.
-       * @tparam Derived The class which is inheriting this mixin. Must declare a static constant `SIZE` which
-       *                 is the size of the component. For that reason, this mixin cannot be used with dynamically
-       *                 sized components. Must also declare a member `buildCsrJacobian()` which takes a `LinearAlgebra::CsrBuilder` as
-       *                 a single argument, which then constructs the matrix and returns something convertible to a `JacT`.
+       * @tparam Derived The class which is inheriting this mixin. Must meet the equirements of `CanMixinCsrJacobian`.
        *
        * An example of how a component might use the mixin:
        * @code{.cpp}
@@ -42,17 +51,18 @@ namespace GridKit
        * @note   Since `CsrJacobian` only partially implements `Model::Evaluator`, any component which wishes to use this mixin
        *         must inherit `Model::Evaluator` virtually, and implement the remaining members.
        */
-      template <class ScalarT, typename IdxT, class Derived>
+      template <class ScalarT, typename IdxT, template <class S, typename I> class Derived>
       class CsrJacobian : public virtual Model::Evaluator<ScalarT, IdxT>
       {
-        using JacT = typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
+        using JacT     = typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
+        using DerivedT = Derived<ScalarT, IdxT>;
 
       protected:
         /**
          * @brief The jacobian matrix.
          * @note The jacobian isn't computed (and is empty) until `evaluateJacobian()` is called.
          */
-        JacT csr_jacobian_ = JacT(Derived::SIZE, Derived::SIZE);
+        JacT csr_jacobian_ = JacT(DerivedT::SIZE, DerivedT::SIZE);
 
       public:
         bool hasCsrJacobian() final
@@ -70,11 +80,13 @@ namespace GridKit
         {
           using CsrBuilder = LinearAlgebra::CsrBuilder<ScalarT, IdxT>;
 
-          auto& self = static_cast<Derived&>(*this);
+          static_assert(CanMixinCsrJacobian<DerivedT, CsrBuilder, JacT>);
+
+          auto& self = static_cast<DerivedT&>(*this);
 
           if (csr_jacobian_.numNonZero() == 0)
           {
-            csr_jacobian_ = self.buildCsrJacobian(CsrBuilder::fromEmpty(Derived::SIZE, Derived::SIZE));
+            csr_jacobian_ = self.buildCsrJacobian(CsrBuilder::fromEmpty(DerivedT::SIZE, DerivedT::SIZE));
           }
           else
           {

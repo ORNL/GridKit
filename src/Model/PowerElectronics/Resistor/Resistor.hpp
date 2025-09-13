@@ -19,7 +19,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  class Resistor : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, Resistor<ScalarT, IdxT>>
+  class Resistor : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, Resistor>
   {
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
