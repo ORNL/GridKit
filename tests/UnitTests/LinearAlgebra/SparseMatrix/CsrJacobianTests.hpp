@@ -1,3 +1,4 @@
+#include <format>
 #include <sstream>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
@@ -49,7 +50,7 @@ namespace GridKit
         COO_Matrix&  coo_jac = comp.getJacobian();
         CsrJacobian& csr_jac = comp.getCsrJacobian();
 
-        success *= compare(coo_jac, csr_jac);
+        success *= compare(coo_jac, csr_jac, true);
 
         std::stringstream test_name;
         test_name << __func__ << " <" << comp_name << ">";
@@ -72,7 +73,7 @@ namespace GridKit
         COO_Matrix&  coo_jac = model.getJacobian();
         CsrJacobian& csr_jac = model.getCsrJacobian();
 
-        success *= compare(coo_jac, csr_jac);
+        success *= compare(coo_jac, csr_jac, false);
 
         std::stringstream test_name;
         test_name << __func__ << " <" << model_name << ">";
@@ -80,7 +81,7 @@ namespace GridKit
       }
 
     private:
-      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat)
+      bool compare(LinearAlgebra::COO_Matrix<ScalarT, IdxT>& original_mat, LinearAlgebra::CsrMatrix<ScalarT, IdxT>& new_mat, bool strictNonzeroMatch)
       {
         bool comparison = true;
 
@@ -89,10 +90,22 @@ namespace GridKit
         comparison = comparison
                      && std::get<0>(original_mat.getDimensions()) == new_mat.numRows()
                      && std::get<1>(original_mat.getDimensions()) == new_mat.numCols()
-                     && vals.size() == new_mat.numNonZero();
+                     && (!strictNonzeroMatch || vals.size() == new_mat.numNonZero());
 
         if (!comparison)
+        {
+          std::cerr << std::format("Matrix dimensions do not align:\n{},{},{} v.s.\n{},{},{}\n",
+                                   std::get<0>(original_mat.getDimensions()),
+                                   std::get<1>(original_mat.getDimensions()),
+                                   vals.size(),
+                                   new_mat.numRows(),
+                                   new_mat.numCols(),
+                                   new_mat.numNonZero());
+
+          original_mat.printMatrix();
+          std::cerr << new_mat.printNonzeroElements() << '\n';
           return comparison;
+        }
 
         ScalarT target;
         // Test all elements - make sure they match

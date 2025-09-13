@@ -88,22 +88,34 @@ namespace GridKit
        */
       struct InternalRowPlan
       {
+        struct Element
+        {
+          /**
+           * @brief The index of the element in the component jacobian
+           */
+          size_t elem_idx_;
+          /**
+           * @brief The column of the element in the system jacobian
+           */
+          IdxT   system_col_;
+        };
+
         /**
          * @brief The index of the component that this equation belongs to
          */
-        size_t            component_idx_;
+        size_t               component_idx_;
         /**
          * @brief The index of the row of the component's jacobian that this row corresponds to.
          */
-        size_t            row_idx_;
+        size_t               row_idx_;
         /**
          * @brief The expected number of nonzero elements in the row of the component's jacobian.
          */
-        IdxT              row_nnz_;
+        IdxT                 row_nnz_;
         /**
-         * @brief The column indices of the elements in this row of the system jacobian
+         * @brief The elements which belong to this row
          */
-        std::vector<IdxT> col_indices_;
+        std::vector<Element> elements_;
       };
 
       /**
@@ -453,9 +465,9 @@ namespace GridKit
         assert(component_jac.rowIndices().size() >= plan.row_idx_ + 2);
         assert(row_end - row_start == plan.row_nnz_);
 
-        for (IdxT i = row_start; i < row_end; i++)
+        for (auto element : plan.elements_)
         {
-          builder.elem(plan.col_indices_[i - row_start], component_jac.values()[i]);
+          builder.elem(element.system_col_, component_jac.values()[element.elem_idx_]);
         }
       };
 
@@ -509,8 +521,7 @@ namespace GridKit
       {
         apply_jacobian_assembly_plan(*jacobian_assembly_plan_, component_jac_view, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
       }
-
-      if (!jacobian_assembly_plan_)
+      else
       {
         createJacobianAssemblyPlan(component_jac_view);
         apply_jacobian_assembly_plan(*jacobian_assembly_plan_, component_jac_view, CsrBuilder::fromEmpty(size(), size()));
@@ -648,28 +659,30 @@ namespace GridKit
 
     void createJacobianAssemblyPlan(const ComponentCsrJacobianView& component_jacs)
     {
-      JacobianAssemblyPlan plan;
-
-      plan.num_components_ = components_.size();
-      plan.system_size_    = size();
-
       auto inverse_map = inverseComponentConnectionMap();
 
-      for (size_t row = 0; row < plan.system_size_; row++)
+      std::vector<typename JacobianAssemblyPlan::RowPlan> row_plans;
+      row_plans.reserve(size());
+
+      for (size_t row = 0; row < size(); row++)
       {
         auto component_contributions = inverse_map[row];
         if (component_contributions.size() > 1)
         {
-          plan.row_plans_[row] = createExternalRowPlan(component_jacs, row, component_contributions);
+          row_plans.push_back(createExternalRowPlan(component_jacs, row, component_contributions));
         }
         else
         {
           auto [comp_idx, local_idx] = component_contributions.front();
-          plan.row_plans_[row]       = createInternalRowPlan(component_jacs[comp_idx], row, comp_idx, local_idx);
+          row_plans.push_back(createInternalRowPlan(component_jacs[comp_idx], row, comp_idx, local_idx));
         }
       }
 
-      jacobian_assembly_plan_ = plan;
+      jacobian_assembly_plan_ = JacobianAssemblyPlan{
+          .row_plans_      = row_plans,
+          .num_components_ = components_.size(),
+          .system_size_    = size(),
+      };
     }
 
     /**
@@ -684,9 +697,9 @@ namespace GridKit
         auto comp = components_[comp_idx];
         for (IdxT local_idx = 0; local_idx < comp->size(); local_idx++)
         {
-          size_t global_idx = static_cast<size_t>(comp->getNodeConnection(local_idx));
+          IdxT global_idx = comp->getNodeConnection(local_idx);
 
-          if (global_idx != static_cast<size_t>(-1))
+          if (global_idx != neg1_)
           {
             map[global_idx].push_back({comp_idx, local_idx});
           }
@@ -711,10 +724,10 @@ namespace GridKit
 
         for (size_t elem_idx = comp_jac.rowIndices()[local_idx]; elem_idx < comp_jac.rowIndices()[local_idx + 1]; elem_idx++)
         {
-          IdxT   local_col_idx  = comp_jac.colIndices()[elem_idx];
-          size_t global_col_idx = components_[comp_idx]->getNodeConnection(local_col_idx);
+          IdxT local_col_idx  = comp_jac.colIndices()[elem_idx];
+          IdxT global_col_idx = components_[comp_idx]->getNodeConnection(local_col_idx);
 
-          if (global_col_idx != static_cast<size_t>(-1))
+          if (global_col_idx != neg1_)
           {
             if (component_elements[global_col_idx].empty())
             {
@@ -751,15 +764,31 @@ namespace GridKit
         size_t             comp_idx,
         IdxT               local_idx) const
     {
-      IdxT        row_idx      = component_jac.rowIndices()[row];
-      IdxT        next_row_idx = component_jac.rowIndices()[row + 1];
-      std::vector col_indices(std::next(component_jac.colIndices().begin(), row_idx), std::next(component_jac.colIndices().begin(), next_row_idx));
+      IdxT row_idx      = component_jac.rowIndices()[local_idx];
+      IdxT next_row_idx = component_jac.rowIndices()[local_idx + 1];
+
+      std::vector<typename JacobianAssemblyPlan::InternalRowPlan::Element> elements;
+      elements.reserve(next_row_idx - row_idx);
+
+      for (size_t i = row_idx; i < next_row_idx; i++)
+      {
+        IdxT local_col  = component_jac.colIndices()[i];
+        IdxT global_col = components_[comp_idx]->getNodeConnection(local_col);
+
+        if (global_col != neg1_)
+        {
+          elements.push_back({
+              .elem_idx_   = i,
+              .system_col_ = global_col,
+          });
+        }
+      }
 
       return {
           .component_idx_ = comp_idx,
           .row_idx_       = local_idx,
           .row_nnz_       = next_row_idx - row_idx,
-          .col_indices_   = col_indices,
+          .elements_      = elements,
       };
     }
 

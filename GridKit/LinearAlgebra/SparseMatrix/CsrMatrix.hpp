@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <format>
 #include <numeric>
 #include <optional>
+#include <sstream>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -216,6 +218,8 @@ namespace GridKit
       void sort();
 
       ScalarT valueAt(size_t row, IdxT col) const;
+
+      std::string printNonzeroElements() const;
 
       template <class, typename, bool, bool, bool>
       friend class CsrBuilder;
@@ -439,6 +443,22 @@ namespace GridKit
       {
         return values_[found_idx];
       }
+    }
+
+    template <class ScalarT, typename IdxT, bool KEEP_SORTED>
+    std::string CsrMatrix<ScalarT, IdxT, KEEP_SORTED>::printNonzeroElements() const
+    {
+      std::stringstream out;
+
+      for (size_t row = 0; row < numRows(); row++)
+      {
+        for (IdxT elem = row_indices_[row]; elem < row_indices_[row + 1]; elem++)
+        {
+          out << std::format("({},{},{}) ", row, col_indices_[elem], values_[elem]);
+        }
+      }
+
+      return out.str();
     }
 
     /**
