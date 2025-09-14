@@ -8,6 +8,7 @@
 #include <idas/idas_ls.h>
 
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Utilities/Benchmark.hpp>
 
 namespace AnalysisManager
 {
@@ -778,6 +779,8 @@ namespace AnalysisManager
 
       if (use_csr)
       {
+        auto timer = GridKit::Utility::startTime<true>("CSR Jacobian Assembly");
+
         assert(model->hasCsrJacobian());
 
         model->evaluateCsrJacobian();
@@ -787,6 +790,8 @@ namespace AnalysisManager
         std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
         std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
         std::copy(Jac.values().cbegin(), Jac.values().cend(), data);
+
+        GridKit::Utility::endTime<true>(std::move(timer));
       }
       else
       {
