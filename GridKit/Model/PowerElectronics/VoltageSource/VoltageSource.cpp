@@ -19,7 +19,7 @@ namespace GridKit
   VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, RealT V)
     : V_(V)
   {
-    size_           = 3;
+    size_           = SIZE;
     n_intern_       = 1;
     n_extern_       = 2;
     extern_indices_ = {0, 1};
@@ -87,6 +87,18 @@ namespace GridKit
     jac_.setValues(rcord, ccord, vals);
 
     return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  VoltageSource<ScalarT, IdxT>::CsrJacobian VoltageSource<ScalarT, IdxT>::buildCsrJacobian(
+      LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
+  {
+    builder.row(0).elem(2, -1.0);
+    builder.row(1).elem(2, 1.0);
+    builder.row(2).elem(0, -1.0).elem(1, 1.0);
+
+    return builder;
   }
 
   template <class ScalarT, typename IdxT>
