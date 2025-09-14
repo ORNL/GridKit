@@ -10,6 +10,7 @@
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
+#include <GridKit/Utilities/Template.hpp>
 
 namespace GridKit
 {
@@ -189,14 +190,12 @@ namespace GridKit
       const CsrJacobian& operator[](size_t component_idx) const
       {
         auto& either = component_jacobians_[component_idx];
-        try
-        {
-          return *std::get<CsrJacobian*>(either);
-        }
-        catch (...)
-        {
-          return std::get<CsrJacobian>(either);
-        }
+        return std::visit(
+            Utility::OverloadVisitor{[](CsrJacobian* jac) -> const CsrJacobian&
+                                     { return *jac; },
+                                     [](const CsrJacobian& jac) -> const CsrJacobian&
+                                     { return jac; }},
+            either);
       }
     };
 
@@ -500,14 +499,12 @@ namespace GridKit
           builder.row(row);
 
           auto row_plan = plan.row_plans_[row];
-          try
-          {
-            apply_internal_row_plan(std::get<InternalRowPlan>(row_plan), jac_view, builder);
-          }
-          catch (...)
-          {
-            apply_external_row_plan(std::get<ExternalRowPlan>(row_plan), jac_view, builder);
-          }
+          std::visit(
+              Utility::OverloadVisitor{[&](const InternalRowPlan& row_plan)
+                                       { apply_internal_row_plan(row_plan, jac_view, builder); },
+                                       [&](const ExternalRowPlan& row_plan)
+                                       { apply_external_row_plan(row_plan, jac_view, builder); }},
+              row_plan);
         }
 
         csr_jacobian_ = std::move(builder);
