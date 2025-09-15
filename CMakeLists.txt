@@ -52,6 +52,8 @@ if(GRIDKIT_ENABLE_ASAN)
   set(GRIDKIT_LINK_OPTIONS ${GRIDKIT_LINK_OPTIONS} -fsanitize=address CACHE INTERNAL STRING)
 endif()
 
+option(GRIDKIT_ENABLE_BENCHMARKS "Enable the ability to benchmark by allowing timing captures" OFF)
+
 if(GRIDKIT_ENABLE_UBSAN)
   set(GRIDKIT_COMPILE_OPTIONS ${GRIDKIT_COMPILE_OPTIONS} -fsanitize=undefined -fno-omit-frame-pointer CACHE INTERNAL STRING)
   set(GRIDKIT_LINK_OPTIONS ${GRIDKIT_LINK_OPTIONS} -fsanitize=undefined CACHE INTERNAL STRING)
@@ -102,6 +104,10 @@ endif()
 
 if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
+endif()
+
+if(GRIDKIT_ENABLE_BENCHMARKS)
+  add_compile_definitions(GRIDKIT_BENCHMARK)
 endif()
 
 # Macro that adds libraries

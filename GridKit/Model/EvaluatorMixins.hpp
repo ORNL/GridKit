@@ -65,10 +65,12 @@ namespace GridKit
          */
         JacT csr_jacobian_ = JacT(DerivedT::SIZE, DerivedT::SIZE);
 
+        bool should_use_csr_ = true;
+
       public:
         bool hasCsrJacobian() final
         {
-          return true;
+          return should_use_csr_;
         }
 
         /**
@@ -105,6 +107,11 @@ namespace GridKit
         const JacT& getCsrJacobian() const final
         {
           return csr_jacobian_;
+        }
+
+        void setCsrUsage(bool use) noexcept
+        {
+          should_use_csr_ = use;
         }
       };
     } // namespace Evaluator

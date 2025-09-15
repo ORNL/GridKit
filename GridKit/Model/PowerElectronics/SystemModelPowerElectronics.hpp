@@ -666,12 +666,12 @@ namespace GridKit
         auto component_contributions = inverse_map[row];
         if (component_contributions.size() > 1)
         {
-          row_plans.push_back(createExternalRowPlan(component_jacs, row, component_contributions));
+          row_plans.push_back(createExternalRowPlan(component_jacs, component_contributions));
         }
         else
         {
           auto [comp_idx, local_idx] = component_contributions.front();
-          row_plans.push_back(createInternalRowPlan(component_jacs[comp_idx], row, comp_idx, local_idx));
+          row_plans.push_back(createInternalRowPlan(component_jacs[comp_idx], comp_idx, local_idx));
         }
       }
 
@@ -708,7 +708,6 @@ namespace GridKit
 
     JacobianAssemblyPlan::ExternalRowPlan createExternalRowPlan(
         const ComponentCsrJacobianView&              component_jacs,
-        size_t                                       row,
         const std::vector<std::tuple<size_t, IdxT>>& component_contributions)
     {
       std::vector<std::vector<typename JacobianAssemblyPlan::ExternalRowPlan::SystemElement::ComponentElement>> component_elements(size());
@@ -757,7 +756,6 @@ namespace GridKit
 
     JacobianAssemblyPlan::InternalRowPlan createInternalRowPlan(
         const CsrJacobian& component_jac,
-        size_t             row,
         size_t             comp_idx,
         IdxT               local_idx) const
     {

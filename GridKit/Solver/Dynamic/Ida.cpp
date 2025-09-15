@@ -171,8 +171,19 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      sunindextype n   = static_cast<sunindextype>(model_->size());
-      sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+      sunindextype n = static_cast<sunindextype>(model_->size());
+      sunindextype nnz;
+
+      if (model_->hasCsrJacobian() && user_data_.use_csr_)
+      {
+        model_->evaluateCsrJacobian();
+        nnz = static_cast<sunindextype>(model_->getCsrJacobian().numNonZero());
+      }
+      else
+      {
+        model_->evaluateJacobian();
+        nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+      }
 
       JacobianMat_ = SUNSparseMatrix(n,
                                      n,
@@ -740,8 +751,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
       assert(user_data != nullptr);
-      auto user_data_ptr    = static_cast<UserData*>(user_data);
-      auto [use_csr, model] = *user_data_ptr;
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tres, 0.0);
       copyVec(yy, model->y());
@@ -764,8 +775,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
       assert(user_data != nullptr);
-      auto user_data_ptr    = static_cast<UserData*>(user_data);
-      auto [use_csr, model] = *user_data_ptr;
+      auto user_data_ptr                = static_cast<UserData*>(user_data);
+      auto& [use_csr, model, first_jac] = *user_data_ptr;
 
       model->updateTime(t, cj);
       copyVec(yy, model->y());
@@ -775,11 +786,13 @@ namespace AnalysisManager
 
       sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
-      real_type*    data    = SUNSparseMatrix_Data(J);
+      RealT*        data    = SUNSparseMatrix_Data(J);
 
       if (use_csr)
       {
-        auto timer = GridKit::Utility::startTime<true>("CSR Jacobian Assembly");
+        auto timer = first_jac ? GridKit::Utility::startTime<true>("CSR First Jacobian Assembly")
+                               : GridKit::Utility::startTime<true>("CSR Jacobian Assembly");
+        first_jac  = false;
 
         assert(model->hasCsrJacobian());
 
@@ -795,6 +808,8 @@ namespace AnalysisManager
       }
       else
       {
+        auto timer = GridKit::Utility::startTime<true>("COO Jacobian Assembly");
+
         model->evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& Jac = model->getJacobian();
 
@@ -811,6 +826,8 @@ namespace AnalysisManager
         // Copy data from model jac to sundials
         std::copy(c.cbegin(), c.cend(), colvals);
         std::copy(val.cbegin(), val.cend(), data);
+
+        GridKit::Utility::endTime<true>(std::move(timer));
       }
 
       return 0;
@@ -826,8 +843,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
       assert(user_data != nullptr);
-      auto user_data_ptr    = static_cast<UserData*>(user_data);
-      auto [use_csr, model] = *user_data_ptr;
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
@@ -850,8 +867,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
       assert(user_data != nullptr);
-      auto user_data_ptr    = static_cast<UserData*>(user_data);
-      auto [use_csr, model] = *user_data_ptr;
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
@@ -876,8 +893,8 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
       assert(user_data != nullptr);
-      auto user_data_ptr    = static_cast<UserData*>(user_data);
-      auto [use_csr, model] = *user_data_ptr;
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());

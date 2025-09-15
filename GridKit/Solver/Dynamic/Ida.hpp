@@ -187,6 +187,7 @@ namespace AnalysisManager
       {
         bool                                      use_csr_   = false;
         GridKit::Model::Evaluator<ScalarT, IdxT>* model_ptr_ = nullptr;
+        bool                                      first_jac_ = true;
       } user_data_;
 
     private:
