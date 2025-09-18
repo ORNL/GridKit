@@ -24,6 +24,16 @@ namespace GridKit
     namespace Governor
     {
       /**
+       * @brief Constructs a Tgov1 governor model without setting its parameters
+       *
+       */
+      template <class ScalarT, typename IdxT>
+      Tgov1<ScalarT, IdxT>::Tgov1()
+      {
+        size_ = 3;
+      }
+
+      /**
        * @brief Constructs a Tgov1 governor model from its parameters
        *
        * @param pmech $P_m$ internal variable signal node
