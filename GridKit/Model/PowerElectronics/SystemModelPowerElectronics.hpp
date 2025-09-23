@@ -73,8 +73,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
-    using CircuitComponent<ScalarT, IdxT>::size;
-
     using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
 
     /**
@@ -200,6 +198,8 @@ namespace GridKit
     };
 
   public:
+    using CircuitComponent<ScalarT, IdxT>::size;
+
     /**
      * @brief Default constructor for the system model
      *
@@ -619,6 +619,11 @@ namespace GridKit
     void addComponent(component_type* component)
     {
       components_.push_back(component);
+    }
+
+    size_t numComponents() const
+    {
+      return components_.size();
     }
 
   private:

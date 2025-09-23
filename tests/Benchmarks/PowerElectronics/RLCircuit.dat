@@ -1,0 +1,38 @@
+Run: COO Jacobians
+                                Variable            Mean       Std. Dev.      N
+                    RLCircuit Simulation        560.5808         39.7289     50
+                                 -Total-        560.5808         39.7289     50
+                   COO Jacobian Assembly          2.2229          1.4982    950
+                                 -Total-         42.2346          6.2495     50
+Run: CSR - System
+                                Variable            Mean       Std. Dev.      N
+                    RLCircuit Simulation        546.3860         23.0519     50
+                                 -Total-        546.3860         23.0519     50
+                   CSR Jacobian Assembly          1.7939          1.3781    900
+                                 -Total-         32.2898          7.2079     50
+             CSR First Jacobian Assembly          2.8620          1.2868     50
+                                 -Total-          2.8620          1.2868     50
+Run: CSR - Inductor
+                                Variable            Mean       Std. Dev.      N
+                    RLCircuit Simulation        533.4254         24.2374     50
+                                 -Total-        533.4254         24.2374     50
+                   CSR Jacobian Assembly          1.1459          0.5809    900
+                                 -Total-         20.6270          3.2668     50
+             CSR First Jacobian Assembly          1.9261          0.3713     50
+                                 -Total-          1.9261          0.3713     50
+Run: CSR - Inductor, Resistor
+                                Variable            Mean       Std. Dev.      N
+                    RLCircuit Simulation        526.5850         20.8752     50
+                                 -Total-        526.5850         20.8752     50
+                   CSR Jacobian Assembly          0.8578          0.2886    900
+                                 -Total-         15.4408          1.3073     50
+             CSR First Jacobian Assembly          1.6940          0.2518     50
+                                 -Total-          1.6940          0.2518     50
+Run: CSR - All
+                                Variable            Mean       Std. Dev.      N
+                    RLCircuit Simulation        524.0628         28.2315     50
+                                 -Total-        524.0628         28.2315     50
+                   CSR Jacobian Assembly          0.6053          0.2223    900
+                                 -Total-         10.8946          0.9004     50
+             CSR First Jacobian Assembly          1.3520          0.2178     50
+                                 -Total-          1.3520          0.2178     50

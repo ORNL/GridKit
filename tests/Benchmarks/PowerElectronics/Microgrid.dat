@@ -1,0 +1,28 @@
+Run: Microgrid N=2 COO
+                                Variable            Mean       Std. Dev.      N
+                    Microgrid Simulation      44522.5031       1253.1743     20
+                                 -Total-      44522.5031       1253.1743     20
+                   COO Jacobian Assembly        160.1292         24.5181   1920
+                                 -Total-      15372.4054        335.4393     20
+Run: Microgrid N=2 CSR
+                                Variable            Mean       Std. Dev.      N
+                    Microgrid Simulation      31765.9111        906.5040     20
+                                 -Total-      31765.9111        906.5040     20
+                   CSR Jacobian Assembly         40.2636         11.2105   1720
+                                 -Total-       3462.6702        162.0113     20
+             CSR First Jacobian Assembly         45.0833          3.8622     20
+                                 -Total-         45.0833          3.8622     20
+Run: Microgrid N=64 COO
+                                Variable            Mean       Std. Dev.      N
+                    Microgrid Simulation    8449040.0380     149596.5536     20
+                                 -Total-    8449040.0380     149596.5536     20
+                   COO Jacobian Assembly      92701.7574       3909.3889   1720
+                                 -Total-    7972351.1356     135244.9131     20
+Run: Microgrid N=64 CSR
+                                Variable            Mean       Std. Dev.      N
+                    Microgrid Simulation     563655.5370      19340.3189     20
+                                 -Total-     563655.5370      19340.3189     20
+                   CSR Jacobian Assembly       1026.5225        157.8264   1580
+                                 -Total-      81095.2761       5032.0411     20
+             CSR First Jacobian Assembly       1134.8093        176.2326     20
+                                 -Total-       1134.8093        176.2326     20

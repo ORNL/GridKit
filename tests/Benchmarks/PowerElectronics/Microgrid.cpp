@@ -14,42 +14,10 @@
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Utilities/Benchmark.hpp>
 
 using index_type = size_t;
 using real_type  = double;
-
-// Include solution keys for the three test cases N = (2, 4, 8) plus tolerances here:
-#include "SolutionKeys.hpp"
-
-static int test(index_type Nsize, real_type test_tolerance, bool error_tol = false);
-
-/**
- * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
- *
- * @param argc unused
- * @param argv unsued
- * @return int
- */
-int main(int /* argc */, char const** /* argv */)
-{
-  int       retval    = 0;
-  bool      debug_out = false;
-  real_type tol       = SCALE_MICROGRID_ERROR_TOL;
-
-  retval += test(2, tol, debug_out);
-  retval += test(4, tol, debug_out);
-  retval += test(8, tol, debug_out);
-  if (retval > 0)
-  {
-    std::cout << "Some tests fail!!\n";
-  }
-  else
-  {
-    std::cout << "All tests pass!!\n";
-  }
-  return retval;
-}
 
 /**
  * @brief Tests network of distributed generators.
@@ -60,41 +28,20 @@ int main(int /* argc */, char const** /* argv */)
  * @param use_DAE_keys - Choice between using DAE or ODE keys
  * @return int returns 0 if successful, >0 otherwise
  */
-int test(index_type Nsize, real_type error_tol, bool debug_output)
+std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_type Nsize)
 {
   using namespace GridKit;
 
   bool use_jac = true;
 
-  real_type t_init  = 0.0;
-  real_type t_final = 1.0;
-
-  real_type rel_tol = SCALE_MICROGRID_REL_TOL;
-  real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
+  real_type rel_tol = 1e-8;
+  real_type abs_tol = 1e-8;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                     abs_tol,
-                                                                     use_jac,
-                                                                     SCALE_MICROGRID_MAX_STEPS);
-
-  const std::vector<real_type>* true_vec = &answer_key_N8;
-
-  switch (Nsize)
-  {
-  case 2:
-    true_vec = &answer_key_N2;
-    break;
-  case 4:
-    true_vec = &answer_key_N4;
-    break;
-  case 8:
-    true_vec = &answer_key_N8;
-    break;
-  default:
-    std::cout << "No reference solution for Nsize = " << Nsize << ".\n";
-    std::cout << "Using default Nsize = 8.\n";
-  }
+  auto sys_model = std::make_unique<PowerElectronicsModel<real_type, index_type>>(rel_tol,
+                                                                                  abs_tol,
+                                                                                  true,
+                                                                                  10000);
 
   // Modeled after the problem in the paper
   // Every Bus has the same virtual resistance. This is due to the numerical stability as mentioned in the paper.
@@ -281,12 +228,6 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // allocate all the intial conditions
   sys_model->allocate(vec_size_total);
 
-  if (debug_output)
-  {
-    std::cout << sys_model->y().size() << std::endl;
-    std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
-  }
-
   // Create Intial points for states. Every state is to specified to the zero intially
   for (index_type i = 0; i < vec_size_total; i++)
   {
@@ -306,82 +247,64 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   sys_model->y()[vec_size_internals] = DG_parms1.wb_;
 
   sys_model->initialize();
-  sys_model->evaluateResidual();
-  // print the residual in matrix market format
-  sys_model->printResidualMatrixMarket("ScaleMicrogrid_Residual_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Residual N" + std::to_string(Nsize));
-  std::vector<real_type>& fres = sys_model->getResidual();
-  if (debug_output)
-  {
-    std::cout << "Verify Intial Resisdual is Zero: {\n";
-    for (index_type i = 0; i < fres.size(); i++)
-    {
-      std::cout << i << " : " << fres[i] << "\n";
-    }
-    std::cout << "}\n";
-  }
 
   sys_model->updateTime(0.0, 1.0e-8);
-  sys_model->evaluateJacobian();
-  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Jacobian N" + std::to_string(Nsize));
-  // print the jacobian in matrix market format
 
-  if (debug_output)
-    std::cout << "Intial Jacobian with alpha:\n";
+  return std::move(sys_model);
+}
 
-  // Create numerical integrator and configure it for the generator model
-  auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
-  idas->setUseCsr(true);
+void doIterations(index_type Nsize, bool use_csr)
+{
+  const size_t NUM_ITERATIONS = 20;
 
-  // setup simulation
-  idas->configureSimulation();
-  idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init);
+  real_type t_init  = 0.0;
+  real_type t_final = 1.0;
 
-  idas->runSimulation(t_final);
-
-  std::vector<real_type>& yfinal = sys_model->y();
-
-  if (debug_output)
+  for (unsigned i = 0; i < NUM_ITERATIONS; i++)
   {
-    std::cout << "Final Vector y\n";
-    for (index_type i = 0; i < yfinal.size(); i++)
-    {
-      std::cout << i << " : " << yfinal[i] << "\n";
-    }
+    std::cerr << i << ' ';
+    GridKit::Utility::benchmark.newIteration();
+
+    auto sys_model = microgrid(Nsize);
+    std::cerr << std::format("Num components: {}, System Size: {}\n", sys_model->numComponents(), sys_model->size());
+
+    // Create numerical integrator and configure it for the generator model
+    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model.get());
+    idas->setUseCsr(use_csr);
+
+    // setup simulation
+    idas->configureSimulation();
+    idas->getDefaultInitialCondition();
+    idas->initializeSimulation(t_init);
+
+    auto timer = GridKit::Utility::startTime<true>("Microgrid Simulation");
+    idas->runSimulation(t_final);
+    GridKit::Utility::endTime<true>(std::move(timer));
   }
+  std::cerr << '\n';
+}
 
-  bool test_pass = true;
+/**
+ * @brief Run Scale Microgrid test cases of N = (2,4,8) and check for correctness.
+ *
+ * @param argc unused
+ * @param argv unsued
+ * @return int
+ */
+int main(int /* argc */, char const** /* argv */)
+{
+  GridKit::Utility::benchmark.newRun("Microgrid N=2 COO");
+  doIterations(2, false);
 
-  real_type sum_top    = 0.0;
-  real_type sum_bottom = 0.0;
+  GridKit::Utility::benchmark.newRun("Microgrid N=2 CSR");
+  doIterations(2, true);
 
-  // check relative error
-  std::cout << "Test the Relative Error for N = " << Nsize << "\n";
-  for (index_type i = 0; i < true_vec->size(); i++)
-  {
-    // Print the Elementwise Relative Error
-    if (debug_output)
-      std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
+  GridKit::Utility::benchmark.newRun("Microgrid N=64 COO");
+  doIterations(64, false);
 
-    sum_top    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
-    sum_bottom += (true_vec->at(i) * true_vec->at(i));
-  }
+  GridKit::Utility::benchmark.newRun("Microgrid N=64 CSR");
+  doIterations(64, true);
 
-  real_type norm2error = (sqrt(sum_top) / sqrt(sum_bottom));
-  std::cout << "2-Norm Relative Error: " << norm2error << std::endl;
-  test_pass = norm2error < error_tol;
-
-  delete idas;
-  delete sys_model;
-
-  if (test_pass)
-  {
-    std::cout << "Test with Nsize = " << Nsize << " passes!\n";
-    return 0;
-  }
-  else
-  {
-    std::cout << "Test with Nsize = " << Nsize << " fails!\n";
-    return 1;
-  }
+  std::cerr << GridKit::Utility::benchmark.report() << '\n';
+  return 0;
 }
