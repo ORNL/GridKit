@@ -169,7 +169,7 @@ namespace GridKit
 
         success *= result.format_version == 0;
         success *= result.format_revision == 1;
-        success *= result.case_name == "Two-bus test case 1";
+        success *= result.case_name == "Two-bus test case 2";
         success *= result.case_date_time == std::nullopt;
         success *= result.case_description == "A two-bus test case for demonstrating the dynamics format";
         success *= result.case_comments == "This case is set up to monitor the voltage at both buses and the machine angle and speed";
