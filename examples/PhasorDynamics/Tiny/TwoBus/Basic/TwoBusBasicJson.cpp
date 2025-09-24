@@ -1,5 +1,5 @@
 /**
- * @file TwoBusTgov1SignalJson.cpp
+ * @file TwoBusBasic.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Example running a 2-bus system
@@ -7,13 +7,11 @@
  * Simulates a 2-bus system with Genrou 6th order generator model and
  * compares results with data generated for the same system by Poweworld.
  *
- * The system is configured using a JSON file
- *
  */
 #include <ctime>
 #include <iostream>
 
-#include "TwoBusTgov1.hpp"
+#include "TwoBusBasic.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
@@ -26,13 +24,12 @@ int main()
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
-  using namespace GridKit::PhasorDynamics::Governor;
 
   using scalar_type = double;
   using real_type   = double;
   using index_type  = size_t;
 
-  std::cout << "Example: TwoBusTgov1Json \n";
+  std::cout << "Example: TwoBusBasicJson\n";
 
   //
   // Input file
@@ -72,10 +69,6 @@ int main()
                   "v_base": 115e3
                 }
             ],
-            "signals": [
-                { "signal_id": 0, "name": "Machine Speed Deviation"},
-                { "signal_id": 1, "name": "Mechanical Power"}
-            ],
             "devices": [
                 { 
                   "class": "Branch",
@@ -85,16 +78,10 @@ int main()
                 },
                 {
                   "class": "Genrou",
-                  "ports": {"bus":0, "speed": 0, "pmech":1},
+                  "ports": {"bus":0},
                   "id": "DV1",
                   "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.5, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0},
                   "mon": ["delta", "omega"]
-                },
-                {
-                  "class": "Tgov1",
-                  "ports": {"bus":0, "speed": 0, "pmech":1},
-                  "id": "DV2",
-                  "params": {"R":0.05, "T1":0.5, "T2":2.5, "T3":7.5, "Pvmin":0.0, "Pvmax":1.0, "Dt":0.0}
                 },
                 { 
                   "class": "bus_fault",
@@ -112,7 +99,7 @@ int main()
   SystemModelData<scalar_type, index_type> data = json::parse(input_file);
 
   //
-  // Instantiate and allocate the system model
+  // Instantiate system model
   //
 
   SystemModel<scalar_type, index_type> sys(data);
@@ -195,14 +182,12 @@ int main()
     OutputData              data    = output[i];
     std::vector<real_type>& ref_sol = reference_solution[i + 1];
 
-    // Review Note: I believe the denominator should not have +1
     real_type err =
         std::abs(std::sqrt(data.Vr * data.Vr + data.Vi * data.Vi) - ref_sol[2])
         / (1.0 + std::abs(ref_sol[2]));
     if (err > error_V)
       error_V = err;
 
-    // Review Note: I believe the denominator should not have +1
     err = std::abs(1.0 + data.dw - ref_sol[1]) / (1.0 + ref_sol[1]);
     if (err > error_w)
       error_w = err;
