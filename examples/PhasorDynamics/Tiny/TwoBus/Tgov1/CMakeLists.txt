@@ -15,3 +15,4 @@ target_include_directories(TwoBusTgov1Json PRIVATE ${CMAKE_SOURCE_DIR}/third-par
 install(TARGETS TwoBusTgov1Json RUNTIME DESTINATION bin)
 
 add_test(NAME GenrouTest1_tgov1 COMMAND $<TARGET_FILE:TwoBusTgov1>)
+add_test(NAME GenrouTest1_tgov1_json COMMAND $<TARGET_FILE:TwoBusTgov1Json>)
