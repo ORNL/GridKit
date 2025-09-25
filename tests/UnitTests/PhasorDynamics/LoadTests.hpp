@@ -114,7 +114,7 @@ namespace GridKit
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+        PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
         bus.allocate();
         load.allocate();
         load.evaluateJacobian();
