@@ -56,6 +56,7 @@ namespace GridKit
         using bus_type        = BusBase<ScalarT, IdxT>;
 
       public:
+        Ieeet1(bus_type* bus);
         Ieeet1(
             signal_type*           efd_signal,
             signal_type*           speed_signal,

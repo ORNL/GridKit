@@ -73,6 +73,7 @@ namespace GridKit
         using signal_type     = SignalNode<ScalarT, IdxT>;
 
       public:
+        Tgov1();
         Tgov1(signal_type*, signal_type*);
         Tgov1(const model_data_type&);
         ~Tgov1() = default;

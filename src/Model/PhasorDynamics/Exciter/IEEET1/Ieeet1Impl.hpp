@@ -27,6 +27,19 @@ namespace GridKit
       /**
        * @brief  Constructor for IEEET1 Exciter
        *
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
+       */
+      template <class ScalarT, typename IdxT>
+      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type* bus)
+        : bus_(bus)
+      {
+        size_ = 9;
+      }
+
+      /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
        * @param data  Data object to store parameters
        * @param bus   Signal used for terminal reference vmag
        * @param speed Signal used for machine relative speed
