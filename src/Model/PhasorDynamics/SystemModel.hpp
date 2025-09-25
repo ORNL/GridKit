@@ -158,7 +158,7 @@ namespace GridKit
           if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::efd))
           {
             IdxT efd = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::efd);
-            gen->getSignals().template attachSignalNode<GenrouExternalVariables::PM>(getSignal(efd));
+            gen->getSignals().template attachSignalNode<GenrouExternalVariables::EFD>(getSignal(efd));
           }
 
           addComponent(gen);

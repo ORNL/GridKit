@@ -99,11 +99,15 @@ namespace GridKit
         tag_.resize(size);
 
         // Set output signal after allocation
-        // The signal is accessible to the generator
-        if (efd_signal_)
+        // The signal is accessible to any object connecting to the signal node
+        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd_signal_->set(&y_[7]);
+          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7]);
         }
+        // if (efd_signal_)
+        // {
+        //   efd_signal_->set(&y_[7]);
+        // }
         return 0;
       }
 
@@ -120,10 +124,16 @@ namespace GridKit
 
         // External Variables
         ScalarT efd0{0};
-        if (efd_signal_)
+
+        // Initial Efd set by generator
+        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; //<- TODO generator sets efd initial value
+          efd0 = y_[7]; //<- generator needs to be initialized first
         }
+        // if (efd_signal_)
+        // {
+        //   efd0 = y_[7]; //<- TODO generator sets efd initial value
+        // }
 
         // Terminal Voltage
         ScalarT vreal = bus_->Vr();
@@ -239,18 +249,25 @@ namespace GridKit
 
         // Input Variables
         ScalarT omega{0};
-        if (speed_signal_)
+        // if (speed_signal_)
+        // {
+        //   // Meta PR Note
+        //   // This seems to be very slow,
+        //   // but I see how read/write ownership may require this
+        //   //
+        //   // I believe implementing the equivalent to signal->read()
+        //   // at the system level would address this, by routing
+        //   // external signals into a generic inputs_ vector
+        //   // at the same time as the internal state values y_
+        //   // are recieved from IDA.
+        //   omega = speed_signal_->read();
+        // }
+
+        // Input Variables
+
+        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
-          // Meta PR Note
-          // This seems to be very slow,
-          // but I see how read/write ownership may require this
-          //
-          // I believe implementing the equivalent to signal->read()
-          // at the system level would address this, by routing
-          // external signals into a generic inputs_ vector
-          // at the same time as the internal state values y_
-          // are recieved from IDA.
-          omega = speed_signal_->read();
+          omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
         }
 
         // Read E comp (terminal voltage, unless compensation impedance)

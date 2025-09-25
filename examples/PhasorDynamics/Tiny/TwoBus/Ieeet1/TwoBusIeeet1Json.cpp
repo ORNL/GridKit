@@ -15,9 +15,6 @@
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
 
-// Temp, remove
-#include <Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
-
 int main()
 {
   using namespace GridKit::PhasorDynamics;
@@ -29,15 +26,14 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  using BusType      = BusData<scalar_type, index_type>::BusType;
-  using signal_type  = SignalNode<scalar_type, index_type>;
-  using machine_type = Genrou<scalar_type, index_type>;
-  using gov_type     = Governor::Tgov1<scalar_type, index_type>;
-  using exc_type     = Exciter::Ieeet1<scalar_type, index_type>;
+  using BusType = BusData<scalar_type, index_type>::BusType;
 
   std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
 
-  // Model Data
+  //
+  // Create model data
+  //
+
   SystemModelData<scalar_type, index_type> data;
 
   // Set bus data
@@ -81,8 +77,6 @@ int main()
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
-  // ------------- MODEL GROUP ------------------
 
   // Set generator data
   data.genrou.resize(1);
@@ -142,53 +136,15 @@ int main()
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]     = 0.33;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim] = 0.;
 
-  // -------------- END MODEL DATA ------------------
+  //
+  // Instantiate and configure the system model
+  //
 
-  // Manually add components
-  // This is a workaround since signal connections are not implemented in parser
-
-  // Create buses
-  auto* bus0 = BusFactory<scalar_type, index_type>::create(data.bus[0]);
-  auto* bus1 = BusFactory<scalar_type, index_type>::create(data.bus[1]);
-
-  // Create signal nodes
-  signal_type omega(data.signal[0]);
-  signal_type pmech(data.signal[1]);
-  signal_type efd(data.signal[2]);
-
-  // Create branch
-  Branch<scalar_type, index_type> branch(bus0, bus1, data.branch[0]);
-
-  // Add bus fault to bus0
-  BusFault<scalar_type, index_type> fault(bus0, data.bus_fault[0]);
-
-  // Create generator
-  machine_type gen(bus0,   // Bus
-                   &omega, // Machine  Speed Signal
-                   &pmech, // Governor Pmech Signal
-                   &efd,   // Exciter  Efd   Signal
-                   data.genrou[0]);
-
-  // Create governor (w/ Pmech and Speed signals)
-  gov_type gov(&pmech, &omega);
-
-  // Create exciter (w/ Efd, speed, and bus signals)
-  exc_type exc(&efd, &omega, bus0, data.exciter[0]);
-
-  // Instantiate system model and add components to it
-  SystemModel<scalar_type, index_type> sys;
-  sys.addBus(bus0);
-  sys.addBus(bus1);
-  sys.addSignal(&omega);
-  sys.addSignal(&pmech);
-  sys.addSignal(&efd);
-  sys.addComponent(&branch);
-  sys.addComponent(&gen);
-  sys.addComponent(&gov);
-  sys.addComponent(&exc);
-  sys.addFault(&fault);
-
+  SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
+
+  // Get access to the fault
+  auto* fault = sys.getBusFault(0);
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
@@ -253,13 +209,15 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault.setStatus(true);
+  // fault.setStatus(true);
+  fault->setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault.setStatus(false);
+  // fault.setStatus(false);
+  fault->setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
@@ -348,10 +306,6 @@ int main()
   }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
-
-  // Free Bus pointers manually
-  delete bus0;
-  delete bus1;
 
   return status;
 }
