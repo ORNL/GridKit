@@ -5,11 +5,10 @@
  * @brief Example running a 2-bus system with exciter and governor
  *
  */
-#include "TwoBusIeeet1.hpp"
-
 #include <ctime>
 #include <iostream>
 
+#include "TwoBusIeeet1.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
@@ -126,8 +125,8 @@ int main()
   // Exciter
   data.exciter.resize(1);
 
-  data.exciter[0].ports[Ieeet1Ports::speed]                       = 0;
-  data.exciter[0].ports[Ieeet1Ports::efd]                         = 2;
+  data.exciter[0].ports[Ieeet1Ports::speed]                      = 0;
+  data.exciter[0].ports[Ieeet1Ports::efd]                        = 2;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;

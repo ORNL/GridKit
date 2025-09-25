@@ -126,8 +126,8 @@ int main()
   // Exciter
   data.exciter.resize(1);
 
-  data.exciter[0].ports[Ieeet1Ports::speed]                       = 0;
-  data.exciter[0].ports[Ieeet1Ports::efd]                         = 2;
+  data.exciter[0].ports[Ieeet1Ports::speed]                      = 0;
+  data.exciter[0].ports[Ieeet1Ports::efd]                        = 2;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;
