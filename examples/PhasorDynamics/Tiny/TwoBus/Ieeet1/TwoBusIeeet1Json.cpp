@@ -12,8 +12,10 @@
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
+#include <Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
+#include <nlohmann/json.hpp>
 
 int main()
 {
@@ -26,115 +28,91 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  using BusType = BusData<scalar_type, index_type>::BusType;
-
   std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
+
+  //
+  // Input file
+  //
+
+  const char input_file[] =
+      R"({
+            "header": {
+                "format_version": 0,
+                "format_revision": 1,
+                "case_name": "Two-bus test case 2",
+                "case_description": "A two-bus test case for demonstrating the dynamics format",
+                "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed",
+                "freq_base": 60.0,
+                "va_base": 100e6
+            },
+            "buses": [
+                { 
+                  "number": 0,
+                  "class": "bus",
+                  "name": "Bus 1",
+                  "init": {
+                            "Vr":0.9949877346411762,
+                            "Vi":0.09999703952427966
+                          },
+                  "v_base": 115e3,
+                  "mon": ["Vr", "Vi"]
+                },
+                { 
+                  "number": 1,
+                  "class": "infinite_bus",
+                  "name": "Bus 2",
+                  "init": {
+                            "Vr":1.0,
+                            "Vi":0.0
+                          },
+                  "v_base": 115e3
+                }
+            ],
+            "signals": [
+                { "signal_id": 0, "name": "Machine Speed Deviation"},
+                { "signal_id": 1, "name": "Mechanical Power"},
+                { "signal_id": 2, "name": "Excitation Field"}
+            ],
+            "devices": [
+                { 
+                  "class": "Branch",
+                  "ports": {"bus1":0, "bus2":1},
+                  "id": "BR1",
+                  "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0}
+                },
+                {
+                  "class": "Genrou",
+                  "ports": {"bus":0, "speed": 0, "pmech":1, "efd": 2},
+                  "id": "DV1",
+                  "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.5, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0},
+                  "mon": ["delta", "omega"]
+                },
+                {
+                  "class": "Tgov1",
+                  "ports": {"bus":0, "speed": 0, "pmech":1},
+                  "id": "DV2",
+                  "params": {"R":0.05, "T1":0.5, "T2":2.5, "T3":7.5, "Pvmin":0.0, "Pvmax":1.0, "Dt":0.0}
+                },
+                {
+                  "class": "Ieeet1",
+                  "ports": {"bus":0, "speed": 0, "efd":2},
+                  "id": "DV3",
+                  "params": {"Tr":0.001, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}
+                },
+                { 
+                  "class": "bus_fault",
+                  "ports": {"bus":0},
+                  "id": "0",
+                  "params": {"state0": false, "R":0.0, "X":1e-3}
+                }
+            ]
+        })";
 
   //
   // Create model data
   //
 
-  SystemModelData<scalar_type, index_type> data;
-
-  // Set bus data
-  data.bus.resize(2);
-
-  data.bus[0].bus_id   = 0;
-  data.bus[0].bus_type = BusType::DEFAULT;
-  data.bus[0].Vr0      = 0.9949877346411762;
-  data.bus[0].Vi0      = 0.09999703952427966;
-
-  data.bus[1].bus_id   = 1;
-  data.bus[1].bus_type = BusType::SLACK;
-  data.bus[1].Vr0      = 1.0;
-  data.bus[1].Vi0      = 0.0;
-
-  // Set signal nodes data
-  data.signal.resize(3);
-
-  data.signal[0].name      = "omega";
-  data.signal[0].signal_id = 0;
-
-  data.signal[1].name      = "Pm";
-  data.signal[1].signal_id = 1;
-
-  data.signal[2].name      = "Efd";
-  data.signal[2].signal_id = 2;
-
-  // Set branch data
-  data.branch.resize(1);
-
-  data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-  data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
-  data.branch[0].parameters[BranchParameters::R] = 0.0;
-  data.branch[0].parameters[BranchParameters::X] = 0.1;
-  data.branch[0].parameters[BranchParameters::G] = 0.0;
-  data.branch[0].parameters[BranchParameters::B] = 0.0;
-
-  // Add faults
-  data.bus_fault.resize(1);
-
-  data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
-  data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
-  data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
-
-  // Set generator data
-  data.genrou.resize(1);
-
-  data.genrou[0].ports[GenrouPorts::speed]           = 0;
-  data.genrou[0].ports[GenrouPorts::pmech]           = 1;
-  data.genrou[0].ports[GenrouPorts::efd]             = 2;
-  data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
-  data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
-  data.genrou[0].parameters[GenrouParameters::H]     = 3.;
-  data.genrou[0].parameters[GenrouParameters::D]     = 0.;
-  data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
-  data.genrou[0].parameters[GenrouParameters::Tdop]  = 7.;
-  data.genrou[0].parameters[GenrouParameters::Tdopp] = .04;
-  data.genrou[0].parameters[GenrouParameters::Tqopp] = .05;
-  data.genrou[0].parameters[GenrouParameters::Tqop]  = .75;
-  data.genrou[0].parameters[GenrouParameters::Xd]    = 2.1;
-  data.genrou[0].parameters[GenrouParameters::Xdp]   = 0.2;
-  data.genrou[0].parameters[GenrouParameters::Xdpp]  = 0.18;
-  data.genrou[0].parameters[GenrouParameters::Xq]    = 0.5;
-  data.genrou[0].parameters[GenrouParameters::Xqp]   = 0.5;
-  data.genrou[0].parameters[GenrouParameters::Xqpp]  = 0.18;
-  data.genrou[0].parameters[GenrouParameters::Xl]    = 0.15;
-  data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
-  data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
-
-  // Governor
-  data.gov.resize(1);
-
-  data.gov[0].ports[Tgov1Ports::speed]           = 0;
-  data.gov[0].ports[Tgov1Ports::pmech]           = 1;
-  data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
-  data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
-  data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;
-  data.gov[0].parameters[Tgov1Parameters::T1]    = 0.5;
-  data.gov[0].parameters[Tgov1Parameters::T2]    = 2.5;
-  data.gov[0].parameters[Tgov1Parameters::T3]    = 7.5;
-  data.gov[0].parameters[Tgov1Parameters::Dt]    = 0.0;
-
-  // Exciter
-  data.exciter.resize(1);
-
-  data.exciter[0].ports[Ieeet1Ports::speed]                      = 0;
-  data.exciter[0].ports[Ieeet1Ports::efd]                        = 2;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]      = -0.06;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Te]      = 0.6;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Kf]      = 0.09;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tf]      = 1.46;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmin]   = -1.;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Vrmax]   = 1.;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E1]      = 2.8;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::E2]      = 3.373;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]     = 0.04;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]     = 0.33;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim] = 0.;
+  SystemModelData<scalar_type, index_type> data = json::parse(input_file);
 
   //
   // Instantiate and configure the system model
