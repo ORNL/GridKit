@@ -65,6 +65,27 @@ namespace GridKit
       }
 
       /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
+       * @param bus   Signal used for terminal reference vmag
+       * @param data  Data object to store parameters
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
+       */
+      template <class ScalarT, typename IdxT>
+      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
+                                    const model_data_type& data)
+        : bus_(bus)
+      {
+
+        // Parse data struct into model
+        this->initModelParams(data);
+
+        // 9 Internal Variables
+        size_ = 9;
+      }
+
+      /**
        * @brief Allocate memory for model
        *
        */

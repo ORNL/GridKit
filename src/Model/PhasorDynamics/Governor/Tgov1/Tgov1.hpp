@@ -90,7 +90,7 @@ namespace GridKit
         {
         }
 
-        /// Get the `ComponentSignals` from this `GenClassical`
+        /// Get the `ComponentSignals` from this `Tgov1`
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
