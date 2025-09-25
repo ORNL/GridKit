@@ -38,6 +38,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class Branch : public Component<ScalarT, IdxT>
     {
+      using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::nnz_;
       using Component<ScalarT, IdxT>::time_;
@@ -57,6 +58,7 @@ namespace GridKit
       Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
       virtual ~Branch();
 
+      virtual int setGridKitComponentID(IdxT) override;
       virtual int allocate() override;
       virtual int initialize() override;
       virtual int tagDifferentiable() override;

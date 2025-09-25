@@ -249,17 +249,29 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Set the component ID
+     */
+    template <class ScalarT, typename IdxT>
+    int Genrou<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    {
+      gridkit_component_id_ = component_id;
+      return 0;
+    }
+
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::allocate()
     {
+      // Resize component model data
       f_.resize(static_cast<size_t>(size_));
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
 
+      // Set output signal after allocation
       if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
       {
         signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1]);
@@ -442,7 +454,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::evaluateResidual()
     {
-      // Mechanmical Power
+      // Mechanical Power
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
         pmech_ = signals_.template readExternalVariable<GenrouExternalVariables::PM>();

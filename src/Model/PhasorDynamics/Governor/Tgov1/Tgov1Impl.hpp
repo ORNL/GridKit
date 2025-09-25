@@ -115,6 +115,16 @@ namespace GridKit
         }
       }
 
+      /**
+       * @brief Set the component ID
+       */
+      template <class ScalarT, typename IdxT>
+      int Tgov1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
       /*!
        * @brief Allocate memory for model
        */
@@ -150,7 +160,7 @@ namespace GridKit
         // Initial mechanical = initial electric torque
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          p0 = y_[2]; //<- generator needs to be initialized first
+          p0 = y_[2]; ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)

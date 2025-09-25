@@ -36,6 +36,7 @@ namespace GridKit
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using real_type      = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
+      using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
       using PhasorDynamics::Component<ScalarT, IdxT>::nnz_;
       using PhasorDynamics::Component<ScalarT, IdxT>::time_;
@@ -262,6 +263,18 @@ namespace GridKit
       }
 
       /**
+       * @brief Set component ID
+       *
+       * @note Should default to 0. The system model could be used as a
+       * component in a larger system that would need to set this value.
+       */
+      int setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
+      /**
        * @brief Allocate buses, components, and system objects.
        *
        * This method first allocates bus objects, then component objects,
@@ -323,6 +336,9 @@ namespace GridKit
        * exciters, etc.) during the initialization.
        *
        * @todo Implement writting to system vectors in a thread-safe way.
+       *
+       * @note Currently assuming each component stores variables contiguously in memory and
+       * that these are simply concateneted in the global system.
        */
       int initialize()
       {
@@ -479,6 +495,10 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Update time
+       *
+       */
       void updateTime(real_type t, real_type a)
       {
         for (const auto& component : components_)
@@ -487,39 +507,84 @@ namespace GridKit
         }
       }
 
+      /**
+       * @brief Add bus
+       *
+       */
       void addBus(bus_type* bus)
       {
+        IdxT gridkit_bus_id                  = static_cast<IdxT>(buses_.size());
+        gridkit_bus_indices_[gridkit_bus_id] = bus->busID();
         buses_.push_back(bus);
       }
 
+      /**
+       * @brief Add signal
+       *
+       */
       void addSignal(signal_type* signal)
       {
+        IdxT gridkit_signal_id                     = static_cast<IdxT>(signals_.size());
+        gridkit_signal_indices_[gridkit_signal_id] = signal->signalId();
         signals_.push_back(signal);
       }
 
+      /**
+       * @brief Add component
+       *
+       */
       void addComponent(component_type* component)
       {
+        IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
+        // No user-facing component_id for now, but we could add a map to the disambiguation_string
+        component->setGridKitComponentID(gridkit_component_id);
         components_.push_back(component);
       }
 
+      /**
+       * @brief Add fault
+       *
+       */
       void addFault(component_type* component)
       {
-        components_.push_back(component);
-        faults_.push_back(component);
+        IdxT gridkit_component_id                = static_cast<IdxT>(components_.size());
+        IdxT gridkit_fault_id                    = static_cast<IdxT>(gridkit_fault_indices_.size());
+        gridkit_fault_indices_[gridkit_fault_id] = gridkit_component_id;
+        addComponent(component);
       }
 
-      bus_type* getBus(IdxT busid)
+      /**
+       * @brief Return pointer to a bus
+       *
+       */
+      bus_type* getBus(IdxT bus_id)
       {
-        // Need to implement mapping of bus IDs to buses in the system model
-        assert((buses_[busid])->busID() == busid);
-        return buses_[busid];
+        // Should fail if user-provided bus_id is incorrect
+        IdxT gridkit_bus_id = gridkit_bus_indices_.at(bus_id);
+        assert((buses_[gridkit_bus_id])->busID() == bus_id);
+        return buses_[gridkit_bus_id];
       }
 
-      signal_type* getSignal(IdxT signalid)
+      /**
+       * @brief Return pointer to a signal
+       *
+       */
+      signal_type* getSignal(IdxT signal_id)
       {
-        // Need to implement mapping of signal IDs to signals in the system model
-        assert((signals_[signalid])->signalId() == signalid);
-        return signals_[signalid];
+        // Should fail if user-provided signal_id is incorrect
+        IdxT gridkit_signal_id = gridkit_signal_indices_.at(signal_id);
+        assert((signals_[gridkit_signal_id])->signalId() == signal_id);
+        return signals_[gridkit_signal_id];
+      }
+
+      /**
+       * @brief Return pointer to a component
+       *
+       */
+      component_type* getComponent(IdxT gridkit_component_id)
+      {
+        // gridkit_component_id_ is set by System model and guarantied to be unique
+        return components_[gridkit_component_id];
       }
 
       /**
@@ -528,19 +593,21 @@ namespace GridKit
        * This function is used to provide easier access to setting and
        * clearing faults from the SystemModel interface.
        *
-       * @warning This is a hack to get access to bus faults in examples.
-       * A more comprehensive solution is needed.
        */
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id)
       {
-        return dynamic_cast<BusFault<ScalarT, IdxT>*>(faults_[fault_id]);
+        IdxT component_id = gridkit_fault_indices_.at(fault_id);
+        return dynamic_cast<BusFault<ScalarT, IdxT>*>(components_[component_id]);
       }
 
     private:
       std::vector<bus_type*>       buses_;
       std::vector<signal_type*>    signals_;
       std::vector<component_type*> components_;
-      std::vector<component_type*> faults_;
+
+      std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
+      std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id
+      std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
 
       bool owns_components_{false};
 

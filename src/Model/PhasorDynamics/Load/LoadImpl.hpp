@@ -33,6 +33,7 @@ namespace GridKit
         R_(R),
         X_(X)
     {
+      setDerivedParams();
     }
 
     template <class ScalarT, typename IdxT>
@@ -49,20 +50,24 @@ namespace GridKit
       {
         X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
       }
-    }
 
-    template <class ScalarT, typename IdxT>
-    Load<ScalarT, IdxT>::Load(bus_type* bus, IdxT component_id)
-      : bus_(bus)
-    {
-      size_         = 0;
-      component_id_ = component_id;
+      setDerivedParams();
     }
 
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::~Load()
     {
       // std::cout << "Destroy Load..." << std::endl;
+    }
+
+    /**
+     * @brief Set the component ID
+     */
+    template <class ScalarT, typename IdxT>
+    int Load<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    {
+      gridkit_component_id_ = component_id;
+      return 0;
     }
 
     /*!
@@ -127,6 +132,17 @@ namespace GridKit
       Ii() += f[1];
 
       return 0;
+    }
+
+    /**
+     * @brief Derived parameters
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    void Load<ScalarT, IdxT>::setDerivedParams()
+    {
+      b_ = -X_ / (R_ * R_ + X_ * X_);
+      g_ = R_ / (R_ * R_ + X_ * X_);
     }
 
   } // namespace PhasorDynamics

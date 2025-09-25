@@ -22,6 +22,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class BusFault : public Component<ScalarT, IdxT>
     {
+      using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::nnz_;
@@ -41,6 +42,7 @@ namespace GridKit
       BusFault(bus_type* bus, const DataT& data);
       ~BusFault() = default;
 
+      int setGridKitComponentID(IdxT) override;
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;
@@ -93,7 +95,7 @@ namespace GridKit
       real_type R_{0.0};
       real_type X_{0.0};
       bool      status_{false};
-      IdxT      busID_{0};
+      IdxT      bus_id_{0};
     };
 
   } // namespace PhasorDynamics

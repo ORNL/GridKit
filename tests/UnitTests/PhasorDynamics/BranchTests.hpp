@@ -68,6 +68,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus2(Vr2, Vi2);
 
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        branch.allocate();
         branch.evaluateResidual();
 
         success *= isEqual(bus1.Ir(), Ir1);
@@ -101,6 +102,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
 
         PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, R, X, G, B);
+        branch.allocate();
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
@@ -148,6 +150,7 @@ namespace GridKit
                                                      zero,
                                                      zero,
                                                      zero);
+        branch.allocate();
 
         // Test setting branch series resistance
         branch.setR(R);

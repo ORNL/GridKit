@@ -20,9 +20,9 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus)
-      : bus_(bus), R_(0), X_(0.01), status_(0), busID_(0)
+      : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
     {
-      (void) busID_;
+      (void) bus_id_;
       size_ = 0;
     }
 
@@ -40,7 +40,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, real_type R, real_type X, int status)
-      : bus_(bus), R_(R), X_(X), status_(status), busID_(0)
+      : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
     {
       size_ = 0;
     }
@@ -74,10 +74,20 @@ namespace GridKit
 
       if (data.ports.contains(DataT::Ports::bus))
       {
-        busID_ = data.ports.at(DataT::Ports::bus);
+        bus_id_ = data.ports.at(DataT::Ports::bus);
       }
 
       size_ = 0;
+    }
+
+    /**
+     * @brief Set the component ID
+     */
+    template <class ScalarT, typename IdxT>
+    int BusFault<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    {
+      gridkit_component_id_ = component_id;
+      return 0;
     }
 
     /*!
@@ -119,8 +129,8 @@ namespace GridKit
     {
       if (status_)
       {
-        double B = -X_ / (X_ * X_ + R_ * R_);
-        double G = R_ / (X_ * X_ + R_ * R_);
+        real_type B = -X_ / (X_ * X_ + R_ * R_);
+        real_type G = R_ / (X_ * X_ + R_ * R_);
 
         Ir() += -Vr() * G + Vi() * B;
         Ii() += -Vr() * B - Vi() * G;

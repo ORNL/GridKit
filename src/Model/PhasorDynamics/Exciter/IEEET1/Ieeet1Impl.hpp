@@ -86,12 +86,23 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the component ID
+       */
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
+      /**
        * @brief Allocate memory for model
        *
        */
       template <class ScalarT, typename IdxT>
       int Ieeet1<ScalarT, IdxT>::allocate()
       {
+        // Resize component model data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
         f_.resize(size);
         y_.resize(size);
@@ -131,7 +142,7 @@ namespace GridKit
         // other variables.
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; //<- generator needs to be initialized first
+          efd0 = y_[7]; ///<- generator needs to be initialized first
         }
 
         // Terminal Voltage
