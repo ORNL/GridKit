@@ -5,10 +5,11 @@
  * @brief Example running a 2-bus system with exciter and governor
  *
  */
+#include "TwoBusIeeet1.hpp"
+
 #include <ctime>
 #include <iostream>
 
-#include "TwoBusIeeet1.hpp"
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
