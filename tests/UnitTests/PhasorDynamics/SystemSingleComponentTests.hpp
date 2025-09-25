@@ -10,8 +10,8 @@ namespace GridKit
 {
   namespace Testing
   {
-    /// Test the components (connected to an infinite bus) through the system model with the default
-    /// constructors
+    /// Smoke test for components (single component connected to an infinite bus) 
+    /// through the system model with the minimal constructors
     template <class ScalarT, typename IdxT>
     class SystemSingleComponentTests
     {
@@ -35,13 +35,58 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
         system->addComponent(&branch);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == 0;
         success *= system->size() == branch.size();
+        
+        delete system;
+        system = nullptr;
+
+        return success.report(__func__);
+      }
+
+      TestOutcome bus()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus;
+        system->addBus(&bus);
+
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
+        success *= system->size() == bus.size();
+        
+        delete system;
+        system = nullptr;
+
+        return success.report(__func__);
+      }
+
+      TestOutcome busFault()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
+        system->addBus(&bus);
+
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus);
+        system->addFault(&fault);
+
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
+        success *= system->size() == 0;
+        success *= system->size() == fault.size();
         
         delete system;
         system = nullptr;
@@ -61,11 +106,10 @@ namespace GridKit
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
         system->addComponent(&exciter);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == exciter.size();
         
         delete system;
@@ -86,11 +130,10 @@ namespace GridKit
         PhasorDynamics::Load<ScalarT, IdxT> load(&bus);
         system->addComponent(&load);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == load.size();
         
         delete system;
@@ -108,14 +151,13 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 0); // is unit_id really necessary?
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 0); ///< is unit_id really necessary?
         system->addComponent(&gen);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == gen.size();
         
         delete system;
@@ -133,14 +175,13 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 0); // is unit_id really necessary?
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 0); ///< is unit_id really necessary?
         system->addComponent(&gen);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == gen.size();
         
         delete system;
@@ -158,11 +199,10 @@ namespace GridKit
         PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> tgov1;
         system->addComponent(&tgov1);
 
-        system->allocate();
-        system->initialize();
-        system->evaluateResidual();
-        system->evaluateJacobian();
-
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
         success *= system->size() == tgov1.size();
         
         delete system;
