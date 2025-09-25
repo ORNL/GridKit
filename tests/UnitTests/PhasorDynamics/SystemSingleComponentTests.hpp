@@ -10,7 +10,7 @@ namespace GridKit
 {
   namespace Testing
   {
-    /// Smoke test for components (single component connected to an infinite bus) 
+    /// Smoke test for components (single component connected to an infinite bus)
     /// through the system model with the minimal constructors
     template <class ScalarT, typename IdxT>
     class SystemSingleComponentTests
@@ -41,7 +41,7 @@ namespace GridKit
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == 0;
         success *= system->size() == branch.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -62,7 +62,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == bus.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -87,7 +87,7 @@ namespace GridKit
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == 0;
         success *= system->size() == fault.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -111,7 +111,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == exciter.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -135,7 +135,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == load.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -159,7 +159,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == gen.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -183,7 +183,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == gen.size();
-        
+
         delete system;
         system = nullptr;
 
@@ -204,7 +204,7 @@ namespace GridKit
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == tgov1.size();
-        
+
         delete system;
         system = nullptr;
 
