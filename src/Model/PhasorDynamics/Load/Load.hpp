@@ -27,6 +27,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class Load : public Component<ScalarT, IdxT>
     {
+      using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::nnz_;
       using Component<ScalarT, IdxT>::time_;
@@ -36,7 +37,6 @@ namespace GridKit
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::component_id_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
@@ -45,10 +45,10 @@ namespace GridKit
     public:
       Load(bus_type* bus);
       Load(bus_type* bus, real_type R, real_type X);
-      Load(bus_type* bus, IdxT component_id);
       Load(bus_type* bus, const model_data_type& data);
       virtual ~Load();
 
+      virtual int setGridKitComponentID(IdxT) override;
       virtual int allocate() override;
       virtual int initialize() override;
       virtual int tagDifferentiable() override;
@@ -72,6 +72,8 @@ namespace GridKit
       }
 
     private:
+      void setDerivedParams();
+
       ScalarT& Vr()
       {
         return bus_->Vr();
@@ -93,12 +95,16 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};
       real_type R_{0.1};
       real_type X_{0.01};
+
+      /* Derivied parameters */
+      real_type b_;
+      real_type g_;
     };
 
   } // namespace PhasorDynamics

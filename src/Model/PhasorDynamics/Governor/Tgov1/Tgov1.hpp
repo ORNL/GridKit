@@ -58,6 +58,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       class Tgov1 : public Component<ScalarT, IdxT>
       {
+        using Component<ScalarT, IdxT>::gridkit_component_id_;
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
         using Component<ScalarT, IdxT>::nnz_;
@@ -78,6 +79,7 @@ namespace GridKit
         Tgov1(const model_data_type&);
         ~Tgov1() = default;
 
+        int setGridKitComponentID(IdxT) override;
         int allocate() override;
         int initialize() override;
         int tagDifferentiable() override;

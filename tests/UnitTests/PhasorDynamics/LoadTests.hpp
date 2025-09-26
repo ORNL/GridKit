@@ -114,8 +114,9 @@ namespace GridKit
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+        PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
+        bus.allocate();
+        load.allocate();
         load.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = load.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");

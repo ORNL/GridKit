@@ -70,6 +70,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class Genrou : public Component<ScalarT, IdxT>
     {
+      using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::nnz_;
@@ -120,6 +121,7 @@ namespace GridKit
              real_type S12);
       ~Genrou() = default;
 
+      int setGridKitComponentID(IdxT) override;
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;

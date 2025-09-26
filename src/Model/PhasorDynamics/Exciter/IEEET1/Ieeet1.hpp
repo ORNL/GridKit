@@ -65,6 +65,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       class Ieeet1 : public Component<ScalarT, IdxT>
       {
+        using Component<ScalarT, IdxT>::gridkit_component_id_;
         using Component<ScalarT, IdxT>::alpha_;
         using Component<ScalarT, IdxT>::f_;
         using Component<ScalarT, IdxT>::nnz_;
@@ -89,6 +90,7 @@ namespace GridKit
                const model_data_type& data);
         ~Ieeet1() = default;
 
+        int setGridKitComponentID(IdxT) override;
         int allocate() override;
         int initialize() override;
         int tagDifferentiable() override;

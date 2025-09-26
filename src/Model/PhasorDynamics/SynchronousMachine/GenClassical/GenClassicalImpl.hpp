@@ -24,7 +24,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
       : bus_(bus),
-        busID_(0),
+        bus_id_(0),
         unit_id_(unit_id),
         p0_(0.0),
         q0_(0.0),
@@ -50,7 +50,7 @@ namespace GridKit
                                               real_type Ra,
                                               real_type Xdp)
       : bus_(bus),
-        busID_(0),
+        bus_id_(0),
         unit_id_(unit_id),
         p0_(p0),
         q0_(q0),
@@ -103,11 +103,21 @@ namespace GridKit
 
       if (data.ports.contains(DataT::Ports::bus))
       {
-        busID_ = data.ports.at(DataT::Ports::bus);
+        bus_id_ = data.ports.at(DataT::Ports::bus);
       }
 
       size_ = 5;
       setDerivedParams();
+    }
+
+    /**
+     * @brief Set the component ID
+     */
+    template <class ScalarT, typename IdxT>
+    int GenClassical<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    {
+      gridkit_component_id_ = component_id;
+      return 0;
     }
 
     /**
@@ -116,6 +126,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::allocate()
     {
+      // Resize component model data
       auto size = static_cast<size_t>(size_);
       f_.resize(size);
       y_.resize(size);
@@ -178,7 +189,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
     {
-      // Set variable aliases for better reliability.
+      // Set variable aliases for better readability.
       const ScalarT delta = y[0];
       const ScalarT omega = y[1];
       const ScalarT telec = y[2];
@@ -187,7 +198,7 @@ namespace GridKit
       const ScalarT pmech = pmech_set_; /* Later optionally acquire from governor */
       const ScalarT ep    = ep_set_;    /* Later optionally acquire from exciter */
 
-      // Set derivative aliases for better reliability
+      // Set derivative aliases for better readability
       const ScalarT delta_dot = yp[0];
       const ScalarT omega_dot = yp[1];
 

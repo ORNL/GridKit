@@ -22,6 +22,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::evaluateJacobian()
       {
+        std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
         std::cout << "Jacobian evaluation is experimental!" << std::endl;
         GridKit::Enzyme::Sparse::ModelJacobian<Tgov1<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
 

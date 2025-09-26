@@ -107,9 +107,17 @@ namespace GridKit
         return J_;
       }
 
+      virtual int setGridKitComponentID(IdxT) = 0;
+
+      IdxT getGridKitComponentID() const
+      {
+        return gridkit_component_id_;
+      }
+
     protected:
-      IdxT size_;
-      IdxT nnz_;
+      IdxT gridkit_component_id_{0};
+      IdxT size_{0};
+      IdxT nnz_{0};
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
@@ -277,11 +285,6 @@ namespace GridKit
       {
         throw "ERROR: Method not implemented!\n";
         return gB_;
-      }
-
-      IdxT getComponentID() const
-      {
-        return component_id_;
       }
     };
 

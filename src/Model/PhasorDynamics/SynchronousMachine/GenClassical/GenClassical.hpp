@@ -31,6 +31,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class GenClassical : public Component<ScalarT, IdxT>
     {
+      using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::alpha_;
       using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::nnz_;
@@ -58,6 +59,7 @@ namespace GridKit
       GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 
+      int setGridKitComponentID(IdxT) override;
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;
@@ -104,12 +106,12 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
     private:
       /* Identification */
       bus_type* bus_;
-      IdxT      busID_{0};
+      IdxT      bus_id_{0};
       int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */

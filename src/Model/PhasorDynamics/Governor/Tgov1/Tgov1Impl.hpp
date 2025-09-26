@@ -115,6 +115,16 @@ namespace GridKit
         }
       }
 
+      /**
+       * @brief Set the component ID
+       */
+      template <class ScalarT, typename IdxT>
+      int Tgov1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
       /*!
        * @brief Allocate memory for model
        */
