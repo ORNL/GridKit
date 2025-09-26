@@ -39,7 +39,7 @@ namespace GridKit
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;
 
-      void    set(ScalarT* signal_in);
+      void    set(ScalarT* signal_in, IdxT global_index);
       ScalarT read() const;
       void    init(ScalarT signal_in);
 
@@ -119,6 +119,17 @@ namespace GridKit
         return J_;
       }
 
+      int setVariableIndex(IdxT global_index)
+      {
+        variable_index_ = global_index;
+        return 0;
+      }
+
+      IdxT getVariableIndex() const
+      {
+        return variable_index_;
+      }
+
     private:
       ScalarT* signal_{nullptr};
       IdxT     signal_id_{0};
@@ -128,6 +139,7 @@ namespace GridKit
 
       IdxT size_{0};
       IdxT nnz_{0};
+      IdxT variable_index_{0};
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;

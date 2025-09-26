@@ -271,10 +271,21 @@ namespace GridKit
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
 
+      // Resize coupling data
+      w_.resize(2);
+      h_.resize(2);
+
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
+
       // Set output signal after allocation
       if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
       {
-        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1]);
+        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1], this->getVariableIndex(1));
       }
 
       return 0;
@@ -377,11 +388,15 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution computed locally
+     * @brief Internal residual
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Genrou<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int Genrou<ScalarT, IdxT>::evaluateInternalResidual(
+        ScalarT* y,
+        ScalarT* yp,
+        ScalarT* w,
+        ScalarT* f)
     {
       /* Read variables */
       ScalarT delta  = y[0];
@@ -412,6 +427,10 @@ namespace GridKit
       ScalarT psiqp_dot = yp[4];
       ScalarT Edp_dot   = yp[5];
 
+      // Set coupling variable aliases
+      ScalarT vr = w[0];
+      ScalarT vi = w[1];
+
       /* 6 Genrou differential equations */
       f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
       f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech_ - D_ * omega) / (1.0 + omega) - telec);
@@ -430,8 +449,8 @@ namespace GridKit
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir + G_ * vr_ - B_ * vi_ - inr;
-      f[16] = ii + B_ * vr_ + G_ * vi_ - ini;
+      f[15] = ir + G_ * vr - B_ * vi - inr;
+      f[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou control inputs are set to constant for this example */
       // f[17] = efd_ - efd_set_;
@@ -440,9 +459,27 @@ namespace GridKit
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
       f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
 
-      /* Bus current injection */
-      ir_ = inr - vr_ * G_ + vi_ * B_;
-      ii_ = ini - vr_ * B_ - vi_ * G_;
+      return 0;
+    }
+
+    /**
+     * @brief Bus residual
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int Genrou<ScalarT, IdxT>::evaluateBusResidual(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  w,
+        ScalarT*                  h)
+    {
+      ScalarT inr = y[17];
+      ScalarT ini = y[18];
+      ScalarT vr  = w[0];
+      ScalarT vi  = w[1];
+
+      h[0] = inr - vr * G_ + vi * B_;
+      h[1] = ini - vr * B_ - vi * G_;
 
       return 0;
     }
@@ -475,15 +512,16 @@ namespace GridKit
       }
 
       // Bus voltages
-      vr_ = Vr();
-      vi_ = Vi();
+      w_[0] = Vr();
+      w_[1] = Vi();
 
       // Residual evaluation
-      evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), w_.data(), f_.data());
+      evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
 
       // Genrou contribution to bus algebraic equations
-      Ir() += ir_;
-      Ii() += ii_;
+      Ir() += h_[0];
+      Ii() += h_[1];
 
       return 0;
     }

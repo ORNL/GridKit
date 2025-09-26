@@ -16,10 +16,12 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class BusInfinite : public BusBase<ScalarT, IdxT>
     {
+      using BusBase<ScalarT, IdxT>::bus_id_;
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
       using BusBase<ScalarT, IdxT>::yp_;
       using BusBase<ScalarT, IdxT>::f_;
+      using BusBase<ScalarT, IdxT>::J_;
 
     public:
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
@@ -31,6 +33,7 @@ namespace GridKit
       BusInfinite(const DataT& data);
       virtual ~BusInfinite();
 
+      virtual int setBusID(IdxT) override;
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
       virtual int initialize() override;

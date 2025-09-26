@@ -114,16 +114,52 @@ namespace GridKit
         return gridkit_component_id_;
       }
 
+      int setVariableIndex(IdxT local_index, IdxT global_index)
+      {
+        variable_indices_[local_index] = global_index;
+        return 0;
+      }
+
+      IdxT getVariableIndex(IdxT local_index) const
+      {
+        return variable_indices_.at(local_index);
+      }
+
+      const std::map<IdxT, IdxT>& getVariableIndices() const
+      {
+        return variable_indices_;
+      }
+
+      int setResidualIndex(IdxT local_index, IdxT global_index)
+      {
+        residual_indices_[local_index] = global_index;
+        return 0;
+      }
+
+      IdxT getResidualIndex(IdxT local_index) const
+      {
+        return residual_indices_.at(local_index);
+      }
+
+      const std::map<IdxT, IdxT>& getResidualIndices() const
+      {
+        return residual_indices_;
+      }
+
     protected:
-      IdxT gridkit_component_id_{0};
-      IdxT size_{0};
-      IdxT nnz_{0};
+      IdxT                 gridkit_component_id_{0};
+      IdxT                 size_{0};
+      IdxT                 nnz_{0};
+      std::map<IdxT, IdxT> variable_indices_;
+      std::map<IdxT, IdxT> residual_indices_;
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
+      std::vector<ScalarT> w_;
+      std::vector<ScalarT> h_;
 
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
 
@@ -134,8 +170,6 @@ namespace GridKit
       real_type abs_tol_;
 
       IdxT max_steps_;
-
-      IdxT component_id_;
 
       //
       // Adjoint sensitivity members

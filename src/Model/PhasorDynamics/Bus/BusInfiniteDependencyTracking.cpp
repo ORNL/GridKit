@@ -6,8 +6,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     // Available template instantiations
-    template class BusInfinite<double, long int>;
-    template class BusInfinite<double, size_t>;
+    template class BusInfinite<DependencyTracking::Variable, long int>;
+    template class BusInfinite<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

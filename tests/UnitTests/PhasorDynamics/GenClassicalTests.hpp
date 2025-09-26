@@ -266,11 +266,10 @@ namespace GridKit
         gen.allocate();
         gen.initialize();
 
-        (gen.y()[0]).setVariableNumber(0); ///< Independent variables: first
-        (gen.y()[1]).setVariableNumber(1); ///< Independent variables: second
-        (gen.y()[2]).setVariableNumber(2); ///< Independent variables: third
-        (gen.y()[3]).setVariableNumber(3); ///< Independent variables: fourth
-        (gen.y()[4]).setVariableNumber(4); ///< Independent variables: fifth
+        for (size_t i = 0; i < gen.size(); ++i)
+        {
+          gen.y()[i].setVariableNumber(i); ///< Independent variables
+        }
 
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies

@@ -4,12 +4,14 @@
 #include <iostream>
 
 #include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <Definitions.hpp>
 #include <Model/PhasorDynamics/Branch/Branch.hpp>
 #include <Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
 #include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
+#include <Utilities/MapFromCOO.hpp>
 #include <Utilities/TestHelpers.hpp>
 #include <Utilities/Testing.hpp>
 
@@ -104,72 +106,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome dependencyTracking()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
-
-        // Set bus data
-        data.bus.resize(2);
-
-        // Bus 0
-        data.bus[0].bus_id   = 0;
-        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
-        data.bus[0].Vr0      = 10.0;
-        data.bus[0].Vi0      = 20.0;
-
-        // Bus 1
-        data.bus[1].bus_id   = 1;
-        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
-        data.bus[1].Vr0      = 30.0;
-        data.bus[1].Vi0      = 40.0;
-
-        // Set branch data
-        data.branch.resize(1);
-
-        // Branch 0-1
-        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
-        data.branch[0].parameters[BranchParameters::R] = 2.0;
-        data.branch[0].parameters[BranchParameters::X] = 4.0;
-        data.branch[0].parameters[BranchParameters::G] = 0.2;
-        data.branch[0].parameters[BranchParameters::B] = 1.2;
-
-        // Create an empty system model
-        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
-
-        // Allocate and initialize the system
-        system.allocate();
-        system.initialize();
-
-        // Set independent variables
-        success *= (system.size() == 2);
-        for (size_t i = 0; i < system.size(); ++i)
-        {
-          system.y()[i].setVariableNumber(i);
-        }
-
-        // Evaluate and get the system residuals
-        system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residuals = system.getResidual();
-
-        /// Verify the size and structure of the residual dependencies.
-        /// We expect a 2x2 dense Jacobian for a branch connecting a slack bus and a default bus.
-        /// We are less concerned with the values here, as the goal is to get the sparsity pattern.
-        success *= (residuals.size() == 2);
-        for (size_t i = 0; i < residuals.size(); ++i)
-        {
-          DependencyTracking::Variable                       res           = residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (dependencies.size() == 2);
-          success                                                         *= (dependencies.find(0) != dependencies.end());
-          success                                                         *= (dependencies.find(1) != dependencies.end());
-        }
-
-        return success.report(__func__);
-      }
-
       TestOutcome composer()
       {
         TestStatus success = true;
@@ -214,7 +150,108 @@ namespace GridKit
 
         return success.report(__func__);
       }
-    };
 
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModelData<ScalarT, IdxT> data;
+
+        // Set bus data
+        data.bus.resize(2);
+
+        // Bus 0
+        data.bus[0].bus_id   = 0;
+        data.bus[0].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = 10.0;
+        data.bus[0].Vi0      = 20.0;
+
+        // Bus 1
+        data.bus[1].bus_id   = 1;
+        data.bus[1].bus_type = PhasorDynamics::BusData<ScalarT, IdxT>::BusType::DEFAULT;
+        data.bus[1].Vr0      = 30.0;
+        data.bus[1].Vi0      = 40.0;
+
+        // Set branch data
+        data.branch.resize(1);
+
+        // Branch 0-1
+        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
+        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
+
+        // Jacobian via DependencyTracking
+        std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian(data);
+
+        // Jacobian via Enzyme
+        std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(data);
+
+        /// Compare DependencyTracking dependencies to Enzyme's
+        for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
+        {
+          DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i]));
+        }
+
+        return success.report(__func__);
+      }
+
+    private:
+      std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
+          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+      {
+        // Create an empty system model
+        PhasorDynamics::SystemModel<DependencyTracking::Variable, IdxT> system(data);
+
+        // Allocate and initialize the system
+        system.allocate();
+        system.initialize();
+
+        // Set independent variables
+        for (size_t i = 0; i < system.size(); ++i)
+        {
+          system.y()[i].setVariableNumber(i);
+        }
+
+        // Evaluate and get the system residuals
+        system.evaluateResidual();
+        std::vector<DependencyTracking::Variable> residuals = system.getResidual();
+
+        /// Print the dependencies
+        for (size_t i = 0; i < residuals.size(); ++i)
+        {
+          std::cout << i << "th residual: ";
+          (residuals[i]).print(std::cout);
+          std::cout << "\n";
+        }
+
+        return residuals;
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
+          PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
+      {
+        // Create an empty system model
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+
+        // Allocate and initialize the system
+        system.allocate();
+        system.initialize();
+
+        // Evaluate and get the system Jacobian
+        system.evaluateResidual();
+        system.evaluateJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> system_jacobian = system.getJacobian();
+        system_jacobian.printMatrix("System Jacobian");
+
+        return GridKit::Testing::MapFromCOO(system_jacobian);
+      }
+#endif
+    };
   } // namespace Testing
 } // namespace GridKit

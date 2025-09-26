@@ -1,5 +1,5 @@
 /**
- * @file GenClassical.cpp
+ * @file GenClassical.hpp
  * @author Abdourahman Barry (abdourahman@vt.edu)
  * @author Slaven Peles (peless@ornl.gov)
  *
@@ -40,6 +40,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::w_;
+      using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
@@ -106,7 +108,8 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
       /* Identification */
@@ -131,12 +134,6 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
-
-      /* Local copies of bus variables */
-      ScalarT vr_;
-      ScalarT vi_;
-      ScalarT ir_;
-      ScalarT ii_;
     };
 
   } // namespace PhasorDynamics

@@ -45,6 +45,7 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
       using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::J_;
       using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
 
@@ -292,6 +293,11 @@ namespace GridKit
         for (const auto& bus : buses_)
         {
           bus->allocate();
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus->setVariableIndex(j, size_ + j);
+            bus->setResidualIndex(j, size_ + j);
+          }
           size_ += bus->size();
         }
 
@@ -299,6 +305,11 @@ namespace GridKit
         for (const auto& component : components_)
         {
           component->allocate();
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component->setVariableIndex(j, size_ + j);
+            component->setResidualIndex(j, size_ + j);
+          }
           size_ += component->size();
         }
 
@@ -307,6 +318,13 @@ namespace GridKit
         yp_.resize(size_);
         f_.resize(size_);
         tag_.resize(size_);
+
+        // Default variable and residual index mapping to local index
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
 
         return 0;
       }
@@ -342,9 +360,6 @@ namespace GridKit
        */
       int initialize()
       {
-        // Set initial values for global solution vectors
-        IdxT varOffset = 0;
-
         for (const auto& bus : buses_)
         {
           bus->initialize();
@@ -354,10 +369,9 @@ namespace GridKit
         {
           for (IdxT j = 0; j < bus->size(); ++j)
           {
-            y_[varOffset + j]  = bus->y()[j];
-            yp_[varOffset + j] = bus->yp()[j];
+            y_[bus->getVariableIndex(j)]  = bus->y()[j];
+            yp_[bus->getVariableIndex(j)] = bus->yp()[j];
           }
-          varOffset += bus->size();
         }
 
         // Initialize components
@@ -370,10 +384,9 @@ namespace GridKit
         {
           for (IdxT j = 0; j < component->size(); ++j)
           {
-            y_[varOffset + j]  = component->y()[j];
-            yp_[varOffset + j] = component->yp()[j];
+            y_[component->getVariableIndex(j)]  = component->y()[j];
+            yp_[component->getVariableIndex(j)] = component->yp()[j];
           }
-          varOffset += component->size();
         }
 
         return 0;
@@ -389,15 +402,13 @@ namespace GridKit
       int tagDifferentiable()
       {
         // Set initial values for global solution vectors
-        IdxT offset = 0;
         for (const auto& bus : buses_)
         {
           bus->tagDifferentiable();
           for (IdxT j = 0; j < bus->size(); ++j)
           {
-            tag_[offset + j] = bus->tag()[j];
+            tag_[bus->getVariableIndex(j)] = bus->tag()[j];
           }
-          offset += bus->size();
         }
 
         for (const auto& component : components_)
@@ -405,9 +416,8 @@ namespace GridKit
           component->tagDifferentiable();
           for (IdxT j = 0; j < component->size(); ++j)
           {
-            tag_[offset + j] = component->tag()[j];
+            tag_[component->getVariableIndex(j)] = component->tag()[j];
           }
-          offset += component->size();
         }
 
         return 0;
@@ -433,16 +443,14 @@ namespace GridKit
        */
       int evaluateResidual()
       {
-        // Update variables
-        IdxT varOffset = 0;
+        // Update variables and evaluate component residuals
         for (const auto& bus : buses_)
         {
           for (IdxT j = 0; j < bus->size(); ++j)
           {
-            bus->y()[j]  = y_[varOffset + j];
-            bus->yp()[j] = yp_[varOffset + j];
+            bus->y()[j]  = y_[bus->getVariableIndex(j)];
+            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
           }
-          varOffset += bus->size();
 
           bus->evaluateResidual();
         }
@@ -451,32 +459,28 @@ namespace GridKit
         {
           for (IdxT j = 0; j < component->size(); ++j)
           {
-            component->y()[j]  = y_[varOffset + j];
-            component->yp()[j] = yp_[varOffset + j];
+            component->y()[j]  = y_[component->getVariableIndex(j)];
+            component->yp()[j] = yp_[component->getVariableIndex(j)];
           }
-          varOffset += component->size();
 
           component->evaluateResidual();
         }
 
         // Update residual vector
-        IdxT resOffset = 0;
         for (const auto& bus : buses_)
         {
           for (IdxT j = 0; j < bus->size(); ++j)
           {
-            f_[resOffset + j] = bus->getResidual()[j];
+            f_[bus->getResidualIndex(j)] = bus->getResidual()[j];
           }
-          resOffset += bus->size();
         }
 
         for (const auto& component : components_)
         {
           for (IdxT j = 0; j < component->size(); ++j)
           {
-            f_[resOffset + j] = component->getResidual()[j];
+            f_[component->getResidualIndex(j)] = component->getResidual()[j];
           }
-          resOffset += component->size();
         }
 
         return 0;
@@ -485,13 +489,56 @@ namespace GridKit
       /**
        * @brief Evaluate system Jacobian.
        *
-       * @todo Need to implement Jacobian. For now, using finite difference
-       * approximation provided by IDA. This works for dense Jacobian matrix
-       * only.
+       * @note Experimental Jacobian evaluation
+       * @todo Add a proper way to handle off-diagonal (coupling terms)
        *
        */
       int evaluateJacobian()
       {
+        std::vector<IdxT>    ctemp{};
+        std::vector<IdxT>    rtemp{};
+        std::vector<ScalarT> valtemp{};
+
+        // Initialize bus Jacobians
+        for (const auto& bus : buses_)
+        {
+          bus->evaluateJacobian();
+        }
+
+        // Component Jacobian diagonal blocks
+        // Also updates bus Jacobians
+        for (const auto& component : components_)
+        {
+          component->evaluateJacobian();
+          auto component_jacobian = component->getJacobian();
+
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> component_jacobian_entries = component_jacobian.getEntries();
+          const auto [rows, columns, values]                                                                   = component_jacobian_entries;
+          for (size_t i = 0; i < rows.size(); ++i)
+          {
+            rtemp.push_back(rows[i]);
+            ctemp.push_back(columns[i]);
+            valtemp.push_back(values[i]);
+          }
+        }
+
+        // Bus Jacobian diagonal blocks
+        for (const auto& bus : buses_)
+        {
+          auto bus_jacobian = bus->getJacobian();
+
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+          const auto [rows, columns, values]                                                             = bus_jacobian_entries;
+          for (size_t i = 0; i < rows.size(); ++i)
+          {
+            rtemp.push_back(rows[i]);
+            ctemp.push_back(columns[i]);
+            valtemp.push_back(values[i]);
+          }
+        }
+
+        J_.setValues(rtemp, ctemp, valtemp);
+
         return 0;
       }
 
@@ -510,8 +557,11 @@ namespace GridKit
       /**
        * @brief Add bus
        *
+<<<<<<< HEAD
        * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
        *
+=======
+>>>>>>> 6424c768 (Functional system level Jacobian for internal variables/residuals and bus variables/residuals.)
        */
       void addBus(bus_type* bus)
       {
@@ -523,8 +573,11 @@ namespace GridKit
       /**
        * @brief Add signal
        *
+<<<<<<< HEAD
        * Add signal at the end of the signals array and map signal ID with GridKit's ID for the signal
        *
+=======
+>>>>>>> 6424c768 (Functional system level Jacobian for internal variables/residuals and bus variables/residuals.)
        */
       void addSignal(signal_type* signal)
       {

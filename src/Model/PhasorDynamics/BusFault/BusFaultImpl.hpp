@@ -24,6 +24,7 @@ namespace GridKit
     {
       (void) bus_id_;
       size_ = 0;
+      setDerivedParams();
     }
 
     /**
@@ -43,6 +44,7 @@ namespace GridKit
       : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
     {
       size_ = 0;
+      setDerivedParams();
     }
 
     /**
@@ -78,6 +80,17 @@ namespace GridKit
       }
 
       size_ = 0;
+      setDerivedParams();
+    }
+
+    /**
+     * @brief Set the component ID
+     */
+    template <class ScalarT, typename IdxT>
+    int BusFault<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    {
+      gridkit_component_id_ = component_id;
+      return 0;
     }
 
     /**
@@ -97,6 +110,10 @@ namespace GridKit
     int BusFault<ScalarT, IdxT>::allocate()
     {
       // std::cout << "Allocate BusFault..." << std::endl;
+
+      w_.resize(2);
+      h_.resize(2);
+
       return 0;
     }
 
@@ -120,6 +137,24 @@ namespace GridKit
     }
 
     /**
+     * @brief Bus residual
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int BusFault<ScalarT, IdxT>::evaluateBusResidual(
+        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* w, ScalarT* h)
+    {
+      ScalarT Vr = w[0];
+      ScalarT Vi = w[1];
+      ScalarT Ir = -Vr * G_ + Vi * B_;
+      ScalarT Ii = -Vr * B_ - Vi * G_;
+      h[0]       = Ir;
+      h[1]       = Ii;
+
+      return 0;
+    }
+
+    /**
      * \brief Residual contribution of the branch is pushed to the
      * two terminal buses.
      *
@@ -129,28 +164,24 @@ namespace GridKit
     {
       if (status_)
       {
-        real_type B = -X_ / (X_ * X_ + R_ * R_);
-        real_type G = R_ / (X_ * X_ + R_ * R_);
-
-        Ir() += -Vr() * G + Vi() * B;
-        Ii() += -Vr() * B - Vi() * G;
+        w_[0] = Vr();
+        w_[1] = Vi();
+        evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
+        Ir() += h_[0];
+        Ii() += h_[1];
       }
       return 0;
     }
 
     /**
-     * @brief Jacobian evaluation not implemented yet
+     * @brief Derived parameters
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
      */
     template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::evaluateJacobian()
+    void BusFault<ScalarT, IdxT>::setDerivedParams()
     {
-      std::cout << "Evaluate Jacobian for BusFault..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
-      return 0;
+      B_ = -X_ / (X_ * X_ + R_ * R_);
+      G_ = R_ / (X_ * X_ + R_ * R_);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

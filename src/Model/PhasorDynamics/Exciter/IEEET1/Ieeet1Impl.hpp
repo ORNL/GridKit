@@ -65,6 +65,16 @@ namespace GridKit
       }
 
       /**
+       * @brief Set the component ID
+       */
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
+      /**
        * @brief  Constructor for IEEET1 Exciter
        *
        * @param bus   Signal used for terminal reference vmag
@@ -109,12 +119,19 @@ namespace GridKit
         yp_.resize(size);
         tag_.resize(size);
 
+        // Default variable and residual index mapping to local index
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
+
         // Set output signal after allocation. Check if system composer
         // requested Efd and, if so, connect it to the signal node.
         // The signal is accessible to any object connecting to the signal node
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7]);
+          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], this->getVariableIndex(7));
         }
 
         return 0;
@@ -142,7 +159,7 @@ namespace GridKit
         // other variables.
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; //<- generator needs to be initialized first
+          efd0 = y_[7]; ///<- generator needs to be initialized first
         }
 
         // Terminal Voltage

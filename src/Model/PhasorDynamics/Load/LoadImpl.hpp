@@ -33,6 +33,7 @@ namespace GridKit
         R_(R),
         X_(X)
     {
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -51,6 +52,7 @@ namespace GridKit
         X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
       }
 
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -77,6 +79,10 @@ namespace GridKit
     int Load<ScalarT, IdxT>::allocate()
     {
       // std::cout << "Allocate Load..." << std::endl;
+
+      w_.resize(2);
+      h_.resize(2);
+
       return 0;
     }
 
@@ -100,17 +106,19 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution computed locally
+     * @brief Bus residual
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateBusResidual(
+        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* w, ScalarT* h)
     {
-      real_type b = -X_ / (R_ * R_ + X_ * X_);
-      real_type g = R_ / (R_ * R_ + X_ * X_);
-
-      f[0] = -g * y[0] + b * y[1];
-      f[1] = -b * y[0] - g * y[1];
+      ScalarT Vr = w[0];
+      ScalarT Vi = w[1];
+      ScalarT Ir = -g_ * Vr + b_ * Vi;
+      ScalarT Ii = -b_ * Vr - g_ * Vi;
+      h[0]       = Ir;
+      h[1]       = Ii;
 
       return 0;
     }
@@ -122,14 +130,11 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateResidual()
     {
-      std::vector<ScalarT> y(2);
-      std::vector<ScalarT> yp(2);
-      std::vector<ScalarT> f(2);
-      y[0] = Vr();
-      y[1] = Vi();
-      evaluateResidualLocally(y.data(), yp.data(), f.data());
-      Ir() += f[0];
-      Ii() += f[1];
+      w_[0] = Vr();
+      w_[1] = Vi();
+      evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
+      Ir() += h_[0];
+      Ii() += h_[1];
 
       return 0;
     }
