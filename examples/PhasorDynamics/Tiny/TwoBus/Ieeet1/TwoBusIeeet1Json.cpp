@@ -39,7 +39,7 @@ int main()
             "header": {
                 "format_version": 0,
                 "format_revision": 1,
-                "case_name": "Two-bus test case 2",
+                "case_name": "2-bus test case with governor and exciter",
                 "case_description": "A two-bus test case for demonstrating the dynamics format",
                 "case_comments": "This case is set up to monitor the voltage at both buses and the machine angle and speed",
                 "freq_base": 60.0,
