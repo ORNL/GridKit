@@ -142,7 +142,7 @@ namespace GridKit
         // other variables.
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; ///<- generator needs to be initialized first
+          efd0 = y_[7]; //<- generator needs to be initialized first
         }
 
         // Terminal Voltage

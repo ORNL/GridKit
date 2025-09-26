@@ -160,7 +160,7 @@ namespace GridKit
         // Initial mechanical = initial electric torque
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          p0 = y_[2]; ///<- generator needs to be initialized first
+          p0 = y_[2]; //<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
