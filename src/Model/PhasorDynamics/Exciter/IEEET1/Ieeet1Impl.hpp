@@ -98,16 +98,14 @@ namespace GridKit
         yp_.resize(size);
         tag_.resize(size);
 
-        // Set output signal after allocation
+        // Set output signal after allocation. Check if system composer
+        // requested Efd and, if so, connect it to the signal node.
         // The signal is accessible to any object connecting to the signal node
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
           signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7]);
         }
-        // if (efd_signal_)
-        // {
-        //   efd_signal_->set(&y_[7]);
-        // }
+
         return 0;
       }
 
@@ -126,14 +124,15 @@ namespace GridKit
         ScalarT efd0{0};
 
         // Initial Efd set by generator
+        // The exciter object has no way of knowing if the generator
+        // has set the initial value for Efd.
+        // TODO: Build protections in system initialization call to
+        // ensure Efd is initialized externally before the exciter initializes
+        // other variables.
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
           efd0 = y_[7]; //<- generator needs to be initialized first
         }
-        // if (efd_signal_)
-        // {
-        //   efd0 = y_[7]; //<- TODO generator sets efd initial value
-        // }
 
         // Terminal Voltage
         ScalarT vreal = bus_->Vr();
@@ -246,25 +245,18 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Ieeet1<ScalarT, IdxT>::evaluateResidual()
       {
-
         // Input Variables
         ScalarT omega{0};
-        // if (speed_signal_)
-        // {
-        //   // Meta PR Note
-        //   // This seems to be very slow,
-        //   // but I see how read/write ownership may require this
-        //   //
-        //   // I believe implementing the equivalent to signal->read()
-        //   // at the system level would address this, by routing
-        //   // external signals into a generic inputs_ vector
-        //   // at the same time as the internal state values y_
-        //   // are recieved from IDA.
-        //   omega = speed_signal_->read();
-        // }
 
-        // Input Variables
-
+        // Set Input Variables
+        // Meta PR Note: This seems to be very slow,
+        // but I see how read/write ownership may require this
+        //
+        // I believe implementing the equivalent to signal->read()
+        // at the system level would address this, by routing
+        // external signals into a generic inputs_ vector
+        // at the same time as the internal state values y_
+        // are recieved from IDA.
         if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
           omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
@@ -312,7 +304,7 @@ namespace GridKit
         // NOTE seems about double PW saturation.
         f_[8] = -ksat;
         if (efdp > SA_)
-          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //
+          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_);
 
         return 0;
       }
