@@ -32,7 +32,7 @@ namespace GridKit
           yp_.data(),
           w_.data(),
           J_);
-      
+
       J_.printMatrix("GenClassical internal Jacobian");
 
       return 0;
