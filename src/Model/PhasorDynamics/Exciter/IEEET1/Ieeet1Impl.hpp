@@ -65,6 +65,27 @@ namespace GridKit
       }
 
       /**
+       * @brief  Constructor for IEEET1 Exciter
+       *
+       * @param bus   Signal used for terminal reference vmag
+       * @param data  Data object to store parameters
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
+       */
+      template <class ScalarT, typename IdxT>
+      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
+                                    const model_data_type& data)
+        : bus_(bus)
+      {
+
+        // Parse data struct into model
+        this->initModelParams(data);
+
+        // 9 Internal Variables
+        size_ = 9;
+      }
+
+      /**
        * @brief Allocate memory for model
        *
        */
@@ -77,12 +98,14 @@ namespace GridKit
         yp_.resize(size);
         tag_.resize(size);
 
-        // Set output signal after allocation
-        // The signal is accessible to the generator
-        if (efd_signal_)
+        // Set output signal after allocation. Check if system composer
+        // requested Efd and, if so, connect it to the signal node.
+        // The signal is accessible to any object connecting to the signal node
+        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd_signal_->set(&y_[7]);
+          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7]);
         }
+
         return 0;
       }
 
@@ -99,9 +122,16 @@ namespace GridKit
 
         // External Variables
         ScalarT efd0{0};
-        if (efd_signal_)
+
+        // Initial Efd set by generator
+        // The exciter object has no way of knowing if the generator
+        // has set the initial value for Efd.
+        // TODO: Build protections in system initialization call to
+        // ensure Efd is initialized externally before the exciter initializes
+        // other variables.
+        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; //<- TODO generator sets efd initial value
+          efd0 = y_[7]; //<- generator needs to be initialized first
         }
 
         // Terminal Voltage
@@ -215,21 +245,21 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Ieeet1<ScalarT, IdxT>::evaluateResidual()
       {
-
         // Input Variables
         ScalarT omega{0};
-        if (speed_signal_)
+
+        // Set Input Variables
+        // Meta PR Note: This seems to be very slow,
+        // but I see how read/write ownership may require this
+        //
+        // I believe implementing the equivalent to signal->read()
+        // at the system level would address this, by routing
+        // external signals into a generic inputs_ vector
+        // at the same time as the internal state values y_
+        // are recieved from IDA.
+        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
-          // Meta PR Note
-          // This seems to be very slow,
-          // but I see how read/write ownership may require this
-          //
-          // I believe implementing the equivalent to signal->read()
-          // at the system level would address this, by routing
-          // external signals into a generic inputs_ vector
-          // at the same time as the internal state values y_
-          // are recieved from IDA.
-          omega = speed_signal_->read();
+          omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
         }
 
         // Read E comp (terminal voltage, unless compensation impedance)
@@ -274,7 +304,7 @@ namespace GridKit
         // NOTE seems about double PW saturation.
         f_[8] = -ksat;
         if (efdp > SA_)
-          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_); //
+          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_);
 
         return 0;
       }

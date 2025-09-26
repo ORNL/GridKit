@@ -10,6 +10,7 @@
 #pragma once
 
 #include <Model/PhasorDynamics/Component.hpp>
+#include <Model/PhasorDynamics/ComponentSignals.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -37,6 +38,29 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /// Internal variables of a `Ieeet1`
+      enum class Ieeet1InternalVariables : size_t
+      {
+        VTS,  ///< Sensed term voltage
+        VR,   ///< Voltage regulation
+        EFDP, ///< Efd (pre multiplication)
+        VFX,  ///< Exciter feedback
+        VTR,  ///< Terminal voltage error
+        VF,   ///< Feedback voltage
+        VE,   ///< Exciter control voltage
+        EFD,  ///< Efd
+        KSAT, ///< Saturation
+        MAXIMUM,
+      };
+
+      /// External variables of a `Ieeet1`
+      enum class Ieeet1ExternalVariables : size_t
+      {
+        OMEGA, ///< Generator speed deviation
+        VREAL, ///< Real bus voltage
+        VIMAG, ///< Imaginary bus voltage
+        MAXIMUM,
+      };
 
       template <class ScalarT, typename IdxT>
       class Ieeet1 : public Component<ScalarT, IdxT>
@@ -57,11 +81,12 @@ namespace GridKit
 
       public:
         Ieeet1(bus_type* bus);
-        Ieeet1(
-            signal_type*           efd_signal,
-            signal_type*           speed_signal,
-            bus_type*              bus,
-            const model_data_type& data);
+        Ieeet1(signal_type*           efd_signal,
+               signal_type*           speed_signal,
+               bus_type*              bus,
+               const model_data_type& data);
+        Ieeet1(bus_type*              bus,
+               const model_data_type& data);
         ~Ieeet1() = default;
 
         int allocate() override;
@@ -72,6 +97,16 @@ namespace GridKit
 
         void updateTime(real_type /* t */, real_type /* a */) override
         {
+        }
+
+        /// Get the `ComponentSignals` from this `GenClassical`
+        auto getSignals()
+            -> ComponentSignals<ScalarT,
+                                IdxT,
+                                Ieeet1InternalVariables,
+                                Ieeet1ExternalVariables>&
+        {
+          return signals_;
         }
 
       private:
@@ -108,6 +143,9 @@ namespace GridKit
         ScalarT vOEL_{0};
         ScalarT vS_{0};
         ScalarT Ec_{0}; // "Compensated" terminal measurment
+
+        /// Component signal extension
+        ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
         // Scale of Sigmoid function
         // (temporary local implementation)

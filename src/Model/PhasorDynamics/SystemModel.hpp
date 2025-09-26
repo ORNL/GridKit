@@ -73,6 +73,7 @@ namespace GridKit
       SystemModel(SystemModelData<real_type, IdxT>& data)
       {
         using namespace Governor;
+        using namespace Exciter;
 
         // Set system model tolerances
         rel_tol_         = 1e-7;
@@ -154,6 +155,12 @@ namespace GridKit
             gen->getSignals().template attachSignalNode<GenrouExternalVariables::PM>(getSignal(pmech));
           }
 
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::efd))
+          {
+            IdxT efd = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::efd);
+            gen->getSignals().template attachSignalNode<GenrouExternalVariables::EFD>(getSignal(efd));
+          }
+
           addComponent(gen);
         }
 
@@ -187,6 +194,31 @@ namespace GridKit
           }
 
           addComponent(gov);
+        }
+
+        for (const auto& excitedata : data.exciter)
+        {
+          IdxT bus_index = 0;
+          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::bus);
+          }
+
+          auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+
+          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::speed))
+          {
+            IdxT speed = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::speed);
+            exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::OMEGA>(getSignal(speed));
+          }
+
+          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::efd))
+          {
+            IdxT efd = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::efd);
+            exciter->getSignals().template assignSignalNode<Ieeet1InternalVariables::EFD>(getSignal(efd));
+          }
+
+          addComponent(exciter);
         }
 
         // Add faults

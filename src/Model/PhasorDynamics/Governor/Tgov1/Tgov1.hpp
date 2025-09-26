@@ -90,7 +90,7 @@ namespace GridKit
         {
         }
 
-        /// Get the `ComponentSignals` from this `GenClassical`
+        /// Get the `ComponentSignals` from this `Tgov1`
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
@@ -101,7 +101,7 @@ namespace GridKit
         }
 
       public:
-        __attribute__((always_inline)) int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
 
       private:
         // Input parameters
