@@ -93,16 +93,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Set the component ID
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
-    {
-      gridkit_component_id_ = component_id;
-      return 0;
-    }
-
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */

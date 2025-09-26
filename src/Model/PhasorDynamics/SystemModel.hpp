@@ -557,11 +557,8 @@ namespace GridKit
       /**
        * @brief Add bus
        *
-<<<<<<< HEAD
        * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
        *
-=======
->>>>>>> 6424c768 (Functional system level Jacobian for internal variables/residuals and bus variables/residuals.)
        */
       void addBus(bus_type* bus)
       {
@@ -573,11 +570,8 @@ namespace GridKit
       /**
        * @brief Add signal
        *
-<<<<<<< HEAD
        * Add signal at the end of the signals array and map signal ID with GridKit's ID for the signal
        *
-=======
->>>>>>> 6424c768 (Functional system level Jacobian for internal variables/residuals and bus variables/residuals.)
        */
       void addSignal(signal_type* signal)
       {
