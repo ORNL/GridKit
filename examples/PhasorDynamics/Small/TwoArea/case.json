@@ -4,7 +4,7 @@
         "format_revision": 1,
         "case_name": "two_area_case",
         "case_description": "None",
-        "case_comments": "CASE COMMENTS",
+        "case_comments": "No Case Comments",
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
