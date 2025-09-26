@@ -538,7 +538,7 @@ namespace GridKit
        *
        * Add component at the end of the components array and set GridKit's component ID
        *
-       * @todo: No integer user-facing component_id for now, but we could map GridKit's 
+       * @todo: No integer user-facing component_id for now, but we could map GridKit's
        * component ID to the disambiguation_string
        *
        */
