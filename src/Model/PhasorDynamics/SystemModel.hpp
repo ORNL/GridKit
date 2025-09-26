@@ -312,7 +312,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Assume that jacobian is not avalible
+       * @brief Assume that jacobian is not available
        *
        * @return true
        * @return false
@@ -510,6 +510,8 @@ namespace GridKit
       /**
        * @brief Add bus
        *
+       * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
+       *
        */
       void addBus(bus_type* bus)
       {
@@ -520,6 +522,8 @@ namespace GridKit
 
       /**
        * @brief Add signal
+       *
+       * Add signal at the end of the signals array and map signal ID with GridKit's ID for the signal
        *
        */
       void addSignal(signal_type* signal)
@@ -532,17 +536,24 @@ namespace GridKit
       /**
        * @brief Add component
        *
+       * Add component at the end of the components array and set GridKit's component ID
+       *
+       * @todo: No integer user-facing component_id for now, but we could map GridKit's 
+       * component ID to the disambiguation_string
+       *
        */
       void addComponent(component_type* component)
       {
         IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
-        // No user-facing component_id for now, but we could add a map to the disambiguation_string
         component->setGridKitComponentID(gridkit_component_id);
         components_.push_back(component);
       }
 
       /**
        * @brief Add fault
+       *
+       * The fault is added to the components array, and we keep a map to its
+       * location, so it can easily be accessed.
        *
        */
       void addFault(component_type* component)
