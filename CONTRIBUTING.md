@@ -479,3 +479,11 @@ class Matrix   // No, class is outside GridKit namespace
 
 ## Development Container
 A development container is available for all developers using VS Code to develop. This will automatically install all pre-requisite software you need to develop in GridKit. Any developer who wishes to use this setup can follow [this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and simply use the option "Reopen Folder in Container" rather than "New Dev Container...", which will automatically build the included container.
+
+
+## Electric Grid Test Cases
+
+When adding a new test case to to the repository using the GridKit input file format, you should follow the following guidelines to remain constistant with existing GridKit cases. For each test case, the associated README.md should contain the following:
+- A oneline diagram ($\geq$ 600 dpi)
+
+Continue more with standards, or give an example here.
