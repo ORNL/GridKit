@@ -266,18 +266,18 @@ namespace GridKit
           std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
-            for (size_t res_i = 0; res_i < n_res; ++res_i)
+            for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
 
               // Elementary vector for Jacobian-vector product
-              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              for (size_t res_i = 0; res_i < n_res; ++res_i)
               {
-                elementary_v[var_i] = 0.0;
+                elementary_v[res_i] = 0.0;
               }
-              elementary_v[res_i] = 1.0;
+              elementary_v[var_i] = 1.0;
 
               // Autodiff
               __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
@@ -331,18 +331,18 @@ namespace GridKit
           std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
-            for (size_t res_i = 0; res_i < n_res; ++res_i)
+            for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
 
               // Elementary vector for Jacobian-vector product
-              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              for (size_t res_i = 0; res_i < n_res; ++res_i)
               {
-                elementary_v[var_i] = 0.0;
+                elementary_v[res_i] = 0.0;
               }
-              elementary_v[res_i] = 1.0;
+              elementary_v[var_i] = 1.0;
 
               // Autodiff
               __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
@@ -396,18 +396,18 @@ namespace GridKit
           std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
-            for (size_t res_i = 0; res_i < n_res; ++res_i)
+            for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
 
               // Elementary vector for Jacobian-vector product
-              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              for (size_t res_i = 0; res_i < n_res; ++res_i)
               {
-                elementary_v[var_i] = 0.0;
+                elementary_v[res_i] = 0.0;
               }
-              elementary_v[res_i] = 1.0;
+              elementary_v[var_i] = 1.0;
 
               // Autodiff
               __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
