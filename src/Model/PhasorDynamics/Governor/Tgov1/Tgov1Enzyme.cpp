@@ -28,16 +28,15 @@ namespace GridKit
         GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
                                                   GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                                   ScalarT,
-                                                  IdxT>::eval(
-            this,
-            f_.size(),
-            y_.size(),
-            this->getResidualIndices(),
-            this->getVariableIndices(),
-            y_.data(),
-            yp_.data(),
-            w_.data(),
-            J_);
+                                                  IdxT>::eval(this,
+                                                              f_.size(),
+                                                              y_.size(),
+                                                              this->getResidualIndices(),
+                                                              this->getVariableIndices(),
+                                                              y_.data(),
+                                                              yp_.data(),
+                                                              w_.data(),
+                                                              J_);
 
         J_.printMatrix("Tgov1 internal Jacobian");
 

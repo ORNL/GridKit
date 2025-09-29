@@ -54,9 +54,9 @@ namespace GridKit
       };
 
       /**
-        * @brief Residual wrapper partial template specialization for BusResidual
-        *
-        */
+       * @brief Residual wrapper partial template specialization for BusResidual
+       *
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual, ScalarT>
       {
@@ -67,9 +67,9 @@ namespace GridKit
       };
 
       /**
-        * @brief Residual wrapper partial template specialization for BusResidual11
-        *
-        */
+       * @brief Residual wrapper partial template specialization for BusResidual11
+       *
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual11, ScalarT>
       {
@@ -80,9 +80,9 @@ namespace GridKit
       };
 
       /**
-        * @brief Residual wrapper partial template specialization for BusResidual12
-        *
-        */
+       * @brief Residual wrapper partial template specialization for BusResidual12
+       *
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual12, ScalarT>
       {
@@ -93,9 +93,9 @@ namespace GridKit
       };
 
       /**
-        * @brief Residual wrapper partial template specialization for BusResidual21
-        *
-        */
+       * @brief Residual wrapper partial template specialization for BusResidual21
+       *
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual21, ScalarT>
       {
@@ -106,9 +106,9 @@ namespace GridKit
       };
 
       /**
-        * @brief Residual wrapper partial template specialization for BusResidual22
-        *
-        */
+       * @brief Residual wrapper partial template specialization for BusResidual22
+       *
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual22, ScalarT>
       {
@@ -244,7 +244,7 @@ namespace GridKit
        * @param[in,out] jac - Jacobian
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      struct InternalJacobian 
+      struct InternalJacobian
       {
         static void eval(ModelT*                                            model,
                          size_t                                             n_res,
@@ -306,10 +306,10 @@ namespace GridKit
 
       /**
        * @brief Enzyme automatic differentiation Jacobian evaluator: Bus Jacobian
-       * 
+       *
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      struct BusJacobian 
+      struct BusJacobian
       {
         static void eval(ModelT*                                            model,
                          size_t                                             n_res,
@@ -371,7 +371,7 @@ namespace GridKit
 
       /**
        * @brief Enzyme automatic differentiation Jacobian evaluator: Branch Jacobian
-       * 
+       *
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BranchJacobian

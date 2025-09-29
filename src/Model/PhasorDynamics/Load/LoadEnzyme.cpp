@@ -22,16 +22,15 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                            ScalarT,
-                                           IdxT>::eval(
-          this,
-          static_cast<size_t>(bus_->size()),
-          static_cast<size_t>(bus_->size()),
-          bus_->getResidualIndices(),
-          bus_->getVariableIndices(),
-          y_.data(),
-          yp_.data(),
-          (bus_->y()).data(),
-          bus_->getJacobian());
+                                           IdxT>::eval(this,
+                                                       static_cast<size_t>(bus_->size()),
+                                                       static_cast<size_t>(bus_->size()),
+                                                       bus_->getResidualIndices(),
+                                                       bus_->getVariableIndices(),
+                                                       y_.data(),
+                                                       yp_.data(),
+                                                       (bus_->y()).data(),
+                                                       bus_->getJacobian());
 
       return 0;
     }

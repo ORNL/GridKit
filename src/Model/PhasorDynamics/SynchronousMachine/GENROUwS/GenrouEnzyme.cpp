@@ -22,32 +22,30 @@ namespace GridKit
       GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                                 GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                                 ScalarT,
-                                                IdxT>::eval(
-          this,
-          f_.size(),
-          y_.size(),
-          this->getResidualIndices(),
-          this->getVariableIndices(),
-          y_.data(),
-          yp_.data(),
-          w_.data(),
-          J_);
+                                                IdxT>::eval(this,
+                                                            f_.size(),
+                                                            y_.size(),
+                                                            this->getResidualIndices(),
+                                                            this->getVariableIndices(),
+                                                            y_.data(),
+                                                            yp_.data(),
+                                                            w_.data(),
+                                                            J_);
 
       J_.printMatrix("Genrou internal Jacobian");
 
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                            ScalarT,
-                                           IdxT>::eval(
-          this,
-          static_cast<size_t>(bus_->size()),
-          static_cast<size_t>(bus_->size()),
-          bus_->getResidualIndices(),
-          bus_->getVariableIndices(),
-          y_.data(),
-          yp_.data(),
-          (bus_->y()).data(),
-          bus_->getJacobian());
+                                           IdxT>::eval(this,
+                                                       static_cast<size_t>(bus_->size()),
+                                                       static_cast<size_t>(bus_->size()),
+                                                       bus_->getResidualIndices(),
+                                                       bus_->getVariableIndices(),
+                                                       y_.data(),
+                                                       yp_.data(),
+                                                       (bus_->y()).data(),
+                                                       bus_->getJacobian());
 
       return 0;
     }

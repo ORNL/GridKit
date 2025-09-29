@@ -22,16 +22,15 @@ namespace GridKit
       GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
                                                 GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                                 ScalarT,
-                                                IdxT>::eval(
-          this,
-          f_.size(),
-          y_.size(),
-          this->getResidualIndices(),
-          this->getVariableIndices(),
-          y_.data(),
-          yp_.data(),
-          w_.data(),
-          J_);
+                                                IdxT>::eval(this,
+                                                            f_.size(),
+                                                            y_.size(),
+                                                            this->getResidualIndices(),
+                                                            this->getVariableIndices(),
+                                                            y_.data(),
+                                                            yp_.data(),
+                                                            w_.data(),
+                                                            J_);
 
       J_.printMatrix("GenClassical internal Jacobian");
 
