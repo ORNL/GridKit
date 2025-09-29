@@ -262,10 +262,10 @@ namespace GridKit
                          ScalarT*                                           w,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          std::vector<Triple<ScalarT>> triplets;
-          std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
+            std::vector<Triple<ScalarT>> triplets;
+            std::vector<ScalarT>         elementary_v(n_res);
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
@@ -327,10 +327,10 @@ namespace GridKit
                          ScalarT*                                           w,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          std::vector<Triple<ScalarT>> triplets;
-          std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
+            std::vector<Triple<ScalarT>> triplets;
+            std::vector<ScalarT>         elementary_v(n_res);
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
@@ -392,10 +392,10 @@ namespace GridKit
                          ScalarT*                                           w,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          std::vector<Triple<ScalarT>> triplets;
-          std::vector<ScalarT>         elementary_v(n_var);
           if (n_res > 0 && n_var > 0)
           {
+            std::vector<Triple<ScalarT>> triplets;
+            std::vector<ScalarT>         elementary_v(n_res);
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage
