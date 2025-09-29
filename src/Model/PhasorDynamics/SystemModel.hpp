@@ -489,8 +489,14 @@ namespace GridKit
       /**
        * @brief Evaluate system Jacobian.
        *
-       * @note Experimental Jacobian evaluation
-       * @todo Add a proper way to handle off-diagonal (coupling terms)
+       * First, initialize bus Jacobians to 0. 
+       * Then, evaluate component Jacobians (internal block and bus Jacobian contributions). 
+       * Once component Jacobians are evaluated, store the result in the system Jacobian. 
+       * Finally, store bus Jacobians into the system Jacobian after all component have added their 
+       * contributions.
+       *
+       * @todo split the initial assembly from updating values. This will the
+       * slow otherwise.
        *
        */
       int evaluateJacobian()
@@ -505,7 +511,7 @@ namespace GridKit
           bus->evaluateJacobian();
         }
 
-        // Component Jacobian diagonal blocks
+        // Jacobian blocks owed by components
         // Also updates bus Jacobians
         for (const auto& component : components_)
         {
@@ -522,7 +528,7 @@ namespace GridKit
           }
         }
 
-        // Bus Jacobian diagonal blocks
+        // Bus Jacobians
         for (const auto& bus : buses_)
         {
           auto bus_jacobian = bus->getJacobian();

@@ -6,7 +6,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation experimental. This sets values to, for other
+     * @brief Jacobian evaluation experimental. This sets values to 0, for other
      * components to add their contributions.
      *
      * @warning This implementation assumes bus Jacobians are always evaluated
