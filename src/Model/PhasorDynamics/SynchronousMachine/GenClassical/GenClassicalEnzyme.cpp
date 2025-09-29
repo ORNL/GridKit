@@ -1,3 +1,8 @@
+/**
+ * @file GenClassicalEnzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ *
+ */
 
 #include "GenClassicalImpl.hpp"
 #include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>

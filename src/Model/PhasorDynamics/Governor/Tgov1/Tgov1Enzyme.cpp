@@ -1,5 +1,6 @@
 /**
  * @file Tgov1Enzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
 

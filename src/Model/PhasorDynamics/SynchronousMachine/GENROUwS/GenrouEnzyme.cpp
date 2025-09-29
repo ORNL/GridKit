@@ -1,3 +1,8 @@
+/**
+ * @file GenrouEnzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ *
+ */
 
 #include "GenrouImpl.hpp"
 #include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>

@@ -1,3 +1,9 @@
+/**
+ * @file SparseWrapper.hpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ *
+ */
+
 #pragma once
 
 #include <vector>

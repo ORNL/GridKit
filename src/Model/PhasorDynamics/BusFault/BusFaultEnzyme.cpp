@@ -1,3 +1,8 @@
+/**
+ * @file BusFaultEnzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ *
+ */
 
 #include "BusFaultImpl.hpp"
 #include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
