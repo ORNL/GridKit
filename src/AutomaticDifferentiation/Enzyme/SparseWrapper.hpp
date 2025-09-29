@@ -226,7 +226,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Function that computes the Jacobian via automatic differentiation
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
@@ -244,194 +244,195 @@ namespace GridKit
        * @param[in,out] jac - Jacobian
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      void InternalJacobian(ModelT*                                            model,
-                            size_t                                             n_res,
-                            size_t                                             n_var,
-                            const std::map<IdxT, IdxT>&                        res_indices,
-                            const std::map<IdxT, IdxT>&                        var_indices,
-                            ScalarT*                                           y,
-                            ScalarT*                                           yp,
-                            ScalarT*                                           w,
-                            GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      struct InternalJacobian 
       {
-        std::vector<Triple<ScalarT>> triplets;
-        std::vector<ScalarT>         elementary_v(n_var);
-        if (n_res > 0 && n_var > 0)
+        static void eval(ModelT*                                            model,
+                         size_t                                             n_res,
+                         size_t                                             n_var,
+                         const std::map<IdxT, IdxT>&                        res_indices,
+                         const std::map<IdxT, IdxT>&                        var_indices,
+                         ScalarT*                                           y,
+                         ScalarT*                                           yp,
+                         ScalarT*                                           w,
+                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          for (size_t res_i = 0; res_i < n_res; ++res_i)
+          std::vector<Triple<ScalarT>> triplets;
+          std::vector<ScalarT>         elementary_v(n_var);
+          if (n_res > 0 && n_var > 0)
           {
-            // Sparse storage
-            ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-            ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
-
-            // Elementary vector for Jacobian-vector product
-            for (size_t var_i = 0; var_i < n_var; ++var_i)
+            for (size_t res_i = 0; res_i < n_res; ++res_i)
             {
-              elementary_v[var_i] = 0.0;
+              // Sparse storage
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+
+              // Elementary vector for Jacobian-vector product
+              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              {
+                elementary_v[var_i] = 0.0;
+              }
+              elementary_v[res_i] = 1.0;
+
+              // Autodiff
+              __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
+                                     enzyme_const,
+                                     model,
+                                     enzyme_dup,
+                                     y,
+                                     output,
+                                     enzyme_const,
+                                     yp,
+                                     enzyme_const,
+                                     w,
+                                     enzyme_dupnoneed,
+                                     elementary_v.data(),
+                                     d_output);
             }
-            elementary_v[res_i] = 1.0;
 
-            // Autodiff
-            __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
-                                   enzyme_const,
-                                   model,
-                                   enzyme_dup,
-                                   y,
-                                   output,
-                                   enzyme_const,
-                                   yp,
-                                   enzyme_const,
-                                   w,
-                                   enzyme_dupnoneed,
-                                   elementary_v.data(),
-                                   d_output);
+            // Store result
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
+            for (auto& tup : triplets)
+            {
+              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
+              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              valtemp.push_back(tup.val);
+            }
+            jac.setValues(rtemp, ctemp, valtemp);
           }
-
-          // Store result
-          std::vector<IdxT>    ctemp{};
-          std::vector<IdxT>    rtemp{};
-          std::vector<ScalarT> valtemp{};
-          for (auto& tup : triplets)
-          {
-            rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-            ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
-            valtemp.push_back(tup.val);
-          }
-          jac.setValues(rtemp, ctemp, valtemp);
         }
-      }
+      };
 
       /**
-       * @brief Function that computes the Jacobian via automatic differentiation
-       *
-       * @tparam ModelT - model type
-       * @tparam MemberFunctions - member function parameter key
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Bus Jacobian
+       * 
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      void BusJacobian(ModelT*                                            model,
-                       size_t                                             n_res,
-                       size_t                                             n_var,
-                       const std::map<IdxT, IdxT>&                        res_indices,
-                       const std::map<IdxT, IdxT>&                        var_indices,
-                       ScalarT*                                           y,
-                       ScalarT*                                           yp,
-                       ScalarT*                                           w,
-                       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      struct BusJacobian 
       {
-        std::vector<Triple<ScalarT>> triplets;
-        std::vector<ScalarT>         elementary_v(n_var);
-        if (n_res > 0 && n_var > 0)
+        static void eval(ModelT*                                            model,
+                         size_t                                             n_res,
+                         size_t                                             n_var,
+                         const std::map<IdxT, IdxT>&                        res_indices,
+                         const std::map<IdxT, IdxT>&                        var_indices,
+                         ScalarT*                                           y,
+                         ScalarT*                                           yp,
+                         ScalarT*                                           w,
+                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          for (size_t res_i = 0; res_i < n_res; ++res_i)
+          std::vector<Triple<ScalarT>> triplets;
+          std::vector<ScalarT>         elementary_v(n_var);
+          if (n_res > 0 && n_var > 0)
           {
-            // Sparse storage
-            ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-            ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
-
-            // Elementary vector for Jacobian-vector product
-            for (size_t var_i = 0; var_i < n_var; ++var_i)
+            for (size_t res_i = 0; res_i < n_res; ++res_i)
             {
-              elementary_v[var_i] = 0.0;
+              // Sparse storage
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+
+              // Elementary vector for Jacobian-vector product
+              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              {
+                elementary_v[var_i] = 0.0;
+              }
+              elementary_v[res_i] = 1.0;
+
+              // Autodiff
+              __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
+                                     enzyme_const,
+                                     model,
+                                     enzyme_const,
+                                     y,
+                                     enzyme_const,
+                                     yp,
+                                     enzyme_dup,
+                                     w,
+                                     output,
+                                     enzyme_dupnoneed,
+                                     elementary_v.data(),
+                                     d_output);
             }
-            elementary_v[res_i] = 1.0;
 
-            // Autodiff
-            __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
-                                   enzyme_const,
-                                   model,
-                                   enzyme_const,
-                                   y,
-                                   enzyme_const,
-                                   yp,
-                                   enzyme_dup,
-                                   w,
-                                   output,
-                                   enzyme_dupnoneed,
-                                   elementary_v.data(),
-                                   d_output);
+            // Store result
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
+            for (auto& tup : triplets)
+            {
+              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
+              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              valtemp.push_back(tup.val);
+            }
+            jac.axpy(1.0, rtemp, ctemp, valtemp); ///< Todo: Update once sparse storage format changes
           }
-
-          // Store result
-          std::vector<IdxT>    ctemp{};
-          std::vector<IdxT>    rtemp{};
-          std::vector<ScalarT> valtemp{};
-          for (auto& tup : triplets)
-          {
-            rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-            ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
-            valtemp.push_back(tup.val);
-          }
-          jac.axpy(1.0, rtemp, ctemp, valtemp); ///< Todo: Update once sparse storage format changes
         }
-      }
+      };
 
       /**
-       * @brief Function that computes the Jacobian via automatic differentiation
-       *
-       * @tparam ModelT - model type
-       * @tparam MemberFunctions - member function parameter key
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Branch Jacobian
+       * 
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      void BranchJacobian(ModelT*                                            model,
-                          size_t                                             n_res,
-                          size_t                                             n_var,
-                          const std::map<IdxT, IdxT>&                        res_indices,
-                          const std::map<IdxT, IdxT>&                        var_indices,
-                          ScalarT*                                           y,
-                          ScalarT*                                           yp,
-                          ScalarT*                                           w,
-                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      struct BranchJacobian
       {
-        std::vector<Triple<ScalarT>> triplets;
-        std::vector<ScalarT>         elementary_v(n_var);
-        if (n_res > 0 && n_var > 0)
+        static void eval(ModelT*                                            model,
+                         size_t                                             n_res,
+                         size_t                                             n_var,
+                         const std::map<IdxT, IdxT>&                        res_indices,
+                         const std::map<IdxT, IdxT>&                        var_indices,
+                         ScalarT*                                           y,
+                         ScalarT*                                           yp,
+                         ScalarT*                                           w,
+                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
-          for (size_t res_i = 0; res_i < n_res; ++res_i)
+          std::vector<Triple<ScalarT>> triplets;
+          std::vector<ScalarT>         elementary_v(n_var);
+          if (n_res > 0 && n_var > 0)
           {
-            // Sparse storage
-            ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
-            ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
-
-            // Elementary vector for Jacobian-vector product
-            for (size_t var_i = 0; var_i < n_var; ++var_i)
+            for (size_t res_i = 0; res_i < n_res; ++res_i)
             {
-              elementary_v[var_i] = 0.0;
+              // Sparse storage
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, res_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, res_i, &triplets);
+
+              // Elementary vector for Jacobian-vector product
+              for (size_t var_i = 0; var_i < n_var; ++var_i)
+              {
+                elementary_v[var_i] = 0.0;
+              }
+              elementary_v[res_i] = 1.0;
+
+              // Autodiff
+              __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
+                                     enzyme_const,
+                                     model,
+                                     enzyme_const,
+                                     y,
+                                     enzyme_const,
+                                     yp,
+                                     enzyme_dup,
+                                     w,
+                                     output,
+                                     enzyme_dupnoneed,
+                                     elementary_v.data(),
+                                     d_output);
             }
-            elementary_v[res_i] = 1.0;
 
-            // Autodiff
-            __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
-                                   enzyme_const,
-                                   model,
-                                   enzyme_const,
-                                   y,
-                                   enzyme_const,
-                                   yp,
-                                   enzyme_dup,
-                                   w,
-                                   output,
-                                   enzyme_dupnoneed,
-                                   elementary_v.data(),
-                                   d_output);
+            // Store result
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
+            for (auto& tup : triplets)
+            {
+              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
+              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              valtemp.push_back(tup.val);
+            }
+            jac.setValues(rtemp, ctemp, valtemp);
           }
-
-          // Store result
-          std::vector<IdxT>    ctemp{};
-          std::vector<IdxT>    rtemp{};
-          std::vector<ScalarT> valtemp{};
-          for (auto& tup : triplets)
-          {
-            rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-            ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
-            valtemp.push_back(tup.val);
-          }
-          jac.setValues(rtemp, ctemp, valtemp);
         }
-      }
+      };
     } // namespace Sparse
   } // namespace Enzyme
 } // namespace GridKit

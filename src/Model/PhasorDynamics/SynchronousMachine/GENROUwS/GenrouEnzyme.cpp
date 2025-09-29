@@ -22,7 +22,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                                 GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                                 ScalarT,
-                                                IdxT>(
+                                                IdxT>::eval(
           this,
           f_.size(),
           y_.size(),
@@ -38,7 +38,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                            ScalarT,
-                                           IdxT>(
+                                           IdxT>::eval(
           this,
           static_cast<size_t>(bus_->size()),
           static_cast<size_t>(bus_->size()),

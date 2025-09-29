@@ -28,7 +28,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual11,
                                            ScalarT,
-                                           IdxT>(
+                                           IdxT>::eval(
           this,
           static_cast<size_t>(bus1_->size()),
           static_cast<size_t>((bus1_->y()).size()),
@@ -43,7 +43,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual22,
                                            ScalarT,
-                                           IdxT>(
+                                           IdxT>::eval(
           this,
           static_cast<size_t>(bus2_->size()),
           static_cast<size_t>((bus2_->y()).size()),
@@ -58,7 +58,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BranchJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
                                               GridKit::Enzyme::Sparse::MemberFunctions::BusResidual12,
                                               ScalarT,
-                                              IdxT>(
+                                              IdxT>::eval(
           this,
           static_cast<size_t>(bus1_->size()),
           static_cast<size_t>((bus2_->y()).size()),
@@ -75,7 +75,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::BranchJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
                                               GridKit::Enzyme::Sparse::MemberFunctions::BusResidual21,
                                               ScalarT,
-                                              IdxT>(
+                                              IdxT>::eval(
           this,
           static_cast<size_t>(bus2_->size()),
           static_cast<size_t>((bus1_->y()).size()),

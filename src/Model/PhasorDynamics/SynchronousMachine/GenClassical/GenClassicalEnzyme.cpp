@@ -22,7 +22,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
                                                 GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                                 ScalarT,
-                                                IdxT>(
+                                                IdxT>::eval(
           this,
           f_.size(),
           y_.size(),
