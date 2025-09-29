@@ -24,10 +24,10 @@ namespace GridKit
       {
         InternalResidual,
         BusResidual,
-        BusResidual11, ///< Special case for branches that are connected to two buses
-        BusResidual12, ///< Special case for branches that are connected to two buses
-        BusResidual21, ///< Special case for branches that are connected to two buses
-        BusResidual22  ///< Special case for branches that are connected to two buses
+        BusResidual11, //< Special case for branches that are connected to two buses
+        BusResidual12, //< Special case for branches that are connected to two buses
+        BusResidual21, //< Special case for branches that are connected to two buses
+        BusResidual22  //< Special case for branches that are connected to two buses
       };
 
       /**
@@ -36,58 +36,85 @@ namespace GridKit
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
        * @tparam ScalarT - scalar data type
+       *
+       * @param[in] model - Pointer to the model to be differentiated
+       * @param[in] y - Internal variables
+       * @param[in] yp - Internal variable derivatives
+       * @param[in] w - Coupling (bus) variables
+       * @param[out] f - Internal residual
+       * @param[out] h - Coupling (bus) residual
        */
       template <typename ModelT, MemberFunctions function, typename ScalarT>
       struct Wrapper
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* f)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* f)
         {
-          obj->evaluateInternalResidual(y, yp, w, f);
+          model->evaluateInternalResidual(y, yp, w, f);
         }
       };
 
+      /**
+        * @brief Residual wrapper partial template specialization for BusResidual
+        *
+        */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual, ScalarT>
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
         {
-          obj->evaluateBusResidual(y, yp, w, h);
+          model->evaluateBusResidual(y, yp, w, h);
         }
       };
 
+      /**
+        * @brief Residual wrapper partial template specialization for BusResidual11
+        *
+        */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual11, ScalarT>
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
         {
-          obj->evaluateBusResidual11(y, yp, w, h);
+          model->evaluateBusResidual11(y, yp, w, h);
         }
       };
 
+      /**
+        * @brief Residual wrapper partial template specialization for BusResidual12
+        *
+        */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual12, ScalarT>
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
         {
-          obj->evaluateBusResidual12(y, yp, w, h);
+          model->evaluateBusResidual12(y, yp, w, h);
         }
       };
 
+      /**
+        * @brief Residual wrapper partial template specialization for BusResidual21
+        *
+        */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual21, ScalarT>
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
         {
-          obj->evaluateBusResidual21(y, yp, w, h);
+          model->evaluateBusResidual21(y, yp, w, h);
         }
       };
 
+      /**
+        * @brief Residual wrapper partial template specialization for BusResidual22
+        *
+        */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual22, ScalarT>
       {
-        static void eval(ModelT* obj, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
         {
-          obj->evaluateBusResidual22(y, yp, w, h);
+          model->evaluateBusResidual22(y, yp, w, h);
         }
       };
 
@@ -205,17 +232,27 @@ namespace GridKit
        * @tparam MemberFunctions - member function parameter key
        * @tparam ScalarT - scalar data type
        * @tparam IdxT - matrix index data type
+       *
+       * @param[in] model - Pointer to the model to be differentiated
+       * @param[in] n_res - Number of residual functions
+       * @param[in] n_var - Number of independent variables
+       * @param[in] res_indices - Map from local residual indices to global indices
+       * @param[in] var_indices - Map from local variable indices to global indices
+       * @param[in] y - Internal variables
+       * @param[in] yp - Internal variable derivatives
+       * @param[in] w - Coupling (bus) variables
+       * @param[in,out] jac - Jacobian
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      void ModelJacobian(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           w,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+      void InternalJacobian(ModelT*                                            model,
+                            size_t                                             n_res,
+                            size_t                                             n_var,
+                            const std::map<IdxT, IdxT>&                        res_indices,
+                            const std::map<IdxT, IdxT>&                        var_indices,
+                            ScalarT*                                           y,
+                            ScalarT*                                           yp,
+                            ScalarT*                                           w,
+                            GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
       {
         std::vector<Triple<ScalarT>> triplets;
         std::vector<ScalarT>         elementary_v(n_var);

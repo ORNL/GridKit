@@ -19,10 +19,10 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for GenClassical..." << std::endl;
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-      GridKit::Enzyme::Sparse::ModelJacobian<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
-                                             GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
-                                             ScalarT,
-                                             IdxT>(
+      GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
+                                                GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                                ScalarT,
+                                                IdxT>(
           this,
           f_.size(),
           y_.size(),
