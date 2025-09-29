@@ -489,10 +489,10 @@ namespace GridKit
       /**
        * @brief Evaluate system Jacobian.
        *
-       * First, initialize bus Jacobians to 0. 
-       * Then, evaluate component Jacobians (internal block and bus Jacobian contributions). 
-       * Once component Jacobians are evaluated, store the result in the system Jacobian. 
-       * Finally, store bus Jacobians into the system Jacobian after all component have added their 
+       * First, initialize bus Jacobians to 0.
+       * Then, evaluate component Jacobians (internal block and bus Jacobian contributions).
+       * Once component Jacobians are evaluated, store the result in the system Jacobian.
+       * Finally, store bus Jacobians into the system Jacobian after all component have added their
        * contributions.
        *
        * @todo split the initial assembly from updating values. This will the
