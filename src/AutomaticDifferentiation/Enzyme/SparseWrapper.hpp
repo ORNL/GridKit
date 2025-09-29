@@ -299,7 +299,7 @@ namespace GridKit
               ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
               valtemp.push_back(tup.val);
             }
-            jac.setValues(rtemp, ctemp, valtemp);
+            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
           }
         }
       };
@@ -364,7 +364,7 @@ namespace GridKit
               ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
               valtemp.push_back(tup.val);
             }
-            jac.axpy(1.0, rtemp, ctemp, valtemp); ///< Todo: Update once sparse storage format changes
+            jac.axpy(1.0, rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
           }
         }
       };
@@ -429,7 +429,7 @@ namespace GridKit
               ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
               valtemp.push_back(tup.val);
             }
-            jac.setValues(rtemp, ctemp, valtemp);
+            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
           }
         }
       };

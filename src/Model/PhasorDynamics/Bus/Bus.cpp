@@ -8,9 +8,9 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation not implemented
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
+     * @tparam ScalarT - data type for Jacobian elements
+     * @tparam IdxT    - data type for matrix indices
+     * @return int - error code
      */
     template <class ScalarT, typename IdxT>
     int Bus<ScalarT, IdxT>::evaluateJacobian()
