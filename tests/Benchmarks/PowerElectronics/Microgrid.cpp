@@ -19,6 +19,15 @@
 using index_type = size_t;
 using real_type  = double;
 
+struct MicrogridComponents
+{
+  std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>>    system_;
+  std::vector<GridKit::DistributedGenerator<real_type, index_type>*> dgs_;
+  std::vector<GridKit::MicrogridLine<real_type, index_type>*>        lines_;
+  std::vector<GridKit::MicrogridLoad<real_type, index_type>*>        loads_;
+  std::vector<GridKit::MicrogridBusDQ<real_type, index_type>*>       buses_;
+};
+
 /**
  * @brief Tests network of distributed generators.
  *
@@ -28,11 +37,11 @@ using real_type  = double;
  * @param use_DAE_keys - Choice between using DAE or ODE keys
  * @return int returns 0 if successful, >0 otherwise
  */
-std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_type Nsize)
+MicrogridComponents microgrid(index_type Nsize)
 {
   using namespace GridKit;
 
-  bool use_jac = true;
+  MicrogridComponents components;
 
   real_type rel_tol = 1e-8;
   real_type abs_tol = 1e-8;
@@ -146,6 +155,7 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
     dg_ref->setExternalConnectionNodes(4 + i, i);
   }
   sys_model->addComponent(dg_ref);
+  components.dgs_.push_back(dg_ref);
 
   // Keep track of models and index location
   index_type indexv   = 12;
@@ -169,6 +179,7 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
     }
     indexv += 13;
     sys_model->addComponent(dg);
+    components.dgs_.push_back(dg);
   }
 
   // Load all the Line compoenents
@@ -193,6 +204,7 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
     }
     indexv += 2;
     sys_model->addComponent(line_model);
+    components.lines_.push_back(line_model);
   }
 
   //  Load all the Load components
@@ -213,6 +225,7 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
     }
     indexv += 2;
     sys_model->addComponent(load_model);
+    components.loads_.push_back(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
@@ -223,6 +236,7 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
     virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
     virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
     sys_model->addComponent(virDQbus_model);
+    components.buses_.push_back(virDQbus_model);
   }
 
   // allocate all the intial conditions
@@ -250,10 +264,11 @@ std::unique_ptr<GridKit::PowerElectronicsModel<double, size_t>> microgrid(index_
 
   sys_model->updateTime(0.0, 1.0e-8);
 
-  return std::move(sys_model);
+  components.system_ = std::move(sys_model);
+  return components;
 }
 
-void doIterations(index_type Nsize, bool use_csr)
+void doIterations(index_type Nsize, bool use_csr, bool dg_csr)
 {
   const size_t NUM_ITERATIONS = 20;
 
@@ -262,14 +277,17 @@ void doIterations(index_type Nsize, bool use_csr)
 
   for (unsigned i = 0; i < NUM_ITERATIONS; i++)
   {
-    std::cerr << i << ' ';
     GridKit::Utility::benchmark.newIteration();
 
-    auto sys_model = microgrid(Nsize);
-    std::cerr << std::format("Num components: {}, System Size: {}\n", sys_model->numComponents(), sys_model->size());
+    auto microgrid_components = microgrid(Nsize);
+
+    for (auto dg : microgrid_components.dgs_)
+    {
+      dg->setCsrUsage(dg_csr);
+    }
 
     // Create numerical integrator and configure it for the generator model
-    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model.get());
+    auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(microgrid_components.system_.get());
     idas->setUseCsr(use_csr);
 
     // setup simulation
@@ -277,11 +295,9 @@ void doIterations(index_type Nsize, bool use_csr)
     idas->getDefaultInitialCondition();
     idas->initializeSimulation(t_init);
 
-    auto timer = GridKit::Utility::startTime<true>("Microgrid Simulation");
-    idas->runSimulation(t_final);
-    GridKit::Utility::endTime<true>(std::move(timer));
+    GridKit::Utility::time<true>("Microgrid Simulation", [&]()
+    { idas->runSimulation(t_final); });
   }
-  std::cerr << '\n';
 }
 
 /**
@@ -294,16 +310,22 @@ void doIterations(index_type Nsize, bool use_csr)
 int main(int /* argc */, char const** /* argv */)
 {
   GridKit::Utility::benchmark.newRun("Microgrid N=2 COO");
-  doIterations(2, false);
+  doIterations(2, false, false);
 
-  GridKit::Utility::benchmark.newRun("Microgrid N=2 CSR");
-  doIterations(2, true);
+  GridKit::Utility::benchmark.newRun("Microgrid N=2 CSR (System)");
+  doIterations(2, true, false);
+
+  GridKit::Utility::benchmark.newRun("Microgrid N=2 CSR (System + DG)");
+  doIterations(2, true, true);
 
   GridKit::Utility::benchmark.newRun("Microgrid N=64 COO");
-  doIterations(64, false);
+  doIterations(64, false, false);
 
-  GridKit::Utility::benchmark.newRun("Microgrid N=64 CSR");
-  doIterations(64, true);
+  GridKit::Utility::benchmark.newRun("Microgrid N=64 CSR (System)");
+  doIterations(64, true, false);
+
+  GridKit::Utility::benchmark.newRun("Microgrid N=64 CSR (System + DG)");
+  doIterations(64, true, true);
 
   std::cerr << GridKit::Utility::benchmark.report() << '\n';
   return 0;

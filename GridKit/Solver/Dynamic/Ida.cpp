@@ -790,44 +790,42 @@ namespace AnalysisManager
 
       if (use_csr)
       {
-        auto timer = first_jac ? GridKit::Utility::startTime<true>("CSR First Jacobian Assembly")
-                               : GridKit::Utility::startTime<true>("CSR Jacobian Assembly");
+        auto label = first_jac ? "CSR Jacobian Assembly (first)"
+                               : "CSR Jacobian Assembly";
         first_jac  = false;
 
-        assert(model->hasCsrJacobian());
+        GridKit::Utility::time<true>(label, [&]()
+                                     {
+          assert(model->hasCsrJacobian());
 
-        model->evaluateCsrJacobian();
+          model->evaluateCsrJacobian();
 
-        auto& Jac = model->getCsrJacobian();
+          auto& Jac = model->getCsrJacobian();
 
-        std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
-        std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
-        std::copy(Jac.values().cbegin(), Jac.values().cend(), data);
-
-        GridKit::Utility::endTime<true>(std::move(timer));
+          std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
+          std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
+          std::copy(Jac.values().cbegin(), Jac.values().cend(), data); });
       }
       else
       {
-        auto timer = GridKit::Utility::startTime<true>("COO Jacobian Assembly");
+        GridKit::Utility::time<true>("COO Jacobian Assembly", [&]()
+                                     {
+          model->evaluateJacobian();
+          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
 
-        model->evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& Jac = model->getJacobian();
+          // Get reference to the jacobian entries
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = Jac.getEntries();
+          const auto [r, c, val]                                                        = tpm;
 
-        // Get reference to the jacobian entries
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
-        const auto [r, c, val]                                                        = tpm;
+          // get the CSR row pointers from COO matrix
+          std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
 
-        // get the CSR row pointers from COO matrix
-        std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
+          // Set row pointers
+          std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
 
-        // Set row pointers
-        std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
-
-        // Copy data from model jac to sundials
-        std::copy(c.cbegin(), c.cend(), colvals);
-        std::copy(val.cbegin(), val.cend(), data);
-
-        GridKit::Utility::endTime<true>(std::move(timer));
+          // Copy data from model jac to sundials
+          std::copy(c.cbegin(), c.cend(), colvals);
+          std::copy(val.cbegin(), val.cend(), data); });
       }
 
       return 0;

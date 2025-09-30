@@ -28,6 +28,7 @@ namespace GridKit
 
         std::unordered_map<const char*, std::vector<Iteration>> iterations_;
         std::string                                             name_;
+        size_t                                                  current_iteration_;
       };
 
       mutable std::mutex lock_;
@@ -37,7 +38,7 @@ namespace GridKit
       {
         if (runs_.empty())
         {
-          runs_.emplace_back();
+          runs_.emplace_back().current_iteration_ = 0;
         }
 
         return runs_.back();
@@ -50,15 +51,12 @@ namespace GridKit
         auto iteration_iter = last_run.iterations_.find(name);
         if (iteration_iter == last_run.iterations_.end())
         {
-          iteration_iter = std::get<0>(last_run.iterations_.insert({name, std::vector<Run::Iteration>(1)}));
+          iteration_iter = std::get<0>(last_run.iterations_.insert({name, std::vector<Run::Iteration>()}));
         }
 
         std::vector<Run::Iteration>& iter_vec = std::get<1>(*iteration_iter);
 
-        if (iter_vec.empty())
-        {
-          iter_vec.emplace_back();
-        }
+        iter_vec.resize(last_run.current_iteration_);
 
         return iter_vec.back();
       }
@@ -66,30 +64,30 @@ namespace GridKit
     public:
       void addTime(Duration duration, const char* name)
       {
-        lock_.lock();
+        const std::lock_guard guard(lock_);
 
         auto& last_iter = lastIteration(name);
         last_iter.observations_.emplace_back(std::move(duration));
-
-        lock_.unlock();
       }
 
       void newIteration()
       {
-        lock_.lock();
+        const std::lock_guard guard(lock_);
 
         auto& last_run = lastRun();
 
-        for (auto& var_pair : last_run.iterations_)
+        for (auto& [var_name, iterations] : last_run.iterations_)
         {
-          std::get<1>(var_pair).emplace_back();
+          iterations.emplace_back();
         }
 
-        lock_.unlock();
+        last_run.current_iteration_++;
       }
 
       void newRun(std::string name)
       {
+        const std::lock_guard guard(lock_);
+
         if (runs_.size() > 0 && runs_.back().name_.empty())
         {
           runs_.back().name_ = std::move(name);
@@ -97,37 +95,53 @@ namespace GridKit
         else
         {
           runs_.push_back({
-              .iterations_ = {},
-              .name_       = std::move(name),
+              .iterations_        = {},
+              .name_              = std::move(name),
+              .current_iteration_ = 0,
           });
         }
       }
 
       void clear()
       {
-        lock_.lock();
+        const std::lock_guard guard(lock_);
 
         runs_.clear();
-
-        lock_.unlock();
       }
 
       std::string report() const
       {
         std::stringstream out;
 
-        lock_.lock();
+        const std::lock_guard guard(lock_);
+
+        constexpr std::string_view format_str = "{:>40} {:>15.4f} {:>15.4f} {:>9}\n";
+        constexpr std::string_view header_str = "{:-^40} {:-^15} {:-^15} {:-^9}\n";
 
         for (const auto& run : runs_)
         {
-          out << std::format("Run: {}\n", run.name_);
-          constexpr std::string_view format_str = "{:>40} {:>15.4f} {:>15.4f} {:>6}\n";
-          out << std::format("{:>40} {:>15} {:>15} {:>6}\n", "Variable", "Mean", "Std. Dev.", "N");
+          out << std::format("Run: {}, ({} iterations)\n", run.name_, run.current_iteration_);
+          out << std::format(header_str, "Variable", "Mean", "Std. Dev.", "N");
 
-          for (const auto& var_pair : run.iterations_)
+          std::unordered_map<std::string, std::vector<GridKit::Utility::Benchmark::Run::Iteration>> var_iterations;
+
+          for (const auto& [var_name, iterations] : run.iterations_)
           {
-            const auto& [var_name, iterations] = var_pair;
+            if (!var_iterations.contains(var_name))
+            {
+              var_iterations.insert({var_name, std::vector<GridKit::Utility::Benchmark::Run::Iteration>(run.current_iteration_)});
+            }
 
+            auto& new_iterations = var_iterations[var_name];
+
+            for (size_t i = 0; i < iterations.size(); i++)
+            {
+              new_iterations[i].observations_.insert(new_iterations[i].observations_.end(), iterations[i].observations_.cbegin(), iterations[i].observations_.cend());
+            }
+          }
+
+          for (const auto& [var_name, iterations] : var_iterations)
+          {
             double              sum                = 0;
             unsigned            total_observations = 0;
             std::vector<double> iter_sums;
@@ -148,14 +162,14 @@ namespace GridKit
               iter_sums.push_back(iter_sum);
             }
 
-            double overall_mean = sum / total_observations;
-            double iter_mean    = sum / iterations.size();
+            double overall_mean = sum / static_cast<double>(total_observations);
+            double iter_mean    = sum / static_cast<double>(iterations.size());
             double overall_var  = 0;
             double iter_var     = 0;
 
             for (size_t i = 0; i < iterations.size(); i++)
             {
-              iter_var += std::pow(iter_sums[i] - iter_mean, 2) / (iterations.size() - 1);
+              iter_var += std::pow(iter_sums[i] - iter_mean, 2) / static_cast<double>(iterations.size() - 1);
 
               for (const auto& obs : iterations[i].observations_)
               {
@@ -164,11 +178,9 @@ namespace GridKit
             }
 
             out << std::format(format_str, var_name, overall_mean, std::sqrt(overall_var), total_observations);
-            out << std::format(format_str, "-Total-", iter_mean, std::sqrt(iter_var), iterations.size());
+            out << std::format(format_str, "-Total-", iter_mean, std::sqrt(iter_var), total_observations / iterations.size());
           }
         }
-
-        lock_.unlock();
 
         return out.str();
       }
@@ -241,6 +253,25 @@ namespace GridKit
       auto inner_timer = std::move(timer).intoInner();
       benchmark.addTime(std::chrono::high_resolution_clock::now() - inner_timer->start_, inner_timer->name_);
 #endif
+    }
+
+    template <bool ENABLE, typename F>
+    auto time(const char* name, F func)
+    {
+      if constexpr (std::is_same<typename std::result_of<F&()>::type, void>::value)
+      {
+        auto timer = startTime<ENABLE>(name);
+        func();
+        endTime<ENABLE>(std::move(timer));
+      }
+      else
+      {
+        auto timer = startTime<ENABLE>(name);
+        auto re    = func();
+        endTime<ENABLE>(std::move(timer));
+
+        return std::move(re);
+      }
     }
   }; // namespace Utility
 }; // namespace GridKit

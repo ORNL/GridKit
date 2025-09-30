@@ -12,6 +12,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <GridKit/Utilities/Benchmark.hpp>
+
 namespace GridKit
 {
   namespace LinearAlgebra
@@ -208,20 +210,23 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline std::vector<IdxT> COO_Matrix<RealT, IdxT>::getCSRRowData()
     {
-      if (!this->isSorted())
-        this->sortSparse();
-      std::vector<IdxT> row_size_vec(static_cast<size_t>(this->rows_size_ + 1), 0);
-      size_t            counter = 0;
-      for (size_t i = 0; i < row_size_vec.size() - 1; i++)
-      {
-        row_size_vec[i + 1] = row_size_vec[i];
-        while (counter < this->row_indices_.size() && i == static_cast<size_t>(this->row_indices_[counter]))
+      return GridKit::Utility::time<true>("COO getCSRRowData", [&]()
+                                          {
+        if (!this->isSorted())
+          this->sortSparse();
+        std::vector<IdxT> row_size_vec(static_cast<size_t>(this->rows_size_ + 1), 0);
+        size_t            counter = 0;
+        for (size_t i = 0; i < row_size_vec.size() - 1; i++)
         {
-          row_size_vec[i + 1]++;
-          counter++;
+          row_size_vec[i + 1] = row_size_vec[i];
+          while (counter < this->row_indices_.size() && i == static_cast<size_t>(this->row_indices_[counter]))
+          {
+            row_size_vec[i + 1]++;
+            counter++;
+          }
         }
-      }
-      return row_size_vec;
+
+        return row_size_vec; });
     }
 
     /**
@@ -245,7 +250,8 @@ namespace GridKit
     inline void COO_Matrix<RealT, IdxT>::setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
     {
       // sort input
-      this->sortSparseCOO(r, c, v);
+      GridKit::Utility::time<true>("COO setValues sort", [&]()
+                                   { this->sortSparseCOO(r, c, v); });
 
       // Duplicated with axpy. Could replace with function depdent on lambda expression
       size_t a_iter = 0;
@@ -304,60 +310,65 @@ namespace GridKit
         return;
       }
 
-      if (!this->sorted_)
-      {
-        this->sortSparse();
-      }
-      if (!a.isSorted())
-      {
-        a.sortSparse();
-      }
-      IdxT                                                                    m   = 0;
-      IdxT                                                                    n   = 0;
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = a.getEntries();
-      const auto& [r, c, val]                                                     = tpm;
-      std::tie(m, n)                                                              = a.getDimensions();
-
-      // Increase size as necessary
-      this->rows_size_    = this->rows_size_ > m ? this->rows_size_ : m;
-      this->columns_size_ = this->columns_size_ > n ? this->columns_size_ : n;
-
-      size_t a_iter = 0;
-      // iterate for all current values in matrix
-      for (size_t i = 0; i < this->row_indices_.size(); i++)
-      {
-        // pushback values when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+      GridKit::Utility::time<true>("COO axpy", [&]()
+                                   {
+        if (!this->sorted_)
         {
-          this->row_indices_.push_back(r[a_iter]);
-          this->column_indices_.push_back(c[a_iter]);
-          this->values_.push_back(alpha * val[a_iter]);
-
-          this->checkIncreaseSize(r[a_iter], c[a_iter]);
-          a_iter++;
+          GridKit::Utility::time<true>("COO axpy sort", [&]()
+          { this->sortSparse(); });
         }
-        if (a_iter >= r.size())
+        if (!a.isSorted())
         {
-          break;
+          GridKit::Utility::time<true>("COO axpy sort", [&]()
+          { a.sortSparse(); });
         }
 
-        if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+        IdxT                                                                    m   = 0;
+        IdxT                                                                    n   = 0;
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = a.getEntries();
+        const auto& [r, c, val]                                                     = tpm;
+        std::tie(m, n)                                                              = a.getDimensions();
+
+        // Increase size as necessary
+        this->rows_size_    = this->rows_size_ > m ? this->rows_size_ : m;
+        this->columns_size_ = this->columns_size_ > n ? this->columns_size_ : n;
+
+        size_t a_iter = 0;
+        // iterate for all current values in matrix
+        for (size_t i = 0; i < this->row_indices_.size(); i++)
         {
-          this->values_[i] += alpha * val[a_iter];
-          a_iter++;
+          // pushback values when they are not in current matrix
+          while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+          {
+            this->row_indices_.push_back(r[a_iter]);
+            this->column_indices_.push_back(c[a_iter]);
+            this->values_.push_back(alpha * val[a_iter]);
+
+            this->checkIncreaseSize(r[a_iter], c[a_iter]);
+            a_iter++;
+          }
+          if (a_iter >= r.size())
+          {
+            break;
+          }
+
+          if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+          {
+            this->values_[i] += alpha * val[a_iter];
+            a_iter++;
+          }
         }
-      }
-      // push back rest that was not found sorted_
-      for (size_t i = a_iter; i < r.size(); i++)
-      {
-        this->row_indices_.push_back(r[i]);
-        this->column_indices_.push_back(c[i]);
-        this->values_.push_back(alpha * val[i]);
+        // push back rest that was not found sorted_
+        for (size_t i = a_iter; i < r.size(); i++)
+        {
+          this->row_indices_.push_back(r[i]);
+          this->column_indices_.push_back(c[i]);
+          this->values_.push_back(alpha * val[i]);
 
-        this->checkIncreaseSize(r[i], c[i]);
-      }
+          this->checkIncreaseSize(r[i], c[i]);
+        }
 
-      this->sorted_ = false;
+        this->sorted_ = false; });
     }
 
     /**
@@ -382,50 +393,54 @@ namespace GridKit
       if (alpha == 0)
         return;
 
-      if (!this->sorted_)
-      {
-        this->sortSparse();
-      }
-
-      // sort input
-      this->sortSparseCOO(r, c, v);
-
-      size_t a_iter = 0;
-      // iterate for all current values_ in matrix
-      for (size_t i = 0; i < this->row_indices_.size(); i++)
-      {
-        // pushback values_ when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+      GridKit::Utility::time<true>("COO axpy", [&]()
+                                   {
+        if (!this->sorted_)
         {
-          this->row_indices_.push_back(r[a_iter]);
-          this->column_indices_.push_back(c[a_iter]);
-          this->values_.push_back(alpha * v[a_iter]);
-
-          this->checkIncreaseSize(r[a_iter], c[a_iter]);
-          a_iter++;
-        }
-        if (a_iter >= r.size())
-        {
-          break;
+          GridKit::Utility::time<true>("COO axpy sort", [&]()
+          { this->sortSparse(); });
         }
 
-        if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+        // sort input
+        GridKit::Utility::time<true>("COO axpy sort", [&]()
+        { this->sortSparseCOO(r, c, v); });
+
+        size_t a_iter = 0;
+        // iterate for all current values_ in matrix
+        for (size_t i = 0; i < this->row_indices_.size(); i++)
         {
-          this->values_[i] += alpha * v[a_iter];
-          a_iter++;
+          // pushback values_ when they are not in current matrix
+          while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+          {
+            this->row_indices_.push_back(r[a_iter]);
+            this->column_indices_.push_back(c[a_iter]);
+            this->values_.push_back(alpha * v[a_iter]);
+
+            this->checkIncreaseSize(r[a_iter], c[a_iter]);
+            a_iter++;
+          }
+          if (a_iter >= r.size())
+          {
+            break;
+          }
+
+          if (r[a_iter] == this->row_indices_[i] && c[a_iter] == this->column_indices_[i])
+          {
+            this->values_[i] += alpha * v[a_iter];
+            a_iter++;
+          }
         }
-      }
-      // push back rest that was not found sorted_
-      for (size_t i = a_iter; i < r.size(); i++)
-      {
-        this->row_indices_.push_back(r[i]);
-        this->column_indices_.push_back(c[i]);
-        this->values_.push_back(alpha * v[i]);
+        // push back rest that was not found sorted_
+        for (size_t i = a_iter; i < r.size(); i++)
+        {
+          this->row_indices_.push_back(r[i]);
+          this->column_indices_.push_back(c[i]);
+          this->values_.push_back(alpha * v[i]);
 
-        this->checkIncreaseSize(r[i], c[i]);
-      }
+          this->checkIncreaseSize(r[i], c[i]);
+        }
 
-      this->sorted_ = false;
+        this->sorted_ = false; });
     }
 
     /**
@@ -865,37 +880,38 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values)
     {
+      GridKit::Utility::time<true>("COO Sort", [&]()
+                                   {
+        // index based sort code
+        //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
+        // cannot call sort since two arrays are used instead
+        std::vector<size_t> ordervec(rows.size());
+        std::size_t         n(0);
+        std::generate(std::begin(ordervec), std::end(ordervec), [&]
+        { return n++; });
 
-      // index based sort code
-      //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
-      // cannot call sort since two arrays are used instead
-      std::vector<size_t> ordervec(rows.size());
-      std::size_t         n(0);
-      std::generate(std::begin(ordervec), std::end(ordervec), [&]
-                    { return n++; });
+        // Sort by row first then column.
+        std::sort(std::begin(ordervec),
+                  std::end(ordervec),
+                  [&](auto i1, auto i2)
+        { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
 
-      // Sort by row first then column.
-      std::sort(std::begin(ordervec),
-                std::end(ordervec),
-                [&](auto i1, auto i2)
-                { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
-
-      // reorder based of index-sorting. Only swap cost no extra memory.
-      //  @todo see if extra memory creation is fine
-      //  https://stackoverflow.com/a/22183350
-      for (size_t i = 0; i < ordervec.size(); i++)
-      {
-        // permutation swap
-        while (ordervec[i] != ordervec[ordervec[i]])
+        // reorder based of index-sorting. Only swap cost no extra memory.
+        //  @todo see if extra memory creation is fine
+        //  https://stackoverflow.com/a/22183350
+        for (size_t i = 0; i < ordervec.size(); i++)
         {
-          std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
-          std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
-          std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
+          // permutation swap
+          while (ordervec[i] != ordervec[ordervec[i]])
+          {
+            std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
+            std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
+            std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
 
-          // swap orderings
-          std::swap(ordervec[i], ordervec[ordervec[i]]);
-        }
-      }
+            // swap orderings
+            std::swap(ordervec[i], ordervec[ordervec[i]]);
+          }
+        } });
     }
 
     /**
