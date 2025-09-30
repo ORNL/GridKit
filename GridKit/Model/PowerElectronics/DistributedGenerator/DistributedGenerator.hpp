@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <GridKit/Model/EvaluatorMixins.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 
 namespace GridKit
@@ -37,7 +38,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  class DistributedGenerator : public CircuitComponent<ScalarT, IdxT>
+  class DistributedGenerator : public CircuitComponent<ScalarT, IdxT>, public Mixin::Evaluator::CsrJacobian<ScalarT, IdxT, DistributedGenerator>
   {
     using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
@@ -63,6 +64,8 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
+    using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
+
   public:
     DistributedGenerator(IdxT                                        id,
                          DistributedGeneratorParameters<RealT, IdxT> parm,
@@ -79,6 +82,11 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+
+    template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+    CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
+
+    const static std::size_t SIZE = 16;
 
   private:
     RealT wb_;

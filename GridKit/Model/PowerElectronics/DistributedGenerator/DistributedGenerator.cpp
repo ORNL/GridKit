@@ -39,7 +39,7 @@ namespace GridKit
   {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-    size_           = 16;
+    size_           = SIZE;
     n_intern_       = 13;
     n_extern_       = 3;
     extern_indices_ = {0, 1, 2};
@@ -376,6 +376,115 @@ namespace GridKit
     jac_.axpy(alpha_, Jacder);
 
     return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  DistributedGenerator<ScalarT, IdxT>::CsrJacobian DistributedGenerator<ScalarT, IdxT>::buildCsrJacobian(
+      LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
+  {
+    if (refframe_)
+    {
+      builder.row(0)
+          .elem(0, -1.0)
+          .elem(4, -mp_);
+    }
+
+    builder.row(1)
+        .elem(3, -sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[14]) - cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[15]))
+        .elem(14, cos(static_cast<RealT>(y_[3])))
+        .elem(15, -sin(static_cast<RealT>(y_[3])));
+    builder.row(2)
+        .elem(3, cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[14]) - sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[15]))
+        .elem(14, sin(static_cast<RealT>(y_[3])))
+        .elem(15, cos(static_cast<RealT>(y_[3])));
+    builder.row(3)
+        .elem(0, -1.0)
+        .elem(3, -alpha_)
+        .elem(4, -mp_);
+    builder.row(4)
+        .elem(4, -alpha_ - wc_)
+        .elem(12, wc_ * static_cast<RealT>(y_[14]))
+        .elem(13, wc_ * static_cast<RealT>(y_[15]))
+        .elem(14, wc_ * static_cast<RealT>(y_[12]))
+        .elem(15, wc_ * static_cast<RealT>(y_[13]));
+    builder.row(5)
+        .elem(5, -alpha_ - wc_)
+        .elem(12, -wc_ * static_cast<RealT>(y_[15]))
+        .elem(13, wc_ * static_cast<RealT>(y_[14]))
+        .elem(14, wc_ * static_cast<RealT>(y_[13]))
+        .elem(15, -wc_ * static_cast<RealT>(y_[12]));
+    builder.row(6)
+        .elem(5, -nq_)
+        .elem(6, -alpha_)
+        .elem(12, -1.0);
+    builder.row(7)
+        .elem(7, -alpha_)
+        .elem(13, -1.0);
+    builder.row(8)
+        .elem(5, -Kpv_ * nq_)
+        .elem(6, Kiv_)
+        .elem(8, -alpha_)
+        .elem(10, -1.0)
+        .elem(12, -Kpv_)
+        .elem(13, -Cf_ * wb_)
+        .elem(14, F_);
+    builder.row(9)
+        .elem(7, Kiv_)
+        .elem(9, -alpha_)
+        .elem(11, -1.0)
+        .elem(12, Cf_ * wb_)
+        .elem(13, -Kpv_)
+        .elem(15, F_);
+    builder.row(10)
+        .elem(4, -mp_ * static_cast<RealT>(y_[11]))
+        .elem(5, -(Kpc_ * Kpv_ * nq_) / Lf_)
+        .elem(6, (Kpc_ * Kiv_) / Lf_)
+        .elem(8, Kic_ / Lf_)
+        .elem(10, -alpha_ - (Kpc_ + rLf_) / Lf_)
+        .elem(11, -mp_ * static_cast<RealT>(y_[4]))
+        .elem(12, -(Kpc_ * Kpv_ + 1.0) / Lf_)
+        .elem(13, -(Cf_ * Kpc_ * wb_) / Lf_)
+        .elem(14, (F_ * Kpc_) / Lf_);
+    builder.row(11)
+        .elem(4, mp_ * static_cast<RealT>(y_[10]))
+        .elem(7, (Kiv_ * Kpc_) / Lf_)
+        .elem(9, Kic_ / Lf_)
+        .elem(10, mp_ * static_cast<RealT>(y_[4]))
+        .elem(11, -alpha_ - (Kpc_ + rLf_) / Lf_)
+        .elem(12, (Cf_ * Kpc_ * wb_) / Lf_)
+        .elem(13, -(Kpc_ * Kpv_ + 1.0) / Lf_)
+        .elem(15, (F_ * Kpc_) / Lf_);
+    builder.row(12)
+        .elem(4, -mp_ * static_cast<RealT>(y_[13]))
+        .elem(10, 1.0 / Cf_)
+        .elem(12, -alpha_)
+        .elem(13, wb_ - mp_ * static_cast<RealT>(y_[4]))
+        .elem(14, -1.0 / Cf_);
+    builder.row(13)
+        .elem(4, mp_ * static_cast<RealT>(y_[12]))
+        .elem(11, 1.0 / Cf_)
+        .elem(12, -wb_ + mp_ * static_cast<RealT>(y_[4]))
+        .elem(13, -alpha_)
+        .elem(15, -1.0 / Cf_);
+    builder.row(14)
+        .elem(1, (1.0 / Lc_) * -cos(static_cast<RealT>(y_[3])))
+        .elem(2, (1.0 / Lc_) * -sin(static_cast<RealT>(y_[3])))
+        .elem(3, (1.0 / Lc_) * (sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[1]) - cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[2])))
+        .elem(4, -mp_ * static_cast<RealT>(y_[15]))
+        .elem(12, 1.0 / Lc_)
+        .elem(14, -alpha_ - rLc_ / Lc_)
+        .elem(15, wb_ - mp_ * static_cast<RealT>(y_[4]));
+    builder.row(15)
+        .elem(1, (1.0 / Lc_) * sin(static_cast<RealT>(y_[3])))
+        .elem(2, (1.0 / Lc_) * -cos(static_cast<RealT>(y_[3])))
+        .elem(3, (1.0 / Lc_) * (cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[1]) + sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[2])))
+        .elem(4, mp_ * static_cast<RealT>(y_[14]))
+        .elem(13, 1.0 / Lc_)
+        .elem(14, -wb_ + mp_ * static_cast<RealT>(y_[4]))
+        .elem(15, -alpha_ - rLc_ / Lc_);
+
+    return builder;
   }
 
   template <class ScalarT, typename IdxT>
