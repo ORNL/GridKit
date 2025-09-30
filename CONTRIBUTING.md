@@ -479,3 +479,20 @@ class Matrix   // No, class is outside GridKit namespace
 
 ## Development Container
 A development container is available for all developers using VS Code to develop. This will automatically install all pre-requisite software you need to develop in GridKit. Any developer who wishes to use this setup can follow [this tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial) and simply use the option "Reopen Folder in Container" rather than "New Dev Container...", which will automatically build the included container.
+
+
+## Electric Grid Test Cases
+
+When adding a new test case to to the repository using the GridKit input file format, you should follow the following guidelines to remain constistant with existing GridKit cases. For each test case, the associated README.md should contain the following:
+- A high resolution oneline diagram ($\geq$ 600 dpi)
+- No overlapping labels
+- Use common electrical symbols for components (transformers, generators, loads, etc.)
+- Use a calm color pallet
+
+Within the README file for the test case, specify characteristics such as:
+- Which component models are used
+- Quantity of each component model used
+- Types of events well-suited for the case
+- Any other relevant case characteristics 
+
+Additionally, specify existing multiple resolutions of the case, i.e., if there is a high-fidelity EMT network model along with a phasor-domain network model that is well known and available, we should indicate that both these model resolutions are available within GridKit. 
