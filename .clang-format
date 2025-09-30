@@ -6,8 +6,9 @@ BasedOnStyle:  Microsoft
 IndentWidth: 2                    # 2 spaces per indent
 AccessModifierOffset: -2
 IndentAccessModifiers: false      # Align access modifiers to braces
-NamespaceIndentation: All       # Indent namspace contents
+NamespaceIndentation: All         # Indent namespace contents
 ConstructorInitializerIndentWidth: 2
+LambdaBodyIndentation: OuterScope # Align lambdas to their outer scope, such as when an argument to a function
 
 # Comments which match this regex will be unformatted (and therefore can be longer or have more whitespace than other comments)
 CommentPragmas: '^\*\*'
