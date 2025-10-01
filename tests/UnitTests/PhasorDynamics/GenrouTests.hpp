@@ -20,7 +20,8 @@ namespace GridKit
     {
     private:
       using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
-
+      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon(); // added this: was not originally there
+      //static constexpr ScalarT tol_ = .00001;
     public:
       GenrouTests()  = default;
       ~GenrouTests() = default;
@@ -96,6 +97,113 @@ namespace GridKit
         {
           if (!isEqual(f_val, 0.0, tol))
             success = false;
+        }
+
+        return success.report(__func__);
+      }
+      
+      // A test to verify that the hard coded answers match those given by the residual functions
+      // Hard code parameters, differential, and algebraic terms
+      TestOutcome hard_coded_residual()
+      {
+        TestStatus success = true;
+
+        // GenRou generator parameters
+        real_type p0{1};
+        real_type q0{.05013};
+        real_type H{3};
+        real_type D{.5};
+        real_type Ra{.1};
+        real_type Tdop{7};
+        real_type Tdopp{.04};
+        real_type Tqopp{.05};
+        real_type Tqop{.75};
+        real_type Xd{2.1};
+        real_type Xdp{.2};
+        real_type Xdpp{.5};
+        real_type Xq{.18};
+        real_type Xqp{.3};
+        real_type Xqpp{.5};
+        real_type Xl{.5};
+        real_type S10{.1};
+        real_type S12{.2};
+
+        ScalarT Vr1{1.0}; ///< Bus real voltage
+        ScalarT Vi1{0}; ///< Bus imaginary voltage
+
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, 
+                                                  Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
+
+        // Test answer keys - update for genrou
+        const std::vector<ScalarT> res_answer = {-376.99111843077515,
+                                                  -1.1111111111111112,
+                                                  -0.4247619047619049,
+                                                  -54.75,
+                                                  -9.600000000000001,
+                                                  2.3786666666666663,
+                                                  0.21000000000000002,
+                                                  -0.07,
+                                                  -0.19223748416156686,
+                                                  1.8896749891587163,
+                                                  1.4000000000000001,
+                                                  0.31000000000000005,
+                                                  2.211,
+                                                  0.85,
+                                                  1.2,
+                                                  0.9846153846153847,
+                                                  -1.8230769230769228,
+                                                  -1.0846153846153845,
+                                                  -0.9269230769230766};
+        
+        bus.allocate();
+        bus.initialize();
+
+        // Allocate but not initialize generator model
+        gen.allocate();
+
+        // Set variable values matching the answer key - update the values
+        gen.y()[0] = M_PI; // delta
+        gen.y()[1] = 2.0;  // omega
+        gen.y()[2] = 2.0;  // Eqp
+        gen.y()[3] = .1; // psidp
+        gen.y()[4] = .01; // psiqp
+        gen.y()[5] = .6; // Edp
+        gen.y()[6] = .2; // psiqp
+        gen.y()[7] = .03; // psidpp
+        gen.y()[8] = .01; // psipp
+        gen.y()[9] = 2; // ksat
+        gen.y()[10] = .8; // vd
+        gen.y()[11] = .4; // vq
+        gen.y()[12] = 2; // telec
+        gen.y()[13] = 1.1; // id
+        gen.y()[14] = .3; // iq
+        gen.y()[15] = .9; // ir
+        gen.y()[16] = .25; // ii
+        gen.y()[17] = .3; // inr
+        gen.y()[18] = .15; // ini
+
+
+        // Set derivative values matching the answer key - calculate these yourself
+        gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
+        gen.yp()[1] = -1.5;            // omega_dot
+        gen.yp()[2] = 1;               // Eqp_dot
+        gen.yp()[3] = 1;               // psidp_dot
+        gen.yp()[4] = 1;               // psiqp_dot
+        gen.yp()[5] = 1;               // Edp_dot
+
+        gen.evaluateResidual();
+        std::vector<ScalarT>& residual = gen.getResidual();
+
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          if (!isEqual(residual[i], res_answer[i], tol_))
+          {
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << residual[i] << " != " << res_answer[i] << "\n";
+            success = false;
+            break;
+          }
         }
 
         return success.report(__func__);
