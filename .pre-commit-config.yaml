@@ -11,3 +11,4 @@ repos:
     - id: forbid-new-submodules
     - id: end-of-file-fixer
     - id: check-yaml
+    - id: check-json
