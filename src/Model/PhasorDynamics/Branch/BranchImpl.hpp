@@ -191,7 +191,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual12(
+    __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual12(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  w,
