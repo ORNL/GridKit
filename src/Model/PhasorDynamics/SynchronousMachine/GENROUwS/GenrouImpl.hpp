@@ -467,7 +467,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Genrou<ScalarT, IdxT>::evaluateBusResidual(
+    __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateBusResidual(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  w,
