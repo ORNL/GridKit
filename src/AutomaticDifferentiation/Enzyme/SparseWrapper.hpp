@@ -293,9 +293,9 @@ namespace GridKit
             }
 
             // Store result
-            std::vector<IdxT>    ctemp(triplets.size());
-            std::vector<IdxT>    rtemp(triplets.size());
-            std::vector<ScalarT> valtemp(triplets.size());
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
             for (auto& tup : triplets)
             {
               rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
@@ -355,9 +355,9 @@ namespace GridKit
             }
 
             // Store result
-            std::vector<IdxT>    ctemp(triplets.size());
-            std::vector<IdxT>    rtemp(triplets.size());
-            std::vector<ScalarT> valtemp(triplets.size());
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
             for (auto& tup : triplets)
             {
               rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
@@ -417,9 +417,9 @@ namespace GridKit
             }
 
             // Store result
-            std::vector<IdxT>    ctemp(triplets.size());
-            std::vector<IdxT>    rtemp(triplets.size());
-            std::vector<ScalarT> valtemp(triplets.size());
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
             for (auto& tup : triplets)
             {
               rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
