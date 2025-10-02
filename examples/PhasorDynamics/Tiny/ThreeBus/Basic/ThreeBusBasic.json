@@ -4,14 +4,14 @@
         "format_revision": 1,
         "case_name": "ThreeBusExample",
         "case_description": "None",
-        "case_comments": "CASE COMMENTS",
+        "case_comments": "None",
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 1,
-            "class": "bus",
+            "class": "infinite_bus",
             "name": "1",
             "init": {
                 "Vr": 1.05999994,
@@ -122,6 +122,21 @@
             }
         },
         {
+            "class": "Load",
+            "ports": {
+                "bus": 3
+            },
+            "id": "load_3_1",
+            "params": {
+                "R": 0.44471991918502957,
+                "X": 0.20330053750868038
+            },
+            "mon": [
+                "p",
+                "q"
+            ]
+        },
+        {
             "class": "Genrou",
             "ports": {
                 "bus": 2,
@@ -131,8 +146,8 @@
             },
             "id": "genrou_2_1",
             "params": {
-                "p0": 1.0,
-                "q0": 0.05013,
+                "p0": 0.5,
+                "q0": -0.0758774653,
                 "H": 2.70000005,
                 "D": 0.0,
                 "Ra": 0.0,
@@ -165,8 +180,8 @@
             },
             "id": "genrou_3_1",
             "params": {
-                "p0": 1.0,
-                "q0": 0.05013,
+                "p0": 0.25,
+                "q0": 0.2658729851,
                 "H": 1.60000002,
                 "D": 0.0,
                 "Ra": 0.0,
