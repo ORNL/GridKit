@@ -247,7 +247,7 @@ namespace GridKit
        *
        */
       template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* w,
