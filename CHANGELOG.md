@@ -1,5 +1,32 @@
 # Release Changelog
 
+## v0.2
+
+- Added 3, 10, and 37 bus test cases.
+- Updated documentation.
+- Added JSON parsing.
+- Automatic differentiation with enzyme.
+- Added PR and issue templates.
+- Added Genrou class unit test and example.
+- Added Dev container.
+- Added back removed tests.
+- Added the ability to print matrices to matrix market files for later analysis.
+- Added input format specifications.
+- Improved IDA interface.
+- SUNDIALS interface updates.
+- Refactored and reorganized examples.
+- Updated variable names and function signatures to follow conventions.
+- Added classical generator model.
+- Added clang formatting pre-commit.
+- CMake fixes.
+- Fixed warnings, memory leaks, and failed asserts.
+- Added Tgov1 example. 
+- Added 10 generator example.
+- Improved data structures.
+- Removed dead code.
+- Added signal node connectivity tools.
+- Upgraded to Spack 1.0.0.
+
 ## v0.1
 
 - Refactored code to support adding different model families.
