@@ -193,7 +193,6 @@ namespace GridKit
         real_type H{1.0};
         real_type D{1.0};
         real_type Ra{0.6};
-        real_type Xl{.15};
         real_type Xdp{0.2};
 
         ScalarT Vr1{1.0}; ///< Bus real voltage
