@@ -3,6 +3,33 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
+set(GRIDKIT_EXAMPLES_INSTALL_ROOT "share/gridkit/examples")
+
+#
+# gridkit_example_add_file(<filename>)
+#
+# This macro will add a file (e.g., JSON) that is needed for an example to the
+# build tree and the install tree following the same directory structure as the
+# source tree under `examples`.
+# 
+# <filename> must exist in the CMAKE_CURRENT_SOURCE_DIR where this macro is
+# called.
+#
+macro(gridkit_example_add_file _filename)
+    get_filename_component(__fname ${_filename} NAME)
+    set(_source_filepath ${CMAKE_CURRENT_SOURCE_DIR}/${__fname})
+    if(NOT EXISTS ${_source_filepath})
+        message(FATAL_ERROR "File does not exist: ${_source_filepath}")
+    endif()
+    set(_binary_filepath ${CMAKE_CURRENT_BINARY_DIR}/${__fname})
+    configure_file(${_source_filepath} ${_binary_filepath} COPYONLY)
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR
+        BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples
+        OUTPUT_VARIABLE _rel_path)
+    set(_ex_install_path ${GRIDKIT_EXAMPLES_INSTALL_ROOT}/${_rel_path})
+    install(FILES ${_filename} DESTINATION ${_ex_install_path})
+endmacro()
+
 add_subdirectory(LinearAlgebra)
 
 add_subdirectory(PowerFlow)
