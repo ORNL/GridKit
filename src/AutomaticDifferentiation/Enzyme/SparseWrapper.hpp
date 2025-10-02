@@ -335,10 +335,7 @@ namespace GridKit
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
 
               // Elementary vector for Jacobian-vector product
-              for (size_t res_i = 0; res_i < n_res; ++res_i)
-              {
-                elementary_v[res_i] = 0.0;
-              }
+              std::ranges::fill(elementary_v, 0.0);
               elementary_v[var_i] = 1.0;
 
               // Autodiff
