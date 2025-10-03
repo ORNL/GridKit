@@ -29,20 +29,40 @@ int main(int argc, const char* argv[])
   using real_type   = double;
   using index_type  = size_t;
 
-  if (argc < 2)
-  {
-    throw std::runtime_error(
-        "\n\nUsage:\n"
-        "\tTwoBusBasicJson <json-input-file>\n");
-  }
-
-  std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
-
   //
   // Input file
   //
 
-  auto input_file = std::filesystem::path(argv[1]);
+  std::filesystem::path input_file;
+  if (argc < 2)
+  {
+    if (std::filesystem::exists("TwoBusIeeet1.json"))
+    {
+      input_file = std::filesystem::current_path() / "TwoBusIeeet1.json";
+    }
+    else
+    {
+      std::cout << "\n"
+                   "ERROR: No input file found or provided.\n"
+                   "\n"
+                   "Usage:\n"
+                   "       TwoBusIeeet1Json <json-input-file>\n"
+                   "\n"
+                   "Please provide a JSON input file as a positional command-line \n"
+                   "argument.\n"
+                   "\n"
+                   "By default this example will look for \"TwoBusIeeet1.json\" in the \n"
+                   "current working directory and use that if found.\n"
+                   "\n";
+      exit(1);
+    }
+  }
+  else
+  {
+    input_file = argv[1];
+  }
+
+  std::cout << "Example: TwoBusIeeet1Json\n";
   std::cout << "Input file: " << input_file << '\n';
 
   //
