@@ -165,10 +165,10 @@ namespace GridKit
 
       IdxT                 size_{0};
       IdxT                 nnz_{0};
-      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level) 
-                                              ///variable indices
-      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level) 
-                                              ///residual indices
+      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level)
+                                              /// variable indices
+      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
+                                              /// residual indices
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
