@@ -24,13 +24,14 @@ namespace GridKit
     {
       using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::nnz_;
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
+      using Component<ScalarT, IdxT>::w_;
+      using Component<ScalarT, IdxT>::h_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
@@ -57,11 +58,13 @@ namespace GridKit
       void setR(real_type R)
       {
         R_ = R;
+        setDerivedParams();
       }
 
       void setX(real_type X)
       {
         X_ = X;
+        setDerivedParams();
       }
 
       void setStatus(bool status)
@@ -70,6 +73,8 @@ namespace GridKit
       }
 
     private:
+      void setDerivedParams();
+
       ScalarT& Vr()
       {
         return bus_->Vr();
@@ -90,12 +95,19 @@ namespace GridKit
         return bus_->Ii();
       }
 
+    public:
+      __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+
     private:
       bus_type* bus_;
       real_type R_{0.0};
       real_type X_{0.0};
       bool      status_{false};
       IdxT      bus_id_{0};
+
+      /* Derivied parameters */
+      real_type B_;
+      real_type G_;
     };
 
   } // namespace PhasorDynamics

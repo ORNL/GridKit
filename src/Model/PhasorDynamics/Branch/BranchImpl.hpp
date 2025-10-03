@@ -37,6 +37,7 @@ namespace GridKit
         bus2_id_(0)
     {
       size_ = 0;
+      setDerivedParams();
     }
 
     /**
@@ -67,6 +68,7 @@ namespace GridKit
         bus1_id_(0),
         bus2_id_(0)
     {
+      setDerivedParams();
     }
 
     template <class ScalarT, typename IdxT>
@@ -105,6 +107,7 @@ namespace GridKit
       }
 
       size_ = 0;
+      setDerivedParams();
     }
 
     /**
@@ -136,6 +139,10 @@ namespace GridKit
     int Branch<ScalarT, IdxT>::allocate()
     {
       // std::cout << "Allocate Branch..." << std::endl;
+
+      w_.resize(2);
+      h_.resize(2);
+
       return 0;
     }
 
@@ -159,38 +166,126 @@ namespace GridKit
     }
 
     /**
-     * \brief Residual contribution of the branch is pushed to the
-     * two terminal buses.
+     * @brief Bus 1 residual contribution from bus 1 variables
      *
      */
     template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateResidual()
+    __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual11(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  w,
+        ScalarT*                  h)
     {
-      // std::cout << "Evaluating branch residual ...\n";
-      real_type b = -X_ / (R_ * R_ + X_ * X_);
-      real_type g = R_ / (R_ * R_ + X_ * X_);
-
-      Ir1() += -(g + 0.5 * G_) * Vr1() + (b + 0.5 * B_) * Vi1() + g * Vr2() - b * Vi2();
-      Ii1() += -(b + 0.5 * B_) * Vr1() - (g + 0.5 * G_) * Vi1() + b * Vr2() + g * Vi2();
-      Ir2() += g * Vr1() - b * Vi1() - (g + 0.5 * G_) * Vr2() + (b + 0.5 * B_) * Vi2();
-      Ii2() += b * Vr1() + g * Vi1() - (b + 0.5 * B_) * Vr2() - (g + 0.5 * G_) * Vi2();
+      ScalarT Vr1 = w[0];
+      ScalarT Vi1 = w[1];
+      ScalarT Ir1 = -(g_ + 0.5 * G_) * Vr1 + (b_ + 0.5 * B_) * Vi1;
+      ScalarT Ii1 = -(b_ + 0.5 * B_) * Vr1 - (g_ + 0.5 * G_) * Vi1;
+      h[0]        = Ir1;
+      h[1]        = Ii1;
 
       return 0;
     }
 
     /**
-     * @brief Jacobian evaluation not implemented yet
+     * @brief Bus 1 residual contribution from bus 2 variables
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
-     * @return int - error code, 0 = success
      */
     template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateJacobian()
+    __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual12(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  w,
+        ScalarT*                  h)
     {
-      std::cout << "Evaluate Jacobian for Branch..." << std::endl;
-      std::cout << "Jacobian evaluation not implemented!" << std::endl;
+      ScalarT Vr2 = w[0];
+      ScalarT Vi2 = w[1];
+      ScalarT Ir1 = g_ * Vr2 - b_ * Vi2;
+      ScalarT Ii1 = b_ * Vr2 + g_ * Vi2;
+      h[0]        = Ir1;
+      h[1]        = Ii1;
+
       return 0;
+    }
+
+    /**
+     * @brief Bus 2 residual contribution from bus 1 variables
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual21(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  w,
+        ScalarT*                  h)
+    {
+      ScalarT Vr1 = w[0];
+      ScalarT Vi1 = w[1];
+      ScalarT Ir2 = g_ * Vr1 - b_ * Vi1;
+      ScalarT Ii2 = b_ * Vr1 + g_ * Vi1;
+      h[0]        = Ir2;
+      h[1]        = Ii2;
+
+      return 0;
+    }
+
+    /**
+     * @brief Bus 2 residual contribution from bus 2 variables
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual22(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  w,
+        ScalarT*                  h)
+    {
+      ScalarT Vr2 = w[0];
+      ScalarT Vi2 = w[1];
+      ScalarT Ir2 = -(g_ + 0.5 * G_) * Vr2 + (b_ + 0.5 * B_) * Vi2;
+      ScalarT Ii2 = -(b_ + 0.5 * B_) * Vr2 - (g_ + 0.5 * G_) * Vi2;
+      h[0]        = Ir2;
+      h[1]        = Ii2;
+
+      return 0;
+    }
+
+    /**
+     * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    int Branch<ScalarT, IdxT>::evaluateResidual()
+    {
+      w_[0] = Vr1();
+      w_[1] = Vi1();
+      evaluateBusResidual11(y_.data(), yp_.data(), w_.data(), h_.data());
+      Ir1() += h_[0];
+      Ii1() += h_[1];
+      evaluateBusResidual21(y_.data(), yp_.data(), w_.data(), h_.data());
+      Ir2() += h_[0];
+      Ii2() += h_[1];
+
+      w_[0] = Vr2();
+      w_[1] = Vi2();
+      evaluateBusResidual12(y_.data(), yp_.data(), w_.data(), h_.data());
+      Ir1() += h_[0];
+      Ii1() += h_[1];
+      evaluateBusResidual22(y_.data(), yp_.data(), w_.data(), h_.data());
+      Ir2() += h_[0];
+      Ii2() += h_[1];
+
+      return 0;
+    }
+
+    /**
+     * @brief Derived parameters
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::setDerivedParams()
+    {
+      b_ = -X_ / (R_ * R_ + X_ * X_);
+      g_ = R_ / (R_ * R_ + X_ * X_);
     }
 
   } // namespace PhasorDynamics

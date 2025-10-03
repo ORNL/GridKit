@@ -54,8 +54,10 @@ namespace GridKit
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<ScalarT>> setDataToCSR();
       std::vector<IdxT>                                                      getCSRRowData();
 
+      // Set values from vector storage. Will sort before storing
+      void setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v);
+
       // BLAS. Will sort before running
-      void    setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v);
       void    axpy(ScalarT alpha, COO_Matrix<ScalarT, IdxT>& a);
       void    axpy(ScalarT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v);
       void    scal(ScalarT alpha);
@@ -66,8 +68,8 @@ namespace GridKit
       void permutation(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm);
       void permutationSizeMap(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm, IdxT m, IdxT n);
 
+      // Special matrices (zero and identity)
       void zeroMatrix();
-
       void identityMatrix(IdxT n);
 
       // Resort values_

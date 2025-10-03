@@ -121,16 +121,54 @@ namespace GridKit
         return J_;
       }
 
+      virtual int setBusID(IdxT) = 0;
+
       virtual const IdxT busID() const
       {
         return bus_id_;
       }
 
-    protected:
-      const IdxT bus_id_{static_cast<IdxT>(-1)};
+      int setVariableIndex(IdxT local_index, IdxT global_index)
+      {
+        variable_indices_[local_index] = global_index;
+        return 0;
+      }
 
-      IdxT size_{0};
-      IdxT nnz_{0};
+      IdxT getVariableIndex(IdxT local_index) const
+      {
+        return variable_indices_.at(local_index);
+      }
+
+      const std::map<IdxT, IdxT>& getVariableIndices() const
+      {
+        return variable_indices_;
+      }
+
+      int setResidualIndex(IdxT local_index, IdxT global_index)
+      {
+        residual_indices_[local_index] = global_index;
+        return 0;
+      }
+
+      IdxT getResidualIndex(IdxT local_index) const
+      {
+        return residual_indices_.at(local_index);
+      }
+
+      const std::map<IdxT, IdxT>& getResidualIndices() const
+      {
+        return residual_indices_;
+      }
+
+    protected:
+      IdxT bus_id_{static_cast<IdxT>(-1)};
+
+      IdxT                 size_{0};
+      IdxT                 nnz_{0};
+      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level)
+                                              /// variable indices
+      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
+                                              /// residual indices
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;

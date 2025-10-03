@@ -1,3 +1,8 @@
+/**
+ * @file GenrouEnzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
+ *
+ */
 
 #include "GenrouImpl.hpp"
 #include <AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
@@ -19,7 +24,33 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-      GridKit::Enzyme::Sparse::ModelJacobian<Genrou<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
+      GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
+                                                GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                                ScalarT,
+                                                IdxT>::eval(this,
+                                                            f_.size(),
+                                                            y_.size(),
+                                                            this->getResidualIndices(),
+                                                            this->getVariableIndices(),
+                                                            y_.data(),
+                                                            yp_.data(),
+                                                            w_.data(),
+                                                            J_);
+
+      J_.printMatrix("Genrou internal Jacobian");
+
+      GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
+                                           GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+                                           ScalarT,
+                                           IdxT>::eval(this,
+                                                       static_cast<size_t>(bus_->size()),
+                                                       static_cast<size_t>(bus_->size()),
+                                                       bus_->getResidualIndices(),
+                                                       bus_->getVariableIndices(),
+                                                       y_.data(),
+                                                       yp_.data(),
+                                                       (bus_->y()).data(),
+                                                       bus_->getJacobian());
 
       return 0;
     }

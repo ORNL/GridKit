@@ -1,5 +1,6 @@
 /**
  * @file Tgov1Enzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
 
@@ -24,7 +25,21 @@ namespace GridKit
       {
         std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
         std::cout << "Jacobian evaluation is experimental!" << std::endl;
-        GridKit::Enzyme::Sparse::ModelJacobian<Tgov1<ScalarT, IdxT>, ScalarT, IdxT>(this, f_.size(), y_.size(), y_.data(), yp_.data(), J_);
+
+        GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                                  ScalarT,
+                                                  IdxT>::eval(this,
+                                                              f_.size(),
+                                                              y_.size(),
+                                                              this->getResidualIndices(),
+                                                              this->getVariableIndices(),
+                                                              y_.data(),
+                                                              yp_.data(),
+                                                              w_.data(),
+                                                              J_);
+
+        J_.printMatrix("Tgov1 internal Jacobian");
 
         return 0;
       }

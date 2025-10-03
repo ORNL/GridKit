@@ -59,8 +59,9 @@ namespace GridKit
         const ScalarT Ii{0.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+        PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
+        bus.allocate();
+        load.allocate();
         load.evaluateResidual();
 
         success *= isEqual(bus.Ir(), Ir);
@@ -83,8 +84,9 @@ namespace GridKit
         Vi.setVariableNumber(1); ///< Independent variables: second
 
         PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus(Vr, Vi);
-
-        PhasorDynamics::Load<DependencyTracking::Variable, IdxT> load(&bus, R, X);
+        PhasorDynamics::Load<DependencyTracking::Variable, IdxT>        load(&bus, R, X);
+        bus.allocate();
+        load.allocate();
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
@@ -113,12 +115,12 @@ namespace GridKit
         ScalarT Vr{10.0}; ///< Bus real voltage
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
+        PhasorDynamics::Bus<ScalarT, IdxT>  bus(Vr, Vi);
+        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
         bus.allocate();
         load.allocate();
         load.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = load.getJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = bus.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");
 
         /// Compare model Jacobian wih dependencies computed analytically

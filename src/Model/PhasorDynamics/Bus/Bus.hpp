@@ -18,11 +18,15 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class Bus : public BusBase<ScalarT, IdxT>
     {
+      using BusBase<ScalarT, IdxT>::bus_id_;
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
       using BusBase<ScalarT, IdxT>::yp_;
       using BusBase<ScalarT, IdxT>::f_;
+      using BusBase<ScalarT, IdxT>::J_;
       using BusBase<ScalarT, IdxT>::tag_;
+      using BusBase<ScalarT, IdxT>::variable_indices_;
+      using BusBase<ScalarT, IdxT>::residual_indices_;
 
     public:
       using real_type = typename BusBase<ScalarT, IdxT>::real_type;
@@ -34,6 +38,7 @@ namespace GridKit
       Bus(const DataT& data);
       virtual ~Bus();
 
+      virtual int setBusID(IdxT) override;
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
       virtual int initialize() override;

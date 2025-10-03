@@ -9,8 +9,10 @@ int main()
   GridKit::Testing::SystemTests<double, size_t> test;
 
   result += test.constructor();
-  result += test.dependencyTracking();
   result += test.composer();
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.jacobian();
+#endif
 
   return result.summary();
 }

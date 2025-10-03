@@ -35,8 +35,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::w_;
+      using Component<ScalarT, IdxT>::h_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
@@ -95,7 +95,7 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateResidualLocally(ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};

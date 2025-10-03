@@ -132,6 +132,18 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+
+      // Resize coupling data
+      w_.resize(2);
+      h_.resize(2);
+
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
+
       return 0;
     }
 
@@ -183,11 +195,15 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual contribution computed locally
+     * @brief Internal residual
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateInternalResidual(
+        ScalarT* y,
+        ScalarT* yp,
+        ScalarT* w,
+        ScalarT* f)
     {
       // Set variable aliases for better readability.
       const ScalarT delta = y[0];
@@ -202,19 +218,38 @@ namespace GridKit
       const ScalarT delta_dot = yp[0];
       const ScalarT omega_dot = yp[1];
 
+      // Set coupling variable aliases
+      const ScalarT vr = w[0];
+      const ScalarT vi = w[1];
+
       // GenClassical differential equations
       f[0] = delta_dot - (omega - 1.0) * (2.0 * M_PI * 60.0);
       f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * (omega - 1.0)) / omega - telec);
 
       // GenClassical algebraic equations
-      f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr_ - B_ * vi_) * std::cos(delta) + (B_ * vr_ + G_ * vi_) * std::sin(delta)));
+      f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
 
-      f[3] = ir + G_ * vr_ - B_ * vi_ - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
-      f[4] = ii + B_ * vr_ + G_ * vi_ - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
+      f[3] = ir + G_ * vr - B_ * vi - ep * (G_ * std::cos(delta) - B_ * std::sin(delta));
+      f[4] = ii + B_ * vr + G_ * vi - ep * (B_ * std::cos(delta) + G_ * std::sin(delta));
 
-      // Bus current injection
-      ir_ = ir;
-      ii_ = ii;
+      return 0;
+    }
+
+    /**
+     * @brief Bus residual
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateBusResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        [[maybe_unused]] ScalarT* w,
+        ScalarT*                  h)
+    {
+      const ScalarT ir = y[3];
+      const ScalarT ii = y[4];
+      h[0]             = ir;
+      h[1]             = ii;
 
       return 0;
     }
@@ -226,14 +261,14 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::evaluateResidual()
     {
-      vr_ = Vr();
-      vi_ = Vi();
+      w_[0] = Vr();
+      w_[1] = Vi();
 
-      evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), w_.data(), f_.data());
+      evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
 
-      // GenClassical contribution to bus algebraic equations
-      Ir() += ir_;
-      Ii() += ii_;
+      Ir() += h_[0];
+      Ii() += h_[1];
 
       return 0;
     }

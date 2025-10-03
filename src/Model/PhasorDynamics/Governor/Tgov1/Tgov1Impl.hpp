@@ -138,11 +138,18 @@ namespace GridKit
         yp_.resize(size);
         tag_.resize(size);
 
+        // Default variable and residual index mapping to local index
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
+
         // Set output signal after allocation
         // The signal is accessible to the generator
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2]);
+          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], this->getVariableIndex(2));
         }
 
         return 0;
@@ -160,7 +167,7 @@ namespace GridKit
         // Initial mechanical = initial electric torque
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          p0 = y_[2]; //<- generator needs to be initialized first
+          p0 = y_[2]; ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
@@ -236,11 +243,15 @@ namespace GridKit
       }
 
       /**
-       * @brief Residuals of system equations evaluated locally
+       * @brief Internal residuals
        *
        */
       template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) int Tgov1<ScalarT, IdxT>::evaluateResidualLocally(ScalarT* y, ScalarT* yp, ScalarT* f)
+      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
+          ScalarT*                  y,
+          ScalarT*                  yp,
+          [[maybe_unused]] ScalarT* w,
+          ScalarT*                  f)
       {
         // Read Internal Variables
         ScalarT ptx   = y[0]; // y0 - Ptx
@@ -278,7 +289,7 @@ namespace GridKit
           omega_ = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        evaluateResidualLocally(y_.data(), yp_.data(), f_.data());
+        evaluateInternalResidual(y_.data(), yp_.data(), w_.data(), f_.data());
 
         return 0;
       }

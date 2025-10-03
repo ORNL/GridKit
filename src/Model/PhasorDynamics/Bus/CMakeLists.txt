@@ -4,12 +4,29 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-gridkit_add_library(phasor_dynamics_bus
+if(GRIDKIT_ENABLE_ENZYME)
+  gridkit_add_library(phasor_dynamics_bus
+    SOURCES
+      BusEnzyme.cpp
+      BusInfinite.cpp
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_bus)
+else()
+  gridkit_add_library(phasor_dynamics_bus
+    SOURCES
+      Bus.cpp
+      BusInfinite.cpp
+    OUTPUT_NAME
+      gridkit_phasor_dynamics_bus)
+endif()
+
+gridkit_add_library(phasor_dynamics_bus_dependency_tracking
   SOURCES
-    Bus.cpp
-    BusInfinite.cpp
+    BusDependencyTracking.cpp
+    BusInfiniteDependencyTracking.cpp
   OUTPUT_NAME
-    gridkit_phasor_dynamics_bus)
+    gridkit_phasor_dynamics_bus_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(gridkit_phasor_dynamics_components INTERFACE GRIDKIT::phasor_dynamics_bus)
+target_link_libraries(gridkit_phasor_dynamics_components_dependency_tracking INTERFACE GRIDKIT::phasor_dynamics_bus_dependency_tracking)
