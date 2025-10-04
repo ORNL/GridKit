@@ -134,26 +134,29 @@ namespace GridKit
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
 
-        // Test answer keys - update for genrou
-        const std::vector<ScalarT> res_answer = {-376.99111843077515,
-                                                 -1.1111111111111112,
-                                                 -0.4247619047619049,
-                                                 -54.75,
-                                                 -9.600000000000001,
-                                                 2.3786666666666663,
-                                                 0.21000000000000002,
-                                                 -0.07,
-                                                 -0.19223748416156686,
-                                                 1.8896749891587163,
-                                                 1.4000000000000001,
-                                                 0.31000000000000005,
-                                                 2.211,
-                                                 0.85,
-                                                 1.2,
-                                                 0.9846153846153847,
-                                                 -1.8230769230769228,
-                                                 -1.0846153846153845,
-                                                 -0.9269230769230766};
+        // Answer key is available only in double precision.
+        // Therefore, only double precision tests are done at this time.
+        const std::vector<double> res_answer = {
+            -3.7699111843077515e+02,
+            -1.1111111111111112e+00,
+            -4.2476190476190490e-01,
+            -5.4750000000000000e+01,
+            -9.6000000000000010e+00,
+            2.3786666666666663e+00,
+            2.1000000000000002e-01,
+            -7.0000000000000000e-02,
+            -1.9223748416156686e-01,
+            1.8896749891587163e+00,
+            1.4000000000000001e+00,
+            3.1000000000000005e-01,
+            2.2110000000000000e+00,
+            8.5000000000000000e-01,
+            1.2000000000000000e+00,
+            9.8461538461538467e-01,
+            -1.8230769230769228e+00,
+            -1.0846153846153845e+00,
+            -9.2692307692307660e-01
+        };
 
         bus.allocate();
         bus.initialize();
@@ -161,7 +164,7 @@ namespace GridKit
         // Allocate but not initialize generator model
         gen.allocate();
 
-        // Set variable values matching the answer key - update the values
+        // Set variable values matching the answer key
         gen.y()[0]  = M_PI; // delta
         gen.y()[1]  = 2.0;  // omega
         gen.y()[2]  = 2.0;  // Eqp
@@ -182,7 +185,7 @@ namespace GridKit
         gen.y()[17] = .3;   // inr
         gen.y()[18] = .15;  // ini
 
-        // Set derivative values matching the answer key - calculate these yourself
+        // Set derivative values matching the answer key
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
         gen.yp()[1] = -1.5;            // omega_dot
         gen.yp()[2] = 1;               // Eqp_dot
