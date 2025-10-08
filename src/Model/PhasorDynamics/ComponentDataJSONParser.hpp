@@ -86,14 +86,15 @@ namespace GridKit
       {
         for (auto& raw_monitored_variable : j.at("mon"))
         {
-          auto monitored = magic_enum::enum_cast<MonitorableVariables>(raw_monitored_variable.get<std::string>());
+          auto var_name  = raw_monitored_variable.get<std::string>();
+          auto monitored = magic_enum::enum_cast<MonitorableVariables>(var_name);
           if (monitored.has_value())
           {
             c.monitored_variables.insert(monitored.value());
           }
           else
           {
-            throw std::runtime_error("Invalid monitored variable");
+            throw std::runtime_error("Invalid monitored variable \"" + var_name + '\"');
           }
         }
       }
