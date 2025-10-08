@@ -6,6 +6,20 @@
 set(GRIDKIT_EXAMPLES_INSTALL_ROOT "share/gridkit/examples")
 
 #
+# gridkit_example_current_install_path(<output-variable>)
+# 
+# Get the full installation destination for the current example directory.
+# 
+# Result is stored in <output-variable>
+#
+macro(gridkit_example_current_install_path _out)
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR
+        BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples
+        OUTPUT_VARIABLE _rel_path)
+    set(${_out} ${GRIDKIT_EXAMPLES_INSTALL_ROOT}/${_rel_path})
+endmacro()
+
+#
 # gridkit_example_add_file(<filename>)
 #
 # This macro will add a file (e.g., JSON) that is needed for an example to the
@@ -23,10 +37,7 @@ macro(gridkit_example_add_file _filename)
     endif()
     set(_binary_filepath ${CMAKE_CURRENT_BINARY_DIR}/${__fname})
     configure_file(${_source_filepath} ${_binary_filepath} COPYONLY)
-    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR
-        BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples
-        OUTPUT_VARIABLE _rel_path)
-    set(_ex_install_path ${GRIDKIT_EXAMPLES_INSTALL_ROOT}/${_rel_path})
+    gridkit_example_current_install_path(_ex_install_path)
     install(FILES ${_filename} DESTINATION ${_ex_install_path})
 endmacro()
 

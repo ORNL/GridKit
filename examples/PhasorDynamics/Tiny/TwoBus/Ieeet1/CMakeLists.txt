@@ -1,9 +1,11 @@
+gridkit_example_current_install_path(_install_path)
+
 add_executable(TwoBusIeeet1 TwoBusIeeet1.cpp)
 target_link_libraries(TwoBusIeeet1
 	GRIDKIT::phasor_dynamics_components
 	GRIDKIT::phasor_dynamics_signal
 	GRIDKIT::solvers_dyn)
-install(TARGETS TwoBusIeeet1 RUNTIME DESTINATION bin)
+install(TARGETS TwoBusIeeet1 RUNTIME DESTINATION ${_install_path})
 
 add_executable(TwoBusIeeet1Json TwoBusIeeet1Json.cpp)
 target_link_libraries(TwoBusIeeet1Json
@@ -14,10 +16,12 @@ target_include_directories(TwoBusIeeet1Json
     PRIVATE ${CMAKE_SOURCE_DIR}/third-party/nlohmann-json/include)
 target_include_directories(TwoBusIeeet1Json
     PRIVATE ${CMAKE_SOURCE_DIR}/third-party/magic-enum/include)
-install(TARGETS TwoBusIeeet1Json RUNTIME DESTINATION bin)
+install(TARGETS TwoBusIeeet1Json RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(TwoBusIeeet1.json)
 
 add_test(NAME GenrouTest1_Ieeet1 COMMAND TwoBusIeeet1)
 add_test(NAME GenrouTest1_Ieeet1_Json
-    COMMAND TwoBusIeeet1Json TwoBusIeeet1.json
+    COMMAND TwoBusIeeet1Json ${CMAKE_CURRENT_BINARY_DIR}/TwoBusIeeet1.json)
+add_test(NAME GenrouTest1_Ieeet1_Json_no_arg
+    COMMAND TwoBusIeeet1Json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
