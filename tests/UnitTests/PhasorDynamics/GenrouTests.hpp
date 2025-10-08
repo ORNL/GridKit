@@ -136,7 +136,7 @@ namespace GridKit
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
-        const std::vector<double> res_answer = {
+        const std::vector<ScalarT> res_answer = {
             -2 * M_PI * 60.0,
             -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
             -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
