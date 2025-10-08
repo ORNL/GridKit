@@ -21,7 +21,7 @@ namespace GridKit
     private:
       using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon(); // added this: was not originally there
-      // static constexpr ScalarT tol_ = .00001;
+
     public:
       GenrouTests()  = default;
       ~GenrouTests() = default;
