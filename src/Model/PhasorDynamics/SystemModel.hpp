@@ -568,8 +568,8 @@ namespace GridKit
        */
       void addBus(bus_type* bus)
       {
-        IdxT gridkit_bus_id                  = static_cast<IdxT>(buses_.size());
-        gridkit_bus_indices_[gridkit_bus_id] = bus->busID();
+        IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
+        gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
         buses_.push_back(bus);
       }
 
@@ -581,8 +581,8 @@ namespace GridKit
        */
       void addSignal(signal_type* signal)
       {
-        IdxT gridkit_signal_id                     = static_cast<IdxT>(signals_.size());
-        gridkit_signal_indices_[gridkit_signal_id] = signal->signalId();
+        IdxT gridkit_signal_id                      = static_cast<IdxT>(signals_.size());
+        gridkit_signal_indices_[signal->signalId()] = gridkit_signal_id;
         signals_.push_back(signal);
       }
 
