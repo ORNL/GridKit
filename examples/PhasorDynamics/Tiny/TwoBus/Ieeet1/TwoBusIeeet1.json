@@ -105,7 +105,7 @@
             }
         },
         { 
-            "class": "bus_fault",
+            "class": "BusFault",
             "ports": {"bus":0},
             "id": "0",
             "params": {"state0": false, "R":0.0, "X":1e-3}
