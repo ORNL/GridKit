@@ -137,25 +137,25 @@ namespace GridKit
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
         const std::vector<double> res_answer = {
-            -3.7699111843077515e+02,
-            -1.1111111111111112e+00,
-            -4.2476190476190490e-01,
-            -5.4750000000000000e+01,
-            -9.6000000000000010e+00,
-            2.3786666666666663e+00,
-            2.1000000000000002e-01,
-            -7.0000000000000000e-02,
-            -1.9223748416156686e-01,
-            1.8896749891587163e+00,
-            1.4000000000000001e+00,
-            3.1000000000000005e-01,
-            2.2110000000000000e+00,
-            8.5000000000000000e-01,
-            1.2000000000000000e+00,
-            9.8461538461538467e-01,
-            -1.8230769230769228e+00,
-            -1.0846153846153845e+00,
-            -9.2692307692307660e-01};
+            -2 * M_PI * 60.0,
+            -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
+            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
+            -54.75,
+            -9.6,
+            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
+            0.21,
+            -0.07,
+            -0.19223748416156686,
+            1.8896749891587163,
+            1.4,
+            0.31,
+            2.211,
+            0.85,
+            1.2,
+            static_cast<ScalarT>(64.) / static_cast<ScalarT>(65.),
+            -static_cast<ScalarT>(237.) / static_cast<ScalarT>(130.),
+            -static_cast<ScalarT>(141.) / static_cast<ScalarT>(130.),
+            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.)};
 
         bus.allocate();
         bus.initialize();
