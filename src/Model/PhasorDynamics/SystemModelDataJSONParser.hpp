@@ -62,7 +62,7 @@ namespace GridKit
       /// governor and support for signal nodes.
       for (auto& raw_component : j.at("devices"))
       {
-        auto kind = raw_component.at("class");
+        auto kind = raw_component.at("class").get<std::string>();
         if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;
@@ -101,7 +101,7 @@ namespace GridKit
         }
         else
         {
-          throw std::runtime_error("Invalid device class");
+          throw std::runtime_error("Invalid device class \"" + kind + '\"');
         }
       }
     }
