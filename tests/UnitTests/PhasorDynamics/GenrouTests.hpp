@@ -217,7 +217,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-
 #if 0 // Disabled GenrouEnzyme because of an intermittent build issue
 #ifdef GRIDKIT_ENABLE_ENZYME
       /**
