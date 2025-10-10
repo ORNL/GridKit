@@ -75,6 +75,12 @@ namespace GridKit
           raw_component.get_to(genrou);
           sm.genrou.push_back(genrou);
         }
+        else if (kind == "GenClassical")
+        {
+          typename SystemModelData<RealT, IdxT>::GenClassicalDataT gen_classical;
+          raw_component.get_to(gen_classical);
+          sm.genclassical.push_back(gen_classical);
+        }
         else if (kind == "Load")
         {
           typename SystemModelData<RealT, IdxT>::LoadDataT load;
