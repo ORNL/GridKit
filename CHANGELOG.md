@@ -26,6 +26,7 @@
 - Removed dead code.
 - Added signal node connectivity tools.
 - Upgraded to Spack 1.0.0.
+- Added `GenClassical` as supported device class in JSON parser.
 
 ## v0.1
 
