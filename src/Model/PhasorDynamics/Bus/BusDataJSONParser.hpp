@@ -19,6 +19,11 @@ namespace GridKit
     {
       j.at("name").get_to(bd.name);
 
+      std::stringstream error_context;
+      error_context << "\n\tSee bus number " << bd.bus_id
+                    << " (\"name\": \"" << bd.name << "\") "
+                    << "in the \"buses\" list of your JSON file.";
+
       if (j.contains("init"))
       {
         for (auto& raw_parameter : j.at("init").items())
@@ -33,7 +38,10 @@ namespace GridKit
           }
           else
           {
-            throw std::runtime_error("Invalid initial parameter");
+            std::stringstream msg;
+            msg << "\n\tInvalid initial parameter \"" << raw_parameter.key()
+                << "\" in \"init\" section." << error_context.str();
+            throw std::runtime_error(msg.str());
           }
         }
       }
@@ -51,7 +59,10 @@ namespace GridKit
       }
       else
       {
-        throw std::runtime_error("Invalid bus class");
+        std::stringstream msg;
+        msg << "\n\tInvalid bus class: \"" << string_class << "\"."
+            << error_context.str();
+        throw std::runtime_error(msg.str());
       }
 
       j.at("v_base").get_to(bd.v_base);
@@ -93,7 +104,10 @@ namespace GridKit
           }
           else
           {
-            throw std::runtime_error("Invalid monitored variable");
+            std::stringstream msg;
+            msg << "\n\tInvalid monitored variable: \"" << monitored
+                << "\" in \"mon\" list." << error_context.str();
+            throw std::runtime_error(msg.str());
           }
         }
       }

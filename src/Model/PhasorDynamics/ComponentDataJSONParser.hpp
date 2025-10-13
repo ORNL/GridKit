@@ -25,13 +25,20 @@ namespace GridKit
     {
       j.at("class").get_to(c.device_class);
 
+      j.at("id").get_to(c.disambiguation_string);
+
+      std::stringstream error_context;
+      error_context << "\n\tSee the \"" << c.device_class
+                    << "\" device with \"id\": \"" << c.disambiguation_string
+                    << "\" in the \"devices\" list of your JSON file.";
+
       for (auto& raw_parameter : j.at("params").items())
       {
         auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
         if (key.has_value())
         {
-          // NOTE: this is necessary because it doesn't seem like nlohmann/json handles std::variant
-          //       out of the box
+          // NOTE: this is necessary because it doesn't seem like nlohmann/json
+          //       handles std::variant out of the box
           if (raw_parameter.value().is_boolean())
           {
             c.parameters[key.value()] = raw_parameter.value().template get<bool>();
@@ -46,13 +53,20 @@ namespace GridKit
           }
           else
           {
-            throw std::runtime_error("Invalid initial parameter");
+            std::stringstream msg;
+            msg << "\n\tInvalid initial parameter value type: "
+                << "\"" << raw_parameter.key() << "\": " << raw_parameter.value()
+                << " (typed as \"" << raw_parameter.value().type_name() << "\")."
+                << error_context.str();
+            throw std::runtime_error(msg.str());
           }
         }
         else
         {
-          // std::cout << "Key " << raw_parameter.key() << " has no value!\n";
-          throw std::runtime_error("Invalid initial parameter");
+          std::stringstream msg;
+          msg << "\n\tInitial parameter \"" << raw_parameter.key()
+              << "\" has no value." << error_context.str();
+          throw std::runtime_error(msg.str());
         }
       }
 
@@ -65,8 +79,10 @@ namespace GridKit
         }
         else
         {
-          // std::cout << raw_port.key() << "\n";
-          throw std::runtime_error("Invalid port mapping");
+          std::stringstream msg;
+          msg << "\n\tInvalid port mapping: \"" << raw_port.key()
+              << "\" has no value." << error_context.str();
+          throw std::runtime_error(msg.str());
         }
       }
 
@@ -80,8 +96,6 @@ namespace GridKit
         j.at("va_base").get_to(c.va_base);
       }
 
-      j.at("id").get_to(c.disambiguation_string);
-
       if (j.contains("mon"))
       {
         for (auto& raw_monitored_variable : j.at("mon"))
@@ -94,7 +108,10 @@ namespace GridKit
           }
           else
           {
-            throw std::runtime_error("Invalid monitored variable \"" + var_name + '\"');
+            std::stringstream msg;
+            msg << "\n\tInvalid monitored variable: \"" << var_name
+                << "\" in \"mon\" list." << error_context.str();
+            throw std::runtime_error(msg.str());
           }
         }
       }
