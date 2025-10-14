@@ -163,7 +163,7 @@ namespace GridKit
         // Allocate but not initialize generator model
         gen.allocate();
         // TODO: Set pmech and efd. They are currently not set in this test, as we are not
-        // calling gen.initialize(). The private members are initialized to 0 as a workaround, 
+        // calling gen.initialize(). The private members are initialized to 0 as a workaround,
         // but this needs to be better handled in the model implementation.
 
         // Set variable values matching the answer key
