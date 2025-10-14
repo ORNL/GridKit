@@ -80,7 +80,7 @@ namespace GridKit
     {
       // std::cout << "Allocate Load..." << std::endl;
 
-      w_.resize(2);
+      wb_.resize(2);
       h_.resize(2);
 
       return 0;
@@ -111,10 +111,10 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* w, ScalarT* h)
+        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
     {
-      ScalarT Vr = w[0];
-      ScalarT Vi = w[1];
+      ScalarT Vr = wb[0];
+      ScalarT Vi = wb[1];
       ScalarT Ir = -g_ * Vr + b_ * Vi;
       ScalarT Ii = -b_ * Vr - g_ * Vi;
       h[0]       = Ir;
@@ -130,9 +130,9 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateResidual()
     {
-      w_[0] = Vr();
-      w_[1] = Vi();
-      evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
+      wb_[0] = Vr();
+      wb_[1] = Vi();
+      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
 

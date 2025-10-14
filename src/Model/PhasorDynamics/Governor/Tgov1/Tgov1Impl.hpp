@@ -138,6 +138,11 @@ namespace GridKit
         yp_.resize(size);
         tag_.resize(size);
 
+        // Resize external variable data
+        we_.resize(1);
+        we_[0]         = 0.0;
+        we_indices_[0] = static_cast<IdxT>(-1);
+
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -145,11 +150,10 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Set output signal after allocation
-        // The signal is accessible to the generator
+        // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], this->getVariableIndex(2));
+          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], &(this->getVariableIndex(2)));
         }
 
         return 0;
@@ -247,10 +251,11 @@ namespace GridKit
        *
        */
       template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
+      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidualWithExternal(
           ScalarT*                  y,
           ScalarT*                  yp,
-          [[maybe_unused]] ScalarT* w,
+          [[maybe_unused]] ScalarT* wb,
+          [[maybe_unused]] ScalarT* we,
           ScalarT*                  f)
       {
         // Read Internal Variables
@@ -262,8 +267,11 @@ namespace GridKit
         ScalarT ptx_dot = yp[0];
         ScalarT pv_dot  = yp[1];
 
+        // Set external variable aliases
+        ScalarT omega = we[0];
+
         // The 'pre-limit' derivative of Pv
-        ScalarT func     = (-pv + (pref_ - omega_) / R_) / T1_;
+        ScalarT func     = (-pv + (pref_ - omega) / R_) / T1_;
         ScalarT valv_ind = this->indicator(pv, func);
 
         // Internal Differential Equations
@@ -271,7 +279,7 @@ namespace GridKit
         f[1] = -pv_dot + valv_ind * func;
 
         // Internal Algebraic Equations
-        f[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega_);
+        f[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         return 0;
       }
@@ -286,10 +294,11 @@ namespace GridKit
         // Input Variables
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          omega_ = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          we_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          we_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        evaluateInternalResidual(y_.data(), yp_.data(), w_.data(), f_.data());
+        evaluateInternalResidualWithExternal(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
 
         return 0;
       }

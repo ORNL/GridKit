@@ -24,20 +24,37 @@ namespace GridKit
       std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-      GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
-                                                GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+      GridKit::Enzyme::Sparse::InternalJacobianWithExternal<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
+                                                            GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
+                                                            ScalarT,
+                                                            IdxT>::eval(this,
+                                                                        f_.size(),
+                                                                        y_.size(),
+                                                                        this->getResidualIndices(),
+                                                                        this->getVariableIndices(),
+                                                                        y_.data(),
+                                                                        yp_.data(),
+                                                                        wb_.data(),
+                                                                        we_.data(),
+                                                                        J_);
+
+      J_.printMatrix("Genrou internal Jacobian");
+
+      GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
+                                                GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
                                                 ScalarT,
                                                 IdxT>::eval(this,
                                                             f_.size(),
-                                                            y_.size(),
+                                                            we_.size(),
                                                             this->getResidualIndices(),
-                                                            this->getVariableIndices(),
+                                                            we_indices_,
                                                             y_.data(),
                                                             yp_.data(),
-                                                            w_.data(),
+                                                            wb_.data(),
+                                                            we_.data(),
                                                             J_);
 
-      J_.printMatrix("Genrou internal Jacobian");
+      J_.printMatrix("Genrou Jacobian after signal evaluation");
 
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,

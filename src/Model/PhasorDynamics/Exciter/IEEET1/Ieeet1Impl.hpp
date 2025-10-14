@@ -116,12 +116,10 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        // Set output signal after allocation. Check if system composer
-        // requested Efd and, if so, connect it to the signal node.
-        // The signal is accessible to any object connecting to the signal node
+        // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], this->getVariableIndex(7));
+          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], &(this->getVariableIndex(7)));
         }
 
         return 0;

@@ -134,7 +134,7 @@ namespace GridKit
       tag_.resize(size);
 
       // Resize coupling data
-      w_.resize(2);
+      wb_.resize(2);
       h_.resize(2);
 
       // Default variable and residual index mapping to local index
@@ -202,7 +202,7 @@ namespace GridKit
     __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
-        ScalarT* w,
+        ScalarT* wb,
         ScalarT* f)
     {
       // Set variable aliases for better readability.
@@ -219,8 +219,8 @@ namespace GridKit
       const ScalarT omega_dot = yp[1];
 
       // Set coupling variable aliases
-      const ScalarT vr = w[0];
-      const ScalarT vi = w[1];
+      const ScalarT vr = wb[0];
+      const ScalarT vi = wb[1];
 
       // GenClassical differential equations
       f[0] = delta_dot - (omega - 1.0) * (2.0 * M_PI * 60.0);
@@ -243,7 +243,7 @@ namespace GridKit
     __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
-        [[maybe_unused]] ScalarT* w,
+        [[maybe_unused]] ScalarT* wb,
         ScalarT*                  h)
     {
       const ScalarT ir = y[3];
@@ -261,11 +261,11 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::evaluateResidual()
     {
-      w_[0] = Vr();
-      w_[1] = Vi();
+      wb_[0] = Vr();
+      wb_[1] = Vi();
 
-      evaluateInternalResidual(y_.data(), yp_.data(), w_.data(), f_.data());
-      evaluateBusResidual(y_.data(), yp_.data(), w_.data(), h_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
 
       Ir() += h_[0];
       Ii() += h_[1];

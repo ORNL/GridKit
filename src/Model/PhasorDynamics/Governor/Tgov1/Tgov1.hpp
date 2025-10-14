@@ -67,7 +67,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::w_;
+        using Component<ScalarT, IdxT>::wb_;
         using Component<ScalarT, IdxT>::h_;
         using Component<ScalarT, IdxT>::J_;
 
@@ -105,7 +105,7 @@ namespace GridKit
         }
 
       public:
-        __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateInternalResidualWithExternal(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
       private:
         // Input parameters
@@ -136,8 +136,9 @@ namespace GridKit
 
         void initializeParameters(const model_data_type& data);
 
-        /* Local copies of signal variables */
-        ScalarT omega_{0};
+        /* Local copies of external variables */
+        std::vector<ScalarT> we_;
+        std::map<IdxT, IdxT> we_indices_;
       };
 
     } // namespace Governor

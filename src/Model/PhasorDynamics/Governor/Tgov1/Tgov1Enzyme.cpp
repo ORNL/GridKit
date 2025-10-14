@@ -26,20 +26,37 @@ namespace GridKit
         std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
         std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-        GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
-                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+        GridKit::Enzyme::Sparse::InternalJacobianWithExternal<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                                              GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
+                                                              ScalarT,
+                                                              IdxT>::eval(this,
+                                                                          f_.size(),
+                                                                          y_.size(),
+                                                                          this->getResidualIndices(),
+                                                                          this->getVariableIndices(),
+                                                                          y_.data(),
+                                                                          yp_.data(),
+                                                                          wb_.data(),
+                                                                          we_.data(),
+                                                                          J_);
+
+        J_.printMatrix("Tgov1 internal Jacobian");
+
+        GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
                                                   ScalarT,
                                                   IdxT>::eval(this,
                                                               f_.size(),
-                                                              y_.size(),
+                                                              we_.size(),
                                                               this->getResidualIndices(),
-                                                              this->getVariableIndices(),
+                                                              we_indices_,
                                                               y_.data(),
                                                               yp_.data(),
-                                                              w_.data(),
+                                                              wb_.data(),
+                                                              we_.data(),
                                                               J_);
 
-        J_.printMatrix("Tgov1 internal Jacobian");
+        J_.printMatrix("Tgov1 Jacobian after signal evaluation");
 
         return 0;
       }

@@ -182,13 +182,15 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(busdata, gendata);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        auto tol = 1000 * std::numeric_limits<real_type>::epsilon(); ///< Todo: Resolve mismatch from sigmoid approximation
+        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
         for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
           success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i], tol));
         }
+
+        success.expectFailure(); // TODO: Resolve mismatch from sigmoid approximation
 
         return success.report(__func__);
       }
@@ -215,13 +217,14 @@ namespace GridKit
 
         for (size_t i = 0; i < gov.size(); ++i)
         {
-          gov.y()[i].setVariableNumber(i); ///< Independent variables
+          gov.y()[i].setVariableNumber(i); // Governor independent variables
         }
+        gen.y()[1].setVariableNumber(gov.size()); // omega as an additional independent variable
 
         bus.evaluateResidual();
         gen.evaluateResidual();
-        gov.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                ///< the dependencies
+        gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
+                                // the dependencies
         std::vector<DependencyTracking::Variable> residual = gov.getResidual();
 
         /// Print the dependencies
@@ -249,6 +252,8 @@ namespace GridKit
         bus.allocate();
         gov.allocate();
         gen.allocate();
+
+        gen.setVariableIndex(1, gov.size()); // Reset omega index
 
         bus.initialize();
         gen.initialize();

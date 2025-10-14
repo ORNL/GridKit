@@ -120,7 +120,7 @@ namespace GridKit
         return 0;
       }
 
-      IdxT getVariableIndex(IdxT local_index) const
+      IdxT& getVariableIndex(IdxT local_index)
       {
         return variable_indices_.at(local_index);
       }
@@ -136,7 +136,7 @@ namespace GridKit
         return 0;
       }
 
-      IdxT getResidualIndex(IdxT local_index) const
+      IdxT& getResidualIndex(IdxT local_index)
       {
         return residual_indices_.at(local_index);
       }
@@ -160,7 +160,7 @@ namespace GridKit
       std::vector<bool>    tag_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
-      std::vector<ScalarT> w_;
+      std::vector<ScalarT> wb_;
       std::vector<ScalarT> h_;
 
       GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
