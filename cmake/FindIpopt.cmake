@@ -4,14 +4,16 @@
 Finds Ipopt include directory and libraries and exports target `Ipopt`
 
 User may set:
+- Ipopt_DIR
 - IPOPT_ROOT_DIR
+- IPOPT_DIR
 
 Author(s):
 - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 
 ]]
 
-find_library(IPOPT_LIBRARY
+find_library(Ipopt_LIBRARY
   NAMES
   ipopt
   PATHS
@@ -20,17 +22,12 @@ find_library(IPOPT_LIBRARY
   PATH_SUFFIXES
   lib64 lib)
 
-if(IPOPT_LIBRARY)
-  set(IPOPT_LIBRARY CACHE FILEPATH "Path to Ipopt library")
-  message(STATUS "Found Ipopt library: " ${IPOPT_LIBRARY})
-  get_filename_component(IPOPT_LIBRARY_DIR ${IPOPT_LIBRARY} DIRECTORY CACHE "Ipopt library directory")
-  mark_as_advanced(IPOPT_LIBRARY IPOPT_LIBRARY_DIR)
-  if(NOT IPOPT_DIR)
-    get_filename_component(IPOPT_DIR ${IPOPT_LIBRARY_DIR} DIRECTORY CACHE)
-  endif()
+if(Ipopt_LIBRARY)
+  get_filename_component(IPOPT_LIBRARY_DIR ${Ipopt_LIBRARY} DIRECTORY)
+  get_filename_component(IPOPT_DIR ${IPOPT_LIBRARY_DIR} DIRECTORY)
 endif()
 
-find_path(IPOPT_INCLUDE_DIR
+find_path(Ipopt_INCLUDE_DIR
   NAMES
   IpTNLP.hpp
   PATHS
@@ -41,23 +38,16 @@ find_path(IPOPT_INCLUDE_DIR
   include/coin-or
   include/coinor)
 
-if(IPOPT_LIBRARY)
-  message(STATUS "Found Ipopt include: ${IPOPT_INCLUDE_DIR}")
-  mark_as_advanced(IPOPT_INCLUDE_DIR)
-  add_library(IPOPT INTERFACE IMPORTED)
-  target_link_libraries(IPOPT INTERFACE ${IPOPT_LIBRARY})
-  target_include_directories(IPOPT INTERFACE ${IPOPT_INCLUDE_DIR})
-else()
-  if(NOT IPOPT_ROOT_DIR)
-    message(STATUS "Ipopt dir not found! Please provide correct filepath.")
-    set(IPOPT_DIR ${IPOPT_DIR} CACHE PATH "Path to Ipopt installation root.")
-    unset(IPOPT_INCLUDE_DIR CACHE)
-    unset(IPOPT_LIBRARY CACHE)
-    unset(IPOPT_LIBRARY_DIR CACHE)
-  elseif(NOT IPOPT_LIB)
-    message(STATUS "Ipopt library not found! Please provide correct filepath.")
-  endif()
-  if(IPOPT_ROOT_DIR AND NOT IPOPT_INCLUDE_DIR)
-    message(STATUS "Ipopt include directory  not found! Please provide correct path.")
-  endif()
-endif()
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Ipopt REQUIRED_VARS
+    Ipopt_LIBRARY
+    Ipopt_INCLUDE_DIR
+)
+
+add_library(Ipopt INTERFACE IMPORTED)
+target_link_libraries(Ipopt INTERFACE ${IPOPT_LIBRARY})
+target_include_directories(Ipopt INTERFACE ${IPOPT_INCLUDE_DIR})
+
+set(Ipopt_DIR ${IPOPT_DIR} CACHE PATH "" FORCE)
+mark_as_advanced(Ipopt_INCLUDE_DIR)
+mark_as_advanced(Ipopt_LIBRARY)

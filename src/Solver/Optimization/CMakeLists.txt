@@ -10,7 +10,7 @@ gridkit_add_library(solvers_opt
     DynamicObjective.cpp
     DynamicConstraint.cpp
   LINK_LIBRARIES
-    PUBLIC IPOPT
+    PUBLIC Ipopt
     PUBLIC GRIDKIT::solvers_dyn
   OUTPUT_NAME
     gridkit_solvers_opt)

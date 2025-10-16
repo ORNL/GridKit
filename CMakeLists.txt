@@ -87,13 +87,12 @@ option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
 option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
 
 if(GRIDKIT_ENABLE_IPOPT)
-  include(FindIpopt)
+  find_package(Ipopt REQUIRED)
   enable_language(Fortran) # Needed for linking to HSL
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS)
-  find_package(SUNDIALS 7.4.0 REQUIRED CONFIG
-               PATHS ${SUNDIALS_DIR}
-                     ${SUNDIALS_DIR}/lib/cmake/sundials)
+  list(APPEND CMAKE_PREFIX_PATH ${SUNDIALS_DIR})
+  find_package(SUNDIALS 7.4.0 REQUIRED)
   message(STATUS "SUNDIALS configuration found: ${SUNDIALS_CONFIG}")
   if(TARGET SUNDIALS::sunlinsolklu)
     set(GRIDKIT_ENABLE_SUNDIALS_SPARSE ON CACHE INTERNAL BOOL "Sparse solver enabled in SUNDIALS.")
