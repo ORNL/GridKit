@@ -8,7 +8,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-project(gridkit)
+project(gridkit CXX)
 
 set(PACKAGE_NAME "GRIDKIT")
 set(PACKAGE_STRING "GRIDKIT 0.1.0")
