@@ -29,6 +29,7 @@
 - Added `GenClassical` as supported device class in JSON parser.
 - Added more context information to JSON parser errors.
 - Added `Logger` class.
+- Added `CliOptions` for simple command-line parsing.
 
 ## v0.1
 
