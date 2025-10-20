@@ -28,6 +28,7 @@
 - Upgraded to Spack 1.0.0.
 - Added `GenClassical` as supported device class in JSON parser.
 - Added more context information to JSON parser errors.
+- Added `Logger` class.
 
 ## v0.1
 
