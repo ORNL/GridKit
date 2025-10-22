@@ -83,8 +83,7 @@ endif("${isSystemDir}" STREQUAL "-1")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
 
-option(GRIDKIT_BUILD_SHARED "Build shared libraries" ON)
-option(GRIDKIT_BUILD_STATIC "Build static libraries" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if(GRIDKIT_ENABLE_IPOPT)
   include(FindIpopt)
