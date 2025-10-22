@@ -122,7 +122,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(src)
 
 # Create examples and tests
-enable_testing()
+include(CTest)
 add_subdirectory(examples)
 add_subdirectory(tests)
 
