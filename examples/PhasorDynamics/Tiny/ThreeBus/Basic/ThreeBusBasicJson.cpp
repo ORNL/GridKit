@@ -13,14 +13,16 @@
 #include <fstream>
 #include <vector>
 
-#include "ThreeBusBasic.hpp"
-#include <Model/PhasorDynamics/ComponentLibrary.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
 #include <nlohmann/json.hpp>
+
+#include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Testing.hpp>
+
+#include "ThreeBusBasic.hpp"
 
 using scalar_type = double;
 using real_type   = double;

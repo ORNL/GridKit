@@ -1,0 +1,23 @@
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/Definitions.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Definitions.hpp)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Definitions.hpp
+  DESTINATION include/GridKit)
+add_library(definitions INTERFACE)
+target_include_directories(definitions INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include>)
+add_library(GRIDKIT::definitions ALIAS definitions)
+install(TARGETS definitions EXPORT gridkit-targets)
+
+# Create component models
+add_subdirectory(Model)
+
+# General Utilities and File IO
+add_subdirectory(Utilities)
+
+# Local Sparse matrix operations
+add_subdirectory(LinearAlgebra)
+
+# Create solvers
+add_subdirectory(Solver)

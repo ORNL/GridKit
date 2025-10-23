@@ -1,7 +1,8 @@
 #include <iostream>
 
+#include <GridKit/Utilities/Testing.hpp>
+
 #include "ScalarModel.hpp"
-#include <Utilities/Testing.hpp>
 
 /**
  * @brief Example that computes the derivative of a library function

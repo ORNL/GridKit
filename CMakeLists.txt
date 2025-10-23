@@ -80,9 +80,6 @@ if("${isSystemDir}" STREQUAL "-1")
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
-
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if(GRIDKIT_ENABLE_IPOPT)
@@ -105,21 +102,12 @@ if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
 endif()
 
-# The binary dir is already a global include directory
-configure_file(
-  ${CMAKE_SOURCE_DIR}/src/Definitions.hpp.in
-  ${CMAKE_BINARY_DIR}/Definitions.hpp)
-install(
-  FILES ${CMAKE_BINARY_DIR}/Definitions.hpp
-  DESTINATION include
-  )
-
 # Macro that adds libraries
 include(GridkitAddLibrary)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_subdirectory(src)
+add_subdirectory(GridKit)
 
 # Create examples and tests
 include(CTest)

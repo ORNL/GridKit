@@ -363,17 +363,24 @@ int main()
 
 Header files should be included in 3 separate blocks: standard libraries,
 GridKit external dependencies, and GridKit header files. There should be an
-empty line between the blocks. External libraries should use `<...>`, while
-GridKit headers should be included with `"..."`.
+empty line between the blocks. External libraries should always use `<...>`.
+GridKit headers should be included with `<GridKit/...>` (using full path to
+file) with one exception: headers that are local to a compilation unit should
+use `"..."`. That is, only in a `.cpp` file and only those headers that are
+local to the component (headers from other project components should still use
+`<...>`).
 
 ```c++
+#include "Ida.hpp"     // GridKit local internal header
+
 #include <iostream>    // Standard libs headers
 #include <cmath>
 
 #include <sundials.h>  // GridKit dependencies
 #include <idas.h>
 
-#include "Ida.hpp"     // GridKit internal header
+#include <GridKit/Model/Evaluator.hpp> // GridKit header from another component
+
 ```
 
 ```c++

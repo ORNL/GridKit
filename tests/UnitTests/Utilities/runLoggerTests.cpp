@@ -3,10 +3,6 @@
  * @brief Driver for Logger class tests.
  * @author Slaven Peles <peless@ornl.org>
  */
-
-#include <iostream>
-#include <ostream>
-
 #include "LoggerTests.hpp"
 
 int main()

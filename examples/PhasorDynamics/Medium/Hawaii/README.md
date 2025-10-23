@@ -14,11 +14,11 @@ This case is a modified version of the synthetic Hawaii case, available at the T
 
 Model       | Count  
 ------------|--------
-[Bus](../../../../src/Model/PhasorDynamics/Bus/README.md)         | 37
-[Branch](../../../../src/Model/PhasorDynamics/Branch/README.md)     | 89
-[GENROU](../../../../src/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md)       | 39
-[TGOV1](../../../../src/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 39
-[IEEET1](../../../../src/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 39
+[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 37
+[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 89
+[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md)       | 39
+[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 39
+[IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 39
 
 ## Case Events
 

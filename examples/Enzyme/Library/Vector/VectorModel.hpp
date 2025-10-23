@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
+#include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
 using DenseMatrix = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
 

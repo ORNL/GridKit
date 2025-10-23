@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

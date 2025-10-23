@@ -6,13 +6,13 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PowerElectronics/Capacitor/Capacitor.hpp>
-#include <Model/PowerElectronics/Inductor/Inductor.hpp>
-#include <Model/PowerElectronics/Resistor/Resistor.hpp>
-#include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
-#include <Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
-#include <Solver/Dynamic/DynamicSolver.hpp>
-#include <Solver/Dynamic/Ida.hpp>
+#include <GridKit/Model/PowerElectronics/Capacitor/Capacitor.hpp>
+#include <GridKit/Model/PowerElectronics/Inductor/Inductor.hpp>
+#include <GridKit/Model/PowerElectronics/Resistor/Resistor.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/VoltageSource/VoltageSource.hpp>
+#include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
 
 int main(int /* argc */, char const** /* argv */)
 {

@@ -1,8 +1,9 @@
 #include <iostream>
 
+#include <GridKit/Model/PowerFlow/MatpowerParser.hpp>
+#include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+
 #include "MatPowerTesting.hpp"
-#include <Model/PowerFlow/MatpowerParser.hpp>
-#include <Model/PowerFlow/PowerFlowData.hpp>
 
 using namespace GridKit;
 using namespace GridKit::Testing;

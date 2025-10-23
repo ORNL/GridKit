@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PhasorDynamics/ComponentLibrary.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

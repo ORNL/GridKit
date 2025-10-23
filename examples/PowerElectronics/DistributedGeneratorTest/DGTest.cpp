@@ -1,13 +1,14 @@
 
 #define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <math.h>
 
-#include <Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 
 /**
  * @brief Testing for the Distributed Generators outputs
