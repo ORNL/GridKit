@@ -531,7 +531,7 @@ namespace GridKit
       evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
 
-      // Genrou contribution to bus algebraic equations 
+      // Genrou contribution to bus algebraic equations
       Ir() += h_[0];
       Ii() += h_[1];
 
