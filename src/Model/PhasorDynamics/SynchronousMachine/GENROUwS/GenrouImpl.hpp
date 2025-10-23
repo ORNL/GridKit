@@ -312,8 +312,8 @@ namespace GridKit
       /* Initialization tricks -- assuming NO saturation */
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
-      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
+      ScalarT p     = static_cast<ScalarT>(p0_);
+      ScalarT q     = static_cast<ScalarT>(q0_);
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT Er    = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
       ScalarT Ei    = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
@@ -494,9 +494,8 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
-      // Current base conversion. Assumes generator and bus are same V base
-      h[0] = (inr - vr * G_ + vi * B_) * mva_base_ / mva_system_base_;
-      h[1] = (ini - vr * B_ - vi * G_) * mva_base_ / mva_system_base_;
+      h[0] = inr - vr * G_ + vi * B_;
+      h[1] = ini - vr * B_ - vi * G_;
 
       return 0;
     }
@@ -532,7 +531,7 @@ namespace GridKit
       evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
 
-      // Genrou contribution to bus algebraic equations
+      // Genrou contribution to bus algebraic equations 
       Ir() += h_[0];
       Ii() += h_[1];
 
