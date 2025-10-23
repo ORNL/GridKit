@@ -87,16 +87,6 @@ namespace GridKit
         }
       }
 
-      if (j.contains("freq_base"))
-      {
-        j.at("freq_base").get_to(c.freq_base);
-      }
-
-      if (j.contains("va_base"))
-      {
-        j.at("va_base").get_to(c.va_base);
-      }
-
       if (j.contains("mon"))
       {
         for (auto& raw_monitored_variable : j.at("mon"))

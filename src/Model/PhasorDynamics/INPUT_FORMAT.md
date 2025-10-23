@@ -111,8 +111,6 @@ represent a device and has the following fields:
   `id`              | A string disambiguating the device from others. Each device in a class must have a unique combination of required port bus numbers and this string. This string should be 1 or 2 characters long.
   `params`          | An object mapping initialization parameters to numerical values, depending on the class. See the table below for more information
   `mon`             | Optional field, which is an array specifying variables to record the value of in an output channel. Available variables are determined by the device class, as specified in the table below
-  `va_base`         | Optional field to override the system power base for this device
-  `freq_base`       | Optional field to override the system frequency base for this device
   `extension`       | Optional field containing an object with implementation-defined keys
 
 For more information, see the detailed documentation for each device class containing equations, electrical bus configuration, and signal inlets/outlets specifications.
