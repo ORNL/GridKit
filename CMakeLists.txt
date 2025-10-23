@@ -91,6 +91,7 @@ if(GRIDKIT_ENABLE_IPOPT)
   enable_language(Fortran) # Needed for linking to HSL
 endif()
 if(GRIDKIT_ENABLE_SUNDIALS)
+  enable_language(C)
   find_package(SUNDIALS 7.4.0 REQUIRED CONFIG
                PATHS ${SUNDIALS_DIR}
                      ${SUNDIALS_DIR}/lib/cmake/sundials)
