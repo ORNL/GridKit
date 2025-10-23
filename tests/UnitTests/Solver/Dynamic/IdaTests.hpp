@@ -1,7 +1,7 @@
-#include "Model/Evaluator.hpp"
-#include "Solver/Dynamic/Ida.hpp"
-#include "Utilities/TestHelpers.hpp"
-#include "Utilities/Testing.hpp"
+#include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 using AnalysisManager::Sundials::Ida;
 

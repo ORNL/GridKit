@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 
-#include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the Jacobian of a vector-valued function

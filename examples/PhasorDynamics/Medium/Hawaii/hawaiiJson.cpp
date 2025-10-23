@@ -13,14 +13,13 @@
 #include <filesystem>
 #include <iostream>
 
+#include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Testing.hpp>
+
 #include "hawaii.hpp"
-#include <Model/PhasorDynamics/ComponentLibrary.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
-#include <nlohmann/json.hpp>
 
 int main(int argc, const char* argv[])
 {
@@ -65,7 +64,7 @@ int main(int argc, const char* argv[])
   std::cout << "Input file: " << input_file << '\n';
 
   // Parse Model Data
-  SystemModelData<scalar_type, index_type> data(json::parse(std::ifstream(input_file)));
+  auto data = parseSystemModelData(input_file);
 
   //  Instantiate System Model
   SystemModel<scalar_type, index_type> sys(data);

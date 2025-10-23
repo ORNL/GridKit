@@ -7,13 +7,13 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
-#include <Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
-#include <Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
-#include <Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
-#include <Model/PowerElectronics/SystemModelPowerElectronics.hpp>
-#include <Solver/Dynamic/DynamicSolver.hpp>
-#include <Solver/Dynamic/Ida.hpp>
+#include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
+#include <GridKit/Model/PowerElectronics/MicrogridLoad/MicrogridLoad.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
 
 int main(int /* argc */, char const** /* argv */)
 {

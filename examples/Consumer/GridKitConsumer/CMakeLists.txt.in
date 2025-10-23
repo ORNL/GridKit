@@ -1,6 +1,6 @@
 # Example of how to consume GridKit as a package via cmake
 # Below is a standard example of a CMakeLists.txt file that ultizies GridKit
-# See the Readme on how to build and install GridKie
+# See the Readme on how to build and install GridKit
 #-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.20)
 

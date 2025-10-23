@@ -1,5 +1,5 @@
 
-#include <LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
+#include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 
 int main()
 {

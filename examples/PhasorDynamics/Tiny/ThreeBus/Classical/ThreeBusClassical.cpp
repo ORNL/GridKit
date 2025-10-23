@@ -15,11 +15,11 @@
 #include <fstream>
 #include <vector>
 
-#include <Model/PhasorDynamics/ComponentLibrary.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 using scalar_type = double;
 using real_type   = double;

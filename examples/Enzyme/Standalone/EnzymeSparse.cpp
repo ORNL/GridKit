@@ -1,10 +1,11 @@
 #include <assert.h>
-#include <cmath>
 #include <stdio.h>
+
+#include <cmath>
 #include <vector>
 
-#include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function

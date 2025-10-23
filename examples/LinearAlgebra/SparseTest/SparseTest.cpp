@@ -8,7 +8,7 @@
 #include <tuple>
 #include <vector>
 
-#include <LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 
 int main()
 {

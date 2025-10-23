@@ -1,18 +1,18 @@
 #include <iomanip>
 #include <iostream>
 
-#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <Definitions.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusData.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
-#include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
-#include <Utilities/MapFromCOO.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

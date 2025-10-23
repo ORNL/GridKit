@@ -1,7 +1,8 @@
 #include <iostream>
 
+#include <GridKit/Utilities/Testing.hpp>
+
 #include "VectorModel.hpp"
-#include <Utilities/Testing.hpp>
 
 /**
  * @brief Example that computes the Jacobian of a vector-valued residual
