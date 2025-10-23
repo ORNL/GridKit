@@ -126,6 +126,7 @@ namespace GridKit
       real_type D_{0.0};
       real_type Ra_{0.0};
       real_type Xdp_{0.0};
+      real_type mva_base_{100.0};
 
       /* Derivied parameters */
       real_type G_;

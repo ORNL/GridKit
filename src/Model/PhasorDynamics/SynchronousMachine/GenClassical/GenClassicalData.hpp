@@ -21,6 +21,7 @@ namespace GridKit
       D,   ///< Damping coefficient
       Ra,  ///< Winding resistance
       Xdp, ///< Direct axis transient reactance
+      mva_base ///< MVA Base of the generator
     };
 
     /// Ports supported for a classical generator model
