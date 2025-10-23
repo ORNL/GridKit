@@ -54,3 +54,5 @@ endif()
 if(GRIDKIT_ENABLE_ENZYME)
   add_subdirectory(Enzyme)
 endif()
+
+add_subdirectory(Consumer)
