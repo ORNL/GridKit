@@ -197,8 +197,8 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      inline void checkAllocation(void* v, const char* functionName);
-      inline void checkOutput(int retval, const char* functionName);
+      static inline void checkAllocation(void* v, const char* functionName);
+      static inline void checkOutput(int retval, const char* functionName);
     };
 
     /// Simple exception to use within Ida class.

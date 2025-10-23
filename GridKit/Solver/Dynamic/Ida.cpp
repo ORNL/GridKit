@@ -171,19 +171,8 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      sunindextype n = static_cast<sunindextype>(model_->size());
-      sunindextype nnz;
-
-      if (model_->hasCsrJacobian() && user_data_.use_csr_)
-      {
-        model_->evaluateCsrJacobian();
-        nnz = static_cast<sunindextype>(model_->getCsrJacobian().numNonZero());
-      }
-      else
-      {
-        model_->evaluateJacobian();
-        nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
-      }
+      sunindextype n   = static_cast<sunindextype>(model_->size());
+      sunindextype nnz = 0;
 
       JacobianMat_ = SUNSparseMatrix(n,
                                      n,
@@ -777,6 +766,7 @@ namespace AnalysisManager
       assert(user_data != nullptr);
       auto user_data_ptr                = static_cast<UserData*>(user_data);
       auto& [use_csr, model, first_jac] = *user_data_ptr;
+      int retval                        = 0;
 
       model->updateTime(t, cj);
       copyVec(yy, model->y());
@@ -794,41 +784,61 @@ namespace AnalysisManager
                                : "CSR Jacobian Assembly";
         first_jac  = false;
 
+        assert(model->hasCsrJacobian());
+
         GridKit::Utility::time<true>(label, [&]()
-                                     {
-          assert(model->hasCsrJacobian());
-
+        {
           model->evaluateCsrJacobian();
+        });
 
-          auto& Jac = model->getCsrJacobian();
+        auto& Jac = model->getCsrJacobian();
 
-          std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
-          std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
-          std::copy(Jac.values().cbegin(), Jac.values().cend(), data); });
+        if (SUNSparseMatrix_NNZ(J) != Jac.numNonZero())
+        {
+          retval = SUNSparseMatrix_Reallocate(J, Jac.numNonZero());
+          checkOutput(retval, "SUNSparseMatrix_Reallocate");
+
+          colvals = SUNSparseMatrix_IndexValues(J);
+          data    = SUNSparseMatrix_Data(J);
+        }
+
+        std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
+        std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
+        std::copy(Jac.values().cbegin(), Jac.values().cend(), data);
       }
       else
       {
-        GridKit::Utility::time<true>("COO Jacobian Assembly", [&]()
-                                     {
+        auto [csrrowdata, c, val] = GridKit::Utility::time<true>("COO Jacobian Assembly", [&]()
+        {
           model->evaluateJacobian();
           GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
 
           // Get reference to the jacobian entries
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = Jac.getEntries();
-          const auto [r, c, val]                                                        = tpm;
-
+          const auto [r, c, val]       = Jac.getEntries();
           // get the CSR row pointers from COO matrix
           std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
 
-          // Set row pointers
-          std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
+          return std::make_tuple(csrrowdata, c, val);
+        });
 
-          // Copy data from model jac to sundials
-          std::copy(c.cbegin(), c.cend(), colvals);
-          std::copy(val.cbegin(), val.cend(), data); });
+        if (SUNSparseMatrix_NNZ(J) != val.size())
+        {
+          retval = SUNSparseMatrix_Reallocate(J, val.size());
+          checkOutput(retval, "SUNSparseMatrix_Reallocate");
+
+          colvals = SUNSparseMatrix_IndexValues(J);
+          data    = SUNSparseMatrix_Data(J);
+        }
+
+        // Set row pointers
+        std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
+
+        // Copy data from model jac to sundials
+        std::copy(c.cbegin(), c.cend(), colvals);
+        std::copy(val.cbegin(), val.cend(), data);
       }
 
-      return 0;
+      return retval;
     }
 
     /**
