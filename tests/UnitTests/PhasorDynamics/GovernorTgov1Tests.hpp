@@ -63,9 +63,9 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using BusType          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
-        using GenrouParameters = PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
-        using GenrouPorts      = PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
+        using BusType          = typename PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
+        using GenrouParameters = typename PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
+        using GenrouPorts      = typename PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;

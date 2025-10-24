@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <stdexcept>
 
 #include <Model/PhasorDynamics/Bus/BusData.hpp>

@@ -28,7 +28,7 @@ namespace GridKit
       {
         using namespace GridKit::PhasorDynamics;
         using BusData = BusData<RealT, IdxT>;
-        using BusType = BusData::BusType;
+        using BusType = typename BusData::BusType;
 
         const char data[] =
             R"({
@@ -133,7 +133,7 @@ namespace GridKit
       {
         using namespace GridKit::PhasorDynamics;
         using BusData = BusData<RealT, IdxT>;
-        using BusType = BusData::BusType;
+        using BusType = typename BusData::BusType;
 
         const char data[] =
             R"({
