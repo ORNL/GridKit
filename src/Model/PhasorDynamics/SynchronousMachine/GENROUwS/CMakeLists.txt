@@ -1,9 +1,15 @@
 
+set(_install_headers
+  Genrou.hpp
+  GenrouData.hpp)
+
 # Disabled GenrouEnzyme because of an intermittent build issue
 #if(GRIDKIT_ENABLE_ENZYME)
 #  gridkit_add_library(phasor_dynamics_genrou
 #    SOURCES
 #      GenrouEnzyme.cpp
+#    HEADERS
+#      ${_install_headers}
 #    LINK_LIBRARIES
 #      PUBLIC GRIDKIT::phasor_dynamics_signal ClangEnzymeFlags
 #    COMPILE_OPTIONS
@@ -12,6 +18,8 @@
   gridkit_add_library(phasor_dynamics_genrou
     SOURCES
       Genrou.cpp
+    HEADERS
+      ${_install_headers}
     LINK_LIBRARIES
       PUBLIC GRIDKIT::phasor_dynamics_signal)
 #endif()

@@ -105,15 +105,6 @@ if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
 endif()
 
-# The binary dir is already a global include directory
-configure_file(
-  ${CMAKE_SOURCE_DIR}/src/Definitions.hpp.in
-  ${CMAKE_BINARY_DIR}/Definitions.hpp)
-install(
-  FILES ${CMAKE_BINARY_DIR}/Definitions.hpp
-  DESTINATION include
-  )
-
 # Macro that adds libraries
 include(GridkitAddLibrary)
 

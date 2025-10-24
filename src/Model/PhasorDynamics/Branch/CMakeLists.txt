@@ -5,16 +5,26 @@
 #    - Slaven Peles <peless@ornl.gov>
 # ]]
 
+set(_install_headers
+  Branch.hpp
+  BranchData.hpp)
+
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(phasor_dynamics_branch
     SOURCES
       BranchEnzyme.cpp
+    HEADERS
+      ${_install_headers}
     LINK_LIBRARIES
       ClangEnzymeFlags
     COMPILE_OPTIONS
       -mllvm -enzyme-auto-sparsity=1 -fno-math-errno)
 else()
-  gridkit_add_library(phasor_dynamics_branch SOURCES Branch.cpp)
+  gridkit_add_library(phasor_dynamics_branch
+    SOURCES
+      Branch.cpp
+    HEADERS
+      ${_install_headers})
 endif()
 
 gridkit_add_library(phasor_dynamics_branch_dependency_tracking

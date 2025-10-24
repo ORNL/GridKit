@@ -4,9 +4,15 @@
 #    - Adam Birchfield <abirchfield@tamu.edu>
 # ]]
 
+set(_install_headers
+  Ieeet1.hpp
+  Ieeet1Data.hpp)
+
 gridkit_add_library(phasor_dynamics_exciter_ieeet1
   SOURCES
     Ieeet1.cpp
+  HEADERS
+    ${_install_headers}
   LINK_LIBRARIES
     GRIDKIT::phasor_dynamics_signal)
 

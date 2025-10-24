@@ -5,3 +5,11 @@ add_library(GRIDKIT::Utilities ALIAS Utilities)
 
 add_subdirectory(Logger)
 add_subdirectory(CliOptions)
+
+install(
+  FILES
+    Colors.hpp
+    FileIO.hpp
+    MapFromCOO.hpp
+  DESTINATION
+    include/GridKit/Utilities)

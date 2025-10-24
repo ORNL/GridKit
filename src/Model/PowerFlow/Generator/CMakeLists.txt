@@ -7,4 +7,10 @@ gridkit_add_library(generator
   SOURCES
     GeneratorSlack.cpp
     GeneratorPV.cpp
-    GeneratorPQ.cpp)
+    GeneratorPQ.cpp
+  HEADERS
+    GeneratorBase.hpp
+    GeneratorFactory.hpp
+    GeneratorPQ.hpp
+    GeneratorPV.hpp
+    GeneratorSlack.hpp)

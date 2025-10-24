@@ -5,7 +5,13 @@
 #    - Slaven Peles <peless@ornl.gov>
 # ]]
 
-gridkit_add_library(phasor_dynamics_signal SOURCES SignalNode.cpp)
+gridkit_add_library(phasor_dynamics_signal
+  SOURCES
+    SignalNode.cpp
+  HEADERS
+    SignalNode.hpp
+    SignalNodeData.hpp
+    SignalNodeDataJSONParser.hpp)
 
 gridkit_add_library(phasor_dynamics_signal_dependency_tracking
   SOURCES SignalNodeDependencyTracking.cpp)

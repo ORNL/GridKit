@@ -20,3 +20,17 @@ add_library(GRIDKIT::phasor_dynamics_components
   ALIAS gridkit_phasor_dynamics_components)
 add_library(GRIDKIT::phasor_dynamics_components_dependency_tracking
   ALIAS gridkit_phasor_dynamics_components_dependency_tracking)
+
+install(
+  FILES
+    BusBase.hpp
+    Component.hpp
+    ComponentData.hpp
+    ComponentDataJSONParser.hpp
+    ComponentLibrary.hpp
+    ComponentSignals.hpp
+    SystemModel.hpp
+    SystemModelData.hpp
+    SystemModelDataJSONParser.hpp
+  DESTINATION
+    include/GridKit/Model/PhasorDynamics)

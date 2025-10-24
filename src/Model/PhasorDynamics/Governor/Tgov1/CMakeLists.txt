@@ -4,10 +4,16 @@
 #    - Adam Birchfield <abirchfield@tamu.edu>
 # ]]
 
+set(_install_headers
+  Tgov1.hpp
+  Tgov1Data.hpp)
+
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(phasor_dynamics_governortgov1
     SOURCES
       Tgov1Enzyme.cpp
+    HEADERS
+      ${_install_headers}
     LINK_LIBRARIES
       GRIDKIT::phasor_dynamics_signal
       ClangEnzymeFlags
@@ -17,6 +23,8 @@ else()
   gridkit_add_library(phasor_dynamics_governortgov1
     SOURCES
       Tgov1.cpp
+    HEADERS
+      ${_install_headers}
     LINK_LIBRARIES
       GRIDKIT::phasor_dynamics_signal)
 endif()
