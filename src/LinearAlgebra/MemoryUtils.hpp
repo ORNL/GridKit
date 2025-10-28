@@ -33,7 +33,7 @@ namespace GridKit
         /**
          * @brief Dummy function to stand in when GPU support is not enabled.
          *
-         * @return Allways return success!
+         * @return Always return success!
          */
         static int getLastDeviceError()
         {
