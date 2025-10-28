@@ -152,7 +152,7 @@ namespace GridKit
           return -1;
         }
 
-      }; // struct Cuda
+      }; // struct Cpu
     }; // namespace memory
 
     /**
