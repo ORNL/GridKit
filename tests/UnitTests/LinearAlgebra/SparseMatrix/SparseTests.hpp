@@ -375,6 +375,8 @@ namespace GridKit
           success = false;
         }
 
+        Csr B = A;
+
         if (A.destroyMatrixData(memspace_) != 0)
         {
           std::cout << "Failed to destroy matrix data.\n";
