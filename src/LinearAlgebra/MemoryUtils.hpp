@@ -61,7 +61,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int allocateArrayOnDevice(T** /* v */, I /* n */)
