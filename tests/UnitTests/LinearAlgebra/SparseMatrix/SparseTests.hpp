@@ -44,7 +44,7 @@ namespace GridKit
         TestStatus success;
         success = true;
 
-        Csr A(n, m, nnz, is_symmetric, is_expanded);
+        CsrMatrix A(n, m, nnz, is_symmetric, is_expanded);
 
         if (A.getNumRows() != n || A.getNumColumns() != m || A.getNnz() != nnz)
         {
@@ -74,7 +74,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         index_type* h_row_data = new index_type[n + 1];
         for (index_type i = 0; i <= n; ++i)
@@ -129,7 +129,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         real_type* val_data = new real_type[nnz];
         for (index_type i = 0; i < nnz; ++i)
@@ -173,7 +173,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         real_type* val_data = new real_type[nnz];
         for (index_type i = 0; i < nnz; ++i)
@@ -260,7 +260,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         real_type* val_data = new real_type[nnz];
         for (index_type i = 0; i < nnz; ++i)
@@ -317,7 +317,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         real_type* val_data = new real_type[nnz];
         for (index_type i = 0; i < nnz; ++i)
@@ -362,7 +362,7 @@ namespace GridKit
 
         index_type nnz = n * row_density; // Total non-zeros based on row density
 
-        Csr A(n, m, nnz);
+        CsrMatrix A(n, m, nnz);
 
         if (A.allocateMatrixData(memspace_) != 0)
         {

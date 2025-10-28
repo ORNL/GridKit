@@ -446,31 +446,31 @@ namespace GridKit
       MemoryHandler mem_; ///< Device memory manager object
     };
 
-    class Csr : public Sparse
+    class CsrMatrix : public Sparse
     {
     public:
-      Csr();
+      CsrMatrix();
 
-      Csr(index_type n, index_type m, index_type nnz);
+      CsrMatrix(index_type n, index_type m, index_type nnz);
 
-      Csr(index_type n,
-          index_type m,
-          index_type nnz,
-          bool       symmetric,
-          bool       expanded);
+      CsrMatrix(index_type n,
+                index_type m,
+                index_type nnz,
+                bool       symmetric,
+                bool       expanded);
 
-      Csr(index_type          n,
-          index_type          m,
-          index_type          nnz,
-          bool                symmetric,
-          bool                expanded,
-          index_type**        rows,
-          index_type**        cols,
-          real_type**         vals,
-          memory::MemorySpace memspaceSrc,
-          memory::MemorySpace memspaceDst);
+      CsrMatrix(index_type          n,
+                index_type          m,
+                index_type          nnz,
+                bool                symmetric,
+                bool                expanded,
+                index_type**        rows,
+                index_type**        cols,
+                real_type**         vals,
+                memory::MemorySpace memspaceSrc,
+                memory::MemorySpace memspaceDst);
 
-      ~Csr();
+      ~CsrMatrix();
 
       virtual index_type* getRowData(memory::MemorySpace memspace);
       virtual index_type* getColData(memory::MemorySpace memspace);

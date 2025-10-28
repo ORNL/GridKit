@@ -473,22 +473,22 @@ namespace GridKit
       return 0;
     }
 
-    Csr::Csr()
+    CsrMatrix::CsrMatrix()
     {
       sparse_format_ = COMPRESSED_SPARSE_ROW;
     }
 
-    Csr::Csr(index_type n, index_type m, index_type nnz)
+    CsrMatrix::CsrMatrix(index_type n, index_type m, index_type nnz)
       : Sparse(n, m, nnz)
     {
       sparse_format_ = COMPRESSED_SPARSE_ROW;
     }
 
-    Csr::Csr(index_type n,
-             index_type m,
-             index_type nnz,
-             bool       symmetric,
-             bool       expanded)
+    CsrMatrix::CsrMatrix(index_type n,
+                         index_type m,
+                         index_type nnz,
+                         bool       symmetric,
+                         bool       expanded)
       : Sparse(n, m, nnz, symmetric, expanded)
     {
       sparse_format_ = COMPRESSED_SPARSE_ROW;
@@ -508,16 +508,16 @@ namespace GridKit
      * @param[in] memspaceSrc
      * @param[in] memspaceDst
      */
-    Csr::Csr(index_type          n,
-             index_type          m,
-             index_type          nnz,
-             bool                symmetric,
-             bool                expanded,
-             index_type**        rows,
-             index_type**        cols,
-             real_type**         vals,
-             memory::MemorySpace memspaceSrc,
-             memory::MemorySpace memspaceDst)
+    CsrMatrix::CsrMatrix(index_type          n,
+                         index_type          m,
+                         index_type          nnz,
+                         bool                symmetric,
+                         bool                expanded,
+                         index_type**        rows,
+                         index_type**        cols,
+                         real_type**         vals,
+                         memory::MemorySpace memspaceSrc,
+                         memory::MemorySpace memspaceDst)
       : Sparse(n, m, nnz, symmetric, expanded)
     {
       sparse_format_ = COMPRESSED_SPARSE_ROW;
@@ -622,17 +622,17 @@ namespace GridKit
         *vals                      = nullptr;
         break;
       default:
-        std::cerr << "Csr constructor failed! "
+        std::cerr << "CsrMatrix constructor failed! "
                   << "Possible bug in memory spaces setting.\n";
         break;
       }
     }
 
-    Csr::~Csr()
+    CsrMatrix::~CsrMatrix()
     {
     }
 
-    index_type* Csr::getRowData(memory::MemorySpace memspace)
+    index_type* CsrMatrix::getRowData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -647,7 +647,7 @@ namespace GridKit
       }
     }
 
-    index_type* Csr::getColData(memory::MemorySpace memspace)
+    index_type* CsrMatrix::getColData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -662,7 +662,7 @@ namespace GridKit
       }
     }
 
-    real_type* Csr::getValues(memory::MemorySpace memspace)
+    real_type* CsrMatrix::getValues(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -677,11 +677,11 @@ namespace GridKit
       }
     }
 
-    int Csr::copyDataFrom(const index_type*   row_data,
-                          const index_type*   col_data,
-                          const real_type*    val_data,
-                          memory::MemorySpace memspaceIn,
-                          memory::MemorySpace memspaceOut)
+    int CsrMatrix::copyDataFrom(const index_type*   row_data,
+                                const index_type*   col_data,
+                                const real_type*    val_data,
+                                memory::MemorySpace memspaceIn,
+                                memory::MemorySpace memspaceOut)
     {
       // four cases (for now)
       index_type nnz_current = nnz_;
@@ -707,7 +707,7 @@ namespace GridKit
       if (memspaceOut == memory::HOST)
       {
         // check if cpu data allocated
-        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csr::copyDataFrom one of host row or column data is null!\n");
+        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of host row or column data is null!\n");
 
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
         {
@@ -725,7 +725,7 @@ namespace GridKit
       if (memspaceOut == memory::DEVICE)
       {
         // check if cuda data allocated
-        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csr::copyDataFrom one of device row or column data is null!\n");
+        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of device row or column data is null!\n");
 
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
         {
@@ -773,19 +773,19 @@ namespace GridKit
       return 0;
     }
 
-    int Csr::copyDataFrom(const index_type*   row_data,
-                          const index_type*   col_data,
-                          const real_type*    val_data,
-                          index_type          new_nnz,
-                          memory::MemorySpace memspaceIn,
-                          memory::MemorySpace memspaceOut)
+    int CsrMatrix::copyDataFrom(const index_type*   row_data,
+                                const index_type*   col_data,
+                                const real_type*    val_data,
+                                index_type          new_nnz,
+                                memory::MemorySpace memspaceIn,
+                                memory::MemorySpace memspaceOut)
     {
       destroyMatrixData(memspaceOut);
       nnz_ = new_nnz;
       return copyDataFrom(row_data, col_data, val_data, memspaceIn, memspaceOut);
     }
 
-    int Csr::allocateMatrixData(memory::MemorySpace memspace)
+    int CsrMatrix::allocateMatrixData(memory::MemorySpace memspace)
     {
       index_type nnz_current = nnz_;
       destroyMatrixData(memspace); // just in case
@@ -826,7 +826,7 @@ namespace GridKit
      *
      * @see Sparse::setUpdated
      */
-    int Csr::syncData(memory::MemorySpace memspace)
+    int CsrMatrix::syncData(memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -834,18 +834,18 @@ namespace GridKit
       {
       case HOST:
         // check if we need to copy or not
-        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In Csr::syncData one of host row or column data is null!\n");
+        assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In CsrMatrix::syncData one of host row or column data is null!\n");
 
         if (h_data_updated_)
         {
-          std::cerr << "Csr::syncData is trying to sync host, but host already up to date!\n";
+          std::cerr << "CsrMatrix::syncData is trying to sync host, but host already up to date!\n";
           assert(!h_data_updated_);
           return 1;
         }
         if (!d_data_updated_)
         {
-          std::cerr << "Csr::syncData is trying to sync host with device, but device is out of date!\n"
-                    << "See Csr::syncData documentation\n.";
+          std::cerr << "CsrMatrix::syncData is trying to sync host with device, but device is out of date!\n"
+                    << "See CsrMatrix::syncData documentation\n.";
           assert(d_data_updated_);
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
@@ -865,18 +865,18 @@ namespace GridKit
         h_data_updated_ = true;
         return 0;
       case DEVICE:
-        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In Csr::syncData one of device row or column data is null!\n");
+        assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In CsrMatrix::syncData one of device row or column data is null!\n");
 
         if (d_data_updated_)
         {
-          std::cerr << "Csr::syncData is trying to sync device, but device already up to date!\n";
+          std::cerr << "CsrMatrix::syncData is trying to sync device, but device already up to date!\n";
           assert(!d_data_updated_);
           return 1;
         }
         if (!h_data_updated_)
         {
-          std::cerr << "Csr::syncData is trying to sync device with host, but host is out of date!\n"
-                    << "See Csr::syncData documentation\n.";
+          std::cerr << "CsrMatrix::syncData is trying to sync device with host, but host is out of date!\n"
+                    << "See CsrMatrix::syncData documentation\n.";
           assert(h_data_updated_);
         }
         if ((d_row_data_ == nullptr) && (d_col_data_ == nullptr))
@@ -905,7 +905,7 @@ namespace GridKit
      *
      * @param out - Output stream where the matrix data is printed
      */
-    void Csr::print(std::ostream& out, index_type indexing_base)
+    void CsrMatrix::print(std::ostream& out, index_type indexing_base)
     {
       out << std::scientific << std::setprecision(std::numeric_limits<real_type>::digits10);
       for (index_type i = 0; i < n_; ++i)
