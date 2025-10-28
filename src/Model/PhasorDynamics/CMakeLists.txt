@@ -16,5 +16,7 @@ add_subdirectory(SynchronousMachine)
 
 add_subdirectory(SignalNode)
 
-add_library(GRIDKIT::phasor_dynamics_components ALIAS gridkit_phasor_dynamics_components)
-add_library(GRIDKIT::phasor_dynamics_components_dependency_tracking ALIAS gridkit_phasor_dynamics_components_dependency_tracking)
+add_library(GRIDKIT::phasor_dynamics_components
+  ALIAS gridkit_phasor_dynamics_components)
+add_library(GRIDKIT::phasor_dynamics_components_dependency_tracking
+  ALIAS gridkit_phasor_dynamics_components_dependency_tracking)

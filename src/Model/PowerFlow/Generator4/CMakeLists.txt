@@ -5,8 +5,4 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-gridkit_add_library(generator4
-  SOURCES
-    Generator4.cpp
-  OUTPUT_NAME
-    gridkit_generator4)
+gridkit_add_library(generator4 SOURCES Generator4.cpp)

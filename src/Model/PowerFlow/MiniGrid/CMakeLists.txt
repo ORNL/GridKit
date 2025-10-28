@@ -3,8 +3,4 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-gridkit_add_library(minigrid
-  SOURCES
-    MiniGrid.cpp
-  OUTPUT_NAME
-    gridkit_minigrid)
+gridkit_add_library(minigrid SOURCES MiniGrid.cpp)
