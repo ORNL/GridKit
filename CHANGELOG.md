@@ -32,6 +32,7 @@
 - Added `CliOptions` for simple command-line parsing.
 - Added public function to encapsulate use of nlohmann/json and magic_enum from users.
 - Added complete basic consumer example project used for testing installation
+- Added `CsrMatrix` class.
 
 ## v0.1
 
