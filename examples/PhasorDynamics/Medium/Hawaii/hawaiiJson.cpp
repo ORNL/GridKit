@@ -24,62 +24,62 @@
 
 int main(int argc, const char* argv[])
 {
-    using namespace GridKit::PhasorDynamics;
-    using namespace AnalysisManager::Sundials;
+  using namespace GridKit::PhasorDynamics;
+  using namespace AnalysisManager::Sundials;
 
-    using scalar_type = double;
-    using real_type   = double;
-    using index_type  = size_t;
+  using scalar_type = double;
+  using real_type   = double;
+  using index_type  = size_t;
 
-    //
-    // Input file
-    //
+  //
+  // Input file
+  //
 
-    std::filesystem::path input_file;
-    if (argc < 2)
-    {
+  std::filesystem::path input_file;
+  if (argc < 2)
+  {
     if (std::filesystem::exists("hawaii.json"))
     {
-        input_file = std::filesystem::current_path() / "hawaii.json";
+      input_file = std::filesystem::current_path() / "hawaii.json";
     }
     else
     {
-        std::cout << "\n"
-                    "ERROR: No input file found or provided.\n"
-                    "\n"
-                    "Usage:\n"
-                    "       hawaiiJson <json-input-file>\n"
-                    "\n"
-                    "Please provide a JSON input file as a positional command-line \n"
-                    "argument.\n"
-                    "\n"
-                    "By default this example will look for \"hawaii.json\" in the \n"
-                    "current working directory and use that if found.\n"
-                    "\n";
-        exit(1);
+      std::cout << "\n"
+                   "ERROR: No input file found or provided.\n"
+                   "\n"
+                   "Usage:\n"
+                   "       hawaiiJson <json-input-file>\n"
+                   "\n"
+                   "Please provide a JSON input file as a positional command-line \n"
+                   "argument.\n"
+                   "\n"
+                   "By default this example will look for \"hawaii.json\" in the \n"
+                   "current working directory and use that if found.\n"
+                   "\n";
+      exit(1);
     }
-    }
-    else
-    {
+  }
+  else
+  {
     input_file = argv[1];
-    }
+  }
 
-    std::cout << "Example: hawaiiJson\n";
-    std::cout << "Input file: " << input_file << '\n';
+  std::cout << "Example: hawaiiJson\n";
+  std::cout << "Input file: " << input_file << '\n';
 
-    //
-    // Create model data
-    //
+  //
+  // Create model data
+  //
 
-    SystemModelData<scalar_type, index_type> data(json::parse(std::ifstream(input_file)));
+  SystemModelData<scalar_type, index_type> data(json::parse(std::ifstream(input_file)));
 
-    //
-    // Instantiate system model
-    //
+  //
+  // Instantiate system model
+  //
 
-    SystemModel<scalar_type, index_type> sys(data);
-    sys.allocate();
+  SystemModel<scalar_type, index_type> sys(data);
+  sys.allocate();
 
-    int status=0;
-    return status;
+  int status = 0;
+  return status;
 }
