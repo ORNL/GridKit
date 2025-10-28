@@ -34,7 +34,7 @@ endif()
 option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is disabled by default
-option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
+option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
 
 # Enzyme support is disabled by default
 option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
