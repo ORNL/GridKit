@@ -189,10 +189,11 @@ namespace GridKit
       {
         auto& either = component_jacobians_[component_idx];
         return std::visit(
-            Utility::OverloadVisitor{[](CsrJacobian* jac) -> const CsrJacobian&
-                                     { return *jac; },
-                                     [](const CsrJacobian& jac) -> const CsrJacobian&
-                                     { return jac; }},
+            Utility::OverloadVisitor{
+                [](CsrJacobian* jac) -> const CsrJacobian&
+        { return *jac; },
+                [](const CsrJacobian& jac) -> const CsrJacobian&
+        { return jac; }},
             either);
       }
     };
@@ -418,7 +419,8 @@ namespace GridKit
       // Evaluate component jacs
       for (auto component : components_)
       {
-        component->evaluateJacobian();
+        GridKit::Utility::time<true>("Individual COO Jacobian Assembly", [&]()
+        { component->evaluateJacobian(); });
 
         // get references to local jacobian
         std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = component->getJacobian().getEntries();
@@ -428,19 +430,23 @@ namespace GridKit
         std::vector<IdxT>  rgr;
         std::vector<IdxT>  cgr;
         std::vector<RealT> vgr;
-        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
+        GridKit::Utility::time<true>("System COO Jacobian permutation", [&]()
         {
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
           {
-            rgr.push_back(component->getNodeConnection(r[i]));
-            cgr.push_back(component->getNodeConnection(c[i]));
-            vgr.push_back(v[i]);
+            if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+            {
+              rgr.push_back(component->getNodeConnection(r[i]));
+              cgr.push_back(component->getNodeConnection(c[i]));
+              vgr.push_back(v[i]);
+            }
           }
-        }
+        });
 
         // AXPY to Global Jacobian
         // elementwise jac_(rgr, cgr) += vgr
-        jac_.axpy(1.0, rgr, cgr, vgr);
+        GridKit::Utility::time<true>("System Jacobian axpy", [&]()
+        { jac_.axpy(1.0, rgr, cgr, vgr); });
       }
 
       // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
@@ -500,10 +506,11 @@ namespace GridKit
 
           auto row_plan = plan.row_plans_[row];
           std::visit(
-              Utility::OverloadVisitor{[&](const InternalRowPlan& row_plan)
-                                       { apply_internal_row_plan(row_plan, jac_view, builder); },
-                                       [&](const ExternalRowPlan& row_plan)
-                                       { apply_external_row_plan(row_plan, jac_view, builder); }},
+              Utility::OverloadVisitor{
+                  [&](const InternalRowPlan& row_plan)
+          { apply_internal_row_plan(row_plan, jac_view, builder); },
+                  [&](const ExternalRowPlan& row_plan)
+          { apply_external_row_plan(row_plan, jac_view, builder); }},
               row_plan);
         }
 
