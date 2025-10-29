@@ -13,18 +13,23 @@ namespace GridKit
     using real_type  = double;
     using index_type = std::int32_t;
 
-    class Sparse
+    class CsrMatrix
     {
     public:
-      // basic constructor
-      Sparse();
-      Sparse(index_type n, index_type m, index_type nnz);
-      Sparse(index_type n,
-             index_type m,
-             index_type nnz,
-             bool       symmetric,
-             bool       expanded);
-      virtual ~Sparse();
+      CsrMatrix();
+
+      CsrMatrix(index_type n, index_type m, index_type nnz);
+
+      CsrMatrix(index_type          n,
+                index_type          m,
+                index_type          nnz,
+                index_type**        rows,
+                index_type**        cols,
+                real_type**         vals,
+                memory::MemorySpace memspaceSrc = memory::HOST,
+                memory::MemorySpace memspaceDst = memory::HOST);
+
+      ~CsrMatrix();
 
       // accessors
       index_type getNumRows();
@@ -34,33 +39,33 @@ namespace GridKit
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
 
-      virtual index_type* getRowData(memory::MemorySpace memspace) = 0;
-      virtual index_type* getColData(memory::MemorySpace memspace) = 0;
-      virtual real_type*  getValues(memory::MemorySpace memspace)  = 0;
+      index_type* getRowData(memory::MemorySpace memspace = memory::HOST);
+      index_type* getColData(memory::MemorySpace memspace = memory::HOST);
+      real_type*  getValues(memory::MemorySpace memspace = memory::HOST);
 
-      virtual int copyDataFrom(const index_type*   row_data,
-                               const index_type*   col_data,
-                               const real_type*    val_data,
-                               memory::MemorySpace memspaceIn,
-                               memory::MemorySpace memspaceOut) = 0;
-      virtual int copyDataFrom(const index_type*   row_data,
-                               const index_type*   col_data,
-                               const real_type*    val_data,
-                               index_type          new_nnz,
-                               memory::MemorySpace memspaceIn,
-                               memory::MemorySpace memspaceOut) = 0;
+      int copyDataFrom(const index_type*   row_data,
+                       const index_type*   col_data,
+                       const real_type*    val_data,
+                       memory::MemorySpace memspaceIn,
+                       memory::MemorySpace memspaceOut);
+      int copyDataFrom(const index_type*   row_data,
+                       const index_type*   col_data,
+                       const real_type*    val_data,
+                       index_type          new_nnz,
+                       memory::MemorySpace memspaceIn,
+                       memory::MemorySpace memspaceOut);
 
-      virtual int allocateMatrixData(memory::MemorySpace memspace) = 0;
-      int         setDataPointers(index_type*         row_data,
-                                  index_type*         col_data,
-                                  real_type*          val_data,
-                                  memory::MemorySpace memspace);
+      int allocateMatrixData(memory::MemorySpace memspace);
+      int setDataPointers(index_type*         row_data,
+                          index_type*         col_data,
+                          real_type*          val_data,
+                          memory::MemorySpace memspace);
 
       int destroyMatrixData(memory::MemorySpace memspace);
 
-      virtual void print(std::ostream& file_out, index_type indexing_base) = 0;
+      void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
 
-      virtual int syncData(memory::MemorySpace memspaceOut) = 0;
+      int syncData(memory::MemorySpace memspaceOut);
 
       // update Values just updates values; it allocates if necessary.
       // values have the same dimensions between different formats
@@ -72,7 +77,7 @@ namespace GridKit
       virtual int setValuesPointer(real_type*          new_vals,
                                    memory::MemorySpace memspace);
 
-    protected:
+    private:
       index_type n_{0};   ///< number of rows
       index_type m_{0};   ///< number of columns
       index_type nnz_{0}; ///< number of non-zeros
@@ -99,47 +104,6 @@ namespace GridKit
       bool owns_gpu_values_{false};           ///< for nonzero values
 
       MemoryHandler mem_; ///< Device memory manager object
-    };
-
-    class CsrMatrix : public Sparse
-    {
-    public:
-      CsrMatrix();
-
-      CsrMatrix(index_type n, index_type m, index_type nnz);
-
-      CsrMatrix(index_type          n,
-                index_type          m,
-                index_type          nnz,
-                index_type**        rows,
-                index_type**        cols,
-                real_type**         vals,
-                memory::MemorySpace memspaceSrc = memory::HOST,
-                memory::MemorySpace memspaceDst = memory::HOST);
-
-      ~CsrMatrix();
-
-      virtual index_type* getRowData(memory::MemorySpace memspace = memory::HOST);
-      virtual index_type* getColData(memory::MemorySpace memspace = memory::HOST);
-      virtual real_type*  getValues(memory::MemorySpace memspace = memory::HOST);
-
-      virtual int copyDataFrom(const index_type*   row_data,
-                               const index_type*   col_data,
-                               const real_type*    val_data,
-                               memory::MemorySpace memspaceIn,
-                               memory::MemorySpace memspaceOut);
-      virtual int copyDataFrom(const index_type*   row_data,
-                               const index_type*   col_data,
-                               const real_type*    val_data,
-                               index_type          new_nnz,
-                               memory::MemorySpace memspaceIn,
-                               memory::MemorySpace memspaceOut);
-
-      virtual int allocateMatrixData(memory::MemorySpace memspace);
-
-      virtual void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
-
-      virtual int syncData(memory::MemorySpace memspaceOut);
     };
   } // namespace LinearAlgebra
 } // namespace GridKit

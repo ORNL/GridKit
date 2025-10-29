@@ -9,57 +9,9 @@ namespace GridKit
   namespace LinearAlgebra
   {
     /**
-     * @brief empty constructor that does absolutely nothing
-     */
-    Sparse::Sparse()
-    {
-    }
-
-    /**
-     * @brief basic constructor. It DOES NOT allocate any memory!
-     *
-     * @param[in] n   - number of rows
-     * @param[in] m   - number of columns
-     * @param[in] nnz - number of non-zeros
-     */
-    Sparse::Sparse(index_type n,
-                   index_type m,
-                   index_type nnz)
-      : n_{n},
-        m_{m},
-        nnz_{nnz}
-    {
-      setNotUpdated();
-
-      // set everything to nullptr
-      h_row_data_ = nullptr;
-      h_col_data_ = nullptr;
-      h_val_data_ = nullptr;
-
-      d_row_data_ = nullptr;
-      d_col_data_ = nullptr;
-      d_val_data_ = nullptr;
-
-      owns_cpu_sparsity_pattern_ = false;
-      owns_cpu_values_           = false;
-
-      owns_gpu_sparsity_pattern_ = false;
-      owns_gpu_values_           = false;
-    }
-
-    /**
-     * @brief destructor
-     * */
-    Sparse::~Sparse()
-    {
-      this->destroyMatrixData(memory::HOST);
-      this->destroyMatrixData(memory::DEVICE);
-    }
-
-    /**
      * @brief set the matrix update flags to false (for both HOST and DEVICE).
      */
-    void Sparse::setNotUpdated()
+    void CsrMatrix::setNotUpdated()
     {
       h_data_updated_ = false;
       d_data_updated_ = false;
@@ -70,7 +22,7 @@ namespace GridKit
      *
      * @return number of matrix rows.
      */
-    index_type Sparse::getNumRows()
+    index_type CsrMatrix::getNumRows()
     {
       return this->n_;
     }
@@ -80,7 +32,7 @@ namespace GridKit
      *
      * @return number of matrix columns.
      */
-    index_type Sparse::getNumColumns()
+    index_type CsrMatrix::getNumColumns()
     {
       return this->m_;
     }
@@ -90,7 +42,7 @@ namespace GridKit
      *
      * @return number of non-zeros.
      */
-    index_type Sparse::getNnz()
+    index_type CsrMatrix::getNnz()
     {
       return this->nnz_;
     }
@@ -100,7 +52,7 @@ namespace GridKit
      *
      * @param[in] nnz_new - new number of non-zeros
      */
-    void Sparse::setNnz(index_type nnz_new)
+    void CsrMatrix::setNnz(index_type nnz_new)
     {
       this->nnz_ = nnz_new;
     }
@@ -124,7 +76,7 @@ namespace GridKit
      * @note If you want to set both DEVICE and HOST memory to the same value
      * use syncData function.
      */
-    int Sparse::setUpdated(memory::MemorySpace memspace)
+    int CsrMatrix::setUpdated(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -155,10 +107,10 @@ namespace GridKit
      *
      * @return 0 if successful, 1 if not.
      */
-    int Sparse::setDataPointers(index_type*         row_data,
-                                index_type*         col_data,
-                                real_type*          val_data,
-                                memory::MemorySpace memspace)
+    int CsrMatrix::setDataPointers(index_type*         row_data,
+                                   index_type*         col_data,
+                                   real_type*          val_data,
+                                   memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -219,7 +171,7 @@ namespace GridKit
      * @return 0 if successful, -1 if not.
      *
      */
-    int Sparse::destroyMatrixData(memory::MemorySpace memspace)
+    int CsrMatrix::destroyMatrixData(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -269,9 +221,9 @@ namespace GridKit
      *
      * @return 0 if successful, -1 if not.
      */
-    int Sparse::copyValues(const real_type*    new_vals,
-                           memory::MemorySpace memspaceIn,
-                           memory::MemorySpace memspaceOut)
+    int CsrMatrix::copyValues(const real_type*    new_vals,
+                              memory::MemorySpace memspaceIn,
+                              memory::MemorySpace memspaceOut)
     {
 
       index_type nnz_current = nnz_;
@@ -351,8 +303,8 @@ namespace GridKit
      *
      * @return 0 if successful, -1 if not.
      */
-    int Sparse::setValuesPointer(real_type*          new_vals,
-                                 memory::MemorySpace memspace)
+    int CsrMatrix::setValuesPointer(real_type*          new_vals,
+                                    memory::MemorySpace memspace)
     {
       using namespace memory;
       setNotUpdated();
@@ -391,9 +343,36 @@ namespace GridKit
     {
     }
 
-    CsrMatrix::CsrMatrix(index_type n, index_type m, index_type nnz)
-      : Sparse(n, m, nnz)
+    /**
+     * @brief basic constructor. It DOES NOT allocate any memory!
+     *
+     * @param[in] n   - number of rows
+     * @param[in] m   - number of columns
+     * @param[in] nnz - number of non-zeros
+     */
+    CsrMatrix::CsrMatrix(index_type n,
+                         index_type m,
+                         index_type nnz)
+      : n_{n},
+        m_{m},
+        nnz_{nnz}
     {
+      setNotUpdated();
+
+      // set everything to nullptr
+      h_row_data_ = nullptr;
+      h_col_data_ = nullptr;
+      h_val_data_ = nullptr;
+
+      d_row_data_ = nullptr;
+      d_col_data_ = nullptr;
+      d_val_data_ = nullptr;
+
+      owns_cpu_sparsity_pattern_ = false;
+      owns_cpu_values_           = false;
+
+      owns_gpu_sparsity_pattern_ = false;
+      owns_gpu_values_           = false;
     }
 
     /**
@@ -416,7 +395,7 @@ namespace GridKit
                          real_type**         vals,
                          memory::MemorySpace memspaceSrc,
                          memory::MemorySpace memspaceDst)
-      : Sparse(n, m, nnz)
+      : CsrMatrix(n, m, nnz)
     {
       int control = -1;
       if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::HOST))
@@ -526,6 +505,8 @@ namespace GridKit
 
     CsrMatrix::~CsrMatrix()
     {
+      this->destroyMatrixData(memory::HOST);
+      this->destroyMatrixData(memory::DEVICE);
     }
 
     index_type* CsrMatrix::getRowData(memory::MemorySpace memspace)
@@ -720,7 +701,7 @@ namespace GridKit
      * @pre The memory space other than `memspace` must be up-to-date. Otherwise,
      * this function will return an error.
      *
-     * @see Sparse::setUpdated
+     * @see CsrMatrix::setUpdated
      */
     int CsrMatrix::syncData(memory::MemorySpace memspace)
     {
