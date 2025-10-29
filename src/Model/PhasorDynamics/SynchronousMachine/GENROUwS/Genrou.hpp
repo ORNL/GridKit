@@ -231,6 +231,9 @@ namespace GridKit
       /* Local copies of signal variables */
       ScalarT pmech_;
       ScalarT efd_;
+
+      /* Constant/external parameters */
+      real_type mva_system_base_{100.0};
     };
 
   } // namespace PhasorDynamics

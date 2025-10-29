@@ -135,6 +135,10 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
+
+      /* Constant/external parameters */
+      real_type mva_system_base_{100.0};
+
     };
 
   } // namespace PhasorDynamics
