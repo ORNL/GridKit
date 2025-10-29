@@ -12,3 +12,12 @@ add_subdirectory(Generator4Governor)
 add_subdirectory(Generator4Param)
 add_subdirectory(Load)
 add_subdirectory(MiniGrid)
+
+install(
+  FILES
+    MatpowerParser.hpp
+    PowerFlowData.hpp
+    SystemModel.hpp
+    SystemModelPowerFlow.hpp
+  DESTINATION
+    include/GridKit/Model/PowerFlow)

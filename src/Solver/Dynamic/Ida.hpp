@@ -8,6 +8,7 @@
 #include <optional>
 
 #include <nvector/nvector_serial.h>
+#include <sundials/sundials_context.h>
 #include <sunlinsol/sunlinsol_dense.h>  /* access to dense linear solver        */
 #include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 

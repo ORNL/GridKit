@@ -48,10 +48,13 @@ macro(gridkit_add_library target)
   endif()
 
   # set include dirs
+  target_include_directories(${target} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include/GridKit>)
+
   if(gridkit_add_library_INCLUDE_DIRECTORIES)
-    target_include_directories(${target} PUBLIC
-      $<BUILD_INTERFACE:${gridkit_add_library_INCLUDE_DIRECTORIES}>
-      $<INSTALL_INTERFACE:include>)
+    target_include_directories(${target}
+        ${gridkit_add_library_INCLUDE_DIRECTORIES})
   endif()
 
   # add compile options
@@ -82,7 +85,7 @@ macro(gridkit_add_library target)
       BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
       OUTPUT_VARIABLE _rel_path)
     install(FILES ${gridkit_add_library_HEADERS}
-      DESTINATION include/${_rel_path})
+      DESTINATION include/GridKit/${_rel_path})
   endif()
 
 endmacro()

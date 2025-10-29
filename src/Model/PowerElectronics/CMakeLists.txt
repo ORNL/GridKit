@@ -12,3 +12,11 @@ add_subdirectory(TransmissionLine)
 add_subdirectory(MicrogridLoad)
 add_subdirectory(MicrogridLine)
 add_subdirectory(MicrogridBusDQ)
+
+install(
+  FILES
+    CircuitComponent.hpp
+    CircuitGraph.hpp
+    SystemModelPowerElectronics.hpp
+  DESTINATION
+    include/GridKit/Model/PowerElectronics)
