@@ -16,16 +16,6 @@ namespace GridKit
     class Sparse
     {
     public:
-      /// Supported sparse matrix formats
-      enum SparseFormat
-      {
-        NONE,
-        TRIPLET,
-        COMPRESSED_SPARSE_ROW,
-        COMPRESSED_SPARSE_COLUMN
-      };
-
-    public:
       // basic constructor
       Sparse();
       Sparse(index_type n, index_type m, index_type nnz);
@@ -37,10 +27,9 @@ namespace GridKit
       virtual ~Sparse();
 
       // accessors
-      index_type   getNumRows();
-      index_type   getNumColumns();
-      index_type   getNnz();
-      SparseFormat getSparseFormat() const;
+      index_type getNumRows();
+      index_type getNumColumns();
+      index_type getNnz();
 
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
@@ -84,10 +73,9 @@ namespace GridKit
                                    memory::MemorySpace memspace);
 
     protected:
-      SparseFormat sparse_format_{NONE}; ///< Matrix format
-      index_type   n_{0};                ///< number of rows
-      index_type   m_{0};                ///< number of columns
-      index_type   nnz_{0};              ///< number of non-zeros
+      index_type n_{0};   ///< number of rows
+      index_type m_{0};   ///< number of columns
+      index_type nnz_{0}; ///< number of non-zeros
 
       // host data
       index_type* h_row_data_{nullptr};   ///< row data (HOST)

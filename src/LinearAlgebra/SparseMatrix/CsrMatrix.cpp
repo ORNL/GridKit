@@ -95,11 +95,6 @@ namespace GridKit
       return this->nnz_;
     }
 
-    Sparse::SparseFormat Sparse::getSparseFormat() const
-    {
-      return sparse_format_;
-    }
-
     /**
      * @brief Set number of non-zeros.
      *
@@ -394,13 +389,11 @@ namespace GridKit
 
     CsrMatrix::CsrMatrix()
     {
-      sparse_format_ = COMPRESSED_SPARSE_ROW;
     }
 
     CsrMatrix::CsrMatrix(index_type n, index_type m, index_type nnz)
       : Sparse(n, m, nnz)
     {
-      sparse_format_ = COMPRESSED_SPARSE_ROW;
     }
 
     /**
@@ -425,8 +418,6 @@ namespace GridKit
                          memory::MemorySpace memspaceDst)
       : Sparse(n, m, nnz)
     {
-      sparse_format_ = COMPRESSED_SPARSE_ROW;
-
       int control = -1;
       if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::HOST))
       {
