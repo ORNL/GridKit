@@ -6,3 +6,10 @@
 @PACKAGE_INIT@
 
 include ( "${CMAKE_CURRENT_LIST_DIR}/GridKitTargets.cmake" )
+
+include(CMakeFindDependencyMacro)
+set(GridKit_ENABLE_SUNDIALS @GRIDKIT_ENABLE_SUNDIALS@)
+if(GridKit_ENABLE_SUNDIALS)
+  list(APPEND CMAKE_PREFIX_PATH @SUNDIALS_DIR@)
+  find_dependency(SUNDIALS)
+endif()
