@@ -1,5 +1,4 @@
 #include "SparseTests.hpp"
-#include <LinearAlgebra/LinAlgWorkspaceCpu.hpp>
 
 using namespace GridKit;
 using namespace LinearAlgebra;
@@ -8,17 +7,12 @@ using namespace Testing;
 /**
  * @brief Run sparse matrix tests with a given backend
  *
- * @tparam WorkspaceType workspace type LinAlgWorkspace{Cpu, CUDA, HIP} supported
  * @param[in] backend - name of the hardware backend
  * @param[out] result - test results
  */
-template <typename WorkspaceType>
 void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
 {
   std::cout << "Running tests on " << backend << ":\n";
-
-  WorkspaceType workspace;
-  workspace.initializeHandles();
 
   SparseTests test(memspace);
 
@@ -48,7 +42,7 @@ void runTests(const std::string& backend, memory::MemorySpace memspace, TestingR
 int main(int, char**)
 {
   TestingResults result;
-  runTests<LinAlgWorkspaceCpu>("CPU", memory::HOST, result);
+  runTests("CPU", memory::HOST, result);
 
   return result.summary();
 }
