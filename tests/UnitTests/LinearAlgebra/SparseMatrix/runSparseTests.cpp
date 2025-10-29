@@ -20,8 +20,6 @@ void runTests(const std::string& backend, memory::MemorySpace memspace, TestingR
 
   result += test.constructor(50, 50, 2);
   result += test.constructor(50, 100, 2);
-  result += test.constructor(50, 50, 2, true);
-  result += test.constructor(50, 50, 2, false, false);
 
   result += test.setDataPointers(50, 50, 2);
   result += test.setDataPointers(50, 100, 2);

@@ -29,47 +29,6 @@ namespace GridKit
         m_{m},
         nnz_{nnz}
     {
-      this->is_symmetric_ = false;
-      this->is_expanded_  = true; // default is a normal non-symmetric fully expanded matrix
-
-      setNotUpdated();
-
-      // set everything to nullptr
-      h_row_data_ = nullptr;
-      h_col_data_ = nullptr;
-      h_val_data_ = nullptr;
-
-      d_row_data_ = nullptr;
-      d_col_data_ = nullptr;
-      d_val_data_ = nullptr;
-
-      owns_cpu_sparsity_pattern_ = false;
-      owns_cpu_values_           = false;
-
-      owns_gpu_sparsity_pattern_ = false;
-      owns_gpu_values_           = false;
-    }
-
-    /**
-     * @brief another basic constructor. It DOES NOT allocate any memory!
-     *
-     * @param[in] n         - number of rows
-     * @param[in] m         - number of columns
-     * @param[in] nnz       - number of non-zeros
-     * @param[in] symmetric - true if symmetric, false if non-symmetric
-     * @param[in] expanded  - true if expanded, false if not
-     */
-    Sparse::Sparse(index_type n,
-                   index_type m,
-                   index_type nnz,
-                   bool       symmetric,
-                   bool       expanded)
-      : n_{n},
-        m_{m},
-        nnz_{nnz},
-        is_symmetric_{symmetric},
-        is_expanded_{expanded}
-    {
       setNotUpdated();
 
       // set everything to nullptr
@@ -139,46 +98,6 @@ namespace GridKit
     Sparse::SparseFormat Sparse::getSparseFormat() const
     {
       return sparse_format_;
-    }
-
-    /**
-     * @brief check if matrix is symmetric.
-     *
-     * @return true if symmetric, false otherwise.
-     */
-    bool Sparse::symmetric()
-    {
-      return is_symmetric_;
-    }
-
-    /**
-     * @brief check if (symmetric) matrix is expanded.
-     *
-     * @return true if expanded, false otherwise.
-     */
-    bool Sparse::expanded()
-    {
-      return is_expanded_;
-    }
-
-    /**
-     * @brief Set matrix symmetry property
-     *
-     * @param[in] symmetric - true to set matrix to symmetric and false to set to non-symmetric
-     */
-    void Sparse::setSymmetric(bool symmetric)
-    {
-      this->is_symmetric_ = symmetric;
-    }
-
-    /**
-     * @brief Set matrix "expanded" property
-     *
-     * @param[in] expanded - true to set matrix to expanded and false to set to not expanded
-     */
-    void Sparse::setExpanded(bool expanded)
-    {
-      this->is_expanded_ = expanded;
     }
 
     /**
@@ -484,24 +403,12 @@ namespace GridKit
       sparse_format_ = COMPRESSED_SPARSE_ROW;
     }
 
-    CsrMatrix::CsrMatrix(index_type n,
-                         index_type m,
-                         index_type nnz,
-                         bool       symmetric,
-                         bool       expanded)
-      : Sparse(n, m, nnz, symmetric, expanded)
-    {
-      sparse_format_ = COMPRESSED_SPARSE_ROW;
-    }
-
     /**
      * @brief Hijacking constructor
      *
      * @param[in] n
      * @param[in] m
      * @param[in] nnz
-     * @param[in] symmetric
-     * @param[in] expanded
      * @param[in,out] rows
      * @param[in,out] cols
      * @param[in,out] vals
@@ -511,14 +418,12 @@ namespace GridKit
     CsrMatrix::CsrMatrix(index_type          n,
                          index_type          m,
                          index_type          nnz,
-                         bool                symmetric,
-                         bool                expanded,
                          index_type**        rows,
                          index_type**        cols,
                          real_type**         vals,
                          memory::MemorySpace memspaceSrc,
                          memory::MemorySpace memspaceDst)
-      : Sparse(n, m, nnz, symmetric, expanded)
+      : Sparse(n, m, nnz)
     {
       sparse_format_ = COMPRESSED_SPARSE_ROW;
 

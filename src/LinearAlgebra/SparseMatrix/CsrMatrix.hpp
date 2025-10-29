@@ -42,10 +42,6 @@ namespace GridKit
       index_type   getNnz();
       SparseFormat getSparseFormat() const;
 
-      bool symmetric();
-      bool expanded();
-      void setSymmetric(bool symmetric);
-      void setExpanded(bool expanded);
       void setNnz(index_type nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
 
@@ -93,9 +89,6 @@ namespace GridKit
       index_type   m_{0};                ///< number of columns
       index_type   nnz_{0};              ///< number of non-zeros
 
-      bool is_symmetric_{false}; ///< symmetry flag
-      bool is_expanded_{false};  ///< "expanded" flag
-
       // host data
       index_type* h_row_data_{nullptr};   ///< row data (HOST)
       index_type* h_col_data_{nullptr};   ///< column data (HOST)
@@ -127,17 +120,9 @@ namespace GridKit
 
       CsrMatrix(index_type n, index_type m, index_type nnz);
 
-      CsrMatrix(index_type n,
-                index_type m,
-                index_type nnz,
-                bool       symmetric,
-                bool       expanded);
-
       CsrMatrix(index_type          n,
                 index_type          m,
                 index_type          nnz,
-                bool                symmetric,
-                bool                expanded,
                 index_type**        rows,
                 index_type**        cols,
                 real_type**         vals,

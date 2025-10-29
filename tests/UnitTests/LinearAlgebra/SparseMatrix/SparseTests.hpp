@@ -37,14 +37,12 @@ namespace GridKit
        */
       TestOutcome constructor(index_type n,
                               index_type m,
-                              index_type nnz,
-                              bool       is_symmetric = false,
-                              bool       is_expanded  = true)
+                              index_type nnz)
       {
         TestStatus success;
         success = true;
 
-        CsrMatrix A(n, m, nnz, is_symmetric, is_expanded);
+        CsrMatrix A(n, m, nnz);
 
         if (A.getNumRows() != n || A.getNumColumns() != m || A.getNnz() != nnz)
         {
