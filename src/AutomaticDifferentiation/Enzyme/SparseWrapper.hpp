@@ -53,7 +53,7 @@ namespace GridKit
       /**
        * @brief Residual wrapper partial template specialization for InternalResidual
        *
-       */        
+       */
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::InternalResidual, ScalarT>
       {

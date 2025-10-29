@@ -25,18 +25,18 @@ namespace GridKit
       std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
       GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
-                                                            GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                            ScalarT,
-                                                            IdxT>::eval(this,
-                                                                        f_.size(),
-                                                                        y_.size(),
-                                                                        this->getResidualIndices(),
-                                                                        this->getVariableIndices(),
-                                                                        y_.data(),
-                                                                        yp_.data(),
-                                                                        wb_.data(),
-                                                                        we_.data(),
-                                                                        J_);
+                                                          GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                                          ScalarT,
+                                                          IdxT>::eval(this,
+                                                                      f_.size(),
+                                                                      y_.size(),
+                                                                      this->getResidualIndices(),
+                                                                      this->getVariableIndices(),
+                                                                      y_.data(),
+                                                                      yp_.data(),
+                                                                      wb_.data(),
+                                                                      we_.data(),
+                                                                      J_);
 
       J_.printMatrix("Genrou internal Jacobian");
 
