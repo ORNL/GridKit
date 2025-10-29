@@ -79,6 +79,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::w_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::mva_system_base_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
       using bus_type        = BusBase<ScalarT, IdxT>;
@@ -232,8 +233,7 @@ namespace GridKit
       ScalarT pmech_;
       ScalarT efd_;
 
-      /* Constant/external parameters */
-      real_type mva_system_base_{100.0};
+      
     };
 
   } // namespace PhasorDynamics
