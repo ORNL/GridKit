@@ -138,7 +138,6 @@ namespace GridKit
 
       /* Constant/external parameters */
       real_type mva_system_base_{100.0};
-
     };
 
   } // namespace PhasorDynamics
