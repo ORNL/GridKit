@@ -176,7 +176,7 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateInternalResidualWithSignal(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:

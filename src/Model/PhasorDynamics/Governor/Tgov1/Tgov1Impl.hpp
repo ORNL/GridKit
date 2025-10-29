@@ -251,7 +251,7 @@ namespace GridKit
        *
        */
       template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidualWithSignal(
+      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* wb,
@@ -298,7 +298,7 @@ namespace GridKit
           we_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        evaluateInternalResidualWithSignal(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
 
         return 0;
       }

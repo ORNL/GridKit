@@ -397,7 +397,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateInternalResidualWithSignal(
+    __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
@@ -522,7 +522,7 @@ namespace GridKit
       wb_[1] = Vi();
 
       // Residual evaluation
-      evaluateInternalResidualWithSignal(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
 
       // Genrou contribution to bus algebraic equations

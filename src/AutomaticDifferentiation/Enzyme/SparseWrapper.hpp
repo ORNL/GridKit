@@ -87,7 +87,7 @@ namespace GridKit
          */
         static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* we, ScalarT* f)
         {
-          model->evaluateInternalResidualWithSignal(y, yp, wb, we, f);
+          model->evaluateInternalResidual(y, yp, wb, we, f);
         }
       };
 
