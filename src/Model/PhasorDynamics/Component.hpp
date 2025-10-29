@@ -173,6 +173,18 @@ namespace GridKit
 
       IdxT max_steps_;
 
+      /*
+
+      ------ WARNING: Temporary ------
+
+      The protexted variable mva_system_base_ is temporarily
+      hard coded. This eventually needs to be configured
+      from the input JSON format, which specifies the system MVA base.
+
+      */
+
+      real_type mva_system_base_{100.0};
+
       //
       // Adjoint sensitivity members
       //

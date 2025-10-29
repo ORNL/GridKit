@@ -15,12 +15,13 @@ namespace GridKit
     /// Initial parameters for a classical generator model
     enum class GenClassicalParameters
     {
-      p0,  ///< Initial active power
-      q0,  ///< Initial reactive power
-      H,   ///< Rotor inertia
-      D,   ///< Damping coefficient
-      Ra,  ///< Winding resistance
-      Xdp, ///< Direct axis transient reactance
+      p0,      ///< Initial active power
+      q0,      ///< Initial reactive power
+      H,       ///< Rotor inertia
+      D,       ///< Damping coefficient
+      Ra,      ///< Winding resistance
+      Xdp,     ///< Direct axis transient reactance
+      mva_base ///< MVA Base of the generator
     };
 
     /// Ports supported for a classical generator model

@@ -6,7 +6,6 @@
 
 #include "Genrou.hpp"
 #include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
 #include <Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 
@@ -45,7 +44,8 @@ namespace GridKit
         Xqpp_(.18),
         Xl_(.15),
         S10_(0.),
-        S12_(0.)
+        S12_(0.),
+        mva_base_(100.)
     {
       size_ = 19;
       setDerivedParams();
@@ -95,7 +95,8 @@ namespace GridKit
         Xqpp_(Xqpp),
         Xl_(Xl),
         S10_(S10),
-        S12_(S12)
+        S12_(S12),
+        mva_base_(100.)
     {
       size_ = 19;
       setDerivedParams();
@@ -243,6 +244,11 @@ namespace GridKit
         S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
       }
 
+      if (data.parameters.contains(model_data_type::Parameters::mva_base))
+      {
+        mva_base_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::mva_base));
+      }
+
       if (data.ports.contains(model_data_type::Ports::bus))
       {
         bus_id_ = data.ports.at(model_data_type::Ports::bus);
@@ -301,8 +307,8 @@ namespace GridKit
       /* Initialization tricks -- assuming NO saturation */
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_);
-      ScalarT q     = static_cast<ScalarT>(q0_);
+      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
+      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT Er    = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
       ScalarT Ei    = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
@@ -478,8 +484,9 @@ namespace GridKit
       ScalarT vr  = w[0];
       ScalarT vi  = w[1];
 
-      h[0] = inr - vr * G_ + vi * B_;
-      h[1] = ini - vr * B_ - vi * G_;
+      // Current base conversion. Assumes generator and bus are same V base
+      h[0] = (inr - vr * G_ + vi * B_) * mva_base_ / mva_system_base_;
+      h[1] = (ini - vr * B_ - vi * G_) * mva_base_ / mva_system_base_;
 
       return 0;
     }

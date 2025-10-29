@@ -43,6 +43,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::w_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::mva_system_base_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
       using real_type = typename Component<ScalarT, IdxT>::real_type;
@@ -126,6 +127,7 @@ namespace GridKit
       real_type D_{0.0};
       real_type Ra_{0.0};
       real_type Xdp_{0.0};
+      real_type mva_base_{100.0};
 
       /* Derivied parameters */
       real_type G_;

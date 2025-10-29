@@ -22,9 +22,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class SignalNode;
 
-    template <class ScalarT, typename IdxT>
-    class GovernorBase; // <- TODO: Temporary, to be removed.
-
     template <typename RealT, typename IdxT>
     struct GenrouData;
   } // namespace PhasorDynamics
@@ -82,9 +79,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::w_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::mva_system_base_;
 
       using real_type       = typename Component<ScalarT, IdxT>::real_type;
-      using gov_type        = GovernorBase<ScalarT, IdxT>;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<real_type, IdxT>;
       using signal_type     = SignalNode<ScalarT, IdxT>;
@@ -209,6 +206,7 @@ namespace GridKit
       real_type Xl_{0.0};
       real_type S10_{0.0};
       real_type S12_{0.0};
+      real_type mva_base_{100.0};
 
       /* Derivied parameters */
       real_type SA_;

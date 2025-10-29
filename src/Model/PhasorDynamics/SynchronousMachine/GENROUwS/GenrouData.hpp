@@ -15,24 +15,25 @@ namespace GridKit
     /// Initial parameters for a Genrou generator model
     enum class GenrouParameters
     {
-      p0,    ///< Initial active power
-      q0,    ///< Initial reactive power
-      H,     ///< Rotor inertia
-      D,     ///< Damping coefficient
-      Ra,    ///< Winding resistance
-      Tdop,  ///< Open circuit direct axis transient time
-      Tdopp, ///< Open circuit direct axis sub-transient time
-      Tqop,  ///< Open circuit quadrature axis transient
-      Tqopp, ///< Open circuit quadrature axis sub-transient time
-      Xd,    ///< Direct axis synchronous reactance
-      Xdp,   ///< Direct axis transient reactance
-      Xdpp,  ///< Direct axis sub-transient reactance
-      Xq,    ///< Quadrature axis synchronous reactance
-      Xqp,   ///< Quadrature axis transient reactance
-      Xqpp,  ///< Quadrature axis sub-transient reactance
-      Xl,    ///< Stator leakage reactance
-      S10,   ///< Saturation factor at 1.0 pu flux
-      S12,   ///< Saturation factor at 1.2 pu flux
+      p0,       ///< Initial active power
+      q0,       ///< Initial reactive power
+      H,        ///< Rotor inertia
+      D,        ///< Damping coefficient
+      Ra,       ///< Winding resistance
+      Tdop,     ///< Open circuit direct axis transient time
+      Tdopp,    ///< Open circuit direct axis sub-transient time
+      Tqop,     ///< Open circuit quadrature axis transient
+      Tqopp,    ///< Open circuit quadrature axis sub-transient time
+      Xd,       ///< Direct axis synchronous reactance
+      Xdp,      ///< Direct axis transient reactance
+      Xdpp,     ///< Direct axis sub-transient reactance
+      Xq,       ///< Quadrature axis synchronous reactance
+      Xqp,      ///< Quadrature axis transient reactance
+      Xqpp,     ///< Quadrature axis sub-transient reactance
+      Xl,       ///< Stator leakage reactance
+      S10,      ///< Saturation factor at 1.0 pu flux
+      S12,      ///< Saturation factor at 1.2 pu flux
+      mva_base, ///< MVA base of the genrou model (TODO usa Component class parameter `mva`)
     };
 
     /// Ports for a Genrou generator model

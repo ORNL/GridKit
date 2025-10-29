@@ -31,7 +31,8 @@ namespace GridKit
         H_(3.0),
         D_(0.0),
         Ra_(0.0),
-        Xdp_(0.5)
+        Xdp_(0.5),
+        mva_base_(100.)
     {
       size_ = 5;
       setDerivedParams();
@@ -57,7 +58,8 @@ namespace GridKit
         H_(H),
         D_(D),
         Ra_(Ra),
-        Xdp_(Xdp)
+        Xdp_(Xdp),
+        mva_base_(100.)
     {
       size_ = 5;
       setDerivedParams();
@@ -99,6 +101,11 @@ namespace GridKit
       if (data.parameters.contains(DataT::Parameters::Xdp))
       {
         Xdp_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Xdp));
+      }
+
+      if (data.parameters.contains(DataT::Parameters::mva_base))
+      {
+        mva_base_ = std::get<real_type>(data.parameters.at(DataT::Parameters::mva_base));
       }
 
       if (data.ports.contains(DataT::Ports::bus))
@@ -155,8 +162,8 @@ namespace GridKit
     {
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_);
-      ScalarT q     = static_cast<ScalarT>(q0_);
+      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
+      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
@@ -248,8 +255,8 @@ namespace GridKit
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = ir;
-      h[1]             = ii;
+      h[0]             = ir * mva_base_ / mva_system_base_;
+      h[1]             = ii * mva_base_ / mva_system_base_;
 
       return 0;
     }

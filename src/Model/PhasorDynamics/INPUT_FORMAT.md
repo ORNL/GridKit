@@ -111,8 +111,6 @@ represent a device and has the following fields:
   `id`              | A string disambiguating the device from others. Each device in a class must have a unique combination of required port bus numbers and this string. This string should be 1 or 2 characters long.
   `params`          | An object mapping initialization parameters to numerical values, depending on the class. See the table below for more information
   `mon`             | Optional field, which is an array specifying variables to record the value of in an output channel. Available variables are determined by the device class, as specified in the table below
-  `va_base`         | Optional field to override the system power base for this device
-  `freq_base`       | Optional field to override the system frequency base for this device
   `extension`       | Optional field containing an object with implementation-defined keys
 
 For more information, see the detailed documentation for each device class containing equations, electrical bus configuration, and signal inlets/outlets specifications.
@@ -124,10 +122,10 @@ are specified:
 
   Device class  | Description                                          | Ports                            | Initialization parameters   | Variables available to monitor
   --------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
-  `Branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`          | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `Branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`           | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `Load`        | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
-  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`
-  `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`            | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
   `BusFault`    | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`

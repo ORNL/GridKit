@@ -39,9 +39,6 @@ namespace GridKit
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
 
-      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
-      std::optional<RealT> va_base;   ///< Override for the system-wide power base
-
       std::string disambiguation_string; ///< Disambiguation string for this device
 
     protected:
