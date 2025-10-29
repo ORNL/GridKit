@@ -313,25 +313,6 @@ namespace GridKit
       return Policy::template copyArrayHostToDevice<I, T>(dst, src, n);
     }
 
-    // TODO: Port from ReSolve
-    // #ifdef RESOLVE_USE_GPU
-
-    // // Check if GPU support is enabled in Re::Solve and set appropriate device memory manager.
-    // #if defined RESOLVE_USE_CUDA
-    // #include <resolve/cuda/CudaMemory.hpp>
-    //     using MemoryHandler = MemoryUtils<memory::Cuda>;
-    // #elif defined RESOLVE_USE_HIP
-    // #include <resolve/hip/HipMemory.hpp>
-    //     using MemoryHandler = MemoryUtils<memory::Hip>;
-    // #else
-    // #error Unrecognized device, probably bug in CMake configuration
-    // #endif
-
-    // #else
-
-    // If no GPU support is present, set device memory manager to a dummy object.
     using MemoryHandler = MemoryUtils<memory::Cpu>;
-
-    // #endif
   } // namespace LinearAlgebra
 } // namespace GridKit

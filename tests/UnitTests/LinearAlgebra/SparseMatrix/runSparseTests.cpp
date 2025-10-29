@@ -50,14 +50,5 @@ int main(int, char**)
   TestingResults result;
   runTests<LinAlgWorkspaceCpu>("CPU", memory::HOST, result);
 
-  // TODO: Port from ReSolve
-  // #ifdef RESOLVE_USE_CUDA
-  //   runTests<ReSolve::LinAlgWorkspaceCUDA>("CUDA", memory::DEVICE, result);
-  // #endif
-
-  // #ifdef RESOLVE_USE_HIP
-  //   runTests<ReSolve::LinAlgWorkspaceHIP>("HIP", memory::DEVICE, result);
-  // #endif
-
   return result.summary();
 }
