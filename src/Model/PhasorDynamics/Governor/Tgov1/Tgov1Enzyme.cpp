@@ -26,8 +26,8 @@ namespace GridKit
         std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
         std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
-        GridKit::Enzyme::Sparse::InternalJacobianWithExternal<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
-                                                              GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
+        GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                                              GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
                                                               ScalarT,
                                                               IdxT>::eval(this,
                                                                           f_.size(),
@@ -43,7 +43,7 @@ namespace GridKit
         J_.printMatrix("Tgov1 internal Jacobian");
 
         GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
-                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithExternal,
+                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
                                                   ScalarT,
                                                   IdxT>::eval(this,
                                                               f_.size(),

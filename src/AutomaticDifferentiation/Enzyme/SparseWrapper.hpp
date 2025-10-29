@@ -29,7 +29,7 @@ namespace GridKit
       enum class MemberFunctions
       {
         InternalResidual,
-        InternalResidualWithExternal,
+        InternalResidualWithSignal,
         BusResidual,
         BusResidual11, //< Special case for branches that are connected to two buses
         BusResidual12, //< Special case for branches that are connected to two buses
@@ -71,11 +71,11 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for InternalResidualWithExternal
+       * @brief Residual wrapper partial template specialization for InternalResidualWithSignal
        *
        */
       template <typename ModelT, typename ScalarT>
-      struct Wrapper<ModelT, MemberFunctions::InternalResidualWithExternal, ScalarT>
+      struct Wrapper<ModelT, MemberFunctions::InternalResidualWithSignal, ScalarT>
       {
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -87,7 +87,7 @@ namespace GridKit
          */
         static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* we, ScalarT* f)
         {
-          model->evaluateInternalResidualWithExternal(y, yp, wb, we, f);
+          model->evaluateInternalResidualWithSignal(y, yp, wb, we, f);
         }
       };
 
@@ -376,7 +376,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian with external variables
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian with signal variables
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
@@ -384,7 +384,7 @@ namespace GridKit
        * @tparam IdxT - matrix index data type
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      struct InternalJacobianWithExternal
+      struct InternalJacobianWithSignal
       {
         /**
          * @param[in] model - Pointer to the model to be differentiated
