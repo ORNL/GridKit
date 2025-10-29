@@ -136,7 +136,6 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
-
     };
 
   } // namespace PhasorDynamics
