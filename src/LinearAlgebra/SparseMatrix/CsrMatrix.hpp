@@ -141,14 +141,14 @@ namespace GridKit
                 index_type**        rows,
                 index_type**        cols,
                 real_type**         vals,
-                memory::MemorySpace memspaceSrc,
-                memory::MemorySpace memspaceDst);
+                memory::MemorySpace memspaceSrc = memory::HOST,
+                memory::MemorySpace memspaceDst = memory::HOST);
 
       ~CsrMatrix();
 
-      virtual index_type* getRowData(memory::MemorySpace memspace);
-      virtual index_type* getColData(memory::MemorySpace memspace);
-      virtual real_type*  getValues(memory::MemorySpace memspace);
+      virtual index_type* getRowData(memory::MemorySpace memspace = memory::HOST);
+      virtual index_type* getColData(memory::MemorySpace memspace = memory::HOST);
+      virtual real_type*  getValues(memory::MemorySpace memspace = memory::HOST);
 
       virtual int copyDataFrom(const index_type*   row_data,
                                const index_type*   col_data,
