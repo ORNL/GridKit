@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+#include <istream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -83,5 +85,15 @@ namespace GridKit
       std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes
     };
+
+    ///@{
+    /**
+     * @brief Generate system model data from a JSON input file
+     */
+    SystemModelData<double, size_t> parseSystemModelData(std::istream&);
+    SystemModelData<double, size_t> parseSystemModelData(std::istream&&);
+    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path&);
+    SystemModelData<double, size_t> parseSystemModelData(const std::string&);
+    ///@}
   } // namespace PhasorDynamics
 } // namespace GridKit
