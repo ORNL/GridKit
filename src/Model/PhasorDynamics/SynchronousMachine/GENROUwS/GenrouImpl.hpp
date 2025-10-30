@@ -276,9 +276,9 @@ namespace GridKit
       h_.resize(2);
 
       // Resize external variable data
-      we_.resize(2);
-      we_indices_[0] = static_cast<IdxT>(-1);
-      we_indices_[1] = static_cast<IdxT>(-1);
+      ws_.resize(2);
+      ws_indices_[0] = static_cast<IdxT>(-1);
+      ws_indices_[1] = static_cast<IdxT>(-1);
 
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
@@ -401,7 +401,7 @@ namespace GridKit
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
-        ScalarT* we,
+        ScalarT* ws,
         ScalarT* f)
     {
       /* Read variables */
@@ -438,8 +438,8 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set external variable aliases
-      ScalarT pmech = we[0];
-      ScalarT efd   = we[1];
+      ScalarT pmech = ws[0];
+      ScalarT efd   = ws[1];
 
       /* 6 Genrou differential equations */
       f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
@@ -502,19 +502,19 @@ namespace GridKit
     int Genrou<ScalarT, IdxT>::evaluateResidual()
     {
       // Mechanical Power
-      we_[0] = pmech_set_;
+      ws_[0] = pmech_set_;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
-        we_[0]         = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
-        we_indices_[0] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
+        ws_[0]         = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
+        ws_indices_[0] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
       }
 
       // Exciter Efield
-      we_[1] = efd_set_;
+      ws_[1] = efd_set_;
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
-        we_[1]         = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
-        we_indices_[1] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
+        ws_[1]         = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
+        ws_indices_[1] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
       }
 
       // Bus voltages
@@ -522,7 +522,7 @@ namespace GridKit
       wb_[1] = Vi();
 
       // Residual evaluation
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
 
       // Genrou contribution to bus algebraic equations

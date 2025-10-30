@@ -35,7 +35,7 @@ namespace GridKit
                                                                       y_.data(),
                                                                       yp_.data(),
                                                                       wb_.data(),
-                                                                      we_.data(),
+                                                                      ws_.data(),
                                                                       J_);
 
       J_.printMatrix("Genrou internal Jacobian");
@@ -45,13 +45,13 @@ namespace GridKit
                                                 ScalarT,
                                                 IdxT>::eval(this,
                                                             f_.size(),
-                                                            we_.size(),
+                                                            ws_.size(),
                                                             this->getResidualIndices(),
-                                                            we_indices_,
+                                                            ws_indices_,
                                                             y_.data(),
                                                             yp_.data(),
                                                             wb_.data(),
-                                                            we_.data(),
+                                                            ws_.data(),
                                                             J_);
 
       J_.printMatrix("Genrou Jacobian after signal evaluation");

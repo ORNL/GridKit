@@ -139,9 +139,9 @@ namespace GridKit
         tag_.resize(size);
 
         // Resize external variable data
-        we_.resize(1);
-        we_[0]         = 0.0;
-        we_indices_[0] = static_cast<IdxT>(-1);
+        ws_.resize(1);
+        ws_[0]         = 0.0;
+        ws_indices_[0] = static_cast<IdxT>(-1);
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -255,7 +255,7 @@ namespace GridKit
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* wb,
-          [[maybe_unused]] ScalarT* we,
+          [[maybe_unused]] ScalarT* ws,
           ScalarT*                  f)
       {
         // Read Internal Variables
@@ -268,7 +268,7 @@ namespace GridKit
         ScalarT pv_dot  = yp[1];
 
         // Set external variable aliases
-        ScalarT omega = we[0];
+        ScalarT omega = ws[0];
 
         // The 'pre-limit' derivative of Pv
         ScalarT func     = (-pv + (pref_ - omega) / R_) / T1_;
@@ -294,11 +294,11 @@ namespace GridKit
         // Input Variables
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
         {
-          we_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
-          we_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
+          ws_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
+          ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), we_.data(), f_.data());
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
 
         return 0;
       }

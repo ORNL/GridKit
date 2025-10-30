@@ -82,12 +82,12 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
-         * @param[in] we - Signal variables
+         * @param[in] ws - Signal variables
          * @param[out] f - Internal residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* we, ScalarT* f)
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* ws, ScalarT* f)
         {
-          model->evaluateInternalResidual(y, yp, wb, we, f);
+          model->evaluateInternalResidual(y, yp, wb, ws, f);
         }
       };
 
@@ -395,7 +395,7 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
-         * @param[in] we - Signal variables
+         * @param[in] ws - Signal variables
          * @param[in,out] jac - Jacobian
          */
         static void eval(ModelT*                                            model,
@@ -406,7 +406,7 @@ namespace GridKit
                          ScalarT*                                           y,
                          ScalarT*                                           yp,
                          ScalarT*                                           wb,
-                         ScalarT*                                           we,
+                         ScalarT*                                           ws,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
           if (n_res > 0 && n_var > 0)
@@ -435,7 +435,7 @@ namespace GridKit
                                      enzyme_const,
                                      wb,
                                      enzyme_const,
-                                     we,
+                                     ws,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),
                                      d_output);
@@ -476,7 +476,7 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
-         * @param[in] we - Signal variables
+         * @param[in] ws - Signal variables
          * @param[in,out] jac - Jacobian
          */
         static void eval(ModelT*                                            model,
@@ -487,7 +487,7 @@ namespace GridKit
                          ScalarT*                                           y,
                          ScalarT*                                           yp,
                          ScalarT*                                           wb,
-                         ScalarT*                                           we,
+                         ScalarT*                                           ws,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
           if (n_res > 0 && n_var > 0)
@@ -515,7 +515,7 @@ namespace GridKit
                                      enzyme_const,
                                      wb,
                                      enzyme_dup,
-                                     we,
+                                     ws,
                                      output,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),

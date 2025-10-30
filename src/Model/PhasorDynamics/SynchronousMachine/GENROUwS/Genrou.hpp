@@ -232,8 +232,8 @@ namespace GridKit
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
 
       /* Local copies of external variables */
-      std::vector<ScalarT> we_;
-      std::map<IdxT, IdxT> we_indices_;
+      std::vector<ScalarT> ws_;
+      std::map<IdxT, IdxT> ws_indices_;
     };
 
   } // namespace PhasorDynamics

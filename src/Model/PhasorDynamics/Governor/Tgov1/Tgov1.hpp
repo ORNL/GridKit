@@ -137,8 +137,8 @@ namespace GridKit
         void initializeParameters(const model_data_type& data);
 
         /* Local copies of external variables */
-        std::vector<ScalarT> we_;
-        std::map<IdxT, IdxT> we_indices_;
+        std::vector<ScalarT> ws_;
+        std::map<IdxT, IdxT> ws_indices_;
       };
 
     } // namespace Governor
