@@ -28,13 +28,10 @@ int main(int argc, const char* argv[])
   using namespace AnalysisManager::Sundials;
 
   using scalar_type = double;
-  using real_type   = double;
+  // using real_type   = double;
   using index_type  = size_t;
 
-  //
-  // Input file
-  //
-
+  // Read Input JSON File
   std::filesystem::path input_file;
   if (argc < 2)
   {

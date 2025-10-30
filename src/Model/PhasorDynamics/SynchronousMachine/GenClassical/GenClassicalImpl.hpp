@@ -162,8 +162,8 @@ namespace GridKit
     {
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_);
-      ScalarT q     = static_cast<ScalarT>(q0_);
+      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
+      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
@@ -255,8 +255,8 @@ namespace GridKit
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = ir;
-      h[1]             = ii;
+      h[0]             = ir * mva_base_ / mva_system_base_;
+      h[1]             = ii * mva_base_ / mva_system_base_;
 
       return 0;
     }
