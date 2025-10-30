@@ -3,9 +3,9 @@
  * @author Luke Lowery (lukel@tamu.edu)
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Example running a 2-bus system
+ * @brief Example running the 37-Bus Hawaii Synthetic Case
  *
- * Simulates a 2-bus system with Genrou 6th order generator model and
+ * Simulates a Hawaii Case with Genrou 6th order generator model and
  * compares results with data generated for the same system by Poweworld.
  *
  */
@@ -67,18 +67,51 @@ int main(int argc, const char* argv[])
   std::cout << "Example: hawaiiJson\n";
   std::cout << "Input file: " << input_file << '\n';
 
-  //
-  // Create model data
-  //
-
+  // Parse Model Data
   SystemModelData<scalar_type, index_type> data(json::parse(std::ifstream(input_file)));
 
-  //
-  // Instantiate system model
-  //
-
+  //  Instantiate System Model
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
+
+  // NOTE Now we try and run the case.
+  // Fails for now but left here for future
+
+  /*
+  // Set time step to 1/4 of a 60Hz cycle
+  real_type dt = 1.0 / 4.0 / 60.0;
+
+  // A data structure to keep track of the data 
+  struct OutputData
+  {
+    // Output variables are time, real and imaginary voltage and
+    // frequency deviation
+    real_type ti, Vr, Vi, dw;
+  };
+
+  // A list of output for each time step.
+  std::vector<OutputData> output;
+
+  auto output_cb = [&](real_type t)
+  {
+    std::vector<scalar_type>& y_val = sys.y();
+
+    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
+  };
+
+  // Set up simulation
+  Ida<scalar_type, size_t> ida(&sys);
+  ida.configureSimulation();
+
+  // Run simulation - making sure to pass the callback to record output
+  real_type start = static_cast<real_type>(clock());
+
+  // Run for 1s
+  ida.initializeSimulation(0.0, false);
+  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
+  ida.runSimulation(1.0, nout, output_cb);
+
+  */
 
   int status = 0;
   return status;

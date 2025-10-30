@@ -6123,6 +6123,16 @@
                 "Se2": 0.33,
                 "Ispdlim": 0.0
             }
+        },
+        { 
+            "class": "BusFault",
+            "ports": {"bus":37},
+            "id": "BF_1",
+            "params": {
+                "state0": false, 
+                "R":0.0,
+                "X":1e-3
+            }
         }
     ]
 }
