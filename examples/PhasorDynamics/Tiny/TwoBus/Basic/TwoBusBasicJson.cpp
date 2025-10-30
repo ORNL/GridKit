@@ -17,7 +17,6 @@
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
 #include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
 
 int main(int argc, const char* argv[])
 {

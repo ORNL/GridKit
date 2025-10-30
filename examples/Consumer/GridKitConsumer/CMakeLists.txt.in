@@ -1,0 +1,28 @@
+# Example of how to consume GridKit as a package via cmake
+# Below is a standard example of a CMakeLists.txt file that ultizies GridKit
+# See the Readme on how to build and install GridKie
+#-------------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.20)
+
+# Project name
+project(GridKitConsumer LANGUAGES CXX)
+# GridKit uses C++20 features in its public headers
+set(CMAKE_CXX_STANDARD 20)
+
+# Call find_package to get GridKit targets
+# NOTE: The GridKit installation prefix needs to be provided in either
+# GridKit_DIR or CMAKE_PREFIX_PATH
+find_package(GridKit REQUIRED)
+
+# Create an executable target from our example code
+add_executable(consumer consumer.cpp)
+# Link against a GridKit library target
+target_link_libraries(consumer
+    @GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES@
+)
+
+# Create a test that can be run via ctest
+include(CTest)
+add_test(NAME GridKitConsumer
+    COMMAND consumer
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
