@@ -102,7 +102,6 @@ jobs:
           - gridkit@develop ~asan~enzyme~ipopt~klu~sundials~ubsan
           - gridkit@develop ~asan~enzyme~ipopt~klu+sundials~ubsan
           - gridkit@develop ~asan+enzyme+ipopt+klu+sundials~ubsan build_type=RelWithDebInfo
-            ^enzyme@main
           - gridkit@develop +asan~enzyme+ipopt+klu+sundials+ubsan
 
     steps:
