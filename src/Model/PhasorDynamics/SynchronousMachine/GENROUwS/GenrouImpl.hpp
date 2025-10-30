@@ -468,9 +468,6 @@ namespace GridKit
       f[15] = ir + G_ * vr - B_ * vi - inr;
       f[16] = ii + B_ * vr + G_ * vi - ini;
 
-      /* 2 Genrou control inputs are set to constant for this example */
-      // f[17] = efd_ - efd_set_;
-
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
       f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
@@ -494,7 +491,6 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
-      // Current base conversion. Assumes generator and bus are same V base
       h[0] = (inr - vr * G_ + vi * B_) * mva_base_ / mva_system_base_;
       h[1] = (ini - vr * B_ - vi * G_) * mva_base_ / mva_system_base_;
 

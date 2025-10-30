@@ -3,7 +3,7 @@
 ## One-Line Diagram
 
 <div align="center">
-   <img align="center" src="two-area-oneline.png">
+   <img align="center" src="twoarea_oneline.png">
    
   Figure 1: Oneline of the two-area Case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
