@@ -25,4 +25,4 @@ target_link_libraries(consumer
 include(CTest)
 add_test(NAME GridKitConsumer
     COMMAND consumer
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})

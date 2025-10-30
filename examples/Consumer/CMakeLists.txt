@@ -33,10 +33,11 @@ endif()
 
 # Install CMakeLists.txt for example project
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/GridKitConsumer/CMakeLists.txt.in
-    ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt)
+    ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt
+    @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt
   DESTINATION ${_rel_consumer_path})
 
 # Add target to build and test the example project after install
-add_custom_target(test_install
-    COMMAND ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX})
+add_custom_target(test_install COMMAND
+    ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER})
