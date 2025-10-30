@@ -220,7 +220,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-#if 0 // Disabled GenrouEnzyme because of an intermittent build issue
 #ifdef GRIDKIT_ENABLE_ENZYME
       /**
        * @brief Checks Jacobian evaluation.
@@ -342,7 +341,6 @@ namespace GridKit
 
         return GridKit::Testing::MapFromCOO(model_jacobian);
       }
-#endif
 #endif
     }; // class GenrouTest
 
