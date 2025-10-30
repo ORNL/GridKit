@@ -81,7 +81,7 @@ int main(int argc, const char* argv[])
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
-  // A data structure to keep track of the data 
+  // A data structure to keep track of the data
   struct OutputData
   {
     // Output variables are time, real and imaginary voltage and
