@@ -10,10 +10,6 @@ add_executable(ThreeBusBasicJson ThreeBusBasicJson.cpp)
 target_link_libraries(ThreeBusBasicJson
 	GRIDKIT::phasor_dynamics_components
 	GRIDKIT::solvers_dyn)
-target_include_directories(ThreeBusBasicJson
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/nlohmann-json/include)
-target_include_directories(ThreeBusBasicJson
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/magic-enum/include)
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusBasic.json)
 

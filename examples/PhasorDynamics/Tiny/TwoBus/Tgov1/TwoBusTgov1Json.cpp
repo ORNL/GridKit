@@ -18,10 +18,8 @@
 #include <Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <Model/PhasorDynamics/SystemModel.hpp>
 #include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <Solver/Dynamic/Ida.hpp>
 #include <Utilities/Testing.hpp>
-#include <nlohmann/json.hpp>
 
 int main(int argc, const char* argv[])
 {
@@ -73,7 +71,7 @@ int main(int argc, const char* argv[])
   // Create model data
   //
 
-  SystemModelData<scalar_type, index_type> data = json::parse(std::ifstream(input_file));
+  auto data = parseSystemModelData(input_file);
 
   //
   // Instantiate and allocate the system model

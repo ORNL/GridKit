@@ -10,10 +10,6 @@ add_executable(TwoBusBasicJson TwoBusBasicJson.cpp)
 target_link_libraries(TwoBusBasicJson
 	GRIDKIT::phasor_dynamics_components
 	GRIDKIT::solvers_dyn)
-target_include_directories(TwoBusBasicJson
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/nlohmann-json/include)
-target_include_directories(TwoBusBasicJson
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/magic-enum/include)
 install(TARGETS TwoBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(TwoBusBasic.json)
 

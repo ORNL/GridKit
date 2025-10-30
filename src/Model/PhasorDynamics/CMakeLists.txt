@@ -16,8 +16,10 @@ add_subdirectory(SynchronousMachine)
 
 add_subdirectory(SignalNode)
 
-install(
-  FILES
+gridkit_add_library(phasor_dynamics_core
+  SOURCES
+    SystemModelData.cpp
+  HEADERS
     BusBase.hpp
     Component.hpp
     ComponentData.hpp
@@ -25,8 +27,14 @@ install(
     ComponentSignals.hpp
     SystemModel.hpp
     SystemModelData.hpp
-  DESTINATION
-    include/GridKit/Model/PhasorDynamics)
+  INCLUDE_DIRECTORIES
+    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/nlohmann-json/include
+    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/magic-enum/include)
+
+target_link_libraries(phasor_dynamics_components
+  INTERFACE GRIDKIT::phasor_dynamics_core)
+target_link_libraries(phasor_dynamics_components_dependency_tracking
+  INTERFACE GRIDKIT::phasor_dynamics_core)
 
 add_library(GRIDKIT::phasor_dynamics_components
   ALIAS phasor_dynamics_components)

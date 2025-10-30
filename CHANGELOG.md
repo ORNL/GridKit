@@ -30,6 +30,7 @@
 - Added more context information to JSON parser errors.
 - Added `Logger` class.
 - Added `CliOptions` for simple command-line parsing.
+- Added public function to encapsulate use of nlohmann/json and magic_enum from users.
 
 ## v0.1
 
