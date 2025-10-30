@@ -40,7 +40,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::w_;
+      using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;

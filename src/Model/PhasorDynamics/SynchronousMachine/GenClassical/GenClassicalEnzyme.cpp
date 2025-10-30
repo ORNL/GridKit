@@ -34,7 +34,7 @@ namespace GridKit
                                                             this->getVariableIndices(),
                                                             y_.data(),
                                                             yp_.data(),
-                                                            w_.data(),
+                                                            wb_.data(),
                                                             J_);
 
       J_.printMatrix("GenClassical internal Jacobian");

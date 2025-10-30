@@ -103,7 +103,7 @@ namespace GridKit
       }
 
       // A test to verify that the hard coded answers match those given by the residual functions
-      // Hard code parameters, differential, and algebraic terms
+      // Hard coded parameters, differential, and algebraic terms
       TestOutcome hard_coded_residual()
       {
         TestStatus success = true;
@@ -162,6 +162,9 @@ namespace GridKit
 
         // Allocate but not initialize generator model
         gen.allocate();
+        // TODO: Set pmech and efd. They are currently not set in this test, as we are not
+        // calling gen.initialize(). The private members are initialized to 0 as a workaround,
+        // but this needs to be better handled in the model implementation.
 
         // Set variable values matching the answer key
         gen.y()[0]  = M_PI; // delta

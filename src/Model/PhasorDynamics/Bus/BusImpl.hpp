@@ -97,7 +97,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Set the component ID
+     * @brief Set the bus ID
      */
     template <class ScalarT, typename IdxT>
     int Bus<ScalarT, IdxT>::setBusID(IdxT bus_id)

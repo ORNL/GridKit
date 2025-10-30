@@ -29,6 +29,7 @@ namespace GridKit
       enum class MemberFunctions
       {
         InternalResidual,
+        InternalResidualWithSignal,
         BusResidual,
         BusResidual11, //< Special case for branches that are connected to two buses
         BusResidual12, //< Special case for branches that are connected to two buses
@@ -37,25 +38,56 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper around residual methods inside model classes
+       * @brief Template definition for wrapper around residual methods inside model classes
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
        * @tparam ScalarT - scalar data type
        *
-       * @param[in] model - Pointer to the model to be differentiated
-       * @param[in] y - Internal variables
-       * @param[in] yp - Internal variable derivatives
-       * @param[in] w - Coupling (bus) variables
-       * @param[out] f - Internal residual
-       * @param[out] h - Coupling (bus) residual
        */
       template <typename ModelT, MemberFunctions function, typename ScalarT>
       struct Wrapper
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* f)
+      };
+
+      /**
+       * @brief Residual wrapper partial template specialization for InternalResidual
+       *
+       */
+      template <typename ModelT, typename ScalarT>
+      struct Wrapper<ModelT, MemberFunctions::InternalResidual, ScalarT>
+      {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] f - Internal residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* f)
         {
-          model->evaluateInternalResidual(y, yp, w, f);
+          model->evaluateInternalResidual(y, yp, wb, f);
+        }
+      };
+
+      /**
+       * @brief Residual wrapper partial template specialization for InternalResidualWithSignal
+       *
+       */
+      template <typename ModelT, typename ScalarT>
+      struct Wrapper<ModelT, MemberFunctions::InternalResidualWithSignal, ScalarT>
+      {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in] ws - Signal variables
+         * @param[out] f - Internal residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* ws, ScalarT* f)
+        {
+          model->evaluateInternalResidual(y, yp, wb, ws, f);
         }
       };
 
@@ -66,9 +98,16 @@ namespace GridKit
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual, ScalarT>
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] h - Bus residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
         {
-          model->evaluateBusResidual(y, yp, w, h);
+          model->evaluateBusResidual(y, yp, wb, h);
         }
       };
 
@@ -79,9 +118,16 @@ namespace GridKit
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual11, ScalarT>
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] h - Bus residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
         {
-          model->evaluateBusResidual11(y, yp, w, h);
+          model->evaluateBusResidual11(y, yp, wb, h);
         }
       };
 
@@ -92,9 +138,16 @@ namespace GridKit
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual12, ScalarT>
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] h - Bus residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
         {
-          model->evaluateBusResidual12(y, yp, w, h);
+          model->evaluateBusResidual12(y, yp, wb, h);
         }
       };
 
@@ -105,9 +158,16 @@ namespace GridKit
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual21, ScalarT>
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] h - Bus residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
         {
-          model->evaluateBusResidual21(y, yp, w, h);
+          model->evaluateBusResidual21(y, yp, wb, h);
         }
       };
 
@@ -118,9 +178,16 @@ namespace GridKit
       template <typename ModelT, typename ScalarT>
       struct Wrapper<ModelT, MemberFunctions::BusResidual22, ScalarT>
       {
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* w, ScalarT* h)
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[out] h - Bus residual
+         */
+        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
         {
-          model->evaluateBusResidual22(y, yp, w, h);
+          model->evaluateBusResidual22(y, yp, wb, h);
         }
       };
 
@@ -238,20 +305,21 @@ namespace GridKit
        * @tparam MemberFunctions - member function parameter key
        * @tparam ScalarT - scalar data type
        * @tparam IdxT - matrix index data type
-       *
-       * @param[in] model - Pointer to the model to be differentiated
-       * @param[in] n_res - Number of residual functions
-       * @param[in] n_var - Number of independent variables
-       * @param[in] res_indices - Map from local residual indices to global indices
-       * @param[in] var_indices - Map from local variable indices to global indices
-       * @param[in] y - Internal variables
-       * @param[in] yp - Internal variable derivatives
-       * @param[in] w - Coupling (bus) variables
-       * @param[in,out] jac - Jacobian
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct InternalJacobian
       {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] n_res - Number of residual functions
+         * @param[in] n_var - Number of independent variables
+         * @param[in] res_indices - Map from local residual indices to global indices
+         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in,out] jac - Jacobian
+         */
         static void eval(ModelT*                                            model,
                          size_t                                             n_res,
                          size_t                                             n_var,
@@ -259,7 +327,7 @@ namespace GridKit
                          const std::map<IdxT, IdxT>&                        var_indices,
                          ScalarT*                                           y,
                          ScalarT*                                           yp,
-                         ScalarT*                                           w,
+                         ScalarT*                                           wb,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
           if (n_res > 0 && n_var > 0)
@@ -286,7 +354,7 @@ namespace GridKit
                                      enzyme_const,
                                      yp,
                                      enzyme_const,
-                                     w,
+                                     wb,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),
                                      d_output);
@@ -308,12 +376,28 @@ namespace GridKit
       };
 
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: Bus Jacobian
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian with signal variables
        *
+       * @tparam ModelT - model type
+       * @tparam MemberFunctions - member function parameter key
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
-      struct BusJacobian
+      struct InternalJacobianWithSignal
       {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] n_res - Number of residual functions
+         * @param[in] n_var - Number of independent variables
+         * @param[in] res_indices - Map from local residual indices to global indices
+         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in] ws - Signal variables
+         * @param[in,out] jac - Jacobian
+         */
         static void eval(ModelT*                                            model,
                          size_t                                             n_res,
                          size_t                                             n_var,
@@ -321,7 +405,173 @@ namespace GridKit
                          const std::map<IdxT, IdxT>&                        var_indices,
                          ScalarT*                                           y,
                          ScalarT*                                           yp,
-                         ScalarT*                                           w,
+                         ScalarT*                                           wb,
+                         ScalarT*                                           ws,
+                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        {
+          if (n_res > 0 && n_var > 0)
+          {
+            std::vector<Triple<ScalarT>> triplets;
+            std::vector<ScalarT>         elementary_v(n_res);
+            for (size_t var_i = 0; var_i < n_var; ++var_i)
+            {
+              // Sparse storage
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+
+              // Elementary vector for Jacobian-vector product
+              std::ranges::fill(elementary_v, 0.0);
+              elementary_v[var_i] = 1.0;
+
+              // Autodiff
+              __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
+                                     enzyme_const,
+                                     model,
+                                     enzyme_dup,
+                                     y,
+                                     output,
+                                     enzyme_const,
+                                     yp,
+                                     enzyme_const,
+                                     wb,
+                                     enzyme_const,
+                                     ws,
+                                     enzyme_dupnoneed,
+                                     elementary_v.data(),
+                                     d_output);
+            }
+
+            // Store result
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
+            for (auto& tup : triplets)
+            {
+              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
+              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              valtemp.push_back(tup.val);
+            }
+            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+          }
+        }
+      };
+
+      /**
+       * @brief Enzyme automatic differentiation Jacobian evaluator: External Jacobian
+       *
+       * @tparam ModelT - model type
+       * @tparam MemberFunctions - member function parameter key
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
+      struct ExternalJacobian
+      {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] n_res - Number of residual functions
+         * @param[in] n_var - Number of independent variables
+         * @param[in] res_indices - Map from local residual indices to global indices
+         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in] ws - Signal variables
+         * @param[in,out] jac - Jacobian
+         */
+        static void eval(ModelT*                                            model,
+                         size_t                                             n_res,
+                         size_t                                             n_var,
+                         const std::map<IdxT, IdxT>&                        res_indices,
+                         const std::map<IdxT, IdxT>&                        var_indices,
+                         ScalarT*                                           y,
+                         ScalarT*                                           yp,
+                         ScalarT*                                           wb,
+                         ScalarT*                                           ws,
+                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        {
+          if (n_res > 0 && n_var > 0)
+          {
+            std::vector<Triple<ScalarT>> triplets;
+            std::vector<ScalarT>         elementary_v(n_res);
+            for (size_t var_i = 0; var_i < n_var; ++var_i)
+            {
+              // Sparse storage
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+
+              // Elementary vector for Jacobian-vector product
+              std::ranges::fill(elementary_v, 0.0);
+              elementary_v[var_i] = 1.0;
+
+              // Autodiff
+              __enzyme_fwddiff<void>((void*) Wrapper<ModelT, function, ScalarT>::eval,
+                                     enzyme_const,
+                                     model,
+                                     enzyme_const,
+                                     y,
+                                     enzyme_const,
+                                     yp,
+                                     enzyme_const,
+                                     wb,
+                                     enzyme_dup,
+                                     ws,
+                                     output,
+                                     enzyme_dupnoneed,
+                                     elementary_v.data(),
+                                     d_output);
+            }
+
+            // Store result
+            std::vector<IdxT>    ctemp{};
+            std::vector<IdxT>    rtemp{};
+            std::vector<ScalarT> valtemp{};
+            for (auto& tup : triplets)
+            {
+              IdxT row = res_indices.at(static_cast<IdxT>(tup.row));
+              IdxT col = var_indices.at(static_cast<IdxT>(tup.col));
+              if (col != static_cast<IdxT>(-1))
+              {
+                rtemp.push_back(row);
+                ctemp.push_back(col);
+                valtemp.push_back(tup.val);
+              }
+            }
+            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+          }
+        }
+      };
+
+      /**
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Bus Jacobian
+       *
+       * @tparam ModelT - model type
+       * @tparam MemberFunctions - member function parameter key
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
+       */
+      template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
+      struct BusJacobian
+      {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] n_res - Number of residual functions
+         * @param[in] n_var - Number of independent variables
+         * @param[in] res_indices - Map from local residual indices to global indices
+         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in,out] jac - Jacobian
+         */
+        static void eval(ModelT*                                            model,
+                         size_t                                             n_res,
+                         size_t                                             n_var,
+                         const std::map<IdxT, IdxT>&                        res_indices,
+                         const std::map<IdxT, IdxT>&                        var_indices,
+                         ScalarT*                                           y,
+                         ScalarT*                                           yp,
+                         ScalarT*                                           wb,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
           if (n_res > 0 && n_var > 0)
@@ -347,7 +597,7 @@ namespace GridKit
                                      enzyme_const,
                                      yp,
                                      enzyme_dup,
-                                     w,
+                                     wb,
                                      output,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),
@@ -372,10 +622,25 @@ namespace GridKit
       /**
        * @brief Enzyme automatic differentiation Jacobian evaluator: Branch Jacobian
        *
+       * @tparam ModelT - model type
+       * @tparam MemberFunctions - member function parameter key
+       * @tparam ScalarT - scalar data type
+       * @tparam IdxT - matrix index data type
        */
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BranchJacobian
       {
+        /**
+         * @param[in] model - Pointer to the model to be differentiated
+         * @param[in] n_res - Number of residual functions
+         * @param[in] n_var - Number of independent variables
+         * @param[in] res_indices - Map from local residual indices to global indices
+         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] y - Internal variables
+         * @param[in] yp - Internal variable derivatives
+         * @param[in] wb - Bus variables
+         * @param[in,out] jac - Jacobian
+         */
         static void eval(ModelT*                                            model,
                          size_t                                             n_res,
                          size_t                                             n_var,
@@ -383,7 +648,7 @@ namespace GridKit
                          const std::map<IdxT, IdxT>&                        var_indices,
                          ScalarT*                                           y,
                          ScalarT*                                           yp,
-                         ScalarT*                                           w,
+                         ScalarT*                                           wb,
                          GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
         {
           if (n_res > 0 && n_var > 0)
@@ -409,7 +674,7 @@ namespace GridKit
                                      enzyme_const,
                                      yp,
                                      enzyme_dup,
-                                     w,
+                                     wb,
                                      output,
                                      enzyme_dupnoneed,
                                      elementary_v.data(),

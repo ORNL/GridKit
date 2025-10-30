@@ -5,7 +5,7 @@
 - Added 3, 10, and 37 bus test cases.
 - Updated documentation.
 - Added JSON parsing.
-- Automatic differentiation with enzyme.
+- Automatic differentiation with enzyme (w.r.t. internal and external variables).
 - Added PR and issue templates.
 - Added Genrou class unit test and example.
 - Added Dev container.

@@ -76,7 +76,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::w_;
+      using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
@@ -173,7 +173,7 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
@@ -226,12 +226,12 @@ namespace GridKit
       real_type B_;
 
       /* Setpoints for control variables (determined at initialization) */
-      ScalarT pmech_set_;
-      ScalarT efd_set_;
+      ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
+      ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
 
-      /* Local copies of signal variables */
-      ScalarT pmech_;
-      ScalarT efd_;
+      /* Local copies of external variables */
+      std::vector<ScalarT> ws_;
+      std::map<IdxT, IdxT> ws_indices_;
     };
 
   } // namespace PhasorDynamics

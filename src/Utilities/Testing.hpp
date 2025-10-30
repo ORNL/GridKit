@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -62,8 +63,8 @@ namespace GridKit
             fail++;
             std::cerr << "Mismatching map values! "
                       << "a.first = " << pair_a.first << ", "
-                      << "a.second = " << pair_a.second << ", and "
-                      << "b.second = " << it->second << "\n";
+                      << "a.second = " << std::setprecision(16) << pair_a.second << ", and "
+                      << "b.second = " << std::setprecision(16) << it->second << "\n";
           }
         }
         else

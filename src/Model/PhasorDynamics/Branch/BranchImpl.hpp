@@ -140,7 +140,7 @@ namespace GridKit
     {
       // std::cout << "Allocate Branch..." << std::endl;
 
-      w_.resize(2);
+      wb_.resize(2);
       h_.resize(2);
 
       return 0;
@@ -173,11 +173,11 @@ namespace GridKit
     __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual11(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  w,
+        ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr1 = w[0];
-      ScalarT Vi1 = w[1];
+      ScalarT Vr1 = wb[0];
+      ScalarT Vi1 = wb[1];
       ScalarT Ir1 = -(g_ + 0.5 * G_) * Vr1 + (b_ + 0.5 * B_) * Vi1;
       ScalarT Ii1 = -(b_ + 0.5 * B_) * Vr1 - (g_ + 0.5 * G_) * Vi1;
       h[0]        = Ir1;
@@ -194,11 +194,11 @@ namespace GridKit
     __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual12(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  w,
+        ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr2 = w[0];
-      ScalarT Vi2 = w[1];
+      ScalarT Vr2 = wb[0];
+      ScalarT Vi2 = wb[1];
       ScalarT Ir1 = g_ * Vr2 - b_ * Vi2;
       ScalarT Ii1 = b_ * Vr2 + g_ * Vi2;
       h[0]        = Ir1;
@@ -215,11 +215,11 @@ namespace GridKit
     __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual21(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  w,
+        ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr1 = w[0];
-      ScalarT Vi1 = w[1];
+      ScalarT Vr1 = wb[0];
+      ScalarT Vi1 = wb[1];
       ScalarT Ir2 = g_ * Vr1 - b_ * Vi1;
       ScalarT Ii2 = b_ * Vr1 + g_ * Vi1;
       h[0]        = Ir2;
@@ -236,11 +236,11 @@ namespace GridKit
     __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual22(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  w,
+        ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr2 = w[0];
-      ScalarT Vi2 = w[1];
+      ScalarT Vr2 = wb[0];
+      ScalarT Vi2 = wb[1];
       ScalarT Ir2 = -(g_ + 0.5 * G_) * Vr2 + (b_ + 0.5 * B_) * Vi2;
       ScalarT Ii2 = -(b_ + 0.5 * B_) * Vr2 - (g_ + 0.5 * G_) * Vi2;
       h[0]        = Ir2;
@@ -256,21 +256,21 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateResidual()
     {
-      w_[0] = Vr1();
-      w_[1] = Vi1();
-      evaluateBusResidual11(y_.data(), yp_.data(), w_.data(), h_.data());
+      wb_[0] = Vr1();
+      wb_[1] = Vi1();
+      evaluateBusResidual11(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir1() += h_[0];
       Ii1() += h_[1];
-      evaluateBusResidual21(y_.data(), yp_.data(), w_.data(), h_.data());
+      evaluateBusResidual21(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir2() += h_[0];
       Ii2() += h_[1];
 
-      w_[0] = Vr2();
-      w_[1] = Vi2();
-      evaluateBusResidual12(y_.data(), yp_.data(), w_.data(), h_.data());
+      wb_[0] = Vr2();
+      wb_[1] = Vi2();
+      evaluateBusResidual12(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir1() += h_[0];
       Ii1() += h_[1];
-      evaluateBusResidual22(y_.data(), yp_.data(), w_.data(), h_.data());
+      evaluateBusResidual22(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir2() += h_[0];
       Ii2() += h_[1];
 

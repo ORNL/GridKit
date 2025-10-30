@@ -101,7 +101,7 @@ namespace GridKit
         {
         }
 
-        /// Get the `ComponentSignals` from this `GenClassical`
+        /// Get the `ComponentSignals` from this `Ieeet1`
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
