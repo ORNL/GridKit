@@ -15,4 +15,4 @@ gridkit_add_library(solvers_opt
     OptimizationSolver.hpp
   LINK_LIBRARIES
     PUBLIC IPOPT
-    PUBLIC GRIDKIT::solvers_dyn)
+    PUBLIC GridKit::solvers_dyn)

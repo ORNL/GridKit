@@ -8,10 +8,10 @@
 
 add_executable(dynconopt DynamicConstrainedOpt.cpp)
 target_link_libraries(dynconopt 
-    GRIDKIT::generator4
-    GRIDKIT::generator2
-    GRIDKIT::bus GRIDKIT::solvers_dyn
-    GRIDKIT::solvers_opt
+    GridKit::generator4
+    GridKit::generator2
+    GridKit::bus GridKit::solvers_dyn
+    GridKit::solvers_opt
 )
 # Fortran linker needed to link to HSL solvers
 set_property(TARGET dynconopt PROPERTY LINKER_LANGUAGE Fortran)

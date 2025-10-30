@@ -8,10 +8,10 @@
 
 add_executable(genconstload GenConstLoad.cpp)
 target_link_libraries(genconstload
-    GRIDKIT::generator4governor
-    GRIDKIT::bus GRIDKIT::load
-    GRIDKIT::solvers_dyn
-    GRIDKIT::solvers_opt
+    GridKit::generator4governor
+    GridKit::bus GridKit::load
+    GridKit::solvers_dyn
+    GridKit::solvers_opt
 )
 # Fortran linker needed to link to HSL solvers
 set_property(TARGET genconstload PROPERTY LINKER_LANGUAGE Fortran)

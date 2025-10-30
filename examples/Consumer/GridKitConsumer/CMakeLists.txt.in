@@ -7,12 +7,14 @@ cmake_minimum_required(VERSION 3.20)
 # Project name
 project(GridKitConsumer LANGUAGES CXX)
 # GridKit uses C++20 features in its public headers
-set(CMAKE_CXX_STANDARD 20)
+# set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Call find_package to get GridKit targets
 # NOTE: The GridKit installation prefix needs to be provided in either
 # GridKit_DIR or CMAKE_PREFIX_PATH
-find_package(GridKit REQUIRED)
+find_package(GridKit)
+message(STATUS "GridKit_VERSION: ${GridKit_VERSION}")
 
 # Create an executable target from our example code
 add_executable(consumer consumer.cpp)

@@ -4,4 +4,4 @@ gridkit_add_library(utilities_logger
   HEADERS
     Logger.hpp)
 
-target_link_libraries(Utilities INTERFACE GRIDKIT::utilities_logger)
+target_link_libraries(Utilities INTERFACE GridKit::utilities_logger)
