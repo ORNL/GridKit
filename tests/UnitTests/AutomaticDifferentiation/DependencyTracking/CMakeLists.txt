@@ -5,7 +5,7 @@
 
 
 add_executable(test_dependency_tracking runDependencyTrackingTests.cpp)
-target_link_libraries(test_dependency_tracking GRIDKIT::phasor_dynamics_bus)
+target_link_libraries(test_dependency_tracking GridKit::phasor_dynamics_bus)
                                 
 
 add_test(NAME DependencyTrackingTest COMMAND $<TARGET_FILE:test_dependency_tracking>)

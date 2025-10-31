@@ -18,17 +18,17 @@ if(GRIDKIT_ENABLE_SUNDIALS)
       ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.json
     DESTINATION ${_rel_consumer_path})
   list(APPEND GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
-    GRIDKIT::phasor_dynamics_components
-    GRIDKIT::solvers_dyn)
+    GridKit::phasor_dynamics_components
+    GridKit::solvers_dyn)
 else()
   install(
     FILES ${_examples_dir}/PowerElectronics/DistributedGeneratorTest/DGTest.cpp
     DESTINATION ${_rel_consumer_path}
     RENAME consumer.cpp)
   list(APPEND GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
-    GRIDKIT::power_elec_disgen
-    GRIDKIT::power_elec_microline
-    GRIDKIT::power_elec_microload)
+    GridKit::power_elec_disgen
+    GridKit::power_elec_microline
+    GridKit::power_elec_microload)
 endif()
 
 # Install CMakeLists.txt for example project

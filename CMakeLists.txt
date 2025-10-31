@@ -8,21 +8,12 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-project(gridkit CXX)
-
-set(PACKAGE_NAME "GRIDKIT")
-set(PACKAGE_STRING "GRIDKIT 0.1.0")
-set(PACKAGE_TARNAME "gridkit")
-
-set(PACKAGE_VERSION_MAJOR "0")
-set(PACKAGE_VERSION_MINOR "1")
-set(PACKAGE_VERSION_PATCH "0")
-
-set(GRIDKIT_THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
-
-set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
+project(GridKit 
+    VERSION 0.1.0
+    LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
   set(CMAKE_CXX_FLAGS "/Wall")
@@ -30,25 +21,35 @@ else()
   set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wpedantic")
 endif()
 
+set(GRIDKIT_THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
+
 # Ipopt support is disabled by default
-option(GRIDKIT_ENABLE_IPOPT "Enable Ipopt support" OFF)
+option(GridKit_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is disabled by default
-option(GRIDKIT_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
+option(GridKit_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
 
 # Enzyme support is disabled by default
-option(GRIDKIT_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
+option(GridKit_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
 # Enable the address sanitizer
-option(GRIDKIT_ENABLE_ASAN "Enable the address sanitizer" OFF)
+option(GridKit_ENABLE_ASAN "Enable the address sanitizer" OFF)
+
+# Enable the undefined behavior sanitizer
+option(GridKit_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
+
+# This allows use of "GRIDKIT_*" versions of the above options
+list(APPEND _gridkit_enable_options IPOPT SUNDIALS ENZYME ASAN UBSAN)
+foreach(_opt IN LISTS _gridkit_enable_options)
+  if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
+    set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})
+  endif()
+endforeach()
 
 if(GRIDKIT_ENABLE_ASAN)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
-
-# Enable the undefined behavior sanitizer
-option(GRIDKIT_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 
 if(GRIDKIT_ENABLE_UBSAN)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
@@ -122,7 +123,7 @@ export(EXPORT gridkit-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/GridKitTargets.cm
 # Configuring exporting cmake config
 install(EXPORT gridkit-targets
   FILE GridKitTargets.cmake
-  NAMESPACE GRIDKIT::
+  NAMESPACE GridKit::
   DESTINATION share/cmake/gridkit)
 
 include(CMakePackageConfigHelpers)
@@ -130,7 +131,6 @@ include(CMakePackageConfigHelpers)
 # Basic version file
 write_basic_package_version_file(
   GridKitConfigVersion.cmake
-  VERSION ${PACKAGE_VERSION}
   COMPATIBILITY SameMajorVersion)
 
 # Generate config file that includes exports

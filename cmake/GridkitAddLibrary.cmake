@@ -58,12 +58,13 @@ macro(gridkit_add_library target)
   endif()
 
   # add compile options
+  target_compile_features(${target} PUBLIC cxx_std_20)
   if(gridkit_add_library_COMPILE_OPTIONS)
     target_compile_options(${target} PUBLIC ${gridkit_add_library_COMPILE_OPTIONS})
   endif()
 
   # add alias library
-  add_library(GRIDKIT::${target} ALIAS ${target})
+  add_library(GridKit::${target} ALIAS ${target})
 
   # set output name
   if(gridkit_add_library_OUTPUT_NAME)
@@ -75,8 +76,8 @@ macro(gridkit_add_library target)
 
   # set the library version
   set_target_properties(${target} PROPERTIES
-    VERSION ${PACKAGE_VERSION}
-    SOVERSION ${PACKAGE_VERSION_MAJOR})
+    VERSION ${GridKit_VERSION}
+    SOVERSION ${GridKit_VERSION_MAJOR})
 
   # install
   install(TARGETS ${target} DESTINATION lib EXPORT gridkit-targets)

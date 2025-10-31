@@ -5,9 +5,9 @@ target_include_directories(test_case_format
     ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
 add_executable(test_logger runLoggerTests.cpp)
-target_link_libraries(test_logger PRIVATE GRIDKIT::utilities_logger)
+target_link_libraries(test_logger PRIVATE GridKit::utilities_logger)
 add_executable(test_cli_options runCliOptionsTests.cpp)
-target_link_libraries(test_cli_options PRIVATE GRIDKIT::utilities_cli_options)
+target_link_libraries(test_cli_options PRIVATE GridKit::utilities_cli_options)
 
 add_test(NAME UtilitiesCaseFormatTest COMMAND test_case_format)
 add_test(NAME UtilitiesLoggerTest COMMAND test_logger)

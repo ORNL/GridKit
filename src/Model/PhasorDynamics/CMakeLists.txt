@@ -28,17 +28,17 @@ gridkit_add_library(phasor_dynamics_core
     SystemModel.hpp
     SystemModelData.hpp
   INCLUDE_DIRECTORIES
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/nlohmann-json/include
-    PRIVATE ${CMAKE_SOURCE_DIR}/third-party/magic-enum/include)
+    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
 target_link_libraries(phasor_dynamics_components
-  INTERFACE GRIDKIT::phasor_dynamics_core)
+  INTERFACE GridKit::phasor_dynamics_core)
 target_link_libraries(phasor_dynamics_components_dependency_tracking
-  INTERFACE GRIDKIT::phasor_dynamics_core)
+  INTERFACE GridKit::phasor_dynamics_core)
 
-add_library(GRIDKIT::phasor_dynamics_components
+add_library(GridKit::phasor_dynamics_components
   ALIAS phasor_dynamics_components)
-add_library(GRIDKIT::phasor_dynamics_components_dependency_tracking
+add_library(GridKit::phasor_dynamics_components_dependency_tracking
   ALIAS phasor_dynamics_components_dependency_tracking)
 
 install(TARGETS

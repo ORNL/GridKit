@@ -8,11 +8,11 @@
 
 add_executable(paramest ParameterEstimation.cpp)
 target_link_libraries(paramest
-  GRIDKIT::bus
-  GRIDKIT::generator4param
-  GRIDKIT::solvers_opt
-  GRIDKIT::solvers_dyn
-  GRIDKIT::Utilities
+  GridKit::bus
+  GridKit::generator4param
+  GridKit::solvers_opt
+  GridKit::solvers_dyn
+  GridKit::Utilities
 )
 # Fortran linker needed to link to HSL solvers
 set_property(TARGET paramest PROPERTY LINKER_LANGUAGE Fortran)

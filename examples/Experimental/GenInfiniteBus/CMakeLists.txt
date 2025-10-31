@@ -8,10 +8,10 @@
 
 add_executable(geninfbus GenInfiniteBus.cpp)
 target_link_libraries(geninfbus
-    GRIDKIT::bus
-    GRIDKIT::generator4
-    GRIDKIT::solvers_opt
-    GRIDKIT::solvers_dyn
+    GridKit::bus
+    GridKit::generator4
+    GridKit::solvers_opt
+    GridKit::solvers_dyn
 )
 # Fortran linker needed to link to HSL solvers
 set_property(TARGET geninfbus PROPERTY LINKER_LANGUAGE Fortran)

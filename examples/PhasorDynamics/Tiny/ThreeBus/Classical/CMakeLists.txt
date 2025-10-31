@@ -7,14 +7,14 @@ gridkit_example_current_install_path(_install_path)
 
 add_executable(ThreeBusClassical ThreeBusClassical.cpp)
 target_link_libraries(ThreeBusClassical 
-	GRIDKIT::phasor_dynamics_components
-	GRIDKIT::solvers_dyn)
+	GridKit::phasor_dynamics_components
+	GridKit::solvers_dyn)
 install(TARGETS ThreeBusClassical RUNTIME DESTINATION ${_install_path})
 
 add_executable(ThreeBusClassicalJson ThreeBusClassicalJson.cpp)
 target_link_libraries(ThreeBusClassicalJson
-    GRIDKIT::phasor_dynamics_components
-    GRIDKIT::solvers_dyn)
+    GridKit::phasor_dynamics_components
+    GridKit::solvers_dyn)
 install(TARGETS ThreeBusClassicalJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusClassical.json)
 

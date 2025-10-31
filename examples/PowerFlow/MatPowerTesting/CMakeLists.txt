@@ -9,7 +9,7 @@ set(test_sources
 
 foreach(src ${test_sources})
   add_executable(${src} ${src}.cpp)
-  target_link_libraries(${src} PUBLIC GRIDKIT::Utilities)
+  target_link_libraries(${src} PUBLIC GridKit::Utilities)
   add_test(
     NAME ${src}
     COMMAND $<TARGET_FILE:${src}>
