@@ -142,7 +142,7 @@ Note that for implementation purposes, some of these equations may be simplified
 ## Initialization
 
 ### Without Saturation
-Presume there is no saturation to simplify solution procedure for initial 
+Presume there is no saturation to simplify the solution procedure for the initial 
 conditions.
 
 Using the power-flow solution, we have explicit solutions for the following 
@@ -151,7 +151,7 @@ from the network interface equations. The remaining are algebraically solved
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}
-\omega &= 1 \\
+\omega &= 0 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
   \psi^{''}_{d} &= V_q \\
   \psi^{''}_{q} &= -V_d \\
@@ -170,9 +170,9 @@ from the steady-state initial conditions.
 
 ### With Saturation
 It is important to point out that finding the initial value of $\delta$ for
-the model without saturation direct method can be used. In case when saturation
-is considered some "clever" math is needed. Key insight for determining initial
-$\delta$ is that the magnitude of the saturation depends upon the magnitude
+the model without saturation, the direct method can be used. In case saturation
+is considered, some "clever" math is needed. Key insight for determining initial
+$\delta$ is that the magnitude of the saturation, which depends upon the magnitude
 of $\psi''$, which is independent of $\delta$.
 
 ``` math
