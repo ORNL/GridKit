@@ -1,7 +1,7 @@
 # Classical Generator
 
-An electrical machine model with two differential variables (i.e. second order
-model) is often called classical generator model. While its predicitve ability
+An electrical machine model with two differential variables (i.e. second-order
+model) is often called classical generator model. While its predictive ability
 is limited, it is useful for studies of grid network properties. Mathematically,
 it is equivalent to a driven damped pendulum model.
 
@@ -41,7 +41,7 @@ $T_{e}$ | [p.u.] | electrical torque                   |
 $I_r$   | [p.u.] | machine real injection current      | read by bus
 $I_i$   | [p.u.] | machine imaginary injection current | read by bus
 
-Note: All three can be expressed as function called by model equations. We add
+Note: All three can be expressed as a function called by the model equations. We add
 these as variables as they are needed for outputs.
 
 <br>
@@ -117,7 +117,7 @@ I_i &= \frac{PV_i - QV_r}{V_r^2 + V_i^2}
 \end{aligned} 
 ```
 
-We substitute expressions above into equations for current injections and
+We substitute the expressions above into equations for current injections and
 obtain
 ```math
 \begin{aligned}
@@ -125,12 +125,12 @@ E_p \sin\delta &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \\
 E_p \cos\delta &= \dfrac{G I_r + B I_i}{G^2 + B^2} + V_r
 \end{aligned}
 ```
-By dividing these two equations we get expression for machine angle at the
-steady state
+By dividing these two equations, we get an expression for the machine angle at the
+steady state:
 ```math
 \delta = \arctan \dfrac{E_i}{E_r} \, ,
 ```
-and by squaring and adding them, we get expression for field
+And by squaring and adding them, we get an expression for the field
 winding voltage at the steady state
 ```math
 E_p = \sqrt{E_r^2 + E_i^2}   \, ,
@@ -143,12 +143,12 @@ E_i &= \dfrac{-B I_r + G I_i}{G^2 + B^2} + V_i \, .
 \end{aligned}
 ```
 
-Next, we set machine speed to the synchronous speed:
+Next, we set the machine speed deviation to zero:
 ```math
-\omega = 1
+\omega = 0
 ```
 
-Now, we can compute electrical torque and set mechanical torque to be equal
+Now, we can compute the electrical torque and set the mechanical torque to be equal
 to the electrical:
 ```math
 \begin{aligned}

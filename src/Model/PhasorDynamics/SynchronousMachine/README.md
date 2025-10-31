@@ -7,9 +7,9 @@
 
 <div align="center">
   <img align="center" src="../../../../docs/Figures/SM1.JPG">
-  Figure 1: Synchronous Machine.
-  Figure courtesy of
-  [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf)
+  
+  Figure 1: Synchronous Machine. Figure courtesy of
+  [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf/)
 </div>
 
 The following conventions are used for the d-q reference frame.
@@ -18,18 +18,18 @@ The following conventions are used for the d-q reference frame.
 
 ## Types
 
+- Classical Generator (See [GenClassical](GenClassical/README.md))
 - Round Rotor (See [GENROU](GENROUwS/README.md))
 - Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
 - GENPWS
 - GENTPF
 - GENTPJ
 - GENQEC
-- GenClassical
 
 ### Per-Unit Basis
 
-In relevant models, the terminal impedences are on the generator impedance base.
-To convert to network base, the following must be performed.
+In relevant models, the terminal impedances are on the generator impedance base.
+To convert to the network base, the following must be performed.
 
 ```math
 \begin{aligned}
@@ -40,7 +40,7 @@ To convert to network base, the following must be performed.
 
 For example, say the terminal impedence is $Z=0.05$ in per-unit on the
 machine's base of $S_{base,machine}=50$  MW, and the system base is
-$S_{base,sys}=100$ MW. Then the terminal impedence on the the system
+$S_{base,sys}=100$ MW. Then the terminal impedance on the system
 base is calculated as follows.
 
 ``` math

@@ -94,7 +94,7 @@ namespace GridKit
 
         // Set variable values matching the answer key
         gen.y()[0] = M_PI; // delta
-        gen.y()[1] = 2.0;  // omega
+        gen.y()[1] = 1.0;  // omega
         gen.y()[2] = 2.0;  // telec
         gen.y()[3] = -2.0; // ir
         gen.y()[4] = -4.0; // ii
@@ -145,7 +145,7 @@ namespace GridKit
         // Test answer keys
         const std::vector<ScalarT> var_answer = {
             3.0 * M_PI / 4.0, // delta
-            1.0,              // omega
+            0.0,              // omega
             3.5,              // Te
             1.0,              // Ir
             2.0,              // Ii

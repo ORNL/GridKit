@@ -190,8 +190,8 @@ int main()
     std::vector<double>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                y_val[5],
-                                y_val[10],
+                                1 + y_val[5],
+                                1 + y_val[10],
                                 std::hypot(y_val[0], y_val[1]),
                                 std::hypot(y_val[2], y_val[3])});
   };

@@ -41,13 +41,14 @@ $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R_a}{R_a^2+(X_q'')^2}&
-  B   &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
-  S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
-  S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
-  X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
-  X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
-  X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
+  B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
+  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  X_{d1} &= X_d-X_d'                 & X_{q1} &= X_q-X_q' \\
+  X_{d2} &= X_d'-X_\ell              & X_{q2} &= X_q'-X_\ell\\
+  X_{d3} &= (X_d'-X_d'')/X_{d2}^2    & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{q4} &= (X_q'-X_q'')/X_{q2} \\
   X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
   X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
 \end{aligned}
@@ -141,7 +142,7 @@ Note that for implementation purposes, some of these equations may be simplified
 ## Initialization
 
 ### Without Saturation
-Presume there is no saturation to simplify solution procedure for initial 
+Presume there is no saturation to simplify the solution procedure for the initial 
 conditions.
 
 Using the power-flow solution, we have explicit solutions for the following 
@@ -150,7 +151,7 @@ from the network interface equations. The remaining are algebraically solved
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}
-\omega &= 1 \\
+\omega &= 0 \\
 \delta &= \text{arg} \left[V_r + jV_i + (R_a + jX_q) (I_r + jI_i)\right] \\
   \psi^{''}_{d} &= V_q \\
   \psi^{''}_{q} &= -V_d \\
@@ -169,9 +170,9 @@ from the steady-state initial conditions.
 
 ### With Saturation
 It is important to point out that finding the initial value of $\delta$ for
-the model without saturation direct method can be used. In case when saturation
-is considered some "clever" math is needed. Key insight for determining initial
-$\delta$ is that the magnitude of the saturation depends upon the magnitude
+the model without saturation, the direct method can be used. In case saturation
+is considered, some "clever" math is needed. Key insight for determining initial
+$\delta$ is that the magnitude of the saturation, which depends upon the magnitude
 of $\psi''$, which is independent of $\delta$.
 
 ``` math
