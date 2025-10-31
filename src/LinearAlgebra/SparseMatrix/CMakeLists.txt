@@ -1,10 +1,10 @@
 
-add_library(SparseMatrix CsrMatrix.cpp)
-
-add_library(GridKit::SparseMatrix ALIAS SparseMatrix)
+add_library(CsrMatrix CsrMatrix.cpp)
 
 install(
   FILES
     COO_Matrix.hpp
   DESTINATION
     include/GridKit/LinearAlgebra/SparseMatrix)
+	
+add_library(GRIDKIT::CsrMatrix ALIAS CsrMatrix)
