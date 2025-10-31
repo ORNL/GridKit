@@ -76,7 +76,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int allocateBufferOnDevice(T** /* v */, I /* n */)
@@ -91,7 +91,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int setZeroArrayOnDevice(T* /* v */, I /* n */)
@@ -106,7 +106,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int setArrayToConstOnDevice(T* /* v */, T /* c */, I /* n */)
@@ -121,7 +121,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int copyArrayDeviceToHost(T* /* dst */, const T* /* src */, I /* n */)
@@ -136,7 +136,7 @@ namespace GridKit
          * This will be called only if GPU device support is not built, so
          * trying to access a device should indicate a bug in the code.
          *
-         * @return Allways return failure!
+         * @return Always return failure!
          */
         template <typename I, typename T>
         static int copyArrayDeviceToDevice(T* /* dst */, const T* /* src */, I /* n */)
@@ -160,7 +160,7 @@ namespace GridKit
      *
      * @brief Provides basic memory allocation, free and copy functions.
      *
-     * This class provedes abstractions for memory management functiosn for
+     * This class provides abstractions for memory management functions for
      * different GPU programming models.
      *
      * @tparam Policy - Memory management policy (vendor specific)
