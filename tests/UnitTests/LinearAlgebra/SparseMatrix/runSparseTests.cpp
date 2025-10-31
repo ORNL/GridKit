@@ -10,11 +10,12 @@ using namespace Testing;
  * @param[in] backend - name of the hardware backend
  * @param[out] result - test results
  */
+template <class ScalarT, typename IdxT>
 void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
 {
   std::cout << "Running tests on " << backend << ":\n";
 
-  SparseTests test(memspace);
+  SparseTests<ScalarT, IdxT> test(memspace);
 
   //   ReSolve::io::Logger::setVerbosity(ReSolve::io::Logger::NONE);
 
@@ -40,7 +41,8 @@ void runTests(const std::string& backend, memory::MemorySpace memspace, TestingR
 int main(int, char**)
 {
   TestingResults result;
-  runTests("CPU", memory::HOST, result);
+  runTests<double, size_t>("CPU", memory::HOST, result);
+  runTests<double, long int>("CPU", memory::HOST, result);
 
   return result.summary();
 }

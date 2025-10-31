@@ -7,8 +7,11 @@ namespace GridKit
   {
     using namespace LinearAlgebra;
 
+    template <class ScalarT, typename IdxT>
     class SparseTests
     {
+
+      using CsrMatrix = LinearAlgebra::CsrMatrix<ScalarT, IdxT>;
 
     public:
       SparseTests(memory::MemorySpace memspace = memory::HOST)
@@ -35,9 +38,9 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome constructor(index_type n,
-                              index_type m,
-                              index_type nnz)
+      TestOutcome constructor(IdxT n,
+                              IdxT m,
+                              IdxT nnz)
       {
         TestStatus success;
         success = true;
@@ -65,29 +68,29 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome setDataPointers(index_type n, index_type m, index_type row_density)
+      TestOutcome setDataPointers(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
-        index_type* h_row_data = new index_type[n + 1];
-        for (index_type i = 0; i <= n; ++i)
+        IdxT* h_row_data = new IdxT[n + 1];
+        for (IdxT i = 0; i <= n; ++i)
         {
           h_row_data[i] = i * (nnz / n); // Simple pattern for row pointers
         }
-        index_type* h_col_data = new index_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        IdxT* h_col_data = new IdxT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
           h_col_data[i] = i % m; // Simple pattern for column indices
         }
-        real_type* h_val_data = new real_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        ScalarT* h_val_data = new ScalarT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
-          h_val_data[i] = static_cast<real_type>(i + 1);
+          h_val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
         if (A.setDataPointers(h_row_data, h_col_data, h_val_data, memory::HOST) != 0)
@@ -120,19 +123,19 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome setValuesPointer(index_type n, index_type m, index_type row_density)
+      TestOutcome setValuesPointer(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
-        real_type* val_data = new real_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        ScalarT* val_data = new ScalarT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
-          val_data[i] = static_cast<real_type>(i + 1);
+          val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
         if (A.setValuesPointer(val_data, memory::HOST) != 0)
@@ -164,21 +167,21 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome copyValues(index_type n, index_type m, index_type row_density)
+      TestOutcome copyValues(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
-        real_type* val_data = new real_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        ScalarT* val_data = new ScalarT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
-          val_data[i] = static_cast<real_type>(i + 1);
+          val_data[i] = static_cast<ScalarT>(i + 1);
         }
-        real_type* h_val_data = nullptr;
+        ScalarT* h_val_data = nullptr;
         if (A.copyValues(val_data, memory::HOST, memspace_) != 0)
         {
           std::cout << "Failed to copy values.\n";
@@ -187,7 +190,7 @@ namespace GridKit
         else
         {
           // Modify original values to ensure copy worked
-          for (index_type i = 0; i < nnz; ++i)
+          for (IdxT i = 0; i < nnz; ++i)
           {
             val_data[i] *= 2; // Change the values
           }
@@ -205,8 +208,8 @@ namespace GridKit
             }
             else
             {
-              real_type* d_val_data = A.getValues(memory::DEVICE);
-              h_val_data            = new real_type[nnz];
+              ScalarT* d_val_data = A.getValues(memory::DEVICE);
+              h_val_data          = new ScalarT[nnz];
               mem_.copyArrayDeviceToHost(h_val_data, d_val_data, nnz);
               if (h_val_data == nullptr)
               {
@@ -216,9 +219,9 @@ namespace GridKit
             }
 
             // Check if the copied values are correct
-            for (index_type i = 0; i < nnz; ++i)
+            for (IdxT i = 0; i < nnz; ++i)
             {
-              if (h_val_data[i] != static_cast<real_type>(i + 1))
+              if (h_val_data[i] != static_cast<ScalarT>(i + 1))
               {
                 std::cout << "Copied values do not match expected values.\n";
                 success = false;
@@ -251,19 +254,19 @@ namespace GridKit
        * @param[in] row_density - number of non-zeros per row
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome copyValuesAndSetDataPointers(index_type n, index_type m, index_type row_density)
+      TestOutcome copyValuesAndSetDataPointers(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
-        real_type* val_data = new real_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        ScalarT* val_data = new ScalarT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
-          val_data[i] = static_cast<real_type>(i + 1);
+          val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
         if (A.copyValues(val_data, memory::HOST, memspace_) != 0)
@@ -272,13 +275,13 @@ namespace GridKit
           success = false;
         }
 
-        index_type* row_data = new index_type[n + 1];
-        for (index_type i = 0; i <= n; ++i)
+        IdxT* row_data = new IdxT[n + 1];
+        for (IdxT i = 0; i <= n; ++i)
         {
           row_data[i] = i * (nnz / n); // Simple pattern for row pointers
         }
-        index_type* col_data = new index_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        IdxT* col_data = new IdxT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
           col_data[i] = i % m; // Simple pattern for column indices
         }
@@ -308,19 +311,19 @@ namespace GridKit
        * @param[in] row_density - number of non-zeros per row
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome copyValuesAndSetValues(index_type n, index_type m, index_type row_density)
+      TestOutcome copyValuesAndSetValues(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
-        real_type* val_data = new real_type[nnz];
-        for (index_type i = 0; i < nnz; ++i)
+        ScalarT* val_data = new ScalarT[nnz];
+        for (IdxT i = 0; i < nnz; ++i)
         {
-          val_data[i] = static_cast<real_type>(i + 1);
+          val_data[i] = static_cast<ScalarT>(i + 1);
         }
 
         if (A.copyValues(val_data, memory::HOST, memspace_) != 0)
@@ -353,12 +356,12 @@ namespace GridKit
        *
        * @return TestOutcome indicating success or failure of the test
        */
-      TestOutcome allocateAndDestroyData(index_type n, index_type m, index_type row_density)
+      TestOutcome allocateAndDestroyData(IdxT n, IdxT m, IdxT row_density)
       {
         TestStatus success;
         success = true;
 
-        index_type nnz = n * row_density; // Total non-zeros based on row density
+        IdxT nnz = n * row_density; // Total non-zeros based on row density
 
         CsrMatrix A(n, m, nnz);
 
