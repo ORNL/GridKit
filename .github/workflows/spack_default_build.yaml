@@ -181,6 +181,9 @@ jobs:
       - name: Test Build
         run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
 
+      - name: Test Installation
+        run: cd $(spack -e . location --build-dir gridkit@develop) && make test_install
+
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
         run: |
