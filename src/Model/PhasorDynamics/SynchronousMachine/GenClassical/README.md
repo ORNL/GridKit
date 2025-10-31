@@ -158,4 +158,3 @@ P_{m} &= T_{e}
 ```
 
 With this, we initialize the machine at a steady state.
-
