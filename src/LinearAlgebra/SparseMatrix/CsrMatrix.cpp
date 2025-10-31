@@ -8,6 +8,176 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
+    CsrMatrix::CsrMatrix()
+    {
+    }
+
+    /**
+     * @brief basic constructor. It DOES NOT allocate any memory!
+     *
+     * @param[in] n   - number of rows
+     * @param[in] m   - number of columns
+     * @param[in] nnz - number of non-zeros
+     */
+    CsrMatrix::CsrMatrix(index_type n,
+                         index_type m,
+                         index_type nnz)
+      : n_{n},
+        m_{m},
+        nnz_{nnz}
+    {
+      setNotUpdated();
+
+      // set everything to nullptr
+      h_row_data_ = nullptr;
+      h_col_data_ = nullptr;
+      h_val_data_ = nullptr;
+
+      d_row_data_ = nullptr;
+      d_col_data_ = nullptr;
+      d_val_data_ = nullptr;
+
+      owns_cpu_sparsity_pattern_ = false;
+      owns_cpu_values_           = false;
+
+      owns_gpu_sparsity_pattern_ = false;
+      owns_gpu_values_           = false;
+    }
+
+    /**
+     * @brief Hijacking constructor
+     *
+     * @param[in] n
+     * @param[in] m
+     * @param[in] nnz
+     * @param[in,out] rows
+     * @param[in,out] cols
+     * @param[in,out] vals
+     * @param[in] memspaceSrc
+     * @param[in] memspaceDst
+     */
+    CsrMatrix::CsrMatrix(index_type          n,
+                         index_type          m,
+                         index_type          nnz,
+                         index_type**        rows,
+                         index_type**        cols,
+                         real_type**         vals,
+                         memory::MemorySpace memspaceSrc,
+                         memory::MemorySpace memspaceDst)
+      : CsrMatrix(n, m, nnz)
+    {
+      int control = -1;
+      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::HOST))
+      {
+        control = 0;
+      }
+      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::DEVICE))
+      {
+        control = 1;
+      }
+      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::HOST))
+      {
+        control = 2;
+      }
+      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::DEVICE))
+      {
+        control = 3;
+      }
+
+      switch (control)
+      {
+      case 0: // cpu->cpu
+        // Set host data
+        h_row_data_                = *rows;
+        h_col_data_                = *cols;
+        h_val_data_                = *vals;
+        h_data_updated_            = true;
+        owns_cpu_sparsity_pattern_ = true;
+        owns_cpu_values_           = true;
+        // Set device data to null
+        if (d_row_data_ || d_col_data_ || d_val_data_)
+        {
+          std::cerr << "Device data unexpectedly allocated. "
+                    << "Possible bug in matrix::Sparse class.\n";
+        }
+        d_row_data_                = nullptr;
+        d_col_data_                = nullptr;
+        d_val_data_                = nullptr;
+        d_data_updated_            = false;
+        owns_gpu_sparsity_pattern_ = false;
+        owns_gpu_values_           = false;
+        // Hijack data from the source
+        *rows                      = nullptr;
+        *cols                      = nullptr;
+        *vals                      = nullptr;
+        break;
+      case 2: // gpu->cpu
+        // Set device data and copy it to host
+        d_row_data_                = *rows;
+        d_col_data_                = *cols;
+        d_val_data_                = *vals;
+        d_data_updated_            = true;
+        owns_gpu_sparsity_pattern_ = true;
+        owns_gpu_values_           = true;
+        syncData(memspaceDst);
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 1: // cpu->gpu
+        // Set host data and copy it to device
+        h_row_data_                = *rows;
+        h_col_data_                = *cols;
+        h_val_data_                = *vals;
+        h_data_updated_            = true;
+        owns_cpu_sparsity_pattern_ = true;
+        owns_cpu_values_           = true;
+        syncData(memspaceDst);
+
+        // Hijack data from the source
+        *rows = nullptr;
+        *cols = nullptr;
+        *vals = nullptr;
+        break;
+      case 3: // gpu->gpu
+        // Set device data
+        d_row_data_                = *rows;
+        d_col_data_                = *cols;
+        d_val_data_                = *vals;
+        d_data_updated_            = true;
+        owns_gpu_sparsity_pattern_ = true;
+        owns_gpu_values_           = true;
+        // Set host data to null
+        if (h_row_data_ || h_col_data_ || h_val_data_)
+        {
+          std::cerr << "Host data unexpectedly allocated. "
+                    << "Possible bug in matrix::Sparse class.\n";
+        }
+        h_row_data_                = nullptr;
+        h_col_data_                = nullptr;
+        h_val_data_                = nullptr;
+        h_data_updated_            = false;
+        owns_cpu_sparsity_pattern_ = false;
+        owns_cpu_values_           = false;
+        // Hijack data from the source
+        *rows                      = nullptr;
+        *cols                      = nullptr;
+        *vals                      = nullptr;
+        break;
+      default:
+        std::cerr << "CsrMatrix constructor failed! "
+                  << "Possible bug in memory spaces setting.\n";
+        break;
+      }
+    }
+
+    CsrMatrix::~CsrMatrix()
+    {
+      this->destroyMatrixData(memory::HOST);
+      this->destroyMatrixData(memory::DEVICE);
+    }
+
     /**
      * @brief set the matrix update flags to false (for both HOST and DEVICE).
      */
@@ -337,176 +507,6 @@ namespace GridKit
         return -1;
       }
       return 0;
-    }
-
-    CsrMatrix::CsrMatrix()
-    {
-    }
-
-    /**
-     * @brief basic constructor. It DOES NOT allocate any memory!
-     *
-     * @param[in] n   - number of rows
-     * @param[in] m   - number of columns
-     * @param[in] nnz - number of non-zeros
-     */
-    CsrMatrix::CsrMatrix(index_type n,
-                         index_type m,
-                         index_type nnz)
-      : n_{n},
-        m_{m},
-        nnz_{nnz}
-    {
-      setNotUpdated();
-
-      // set everything to nullptr
-      h_row_data_ = nullptr;
-      h_col_data_ = nullptr;
-      h_val_data_ = nullptr;
-
-      d_row_data_ = nullptr;
-      d_col_data_ = nullptr;
-      d_val_data_ = nullptr;
-
-      owns_cpu_sparsity_pattern_ = false;
-      owns_cpu_values_           = false;
-
-      owns_gpu_sparsity_pattern_ = false;
-      owns_gpu_values_           = false;
-    }
-
-    /**
-     * @brief Hijacking constructor
-     *
-     * @param[in] n
-     * @param[in] m
-     * @param[in] nnz
-     * @param[in,out] rows
-     * @param[in,out] cols
-     * @param[in,out] vals
-     * @param[in] memspaceSrc
-     * @param[in] memspaceDst
-     */
-    CsrMatrix::CsrMatrix(index_type          n,
-                         index_type          m,
-                         index_type          nnz,
-                         index_type**        rows,
-                         index_type**        cols,
-                         real_type**         vals,
-                         memory::MemorySpace memspaceSrc,
-                         memory::MemorySpace memspaceDst)
-      : CsrMatrix(n, m, nnz)
-    {
-      int control = -1;
-      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::HOST))
-      {
-        control = 0;
-      }
-      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::DEVICE))
-      {
-        control = 1;
-      }
-      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::HOST))
-      {
-        control = 2;
-      }
-      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::DEVICE))
-      {
-        control = 3;
-      }
-
-      switch (control)
-      {
-      case 0: // cpu->cpu
-        // Set host data
-        h_row_data_                = *rows;
-        h_col_data_                = *cols;
-        h_val_data_                = *vals;
-        h_data_updated_            = true;
-        owns_cpu_sparsity_pattern_ = true;
-        owns_cpu_values_           = true;
-        // Set device data to null
-        if (d_row_data_ || d_col_data_ || d_val_data_)
-        {
-          std::cerr << "Device data unexpectedly allocated. "
-                    << "Possible bug in matrix::Sparse class.\n";
-        }
-        d_row_data_                = nullptr;
-        d_col_data_                = nullptr;
-        d_val_data_                = nullptr;
-        d_data_updated_            = false;
-        owns_gpu_sparsity_pattern_ = false;
-        owns_gpu_values_           = false;
-        // Hijack data from the source
-        *rows                      = nullptr;
-        *cols                      = nullptr;
-        *vals                      = nullptr;
-        break;
-      case 2: // gpu->cpu
-        // Set device data and copy it to host
-        d_row_data_                = *rows;
-        d_col_data_                = *cols;
-        d_val_data_                = *vals;
-        d_data_updated_            = true;
-        owns_gpu_sparsity_pattern_ = true;
-        owns_gpu_values_           = true;
-        syncData(memspaceDst);
-        // Hijack data from the source
-        *rows = nullptr;
-        *cols = nullptr;
-        *vals = nullptr;
-        break;
-      case 1: // cpu->gpu
-        // Set host data and copy it to device
-        h_row_data_                = *rows;
-        h_col_data_                = *cols;
-        h_val_data_                = *vals;
-        h_data_updated_            = true;
-        owns_cpu_sparsity_pattern_ = true;
-        owns_cpu_values_           = true;
-        syncData(memspaceDst);
-
-        // Hijack data from the source
-        *rows = nullptr;
-        *cols = nullptr;
-        *vals = nullptr;
-        break;
-      case 3: // gpu->gpu
-        // Set device data
-        d_row_data_                = *rows;
-        d_col_data_                = *cols;
-        d_val_data_                = *vals;
-        d_data_updated_            = true;
-        owns_gpu_sparsity_pattern_ = true;
-        owns_gpu_values_           = true;
-        // Set host data to null
-        if (h_row_data_ || h_col_data_ || h_val_data_)
-        {
-          std::cerr << "Host data unexpectedly allocated. "
-                    << "Possible bug in matrix::Sparse class.\n";
-        }
-        h_row_data_                = nullptr;
-        h_col_data_                = nullptr;
-        h_val_data_                = nullptr;
-        h_data_updated_            = false;
-        owns_cpu_sparsity_pattern_ = false;
-        owns_cpu_values_           = false;
-        // Hijack data from the source
-        *rows                      = nullptr;
-        *cols                      = nullptr;
-        *vals                      = nullptr;
-        break;
-      default:
-        std::cerr << "CsrMatrix constructor failed! "
-                  << "Possible bug in memory spaces setting.\n";
-        break;
-      }
-    }
-
-    CsrMatrix::~CsrMatrix()
-    {
-      this->destroyMatrixData(memory::HOST);
-      this->destroyMatrixData(memory::DEVICE);
     }
 
     index_type* CsrMatrix::getRowData(memory::MemorySpace memspace)
