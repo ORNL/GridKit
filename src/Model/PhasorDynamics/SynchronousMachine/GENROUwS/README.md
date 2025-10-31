@@ -41,13 +41,14 @@ $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
-  G   &=\dfrac{R_a}{R_a^2+(X_q'')^2}&
-  B   &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
-  S_A &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
-  S_B &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
-  X_{d1} &= X_d-X_d'      & X_{q1} &= X_q-X_q' \\
-  X_{d2} &= X_d'-X_\ell  & X_{q2} &= X_q'-X_\ell\\
-  X_{d3} &= (X_d'-X_d'')/X_{d2}^2 & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
+  B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
+  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
+  X_{d1} &= X_d-X_d'                 & X_{q1} &= X_q-X_q' \\
+  X_{d2} &= X_d'-X_\ell              & X_{q2} &= X_q'-X_\ell\\
+  X_{d3} &= (X_d'-X_d'')/X_{d2}^2    & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
+  X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{q4} &= (X_q'-X_q'')/X_{q2} \\
   X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
   X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
 \end{aligned}
