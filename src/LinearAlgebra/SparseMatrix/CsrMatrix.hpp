@@ -26,8 +26,8 @@ namespace GridKit
                 index_type**        rows,
                 index_type**        cols,
                 real_type**         vals,
-                memory::MemorySpace memspaceSrc = memory::HOST,
-                memory::MemorySpace memspaceDst = memory::HOST);
+                memory::MemorySpace memspace_src = memory::HOST,
+                memory::MemorySpace memspace_dst = memory::HOST);
 
       ~CsrMatrix();
 
@@ -46,14 +46,14 @@ namespace GridKit
       int copyDataFrom(const index_type*   row_data,
                        const index_type*   col_data,
                        const real_type*    val_data,
-                       memory::MemorySpace memspaceIn,
-                       memory::MemorySpace memspaceOut);
+                       memory::MemorySpace memspace_in,
+                       memory::MemorySpace memspace_out);
       int copyDataFrom(const index_type*   row_data,
                        const index_type*   col_data,
                        const real_type*    val_data,
                        index_type          new_nnz,
-                       memory::MemorySpace memspaceIn,
-                       memory::MemorySpace memspaceOut);
+                       memory::MemorySpace memspace_in,
+                       memory::MemorySpace memspace_out);
 
       int allocateMatrixData(memory::MemorySpace memspace);
       int setDataPointers(index_type*         row_data,
@@ -65,13 +65,13 @@ namespace GridKit
 
       void print(std::ostream& file_out = std::cout, index_type indexing_base = 0);
 
-      int syncData(memory::MemorySpace memspaceOut);
+      int syncData(memory::MemorySpace memspace_out);
 
       // update Values just updates values; it allocates if necessary.
       // values have the same dimensions between different formats
       virtual int copyValues(const real_type*    new_vals,
-                             memory::MemorySpace memspaceIn,
-                             memory::MemorySpace memspaceOut);
+                             memory::MemorySpace memspace_in,
+                             memory::MemorySpace memspace_out);
 
       // set new values just sets the pointer, use caution.
       virtual int setValuesPointer(real_type*          new_vals,

@@ -53,8 +53,8 @@ namespace GridKit
      * @param[in,out] rows
      * @param[in,out] cols
      * @param[in,out] vals
-     * @param[in] memspaceSrc
-     * @param[in] memspaceDst
+     * @param[in] memspace_src
+     * @param[in] memspace_dst
      */
     CsrMatrix::CsrMatrix(index_type          n,
                          index_type          m,
@@ -62,24 +62,24 @@ namespace GridKit
                          index_type**        rows,
                          index_type**        cols,
                          real_type**         vals,
-                         memory::MemorySpace memspaceSrc,
-                         memory::MemorySpace memspaceDst)
+                         memory::MemorySpace memspace_src,
+                         memory::MemorySpace memspace_dst)
       : CsrMatrix(n, m, nnz)
     {
       int control = -1;
-      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::HOST))
+      if ((memspace_src == memory::HOST) && (memspace_dst == memory::HOST))
       {
         control = 0;
       }
-      if ((memspaceSrc == memory::HOST) && (memspaceDst == memory::DEVICE))
+      if ((memspace_src == memory::HOST) && (memspace_dst == memory::DEVICE))
       {
         control = 1;
       }
-      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::HOST))
+      if ((memspace_src == memory::DEVICE) && (memspace_dst == memory::HOST))
       {
         control = 2;
       }
-      if ((memspaceSrc == memory::DEVICE) && (memspaceDst == memory::DEVICE))
+      if ((memspace_src == memory::DEVICE) && (memspace_dst == memory::DEVICE))
       {
         control = 3;
       }
@@ -119,7 +119,7 @@ namespace GridKit
         d_data_updated_            = true;
         owns_gpu_sparsity_pattern_ = true;
         owns_gpu_values_           = true;
-        syncData(memspaceDst);
+        syncData(memspace_dst);
         // Hijack data from the source
         *rows = nullptr;
         *cols = nullptr;
@@ -133,7 +133,7 @@ namespace GridKit
         h_data_updated_            = true;
         owns_cpu_sparsity_pattern_ = true;
         owns_cpu_values_           = true;
-        syncData(memspaceDst);
+        syncData(memspace_dst);
 
         // Hijack data from the source
         *rows = nullptr;
@@ -386,38 +386,38 @@ namespace GridKit
      * It also sets ownership and update flags.
      *
      * @param[in] new_vals    - pointer to new values data (array of real numbers)
-     * @param[in] memspaceIn  - memory space (HOST or DEVICE) of _new_vals_
-     * @param[in] memspaceOut - memory space (HOST or DEVICE) of matrix values to be updated.
+     * @param[in] memspace_in  - memory space (HOST or DEVICE) of _new_vals_
+     * @param[in] memspace_out - memory space (HOST or DEVICE) of matrix values to be updated.
      *
      * @return 0 if successful, -1 if not.
      */
     int CsrMatrix::copyValues(const real_type*    new_vals,
-                              memory::MemorySpace memspaceIn,
-                              memory::MemorySpace memspaceOut)
+                              memory::MemorySpace memspace_in,
+                              memory::MemorySpace memspace_out)
     {
 
       index_type nnz_current = nnz_;
       // four cases (for now)
       setNotUpdated();
       int control = -1;
-      if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
+      if ((memspace_in == memory::HOST) && (memspace_out == memory::HOST))
       {
         control = 0;
       }
-      if ((memspaceIn == memory::HOST) && (memspaceOut == memory::DEVICE))
+      if ((memspace_in == memory::HOST) && (memspace_out == memory::DEVICE))
       {
         control = 1;
       }
-      if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))
+      if ((memspace_in == memory::DEVICE) && (memspace_out == memory::HOST))
       {
         control = 2;
       }
-      if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE))
+      if ((memspace_in == memory::DEVICE) && (memspace_out == memory::DEVICE))
       {
         control = 3;
       }
 
-      if (memspaceOut == memory::HOST)
+      if (memspace_out == memory::HOST)
       {
         // check if cpu data allocated
         if (h_val_data_ == nullptr)
@@ -427,7 +427,7 @@ namespace GridKit
         }
       }
 
-      if (memspaceOut == memory::DEVICE)
+      if (memspace_out == memory::DEVICE)
       {
         // check if cuda data allocated
         if (d_val_data_ == nullptr)
@@ -557,31 +557,31 @@ namespace GridKit
     int CsrMatrix::copyDataFrom(const index_type*   row_data,
                                 const index_type*   col_data,
                                 const real_type*    val_data,
-                                memory::MemorySpace memspaceIn,
-                                memory::MemorySpace memspaceOut)
+                                memory::MemorySpace memspace_in,
+                                memory::MemorySpace memspace_out)
     {
       // four cases (for now)
       index_type nnz_current = nnz_;
       setNotUpdated();
       int control = -1;
-      if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
+      if ((memspace_in == memory::HOST) && (memspace_out == memory::HOST))
       {
         control = 0;
       }
-      if ((memspaceIn == memory::HOST) && ((memspaceOut == memory::DEVICE)))
+      if ((memspace_in == memory::HOST) && ((memspace_out == memory::DEVICE)))
       {
         control = 1;
       }
-      if (((memspaceIn == memory::DEVICE)) && (memspaceOut == memory::HOST))
+      if (((memspace_in == memory::DEVICE)) && (memspace_out == memory::HOST))
       {
         control = 2;
       }
-      if (((memspaceIn == memory::DEVICE)) && ((memspaceOut == memory::DEVICE)))
+      if (((memspace_in == memory::DEVICE)) && ((memspace_out == memory::DEVICE)))
       {
         control = 3;
       }
 
-      if (memspaceOut == memory::HOST)
+      if (memspace_out == memory::HOST)
       {
         // check if cpu data allocated
         assert(((h_row_data_ == nullptr) == (h_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of host row or column data is null!\n");
@@ -599,7 +599,7 @@ namespace GridKit
         }
       }
 
-      if (memspaceOut == memory::DEVICE)
+      if (memspace_out == memory::DEVICE)
       {
         // check if cuda data allocated
         assert(((d_row_data_ == nullptr) == (d_col_data_ == nullptr)) && "In CsrMatrix::copyDataFrom one of device row or column data is null!\n");
@@ -654,12 +654,12 @@ namespace GridKit
                                 const index_type*   col_data,
                                 const real_type*    val_data,
                                 index_type          new_nnz,
-                                memory::MemorySpace memspaceIn,
-                                memory::MemorySpace memspaceOut)
+                                memory::MemorySpace memspace_in,
+                                memory::MemorySpace memspace_out)
     {
-      destroyMatrixData(memspaceOut);
+      destroyMatrixData(memspace_out);
       nnz_ = new_nnz;
-      return copyDataFrom(row_data, col_data, val_data, memspaceIn, memspaceOut);
+      return copyDataFrom(row_data, col_data, val_data, memspace_in, memspace_out);
     }
 
     int CsrMatrix::allocateMatrixData(memory::MemorySpace memspace)
