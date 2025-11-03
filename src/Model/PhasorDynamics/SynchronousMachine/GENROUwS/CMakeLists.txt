@@ -13,7 +13,7 @@ if(GRIDKIT_ENABLE_ENZYME)
       PUBLIC GridKit::phasor_dynamics_signal 
       PRIVATE ClangEnzymeFlags
     COMPILE_OPTIONS
-      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno -fno-vectorize)
+      PRIVATE -mllvm -enzyme-auto-sparsity=1 -fno-math-errno -fno-vectorize)
 else()
   gridkit_add_library(phasor_dynamics_genrou
     SOURCES

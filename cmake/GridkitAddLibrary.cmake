@@ -60,7 +60,7 @@ macro(gridkit_add_library target)
   # add compile options
   target_compile_features(${target} PUBLIC cxx_std_20)
   if(gridkit_add_library_COMPILE_OPTIONS)
-    target_compile_options(${target} PRIVATE ${gridkit_add_library_COMPILE_OPTIONS})
+    target_compile_options(${target} ${gridkit_add_library_COMPILE_OPTIONS})
   endif()
 
   # add alias library

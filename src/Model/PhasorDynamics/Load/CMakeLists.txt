@@ -18,7 +18,7 @@ if(GRIDKIT_ENABLE_ENZYME)
     LINK_LIBRARIES
       PRIVATE ClangEnzymeFlags
     COMPILE_OPTIONS
-      -mllvm -enzyme-auto-sparsity=1 -fno-math-errno)
+      PRIVATE -mllvm -enzyme-auto-sparsity=1 -fno-math-errno)
 else()
   gridkit_add_library(phasor_dynamics_load
     SOURCES
