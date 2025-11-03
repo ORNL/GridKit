@@ -7,4 +7,4 @@ install(
   DESTINATION
     include/GridKit/LinearAlgebra/SparseMatrix)
 	
-add_library(GRIDKIT::CsrMatrix ALIAS CsrMatrix)
+add_library(GridKit::CsrMatrix ALIAS CsrMatrix)
