@@ -10,7 +10,6 @@
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
-#include <GridKit/Utilities/Template.hpp>
 
 namespace GridKit
 {
@@ -75,128 +74,8 @@ namespace GridKit
 
     using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
 
-    /**
-     * @brief A plan for constructing the system jacobian. Consists of individual plans
-     * for constructing each row of the jacobian, which must be executed in order to construct
-     * the overall matrix.
-     */
-    struct JacobianAssemblyPlan
-    {
-      /**
-       * @brief A plan for constructing a row of the system jacobian which corresponds to an internal equation
-       */
-      struct InternalRowPlan
-      {
-        struct Element
-        {
-          /**
-           * @brief The index of the element in the component jacobian
-           */
-          size_t elem_idx_;
-          /**
-           * @brief The column of the element in the system jacobian
-           */
-          IdxT   system_col_;
-        };
-
-        /**
-         * @brief The index of the component that this equation belongs to
-         */
-        size_t               component_idx_;
-        /**
-         * @brief The index of the row of the component's jacobian that this row corresponds to.
-         */
-        size_t               row_idx_;
-        /**
-         * @brief The expected number of nonzero elements in the row of the component's jacobian.
-         */
-        IdxT                 row_nnz_;
-        /**
-         * @brief The elements which belong to this row
-         */
-        std::vector<Element> elements_;
-      };
-
-      /**
-       * @brief A plan for constructing a row of the system jacobian which corresponds to an external equation
-       */
-      struct ExternalRowPlan
-      {
-        /**
-         * @brief A single element in the row. An element is the sum of the elements of (potentially) several component jacobians
-         */
-        struct SystemElement
-        {
-          /**
-           * @brief A single element in a component's row. Represents a summand in the calculation of a single system jacobian element
-           * in an external row.
-           */
-          struct ComponentElement
-          {
-            /**
-             * @brief The index of the component that this element belongs to.
-             */
-            size_t component_idx_;
-            /**
-             * @brief The index of the element inside the component jacobian's `CsrMatrix::values()` and `CsrMatrix::column_indices()` lists.
-             */
-            size_t element_idx_;
-            /**
-             * @brief The expected column of the element inside the component jacobian.
-             */
-            IdxT   column_idx_;
-          };
-
-          /**
-           * @brief A list of all elements in component jacobians which sum to this element in the system jacobian.
-           */
-          std::vector<ComponentElement> component_elements_;
-          /**
-           * @brief The column of this element in the system jacobian.
-           */
-          IdxT                          column_;
-        };
-
-        /**
-         * @brief A list of all elements on this row of the system jacobian.
-         */
-        std::vector<SystemElement> elements_;
-      };
-
-      using RowPlan = std::variant<InternalRowPlan, ExternalRowPlan>;
-
-      /**
-       * @brief A plan for assembling each row
-       */
-      std::vector<RowPlan> row_plans_;
-
-      /**
-       * @brief Number of components which are part of the system.
-       */
-      size_t num_components_;
-
-      /**
-       * @brief The dimension of the system - i.e. how many variables/residual there are
-       */
-      size_t system_size_;
-    };
-
-    struct ComponentCsrJacobianView
-    {
-      std::vector<std::variant<CsrJacobian*, CsrJacobian>> component_jacobians_;
-
-      const CsrJacobian& operator[](size_t component_idx) const
-      {
-        auto& either = component_jacobians_[component_idx];
-        return std::visit(
-            Utility::OverloadVisitor{
-                [](CsrJacobian* jac) -> const CsrJacobian&
-        { return *jac; },
-                [](const CsrJacobian& jac) -> const CsrJacobian&
-        { return jac; }},
-            either);
-      }
-    };
+    using CsrPermutedAxpy = LinearAlgebra::CsrPermutedAxpy<ScalarT, IdxT>;
+    using CsrViewArray    = LinearAlgebra::CsrViewArray<ScalarT, IdxT>;
 
   public:
     using CircuitComponent<ScalarT, IdxT>::size;
@@ -457,78 +336,19 @@ namespace GridKit
 
     int evaluateCsrJacobian() override
     {
-      using ExternalRowPlan = JacobianAssemblyPlan::ExternalRowPlan;
-      using InternalRowPlan = JacobianAssemblyPlan::InternalRowPlan;
-
-      auto apply_internal_row_plan = [](const InternalRowPlan& plan, const ComponentCsrJacobianView& jac_view, auto& builder)
-      {
-        const CsrJacobian& component_jac = jac_view[plan.component_idx_];
-
-        IdxT row_start = component_jac.rowIndices()[plan.row_idx_];
-        IdxT row_end   = component_jac.rowIndices()[plan.row_idx_ + 1];
-
-        assert(component_jac.rowIndices().size() >= plan.row_idx_ + 2);
-        assert(row_end - row_start == plan.row_nnz_);
-
-        for (auto element : plan.elements_)
-        {
-          builder.elem(element.system_col_, component_jac.values()[element.elem_idx_]);
-        }
-      };
-
-      auto apply_external_row_plan = [](const ExternalRowPlan& plan, const ComponentCsrJacobianView& jac_view, auto& builder)
-      {
-        for (auto& element : plan.elements_)
-        {
-          ScalarT sum = 0;
-
-          for (auto& element : element.component_elements_)
-          {
-            const CsrJacobian& component_jac = jac_view[element.component_idx_];
-
-            assert(component_jac.colIndices()[element.element_idx_] == element.column_idx_);
-
-            sum += component_jac.values()[element.element_idx_];
-          }
-
-          builder.elem(element.column_, sum);
-        }
-      };
-
-      auto apply_jacobian_assembly_plan = [&](const JacobianAssemblyPlan& plan, const ComponentCsrJacobianView& jac_view, auto builder)
-      {
-        assert(size() == plan.system_size_);
-        assert(components_.size() == plan.num_components_);
-
-        for (size_t row = 0; row < plan.row_plans_.size(); row++)
-        {
-          builder.row(row);
-
-          auto row_plan = plan.row_plans_[row];
-          std::visit(
-              Utility::OverloadVisitor{
-                  [&](const InternalRowPlan& row_plan)
-          { apply_internal_row_plan(row_plan, jac_view, builder); },
-                  [&](const ExternalRowPlan& row_plan)
-          { apply_external_row_plan(row_plan, jac_view, builder); }},
-              row_plan);
-        }
-
-        csr_jacobian_ = std::move(builder);
-      };
-
-      auto component_jac_view = createComponentCsrJacobianView();
+      auto component_jac_view = createComponentCsrViewArray();
 
       using CsrBuilder = LinearAlgebra::CsrBuilder<ScalarT, IdxT, true, false>;
 
-      if (jacobian_assembly_plan_)
+      if (jacobian_axpy_)
       {
-        apply_jacobian_assembly_plan(*jacobian_assembly_plan_, component_jac_view, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
+        csr_jacobian_ = jacobian_axpy_->apply(component_jac_view, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
       }
       else
       {
-        createJacobianAssemblyPlan(component_jac_view);
-        apply_jacobian_assembly_plan(*jacobian_assembly_plan_, component_jac_view, CsrBuilder::fromEmpty(size(), size()));
+        auto permutations = createComponentPermutations();
+        jacobian_axpy_    = CsrPermutedAxpy::analyzeSparsity(component_jac_view, permutations, size());
+        csr_jacobian_     = jacobian_axpy_->apply(component_jac_view, CsrBuilder::fromEmpty(size(), size()));
       }
 
       return 0;
@@ -636,167 +456,52 @@ namespace GridKit
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    std::vector<component_type*>        components_;
-    std::optional<JacobianAssemblyPlan> jacobian_assembly_plan_;
-    CsrJacobian                         csr_jacobian_{0, 0};
+    std::vector<component_type*>   components_;
+    std::optional<CsrPermutedAxpy> jacobian_axpy_;
+    CsrJacobian                    csr_jacobian_{0, 0};
 
     int  jac_call_count_{0};
     bool use_jac_;
 
-    ComponentCsrJacobianView createComponentCsrJacobianView()
+    CsrViewArray createComponentCsrViewArray()
     {
-      ComponentCsrJacobianView view;
+      CsrViewArray view;
 
-      view.component_jacobians_.reserve(components_.size());
+      view.matrices_.reserve(components_.size());
 
       for (auto component : components_)
       {
         if (component->hasCsrJacobian())
         {
           component->evaluateCsrJacobian();
-          view.component_jacobians_.push_back(&component->getCsrJacobian());
+          view.matrices_.push_back(&component->getCsrJacobian());
         }
         else
         {
           component->evaluateJacobian();
-          view.component_jacobians_.push_back(CsrJacobian::fromCOO(component->getJacobian()));
+          view.matrices_.push_back(CsrJacobian::fromCOO(component->getJacobian()));
         }
       }
 
       return view;
     }
 
-    void createJacobianAssemblyPlan(const ComponentCsrJacobianView& component_jacs)
+    std::vector<std::vector<IdxT>> createComponentPermutations()
     {
-      auto inverse_map = inverseComponentConnectionMap();
-
-      std::vector<typename JacobianAssemblyPlan::RowPlan> row_plans;
-      row_plans.reserve(size());
-
-      for (size_t row = 0; row < size(); row++)
-      {
-        auto component_contributions = inverse_map[row];
-        if (component_contributions.size() > 1)
-        {
-          row_plans.push_back(createExternalRowPlan(component_jacs, component_contributions));
-        }
-        else
-        {
-          auto [comp_idx, local_idx] = component_contributions.front();
-          row_plans.push_back(createInternalRowPlan(component_jacs[comp_idx], comp_idx, local_idx));
-        }
-      }
-
-      jacobian_assembly_plan_ = JacobianAssemblyPlan{
-          .row_plans_      = row_plans,
-          .num_components_ = components_.size(),
-          .system_size_    = size(),
-      };
-    }
-
-    /**
-     * @brief Returns a vector which indicates which system equations are external (true)
-     */
-    std::vector<std::vector<std::tuple<size_t, IdxT>>> inverseComponentConnectionMap()
-    {
-      std::vector<std::vector<std::tuple<size_t, IdxT>>> map(size());
+      std::vector<std::vector<IdxT>> component_permutations(components_.size());
 
       for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
-        auto comp = components_[comp_idx];
-        for (IdxT local_idx = 0; local_idx < comp->size(); local_idx++)
-        {
-          IdxT global_idx = comp->getNodeConnection(local_idx);
+        auto component = components_[comp_idx];
+        component_permutations[comp_idx].reserve(component->size());
 
-          if (global_idx != neg1_)
-          {
-            map[global_idx].push_back({comp_idx, local_idx});
-          }
+        for (IdxT local_idx = 0; local_idx < component->size(); local_idx++)
+        {
+          component_permutations[comp_idx].push_back(component->getNodeConnection(local_idx));
         }
       }
 
-      return map;
-    }
-
-    JacobianAssemblyPlan::ExternalRowPlan createExternalRowPlan(
-        const ComponentCsrJacobianView&              component_jacs,
-        const std::vector<std::tuple<size_t, IdxT>>& component_contributions)
-    {
-      std::vector<std::vector<typename JacobianAssemblyPlan::ExternalRowPlan::SystemElement::ComponentElement>> component_elements(size());
-      size_t                                                                                                    nnz = 0;
-
-      for (const auto& contribution : component_contributions)
-      {
-        auto [comp_idx, local_idx] = contribution;
-        const auto& comp_jac       = component_jacs[comp_idx];
-
-        for (size_t elem_idx = comp_jac.rowIndices()[local_idx]; elem_idx < comp_jac.rowIndices()[local_idx + 1]; elem_idx++)
-        {
-          IdxT local_col_idx  = comp_jac.colIndices()[elem_idx];
-          IdxT global_col_idx = components_[comp_idx]->getNodeConnection(local_col_idx);
-
-          if (global_col_idx != neg1_)
-          {
-            if (component_elements[global_col_idx].empty())
-            {
-              nnz++;
-            }
-
-            component_elements[global_col_idx].push_back({.component_idx_ = comp_idx,
-                                                          .element_idx_   = elem_idx,
-                                                          .column_idx_    = local_col_idx});
-          }
-        }
-      }
-
-      typename JacobianAssemblyPlan::ExternalRowPlan rowPlan;
-      rowPlan.elements_.reserve(nnz);
-
-      for (size_t col_idx = 0; col_idx < component_elements.size(); col_idx++)
-      {
-        if (!component_elements[col_idx].empty())
-        {
-          rowPlan.elements_.push_back({
-              .component_elements_ = std::move(component_elements[col_idx]),
-              .column_             = col_idx,
-          });
-        }
-      }
-
-      return rowPlan;
-    }
-
-    JacobianAssemblyPlan::InternalRowPlan createInternalRowPlan(
-        const CsrJacobian& component_jac,
-        size_t             comp_idx,
-        IdxT               local_idx) const
-    {
-      IdxT row_idx      = component_jac.rowIndices()[local_idx];
-      IdxT next_row_idx = component_jac.rowIndices()[local_idx + 1];
-
-      std::vector<typename JacobianAssemblyPlan::InternalRowPlan::Element> elements;
-      elements.reserve(next_row_idx - row_idx);
-
-      for (size_t i = row_idx; i < next_row_idx; i++)
-      {
-        IdxT local_col  = component_jac.colIndices()[i];
-        IdxT global_col = components_[comp_idx]->getNodeConnection(local_col);
-
-        if (global_col != neg1_)
-        {
-          elements.push_back({
-              .elem_idx_   = i,
-              .system_col_ = global_col,
-          });
-        }
-      }
-
-      return {
-          .component_idx_ = comp_idx,
-          .row_idx_       = local_idx,
-          .row_nnz_       = next_row_idx - row_idx,
-          .elements_      = elements,
-      };
+      return component_permutations;
     }
 
   }; // class PowerElectronicsModel
