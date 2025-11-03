@@ -1,11 +1,10 @@
 
-add_library(SparseMatrix INTERFACE)
-include_directories(SparseMatrix INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-
-add_library(GridKit::SparseMatrix ALIAS SparseMatrix)
+add_library(CsrMatrix CsrMatrix.cpp)
 
 install(
   FILES
     COO_Matrix.hpp
   DESTINATION
     include/GridKit/LinearAlgebra/SparseMatrix)
+	
+add_library(GridKit::CsrMatrix ALIAS CsrMatrix)
