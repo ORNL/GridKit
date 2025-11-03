@@ -43,6 +43,7 @@ macro(gridkit_add_library target)
   add_library(${target} ${gridkit_add_library_SOURCES})
 
   # add link libraries
+  target_link_options(${target} INTERFACE ${GRIDKIT_LINK_OPTIONS})
   if(gridkit_add_library_LINK_LIBRARIES)
     target_link_libraries(${target} ${gridkit_add_library_LINK_LIBRARIES})
   endif()
@@ -59,6 +60,7 @@ macro(gridkit_add_library target)
 
   # add compile options
   target_compile_features(${target} PUBLIC cxx_std_20)
+  target_compile_options(${target} INTERFACE ${GRIDKIT_COMPILE_OPTIONS})
   if(gridkit_add_library_COMPILE_OPTIONS)
     target_compile_options(${target} ${gridkit_add_library_COMPILE_OPTIONS})
   endif()
