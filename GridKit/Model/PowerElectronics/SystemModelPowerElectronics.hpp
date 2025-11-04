@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrPermutedAxpy.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
