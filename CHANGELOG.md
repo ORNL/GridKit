@@ -33,6 +33,7 @@
 - Added public function to encapsulate use of nlohmann/json and magic_enum from users.
 - Added complete basic consumer example project used for testing installation
 - Added `CsrMatrix` class.
+- Added `verify` step for signal node links in system model components
 
 ## v0.1
 

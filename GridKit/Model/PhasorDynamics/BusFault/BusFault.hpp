@@ -50,6 +50,11 @@ namespace GridKit
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
+      int verify() const override
+      {
+        return 0;
+      }
+
       void updateTime(real_type /* t */, real_type /* a */) override
       {
       }

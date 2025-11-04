@@ -10,11 +10,11 @@ target_include_directories(definitions INTERFACE
 add_library(GridKit::definitions ALIAS definitions)
 install(TARGETS definitions EXPORT gridkit-targets)
 
-# Create component models
-add_subdirectory(Model)
-
 # General Utilities and File IO
 add_subdirectory(Utilities)
+
+# Create component models
+add_subdirectory(Model)
 
 # Local Sparse matrix operations
 add_subdirectory(LinearAlgebra)

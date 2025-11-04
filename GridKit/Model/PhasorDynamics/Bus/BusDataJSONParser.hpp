@@ -6,12 +6,14 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     using json = nlohmann::json;
+    using Log  = ::GridKit::Utilities::Logger;
 
     /// JSON parser function implementation for the `BusData` type
     ///
@@ -40,10 +42,9 @@ namespace GridKit
           }
           else
           {
-            std::stringstream msg;
-            msg << "\n\tInvalid initial parameter \"" << raw_parameter.key()
-                << "\" in \"init\" section." << error_context.str();
-            throw std::runtime_error(msg.str());
+            Log::error() << "\n\tInvalid initial parameter \""
+                         << raw_parameter.key() << "\" in \"init\" section."
+                         << error_context.str() << std::endl;
           }
         }
       }
@@ -61,10 +62,8 @@ namespace GridKit
       }
       else
       {
-        std::stringstream msg;
-        msg << "\n\tInvalid bus class: \"" << string_class << "\"."
-            << error_context.str();
-        throw std::runtime_error(msg.str());
+        Log::error() << "\n\tInvalid bus class: \"" << string_class << "\"."
+                     << error_context.str() << std::endl;
       }
 
       j.at("v_base").get_to(bd.v_base);
@@ -106,10 +105,9 @@ namespace GridKit
           }
           else
           {
-            std::stringstream msg;
-            msg << "\n\tInvalid monitored variable: \"" << monitored
-                << "\" in \"mon\" list." << error_context.str();
-            throw std::runtime_error(msg.str());
+            Log::error() << "\n\tInvalid monitored variable: \"" << monitored
+                         << "\" in \"mon\" list." << error_context.str()
+                         << std::endl;
           }
         }
       }

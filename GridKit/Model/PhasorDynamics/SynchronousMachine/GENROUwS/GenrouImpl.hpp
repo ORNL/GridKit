@@ -9,11 +9,14 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Constructor for a GENROU generator model with saturation
      *
@@ -301,6 +304,38 @@ namespace GridKit
       }
 
       return 0;
+    }
+
+    /**
+     * @brief verify method checks that attached signals are also linked
+     */
+    template <class ScalarT, typename IdxT>
+    int Genrou<ScalarT, IdxT>::verify() const
+    {
+      static constexpr auto PM  = GenrouExternalVariables::PM;
+      static constexpr auto EFD = GenrouExternalVariables::EFD;
+
+      int ret = 0;
+
+      if (signals_.template isAttached<PM>())
+      {
+        if (!signals_.template isLinked<PM>())
+        {
+          Log::error() << "Genrou: pmech signal attached with no linked governor\n";
+          ret += 1;
+        }
+      }
+
+      if (signals_.template isAttached<EFD>())
+      {
+        if (!signals_.template isLinked<EFD>())
+        {
+          Log::error() << "Genrou: efd signal attached with no linked exciter\n";
+          ret += 1;
+        }
+      }
+
+      return ret;
     }
 
     /**

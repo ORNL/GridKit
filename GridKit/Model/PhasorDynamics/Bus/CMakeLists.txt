@@ -16,20 +16,26 @@ if(GRIDKIT_ENABLE_ENZYME)
       BusEnzyme.cpp
       BusInfinite.cpp
     HEADERS
-      ${_install_headers})
+      ${_install_headers}
+    LINK_LIBRARIES
+      PUBLIC GridKit::phasor_dynamics_core)
 else()
   gridkit_add_library(phasor_dynamics_bus
     SOURCES
       Bus.cpp
       BusInfinite.cpp
     HEADERS
-      ${_install_headers})
+      ${_install_headers}
+    LINK_LIBRARIES
+      PUBLIC GridKit::phasor_dynamics_core)
 endif()
 
 gridkit_add_library(phasor_dynamics_bus_dependency_tracking
   SOURCES
     BusDependencyTracking.cpp
-    BusInfiniteDependencyTracking.cpp)
+    BusInfiniteDependencyTracking.cpp
+  LINK_LIBRARIES
+    PUBLIC GridKit::phasor_dynamics_core)
 
 # Link to interface target for all components
 target_link_libraries(phasor_dynamics_components

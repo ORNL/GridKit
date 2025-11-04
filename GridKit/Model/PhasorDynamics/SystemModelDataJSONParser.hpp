@@ -109,10 +109,9 @@ namespace GridKit
         }
         else
         {
-          std::stringstream msg;
-          msg << "\n\tInvalid device class: \"" << kind << "\". "
-              << "\n\tSee the \"devices\" list in your JSON file.";
-          throw std::runtime_error(msg.str());
+          Log::error() << "\n\tInvalid device class: \"" << kind << "\". "
+                       << "\n\tSee the \"devices\" list in your JSON file."
+                       << std::endl;
         }
       }
     }

@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -23,6 +24,8 @@ namespace GridKit
   {
     namespace Governor
     {
+      using Log = ::GridKit::Utilities::Logger;
+
       /**
        * @brief Constructs a Tgov1 governor model without setting its parameters
        *
@@ -157,6 +160,28 @@ namespace GridKit
         }
 
         return 0;
+      }
+
+      /**
+       * @brief verify method checks that attached signals are also linked
+       */
+      template <class ScalarT, typename IdxT>
+      int Tgov1<ScalarT, IdxT>::verify() const
+      {
+        static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
+
+        int ret = 0;
+
+        if (signals_.template isAttached<DELTAOMEGA>())
+        {
+          if (!signals_.template isLinked<DELTAOMEGA>())
+          {
+            Log::error() << "Tgov1: deltaomega signal attached with no linked generator\n";
+            ret += 1;
+          }
+        }
+
+        return ret;
       }
 
       /**

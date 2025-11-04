@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/ScalarTraits.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 // Include all components
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -17,6 +18,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     /**
      * @brief Prototype for a system model class
@@ -326,7 +328,33 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        int errorCount = this->verify();
+        if (errorCount > 0)
+        {
+          Log::error() << "Component errors: " << errorCount << std::endl;
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
         return 0;
+      }
+
+      /**
+       * @brief Verify all components are configured correctly
+       *
+       * This method accumulates and returns the number of errors given by
+       * components. It should return 0 when all is well.
+       */
+      int verify() const override
+      {
+        int ret = 0;
+
+        // Verify components
+        for (const auto& component : components_)
+        {
+          ret += component->verify();
+        }
+
+        return ret;
       }
 
       /**

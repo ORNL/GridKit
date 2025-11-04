@@ -91,6 +91,16 @@ namespace GridKit
         return static_cast<bool>(internal_variable_signals_[static_cast<size_t>(variable)]);
       }
 
+      /// Check if a signal node has been "set"
+      ///
+      /// @tparam variable The external variable to check
+      template <ExternalVariables variable>
+      auto isLinked() const -> bool
+      {
+        static_assert(variable < ExternalVariables::MAXIMUM);
+        return external_variable_signals_[static_cast<size_t>(variable)].value()->linked();
+      }
+
       /// Returns a signal node for an internal signal variable to be
       /// attached to an external variable on another component
       ///

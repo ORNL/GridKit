@@ -59,6 +59,12 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    bool SignalNode<ScalarT, IdxT>::linked() const
+    {
+      return (signal_) && (variable_index_);
+    }
+
+    template <class ScalarT, typename IdxT>
     ScalarT SignalNode<ScalarT, IdxT>::read() const
     {
       return *signal_;

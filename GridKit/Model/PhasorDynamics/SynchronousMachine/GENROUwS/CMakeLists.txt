@@ -21,6 +21,7 @@ else()
     HEADERS
       ${_install_headers}
     LINK_LIBRARIES
+      PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal)
 endif()
 

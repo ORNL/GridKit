@@ -23,6 +23,8 @@ namespace GridKit
       {
       }
 
+      virtual int verify() const = 0;
+
       virtual IdxT size() override
       {
         return size_;
