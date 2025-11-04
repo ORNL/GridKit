@@ -330,6 +330,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
+  idas->setUseCsr(true);
 
   // setup simulation
   idas->configureSimulation();

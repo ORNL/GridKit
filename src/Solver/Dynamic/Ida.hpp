@@ -115,6 +115,8 @@ namespace AnalysisManager
       void printSpecial(real_type t, N_Vector x);
       void printFinalStats();
 
+      void setUseCsr(bool use_csr);
+
     private:
       static int Residual(real_type t,
                           N_Vector  yy,
@@ -181,6 +183,13 @@ namespace AnalysisManager
 
       int backwardID_{};
 
+      struct UserData
+      {
+        bool                                      use_csr_   = false;
+        GridKit::Model::Evaluator<ScalarT, IdxT>* model_ptr_ = nullptr;
+        bool                                      first_jac_ = true;
+      } user_data_;
+
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
@@ -188,8 +197,8 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      inline void checkAllocation(void* v, const char* functionName);
-      inline void checkOutput(int retval, const char* functionName);
+      static inline void checkAllocation(void* v, const char* functionName);
+      static inline void checkOutput(int retval, const char* functionName);
     };
 
     /// Simple exception to use within Ida class.

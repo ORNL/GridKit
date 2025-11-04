@@ -8,6 +8,7 @@
 #include <idas/idas_ls.h>
 
 #include "Model/Evaluator.hpp"
+#include "Utilities/Benchmark.hpp"
 
 namespace AnalysisManager
 {
@@ -79,7 +80,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDAInit");
 
       // Set pointer to model data
-      retval = IDASetUserData(solver_, model_);
+      user_data_.model_ptr_ = model_;
+      retval                = IDASetUserData(solver_, &user_data_);
       checkOutput(retval, "IDASetUserData");
 
       // Set tolerances
@@ -170,7 +172,7 @@ namespace AnalysisManager
       int retval = 0;
 
       sunindextype n   = static_cast<sunindextype>(model_->size());
-      sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+      sunindextype nnz = 0;
 
       JacobianMat_ = SUNSparseMatrix(n,
                                      n,
@@ -737,7 +739,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      assert(user_data != nullptr);
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tres, 0.0);
       copyVec(yy, model->y());
@@ -759,36 +763,72 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Jac(real_type t, real_type cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
-
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      assert(user_data != nullptr);
+      auto user_data_ptr                = static_cast<UserData*>(user_data);
+      auto& [use_csr, model, first_jac] = *user_data_ptr;
+      int retval                        = 0;
 
       model->updateTime(t, cj);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
 
-      model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
-
-      // Get reference to the jacobian entries
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
-      const auto [r, c, val]                                                        = tpm;
-
-      // get the CSR row pointers from COO matrix
-      std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
-
       SUNMatZero(J);
 
-      // Set row pointers
       sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
-      std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
-
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
       real_type*    data    = SUNSparseMatrix_Data(J);
-      // Copy data from model jac to sundials
-      std::copy(c.cbegin(), c.cend(), colvals);
-      std::copy(val.cbegin(), val.cend(), data);
 
-      return 0;
+      if (use_csr)
+      {
+        first_jac = false;
+
+        assert(model->hasCsrJacobian());
+        model->evaluateCsrJacobian();
+        auto& Jac = model->getCsrJacobian();
+
+        if (SUNSparseMatrix_NNZ(J) != Jac.numNonZero())
+        {
+          retval = SUNSparseMatrix_Reallocate(J, Jac.numNonZero());
+          checkOutput(retval, "SUNSparseMatrix_Reallocate");
+
+          colvals = SUNSparseMatrix_IndexValues(J);
+          data    = SUNSparseMatrix_Data(J);
+        }
+
+        std::copy(Jac.rowIndices().cbegin(), Jac.rowIndices().cend(), rowptrs);
+        std::copy(Jac.colIndices().cbegin(), Jac.colIndices().cend(), colvals);
+        std::copy(Jac.values().cbegin(), Jac.values().cend(), data);
+      }
+      else
+      {
+        model->evaluateJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
+
+        // Get reference to the jacobian entries
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
+        const auto [r, c, val]                                                        = tpm;
+
+        // get the CSR row pointers from COO matrix
+        std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
+
+        if (SUNSparseMatrix_NNZ(J) != val.size())
+        {
+          retval = SUNSparseMatrix_Reallocate(J, val.size());
+          checkOutput(retval, "SUNSparseMatrix_Reallocate");
+
+          colvals = SUNSparseMatrix_IndexValues(J);
+          data    = SUNSparseMatrix_Data(J);
+        }
+
+        // Set row pointers
+        std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
+
+        // Copy data from model jac to sundials
+        std::copy(c.cbegin(), c.cend(), colvals);
+        std::copy(val.cbegin(), val.cend(), data);
+      }
+
+      return retval;
     }
 
     /**
@@ -800,7 +840,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Integrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      assert(user_data != nullptr);
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
@@ -822,7 +864,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointResidual(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      assert(user_data != nullptr);
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
@@ -846,7 +890,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::adjointIntegrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+      assert(user_data != nullptr);
+      auto user_data_ptr = static_cast<UserData*>(user_data);
+      auto model         = user_data_ptr->model_ptr_;
 
       model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
@@ -955,6 +1001,12 @@ namespace AnalysisManager
     {
       int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "IDAPrintAllStats");
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setUseCsr(bool use_csr)
+    {
+      user_data_.use_csr_ = use_csr;
     }
 
     /**

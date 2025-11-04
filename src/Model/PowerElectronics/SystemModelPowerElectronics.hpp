@@ -3,10 +3,12 @@
 #pragma once
 
 #include <cassert>
+#include <forward_list>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
+#include <LinearAlgebra/SparseMatrix/CsrPermutedSum.hpp>
 #include <Model/PowerElectronics/CircuitComponent.hpp>
 #include <Model/PowerElectronics/CircuitGraph.hpp>
 #include <ScalarTraits.hpp>
@@ -71,7 +73,13 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
+    using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
+
+    using CsrPermutedSum = LinearAlgebra::CsrPermutedSum<ScalarT, IdxT>;
+
   public:
+    using CircuitComponent<ScalarT, IdxT>::size;
+
     /**
      * @brief Default constructor for the system model
      *
@@ -156,6 +164,11 @@ namespace GridKit
           return false;
         }
       }
+      return true;
+    }
+
+    bool hasCsrJacobian() override
+    {
       return true;
     }
 
@@ -283,7 +296,7 @@ namespace GridKit
       distributeVectors();
 
       // Evaluate component jacs
-      for (const auto& component : components_)
+      for (auto component : components_)
       {
         component->evaluateJacobian();
 
@@ -314,6 +327,59 @@ namespace GridKit
       jac_call_count_++;
 
       return 0;
+    }
+
+    int evaluateCsrJacobian() override
+    {
+      // A vector to hold temporary CSR jacobians which are created from components which only have COO jacobians.
+      // Uses `Immovable` to ensure that the references in `component_csr` aren't invalidated.
+      std::forward_list<Utility::Immovable<CsrJacobian>> temp_csr;
+      std::vector<std::reference_wrapper<CsrJacobian>>   component_csr;
+      component_csr.reserve(components_.size());
+
+      // Evaluate component jacobians
+      for (size_t component_idx = 0; component_idx < components_.size(); component_idx++)
+      {
+        auto component = components_[component_idx];
+        if (component->hasCsrJacobian())
+        {
+          component->evaluateCsrJacobian();
+          component_csr.push_back(component->getCsrJacobian());
+        }
+        else
+        {
+          component->evaluateJacobian();
+          temp_csr.emplace_front(CsrJacobian::fromCOO(component->getJacobian()));
+          component_csr.push_back(temp_csr.front());
+        }
+      }
+
+      using CsrBuilder = LinearAlgebra::CsrBuilder<ScalarT, IdxT, true, false>;
+
+      // If we have an available sum operation, use it to construct the system jacobian
+      if (jacobian_sum_)
+      {
+        csr_jacobian_ = jacobian_sum_->apply(component_csr, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
+      }
+      else
+      {
+        // Otherwise, create a sum operation by analyzing the sparsity of the component jacobians
+        auto permutations = createComponentPermutations();
+        jacobian_sum_     = CsrPermutedSum::analyzeSparsity(component_csr, permutations, size());
+        csr_jacobian_     = jacobian_sum_->apply(component_csr, CsrBuilder::fromEmpty(size(), size()));
+      }
+
+      return 0;
+    }
+
+    CsrJacobian& getCsrJacobian() override
+    {
+      return csr_jacobian_;
+    }
+
+    const CsrJacobian& getCsrJacobian() const override
+    {
+      return csr_jacobian_;
     }
 
     /**
@@ -403,10 +469,35 @@ namespace GridKit
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    std::vector<component_type*> components_;
+    std::vector<component_type*>  components_;
+    std::optional<CsrPermutedSum> jacobian_sum_;
+    CsrJacobian                   csr_jacobian_{0, 0};
 
     int  jac_call_count_{0};
     bool use_jac_;
+
+    /**
+     * @brief Create the mapping from local component variable indices to system variable indices
+     *        needed for analyzing the sparsity of the `CsrPermutedSum` which constructs to system Jacobian.
+     * @return
+     */
+    std::vector<std::vector<IdxT>> createComponentPermutations()
+    {
+      std::vector<std::vector<IdxT>> component_permutations(components_.size());
+
+      for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
+      {
+        auto component = components_[comp_idx];
+        component_permutations[comp_idx].reserve(component->size());
+
+        for (IdxT local_idx = 0; local_idx < component->size(); local_idx++)
+        {
+          component_permutations[comp_idx].push_back(component->getNodeConnection(local_idx));
+        }
+      }
+
+      return component_permutations;
+    }
 
   }; // class PowerElectronicsModel
 
