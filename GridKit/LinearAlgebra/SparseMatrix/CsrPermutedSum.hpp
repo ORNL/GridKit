@@ -5,7 +5,7 @@ namespace GridKit
   namespace LinearAlgebra
   {
     template <class ScalarT, typename IdxT>
-    class CsrPermutedAxpy
+    class CsrPermutedSum
     {
     private:
       using CsrMatrix = LinearAlgebra::CsrMatrix<ScalarT, IdxT>;
@@ -152,7 +152,7 @@ namespace GridKit
        */
       size_t summand_size_;
 
-      CsrPermutedAxpy(std::vector<RowPlan> row_plans, size_t num_summands, size_t summand_size) : row_plans_(row_plans), num_summands_(num_summands), summand_size_(summand_size)
+      CsrPermutedSum(std::vector<RowPlan> row_plans, size_t num_summands, size_t summand_size) : row_plans_(row_plans), num_summands_(num_summands), summand_size_(summand_size)
       {
       }
 
@@ -269,9 +269,9 @@ namespace GridKit
       }
 
     public:
-      static CsrPermutedAxpy analyzeSparsity(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, const std::vector<std::vector<IdxT>>& permutations, size_t size)
+      static CsrPermutedSum analyzeSparsity(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, const std::vector<std::vector<IdxT>>& permutations, size_t size)
       {
-        std::vector<typename CsrPermutedAxpy::RowPlan> row_plans;
+        std::vector<typename CsrPermutedSum::RowPlan> row_plans;
         row_plans.reserve(size);
 
         std::vector<std::vector<LocalSummandIdx>> inverse_permutation = invertPermutations(permutations, size);
@@ -290,7 +290,7 @@ namespace GridKit
           }
         }
 
-        return CsrPermutedAxpy(
+        return CsrPermutedSum(
             row_plans,
             permutations.size(),
             size);

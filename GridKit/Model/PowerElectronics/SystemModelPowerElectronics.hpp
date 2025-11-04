@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-#include <GridKit/LinearAlgebra/SparseMatrix/CsrPermutedAxpy.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrPermutedSum.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -76,7 +76,7 @@ namespace GridKit
 
     using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
 
-    using CsrPermutedAxpy = LinearAlgebra::CsrPermutedAxpy<ScalarT, IdxT>;
+    using CsrPermutedSum = LinearAlgebra::CsrPermutedSum<ScalarT, IdxT>;
 
   public:
     using CircuitComponent<ScalarT, IdxT>::size;
@@ -367,7 +367,7 @@ namespace GridKit
       else
       {
         auto permutations = createComponentPermutations();
-        jacobian_axpy_    = CsrPermutedAxpy::analyzeSparsity(component_csr, permutations, size());
+        jacobian_axpy_    = CsrPermutedSum::analyzeSparsity(component_csr, permutations, size());
         csr_jacobian_     = jacobian_axpy_->apply(component_csr, CsrBuilder::fromEmpty(size(), size()));
       }
 
@@ -476,9 +476,9 @@ namespace GridKit
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    std::vector<component_type*>   components_;
-    std::optional<CsrPermutedAxpy> jacobian_axpy_;
-    CsrJacobian                    csr_jacobian_{0, 0};
+    std::vector<component_type*>  components_;
+    std::optional<CsrPermutedSum> jacobian_axpy_;
+    CsrJacobian                   csr_jacobian_{0, 0};
 
     int  jac_call_count_{0};
     bool use_jac_;
