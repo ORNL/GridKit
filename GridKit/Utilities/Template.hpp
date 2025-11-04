@@ -14,12 +14,19 @@ namespace GridKit
       using Ts::operator()...;
     };
 
+    /**
+     * @brief A wrapper class which ensures that an underlying value is never moved.
+     *         Useful if you'd like to take a reference to some value and you aren't sure whether
+     *         or not that value can be moved later, invalidating that reference.
+     * @tparam T Type of the wrapped value
+     */
     template <class T>
     class Immovable
     {
     private:
       T inner_;
 
+      // Simply delete move constructors
       Immovable(Immovable&& other)            = delete;
       Immovable& operator=(Immovable&& other) = delete;
 
@@ -48,6 +55,9 @@ namespace GridKit
         return inner_;
       }
 
+      /**
+       * @brief "Unwrap" the inner object, allowing for it to be moved again.
+       */
       T unwrap() &&
       {
         return std::move(inner_);

@@ -337,11 +337,13 @@ namespace GridKit
 
     int evaluateCsrJacobian() override
     {
-      // A vector to hold temporary CSR jacobians which are created from components which only have COO jacobians
+      // A vector to hold temporary CSR jacobians which are created from components which only have COO jacobians.
+      // Uses `Immovable` to ensure that the references in `component_csr` aren't invalidated.
       std::forward_list<Utility::Immovable<CsrJacobian>> temp_csr;
       std::vector<std::reference_wrapper<CsrJacobian>>   component_csr;
       component_csr.reserve(components_.size());
 
+      // Evaluate component jacobians
       for (size_t component_idx = 0; component_idx < components_.size(); component_idx++)
       {
         auto component = components_[component_idx];
@@ -360,15 +362,17 @@ namespace GridKit
 
       using CsrBuilder = LinearAlgebra::CsrBuilder<ScalarT, IdxT, true, false>;
 
-      if (jacobian_axpy_)
+      // If we have an available sum operation, use it to construct the system jacobian
+      if (jacobian_sum_)
       {
-        csr_jacobian_ = jacobian_axpy_->apply(component_csr, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
+        csr_jacobian_ = jacobian_sum_->apply(component_csr, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
       }
       else
       {
+        // Otherwise, create a sum operation by analyzing the sparsity of the component jacobians
         auto permutations = createComponentPermutations();
-        jacobian_axpy_    = CsrPermutedSum::analyzeSparsity(component_csr, permutations, size());
-        csr_jacobian_     = jacobian_axpy_->apply(component_csr, CsrBuilder::fromEmpty(size(), size()));
+        jacobian_sum_     = CsrPermutedSum::analyzeSparsity(component_csr, permutations, size());
+        csr_jacobian_     = jacobian_sum_->apply(component_csr, CsrBuilder::fromEmpty(size(), size()));
       }
 
       return 0;
@@ -477,7 +481,7 @@ namespace GridKit
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
     std::vector<component_type*>  components_;
-    std::optional<CsrPermutedSum> jacobian_axpy_;
+    std::optional<CsrPermutedSum> jacobian_sum_;
     CsrJacobian                   csr_jacobian_{0, 0};
 
     int  jac_call_count_{0};
