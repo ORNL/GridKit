@@ -46,14 +46,15 @@ foreach(_opt IN LISTS _gridkit_enable_options)
   endif()
 endforeach()
 
+# Sanitizers
 if(GRIDKIT_ENABLE_ASAN)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+  set(GRIDKIT_COMPILE_OPTIONS ${GRIDKIT_COMPILE_OPTIONS} -fsanitize=address -fno-omit-frame-pointer CACHE INTERNAL STRING)
+  set(GRIDKIT_LINK_OPTIONS ${GRIDKIT_LINK_OPTIONS} -fsanitize=address CACHE INTERNAL STRING)
 endif()
 
 if(GRIDKIT_ENABLE_UBSAN)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+  set(GRIDKIT_COMPILE_OPTIONS ${GRIDKIT_COMPILE_OPTIONS} -fsanitize=undefined -fno-omit-frame-pointer CACHE INTERNAL STRING)
+  set(GRIDKIT_LINK_OPTIONS ${GRIDKIT_LINK_OPTIONS} -fsanitize=undefined CACHE INTERNAL STRING)
 endif()
 
 set(CMAKE_MACOSX_RPATH 1)
@@ -80,7 +81,6 @@ list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib"
 if("${isSystemDir}" STREQUAL "-1")
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
-
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
 

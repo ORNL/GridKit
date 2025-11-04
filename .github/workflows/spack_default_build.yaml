@@ -102,6 +102,7 @@ jobs:
           - gridkit@develop ~asan~enzyme~ipopt~klu~sundials~ubsan
           - gridkit@develop ~asan~enzyme~ipopt~klu+sundials~ubsan
           - gridkit@develop ~asan+enzyme+ipopt+klu+sundials~ubsan build_type=RelWithDebInfo
+            ^enzyme@0.0.206
           - gridkit@develop +asan~enzyme+ipopt+klu+sundials+ubsan
 
     steps:
@@ -179,7 +180,10 @@ jobs:
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
 
       - name: Test Build
-        run: cd $(spack -e . location --build-dir gridkit@develop) && ctest -VV
+        run: cd $(spack -e . location --build-dir gridkit@develop) && spack -e ${OLDPWD} build-env gridkit ctest -VV
+
+      - name: Test Installation
+        run: cd $(spack -e . location --build-dir gridkit@develop) && spack -e ${OLDPWD} build-env gridkit make test_install
 
       # Push with force to override existing binaries...
       - name: Push to binaries to buildcache
