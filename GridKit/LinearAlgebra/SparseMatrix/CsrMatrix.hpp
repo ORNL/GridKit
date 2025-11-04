@@ -825,29 +825,11 @@ namespace GridKit
     };
 
     template <class ScalarT, typename IdxT>
-    struct CsrViewArray
-    {
-      using CsrMatrix = LinearAlgebra::CsrMatrix<ScalarT, IdxT>;
-
-      std::vector<std::variant<const CsrMatrix*, CsrMatrix>> matrices_;
-
-      const CsrMatrix& operator[](size_t component_idx) const
-      {
-        auto& either = matrices_[component_idx];
-        return std::visit(
-            Utility::OverloadVisitor{
-                [](const CsrMatrix* jac) -> const CsrMatrix&
-        { return *jac; },
-                [](const CsrMatrix& jac) -> const CsrMatrix&
-        { return jac; }},
-            either);
-      }
-    };
-
-    template <class ScalarT, typename IdxT>
     class CsrPermutedAxpy
     {
     private:
+      using CsrMatrix = LinearAlgebra::CsrMatrix<ScalarT, IdxT>;
+
       struct LocalSummandIdx
       {
         // The index of the summand matrix that this refers to
@@ -855,8 +837,6 @@ namespace GridKit
         // The index of the row/column inside that summand that this refers to
         IdxT   local_idx_;
       };
-
-      using CsrViewArray = LinearAlgebra::CsrViewArray<ScalarT, IdxT>;
 
       /**
        * @brief A plan for constructing a row of the final sum which is calculated exclusively by one of the summands
@@ -893,10 +873,9 @@ namespace GridKit
         std::vector<Element> elements_;
 
         template <class CsrBuilder>
-        void apply(const CsrViewArray& summand_view, CsrBuilder& builder) const
+        void apply(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, CsrBuilder& builder) const
         {
-          using CsrMatrix          = CsrViewArray::CsrMatrix;
-          const CsrMatrix& summand = summand_view[summand_idx_];
+          const CsrMatrix& summand = summands[summand_idx_];
 
           IdxT row_start = summand.rowIndices()[row_idx_];
           IdxT row_end   = summand.rowIndices()[row_idx_ + 1];
@@ -956,16 +935,15 @@ namespace GridKit
         std::vector<SumElement> elements_;
 
         template <class CsrBuilder>
-        void apply(const CsrViewArray& summand_view, CsrBuilder& builder) const
+        void apply(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, CsrBuilder& builder) const
         {
-          using CsrMatrix = CsrViewArray::CsrMatrix;
           for (auto& element : elements_)
           {
             ScalarT sum = 0;
 
             for (auto& element : element.summand_elements_)
             {
-              const CsrMatrix& summand = summand_view[element.summand_idx_];
+              const CsrMatrix& summand = summands[element.summand_idx_];
 
               assert(summand.colIndices()[element.element_idx_] == element.column_idx_);
 
@@ -999,10 +977,10 @@ namespace GridKit
       }
 
       static SharedRowPlan createSharedRowPlan(
-          const CsrViewArray&                   summands,
-          const std::vector<LocalSummandIdx>&   summand_contributions,
-          const std::vector<std::vector<IdxT>>& permutations,
-          size_t                                size)
+          const std::vector<std::reference_wrapper<CsrMatrix>>& summands,
+          const std::vector<LocalSummandIdx>&                   summand_contributions,
+          const std::vector<std::vector<IdxT>>&                 permutations,
+          size_t                                                size)
       {
         using SummandElement = SharedRowPlan::SumElement::SummandElement;
         std::vector<std::vector<SummandElement>>
@@ -1012,7 +990,7 @@ namespace GridKit
         for (const auto& contribution : summand_contributions)
         {
           auto [summand_idx, local_idx] = contribution;
-          const auto& comp_jac          = summands[summand_idx];
+          const CsrMatrix& comp_jac     = summands[summand_idx];
 
           for (size_t elem_idx = comp_jac.rowIndices()[local_idx]; elem_idx < comp_jac.rowIndices()[local_idx + 1]; elem_idx++)
           {
@@ -1051,10 +1029,10 @@ namespace GridKit
       }
 
       static ExclusiveRowPlan createExclusiveRowPlan(
-          const CsrViewArray::CsrMatrix& summand,
-          size_t                         summand_idx,
-          IdxT                           local_idx,
-          const std::vector<IdxT>&       summand_permutation)
+          const CsrMatrix&         summand,
+          size_t                   summand_idx,
+          IdxT                     local_idx,
+          const std::vector<IdxT>& summand_permutation)
       {
         IdxT row_idx      = summand.rowIndices()[local_idx];
         IdxT next_row_idx = summand.rowIndices()[local_idx + 1];
@@ -1111,7 +1089,7 @@ namespace GridKit
       }
 
     public:
-      static CsrPermutedAxpy analyzeSparsity(const CsrViewArray& summands, const std::vector<std::vector<IdxT>>& permutations, size_t size)
+      static CsrPermutedAxpy analyzeSparsity(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, const std::vector<std::vector<IdxT>>& permutations, size_t size)
       {
         std::vector<typename CsrPermutedAxpy::RowPlan> row_plans;
         row_plans.reserve(size);
@@ -1139,9 +1117,9 @@ namespace GridKit
       }
 
       template <class CsrBuilder>
-      CsrBuilder apply(const CsrViewArray& summand_view, CsrBuilder&& builder)
+      CsrBuilder apply(const std::vector<std::reference_wrapper<CsrMatrix>>& summands, CsrBuilder&& builder)
       {
-        assert(summand_view.matrices_.size() == num_summands_);
+        assert(summands.size() == num_summands_);
 
         for (size_t row = 0; row < row_plans_.size(); row++)
         {
@@ -1151,9 +1129,9 @@ namespace GridKit
           std::visit(
               Utility::OverloadVisitor{
                   [&](const ExclusiveRowPlan& row_plan)
-          { row_plan.apply(summand_view, builder); },
+          { row_plan.apply(summands, builder); },
                   [&](const SharedRowPlan& row_plan)
-          { row_plan.apply(summand_view, builder); }},
+          { row_plan.apply(summands, builder); }},
               row_plan);
         }
 

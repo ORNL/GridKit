@@ -13,5 +13,45 @@ namespace GridKit
     {
       using Ts::operator()...;
     };
+
+    template <class T>
+    class Immovable
+    {
+    private:
+      T inner_;
+
+      Immovable(Immovable&& other)            = delete;
+      Immovable& operator=(Immovable&& other) = delete;
+
+    public:
+      Immovable(T&& inner) : inner_(std::move(inner))
+      {
+      }
+
+      operator T&()
+      {
+        return inner_;
+      }
+
+      operator T&() const
+      {
+        return inner_;
+      }
+
+      T& get()
+      {
+        return inner_;
+      }
+
+      const T& get() const
+      {
+        return inner_;
+      }
+
+      T unwrap() &&
+      {
+        return std::move(inner_);
+      }
+    };
   }; // namespace Utility
 }; // namespace GridKit

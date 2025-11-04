@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cassert>
+#include <forward_list>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -75,7 +76,6 @@ namespace GridKit
     using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
 
     using CsrPermutedAxpy = LinearAlgebra::CsrPermutedAxpy<ScalarT, IdxT>;
-    using CsrViewArray    = LinearAlgebra::CsrViewArray<ScalarT, IdxT>;
 
   public:
     using CircuitComponent<ScalarT, IdxT>::size;
@@ -336,19 +336,38 @@ namespace GridKit
 
     int evaluateCsrJacobian() override
     {
-      auto component_jac_view = createComponentCsrViewArray();
+      // A vector to hold temporary CSR jacobians which are created from components which only have COO jacobians
+      std::forward_list<Utility::Immovable<CsrJacobian>> temp_csr;
+      std::vector<std::reference_wrapper<CsrJacobian>>   component_csr;
+      component_csr.reserve(components_.size());
+
+      for (size_t component_idx = 0; component_idx < components_.size(); component_idx++)
+      {
+        auto component = components_[component_idx];
+        if (component->hasCsrJacobian())
+        {
+          component->evaluateCsrJacobian();
+          component_csr.push_back(component->getCsrJacobian());
+        }
+        else
+        {
+          component->evaluateJacobian();
+          temp_csr.emplace_front(CsrJacobian::fromCOO(component->getJacobian()));
+          component_csr.push_back(temp_csr.front());
+        }
+      }
 
       using CsrBuilder = LinearAlgebra::CsrBuilder<ScalarT, IdxT, true, false>;
 
       if (jacobian_axpy_)
       {
-        csr_jacobian_ = jacobian_axpy_->apply(component_jac_view, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
+        csr_jacobian_ = jacobian_axpy_->apply(component_csr, CsrBuilder::fromTemplate(std::move(csr_jacobian_)));
       }
       else
       {
         auto permutations = createComponentPermutations();
-        jacobian_axpy_    = CsrPermutedAxpy::analyzeSparsity(component_jac_view, permutations, size());
-        csr_jacobian_     = jacobian_axpy_->apply(component_jac_view, CsrBuilder::fromEmpty(size(), size()));
+        jacobian_axpy_    = CsrPermutedAxpy::analyzeSparsity(component_csr, permutations, size());
+        csr_jacobian_     = jacobian_axpy_->apply(component_csr, CsrBuilder::fromEmpty(size(), size()));
       }
 
       return 0;
@@ -462,29 +481,6 @@ namespace GridKit
 
     int  jac_call_count_{0};
     bool use_jac_;
-
-    CsrViewArray createComponentCsrViewArray()
-    {
-      CsrViewArray view;
-
-      view.matrices_.reserve(components_.size());
-
-      for (auto component : components_)
-      {
-        if (component->hasCsrJacobian())
-        {
-          component->evaluateCsrJacobian();
-          view.matrices_.push_back(&component->getCsrJacobian());
-        }
-        else
-        {
-          component->evaluateJacobian();
-          view.matrices_.push_back(CsrJacobian::fromCOO(component->getJacobian()));
-        }
-      }
-
-      return view;
-    }
 
     std::vector<std::vector<IdxT>> createComponentPermutations()
     {
