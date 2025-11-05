@@ -22,7 +22,7 @@ Problem variables are voltage magnitudes and phases; they are stored in bus obje
 
 **Bus 1**: Slack bus, does not store variables no residuals. Voltage and phase are set to $`V_1 \equiv 1`$p.u. and $`\theta_1 \equiv 0`$, respectively.
 
-**Bus 2**: PQ bus, stores variables $`V_2, \theta_2`$ and residuals $`P_2, Q_2`$. Load $`P_{L1} = 2.5`$p.u., $`Q_{L1} = -j0.8`$p.u. is attached to it. From the equations for [branch](../../GridKit/Model/PowerFlow/Branch/README.md) and [load](../../GridKit/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
+**Bus 2**: PQ bus, stores variables $`V_2, \theta_2`$ and residuals $`P_2, Q_2`$. Load $`P_{L1} = 2.5`$p.u., $`Q_{L1} = -j0.8`$p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [load](../../../GridKit/Model/PowerFlow/Load/README.md) components, we assemble Bus 2 residuals as:
 ```math
 \begin{array}{rcll}
 P_2 & = &-P_{L1} &~~~\mathrm{(load ~2)} \\
@@ -34,7 +34,7 @@ Q_2 & = & -Q_{L1} &~~~\mathrm{(load ~2)} \\
 \end{array}
 ``` 
 
-**Bus 3**: PV bus, stores variable $`\theta_3`$ and residual $`P_3`$. Voltage is set to $`|V_3| \equiv 1.1`$p.u.. Generator $`P_{G3} = 2`$p.u. is attached to it. From the equations for [branch](../../src/Model/PowerFlow/Branch/README.md) and [generator](../../src/Model/PowerFlow/Gen/README.md) components, we assemble Bus 3 residual as:
+**Bus 3**: PV bus, stores variable $`\theta_3`$ and residual $`P_3`$. Voltage is set to $`|V_3| \equiv 1.1`$p.u.. Generator $`P_{G3} = 2`$p.u. is attached to it. From the equations for [branch](../../../src/Model/PowerFlow/Branch/README.md) and [generator](../../../src/Model/PowerFlow/Gen/README.md) components, we assemble Bus 3 residual as:
 ```math
 \begin{array}{rcll}
 P_3 & = &P_{G3} &~~~\mathrm{(generator ~3)} \\
