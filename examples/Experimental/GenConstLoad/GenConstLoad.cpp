@@ -4,14 +4,15 @@
 
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
-#include <Model/PowerFlow/Bus/BusPQ.hpp>
-#include <Model/PowerFlow/Generator4Governor/Generator4Governor.hpp>
-#include <Model/PowerFlow/Load/Load.hpp>
-#include <Model/PowerFlow/SystemModel.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Utilities/Testing.hpp>
+
+#include <GridKit/Model/PowerFlow/Bus/BusPQ.hpp>
+#include <GridKit/Model/PowerFlow/Generator4Governor/Generator4Governor.hpp>
+#include <GridKit/Model/PowerFlow/Load/Load.hpp>
+#include <GridKit/Model/PowerFlow/SystemModel.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Solver/Optimization/DynamicConstraint.hpp>
+#include <GridKit/Solver/Optimization/DynamicObjective.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 int main()
 {

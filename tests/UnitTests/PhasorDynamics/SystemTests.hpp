@@ -3,17 +3,17 @@
 #include <iomanip>
 #include <iostream>
 
-#include <AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <Definitions.hpp>
-#include <Model/PhasorDynamics/Branch/Branch.hpp>
-#include <Model/PhasorDynamics/Branch/BranchData.hpp>
-#include <Model/PhasorDynamics/Bus/Bus.hpp>
-#include <Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Utilities/MapFromCOO.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
+#include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

@@ -9,12 +9,13 @@
 #include <filesystem>
 #include <iostream>
 
+#include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Testing.hpp>
+
 #include "TwoBusIeeet1.hpp"
-#include <Model/PhasorDynamics/ComponentLibrary.hpp>
-#include <Model/PhasorDynamics/SystemModel.hpp>
-#include <Model/PhasorDynamics/SystemModelData.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
 
 int main(int argc, const char* argv[])
 {

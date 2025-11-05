@@ -14,11 +14,11 @@ This is a model derived from the well-known Kundur case in Literature. It has be
 
 Model       | Count  
 ------------|--------
-[Bus](../../../../src/Model/PhasorDynamics/Bus/README.md)         | 10
-[Branch](../../../../src/Model/PhasorDynamics/Branch/README.md)     | 15 
-[GENROU](../../../../src/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md)       | 3
-[TGOV1](../../../../src/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 3
-[IEEET1](../../../../src/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 3
+[Bus](../../../../GridKit/Model/PhasorDynamics/Bus/README.md)         | 10
+[Branch](../../../../GridKit/Model/PhasorDynamics/Branch/README.md)     | 15 
+[GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md)       | 3
+[TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 3
+[IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 3
 
 ## Case Events
 

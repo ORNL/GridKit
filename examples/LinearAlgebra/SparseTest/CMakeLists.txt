@@ -3,5 +3,5 @@
 add_executable(spmattest SparseTest.cpp)
 target_link_libraries(spmattest GridKit::CsrMatrix)
                                 
-add_test(NAME SparseMatrixTest    COMMAND $<TARGET_FILE:spmattest>)
+add_test(NAME SparseMatrixTest COMMAND spmattest)
 install(TARGETS spmattest RUNTIME DESTINATION bin)

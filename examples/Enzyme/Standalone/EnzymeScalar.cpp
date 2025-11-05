@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <Utilities/Testing.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the derivative of a scalar function

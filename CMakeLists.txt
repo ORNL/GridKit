@@ -82,8 +82,6 @@ if("${isSystemDir}" STREQUAL "-1")
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif("${isSystemDir}" STREQUAL "-1")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
-
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if(GRIDKIT_ENABLE_IPOPT)
@@ -111,7 +109,7 @@ include(GridkitAddLibrary)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_subdirectory(src)
+add_subdirectory(GridKit)
 
 # Create examples and tests
 include(CTest)

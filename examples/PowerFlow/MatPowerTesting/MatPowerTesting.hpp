@@ -12,8 +12,8 @@
 #include <limits>
 #include <vector>
 
-#include <Model/PowerFlow/PowerFlowData.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace
 {

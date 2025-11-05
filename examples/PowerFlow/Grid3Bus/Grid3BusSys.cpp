@@ -16,16 +16,16 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PowerFlow/Branch/Branch.hpp>
-#include <Model/PowerFlow/Bus/BusFactory.hpp>
-#include <Model/PowerFlow/Generator/GeneratorFactory.hpp>
-#include <Model/PowerFlow/Load/Load.hpp>
-#include <Model/PowerFlow/MatpowerParser.hpp>
-#include <Model/PowerFlow/MiniGrid/MiniGrid.hpp>
-#include <Model/PowerFlow/PowerFlowData.hpp>
-#include <Model/PowerFlow/SystemModelPowerFlow.hpp>
-#include <Solver/SteadyState/Kinsol.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PowerFlow/Branch/Branch.hpp>
+#include <GridKit/Model/PowerFlow/Bus/BusFactory.hpp>
+#include <GridKit/Model/PowerFlow/Generator/GeneratorFactory.hpp>
+#include <GridKit/Model/PowerFlow/Load/Load.hpp>
+#include <GridKit/Model/PowerFlow/MatpowerParser.hpp>
+#include <GridKit/Model/PowerFlow/MiniGrid/MiniGrid.hpp>
+#include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+#include <GridKit/Model/PowerFlow/SystemModelPowerFlow.hpp>
+#include <GridKit/Solver/SteadyState/Kinsol.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 static const std::string BUS3_DATA_STRING = R"(
 function mpc = case5

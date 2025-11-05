@@ -1,4 +1,6 @@
 add_executable(test_case_format runCaseFormatTests.cpp)
+target_link_libraries(test_case_format PRIVATE
+    GridKit::phasor_dynamics_components)
 target_include_directories(test_case_format
     PRIVATE
     ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/single_include

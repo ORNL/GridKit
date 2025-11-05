@@ -2,11 +2,11 @@
 #include <iomanip>
 #include <iostream>
 
-#include <Model/PowerFlow/Bus/BusSlack.hpp>
-#include <Model/PowerFlow/Generator4/Generator4.hpp>
-#include <Model/PowerFlow/SystemModel.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Model/PowerFlow/Bus/BusSlack.hpp>
+#include <GridKit/Model/PowerFlow/Generator4/Generator4.hpp>
+#include <GridKit/Model/PowerFlow/SystemModel.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 /*
  * Compute gradient of an objective function expressed as an integral over

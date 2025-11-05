@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
-#include <Utilities/Logger/Logger.hpp>
-#include <Utilities/TestHelpers.hpp>
-#include <Utilities/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

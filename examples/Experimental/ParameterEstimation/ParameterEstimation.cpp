@@ -3,17 +3,19 @@
 #include <memory>
 #include <string>
 
-#include "lookup_table.hpp"
 #include <IpIpoptApplication.hpp>
 #include <IpSolveStatistics.hpp>
-#include <Model/PowerFlow/Bus/BusSlack.hpp>
-#include <Model/PowerFlow/Generator4Param/Generator4Param.hpp>
-#include <Model/PowerFlow/SystemModel.hpp>
-#include <Solver/Dynamic/Ida.hpp>
-#include <Solver/Optimization/DynamicConstraint.hpp>
-#include <Solver/Optimization/DynamicObjective.hpp>
-#include <Utilities/FileIO.hpp>
-#include <Utilities/Testing.hpp>
+
+#include <GridKit/Model/PowerFlow/Bus/BusSlack.hpp>
+#include <GridKit/Model/PowerFlow/Generator4Param/Generator4Param.hpp>
+#include <GridKit/Model/PowerFlow/SystemModel.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Solver/Optimization/DynamicConstraint.hpp>
+#include <GridKit/Solver/Optimization/DynamicObjective.hpp>
+#include <GridKit/Utilities/FileIO.hpp>
+#include <GridKit/Utilities/Testing.hpp>
+
+#include "lookup_table.hpp"
 
 int main()
 {

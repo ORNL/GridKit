@@ -1,5 +1,5 @@
-#include <LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
-#include <Utilities/TestHelpers.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
 
 namespace GridKit
 {
