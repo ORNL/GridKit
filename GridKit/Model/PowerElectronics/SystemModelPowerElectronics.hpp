@@ -81,11 +81,13 @@ namespace GridKit
     PowerElectronicsModel()
     {
       // Set system model parameters as default
-      rel_tol_         = 1e-4;
-      abs_tol_         = 1e-4;
-      this->max_steps_ = 2000;
+      rel_tol_                 = 1e-4;
+      abs_tol_                 = 1e-4;
+      this->max_steps_         = 2000;
       // By default don't use the jacobian
-      use_jac_         = false;
+      use_jac_                 = false;
+      jac_sparsity_row_indices = nullptr;
+      jac_sparsity_col_indices = nullptr;
     }
 
     /**
@@ -104,11 +106,13 @@ namespace GridKit
                           IdxT   max_steps = 2000)
     {
       // Set system model tolerances from input
-      rel_tol_         = rel_tol;
-      abs_tol_         = abs_tol;
-      this->max_steps_ = max_steps;
+      rel_tol_                 = rel_tol;
+      abs_tol_                 = abs_tol;
+      this->max_steps_         = max_steps;
       // Can choose if to use jacobian
-      use_jac_         = use_jac;
+      use_jac_                 = use_jac;
+      jac_sparsity_row_indices = nullptr;
+      jac_sparsity_col_indices = nullptr;
     }
 
     /**
@@ -123,18 +127,140 @@ namespace GridKit
     {
       for (auto comp : this->components_)
         delete comp;
+
+      if (jac_sparsity_row_indices != nullptr)
+      {
+        delete[] jac_sparsity_row_indices;
+      }
+      if (jac_sparsity_col_indices != nullptr)
+      {
+        delete[] jac_sparsity_col_indices;
+      }
     }
 
     /**
-     * @brief allocator default
-     *
-     * @todo this should throw an exception as no allocation without a graph is allowed.
-     * Or needs to be removed from the base class
-     *
-     * @return int
+     * @brief Allocates and constructs sparsity patterns for system jacobian.
+     *        To do this, sparsity patterns of components are needed, so
+     *        each component's jacobian is evaluated, and the sparsity pattern
+     *        of that component's jacobian is expected to match the sparsity pattern
+     *        for the rest of the simulation.
+     * @pre   `size_` must be correctly initialized
      */
     int allocate()
     {
+      // Helper struct for identifying a particular component's local system variable
+      struct ComponentContribution
+      {
+        // The index of the component in `components_`.
+        size_t comp_idx_;
+        // The local system variable index
+        size_t local_row_idx_;
+      };
+
+      // Helper struct for saving CSR sparsities of a particular component, since
+      // right now they only report COO. Can be removed once components have CSR matrices.
+      struct CsrSparsity
+      {
+        std::vector<IdxT> row_indices_;
+        std::vector<IdxT> col_indices_;
+      };
+
+      // A reverse mapping from system variables -> component variables
+      std::vector<std::vector<ComponentContribution>> reverse_map(size_);
+      std::vector<CsrSparsity>                        component_sparsities;
+      component_sparsities.reserve(components_.size());
+
+      // Loop over all components, evaluate their jacobians, save their sparsity information,
+      // and construct the reverse variable mapping.
+      for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
+      {
+        component_type* component = components_[comp_idx];
+        component->evaluateJacobian();
+
+        auto [row_indices, col_indices, _] = component->getJacobian().setDataToCSR();
+
+        component_sparsities.push_back({
+            .row_indices_ = std::move(row_indices),
+            .col_indices_ = std::move(col_indices),
+        });
+
+        for (IdxT local_row = 0; local_row < component->size(); local_row++)
+        {
+          IdxT global_row = component->getNodeConnection(local_row);
+
+          // Not all local variables map to a global variable
+          if (global_row != neg1_)
+          {
+            reverse_map[global_row].push_back({.comp_idx_ = comp_idx, .local_row_idx_ = local_row});
+          }
+        }
+      }
+
+      // Allocate the final sparsity pattern info
+      IdxT*             global_row_indices = new IdxT[size_ + 1];
+      std::vector<IdxT> global_col_indices;
+      global_col_indices.reserve(size_);
+
+      // Construct sparsity pattern row-by-row. In the future, can be batched
+      // into contiguous blocks of rows which can be calculated in parallel,
+      // then joined sequentially
+      for (size_t row = 0; row < size_; row++)
+      {
+        global_row_indices[row] = global_col_indices.size();
+
+        // Collect columns from each component which has a row which contributes to this row
+        for (ComponentContribution contrib : reverse_map[row])
+        {
+          component_type* component     = components_[contrib.comp_idx_];
+          CsrSparsity&    comp_sparsity = component_sparsities[contrib.comp_idx_];
+
+          IdxT row_start = comp_sparsity.row_indices_[contrib.local_row_idx_];
+          IdxT row_end   = comp_sparsity.row_indices_[contrib.local_row_idx_ + 1];
+          for (size_t local_elem_idx = row_start; local_elem_idx < row_end; local_elem_idx++)
+          {
+            IdxT local_col  = comp_sparsity.col_indices_[local_elem_idx];
+            IdxT global_col = component->getNodeConnection(local_col);
+
+            // Not all columns map to columns in the system jacobian
+            if (global_col != neg1_)
+            {
+              global_col_indices.push_back(global_col);
+            }
+          }
+        }
+
+        // Sort the row by column indices. Since the mapping from local indices to global indices isn't monotonically increasing,
+        // this is necessary.
+        auto start = std::next(global_col_indices.begin(), global_row_indices[row]);
+        std::sort(start, global_col_indices.end());
+
+        // If there were multiple components which contributed columns, then we definitely need
+        // to de-duplicate the columns.
+        if (reverse_map[row].size() > 1)
+        {
+          global_col_indices.erase(std::unique(start, global_col_indices.end()), global_col_indices.end());
+        }
+      }
+      // Final row index (beyond the end) keeps track of nnz, which is also the size of the column indices.
+      global_row_indices[size_] = global_col_indices.size();
+
+      // Delete old sparsity buffers, if they exist
+      if (jac_sparsity_row_indices != nullptr)
+      {
+        delete[] jac_sparsity_row_indices;
+      }
+      if (jac_sparsity_col_indices != nullptr)
+      {
+        delete[] jac_sparsity_col_indices;
+      }
+
+      // Allocate new sparsity buffers
+      jac_sparsity_row_indices = global_row_indices;
+      jac_sparsity_col_indices = new IdxT[global_col_indices.size()];
+
+      // Copy column indices
+      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices);
+
       return 1;
     }
 
@@ -183,6 +309,8 @@ namespace GridKit
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+
+      allocate();
 
       return 0;
     }
@@ -401,8 +529,41 @@ namespace GridKit
       components_.push_back(component);
     }
 
+    /**
+     * @brief Returns a pointer to the buffer of Jacobian CSR row indices.
+     * @todo Can be removed once `getJacobian()` returns a `CsrMatrix`
+     */
+    IdxT* getJacRowIndices()
+    {
+      return jac_sparsity_row_indices;
+    }
+
+    /**
+     * @brief Returns a pointer to the buffer of Jacobian CSR column indices.
+     * @todo Can be removed once `getJacobian()` returns a `CsrMatrix`
+     */
+    IdxT* getJacColIndices()
+    {
+      return jac_sparsity_col_indices;
+    }
+
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
+
+    /**
+     * @brief Keeps track of the CSR row indices of the system jacobian.
+     *        `nullptr` is used to indicate an un-allocated buffer.
+     * @todo  Unneeded once the jacobian is in CSR format. This can be stored
+     *        in the jacobian itself.
+     */
+    IdxT* jac_sparsity_row_indices;
+    /**
+     * @brief Keeps track of the CSR col indices of the system jacobian.
+     *        `nullptr` is used to indicate an un-allocated buffer.
+     * @todo  Unneeded once the jacobian is in CSR format. This can be stored
+     *        in the jacobian itself.
+     */
+    IdxT* jac_sparsity_col_indices;
 
     std::vector<component_type*> components_;
 
