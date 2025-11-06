@@ -14,5 +14,7 @@ int main()
   result += test.jacobian();
 #endif
 
+  result += test.signalError();
+
   return result.summary();
 }

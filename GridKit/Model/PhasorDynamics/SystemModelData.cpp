@@ -23,12 +23,27 @@ namespace GridKit
     SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath)
     {
       auto stream = std::ifstream(filePath);
+      if (!stream)
+      {
+        std::stringstream ss;
+        ss << "Could not open file: " << filePath;
+        Log::error() << ss.str() << std::endl;
+        throw std::runtime_error(ss.str());
+      }
       return parseSystemModelData(stream);
     }
 
     SystemModelData<double, size_t> parseSystemModelData(const std::string& fileName)
     {
-      return parseSystemModelData(std::ifstream(fileName));
+      auto stream = std::ifstream(fileName);
+      if (!stream)
+      {
+        std::stringstream ss;
+        ss << "Could not open file: " << fileName;
+        Log::error() << ss.str() << std::endl;
+        throw std::runtime_error(ss.str());
+      }
+      return parseSystemModelData(stream);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

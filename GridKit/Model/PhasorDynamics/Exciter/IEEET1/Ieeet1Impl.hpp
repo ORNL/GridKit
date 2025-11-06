@@ -141,7 +141,7 @@ namespace GridKit
         {
           if (!signals_.template isLinked<OMEGA>())
           {
-            Log::error() << "Ieeet1: omega signal assigned with no linked generator\n";
+            Log::error() << "Ieeet1: omega signal attached with no linked generator\n";
             ret += 1;
           }
         }
