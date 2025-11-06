@@ -285,11 +285,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     inline void COO_Matrix<ScalarT, IdxT>::axpy(ScalarT alpha, COO_Matrix<ScalarT, IdxT>& a)
     {
-      if (alpha == 0)
-      {
-        return;
-      }
-
       if (!this->sorted_)
       {
         this->sortSparse();
@@ -364,9 +359,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     inline void COO_Matrix<ScalarT, IdxT>::axpy(ScalarT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<ScalarT> v)
     {
-      if (alpha == 0)
-        return;
-
       if (!this->sorted_)
       {
         this->sortSparse();
