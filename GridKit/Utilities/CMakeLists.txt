@@ -11,6 +11,7 @@ add_subdirectory(CliOptions)
 install(
   FILES
     Colors.hpp
+    Enum.hpp
     FileIO.hpp
     MapFromCOO.hpp
   DESTINATION

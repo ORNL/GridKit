@@ -112,9 +112,11 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
-        unit_id_(1)
+        unit_id_(1),
+        monitor_(data)
     {
       initializeParameters(data);
+      initializeMonitor();
 
       size_ = 19;
       setDerivedParams();
@@ -126,11 +128,13 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data)
       : bus_(bus),
-        unit_id_(1)
+        unit_id_(1),
+        monitor_(data)
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
       initializeParameters(data);
+      initializeMonitor();
 
       size_ = 19;
       setDerivedParams();
@@ -142,12 +146,14 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, signal_type* efd, const model_data_type& data)
       : bus_(bus),
-        unit_id_(1)
+        unit_id_(1),
+        monitor_(data)
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
       signals_.template attachSignalNode<GenrouExternalVariables::EFD>(efd);
       initializeParameters(data);
+      initializeMonitor();
 
       size_ = 19;
       setDerivedParams();
@@ -257,6 +263,30 @@ namespace GridKit
       {
         bus_id_ = data.ports.at(model_data_type::Ports::bus);
       }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::initializeMonitor()
+    {
+      using Variable = typename model_data_type::MonitorableVariables;
+      monitor_.set(Variable::ir, [this] { return y_[15]; });
+      monitor_.set(Variable::ii, [this] { return y_[16]; });
+      // monitor_.set(Variable::p, [this] { return Ii(); });
+      // monitor_.set(Variable::q, [this] { return Ii(); });
+      monitor_.set(Variable::delta, [this] { return y_[0]; });
+      monitor_.set(Variable::omega, [this] { return y_[1]; });
+    }
+
+    template <class ScalarT, typename IdxT>
+    bool Genrou<ScalarT, IdxT>::monitoring() const
+    {
+      return !monitor_.empty();
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Genrou<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
+    {
+      monitor_.print(os);
     }
 
     /**

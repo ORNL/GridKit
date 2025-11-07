@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
@@ -80,32 +81,20 @@ namespace GridKit
 
       if (j.contains("mon"))
       {
+        using magic_enum::case_insensitive;
+        using magic_enum::enum_cast;
+        using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
         for (auto& raw_monitored_variable : j.at("mon"))
         {
-          auto monitored = raw_monitored_variable.get<std::string>();
-          if (monitored == "Vr")
+          auto var_name  = raw_monitored_variable.get<std::string>();
+          auto monitored = enum_cast<MonitorableVariables>(var_name, case_insensitive);
+          if (monitored.has_value())
           {
-            bd.monitored_variables.set(static_cast<size_t>(
-                BusData<RealT, IdxT>::MonitorableVariables::VR));
-          }
-          else if (monitored == "Vi")
-          {
-            bd.monitored_variables.set(static_cast<size_t>(
-                BusData<RealT, IdxT>::MonitorableVariables::VI));
-          }
-          else if (monitored == "Vm")
-          {
-            bd.monitored_variables.set(static_cast<size_t>(
-                BusData<RealT, IdxT>::MonitorableVariables::VM));
-          }
-          else if (monitored == "Va")
-          {
-            bd.monitored_variables.set(static_cast<size_t>(
-                BusData<RealT, IdxT>::MonitorableVariables::VA));
+            bd.monitored_variables.insert(monitored.value());
           }
           else
           {
-            Log::error() << "\n\tInvalid monitored variable: \"" << monitored
+            Log::error() << "\n\tInvalid monitored variable: \"" << var_name
                          << "\" in \"mon\" list." << error_context.str()
                          << std::endl;
           }

@@ -74,37 +74,11 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data)
       : bus1_(bus1),
-        bus2_(bus2)
+        bus2_(bus2),
+        monitor_(data)
     {
-      if (data.parameters.contains(model_data_type::Parameters::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::G))
-      {
-        G_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::G));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::B))
-      {
-        B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus1))
-      {
-        bus1_id_ = data.ports.at(model_data_type::Ports::bus1);
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus2))
-      {
-        bus2_id_ = data.ports.at(model_data_type::Ports::bus2);
-      }
+      initializeParameters(data);
+      initializeMonitor();
 
       size_ = 0;
       setDerivedParams();
@@ -275,6 +249,68 @@ namespace GridKit
       Ii2() += h_[1];
 
       return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+    {
+      if (data.parameters.contains(model_data_type::Parameters::R))
+      {
+        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::X))
+      {
+        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::G))
+      {
+        G_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::G));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::B))
+      {
+        B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus1))
+      {
+        bus1_id_ = data.ports.at(model_data_type::Ports::bus1);
+      }
+
+      if (data.ports.contains(model_data_type::Ports::bus2))
+      {
+        bus2_id_ = data.ports.at(model_data_type::Ports::bus2);
+      }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::initializeMonitor()
+    {
+      using Variable = typename model_data_type::MonitorableVariables;
+      monitor_.set(Variable::ir1, [this] { return Ir1(); });
+      monitor_.set(Variable::ii1, [this] { return Ii1(); });
+      // monitor_.set(Variable::im1, [this] { return ?(); });
+      // monitor_.set(Variable::p1, [this] { return ?(); });
+      // monitor_.set(Variable::q1, [this] { return ?(); });
+      monitor_.set(Variable::ir2, [this] { return Ir2(); });
+      monitor_.set(Variable::ii2, [this] { return Ii2(); });
+      // monitor_.set(Variable::im2, [this] { return ?(); });
+      // monitor_.set(Variable::p2, [this] { return ?(); });
+      // monitor_.set(Variable::q2, [this] { return ?(); });
+    }
+
+    template <class ScalarT, typename IdxT>
+    bool Branch<ScalarT, IdxT>::monitoring() const
+    {
+      return !monitor_.empty();
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
+    {
+      monitor_.print(os);
     }
 
     /**

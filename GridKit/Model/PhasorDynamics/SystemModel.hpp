@@ -417,7 +417,23 @@ namespace GridKit
           }
         }
 
+        monitoring_ = checkMonitoring();
+
         return 0;
+      }
+
+      bool checkMonitoring() const
+      {
+        bool mon = false;
+        for (const auto& bus : buses_)
+        {
+          mon = mon || bus->monitoring();
+        }
+        for (const auto& component : components_)
+        {
+          mon = mon || component->monitoring();
+        }
+        return mon;
       }
 
       /**
@@ -576,12 +592,31 @@ namespace GridKit
         return 0;
       }
 
+      bool monitoring() const override
+      {
+        return monitoring_;
+      }
+
+      void printMonitoredVariables(std::ostream& os = std::cout) const override
+      {
+        os << "t: " << this->time_ << ":\n";
+        for (const auto& bus : buses_)
+        {
+          bus->printMonitoredVariables(os);
+        }
+        for (const auto& component : components_)
+        {
+          component->printMonitoredVariables(os);
+        }
+      }
+
       /**
        * @brief Update time
        *
        */
       void updateTime(RealT t, RealT a) override
       {
+        this->time_ = t;
         for (const auto& component : components_)
         {
           component->updateTime(t, a);
@@ -703,6 +738,7 @@ namespace GridKit
 
       bool owns_components_{false};
 
+      bool monitoring_{false};
     }; // class SystemModel
 
   } // namespace PhasorDynamics

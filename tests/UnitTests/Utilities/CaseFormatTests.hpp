@@ -80,15 +80,15 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VR)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VI)];
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VR);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VI);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
         success *= result.bus[1].v_base == 115e3;
-        success *= result.bus[1].monitored_variables.none();
+        success *= result.bus[1].monitored_variables.empty();
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
@@ -193,15 +193,15 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VR)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VI)];
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VR);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VI);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
         success *= result.bus[1].v_base == 115e3;
-        success *= result.bus[1].monitored_variables.none();
+        success *= result.bus[1].monitored_variables.empty();
 
         success *= result.signal[0].signal_id == 1;
         success *= result.signal[0].name == "Machine Speed Deviation";

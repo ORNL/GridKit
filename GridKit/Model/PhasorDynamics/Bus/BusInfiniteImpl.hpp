@@ -54,7 +54,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data.bus_id),
+      : BusBase<ScalarT, IdxT>(data),
         Vr_(data.Vr0),
         Vi_(data.Vi0)
     {
