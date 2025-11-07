@@ -7,6 +7,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -41,7 +42,24 @@ namespace GridKit
       im2,
       p2,
       q2,
+      SIZE
     };
+
+    inline const std::string& enumLabel(BranchMonitorableVariables v)
+    {
+      static const std::string labels[] = {
+          "Ir1",
+          "Ii1",
+          "Im1",
+          "P1",
+          "Q1",
+          "Ir2",
+          "Ii2",
+          "Im2",
+          "P2",
+          "Q2"};
+      return labels[Utilities::enumId(v)];
+    }
 
     /**
      * @brief Contains modeling data for a Branch

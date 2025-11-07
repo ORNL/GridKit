@@ -56,11 +56,14 @@ namespace GridKit
                                     const model_data_type& data)
         : efd_signal_(efd_signal),
           speed_signal_(speed_signal),
-          bus_(bus)
+          bus_(bus),
+          monitor_(data)
       {
 
         // Parse data struct into model
         this->initModelParams(data);
+
+        initializeMonitor();
 
         // 9 Internal Variables
         size_ = 9;
@@ -77,11 +80,14 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
                                     const model_data_type& data)
-        : bus_(bus)
+        : bus_(bus),
+          monitor_(data)
       {
 
         // Parse data struct into model
         this->initModelParams(data);
+
+        initializeMonitor();
 
         // 9 Internal Variables
         size_ = 9;
@@ -390,6 +396,25 @@ namespace GridKit
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
       }
 
+      template <class ScalarT, typename IdxT>
+      bool Ieeet1<ScalarT, IdxT>::monitoring() const
+      {
+        return !monitor_.empty();
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Ieeet1<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
+      {
+        monitor_.print(os);
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Ieeet1<ScalarT, IdxT>::initializeMonitor()
+      {
+        using Variable = model_data_type::MonitorableVariables;
+        monitor_.set(Variable::efd, [this] { return efd_signal_->read(); });
+        // monitor_.set(Variable::ksat, [this] { return ?; });
+      }
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

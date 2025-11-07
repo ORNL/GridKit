@@ -45,6 +45,15 @@ namespace GridKit
       virtual IdxT size() = 0;
       virtual IdxT nnz()  = 0;
 
+      virtual bool monitoring() const
+      {
+        return false;
+      }
+
+      virtual void printMonitoredVariables(std::ostream& = std::cout) const
+      {
+      }
+
       /**
        * @brief Is the Jacobian defined. Used in IDA to determine wether DQ is used or not
        *

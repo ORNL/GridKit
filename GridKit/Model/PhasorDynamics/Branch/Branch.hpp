@@ -8,8 +8,10 @@
  */
 #pragma once
 
+#include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -51,11 +53,11 @@ namespace GridKit
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
 
+    public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = BranchData<RealT, IdxT>;
 
-    public:
       Branch(bus_type* bus1, bus_type* bus2);
       Branch(bus_type* bus1, bus_type* bus2, RealT R, RealT X, RealT G, RealT B);
       Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
@@ -77,7 +79,6 @@ namespace GridKit
       {
       }
 
-    public:
       void setR(RealT R)
       {
         R_ = R;
@@ -103,7 +104,12 @@ namespace GridKit
         setDerivedParams();
       }
 
+      bool monitoring() const override;
+      void printMonitoredVariables(std::ostream&) const override;
+
     private:
+      void initializeParameters(const model_data_type& data);
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr1()
@@ -165,6 +171,8 @@ namespace GridKit
       /* Derivied parameters */
       RealT b_;
       RealT g_;
+
+      Model::VariableMonitor<Branch, BranchData> monitor_;
     };
 
   } // namespace PhasorDynamics

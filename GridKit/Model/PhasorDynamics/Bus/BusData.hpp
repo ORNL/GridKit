@@ -6,15 +6,33 @@
  */
 #pragma once
 
-#include <bitset>
 #include <optional>
+#include <set>
 #include <string>
 #include <type_traits>
+
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Indices of the variables able to be monitored on this component
+    enum class BusMonitorableVariables : size_t
+    {
+      VR,
+      VI,
+      VM,
+      VA,
+      SIZE
+    };
+
+    inline const std::string& enumLabel(BusMonitorableVariables v)
+    {
+      static const std::string labels[] = {"Vr", "Vi", "Vm", "Va"};
+      return labels[Utilities::enumId(v)];
+    }
+
     /**
      * @brief Contains modeling data for a Bus
      *
@@ -48,21 +66,11 @@ namespace GridKit
       RealT                v_base{1.0}; ///< Voltage base in volts
       std::optional<RealT> freq_base;   ///< Override for the system-wide base frequency
       std::optional<RealT> va_base;     ///< Override for the system-wide power base
-
-      /// Indices of the variables able to be monitored on this component
-      enum class MonitorableVariables : size_t
-      {
-        VR,
-        VI,
-        VM,
-        VA,
-        MAXIMUM,
-      };
+      using MonitorableVariables = BusMonitorableVariables;
 
       /// Set indicating the variables being monitored
-      std::bitset<static_cast<
-          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
-          monitored_variables;
+      std::set<MonitorableVariables> monitored_variables;
     };
+
   } // namespace PhasorDynamics
 } // namespace GridKit

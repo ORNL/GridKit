@@ -8,6 +8,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -47,7 +48,14 @@ namespace GridKit
       {
         efd,
         ksat,
+        SIZE
       };
+
+      inline const std::string& enumLabel(Ieeet1MonitorableVariables v)
+      {
+        static std::string labels[] = {"efd", "ksat"};
+        return labels[Utilities::enumId(v)];
+      }
 
       /**
        * @brief Contains modeling data for a IEEET1 Exciter model.

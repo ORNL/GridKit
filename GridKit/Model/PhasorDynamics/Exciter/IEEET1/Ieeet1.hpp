@@ -11,6 +11,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -75,12 +76,12 @@ namespace GridKit
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
 
+      public:
         using RealT           = typename Component<ScalarT, IdxT>::RealT;
         using model_data_type = Ieeet1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
         using bus_type        = BusBase<ScalarT, IdxT>;
 
-      public:
         Ieeet1(bus_type* bus);
         Ieeet1(signal_type*           efd_signal,
                signal_type*           speed_signal,
@@ -111,6 +112,9 @@ namespace GridKit
         {
           return signals_;
         }
+
+        bool monitoring() const override;
+        void printMonitoredVariables(std::ostream& os) const override;
 
       private:
         // Signal pointers
@@ -150,8 +154,12 @@ namespace GridKit
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
+        Model::VariableMonitor<Ieeet1, Ieeet1Data> monitor_;
+
         // Parameter initialization function
         void initModelParams(const model_data_type& data);
+
+        void initializeMonitor();
       };
 
     } // namespace Exciter

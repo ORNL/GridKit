@@ -10,6 +10,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -81,12 +83,12 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
+    public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<RealT, IdxT>;
       using signal_type     = SignalNode<ScalarT, IdxT>;
 
-    public:
       Genrou(bus_type* bus, IdxT unit_id);
       Genrou(bus_type*              bus,
              signal_type*           omega,
@@ -149,8 +151,12 @@ namespace GridKit
         return signals_;
       }
 
+      bool monitoring() const override;
+      void printMonitoredVariables(std::ostream&) const override;
+
     private:
       void initializeParameters(const model_data_type& data);
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -233,6 +239,8 @@ namespace GridKit
       /* Local copies of external variables */
       std::vector<ScalarT> ws_;
       std::map<IdxT, IdxT> ws_indices_;
+
+      Model::VariableMonitor<Genrou, GenrouData> monitor_;
     };
 
   } // namespace PhasorDynamics
