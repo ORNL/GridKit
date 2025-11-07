@@ -58,7 +58,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
-    typedef CircuitComponent<ScalarT, IdxT> component_type;
+    using real_type      = typename CircuitComponent<ScalarT, IdxT>::real_type;
+    using component_type = CircuitComponent<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -362,7 +363,7 @@ namespace GridKit
      * @param t
      * @param a
      */
-    void updateTime(ScalarT t, ScalarT a)
+    void updateTime(real_type t, real_type a)
     {
       for (const auto& component : components_)
       {

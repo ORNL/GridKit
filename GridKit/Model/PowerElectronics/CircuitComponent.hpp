@@ -17,12 +17,12 @@ namespace GridKit
   class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
+    using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
 
     CircuitComponent()  = default;
     ~CircuitComponent() = default;
 
-    void updateTime(ScalarT t, ScalarT a)
+    void updateTime(real_type t, real_type a)
     {
       this->time_  = t;
       this->alpha_ = a;
