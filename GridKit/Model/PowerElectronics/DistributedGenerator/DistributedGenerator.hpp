@@ -95,6 +95,6 @@ namespace GridKit
     real_type Lf_;
     real_type rLc_;
     real_type Lc_;
-    bool    refframe_;
+    bool      refframe_;
   };
 } // namespace GridKit

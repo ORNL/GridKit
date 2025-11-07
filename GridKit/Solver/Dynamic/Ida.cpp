@@ -767,7 +767,7 @@ namespace AnalysisManager
       copyVec(yp, model->yp());
 
       model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& Jac = model->getJacobian();
+      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& Jac = model->getJacobian();
 
       // Get reference to the jacobian entries
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();

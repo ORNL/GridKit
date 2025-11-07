@@ -110,12 +110,12 @@ namespace GridKit
         return tag_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() override
+      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() override
       {
         return J_;
       }
 
-      const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const override
+      const GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() const override
       {
         return J_;
       }
@@ -141,7 +141,7 @@ namespace GridKit
       std::vector<bool>    tag_;
       std::vector<ScalarT> f_;
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
+      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> J_;
 
       real_type time_;
       real_type alpha_;

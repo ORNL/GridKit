@@ -15,11 +15,11 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
-    std::vector<DependencyTracking::Variable::DependencyMap> MapFromCOO(LinearAlgebra::COO_Matrix<ScalarT, IdxT> matrix)
+    template <class RealT, typename IdxT>
+    std::vector<DependencyTracking::Variable::DependencyMap> MapFromCOO(LinearAlgebra::COO_Matrix<RealT, IdxT> matrix)
     {
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> matrix_entries = matrix.getEntries();
-      const auto [rows, columns, values]                                                       = matrix_entries;
+      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> matrix_entries = matrix.getEntries();
+      const auto [rows, columns, values]                                                     = matrix_entries;
 
       std::tuple<IdxT, IdxT> matrix_dimensions = matrix.getDimensions();
       const auto [n_rows, n_columns]           = matrix_dimensions;

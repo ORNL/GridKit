@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 
 namespace GridKit

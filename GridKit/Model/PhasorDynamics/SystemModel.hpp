@@ -529,9 +529,9 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
-        std::vector<IdxT>    ctemp{};
-        std::vector<IdxT>    rtemp{};
-        std::vector<ScalarT> valtemp{};
+        std::vector<IdxT>      ctemp{};
+        std::vector<IdxT>      rtemp{};
+        std::vector<real_type> valtemp{};
 
         // Initialize bus Jacobians
         for (const auto& bus : buses_)
@@ -546,8 +546,8 @@ namespace GridKit
           component->evaluateJacobian();
           auto component_jacobian = component->getJacobian();
 
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> component_jacobian_entries = component_jacobian.getEntries();
-          const auto [rows, columns, values]                                                                   = component_jacobian_entries;
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<real_type>&> component_jacobian_entries = component_jacobian.getEntries();
+          const auto [rows, columns, values]                                                                     = component_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
             rtemp.push_back(rows[i]);
@@ -561,8 +561,8 @@ namespace GridKit
         {
           auto bus_jacobian = bus->getJacobian();
 
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> bus_jacobian_entries = bus_jacobian.getEntries();
-          const auto [rows, columns, values]                                                             = bus_jacobian_entries;
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<real_type>&> bus_jacobian_entries = bus_jacobian.getEntries();
+          const auto [rows, columns, values]                                                               = bus_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
             rtemp.push_back(rows[i]);

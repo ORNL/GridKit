@@ -84,8 +84,8 @@ namespace GridKit
       virtual const std::vector<ScalarT>& getResidual() const = 0;
 
       /// \todo Use a different approach to store and set Jacobians
-      virtual GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>&       getJacobian()       = 0;
-      virtual const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const = 0;
+      virtual GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>&       getJacobian()       = 0;
+      virtual const GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() const = 0;
 
       virtual std::vector<ScalarT>&       getIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getIntegrand() const = 0;
