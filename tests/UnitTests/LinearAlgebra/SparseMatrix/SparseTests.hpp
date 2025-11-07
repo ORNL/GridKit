@@ -77,17 +77,17 @@ namespace GridKit
 
         CsrMatrix A(n, m, nnz);
 
-        IdxT* h_row_data = new IdxT[n + 1];
+        IdxT* h_row_data = new IdxT[static_cast<size_t>(n + 1)];
         for (IdxT i = 0; i <= n; ++i)
         {
           h_row_data[i] = i * (nnz / n); // Simple pattern for row pointers
         }
-        IdxT* h_col_data = new IdxT[nnz];
+        IdxT* h_col_data = new IdxT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           h_col_data[i] = i % m; // Simple pattern for column indices
         }
-        ScalarT* h_val_data = new ScalarT[nnz];
+        ScalarT* h_val_data = new ScalarT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           h_val_data[i] = static_cast<ScalarT>(i + 1);
@@ -132,7 +132,7 @@ namespace GridKit
 
         CsrMatrix A(n, m, nnz);
 
-        ScalarT* val_data = new ScalarT[nnz];
+        ScalarT* val_data = new ScalarT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           val_data[i] = static_cast<ScalarT>(i + 1);
@@ -176,7 +176,7 @@ namespace GridKit
 
         CsrMatrix A(n, m, nnz);
 
-        ScalarT* val_data = new ScalarT[nnz];
+        ScalarT* val_data = new ScalarT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           val_data[i] = static_cast<ScalarT>(i + 1);
@@ -209,7 +209,7 @@ namespace GridKit
             else
             {
               ScalarT* d_val_data = A.getValues(memory::DEVICE);
-              h_val_data          = new ScalarT[nnz];
+              h_val_data          = new ScalarT[static_cast<size_t>(nnz)];
               mem_.copyArrayDeviceToHost(h_val_data, d_val_data, nnz);
               if (h_val_data == nullptr)
               {
@@ -263,7 +263,7 @@ namespace GridKit
 
         CsrMatrix A(n, m, nnz);
 
-        ScalarT* val_data = new ScalarT[nnz];
+        ScalarT* val_data = new ScalarT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           val_data[i] = static_cast<ScalarT>(i + 1);
@@ -275,12 +275,12 @@ namespace GridKit
           success = false;
         }
 
-        IdxT* row_data = new IdxT[n + 1];
+        IdxT* row_data = new IdxT[static_cast<size_t>(n + 1)];
         for (IdxT i = 0; i <= n; ++i)
         {
           row_data[i] = i * (nnz / n); // Simple pattern for row pointers
         }
-        IdxT* col_data = new IdxT[nnz];
+        IdxT* col_data = new IdxT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           col_data[i] = i % m; // Simple pattern for column indices
@@ -320,7 +320,7 @@ namespace GridKit
 
         CsrMatrix A(n, m, nnz);
 
-        ScalarT* val_data = new ScalarT[nnz];
+        ScalarT* val_data = new ScalarT[static_cast<size_t>(nnz)];
         for (IdxT i = 0; i < nnz; ++i)
         {
           val_data[i] = static_cast<ScalarT>(i + 1);
