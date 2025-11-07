@@ -271,7 +271,7 @@ namespace GridKit
        * @note Should default to 0. The system model could be used as a
        * component in a larger system that would need to set this value.
        */
-      int setGridKitComponentID(IdxT component_id)
+      int setGridKitComponentID(IdxT component_id) override
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -287,7 +287,7 @@ namespace GridKit
        * @post size_ >= 1
        *
        */
-      int allocate()
+      int allocate() override
       {
         size_ = 0;
 
@@ -363,7 +363,7 @@ namespace GridKit
        * @return true
        * @return false
        */
-      bool hasJacobian()
+      bool hasJacobian() override
       {
         return false;
       }
@@ -386,7 +386,7 @@ namespace GridKit
        * @note Currently assuming each component stores variables contiguously in memory and
        * that these are simply concateneted in the global system.
        */
-      int initialize()
+      int initialize() override
       {
         for (const auto& bus : buses_)
         {
@@ -427,7 +427,7 @@ namespace GridKit
        * equations are differential variables, i.e. their derivatives
        * appear in the equations.
        */
-      int tagDifferentiable()
+      int tagDifferentiable() override
       {
         // Set initial values for global solution vectors
         for (const auto& bus : buses_)
@@ -469,7 +469,7 @@ namespace GridKit
        * to global system vectors. Make components write to the system
        * vectors directly.
        */
-      int evaluateResidual()
+      int evaluateResidual() override
       {
         // Update variables and evaluate component residuals
         for (const auto& bus : buses_)
@@ -527,7 +527,7 @@ namespace GridKit
        * slow otherwise.
        *
        */
-      int evaluateJacobian()
+      int evaluateJacobian() override
       {
         std::vector<IdxT>    ctemp{};
         std::vector<IdxT>    rtemp{};
@@ -580,7 +580,7 @@ namespace GridKit
        * @brief Update time
        *
        */
-      void updateTime(real_type t, real_type a)
+      void updateTime(real_type t, real_type a) override
       {
         for (const auto& component : components_)
         {
