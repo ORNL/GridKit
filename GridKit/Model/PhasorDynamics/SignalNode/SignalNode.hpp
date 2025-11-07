@@ -40,6 +40,7 @@ namespace GridKit
       virtual int evaluateJacobian() override;
 
       void    set(ScalarT* signal_in, IdxT* global_index);
+      bool    linked() const;
       ScalarT read() const;
       void    init(ScalarT signal_in);
 

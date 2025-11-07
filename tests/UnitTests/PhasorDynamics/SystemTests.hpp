@@ -151,6 +151,25 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      /**
+       * @brief Test for exception when signals are incorrectly configured
+       */
+      TestOutcome signalError()
+      {
+        using namespace std::filesystem;
+        using namespace GridKit::PhasorDynamics;
+        auto input_file = current_path() / "ThreeBusBasicBad.json";
+        auto data       = parseSystemModelData(input_file);
+        auto sys        = SystemModel<double, size_t>(data);
+
+        TestStatus status{true};
+        status *= throws<std::runtime_error>(
+            [&]()
+            { sys.allocate(); });
+
+        return status.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome jacobian()
       {

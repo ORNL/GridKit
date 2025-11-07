@@ -83,6 +83,7 @@ namespace GridKit
 
         int setGridKitComponentID(IdxT) override;
         int allocate() override;
+        int verify() const override;
         int initialize() override;
         int tagDifferentiable() override;
         int evaluateResidual() override;

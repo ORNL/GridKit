@@ -7,12 +7,14 @@
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
     using json = nlohmann::json;
+    using Log  = ::GridKit::Utilities::Logger;
 
     /// JSON parser function for the `ComponentData` class and descendants
     template <typename RealT,
@@ -55,20 +57,18 @@ namespace GridKit
           }
           else
           {
-            std::stringstream msg;
-            msg << "\n\tInvalid initial parameter value type: "
-                << "\"" << raw_parameter.key() << "\": " << raw_parameter.value()
-                << " (typed as \"" << raw_parameter.value().type_name() << "\")."
-                << error_context.str();
-            throw std::runtime_error(msg.str());
+            Log::error() << "\n\tInvalid initial parameter value type: "
+                         << "\"" << raw_parameter.key() << "\": "
+                         << raw_parameter.value()
+                         << " (typed as \"" << raw_parameter.value().type_name()
+                         << "\")." << error_context.str() << std::endl;
           }
         }
         else
         {
-          std::stringstream msg;
-          msg << "\n\tInitial parameter \"" << raw_parameter.key()
-              << "\" has no value." << error_context.str();
-          throw std::runtime_error(msg.str());
+          Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
+                       << "\" has no value." << error_context.str()
+                       << std::endl;
         }
       }
 
@@ -81,10 +81,9 @@ namespace GridKit
         }
         else
         {
-          std::stringstream msg;
-          msg << "\n\tInvalid port mapping: \"" << raw_port.key()
-              << "\" has no value." << error_context.str();
-          throw std::runtime_error(msg.str());
+          Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
+                       << "\" has no value." << error_context.str()
+                       << std::endl;
         }
       }
 
@@ -100,10 +99,9 @@ namespace GridKit
           }
           else
           {
-            std::stringstream msg;
-            msg << "\n\tInvalid monitored variable: \"" << var_name
-                << "\" in \"mon\" list." << error_context.str();
-            throw std::runtime_error(msg.str());
+            Log::error() << "\n\tInvalid monitored variable: \"" << var_name
+                         << "\" in \"mon\" list." << error_context.str()
+                         << std::endl;
           }
         }
       }

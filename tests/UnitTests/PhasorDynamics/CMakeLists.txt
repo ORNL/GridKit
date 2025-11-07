@@ -49,6 +49,9 @@ add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GridKit::definitions
                                          GridKit::phasor_dynamics_components
                                          GridKit::phasor_dynamics_components_dependency_tracking)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
+  ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json
+  COPYONLY)
 
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(test_phasor_system_single_component GridKit::phasor_dynamics_components
@@ -60,7 +63,8 @@ add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governortgov1)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
-add_test(NAME PhasorDynamicsSystemTest COMMAND test_phasor_system)
+add_test(NAME PhasorDynamicsSystemTest COMMAND test_phasor_system
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 
 install(TARGETS test_phasor_bus

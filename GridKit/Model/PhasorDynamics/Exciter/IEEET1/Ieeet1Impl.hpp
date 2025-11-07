@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
 
@@ -23,6 +24,7 @@ namespace GridKit
   {
     namespace Exciter
     {
+      using Log = ::GridKit::Utilities::Logger;
 
       /**
        * @brief  Constructor for IEEET1 Exciter
@@ -123,6 +125,28 @@ namespace GridKit
         }
 
         return 0;
+      }
+
+      /**
+       * @brief verify method checks that attached signals are also linked
+       */
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::verify() const
+      {
+        static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
+
+        int ret = 0;
+
+        if (signals_.template isAttached<OMEGA>())
+        {
+          if (!signals_.template isLinked<OMEGA>())
+          {
+            Log::error() << "Ieeet1: omega signal attached with no linked generator\n";
+            ret += 1;
+          }
+        }
+
+        return ret;
       }
 
       /**

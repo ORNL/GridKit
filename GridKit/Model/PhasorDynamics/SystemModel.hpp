@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/ScalarTraits.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 // Include all components
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -17,6 +18,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     /**
      * @brief Prototype for a system model class
@@ -269,7 +271,7 @@ namespace GridKit
        * @note Should default to 0. The system model could be used as a
        * component in a larger system that would need to set this value.
        */
-      int setGridKitComponentID(IdxT component_id)
+      int setGridKitComponentID(IdxT component_id) override
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -285,7 +287,7 @@ namespace GridKit
        * @post size_ >= 1
        *
        */
-      int allocate()
+      int allocate() override
       {
         size_ = 0;
 
@@ -326,7 +328,33 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        int errorCount = this->verify();
+        if (errorCount > 0)
+        {
+          Log::error() << "Component errors: " << errorCount << std::endl;
+          throw std::runtime_error("SystemModel allocation failed");
+        }
+
         return 0;
+      }
+
+      /**
+       * @brief Verify all components are configured correctly
+       *
+       * This method accumulates and returns the number of errors given by
+       * components. It should return 0 when all is well.
+       */
+      int verify() const override
+      {
+        int ret = 0;
+
+        // Verify components
+        for (const auto& component : components_)
+        {
+          ret += component->verify();
+        }
+
+        return ret;
       }
 
       /**
@@ -335,7 +363,7 @@ namespace GridKit
        * @return true
        * @return false
        */
-      bool hasJacobian()
+      bool hasJacobian() override
       {
         return false;
       }
@@ -358,7 +386,7 @@ namespace GridKit
        * @note Currently assuming each component stores variables contiguously in memory and
        * that these are simply concateneted in the global system.
        */
-      int initialize()
+      int initialize() override
       {
         for (const auto& bus : buses_)
         {
@@ -399,7 +427,7 @@ namespace GridKit
        * equations are differential variables, i.e. their derivatives
        * appear in the equations.
        */
-      int tagDifferentiable()
+      int tagDifferentiable() override
       {
         // Set initial values for global solution vectors
         for (const auto& bus : buses_)
@@ -441,7 +469,7 @@ namespace GridKit
        * to global system vectors. Make components write to the system
        * vectors directly.
        */
-      int evaluateResidual()
+      int evaluateResidual() override
       {
         // Update variables and evaluate component residuals
         for (const auto& bus : buses_)
@@ -499,7 +527,7 @@ namespace GridKit
        * slow otherwise.
        *
        */
-      int evaluateJacobian()
+      int evaluateJacobian() override
       {
         std::vector<IdxT>    ctemp{};
         std::vector<IdxT>    rtemp{};
@@ -552,7 +580,7 @@ namespace GridKit
        * @brief Update time
        *
        */
-      void updateTime(real_type t, real_type a)
+      void updateTime(real_type t, real_type a) override
       {
         for (const auto& component : components_)
         {

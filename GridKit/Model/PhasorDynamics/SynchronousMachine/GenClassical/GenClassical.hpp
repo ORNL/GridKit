@@ -68,6 +68,11 @@ namespace GridKit
       int tagDifferentiable() override;
       int evaluateResidual() override;
 
+      int verify() const override
+      {
+        return 0;
+      }
+
       // Still to be implemented
       int evaluateJacobian() override;
 
