@@ -33,7 +33,7 @@ namespace GridKit
     extern_indices_ = {0, 1, 2, 3, 4, 5, 6, 7};
     idc_            = id;
 
-    ScalarT magImpendence = 1 / (R_ * R_ + X_ * X_);
+    ScalarT magImpendence = 1.0 / (R_ * R_ + X_ * X_);
     YReMat_               = magImpendence * R_;
     YImMatOff_            = magImpendence * X_;
     YImMatDi_             = B_ / (2.0) - YImMatOff_;
@@ -139,9 +139,9 @@ namespace GridKit
   {
 
     // Create dF/dy
-    std::vector<IdxT>    rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    std::vector<IdxT>    ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
-    std::vector<ScalarT> vals{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
+    std::vector<IdxT>      rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    std::vector<IdxT>      ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
+    std::vector<real_type> vals{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
     jac_.setValues(rtemp, ctemp, vals);
 
     std::vector<IdxT> ccord{0, 1, 2, 3, 4, 5, 6, 7};
@@ -192,5 +192,7 @@ namespace GridKit
   // Available template instantiations
   template class TransmissionLine<double, long int>;
   template class TransmissionLine<double, size_t>;
+  template class TransmissionLine<DependencyTracking::Variable, long int>;
+  template class TransmissionLine<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

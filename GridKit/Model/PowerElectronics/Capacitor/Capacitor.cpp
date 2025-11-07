@@ -93,15 +93,15 @@ namespace GridKit
   {
     jac_.zeroMatrix();
     // Create dF/dy
-    std::vector<IdxT>    rcord{2, 2, 2};
-    std::vector<IdxT>    ccord{0, 1, 2};
-    std::vector<ScalarT> vals{1.0, -1.0, -1.0};
+    std::vector<IdxT>      rcord{2, 2, 2};
+    std::vector<IdxT>      ccord{0, 1, 2};
+    std::vector<real_type> vals{1.0, -1.0, -1.0};
     jac_.setValues(rcord, ccord, vals);
 
     // Create dF/dy'
     std::vector<IdxT>                                   rcordder{0, 1, 2};
     std::vector<IdxT>                                   ccordder{2, 2, 2};
-    std::vector<ScalarT>                                valsder{C_, -C_, -C_};
+    std::vector<real_type>                              valsder{C_, -C_, -C_};
     GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>(rcordder, ccordder, valsder, 3, 3);
 
     // Perform dF/dy + \alpha dF/dy'
@@ -137,5 +137,7 @@ namespace GridKit
   // Available template instantiations
   template class Capacitor<double, long int>;
   template class Capacitor<double, size_t>;
+  template class Capacitor<DependencyTracking::Variable, long int>;
+  template class Capacitor<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

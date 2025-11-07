@@ -124,5 +124,7 @@ namespace GridKit
   // Available template instantiations
   template class LinearTransformer<double, long int>;
   template class LinearTransformer<double, size_t>;
+  template class LinearTransformer<DependencyTracking::Variable, long int>;
+  template class LinearTransformer<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

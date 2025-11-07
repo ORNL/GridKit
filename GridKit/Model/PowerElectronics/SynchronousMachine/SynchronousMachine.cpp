@@ -106,12 +106,12 @@ namespace GridKit
     ScalarT                  llkq1 = std::get<0>(Llkq_);
     [[maybe_unused]] ScalarT llkq2 = std::get<1>(Llkq_);
 
-    ScalarT cos1   = cos((P_ / 2.0) * y_[5]);
-    ScalarT sin1   = sin((P_ / 2.0) * y_[5]);
-    ScalarT cos23m = cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT cos1   = std::cos((P_ / 2.0) * y_[5]);
+    ScalarT sin1   = std::sin((P_ / 2.0) * y_[5]);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
 
     f_[0] = y_[6] * cos1 + y_[7] * sin1 + y_[8];
     f_[1] = y_[6] * cos23m + y_[7] * sin23m + y_[8];
@@ -159,5 +159,7 @@ namespace GridKit
   // Available template instantiations
   template class SynchronousMachine<double, long int>;
   template class SynchronousMachine<double, size_t>;
+  template class SynchronousMachine<DependencyTracking::Variable, long int>;
+  template class SynchronousMachine<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

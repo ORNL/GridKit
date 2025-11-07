@@ -201,9 +201,9 @@ namespace GridKit
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(1);
-    valtemp = {-sin(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[14]) - cos(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[15]), 
-                cos(static_cast<real_type>(y_[3])), 
-                -sin(static_cast<real_type>(y_[3]))};
+    valtemp = {-sin(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[14]) - cos(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[15]),
+               cos(static_cast<real_type>(y_[3])),
+               -sin(static_cast<real_type>(y_[3]))};
     jac_.setValues(rtemp, ctemp, valtemp);
 
     // r = 2
@@ -212,8 +212,8 @@ namespace GridKit
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(2);
-    valtemp = {cos(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[14]) - sin(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[15]), 
-               sin(static_cast<real_type>(y_[3])), 
+    valtemp = {cos(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[14]) - sin(static_cast<real_type>(y_[3])) * static_cast<real_type>(y_[15]),
+               sin(static_cast<real_type>(y_[3])),
                cos(static_cast<real_type>(y_[3]))};
     jac_.setValues(rtemp, ctemp, valtemp);
 

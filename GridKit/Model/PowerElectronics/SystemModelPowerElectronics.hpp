@@ -289,13 +289,13 @@ namespace GridKit
         component->evaluateJacobian();
 
         // get references to local jacobian
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<real_type>&> tpm = component->getJacobian().getEntries();
         const auto& [r, c, v]                                                         = tpm;
 
         // Create copies of data to handle groundings
         std::vector<IdxT>    rgr;
         std::vector<IdxT>    cgr;
-        std::vector<ScalarT> vgr;
+        std::vector<real_type> vgr;
         for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)

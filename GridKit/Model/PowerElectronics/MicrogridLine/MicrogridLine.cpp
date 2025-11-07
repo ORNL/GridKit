@@ -109,9 +109,9 @@ namespace GridKit
     jac_.zeroMatrix();
 
     // Create dF/dy
-    std::vector<IdxT>    rtemp{1, 2, 3, 4};
-    std::vector<IdxT>    ctemp{5, 6, 5, 6};
-    std::vector<ScalarT> vals{-1.0, -1.0, 1.0, 1.0};
+    std::vector<IdxT>      rtemp{1, 2, 3, 4};
+    std::vector<IdxT>      ctemp{5, 6, 5, 6};
+    std::vector<real_type> vals{-1.0, -1.0, 1.0, 1.0};
     jac_.setValues(rtemp, ctemp, vals);
 
     std::vector<IdxT> ccord{0, 1, 3, 5, 6};
@@ -128,7 +128,7 @@ namespace GridKit
     // Create -dF/dy'
     std::vector<IdxT>                                   rcordder{5, 6};
     std::vector<IdxT>                                   ccordder{5, 6};
-    std::vector<ScalarT>                                valsder{-1.0, -1.0};
+    std::vector<real_type>                              valsder{-1.0, -1.0};
     GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>(rcordder, ccordder, valsder, 7, 7);
 
     // Perform dF/dy + \alpha dF/dy'
@@ -164,5 +164,7 @@ namespace GridKit
   // Available template instantiations
   template class MicrogridLine<double, long int>;
   template class MicrogridLine<double, size_t>;
+  template class MicrogridLine<DependencyTracking::Variable, long int>;
+  template class MicrogridLine<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit
