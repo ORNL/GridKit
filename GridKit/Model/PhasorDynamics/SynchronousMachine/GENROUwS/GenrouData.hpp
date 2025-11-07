@@ -7,6 +7,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Utilities/Enum.hpp>
 
 namespace GridKit
 {
@@ -54,7 +55,20 @@ namespace GridKit
       q,
       delta,
       omega,
+      SIZE
     };
+
+    inline const std::string& enumLabel(GenrouMonitorableVariables v)
+    {
+      static const std::string labels[] = {
+          "Ir",
+          "Ii",
+          "P",
+          "Q",
+          "Delta",
+          "Omega"};
+      return labels[Utilities::enumId(v)];
+    }
 
     /**
      * @brief Contains modeling data for a Genrou generator model.
