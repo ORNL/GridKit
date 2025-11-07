@@ -435,7 +435,7 @@ namespace GridKit
         // check if cpu data allocated
         if (h_val_data_ == nullptr)
         {
-          this->h_val_data_ = new ScalarT[nnz_current];
+          this->h_val_data_ = new ScalarT[static_cast<size_t>(nnz_current)];
           owns_cpu_values_  = true;
         }
       }
@@ -606,13 +606,13 @@ namespace GridKit
 
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
         {
-          this->h_row_data_          = new IdxT[n_ + 1];
-          this->h_col_data_          = new IdxT[nnz_current];
+          this->h_row_data_          = new IdxT[static_cast<size_t>(n_ + 1)];
+          this->h_col_data_          = new IdxT[static_cast<size_t>(nnz_current)];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr)
         {
-          this->h_val_data_ = new ScalarT[nnz_current];
+          this->h_val_data_ = new ScalarT[static_cast<size_t>(nnz_current)];
           owns_cpu_values_  = true;
         }
       }
@@ -689,11 +689,11 @@ namespace GridKit
 
       if (memspace == memory::HOST)
       {
-        this->h_row_data_ = new IdxT[n_ + 1];
+        this->h_row_data_ = new IdxT[static_cast<size_t>(n_ + 1)];
         std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);
-        this->h_col_data_ = new IdxT[nnz_current];
+        this->h_col_data_ = new IdxT[static_cast<size_t>(nnz_current)];
         std::fill(h_col_data_, h_col_data_ + nnz_current, 0);
-        this->h_val_data_ = new ScalarT[nnz_current];
+        this->h_val_data_ = new ScalarT[static_cast<size_t>(nnz_current)];
         std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
         owns_cpu_sparsity_pattern_ = true;
         owns_cpu_values_           = true;
@@ -748,13 +748,13 @@ namespace GridKit
         }
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
         {
-          h_row_data_                = new IdxT[n_ + 1];
-          h_col_data_                = new IdxT[nnz_];
+          h_row_data_                = new IdxT[static_cast<size_t>(n_ + 1)];
+          h_col_data_                = new IdxT[static_cast<size_t>(nnz_)];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr)
         {
-          h_val_data_      = new ScalarT[nnz_];
+          h_val_data_      = new ScalarT[static_cast<size_t>(nnz_)];
           owns_cpu_values_ = true;
         }
         mem_.copyArrayDeviceToHost(h_row_data_, d_row_data_, n_ + 1);
