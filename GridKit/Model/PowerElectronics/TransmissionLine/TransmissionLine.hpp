@@ -23,6 +23,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class TransmissionLine : public CircuitComponent<ScalarT, IdxT>
   {
+    using real_type = typename CircuitComponent<ScalarT, IdxT>::real_type;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
