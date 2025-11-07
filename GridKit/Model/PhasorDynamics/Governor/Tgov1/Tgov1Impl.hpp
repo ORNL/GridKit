@@ -268,7 +268,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
-        return (1 - this->indicator_low(x, f)) * (1 - this->indicator_high(x, f));
+        return (1.0 - this->indicator_low(x, f)) * (1.0 - this->indicator_high(x, f));
       }
 
       /**

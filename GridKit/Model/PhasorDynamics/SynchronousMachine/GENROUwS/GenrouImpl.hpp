@@ -361,14 +361,14 @@ namespace GridKit
       ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
       ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
-      ScalarT psiqpp = -vd / (1 + omega);
-      ScalarT psidpp = vq / (1 + omega);
+      ScalarT psiqpp = -vd / (1.0 + omega);
+      ScalarT psidpp = vq / (1.0 + omega);
       ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       ScalarT psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                      / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+                      / (1.0 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
       ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
       ScalarT psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                      / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+                      / (1.0 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
       ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
 
       /* Now we have the state variables, solve for alg. variables */
@@ -386,8 +386,8 @@ namespace GridKit
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
       y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
-      y_[10] = vd = -psiqpp * (1 + omega);
-      y_[11] = vq = psidpp * (1 + omega);
+      y_[10] = vd = -psiqpp * (1.0 + omega);
+      y_[11] = vq = psidpp * (1.0 + omega);
       y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       y_[13]      = id;
       y_[14]      = iq;

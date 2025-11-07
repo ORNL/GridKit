@@ -254,6 +254,12 @@ namespace GridKit
       inline Variable& operator/=(const double& rhs);
       inline Variable& operator/=(const Variable& rhs);
 
+      // conversion operator
+      inline operator double() const
+      {
+        return value_;
+      }
+
     private:
       double value_;           ///< Value of the variable.
       size_t variable_number_; ///< Independent variable ID

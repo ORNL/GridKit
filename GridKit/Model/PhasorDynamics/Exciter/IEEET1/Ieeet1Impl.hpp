@@ -275,7 +275,7 @@ namespace GridKit
 
         ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
         ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
-        return (1 - ind_low) * (1 - ind_high);
+        return (1.0 - ind_low) * (1.0 - ind_high);
       }
 
       /**

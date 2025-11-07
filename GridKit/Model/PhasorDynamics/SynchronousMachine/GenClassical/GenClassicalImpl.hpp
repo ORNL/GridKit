@@ -231,7 +231,7 @@ namespace GridKit
 
       // GenClassical differential equations
       f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
-      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * omega) / (1 + omega) - telec);
+      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * omega) / (1.0 + omega) - telec);
 
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));
