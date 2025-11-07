@@ -80,21 +80,21 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT wb_;
-    ScalarT wc_;
-    ScalarT mp_;
-    ScalarT Vn_;
-    ScalarT nq_;
-    ScalarT F_;
-    ScalarT Kiv_;
-    ScalarT Kpv_;
-    ScalarT Kic_;
-    ScalarT Kpc_;
-    ScalarT Cf_;
-    ScalarT rLf_;
-    ScalarT Lf_;
-    ScalarT rLc_;
-    ScalarT Lc_;
+    real_type wb_;
+    real_type wc_;
+    real_type mp_;
+    real_type Vn_;
+    real_type nq_;
+    real_type F_;
+    real_type Kiv_;
+    real_type Kpv_;
+    real_type Kic_;
+    real_type Kpc_;
+    real_type Cf_;
+    real_type rLf_;
+    real_type Lf_;
+    real_type rLc_;
+    real_type Lc_;
     bool    refframe_;
   };
 } // namespace GridKit
