@@ -34,6 +34,8 @@
 - Added complete basic consumer example project used for testing installation
 - Added `CsrMatrix` class.
 - Added `verify` step for signal node links in system model components
+- Added support for DependencyTracking::Variable in PowerElectrinics models.
+- Updated Jacobian value storage from `ScalarT` to `real_type`.
 
 ## v0.1
 
