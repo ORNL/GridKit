@@ -56,6 +56,7 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+    int setVirtualResistance(ScalarT RN);
 
   private:
     ScalarT RN_;

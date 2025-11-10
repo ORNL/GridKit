@@ -58,6 +58,16 @@ namespace GridKit
     return 0;
   }
 
+  /**
+   * Set the Virtual Resistance RN_
+   */
+  template <class ScalarT, typename IdxT>
+  int MicrogridBusDQ<ScalarT, IdxT>::setVirtualResistance(ScalarT RN)
+  {
+    RN_ = RN;
+    return 0;
+  }
+
   /*
    * \brief Identify differential variables
    */
