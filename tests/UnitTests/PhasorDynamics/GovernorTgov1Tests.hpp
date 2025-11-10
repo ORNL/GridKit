@@ -1,5 +1,8 @@
+#define _USE_MATH_DEFINES /* need this since directly including GenClassical.cpp for MSVC compiler */
 #include <iomanip>
 #include <iostream>
+#include <limits>
+
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
@@ -51,6 +54,59 @@ namespace GridKit
       }
 
       /**
+       * For Tgov:
+       * This section is the updated residual, not residual initialization.
+       */
+
+       TestOutcome residual()
+      {
+        TestStatus success = true;
+
+        // T1 governor parameters
+        real_type R{0.05};
+        real_type Pvmin{0};
+        real_type Pvmax{1};
+        real_type T1{0.5};
+        real_type T2{2.5};
+        real_type T3{7.5};
+        real_type Dt{0};
+
+        // Tgov1 external inputs
+        real_type omega{60};
+        real_type Pref{1};
+
+        // Test answer keys
+        const std::vector<ScalarT> res_answer = {0.0,
+                                                 -2364.0,
+                                                 -0.2};
+
+        // Set variable values matching the answer key
+        gov.y()[0] = 1;   // Ptx
+        gov.y()[1] = 1.0;   // Pv
+        gov.y()[2] = 10/15;   // Pmech
+
+        // Set derivative values matching the answer key
+        gov.yp()[0] = 8/15;       // ptx_dot
+        gov.yp()[1] = 2;          // pv_dot
+
+        gov.evaluateResidual();
+        std::vector<ScalarT>& residual = gov.getResidual();
+
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          if (!isEqual(residual[i], res_answer[i], tol_))
+          {
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << residual[i] << " != " << res_answer[i] << "\n";
+            success = false;
+            break;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Checks residual evaluation.
        *
        * The test instantiates and initializes Genrou model. Properly
@@ -58,8 +114,10 @@ namespace GridKit
        * precision.
        *
        * @return TestOutcome - wheter test was successful
+       * 
+       * (Verifies the residual evaluates to zero for the initial conditions)
        */
-      TestOutcome residual()
+      TestOutcome zeroInitialResidual()
       {
         TestStatus success = true;
 
