@@ -18,7 +18,7 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     class DenseMatrix
     {
     private:
@@ -58,7 +58,7 @@ namespace GridKit
      * @param[in] IdxT - rows_size
      * @param[in] IdxT - columns_size
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     DenseMatrix<RealT, IdxT>::DenseMatrix(const IdxT rows_size, const IdxT columns_size)
       : rows_size_(rows_size),
         columns_size_(columns_size),
@@ -77,7 +77,7 @@ namespace GridKit
      * @param[in] IdxT - j column index
      * @return RealT - value
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline RealT DenseMatrix<RealT, IdxT>::getValue(const IdxT i, const IdxT j) const
     {
       assert(i < this->columns_size_);
@@ -95,7 +95,7 @@ namespace GridKit
      * @param[in] IdxT - j column index
      * @param[in] RealT - value
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::setValue(const IdxT i, const IdxT j, const RealT value)
     {
       assert(i < this->columns_size_);
@@ -112,7 +112,7 @@ namespace GridKit
      *
      * @param[in] COO_Matrix<RealT, IdxT> - values_COO
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::setValues(COO_Matrix<RealT, IdxT> values_COO)
     {
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = values_COO.getEntries();
@@ -131,7 +131,7 @@ namespace GridKit
      *
      * @return Address of the vector containing matrix values
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::vector<RealT>* DenseMatrix<RealT, IdxT>::getValues()
     {
       return &(this->values_);
@@ -145,7 +145,7 @@ namespace GridKit
      *
      * @return Address of the COO matrix containing the sparsified matrix values
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline COO_Matrix<RealT, IdxT>* DenseMatrix<RealT, IdxT>::getValuesCOO()
     {
       if (!sparsified_ || values_changed_)
@@ -161,7 +161,7 @@ namespace GridKit
      * @tparam RealT
      * @tparam IdxT
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::toCOO()
     {
       if (!sparsified_ || values_changed_)
@@ -198,7 +198,7 @@ namespace GridKit
      *
      * @param[in] name to identify the specific matrix printed
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::printMatrix(std::string name)
     {
       std::cout << "Dense matrix: " << name << "\n";
@@ -218,7 +218,7 @@ namespace GridKit
      * @tparam RealT
      * @tparam IdxT
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     DenseMatrix<RealT, IdxT>::~DenseMatrix()
     {
     }

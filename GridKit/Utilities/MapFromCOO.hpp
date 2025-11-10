@@ -15,7 +15,7 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     std::vector<DependencyTracking::Variable::DependencyMap> MapFromCOO(LinearAlgebra::COO_Matrix<RealT, IdxT> matrix)
     {
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> matrix_entries = matrix.getEntries();

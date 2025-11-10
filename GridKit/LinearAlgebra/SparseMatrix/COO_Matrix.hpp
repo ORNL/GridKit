@@ -26,7 +26,7 @@ namespace GridKit
      *
      * m x n sparse matrix
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     class COO_Matrix
     {
     private:
@@ -100,7 +100,7 @@ namespace GridKit
      * @param[in] r row index
      * @return std::tuple<std::vector<IdxT>, std::vector<RealT>>
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::tuple<std::vector<IdxT>, std::vector<RealT>> COO_Matrix<RealT, IdxT>::getRowCopy(IdxT r)
     {
       if (!this->sorted_)
@@ -131,7 +131,7 @@ namespace GridKit
      * @tparam IdxT
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> COO_Matrix<RealT, IdxT>::getEntries()
     {
       if (!this->sorted_)
@@ -148,7 +148,7 @@ namespace GridKit
      * @tparam IdxT
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> COO_Matrix<RealT, IdxT>::getEntryCopies()
     {
       if (!this->sorted_)
@@ -165,7 +165,7 @@ namespace GridKit
      * @tparam IdxT
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> COO_Matrix<RealT, IdxT>::setDataToCSR()
     {
       if (!this->isSorted())
@@ -194,7 +194,7 @@ namespace GridKit
      * @tparam IdxT
      * @return std::vector<IdxT>
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::vector<IdxT> COO_Matrix<RealT, IdxT>::getCSRRowData()
     {
       if (!this->isSorted())
@@ -229,7 +229,7 @@ namespace GridKit
      *
      * @post Coordinates and values are set in the matrix.
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
     {
       // sort input
@@ -283,7 +283,7 @@ namespace GridKit
      *
      * @post this = this + alpha * a
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a)
     {
       if (alpha == 0)
@@ -362,7 +362,7 @@ namespace GridKit
      *
      * @post this = this + alpha * a
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
     {
       if (alpha == 0)
@@ -421,7 +421,7 @@ namespace GridKit
      * @tparam IdxT
      * @param[in] alpha scalar to scale by
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::scal(RealT alpha)
     {
       for (auto i = this->values_.begin(); i < this->values_.end(); i++)
@@ -437,7 +437,7 @@ namespace GridKit
      * @tparam IdxT
      * @return RealT - Frobenius Norm of the matrix
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline RealT COO_Matrix<RealT, IdxT>::frobNorm()
     {
       RealT totsum = 0.0;
@@ -459,7 +459,7 @@ namespace GridKit
      *
      * @post this = this(row_perm, col_perm)
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::permutation(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm)
     {
       assert(row_perm.size() = this->rows_size_);
@@ -490,7 +490,7 @@ namespace GridKit
      *
      * @post this = this(row_perm, col_perm) and removed indices have corresponding values set to 0
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::permutationSizeMap(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm, IdxT m, IdxT n)
     {
       assert(row_perm.size() == this->rows_size_);
@@ -521,7 +521,7 @@ namespace GridKit
      * @tparam IdxT
      *
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::zeroMatrix()
     {
       // resize doesn't affect capacity if smaller
@@ -544,7 +544,7 @@ namespace GridKit
      * @todo - it might be better to explicitly zero out the matrix and require to be so in preconditions
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::identityMatrix(IdxT n)
     {
       // Reset Matrix
@@ -564,7 +564,7 @@ namespace GridKit
      * @tparam RealT
      * @tparam IdxT
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparse()
     {
       this->sortSparseCOO(this->row_indices_, this->column_indices_, this->values_);
@@ -580,7 +580,7 @@ namespace GridKit
      * @param[out]  bool - true if sorted, false otherwise
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline bool COO_Matrix<RealT, IdxT>::isSorted()
     {
       return this->sorted_;
@@ -594,13 +594,13 @@ namespace GridKit
      *
      * @param[out] IdxT - number of non-zero elements in the matrix
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline IdxT COO_Matrix<RealT, IdxT>::nnz()
     {
       return static_cast<IdxT>(this->values_.size());
     }
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline std::tuple<IdxT, IdxT> COO_Matrix<RealT, IdxT>::getDimensions()
     {
       return std::tuple<IdxT, IdxT>(this->rows_size_, this->columns_size_);
@@ -614,7 +614,7 @@ namespace GridKit
      *
      * @param[in] name to identify the specific matrix printed
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::printMatrix(std::string name)
     {
       if (this->sorted_ == false)
@@ -642,7 +642,7 @@ namespace GridKit
      * @param[in] filename Output file path
      * @param[in] comment Optional comment for the Matrix Market file
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     void COO_Matrix<RealT, IdxT>::printMatrixMarket(const std::string& filename, const std::string& comment)
     {
       if (this->sorted_ == false)
@@ -711,7 +711,7 @@ namespace GridKit
      *
      * @return IdxT - index of lowest row
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline IdxT COO_Matrix<RealT, IdxT>::indexStartRow(const std::vector<IdxT>& rows, IdxT r)
     {
       // Specialized Binary Search for Lowest Row
@@ -757,7 +757,7 @@ namespace GridKit
      * @param[in] ci - column index
      * @return IdxT - returns the index of the coordinate
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline IdxT COO_Matrix<RealT, IdxT>::sparseCordBinarySearch(const std::vector<IdxT>& rows, const std::vector<IdxT>& columns, IdxT ri, IdxT ci)
     {
       assert(rows.size() == columns.size());
@@ -804,7 +804,7 @@ namespace GridKit
      * @return true if size was increased
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline bool COO_Matrix<RealT, IdxT>::checkIncreaseSize(IdxT r, IdxT c)
     {
       bool changed = false;
@@ -840,7 +840,7 @@ namespace GridKit
      * @param columns
      * @param values
      */
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values)
     {
 
@@ -894,7 +894,7 @@ namespace GridKit
      * @post COO_Matrix is created with given coordinates and values
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline COO_Matrix<RealT, IdxT>::COO_Matrix(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, IdxT m, IdxT n)
     {
       this->values_         = v;
@@ -917,7 +917,7 @@ namespace GridKit
      * @post empty COO Matrix is created with given size
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline COO_Matrix<RealT, IdxT>::COO_Matrix(IdxT m, IdxT n)
     {
       this->rows_size_      = m;
@@ -937,7 +937,7 @@ namespace GridKit
      * @post empty COO Matrix of size 0 is created
      */
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     inline COO_Matrix<RealT, IdxT>::COO_Matrix()
     {
       this->rows_size_      = 0;
@@ -948,7 +948,7 @@ namespace GridKit
       this->sorted_         = false; // Set to false until explicitly sorted, though logically it is sorted.
     }
 
-    template <class RealT, typename IdxT>
+    template <typename RealT, typename IdxT>
     COO_Matrix<RealT, IdxT>::~COO_Matrix()
     {
     }

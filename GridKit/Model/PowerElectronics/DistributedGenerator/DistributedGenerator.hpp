@@ -9,7 +9,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class BaseBus;
 
-  template <class RealT, typename IdxT>
+  template <typename RealT, typename IdxT>
   struct DistributedGeneratorParameters
   {
     RealT wb_;
