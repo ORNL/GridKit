@@ -283,7 +283,9 @@ int main(int /* argc */, char const** /* argv */)
   bus4->setExternalConnectionNodes(1, dqbus4 + 1);
   sysmodel->addComponent(bus4);
 
-  sysmodel->allocate(vec_size_total);
+  std::vector<bool> tag(vec_size_total, false);
+  std::fill(tag.begin(), std::next(tag.begin(), vec_size_internals), true);
+  sysmodel->allocate(vec_size_total, std::move(tag));
 
   std::cout << sysmodel->y().size() << std::endl;
   std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
@@ -361,12 +363,12 @@ int main(int /* argc */, char const** /* argv */)
   std::vector<double> yfinial = sysmodel->y();
 
   bus1->setVirtualResistance(1000.0);
-  idas->initializeSimulation(1.0, false);
+  idas->initializeSimulation(1.0, true);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   idas->runSimulation(1.1, nout, output_cb);
 
   bus1->setVirtualResistance(10000.0);
-  idas->initializeSimulation(1.1, false);
+  idas->initializeSimulation(1.1, true);
   nout = static_cast<int>(std::round((2.0 - 1.1) / dt));
   idas->runSimulation(2.0, nout, output_cb);
 

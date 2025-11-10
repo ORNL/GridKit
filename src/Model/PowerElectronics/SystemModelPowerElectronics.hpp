@@ -70,6 +70,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
 
   public:
     /**
@@ -169,7 +170,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int allocate(IdxT s)
+    int allocate(IdxT s, std::vector<bool>&& diff_tag)
     {
       // Allocate all components
       size_ = s;
@@ -182,6 +183,8 @@ namespace GridKit
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+
+      tag_ = std::move(diff_tag);
 
       return 0;
     }
