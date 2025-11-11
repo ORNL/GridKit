@@ -188,7 +188,7 @@ namespace GridKit
     {
       rcordder[static_cast<size_t>(i)] = static_cast<IdxT>(i + 3);
     }
-    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, rcordder, valsder, 16, 16);
+    MatrixT Jacder = MatrixT(rcordder, rcordder, valsder, 16, 16);
 
     std::vector<IdxT>  ctemp{};
     std::vector<IdxT>  rtemp{};

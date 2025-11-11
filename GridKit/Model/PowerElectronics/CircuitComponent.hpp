@@ -18,7 +18,8 @@ namespace GridKit
   class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
     CircuitComponent()  = default;
     ~CircuitComponent() = default;
@@ -197,12 +198,12 @@ namespace GridKit
       return f_;
     }
 
-    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian()
+    MatrixT& getJacobian()
     {
       return jac_;
     }
 
-    const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const
+    const MatrixT& getJacobian() const
     {
       return jac_;
     }
@@ -267,7 +268,7 @@ namespace GridKit
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
 
-    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> jac_;
+    MatrixT jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;

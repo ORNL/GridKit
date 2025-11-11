@@ -19,7 +19,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class MicrogridLoad : public CircuitComponent<ScalarT, IdxT>
   {
-    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;

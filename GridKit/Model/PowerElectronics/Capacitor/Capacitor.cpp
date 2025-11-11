@@ -99,10 +99,10 @@ namespace GridKit
     jac_.setValues(rcord, ccord, vals);
 
     // Create dF/dy'
-    std::vector<IdxT>                               rcordder{0, 1, 2};
-    std::vector<IdxT>                               ccordder{2, 2, 2};
-    std::vector<RealT>                              valsder{C_, -C_, -C_};
-    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, ccordder, valsder, 3, 3);
+    std::vector<IdxT>  rcordder{0, 1, 2};
+    std::vector<IdxT>  ccordder{2, 2, 2};
+    std::vector<RealT> valsder{C_, -C_, -C_};
+    MatrixT            Jacder = MatrixT(rcordder, ccordder, valsder, 3, 3);
 
     // Perform dF/dy + \alpha dF/dy'
     jac_.axpy(alpha_, Jacder);

@@ -16,7 +16,8 @@ namespace GridKit
     class Component : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
       Component()
         : size_(0)
@@ -99,12 +100,12 @@ namespace GridKit
         return f_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() override
+      MatrixT& getJacobian() override
       {
         return J_;
       }
 
-      const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const override
+      const MatrixT& getJacobian() const override
       {
         return J_;
       }
@@ -165,7 +166,7 @@ namespace GridKit
       std::vector<ScalarT> wb_;
       std::vector<ScalarT> h_;
 
-      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> J_;
+      MatrixT J_;
 
       RealT time_;
       RealT alpha_;
