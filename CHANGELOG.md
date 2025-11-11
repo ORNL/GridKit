@@ -35,7 +35,7 @@
 - Added `CsrMatrix` class.
 - Added `verify` step for signal node links in system model components
 - Added support for DependencyTracking::Variable in PowerElectronics models.
-- Updated Jacobian value storage from `ScalarT` to `real_type`.
+- Updated Jacobian value storage from `ScalarT` to `RealT`.
 - Added a header file defining constants to be used throughout the code.
 
 ## v0.1
