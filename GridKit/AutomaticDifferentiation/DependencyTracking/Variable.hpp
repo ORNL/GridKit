@@ -255,7 +255,7 @@ namespace GridKit
       inline Variable& operator/=(const Variable& rhs);
 
       // conversion operator
-      inline operator double() const
+      explicit inline operator double() const
       {
         return value_;
       }
