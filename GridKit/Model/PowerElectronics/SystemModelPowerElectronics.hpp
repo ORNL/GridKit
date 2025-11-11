@@ -71,6 +71,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+    using CircuitComponent<ScalarT, IdxT>::max_steps_;
 
   public:
     /**
@@ -83,7 +84,7 @@ namespace GridKit
       // Set system model parameters as default
       rel_tol_                 = 1e-4;
       abs_tol_                 = 1e-4;
-      this->max_steps_         = 2000;
+      max_steps_               = 2000;
       // By default don't use the jacobian
       use_jac_                 = false;
       jac_sparsity_row_indices = nullptr;
@@ -108,7 +109,7 @@ namespace GridKit
       // Set system model tolerances from input
       rel_tol_                 = rel_tol;
       abs_tol_                 = abs_tol;
-      this->max_steps_         = max_steps;
+      max_steps_               = max_steps;
       // Can choose if to use jacobian
       use_jac_                 = use_jac;
       jac_sparsity_row_indices = nullptr;
@@ -125,7 +126,7 @@ namespace GridKit
      */
     virtual ~PowerElectronicsModel()
     {
-      for (auto comp : this->components_)
+      for (auto comp : components_)
         delete comp;
 
       if (jac_sparsity_row_indices != nullptr)
@@ -273,7 +274,7 @@ namespace GridKit
      */
     bool hasJacobian()
     {
-      if (!this->use_jac_)
+      if (!use_jac_)
         return false;
 
       for (const auto& component : components_)
@@ -327,7 +328,7 @@ namespace GridKit
       {
         component->initialize();
       }
-      this->distributeVectors();
+      distributeVectors();
 
       return 0;
     }
@@ -372,12 +373,12 @@ namespace GridKit
      */
     int evaluateResidual()
     {
-      for (IdxT i = 0; i < this->f_.size(); i++)
+      for (IdxT i = 0; i < f_.size(); i++)
       {
         f_[i] = 0.0;
       }
 
-      this->distributeVectors();
+      distributeVectors();
 
       // Update system residual vector
 
