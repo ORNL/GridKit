@@ -20,7 +20,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, ScalarT R, ScalarT L)
+  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, real_type R, real_type L)
     : R_(R),
       L_(L)
   {
