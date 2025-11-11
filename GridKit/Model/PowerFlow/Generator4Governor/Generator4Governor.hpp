@@ -37,8 +37,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
   public:
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-    typedef BaseBus<ScalarT, IdxT>                                bus_type;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
 
     Generator4Governor(bus_type* bus, ScalarT P0, ScalarT Q0);
     virtual ~Generator4Governor();
@@ -55,7 +55,7 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(RealT t, RealT a)
     {
       time_  = t;
       alpha_ = a;
@@ -220,31 +220,31 @@ namespace GridKit
 
   private:
     // Generator parameters
-    real_type H_;
-    real_type D_;
-    real_type Xq_;
-    real_type Xd_;
-    real_type Xqp_;
-    real_type Xdp_;
-    real_type Rs_;
-    real_type Tq0p_;
-    real_type Td0p_;
-    real_type Ef0_;
-    real_type Pm0_;
-    real_type deltaPm_;
-    real_type deltaPn_;
-    real_type omega_s_;
-    real_type omega_b_;
-    real_type omega_up_;
-    real_type omega_lo_;
-    real_type c_;
-    real_type beta_;
+    RealT H_;
+    RealT D_;
+    RealT Xq_;
+    RealT Xd_;
+    RealT Xqp_;
+    RealT Xdp_;
+    RealT Rs_;
+    RealT Tq0p_;
+    RealT Td0p_;
+    RealT Ef0_;
+    RealT Pm0_;
+    RealT deltaPm_;
+    RealT deltaPn_;
+    RealT omega_s_;
+    RealT omega_b_;
+    RealT omega_up_;
+    RealT omega_lo_;
+    RealT c_;
+    RealT beta_;
 
     // Governor parameters
-    real_type T1_;
-    real_type T2_;
-    real_type T3_;
-    real_type K_;
+    RealT T1_;
+    RealT T2_;
+    RealT T3_;
+    RealT K_;
 
     // Index offsets
     const IdxT offsetGen_;

@@ -34,11 +34,9 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-    // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-    // typedef BaseBus<ScalarT, IdxT> bus_type;
-    using bus_type  = BaseBus<ScalarT, IdxT>;
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using LoadData  = GridKit::PowerFlowData::LoadData<real_type, IdxT>;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
+    using LoadData = GridKit::PowerFlowData::LoadData<RealT, IdxT>;
 
   public:
     Load(bus_type* bus, ScalarT P, ScalarT Q);
@@ -57,7 +55,7 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(RealT t, RealT a)
     {
       time_  = t;
       alpha_ = a;

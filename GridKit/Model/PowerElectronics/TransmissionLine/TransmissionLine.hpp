@@ -23,6 +23,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class TransmissionLine : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -45,7 +47,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    TransmissionLine(IdxT id, ScalarT R, ScalarT X, ScalarT B);
+    TransmissionLine(IdxT id, RealT R, RealT X, RealT B);
     virtual ~TransmissionLine();
 
     int allocate();
@@ -61,11 +63,11 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT R_;
-    ScalarT X_;
-    ScalarT B_;
-    ScalarT YReMat_;
-    ScalarT YImMatDi_;
-    ScalarT YImMatOff_;
+    RealT R_;
+    RealT X_;
+    RealT B_;
+    RealT YReMat_;
+    RealT YImMatDi_;
+    RealT YImMatOff_;
   };
 } // namespace GridKit

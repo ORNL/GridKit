@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/ScalarTraits.hpp>
 
 /**
  * @brief Enzyme constants for activity analysis
@@ -314,6 +315,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct InternalJacobian
       {
+        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
@@ -325,15 +329,15 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           wb,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        static void eval(ModelT*                     model,
+                         size_t                      n_res,
+                         size_t                      n_var,
+                         const std::map<IdxT, IdxT>& res_indices,
+                         const std::map<IdxT, IdxT>& var_indices,
+                         ScalarT*                    y,
+                         ScalarT*                    yp,
+                         ScalarT*                    wb,
+                         MatrixT&                    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -391,6 +395,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct InternalJacobianWithSignal
       {
+        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
@@ -403,16 +410,16 @@ namespace GridKit
          * @param[in] ws - Signal variables
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           wb,
-                         ScalarT*                                           ws,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        static void eval(ModelT*                     model,
+                         size_t                      n_res,
+                         size_t                      n_var,
+                         const std::map<IdxT, IdxT>& res_indices,
+                         const std::map<IdxT, IdxT>& var_indices,
+                         ScalarT*                    y,
+                         ScalarT*                    yp,
+                         ScalarT*                    wb,
+                         ScalarT*                    ws,
+                         MatrixT&                    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -472,6 +479,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct ExternalJacobian
       {
+        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
@@ -484,16 +494,16 @@ namespace GridKit
          * @param[in] ws - Signal variables
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           wb,
-                         ScalarT*                                           ws,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        static void eval(ModelT*                     model,
+                         size_t                      n_res,
+                         size_t                      n_var,
+                         const std::map<IdxT, IdxT>& res_indices,
+                         const std::map<IdxT, IdxT>& var_indices,
+                         ScalarT*                    y,
+                         ScalarT*                    yp,
+                         ScalarT*                    wb,
+                         ScalarT*                    ws,
+                         MatrixT&                    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -558,6 +568,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BusJacobian
       {
+        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
@@ -569,15 +582,15 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           wb,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        static void eval(ModelT*                     model,
+                         size_t                      n_res,
+                         size_t                      n_var,
+                         const std::map<IdxT, IdxT>& res_indices,
+                         const std::map<IdxT, IdxT>& var_indices,
+                         ScalarT*                    y,
+                         ScalarT*                    yp,
+                         ScalarT*                    wb,
+                         MatrixT&                    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -635,6 +648,9 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BranchJacobian
       {
+        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
@@ -646,15 +662,15 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                                            model,
-                         size_t                                             n_res,
-                         size_t                                             n_var,
-                         const std::map<IdxT, IdxT>&                        res_indices,
-                         const std::map<IdxT, IdxT>&                        var_indices,
-                         ScalarT*                                           y,
-                         ScalarT*                                           yp,
-                         ScalarT*                                           wb,
-                         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& jac)
+        static void eval(ModelT*                     model,
+                         size_t                      n_res,
+                         size_t                      n_var,
+                         const std::map<IdxT, IdxT>& res_indices,
+                         const std::map<IdxT, IdxT>& var_indices,
+                         ScalarT*                    y,
+                         ScalarT*                    yp,
+                         ScalarT*                    wb,
+                         MatrixT&                    jac)
         {
           if (n_res > 0 && n_var > 0)
           {

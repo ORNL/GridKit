@@ -19,6 +19,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class VoltageSource : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -41,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    VoltageSource(IdxT id, ScalarT V);
+    VoltageSource(IdxT id, RealT V);
     virtual ~VoltageSource();
 
     int allocate();
@@ -57,6 +59,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT V_;
+    RealT V_;
   };
 } // namespace GridKit

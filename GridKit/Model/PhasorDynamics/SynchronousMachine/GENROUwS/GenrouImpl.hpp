@@ -61,24 +61,24 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
                                   IdxT      unit_id,
-                                  real_type p0,
-                                  real_type q0,
-                                  real_type H,
-                                  real_type D,
-                                  real_type Ra,
-                                  real_type Tdop,
-                                  real_type Tdopp,
-                                  real_type Tqopp,
-                                  real_type Tqop,
-                                  real_type Xd,
-                                  real_type Xdp,
-                                  real_type Xdpp,
-                                  real_type Xq,
-                                  real_type Xqp,
-                                  real_type Xqpp,
-                                  real_type Xl,
-                                  real_type S10,
-                                  real_type S12)
+                                  RealT     p0,
+                                  RealT     q0,
+                                  RealT     H,
+                                  RealT     D,
+                                  RealT     Ra,
+                                  RealT     Tdop,
+                                  RealT     Tdopp,
+                                  RealT     Tqopp,
+                                  RealT     Tqop,
+                                  RealT     Xd,
+                                  RealT     Xdp,
+                                  RealT     Xdpp,
+                                  RealT     Xq,
+                                  RealT     Xqp,
+                                  RealT     Xqpp,
+                                  RealT     Xl,
+                                  RealT     S10,
+                                  RealT     S12)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -160,97 +160,97 @@ namespace GridKit
     {
       if (data.parameters.contains(model_data_type::Parameters::p0))
       {
-        p0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::p0));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::q0))
       {
-        q0_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::q0));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::H))
       {
-        H_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::H));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::D))
       {
-        D_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::D));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Ra))
       {
-        Ra_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ra));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Tdop))
       {
-        Tdop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdop));
+        Tdop_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdop));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Tdopp))
       {
-        Tdopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tdopp));
+        Tdopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdopp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Tqopp))
       {
-        Tqopp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqopp));
+        Tqopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tqopp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Tqop))
       {
-        Tqop_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tqop));
+        Tqop_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tqop));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xd))
       {
-        Xd_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xd));
+        Xd_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xd));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xdp))
       {
-        Xdp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xdpp))
       {
-        Xdpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xdpp));
+        Xdpp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdpp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xq))
       {
-        Xq_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xq));
+        Xq_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xq));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xqp))
       {
-        Xqp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqp));
+        Xqp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xqp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xqpp))
       {
-        Xqpp_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xqpp));
+        Xqpp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xqpp));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Xl))
       {
-        Xl_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Xl));
+        Xl_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xl));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::S10))
       {
-        S10_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S10));
+        S10_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S10));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::S12))
       {
-        S12_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::S12));
+        S12_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S12));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::mva_base))
       {
-        mva_base_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::mva_base));
+        mva_base_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::mva_base));
       }
 
       if (data.ports.contains(model_data_type::Ports::bus))
@@ -361,14 +361,14 @@ namespace GridKit
       ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
       ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
-      ScalarT psiqpp = -vd / (1 + omega);
-      ScalarT psidpp = vq / (1 + omega);
+      ScalarT psiqpp = -vd / (ONE<RealT> + omega);
+      ScalarT psidpp = vq / (ONE<RealT> + omega);
       ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       ScalarT psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                      / (1 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+                      / (ONE<RealT> + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
       ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
       ScalarT psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                      / (1 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+                      / (ONE<RealT> + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
       ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
 
       /* Now we have the state variables, solve for alg. variables */
@@ -386,8 +386,8 @@ namespace GridKit
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
       y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
-      y_[10] = vd = -psiqpp * (1 + omega);
-      y_[11] = vq = psidpp * (1 + omega);
+      y_[10] = vd = -psiqpp * (ONE<RealT> + omega);
+      y_[11] = vq = psidpp * (ONE<RealT> + omega);
       y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       y_[13]      = id;
       y_[14]      = iq;
@@ -484,20 +484,20 @@ namespace GridKit
       ScalarT efd   = ws[1];
 
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
-      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * omega) / (1.0 + omega) - telec);
-      f[2] = Eqp_dot - (1.0 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f[3] = psidp_dot - (1.0 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqp_dot - (1.0 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f[5] = Edp_dot - (1.0 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * 60.0);
+      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
+      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
+      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
+      f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
       f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f[10] = vd + psiqpp * (1.0 + omega);
-      f[11] = vq - psidpp * (1.0 + omega);
+      f[10] = vd + psiqpp * (ONE<RealT> + omega);
+      f[11] = vq - psidpp * (ONE<RealT> + omega);
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
@@ -597,10 +597,10 @@ namespace GridKit
       SB_ = 0;
       if (S12_ != 0)
       {
-        real_type s112 = std::sqrt(S10_ / S12_);
+        RealT s112 = std::sqrt(S10_ / S12_);
 
-        SA_ = (1.2 * s112 + 1.0) / (s112 + 1.0);
-        SB_ = (1.2 * s112 - 1.0) / (s112 - 1.0);
+        SA_ = (1.2 * s112 + ONE<RealT>) / (s112 + ONE<RealT>);
+        SB_ = (1.2 * s112 - ONE<RealT>) / (s112 - ONE<RealT>);
         if (SB_ < SA_)
           SA_ = SB_;
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));

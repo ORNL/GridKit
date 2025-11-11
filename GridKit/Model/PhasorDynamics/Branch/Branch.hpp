@@ -51,13 +51,13 @@ namespace GridKit
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
 
-      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = BranchData<real_type, IdxT>;
+      using model_data_type = BranchData<RealT, IdxT>;
 
     public:
       Branch(bus_type* bus1, bus_type* bus2);
-      Branch(bus_type* bus1, bus_type* bus2, real_type R, real_type X, real_type G, real_type B);
+      Branch(bus_type* bus1, bus_type* bus2, RealT R, RealT X, RealT G, RealT B);
       Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
       virtual ~Branch();
 
@@ -73,31 +73,31 @@ namespace GridKit
         return 0;
       }
 
-      virtual void updateTime(real_type /* t */, real_type /* a */) override
+      virtual void updateTime(RealT /* t */, RealT /* a */) override
       {
       }
 
     public:
-      void setR(real_type R)
+      void setR(RealT R)
       {
         R_ = R;
         setDerivedParams();
       }
 
-      void setX(real_type X)
+      void setX(RealT X)
       {
         // std::cout << "Setting X ...\n";
         X_ = X;
         setDerivedParams();
       }
 
-      void setG(real_type G)
+      void setG(RealT G)
       {
         G_ = G;
         setDerivedParams();
       }
 
-      void setB(real_type B)
+      void setB(RealT B)
       {
         B_ = B;
         setDerivedParams();
@@ -155,16 +155,16 @@ namespace GridKit
     private:
       bus_type* bus1_;
       bus_type* bus2_;
-      real_type R_{0.0};
-      real_type X_{0.0};
-      real_type G_{0.0};
-      real_type B_{0.0};
+      RealT     R_{0.0};
+      RealT     X_{0.0};
+      RealT     G_{0.0};
+      RealT     B_{0.0};
       IdxT      bus1_id_{0};
       IdxT      bus2_id_{0};
 
       /* Derivied parameters */
-      real_type b_;
-      real_type g_;
+      RealT b_;
+      RealT g_;
     };
 
   } // namespace PhasorDynamics

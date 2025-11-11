@@ -19,6 +19,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class InductionMotor : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -41,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    InductionMotor(IdxT id, ScalarT Lls, ScalarT Rs, ScalarT Llr, ScalarT Rr, ScalarT Lms, ScalarT RJ, ScalarT P);
+    InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P);
     virtual ~InductionMotor();
 
     int allocate();
@@ -57,12 +59,12 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT Lls_;
-    ScalarT Rs_;
-    ScalarT Llr_;
-    ScalarT Rr_;
-    ScalarT Lms_;
-    ScalarT RJ_;
-    ScalarT P_;
+    RealT Lls_;
+    RealT Rs_;
+    RealT Llr_;
+    RealT Rr_;
+    RealT Lms_;
+    RealT RJ_;
+    RealT P_;
   };
 } // namespace GridKit

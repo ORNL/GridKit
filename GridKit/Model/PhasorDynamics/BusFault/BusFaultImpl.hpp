@@ -40,7 +40,7 @@ namespace GridKit
      * @param B - line shunt charging
      */
     template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, real_type R, real_type X, int status)
+    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, RealT R, RealT X, int status)
       : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
     {
       size_ = 0;
@@ -61,12 +61,12 @@ namespace GridKit
     {
       if (data.parameters.contains(DataT::Parameters::R))
       {
-        R_ = std::get<real_type>(data.parameters.at(DataT::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(DataT::Parameters::R));
       }
 
       if (data.parameters.contains(DataT::Parameters::X))
       {
-        X_ = std::get<real_type>(data.parameters.at(DataT::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(DataT::Parameters::X));
       }
 
       if (data.parameters.contains(DataT::Parameters::state0))

@@ -18,8 +18,9 @@ namespace GridKit
     class BusBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
-      using BusTypeT  = typename BusData<real_type, IdxT>::BusType;
+      using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using MatrixT  = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
 
       BusBase()
         : size_(0)
@@ -56,12 +57,12 @@ namespace GridKit
         return false;
       }
 
-      virtual void updateTime(real_type /* t */, real_type /* a */) override
+      virtual void updateTime(RealT /* t */, RealT /* a */) override
       {
         // No time to update in bus models
       }
 
-      virtual void setTolerances(real_type& rtol, real_type& atol) const override
+      virtual void setTolerances(RealT& rtol, RealT& atol) const override
       {
         rtol = rtol_;
         atol = atol_;
@@ -111,12 +112,12 @@ namespace GridKit
         return tag_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() override
+      MatrixT& getJacobian() override
       {
         return J_;
       }
 
-      const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const override
+      const MatrixT& getJacobian() const override
       {
         return J_;
       }
@@ -175,13 +176,13 @@ namespace GridKit
       std::vector<bool>    tag_;
       std::vector<ScalarT> f_;
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> J_;
+      MatrixT J_;
 
-      real_type time_;
-      real_type alpha_;
+      RealT time_;
+      RealT alpha_;
 
-      real_type rtol_;
-      real_type atol_;
+      RealT rtol_;
+      RealT atol_;
 
       IdxT max_steps_;
 

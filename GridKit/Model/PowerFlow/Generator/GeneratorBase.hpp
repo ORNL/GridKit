@@ -38,8 +38,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-    using bus_type  = BaseBus<ScalarT, IdxT>;
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+    using bus_type = BaseBus<ScalarT, IdxT>;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
   public:
     GeneratorBase()
@@ -96,7 +96,7 @@ namespace GridKit
       return 0;
     }
 
-    void updateTime(real_type, real_type)
+    void updateTime(RealT, RealT)
     {
     }
 

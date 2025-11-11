@@ -38,13 +38,13 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
 
-      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = LoadData<real_type, IdxT>;
+      using model_data_type = LoadData<RealT, IdxT>;
 
     public:
       Load(bus_type* bus);
-      Load(bus_type* bus, real_type R, real_type X);
+      Load(bus_type* bus, RealT R, RealT X);
       Load(bus_type* bus, const model_data_type& data);
       virtual ~Load();
 
@@ -60,17 +60,17 @@ namespace GridKit
         return 0;
       }
 
-      virtual void updateTime(real_type /* t */, real_type /* a */) override
+      virtual void updateTime(RealT /* t */, RealT /* a */) override
       {
       }
 
     public:
-      void setR(real_type R)
+      void setR(RealT R)
       {
         R_ = R;
       }
 
-      void setX(real_type X)
+      void setX(RealT X)
       {
         // std::cout << "Setting X ...\n";
         X_ = X;
@@ -104,12 +104,12 @@ namespace GridKit
 
     private:
       bus_type* bus_{nullptr};
-      real_type R_{0.1};
-      real_type X_{0.01};
+      RealT     R_{0.1};
+      RealT     X_{0.01};
 
       /* Derivied parameters */
-      real_type b_;
-      real_type g_;
+      RealT b_;
+      RealT g_;
     };
 
   } // namespace PhasorDynamics

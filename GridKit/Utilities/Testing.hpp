@@ -30,8 +30,8 @@ namespace GridKit
     /**
      * @brief Equatlity comparison between maps with a tolerance for the scalar value
      *
-     * @tparam IdxT
-     * @tparam RealT
+     * @tparam IdxT - Integer data type
+     * @tparam RealT - Real type
      *
      * @param[in] a - first map to compare
      * @param[in] b - second map to compare

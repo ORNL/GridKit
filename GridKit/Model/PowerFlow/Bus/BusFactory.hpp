@@ -13,8 +13,8 @@ namespace GridKit
   class BusFactory
   {
   public:
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BusData   = GridKit::PowerFlowData::BusData<real_type, IdxT>;
+    using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusData = GridKit::PowerFlowData::BusData<RealT, IdxT>;
 
     BusFactory() = delete;
 

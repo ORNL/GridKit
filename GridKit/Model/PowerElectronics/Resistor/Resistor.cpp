@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
+  Resistor<ScalarT, IdxT>::Resistor(IdxT id, RealT R)
     : R_(R)
   {
     size_           = 2;
@@ -82,9 +82,9 @@ namespace GridKit
 
     // Create dF/dy
     // does compiler make constant???
-    std::vector<IdxT>    rcord{0, 0, 1, 1};
-    std::vector<IdxT>    ccord{0, 1, 0, 1};
-    std::vector<ScalarT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
+    std::vector<IdxT>  rcord{0, 0, 1, 1};
+    std::vector<IdxT>  ccord{0, 1, 0, 1};
+    std::vector<RealT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
     jac_.setValues(rcord, ccord, vals);
 
     return 0;
@@ -117,5 +117,7 @@ namespace GridKit
   // Available template instantiations
   template class Resistor<double, long int>;
   template class Resistor<double, size_t>;
+  template class Resistor<DependencyTracking::Variable, long int>;
+  template class Resistor<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

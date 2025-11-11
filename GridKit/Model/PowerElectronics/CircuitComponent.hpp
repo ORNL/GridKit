@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 
 namespace GridKit
@@ -17,12 +18,13 @@ namespace GridKit
   class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
+    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
     CircuitComponent()  = default;
     ~CircuitComponent() = default;
 
-    void updateTime(ScalarT t, ScalarT a)
+    void updateTime(RealT t, RealT a)
     {
       this->time_  = t;
       this->alpha_ = a;
@@ -95,7 +97,7 @@ namespace GridKit
       return size_opt_;
     }
 
-    virtual void setTolerances(real_type& rel_tol, real_type& abs_tol) const
+    virtual void setTolerances(RealT& rel_tol, RealT& abs_tol) const
     {
       rel_tol = rel_tol_;
       abs_tol = abs_tol_;
@@ -196,12 +198,12 @@ namespace GridKit
       return f_;
     }
 
-    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian()
+    MatrixT& getJacobian()
     {
       return jac_;
     }
 
-    const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const
+    const MatrixT& getJacobian() const
     {
       return jac_;
     }
@@ -266,17 +268,17 @@ namespace GridKit
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
 
-    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> jac_;
+    MatrixT jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;
     std::vector<ScalarT> param_lo_;
 
-    real_type time_;
-    real_type alpha_;
+    RealT time_;
+    RealT alpha_;
 
-    real_type rel_tol_;
-    real_type abs_tol_;
+    RealT rel_tol_;
+    RealT abs_tol_;
 
     IdxT max_steps_;
 

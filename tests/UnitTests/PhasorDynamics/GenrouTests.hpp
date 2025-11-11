@@ -19,7 +19,7 @@ namespace GridKit
     class GenrouTests
     {
     private:
-      using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon(); // added this: was not originally there
 
     public:
@@ -90,7 +90,7 @@ namespace GridKit
         gen.evaluateResidual();
 
         // Require results to be within machine precision
-        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         const std::vector<ScalarT>& f = gen.getResidual();
         for (const auto& f_val : f)
@@ -109,24 +109,24 @@ namespace GridKit
         TestStatus success = true;
 
         // GenRou generator parameters
-        real_type p0{1};
-        real_type q0{.05013};
-        real_type H{3};
-        real_type D{.5};
-        real_type Ra{.1};
-        real_type Tdop{7};
-        real_type Tdopp{.04};
-        real_type Tqopp{.05};
-        real_type Tqop{.75};
-        real_type Xd{2.1};
-        real_type Xdp{.2};
-        real_type Xdpp{.5};
-        real_type Xq{.18};
-        real_type Xqp{.3};
-        real_type Xqpp{.5};
-        real_type Xl{.5};
-        real_type S10{.1};
-        real_type S12{.2};
+        RealT p0{1};
+        RealT q0{.05013};
+        RealT H{3};
+        RealT D{.5};
+        RealT Ra{.1};
+        RealT Tdop{7};
+        RealT Tdopp{.04};
+        RealT Tqopp{.05};
+        RealT Tqop{.75};
+        RealT Xd{2.1};
+        RealT Xdp{.2};
+        RealT Xdpp{.5};
+        RealT Xq{.18};
+        RealT Xqp{.3};
+        RealT Xqpp{.5};
+        RealT Xl{.5};
+        RealT S10{.1};
+        RealT S12{.2};
 
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{0};   ///< Bus imaginary voltage
@@ -228,7 +228,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         // Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian();

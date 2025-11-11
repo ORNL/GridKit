@@ -11,7 +11,7 @@ namespace GridKit
   namespace LinearAlgebra
   {
 
-    template <class ScalarT, typename IdxT>
+    template <typename RealT, typename IdxT>
     class CsrMatrix
     {
     public:
@@ -24,7 +24,7 @@ namespace GridKit
                 IdxT                nnz,
                 IdxT**              rows,
                 IdxT**              cols,
-                ScalarT**           vals,
+                RealT**             vals,
                 memory::MemorySpace memspace_src = memory::HOST,
                 memory::MemorySpace memspace_dst = memory::HOST);
 
@@ -38,18 +38,18 @@ namespace GridKit
       void setNnz(IdxT nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);
 
-      IdxT*    getRowData(memory::MemorySpace memspace = memory::HOST);
-      IdxT*    getColData(memory::MemorySpace memspace = memory::HOST);
-      ScalarT* getValues(memory::MemorySpace memspace = memory::HOST);
+      IdxT*  getRowData(memory::MemorySpace memspace = memory::HOST);
+      IdxT*  getColData(memory::MemorySpace memspace = memory::HOST);
+      RealT* getValues(memory::MemorySpace memspace = memory::HOST);
 
       int copyDataFrom(const IdxT*         row_data,
                        const IdxT*         col_data,
-                       const ScalarT*      val_data,
+                       const RealT*        val_data,
                        memory::MemorySpace memspace_in,
                        memory::MemorySpace memspace_out);
       int copyDataFrom(const IdxT*         row_data,
                        const IdxT*         col_data,
-                       const ScalarT*      val_data,
+                       const RealT*        val_data,
                        IdxT                new_nnz,
                        memory::MemorySpace memspace_in,
                        memory::MemorySpace memspace_out);
@@ -57,7 +57,7 @@ namespace GridKit
       int allocateMatrixData(memory::MemorySpace memspace);
       int setDataPointers(IdxT*               row_data,
                           IdxT*               col_data,
-                          ScalarT*            val_data,
+                          RealT*              val_data,
                           memory::MemorySpace memspace);
 
       int destroyMatrixData(memory::MemorySpace memspace);
@@ -68,12 +68,12 @@ namespace GridKit
 
       // update Values just updates values; it allocates if necessary.
       // values have the same dimensions between different formats
-      virtual int copyValues(const ScalarT*      new_vals,
+      virtual int copyValues(const RealT*        new_vals,
                              memory::MemorySpace memspace_in,
                              memory::MemorySpace memspace_out);
 
       // set new values just sets the pointer, use caution.
-      virtual int setValuesPointer(ScalarT*            new_vals,
+      virtual int setValuesPointer(RealT*              new_vals,
                                    memory::MemorySpace memspace);
 
     private:
@@ -82,16 +82,16 @@ namespace GridKit
       IdxT nnz_{0}; ///< number of non-zeros
 
       // host data
-      IdxT*    h_row_data_{nullptr};   ///< row data (HOST)
-      IdxT*    h_col_data_{nullptr};   ///< column data (HOST)
-      ScalarT* h_val_data_{nullptr};   ///< value data (HOST)
-      bool     h_data_updated_{false}; ///< HOST update flag
+      IdxT*  h_row_data_{nullptr};   ///< row data (HOST)
+      IdxT*  h_col_data_{nullptr};   ///< column data (HOST)
+      RealT* h_val_data_{nullptr};   ///< value data (HOST)
+      bool   h_data_updated_{false}; ///< HOST update flag
 
       // gpu data
-      IdxT*    d_row_data_{nullptr};   ///< row data (DEVICE)
-      IdxT*    d_col_data_{nullptr};   ///< column data (DEVICE)
-      ScalarT* d_val_data_{nullptr};   ///< value data (DEVICE)
-      bool     d_data_updated_{false}; ///< DEVICE update flag
+      IdxT*  d_row_data_{nullptr};   ///< row data (DEVICE)
+      IdxT*  d_col_data_{nullptr};   ///< column data (DEVICE)
+      RealT* d_val_data_{nullptr};   ///< value data (DEVICE)
+      bool   d_data_updated_{false}; ///< DEVICE update flag
 
       void setNotUpdated();
 

@@ -254,6 +254,12 @@ namespace GridKit
       inline Variable& operator/=(const double& rhs);
       inline Variable& operator/=(const Variable& rhs);
 
+      // conversion operator
+      explicit inline operator double() const
+      {
+        return value_;
+      }
+
     private:
       double value_;           ///< Value of the variable.
       size_t variable_number_; ///< Independent variable ID
@@ -334,9 +340,8 @@ namespace GridKit
   class ScalarTraits<DependencyTracking::Variable>
   {
   public:
-    typedef double real_type;
-    typedef double norm_type;
-    typedef double scalar_type;
+    typedef double RealT;
+    typedef double NormT;
   };
 
 } // namespace GridKit

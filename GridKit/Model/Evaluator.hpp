@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
@@ -17,7 +18,8 @@ namespace GridKit
     class Evaluator
     {
     public:
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
 
       Evaluator()
       {
@@ -50,11 +52,11 @@ namespace GridKit
        */
       virtual bool hasJacobian() = 0;
 
-      virtual IdxT sizeQuadrature()                                      = 0;
-      virtual IdxT sizeParams()                                          = 0;
-      virtual void updateTime(real_type t, real_type a)                  = 0;
-      virtual void setTolerances(real_type& rtol, real_type& atol) const = 0;
-      virtual void setMaxSteps(IdxT& msa) const                          = 0;
+      virtual IdxT sizeQuadrature()                              = 0;
+      virtual IdxT sizeParams()                                  = 0;
+      virtual void updateTime(RealT t, RealT a)                  = 0;
+      virtual void setTolerances(RealT& rtol, RealT& atol) const = 0;
+      virtual void setMaxSteps(IdxT& msa) const                  = 0;
 
       virtual std::vector<ScalarT>&       y()       = 0;
       virtual const std::vector<ScalarT>& y() const = 0;
@@ -83,9 +85,8 @@ namespace GridKit
       virtual std::vector<ScalarT>&       getResidual()       = 0;
       virtual const std::vector<ScalarT>& getResidual() const = 0;
 
-      /// \todo Use a different approach to store and set Jacobians
-      virtual GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>&       getJacobian()       = 0;
-      virtual const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const = 0;
+      virtual MatrixT&       getJacobian()       = 0;
+      virtual const MatrixT& getJacobian() const = 0;
 
       virtual std::vector<ScalarT>&       getIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getIntegrand() const = 0;

@@ -30,13 +30,13 @@ namespace AnalysisManager
       using OptimizationSolver<ScalarT, IdxT>::integrator_;
       using OptimizationSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
-      typedef Ipopt::Index                     Index;
-      typedef Ipopt::Number                    Number;
-      typedef Ipopt::SolverReturn              SolverReturn;
-      typedef Ipopt::IpoptCalculatedQuantities IpoptCalculatedQuantities;
-      typedef Ipopt::IpoptData                 IpoptData;
+      using Index                     = Ipopt::Index;
+      using Number                    = Ipopt::Number;
+      using SolverReturn              = Ipopt::SolverReturn;
+      using IpoptCalculatedQuantities = Ipopt::IpoptCalculatedQuantities;
+      using IpoptData                 = Ipopt::IpoptData;
 
     public:
       DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator);
@@ -80,9 +80,9 @@ namespace AnalysisManager
                                      IpoptCalculatedQuantities* ip_cq);
 
     private:
-      real_type t_init_;
-      real_type t_final_;
-      int       nout_;
+      RealT t_init_;
+      RealT t_final_;
+      int   nout_;
     };
 
   } // namespace IpoptInterface

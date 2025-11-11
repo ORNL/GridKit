@@ -27,8 +27,8 @@ namespace GridKit
 
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type* bus,
-                              real_type R,
-                              real_type X)
+                              RealT     R,
+                              RealT     X)
       : bus_(bus),
         R_(R),
         X_(X)
@@ -44,12 +44,12 @@ namespace GridKit
     {
       if (data.parameters.contains(model_data_type::Parameters::R))
       {
-        R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::X))
       {
-        X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
       }
 
       size_ = 0;

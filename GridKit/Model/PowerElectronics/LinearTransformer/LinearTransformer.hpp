@@ -19,6 +19,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class LinearTransformer : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -41,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    LinearTransformer(IdxT id, ScalarT L0, ScalarT L1, ScalarT R0, ScalarT R1, ScalarT M);
+    LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M);
     virtual ~LinearTransformer();
 
     int allocate();
@@ -57,10 +59,10 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT L0_;
-    ScalarT L1_;
-    ScalarT R0_;
-    ScalarT R1_;
-    ScalarT M_;
+    RealT L0_;
+    RealT L1_;
+    RealT R0_;
+    RealT R1_;
+    RealT M_;
   };
 } // namespace GridKit

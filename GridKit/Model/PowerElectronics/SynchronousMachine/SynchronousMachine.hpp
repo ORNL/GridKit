@@ -21,6 +21,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class SynchronousMachine : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -43,7 +45,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT, ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT, ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT RJ, ScalarT P, ScalarT mub);
+    SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub);
     virtual ~SynchronousMachine();
 
     int allocate();
@@ -59,18 +61,18 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT                      Lls_;
-    std::tuple<ScalarT, ScalarT> Llkq_;
-    ScalarT                      Llfd_;
-    ScalarT                      Llkd_;
-    ScalarT                      Lmq_;
-    ScalarT                      Lmd_;
-    ScalarT                      Rs_;
-    std::tuple<ScalarT, ScalarT> Rkq_;
-    ScalarT                      Rfd_;
-    ScalarT                      Rkd_;
-    ScalarT                      RJ_;
-    ScalarT                      P_;
-    ScalarT                      mub_;
+    RealT                    Lls_;
+    std::tuple<RealT, RealT> Llkq_;
+    RealT                    Llfd_;
+    RealT                    Llkd_;
+    RealT                    Lmq_;
+    RealT                    Lmd_;
+    RealT                    Rs_;
+    std::tuple<RealT, RealT> Rkq_;
+    RealT                    Rfd_;
+    RealT                    Rkd_;
+    RealT                    RJ_;
+    RealT                    P_;
+    RealT                    mub_;
   };
 } // namespace GridKit

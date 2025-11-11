@@ -35,8 +35,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-    typedef BaseBus<ScalarT, IdxT>                                bus_type;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
 
   public:
     Generator4Param(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
@@ -54,7 +54,7 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(RealT t, RealT a)
     {
       time_  = t;
       alpha_ = a;
@@ -192,19 +192,19 @@ namespace GridKit
     }
 
   private:
-    real_type H_;    ///< Inertia constant [s]
-    real_type D_;    ///< Damping constant [pu]
-    real_type Xq_;   ///< q-axis synchronous reactance [pu]
-    real_type Xd_;   ///< d-axis synchronous reactance [pu]
-    real_type Xqp_;  ///< q-axis transient reactance [pu]
-    real_type Xdp_;  ///< d-axis transient reactance [pu]
-    real_type Rs_;   ///< stator armature resistance [pu]
-    real_type Tq0p_; ///< q-axis open circuit transient time constant [s]
-    real_type Td0p_; ///< d-axis open circuit transient time constant [s]
-    real_type Ef_;
-    real_type Pm_;
-    real_type omega_s_;
-    real_type omega_b_;
+    RealT H_;    ///< Inertia constant [s]
+    RealT D_;    ///< Damping constant [pu]
+    RealT Xq_;   ///< q-axis synchronous reactance [pu]
+    RealT Xd_;   ///< d-axis synchronous reactance [pu]
+    RealT Xqp_;  ///< q-axis transient reactance [pu]
+    RealT Xdp_;  ///< d-axis transient reactance [pu]
+    RealT Rs_;   ///< stator armature resistance [pu]
+    RealT Tq0p_; ///< q-axis open circuit transient time constant [s]
+    RealT Td0p_; ///< d-axis open circuit transient time constant [s]
+    RealT Ef_;
+    RealT Pm_;
+    RealT omega_s_;
+    RealT omega_b_;
 
     ScalarT P0_;
     ScalarT Q0_;

@@ -13,7 +13,7 @@ namespace GridKit
     class NullEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
+      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       NullEvaluator()
       {
@@ -61,7 +61,7 @@ namespace GridKit
         return 0;
       }
 
-      void setTolerances([[maybe_unused]] real_type& rel_tol, [[maybe_unused]] real_type& abs_tol) const override
+      void setTolerances([[maybe_unused]] RealT& rel_tol, [[maybe_unused]] RealT& abs_tol) const override
       {
       }
 
@@ -106,7 +106,7 @@ namespace GridKit
         return 0;
       }
 
-      void updateTime([[maybe_unused]] real_type t, [[maybe_unused]] real_type a) override
+      void updateTime([[maybe_unused]] RealT t, [[maybe_unused]] RealT a) override
       {
       }
 

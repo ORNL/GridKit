@@ -16,7 +16,7 @@ namespace GridKit
     class SystemSingleComponentTests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
     public:
       SystemSingleComponentTests()  = default;

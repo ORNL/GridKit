@@ -41,12 +41,12 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
     using bus_type   = BaseBus<ScalarT, IdxT>;
-    using real_type  = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using BranchData = GridKit::PowerFlowData::BranchData<real_type, IdxT>;
+    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BranchData = GridKit::PowerFlowData::BranchData<RealT, IdxT>;
 
   public:
     Branch(bus_type* bus1, bus_type* bus2);
-    Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2);
+    Branch(RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2);
     Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
     virtual ~Branch();
 
@@ -62,28 +62,28 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type /* t */, real_type /* a */)
+    void updateTime(RealT /* t */, RealT /* a */)
     {
     }
 
   public:
-    void setR(real_type R)
+    void setR(RealT R)
     {
       R_ = R;
     }
 
-    void setX(real_type X)
+    void setX(RealT X)
     {
       // std::cout << "Setting X ...\n";
       X_ = X;
     }
 
-    void setG(real_type G)
+    void setG(RealT G)
     {
       G_ = G;
     }
 
-    void setB(real_type B)
+    void setB(RealT B)
     {
       B_ = B;
     }
@@ -130,10 +130,10 @@ namespace GridKit
     }
 
   private:
-    real_type  R_;
-    real_type  X_;
-    real_type  G_;
-    real_type  B_;
+    RealT      R_;
+    RealT      X_;
+    RealT      G_;
+    RealT      B_;
     const IdxT fbusID_;
     const IdxT tbusID_;
     bus_type*  bus1_;

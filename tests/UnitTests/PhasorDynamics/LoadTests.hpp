@@ -20,7 +20,7 @@ namespace GridKit
     class LoadTests
     {
     public:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
       LoadTests()  = default;
       ~LoadTests() = default;
@@ -49,8 +49,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Load resistance
-        real_type X{4.0}; ///< Load reactance
+        RealT R{2.0}; ///< Load resistance
+        RealT X{4.0}; ///< Load reactance
 
         ScalarT Vr{10.0}; ///< Bus real voltage
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
@@ -74,8 +74,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Load resistance
-        real_type X{4.0}; ///< Load reactance
+        RealT R{2.0}; ///< Load resistance
+        RealT X{4.0}; ///< Load reactance
 
         DependencyTracking::Variable Vr{10.0}; ///< Bus real voltage
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
@@ -109,8 +109,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Load resistance
-        real_type X{4.0}; ///< Load reactance
+        RealT R{2.0}; ///< Load resistance
+        RealT X{4.0}; ///< Load reactance
 
         ScalarT Vr{10.0}; ///< Bus real voltage
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
@@ -136,17 +136,17 @@ namespace GridKit
 #endif
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const real_type R,
-                                                                                  const real_type X)
+      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
+                                                                                  const RealT X)
       {
-        const real_type b = -X / (R * R + X * X);
-        const real_type g = R / (R * R + X * X);
+        const RealT b = -X / (R * R + X * X);
+        const RealT g = R / (R * R + X * X);
 
-        real_type dIr_dVr = -g;
-        real_type dIr_dVi = b;
+        RealT dIr_dVr = -g;
+        RealT dIr_dVi = b;
 
-        real_type dIi_dVr = -b;
-        real_type dIi_dVi = -g;
+        RealT dIi_dVr = -b;
+        RealT dIi_dVi = -g;
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
         dependencies[0] = {{0, dIr_dVr}, {1, dIr_dVi}};

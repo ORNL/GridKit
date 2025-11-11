@@ -36,7 +36,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT, ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT, ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT RJ, ScalarT P, ScalarT mub)
+  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
     : Lls_(Lls),
       Llkq_(Llkq),
       Llfd_(Llfd),
@@ -101,17 +101,17 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
   {
-    ScalarT                  rkq1  = std::get<0>(Rkq_);
-    [[maybe_unused]] ScalarT rkq2  = std::get<1>(Rkq_);
-    ScalarT                  llkq1 = std::get<0>(Llkq_);
-    [[maybe_unused]] ScalarT llkq2 = std::get<1>(Llkq_);
+    ScalarT                  rkq1  = static_cast<ScalarT>(std::get<0>(Rkq_));
+    [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
+    ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
+    [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
-    ScalarT cos1   = cos((P_ / 2.0) * y_[5]);
-    ScalarT sin1   = sin((P_ / 2.0) * y_[5]);
-    ScalarT cos23m = cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT cos1   = std::cos((P_ / 2.0) * y_[5]);
+    ScalarT sin1   = std::sin((P_ / 2.0) * y_[5]);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
 
     f_[0] = y_[6] * cos1 + y_[7] * sin1 + y_[8];
     f_[1] = y_[6] * cos23m + y_[7] * sin23m + y_[8];
@@ -159,5 +159,7 @@ namespace GridKit
   // Available template instantiations
   template class SynchronousMachine<double, long int>;
   template class SynchronousMachine<double, size_t>;
+  template class SynchronousMachine<DependencyTracking::Variable, long int>;
+  template class SynchronousMachine<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit

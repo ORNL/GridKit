@@ -13,9 +13,9 @@ namespace GridKit
     class BusFactory
     {
     public:
-      using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
-      using BusData   = GridKit::PhasorDynamics::BusData<real_type, IdxT>;
-      using BusTypeT  = typename GridKit::PhasorDynamics::BusData<real_type, IdxT>::BusType;
+      using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using BusData  = GridKit::PhasorDynamics::BusData<RealT, IdxT>;
+      using BusTypeT = typename GridKit::PhasorDynamics::BusData<RealT, IdxT>::BusType;
 
       BusFactory() = delete;
 

@@ -19,6 +19,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class MicrogridLoad : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -41,7 +44,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    MicrogridLoad(IdxT id, ScalarT R, ScalarT L);
+    MicrogridLoad(IdxT id, RealT R, RealT L);
     virtual ~MicrogridLoad();
 
     int allocate();
@@ -57,7 +60,7 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT R_;
-    ScalarT L_;
+    RealT R_;
+    RealT L_;
   };
 } // namespace GridKit

@@ -58,7 +58,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
-    typedef CircuitComponent<ScalarT, IdxT> component_type;
+    using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using component_type = CircuitComponent<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -288,13 +289,13 @@ namespace GridKit
         component->evaluateJacobian();
 
         // get references to local jacobian
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                         = tpm;
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = component->getJacobian().getEntries();
+        const auto& [r, c, v]                                                       = tpm;
 
         // Create copies of data to handle groundings
-        std::vector<IdxT>    rgr;
-        std::vector<IdxT>    cgr;
-        std::vector<ScalarT> vgr;
+        std::vector<IdxT>  rgr;
+        std::vector<IdxT>  cgr;
+        std::vector<RealT> vgr;
         for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
@@ -362,7 +363,7 @@ namespace GridKit
      * @param t
      * @param a
      */
-    void updateTime(ScalarT t, ScalarT a)
+    void updateTime(RealT t, RealT a)
     {
       for (const auto& component : components_)
       {

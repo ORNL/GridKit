@@ -47,7 +47,7 @@ namespace GridKit
         : R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
-          T1_(0.5),
+          T1_(HALF<RealT>),
           T2_(2.5),
           T3_(7.5),
           Dt_(0)
@@ -84,37 +84,37 @@ namespace GridKit
       {
         if (data.parameters.contains(model_data_type::Parameters::R))
         {
-          R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+          R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::Pvmin))
         {
-          Pvmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmin));
+          Pvmin_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Pvmin));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::Pvmax))
         {
-          Pvmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Pvmax));
+          Pvmax_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Pvmax));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::T1))
         {
-          T1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T1));
+          T1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T1));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::T2))
         {
-          T2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T2));
+          T2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T2));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::T3))
         {
-          T3_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::T3));
+          T3_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T3));
         }
 
         if (data.parameters.contains(model_data_type::Parameters::Dt))
         {
-          Dt_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Dt));
+          Dt_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Dt));
         }
       }
 
@@ -241,7 +241,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
+        return ((HALF<RealT> * mu_ * x) / (ONE<RealT> + std::abs(mu_ * x))) + HALF<RealT>;
       }
 
       /**
@@ -268,7 +268,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
-        return (1 - this->indicator_low(x, f)) * (1 - this->indicator_high(x, f));
+        return (ONE<RealT> - this->indicator_low(x, f)) * (ONE<RealT> - this->indicator_high(x, f));
       }
 
       /**

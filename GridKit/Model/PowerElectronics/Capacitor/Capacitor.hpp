@@ -19,6 +19,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class Capacitor : public CircuitComponent<ScalarT, IdxT>
   {
+    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
+
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
@@ -41,7 +44,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    Capacitor(IdxT id, ScalarT C);
+    Capacitor(IdxT id, RealT C);
     virtual ~Capacitor();
 
     int allocate();
@@ -57,6 +60,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT C_;
+    RealT C_;
   };
 } // namespace GridKit

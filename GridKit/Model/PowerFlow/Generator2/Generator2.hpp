@@ -35,8 +35,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
-    typedef BaseBus<ScalarT, IdxT>                                bus_type;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
 
   public:
     Generator2(bus_type* bus);
@@ -54,7 +54,7 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(RealT t, RealT a)
     {
       time_  = t;
       alpha_ = a;
@@ -85,18 +85,18 @@ namespace GridKit
     inline ScalarT frequencyPenaltyDer(ScalarT omega);
 
   private:
-    real_type H_;
-    real_type D_;
-    real_type Pm_;
-    real_type Xdp_;
-    real_type Eqp_;
-    real_type omega_s_;
-    real_type omega_b_;
-    real_type omega_up_;
-    real_type omega_lo_;
-    real_type theta_s_;
-    real_type c_;
-    real_type beta_;
+    RealT H_;
+    RealT D_;
+    RealT Pm_;
+    RealT Xdp_;
+    RealT Eqp_;
+    RealT omega_s_;
+    RealT omega_b_;
+    RealT omega_up_;
+    RealT omega_lo_;
+    RealT theta_s_;
+    RealT c_;
+    RealT beta_;
 
     bus_type* bus_;
   };

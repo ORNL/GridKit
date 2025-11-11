@@ -20,7 +20,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, ScalarT R, ScalarT L)
+  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, RealT R, RealT L)
     : R_(R),
       L_(L)
   {
@@ -104,27 +104,28 @@ namespace GridKit
     jac_.zeroMatrix();
 
     // Create dF/dy
-    std::vector<IdxT>    rtemp{1, 2};
-    std::vector<IdxT>    ctemp{3, 4};
-    std::vector<ScalarT> vals{-1.0, -1.0};
-    jac_.setValues(rtemp, ctemp, vals);
+    std::vector<IdxT>  rtemp{1, 2};
+    std::vector<IdxT>  ctemp{3, 4};
+    std::vector<RealT> valtemp{-1.0, -1.0};
+    jac_.setValues(rtemp, ctemp, valtemp);
 
     std::vector<IdxT> ccord{0, 1, 3, 4};
 
-    std::vector<IdxT> rcord(ccord.size(), 3);
-    vals = {y_[4], (1.0 / L_), -(R_ / L_), y_[0]};
+    std::vector<IdxT>  rcord(ccord.size(), 3);
+    std::vector<RealT> vals{};
+    vals = {static_cast<RealT>(y_[4]), (1.0 / L_), -(R_ / L_), static_cast<RealT>(y_[0])};
     jac_.setValues(rcord, ccord, vals);
 
     std::vector<IdxT> ccor2{0, 2, 3, 4};
     std::fill(rcord.begin(), rcord.end(), 4);
-    vals = {-y_[3], (1.0 / L_), -y_[0], -(R_ / L_)};
+    vals = {-static_cast<RealT>(y_[3]), (1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_)};
     jac_.setValues(rcord, ccor2, vals);
 
     // Create -dF/dy'
-    std::vector<IdxT>                                 rcordder{3, 4};
-    std::vector<IdxT>                                 ccordder{3, 4};
-    std::vector<ScalarT>                              valsder{-1.0, -1.0};
-    GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>(rcordder, ccordder, valsder, 5, 5);
+    std::vector<IdxT>  rcordder{3, 4};
+    std::vector<IdxT>  ccordder{3, 4};
+    std::vector<RealT> valsder{-1.0, -1.0};
+    MatrixT            Jacder = MatrixT(rcordder, ccordder, valsder, 5, 5);
 
     // Perform dF/dy + \alpha dF/dy'
     jac_.axpy(alpha_, Jacder);
@@ -159,5 +160,7 @@ namespace GridKit
   // Available template instantiations
   template class MicrogridLoad<double, long int>;
   template class MicrogridLoad<double, size_t>;
+  template class MicrogridLoad<DependencyTracking::Variable, long int>;
+  template class MicrogridLoad<DependencyTracking::Variable, size_t>;
 
 } // namespace GridKit
