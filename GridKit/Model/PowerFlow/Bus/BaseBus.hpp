@@ -41,7 +41,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
   public:
-    using RealT = ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
     enum BusType
     {

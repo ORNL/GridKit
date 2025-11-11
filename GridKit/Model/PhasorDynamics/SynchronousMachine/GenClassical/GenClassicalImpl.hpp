@@ -44,12 +44,12 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
                                               int       unit_id,
-                                              RealT p0,
-                                              RealT q0,
-                                              RealT H,
-                                              RealT D,
-                                              RealT Ra,
-                                              RealT Xdp)
+                                              RealT     p0,
+                                              RealT     q0,
+                                              RealT     H,
+                                              RealT     D,
+                                              RealT     Ra,
+                                              RealT     Xdp)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),

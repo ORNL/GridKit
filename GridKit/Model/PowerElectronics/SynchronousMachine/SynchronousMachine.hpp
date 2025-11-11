@@ -61,18 +61,18 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    RealT                        Lls_;
+    RealT                    Lls_;
     std::tuple<RealT, RealT> Llkq_;
-    RealT                        Llfd_;
-    RealT                        Llkd_;
-    RealT                        Lmq_;
-    RealT                        Lmd_;
-    RealT                        Rs_;
+    RealT                    Llfd_;
+    RealT                    Llkd_;
+    RealT                    Lmq_;
+    RealT                    Lmd_;
+    RealT                    Rs_;
     std::tuple<RealT, RealT> Rkq_;
-    RealT                        Rfd_;
-    RealT                        Rkd_;
-    RealT                        RJ_;
-    RealT                        P_;
-    RealT                        mub_;
+    RealT                    Rfd_;
+    RealT                    Rkd_;
+    RealT                    RJ_;
+    RealT                    P_;
+    RealT                    mub_;
   };
 } // namespace GridKit

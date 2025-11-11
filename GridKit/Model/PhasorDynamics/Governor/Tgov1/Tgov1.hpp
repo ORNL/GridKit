@@ -71,7 +71,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::h_;
         using Component<ScalarT, IdxT>::J_;
 
-        using RealT       = typename Component<ScalarT, IdxT>::RealT;
+        using RealT           = typename Component<ScalarT, IdxT>::RealT;
         using model_data_type = Tgov1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
 

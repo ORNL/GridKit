@@ -18,8 +18,8 @@ namespace GridKit
     class BusBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using BusTypeT  = typename BusData<RealT, IdxT>::BusType;
+      using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
 
       BusBase()
         : size_(0)

@@ -45,20 +45,20 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
-      using RealT = typename Component<ScalarT, IdxT>::RealT;
-      using DataT     = GenClassicalData<RealT, IdxT>;
+      using bus_type = BusBase<ScalarT, IdxT>;
+      using RealT    = typename Component<ScalarT, IdxT>::RealT;
+      using DataT    = GenClassicalData<RealT, IdxT>;
 
     public:
       GenClassical(bus_type* bus, int unit_id);
       GenClassical(bus_type* bus,
                    int       unit_id,
-                   RealT p0,
-                   RealT q0,
-                   RealT H,
-                   RealT D,
-                   RealT Ra,
-                   RealT Xdp);
+                   RealT     p0,
+                   RealT     q0,
+                   RealT     H,
+                   RealT     D,
+                   RealT     Ra,
+                   RealT     Xdp);
       GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 

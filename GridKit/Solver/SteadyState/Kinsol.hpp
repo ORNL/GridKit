@@ -29,7 +29,7 @@ namespace AnalysisManager
     {
       using SteadyStateSolver<ScalarT, IdxT>::model_;
 
-      using RealT =  GridKit::ScalarTraits<ScalarT>::RealT;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       static_assert(std::is_same_v<RealT, sunrealtype>, "RealT must be the same type as sunrealtype");
 

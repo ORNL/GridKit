@@ -82,8 +82,8 @@ namespace GridKit
 
     // Create dF/dy
     // does compiler make constant???
-    std::vector<IdxT>      rcord{0, 0, 1, 1};
-    std::vector<IdxT>      ccord{0, 1, 0, 1};
+    std::vector<IdxT>  rcord{0, 0, 1, 1};
+    std::vector<IdxT>  ccord{0, 1, 0, 1};
     std::vector<RealT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
     jac_.setValues(rcord, ccord, vals);
 

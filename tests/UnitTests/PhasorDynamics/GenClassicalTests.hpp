@@ -28,7 +28,7 @@ namespace GridKit
     class GenClassicalTests
     {
     private:
-      using RealT               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:

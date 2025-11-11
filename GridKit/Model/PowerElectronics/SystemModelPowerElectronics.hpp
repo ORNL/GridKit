@@ -58,7 +58,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
-    using RealT      = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
@@ -290,11 +290,11 @@ namespace GridKit
 
         // get references to local jacobian
         std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                           = tpm;
+        const auto& [r, c, v]                                                       = tpm;
 
         // Create copies of data to handle groundings
-        std::vector<IdxT>      rgr;
-        std::vector<IdxT>      cgr;
+        std::vector<IdxT>  rgr;
+        std::vector<IdxT>  cgr;
         std::vector<RealT> vgr;
         for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
         {

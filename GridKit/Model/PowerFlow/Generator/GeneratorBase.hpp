@@ -38,8 +38,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-    using bus_type  = BaseBus<ScalarT, IdxT>;
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
   public:
     GeneratorBase()

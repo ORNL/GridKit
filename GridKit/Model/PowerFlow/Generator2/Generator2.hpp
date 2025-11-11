@@ -35,8 +35,8 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
-    using RealT = ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    typedef BaseBus<ScalarT, IdxT>                                bus_type;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
 
   public:
     Generator2(bus_type* bus);

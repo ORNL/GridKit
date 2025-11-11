@@ -34,11 +34,9 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
-    // using RealT = ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    // typedef BaseBus<ScalarT, IdxT> bus_type;
-    using bus_type  = BaseBus<ScalarT, IdxT>;
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using LoadData  = GridKit::PowerFlowData::LoadData<RealT, IdxT>;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type = BaseBus<ScalarT, IdxT>;
+    using LoadData = GridKit::PowerFlowData::LoadData<RealT, IdxT>;
 
   public:
     Load(bus_type* bus, ScalarT P, ScalarT Q);

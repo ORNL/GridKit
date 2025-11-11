@@ -33,9 +33,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
   {
-    typedef BaseBus<ScalarT, IdxT>            bus_type;
-    typedef ModelEvaluatorImpl<ScalarT, IdxT> component_type;
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using bus_type       = BaseBus<ScalarT, IdxT>;
+    using component_type = ModelEvaluatorImpl<ScalarT, IdxT>;
+    using RealT          = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;

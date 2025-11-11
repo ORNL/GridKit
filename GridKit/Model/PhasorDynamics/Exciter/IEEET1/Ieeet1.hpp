@@ -75,7 +75,7 @@ namespace GridKit
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
 
-        using RealT       = typename Component<ScalarT, IdxT>::RealT;
+        using RealT           = typename Component<ScalarT, IdxT>::RealT;
         using model_data_type = Ieeet1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
         using bus_type        = BusBase<ScalarT, IdxT>;

@@ -34,9 +34,9 @@ namespace GridKit
     idc_            = id;
 
     RealT magImpendence = 1.0 / (R_ * R_ + X_ * X_);
-    YReMat_                 = magImpendence * R_;
-    YImMatOff_              = magImpendence * X_;
-    YImMatDi_               = B_ / (2.0) - YImMatOff_;
+    YReMat_             = magImpendence * R_;
+    YImMatOff_          = magImpendence * X_;
+    YImMatDi_           = B_ / (2.0) - YImMatOff_;
   }
 
   template <class ScalarT, typename IdxT>
@@ -139,8 +139,8 @@ namespace GridKit
   {
 
     // Create dF/dy
-    std::vector<IdxT>      rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    std::vector<IdxT>      ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
+    std::vector<IdxT>  rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    std::vector<IdxT>  ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
     std::vector<RealT> vals{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
     jac_.setValues(rtemp, ctemp, vals);
 

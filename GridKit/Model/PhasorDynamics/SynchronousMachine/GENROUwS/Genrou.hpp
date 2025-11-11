@@ -81,7 +81,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
-      using RealT       = typename Component<ScalarT, IdxT>::RealT;
+      using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<RealT, IdxT>;
       using signal_type     = SignalNode<ScalarT, IdxT>;
@@ -100,24 +100,24 @@ namespace GridKit
       Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
-             RealT p0,
-             RealT q0,
-             RealT H,
-             RealT D,
-             RealT Ra,
-             RealT Tdop,
-             RealT Tdopp,
-             RealT Tqopp,
-             RealT Tqop,
-             RealT Xd,
-             RealT Xdp,
-             RealT Xdpp,
-             RealT Xq,
-             RealT Xqp,
-             RealT Xqpp,
-             RealT Xl,
-             RealT S10,
-             RealT S12);
+             RealT     p0,
+             RealT     q0,
+             RealT     H,
+             RealT     D,
+             RealT     Ra,
+             RealT     Tdop,
+             RealT     Tdopp,
+             RealT     Tqopp,
+             RealT     Tqop,
+             RealT     Xd,
+             RealT     Xdp,
+             RealT     Xdpp,
+             RealT     Xq,
+             RealT     Xqp,
+             RealT     Xqpp,
+             RealT     Xl,
+             RealT     S10,
+             RealT     S12);
       ~Genrou() = default;
 
       int setGridKitComponentID(IdxT) override;

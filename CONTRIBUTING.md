@@ -236,17 +236,19 @@ class My_Class // No, using underscore in class name
 Always declare type aliases with the `using` keyword rather than `typedef typename`. 
 
 ```c++
-  using RealT = GridKit::ScalarTraits<ScalarT>::RealT; // Yes
+  using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT; // Yes
   typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT; // No
 ```
 
 Types that are used as template parameters should use uppercase camel name format, 
-similar to classes, with the `T` suffix to indicate that it is a type. 
+similar to classes, with the `T` suffix to indicate that it is a type. Other
+local type aliases can use the `_type` suffix.
 For consistency, use the same name everywhere the same type is used.
 
 ```c++
   template <typename RealT> ...; // Yes
-  template <typename real_type>; // No
+  template <typename real_type>; // No, `_type` used in a template parameter name
+  using bus_type = BaseBus<ScalarT, IdxT>; // Yes
 ```
 
 ### Enums (enumerated types)

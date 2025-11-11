@@ -27,8 +27,8 @@ namespace GridKit
 
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type* bus,
-                              RealT R,
-                              RealT X)
+                              RealT     R,
+                              RealT     X)
       : bus_(bus),
         R_(R),
         X_(X)

@@ -26,7 +26,7 @@ namespace GridKit
   {
     using bus_type       = Model::Evaluator<ScalarT, IdxT>;
     using component_type = Model::Evaluator<ScalarT, IdxT>;
-    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using RealT          = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;

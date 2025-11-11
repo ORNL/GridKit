@@ -17,9 +17,9 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
   template <class ScalarT, typename IdxT>
-  DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT                                            id,
+  DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT                                        id,
                                                             DistributedGeneratorParameters<RealT, IdxT> parm,
-                                                            bool                                            reference_frame)
+                                                            bool                                        reference_frame)
     : wb_(parm.wb_),
       wc_(parm.wc_),
       mp_(parm.mp_),
@@ -182,7 +182,7 @@ namespace GridKit
   {
     jac_.zeroMatrix();
     // Create dF/dy'
-    std::vector<IdxT>      rcordder(13);
+    std::vector<IdxT>  rcordder(13);
     std::vector<RealT> valsder(13, -1.0);
     for (int i = 0; i < 13; i++)
     {
@@ -190,8 +190,8 @@ namespace GridKit
     }
     GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, rcordder, valsder, 16, 16);
 
-    std::vector<IdxT>      ctemp{};
-    std::vector<IdxT>      rtemp{};
+    std::vector<IdxT>  ctemp{};
+    std::vector<IdxT>  rtemp{};
     std::vector<RealT> valtemp{};
 
     // Create dF/dy

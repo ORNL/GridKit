@@ -29,9 +29,9 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::residual_indices_;
 
     public:
-      using RealT = typename BusBase<ScalarT, IdxT>::RealT;
-      using DataT     = BusData<RealT, IdxT>;
-      using BusTypeT  = typename BusData<RealT, IdxT>::BusType;
+      using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
+      using DataT    = BusData<RealT, IdxT>;
+      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
 
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);

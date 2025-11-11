@@ -51,7 +51,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
 
-      using RealT       = typename Component<ScalarT, IdxT>::RealT;
+      using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = BranchData<RealT, IdxT>;
 
@@ -155,10 +155,10 @@ namespace GridKit
     private:
       bus_type* bus1_;
       bus_type* bus2_;
-      RealT R_{0.0};
-      RealT X_{0.0};
-      RealT G_{0.0};
-      RealT B_{0.0};
+      RealT     R_{0.0};
+      RealT     X_{0.0};
+      RealT     G_{0.0};
+      RealT     B_{0.0};
       IdxT      bus1_id_{0};
       IdxT      bus2_id_{0};
 

@@ -98,8 +98,8 @@ namespace GridKit
     jac_.zeroMatrix();
 
     // Create dF/dy
-    std::vector<IdxT>      rtemp{0, 1};
-    std::vector<IdxT>      ctemp{0, 1};
+    std::vector<IdxT>  rtemp{0, 1};
+    std::vector<IdxT>  ctemp{0, 1};
     std::vector<RealT> vals{-1.0 / RN_, -1.0 / RN_};
     jac_.setValues(rtemp, ctemp, vals);
 

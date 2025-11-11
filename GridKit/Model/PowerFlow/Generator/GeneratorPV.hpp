@@ -37,9 +37,9 @@ namespace GridKit
     using GeneratorBase<ScalarT, IdxT>::gB_;
     using GeneratorBase<ScalarT, IdxT>::param_;
 
-    using bus_type  = BaseBus<ScalarT, IdxT>;
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using GenData   = GridKit::PowerFlowData::GenData<RealT, IdxT>;
+    using bus_type = BaseBus<ScalarT, IdxT>;
+    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using GenData  = GridKit::PowerFlowData::GenData<RealT, IdxT>;
 
   public:
     GeneratorPV(bus_type* bus, GenData& data);

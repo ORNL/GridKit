@@ -55,10 +55,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1,
                                   bus_type* bus2,
-                                  RealT R,
-                                  RealT X,
-                                  RealT G,
-                                  RealT B)
+                                  RealT     R,
+                                  RealT     X,
+                                  RealT     G,
+                                  RealT     B)
       : bus1_(bus1),
         bus2_(bus2),
         R_(R),

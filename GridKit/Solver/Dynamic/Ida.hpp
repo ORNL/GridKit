@@ -29,7 +29,7 @@ namespace AnalysisManager
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
-      using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -116,14 +116,14 @@ namespace AnalysisManager
       void printFinalStats();
 
     private:
-      static int Residual(RealT t,
-                          N_Vector  yy,
-                          N_Vector  yp,
-                          N_Vector  rr,
-                          void*     user_data);
+      static int Residual(RealT    t,
+                          N_Vector yy,
+                          N_Vector yp,
+                          N_Vector rr,
+                          void*    user_data);
 
-      static int Jac(RealT t,
-                     RealT cj,
+      static int Jac(RealT     t,
+                     RealT     cj,
                      N_Vector  yy,
                      N_Vector  yp,
                      N_Vector  resvec,
@@ -133,27 +133,27 @@ namespace AnalysisManager
                      N_Vector  tmp2,
                      N_Vector  tmp3);
 
-      static int Integrand(RealT t,
-                           N_Vector  yy,
-                           N_Vector  yp,
-                           N_Vector  rhsQ,
-                           void*     user_data);
+      static int Integrand(RealT    t,
+                           N_Vector yy,
+                           N_Vector yp,
+                           N_Vector rhsQ,
+                           void*    user_data);
 
-      static int adjointResidual(RealT t,
-                                 N_Vector  yy,
-                                 N_Vector  yp,
-                                 N_Vector  yyB,
-                                 N_Vector  ypB,
-                                 N_Vector  rrB,
-                                 void*     user_data);
+      static int adjointResidual(RealT    t,
+                                 N_Vector yy,
+                                 N_Vector yp,
+                                 N_Vector yyB,
+                                 N_Vector ypB,
+                                 N_Vector rrB,
+                                 void*    user_data);
 
-      static int adjointIntegrand(RealT t,
-                                  N_Vector  yy,
-                                  N_Vector  yp,
-                                  N_Vector  yyB,
-                                  N_Vector  ypB,
-                                  N_Vector  rhsQB,
-                                  void*     user_data);
+      static int adjointIntegrand(RealT    t,
+                                  N_Vector yy,
+                                  N_Vector yp,
+                                  N_Vector yyB,
+                                  N_Vector ypB,
+                                  N_Vector rhsQB,
+                                  void*    user_data);
 
     private:
       void*           solver_{};
@@ -165,7 +165,7 @@ namespace AnalysisManager
 
       RealT t_init_{};
       RealT t_final_{};
-      int       nout_{}; ///< Number of integration outputs
+      int   nout_{}; ///< Number of integration outputs
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector

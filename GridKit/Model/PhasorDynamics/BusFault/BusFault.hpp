@@ -33,9 +33,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
 
-      using bus_type  = BusBase<ScalarT, IdxT>;
-      using RealT = typename Component<ScalarT, IdxT>::RealT;
-      using DataT     = BusFaultData<RealT, IdxT>;
+      using bus_type = BusBase<ScalarT, IdxT>;
+      using RealT    = typename Component<ScalarT, IdxT>::RealT;
+      using DataT    = BusFaultData<RealT, IdxT>;
 
     public:
       BusFault(bus_type* bus);
@@ -105,8 +105,8 @@ namespace GridKit
 
     private:
       bus_type* bus_;
-      RealT R_{0.0};
-      RealT X_{0.0};
+      RealT     R_{0.0};
+      RealT     X_{0.0};
       bool      status_{false};
       IdxT      bus_id_{0};
 

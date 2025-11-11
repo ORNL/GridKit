@@ -63,9 +63,9 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    DistributedGenerator(IdxT                                            id,
+    DistributedGenerator(IdxT                                        id,
                          DistributedGeneratorParameters<RealT, IdxT> parm,
-                         bool                                            reference_frame);
+                         bool                                        reference_frame);
     virtual ~DistributedGenerator();
 
     int allocate();
@@ -95,6 +95,6 @@ namespace GridKit
     RealT Lf_;
     RealT rLc_;
     RealT Lc_;
-    bool      refframe_;
+    bool  refframe_;
   };
 } // namespace GridKit

@@ -308,8 +308,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulation(RealT tf, int nout, const std::optional<std::function<void(RealT)>> step_callback)
     {
-      int       retval = 0;
-      int       iout   = 0;
+      int   retval = 0;
+      int   iout   = 0;
       RealT tret;
       RealT dt   = (tf - t_init_) / static_cast<RealT>(nout);
       RealT tout = t_init_ + dt;
@@ -434,7 +434,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, int nout)
     {
-      int       retval = 0;
+      int   retval = 0;
       RealT tret;
 
       // std::cout << "Forward integration for initial value problem ... \n";
@@ -531,7 +531,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(RealT tf)
     {
-      int       retval = 0;
+      int   retval = 0;
       RealT rel_tol;
       RealT abs_tol;
 
@@ -633,8 +633,8 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, int nout)
     {
-      int       retval = 0;
-      int       ncheck;
+      int   retval = 0;
+      int   ncheck;
       RealT time;
 
       // std::cout << "Forward integration for adjoint analysis ... \n";
@@ -672,9 +672,9 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::runBackwardSimulation(RealT t_init)
     {
-      int       retval = 0;
-      long int  nstB;
-      RealT time;
+      int      retval = 0;
+      long int nstB;
+      RealT    time;
 
       // std::cout << "Backward integration for adjoint analysis ... ";
 
@@ -783,7 +783,7 @@ namespace AnalysisManager
       std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
 
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
-      RealT*    data    = SUNSparseMatrix_Data(J);
+      RealT*        data    = SUNSparseMatrix_Data(J);
       // Copy data from model jac to sundials
       std::copy(c.cbegin(), c.cend(), colvals);
       std::copy(val.cbegin(), val.cend(), data);
@@ -934,7 +934,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y)
     {
       RealT* yval = N_VGetArrayPointer(y);
-      IdxT       N    = static_cast<IdxT>(N_VGetLength(y));
+      IdxT   N    = static_cast<IdxT>(N_VGetLength(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;
       for (IdxT i = 0; i < N; ++i)

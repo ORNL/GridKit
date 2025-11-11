@@ -104,14 +104,14 @@ namespace GridKit
     jac_.zeroMatrix();
 
     // Create dF/dy
-    std::vector<IdxT>      rtemp{1, 2};
-    std::vector<IdxT>      ctemp{3, 4};
+    std::vector<IdxT>  rtemp{1, 2};
+    std::vector<IdxT>  ctemp{3, 4};
     std::vector<RealT> valtemp{-1.0, -1.0};
     jac_.setValues(rtemp, ctemp, valtemp);
 
     std::vector<IdxT> ccord{0, 1, 3, 4};
 
-    std::vector<IdxT>      rcord(ccord.size(), 3);
+    std::vector<IdxT>  rcord(ccord.size(), 3);
     std::vector<RealT> vals{};
     vals = {static_cast<RealT>(y_[4]), (1.0 / L_), -(R_ / L_), static_cast<RealT>(y_[0])};
     jac_.setValues(rcord, ccord, vals);
@@ -122,8 +122,8 @@ namespace GridKit
     jac_.setValues(rcord, ccor2, vals);
 
     // Create -dF/dy'
-    std::vector<IdxT>                                   rcordder{3, 4};
-    std::vector<IdxT>                                   ccordder{3, 4};
+    std::vector<IdxT>                               rcordder{3, 4};
+    std::vector<IdxT>                               ccordder{3, 4};
     std::vector<RealT>                              valsder{-1.0, -1.0};
     GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, ccordder, valsder, 5, 5);
 

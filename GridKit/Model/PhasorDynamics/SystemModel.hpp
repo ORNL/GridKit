@@ -36,7 +36,7 @@ namespace GridKit
       using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
       using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
@@ -529,8 +529,8 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
-        std::vector<IdxT>      ctemp{};
-        std::vector<IdxT>      rtemp{};
+        std::vector<IdxT>  ctemp{};
+        std::vector<IdxT>  rtemp{};
         std::vector<RealT> valtemp{};
 
         // Initialize bus Jacobians
@@ -547,7 +547,7 @@ namespace GridKit
           auto component_jacobian = component->getJacobian();
 
           std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
-          const auto [rows, columns, values]                                                                     = component_jacobian_entries;
+          const auto [rows, columns, values]                                                                 = component_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
             rtemp.push_back(rows[i]);
@@ -562,7 +562,7 @@ namespace GridKit
           auto bus_jacobian = bus->getJacobian();
 
           std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
-          const auto [rows, columns, values]                                                               = bus_jacobian_entries;
+          const auto [rows, columns, values]                                                           = bus_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
             rtemp.push_back(rows[i]);

@@ -41,7 +41,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
 
     using bus_type   = BaseBus<ScalarT, IdxT>;
-    using RealT  = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using BranchData = GridKit::PowerFlowData::BranchData<RealT, IdxT>;
 
   public:
@@ -130,10 +130,10 @@ namespace GridKit
     }
 
   private:
-    RealT  R_;
-    RealT  X_;
-    RealT  G_;
-    RealT  B_;
+    RealT      R_;
+    RealT      X_;
+    RealT      G_;
+    RealT      B_;
     const IdxT fbusID_;
     const IdxT tbusID_;
     bus_type*  bus1_;

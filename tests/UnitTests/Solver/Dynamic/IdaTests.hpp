@@ -13,7 +13,7 @@ namespace GridKit
     class NullEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      typedef typename Model::Evaluator<ScalarT, IdxT>::RealT RealT;
+      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       NullEvaluator()
       {

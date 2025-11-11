@@ -29,8 +29,8 @@ namespace GridKit
     using BaseBus<ScalarT, IdxT>::tag_;
 
   public:
-    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using BusData   = GridKit::PowerFlowData::BusData<RealT, IdxT>;
+    using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusData = GridKit::PowerFlowData::BusData<RealT, IdxT>;
 
     BusPV();
     BusPV(ScalarT V, ScalarT theta0);

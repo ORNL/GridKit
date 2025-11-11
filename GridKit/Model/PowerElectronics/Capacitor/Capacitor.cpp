@@ -93,14 +93,14 @@ namespace GridKit
   {
     jac_.zeroMatrix();
     // Create dF/dy
-    std::vector<IdxT>      rcord{2, 2, 2};
-    std::vector<IdxT>      ccord{0, 1, 2};
+    std::vector<IdxT>  rcord{2, 2, 2};
+    std::vector<IdxT>  ccord{0, 1, 2};
     std::vector<RealT> vals{1.0, -1.0, -1.0};
     jac_.setValues(rcord, ccord, vals);
 
     // Create dF/dy'
-    std::vector<IdxT>                                   rcordder{0, 1, 2};
-    std::vector<IdxT>                                   ccordder{2, 2, 2};
+    std::vector<IdxT>                               rcordder{0, 1, 2};
+    std::vector<IdxT>                               ccordder{2, 2, 2};
     std::vector<RealT>                              valsder{C_, -C_, -C_};
     GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, ccordder, valsder, 3, 3);
 

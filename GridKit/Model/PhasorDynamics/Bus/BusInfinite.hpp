@@ -24,9 +24,9 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::J_;
 
     public:
-      using RealT = typename BusBase<ScalarT, IdxT>::RealT;
-      using DataT     = BusData<RealT, IdxT>;
-      using BusTypeT  = typename BusData<RealT, IdxT>::BusType;
+      using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
+      using DataT    = BusData<RealT, IdxT>;
+      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);

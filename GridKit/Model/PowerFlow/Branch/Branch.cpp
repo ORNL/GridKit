@@ -106,9 +106,9 @@ namespace GridKit
   int Branch<ScalarT, IdxT>::evaluateResidual()
   {
     // std::cout << "Evaluating branch residual ...\n";
-    RealT b      = -X_ / (R_ * R_ + X_ * X_);
-    RealT g      = R_ / (R_ * R_ + X_ * X_);
-    ScalarT   dtheta = theta1() - theta2();
+    RealT   b      = -X_ / (R_ * R_ + X_ * X_);
+    RealT   g      = R_ / (R_ * R_ + X_ * X_);
+    ScalarT dtheta = theta1() - theta2();
 
     P1() -= (g + 0.5 * G_) * V1() * V1() + V1() * V2() * (-g * cos(dtheta) - b * sin(dtheta));
     Q1() -= (-b - 0.5 * B_) * V1() * V1() + V1() * V2() * (-g * sin(dtheta) + b * cos(dtheta));

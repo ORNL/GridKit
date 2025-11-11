@@ -81,8 +81,8 @@ namespace GridKit
   int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
   {
     // Create dF/dy
-    std::vector<IdxT>      rcord{0, 1, 2, 2};
-    std::vector<IdxT>      ccord{2, 2, 0, 1};
+    std::vector<IdxT>  rcord{0, 1, 2, 2};
+    std::vector<IdxT>  ccord{2, 2, 0, 1};
     std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0};
     jac_.setValues(rcord, ccord, vals);
 
