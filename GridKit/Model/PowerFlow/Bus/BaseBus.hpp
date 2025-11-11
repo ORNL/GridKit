@@ -41,7 +41,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
 
   public:
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT RealT;
 
     enum BusType
     {
@@ -107,7 +107,7 @@ namespace GridKit
       return 0;
     }
 
-    virtual void updateTime(real_type, real_type)
+    virtual void updateTime(RealT, RealT)
     {
     } // <- throw exception here
 

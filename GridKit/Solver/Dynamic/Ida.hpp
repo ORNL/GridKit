@@ -29,7 +29,7 @@ namespace AnalysisManager
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
 
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -42,23 +42,23 @@ namespace AnalysisManager
 #endif
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
-      int setIntegrationTime(real_type t_init, real_type t_final, int nout);
-      int initializeSimulation(real_type t0, bool findConsistent = false);
+      int setIntegrationTime(RealT t_init, RealT t_final, int nout);
+      int initializeSimulation(RealT t0, bool findConsistent = false);
 
-      int runSimulation(real_type tf, int nout = 1, std::optional<std::function<void(real_type)>> step_callback = {});
+      int runSimulation(RealT tf, int nout = 1, std::optional<std::function<void(RealT)>> step_callback = {});
       int deleteSimulation();
 
       int configureQuadrature();
       int initializeQuadrature();
-      int runSimulationQuadrature(real_type tf, int nout = 1);
+      int runSimulationQuadrature(RealT tf, int nout = 1);
       int deleteQuadrature();
 
       int configureAdjoint();
       int configureLinearSolverBackward();
       int initializeAdjoint(IdxT steps = 100);
-      int initializeBackwardSimulation(real_type tf);
-      int runForwardSimulation(real_type tf, int nout = 1);
-      int runBackwardSimulation(real_type t0);
+      int initializeBackwardSimulation(RealT tf);
+      int runForwardSimulation(RealT tf, int nout = 1);
+      int runBackwardSimulation(RealT t0);
       int deleteAdjoint();
       int deleteBackwardSimulation();
 
@@ -76,12 +76,12 @@ namespace AnalysisManager
         return 0;
       }
 
-      real_type getInitialTime()
+      RealT getInitialTime()
       {
         return t_init_;
       }
 
-      real_type getFinalTime()
+      RealT getFinalTime()
       {
         return t_final_;
       }
@@ -91,39 +91,39 @@ namespace AnalysisManager
         return nout_;
       }
 
-      const real_type* getIntegral() const
+      const RealT* getIntegral() const
       {
         return N_VGetArrayPointer(q_);
       }
 
-      real_type* getIntegral()
+      RealT* getIntegral()
       {
         return N_VGetArrayPointer(q_);
       }
 
-      const real_type* getAdjointIntegral() const
+      const RealT* getAdjointIntegral() const
       {
         return N_VGetArrayPointer(qB_);
       }
 
-      real_type* getAdjointIntegral()
+      RealT* getAdjointIntegral()
       {
         return N_VGetArrayPointer(qB_);
       }
 
-      void printOutput(real_type t);
-      void printSpecial(real_type t, N_Vector x);
+      void printOutput(RealT t);
+      void printSpecial(RealT t, N_Vector x);
       void printFinalStats();
 
     private:
-      static int Residual(real_type t,
+      static int Residual(RealT t,
                           N_Vector  yy,
                           N_Vector  yp,
                           N_Vector  rr,
                           void*     user_data);
 
-      static int Jac(real_type t,
-                     real_type cj,
+      static int Jac(RealT t,
+                     RealT cj,
                      N_Vector  yy,
                      N_Vector  yp,
                      N_Vector  resvec,
@@ -133,13 +133,13 @@ namespace AnalysisManager
                      N_Vector  tmp2,
                      N_Vector  tmp3);
 
-      static int Integrand(real_type t,
+      static int Integrand(RealT t,
                            N_Vector  yy,
                            N_Vector  yp,
                            N_Vector  rhsQ,
                            void*     user_data);
 
-      static int adjointResidual(real_type t,
+      static int adjointResidual(RealT t,
                                  N_Vector  yy,
                                  N_Vector  yp,
                                  N_Vector  yyB,
@@ -147,7 +147,7 @@ namespace AnalysisManager
                                  N_Vector  rrB,
                                  void*     user_data);
 
-      static int adjointIntegrand(real_type t,
+      static int adjointIntegrand(RealT t,
                                   N_Vector  yy,
                                   N_Vector  yp,
                                   N_Vector  yyB,
@@ -163,8 +163,8 @@ namespace AnalysisManager
       SUNLinearSolver linearSolver_{};
       SUNLinearSolver linearSolverB_{};
 
-      real_type t_init_{};
-      real_type t_final_{};
+      RealT t_init_{};
+      RealT t_final_{};
       int       nout_{}; ///< Number of integration outputs
 
       N_Vector yy_{};  ///< Solution vector

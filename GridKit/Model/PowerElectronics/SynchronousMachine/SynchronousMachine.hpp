@@ -21,7 +21,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class SynchronousMachine : public CircuitComponent<ScalarT, IdxT>
   {
-    using real_type = typename CircuitComponent<ScalarT, IdxT>::real_type;
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -45,7 +45,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    SynchronousMachine(IdxT id, real_type Lls, std::tuple<real_type, real_type> Llkq, real_type Llfd, real_type Llkd, real_type Lmq, real_type Lmd, real_type Rs, std::tuple<real_type, real_type> Rkq, real_type Rfd, real_type Rkd, real_type RJ, real_type P, real_type mub);
+    SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub);
     virtual ~SynchronousMachine();
 
     int allocate();
@@ -61,18 +61,18 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    real_type                        Lls_;
-    std::tuple<real_type, real_type> Llkq_;
-    real_type                        Llfd_;
-    real_type                        Llkd_;
-    real_type                        Lmq_;
-    real_type                        Lmd_;
-    real_type                        Rs_;
-    std::tuple<real_type, real_type> Rkq_;
-    real_type                        Rfd_;
-    real_type                        Rkd_;
-    real_type                        RJ_;
-    real_type                        P_;
-    real_type                        mub_;
+    RealT                        Lls_;
+    std::tuple<RealT, RealT> Llkq_;
+    RealT                        Llfd_;
+    RealT                        Llkd_;
+    RealT                        Lmq_;
+    RealT                        Lmd_;
+    RealT                        Rs_;
+    std::tuple<RealT, RealT> Rkq_;
+    RealT                        Rfd_;
+    RealT                        Rkd_;
+    RealT                        RJ_;
+    RealT                        P_;
+    RealT                        mub_;
   };
 } // namespace GridKit

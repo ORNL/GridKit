@@ -29,9 +29,9 @@ namespace AnalysisManager
     {
       using SteadyStateSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
 
-      static_assert(std::is_same_v<real_type, sunrealtype>, "real_type must be the same type as sunrealtype");
+      static_assert(std::is_same_v<RealT, sunrealtype>, "RealT must be the same type as sunrealtype");
 
     public:
       Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -40,22 +40,22 @@ namespace AnalysisManager
       int configureSimulation();
       int configureLinearSolver();
       int getDefaultInitialCondition();
-      // int setIntegrationTime(real_type t_init, real_type t_final, int nout);
+      // int setIntegrationTime(RealT t_init, RealT t_final, int nout);
       // int initializeSimulation();
       int runSimulation();
       int deleteSimulation();
 
       // int configureQuadrature();
       // int initializeQuadrature();
-      // int runSimulationQuadrature(real_type tf, int nout=1);
+      // int runSimulationQuadrature(RealT tf, int nout=1);
       // int deleteQuadrature();
 
       // int configureAdjoint();
       // int configureLinearSolverBackward();
       // int initializeAdjoint(IdxT steps = 100);
-      // int initializeBackwardSimulation(real_type tf);
-      // int runForwardSimulation(real_type tf, int nout=1);
-      // int runBackwardSimulation(real_type t0);
+      // int initializeBackwardSimulation(RealT tf);
+      // int runForwardSimulation(RealT tf, int nout=1);
+      // int runBackwardSimulation(RealT t0);
       // int deleteAdjoint();
 
       int saveInitialCondition()
@@ -70,12 +70,12 @@ namespace AnalysisManager
         return 0;
       }
 
-      // real_type getInitialTime()
+      // RealT getInitialTime()
       // {
       //     return t_init_;
       // }
 
-      // real_type getFinalTime()
+      // RealT getFinalTime()
       // {
       //     return t_final_;
       // }
@@ -85,22 +85,22 @@ namespace AnalysisManager
       //     return nout_;
       // }
 
-      // const real_type* getIntegral() const
+      // const RealT* getIntegral() const
       // {
       //     return N_VGetArrayPointer(q_);
       // }
 
-      // real_type* getIntegral()
+      // RealT* getIntegral()
       // {
       //     return N_VGetArrayPointer(q_);
       // }
 
-      // const real_type* getAdjointIntegral() const
+      // const RealT* getAdjointIntegral() const
       // {
       //     return N_VGetArrayPointer(qB_);
       // }
 
-      // real_type* getAdjointIntegral()
+      // RealT* getAdjointIntegral()
       // {
       //     return N_VGetArrayPointer(qB_);
       // }

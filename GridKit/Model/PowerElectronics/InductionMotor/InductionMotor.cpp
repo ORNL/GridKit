@@ -24,7 +24,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  InductionMotor<ScalarT, IdxT>::InductionMotor(IdxT id, real_type Lls, real_type Rs, real_type Llr, real_type Rr, real_type Lms, real_type RJ, real_type P)
+  InductionMotor<ScalarT, IdxT>::InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P)
     : Lls_(Lls),
       Rs_(Rs),
       Llr_(Llr),

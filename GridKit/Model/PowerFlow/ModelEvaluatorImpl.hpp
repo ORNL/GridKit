@@ -16,7 +16,7 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    typedef typename Model::Evaluator<ScalarT, IdxT>::real_type real_type;
+    typedef typename Model::Evaluator<ScalarT, IdxT>::RealT RealT;
 
     ModelEvaluatorImpl()
       : size_(0),
@@ -37,7 +37,7 @@ namespace GridKit
         ypB_(static_cast<size_t>(size_)),
         fB_(static_cast<size_t>(size_)),
         gB_(static_cast<size_t>(size_opt_)),
-        jac_(GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>()),
+        jac_(GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>()),
         param_(static_cast<size_t>(size_opt_)),
         param_up_(static_cast<size_t>(size_opt_)),
         param_lo_(static_cast<size_t>(size_opt_))
@@ -69,14 +69,14 @@ namespace GridKit
       return size_opt_;
     }
 
-    // virtual void updateTime(real_type t, real_type a)
+    // virtual void updateTime(RealT t, RealT a)
     // {
     //     time_ = t;
     //     alpha_ = a;
     //     std::cout << "updateTime: t = " << time_ << "\n";
     // }
 
-    virtual void setTolerances(real_type& rel_tol, real_type& abs_tol) const
+    virtual void setTolerances(RealT& rel_tol, RealT& abs_tol) const
     {
       rel_tol = rel_tol_;
       abs_tol = abs_tol_;
@@ -177,12 +177,12 @@ namespace GridKit
       return f_;
     }
 
-    GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian()
+    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian()
     {
       return jac_;
     }
 
-    const GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() const
+    const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const
     {
       return jac_;
     }
@@ -240,17 +240,17 @@ namespace GridKit
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
 
-    GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> jac_;
+    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;
     std::vector<ScalarT> param_lo_;
 
-    real_type time_;
-    real_type alpha_;
+    RealT time_;
+    RealT alpha_;
 
-    real_type rel_tol_;
-    real_type abs_tol_;
+    RealT rel_tol_;
+    RealT abs_tol_;
 
     IdxT max_steps_;
 

@@ -26,7 +26,7 @@ namespace GridKit
   {
     using bus_type       = Model::Evaluator<ScalarT, IdxT>;
     using component_type = Model::Evaluator<ScalarT, IdxT>;
-    using real_type      = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
@@ -629,7 +629,7 @@ namespace GridKit
       return 0;
     }
 
-    void updateTime(real_type t, real_type a)
+    void updateTime(RealT t, RealT a)
     {
       for (const auto& component : components_)
       {

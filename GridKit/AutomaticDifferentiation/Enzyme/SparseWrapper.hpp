@@ -315,8 +315,8 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct InternalJacobian
       {
-        using real_type = GridKit::ScalarTraits<ScalarT>::real_type;
-        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>;
+        using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -395,8 +395,8 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct InternalJacobianWithSignal
       {
-        using real_type = GridKit::ScalarTraits<ScalarT>::real_type;
-        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>;
+        using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -479,8 +479,8 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct ExternalJacobian
       {
-        using real_type = GridKit::ScalarTraits<ScalarT>::real_type;
-        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>;
+        using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -568,8 +568,8 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BusJacobian
       {
-        using real_type = GridKit::ScalarTraits<ScalarT>::real_type;
-        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>;
+        using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -648,8 +648,8 @@ namespace GridKit
       template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
       struct BranchJacobian
       {
-        using real_type = GridKit::ScalarTraits<ScalarT>::real_type;
-        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>;
+        using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+        using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated

@@ -55,10 +55,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1,
                                   bus_type* bus2,
-                                  real_type R,
-                                  real_type X,
-                                  real_type G,
-                                  real_type B)
+                                  RealT R,
+                                  RealT X,
+                                  RealT G,
+                                  RealT B)
       : bus1_(bus1),
         bus2_(bus2),
         R_(R),
@@ -78,22 +78,22 @@ namespace GridKit
     {
       if (data.parameters.contains(model_data_type::Parameters::R))
       {
-        R_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::X))
       {
-        X_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::G))
       {
-        G_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::G));
+        G_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::G));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::B))
       {
-        B_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::B));
+        B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
       }
 
       if (data.ports.contains(model_data_type::Ports::bus1))

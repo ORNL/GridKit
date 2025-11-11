@@ -37,9 +37,9 @@ namespace GridKit
     using GeneratorBase<ScalarT, IdxT>::param_;
 
     using bus_type  = BaseBus<ScalarT, IdxT>;
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using GenData   = GridKit::PowerFlowData::GenData<real_type, IdxT>;
-    // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using GenData   = GridKit::PowerFlowData::GenData<RealT, IdxT>;
+    // typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT RealT;
     // typedef BaseBus<ScalarT, IdxT> bus_type;
 
   public:

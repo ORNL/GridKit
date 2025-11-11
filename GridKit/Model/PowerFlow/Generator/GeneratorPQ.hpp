@@ -38,8 +38,8 @@ namespace GridKit
     using GeneratorBase<ScalarT, IdxT>::param_;
 
     using bus_type  = BaseBus<ScalarT, IdxT>;
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using GenData   = GridKit::PowerFlowData::GenData<real_type, IdxT>;
+    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using GenData   = GridKit::PowerFlowData::GenData<RealT, IdxT>;
 
   public:
     GeneratorPQ(bus_type* bus, GenData& data);

@@ -28,7 +28,7 @@ namespace GridKit
     class GenClassicalTests
     {
     private:
-      using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:
@@ -63,14 +63,14 @@ namespace GridKit
         TestStatus success = true;
 
         // Classical generator parameters
-        real_type H{0.5};
-        real_type D{-1.0};
-        real_type Ra{0.5};
-        real_type Xdp{0.5};
+        RealT H{0.5};
+        RealT D{-1.0};
+        RealT Ra{0.5};
+        RealT Xdp{0.5};
 
         // Classical generator inputs
-        real_type Pm{1.0};
-        real_type Ep{2.0};
+        RealT Pm{1.0};
+        RealT Ep{2.0};
 
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
@@ -132,12 +132,12 @@ namespace GridKit
         TestStatus success = true;
 
         // Classical generator parameters
-        real_type p0{3.0};
-        real_type q0{-1.0};
-        real_type H{1.0};
-        real_type D{1.0};
-        real_type Ra{0.1};
-        real_type Xdp{2.3};
+        RealT p0{3.0};
+        RealT q0{-1.0};
+        RealT H{1.0};
+        RealT D{1.0};
+        RealT Ra{0.1};
+        RealT Xdp{2.3};
 
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
@@ -188,12 +188,12 @@ namespace GridKit
         TestStatus success = true;
 
         // Classical generator parameters
-        real_type p0{3.0};
-        real_type q0{-1.0};
-        real_type H{1.0};
-        real_type D{1.0};
-        real_type Ra{0.6};
-        real_type Xdp{0.2};
+        RealT p0{3.0};
+        RealT q0{-1.0};
+        RealT H{1.0};
+        RealT D{1.0};
+        RealT Ra{0.6};
+        RealT Xdp{0.2};
 
         ScalarT Vr1{1.0}; ///< Bus real voltage
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
@@ -230,10 +230,10 @@ namespace GridKit
         TestStatus success = true;
 
         // Classical generator parameters
-        real_type H{0.5};
-        real_type D{-1.0};
-        real_type Ra{0.5};
-        real_type Xdp{0.5};
+        RealT H{0.5};
+        RealT D{-1.0};
+        RealT Ra{0.5};
+        RealT Xdp{0.5};
 
         // Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian(H, D, Ra, Xdp);
@@ -254,7 +254,7 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
-          const real_type H, const real_type D, const real_type Ra, const real_type Xdp)
+          const RealT H, const RealT D, const RealT Ra, const RealT Xdp)
       {
         DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
         DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
@@ -287,7 +287,7 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const real_type H, const real_type D, const real_type Ra, const real_type Xdp)
+          const RealT H, const RealT D, const RealT Ra, const RealT Xdp)
       {
         ScalarT Vr1{1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage

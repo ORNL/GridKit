@@ -30,7 +30,7 @@ namespace AnalysisManager
       using OptimizationSolver<ScalarT, IdxT>::integrator_;
       using OptimizationSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
 
       typedef Ipopt::Index                     Index;
       typedef Ipopt::Number                    Number;
@@ -80,8 +80,8 @@ namespace AnalysisManager
                                      IpoptCalculatedQuantities* ip_cq);
 
     private:
-      real_type t_init_;
-      real_type t_final_;
+      RealT t_init_;
+      RealT t_final_;
       int       nout_;
     };
 

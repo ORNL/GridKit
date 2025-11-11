@@ -18,7 +18,7 @@ namespace GridKit
     class Evaluator
     {
     public:
-      typedef typename GridKit::ScalarTraits<ScalarT>::real_type real_type;
+      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
 
       Evaluator()
       {
@@ -53,8 +53,8 @@ namespace GridKit
 
       virtual IdxT sizeQuadrature()                                      = 0;
       virtual IdxT sizeParams()                                          = 0;
-      virtual void updateTime(real_type t, real_type a)                  = 0;
-      virtual void setTolerances(real_type& rtol, real_type& atol) const = 0;
+      virtual void updateTime(RealT t, RealT a)                  = 0;
+      virtual void setTolerances(RealT& rtol, RealT& atol) const = 0;
       virtual void setMaxSteps(IdxT& msa) const                          = 0;
 
       virtual std::vector<ScalarT>&       y()       = 0;
@@ -85,8 +85,8 @@ namespace GridKit
       virtual const std::vector<ScalarT>& getResidual() const = 0;
 
       /// \todo Use a different approach to store and set Jacobians
-      virtual GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>&       getJacobian()       = 0;
-      virtual const GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() const = 0;
+      virtual GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>&       getJacobian()       = 0;
+      virtual const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const = 0;
 
       virtual std::vector<ScalarT>&       getIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getIntegrand() const = 0;

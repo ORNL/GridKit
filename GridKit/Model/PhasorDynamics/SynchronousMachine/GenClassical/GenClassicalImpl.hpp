@@ -44,12 +44,12 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
                                               int       unit_id,
-                                              real_type p0,
-                                              real_type q0,
-                                              real_type H,
-                                              real_type D,
-                                              real_type Ra,
-                                              real_type Xdp)
+                                              RealT p0,
+                                              RealT q0,
+                                              RealT H,
+                                              RealT D,
+                                              RealT Ra,
+                                              RealT Xdp)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -75,37 +75,37 @@ namespace GridKit
     {
       if (data.parameters.contains(DataT::Parameters::p0))
       {
-        p0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(DataT::Parameters::p0));
       }
 
       if (data.parameters.contains(DataT::Parameters::q0))
       {
-        q0_ = std::get<real_type>(data.parameters.at(DataT::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(DataT::Parameters::q0));
       }
 
       if (data.parameters.contains(DataT::Parameters::H))
       {
-        H_ = std::get<real_type>(data.parameters.at(DataT::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(DataT::Parameters::H));
       }
 
       if (data.parameters.contains(DataT::Parameters::D))
       {
-        D_ = std::get<real_type>(data.parameters.at(DataT::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(DataT::Parameters::D));
       }
 
       if (data.parameters.contains(DataT::Parameters::Ra))
       {
-        Ra_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(DataT::Parameters::Ra));
       }
 
       if (data.parameters.contains(DataT::Parameters::Xdp))
       {
-        Xdp_ = std::get<real_type>(data.parameters.at(DataT::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(DataT::Parameters::Xdp));
       }
 
       if (data.parameters.contains(DataT::Parameters::mva_base))
       {
-        mva_base_ = std::get<real_type>(data.parameters.at(DataT::Parameters::mva_base));
+        mva_base_ = std::get<RealT>(data.parameters.at(DataT::Parameters::mva_base));
       }
 
       if (data.ports.contains(DataT::Ports::bus))
@@ -230,8 +230,8 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // GenClassical differential equations
-      f[0] = delta_dot - omega * (TWO<real_type> * M_PI * 60.0);
-      f[1] = omega_dot - (ONE<real_type> / (TWO<real_type> * H_)) * ((pmech - D_ * omega) / (ONE<real_type> + omega) - telec);
+      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * 60.0);
+      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));

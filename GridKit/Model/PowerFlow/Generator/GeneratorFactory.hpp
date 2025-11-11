@@ -14,8 +14,8 @@ namespace GridKit
   class GeneratorFactory
   {
   public:
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
-    using GenData   = GridKit::PowerFlowData::GenData<real_type, IdxT>;
+    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using GenData   = GridKit::PowerFlowData::GenData<RealT, IdxT>;
 
     GeneratorFactory() = delete;
 

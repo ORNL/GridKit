@@ -35,7 +35,7 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(real_type R, real_type X, real_type G, real_type B, bus_type* bus1, bus_type* bus2)
+  Branch<ScalarT, IdxT>::Branch(RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2)
     : R_(R),
       X_(X),
       G_(G),
@@ -106,8 +106,8 @@ namespace GridKit
   int Branch<ScalarT, IdxT>::evaluateResidual()
   {
     // std::cout << "Evaluating branch residual ...\n";
-    real_type b      = -X_ / (R_ * R_ + X_ * X_);
-    real_type g      = R_ / (R_ * R_ + X_ * X_);
+    RealT b      = -X_ / (R_ * R_ + X_ * X_);
+    RealT g      = R_ / (R_ * R_ + X_ * X_);
     ScalarT   dtheta = theta1() - theta2();
 
     P1() -= (g + 0.5 * G_) * V1() * V1() + V1() * V2() * (-g * cos(dtheta) - b * sin(dtheta));

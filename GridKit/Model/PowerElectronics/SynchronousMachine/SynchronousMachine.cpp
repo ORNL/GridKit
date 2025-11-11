@@ -36,7 +36,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, real_type Lls, std::tuple<real_type, real_type> Llkq, real_type Llfd, real_type Llkd, real_type Lmq, real_type Lmd, real_type Rs, std::tuple<real_type, real_type> Rkq, real_type Rfd, real_type Rkd, real_type RJ, real_type P, real_type mub)
+  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub)
     : Lls_(Lls),
       Llkq_(Llkq),
       Llfd_(Llfd),

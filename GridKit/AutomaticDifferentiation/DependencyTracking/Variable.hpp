@@ -340,9 +340,8 @@ namespace GridKit
   class ScalarTraits<DependencyTracking::Variable>
   {
   public:
-    typedef double real_type;
-    typedef double norm_type;
-    typedef double scalar_type;
+    typedef double RealT;
+    typedef double NormT;
   };
 
 } // namespace GridKit

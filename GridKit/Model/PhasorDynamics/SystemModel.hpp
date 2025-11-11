@@ -36,7 +36,7 @@ namespace GridKit
       using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
       using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
-      using real_type      = typename Model::Evaluator<ScalarT, IdxT>::real_type;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
@@ -74,7 +74,7 @@ namespace GridKit
        * @post All component models in SystemModelData are created, and
        * correctly connected into the system model.
        */
-      SystemModel(SystemModelData<real_type, IdxT>& data)
+      SystemModel(SystemModelData<RealT, IdxT>& data)
       {
         using namespace Governor;
         using namespace Exciter;
@@ -531,7 +531,7 @@ namespace GridKit
       {
         std::vector<IdxT>      ctemp{};
         std::vector<IdxT>      rtemp{};
-        std::vector<real_type> valtemp{};
+        std::vector<RealT> valtemp{};
 
         // Initialize bus Jacobians
         for (const auto& bus : buses_)
@@ -546,7 +546,7 @@ namespace GridKit
           component->evaluateJacobian();
           auto component_jacobian = component->getJacobian();
 
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<real_type>&> component_jacobian_entries = component_jacobian.getEntries();
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
           const auto [rows, columns, values]                                                                     = component_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
@@ -561,7 +561,7 @@ namespace GridKit
         {
           auto bus_jacobian = bus->getJacobian();
 
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<real_type>&> bus_jacobian_entries = bus_jacobian.getEntries();
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
           const auto [rows, columns, values]                                                               = bus_jacobian_entries;
           for (size_t i = 0; i < rows.size(); ++i)
           {
@@ -580,7 +580,7 @@ namespace GridKit
        * @brief Update time
        *
        */
-      void updateTime(real_type t, real_type a) override
+      void updateTime(RealT t, RealT a) override
       {
         for (const auto& component : components_)
         {

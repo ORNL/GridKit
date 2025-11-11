@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, real_type V)
+  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, RealT V)
     : V_(V)
   {
     size_           = 3;
@@ -83,7 +83,7 @@ namespace GridKit
     // Create dF/dy
     std::vector<IdxT>      rcord{0, 1, 2, 2};
     std::vector<IdxT>      ccord{2, 2, 0, 1};
-    std::vector<real_type> vals{-1.0, 1.0, -1.0, 1.0};
+    std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0};
     jac_.setValues(rcord, ccord, vals);
 
     return 0;

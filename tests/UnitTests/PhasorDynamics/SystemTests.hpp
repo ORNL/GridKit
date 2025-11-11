@@ -26,7 +26,7 @@ namespace GridKit
     class SystemTests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
     public:
       SystemTests()  = default;
@@ -110,10 +110,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Branch series resistance
-        real_type X{4.0}; ///< Branch series reactance
-        real_type G{0.2}; ///< Branch shunt conductance
-        real_type B{1.2}; ///< Branch shunt charging
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
 
         ScalarT Vr1{10.0}; ///< Bus-1 real voltage
         ScalarT Vi1{20.0}; ///< Bus-1 imaginary voltage

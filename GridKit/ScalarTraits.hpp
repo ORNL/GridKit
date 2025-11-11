@@ -12,9 +12,8 @@ namespace GridKit
   class ScalarTraits<double>
   {
   public:
-    typedef double real_type;
-    typedef double norm_type;
-    typedef double scalar_type;
+    typedef double RealT;
+    typedef double NormT;
   };
 
 } // namespace GridKit

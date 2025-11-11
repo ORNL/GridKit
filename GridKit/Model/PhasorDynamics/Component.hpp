@@ -16,7 +16,7 @@ namespace GridKit
     class Component : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using real_type = typename Model::Evaluator<ScalarT, IdxT>::real_type;
+      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       Component()
         : size_(0)
@@ -41,14 +41,14 @@ namespace GridKit
         return false;
       }
 
-      // virtual void updateTime(real_type t, real_type a)
+      // virtual void updateTime(RealT t, RealT a)
       // {
       //     time_ = t;
       //     alpha_ = a;
       //     std::cout << "updateTime: t = " << time_ << "\n";
       // }
 
-      virtual void setTolerances(real_type& rtol, real_type& atol) const override
+      virtual void setTolerances(RealT& rtol, RealT& atol) const override
       {
         rtol = rel_tol_;
         atol = abs_tol_;
@@ -99,12 +99,12 @@ namespace GridKit
         return f_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() override
+      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() override
       {
         return J_;
       }
 
-      const GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& getJacobian() const override
+      const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const override
       {
         return J_;
       }
@@ -165,13 +165,13 @@ namespace GridKit
       std::vector<ScalarT> wb_;
       std::vector<ScalarT> h_;
 
-      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> J_;
+      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> J_;
 
-      real_type time_;
-      real_type alpha_;
+      RealT time_;
+      RealT alpha_;
 
-      real_type rel_tol_;
-      real_type abs_tol_;
+      RealT rel_tol_;
+      RealT abs_tol_;
 
       IdxT max_steps_;
 
@@ -185,7 +185,7 @@ namespace GridKit
 
       */
 
-      real_type mva_system_base_{100.0};
+      RealT mva_system_base_{100.0};
 
       //
       // Adjoint sensitivity members

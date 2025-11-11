@@ -21,7 +21,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
 
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type real_type;
+    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT RealT;
 
   public:
     MiniGrid();
@@ -59,7 +59,7 @@ namespace GridKit
       return -1;
     }
 
-    void updateTime(real_type /* t */, real_type /* a */)
+    void updateTime(RealT /* t */, RealT /* a */)
     {
     }
 

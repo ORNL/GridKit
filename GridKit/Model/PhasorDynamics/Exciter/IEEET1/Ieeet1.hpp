@@ -75,8 +75,8 @@ namespace GridKit
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
 
-        using real_type       = typename Component<ScalarT, IdxT>::real_type;
-        using model_data_type = Ieeet1Data<real_type, IdxT>;
+        using RealT       = typename Component<ScalarT, IdxT>::RealT;
+        using model_data_type = Ieeet1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
         using bus_type        = BusBase<ScalarT, IdxT>;
 
@@ -98,7 +98,7 @@ namespace GridKit
         int evaluateResidual() override;
         int evaluateJacobian() override;
 
-        void updateTime(real_type /* t */, real_type /* a */) override
+        void updateTime(RealT /* t */, RealT /* a */) override
         {
         }
 
@@ -119,25 +119,25 @@ namespace GridKit
         bus_type*    bus_;
 
         // Model Input parameters
-        real_type Tr_;      ///< Time constant for voltage sensing
-        real_type Ka_;      ///< Coefficient for voltage regulation
-        real_type Ta_;      ///< Time constant for voltage regulation
-        real_type Ke_;      ///< Coefficient for excitation system
-        real_type Te_;      ///< Time constant for excitation system
-        real_type Kf_;      ///< Coefficient for feedback
-        real_type Tf_;      ///< Time constant for feedback
-        real_type Vrmin_;   ///< LL to voltage regulation
-        real_type Vrmax_;   ///< HH to voltage regulation
-        real_type E1_;      ///< Saturation parameter
-        real_type E2_;      ///< Saturation parameter
-        real_type Se1_;     ///< Saturation parameter
-        real_type Se2_;     ///< Saturation parameter
-        real_type Ispdlim_; ///< Speed limit flag indicator
+        RealT Tr_;      ///< Time constant for voltage sensing
+        RealT Ka_;      ///< Coefficient for voltage regulation
+        RealT Ta_;      ///< Time constant for voltage regulation
+        RealT Ke_;      ///< Coefficient for excitation system
+        RealT Te_;      ///< Time constant for excitation system
+        RealT Kf_;      ///< Coefficient for feedback
+        RealT Tf_;      ///< Time constant for feedback
+        RealT Vrmin_;   ///< LL to voltage regulation
+        RealT Vrmax_;   ///< HH to voltage regulation
+        RealT E1_;      ///< Saturation parameter
+        RealT E2_;      ///< Saturation parameter
+        RealT Se1_;     ///< Saturation parameter
+        RealT Se2_;     ///< Saturation parameter
+        RealT Ispdlim_; ///< Speed limit flag indicator
 
         // Model Derived parameters
         // TODO -> Need to be solved for in instantiation!
-        real_type SA_{0};
-        real_type SB_{0};
+        RealT SA_{0};
+        RealT SB_{0};
 
         // External Variables that don't have models yet.
         // They are constants until then.
@@ -153,7 +153,7 @@ namespace GridKit
         // Scale of Sigmoid function
         // (temporary local implementation)
         // This value gave higher precision.
-        const real_type mu_{400000.0};
+        const RealT mu_{400000.0};
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);

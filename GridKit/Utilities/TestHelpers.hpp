@@ -238,7 +238,7 @@ namespace GridKit
     }
 
     // /// @brief eps = 2.2e-15 for double type
-    // static const real_type eps_ = 10*std::numeric_limits<real_type>::epsilon();
+    // static const RealT eps_ = 10*std::numeric_limits<RealT>::epsilon();
 
     // class TestBase
     // {
@@ -249,7 +249,7 @@ namespace GridKit
     // protected:
     //     /// Returns true if two real numbers are equal within tolerance
     //     [[nodiscard]] static
-    //     bool isEqual(const real_type a, const real_type b)
+    //     bool isEqual(const RealT a, const RealT b)
     //     {
     //         return (std::abs(a - b)/(1.0 + std::abs(b)) < eps);
     //     }

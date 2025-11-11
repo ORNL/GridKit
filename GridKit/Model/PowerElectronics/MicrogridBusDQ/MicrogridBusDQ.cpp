@@ -20,7 +20,7 @@ namespace GridKit
    * Timothy C. Green, Section E
    */
   template <class ScalarT, typename IdxT>
-  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, real_type RN)
+  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, RealT RN)
     : RN_(RN)
   {
     // externals [vbus_d, vbus_q]
@@ -100,7 +100,7 @@ namespace GridKit
     // Create dF/dy
     std::vector<IdxT>      rtemp{0, 1};
     std::vector<IdxT>      ctemp{0, 1};
-    std::vector<real_type> vals{-1.0 / RN_, -1.0 / RN_};
+    std::vector<RealT> vals{-1.0 / RN_, -1.0 / RN_};
     jac_.setValues(rtemp, ctemp, vals);
 
     return 0;

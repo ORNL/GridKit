@@ -19,7 +19,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class Resistor : public CircuitComponent<ScalarT, IdxT>
   {
-    using real_type = typename CircuitComponent<ScalarT, IdxT>::real_type;
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -43,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    Resistor(IdxT id, real_type R);
+    Resistor(IdxT id, RealT R);
     virtual ~Resistor();
 
     int allocate();
@@ -59,6 +59,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    real_type R_;
+    RealT R_;
   };
 } // namespace GridKit

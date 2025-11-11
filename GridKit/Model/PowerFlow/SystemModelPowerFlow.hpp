@@ -35,7 +35,7 @@ namespace GridKit
   {
     typedef BaseBus<ScalarT, IdxT>            bus_type;
     typedef ModelEvaluatorImpl<ScalarT, IdxT> component_type;
-    using real_type = typename ModelEvaluatorImpl<ScalarT, IdxT>::real_type;
+    using RealT = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
@@ -348,7 +348,7 @@ namespace GridKit
       return 0;
     }
 
-    void updateTime(real_type /* t */, real_type /* a */)
+    void updateTime(RealT /* t */, RealT /* a */)
     {
     }
 

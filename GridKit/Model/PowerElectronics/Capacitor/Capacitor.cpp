@@ -18,7 +18,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, real_type C)
+  Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, RealT C)
     : C_(C)
   {
     size_           = 3;
@@ -95,14 +95,14 @@ namespace GridKit
     // Create dF/dy
     std::vector<IdxT>      rcord{2, 2, 2};
     std::vector<IdxT>      ccord{0, 1, 2};
-    std::vector<real_type> vals{1.0, -1.0, -1.0};
+    std::vector<RealT> vals{1.0, -1.0, -1.0};
     jac_.setValues(rcord, ccord, vals);
 
     // Create dF/dy'
     std::vector<IdxT>                                   rcordder{0, 1, 2};
     std::vector<IdxT>                                   ccordder{2, 2, 2};
-    std::vector<real_type>                              valsder{C_, -C_, -C_};
-    GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>(rcordder, ccordder, valsder, 3, 3);
+    std::vector<RealT>                              valsder{C_, -C_, -C_};
+    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, ccordder, valsder, 3, 3);
 
     // Perform dF/dy + \alpha dF/dy'
     jac_.axpy(alpha_, Jacder);

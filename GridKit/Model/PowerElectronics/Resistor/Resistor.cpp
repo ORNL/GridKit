@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Resistor<ScalarT, IdxT>::Resistor(IdxT id, real_type R)
+  Resistor<ScalarT, IdxT>::Resistor(IdxT id, RealT R)
     : R_(R)
   {
     size_           = 2;
@@ -84,7 +84,7 @@ namespace GridKit
     // does compiler make constant???
     std::vector<IdxT>      rcord{0, 0, 1, 1};
     std::vector<IdxT>      ccord{0, 1, 0, 1};
-    std::vector<real_type> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
+    std::vector<RealT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
     jac_.setValues(rcord, ccord, vals);
 
     return 0;

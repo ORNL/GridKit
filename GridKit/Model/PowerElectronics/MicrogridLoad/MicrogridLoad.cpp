@@ -20,7 +20,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, real_type R, real_type L)
+  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(IdxT id, RealT R, RealT L)
     : R_(R),
       L_(L)
   {
@@ -106,26 +106,26 @@ namespace GridKit
     // Create dF/dy
     std::vector<IdxT>      rtemp{1, 2};
     std::vector<IdxT>      ctemp{3, 4};
-    std::vector<real_type> valtemp{-1.0, -1.0};
+    std::vector<RealT> valtemp{-1.0, -1.0};
     jac_.setValues(rtemp, ctemp, valtemp);
 
     std::vector<IdxT> ccord{0, 1, 3, 4};
 
     std::vector<IdxT>      rcord(ccord.size(), 3);
-    std::vector<real_type> vals{};
-    vals = {static_cast<real_type>(y_[4]), (1.0 / L_), -(R_ / L_), static_cast<real_type>(y_[0])};
+    std::vector<RealT> vals{};
+    vals = {static_cast<RealT>(y_[4]), (1.0 / L_), -(R_ / L_), static_cast<RealT>(y_[0])};
     jac_.setValues(rcord, ccord, vals);
 
     std::vector<IdxT> ccor2{0, 2, 3, 4};
     std::fill(rcord.begin(), rcord.end(), 4);
-    vals = {-static_cast<real_type>(y_[3]), (1.0 / L_), -static_cast<real_type>(y_[0]), -(R_ / L_)};
+    vals = {-static_cast<RealT>(y_[3]), (1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_)};
     jac_.setValues(rcord, ccor2, vals);
 
     // Create -dF/dy'
     std::vector<IdxT>                                   rcordder{3, 4};
     std::vector<IdxT>                                   ccordder{3, 4};
-    std::vector<real_type>                              valsder{-1.0, -1.0};
-    GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>(rcordder, ccordder, valsder, 5, 5);
+    std::vector<RealT>                              valsder{-1.0, -1.0};
+    GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT> Jacder = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>(rcordder, ccordder, valsder, 5, 5);
 
     // Perform dF/dy + \alpha dF/dy'
     jac_.axpy(alpha_, Jacder);

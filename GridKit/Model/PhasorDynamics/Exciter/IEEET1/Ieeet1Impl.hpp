@@ -253,7 +253,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Ieeet1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ((HALF<real_type> * mu_ * x) / (ONE<real_type> + std::abs(mu_ * x))) + HALF<real_type>;
+        return ((HALF<RealT> * mu_ * x) / (ONE<RealT> + std::abs(mu_ * x))) + HALF<RealT>;
       }
 
       /**
@@ -275,7 +275,7 @@ namespace GridKit
 
         ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
         ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
-        return (ONE<real_type> - ind_low) * (ONE<real_type> - ind_high);
+        return (ONE<RealT> - ind_low) * (ONE<RealT> - ind_high);
       }
 
       /**
@@ -372,63 +372,63 @@ namespace GridKit
 
         if (data.parameters.contains(model_data_type::Parameters::Tr))
         {
-          Tr_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tr));
+          Tr_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tr));
         }
         if (data.parameters.contains(model_data_type::Parameters::Ka))
         {
-          Ka_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ka));
+          Ka_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ka));
         }
         if (data.parameters.contains(model_data_type::Parameters::Ta))
         {
-          Ta_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ta));
+          Ta_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ta));
         }
         if (data.parameters.contains(model_data_type::Parameters::Ke))
         {
-          Ke_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ke));
+          Ke_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ke));
         }
         if (data.parameters.contains(model_data_type::Parameters::Te))
         {
-          Te_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Te));
+          Te_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Te));
         }
         if (data.parameters.contains(model_data_type::Parameters::Kf))
         {
-          Kf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Kf));
+          Kf_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Kf));
         }
         if (data.parameters.contains(model_data_type::Parameters::Tf))
         {
-          Tf_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Tf));
+          Tf_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tf));
         }
         if (data.parameters.contains(model_data_type::Parameters::Vrmin))
         {
-          Vrmin_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmin));
+          Vrmin_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vrmin));
         }
         if (data.parameters.contains(model_data_type::Parameters::Vrmax))
         {
-          Vrmax_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Vrmax));
+          Vrmax_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vrmax));
         }
         if (data.parameters.contains(model_data_type::Parameters::E1))
         {
-          E1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E1));
+          E1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::E1));
         }
         if (data.parameters.contains(model_data_type::Parameters::E2))
         {
-          E2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::E2));
+          E2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::E2));
         }
         if (data.parameters.contains(model_data_type::Parameters::Se1))
         {
-          Se1_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se1));
+          Se1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Se1));
         }
         if (data.parameters.contains(model_data_type::Parameters::Se2))
         {
-          Se2_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Se2));
+          Se2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Se2));
         }
         if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
         {
-          Ispdlim_ = std::get<real_type>(data.parameters.at(model_data_type::Parameters::Ispdlim));
+          Ispdlim_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ispdlim));
         }
 
         // Derived Parameters
-        real_type SR = std::sqrt(Se2_ / Se1_);
+        RealT SR = std::sqrt(Se2_ / Se1_);
 
         // Solution 1 (Aligned with PW)
         SA_ = (SR * E1_ - E2_) / (SR - 1);

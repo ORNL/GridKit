@@ -81,9 +81,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
-      using real_type       = typename Component<ScalarT, IdxT>::real_type;
+      using RealT       = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = GenrouData<real_type, IdxT>;
+      using model_data_type = GenrouData<RealT, IdxT>;
       using signal_type     = SignalNode<ScalarT, IdxT>;
 
     public:
@@ -100,24 +100,24 @@ namespace GridKit
       Genrou(bus_type* bus, const model_data_type& data);
       Genrou(bus_type* bus,
              IdxT      unit_id,
-             real_type p0,
-             real_type q0,
-             real_type H,
-             real_type D,
-             real_type Ra,
-             real_type Tdop,
-             real_type Tdopp,
-             real_type Tqopp,
-             real_type Tqop,
-             real_type Xd,
-             real_type Xdp,
-             real_type Xdpp,
-             real_type Xq,
-             real_type Xqp,
-             real_type Xqpp,
-             real_type Xl,
-             real_type S10,
-             real_type S12);
+             RealT p0,
+             RealT q0,
+             RealT H,
+             RealT D,
+             RealT Ra,
+             RealT Tdop,
+             RealT Tdopp,
+             RealT Tqopp,
+             RealT Tqop,
+             RealT Xd,
+             RealT Xdp,
+             RealT Xdpp,
+             RealT Xq,
+             RealT Xqp,
+             RealT Xqpp,
+             RealT Xl,
+             RealT S10,
+             RealT S12);
       ~Genrou() = default;
 
       int setGridKitComponentID(IdxT) override;
@@ -130,7 +130,7 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override;
 
-      void updateTime(real_type /* t */, real_type /* a */) override
+      void updateTime(RealT /* t */, RealT /* a */) override
       {
       }
 
@@ -187,44 +187,44 @@ namespace GridKit
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
 
       /* Initial terminal conditions */
-      real_type p0_{0.0};
-      real_type q0_{0.0};
+      RealT p0_{0.0};
+      RealT q0_{0.0};
 
       /* Input parameters */
-      real_type H_{0.0};
-      real_type D_{0.0};
-      real_type Ra_{0.0};
-      real_type Tdop_{0.0};
-      real_type Tdopp_{0.0};
-      real_type Tqopp_{0.0};
-      real_type Tqop_{0.0};
-      real_type Xd_{0.0};
-      real_type Xdp_{0.0};
-      real_type Xdpp_{0.0};
-      real_type Xq_{0.0};
-      real_type Xqp_{0.0};
-      real_type Xqpp_{0.0};
-      real_type Xl_{0.0};
-      real_type S10_{0.0};
-      real_type S12_{0.0};
-      real_type mva_base_{100.0};
+      RealT H_{0.0};
+      RealT D_{0.0};
+      RealT Ra_{0.0};
+      RealT Tdop_{0.0};
+      RealT Tdopp_{0.0};
+      RealT Tqopp_{0.0};
+      RealT Tqop_{0.0};
+      RealT Xd_{0.0};
+      RealT Xdp_{0.0};
+      RealT Xdpp_{0.0};
+      RealT Xq_{0.0};
+      RealT Xqp_{0.0};
+      RealT Xqpp_{0.0};
+      RealT Xl_{0.0};
+      RealT S10_{0.0};
+      RealT S12_{0.0};
+      RealT mva_base_{100.0};
 
       /* Derivied parameters */
-      real_type SA_;
-      real_type SB_;
-      real_type Xd1_;
-      real_type Xd2_;
-      real_type Xd3_;
-      real_type Xd4_;
-      real_type Xd5_;
-      real_type Xq1_;
-      real_type Xq2_;
-      real_type Xq3_;
-      real_type Xq4_;
-      real_type Xq5_;
-      real_type Xqd_;
-      real_type G_;
-      real_type B_;
+      RealT SA_;
+      RealT SB_;
+      RealT Xd1_;
+      RealT Xd2_;
+      RealT Xd3_;
+      RealT Xd4_;
+      RealT Xd5_;
+      RealT Xq1_;
+      RealT Xq2_;
+      RealT Xq3_;
+      RealT Xq4_;
+      RealT Xq5_;
+      RealT Xqd_;
+      RealT G_;
+      RealT B_;
 
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set

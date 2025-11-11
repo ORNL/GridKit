@@ -23,7 +23,7 @@ namespace GridKit
     class GovernorTgov1Tests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
     public:
       GovernorTgov1Tests()  = default;
@@ -115,7 +115,7 @@ namespace GridKit
         gov.evaluateResidual();
 
         // Require results to be within machine precision
-        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
         const std::vector<ScalarT>& f = gov.getResidual();
         for (const auto& f_val : f)
@@ -182,7 +182,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(busdata, gendata);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        auto tol = 10 * std::numeric_limits<real_type>::epsilon();
+        auto tol = 10 * std::numeric_limits<RealT>::epsilon();
         for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];

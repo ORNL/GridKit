@@ -17,7 +17,7 @@ namespace GridKit
     class BranchTests
     {
     private:
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::real_type;
+      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
     public:
       BranchTests()  = default;
@@ -49,10 +49,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Branch series resistance
-        real_type X{4.0}; ///< Branch series reactance
-        real_type G{0.2}; ///< Branch shunt conductance
-        real_type B{1.2}; ///< Branch shunt charging
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
 
         ScalarT Vr1{10.0}; ///< Bus-1 real voltage
         ScalarT Vi1{20.0}; ///< Bus-1 imaginary voltage
@@ -83,10 +83,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        real_type R{2.0}; ///< Branch series resistance
-        real_type X{4.0}; ///< Branch series reactance
-        real_type G{0.2}; ///< Branch shunt conductance
-        real_type B{1.2}; ///< Branch shunt charging
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
 
         DependencyTracking::Variable Vr1{10.0}; ///< Bus-1 real voltage
         DependencyTracking::Variable Vi1{20.0}; ///< Bus-1 imaginary voltage
@@ -124,12 +124,12 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        const real_type zero{0.0};
+        const RealT zero{0.0};
 
-        real_type R{2.0}; ///< Branch series resistance
-        real_type X{4.0}; ///< Branch series reactance
-        real_type G{0.2}; ///< Branch shunt conductance
-        real_type B{1.2}; ///< Branch shunt charging
+        RealT R{2.0}; ///< Branch series resistance
+        RealT X{4.0}; ///< Branch series reactance
+        RealT G{0.2}; ///< Branch shunt conductance
+        RealT B{1.2}; ///< Branch shunt charging
 
         ScalarT Vr1{-1.0}; ///< Bus-1 real voltage
         ScalarT Vi1{-1.0}; ///< Bus-1 imaginary voltage
@@ -185,33 +185,33 @@ namespace GridKit
       }
 
     private:
-      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const real_type R,
-                                                                                  const real_type X,
-                                                                                  const real_type G,
-                                                                                  const real_type B)
+      std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
+                                                                                  const RealT X,
+                                                                                  const RealT G,
+                                                                                  const RealT B)
       {
-        const real_type b = -X / (R * R + X * X);
-        const real_type g = R / (R * R + X * X);
+        const RealT b = -X / (R * R + X * X);
+        const RealT g = R / (R * R + X * X);
 
-        real_type dIr1_dVr1 = -(g + 0.5 * G);
-        real_type dIr1_dVi1 = (b + 0.5 * B);
-        real_type dIr1_dVr2 = g;
-        real_type dIr1_dVi2 = -b;
+        RealT dIr1_dVr1 = -(g + 0.5 * G);
+        RealT dIr1_dVi1 = (b + 0.5 * B);
+        RealT dIr1_dVr2 = g;
+        RealT dIr1_dVi2 = -b;
 
-        real_type dIi1_dVr1 = -(b + 0.5 * B);
-        real_type dIi1_dVi1 = -(g + 0.5 * G);
-        real_type dIi1_dVr2 = b;
-        real_type dIi1_dVi2 = g;
+        RealT dIi1_dVr1 = -(b + 0.5 * B);
+        RealT dIi1_dVi1 = -(g + 0.5 * G);
+        RealT dIi1_dVr2 = b;
+        RealT dIi1_dVi2 = g;
 
-        real_type dIr2_dVr1 = g;
-        real_type dIr2_dVi1 = -b;
-        real_type dIr2_dVr2 = -(g + 0.5 * G);
-        real_type dIr2_dVi2 = (b + 0.5 * B);
+        RealT dIr2_dVr1 = g;
+        RealT dIr2_dVi1 = -b;
+        RealT dIr2_dVr2 = -(g + 0.5 * G);
+        RealT dIr2_dVi2 = (b + 0.5 * B);
 
-        real_type dIi2_dVr1 = b;
-        real_type dIi2_dVi1 = g;
-        real_type dIi2_dVr2 = -(b + 0.5 * B);
-        real_type dIi2_dVi2 = -(g + 0.5 * G);
+        RealT dIi2_dVr1 = b;
+        RealT dIi2_dVi1 = g;
+        RealT dIi2_dVr2 = -(b + 0.5 * B);
+        RealT dIi2_dVi2 = -(g + 0.5 * G);
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(4);
         dependencies[0] = {{0, dIr1_dVr1}, {1, dIr1_dVi1}, {2, dIr1_dVr2}, {3, dIr1_dVi2}};

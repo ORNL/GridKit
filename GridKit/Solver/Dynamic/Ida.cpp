@@ -72,7 +72,7 @@ namespace AnalysisManager
       checkAllocation((void*) yp0_, "N_VClone");
 
       // Dummy initial time; will be overridden.
-      const real_type t0 = 0.0;
+      const RealT t0 = 0.0;
 
       // Allocate and initialize IDA workspace
       retval = IDAInit(solver_, this->Residual, t0, yy_, yp_);
@@ -83,8 +83,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetUserData");
 
       // Set tolerances
-      real_type rel_tol;
-      real_type abs_tol;
+      RealT rel_tol;
+      RealT abs_tol;
 
       model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
       retval = IDASStolerances(solver_, rel_tol, abs_tol);
@@ -241,7 +241,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::setIntegrationTime(real_type t_init, real_type t_final, int nout)
+    int Ida<ScalarT, IdxT>::setIntegrationTime(RealT t_init, RealT t_final, int nout)
     {
       t_init_  = t_init;
       t_final_ = t_final;
@@ -256,7 +256,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeSimulation(real_type t0, bool findConsistent)
+    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
     {
       int retval = 0;
 
@@ -306,13 +306,13 @@ namespace AnalysisManager
      * @todo Consider adding initial time as the function argument, as well.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(real_type tf, int nout, const std::optional<std::function<void(real_type)>> step_callback)
+    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, int nout, const std::optional<std::function<void(RealT)>> step_callback)
     {
       int       retval = 0;
       int       iout   = 0;
-      real_type tret;
-      real_type dt   = (tf - t_init_) / static_cast<real_type>(nout);
-      real_type tout = t_init_ + dt;
+      RealT tret;
+      RealT dt   = (tf - t_init_) / static_cast<RealT>(nout);
+      RealT tout = t_init_ + dt;
 
       // In loop, call IDASolve, print results, and test for error.
       //  Break out of loop when NOUT preset output times have been reached.
@@ -390,7 +390,7 @@ namespace AnalysisManager
       checkOutput(retval, "IDAQuadInit");
 
       // Set tolerances and error control for quadratures
-      real_type rel_tol, abs_tol;
+      RealT rel_tol, abs_tol;
       model_->setTolerances(rel_tol, abs_tol);
 
       // Set tolerances for quadrature stricter than for integration
@@ -432,15 +432,15 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationQuadrature(real_type tf, int nout)
+    int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, int nout)
     {
       int       retval = 0;
-      real_type tret;
+      RealT tret;
 
       // std::cout << "Forward integration for initial value problem ... \n";
 
-      real_type dt   = tf / static_cast<real_type>(nout);
-      real_type tout = dt;
+      RealT dt   = tf / static_cast<RealT>(nout);
+      RealT tout = dt;
       // printOutput(0.0);
       // printSpecial(0.0, yy_);
       for (int i = 0; i < nout; ++i)
@@ -529,11 +529,11 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeBackwardSimulation(real_type tf)
+    int Ida<ScalarT, IdxT>::initializeBackwardSimulation(RealT tf)
     {
       int       retval = 0;
-      real_type rel_tol;
-      real_type abs_tol;
+      RealT rel_tol;
+      RealT abs_tol;
 
       model_->initializeAdjoint();
 
@@ -631,16 +631,16 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runForwardSimulation(real_type tf, int nout)
+    int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, int nout)
     {
       int       retval = 0;
       int       ncheck;
-      real_type time;
+      RealT time;
 
       // std::cout << "Forward integration for adjoint analysis ... \n";
 
-      real_type dt   = tf / static_cast<real_type>(nout);
-      real_type tout = dt;
+      RealT dt   = tf / static_cast<RealT>(nout);
+      RealT tout = dt;
       for (int i = 0; i < nout; ++i)
       {
         retval = IDASolveF(solver_, tout, &time, yy_, yp_, IDA_NORMAL, &ncheck);
@@ -670,11 +670,11 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runBackwardSimulation(real_type t_init)
+    int Ida<ScalarT, IdxT>::runBackwardSimulation(RealT t_init)
     {
       int       retval = 0;
       long int  nstB;
-      real_type time;
+      RealT time;
 
       // std::cout << "Backward integration for adjoint analysis ... ";
 
@@ -735,7 +735,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Residual(real_type tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
+    int Ida<ScalarT, IdxT>::Residual(RealT tres, N_Vector yy, N_Vector yp, N_Vector rr, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -757,7 +757,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Jac(real_type t, real_type cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
+    int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
 
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
@@ -767,7 +767,7 @@ namespace AnalysisManager
       copyVec(yp, model->yp());
 
       model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<real_type, IdxT>& Jac = model->getJacobian();
+      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& Jac = model->getJacobian();
 
       // Get reference to the jacobian entries
       std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
@@ -783,7 +783,7 @@ namespace AnalysisManager
       std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
 
       sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
-      real_type*    data    = SUNSparseMatrix_Data(J);
+      RealT*    data    = SUNSparseMatrix_Data(J);
       // Copy data from model jac to sundials
       std::copy(c.cbegin(), c.cend(), colvals);
       std::copy(val.cbegin(), val.cend(), data);
@@ -798,7 +798,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::Integrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
+    int Ida<ScalarT, IdxT>::Integrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector rhsQ, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -820,7 +820,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointResidual(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointResidual(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rrB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -844,7 +844,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::adjointIntegrand(real_type tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
+    int Ida<ScalarT, IdxT>::adjointIntegrand(RealT tt, N_Vector yy, N_Vector yp, N_Vector yyB, N_Vector ypB, N_Vector rhsQB, void* user_data)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
@@ -907,10 +907,10 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(real_type t)
+    void Ida<ScalarT, IdxT>::printOutput(RealT t)
     {
-      real_type* yval  = N_VGetArrayPointer(yy_);
-      real_type* ypval = N_VGetArrayPointer(yp_);
+      RealT* yval  = N_VGetArrayPointer(yy_);
+      RealT* ypval = N_VGetArrayPointer(yp_);
 
       std::cout << std::setprecision(5) << std::setw(7) << t << " ";
       for (IdxT i = 0; i < model_->size(); ++i)
@@ -931,9 +931,9 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(real_type t, N_Vector y)
+    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y)
     {
-      real_type* yval = N_VGetArrayPointer(y);
+      RealT* yval = N_VGetArrayPointer(y);
       IdxT       N    = static_cast<IdxT>(N_VGetLength(y));
       std::cout << "{";
       std::cout << std::setprecision(5) << std::setw(7) << t;

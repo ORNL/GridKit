@@ -46,19 +46,19 @@ namespace GridKit
       using Component<ScalarT, IdxT>::mva_system_base_;
 
       using bus_type  = BusBase<ScalarT, IdxT>;
-      using real_type = typename Component<ScalarT, IdxT>::real_type;
-      using DataT     = GenClassicalData<real_type, IdxT>;
+      using RealT = typename Component<ScalarT, IdxT>::RealT;
+      using DataT     = GenClassicalData<RealT, IdxT>;
 
     public:
       GenClassical(bus_type* bus, int unit_id);
       GenClassical(bus_type* bus,
                    int       unit_id,
-                   real_type p0,
-                   real_type q0,
-                   real_type H,
-                   real_type D,
-                   real_type Ra,
-                   real_type Xdp);
+                   RealT p0,
+                   RealT q0,
+                   RealT H,
+                   RealT D,
+                   RealT Ra,
+                   RealT Xdp);
       GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical() = default;
 
@@ -76,16 +76,16 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override;
 
-      void updateTime(real_type /* t */, real_type /* a */) override
+      void updateTime(RealT /* t */, RealT /* a */) override
       {
       }
 
-      void setPmech(real_type pmech)
+      void setPmech(RealT pmech)
       {
         pmech_set_ = pmech;
       }
 
-      void setEp(real_type ep)
+      void setEp(RealT ep)
       {
         ep_set_ = ep;
       }
@@ -124,19 +124,19 @@ namespace GridKit
       int       unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
-      real_type p0_{0.0};
-      real_type q0_{0.0};
+      RealT p0_{0.0};
+      RealT q0_{0.0};
 
       /* Input parameters */
-      real_type H_{0.0};
-      real_type D_{0.0};
-      real_type Ra_{0.0};
-      real_type Xdp_{0.0};
-      real_type mva_base_{100.0};
+      RealT H_{0.0};
+      RealT D_{0.0};
+      RealT Ra_{0.0};
+      RealT Xdp_{0.0};
+      RealT mva_base_{100.0};
 
       /* Derivied parameters */
-      real_type G_;
-      real_type B_;
+      RealT G_;
+      RealT B_;
 
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
