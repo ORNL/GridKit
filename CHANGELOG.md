@@ -37,6 +37,7 @@
 - Added support for DependencyTracking::Variable in PowerElectronics models.
 - Updated Jacobian value storage from `ScalarT` to `RealT`.
 - Added a header file defining constants to be used throughout the code.
+- Added Jacobian sparsity pattern computation into `PowerElectronics`.
 
 ## v0.1
 
