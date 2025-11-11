@@ -253,7 +253,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Ieeet1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
+        return ((HALF<real_type> * mu_ * x) / (ONE<real_type> + std::abs(mu_ * x))) + HALF<real_type>;
       }
 
       /**
@@ -275,7 +275,7 @@ namespace GridKit
 
         ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
         ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
-        return (1.0 - ind_low) * (1.0 - ind_high);
+        return (ONE<real_type> - ind_low) * (ONE<real_type> - ind_high);
       }
 
       /**

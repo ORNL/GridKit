@@ -47,7 +47,7 @@ namespace GridKit
         : R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
-          T1_(0.5),
+          T1_(HALF<real_type>),
           T2_(2.5),
           T3_(7.5),
           Dt_(0)
@@ -241,7 +241,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ((0.5 * mu_ * x) / (1.0 + std::abs(mu_ * x))) + 0.5;
+        return ((HALF<real_type> * mu_ * x) / (ONE<real_type> + std::abs(mu_ * x))) + HALF<real_type>;
       }
 
       /**
@@ -268,7 +268,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
-        return (1.0 - this->indicator_low(x, f)) * (1.0 - this->indicator_high(x, f));
+        return (ONE<real_type> - this->indicator_low(x, f)) * (ONE<real_type> - this->indicator_high(x, f));
       }
 
       /**

@@ -247,7 +247,7 @@ capitalized and the constant names should be uppercase with underscores
 
 ### Constants
 
-If a constant is used in more than one file, define it in `Common.h`. For
+If a constant is used in more than one file, define it in `Constants.hpp`. For
 constants with long names, use underscores to separate words in the constant
 name. Use all caps (screaming snake case).
 

@@ -230,8 +230,8 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // GenClassical differential equations
-      f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
-      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * omega) / (1.0 + omega) - telec);
+      f[0] = delta_dot - omega * (TWO<real_type> * M_PI * 60.0);
+      f[1] = omega_dot - (ONE<real_type> / (TWO<real_type> * H_)) * ((pmech - D_ * omega) / (ONE<real_type> + omega) - telec);
 
       // GenClassical algebraic equations
       f[2] = telec - (G_ * ep * ep - ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta)));

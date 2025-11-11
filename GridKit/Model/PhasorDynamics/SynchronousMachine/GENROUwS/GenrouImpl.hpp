@@ -361,14 +361,14 @@ namespace GridKit
       ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
       ScalarT vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
       ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
-      ScalarT psiqpp = -vd / (1.0 + omega);
-      ScalarT psidpp = vq / (1.0 + omega);
+      ScalarT psiqpp = -vd / (ONE<real_type> + omega);
+      ScalarT psidpp = vq / (ONE<real_type> + omega);
       ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       ScalarT psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                      / (1.0 + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+                      / (ONE<real_type> + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
       ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
       ScalarT psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                      / (1.0 + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+                      / (ONE<real_type> + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
       ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
 
       /* Now we have the state variables, solve for alg. variables */
@@ -386,8 +386,8 @@ namespace GridKit
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
       y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
-      y_[10] = vd = -psiqpp * (1.0 + omega);
-      y_[11] = vq = psidpp * (1.0 + omega);
+      y_[10] = vd = -psiqpp * (ONE<real_type> + omega);
+      y_[11] = vq = psidpp * (ONE<real_type> + omega);
       y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       y_[13]      = id;
       y_[14]      = iq;
@@ -484,20 +484,20 @@ namespace GridKit
       ScalarT efd   = ws[1];
 
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (2.0 * M_PI * 60.0);
-      f[1] = omega_dot - (1.0 / (2.0 * H_)) * ((pmech - D_ * omega) / (1.0 + omega) - telec);
-      f[2] = Eqp_dot - (1.0 / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f[3] = psidp_dot - (1.0 / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqp_dot - (1.0 / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f[5] = Edp_dot - (1.0 / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+      f[0] = delta_dot - omega * (TWO<real_type> * M_PI * 60.0);
+      f[1] = omega_dot - (ONE<real_type> / (TWO<real_type> * H_)) * ((pmech - D_ * omega) / (ONE<real_type> + omega) - telec);
+      f[2] = Eqp_dot - (ONE<real_type> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
+      f[3] = psidp_dot - (ONE<real_type> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
+      f[4] = psiqp_dot - (ONE<real_type> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
+      f[5] = Edp_dot - (ONE<real_type> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
       f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f[10] = vd + psiqpp * (1.0 + omega);
-      f[11] = vq - psidpp * (1.0 + omega);
+      f[10] = vd + psiqpp * (ONE<real_type> + omega);
+      f[11] = vq - psidpp * (ONE<real_type> + omega);
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
       f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
       f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
@@ -599,8 +599,8 @@ namespace GridKit
       {
         real_type s112 = std::sqrt(S10_ / S12_);
 
-        SA_ = (1.2 * s112 + 1.0) / (s112 + 1.0);
-        SB_ = (1.2 * s112 - 1.0) / (s112 - 1.0);
+        SA_ = (1.2 * s112 + ONE<real_type>) / (s112 + ONE<real_type>);
+        SB_ = (1.2 * s112 - ONE<real_type>) / (s112 - ONE<real_type>);
         if (SB_ < SA_)
           SA_ = SB_;
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
