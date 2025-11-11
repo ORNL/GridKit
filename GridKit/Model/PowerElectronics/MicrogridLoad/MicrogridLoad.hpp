@@ -43,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    MicrogridLoad(IdxT id, ScalarT R, ScalarT L);
+    MicrogridLoad(IdxT id, real_type R, real_type L);
     virtual ~MicrogridLoad();
 
     int allocate();
