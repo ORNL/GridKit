@@ -168,8 +168,7 @@ namespace GridKit
 
       // A reverse mapping from system variables -> component variables
       std::vector<std::vector<ComponentContribution>> reverse_map(size_);
-      std::vector<CsrSparsity>                        component_sparsities;
-      component_sparsities.reserve(components_.size());
+      CsrSparsity*                                    component_sparsities = new CsrSparsity[components_.size()];
 
       // Loop over all components, evaluate their jacobians, save their sparsity information,
       // and construct the reverse variable mapping.
@@ -180,10 +179,10 @@ namespace GridKit
 
         auto [row_indices, col_indices, _] = component->getJacobian().setDataToCSR();
 
-        component_sparsities.push_back({
+        component_sparsities[comp_idx] = CsrSparsity{
             .row_indices_ = std::move(row_indices),
             .col_indices_ = std::move(col_indices),
-        });
+        };
 
         for (IdxT local_row = 0; local_row < component->size(); local_row++)
         {
@@ -261,6 +260,8 @@ namespace GridKit
 
       // Copy column indices
       std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices);
+
+      delete[] component_sparsities;
 
       return 1;
     }
