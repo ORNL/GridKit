@@ -213,7 +213,7 @@ int YetAnotherFunction(); // No, using uppercase camel name format
 
 ### Class names
 
-Class names should us uppercase camel name format.
+Class names should use uppercase camel name format.
 ```c++
 class MyClass // Yes
 {
@@ -231,7 +231,23 @@ class My_Class // No, using underscore in class name
 }
 ```
 
+### Type declarations and template parameters
 
+Always declare type aliases with the `using` keyword rather than `typedef typename`. 
+
+```c++
+  using RealT = GridKit::ScalarTraits<ScalarT>::RealT; // Yes
+  typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT; // No
+```
+
+Types that are used as template parameters should use uppercase camel name format, 
+similar to classes, with the `T` suffix to indicate that it is a type. 
+For consistency, use the same name everywhere the same type is used.
+
+```c++
+  template <typename RealT> ...; // Yes
+  template <typename real_type>; // No
+```
 
 ### Enums (enumerated types)
 

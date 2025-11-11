@@ -26,13 +26,13 @@ namespace AnalysisManager
       using OptimizationSolver<ScalarT, IdxT>::integrator_;
       using OptimizationSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
+      using RealT =  GridKit::ScalarTraits<ScalarT>::RealT;
 
-      typedef Ipopt::Index                     Index;
-      typedef Ipopt::Number                    Number;
-      typedef Ipopt::SolverReturn              SolverReturn;
-      typedef Ipopt::IpoptCalculatedQuantities IpoptCalculatedQuantities;
-      typedef Ipopt::IpoptData                 IpoptData;
+      using Index                     = Ipopt::Index;
+      using Number                    = Ipopt::Number;
+      using SolverReturn              = Ipopt::SolverReturn;
+      using IpoptCalculatedQuantities = Ipopt::IpoptCalculatedQuantities;
+      using IpoptData                 = Ipopt::IpoptData;
 
     public:
       DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator);

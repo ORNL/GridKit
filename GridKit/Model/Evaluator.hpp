@@ -18,7 +18,7 @@ namespace GridKit
     class Evaluator
     {
     public:
-      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
+      using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
 
       Evaluator()
       {

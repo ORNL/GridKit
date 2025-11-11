@@ -29,7 +29,7 @@ namespace AnalysisManager
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
-      typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT;
+      using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);

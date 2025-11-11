@@ -21,7 +21,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
 
-    typedef typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT RealT;
+    using RealT = ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
 
   public:
     MiniGrid();
