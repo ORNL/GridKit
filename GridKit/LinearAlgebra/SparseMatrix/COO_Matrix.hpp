@@ -95,8 +95,9 @@ namespace GridKit
     /**
      * @brief Get copy of row index
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] r row index
      * @return std::tuple<std::vector<IdxT>, std::vector<RealT>>
      */
@@ -127,8 +128,9 @@ namespace GridKit
     /**
      * @brief Get all entry pointers. Will sort before returning
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
     template <typename RealT, typename IdxT>
@@ -144,8 +146,9 @@ namespace GridKit
     /**
      * @brief Sorts the data if it's not already sorted
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
     template <typename RealT, typename IdxT>
@@ -161,8 +164,9 @@ namespace GridKit
     /**
      * @brief Returns the data in CSR Format
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
     template <typename RealT, typename IdxT>
@@ -189,9 +193,9 @@ namespace GridKit
      *
      * @todo swap this with having the matrix store the data and updates. This can then be passed by reference
      *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
-     * @tparam RealT
-     * @tparam IdxT
      * @return std::vector<IdxT>
      */
     template <typename RealT, typename IdxT>
@@ -218,8 +222,9 @@ namespace GridKit
      *
      * Matrix entries will be sorted in row-major order before the method returns.
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] r row indices of the matrix
      * @param[in] c column indices of the matrix
      * @param[in] v values of the matrix
@@ -276,8 +281,9 @@ namespace GridKit
     /**
      * @brief Implements axpy this += alpha * a. Will sort before running
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] alpha matrix to be added
      * @param[in] a scalar to multiply by
      *
@@ -350,8 +356,9 @@ namespace GridKit
     /**
      * @brief axpy on a COO representation of a matrix. Will sort before running
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param alpha scalar to multiply by
      * @param r row indices
      * @param c column indices
@@ -417,8 +424,9 @@ namespace GridKit
     /**
      * @brief Scale all values by alpha
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] alpha scalar to scale by
      */
     template <typename RealT, typename IdxT>
@@ -433,8 +441,9 @@ namespace GridKit
     /**
      * @brief Calculates the Frobenius Norm of the matrix
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @return RealT - Frobenius Norm of the matrix
      */
     template <typename RealT, typename IdxT>
@@ -451,7 +460,8 @@ namespace GridKit
     /**
      * @brief Permutate the matrix to a different one. Only changes the coordinates
      *
-     * @tparam RealT
+     * @tparam RealT - Real type for Jacobian entries
+     *
      * @param[in] row_perm
      * @param[out] col_perm
      *
@@ -477,8 +487,9 @@ namespace GridKit
     /**
      * @brief Permutes the matrix and can change its size efficently
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] row_perm row permutation
      * @param[in] col_perm column permutation
      * @param[in] m number of rows
@@ -517,8 +528,8 @@ namespace GridKit
     /**
      * @brief Turn matrix into the zero matrix. Does not actually delete memory
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      */
     template <typename RealT, typename IdxT>
@@ -534,8 +545,8 @@ namespace GridKit
     /**
      * @brief Turn matrix into the identity matrix
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] n size of the identity matrix
      *
@@ -561,8 +572,8 @@ namespace GridKit
     /**
      * @brief Restructure the sparse matrix for faster accesses and modifications
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      */
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparse()
@@ -574,8 +585,8 @@ namespace GridKit
     /**
      * @brief Check if the matrix is sorted
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[out]  bool - true if sorted, false otherwise
      */
@@ -589,8 +600,8 @@ namespace GridKit
     /**
      * @brief Get the number of non-zero elements in the matrix
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[out] IdxT - number of non-zero elements in the matrix
      */
@@ -609,8 +620,8 @@ namespace GridKit
     /**
      * @brief Print matrix in sorted order
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] name to identify the specific matrix printed
      */
@@ -636,8 +647,8 @@ namespace GridKit
     /**
      * @brief Print matrix to file in Matrix Market format
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] filename Output file path
      * @param[in] comment Optional comment for the Matrix Market file
@@ -703,8 +714,9 @@ namespace GridKit
      * @brief Find the lowest row cordinate from set of provided coordinates
      *
      * Assumes rows and columns are sorted
-     * @tparam RealT
-     * @tparam IdxT
+     *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] rows - row indices
      * @param[in] r - row index
@@ -749,8 +761,9 @@ namespace GridKit
     /**
      * @brief Basic binary search
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] rows - row indices
      * @param[in] columns - column indices
      * @param[in] ri - row index
@@ -797,8 +810,9 @@ namespace GridKit
     /**
      * @brief Check if the size of the matrix needs to be increased
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param[in] r row index
      * @param[in] c column index
      * @return true if size was increased
@@ -834,8 +848,9 @@ namespace GridKit
      *
      * @todo simple setup. Should add stable sorting since lists are pre-sorted_
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
      * @param rows
      * @param columns
      * @param values
@@ -879,8 +894,8 @@ namespace GridKit
     /**
      * @brief Constructor for COO Matrix with given cooridnates and values
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] r row indices
      * @param[in] c column indices
@@ -908,8 +923,8 @@ namespace GridKit
     /**
      * @brief Constructor for empty COO Matrix of a given size
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] m number of rows
      * @param[in] n number of columns
@@ -931,8 +946,8 @@ namespace GridKit
     /**
      * @brief Constructor for empty COO Matrix of size 0
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @post empty COO Matrix of size 0 is created
      */

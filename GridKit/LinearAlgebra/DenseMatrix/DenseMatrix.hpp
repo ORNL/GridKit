@@ -52,8 +52,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix constructor
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - rows_size
      * @param[in] IdxT - columns_size
@@ -70,8 +70,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix single value getter
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - i row index
      * @param[in] IdxT - j column index
@@ -88,8 +88,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix single value setter
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - i row index
      * @param[in] IdxT - j column index
@@ -107,8 +107,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix value setter from COO
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] COO_Matrix<RealT, IdxT> - values_COO
      */
@@ -126,8 +126,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix getter for all values stored as a vector
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @return Address of the vector containing matrix values
      */
@@ -140,8 +140,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix getter for all values stored as a COO sparse matrix
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @return Address of the COO matrix containing the sparsified matrix values
      */
@@ -158,8 +158,8 @@ namespace GridKit
     /**
      * @brief Dense matrix conversion to COO form
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      */
     template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::toCOO()
@@ -193,8 +193,8 @@ namespace GridKit
     /**
      * @brief Print matrix
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] name to identify the specific matrix printed
      */
@@ -215,8 +215,8 @@ namespace GridKit
     /**
      * @brief DenseMatrix destructor
      *
-     * @tparam RealT
-     * @tparam IdxT
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
      */
     template <typename RealT, typename IdxT>
     DenseMatrix<RealT, IdxT>::~DenseMatrix()
