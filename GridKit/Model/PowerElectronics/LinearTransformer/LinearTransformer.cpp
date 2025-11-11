@@ -28,7 +28,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  LinearTransformer<ScalarT, IdxT>::LinearTransformer(IdxT id, ScalarT L0, ScalarT L1, ScalarT R0, ScalarT R1, ScalarT M)
+  LinearTransformer<ScalarT, IdxT>::LinearTransformer(IdxT id, real_type L0, real_type L1, real_type R0, real_type R1, real_type M)
     : L0_(L0),
       L1_(L1),
       R0_(R0),

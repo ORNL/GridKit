@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Inductor<ScalarT, IdxT>::Inductor(IdxT id, ScalarT L)
+  Inductor<ScalarT, IdxT>::Inductor(IdxT id, real_type L)
     : L_(L)
   {
     size_           = 3;

@@ -105,12 +105,12 @@ namespace GridKit
 
     // output
     // current transformed to common frame
-    f_[1] = cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15];
-    f_[2] = sin(y_[3]) * y_[14] + cos(y_[3]) * y_[15];
+    f_[1] = std::cos(y_[3]) * y_[14] - std::sin(y_[3]) * y_[15];
+    f_[2] = std::sin(y_[3]) * y_[14] + std::cos(y_[3]) * y_[15];
 
     // Take incoming voltages to current rotator reference frame
-    ScalarT vbd_in = cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2];
-    ScalarT vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
+    ScalarT vbd_in = std::cos(y_[3]) * y_[1] + std::sin(y_[3]) * y_[2];
+    ScalarT vbq_in = -std::sin(y_[3]) * y_[1] + std::cos(y_[3]) * y_[2];
 
     // ### Internal Componenets ##
     // Rotor difference angle

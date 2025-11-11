@@ -20,7 +20,7 @@ namespace GridKit
    * Timothy C. Green, Section E
    */
   template <class ScalarT, typename IdxT>
-  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, ScalarT RN)
+  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, real_type RN)
     : RN_(RN)
   {
     // externals [vbus_d, vbus_q]

@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, ScalarT V)
+  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, real_type V)
     : V_(V)
   {
     size_           = 3;

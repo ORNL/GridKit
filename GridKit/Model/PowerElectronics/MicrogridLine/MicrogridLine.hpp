@@ -43,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    MicrogridLine(IdxT id, ScalarT R, ScalarT L);
+    MicrogridLine(IdxT id, real_type R, real_type L);
     virtual ~MicrogridLine();
 
     int allocate();
@@ -59,7 +59,7 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT R_;
-    ScalarT L_;
+    real_type R_;
+    real_type L_;
   };
 } // namespace GridKit

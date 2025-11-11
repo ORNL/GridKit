@@ -36,7 +36,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT, ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT, ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT RJ, ScalarT P, ScalarT mub)
+  SynchronousMachine<ScalarT, IdxT>::SynchronousMachine(IdxT id, real_type Lls, std::tuple<real_type, real_type> Llkq, real_type Llfd, real_type Llkd, real_type Lmq, real_type Lmd, real_type Rs, std::tuple<real_type, real_type> Rkq, real_type Rfd, real_type Rkd, real_type RJ, real_type P, real_type mub)
     : Lls_(Lls),
       Llkq_(Llkq),
       Llfd_(Llfd),
@@ -101,10 +101,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int SynchronousMachine<ScalarT, IdxT>::evaluateResidual()
   {
-    ScalarT                  rkq1  = std::get<0>(Rkq_);
-    [[maybe_unused]] ScalarT rkq2  = std::get<1>(Rkq_);
-    ScalarT                  llkq1 = std::get<0>(Llkq_);
-    [[maybe_unused]] ScalarT llkq2 = std::get<1>(Llkq_);
+    ScalarT                  rkq1  = static_cast<ScalarT>(std::get<0>(Rkq_));
+    [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
+    ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
+    [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
     ScalarT cos1   = std::cos((P_ / 2.0) * y_[5]);
     ScalarT sin1   = std::sin((P_ / 2.0) * y_[5]);

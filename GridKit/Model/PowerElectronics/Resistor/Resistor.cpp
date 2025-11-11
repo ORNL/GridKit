@@ -16,7 +16,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Resistor<ScalarT, IdxT>::Resistor(IdxT id, ScalarT R)
+  Resistor<ScalarT, IdxT>::Resistor(IdxT id, real_type R)
     : R_(R)
   {
     size_           = 2;

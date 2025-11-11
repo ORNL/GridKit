@@ -18,7 +18,7 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, ScalarT C)
+  Capacitor<ScalarT, IdxT>::Capacitor(IdxT id, real_type C)
     : C_(C)
   {
     size_           = 3;

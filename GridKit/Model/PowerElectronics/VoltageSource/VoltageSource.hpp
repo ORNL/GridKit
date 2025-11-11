@@ -43,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    VoltageSource(IdxT id, ScalarT V);
+    VoltageSource(IdxT id, real_type V);
     virtual ~VoltageSource();
 
     int allocate();
@@ -59,6 +59,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT V_;
+    real_type V_;
   };
 } // namespace GridKit

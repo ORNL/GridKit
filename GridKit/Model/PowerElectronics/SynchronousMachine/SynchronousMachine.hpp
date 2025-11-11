@@ -45,7 +45,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    SynchronousMachine(IdxT id, ScalarT Lls, std::tuple<ScalarT, ScalarT> Llkq, ScalarT Llfd, ScalarT Llkd, ScalarT Lmq, ScalarT Lmd, ScalarT Rs, std::tuple<ScalarT, ScalarT> Rkq, ScalarT Rfd, ScalarT Rkd, ScalarT RJ, ScalarT P, ScalarT mub);
+    SynchronousMachine(IdxT id, real_type Lls, std::tuple<real_type, real_type> Llkq, real_type Llfd, real_type Llkd, real_type Lmq, real_type Lmd, real_type Rs, std::tuple<real_type, real_type> Rkq, real_type Rfd, real_type Rkd, real_type RJ, real_type P, real_type mub);
     virtual ~SynchronousMachine();
 
     int allocate();
@@ -61,18 +61,18 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT                      Lls_;
-    std::tuple<ScalarT, ScalarT> Llkq_;
-    ScalarT                      Llfd_;
-    ScalarT                      Llkd_;
-    ScalarT                      Lmq_;
-    ScalarT                      Lmd_;
-    ScalarT                      Rs_;
-    std::tuple<ScalarT, ScalarT> Rkq_;
-    ScalarT                      Rfd_;
-    ScalarT                      Rkd_;
-    ScalarT                      RJ_;
-    ScalarT                      P_;
-    ScalarT                      mub_;
+    real_type                        Lls_;
+    std::tuple<real_type, real_type> Llkq_;
+    real_type                        Llfd_;
+    real_type                        Llkd_;
+    real_type                        Lmq_;
+    real_type                        Lmd_;
+    real_type                        Rs_;
+    std::tuple<real_type, real_type> Rkq_;
+    real_type                        Rfd_;
+    real_type                        Rkd_;
+    real_type                        RJ_;
+    real_type                        P_;
+    real_type                        mub_;
   };
 } // namespace GridKit

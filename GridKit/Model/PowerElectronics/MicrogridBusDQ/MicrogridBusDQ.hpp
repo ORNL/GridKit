@@ -43,7 +43,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    MicrogridBusDQ(IdxT id, ScalarT RN);
+    MicrogridBusDQ(IdxT id, real_type RN);
     virtual ~MicrogridBusDQ();
 
     int allocate();
@@ -59,6 +59,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT RN_;
+    real_type RN_;
   };
 } // namespace GridKit

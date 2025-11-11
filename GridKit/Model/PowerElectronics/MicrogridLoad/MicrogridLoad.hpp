@@ -59,7 +59,7 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    ScalarT R_;
-    ScalarT L_;
+    real_type R_;
+    real_type L_;
   };
 } // namespace GridKit
