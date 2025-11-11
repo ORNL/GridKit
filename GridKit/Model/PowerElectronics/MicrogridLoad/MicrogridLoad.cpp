@@ -111,7 +111,7 @@ namespace GridKit
 
     std::vector<IdxT> ccord{0, 1, 3, 4};
 
-    std::vector<IdxT> rcord(ccord.size(), 3);
+    std::vector<IdxT>      rcord(ccord.size(), 3);
     std::vector<real_type> vals{};
     vals = {static_cast<real_type>(y_[4]), (1.0 / L_), -(R_ / L_), static_cast<real_type>(y_[0])};
     jac_.setValues(rcord, ccord, vals);
