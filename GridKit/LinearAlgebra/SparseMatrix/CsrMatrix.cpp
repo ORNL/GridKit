@@ -819,7 +819,8 @@ namespace GridKit
     }
 
     /**
-     * @brief Changes the size of the matrix. De-allocates the matrix, if needed.
+     * @brief Changes the size of the matrix. De-allocates the matrix, if needed, since the
+     *        old indices corresponded to a differently-size matrix and no longer make sense.
      *        Does not re-allocate any memory.
      * @param n The new number of rows
      * @param m The new number of columns
