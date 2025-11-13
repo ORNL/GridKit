@@ -82,13 +82,13 @@ namespace GridKit
     PowerElectronicsModel()
     {
       // Set system model parameters as default
-      rel_tol_                 = 1e-4;
-      abs_tol_                 = 1e-4;
-      max_steps_               = 2000;
+      rel_tol_                  = 1e-4;
+      abs_tol_                  = 1e-4;
+      max_steps_                = 2000;
       // By default don't use the jacobian
-      use_jac_                 = false;
-      jac_sparsity_row_indices = nullptr;
-      jac_sparsity_col_indices = nullptr;
+      use_jac_                  = false;
+      jac_sparsity_row_indices_ = nullptr;
+      jac_sparsity_col_indices_ = nullptr;
     }
 
     /**
@@ -107,13 +107,13 @@ namespace GridKit
                           IdxT   max_steps = 2000)
     {
       // Set system model tolerances from input
-      rel_tol_                 = rel_tol;
-      abs_tol_                 = abs_tol;
-      max_steps_               = max_steps;
+      rel_tol_                  = rel_tol;
+      abs_tol_                  = abs_tol;
+      max_steps_                = max_steps;
       // Can choose if to use jacobian
-      use_jac_                 = use_jac;
-      jac_sparsity_row_indices = nullptr;
-      jac_sparsity_col_indices = nullptr;
+      use_jac_                  = use_jac;
+      jac_sparsity_row_indices_ = nullptr;
+      jac_sparsity_col_indices_ = nullptr;
     }
 
     /**
@@ -129,13 +129,13 @@ namespace GridKit
       for (auto comp : components_)
         delete comp;
 
-      if (jac_sparsity_row_indices != nullptr)
+      if (jac_sparsity_row_indices_ != nullptr)
       {
-        delete[] jac_sparsity_row_indices;
+        delete[] jac_sparsity_row_indices_;
       }
-      if (jac_sparsity_col_indices != nullptr)
+      if (jac_sparsity_col_indices_ != nullptr)
       {
-        delete[] jac_sparsity_col_indices;
+        delete[] jac_sparsity_col_indices_;
       }
     }
 
@@ -245,21 +245,21 @@ namespace GridKit
       global_row_indices[size_] = global_col_indices.size();
 
       // Delete old sparsity buffers, if they exist
-      if (jac_sparsity_row_indices != nullptr)
+      if (jac_sparsity_row_indices_ != nullptr)
       {
-        delete[] jac_sparsity_row_indices;
+        delete[] jac_sparsity_row_indices_;
       }
-      if (jac_sparsity_col_indices != nullptr)
+      if (jac_sparsity_col_indices_ != nullptr)
       {
-        delete[] jac_sparsity_col_indices;
+        delete[] jac_sparsity_col_indices_;
       }
 
       // Allocate new sparsity buffers
-      jac_sparsity_row_indices = global_row_indices;
-      jac_sparsity_col_indices = new IdxT[global_col_indices.size()];
+      jac_sparsity_row_indices_ = global_row_indices;
+      jac_sparsity_col_indices_ = new IdxT[global_col_indices.size()];
 
       // Copy column indices
-      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices);
+      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices_);
 
       delete[] component_sparsities;
 
@@ -537,7 +537,7 @@ namespace GridKit
      */
     IdxT* getJacRowIndices()
     {
-      return jac_sparsity_row_indices;
+      return jac_sparsity_row_indices_;
     }
 
     /**
@@ -546,7 +546,7 @@ namespace GridKit
      */
     IdxT* getJacColIndices()
     {
-      return jac_sparsity_col_indices;
+      return jac_sparsity_col_indices_;
     }
 
   private:
@@ -558,14 +558,14 @@ namespace GridKit
      * @todo  Unneeded once the jacobian is in CSR format. This can be stored
      *        in the jacobian itself.
      */
-    IdxT* jac_sparsity_row_indices;
+    IdxT* jac_sparsity_row_indices_;
     /**
      * @brief Keeps track of the CSR col indices of the system jacobian.
      *        `nullptr` is used to indicate an un-allocated buffer.
      * @todo  Unneeded once the jacobian is in CSR format. This can be stored
      *        in the jacobian itself.
      */
-    IdxT* jac_sparsity_col_indices;
+    IdxT* jac_sparsity_col_indices_;
 
     std::vector<component_type*> components_;
 
