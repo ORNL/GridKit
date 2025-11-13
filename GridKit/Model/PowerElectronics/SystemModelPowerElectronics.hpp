@@ -89,6 +89,7 @@ namespace GridKit
       max_steps_ = 2000;
       // By default don't use the jacobian
       use_jac_   = false;
+      csr_jac_   = nullptr;
     }
 
     /**
@@ -112,6 +113,7 @@ namespace GridKit
       max_steps_ = max_steps;
       // Can choose if to use jacobian
       use_jac_   = use_jac;
+      csr_jac_   = nullptr;
     }
 
     /**
@@ -126,6 +128,9 @@ namespace GridKit
     {
       for (auto comp : components_)
         delete comp;
+
+      if (!csr_jac_)
+        delete csr_jac_;
     }
 
     /**
@@ -238,6 +243,9 @@ namespace GridKit
       // Final row index (beyond the end) keeps track of nnz, which is also the size of the column indices.
       global_row_indices[size_] = static_cast<IdxT>(global_col_indices.size());
 
+      if (!csr_jac_)
+        delete csr_jac_;
+
       // Allocate new sparsity buffers
       IdxT nnz             = static_cast<IdxT>(global_col_indices.size());
       auto jac_row_indices = global_row_indices;
@@ -247,7 +255,7 @@ namespace GridKit
       // Copy column indices
       std::copy(global_col_indices.begin(), global_col_indices.end(), jac_col_indices);
 
-      csr_jac_ = LinearAlgebra::CsrMatrix(size_, size_, nnz, &jac_row_indices, &jac_col_indices, &jac_values);
+      csr_jac_ = new LinearAlgebra::CsrMatrix(size_, size_, nnz, &jac_row_indices, &jac_col_indices, &jac_values);
 
       delete[] component_sparsities;
       delete[] reverse_map;
@@ -526,13 +534,13 @@ namespace GridKit
      */
     LinearAlgebra::CsrMatrix<RealT, IdxT>& getCsrJac()
     {
-      return csr_jac_;
+      return *csr_jac_;
     }
 
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    LinearAlgebra::CsrMatrix<RealT, IdxT> csr_jac_;
+    LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
     std::vector<component_type*> components_;
 
