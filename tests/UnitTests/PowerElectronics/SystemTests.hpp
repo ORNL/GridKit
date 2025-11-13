@@ -249,8 +249,8 @@ namespace GridKit
 
         std::vector<DependencyTracking::Variable>& residuals = sysmodel->getResidual();
 
-        size_t* row_indices = sysmodel->getJacRowIndices();
-        size_t* col_indices = sysmodel->getJacColIndices();
+        size_t* row_indices = sysmodel->getCsrJac().getRowData();
+        size_t* col_indices = sysmodel->getCsrJac().getColData();
 
         for (size_t row = 0; row < residuals.size(); row++)
         {

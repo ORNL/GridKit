@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -83,13 +84,11 @@ namespace GridKit
     PowerElectronicsModel()
     {
       // Set system model parameters as default
-      rel_tol_                  = 1e-4;
-      abs_tol_                  = 1e-4;
-      max_steps_                = 2000;
+      rel_tol_   = 1e-4;
+      abs_tol_   = 1e-4;
+      max_steps_ = 2000;
       // By default don't use the jacobian
-      use_jac_                  = false;
-      jac_sparsity_row_indices_ = nullptr;
-      jac_sparsity_col_indices_ = nullptr;
+      use_jac_   = false;
     }
 
     /**
@@ -108,13 +107,11 @@ namespace GridKit
                           IdxT   max_steps = 2000)
     {
       // Set system model tolerances from input
-      rel_tol_                  = rel_tol;
-      abs_tol_                  = abs_tol;
-      max_steps_                = max_steps;
+      rel_tol_   = rel_tol;
+      abs_tol_   = abs_tol;
+      max_steps_ = max_steps;
       // Can choose if to use jacobian
-      use_jac_                  = use_jac;
-      jac_sparsity_row_indices_ = nullptr;
-      jac_sparsity_col_indices_ = nullptr;
+      use_jac_   = use_jac;
     }
 
     /**
@@ -129,15 +126,6 @@ namespace GridKit
     {
       for (auto comp : components_)
         delete comp;
-
-      if (jac_sparsity_row_indices_ != nullptr)
-      {
-        delete[] jac_sparsity_row_indices_;
-      }
-      if (jac_sparsity_col_indices_ != nullptr)
-      {
-        delete[] jac_sparsity_col_indices_;
-      }
     }
 
     /**
@@ -248,24 +236,18 @@ namespace GridKit
         }
       }
       // Final row index (beyond the end) keeps track of nnz, which is also the size of the column indices.
-      global_row_indices[size_] = global_col_indices.size();
-
-      // Delete old sparsity buffers, if they exist
-      if (jac_sparsity_row_indices_ != nullptr)
-      {
-        delete[] jac_sparsity_row_indices_;
-      }
-      if (jac_sparsity_col_indices_ != nullptr)
-      {
-        delete[] jac_sparsity_col_indices_;
-      }
+      global_row_indices[size_] = static_cast<IdxT>(global_col_indices.size());
 
       // Allocate new sparsity buffers
-      jac_sparsity_row_indices_ = global_row_indices;
-      jac_sparsity_col_indices_ = new IdxT[global_col_indices.size()];
+      IdxT nnz             = static_cast<IdxT>(global_col_indices.size());
+      auto jac_row_indices = global_row_indices;
+      auto jac_col_indices = new IdxT[nnz];
+      auto jac_values      = new RealT[nnz];
 
       // Copy column indices
-      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices_);
+      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_col_indices);
+
+      csr_jac_ = LinearAlgebra::CsrMatrix(size_, size_, nnz, &jac_row_indices, &jac_col_indices, &jac_values);
 
       delete[] component_sparsities;
       delete[] reverse_map;
@@ -539,40 +521,18 @@ namespace GridKit
     }
 
     /**
-     * @brief Returns a pointer to the buffer of Jacobian CSR row indices.
+     * @brief Returns a reference to the CSR Jacobian.
      * @todo Can be removed once `getJacobian()` returns a `CsrMatrix`
      */
-    IdxT* getJacRowIndices()
+    LinearAlgebra::CsrMatrix<RealT, IdxT>& getCsrJac()
     {
-      return jac_sparsity_row_indices_;
-    }
-
-    /**
-     * @brief Returns a pointer to the buffer of Jacobian CSR column indices.
-     * @todo Can be removed once `getJacobian()` returns a `CsrMatrix`
-     */
-    IdxT* getJacColIndices()
-    {
-      return jac_sparsity_col_indices_;
+      return csr_jac_;
     }
 
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    /**
-     * @brief Keeps track of the CSR row indices of the system jacobian.
-     *        `nullptr` is used to indicate an un-allocated buffer.
-     * @todo  Unneeded once the jacobian is in CSR format. This can be stored
-     *        in the jacobian itself.
-     */
-    IdxT* jac_sparsity_row_indices_;
-    /**
-     * @brief Keeps track of the CSR col indices of the system jacobian.
-     *        `nullptr` is used to indicate an un-allocated buffer.
-     * @todo  Unneeded once the jacobian is in CSR format. This can be stored
-     *        in the jacobian itself.
-     */
-    IdxT* jac_sparsity_col_indices_;
+    LinearAlgebra::CsrMatrix<RealT, IdxT> csr_jac_;
 
     std::vector<component_type*> components_;
 
