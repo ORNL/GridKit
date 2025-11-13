@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cassert>
+#include <forward_list>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -167,8 +168,8 @@ namespace GridKit
       };
 
       // A reverse mapping from system variables -> component variables
-      std::vector<std::vector<ComponentContribution>> reverse_map(size_);
-      CsrSparsity*                                    component_sparsities = new CsrSparsity[components_.size()];
+      auto reverse_map          = new std::forward_list<ComponentContribution>[size_];
+      auto component_sparsities = new CsrSparsity[components_.size()];
 
       // Loop over all components, evaluate their jacobians, save their sparsity information,
       // and construct the reverse variable mapping.
@@ -191,7 +192,7 @@ namespace GridKit
           // Not all local variables map to a global variable
           if (global_row != neg1_)
           {
-            reverse_map[global_row].push_back({.comp_idx_ = comp_idx, .local_row_idx_ = local_row});
+            reverse_map[global_row].push_front({.comp_idx_ = comp_idx, .local_row_idx_ = local_row});
           }
         }
       }
@@ -208,11 +209,16 @@ namespace GridKit
       {
         global_row_indices[row] = global_col_indices.size();
 
+        // How many components contribute to this row
+        size_t num_contrib = 0;
+
         // Collect columns from each component which has a row which contributes to this row
         for (ComponentContribution contrib : reverse_map[row])
         {
           component_type* component     = components_[contrib.comp_idx_];
           CsrSparsity&    comp_sparsity = component_sparsities[contrib.comp_idx_];
+
+          num_contrib++;
 
           IdxT row_start = comp_sparsity.row_indices_[contrib.local_row_idx_];
           IdxT row_end   = comp_sparsity.row_indices_[contrib.local_row_idx_ + 1];
@@ -236,7 +242,7 @@ namespace GridKit
 
         // If there were multiple components which contributed columns, then we definitely need
         // to de-duplicate the columns.
-        if (reverse_map[row].size() > 1)
+        if (num_contrib > 1)
         {
           global_col_indices.erase(std::unique(start, global_col_indices.end()), global_col_indices.end());
         }
@@ -262,6 +268,7 @@ namespace GridKit
       std::copy(global_col_indices.begin(), global_col_indices.end(), jac_sparsity_col_indices_);
 
       delete[] component_sparsities;
+      delete[] reverse_map;
 
       return 1;
     }
