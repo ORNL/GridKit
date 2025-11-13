@@ -239,19 +239,19 @@ namespace GridKit
       global_row_indices[size_] = static_cast<IdxT>(global_col_indices.size());
 
       // Allocate new sparsity buffers
-      IdxT nnz             = static_cast<IdxT>(global_col_indices.size());
-      auto jac_row_indices = global_row_indices;
-      auto jac_col_indices = new IdxT[nnz];
-      auto jac_values      = new RealT[nnz];
-
-      // Copy column indices
-      std::copy(global_col_indices.begin(), global_col_indices.end(), jac_col_indices);
+      IdxT nnz = static_cast<IdxT>(global_col_indices.size());
 
       csr_jac_.resize(size_, size_);
-      csr_jac_.setDataPointers(jac_row_indices, jac_col_indices, jac_values, LinearAlgebra::memory::HOST);
+      csr_jac_.setNnz(nnz);
+      csr_jac_.allocateMatrixData(LinearAlgebra::memory::HOST);
+
+      // Copy column indices
+      std::copy(global_col_indices.begin(), global_col_indices.end(), csr_jac_.getColData());
+      std::copy(global_row_indices, global_row_indices + size_ + 1, csr_jac_.getRowData());
 
       delete[] component_sparsities;
       delete[] reverse_map;
+      delete[] global_row_indices;
 
       return 1;
     }
