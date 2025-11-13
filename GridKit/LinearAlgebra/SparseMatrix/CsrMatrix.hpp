@@ -76,6 +76,8 @@ namespace GridKit
       virtual int setValuesPointer(RealT*              new_vals,
                                    memory::MemorySpace memspace);
 
+      int resize(IdxT n, IdxT m);
+
     private:
       IdxT n_{0};   ///< number of rows
       IdxT m_{0};   ///< number of columns

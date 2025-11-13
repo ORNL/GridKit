@@ -818,6 +818,25 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Changes the size of the matrix. De-allocates the matrix, if needed.
+     *        Does not re-allocate any memory.
+     * @param n The new number of rows
+     * @param m The new number of columns
+     * @return 0 if succesful
+     */
+    template <typename RealT, typename IdxT>
+    int CsrMatrix<RealT, IdxT>::resize(IdxT n, IdxT m)
+    {
+      destroyMatrixData(memory::HOST);
+      destroyMatrixData(memory::DEVICE);
+
+      n_ = n;
+      m_ = m;
+
+      return 0;
+    }
+
     template class CsrMatrix<double, long int>;
     template class CsrMatrix<double, size_t>;
   } // namespace LinearAlgebra
