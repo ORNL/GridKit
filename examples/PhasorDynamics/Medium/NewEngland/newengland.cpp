@@ -9,6 +9,8 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include "newengland.hpp"
+
 #include <ctime>
 #include <filesystem>
 #include <iostream>
@@ -18,8 +20,6 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Utilities/Testing.hpp>
-
-#include "newengland.hpp"
 
 int main(int argc, const char* argv[])
 {
@@ -69,7 +69,6 @@ int main(int argc, const char* argv[])
   //  Instantiate System Model
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
-
 
   int status = 0;
   return status;
