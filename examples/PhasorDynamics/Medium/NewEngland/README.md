@@ -3,7 +3,7 @@
 ## One-Line Diagram
 
 <div align="center">
-   <img align="center" src="newengland-oneline.webp">
+   <img align="center" src="newengland-oneline.png">
    
   Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
