@@ -319,6 +319,12 @@ namespace GridKit
       for (auto component : components_)
       {
         auto extern_indices = component->getExternIndices();
+
+        // Whether or not we've seen a local variable yet
+        bool has_seen_local = false;
+        // The system index of the last local we've seen
+        IdxT last_local_sys;
+
         for (IdxT comp_var_idx = 0; comp_var_idx < component->size(); comp_var_idx++)
         {
           IdxT sys_var_idx = component->getNodeConnection(comp_var_idx);
@@ -334,6 +340,16 @@ namespace GridKit
           else
           {
             assert(sys_var_idx < n_intern_);
+
+            // Make sure that all of the locals for a particular component are grouped
+            // together in the sytem vector, and have increasing indices.
+            if (has_seen_local)
+            {
+              assert(sys_var_idx == last_local_sys + 1);
+            }
+
+            has_seen_local = true;
+            last_local_sys = sys_var_idx;
           }
         }
       }
