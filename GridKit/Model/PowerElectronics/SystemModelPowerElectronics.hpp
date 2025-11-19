@@ -316,8 +316,9 @@ namespace GridKit
       // and all component externals are mapped to system externals.
       // System locals are stored first, in 0..n_intern_ and externals
       // are stored after, in n_intern_..
-      for (auto component : components_)
+      for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
+        auto component      = components_[comp_idx];
         auto extern_indices = component->getExternIndices();
 
         // Whether or not we've seen a local variable yet
@@ -346,6 +347,11 @@ namespace GridKit
             if (has_seen_local)
             {
               assert(sys_var_idx == last_local_sys + 1);
+            }
+            else if (comp_idx > 0)
+            {
+              // Ensure increasing indices in components - so no need to sort components
+              assert(sys_var_idx > last_local_sys);
             }
 
             has_seen_local = true;
