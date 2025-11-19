@@ -316,6 +316,9 @@ namespace GridKit
       // and all component externals are mapped to system externals.
       // System locals are stored first, in 0..n_intern_ and externals
       // are stored after, in n_intern_..
+      // Additionally, ensure that components locals are grouped in the system vectors - no other
+      // variables are between locals from a single component. As well, ensure that components are
+      // sorted by these groupings, so the first component is the first block and so on.
       for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
         auto component      = components_[comp_idx];
