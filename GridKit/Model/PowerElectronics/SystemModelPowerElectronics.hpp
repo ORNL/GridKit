@@ -64,6 +64,8 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
+    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
@@ -291,10 +293,49 @@ namespace GridKit
     int allocate(IdxT s)
     {
       // Allocate all components
-      size_ = s;
+      size_     = s;
+      n_intern_ = 0;
       for (const auto& component : components_)
       {
         component->allocate();
+
+        // Count up the amount of internal variables which get mapped to system variables
+        auto extern_indices = component->getExternIndices();
+        for (IdxT comp_var_idx = 0; comp_var_idx < component->size(); comp_var_idx++)
+        {
+          IdxT sys_var_idx = component->getNodeConnection(comp_var_idx);
+          if (!extern_indices.contains(comp_var_idx) && sys_var_idx != neg1_)
+          {
+            n_intern_++;
+          }
+        }
+      }
+      n_extern_ = size_ - n_intern_;
+
+      // Ensure that all component locals are mapped to system locals
+      // and all component externals are mapped to system externals.
+      // System locals are stored first, in 0..n_intern_ and externals
+      // are stored after, in n_intern_..
+      for (auto component : components_)
+      {
+        auto extern_indices = component->getExternIndices();
+        for (IdxT comp_var_idx = 0; comp_var_idx < component->size(); comp_var_idx++)
+        {
+          IdxT sys_var_idx = component->getNodeConnection(comp_var_idx);
+
+          // Ignore local variables which aren't mapped to sytem variables
+          if (sys_var_idx == neg1_)
+            continue;
+
+          if (extern_indices.contains(comp_var_idx))
+          {
+            assert(sys_var_idx >= n_intern_);
+          }
+          else
+          {
+            assert(sys_var_idx < n_intern_);
+          }
+        }
       }
 
       // Allocate global vectors
