@@ -31,17 +31,11 @@ int main(int /* argc */, char const** /* argv */)
   double linit = 1.0;
   double vinit = 1.0;
 
-  // Current system map
-  // 0 -> Resistor/VSource external
-  // 1 -> Inductor/Resistor external
-  // 2 -> Inductor internal
-  // 3 -> VSource internal
-
-  // New system map
-  // 0 -> Inductor internal          (old 2)
-  // 1 -> VSource internal           (old 3)
-  // 2 -> Resistor/VSource external  (old 0)
-  // 3 -> Inductor/Resistor external (old 1)
+  // System vector map
+  // 0 -> Inductor internal
+  // 1 -> VSource internal
+  // 2 -> Resistor/VSource external
+  // 3 -> Inductor/Resistor external
 
   // inductor
   GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit);
