@@ -157,9 +157,10 @@ namespace GridKit
         std::vector<IdxT> col_indices_;
       };
 
-      // A reverse mapping from system variables -> component variables
-      auto reverse_map          = new std::forward_list<ComponentContribution>[size_];
-      auto component_sparsities = new CsrSparsity[components_.size()];
+      // A reverse mapping from external system variables -> component variables
+      auto   reverse_extern_map   = new std::forward_list<ComponentContribution>[n_extern_];
+      auto   component_sparsities = new CsrSparsity[components_.size()];
+      size_t component_nnz        = 0;
 
       // Loop over all components, evaluate their jacobians, save their sparsity information,
       // and construct the reverse variable mapping.
@@ -170,45 +171,89 @@ namespace GridKit
 
         auto [row_indices, col_indices, _] = component->getJacobian().setDataToCSR();
 
-        component_sparsities[comp_idx] = CsrSparsity{
-            .row_indices_ = std::move(row_indices),
-            .col_indices_ = std::move(col_indices),
+        auto& comp_sparsity = component_sparsities[comp_idx];
+        comp_sparsity       = CsrSparsity{
+                  .row_indices_ = std::move(row_indices),
+                  .col_indices_ = std::move(col_indices),
         };
 
-        for (IdxT local_row = 0; local_row < component->size(); local_row++)
+        for (IdxT local_external_row : component->getExternIndices())
         {
-          IdxT global_row = component->getNodeConnection(local_row);
+          IdxT global_row = component->getNodeConnection(local_external_row);
 
           // Not all local variables map to a global variable
           if (global_row != neg1_)
           {
-            reverse_map[global_row].push_front({.comp_idx_ = comp_idx, .local_row_idx_ = local_row});
+            // global_row >= n_intern_ (see allocate(s))
+            reverse_extern_map[global_row - n_intern_].push_front({.comp_idx_ = comp_idx, .local_row_idx_ = local_external_row});
           }
         }
+
+        component_nnz += comp_sparsity.row_indices_.back();
       }
 
       // Allocate the final sparsity pattern info
-      IdxT*             global_row_indices = new IdxT[size_ + 1];
-      std::vector<IdxT> global_col_indices;
-      global_col_indices.reserve(size_);
+      IdxT* global_row_indices = new IdxT[size_ + 1];
+      IdxT* global_col_indices = new IdxT[component_nnz]; // Use component_nnz as an upper bound on nnz
+      global_row_indices[0]    = 0;
 
-      // Construct sparsity pattern row-by-row. In the future, can be batched
-      // into contiguous blocks of rows which can be calculated in parallel,
-      // then joined sequentially
-      for (size_t row = 0; row < size_; row++)
+      // Construct Jacobian sparsity pattern
+
+      // Start with internal rows, which must be before external rows, are grouped by component,
+      // strictly increasing wrt component internals, and must be sorted by component (see allocate(s))
+      size_t curr_internal_row = 0;
+      for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
-        global_row_indices[row] = global_col_indices.size();
+        auto  component      = components_[comp_idx];
+        auto  comp_externals = component->getExternIndices();
+        auto& comp_sparsity  = component_sparsities[comp_idx];
 
-        // How many components contribute to this row
-        size_t num_contrib = 0;
+        for (IdxT local_row = 0; local_row < component->size(); local_row++)
+        {
+          // Skip external variables and variables which aren't system variables
+          if (comp_externals.contains(local_row) || component->getNodeConnection(local_row) == neg1_)
+            continue;
+
+          global_row_indices[curr_internal_row + 1] = global_row_indices[curr_internal_row];
+
+          assert(component->getNodeConnection(local_row) == curr_internal_row);
+
+          IdxT row_start = comp_sparsity.row_indices_[local_row];
+          IdxT row_end   = comp_sparsity.row_indices_[local_row + 1];
+          for (IdxT local_col_idx = row_start; local_col_idx < row_end; local_col_idx++)
+          {
+            IdxT global_col_idx = component->getNodeConnection(comp_sparsity.col_indices_[local_col_idx]);
+
+            if (global_col_idx == neg1_)
+              continue;
+
+            global_col_indices[global_row_indices[curr_internal_row + 1]] = global_col_idx;
+            global_row_indices[curr_internal_row + 1]++;
+          }
+
+          // Need to sort internal rows because even though the mapping from component internal to system internal
+          // is monotonic, the mapping from component external to system external may not be, and internal rows
+          // may contain external columns.
+          auto global_row_start = global_col_indices + global_row_indices[curr_internal_row];
+          auto global_row_end   = global_col_indices + global_row_indices[curr_internal_row + 1];
+          std::sort(global_row_start, global_row_end);
+
+          curr_internal_row++;
+        }
+      }
+
+      assert(curr_internal_row == n_intern_);
+
+      // Then move on to external rows, which come after internal rows
+      for (size_t row = n_intern_; row < size_; row++)
+      {
+        global_row_indices[row + 1] = global_row_indices[row];
 
         // Collect columns from each component which has a row which contributes to this row
-        for (ComponentContribution contrib : reverse_map[row])
+        for (ComponentContribution contrib : reverse_extern_map[row - n_intern_])
         {
           component_type* component     = components_[contrib.comp_idx_];
           CsrSparsity&    comp_sparsity = component_sparsities[contrib.comp_idx_];
-
-          num_contrib++;
 
           IdxT row_start = comp_sparsity.row_indices_[contrib.local_row_idx_];
           IdxT row_end   = comp_sparsity.row_indices_[contrib.local_row_idx_ + 1];
@@ -220,40 +265,37 @@ namespace GridKit
             // Not all columns map to columns in the system jacobian
             if (global_col != neg1_)
             {
-              global_col_indices.push_back(global_col);
+              global_col_indices[global_row_indices[row + 1]] = global_col;
+              global_row_indices[row + 1]++;
             }
           }
         }
 
         // Sort the row by column indices. Since the mapping from local indices to global indices isn't monotonically increasing,
         // this is necessary.
-        auto start = std::next(global_col_indices.begin(), global_row_indices[row]);
-        std::sort(start, global_col_indices.end());
+        auto start = std::next(global_col_indices, global_row_indices[row]);
+        auto end   = std::next(global_col_indices, global_row_indices[row + 1]);
+        std::sort(start, end);
 
-        // If there were multiple components which contributed columns, then we definitely need
-        // to de-duplicate the columns.
-        if (num_contrib > 1)
-        {
-          global_col_indices.erase(std::unique(start, global_col_indices.end()), global_col_indices.end());
-        }
+        // De-duplicate the columns
+        auto new_end                = std::unique(start, end);
+        global_row_indices[row + 1] = global_row_indices[row] + std::distance(start, new_end);
       }
-      // Final row index (beyond the end) keeps track of nnz, which is also the size of the column indices.
-      global_row_indices[size_] = static_cast<IdxT>(global_col_indices.size());
-
       // Allocate new sparsity buffers
-      IdxT nnz = static_cast<IdxT>(global_col_indices.size());
+      IdxT nnz = global_row_indices[size_];
 
       csr_jac_.resize(size_, size_);
       csr_jac_.setNnz(nnz);
       csr_jac_.allocateMatrixData(LinearAlgebra::memory::HOST);
 
       // Copy column indices
-      std::copy(global_col_indices.begin(), global_col_indices.end(), csr_jac_.getColData());
+      std::copy(global_col_indices, global_col_indices + nnz, csr_jac_.getColData());
       std::copy(global_row_indices, global_row_indices + size_ + 1, csr_jac_.getRowData());
 
       delete[] component_sparsities;
-      delete[] reverse_map;
+      delete[] reverse_extern_map;
       delete[] global_row_indices;
+      delete[] global_col_indices;
 
       return 1;
     }
