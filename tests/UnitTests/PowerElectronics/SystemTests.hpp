@@ -106,10 +106,21 @@ namespace GridKit
         rload_list[0] = rload1;
         Lload_list[0] = Lload1;
 
-        //							DGs	+		- refframe	   Lines +				Loads
-        size_t vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
-        //							\omegaref + BusDQ
-        size_t vec_size_externals = 1 + 2 * (2 * Nsize);
+        size_t num_dgs   = 2 * Nsize;
+        size_t num_lines = 2 * Nsize - 1;
+        size_t num_loads = Nsize;
+        size_t num_buses = 2 * Nsize;
+
+        size_t vec_size_internals =
+            //                                                                                  - refframe
+            num_dgs * DistributedGenerator<DependencyTracking::Variable, size_t>::NUM_INTERNALS - 1
+            + num_lines * MicrogridLine<DependencyTracking::Variable, size_t>::NUM_INTERNALS
+            + num_loads * MicrogridLoad<DependencyTracking::Variable, size_t>::NUM_INTERNALS
+            + num_buses * MicrogridBusDQ<DependencyTracking::Variable, size_t>::NUM_INTERNALS;
+
+        size_t vec_size_externals =
+            //                                                                              + refframe
+            num_buses * MicrogridBusDQ<DependencyTracking::Variable, size_t>::NUM_EXTERNALS + 1;
 
         std::vector<size_t> vdqbus_index(2 * Nsize, 0);
         vdqbus_index[0] = vec_size_internals + 1;

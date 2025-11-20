@@ -64,6 +64,9 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
+    static constexpr size_t NUM_INTERNALS = 13;
+    static constexpr size_t NUM_EXTERNALS = 3;
+
     DistributedGenerator(IdxT                                        id,
                          DistributedGeneratorParameters<RealT, IdxT> parm,
                          bool                                        reference_frame);

@@ -44,6 +44,9 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
+    static constexpr size_t NUM_INTERNALS = 2;
+    static constexpr size_t NUM_EXTERNALS = 3;
+
     MicrogridLoad(IdxT id, RealT R, RealT L);
     virtual ~MicrogridLoad();
 

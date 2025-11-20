@@ -26,9 +26,9 @@ namespace GridKit
   {
     // internals [id, iq]
     // externals [\omegaref, vbd_out, vbq_out]
-    size_           = 5;
-    n_intern_       = 2;
-    n_extern_       = 3;
+    size_           = NUM_INTERNALS + NUM_EXTERNALS;
+    n_intern_       = NUM_INTERNALS;
+    n_extern_       = NUM_EXTERNALS;
     extern_indices_ = {0, 1, 2};
     idc_            = id;
   }

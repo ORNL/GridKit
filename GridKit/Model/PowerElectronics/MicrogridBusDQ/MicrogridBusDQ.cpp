@@ -24,9 +24,9 @@ namespace GridKit
     : RN_(RN)
   {
     // externals [vbus_d, vbus_q]
-    size_           = 2;
-    n_intern_       = 0;
-    n_extern_       = 2;
+    size_           = NUM_INTERNALS + NUM_EXTERNALS;
+    n_intern_       = NUM_INTERNALS;
+    n_extern_       = NUM_EXTERNALS;
     extern_indices_ = {0, 1};
     idc_            = id;
   }

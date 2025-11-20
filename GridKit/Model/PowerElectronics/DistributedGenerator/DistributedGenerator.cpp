@@ -39,9 +39,9 @@ namespace GridKit
   {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-    size_           = 16;
-    n_intern_       = 13;
-    n_extern_       = 3;
+    size_           = NUM_INTERNALS + NUM_EXTERNALS;
+    n_intern_       = NUM_INTERNALS;
+    n_extern_       = NUM_EXTERNALS;
     extern_indices_ = {0, 1, 2};
     idc_            = id;
   }
