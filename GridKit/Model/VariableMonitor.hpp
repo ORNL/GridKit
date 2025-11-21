@@ -14,29 +14,18 @@ namespace GridKit
 {
   namespace Model
   {
-    namespace Detail
-    {
-      template <typename T>
-      struct Types
-      {
-      };
 
-      template <typename TScalar, typename TIdx, template <typename, typename> typename TT>
-      struct Types<TT<TScalar, TIdx>>
-      {
-        using ScalarT = TScalar;
-        using IdxT    = TIdx;
-      };
-    } // namespace Detail
-
-    template <typename TEvaluator, template <typename, typename> typename TData>
+    template <typename EvalT, template <typename, typename> typename DataT>
     class VariableMonitor
     {
+    };
+
+    template <typename ScalarT, typename IdxT, template <typename, typename> typename EvalT, template <typename, typename> typename DataT>
+    class VariableMonitor<EvalT<ScalarT, IdxT>, DataT>
+    {
     public:
-      using ScalarT       = typename Detail::Types<TEvaluator>::ScalarT;
-      using IdxT          = typename Detail::Types<TEvaluator>::IdxT;
       using RealT         = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using ObjData       = TData<RealT, IdxT>;
+      using ObjData       = DataT<RealT, IdxT>;
       using VariableEnum  = typename ObjData::MonitorableVariables;
       using EnumId        = std::underlying_type_t<VariableEnum>;
       using ValueFunction = std::function<ScalarT(void)>;
@@ -77,11 +66,6 @@ namespace GridKit
       bool empty() const
       {
         return variables_.empty();
-      }
-
-      void push(VariableEnum v, ValueFunction g)
-      {
-        // variables_.emplace_back(v, g);
       }
 
       void set(VariableEnum v, ValueFunction f)

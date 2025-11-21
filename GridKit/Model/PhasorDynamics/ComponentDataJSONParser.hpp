@@ -16,6 +16,12 @@ namespace GridKit
     using json = nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
+    template <typename EnumT, typename KeyT>
+    inline auto enum_parse(KeyT&& key)
+    {
+      return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
+    }
+
     /// JSON parser function for the `ComponentData` class and descendants
     template <typename RealT,
               typename IdxT,
@@ -38,7 +44,7 @@ namespace GridKit
 
       for (auto& raw_parameter : j.at("params").items())
       {
-        auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
+        auto key = enum_parse<Parameters>(raw_parameter.key());
         if (key.has_value())
         {
           // NOTE: this is necessary because it doesn't seem like nlohmann/json
@@ -74,7 +80,7 @@ namespace GridKit
 
       for (auto& raw_port : j.at("ports").items())
       {
-        auto key = magic_enum::enum_cast<Ports>(raw_port.key());
+        auto key = enum_parse<Ports>(raw_port.key());
         if (key.has_value())
         {
           raw_port.value().get_to(c.ports[key.value()]);
@@ -92,7 +98,7 @@ namespace GridKit
         for (auto& raw_monitored_variable : j.at("mon"))
         {
           auto var_name  = raw_monitored_variable.get<std::string>();
-          auto monitored = magic_enum::enum_cast<MonitorableVariables>(var_name);
+          auto monitored = enum_parse<MonitorableVariables>(var_name);
           if (monitored.has_value())
           {
             c.monitored_variables.insert(monitored.value());
