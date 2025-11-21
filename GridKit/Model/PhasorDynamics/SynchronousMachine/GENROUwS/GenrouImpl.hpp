@@ -269,12 +269,12 @@ namespace GridKit
     void Genrou<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
-      monitor_.set(Variable::ir, [this] { return y_[15]; });
-      monitor_.set(Variable::ii, [this] { return y_[16]; });
-      // monitor_.set(Variable::p, [this] { return Ii(); });
-      // monitor_.set(Variable::q, [this] { return Ii(); });
-      monitor_.set(Variable::delta, [this] { return y_[0]; });
-      monitor_.set(Variable::omega, [this] { return y_[1]; });
+      monitor_.set(Variable::IR, [this] { return y_[15]; });
+      monitor_.set(Variable::II, [this] { return y_[16]; });
+      // monitor_.set(Variable::P, [this] { return ?(); });
+      // monitor_.set(Variable::Q, [this] { return ?(); });
+      monitor_.set(Variable::DELTA, [this] { return y_[0]; });
+      monitor_.set(Variable::OMEGA, [this] { return y_[1]; });
     }
 
     template <class ScalarT, typename IdxT>
