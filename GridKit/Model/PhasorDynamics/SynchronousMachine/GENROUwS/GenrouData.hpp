@@ -49,12 +49,12 @@ namespace GridKit
     /// Variables able to be monitored for a Genrou generator model
     enum class GenrouMonitorableVariables
     {
-      ir,
-      ii,
-      p,
-      q,
-      delta,
-      omega,
+      IR,
+      II,
+      P,
+      Q,
+      DELTA,
+      OMEGA,
       SIZE
     };
 

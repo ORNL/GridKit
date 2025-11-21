@@ -119,8 +119,8 @@ namespace GridKit
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
         success *= result.genrou[0].ports[GenrouPorts::bus] == 1;
         success *= result.genrou[0].disambiguation_string == "1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::DELTA);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::OMEGA);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
@@ -242,8 +242,8 @@ namespace GridKit
         success *= result.genrou[0].ports[GenrouPorts::pmech] == 2;
         success *= result.genrou[0].ports[GenrouPorts::efd] == 3;
         success *= result.genrou[0].disambiguation_string == "DV1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::DELTA);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::OMEGA);
 
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::R]) == 0.05;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::T1]) == 0.5;
