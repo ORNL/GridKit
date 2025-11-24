@@ -79,10 +79,6 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override;
 
-      void updateTime(RealT /* t */, RealT /* a */) override
-      {
-      }
-
       void setPmech(RealT pmech)
       {
         pmech_set_ = pmech;

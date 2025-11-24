@@ -22,8 +22,10 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateJacobian()
     {
-      std::cout << "Evaluate Jacobian for Branch..." << std::endl;
-      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+      //std::cout << "Evaluate Jacobian for Branch..." << std::endl;
+      //std::cout << "Jacobian evaluation is experimental!" << std::endl;
+
+      J_.zeroMatrix();
 
       // Bus 1 diagonal Jacobian block owned by the bus
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
@@ -67,8 +69,6 @@ namespace GridKit
                                                           (bus2_->y()).data(),
                                                           J_);
 
-      J_.printMatrix("Branch after BusJacobian12 call");
-
       // Off-diagonal Jacobian block (Bus1 variables) owned by the branch
       GridKit::Enzyme::Sparse::BranchJacobian<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
                                               GridKit::Enzyme::Sparse::MemberFunctions::BusResidual21,
@@ -82,8 +82,6 @@ namespace GridKit
                                                           yp_.data(),
                                                           (bus1_->y()).data(),
                                                           J_);
-
-      J_.printMatrix("Branch after BusJacobian21 call");
 
       return 0;
     }

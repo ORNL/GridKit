@@ -5,4 +5,4 @@ target_link_libraries(TenGenClassical
 install(TARGETS TenGenClassical RUNTIME DESTINATION bin)
 
 # Not used for tesing for now.
-# add_test(NAME GenrouTest3_genclassical COMMAND $<TARGET_FILE:TenGenClassical>)
+add_test(NAME GenrouTest3_genclassical COMMAND $<TARGET_FILE:TenGenClassical>)

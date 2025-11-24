@@ -91,10 +91,6 @@ namespace GridKit
         // Still to be implemented
         int evaluateJacobian() override;
 
-        void updateTime(RealT /* t */, RealT /* a */) override
-        {
-        }
-
         /// Get the `ComponentSignals` from this `Tgov1`
         auto getSignals()
             -> ComponentSignals<ScalarT,
@@ -127,7 +123,7 @@ namespace GridKit
         // Parameter initialization function
         void initializeParameters(const model_data_type& data);
 
-        /* Local copies of external variables */
+        /* Local copies of signal variables */
         std::vector<ScalarT> ws_;
         std::map<IdxT, IdxT> ws_indices_;
       };

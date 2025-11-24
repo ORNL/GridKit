@@ -15,6 +15,20 @@ namespace GridKit
   {
     namespace Exciter
     {
+      /**
+       * @brief Jacobian evaluation not implemented yet
+       *
+       * @tparam ScalarT - Scalar data type
+       * @tparam IdxT    - Index data type
+       * @return int - error code, 0 = success
+       */
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::evaluateJacobian()
+      {
+        std::cout << "Jacobian evaluation not implemented!" << std::endl;
+        return 0;
+      }
+      
       // Available template instantiations
       template class Ieeet1<DependencyTracking::Variable, long int>;
       template class Ieeet1<DependencyTracking::Variable, size_t>;

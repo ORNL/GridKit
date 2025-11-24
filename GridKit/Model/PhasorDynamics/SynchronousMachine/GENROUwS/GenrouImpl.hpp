@@ -315,11 +315,11 @@ namespace GridKit
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
 
-      // Resize coupling data
+      // Resize bus data
       wb_.resize(2);
       h_.resize(2);
 
-      // Resize external variable data
+      // Resize signal variable data
       ws_.resize(2);
       ws_indices_[0] = static_cast<IdxT>(-1);
       ws_indices_[1] = static_cast<IdxT>(-1);
@@ -513,7 +513,7 @@ namespace GridKit
       ScalarT vr = wb[0];
       ScalarT vi = wb[1];
 
-      // Set external variable aliases
+      // Set signal variable aliases
       ScalarT pmech = ws[0];
       ScalarT efd   = ws[1];
 
@@ -551,7 +551,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y,
+        ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
         ScalarT*                  h)

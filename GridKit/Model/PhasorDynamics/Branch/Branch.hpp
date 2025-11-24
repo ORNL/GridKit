@@ -76,10 +76,6 @@ namespace GridKit
         return 0;
       }
 
-      virtual void updateTime(RealT /* t */, RealT /* a */) override
-      {
-      }
-
       void setR(RealT R)
       {
         R_ = R;

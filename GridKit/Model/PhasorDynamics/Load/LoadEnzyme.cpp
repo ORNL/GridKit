@@ -22,8 +22,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
-      std::cout << "Evaluate Jacobian for Load..." << std::endl;
-      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+      //std::cout << "Evaluate Jacobian for Load..." << std::endl;
+      //std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
       GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
                                            GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,

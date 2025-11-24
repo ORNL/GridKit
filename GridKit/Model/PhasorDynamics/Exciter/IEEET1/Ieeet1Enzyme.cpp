@@ -1,35 +1,38 @@
 /**
- * @file Tgov1Enzyme.cpp
+ * @file Ieeet1Enzyme.cpp
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
 
-#include "Tgov1Impl.hpp"
+#include "Ieeet1Impl.hpp"
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Governor
+    namespace Exciter
     {
       /**
-       * @brief Jacobian evaluation experimental
+       * @brief Jacobian evaluation not implemented yet
        *
        * @tparam ScalarT - Scalar data type
        * @tparam IdxT    - Index data type
        * @return int - error code, 0 = success
        */
       template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::evaluateJacobian()
+      int Ieeet1<ScalarT, IdxT>::evaluateJacobian()
       {
-        //std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
+        //std::cout << "Evaluate Jacobian for Ieeet1..." << std::endl;
         //std::cout << "Jacobian evaluation is experimental!" << std::endl;
         
+// The following will fail to build without a smooth approximation for
+// the saturation
+#if 0
         J_.zeroMatrix(); 
 
-        GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                                             GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
                                                             ScalarT,
                                                             IdxT>::eval(this,
@@ -44,7 +47,21 @@ namespace GridKit
                                                                         alpha_,
                                                                         J_);
 
-        GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+        GridKit::Enzyme::Sparse::df_dwbWithSignal<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
+                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                                  ScalarT,
+                                                  IdxT>::eval(this,
+                                                              f_.size(),
+                                                              static_cast<size_t>(bus_->size()),
+                                                              this->getResidualIndices(),
+                                                              bus_->getVariableIndices(),
+                                                              y_.data(),
+                                                              yp_.data(),
+                                                              wb_.data(),
+                                                              ws_.data(),
+                                                              J_);
+  
+        GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                                   GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
                                                   ScalarT,
                                                   IdxT>::eval(this,
@@ -57,14 +74,15 @@ namespace GridKit
                                                               wb_.data(),
                                                               ws_.data(),
                                                               J_);
-
+#endif
+  
         return 0;
       }
 
       // Available template instantiations
-      template class Tgov1<double, long int>;
-      template class Tgov1<double, size_t>;
+      template class Ieeet1<double, long int>;
+      template class Ieeet1<double, size_t>;
 
-    } // namespace Governor
+    } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

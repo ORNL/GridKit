@@ -335,6 +335,7 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        // Verify component configuration
         int errorCount = this->verify();
         if (errorCount > 0)
         {
@@ -365,14 +366,19 @@ namespace GridKit
       }
 
       /**
-       * @brief Assume that jacobian is not available
+       * @brief Check components for Jacobian availability
        *
        * @return true
        * @return false
        */
       bool hasJacobian() override
       {
-        return false;
+        bool has_jacobian = true;
+        for (const auto& component : components_)
+        {
+          has_jacobian *= component->hasJacobian();
+        }
+        return has_jacobian;
       }
 
       /**
@@ -573,6 +579,7 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
+        J_.zeroMatrix();
         std::vector<IdxT>  ctemp{};
         std::vector<IdxT>  rtemp{};
         std::vector<RealT> valtemp{};
@@ -617,6 +624,8 @@ namespace GridKit
 
         J_.setValues(rtemp, ctemp, valtemp);
 
+        //J_.printMatrix("System Jacobian");
+
         return 0;
       }
 
@@ -659,7 +668,8 @@ namespace GridKit
        */
       void updateTime(RealT t, RealT a) override
       {
-        this->time_ = t;
+        time_  = t;
+        alpha_ = a;
         for (const auto& component : components_)
         {
           component->updateTime(t, a);

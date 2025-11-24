@@ -179,9 +179,6 @@ namespace GridKit
 
       MatrixT J_;
 
-      RealT time_;
-      RealT alpha_;
-
       RealT rtol_;
       RealT atol_;
 

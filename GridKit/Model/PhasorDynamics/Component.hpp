@@ -39,15 +39,15 @@ namespace GridKit
       /// @todo Remove this method. It should be part of DynamicSolver class.
       virtual bool hasJacobian() override
       {
-        return false;
+        return true;
       }
 
-      // virtual void updateTime(RealT t, RealT a)
-      // {
-      //     time_ = t;
-      //     alpha_ = a;
-      //     std::cout << "updateTime: t = " << time_ << "\n";
-      // }
+      virtual void updateTime(RealT t, RealT a) override
+      {
+          time_ = t;
+          alpha_ = a;
+          //std::cout << "updateTime: t = " << time_ << ", alpha = " << alpha_ << "\n";
+      }
 
       virtual void setTolerances(RealT& rtol, RealT& atol) const override
       {
@@ -180,7 +180,7 @@ namespace GridKit
 
       ------ WARNING: Temporary ------
 
-      The protexted variable mva_system_base_ is temporarily
+      The protected variable mva_system_base_ is temporarily
       hard coded. This eventually needs to be configured
       from the input JSON format, which specifies the system MVA base.
 

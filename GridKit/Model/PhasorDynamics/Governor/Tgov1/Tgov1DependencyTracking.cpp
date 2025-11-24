@@ -21,7 +21,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::evaluateJacobian()
       {
-        std::cout << "Jacobian evaluation not implemented!" << std::endl;
+        //std::cout << "Jacobian evaluation not implemented!" << std::endl;
         return 0;
       }
 

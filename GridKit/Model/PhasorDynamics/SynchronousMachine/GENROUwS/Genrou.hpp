@@ -133,10 +133,6 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override;
 
-      void updateTime(RealT /* t */, RealT /* a */) override
-      {
-      }
-
       // Temporary access functions for governor
       // Should be abstracted
       ScalarT getSpeed();
@@ -237,7 +233,7 @@ namespace GridKit
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
       ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
 
-      /* Local copies of external variables */
+      /* Local copies of signal variables */
       std::vector<ScalarT> ws_;
       std::map<IdxT, IdxT> ws_indices_;
 

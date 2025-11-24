@@ -76,6 +76,9 @@ int main(int argc, const char* argv[])
 
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
+  sys.initialize();
+  sys.evaluateResidual();
+  sys.evaluateJacobian();
 
   // Get access to the fault
   auto* fault = sys.getBusFault(0);
@@ -115,7 +118,10 @@ int main(int argc, const char* argv[])
   {
     std::vector<scalar_type>& y_val = sys.y();
 
-    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
+    output.push_back(OutputData{t,
+                                static_cast<real_type>(y_val[0]),
+                                static_cast<real_type>(y_val[1]),
+                                static_cast<real_type>(y_val[3])});
   };
 
   // Set up simulation

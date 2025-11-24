@@ -67,7 +67,7 @@ namespace GridKit
 
       virtual void updateTime(RealT /* t */, RealT /* a */) override
       {
-        // No time to update in bus models
+        // No time to update in signal nodes
       }
 
       virtual void setTolerances(RealT& rtol, RealT& atol) const override
@@ -143,9 +143,6 @@ namespace GridKit
       std::vector<ScalarT> f_;
 
       MatrixT J_;
-
-      RealT time_;
-      RealT alpha_;
 
       RealT rtol_;
       RealT atol_;

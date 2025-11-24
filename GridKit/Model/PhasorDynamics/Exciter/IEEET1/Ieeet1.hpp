@@ -75,6 +75,8 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
+        using Component<ScalarT, IdxT>::wb_;
+        using Component<ScalarT, IdxT>::J_;
 
       public:
         using RealT           = typename Component<ScalarT, IdxT>::RealT;
@@ -99,9 +101,9 @@ namespace GridKit
         int tagDifferentiable() override;
         int evaluateResidual() override;
         int evaluateJacobian() override;
-
-        void updateTime(RealT /* t */, RealT /* a */) override
+        bool hasJacobian() override
         {
+          return false;
         }
 
         /// Get the `ComponentSignals` from this `Ieeet1`
@@ -114,7 +116,11 @@ namespace GridKit
           return signals_;
         }
 
+<<<<<<< HEAD
         const Model::VariableMonitorBase* getMonitor() const override;
+=======
+        __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+>>>>>>> 0273332f (Functional PhasorDynamics simulations with sparse Jacobians.)
 
       private:
         // Signal pointers
@@ -162,6 +168,10 @@ namespace GridKit
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();
+
+        /* Local copies of signal variables */
+        std::vector<ScalarT> ws_;
+        std::map<IdxT, IdxT> ws_indices_;
       };
 
     } // namespace Exciter

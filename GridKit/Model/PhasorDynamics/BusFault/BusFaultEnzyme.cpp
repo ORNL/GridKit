@@ -22,8 +22,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusFault<ScalarT, IdxT>::evaluateJacobian()
     {
-      std::cout << "Evaluate Jacobian for BusFault..." << std::endl;
-      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+      //std::cout << "Evaluate Jacobian for BusFault..." << std::endl;
+      //std::cout << "Jacobian evaluation is experimental!" << std::endl;
 
       if (status_)
       {
