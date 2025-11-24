@@ -340,8 +340,8 @@ namespace GridKit
         f_[6] = -ve + ksat * efdp;
         f_[7] = -efd + efdp + omega * efdp * Ispdlim_;
 
-        ScalarT efd_sat  = (efdp - SA_) * ( this->sigmoid(efdp-SA_) );
-        f_[8] = -ksat + SB_ * efd_sat * efd_sat;
+        ScalarT efd_sat = (efdp - SA_) * (this->sigmoid(efdp - SA_));
+        f_[8]           = -ksat + SB_ * efd_sat * efd_sat;
 
         return 0;
       }
