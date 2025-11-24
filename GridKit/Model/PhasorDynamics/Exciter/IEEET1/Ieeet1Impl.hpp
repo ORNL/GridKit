@@ -253,7 +253,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       ScalarT Ieeet1<ScalarT, IdxT>::sigmoid(ScalarT x)
       {
-        return ONE<RealT> / (ONE<RealT> + std::exp(- mu_ * x));
+        return ONE<RealT> / (ONE<RealT> + std::exp(-mu_ * x));
       }
 
       /**
