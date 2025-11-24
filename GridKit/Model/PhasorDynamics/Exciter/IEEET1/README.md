@@ -160,11 +160,6 @@ The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be ch
 \begin{aligned}
    \sigma(x) = 
       \dfrac{1}{1+\exp(-\alpha x)}
-   \approx 
-      \dfrac{1}{2}
-      \left(
-         \dfrac{\alpha x}{1+|\alpha x|} + 1
-      \right)
 \end{aligned}
 ```
 
