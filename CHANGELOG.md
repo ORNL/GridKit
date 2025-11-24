@@ -2,7 +2,7 @@
 
 ## v0.2
 
-- Added 3, 10, and 37 bus test cases.
+- Added 3, 10, 37, and 39 bus test cases.
 - Updated documentation.
 - Added JSON parsing.
 - Automatic differentiation with enzyme (w.r.t. internal and external variables).
