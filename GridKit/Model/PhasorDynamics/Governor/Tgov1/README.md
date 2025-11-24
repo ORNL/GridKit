@@ -93,15 +93,15 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 ```
 
 The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $P_v$ limits $(P_{vmin}, P_{vmax})$.
-$$
+```math
 \begin{aligned}
    \phi_L(P_v,f)&= \sigma(P_{vmin}-P_v)\sigma(-f)            \\
    \phi_U(P_v,f)&= \sigma(P_v-P_{vmax})\sigma(f)             \\
    \phi(P_v,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
 \end{aligned}
-$$
+```
 
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
+The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function.
 ```math
 \begin{aligned}
    \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}

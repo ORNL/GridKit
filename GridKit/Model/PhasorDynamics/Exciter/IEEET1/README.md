@@ -155,34 +155,11 @@ The indicator function $\phi$ can be defined in terms of a scaled activation fun
 \end{aligned}
 ```
 
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
+The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function.
 ```math
 \begin{aligned}
    \sigma(x) = 
       \dfrac{1}{1+\exp(-\alpha x)}
-\end{aligned}
-```
-
-Applying these approximations produces a smooth approximation of the explicit differential equation of $V_R$. The approximation written out below approaches an exact solution as $\alpha\to\infty$.
-
-```math
-\begin{aligned}
-   \dot{V}_R 
-   &\approx f
-      \left[
-         1 +
-         \dfrac{\alpha^2}{4}
-         \dfrac{V_{rmin}\text{-}V_R}
-         {1+\alpha |V_{rmin}\text{-}V_R|}
-         \dfrac{f}{1+\alpha |f|}
-      \right]
-      \left[
-         1-
-         \dfrac{\alpha^2}{4}
-         \dfrac{V_R\text{-}V_{rmax}}
-            {1+\alpha| V_R\text{-}V_{rmax}|}
-            \dfrac{f}{1+\alpha |f|}
-      \right]\\
 \end{aligned}
 ```
 
@@ -210,9 +187,9 @@ For the algebraic piecewise functions (non-flags), this implementation is straig
 ```math
 \begin{aligned}
     E_{fd}
-    &= E_{fd}' + \omega E_{fd}' I_{spdlm} \\ 
+    &=(1 + \omega I_{spdlm})E_{fd}' \\ 
     k_{sat}
-    &=S_B\left[\sigma (E_{fd}' -S_A) \cdot (E_{fd}' -S_A)\right]^2   
+    &=S_B\left[(E_{fd}' -S_A) \cdot \sigma (E_{fd}' -S_A)\right]^2   
 \end{aligned}
 ```
 
