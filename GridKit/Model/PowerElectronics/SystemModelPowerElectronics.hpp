@@ -235,11 +235,6 @@ namespace GridKit
             component->y()[j]  = y_[component->getNodeConnection(j)];
             component->yp()[j] = yp_[component->getNodeConnection(j)];
           }
-          else
-          {
-            component->y()[j]  = 0.0;
-            component->yp()[j] = 0.0;
-          }
         }
       }
       return 0;
