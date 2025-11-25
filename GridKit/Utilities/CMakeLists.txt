@@ -13,5 +13,7 @@ install(
     Colors.hpp
     FileIO.hpp
     MapFromCOO.hpp
+    Benchmark.hpp
+    Template.hpp
   DESTINATION
     include/GridKit/Utilities)

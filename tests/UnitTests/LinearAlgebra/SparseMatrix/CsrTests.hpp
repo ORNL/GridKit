@@ -1,4 +1,4 @@
-#include <GridKit/LinearAlgebra/SparseMatrix/CSRMatrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Utilities/TestHelpers.hpp>
 #include <GridKit/Utilities/Testing.hpp>
 
