@@ -5,6 +5,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -50,8 +51,13 @@ namespace GridKit
         return false;
       }
 
-      virtual void printMonitoredVariables(std::ostream& = std::cout) const
+      virtual void printMonitoredVariables() const
       {
+      }
+
+      virtual const VariableMonitorBase* getMonitor() const
+      {
+        return nullptr;
       }
 
       /**

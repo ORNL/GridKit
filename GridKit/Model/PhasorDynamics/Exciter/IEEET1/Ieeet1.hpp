@@ -113,8 +113,10 @@ namespace GridKit
           return signals_;
         }
 
-        bool monitoring() const override;
-        void printMonitoredVariables(std::ostream& os) const override;
+        const Model::VariableMonitorBase* getMonitor() const override
+        {
+          return &monitor_;
+        }
 
       private:
         // Signal pointers

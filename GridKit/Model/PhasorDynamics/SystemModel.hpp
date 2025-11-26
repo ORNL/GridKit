@@ -75,6 +75,7 @@ namespace GridKit
        * correctly connected into the system model.
        */
       SystemModel(SystemModelData<RealT, IdxT>& data)
+        : monitor_(time_)
       {
         using namespace Governor;
         using namespace Exciter;
@@ -235,6 +236,11 @@ namespace GridKit
           }
           auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
           addFault(fault);
+        }
+
+        for (const auto& sink : data.monitor_sink)
+        {
+          monitor_.addSink(sink);
         }
       }
 
@@ -417,23 +423,24 @@ namespace GridKit
           }
         }
 
-        monitoring_ = checkMonitoring();
+        initializeMonitor();
 
         return 0;
       }
 
-      bool checkMonitoring() const
+      void initializeMonitor()
       {
-        bool mon = false;
-        for (const auto& bus : buses_)
+        for (const auto* bus : buses_)
         {
-          mon = mon || bus->monitoring();
+          monitor_.addMonitor(bus->getMonitor());
         }
-        for (const auto& component : components_)
+
+        for (const auto* component : components_)
         {
-          mon = mon || component->monitoring();
+          monitor_.addMonitor(component->getMonitor());
         }
-        return mon;
+
+        monitor_.start();
       }
 
       /**
@@ -594,20 +601,21 @@ namespace GridKit
 
       bool monitoring() const override
       {
-        return monitoring_;
+        return !monitor_.empty();
       }
 
-      void printMonitoredVariables(std::ostream& os = std::cout) const override
+      void printMonitoredVariables() const override
       {
-        os << "t: " << this->time_ << ":\n";
-        for (const auto& bus : buses_)
-        {
-          bus->printMonitoredVariables(os);
-        }
-        for (const auto& component : components_)
-        {
-          component->printMonitoredVariables(os);
-        }
+        monitor_.print();
+        // os << "t: " << this->time_ << ":\n";
+        // for (const auto& bus : buses_)
+        // {
+        //   bus->printMonitoredVariables(os);
+        // }
+        // for (const auto& component : components_)
+        // {
+        //   component->printMonitoredVariables(os);
+        // }
       }
 
       /**
@@ -738,7 +746,7 @@ namespace GridKit
 
       bool owns_components_{false};
 
-      bool monitoring_{false};
+      Model::VariableMonitor<SystemModel, SystemModelData> monitor_;
     }; // class SystemModel
 
   } // namespace PhasorDynamics

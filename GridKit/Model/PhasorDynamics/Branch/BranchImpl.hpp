@@ -289,28 +289,20 @@ namespace GridKit
     void Branch<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
-      monitor_.set(Variable::IR1, [this] { return Ir1(); });
-      monitor_.set(Variable::II1, [this] { return Ii1(); });
+      monitor_.set(Variable::IR1, [this]
+                   { return Ir1(); });
+      monitor_.set(Variable::II1, [this]
+                   { return Ii1(); });
       // monitor_.set(Variable::IM1, [this] { return ?(); });
       // monitor_.set(Variable::P1, [this] { return ?(); });
       // monitor_.set(Variable::Q1, [this] { return ?(); });
-      monitor_.set(Variable::IR2, [this] { return Ir2(); });
-      monitor_.set(Variable::II2, [this] { return Ii2(); });
+      monitor_.set(Variable::IR2, [this]
+                   { return Ir2(); });
+      monitor_.set(Variable::II2, [this]
+                   { return Ii2(); });
       // monitor_.set(Variable::IM2, [this] { return ?(); });
       // monitor_.set(Variable::P2, [this] { return ?(); });
       // monitor_.set(Variable::Q2, [this] { return ?(); });
-    }
-
-    template <class ScalarT, typename IdxT>
-    bool Branch<ScalarT, IdxT>::monitoring() const
-    {
-      return !monitor_.empty();
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
-    {
-      monitor_.print(os);
     }
 
     /**

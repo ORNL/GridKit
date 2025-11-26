@@ -9,12 +9,16 @@
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using json = nlohmann::json;
+    using json          = nlohmann::json;
+    using Log           = ::GridKit::Utilities::Logger;
+    using MonitorFormat = ::GridKit::Model::VariableMonitorFormat;
 
     /// JSON parser function implementation for the `SystemModelData` type
     ///
@@ -22,6 +26,11 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
     {
+      auto enum_parse = []<typename EnumT, typename KeyT>(EnumT, KeyT&& key)
+      {
+        return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);
+      };
+
       auto header = j.at("header");
 
       if (header.contains("format_version"))
@@ -45,6 +54,26 @@ namespace GridKit
       header.at("case_comments").get_to(sm.case_comments);
       header.at("freq_base").get_to(sm.freq_base);
       header.at("va_base").get_to(sm.va_base);
+
+      if (j.contains("monitors"))
+      {
+        for (auto&& raw_mon : j.at("monitors"))
+        {
+          auto file_name = raw_mon.value("file_name", std::string{});
+          auto fmt_str   = raw_mon.at("format").get<std::string>();
+          auto format    = enum_parse(MonitorFormat{}, fmt_str);
+          if (format.has_value())
+          {
+            sm.monitor_sink.emplace_back(file_name, format.value());
+          }
+          else
+          {
+            Log::error() << "\n\tInvalid monitor format: \"" << fmt_str << "\"."
+                         << "\n\tSee the \"monitors\" list in your JSON file."
+                         << std::endl;
+          }
+        }
+      }
 
       /// @todo Give signal nodes their own array!!!
       /// Modify JSON format accordingly
