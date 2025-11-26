@@ -218,14 +218,14 @@ namespace GridKit
         return std::move(inner_);
       }
 #else
-      Timer(std::chrono::time_point<std::chrono::high_resolution_clock>&& start, const char* name)
+      Timer([[maybe_unused]] std::chrono::time_point<std::chrono::high_resolution_clock>&& start, [[maybe_unused]] const char* name)
       {
       }
 #endif
     };
 
     template <bool ENABLE>
-    Timer startTime(const char* name)
+    Timer startTime([[maybe_unused]] const char* name)
     {
       if constexpr (ENABLE)
       {
@@ -242,7 +242,7 @@ namespace GridKit
     }
 
     template <bool ENABLE>
-    void endTime(Timer&& timer)
+    void endTime([[maybe_unused]] Timer&& timer)
     {
       if constexpr (!ENABLE)
       {
