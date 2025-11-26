@@ -135,8 +135,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class Capacitor<double, int>;
   template class Capacitor<double, long int>;
   template class Capacitor<double, size_t>;
+  template class Capacitor<DependencyTracking::Variable, int>;
   template class Capacitor<DependencyTracking::Variable, long int>;
   template class Capacitor<DependencyTracking::Variable, size_t>;
 

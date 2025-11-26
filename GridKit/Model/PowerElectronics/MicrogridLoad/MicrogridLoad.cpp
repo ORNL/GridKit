@@ -158,8 +158,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class MicrogridLoad<double, int>;
   template class MicrogridLoad<double, long int>;
   template class MicrogridLoad<double, size_t>;
+  template class MicrogridLoad<DependencyTracking::Variable, int>;
   template class MicrogridLoad<DependencyTracking::Variable, long int>;
   template class MicrogridLoad<DependencyTracking::Variable, size_t>;
 

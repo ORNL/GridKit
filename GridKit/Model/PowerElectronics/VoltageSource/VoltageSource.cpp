@@ -126,8 +126,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class VoltageSource<double, int>;
   template class VoltageSource<double, long int>;
   template class VoltageSource<double, size_t>;
+  template class VoltageSource<DependencyTracking::Variable, int>;
   template class VoltageSource<DependencyTracking::Variable, long int>;
   template class VoltageSource<DependencyTracking::Variable, size_t>;
 

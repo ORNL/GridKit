@@ -190,8 +190,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class TransmissionLine<double, int>;
   template class TransmissionLine<double, long int>;
   template class TransmissionLine<double, size_t>;
+  template class TransmissionLine<DependencyTracking::Variable, int>;
   template class TransmissionLine<DependencyTracking::Variable, long int>;
   template class TransmissionLine<DependencyTracking::Variable, size_t>;
 

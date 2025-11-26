@@ -146,8 +146,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class Inductor<double, int>;
   template class Inductor<double, long int>;
   template class Inductor<double, size_t>;
+  template class Inductor<DependencyTracking::Variable, int>;
   template class Inductor<DependencyTracking::Variable, long int>;
   template class Inductor<DependencyTracking::Variable, size_t>;
 

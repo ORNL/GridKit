@@ -125,8 +125,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class Resistor<double, int>;
   template class Resistor<double, long int>;
   template class Resistor<double, size_t>;
+  template class Resistor<DependencyTracking::Variable, int>;
   template class Resistor<DependencyTracking::Variable, long int>;
   template class Resistor<DependencyTracking::Variable, size_t>;
 

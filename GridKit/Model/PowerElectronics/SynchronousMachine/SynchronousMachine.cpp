@@ -157,8 +157,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class SynchronousMachine<double, int>;
   template class SynchronousMachine<double, long int>;
   template class SynchronousMachine<double, size_t>;
+  template class SynchronousMachine<DependencyTracking::Variable, int>;
   template class SynchronousMachine<DependencyTracking::Variable, long int>;
   template class SynchronousMachine<DependencyTracking::Variable, size_t>;
 

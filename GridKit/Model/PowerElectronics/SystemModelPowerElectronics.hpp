@@ -462,6 +462,9 @@ namespace GridKit
       jac_.printMatrixMarket(filename, title);
     }
 
+    /**
+     * @brief Adds new component pointer to the system
+     */
     void addComponent(component_type* component)
     {
       components_.push_back(component);

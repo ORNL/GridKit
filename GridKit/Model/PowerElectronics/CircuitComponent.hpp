@@ -35,17 +35,17 @@ namespace GridKit
       return true;
     }
 
-    size_t getExternSize()
+    IdxT getExternSize()
     {
       return n_extern_;
     }
 
-    size_t getInternalSize()
+    IdxT getInternalSize()
     {
       return this->n_intern_;
     }
 
-    std::set<size_t> getExternIndices()
+    std::set<IdxT> getExternIndices()
     {
       return this->extern_indices_;
     }

@@ -137,8 +137,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class InductionMotor<double, int>;
   template class InductionMotor<double, long int>;
   template class InductionMotor<double, size_t>;
+  template class InductionMotor<DependencyTracking::Variable, int>;
   template class InductionMotor<DependencyTracking::Variable, long int>;
   template class InductionMotor<DependencyTracking::Variable, size_t>;
 

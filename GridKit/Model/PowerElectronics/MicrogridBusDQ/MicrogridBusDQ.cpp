@@ -131,8 +131,10 @@ namespace GridKit
   }
 
   // Available template instantiations
+  template class MicrogridBusDQ<double, int>;
   template class MicrogridBusDQ<double, long int>;
   template class MicrogridBusDQ<double, size_t>;
+  template class MicrogridBusDQ<DependencyTracking::Variable, int>;
   template class MicrogridBusDQ<DependencyTracking::Variable, long int>;
   template class MicrogridBusDQ<DependencyTracking::Variable, size_t>;
 
