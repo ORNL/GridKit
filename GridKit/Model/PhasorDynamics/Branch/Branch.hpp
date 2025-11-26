@@ -104,8 +104,10 @@ namespace GridKit
         setDerivedParams();
       }
 
-      bool monitoring() const override;
-      void printMonitoredVariables(std::ostream&) const override;
+      const Model::VariableMonitorBase* getMonitor() const override
+      {
+        return &monitor_;
+      }
 
     private:
       void initializeParameters(const model_data_type& data);

@@ -442,22 +442,11 @@ namespace GridKit
       }
 
       template <class ScalarT, typename IdxT>
-      bool Ieeet1<ScalarT, IdxT>::monitoring() const
-      {
-        return !monitor_.empty();
-      }
-
-      template <class ScalarT, typename IdxT>
-      void Ieeet1<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
-      {
-        monitor_.print(os);
-      }
-
-      template <class ScalarT, typename IdxT>
       void Ieeet1<ScalarT, IdxT>::initializeMonitor()
       {
         using Variable = model_data_type::MonitorableVariables;
-        monitor_.set(Variable::EFD, [this] { return efd_signal_->read(); });
+        monitor_.set(Variable::EFD, [this]
+                     { return efd_signal_->read(); });
         // monitor_.set(Variable::KSAT, [this] { return ?; });
       }
     } // namespace Exciter

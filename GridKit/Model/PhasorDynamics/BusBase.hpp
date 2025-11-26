@@ -28,11 +28,13 @@ namespace GridKit
 
       explicit BusBase(const BusData<RealT, IdxT>& data)
         : bus_id_(data.bus_id),
-          monitor_("Bus " + data.name, data.monitored_variables)
+          monitor_("Bus_" + data.name, data.monitored_variables)
       {
-        using MonitorableVariables = typename BusData<RealT, IdxT>::MonitorableVariables;
-        monitor_.set(MonitorableVariables::VR, [this]() { return Vr(); });
-        monitor_.set(MonitorableVariables::VI, [this]() { return Vi(); });
+        using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
+        monitor_.set(Variable::VR, [this]()
+                     { return Vr(); });
+        monitor_.set(Variable::VI, [this]()
+                     { return Vi(); });
       }
 
       virtual ~BusBase()
@@ -164,14 +166,9 @@ namespace GridKit
         return residual_indices_;
       }
 
-      bool monitoring() const override
+      const Model::VariableMonitorBase* getMonitor() const override
       {
-        return !monitor_.empty();
-      }
-
-      void printMonitoredVariables(std::ostream& os) const override
-      {
-        monitor_.print(os);
+        return &monitor_;
       }
 
     protected:
