@@ -269,24 +269,16 @@ namespace GridKit
     void Genrou<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
-      monitor_.set(Variable::IR, [this] { return y_[15]; });
-      monitor_.set(Variable::II, [this] { return y_[16]; });
+      monitor_.set(Variable::IR, [this]
+                   { return y_[15]; });
+      monitor_.set(Variable::II, [this]
+                   { return y_[16]; });
       // monitor_.set(Variable::P, [this] { return ?(); });
       // monitor_.set(Variable::Q, [this] { return ?(); });
-      monitor_.set(Variable::DELTA, [this] { return y_[0]; });
-      monitor_.set(Variable::OMEGA, [this] { return y_[1]; });
-    }
-
-    template <class ScalarT, typename IdxT>
-    bool Genrou<ScalarT, IdxT>::monitoring() const
-    {
-      return !monitor_.empty();
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::printMonitoredVariables(std::ostream& os) const
-    {
-      monitor_.print(os);
+      monitor_.set(Variable::DELTA, [this]
+                   { return y_[0]; });
+      monitor_.set(Variable::OMEGA, [this]
+                   { return y_[1]; });
     }
 
     /**

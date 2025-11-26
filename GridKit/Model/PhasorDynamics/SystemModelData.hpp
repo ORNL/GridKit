@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
@@ -37,6 +38,7 @@ namespace GridKit
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
       using SignalDataT       = SignalNodeData<RealT, IdxT>;
+      using MonitorSinkSpec   = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from
@@ -84,6 +86,8 @@ namespace GridKit
       std::vector<Tgov1DataT>        gov;          ///< Governors within the model
       std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes
+
+      std::vector<MonitorSinkSpec> monitor_sink;
     };
 
     ///@{
