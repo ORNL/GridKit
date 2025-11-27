@@ -209,7 +209,7 @@ namespace GridKit
         // Sort used is a radix sort, where the radix is equal to the number of columns of the final sum.
         // Due to this choice, only a single step of radix sort needs to be performed,
         // but we allocate a vector of size equal to the number of columns in the matrix.
-        std::vector<std::vector<LocalSummandIdx>> summand_elements(size);
+        std::map<IdxT, std::vector<LocalSummandIdx>> summand_elements;
 
         // Loop over all summands which have rows that map to this row in the final sum
         for (const auto& contribution : summand_contributions)
@@ -227,16 +227,17 @@ namespace GridKit
             // In system jacobian construction, not all component variables map to system variables.
             if (global_col_idx != static_cast<IdxT>(-1))
             {
+              auto& element = summand_elements[global_col_idx];
               // If we haven't encountered an element in one of the summands that maps to this column in the final sum
               // yet, then this is an additional non-zero element.
-              if (summand_elements[global_col_idx].empty())
+              if (element.empty())
               {
                 nnz++;
               }
 
               // Insert into the radix sort bucket
-              summand_elements[global_col_idx].push_back({.summand_idx_ = summand_idx,
-                                                          .local_idx_   = elem_idx});
+              element.push_back({.summand_idx_ = summand_idx,
+                                 .local_idx_   = elem_idx});
             }
           }
         }
@@ -245,12 +246,12 @@ namespace GridKit
         SharedRowPlan rowPlan;
         rowPlan.elements_.reserve(nnz);
 
-        for (size_t col_idx = 0; col_idx < summand_elements.size(); col_idx++)
+        for (auto& [col_idx, element] : summand_elements)
         {
-          if (!summand_elements[col_idx].empty())
+          if (!element.empty())
           {
             rowPlan.elements_.push_back({
-                .summand_elements_ = std::move(summand_elements[col_idx]),
+                .summand_elements_ = std::move(element),
                 .column_           = col_idx,
             });
           }
