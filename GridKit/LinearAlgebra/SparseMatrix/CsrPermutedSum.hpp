@@ -351,7 +351,7 @@ namespace GridKit
         // Construct a plan for constructing each row of the final sum
         for (size_t row = 0; row < size; row++)
         {
-          auto component_contributions = inverse_permutation[row];
+          const auto& component_contributions = inverse_permutation[row];
           if (component_contributions.size() > 1)
           {
             row_plans.push_back(createSharedRowPlan(summands, component_contributions, permutations, size));
@@ -387,7 +387,7 @@ namespace GridKit
         {
           builder.row(row);
 
-          auto row_plan = row_plans_[row];
+          const auto& row_plan = row_plans_[row];
           std::visit(
               Utility::OverloadVisitor{
                   [&](const ExclusiveRowPlan& row_plan)
