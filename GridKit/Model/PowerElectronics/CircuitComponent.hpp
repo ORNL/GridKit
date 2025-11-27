@@ -59,6 +59,11 @@ namespace GridKit
      */
     int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
     {
+      // TODO: This should be able to go in the constructor instead of here
+      if (connection_nodes_.size() != size_)
+      {
+        connection_nodes_.resize(size_);
+      }
       connection_nodes_[local_index] = global_index;
       return 0;
     }
@@ -71,9 +76,9 @@ namespace GridKit
      * @param local_index index of local value in vector
      * @return IdxT Index of the same value in the global vector
      */
-    IdxT getNodeConnection(IdxT local_index)
+    IdxT getNodeConnection(IdxT local_index) const
     {
-      return connection_nodes_.at(local_index);
+      return connection_nodes_[local_index];
     }
 
   public:
@@ -245,11 +250,11 @@ namespace GridKit
     }
 
   protected:
-    size_t               n_extern_;
-    size_t               n_intern_;
-    std::set<IdxT>       extern_indices_;
+    size_t            n_extern_;
+    size_t            n_intern_;
+    std::set<IdxT>    extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-    std::map<IdxT, IdxT> connection_nodes_;
+    std::vector<IdxT> connection_nodes_;
 
   protected:
     IdxT size_{0};
