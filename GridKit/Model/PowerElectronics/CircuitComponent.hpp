@@ -22,12 +22,41 @@ namespace GridKit
     using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
     CircuitComponent()  = default;
+    virtual CircuitComponent<ScalarT, IdxT>* clone() const = 0;
+    virtual CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other) = 0;
+
+    // virtual CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other) {
+    //     return *other.clone();
+    // }
+    // virtual CircuitComponent<ScalarT, IdxT>* clone()
+    // {
+    //   return new CircuitComponent<ScalarT, IdxT>(*this);
+    // }
     ~CircuitComponent() = default;
 
+    /**
+     * @brief Set current time t and the new scaling a
+     */
     void updateTime(RealT t, RealT a)
     {
       this->time_  = t;
       this->alpha_ = a;
+    }
+
+    /**
+     * @brief Current time the component is at
+     */
+    RealT getTime() const
+    {
+      return this->time_;
+    }
+
+    /**
+     * @brief Alpha represents the time scaling required for IDA Jacobian calc
+     */
+    RealT getAlpha() const
+    {
+      return this->alpha_;
     }
 
     bool hasJacobian()
@@ -42,12 +71,12 @@ namespace GridKit
 
     IdxT getInternalSize()
     {
-      return this->n_intern_;
+      return n_intern_;
     }
 
     std::set<IdxT> getExternIndices()
     {
-      return this->extern_indices_;
+      return extern_indices_;
     }
 
     /**
@@ -81,7 +110,11 @@ namespace GridKit
       return connection_nodes_[local_index];
     }
 
-  public:
+    const std::map<IdxT, IdxT>& getNodeConnectionMapping()
+    {
+      return connection_nodes_;
+    }
+
     virtual IdxT size()
     {
       return size_;
@@ -108,9 +141,24 @@ namespace GridKit
       abs_tol = abs_tol_;
     }
 
+    RealT getRelTol() const
+    {
+      return rel_tol_;
+    }
+
+    RealT getAbsTol() const
+    {
+      return abs_tol_;
+    }
+
     virtual void setMaxSteps(IdxT& msa) const
     {
       msa = max_steps_;
+    }
+
+    IdxT getMaxSteps() const
+    {
+      return max_steps_;
     }
 
     std::vector<ScalarT>& y()
@@ -243,8 +291,8 @@ namespace GridKit
       return gB_;
     }
 
-    //@todo Fix ID naming
-    IdxT getIDcomponent()
+    ///@todo Fix ID naming
+    IdxT getComponentID() const
     {
       return idc_;
     }

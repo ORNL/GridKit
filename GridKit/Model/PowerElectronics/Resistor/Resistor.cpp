@@ -26,6 +26,32 @@ namespace GridKit
     idc_            = id;
   }
 
+  
+  template <class ScalarT, typename IdxT>
+  Resistor<ScalarT, IdxT>::Resistor(const Resistor<ScalarT, IdxT>& other)
+  {
+    size_           = SIZE;
+    n_intern_       = 0;
+    n_extern_       = 2;
+    extern_indices_ = {0, 1};
+    idc_            = other.getComponentID();
+
+    setResistance(other.getResistance());
+  }
+
+  
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>&  Resistor<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
+  {
+    const Resistor<ScalarT, IdxT>& other_cast = dynamic_cast<const Resistor<ScalarT, IdxT>&>(other);
+
+    idc_ = other_cast.getComponentID();
+
+    R_ = other_cast.getResistance();
+
+    return *this;
+  }
+
   template <class ScalarT, typename IdxT>
   Resistor<ScalarT, IdxT>::~Resistor()
   {

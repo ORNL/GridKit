@@ -44,6 +44,14 @@ namespace GridKit
 
   public:
     MicrogridBusDQ(IdxT id, RealT RN);
+    MicrogridBusDQ(const MicrogridBusDQ& other);
+
+    CircuitComponent<ScalarT, IdxT>* clone() const override
+    {
+      return new MicrogridBusDQ<ScalarT, IdxT>(*this);
+    }
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
+
     virtual ~MicrogridBusDQ();
 
     int allocate();
@@ -57,6 +65,19 @@ namespace GridKit
     int evaluateAdjointResidual();
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
+
+    RealT getVirtualResistance() const
+    {
+      return RN_;
+    }
+
+    template<class S>
+    void setVirtualResistance(S rn)
+    {
+      RN_ = rn;
+    }
+
+
 
   private:
     RealT RN_;

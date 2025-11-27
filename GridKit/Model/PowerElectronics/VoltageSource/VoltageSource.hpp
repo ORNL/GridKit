@@ -49,6 +49,13 @@ namespace GridKit
     const static size_t SIZE = 3;
 
     VoltageSource(IdxT id, RealT V);
+    VoltageSource(const VoltageSource<ScalarT, IdxT>& other);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new VoltageSource<ScalarT, IdxT>(*this);
+    }
+    
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
     virtual ~VoltageSource();
 
     int allocate();
@@ -63,10 +70,20 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
+    ScalarT getVoltage() const
+    {
+      return V_;
+    }
+
+    void setVoltage(ScalarT v)
+    {
+      V_ = v;
+    }
+
     template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
     CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
 
   private:
-    RealT V_;
+    ScalarT V_;
   };
 } // namespace GridKit

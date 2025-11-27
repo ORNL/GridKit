@@ -45,6 +45,12 @@ namespace GridKit
 
   public:
     Capacitor(IdxT id, RealT C);
+    Capacitor(const Capacitor<ScalarT, IdxT>& other);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new Capacitor<ScalarT, IdxT>(*this);
+    }
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
     virtual ~Capacitor();
 
     int allocate();
@@ -59,7 +65,17 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
+    ScalarT getCapacitance() const
+    {
+      return C_;
+    }
+
+    void setCapacitance(ScalarT c)
+    {
+      C_ = c;
+    }
+
   private:
-    RealT C_;
+    ScalarT C_;
   };
 } // namespace GridKit

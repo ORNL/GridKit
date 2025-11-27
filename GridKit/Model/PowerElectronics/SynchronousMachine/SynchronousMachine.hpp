@@ -46,6 +46,10 @@ namespace GridKit
 
   public:
     SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new SynchronousMachine<ScalarT, IdxT>(*this);
+    }
     virtual ~SynchronousMachine();
 
     int allocate();

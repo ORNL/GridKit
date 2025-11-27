@@ -39,11 +39,44 @@ namespace GridKit
   {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
+    ///@todo set to static constant
     size_           = SIZE;
     n_intern_       = 13;
     n_extern_       = 3;
     extern_indices_ = {0, 1, 2};
     idc_            = id;
+  }
+
+  /**
+   * @brief Construct a new Distributed Generator< Scalar T,  Idx T>:: Distributed Generator object
+   * 
+   * @tparam ScalarT 
+   * @tparam IdxT 
+   * @param other 
+   */
+  template <class ScalarT, typename IdxT>
+  DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(const DistributedGenerator<ScalarT, IdxT>& other)
+  {
+    size_           = SIZE;
+    n_intern_       = 13;
+    n_extern_       = 3;
+    extern_indices_ = {0, 1, 2};
+    idc_            = other.getComponentID();
+
+    setParameters(other.getParameters());
+    setReferenceFrame(other.isReferenceFrame());
+  }
+
+  
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>&  DistributedGenerator<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
+  {
+    const DistributedGenerator<ScalarT, IdxT>& other_cast = dynamic_cast<const DistributedGenerator<ScalarT, IdxT>&>(other);
+    idc_            = other_cast.getComponentID();
+
+    setParameters(other_cast.getParameters());
+    setReferenceFrame(other_cast.isReferenceFrame());
+    return *this;
   }
 
   template <class ScalarT, typename IdxT>
@@ -485,6 +518,18 @@ namespace GridKit
         .elem(15, -alpha_ - rLc_ / Lc_);
 
     return builder;
+  }
+
+  template <class ScalarT, typename IdxT>
+  bool DistributedGenerator<ScalarT, IdxT>::isReferenceFrame() const
+  {
+    return refframe_;
+  }
+
+  template <class ScalarT, typename IdxT>
+  void DistributedGenerator<ScalarT, IdxT>::setReferenceFrame(bool ref)
+  {
+    refframe_ = ref;
   }
 
   template <class ScalarT, typename IdxT>

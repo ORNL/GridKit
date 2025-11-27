@@ -49,6 +49,13 @@ namespace GridKit
     const static size_t SIZE = 2;
 
     Resistor(IdxT id, RealT R);
+    Resistor(const Resistor<ScalarT, IdxT>& other);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new Resistor<ScalarT, IdxT>(*this);
+    }
+    
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
     virtual ~Resistor();
 
     int allocate();
@@ -63,10 +70,20 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
+    ScalarT getResistance() const
+    {
+      return R_;
+    }
+
+    void setResistance(ScalarT r)
+    {
+      R_ = r;
+    }
+
     template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
     CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
 
   private:
-    RealT R_;
+    ScalarT R_;
   };
 } // namespace GridKit

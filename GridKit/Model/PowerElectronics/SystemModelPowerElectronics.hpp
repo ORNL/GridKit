@@ -120,6 +120,48 @@ namespace GridKit
     }
 
     /**
+     * @brief Basic copy instructor for the model
+     */
+    PowerElectronicsModel(const PowerElectronicsModel<ScalarT, IdxT> &other)
+    {
+      abs_tol_ = other.getAbsTol();
+      rel_tol_ = other.getRelTol();
+      this->max_steps_ = other.getMaxSteps();
+      // size_ = other.size();
+      
+      y_ = other.y();
+      yp_ = other.yp();
+      f_ = other.getResidual();
+      this->tag_ = other.tag();
+      this->time_ = other.getTime();
+      this->alpha_ = other.getAlpha();
+    }
+
+    CircuitComponent<ScalarT, IdxT>* clone() const override
+    {
+      return new PowerElectronicsModel<ScalarT, IdxT>(*this);
+    }
+
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other)
+    {
+      const PowerElectronicsModel<ScalarT, IdxT>& other_cast = dynamic_cast<const PowerElectronicsModel<ScalarT, IdxT>&>(other);
+
+      abs_tol_ = other_cast.getAbsTol();
+      rel_tol_ = other_cast.getRelTol();
+      this->max_steps_ = other_cast.getMaxSteps();
+      // size_ = other.size();
+      
+      y_ = other_cast.y();
+      yp_ = other_cast.yp();
+      f_ = other_cast.getResidual();
+      this->tag_ = other_cast.tag();
+      this->time_ = other_cast.getTime();
+      this->alpha_ = other_cast.getAlpha();
+
+      return *this;
+    }
+
+    /**
      * @brief Destructor for the system model
      *
      * @pre System components are allocated
@@ -475,6 +517,17 @@ namespace GridKit
       components_.push_back(component);
     }
 
+    /**
+     * @brief Get the list of component pointers associated
+     */
+    const std::vector<component_type*>& getComponents()
+    {
+      return components_;
+    }
+
+    /**
+     * @brief num of components
+     */
     size_t numComponents() const
     {
       return components_.size();

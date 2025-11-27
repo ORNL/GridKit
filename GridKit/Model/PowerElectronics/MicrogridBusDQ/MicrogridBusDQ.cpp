@@ -32,6 +32,31 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
+  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(const MicrogridBusDQ<ScalarT, IdxT>& other)
+  {
+    // externals [vbus_d, vbus_q]
+    size_           = 2;
+    n_intern_       = 0;
+    n_extern_       = 2;
+    extern_indices_ = {0, 1};
+    idc_            = other.getComponentID();
+
+    RN_ = other.getVirtualResistance();
+  }
+
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>&  MicrogridBusDQ<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
+  {
+    const MicrogridBusDQ<ScalarT, IdxT>& other_cast = dynamic_cast<const MicrogridBusDQ<ScalarT, IdxT>&>(other);
+
+    idc_            = other_cast.getComponentID();
+    
+    RN_ = other_cast.getVirtualResistance();
+
+    return *this;
+  }
+
+  template <class ScalarT, typename IdxT>
   MicrogridBusDQ<ScalarT, IdxT>::~MicrogridBusDQ()
   {
   }

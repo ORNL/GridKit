@@ -50,6 +50,12 @@ namespace GridKit
     const static size_t SIZE = 3;
 
     Inductor(IdxT id, RealT L);
+    Inductor(const Inductor<ScalarT, IdxT>& other);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new Inductor<ScalarT, IdxT>(*this);
+    }
+    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
     virtual ~Inductor();
 
     int allocate();
@@ -64,10 +70,20 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
+    ScalarT getInductance() const
+    {
+      return L_;
+    }
+
+    void setInductance(ScalarT l)
+    {
+      L_ = l;
+    }
+
     template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
     CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
 
   private:
-    RealT L_;
+    ScalarT L_;
   };
 } // namespace GridKit

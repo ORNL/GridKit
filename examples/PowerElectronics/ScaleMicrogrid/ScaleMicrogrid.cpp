@@ -325,6 +325,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Jacobian N" + std::to_string(Nsize));
   // print the jacobian in matrix market format
 
+  // auto other(sys_model);
+  // std::cout << other->getAbsTol() << std::endl;
+
   if (debug_output)
     std::cout << "Intial Jacobian with alpha:\n";
 

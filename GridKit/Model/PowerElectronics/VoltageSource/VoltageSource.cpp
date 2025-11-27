@@ -25,6 +25,32 @@ namespace GridKit
     extern_indices_ = {0, 1};
     idc_            = id;
   }
+  
+
+  template <class ScalarT, typename IdxT>
+  VoltageSource<ScalarT, IdxT>::VoltageSource(const VoltageSource<ScalarT, IdxT>& other)
+  {
+    size_           = SIZE;
+    n_intern_       = 1;
+    n_extern_       = 2;
+    extern_indices_ = {0, 1};
+    idc_            = other.getComponentID();
+
+    setVoltage(other.getVoltage());
+  }
+
+  
+  template <class ScalarT, typename IdxT>
+  CircuitComponent<ScalarT, IdxT>&  VoltageSource<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
+  {
+    const VoltageSource<ScalarT, IdxT>& other_cast = dynamic_cast<const VoltageSource<ScalarT, IdxT>&>(other);
+
+    idc_ = other_cast.getComponentID();
+
+    V_ = other_cast.getVoltage();
+
+    return *this;
+  }
 
   template <class ScalarT, typename IdxT>
   VoltageSource<ScalarT, IdxT>::~VoltageSource()

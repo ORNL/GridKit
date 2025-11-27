@@ -48,6 +48,10 @@ namespace GridKit
 
   public:
     TransmissionLine(IdxT id, RealT R, RealT X, RealT B);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new TransmissionLine<ScalarT, IdxT>(*this);
+    }
     virtual ~TransmissionLine();
 
     int allocate();

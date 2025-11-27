@@ -44,6 +44,10 @@ namespace GridKit
 
   public:
     InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new InductionMotor<ScalarT, IdxT>(*this);
+    }
     virtual ~InductionMotor();
 
     int allocate();

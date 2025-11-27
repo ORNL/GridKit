@@ -44,6 +44,10 @@ namespace GridKit
 
   public:
     LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M);
+    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    {
+      return new LinearTransformer<ScalarT, IdxT>(*this);
+    }
     virtual ~LinearTransformer();
 
     int allocate();
