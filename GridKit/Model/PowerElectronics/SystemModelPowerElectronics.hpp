@@ -226,9 +226,10 @@ namespace GridKit
      */
     int distributeVectors()
     {
-      for (const auto& component : components_)
+      for (auto component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        IdxT size = component->size();
+        for (IdxT j = 0; j < size; ++j)
         {
           if (component->getNodeConnection(j) != neg1_)
           {
@@ -261,11 +262,13 @@ namespace GridKit
 
       // Update system residual vector
 
-      for (const auto& component : components_)
+      for (auto component : components_)
       {
         // TODO:check return type
         component->evaluateResidual();
-        for (IdxT j = 0; j < component->size(); ++j)
+
+        IdxT size = component->size();
+        for (IdxT j = 0; j < size; ++j)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)
