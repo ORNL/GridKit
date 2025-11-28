@@ -111,6 +111,7 @@ namespace GridKit
 
   template <class ScalarT, typename IdxT>
   template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  [[gnu::used]]
   Inductor<ScalarT, IdxT>::CsrJacobian Inductor<ScalarT, IdxT>::buildCsrJacobian(
       LinearAlgebra::CsrBuilder<Inductor<ScalarT, IdxT>::RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
   {

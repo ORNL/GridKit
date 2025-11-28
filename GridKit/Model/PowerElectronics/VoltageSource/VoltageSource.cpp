@@ -91,6 +91,7 @@ namespace GridKit
 
   template <class ScalarT, typename IdxT>
   template <bool INCLUDE_DIAGONALS, bool KEEP_SORTED, bool USE_TEMPLATE>
+  [[gnu::used]]
   VoltageSource<ScalarT, IdxT>::CsrJacobian VoltageSource<ScalarT, IdxT>::buildCsrJacobian(
       LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder)
   {
