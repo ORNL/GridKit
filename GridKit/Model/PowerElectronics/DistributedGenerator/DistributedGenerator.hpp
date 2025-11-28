@@ -140,9 +140,9 @@ namespace GridKit
      * @tparam IdxT 
      * @return DistributedGeneratorParameters<ScalarT, IdxT> 
      */
-    DistributedGeneratorParameters<ScalarT, IdxT>  getParameters() const
+    DistributedGeneratorParameters<RealT, IdxT>  getParameters() const
     {
-      DistributedGeneratorParameters<ScalarT, IdxT> parms;
+      DistributedGeneratorParameters<RealT, IdxT> parms;
       parms.wb_  = wb_;
       parms.wc_  = wc_;
       parms.mp_  = mp_;
@@ -162,18 +162,7 @@ namespace GridKit
       return parms;
     }
   
-  
-    /**
-     * @brief Set the Parameters object.
-     * 
-     * extra templates allow typcasting
-     * 
-     * @tparam S 
-     * @tparam I 
-     * @param params 
-     */
-    template <class S, typename I>
-    void setParameters(const DistributedGeneratorParameters<S, I> params)
+    void setParameters(const DistributedGeneratorParameters<RealT, IdxT> params)
     {
       wb_ = params.wb_;
       wc_ = params.wc_;

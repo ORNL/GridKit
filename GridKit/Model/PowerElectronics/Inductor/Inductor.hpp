@@ -70,12 +70,12 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    ScalarT getInductance() const
+    RealT getInductance() const
     {
       return L_;
     }
 
-    void setInductance(ScalarT l)
+    void setInductance(RealT l)
     {
       L_ = l;
     }
@@ -84,6 +84,6 @@ namespace GridKit
     CsrJacobian buildCsrJacobian(LinearAlgebra::CsrBuilder<RealT, IdxT, INCLUDE_DIAGONALS, KEEP_SORTED, USE_TEMPLATE> builder);
 
   private:
-    ScalarT L_;
+    RealT L_;
   };
 } // namespace GridKit

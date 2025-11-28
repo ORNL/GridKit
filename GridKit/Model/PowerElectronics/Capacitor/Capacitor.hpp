@@ -65,17 +65,17 @@ namespace GridKit
     // int evaluateAdjointJacobian();
     int evaluateAdjointIntegrand();
 
-    ScalarT getCapacitance() const
+    RealT getCapacitance() const
     {
       return C_;
     }
 
-    void setCapacitance(ScalarT c)
+    void setCapacitance(RealT c)
     {
       C_ = c;
     }
 
   private:
-    ScalarT C_;
+    RealT C_;
   };
 } // namespace GridKit
