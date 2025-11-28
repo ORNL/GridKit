@@ -135,6 +135,8 @@ namespace GridKit
       this->tag_ = other.tag();
       this->time_ = other.getTime();
       this->alpha_ = other.getAlpha();
+
+      this->connection_nodes_ = other.getNodeConnectionMapping();
     }
 
     CircuitComponent<ScalarT, IdxT>* clone() const override
@@ -157,6 +159,8 @@ namespace GridKit
       this->tag_ = other_cast.tag();
       this->time_ = other_cast.getTime();
       this->alpha_ = other_cast.getAlpha();
+      
+      this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
       return *this;
     }

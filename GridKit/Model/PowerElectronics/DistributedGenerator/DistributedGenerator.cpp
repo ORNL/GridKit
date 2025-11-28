@@ -65,6 +65,8 @@ namespace GridKit
 
     setParameters(other.getParameters());
     setReferenceFrame(other.isReferenceFrame());
+    
+    this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
   
@@ -76,6 +78,9 @@ namespace GridKit
 
     setParameters(other_cast.getParameters());
     setReferenceFrame(other_cast.isReferenceFrame());
+    
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
+    
     return *this;
   }
 

@@ -38,6 +38,7 @@ namespace GridKit
 
     setInductance(other.getInductance());
 
+    this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
   template <class ScalarT, typename IdxT>
@@ -48,6 +49,8 @@ namespace GridKit
     idc_            = other_cast.getComponentID();
     
     setInductance(other_cast.getInductance());
+    
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
     return *this;
   }

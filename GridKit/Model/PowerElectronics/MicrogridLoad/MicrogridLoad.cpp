@@ -49,6 +49,8 @@ namespace GridKit
     R_ = other.getResistance();
     L_ = other.getInductance();
 
+    this->connection_nodes_ = other.getNodeConnectionMapping();
+
   }
 
   
@@ -61,6 +63,8 @@ namespace GridKit
 
     R_ = other_cast.getResistance();
     L_ = other_cast.getInductance();
+
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
     return *this;
   }

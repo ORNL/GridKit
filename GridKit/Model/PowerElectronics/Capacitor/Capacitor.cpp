@@ -38,6 +38,8 @@ namespace GridKit
     idc_            = other.getComponentID();
     
     setCapacitance(other.getCapacitance());
+
+    this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
   template <class ScalarT, typename IdxT>
@@ -48,6 +50,8 @@ namespace GridKit
     idc_            = other_cast.getComponentID();
     
     setCapacitance(other_cast.getCapacitance());
+    
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
     return *this;
   }

@@ -37,6 +37,8 @@ namespace GridKit
     idc_            = other.getComponentID();
 
     setResistance(other.getResistance());
+    
+    this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
   
@@ -48,6 +50,8 @@ namespace GridKit
     idc_ = other_cast.getComponentID();
 
     R_ = other_cast.getResistance();
+    
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
     return *this;
   }

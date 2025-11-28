@@ -110,7 +110,7 @@ namespace GridKit
       return connection_nodes_[local_index];
     }
 
-    const std::map<IdxT, IdxT>& getNodeConnectionMapping()
+    const std::vector<IdxT>& getNodeConnectionMapping() const
     {
       return connection_nodes_;
     }

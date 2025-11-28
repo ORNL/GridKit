@@ -42,6 +42,8 @@ namespace GridKit
     idc_            = other.getComponentID();
 
     RN_ = other.getVirtualResistance();
+    
+    this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
   template <class ScalarT, typename IdxT>
@@ -52,6 +54,8 @@ namespace GridKit
     idc_            = other_cast.getComponentID();
     
     RN_ = other_cast.getVirtualResistance();
+    
+    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
 
     return *this;
   }
