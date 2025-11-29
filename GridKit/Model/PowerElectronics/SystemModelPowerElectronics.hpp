@@ -128,6 +128,8 @@ namespace GridKit
       rel_tol_ = other.getRelTol();
       this->max_steps_ = other.getMaxSteps();
       // size_ = other.size();
+      ///@todo fix since .size is not const
+      size_ = other.y().size();
       
       y_ = other.y();
       yp_ = other.yp();
@@ -137,6 +139,12 @@ namespace GridKit
       this->alpha_ = other.getAlpha();
 
       this->connection_nodes_ = other.getNodeConnectionMapping();
+
+      for (IdxT i = 0; i < other.getComponents().size(); i++)
+      {
+        this->components_.push_back(other.getComponents()[i]->clone());
+      }
+      
     }
 
     CircuitComponent<ScalarT, IdxT>* clone() const override
@@ -524,7 +532,7 @@ namespace GridKit
     /**
      * @brief Get the list of component pointers associated
      */
-    const std::vector<component_type*>& getComponents()
+    const std::vector<component_type*>& getComponents() const
     {
       return components_;
     }

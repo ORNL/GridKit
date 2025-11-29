@@ -39,6 +39,17 @@ namespace GridKit
     
     setCapacitance(other.getCapacitance());
 
+    // size_ = other.size();
+    ///@todo fix since .size is not const
+    size_ = static_cast<IdxT>(other.y().size());
+    
+    y_ = other.y();
+    yp_ = other.yp();
+    f_ = other.getResidual();
+    this->tag_ = other.tag();
+    this->time_ = other.getTime();
+    this->alpha_ = other.getAlpha();
+
     this->connection_nodes_ = other.getNodeConnectionMapping();
   }
 
