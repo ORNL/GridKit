@@ -6,6 +6,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -258,7 +259,7 @@ namespace GridKit
     template <bool ENABLE, typename F>
     auto time(const char* name, F func)
     {
-      if constexpr (std::is_same<typename std::result_of<F&()>::type, void>::value)
+      if constexpr (std::is_same<std::invoke_result_t<F>, void>::value)
       {
         auto timer = startTime<ENABLE>(name);
         func();
