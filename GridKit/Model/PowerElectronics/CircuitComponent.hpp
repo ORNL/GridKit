@@ -21,9 +21,8 @@ namespace GridKit
     using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
     using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-    CircuitComponent()  = default;
-    virtual CircuitComponent<ScalarT, IdxT>* clone() const = 0;
-    virtual CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other) = 0;
+    CircuitComponent()                                               = default;
+    virtual CircuitComponent<ScalarT, IdxT>* clone_component() const = 0;
 
     // virtual CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other) {
     //     return *other.clone();

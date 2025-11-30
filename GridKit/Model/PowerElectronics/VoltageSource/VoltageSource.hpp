@@ -49,14 +49,12 @@ namespace GridKit
     const static size_t SIZE = 3;
 
     VoltageSource(IdxT id, RealT V);
-    VoltageSource(const VoltageSource<ScalarT, IdxT>& other);
-    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    virtual ~VoltageSource();
+
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
       return new VoltageSource<ScalarT, IdxT>(*this);
     }
-    
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
-    virtual ~VoltageSource();
 
     int allocate();
     int initialize();

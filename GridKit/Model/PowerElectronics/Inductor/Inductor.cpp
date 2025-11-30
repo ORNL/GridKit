@@ -26,45 +26,6 @@ namespace GridKit
     idc_            = id;
   }
 
-  
-  template <class ScalarT, typename IdxT>
-  Inductor<ScalarT, IdxT>::Inductor(const Inductor<ScalarT, IdxT>& other)
-  {
-    size_           = SIZE;
-    n_intern_       = 1;
-    n_extern_       = 2;
-    extern_indices_ = {0, 1};
-    idc_            = other.getComponentID();
-
-    setInductance(other.getInductance());
-    // size_ = other.size();
-    ///@todo fix since .size is not const
-    size_ = static_cast<IdxT>(other.y().size());
-    
-    y_ = other.y();
-    yp_ = other.yp();
-    f_ = other.getResidual();
-    this->tag_ = other.tag();
-    this->time_ = other.getTime();
-    this->alpha_ = other.getAlpha();
-
-    this->connection_nodes_ = other.getNodeConnectionMapping();
-  }
-
-  template <class ScalarT, typename IdxT>
-  CircuitComponent<ScalarT, IdxT>&  Inductor<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
-  {
-    const Inductor<ScalarT, IdxT>& other_cast = dynamic_cast<const Inductor<ScalarT, IdxT>&>(other);
-
-    idc_            = other_cast.getComponentID();
-    
-    setInductance(other_cast.getInductance());
-    
-    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
-
-    return *this;
-  }
-
   template <class ScalarT, typename IdxT>
   Inductor<ScalarT, IdxT>::~Inductor()
   {

@@ -67,6 +67,12 @@ namespace GridKit
 
         bool should_use_csr_ = true;
 
+        CsrJacobian(const CsrJacobian& other) : should_use_csr_(other.should_use_csr_)
+        {
+        }
+
+        CsrJacobian() = default;
+
       public:
         bool hasCsrJacobian() final
         {

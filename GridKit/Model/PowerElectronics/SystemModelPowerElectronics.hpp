@@ -71,12 +71,24 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::jac_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+    using CircuitComponent<ScalarT, IdxT>::max_steps_;
 
     using typename Model::Evaluator<ScalarT, IdxT>::CsrJacobian;
 
     using CsrPermutedSum = LinearAlgebra::CsrPermutedSum<ScalarT, IdxT>;
+
+    PowerElectronicsModel(const PowerElectronicsModel& other) : CircuitComponent<ScalarT, IdxT>(other)
+    {
+      components_.reserve(other.components_.size());
+
+      for (auto component : other.components_)
+      {
+        components_.push_back(component->clone_component());
+      }
+    }
 
   public:
     using CircuitComponent<ScalarT, IdxT>::size;
@@ -89,11 +101,11 @@ namespace GridKit
     PowerElectronicsModel()
     {
       // Set system model parameters as default
-      rel_tol_         = 1e-4;
-      abs_tol_         = 1e-4;
-      this->max_steps_ = 2000;
+      rel_tol_   = 1e-4;
+      abs_tol_   = 1e-4;
+      max_steps_ = 2000;
       // By default don't use the jacobian
-      use_jac_         = false;
+      use_jac_   = false;
     }
 
     /**
@@ -112,65 +124,16 @@ namespace GridKit
                           IdxT   max_steps = 2000)
     {
       // Set system model tolerances from input
-      rel_tol_         = rel_tol;
-      abs_tol_         = abs_tol;
-      this->max_steps_ = max_steps;
+      rel_tol_   = rel_tol;
+      abs_tol_   = abs_tol;
+      max_steps_ = max_steps;
       // Can choose if to use jacobian
-      use_jac_         = use_jac;
+      use_jac_   = use_jac;
     }
 
-    /**
-     * @brief Basic copy instructor for the model
-     */
-    PowerElectronicsModel(const PowerElectronicsModel<ScalarT, IdxT> &other)
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
-      abs_tol_ = other.getAbsTol();
-      rel_tol_ = other.getRelTol();
-      this->max_steps_ = other.getMaxSteps();
-      // size_ = other.size();
-      ///@todo fix since .size is not const
-      size_ = other.y().size();
-      
-      y_ = other.y();
-      yp_ = other.yp();
-      f_ = other.getResidual();
-      this->tag_ = other.tag();
-      this->time_ = other.getTime();
-      this->alpha_ = other.getAlpha();
-
-      this->connection_nodes_ = other.getNodeConnectionMapping();
-
-      for (IdxT i = 0; i < other.getComponents().size(); i++)
-      {
-        this->components_.push_back(other.getComponents()[i]->clone());
-      }
-      
-    }
-
-    CircuitComponent<ScalarT, IdxT>* clone() const override
-    {
-      return new PowerElectronicsModel<ScalarT, IdxT>(*this);
-    }
-
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other)
-    {
-      const PowerElectronicsModel<ScalarT, IdxT>& other_cast = dynamic_cast<const PowerElectronicsModel<ScalarT, IdxT>&>(other);
-
-      abs_tol_ = other_cast.getAbsTol();
-      rel_tol_ = other_cast.getRelTol();
-      this->max_steps_ = other_cast.getMaxSteps();
-      // size_ = other.size();
-      
-      y_ = other_cast.y();
-      yp_ = other_cast.yp();
-      f_ = other_cast.getResidual();
-      this->tag_ = other_cast.tag();
-      this->time_ = other_cast.getTime();
-      this->alpha_ = other_cast.getAlpha();
-      
-      this->connection_nodes_ = other_cast.getNodeConnectionMapping();
-
-      return *this;
+      return new PowerElectronicsModel(*this);
     }
 
     /**

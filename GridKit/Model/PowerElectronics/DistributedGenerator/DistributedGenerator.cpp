@@ -47,53 +47,6 @@ namespace GridKit
     idc_            = id;
   }
 
-  /**
-   * @brief Construct a new Distributed Generator< Scalar T,  Idx T>:: Distributed Generator object
-   * 
-   * @tparam ScalarT 
-   * @tparam IdxT 
-   * @param other 
-   */
-  template <class ScalarT, typename IdxT>
-  DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(const DistributedGenerator<ScalarT, IdxT>& other)
-  {
-    size_           = SIZE;
-    n_intern_       = 13;
-    n_extern_       = 3;
-    extern_indices_ = {0, 1, 2};
-    idc_            = other.getComponentID();
-
-    setParameters(other.getParameters());
-    setReferenceFrame(other.isReferenceFrame());
-    // size_ = other.size();
-    ///@todo fix since .size is not const
-    size_ = static_cast<IdxT>(other.y().size());
-    
-    y_ = other.y();
-    yp_ = other.yp();
-    f_ = other.getResidual();
-    this->tag_ = other.tag();
-    this->time_ = other.getTime();
-    this->alpha_ = other.getAlpha();
-    
-    this->connection_nodes_ = other.getNodeConnectionMapping();
-  }
-
-  
-  template <class ScalarT, typename IdxT>
-  CircuitComponent<ScalarT, IdxT>&  DistributedGenerator<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
-  {
-    const DistributedGenerator<ScalarT, IdxT>& other_cast = dynamic_cast<const DistributedGenerator<ScalarT, IdxT>&>(other);
-    idc_            = other_cast.getComponentID();
-
-    setParameters(other_cast.getParameters());
-    setReferenceFrame(other_cast.isReferenceFrame());
-    
-    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
-
-    return *this;
-  }
-
   template <class ScalarT, typename IdxT>
   DistributedGenerator<ScalarT, IdxT>::~DistributedGenerator()
   {

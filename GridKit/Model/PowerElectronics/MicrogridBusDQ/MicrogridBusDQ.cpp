@@ -32,45 +32,6 @@ namespace GridKit
   }
 
   template <class ScalarT, typename IdxT>
-  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(const MicrogridBusDQ<ScalarT, IdxT>& other)
-  {
-    // externals [vbus_d, vbus_q]
-    size_           = 2;
-    n_intern_       = 0;
-    n_extern_       = 2;
-    extern_indices_ = {0, 1};
-    idc_            = other.getComponentID();
-
-    RN_ = other.getVirtualResistance();
-    // size_ = other.size();
-    ///@todo fix since .size is not const
-    size_ = static_cast<IdxT>(other.y().size());
-    
-    y_ = other.y();
-    yp_ = other.yp();
-    f_ = other.getResidual();
-    this->tag_ = other.tag();
-    this->time_ = other.getTime();
-    this->alpha_ = other.getAlpha();
-    
-    this->connection_nodes_ = other.getNodeConnectionMapping();
-  }
-
-  template <class ScalarT, typename IdxT>
-  CircuitComponent<ScalarT, IdxT>&  MicrogridBusDQ<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
-  {
-    const MicrogridBusDQ<ScalarT, IdxT>& other_cast = dynamic_cast<const MicrogridBusDQ<ScalarT, IdxT>&>(other);
-
-    idc_            = other_cast.getComponentID();
-    
-    RN_ = other_cast.getVirtualResistance();
-    
-    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
-
-    return *this;
-  }
-
-  template <class ScalarT, typename IdxT>
   MicrogridBusDQ<ScalarT, IdxT>::~MicrogridBusDQ()
   {
   }

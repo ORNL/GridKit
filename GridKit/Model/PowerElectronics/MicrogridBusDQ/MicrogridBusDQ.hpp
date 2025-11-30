@@ -44,15 +44,12 @@ namespace GridKit
 
   public:
     MicrogridBusDQ(IdxT id, RealT RN);
-    MicrogridBusDQ(const MicrogridBusDQ& other);
+    virtual ~MicrogridBusDQ();
 
-    CircuitComponent<ScalarT, IdxT>* clone() const override
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
       return new MicrogridBusDQ<ScalarT, IdxT>(*this);
     }
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
-
-    virtual ~MicrogridBusDQ();
 
     int allocate();
     int initialize();
@@ -71,13 +68,10 @@ namespace GridKit
       return RN_;
     }
 
-    template<class S>
-    void setVirtualResistance(S rn)
+    void setVirtualResistance(RealT rn)
     {
       RN_ = rn;
     }
-
-
 
   private:
     RealT RN_;

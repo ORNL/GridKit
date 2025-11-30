@@ -50,13 +50,12 @@ namespace GridKit
     const static size_t SIZE = 3;
 
     Inductor(IdxT id, RealT L);
-    Inductor(const Inductor<ScalarT, IdxT>& other);
-    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    virtual ~Inductor();
+
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
       return new Inductor<ScalarT, IdxT>(*this);
     }
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
-    virtual ~Inductor();
 
     int allocate();
     int initialize();

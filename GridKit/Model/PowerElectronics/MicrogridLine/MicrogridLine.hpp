@@ -45,14 +45,12 @@ namespace GridKit
 
   public:
     MicrogridLine(IdxT id, RealT R, RealT L);
-    MicrogridLine(const MicrogridLine<ScalarT, IdxT>& other);
-    CircuitComponent<ScalarT, IdxT>* clone() const override
+    virtual ~MicrogridLine();
+
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
       return new MicrogridLine<ScalarT, IdxT>(*this);
     }
-    
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
-    virtual ~MicrogridLine();
 
     int allocate();
     int initialize();
@@ -71,8 +69,7 @@ namespace GridKit
       return R_;
     }
 
-    template<class S>
-    RealT setResistance(S r)
+    void setResistance(RealT r)
     {
       R_ = r;
     }
@@ -82,8 +79,7 @@ namespace GridKit
       return L_;
     }
 
-    template<class S>
-    RealT setInductance(S l)
+    void setInductance(RealT l)
     {
       L_ = l;
     }

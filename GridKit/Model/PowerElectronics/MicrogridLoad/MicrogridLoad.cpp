@@ -33,52 +33,6 @@ namespace GridKit
     idc_            = id;
   }
 
-  
-
-  template <class ScalarT, typename IdxT>
-  MicrogridLoad<ScalarT, IdxT>::MicrogridLoad(const MicrogridLoad<ScalarT, IdxT>& other)
-  {
-    // internals [id, iq]
-    // externals [\omegaref, vbd_out, vbq_out]
-    size_           = 5;
-    n_intern_       = 2;
-    n_extern_       = 3;
-    extern_indices_ = {0, 1, 2};
-    idc_            = other.getComponentID();
-
-    R_ = other.getResistance();
-    L_ = other.getInductance();
-    // size_ = other.size();
-    ///@todo fix since .size is not const
-    size_ = static_cast<IdxT>(other.y().size());
-    
-    y_ = other.y();
-    yp_ = other.yp();
-    f_ = other.getResidual();
-    this->tag_ = other.tag();
-    this->time_ = other.getTime();
-    this->alpha_ = other.getAlpha();
-
-    this->connection_nodes_ = other.getNodeConnectionMapping();
-
-  }
-
-  
-  template <class ScalarT, typename IdxT>
-  CircuitComponent<ScalarT, IdxT>&  MicrogridLoad<ScalarT, IdxT>::operator=(const CircuitComponent<ScalarT, IdxT>& other)
-  {
-    const MicrogridLoad<ScalarT, IdxT>& other_cast = dynamic_cast<const MicrogridLoad<ScalarT, IdxT>&>(other);
-
-    idc_ = other_cast.getComponentID();
-
-    R_ = other_cast.getResistance();
-    L_ = other_cast.getInductance();
-
-    this->connection_nodes_ = other_cast.getNodeConnectionMapping();
-
-    return *this;
-  }
-
   template <class ScalarT, typename IdxT>
   MicrogridLoad<ScalarT, IdxT>::~MicrogridLoad()
   {

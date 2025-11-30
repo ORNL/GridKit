@@ -45,13 +45,12 @@ namespace GridKit
 
   public:
     Capacitor(IdxT id, RealT C);
-    Capacitor(const Capacitor<ScalarT, IdxT>& other);
-    CircuitComponent<ScalarT, IdxT>*  clone() const override
-    {
-      return new Capacitor<ScalarT, IdxT>(*this);
-    }
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
     virtual ~Capacitor();
+
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
+    {
+      return new Capacitor(*this);
+    }
 
     int allocate();
     int initialize();

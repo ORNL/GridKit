@@ -49,14 +49,12 @@ namespace GridKit
     const static size_t SIZE = 2;
 
     Resistor(IdxT id, RealT R);
-    Resistor(const Resistor<ScalarT, IdxT>& other);
-    CircuitComponent<ScalarT, IdxT>*  clone() const override
+    virtual ~Resistor();
+
+    CircuitComponent<ScalarT, IdxT>* clone_component() const final
     {
       return new Resistor<ScalarT, IdxT>(*this);
     }
-    
-    CircuitComponent<ScalarT, IdxT>& operator=(const CircuitComponent<ScalarT, IdxT>& other);
-    virtual ~Resistor();
 
     int allocate();
     int initialize();
