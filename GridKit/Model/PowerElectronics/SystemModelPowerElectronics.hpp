@@ -391,6 +391,7 @@ namespace GridKit
 
     int evaluateCsrJacobian() override
     {
+      distributeVectors();
       // A vector to hold temporary CSR jacobians which are created from components which only have COO jacobians.
       // Uses `Immovable` to ensure that the references in `component_csr` aren't invalidated.
       std::forward_list<Utility::Immovable<CsrJacobian>> temp_csr;
