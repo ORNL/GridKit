@@ -115,7 +115,29 @@ namespace AnalysisManager
       void printSpecial(RealT t, N_Vector x);
       void printFinalStats();
 
-      void setUseCsr(bool use_csr);
+      struct Stats
+      {
+        long int num_steps_;
+        long int num_residual_evals_;
+        long int num_linear_decompositions_;
+        long int num_linear_solves_;
+        long int num_fails_;
+
+        Stats& operator+=(const Stats& other)
+        {
+          num_steps_                 += other.num_steps_;
+          num_residual_evals_        += other.num_residual_evals_;
+          num_linear_decompositions_ += other.num_linear_decompositions_;
+          num_linear_solves_         += other.num_linear_solves_;
+          num_fails_                 += other.num_fails_;
+          return *this;
+        }
+      };
+
+      Stats getStats() const;
+
+      void
+      setUseCsr(bool use_csr);
 
     private:
       static int Residual(RealT    t,

@@ -1014,6 +1014,34 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
+    Ida<ScalarT, IdxT>::Stats Ida<ScalarT, IdxT>::getStats() const
+    {
+      Stats       stats;
+      int         dummy;
+      sunrealtype dummy2;
+      long int    dummy3;
+
+      int retval = IDAGetIntegratorStats(
+          solver_,
+          &stats.num_steps_,
+          &stats.num_residual_evals_,
+          &stats.num_linear_decompositions_,
+          &stats.num_fails_,
+          &dummy,
+          &dummy,
+          &dummy2,
+          &dummy2,
+          &dummy2,
+          &dummy2);
+      checkOutput(retval, "IDAGetIntegratorStats");
+
+      retval = IDAGetNonlinSolvStats(solver_, &stats.num_linear_solves_, &dummy3);
+      checkOutput(retval, "IDAGetNonlinSolvStats");
+
+      return stats;
+    }
+
+    template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::setUseCsr(bool use_csr)
     {
       user_data_.use_csr_ = use_csr;
