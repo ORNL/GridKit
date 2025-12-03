@@ -9,5 +9,8 @@ add_subdirectory(PhasorDynamics)
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
 
-install(FILES Evaluator.hpp DESTINATION include/GridKit/Model)
-install(FILES VariableMonitor.hpp DESTINATION include/GridKit/Model)
+install(FILES
+  Evaluator.hpp
+  VariableMonitorBase.hpp
+  VariableMonitor.hpp
+  DESTINATION include/GridKit/Model)

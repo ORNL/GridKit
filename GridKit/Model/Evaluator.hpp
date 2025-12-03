@@ -4,7 +4,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/VariableMonitorBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -57,6 +57,10 @@ namespace GridKit
       virtual const VariableMonitorBase* getMonitor() const
       {
         return nullptr;
+      }
+
+      virtual void stopMonitor() const
+      {
       }
 
       /**

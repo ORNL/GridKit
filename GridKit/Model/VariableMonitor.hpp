@@ -10,8 +10,11 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
+#include <GridKit/Model/VariableMonitorBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Enum.hpp>
 
@@ -28,70 +31,6 @@ namespace GridKit
 
   namespace Model
   {
-    enum class VariableMonitorFormat
-    {
-      CSV,
-      JSON,
-      YAML
-    };
-
-    class VariableMonitorBase
-    {
-    public:
-      struct Csv
-      {
-      };
-
-      struct Json
-      {
-      };
-
-      struct Yaml
-      {
-      };
-
-      using Format = VariableMonitorFormat;
-
-      struct SinkSpec
-      {
-        std::string file_name;
-        Format      format;
-      };
-
-      virtual ~VariableMonitorBase()
-      {
-      }
-
-      virtual bool empty() const = 0;
-
-      virtual void printHeader(std::ostream&, Csv) const = 0;
-      virtual void print(std::ostream&, Csv) const       = 0;
-
-      virtual void printFooter(std::ostream&, Csv) const
-      {
-      }
-
-      virtual void printHeader(std::ostream&, Json) const
-      {
-      }
-
-      virtual void print(std::ostream&, Json) const = 0;
-
-      virtual void printFooter(std::ostream&, Json) const
-      {
-      }
-
-      virtual void printHeader(std::ostream&, Yaml) const
-      {
-      }
-
-      virtual void print(std::ostream&, Yaml) const = 0;
-
-      virtual void printFooter(std::ostream&, Yaml) const
-      {
-      }
-    };
-
     template <typename EvalT, template <typename, typename> typename DataT>
     class VariableMonitor
     {
@@ -129,19 +68,19 @@ namespace GridKit
       {
       }
 
-      void printHeader(std::ostream& os, Csv) const override
+      void printHeader(std::ostream& os, Csv csv) const override
       {
         for (auto v : variables_)
         {
-          os << delim_ << label_ << '_' << enumLabel(v);
+          os << csv.delim << label_ << '_' << enumLabel(v);
         }
       }
 
-      void print(std::ostream& os, Csv) const override
+      void print(std::ostream& os, Csv csv) const override
       {
         for (auto v : variables_)
         {
-          os << delim_ << f(v);
+          os << csv.delim << f(v);
         }
       }
 
@@ -159,6 +98,7 @@ namespace GridKit
         os << indent_ << std::quoted(label_) << ": {\n";
         indent_.append(2, ' ');
         std::ostringstream v_os;
+        v_os.copyfmt(os);
         for (auto v : variables_)
         {
           print(v_os, v, Json());
@@ -212,7 +152,6 @@ namespace GridKit
       std::array<ValueFunction, enum_size_> f_;
       std::vector<VariableEnum>             variables_;
       mutable std::string                   indent_{"    "};
-      std::string                           delim_{","};
       std::string                           label_;
     };
 
@@ -233,12 +172,10 @@ namespace GridKit
       explicit VariableMonitor(const RealT& time_var)
         : time_(&time_var)
       {
-        sinks_.emplace_back(std::cout, Format::CSV);
       }
 
       virtual ~VariableMonitor()
       {
-        stop();
       }
 
       void addMonitor(const VariableMonitorBase* monitor)
@@ -253,11 +190,11 @@ namespace GridKit
       {
         if (spec.file_name.empty())
         {
-          sinks_.front().format = spec.format;
+          sinks_.push_back(make_sink(spec, std::cout));
         }
         else
         {
-          sinks_.emplace_back(spec.file_name, spec.format);
+          sinks_.push_back(make_sink(spec, spec.file_name));
         }
       }
 
@@ -289,12 +226,12 @@ namespace GridKit
 
       using VariableMonitorBase::printHeader;
 
-      void printHeader(std::ostream& os, Csv) const override
+      void printHeader(std::ostream& os, Csv csv) const override
       {
         os << "t";
         for (auto&& var : variables_)
         {
-          os << delim_ << var.label;
+          os << csv.delim << var.label;
         }
       }
 
@@ -304,12 +241,12 @@ namespace GridKit
       }
 
       template <typename FormatT>
-      void printFullHeader(std::ostream& os, FormatT format) const
+      void printFullHeader(std::ostream& os, FormatT fmt) const
       {
-        this->printHeader(os, format);
+        this->printHeader(os, fmt);
         for (auto* mon : monitors_)
         {
-          mon->printHeader(os, format);
+          mon->printHeader(os, fmt);
         }
         os << '\n';
       }
@@ -318,41 +255,30 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          switch (sink.format)
-          {
-          case Format::CSV:
-            printFullHeader(sink.os, Csv());
-            break;
-          case Format::JSON:
-            printFullHeader(sink.os, Json());
-            break;
-          case Format::YAML:
-            printFullHeader(sink.os, Yaml());
-            break;
-          }
+          std::visit([this](auto&& sink)
+                     { printFullHeader(sink.os, sink.format); },
+                     sink);
         }
       }
 
-      void print(std::ostream& os, Csv) const override
+      void print(std::ostream& os, Csv csv) const override
       {
         os << *time_;
         for (auto&& var : variables_)
         {
-          os << delim_ << *var.value;
+          os << csv.delim << *var.value;
         }
 
         for (auto* mon : monitors_)
         {
-          mon->print(os, Csv());
+          mon->print(os, csv);
         }
       }
 
-      void print(std::ostream& os, Json) const override
+      void print(std::ostream& os, Json json) const override
       {
-        static bool after_first = false;
-
         std::string indent = "  ";
-        if (after_first)
+        if (json.after_first)
         {
           os << indent << ",\n";
         }
@@ -365,7 +291,7 @@ namespace GridKit
           os << indent << std::quoted(var.label) << ": " << *var.value << ",\n";
         }
 
-        after_first = false;
+        auto after_first = false;
         for (auto* mon : monitors_)
         {
           if (after_first)
@@ -379,8 +305,6 @@ namespace GridKit
         indent.erase(indent.size() - 2);
         os << '\n'
            << indent << "}";
-
-        after_first = true;
       }
 
       void print(std::ostream& os, Yaml) const override
@@ -400,13 +324,13 @@ namespace GridKit
       }
 
       template <typename FormatT>
-      void printFull(std::ostream& os, FormatT format) const
+      void printFull(std::ostream& os, FormatT fmt) const
       {
         const auto     orig_prec = os.precision();
         constexpr auto max_prec  = std::numeric_limits<RealT>::digits10 + 1;
         os.precision(max_prec);
         os << std::scientific;
-        this->print(os, format);
+        this->print(os, fmt);
         os << '\n';
         os << std::defaultfloat;
         os.precision(orig_prec);
@@ -416,18 +340,15 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          switch (sink.format)
-          {
-          case Format::CSV:
-            printFull(sink.os, Csv());
-            break;
-          case Format::JSON:
-            printFull(sink.os, Json());
-            break;
-          case Format::YAML:
-            printFull(sink.os, Yaml());
-            break;
-          }
+          std::visit([this](auto&& sink)
+                     {
+              printFull(sink.os, sink.format);
+              using T = std::remove_cvref_t<decltype(sink)>;
+              if constexpr (std::is_same_v<T, Sink<Json>>)
+              {
+                sink.format.after_first = true;
+              } },
+                     sink);
         }
       }
 
@@ -435,7 +356,7 @@ namespace GridKit
 
       void printFooter(std::ostream& os, Json) const override
       {
-        os << "]";
+        os << "\n]\n";
       }
 
       template <typename FormatT>
@@ -452,46 +373,60 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
-          switch (sink.format)
-          {
-          case Format::CSV:
-            printFullFooter(sink.os, Csv());
-            break;
-          case Format::JSON:
-            printFullFooter(sink.os, Json());
-            break;
-          case Format::YAML:
-            printFullFooter(sink.os, Yaml());
-            break;
-          }
+          std::visit([this](auto&& sink)
+                     { printFullFooter(sink.os, sink.format); },
+                     sink);
         }
       }
 
     private:
       const RealT* time_{nullptr};
 
+      template <typename FormatT>
       struct Sink
       {
         Sink() = delete;
 
-        Sink(std::ostream& out, Format fmt)
+        Sink(std::ostream& out, FormatT fmt)
           : os(out), format(fmt)
         {
         }
 
-        Sink(const std::string& fileName, Format fmt)
+        Sink(const std::string& fileName, FormatT fmt)
           : file_stream(std::make_unique<std::ofstream>(fileName)),
             os(*file_stream),
             format(fmt)
         {
         }
 
+        Sink(Sink&&) = default;
+
         std::unique_ptr<std::ofstream> file_stream;
         std::ostream&                  os;
-        Format                         format;
+        FormatT                        format;
       };
 
-      std::vector<Sink>                       sinks_;
+      using SinkVariant = std::variant<Sink<Csv>, Sink<Json>, Sink<Yaml>>;
+
+      template <typename T>
+      static SinkVariant make_sink(SinkSpec spec, T&& arg)
+      {
+        switch (spec.format)
+        {
+        case Format::CSV:
+          return Sink(std::forward<T>(arg), Csv{spec.delim});
+          break;
+        case Format::JSON:
+          return Sink(std::forward<T>(arg), Json{});
+          break;
+        case Format::YAML:
+          return Sink(std::forward<T>(arg), Yaml{});
+          break;
+        }
+        throw std::runtime_error("Invalid monitor output format");
+      }
+
+      std::vector<SinkVariant>                sinks_;
       std::vector<const VariableMonitorBase*> monitors_;
 
       struct Variable
@@ -502,7 +437,7 @@ namespace GridKit
 
       std::vector<Variable> variables_;
 
-      std::string delim_{","};
+      mutable bool after_first_{false};
     };
 
   } // namespace Model

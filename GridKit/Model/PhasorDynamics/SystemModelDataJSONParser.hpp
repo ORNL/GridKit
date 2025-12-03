@@ -9,7 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/VariableMonitorBase.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -57,14 +57,24 @@ namespace GridKit
 
       if (j.contains("monitors"))
       {
+        sm.monitor_sink.emplace_back("", MonitorFormat::CSV, ",");
         for (auto&& raw_mon : j.at("monitors"))
         {
           auto file_name = raw_mon.value("file_name", std::string{});
           auto fmt_str   = raw_mon.at("format").get<std::string>();
           auto format    = enum_parse(MonitorFormat{}, fmt_str);
+          auto delim     = raw_mon.value("delim", std::string(","));
           if (format.has_value())
           {
-            sm.monitor_sink.emplace_back(file_name, format.value());
+            if (file_name.empty())
+            {
+              sm.monitor_sink.front().format = format.value();
+              sm.monitor_sink.front().delim  = delim;
+            }
+            else
+            {
+              sm.monitor_sink.emplace_back(file_name, format.value(), delim);
+            }
           }
           else
           {
