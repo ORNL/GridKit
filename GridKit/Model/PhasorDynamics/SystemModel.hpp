@@ -443,6 +443,11 @@ namespace GridKit
         monitor_.start();
       }
 
+      void stopMonitor() const override
+      {
+        monitor_.stop();
+      }
+
       /**
        * @todo Tagging differential variables
        *
@@ -607,15 +612,6 @@ namespace GridKit
       void printMonitoredVariables() const override
       {
         monitor_.print();
-        // os << "t: " << this->time_ << ":\n";
-        // for (const auto& bus : buses_)
-        // {
-        //   bus->printMonitoredVariables(os);
-        // }
-        // for (const auto& component : components_)
-        // {
-        //   component->printMonitoredVariables(os);
-        // }
       }
 
       /**
