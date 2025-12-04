@@ -551,6 +551,9 @@ namespace GridKit
         FormatT                        format;
       };
 
+      template <typename ArgT, typename FormatT>
+      Sink(ArgT&&, FormatT) -> Sink<FormatT>;
+
       /// Variant type for all possible sink types
       using SinkVariant = std::variant<Sink<Csv>, Sink<Json>, Sink<Yaml>>;
 
