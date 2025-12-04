@@ -70,9 +70,16 @@ namespace GridKit
       }
 
       /**
+       * @brief Get monitor ready for output
+       */
+      virtual void startMonitor()
+      {
+      }
+
+      /**
        * @brief Tell monitor to wrap up
        */
-      virtual void stopMonitor() const
+      virtual void stopMonitor()
       {
       }
 

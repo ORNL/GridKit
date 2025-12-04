@@ -424,6 +424,7 @@ namespace GridKit
         }
 
         initializeMonitor();
+        startMonitor();
 
         return 0;
       }
@@ -442,11 +443,14 @@ namespace GridKit
         {
           monitor_.addMonitor(component->getMonitor());
         }
+      }
 
+      void startMonitor() override
+      {
         monitor_.start();
       }
 
-      void stopMonitor() const override
+      void stopMonitor() override
       {
         monitor_.stop();
       }

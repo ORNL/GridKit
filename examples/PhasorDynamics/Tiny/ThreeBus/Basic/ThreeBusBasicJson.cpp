@@ -174,6 +174,8 @@ int main(int argc, const char* argv[])
   ida.runSimulation(10.0, nout, output_cb);
   double stop = static_cast<double>(clock());
 
+  sys.stopMonitor();
+
   /* Check worst-case error */
   real_type worst_error      = 0;
   real_type worst_error_time = 0;
