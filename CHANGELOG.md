@@ -38,6 +38,7 @@
 - Updated Jacobian value storage from `ScalarT` to `RealT`.
 - Added a header file defining constants to be used throughout the code.
 - Added `GridKitDocs` target for Doxygen documentation.
+- Added capability to print monitored variables in multiple formats, triggered from `Ida::runSimulation`.
 
 ## v0.1
 

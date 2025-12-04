@@ -45,20 +45,32 @@ namespace GridKit
       virtual IdxT size() = 0;
       virtual IdxT nnz()  = 0;
 
+      /**
+       * @brief Is there something to monitor? Defaults to `false`
+       */
       virtual bool monitoring() const
       {
         return false;
       }
 
+      /**
+       * @brief Print variables at current state
+       */
       virtual void printMonitoredVariables() const
       {
       }
 
+      /**
+       * @brief Get non-owning reference to monitor
+       */
       virtual const VariableMonitorBase* getMonitor() const
       {
         return nullptr;
       }
 
+      /**
+       * @brief Tell monitor to wrap up
+       */
       virtual void stopMonitor() const
       {
       }

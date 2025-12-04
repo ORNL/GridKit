@@ -55,6 +55,25 @@ Contained in the `header` key is an object with the following items:
   `freq_base`        | A floating point value indicating the system frequency base in hertz (Hz). This is commonly 60 Hz
   `va_base`          | A floating point value indicating the system power base in volt-amperes (VA). This is commonly 100e6 VA
 
+### Monitors
+
+Contained in the `monitors` key is an array of objects, each of which describes
+an output for monitored variables (those listed in the `mon` field of a
+[bus](#buses) or [device](#devices). The following fields are supported:
+
+  Name               | Description
+  -------------------|------------------------------------------------------
+  `file_name`        | Optional string indicating output file name. If omitted, `stdout` is used.
+  `format`           | One of { "CSV", "JSON", "YAML" } (case-insensitive)
+  `delim`            | Optional string specifying delimiter to use for CSV output (default is `","`).
+
+__NOTE__: If `monitors` entry is omitted entirely, you will get the default CSV
+output to `stdout`. If you wish to change the console output format, use an
+entry here without the `file_name` field. For example:
+```json
+  "monitors": [ { "format": "YAML" } ]
+```
+
 ### Buses
 
 Contained in the `buses` key is an array of objects, each of which represent

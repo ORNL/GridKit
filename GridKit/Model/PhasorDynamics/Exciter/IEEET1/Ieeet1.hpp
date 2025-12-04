@@ -161,6 +161,7 @@ namespace GridKit
         // This value gave higher precision.
         const RealT mu_{400000.0};
 
+        /// Variable monitor
         Model::VariableMonitor<Ieeet1, Ieeet1Data> monitor_;
 
         // Activation function (sigmoid approximation)
@@ -170,6 +171,7 @@ namespace GridKit
         // Parameter initialization function
         void initModelParams(const model_data_type& data);
 
+        /// Associate variable getter functions with enum values
         void initializeMonitor();
       };
 

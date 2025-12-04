@@ -181,6 +181,7 @@ namespace GridKit
       std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
                                               /// residual indices
 
+      /// Variable monitor
       Model::VariableMonitor<BusBase, BusData> monitor_;
 
       std::vector<ScalarT> y_;

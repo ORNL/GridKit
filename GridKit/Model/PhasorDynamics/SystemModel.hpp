@@ -428,6 +428,9 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Add monitors from buses and components and start monitor
+       */
       void initializeMonitor()
       {
         for (const auto* bus : buses_)
@@ -742,6 +745,7 @@ namespace GridKit
 
       bool owns_components_{false};
 
+      /// Variable monitor
       Model::VariableMonitor<SystemModel, SystemModelData> monitor_;
     }; // class SystemModel
 

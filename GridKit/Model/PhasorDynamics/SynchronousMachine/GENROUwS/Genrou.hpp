@@ -158,6 +158,7 @@ namespace GridKit
 
     private:
       void initializeParameters(const model_data_type& data);
+      /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
 
@@ -242,6 +243,7 @@ namespace GridKit
       std::vector<ScalarT> ws_;
       std::map<IdxT, IdxT> ws_indices_;
 
+      /// Variable monitor
       Model::VariableMonitor<Genrou, GenrouData> monitor_;
     };
 

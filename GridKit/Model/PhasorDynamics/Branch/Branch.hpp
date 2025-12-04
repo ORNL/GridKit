@@ -174,6 +174,7 @@ namespace GridKit
       RealT b_;
       RealT g_;
 
+      /// Variable monitor
       Model::VariableMonitor<Branch, BranchData> monitor_;
     };
 
