@@ -354,13 +354,8 @@ namespace AnalysisManager
       copyVec(yp_, model_->yp());
       if (model_->monitoring())
       {
-        // model_->printMonitoredVariables();
         model_->stopMonitor();
       }
-      // if (step_callback.has_value())
-      // {
-      //   (*step_callback)(tret);
-      // }
 
       // std::cout << "\n";
       return retval;

@@ -30,6 +30,7 @@ namespace GridKit
       TestOutcome simpleParse()
       {
         using namespace GridKit::PhasorDynamics;
+        using namespace GridKit::Model;
         using BusData = BusData<RealT, IdxT>;
         using BusType = typename BusData::BusType;
 
@@ -44,6 +45,12 @@ namespace GridKit
                    "freq_base": 60.0,
                    "va_base": 100e6
                },
+               "monitors": [
+                   {
+                       "file_name": "mon.json",
+                       "format": "json"
+                   }
+               ],
                "buses": [
                    { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
                    { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
@@ -67,6 +74,11 @@ namespace GridKit
         success *= result.case_comments == "This case is set up to monitor the voltage at both buses and the machine angle and speed";
         success *= result.freq_base == 60.0;
         success *= result.va_base == 100.0e6;
+
+        success *= result.monitor_sink[0].file_name.empty();
+        success *= result.monitor_sink[0].format == VariableMonitorFormat::CSV;
+        success *= result.monitor_sink[1].file_name == "mon.json";
+        success *= result.monitor_sink[1].format == VariableMonitorFormat::JSON;
 
         success *= result.bus.size() == 2;
         success *= result.branch.size() == 1;

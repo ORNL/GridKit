@@ -27,6 +27,9 @@ namespace GridKit
       SIZE
     };
 
+    /**
+     * @brief Convert enum value to string label
+     */
     inline const std::string& enumLabel(BusMonitorableVariables v)
     {
       static const std::string labels[] = {"Vr", "Vi", "Vm", "Va"};
@@ -66,6 +69,8 @@ namespace GridKit
       RealT                v_base{1.0}; ///< Voltage base in volts
       std::optional<RealT> freq_base;   ///< Override for the system-wide base frequency
       std::optional<RealT> va_base;     ///< Override for the system-wide power base
+
+      /// Alias
       using MonitorableVariables = BusMonitorableVariables;
 
       /// Set indicating the variables being monitored

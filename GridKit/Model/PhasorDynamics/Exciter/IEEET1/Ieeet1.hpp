@@ -156,11 +156,13 @@ namespace GridKit
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
+        /// Variable monitor
         Model::VariableMonitor<Ieeet1, Ieeet1Data> monitor_;
 
         // Parameter initialization function
         void initModelParams(const model_data_type& data);
 
+        /// Associate variable getter functions with enum values
         void initializeMonitor();
       };
 

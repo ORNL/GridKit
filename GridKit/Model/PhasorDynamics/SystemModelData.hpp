@@ -87,6 +87,7 @@ namespace GridKit
       std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes
 
+      /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;
     };
 

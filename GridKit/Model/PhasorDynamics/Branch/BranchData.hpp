@@ -45,6 +45,9 @@ namespace GridKit
       SIZE
     };
 
+    /**
+     * @brief Convert enum value to string label
+     */
     inline const std::string& enumLabel(BranchMonitorableVariables v)
     {
       static const std::string labels[] = {

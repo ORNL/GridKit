@@ -51,6 +51,9 @@ namespace GridKit
         SIZE
       };
 
+      /**
+       * @brief Convert enum value to string label
+       */
       inline const std::string& enumLabel(Ieeet1MonitorableVariables v)
       {
         static std::string labels[] = {"efd", "ksat"};
