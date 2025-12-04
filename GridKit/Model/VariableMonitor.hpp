@@ -314,10 +314,11 @@ namespace GridKit
       /**
        * @brief Print header if we're monitoring
        */
-      void start() const
+      void start()
       {
         if (!empty())
         {
+          startSinks();
           printHeader();
         }
       }
@@ -325,11 +326,12 @@ namespace GridKit
       /**
        * @brief Print footer if we're monitoring
        */
-      void stop() const
+      void stop()
       {
         if (!empty())
         {
           printFooter();
+          stopSinks();
         }
       }
 
@@ -372,7 +374,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { printFullHeader(sink.os, sink.format); },
+                     { printFullHeader(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -464,7 +466,7 @@ namespace GridKit
         {
           std::visit([this](auto&& sink)
                      {
-              printFull(sink.os, sink.format);
+              printFull(*sink.os, sink.format);
               using T = std::remove_cvref_t<decltype(sink)>;
               if constexpr (std::is_same_v<T, Sink<Json>>)
               {
@@ -503,7 +505,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { printFullFooter(sink.os, sink.format); },
+                     { printFullFooter(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -524,7 +526,7 @@ namespace GridKit
          * @brief Version for an output stream that already exists
          */
         Sink(std::ostream& out, FormatT fmt)
-          : os(out), format(fmt)
+          : os(&out), format(fmt)
         {
         }
 
@@ -532,8 +534,7 @@ namespace GridKit
          * @brief Version for opening an output stream for the given file
          */
         Sink(const std::string& fileName, FormatT fmt)
-          : file_stream(std::make_unique<std::ofstream>(fileName)),
-            os(*file_stream),
+          : file_name(fileName),
             format(fmt)
         {
         }
@@ -543,10 +544,36 @@ namespace GridKit
          */
         Sink(Sink&&) = default;
 
+        void start()
+        {
+          if (file_name.empty())
+          {
+            return;
+          }
+          if (file_stream)
+          {
+            return;
+          }
+          file_stream = std::make_unique<std::ofstream>(file_name);
+          os          = file_stream.get();
+        }
+
+        void stop()
+        {
+          if (file_name.empty())
+          {
+            return;
+          }
+          file_stream.reset();
+          os = nullptr;
+        }
+
+        /// Output file name
+        std::string                    file_name;
         /// Output file stream (if we opened one)
         std::unique_ptr<std::ofstream> file_stream;
         /// Output stream for printing
-        std::ostream&                  os;
+        std::ostream*                  os{nullptr};
         /// Output format object which may have useful members
         FormatT                        format;
       };
@@ -576,6 +603,32 @@ namespace GridKit
           break;
         }
         throw std::runtime_error("Invalid monitor output format");
+      }
+
+      /**
+       * @brief Get sinks ready for output
+       */
+      void startSinks()
+      {
+        for (auto&& sink : sinks_)
+        {
+          std::visit([this](auto&& sink)
+                     { sink.start(); },
+                     sink);
+        }
+      }
+
+      /**
+       * @brief Finalize sinks and close owned files
+       */
+      void stopSinks()
+      {
+        for (auto&& sink : sinks_)
+        {
+          std::visit([this](auto&& sink)
+                     { sink.stop(); },
+                     sink);
+        }
       }
 
       /// Collection of output sinks
