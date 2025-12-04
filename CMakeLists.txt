@@ -116,6 +116,9 @@ include(CTest)
 add_subdirectory(examples)
 add_subdirectory(tests)
 
+# Documentation
+add_subdirectory(docs)
+
 export(EXPORT gridkit-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/GridKitTargets.cmake)
 
 # Configuring exporting cmake config

@@ -37,6 +37,7 @@
 - Added support for DependencyTracking::Variable in PowerElectronics models.
 - Updated Jacobian value storage from `ScalarT` to `RealT`.
 - Added a header file defining constants to be used throughout the code.
+- Added `GridKitDocs` target for Doxygen documentation.
 
 ## v0.1
 
