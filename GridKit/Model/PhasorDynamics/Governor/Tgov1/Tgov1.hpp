@@ -122,7 +122,8 @@ namespace GridKit
         ScalarT pref_{0};
 
         // Scale of Sigmoid function (temporary local implementation)
-        const ScalarT mu_{4000.0};
+        // mu set to 4*60, to provide accuracy and finite derivatives.
+        const ScalarT mu_{240.0};
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;

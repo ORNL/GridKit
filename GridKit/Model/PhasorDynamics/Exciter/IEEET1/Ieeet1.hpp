@@ -152,8 +152,8 @@ namespace GridKit
 
         // Scale of Sigmoid function
         // (temporary local implementation)
-        // This value gave higher precision.
-        const RealT mu_{400000.0};
+        // mu set to 4*60, to provide accuracy and finite derivatives.
+        const RealT mu_{240.0};
 
         // Activation function (sigmoid approximation)
         ScalarT sigmoid(ScalarT x);
