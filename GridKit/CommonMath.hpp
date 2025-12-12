@@ -12,7 +12,7 @@ namespace GridKit
     /**
      * @brief Scaled sigmoid activation function
      *
-     * @note The sigmoid constant (mu) value of the constant to balance accuracy
+     * @note The sigmoid constant (mu) value is chosen to balance accuracy
      * and finite derivatives. Large values more closely approximate a step
      * function, but lead to inf or NaN derivatives. 
      * The value of 240 corresponds to a time step of 1/4 of a 60Hz cycle.
