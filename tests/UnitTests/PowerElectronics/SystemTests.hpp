@@ -144,14 +144,14 @@ namespace GridKit
         //"grounding" of the difference
         dg_ref->setExternalConnectionNodes(3, static_cast<size_t>(-1));
         // internal connections
-        for (size_t i = 0; i < 12; i++)
+        for (size_t i = 0; i < dg_ref->NUM_INTERNALS - 1; i++)
         {
           dg_ref->setExternalConnectionNodes(4 + i, i);
         }
         sysmodel->addComponent(dg_ref);
 
         // Keep track of models and index location
-        size_t indexv   = 12;
+        size_t indexv   = dg_ref->NUM_INTERNALS - 1;
         size_t model_id = 1;
         // Add all other DGs
         for (size_t i = 1; i < 2 * Nsize; i++)
@@ -166,11 +166,11 @@ namespace GridKit
           dg->setExternalConnectionNodes(1, vdqbus_index[i]);
           dg->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
           // internal connections
-          for (size_t j = 0; j < 13; j++)
+          for (size_t j = 0; j < dg_ref->NUM_INTERNALS; j++)
           {
             dg->setExternalConnectionNodes(3 + j, indexv + j);
           }
-          indexv += 13;
+          indexv += dg_ref->NUM_INTERNALS;
           sysmodel->addComponent(dg);
         }
 
@@ -241,9 +241,9 @@ namespace GridKit
         // Create Intial derivatives specifics generated in MATLAB
         for (size_t i = 0; i < 2 * Nsize; i++)
         {
-          sysmodel->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-          sysmodel->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-          sysmodel->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+          sysmodel->yp()[dg_ref->NUM_INTERNALS * i - 1 + 3] = DGParams_list[i].Vn_;
+          sysmodel->yp()[dg_ref->NUM_INTERNALS * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+          sysmodel->yp()[dg_ref->NUM_INTERNALS * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
         }
 
         // since the intial P_com = 0, the set the intial vector to the reference frame
