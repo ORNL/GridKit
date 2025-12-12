@@ -38,6 +38,7 @@
 - Updated Jacobian value storage from `ScalarT` to `RealT`.
 - Added a header file defining constants to be used throughout the code.
 - Added `GridKitDocs` target for Doxygen documentation.
+- Added a header file defining common math functions (e.g., sigmoid) to be used throughout the code.
 
 ## v0.1
 
