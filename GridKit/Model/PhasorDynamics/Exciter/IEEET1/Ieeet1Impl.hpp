@@ -237,28 +237,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Net Indicator function for regulator limits
-       *
-       * @param[in] x State variable
-       * @param[in] f Conditional derivative of state variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Scalar value indicating limit activation.
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
-      {
-
-        ScalarT ind_low  = (Math::sigmoid(Vrmin_ - x)) * (Math::sigmoid(-f));
-        ScalarT ind_high = (Math::sigmoid(x - Vrmax_)) * (Math::sigmoid(f));
-        return (ONE<RealT> - ind_low) * (ONE<RealT> - ind_high);
-      }
-
-      /**
        * @brief Residuals of system equations
        *
        */
@@ -306,7 +284,7 @@ namespace GridKit
 
         // The 'pre-limit' derivative of Pv
         ScalarT f      = -vr + Ka_ * vtr;
-        ScalarT vr_ind = this->indicator(vr, f);
+        ScalarT vr_ind = Math::indicator(Vrmin_, Vrmax_, vr, f);
 
         // Internal Differential Equations
         f_[0] = -vts_dot + (Ec_ - vts) / Tr_;

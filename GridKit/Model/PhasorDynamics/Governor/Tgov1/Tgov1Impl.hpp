@@ -230,33 +230,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Indicator function for lower valve limit violation.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator_low(ScalarT x, ScalarT f)
-      {
-        return (Math::sigmoid(Pvmin_ - x)) * (Math::sigmoid(-f));
-      }
-
-      /**
-       * @brief Indicator function for high valve limit violation.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator_high(ScalarT x, ScalarT f)
-      {
-        return (Math::sigmoid(x - Pvmax_)) * (Math::sigmoid(f));
-      }
-
-      /**
-       * @brief Net Indicator function for valve limits.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
-      {
-        return (ONE<RealT> - this->indicator_low(x, f)) * (ONE<RealT> - this->indicator_high(x, f));
-      }
-
-      /**
        * @brief Internal residuals
        *
        */
@@ -282,7 +255,7 @@ namespace GridKit
 
         // The 'pre-limit' derivative of Pv
         ScalarT func     = (-pv + (pref_ - omega) / R_) / T1_;
-        ScalarT valv_ind = this->indicator(pv, func);
+        ScalarT valv_ind = Math::indicator(Pvmin_, Pvmax_, pv, func);
 
         // Internal Differential Equations
         f[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;

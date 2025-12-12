@@ -150,9 +150,6 @@ namespace GridKit
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
-        // Indicator 
-        ScalarT indicator(ScalarT x, ScalarT f);
-
         // Parameter initialization function
         void initModelParams(const model_data_type& data);
       };
