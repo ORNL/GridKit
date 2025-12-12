@@ -25,7 +25,7 @@ namespace GridKit
     template <class ScalarT>
     __attribute__((always_inline)) inline ScalarT sigmoid(const ScalarT x)
     {
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using RealT               = typename GridKit::ScalarTraits<ScalarT>::RealT;
       static constexpr RealT MU = 240.0;
       return ONE<RealT> / (ONE<RealT> + std::exp(-MU * x));
     }
@@ -43,8 +43,8 @@ namespace GridKit
      */
     template <class ScalarT, typename RealT>
     __attribute__((always_inline)) inline ScalarT indicator_low(
-        const RealT limit_min, 
-        const ScalarT x, 
+        const RealT   limit_min,
+        const ScalarT x,
         const ScalarT f)
     {
       return sigmoid(limit_min - x) * sigmoid(-f);
@@ -63,8 +63,8 @@ namespace GridKit
      */
     template <class ScalarT, typename RealT>
     __attribute__((always_inline)) inline ScalarT indicator_high(
-        const RealT limit_max, 
-        const ScalarT x, 
+        const RealT   limit_max,
+        const ScalarT x,
         const ScalarT f)
     {
       return sigmoid(x - limit_max) * sigmoid(f);
@@ -84,9 +84,9 @@ namespace GridKit
      */
     template <class ScalarT, typename RealT>
     __attribute__((always_inline)) inline ScalarT indicator(
-        const RealT limit_min, 
-        const RealT limit_max, 
-        const ScalarT x, 
+        const RealT   limit_min,
+        const RealT   limit_max,
+        const ScalarT x,
         const ScalarT f)
     {
       return (ONE<RealT> - indicator_low(limit_min, x, f)) * (ONE<RealT> - indicator_high(limit_max, x, f));
