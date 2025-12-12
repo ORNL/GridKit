@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 #include <GridKit/ScalarTraits.hpp>
 

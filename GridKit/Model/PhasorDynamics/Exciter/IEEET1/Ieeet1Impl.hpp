@@ -237,26 +237,6 @@ namespace GridKit
       }
 
       /**
-       * @brief  Scaled sigmoid activation function
-       *
-       * @param[in] x State variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Sigmoid approximation evaluated at x
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       *
-       *   Algebraic approximation of transcendental sigmoid.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::sigmoid(ScalarT x)
-      {
-        return ONE<RealT> / (ONE<RealT> + std::exp(-mu_ * x));
-      }
-
-      /**
        * @brief Net Indicator function for regulator limits
        *
        * @param[in] x State variable
@@ -273,8 +253,8 @@ namespace GridKit
       ScalarT Ieeet1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
       {
 
-        ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
-        ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
+        ScalarT ind_low  = (Math::sigmoid(Vrmin_ - x)) * (Math::sigmoid(-f));
+        ScalarT ind_high = (Math::sigmoid(x - Vrmax_)) * (Math::sigmoid(f));
         return (ONE<RealT> - ind_low) * (ONE<RealT> - ind_high);
       }
 
@@ -340,7 +320,7 @@ namespace GridKit
         f_[6] = -ve + ksat * efdp;
         f_[7] = -efd + efdp + omega * efdp * Ispdlim_;
 
-        ScalarT efd_sat = (efdp - SA_) * (this->sigmoid(efdp - SA_));
+        ScalarT efd_sat = (efdp - SA_) * (Math::sigmoid(efdp - SA_));
         f_[8]           = -ksat + SB_ * efd_sat * efd_sat;
 
         return 0;

@@ -150,13 +150,7 @@ namespace GridKit
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
-        // Scale of Sigmoid function
-        // (temporary local implementation)
-        // mu set to 4*60, to provide accuracy and finite derivatives.
-        const RealT mu_{240.0};
-
-        // Activation function (sigmoid approximation)
-        ScalarT sigmoid(ScalarT x);
+        // Indicator 
         ScalarT indicator(ScalarT x, ScalarT f);
 
         // Parameter initialization function

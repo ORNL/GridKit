@@ -28,6 +28,7 @@ add_subdirectory(Solver)
 install(
   FILES
     Constants.hpp
+    CommonMath.hpp
     ScalarTraits.hpp
   DESTINATION
     include/GridKit)
