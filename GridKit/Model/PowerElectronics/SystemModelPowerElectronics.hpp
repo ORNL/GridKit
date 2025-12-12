@@ -273,13 +273,13 @@ namespace GridKit
 
         // Sort the row by column indices. Since the mapping from local indices to global indices isn't monotonically increasing,
         // this is necessary.
-        auto start = std::next(global_col_indices, global_row_indices[row]);
-        auto end   = std::next(global_col_indices, global_row_indices[row + 1]);
+        auto start = std::next(global_col_indices, static_cast<ptrdiff_t>(global_row_indices[row]));
+        auto end   = std::next(global_col_indices, static_cast<ptrdiff_t>(global_row_indices[row + 1]));
         std::sort(start, end);
 
         // De-duplicate the columns
         auto new_end                = std::unique(start, end);
-        global_row_indices[row + 1] = global_row_indices[row] + std::distance(start, new_end);
+        global_row_indices[row + 1] = global_row_indices[row] + static_cast<IdxT>(std::distance(start, new_end));
       }
       // Allocate new sparsity buffers
       IdxT nnz = global_row_indices[size_];
