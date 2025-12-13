@@ -3,7 +3,6 @@
 #include <iostream>
 #include <limits>
 
-
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -26,8 +25,8 @@ namespace GridKit
     class GovernorTgov1Tests
     {
     private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using real_type = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:
@@ -60,7 +59,7 @@ namespace GridKit
        * This section is the updated residual, not residual initialization.
        */
 
-       TestOutcome residual()
+      TestOutcome residual()
       {
         TestStatus success = true;
 
@@ -100,7 +99,7 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
         PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
         PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
-        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);        
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
@@ -120,13 +119,13 @@ namespace GridKit
         gov.evaluateResidual();
 
         // Set variable values matching the answer key
-        gov.y()[0] = 1.0;   // Ptx
-        gov.y()[1] = 1.0;   // Pv
-        gov.y()[2] = static_cast<ScalarT>(10.0)/static_cast<ScalarT>(15.0);   // Pmech
+        gov.y()[0] = 1.0;                                                     // Ptx
+        gov.y()[1] = 1.0;                                                     // Pv
+        gov.y()[2] = static_cast<ScalarT>(10.0) / static_cast<ScalarT>(15.0); // Pmech
 
         // Set derivative values matching the answer key
-        gov.yp()[0] = static_cast<ScalarT>(8.0)/static_cast<ScalarT>(15.0);       // ptx_dot
-        gov.yp()[1] = 2.0;          // pv_dot
+        gov.yp()[0] = static_cast<ScalarT>(8.0) / static_cast<ScalarT>(15.0); // ptx_dot
+        gov.yp()[1] = 2.0;                                                    // pv_dot
 
         gov.evaluateResidual();
         std::vector<ScalarT>& residual = gov.getResidual();
@@ -153,7 +152,7 @@ namespace GridKit
        * precision.
        *
        * @return TestOutcome - wheter test was successful
-       * 
+       *
        * (Verifies the residual evaluates to zero for the initial conditions)
        */
       TestOutcome zeroInitialResidual()
