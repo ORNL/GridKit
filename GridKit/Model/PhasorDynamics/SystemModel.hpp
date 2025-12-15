@@ -622,6 +622,29 @@ namespace GridKit
       }
 
       /**
+       * @brief Update variables in buses and components
+       */
+      void updateVariables()
+      {
+        for (const auto& bus : buses_)
+        {
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus->y()[j]  = y_[bus->getVariableIndex(j)];
+            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
+          }
+        }
+        for (const auto& component : components_)
+        {
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component->y()[j]  = y_[component->getVariableIndex(j)];
+            component->yp()[j] = yp_[component->getVariableIndex(j)];
+          }
+        }
+      }
+
+      /**
        * @brief Update time
        *
        */
@@ -632,6 +655,8 @@ namespace GridKit
         {
           component->updateTime(t, a);
         }
+
+        updateVariables();
       }
 
       /**
