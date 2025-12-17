@@ -249,17 +249,6 @@ For consistency, use the same name everywhere the same type is used.
   template <typename real_type>; // No, `_type` used in a template parameter name
 ```
 
-### Enums (enumerated types)
-
-Always define `enum`s inside `GridKit` namespace. Type names should be
-capitalized and the constant names should be uppercase with underscores
-(but there is no underscore at the end!).
-
-```c++
-  enum ExampleEnum { CONST_ONE = 0,
-                     CONST_TWO = 8,
-                     YET_ANOTHER_CONST = 17 };
-```
 
 ### Constants
 
