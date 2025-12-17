@@ -436,12 +436,20 @@ namespace GridKit
       {
         for (const auto* bus : buses_)
         {
-          monitor_.addMonitor(bus->getMonitor());
+          auto* mon = bus->getMonitor();
+          if (mon && !mon->empty())
+          {
+            monitor_.addMonitor(mon);
+          }
         }
 
         for (const auto* component : components_)
         {
-          monitor_.addMonitor(component->getMonitor());
+          auto* mon = component->getMonitor();
+          if (mon && !mon->empty())
+          {
+            monitor_.addMonitor(mon);
+          }
         }
       }
 
