@@ -121,20 +121,10 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_{0};
 
-        // Scale of Sigmoid function (temporary local implementation)
-        const ScalarT mu_{4000.0};
-
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
-        // Activation function (sigmoid approximation)
-        ScalarT sigmoid(ScalarT x);
-
-        // Indicator of Valve limit states
-        ScalarT indicator_low(ScalarT x, ScalarT f);
-        ScalarT indicator_high(ScalarT x, ScalarT f);
-        ScalarT indicator(ScalarT x, ScalarT f);
-
+        // Parameter initialization function
         void initializeParameters(const model_data_type& data);
 
         /* Local copies of external variables */

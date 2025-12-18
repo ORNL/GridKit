@@ -155,58 +155,11 @@ The indicator function $\phi$ can be defined in terms of a scaled activation fun
 \end{aligned}
 ```
 
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function. This is further approximated by an algebraic form to obtain a practical function during implementation.
+The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function.
 ```math
 \begin{aligned}
    \sigma(x) = 
       \dfrac{1}{1+\exp(-\alpha x)}
-   \approx 
-      \dfrac{1}{2}
-      \left(
-         \dfrac{\alpha x}{1+|\alpha x|} + 1
-      \right)
-\end{aligned}
-```
-
-Applying these approximations produces a smooth approximation of the explicit differential equation of $V_R$. The approximation written out below approaches an exact solution as $\alpha\to\infty$.
-
-<!--
-Very explicit version, if prefered
-```math
-\begin{aligned}
-   \dot{V}_R 
-   &\approx \dfrac{K_{a}V_{tr}-V_{R}}{T_A}
-      \left[
-         1 +
-         \dfrac{\alpha^2(V_{rmin}\text{-}V_R)(K_{a}V_{tr}-V_{R})}
-         {4(1+\alpha |V_{rmin}\text{-}V_R|)(T_A+\alpha |K_{a}V_{tr}-V_{R}|)}
-      \right]
-      \left[
-         1-
-            \dfrac{\alpha^2(V_R\text{-}V_{rmax})(K_{a}V_{tr}-V_{R})}
-            {4(1+\alpha| V_R\text{-}V_{rmax}|)(T_A+\alpha |K_{a}V_{tr}-V_{R}|)}
-      \right]\\
-\end{aligned}
-```
--->
-```math
-\begin{aligned}
-   \dot{V}_R 
-   &\approx f
-      \left[
-         1 +
-         \dfrac{\alpha^2}{4}
-         \dfrac{V_{rmin}\text{-}V_R}
-         {1+\alpha |V_{rmin}\text{-}V_R|}
-         \dfrac{f}{1+\alpha |f|}
-      \right]
-      \left[
-         1-
-         \dfrac{\alpha^2}{4}
-         \dfrac{V_R\text{-}V_{rmax}}
-            {1+\alpha| V_R\text{-}V_{rmax}|}
-            \dfrac{f}{1+\alpha |f|}
-      \right]\\
 \end{aligned}
 ```
 
@@ -228,22 +181,19 @@ The algebraic equations of the exciter.
    \end{cases} \\
 \end{aligned}
 ```
-
 #### Smooth Piecewise Approximation (Algebraic) 
 
 For the algebraic piecewise functions (non-flags), this implementation is straightforward when the approximation above is used.
 ```math
 \begin{aligned}
+    E_{fd}
+    &=(1 + \omega I_{spdlm})E_{fd}' \\ 
     k_{sat}
-    &=\sigma (E_{fd}' -S_A) \cdot S_B(E_{fd}' -S_A)^2   
+    &=S_B\left[(E_{fd}' -S_A) \cdot \sigma (E_{fd}' -S_A)\right]^2   
 \end{aligned}
 ```
-The approximation written out below approaches an exact solution as $\alpha\to\infty$.
-```math
-\begin{aligned}
-    k_{sat}&\approx\dfrac{\alpha S_B}{2} \dfrac{(E_{fd}' -S_A)^3}{1+\alpha|E_{fd}' -S_A|}
-\end{aligned}
-```
+
+The approximation approaches an exact solution as $\alpha\to\infty$.
 
 ## Initialization
 

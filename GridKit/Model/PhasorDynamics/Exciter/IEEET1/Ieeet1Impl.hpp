@@ -237,48 +237,6 @@ namespace GridKit
       }
 
       /**
-       * @brief  Scaled sigmoid activation function
-       *
-       * @param[in] x State variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Sigmoid approximation evaluated at x
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       *
-       *   Algebraic approximation of transcendental sigmoid.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::sigmoid(ScalarT x)
-      {
-        return ((HALF<RealT> * mu_ * x) / (ONE<RealT> + std::abs(mu_ * x))) + HALF<RealT>;
-      }
-
-      /**
-       * @brief Net Indicator function for regulator limits
-       *
-       * @param[in] x State variable
-       * @param[in] f Conditional derivative of state variable
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
-       * @return Scalar value indicating limit activation.
-       *
-       * @warning This needs to be abstracted to be used
-       *          across phasor dynamics. Identical pattern is
-       *          being used in TGOV1 model.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Ieeet1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
-      {
-
-        ScalarT ind_low  = (this->sigmoid(Vrmin_ - x)) * (this->sigmoid(-f));
-        ScalarT ind_high = (this->sigmoid(x - Vrmax_)) * (this->sigmoid(f));
-        return (ONE<RealT> - ind_low) * (ONE<RealT> - ind_high);
-      }
-
-      /**
        * @brief Residuals of system equations
        *
        */
@@ -326,7 +284,7 @@ namespace GridKit
 
         // The 'pre-limit' derivative of Pv
         ScalarT f      = -vr + Ka_ * vtr;
-        ScalarT vr_ind = this->indicator(vr, f);
+        ScalarT vr_ind = Math::indicator(Vrmin_, Vrmax_, vr, f);
 
         // Internal Differential Equations
         f_[0] = -vts_dot + (Ec_ - vts) / Tr_;
@@ -340,11 +298,8 @@ namespace GridKit
         f_[6] = -ve + ksat * efdp;
         f_[7] = -efd + efdp + omega * efdp * Ispdlim_;
 
-        // TODO smooth approaximation for Enzyme
-        // NOTE seems about double PW saturation.
-        f_[8] = -ksat;
-        if (efdp > SA_)
-          f_[8] += SB_ * (efdp - SA_) * (efdp - SA_);
+        ScalarT efd_sat = (efdp - SA_) * (Math::sigmoid(efdp - SA_));
+        f_[8]           = -ksat + SB_ * efd_sat * efd_sat;
 
         return 0;
       }

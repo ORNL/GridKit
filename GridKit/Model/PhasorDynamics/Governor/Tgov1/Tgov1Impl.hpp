@@ -230,48 +230,6 @@ namespace GridKit
       }
 
       /**
-       * @brief Scaled sigmoid activation function
-       *
-       * Temporary local implementation of smooth approximation
-       * of a piecewise differential equation. Ideally this is
-       * a more abstracted capability with GK.
-       *
-       * Algebraic approximation of transcendental sigmoid.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::sigmoid(ScalarT x)
-      {
-        return ((HALF<RealT> * mu_ * x) / (ONE<RealT> + std::abs(mu_ * x))) + HALF<RealT>;
-      }
-
-      /**
-       * @brief Indicator function for lower valve limit violation.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator_low(ScalarT x, ScalarT f)
-      {
-        return (this->sigmoid(Pvmin_ - x)) * (this->sigmoid(-f));
-      }
-
-      /**
-       * @brief Indicator function for high valve limit violation.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator_high(ScalarT x, ScalarT f)
-      {
-        return (this->sigmoid(x - Pvmax_)) * (this->sigmoid(f));
-      }
-
-      /**
-       * @brief Net Indicator function for valve limits.
-       */
-      template <class ScalarT, typename IdxT>
-      ScalarT Tgov1<ScalarT, IdxT>::indicator(ScalarT x, ScalarT f)
-      {
-        return (ONE<RealT> - this->indicator_low(x, f)) * (ONE<RealT> - this->indicator_high(x, f));
-      }
-
-      /**
        * @brief Internal residuals
        *
        */
@@ -297,7 +255,7 @@ namespace GridKit
 
         // The 'pre-limit' derivative of Pv
         ScalarT func     = (-pv + (pref_ - omega) / R_) / T1_;
-        ScalarT valv_ind = this->indicator(pv, func);
+        ScalarT valv_ind = Math::indicator(Pvmin_, Pvmax_, pv, func);
 
         // Internal Differential Equations
         f[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
