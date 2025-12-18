@@ -1,5 +1,7 @@
+#define _USE_MATH_DEFINES /* need this since directly including GenClassical.cpp for MSVC compiler */
 #include <iomanip>
 #include <iostream>
+#include <limits>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
@@ -23,7 +25,9 @@ namespace GridKit
     class GovernorTgov1Tests
     {
     private:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
     public:
       GovernorTgov1Tests()  = default;
@@ -51,6 +55,96 @@ namespace GridKit
       }
 
       /**
+       * For Tgov:
+       * This section is the updated residual, not residual initialization.
+       */
+
+      TestOutcome residual()
+      {
+        TestStatus success = true;
+
+        using BusType          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
+        using GenrouParameters = PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
+        using GenrouPorts      = PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
+
+        PhasorDynamics::BusData<ScalarT, IdxT> busdata;
+        busdata.bus_id   = 0;
+        busdata.bus_type = BusType::DEFAULT;
+        busdata.Vr0      = 1.0;
+        busdata.Vi0      = 0.0;
+
+        PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
+        gendata.ports[GenrouPorts::bus] = 0;
+
+        gendata.parameters[GenrouParameters::p0]    = 1.;
+        gendata.parameters[GenrouParameters::q0]    = 0.05013;
+        gendata.parameters[GenrouParameters::H]     = 3.;
+        gendata.parameters[GenrouParameters::D]     = 0.;
+        gendata.parameters[GenrouParameters::Ra]    = 0.;
+        gendata.parameters[GenrouParameters::Tdop]  = 7.;
+        gendata.parameters[GenrouParameters::Tdopp] = .04;
+        gendata.parameters[GenrouParameters::Tqopp] = .05;
+        gendata.parameters[GenrouParameters::Tqop]  = .75;
+        gendata.parameters[GenrouParameters::Xd]    = 2.1;
+        gendata.parameters[GenrouParameters::Xdp]   = 0.2;
+        gendata.parameters[GenrouParameters::Xdpp]  = 0.18;
+        gendata.parameters[GenrouParameters::Xq]    = 0.5;
+        gendata.parameters[GenrouParameters::Xqp]   = 0.5;
+        gendata.parameters[GenrouParameters::Xqpp]  = 0.18;
+        gendata.parameters[GenrouParameters::Xl]    = 0.15;
+        gendata.parameters[GenrouParameters::S10]   = 0.;
+        gendata.parameters[GenrouParameters::S12]   = 0.;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      omega;
+        PhasorDynamics::Genrou<ScalarT, IdxT>          gen(&bus, &omega, &pmech, gendata);
+        PhasorDynamics::Governor::Tgov1<ScalarT, IdxT> gov(&pmech, &omega);
+
+        // Test answer keys
+        const std::vector<ScalarT> res_answer = {0.0,
+                                                 -2.0,
+                                                 -0.2};
+
+        bus.allocate();
+        gen.allocate();
+        gov.allocate();
+
+        bus.initialize();
+        gen.initialize();
+        gov.initialize();
+
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        gov.evaluateResidual();
+
+        // Set variable values matching the answer key
+        gov.y()[0] = 1.0;                                                     // Ptx
+        gov.y()[1] = 1.0;                                                     // Pv
+        gov.y()[2] = static_cast<ScalarT>(10.0) / static_cast<ScalarT>(15.0); // Pmech
+
+        // Set derivative values matching the answer key
+        gov.yp()[0] = static_cast<ScalarT>(8.0) / static_cast<ScalarT>(15.0); // ptx_dot
+        gov.yp()[1] = 2.0;                                                    // pv_dot
+
+        gov.evaluateResidual();
+        std::vector<ScalarT>& residual = gov.getResidual();
+
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          if (!isEqual(residual[i], res_answer[i], tol_))
+          {
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << residual[i] << " != " << res_answer[i] << "\n";
+            success = false;
+            break;
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Checks residual evaluation.
        *
        * The test instantiates and initializes Genrou model. Properly
@@ -58,8 +152,10 @@ namespace GridKit
        * precision.
        *
        * @return TestOutcome - wheter test was successful
+       *
+       * (Verifies the residual evaluates to zero for the initial conditions)
        */
-      TestOutcome residual()
+      TestOutcome zeroInitialResidual()
       {
         TestStatus success = true;
 
