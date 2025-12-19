@@ -80,8 +80,8 @@ namespace GridKit
       }
 
       using Variable = typename DataT::MonitorableVariables;
-      // monitor_.set(Variable::state, [this]
-      //              { return status_; });
+      monitor_.set(Variable::state, [this]
+                   { return status_; });
       monitor_.set(Variable::ir, [this]
                    { return Ir(); });
       monitor_.set(Variable::ii, [this]

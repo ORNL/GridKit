@@ -58,18 +58,16 @@ namespace GridKit
 
     public:
       /// Underlying real value type
-      using RealT         = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using RealT        = typename GridKit::ScalarTraits<ScalarT>::RealT;
       /// Type of (EvalT)Data class expected to have MonitorableVariables enum
-      using ObjData       = DataT<RealT, IdxT>;
+      using ObjData      = DataT<RealT, IdxT>;
       /// Enum of valid monitorable variables
-      using VariableEnum  = typename ObjData::MonitorableVariables;
-      /// Abstraction type for functions returning a monitored value
-      using ValueFunction = std::function<ScalarT(void)>;
+      using VariableEnum = typename ObjData::MonitorableVariables;
       ///@{
       /// @brief Alias
-      using Csv           = VariableMonitorBase::Csv;
-      using Json          = VariableMonitorBase::Json;
-      using Yaml          = VariableMonitorBase::Yaml;
+      using Csv          = VariableMonitorBase::Csv;
+      using Json         = VariableMonitorBase::Json;
+      using Yaml         = VariableMonitorBase::Yaml;
       ///@}
 
       VariableMonitor() = default;
@@ -117,12 +115,66 @@ namespace GridKit
        * @note This does not designate the variable for printing. It defines how
        * to get the variable if it is printed.
        */
-      void set(VariableEnum v, ValueFunction f)
+      template <typename FuncT>
+      void set(VariableEnum v, FuncT f)
       {
-        f_[Utilities::enumId(v)] = f;
+        f_[Utilities::enumId(v)] = ValuePrinter{f};
       }
 
-    protected:
+    private:
+      ///@{
+      /**
+       * @brief Functors to handle printing different types
+       */
+      template <typename FuncT, typename RetT>
+      struct ValuePrinterImpl
+      {
+        FuncT f;
+
+        void operator()(std::ostream& os) const
+        {
+          os << f();
+        }
+      };
+
+      template <typename FuncT>
+      struct ValuePrinterImpl<FuncT, ScalarT>
+      {
+        FuncT f;
+
+        void operator()(std::ostream& os) const
+        {
+          os << static_cast<RealT>(f());
+        }
+      };
+
+      template <typename FuncT>
+      using ValuePrinterType =
+          ValuePrinterImpl<FuncT, std::invoke_result_t<FuncT>>;
+
+      class ValuePrinter
+      {
+      public:
+        ValuePrinter() = default;
+
+        template <typename FuncT>
+        ValuePrinter(FuncT f)
+          : impl_{ValuePrinterType<FuncT>(f)}
+        {
+        }
+
+      private:
+        std::function<void(std::ostream&)> impl_;
+
+        friend std::ostream& operator<<(std::ostream& os, const ValuePrinter& p)
+        {
+          p.impl_(os);
+          return os;
+        }
+      };
+
+      ///@}
+
       void printHeader(std::ostream& os, Csv csv) const override
       {
         for (auto v : variables_)
@@ -135,7 +187,7 @@ namespace GridKit
       {
         for (auto v : variables_)
         {
-          os << csv.delim << f(v);
+          os << csv.delim << f_[Utilities::enumId(v)];
         }
       }
 
@@ -144,7 +196,7 @@ namespace GridKit
        */
       void print(std::ostream& os, VariableEnum v, Json) const
       {
-        os << indent_ << std::quoted(enumLabel(v)) << ": " << f(v) << ",\n";
+        os << indent_ << std::quoted(enumLabel(v)) << ": " << f_[Utilities::enumId(v)] << ",\n";
       }
 
       void print(std::ostream& os, Json) const override
@@ -177,7 +229,7 @@ namespace GridKit
        */
       void print(std::ostream& os, VariableEnum v, Yaml) const
       {
-        os << indent_ << enumLabel(v) << ": " << f(v) << '\n';
+        os << indent_ << enumLabel(v) << ": " << f_[Utilities::enumId(v)] << '\n';
       }
 
       void print(std::ostream& os, Yaml) const override
@@ -199,22 +251,14 @@ namespace GridKit
       /// Compile-time constant size: length of enum value list
       static constexpr auto enum_size_ = Utilities::enumSize<VariableEnum>;
 
-      /**
-       * @brief Convenience function to access value associated with enum value
-       */
-      auto f(VariableEnum v) const
-      {
-        return static_cast<RealT>(f_[Utilities::enumId(v)]());
-      }
-
       /// Set of functions associated with each enum value
-      std::array<ValueFunction, enum_size_> f_;
+      std::array<ValuePrinter, enum_size_> f_;
       /// Set of selected enum values
-      std::vector<VariableEnum>             variables_;
+      std::vector<VariableEnum>            variables_;
       /// Indent string used for formatting
-      mutable std::string                   indent_{"    "};
+      mutable std::string                  indent_{"    "};
       /// Monitor disambiguation label
-      std::string                           label_;
+      std::string                          label_;
     };
 
     /**
@@ -231,16 +275,14 @@ namespace GridKit
     {
     public:
       /// Underlying real value type
-      using RealT         = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      /// Abstraction type for functions returning a monitored value
-      using ValueFunction = std::function<RealT(void)>;
+      using RealT    = typename GridKit::ScalarTraits<ScalarT>::RealT;
       ///@{
       /// @brief Alias
-      using Format        = VariableMonitorFormat;
-      using SinkSpec      = VariableMonitorBase::SinkSpec;
-      using Csv           = VariableMonitorBase::Csv;
-      using Json          = VariableMonitorBase::Json;
-      using Yaml          = VariableMonitorBase::Yaml;
+      using Format   = VariableMonitorFormat;
+      using SinkSpec = VariableMonitorBase::SinkSpec;
+      using Csv      = VariableMonitorBase::Csv;
+      using Json     = VariableMonitorBase::Json;
+      using Yaml     = VariableMonitorBase::Yaml;
       ///@}
 
       /// Default to empty monitor

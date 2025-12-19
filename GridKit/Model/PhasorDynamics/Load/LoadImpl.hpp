@@ -52,7 +52,7 @@ namespace GridKit
         X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
       }
 
-      using Variable = typename model_data_type::MonitorableVariables;
+      // using Variable = typename model_data_type::MonitorableVariables;
       // monitor_.set(Variable::p, [this] { return ?; });
       // monitor_.set(Variable::q, [this] { return ?; });
 
