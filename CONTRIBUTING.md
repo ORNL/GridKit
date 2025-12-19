@@ -249,17 +249,6 @@ For consistency, use the same name everywhere the same type is used.
   template <typename real_type>; // No, `_type` used in a template parameter name
 ```
 
-### Enums (enumerated types)
-
-Always define `enum`s inside `GridKit` namespace. Type names should be
-capitalized and the constant names should be uppercase with underscores
-(but there is no underscore at the end!).
-
-```c++
-  enum ExampleEnum { CONST_ONE = 0,
-                     CONST_TWO = 8,
-                     YET_ANOTHER_CONST = 17 };
-```
 
 ### Constants
 
@@ -272,6 +261,23 @@ name. Use all caps (screaming snake case).
    constexpr double SQRT_TWO = 1.4142 // Yes
    constexpr double SQRTTWO = 1.4142  // No, the two words not separated by "_"
    constexpr double EXP = 2.7183      // Yes
+```
+
+### Enums (enumerated types)
+
+Always define `enum`s inside `GridKit` namespace. The `enum` name should
+be upper camel case, same as class names. The `enum` element names should
+match symbol for physics quantity they represent or they should be uppercase
+(same as names for constants) if they do not represent a physics quantity.
+For example, enum element for real component of voltage $V_r$ should be `Vr`.
+A name for `enum` element for a "fast mode", for example, should be something
+like `FAST_MODE`, capitalized with underscores separating words (but no
+underscore at the end!).
+
+```c++
+  enum ExampleEnum { Vr, // Yes, it matches symbol for real voltage component
+                     VR, // No, the element name should match the physics symbol
+                     FAST_MODE}; // Yes, element name is all caps.
 ```
 
 ### Pointers and references
