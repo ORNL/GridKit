@@ -170,7 +170,7 @@ namespace GridKit
       IdxT      bus1_id_{0};
       IdxT      bus2_id_{0};
 
-      /* Derivied parameters */
+      /* Derived parameters */
       RealT b_;
       RealT g_;
 
