@@ -32,16 +32,16 @@ namespace GridKit
     /// Variables able to be monitored for a branch
     enum class BranchMonitorableVariables
     {
-      IR1,
-      II1,
-      IM1,
-      P1,
-      Q1,
-      IR2,
-      II2,
-      IM2,
-      P2,
-      Q2,
+      ir1,
+      ii1,
+      im1,
+      p1,
+      q1,
+      ir2,
+      ii2,
+      im2,
+      p2,
+      q2,
       SIZE
     };
 
@@ -51,16 +51,16 @@ namespace GridKit
     inline const std::string& enumLabel(BranchMonitorableVariables v)
     {
       static const std::string labels[] = {
-          "Ir1",
-          "Ii1",
-          "Im1",
-          "P1",
-          "Q1",
-          "Ir2",
-          "Ii2",
-          "Im2",
-          "P2",
-          "Q2"};
+          "ir1",
+          "ii1",
+          "im1",
+          "p1",
+          "q1",
+          "ir2",
+          "ii2",
+          "im2",
+          "p2",
+          "q2"};
       return labels[Utilities::enumId(v)];
     }
 

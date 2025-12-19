@@ -289,20 +289,20 @@ namespace GridKit
     void Branch<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
-      monitor_.set(Variable::IR1, [this]
+      monitor_.set(Variable::ir1, [this]
                    { return Ir1(); });
-      monitor_.set(Variable::II1, [this]
+      monitor_.set(Variable::ii1, [this]
                    { return Ii1(); });
-      // monitor_.set(Variable::IM1, [this] { return ?(); });
-      // monitor_.set(Variable::P1, [this] { return ?(); });
-      // monitor_.set(Variable::Q1, [this] { return ?(); });
-      monitor_.set(Variable::IR2, [this]
+      // monitor_.set(Variable::im1, [this] { return ?(); });
+      // monitor_.set(Variable::p1, [this] { return ?(); });
+      // monitor_.set(Variable::q1, [this] { return ?(); });
+      monitor_.set(Variable::ir2, [this]
                    { return Ir2(); });
-      monitor_.set(Variable::II2, [this]
+      monitor_.set(Variable::ii2, [this]
                    { return Ii2(); });
-      // monitor_.set(Variable::IM2, [this] { return ?(); });
-      // monitor_.set(Variable::P2, [this] { return ?(); });
-      // monitor_.set(Variable::Q2, [this] { return ?(); });
+      // monitor_.set(Variable::im2, [this] { return ?(); });
+      // monitor_.set(Variable::p2, [this] { return ?(); });
+      // monitor_.set(Variable::q2, [this] { return ?(); });
     }
 
     /**

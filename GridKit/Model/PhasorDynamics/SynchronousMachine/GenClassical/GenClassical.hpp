@@ -9,6 +9,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -90,7 +92,13 @@ namespace GridKit
         ep_set_ = ep;
       }
 
+      const Model::VariableMonitorBase* getMonitor() const override
+      {
+        return &monitor_;
+      }
+
     private:
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -141,6 +149,9 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
+
+      /// Variable monitor
+      Model::VariableMonitor<GenClassical, GenClassicalData> monitor_;
     };
 
   } // namespace PhasorDynamics

@@ -46,8 +46,8 @@ namespace GridKit
       /// Variables able to be monitored for a IEEET1 Exciter model
       enum class Ieeet1MonitorableVariables
       {
-        EFD,
-        KSAT,
+        efd,
+        ksat,
         SIZE
       };
 

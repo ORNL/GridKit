@@ -49,12 +49,12 @@ namespace GridKit
     /// Variables able to be monitored for a Genrou generator model
     enum class GenrouMonitorableVariables
     {
-      IR,
-      II,
-      P,
-      Q,
-      DELTA,
-      OMEGA,
+      ir,
+      ii,
+      p,
+      q,
+      delta,
+      omega,
       SIZE
     };
 
@@ -64,12 +64,12 @@ namespace GridKit
     inline const std::string& enumLabel(GenrouMonitorableVariables v)
     {
       static const std::string labels[] = {
-          "Ir",
-          "Ii",
-          "P",
-          "Q",
-          "Delta",
-          "Omega"};
+          "ir",
+          "ii",
+          "p",
+          "q",
+          "delta",
+          "omega"};
       return labels[Utilities::enumId(v)];
     }
 

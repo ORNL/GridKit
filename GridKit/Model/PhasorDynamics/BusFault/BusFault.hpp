@@ -4,6 +4,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
@@ -77,6 +78,11 @@ namespace GridKit
         status_ = status;
       }
 
+      const Model::VariableMonitorBase* getMonitor() const override
+      {
+        return &monitor_;
+      }
+
     private:
       void setDerivedParams();
 
@@ -113,6 +119,9 @@ namespace GridKit
       /* Derivied parameters */
       RealT B_;
       RealT G_;
+
+      /// Variable monitor
+      Model::VariableMonitor<BusFault, BusFaultData> monitor_;
     };
 
   } // namespace PhasorDynamics

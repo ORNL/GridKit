@@ -92,8 +92,8 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VR);
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VI);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
@@ -131,8 +131,8 @@ namespace GridKit
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
         success *= result.genrou[0].ports[GenrouPorts::bus] == 1;
         success *= result.genrou[0].disambiguation_string == "1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::DELTA);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::OMEGA);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
@@ -205,8 +205,8 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VR);
-        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::VI);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
@@ -254,8 +254,8 @@ namespace GridKit
         success *= result.genrou[0].ports[GenrouPorts::pmech] == 2;
         success *= result.genrou[0].ports[GenrouPorts::efd] == 3;
         success *= result.genrou[0].disambiguation_string == "DV1";
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::DELTA);
-        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::OMEGA);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
+        success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
 
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::R]) == 0.05;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::T1]) == 0.5;

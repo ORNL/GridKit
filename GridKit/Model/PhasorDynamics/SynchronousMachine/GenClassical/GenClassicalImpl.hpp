@@ -113,8 +113,26 @@ namespace GridKit
         bus_id_ = data.ports.at(DataT::Ports::bus);
       }
 
+      initializeMonitor();
+
       size_ = 5;
       setDerivedParams();
+    }
+
+    template <class ScalarT, typename IdxT>
+    void GenClassical<ScalarT, IdxT>::initializeMonitor()
+    {
+      using Variable = typename DataT::MonitorableVariables;
+      monitor_.set(Variable::ir, [this]
+                   { return y_[3]; });
+      monitor_.set(Variable::ii, [this]
+                   { return y_[4]; });
+      // monitor_.set(Variable::p, [this] { return ?(); });
+      // monitor_.set(Variable::q, [this] { return ?(); });
+      monitor_.set(Variable::delta, [this]
+                   { return y_[0]; });
+      monitor_.set(Variable::omega, [this]
+                   { return y_[1]; });
     }
 
     /**

@@ -28,9 +28,19 @@ namespace GridKit
     /// Variables able to be monitored for a load
     enum class LoadMonitorableVariables
     {
-      // TODO: presumably some variables would make sense to monitor here
-      NONE
+      p,
+      q,
+      SIZE
     };
+
+    /**
+     * @brief Convert enum value to string label
+     */
+    inline const std::string& enumLabel(LoadMonitorableVariables v)
+    {
+      static const std::string labels[] = {"p", "q"};
+      return labels[Utilities::enumId(v)];
+    }
 
     /**
      * @brief Contains modeling data for a load

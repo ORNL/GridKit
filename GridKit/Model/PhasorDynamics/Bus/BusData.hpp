@@ -20,10 +20,10 @@ namespace GridKit
     /// Indices of the variables able to be monitored on this component
     enum class BusMonitorableVariables : size_t
     {
-      VR,
-      VI,
-      VM,
-      VA,
+      Vr,
+      Vi,
+      Vm,
+      Va,
       SIZE
     };
 

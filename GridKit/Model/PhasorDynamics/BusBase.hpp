@@ -31,9 +31,9 @@ namespace GridKit
           monitor_("Bus_" + data.name, data.monitored_variables)
       {
         using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
-        monitor_.set(Variable::VR, [this]()
+        monitor_.set(Variable::Vr, [this]
                      { return Vr(); });
-        monitor_.set(Variable::VI, [this]()
+        monitor_.set(Variable::Vi, [this]
                      { return Vi(); });
       }
 

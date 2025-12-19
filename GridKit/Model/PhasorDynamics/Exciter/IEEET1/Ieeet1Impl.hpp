@@ -400,9 +400,9 @@ namespace GridKit
       void Ieeet1<ScalarT, IdxT>::initializeMonitor()
       {
         using Variable = model_data_type::MonitorableVariables;
-        monitor_.set(Variable::EFD, [this]
+        monitor_.set(Variable::efd, [this]
                      { return efd_signal_->read(); });
-        // monitor_.set(Variable::KSAT, [this] { return ?; });
+        // monitor_.set(Variable::ksat, [this] { return ?; });
       }
     } // namespace Exciter
   } // namespace PhasorDynamics

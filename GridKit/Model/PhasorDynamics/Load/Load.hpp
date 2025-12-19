@@ -2,6 +2,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -99,6 +101,11 @@ namespace GridKit
         return bus_->Ii();
       }
 
+      const Model::VariableMonitorBase* getMonitor() const override
+      {
+        return &monitor_;
+      }
+
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
@@ -110,6 +117,8 @@ namespace GridKit
       /* Derivied parameters */
       RealT b_;
       RealT g_;
+
+      Model::VariableMonitor<Load, LoadData> monitor_;
     };
 
   } // namespace PhasorDynamics

@@ -79,6 +79,14 @@ namespace GridKit
         bus_id_ = data.ports.at(DataT::Ports::bus);
       }
 
+      using Variable = typename DataT::MonitorableVariables;
+      // monitor_.set(Variable::state, [this]
+      //              { return status_; });
+      monitor_.set(Variable::ir, [this]
+                   { return Ir(); });
+      monitor_.set(Variable::ii, [this]
+                   { return Ii(); });
+
       size_ = 0;
       setDerivedParams();
     }
