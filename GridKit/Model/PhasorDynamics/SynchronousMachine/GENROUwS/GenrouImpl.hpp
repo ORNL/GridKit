@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -113,7 +114,7 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
       : bus_(bus),
         unit_id_(1),
-        monitor_(data)
+        monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
       initializeMonitor();
@@ -129,7 +130,7 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data)
       : bus_(bus),
         unit_id_(1),
-        monitor_(data)
+        monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
@@ -147,7 +148,7 @@ namespace GridKit
     Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, signal_type* efd, const model_data_type& data)
       : bus_(bus),
         unit_id_(1),
-        monitor_(data)
+        monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
@@ -157,6 +158,11 @@ namespace GridKit
 
       size_ = 19;
       setDerivedParams();
+    }
+
+    template <class ScalarT, typename IdxT>
+    Genrou<ScalarT, IdxT>::~Genrou()
+    {
     }
 
     /// Helper function to extract and assign model parameters from the model's associated
@@ -266,19 +272,25 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* Genrou<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
+    }
+
+    template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
-      monitor_.set(Variable::ir, [this]
-                   { return y_[15]; });
-      monitor_.set(Variable::ii, [this]
-                   { return y_[16]; });
-      // monitor_.set(Variable::p, [this] { return ?(); });
-      // monitor_.set(Variable::q, [this] { return ?(); });
-      monitor_.set(Variable::delta, [this]
-                   { return y_[0]; });
-      monitor_.set(Variable::omega, [this]
-                   { return y_[1]; });
+      monitor_->set(Variable::ir, [this]
+                    { return y_[15]; });
+      monitor_->set(Variable::ii, [this]
+                    { return y_[16]; });
+      // monitor_->set(Variable::p, [this] { return ?(); });
+      // monitor_->set(Variable::q, [this] { return ?(); });
+      monitor_->set(Variable::delta, [this]
+                    { return y_[0]; });
+      monitor_->set(Variable::omega, [this]
+                    { return y_[1]; });
     }
 
     /**

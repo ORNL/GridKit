@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -783,7 +784,7 @@ namespace GridKit
       bool owns_components_{false};
 
       /// Variable monitor
-      Model::VariableMonitor<SystemModel, SystemModelData> monitor_;
+      Model::VariableMonitorController<ScalarT> monitor_;
     }; // class SystemModel
 
   } // namespace PhasorDynamics

@@ -11,8 +11,6 @@
 #include <string>
 #include <type_traits>
 
-#include <GridKit/Utilities/Enum.hpp>
-
 namespace GridKit
 {
   namespace PhasorDynamics
@@ -23,18 +21,8 @@ namespace GridKit
       Vr,
       Vi,
       Vm,
-      Va,
-      SIZE
+      Va
     };
-
-    /**
-     * @brief Convert enum value to string label
-     */
-    inline const std::string& enumLabel(BusMonitorableVariables v)
-    {
-      static const std::string labels[] = {"Vr", "Vi", "Vm", "Va"};
-      return labels[Utilities::enumId(v)];
-    }
 
     /**
      * @brief Contains modeling data for a Bus

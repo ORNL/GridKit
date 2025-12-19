@@ -11,6 +11,6 @@ add_subdirectory(PowerElectronics)
 
 install(FILES
   Evaluator.hpp
-  VariableMonitorBase.hpp
   VariableMonitor.hpp
+  VariableMonitorController.hpp
   DESTINATION include/GridKit/Model)

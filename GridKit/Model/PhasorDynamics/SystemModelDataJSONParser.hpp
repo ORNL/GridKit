@@ -9,7 +9,6 @@
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
-#include <GridKit/Model/VariableMonitorBase.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit

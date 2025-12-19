@@ -57,6 +57,7 @@ namespace GridKit
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = BranchData<RealT, IdxT>;
+      using MonitorT        = Model::VariableMonitor<Branch, BranchData>;
 
       Branch(bus_type* bus1, bus_type* bus2);
       Branch(bus_type* bus1, bus_type* bus2, RealT R, RealT X, RealT G, RealT B);
@@ -104,10 +105,7 @@ namespace GridKit
         setDerivedParams();
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void initializeParameters(const model_data_type& data);
@@ -175,7 +173,7 @@ namespace GridKit
       RealT g_;
 
       /// Variable monitor
-      Model::VariableMonitor<Branch, BranchData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

@@ -15,7 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
-#include <GridKit/Model/VariableMonitorBase.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {

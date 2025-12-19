@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
@@ -57,7 +58,7 @@ namespace GridKit
         : efd_signal_(efd_signal),
           speed_signal_(speed_signal),
           bus_(bus),
-          monitor_(data)
+          monitor_(std::make_unique<MonitorT>(data))
       {
 
         // Parse data struct into model
@@ -81,7 +82,7 @@ namespace GridKit
       Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
                                     const model_data_type& data)
         : bus_(bus),
-          monitor_(data)
+          monitor_(std::make_unique<MonitorT>(data))
       {
 
         // Parse data struct into model
@@ -91,6 +92,11 @@ namespace GridKit
 
         // 9 Internal Variables
         size_ = 9;
+      }
+
+      template <class ScalarT, typename IdxT>
+      Ieeet1<ScalarT, IdxT>::~Ieeet1()
+      {
       }
 
       /**
@@ -397,12 +403,18 @@ namespace GridKit
       }
 
       template <class ScalarT, typename IdxT>
+      const Model::VariableMonitorBase* Ieeet1<ScalarT, IdxT>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      template <class ScalarT, typename IdxT>
       void Ieeet1<ScalarT, IdxT>::initializeMonitor()
       {
         using Variable = model_data_type::MonitorableVariables;
-        monitor_.set(Variable::efd, [this]
-                     { return efd_signal_->read(); });
-        // monitor_.set(Variable::ksat, [this] { return ?; });
+        monitor_->set(Variable::efd, [this]
+                      { return efd_signal_->read(); });
+        // monitor_->set(Variable::ksat, [this] { return ?; });
       }
     } // namespace Exciter
   } // namespace PhasorDynamics

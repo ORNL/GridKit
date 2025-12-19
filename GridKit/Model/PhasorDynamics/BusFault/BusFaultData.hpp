@@ -32,21 +32,8 @@ namespace GridKit
     {
       state,
       ir,
-      ii,
-      SIZE
+      ii
     };
-
-    /**
-     * @brief Convert enum value to string label
-     */
-    inline const std::string& enumLabel(BusFaultMonitorableVariables v)
-    {
-      static const std::string labels[] = {
-          "state",
-          "ir",
-          "ii"};
-      return labels[Utilities::enumId(v)];
-    }
 
     /**
      * @brief Contains modeling data for a short-to-ground fault

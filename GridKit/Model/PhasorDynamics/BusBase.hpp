@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -16,30 +17,20 @@ namespace GridKit
      * @brief BusBase model implementation base class.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarT, typename IdxT>
     class BusBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT  = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
       using BusTypeT = typename BusData<RealT, IdxT>::BusType;
+      using MonitorT = Model::VariableMonitor<BusBase, BusData>;
 
       BusBase() = default;
 
-      explicit BusBase(const BusData<RealT, IdxT>& data)
-        : bus_id_(data.bus_id),
-          monitor_("Bus_" + data.name, data.monitored_variables)
-      {
-        using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
-        monitor_.set(Variable::Vr, [this]
-                     { return Vr(); });
-        monitor_.set(Variable::Vi, [this]
-                     { return Vi(); });
-      }
+      explicit BusBase(const BusData<RealT, IdxT>& data);
 
-      virtual ~BusBase()
-      {
-      }
+      virtual ~BusBase();
 
       /// Pure virtual function, returns bus type (DEFAULT or SLACK).
       virtual BusTypeT BusType() const
@@ -166,10 +157,7 @@ namespace GridKit
         return residual_indices_;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     protected:
       IdxT bus_id_{static_cast<IdxT>(-1)};
@@ -182,7 +170,7 @@ namespace GridKit
                                               /// residual indices
 
       /// Variable monitor
-      Model::VariableMonitor<BusBase, BusData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;

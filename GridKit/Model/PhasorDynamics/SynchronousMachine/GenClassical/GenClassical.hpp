@@ -47,11 +47,12 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
+    public:
       using bus_type = BusBase<ScalarT, IdxT>;
       using RealT    = typename Component<ScalarT, IdxT>::RealT;
       using DataT    = GenClassicalData<RealT, IdxT>;
+      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
-    public:
       GenClassical(bus_type* bus, int unit_id);
       GenClassical(bus_type* bus,
                    int       unit_id,
@@ -62,7 +63,7 @@ namespace GridKit
                    RealT     Ra,
                    RealT     Xdp);
       GenClassical(bus_type* bus, const DataT& data);
-      ~GenClassical() = default;
+      ~GenClassical();
 
       int setGridKitComponentID(IdxT) override;
       int allocate() override;
@@ -92,10 +93,7 @@ namespace GridKit
         ep_set_ = ep;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void initializeMonitor();
@@ -151,7 +149,7 @@ namespace GridKit
       ScalarT ep_set_;
 
       /// Variable monitor
-      Model::VariableMonitor<GenClassical, GenClassicalData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

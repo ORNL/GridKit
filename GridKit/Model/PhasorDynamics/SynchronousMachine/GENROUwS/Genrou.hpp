@@ -88,6 +88,7 @@ namespace GridKit
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = GenrouData<RealT, IdxT>;
       using signal_type     = SignalNode<ScalarT, IdxT>;
+      using MonitorT        = Model::VariableMonitor<Genrou, GenrouData>;
 
       Genrou(bus_type* bus, IdxT unit_id);
       Genrou(bus_type*              bus,
@@ -120,7 +121,7 @@ namespace GridKit
              RealT     Xl,
              RealT     S10,
              RealT     S12);
-      ~Genrou() = default;
+      ~Genrou();
 
       int setGridKitComponentID(IdxT) override;
       int allocate() override;
@@ -151,10 +152,7 @@ namespace GridKit
         return signals_;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void initializeParameters(const model_data_type& data);
@@ -244,7 +242,7 @@ namespace GridKit
       std::map<IdxT, IdxT> ws_indices_;
 
       /// Variable monitor
-      Model::VariableMonitor<Genrou, GenrouData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

@@ -6,6 +6,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
@@ -53,8 +54,8 @@ namespace GridKit
       }
 
       // using Variable = typename model_data_type::MonitorableVariables;
-      // monitor_.set(Variable::p, [this] { return ?; });
-      // monitor_.set(Variable::q, [this] { return ?; });
+      // monitor_->set(Variable::p, [this] { return ?; });
+      // monitor_->set(Variable::q, [this] { return ?; });
 
       size_ = 0;
       setDerivedParams();
@@ -152,6 +153,12 @@ namespace GridKit
     {
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);
+    }
+
+    template <class ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* Load<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
     }
 
   } // namespace PhasorDynamics

@@ -40,11 +40,12 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
 
+    public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
       using bus_type        = BusBase<ScalarT, IdxT>;
       using model_data_type = LoadData<RealT, IdxT>;
+      using MonitorT        = Model::VariableMonitor<Load, LoadData>;
 
-    public:
       Load(bus_type* bus);
       Load(bus_type* bus, RealT R, RealT X);
       Load(bus_type* bus, const model_data_type& data);
@@ -101,10 +102,7 @@ namespace GridKit
         return bus_->Ii();
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
@@ -118,7 +116,7 @@ namespace GridKit
       RealT b_;
       RealT g_;
 
-      Model::VariableMonitor<Load, LoadData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

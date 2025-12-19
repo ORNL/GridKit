@@ -13,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
@@ -71,7 +72,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
       : bus_(bus),
-        unit_id_(1)
+        unit_id_(1),
+        monitor_(std::make_unique<MonitorT>(data))
     {
       if (data.parameters.contains(DataT::Parameters::p0))
       {
@@ -120,19 +122,30 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    GenClassical<ScalarT, IdxT>::~GenClassical()
+    {
+    }
+
+    template <class ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* GenClassical<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
+    }
+
+    template <class ScalarT, typename IdxT>
     void GenClassical<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename DataT::MonitorableVariables;
-      monitor_.set(Variable::ir, [this]
-                   { return y_[3]; });
-      monitor_.set(Variable::ii, [this]
-                   { return y_[4]; });
-      // monitor_.set(Variable::p, [this] { return ?(); });
-      // monitor_.set(Variable::q, [this] { return ?(); });
-      monitor_.set(Variable::delta, [this]
-                   { return y_[0]; });
-      monitor_.set(Variable::omega, [this]
-                   { return y_[1]; });
+      monitor_->set(Variable::ir, [this]
+                    { return y_[3]; });
+      monitor_->set(Variable::ii, [this]
+                    { return y_[4]; });
+      // monitor_->set(Variable::p, [this] { return ?(); });
+      // monitor_->set(Variable::q, [this] { return ?(); });
+      monitor_->set(Variable::delta, [this]
+                    { return y_[0]; });
+      monitor_->set(Variable::omega, [this]
+                    { return y_[1]; });
     }
 
     /**

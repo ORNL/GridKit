@@ -34,15 +34,16 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
 
+    public:
       using bus_type = BusBase<ScalarT, IdxT>;
       using RealT    = typename Component<ScalarT, IdxT>::RealT;
       using DataT    = BusFaultData<RealT, IdxT>;
+      using MonitorT = Model::VariableMonitor<BusFault, BusFaultData>;
 
-    public:
       BusFault(bus_type* bus);
       BusFault(bus_type* bus, RealT R, RealT X, int status);
       BusFault(bus_type* bus, const DataT& data);
-      ~BusFault() = default;
+      ~BusFault();
 
       int setGridKitComponentID(IdxT) override;
       int allocate() override;
@@ -78,10 +79,7 @@ namespace GridKit
         status_ = status;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override
-      {
-        return &monitor_;
-      }
+      const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void setDerivedParams();
@@ -121,7 +119,7 @@ namespace GridKit
       RealT G_;
 
       /// Variable monitor
-      Model::VariableMonitor<BusFault, BusFaultData> monitor_;
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

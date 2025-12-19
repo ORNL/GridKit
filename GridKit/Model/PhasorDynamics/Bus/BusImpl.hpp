@@ -4,6 +4,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBaseImpl.hpp>
 
 namespace GridKit
 {

@@ -81,6 +81,7 @@ namespace GridKit
         using model_data_type = Ieeet1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
         using bus_type        = BusBase<ScalarT, IdxT>;
+        using MonitorT        = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
         Ieeet1(bus_type* bus);
         Ieeet1(signal_type*           efd_signal,
@@ -89,7 +90,7 @@ namespace GridKit
                const model_data_type& data);
         Ieeet1(bus_type*              bus,
                const model_data_type& data);
-        ~Ieeet1() = default;
+        ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override;
         int allocate() override;
@@ -113,10 +114,7 @@ namespace GridKit
           return signals_;
         }
 
-        const Model::VariableMonitorBase* getMonitor() const override
-        {
-          return &monitor_;
-        }
+        const Model::VariableMonitorBase* getMonitor() const override;
 
       private:
         // Signal pointers
@@ -157,7 +155,7 @@ namespace GridKit
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
 
         /// Variable monitor
-        Model::VariableMonitor<Ieeet1, Ieeet1Data> monitor_;
+        std::unique_ptr<MonitorT> monitor_;
 
         // Parameter initialization function
         void initModelParams(const model_data_type& data);

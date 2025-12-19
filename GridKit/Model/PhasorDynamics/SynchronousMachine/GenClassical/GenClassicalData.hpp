@@ -40,24 +40,8 @@ namespace GridKit
       p,
       q,
       delta,
-      omega,
-      SIZE
+      omega
     };
-
-    /**
-     * @brief Convert enum value to string label
-     */
-    inline const std::string& enumLabel(GenClassicalMonitorableVariables v)
-    {
-      static const std::string labels[] = {
-          "ir",
-          "ii",
-          "p",
-          "q",
-          "delta",
-          "omega"};
-      return labels[Utilities::enumId(v)];
-    }
 
     /**
      * @brief Contains modeling data for a GenClassical generator model.
