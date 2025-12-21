@@ -310,31 +310,31 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
-          DependencyTracking::Variable::DependencyMap dependency_y = (residual_y[i]).getDependencies();
+          DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
           DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
 
-          for (const auto& pair_y : dependency_y) 
+          for (const auto& pair_y : dependency_y)
           {
             auto index_y = pair_y.first;
             auto value_y = pair_y.second;
-            auto it_yp = dependency_yp.find(index_y);
+            auto it_yp   = dependency_yp.find(index_y);
             if (it_yp != dependency_yp.end())
             {
               auto value_yp = it_yp->second;
               dependencies[i].insert(std::make_pair(index_y, value_y + value_yp));
             }
-            else 
+            else
             {
               dependencies[i].insert(std::make_pair(index_y, value_y));
             }
           }
 
           // Insert yp dependencies that did not exist in the y dependencies
-          for (const auto& pair_yp : dependency_yp) 
+          for (const auto& pair_yp : dependency_yp)
           {
             auto index_yp = pair_yp.first;
             auto value_yp = pair_yp.second;
-            auto it_y = dependency_y.find(index_yp);
+            auto it_y     = dependency_y.find(index_yp);
             if (it_y == dependency_y.end())
             {
               dependencies[i].insert(std::make_pair(index_yp, value_yp));

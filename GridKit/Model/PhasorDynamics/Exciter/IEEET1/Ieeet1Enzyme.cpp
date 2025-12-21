@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
 #include "Ieeet1Impl.hpp"
 
@@ -24,58 +24,54 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Ieeet1<ScalarT, IdxT>::evaluateJacobian()
       {
-        //std::cout << "Evaluate Jacobian for Ieeet1..." << std::endl;
-        //std::cout << "Jacobian evaluation is experimental!" << std::endl;
-        
-// The following will fail to build without a smooth approximation for
-// the saturation
-#if 0
-        J_.zeroMatrix(); 
+        Log::misc() << "Evaluate Jacobian for Ieeet1..." << std::endl;
+        Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-        GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
-                                                            GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                            ScalarT,
-                                                            IdxT>::eval(this,
-                                                                        f_.size(),
-                                                                        y_.size(),
-                                                                        this->getResidualIndices(),
-                                                                        this->getVariableIndices(),
-                                                                        y_.data(),
-                                                                        yp_.data(),
-                                                                        wb_.data(),
-                                                                        ws_.data(),
-                                                                        alpha_,
-                                                                        J_);
+        J_.zeroMatrix();
 
-        GridKit::Enzyme::Sparse::df_dwbWithSignal<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
-                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                  ScalarT,
-                                                  IdxT>::eval(this,
-                                                              f_.size(),
-                                                              static_cast<size_t>(bus_->size()),
-                                                              this->getResidualIndices(),
-                                                              bus_->getVariableIndices(),
-                                                              y_.data(),
-                                                              yp_.data(),
-                                                              wb_.data(),
-                                                              ws_.data(),
-                                                              J_);
-  
-        GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
-                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                  ScalarT,
-                                                  IdxT>::eval(this,
-                                                              f_.size(),
-                                                              ws_.size(),
-                                                              this->getResidualIndices(),
-                                                              ws_indices_,
-                                                              y_.data(),
-                                                              yp_.data(),
-                                                              wb_.data(),
-                                                              ws_.data(),
-                                                              J_);
-#endif
-  
+        GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
+                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                      ScalarT,
+                                      IdxT>::eval(this,
+                                                  f_.size(),
+                                                  y_.size(),
+                                                  this->getResidualIndices(),
+                                                  this->getVariableIndices(),
+                                                  y_.data(),
+                                                  yp_.data(),
+                                                  wb_.data(),
+                                                  ws_.data(),
+                                                  alpha_,
+                                                  J_);
+
+        GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
+                                       GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                       ScalarT,
+                                       IdxT>::eval(this,
+                                                   f_.size(),
+                                                   static_cast<size_t>(bus_->size()),
+                                                   this->getResidualIndices(),
+                                                   bus_->getVariableIndices(),
+                                                   y_.data(),
+                                                   yp_.data(),
+                                                   (bus_->y()).data(),
+                                                   ws_.data(),
+                                                   J_);
+
+        GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
+                                       GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                       ScalarT,
+                                       IdxT>::eval(this,
+                                                   f_.size(),
+                                                   ws_.size(),
+                                                   this->getResidualIndices(),
+                                                   ws_indices_,
+                                                   y_.data(),
+                                                   yp_.data(),
+                                                   wb_.data(),
+                                                   ws_.data(),
+                                                   J_);
+
         return 0;
       }
 

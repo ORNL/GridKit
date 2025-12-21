@@ -8,11 +8,14 @@
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /*!
      * @brief BusBase model implementation base class.
      *

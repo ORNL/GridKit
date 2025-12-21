@@ -128,7 +128,7 @@ namespace GridKit
 
         // Resize signal variable data
         ws_.resize(1);
-        ws_[0] = 0.0;
+        ws_[0]         = 0.0;
         ws_indices_[0] = static_cast<IdxT>(-1);
 
         // Default variable and residual index mapping to local index
@@ -197,7 +197,7 @@ namespace GridKit
         // Terminal Voltage
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
-        Ec_           = std::sqrt(vreal * vreal + vimag * vimag);
+        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Derived from External initial values
         ScalarT vr  = Ke_ * efd0;
@@ -205,10 +205,10 @@ namespace GridKit
         ScalarT vtr = Ke_ / Ka_ * efd0;
 
         // Vref (setpoint = terminal + error)
-        vref_ = Ec_ + vtr;
+        vref_ = Ec + vtr;
 
         // IVP for Internal Variables
-        y_[0] = Ec_;  // y0 - vts  - Sensed term volt
+        y_[0] = Ec;   // y0 - vts  - Sensed term volt
         y_[1] = vr;   // y1 - vr   - Voltage reg
         y_[2] = efd0; // y2 - efdp - Efd pre mult
         y_[3] = vfx;  // y3 - vfx  - Exciter feedback
@@ -271,7 +271,7 @@ namespace GridKit
         // Read E comp (terminal voltage, unless compensation impedance)
         ScalarT vreal = wb[0];
         ScalarT vimag = wb[1];
-        Ec_           = std::sqrt(vreal * vreal + vimag * vimag);
+        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Read Internal Variables
         ScalarT vts  = y[0]; // y0 - Sensed term volt
@@ -289,28 +289,29 @@ namespace GridKit
         ScalarT vr_dot   = yp[1];
         ScalarT efdp_dot = yp[2];
         ScalarT vfx_dot  = yp[3];
-        
+
         // Set signal variable aliases
         ScalarT omega = ws[0];
 
         // The 'pre-limit' derivative of Pv
-        ScalarT func   = -vr + Ka_ * vtr;
-        ScalarT vr_ind = this->indicator(vr, func);
+        ScalarT func            = -vr + Ka_ * vtr;
+        ScalarT func_normalized = func * 12.0 / 240.0; // Arbitrary normalization to use standardized sigmoid
+        ScalarT vr_ind          = Math::indicator(Vrmin_, Vrmax_, vr, func_normalized);
 
         // Internal Differential Equations
-        f[0] = -vts_dot + (Ec_ - vts) / Tr_;
+        f[0] = -vts_dot + (Ec - vts) / Tr_;
         f[1] = -vr_dot + vr_ind * func / Ta_;
         f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
-        f[4] = -vtr + vref_ + vUEL_ + vOEL_ + vS_ - vf - vts;
+        f[4] = -vts + vref_ + vUEL_ + vOEL_ + vS_ - vtr - vf;
         f[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
         f[6] = -ve + ksat * efdp;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
 
         ScalarT efd_sat = (efdp - SA_) * (Math::sigmoid(efdp - SA_));
-        f_[8]           = -ksat + SB_ * efd_sat * efd_sat;
+        f[8]            = -ksat + SB_ * efd_sat * efd_sat;
 
         return 0;
       }

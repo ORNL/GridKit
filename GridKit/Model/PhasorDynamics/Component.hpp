@@ -3,12 +3,16 @@
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Component model implementation base class.
      */
@@ -44,9 +48,9 @@ namespace GridKit
 
       virtual void updateTime(RealT t, RealT a) override
       {
-          time_ = t;
-          alpha_ = a;
-          //std::cout << "updateTime: t = " << time_ << ", alpha = " << alpha_ << "\n";
+        time_  = t;
+        alpha_ = a;
+        // std::cout << "updateTime: t = " << time_ << ", alpha = " << alpha_ << "\n";
       }
 
       virtual void setTolerances(RealT& rtol, RealT& atol) const override

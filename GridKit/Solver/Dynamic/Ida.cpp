@@ -142,15 +142,13 @@ namespace AnalysisManager
         this->configureLinearSolverDense();
       }
 #else
+      /// Todo - Improve error handling capabilities and hasJacobian_ ownership
       if (model_->hasJacobian())
       {
-        /// Todo - Improve error handling capabilities and hasJacobian_ ownership
-        throw std::runtime_error("SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian.");
+        Log::warning() << "SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian. "
+                       << "Falling back to dense Jacobian.\n";
       }
-      else
-      {
-        this->configureLinearSolverDense();
-      }
+      this->configureLinearSolverDense();
 #endif
 
       return retval;

@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
 #include "GenClassicalImpl.hpp"
 
@@ -22,50 +22,50 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int GenClassical<ScalarT, IdxT>::evaluateJacobian()
     {
-      //std::cout << "Evaluate Jacobian for GenClassical..." << std::endl;
-      //std::cout << "Jacobian evaluation is experimental!" << std::endl;
+      Log::misc() << "Evaluate Jacobian for GenClassical..." << std::endl;
+      Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-      J_.zeroMatrix(); 
+      J_.zeroMatrix();
 
-      GridKit::Enzyme::Sparse::InternalJacobian<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
-                                                GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
-                                                ScalarT,
-                                                IdxT>::eval(this,
-                                                            f_.size(),
-                                                            y_.size(),
-                                                            this->getResidualIndices(),
-                                                            this->getVariableIndices(),
-                                                            y_.data(),
-                                                            yp_.data(),
-                                                            wb_.data(),
-                                                            alpha_,
-                                                            J_);
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                    ScalarT,
+                                    IdxT>::eval(this,
+                                                f_.size(),
+                                                y_.size(),
+                                                this->getResidualIndices(),
+                                                this->getVariableIndices(),
+                                                y_.data(),
+                                                yp_.data(),
+                                                wb_.data(),
+                                                alpha_,
+                                                J_);
 
-      GridKit::Enzyme::Sparse::df_dwb<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
-                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
-                                      ScalarT,
-                                      IdxT>::eval(this,
-                                                  f_.size(),
-                                                  static_cast<size_t>(bus_->size()),
-                                                  this->getResidualIndices(),
-                                                  bus_->getVariableIndices(),
-                                                  y_.data(),
-                                                  yp_.data(),
-                                                  (bus_->y()).data(),
-                                                  J_);
-
-      GridKit::Enzyme::Sparse::dh_dy<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                      ScalarT,
                                      IdxT>::eval(this,
+                                                 f_.size(),
                                                  static_cast<size_t>(bus_->size()),
-                                                 y_.size(),
-                                                 bus_->getResidualIndices(),
-                                                 this->getVariableIndices(),
+                                                 this->getResidualIndices(),
+                                                 bus_->getVariableIndices(),
                                                  y_.data(),
                                                  yp_.data(),
-                                                 wb_.data(),
+                                                 (bus_->y()).data(),
                                                  J_);
+
+      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::GenClassical<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+                                    ScalarT,
+                                    IdxT>::eval(this,
+                                                static_cast<size_t>(bus_->size()),
+                                                y_.size(),
+                                                bus_->getResidualIndices(),
+                                                this->getVariableIndices(),
+                                                y_.data(),
+                                                yp_.data(),
+                                                wb_.data(),
+                                                J_);
 
       return 0;
     }

@@ -4,13 +4,13 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/ScalarTraits.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 
 // Include all components
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -19,8 +19,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using Log = ::GridKit::Utilities::Logger;
-
     /**
      * @brief Prototype for a system model class
      *
@@ -373,11 +371,23 @@ namespace GridKit
        */
       bool hasJacobian() override
       {
-        bool has_jacobian = true;
+        bool has_jacobian = false;
+#ifdef GRIDKIT_ENABLE_ENZYME
+        has_jacobian = true;
         for (const auto& component : components_)
         {
-          has_jacobian *= component->hasJacobian();
+          has_jacobian = has_jacobian && component->hasJacobian();
         }
+
+        if (!has_jacobian)
+        {
+          Log::warning() << "GritKit was built with Enzyme, but some models don't have Jacobians available. "
+                         << "Falling back to dense Jacobians in PhasorDynamics.\n";
+        }
+#else
+        Log::warning() << "GritKit was not built with Enzyme. "
+                       << "Falling back to dense Jacobians in PhasorDynamics.\n";
+#endif
         return has_jacobian;
       }
 
@@ -624,7 +634,7 @@ namespace GridKit
 
         J_.setValues(rtemp, ctemp, valtemp);
 
-        //J_.printMatrix("System Jacobian");
+        // J_.printMatrix("System Jacobian");
 
         return 0;
       }

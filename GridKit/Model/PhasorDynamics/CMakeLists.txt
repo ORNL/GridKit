@@ -18,6 +18,7 @@ gridkit_add_library(phasor_dynamics_core
     SystemModel.hpp
     SystemModelData.hpp
   LINK_LIBRARIES
+    PUBLIC GridKit::definitions
     PUBLIC GridKit::utilities_logger
   INCLUDE_DIRECTORIES
     PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include

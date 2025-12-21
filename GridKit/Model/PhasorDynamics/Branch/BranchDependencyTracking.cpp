@@ -20,8 +20,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateJacobian()
     {
-      //std::cout << "Evaluate Jacobian for Branch..." << std::endl;
-      //std::cout << "Jacobian evaluation is not implemented!" << std::endl;
+      Log::misc() << "Evaluate Jacobian for Branch..." << std::endl;
+      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
 
       return 0;
     }

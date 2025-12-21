@@ -21,8 +21,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::evaluateJacobian()
     {
-      //std::cout << "Evaluate Jacobian for Genrou..." << std::endl;
-      //std::cout << "Jacobian evaluation not implemented!" << std::endl;
+      Log::misc() << "Evaluate Jacobian for Genrou..." << std::endl;
+      Log::misc() << "Jacobian evaluation not implemented!" << std::endl;
       return 0;
     }
 

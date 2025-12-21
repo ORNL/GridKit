@@ -101,10 +101,6 @@ namespace GridKit
         int tagDifferentiable() override;
         int evaluateResidual() override;
         int evaluateJacobian() override;
-        bool hasJacobian() override
-        {
-          return false;
-        }
 
         /// Get the `ComponentSignals` from this `Ieeet1`
         auto getSignals()
@@ -116,11 +112,9 @@ namespace GridKit
           return signals_;
         }
 
-<<<<<<< HEAD
         const Model::VariableMonitorBase* getMonitor() const override;
-=======
+
         __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
->>>>>>> 0273332f (Functional PhasorDynamics simulations with sparse Jacobians.)
 
       private:
         // Signal pointers
@@ -155,7 +149,7 @@ namespace GridKit
         ScalarT vUEL_{0};
         ScalarT vOEL_{0};
         ScalarT vS_{0};
-        ScalarT Ec_{0}; // "Compensated" terminal measurment
+        ScalarT Ec_{0}; // "Compensated" terminal measurment, currently unused
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
