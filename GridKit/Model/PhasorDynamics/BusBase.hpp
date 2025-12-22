@@ -1,10 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <set>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
@@ -14,27 +17,20 @@ namespace GridKit
      * @brief BusBase model implementation base class.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarT, typename IdxT>
     class BusBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT  = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
       using BusTypeT = typename BusData<RealT, IdxT>::BusType;
+      using MonitorT = Model::VariableMonitor<BusBase, BusData>;
 
-      BusBase()
-        : size_(0)
-      {
-      }
+      BusBase() = default;
 
-      BusBase(IdxT bus_id)
-        : bus_id_(bus_id)
-      {
-      }
+      explicit BusBase(const BusData<RealT, IdxT>& data);
 
-      virtual ~BusBase()
-      {
-      }
+      virtual ~BusBase();
 
       /// Pure virtual function, returns bus type (DEFAULT or SLACK).
       virtual BusTypeT BusType() const
@@ -161,6 +157,8 @@ namespace GridKit
         return residual_indices_;
       }
 
+      const Model::VariableMonitorBase* getMonitor() const override;
+
     protected:
       IdxT bus_id_{static_cast<IdxT>(-1)};
 
@@ -170,6 +168,9 @@ namespace GridKit
                                               /// variable indices
       std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
                                               /// residual indices
+
+      /// Variable monitor
+      std::unique_ptr<MonitorT> monitor_;
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;

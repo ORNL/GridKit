@@ -5,6 +5,7 @@
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -44,6 +45,43 @@ namespace GridKit
 
       virtual IdxT size() = 0;
       virtual IdxT nnz()  = 0;
+
+      /**
+       * @brief Is there something to monitor? Defaults to `false`
+       */
+      virtual bool monitoring() const
+      {
+        return false;
+      }
+
+      /**
+       * @brief Print variables at current state
+       */
+      virtual void printMonitoredVariables() const
+      {
+      }
+
+      /**
+       * @brief Get non-owning reference to monitor
+       */
+      virtual const VariableMonitorBase* getMonitor() const
+      {
+        return nullptr;
+      }
+
+      /**
+       * @brief Get monitor ready for output
+       */
+      virtual void startMonitor()
+      {
+      }
+
+      /**
+       * @brief Tell monitor to wrap up
+       */
+      virtual void stopMonitor()
+      {
+      }
 
       /**
        * @brief Is the Jacobian defined. Used in IDA to determine wether DQ is used or not

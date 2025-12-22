@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -75,6 +76,7 @@ namespace GridKit
        * correctly connected into the system model.
        */
       SystemModel(SystemModelData<RealT, IdxT>& data)
+        : monitor_(time_)
       {
         using namespace Governor;
         using namespace Exciter;
@@ -235,6 +237,11 @@ namespace GridKit
           }
           auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
           addFault(fault);
+        }
+
+        for (const auto& sink : data.monitor_sink)
+        {
+          monitor_.addSink(sink);
         }
       }
 
@@ -417,7 +424,44 @@ namespace GridKit
           }
         }
 
+        initializeMonitor();
+        startMonitor();
+
         return 0;
+      }
+
+      /**
+       * @brief Add monitors from buses and components and start monitor
+       */
+      void initializeMonitor()
+      {
+        for (const auto* bus : buses_)
+        {
+          auto* mon = bus->getMonitor();
+          if (mon && !mon->empty())
+          {
+            monitor_.addMonitor(mon);
+          }
+        }
+
+        for (const auto* component : components_)
+        {
+          auto* mon = component->getMonitor();
+          if (mon && !mon->empty())
+          {
+            monitor_.addMonitor(mon);
+          }
+        }
+      }
+
+      void startMonitor() override
+      {
+        monitor_.start();
+      }
+
+      void stopMonitor() override
+      {
+        monitor_.stop();
       }
 
       /**
@@ -576,16 +620,52 @@ namespace GridKit
         return 0;
       }
 
+      bool monitoring() const override
+      {
+        return !monitor_.empty();
+      }
+
+      void printMonitoredVariables() const override
+      {
+        monitor_.print();
+      }
+
+      /**
+       * @brief Update variables in buses and components
+       */
+      void updateVariables()
+      {
+        for (const auto& bus : buses_)
+        {
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus->y()[j]  = y_[bus->getVariableIndex(j)];
+            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
+          }
+        }
+        for (const auto& component : components_)
+        {
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component->y()[j]  = y_[component->getVariableIndex(j)];
+            component->yp()[j] = yp_[component->getVariableIndex(j)];
+          }
+        }
+      }
+
       /**
        * @brief Update time
        *
        */
       void updateTime(RealT t, RealT a) override
       {
+        this->time_ = t;
         for (const auto& component : components_)
         {
           component->updateTime(t, a);
         }
+
+        updateVariables();
       }
 
       /**
@@ -703,6 +783,8 @@ namespace GridKit
 
       bool owns_components_{false};
 
+      /// Variable monitor
+      Model::VariableMonitorController<ScalarT> monitor_;
     }; // class SystemModel
 
   } // namespace PhasorDynamics

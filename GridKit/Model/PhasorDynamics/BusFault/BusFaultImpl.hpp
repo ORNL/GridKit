@@ -6,6 +6,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
@@ -57,7 +58,8 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, const DataT& data)
-      : bus_(bus)
+      : bus_(bus),
+        monitor_(std::make_unique<MonitorT>(data))
     {
       if (data.parameters.contains(DataT::Parameters::R))
       {
@@ -79,8 +81,21 @@ namespace GridKit
         bus_id_ = data.ports.at(DataT::Ports::bus);
       }
 
+      using Variable = typename DataT::MonitorableVariables;
+      monitor_->set(Variable::state, [this]
+                    { return status_; });
+      monitor_->set(Variable::ir, [this]
+                    { return Ir(); });
+      monitor_->set(Variable::ii, [this]
+                    { return Ii(); });
+
       size_ = 0;
       setDerivedParams();
+    }
+
+    template <class ScalarT, typename IdxT>
+    BusFault<ScalarT, IdxT>::~BusFault()
+    {
     }
 
     /**
@@ -161,6 +176,12 @@ namespace GridKit
         Ii() += h_[1];
       }
       return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* BusFault<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
     }
 
     /**

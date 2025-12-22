@@ -46,7 +46,7 @@ namespace GridKit
       enum class Ieeet1MonitorableVariables
       {
         efd,
-        ksat,
+        ksat
       };
 
       /**

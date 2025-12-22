@@ -9,6 +9,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
@@ -45,11 +47,12 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
 
+    public:
       using bus_type = BusBase<ScalarT, IdxT>;
       using RealT    = typename Component<ScalarT, IdxT>::RealT;
       using DataT    = GenClassicalData<RealT, IdxT>;
+      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
-    public:
       GenClassical(bus_type* bus, int unit_id);
       GenClassical(bus_type* bus,
                    int       unit_id,
@@ -60,7 +63,7 @@ namespace GridKit
                    RealT     Ra,
                    RealT     Xdp);
       GenClassical(bus_type* bus, const DataT& data);
-      ~GenClassical() = default;
+      ~GenClassical();
 
       int setGridKitComponentID(IdxT) override;
       int allocate() override;
@@ -90,7 +93,10 @@ namespace GridKit
         ep_set_ = ep;
       }
 
+      const Model::VariableMonitorBase* getMonitor() const override;
+
     private:
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -141,6 +147,9 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
+
+      /// Variable monitor
+      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

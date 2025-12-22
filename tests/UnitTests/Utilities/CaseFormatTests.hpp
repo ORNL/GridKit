@@ -30,6 +30,7 @@ namespace GridKit
       TestOutcome simpleParse()
       {
         using namespace GridKit::PhasorDynamics;
+        using namespace GridKit::Model;
         using BusData = BusData<RealT, IdxT>;
         using BusType = typename BusData::BusType;
 
@@ -44,6 +45,12 @@ namespace GridKit
                    "freq_base": 60.0,
                    "va_base": 100e6
                },
+               "monitors": [
+                   {
+                       "file_name": "mon.json",
+                       "format": "json"
+                   }
+               ],
                "buses": [
                    { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
                    { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
@@ -68,6 +75,11 @@ namespace GridKit
         success *= result.freq_base == 60.0;
         success *= result.va_base == 100.0e6;
 
+        success *= result.monitor_sink[0].file_name.empty();
+        success *= result.monitor_sink[0].format == VariableMonitorFormat::CSV;
+        success *= result.monitor_sink[1].file_name == "mon.json";
+        success *= result.monitor_sink[1].format == VariableMonitorFormat::JSON;
+
         success *= result.bus.size() == 2;
         success *= result.branch.size() == 1;
         success *= result.bus_fault.size() == 1;
@@ -80,15 +92,15 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VR)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VI)];
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
         success *= result.bus[1].v_base == 115e3;
-        success *= result.bus[1].monitored_variables.none();
+        success *= result.bus[1].monitored_variables.empty();
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
@@ -193,15 +205,15 @@ namespace GridKit
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
         success *= result.bus[0].v_base == 115e3;
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VR)];
-        success *= result.bus[0].monitored_variables[static_cast<size_t>(BusData::MonitorableVariables::VI)];
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
+        success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
         success *= result.bus[1].bus_type == BusType::SLACK;
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
         success *= result.bus[1].v_base == 115e3;
-        success *= result.bus[1].monitored_variables.none();
+        success *= result.bus[1].monitored_variables.empty();
 
         success *= result.signal[0].signal_id == 1;
         success *= result.signal[0].name == "Machine Speed Deviation";

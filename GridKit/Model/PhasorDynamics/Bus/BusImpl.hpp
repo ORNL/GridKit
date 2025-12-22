@@ -4,6 +4,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
+#include <GridKit/Model/PhasorDynamics/BusBaseImpl.hpp>
 
 namespace GridKit
 {
@@ -55,7 +56,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     Bus<ScalarT, IdxT>::Bus(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data.bus_id),
+      : BusBase<ScalarT, IdxT>(data),
         Vr0_(data.Vr0),
         Vi0_(data.Vi0)
     {

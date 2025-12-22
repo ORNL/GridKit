@@ -322,16 +322,23 @@ namespace AnalysisManager
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
 
-        if (step_callback.has_value())
+        if (step_callback.has_value() || model_->monitoring())
         {
           // The callback may try to observe upated values in the model, so we
           // should update them here (At this point, the model's values are one
           // internal integrator step out of date)
-          model_->updateTime(tret, 0.0);
           copyVec(yy_, model_->y());
           copyVec(yp_, model_->yp());
+          model_->updateTime(tret, 0.0);
 
-          (*step_callback)(tret);
+          if (model_->monitoring())
+          {
+            model_->printMonitoredVariables();
+          }
+          if (step_callback.has_value())
+          {
+            (*step_callback)(tret);
+          }
         }
 
         if (retval == IDA_SUCCESS)
@@ -342,9 +349,13 @@ namespace AnalysisManager
       }
 
       // Final copy out. No guarantee last residual evaluation is final step.
-      model_->updateTime(tf, 0.0);
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
+      model_->updateTime(tf, 0.0);
+      if (model_->monitoring())
+      {
+        model_->printMonitoredVariables();
+      }
 
       // std::cout << "\n";
       return retval;

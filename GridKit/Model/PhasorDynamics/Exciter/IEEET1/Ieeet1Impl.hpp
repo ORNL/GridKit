@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
@@ -56,11 +57,14 @@ namespace GridKit
                                     const model_data_type& data)
         : efd_signal_(efd_signal),
           speed_signal_(speed_signal),
-          bus_(bus)
+          bus_(bus),
+          monitor_(std::make_unique<MonitorT>(data))
       {
 
         // Parse data struct into model
         this->initModelParams(data);
+
+        initializeMonitor();
 
         // 9 Internal Variables
         size_ = 9;
@@ -77,14 +81,22 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
                                     const model_data_type& data)
-        : bus_(bus)
+        : bus_(bus),
+          monitor_(std::make_unique<MonitorT>(data))
       {
 
         // Parse data struct into model
         this->initModelParams(data);
 
+        initializeMonitor();
+
         // 9 Internal Variables
         size_ = 9;
+      }
+
+      template <class ScalarT, typename IdxT>
+      Ieeet1<ScalarT, IdxT>::~Ieeet1()
+      {
       }
 
       /**
@@ -390,6 +402,20 @@ namespace GridKit
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
       }
 
+      template <class ScalarT, typename IdxT>
+      const Model::VariableMonitorBase* Ieeet1<ScalarT, IdxT>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      template <class ScalarT, typename IdxT>
+      void Ieeet1<ScalarT, IdxT>::initializeMonitor()
+      {
+        using Variable = model_data_type::MonitorableVariables;
+        monitor_->set(Variable::efd, [this]
+                      { return efd_signal_->read(); });
+        // monitor_->set(Variable::ksat, [this] { return ?; });
+      }
     } // namespace Exciter
   } // namespace PhasorDynamics
 } // namespace GridKit

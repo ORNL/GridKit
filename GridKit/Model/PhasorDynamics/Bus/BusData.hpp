@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include <bitset>
 #include <optional>
+#include <set>
 #include <string>
 #include <type_traits>
 
@@ -15,6 +15,15 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Indices of the variables able to be monitored on this component
+    enum class BusMonitorableVariables : size_t
+    {
+      Vr,
+      Vi,
+      Vm,
+      Va
+    };
+
     /**
      * @brief Contains modeling data for a Bus
      *
@@ -49,20 +58,12 @@ namespace GridKit
       std::optional<RealT> freq_base;   ///< Override for the system-wide base frequency
       std::optional<RealT> va_base;     ///< Override for the system-wide power base
 
-      /// Indices of the variables able to be monitored on this component
-      enum class MonitorableVariables : size_t
-      {
-        VR,
-        VI,
-        VM,
-        VA,
-        MAXIMUM,
-      };
+      /// Alias
+      using MonitorableVariables = BusMonitorableVariables;
 
       /// Set indicating the variables being monitored
-      std::bitset<static_cast<
-          std::underlying_type_t<MonitorableVariables>>(MonitorableVariables::MAXIMUM)>
-          monitored_variables;
+      std::set<MonitorableVariables> monitored_variables;
     };
+
   } // namespace PhasorDynamics
 } // namespace GridKit

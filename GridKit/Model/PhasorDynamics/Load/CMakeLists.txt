@@ -15,6 +15,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       LoadEnzyme.cpp
     HEADERS
       ${_install_headers}
+    INCLUDE_DIRECTORIES
+      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PRIVATE ClangEnzymeFlags
     COMPILE_OPTIONS
@@ -23,12 +25,15 @@ else()
   gridkit_add_library(phasor_dynamics_load
     SOURCES
       Load.cpp
+    INCLUDE_DIRECTORIES
+      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     HEADERS
       ${_install_headers})
 endif()
 
 gridkit_add_library(phasor_dynamics_load_dependency_tracking
-  SOURCES LoadDependencyTracking.cpp)
+  SOURCES LoadDependencyTracking.cpp
+  INCLUDE_DIRECTORIES PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
 # Link to interface target for all components
 target_link_libraries(phasor_dynamics_components

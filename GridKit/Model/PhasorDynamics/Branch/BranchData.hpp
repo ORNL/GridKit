@@ -40,7 +40,7 @@ namespace GridKit
       ii2,
       im2,
       p2,
-      q2,
+      q2
     };
 
     /**

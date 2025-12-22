@@ -32,7 +32,7 @@ namespace GridKit
     {
       state,
       ir,
-      ii,
+      ii
     };
 
     /**

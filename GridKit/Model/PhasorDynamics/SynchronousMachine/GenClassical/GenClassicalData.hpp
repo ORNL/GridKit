@@ -40,7 +40,7 @@ namespace GridKit
       p,
       q,
       delta,
-      omega,
+      omega
     };
 
     /**
