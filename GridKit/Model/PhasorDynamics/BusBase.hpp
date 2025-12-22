@@ -4,8 +4,8 @@
 #include <set>
 #include <vector>
 
-#include <GridKit/Constants.hpp>
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
