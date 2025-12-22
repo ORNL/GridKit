@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <forward_list>
 #include <iomanip>
@@ -149,18 +150,9 @@ namespace GridKit
         size_t local_row_idx_;
       };
 
-      // Helper struct for saving CSR sparsities of a particular component, since
-      // right now they only report COO. Can be removed once components have CSR matrices.
-      struct CsrSparsity
-      {
-        std::vector<IdxT> row_indices_;
-        std::vector<IdxT> col_indices_;
-      };
-
       // A reverse mapping from external system variables -> component variables
-      auto   reverse_extern_map   = new std::forward_list<ComponentContribution>[n_extern_];
-      auto   component_sparsities = new CsrSparsity[components_.size()];
-      size_t component_nnz        = 0;
+      auto   reverse_extern_map = new std::forward_list<ComponentContribution>[n_extern_];
+      size_t component_nnz      = 0;
 
       // Loop over all components, evaluate their jacobians, save their sparsity information,
       // and construct the reverse variable mapping.
@@ -169,13 +161,7 @@ namespace GridKit
         component_type* component = components_[comp_idx];
         component->evaluateJacobian();
 
-        auto [row_indices, col_indices, _] = component->getJacobian().setDataToCSR();
-
-        auto& comp_sparsity = component_sparsities[comp_idx];
-        comp_sparsity       = CsrSparsity{
-                  .row_indices_ = std::move(row_indices),
-                  .col_indices_ = std::move(col_indices),
-        };
+        auto& comp_jacobian = component->getJacobian();
 
         for (IdxT local_external_row : component->getExternIndices())
         {
@@ -189,7 +175,7 @@ namespace GridKit
           }
         }
 
-        component_nnz += comp_sparsity.row_indices_.back();
+        component_nnz += comp_jacobian.nnz();
       }
 
       // Allocate the final sparsity pattern info
@@ -204,42 +190,54 @@ namespace GridKit
       size_t curr_internal_row = 0;
       for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
-        auto  component      = components_[comp_idx];
-        auto  comp_externals = component->getExternIndices();
-        auto& comp_sparsity  = component_sparsities[comp_idx];
+        component_type* component           = components_[comp_idx];
+        auto            comp_externals      = component->getExternIndices();
+        const auto& [rows, columns, values] = component->getJacobian().getEntries();
 
-        for (IdxT local_row = 0; local_row < component->size(); local_row++)
+        if (rows.empty())
+          continue;
+
+        // Loop through all elements of the component jacobian, adding them to the system jacobian if needed
+        for (size_t elem_idx = 0; elem_idx < rows.size(); elem_idx++)
         {
-          // Skip external variables and variables which aren't system variables
-          if (comp_externals.contains(local_row) || component->getNodeConnection(local_row) == neg1_)
+          IdxT local_row  = rows[elem_idx];
+          IdxT global_row = component->getNodeConnection(local_row);
+
+          // Skip variables which aren't system variables
+          if (comp_externals.contains(local_row) || global_row == neg1_)
             continue;
 
-          global_row_indices[curr_internal_row + 1] = global_row_indices[curr_internal_row];
-
-          assert(component->getNodeConnection(local_row) == curr_internal_row);
-
-          IdxT row_start = comp_sparsity.row_indices_[local_row];
-          IdxT row_end   = comp_sparsity.row_indices_[local_row + 1];
-          for (IdxT local_col_idx = row_start; local_col_idx < row_end; local_col_idx++)
+          if (global_row > curr_internal_row)
           {
-            IdxT global_col_idx = component->getNodeConnection(comp_sparsity.col_indices_[local_col_idx]);
-
-            if (global_col_idx == neg1_)
-              continue;
-
-            global_col_indices[global_row_indices[curr_internal_row + 1]] = global_col_idx;
-            global_row_indices[curr_internal_row + 1]++;
+            curr_internal_row++;
+            global_row_indices[curr_internal_row + 1] = global_row_indices[curr_internal_row];
           }
 
-          // Need to sort internal rows because even though the mapping from component internal to system internal
-          // is monotonic, the mapping from component external to system external may not be, and internal rows
-          // may contain external columns.
-          auto global_row_start = global_col_indices + global_row_indices[curr_internal_row];
-          auto global_row_end   = global_col_indices + global_row_indices[curr_internal_row + 1];
-          std::sort(global_row_start, global_row_end);
+          assert(global_row == curr_internal_row);
 
-          curr_internal_row++;
+          IdxT local_col_idx  = columns[elem_idx];
+          IdxT global_col_idx = component->getNodeConnection(local_col_idx);
+
+          if (global_col_idx == neg1_)
+            continue;
+
+          global_col_indices[global_row_indices[curr_internal_row + 1]] = global_col_idx;
+          global_row_indices[curr_internal_row + 1]++;
         }
+      }
+
+      // One last row after
+      curr_internal_row++;
+      global_row_indices[curr_internal_row + 1] = global_row_indices[curr_internal_row];
+
+      // Need to sort internal rows because even though the mapping from component internal to system internal
+      // is monotonic, the mapping from component external to system external may not be, and internal rows
+      // may contain external columns.
+      for (size_t row_idx = 0; row_idx < curr_internal_row; row_idx++)
+      {
+        auto global_row_start = global_col_indices + global_row_indices[row_idx];
+        auto global_row_end   = global_col_indices + global_row_indices[row_idx + 1];
+        std::sort(global_row_start, global_row_end);
       }
 
       assert(curr_internal_row == n_intern_);
@@ -252,14 +250,23 @@ namespace GridKit
         // Collect columns from each component which has a row which contributes to this row
         for (ComponentContribution contrib : reverse_extern_map[row - n_intern_])
         {
-          component_type* component     = components_[contrib.comp_idx_];
-          CsrSparsity&    comp_sparsity = component_sparsities[contrib.comp_idx_];
+          component_type* component           = components_[contrib.comp_idx_];
+          const auto& [rows, columns, values] = component->getJacobian().getEntries();
 
-          IdxT row_start = comp_sparsity.row_indices_[contrib.local_row_idx_];
-          IdxT row_end   = comp_sparsity.row_indices_[contrib.local_row_idx_ + 1];
-          for (size_t local_elem_idx = row_start; local_elem_idx < row_end; local_elem_idx++)
+          auto row_start = std::ranges::lower_bound(rows, contrib.local_row_idx_);
+
+          // It can happen where external contributions are only constants, and do not appear in the jacobian.
+          // If that is the case, we won't be able to find local_row_idx_ and must skip this contribution
+          if (row_start == rows.end() || *row_start != contrib.local_row_idx_)
+            continue;
+
+          auto row_end = std::upper_bound(row_start, rows.end(), contrib.local_row_idx_);
+
+          for (size_t local_elem_idx = std::distance(rows.begin(), row_start);
+               local_elem_idx < static_cast<size_t>(std::distance(rows.begin(), row_end));
+               local_elem_idx++)
           {
-            IdxT local_col  = comp_sparsity.col_indices_[local_elem_idx];
+            IdxT local_col  = columns[local_elem_idx];
             IdxT global_col = component->getNodeConnection(local_col);
 
             // Not all columns map to columns in the system jacobian
@@ -292,7 +299,6 @@ namespace GridKit
       std::copy(global_col_indices, global_col_indices + nnz, csr_jac_.getColData());
       std::copy(global_row_indices, global_row_indices + size_ + 1, csr_jac_.getRowData());
 
-      delete[] component_sparsities;
       delete[] reverse_extern_map;
       delete[] global_row_indices;
       delete[] global_col_indices;
