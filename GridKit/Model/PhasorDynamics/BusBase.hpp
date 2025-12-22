@@ -131,13 +131,13 @@ namespace GridKit
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
-        variable_indices_[local_index] = global_index;
+        variable_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT getVariableIndex(IdxT local_index) const
       {
-        return variable_indices_[local_index];
+        return variable_indices_[static_cast<size_t>(local_index)];
       }
 
       const std::vector<IdxT>& getVariableIndices() const
@@ -147,13 +147,13 @@ namespace GridKit
 
       int setResidualIndex(IdxT local_index, IdxT global_index)
       {
-        residual_indices_[local_index] = global_index;
+        residual_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT getResidualIndex(IdxT local_index) const
       {
-        return residual_indices_[local_index];
+        return residual_indices_[static_cast<size_t>(local_index)];
       }
 
       const std::vector<IdxT>& getResidualIndices() const

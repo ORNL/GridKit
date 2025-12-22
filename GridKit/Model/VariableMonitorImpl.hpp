@@ -97,7 +97,7 @@ namespace GridKit
       template <typename FuncT>
       void set(VariableEnum v, FuncT f)
       {
-        f_[enum_integer(v)] = ValuePrinter{f};
+        f_[static_cast<size_t>(enum_integer(v))] = ValuePrinter{f};
       }
 
     private:
@@ -166,7 +166,7 @@ namespace GridKit
       {
         for (auto v : variables_)
         {
-          os << csv.delim << f_[enum_integer(v)];
+          os << csv.delim << f_[static_cast<size_t>(enum_integer(v))];
         }
       }
 
@@ -176,7 +176,7 @@ namespace GridKit
       void print(std::ostream& os, VariableEnum v, Json) const
       {
         os << indent_ << std::quoted(enum_name(v)) << ": "
-           << f_[enum_integer(v)] << ",\n";
+           << f_[static_cast<size_t>(enum_integer(v))] << ",\n";
       }
 
       void print(std::ostream& os, Json) const override
@@ -209,7 +209,7 @@ namespace GridKit
        */
       void print(std::ostream& os, VariableEnum v, Yaml) const
       {
-        os << indent_ << enum_name(v) << ": " << f_[enum_integer(v)]
+        os << indent_ << enum_name(v) << ": " << f_[static_cast<size_t>(enum_integer(v))]
            << '\n';
       }
 

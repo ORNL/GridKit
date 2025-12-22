@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <GridKit/Constants.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/ModelWrappers.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
