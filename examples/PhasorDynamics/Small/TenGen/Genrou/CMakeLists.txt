@@ -5,4 +5,4 @@ target_link_libraries(TenGenGenrou
 install(TARGETS TenGenGenrou RUNTIME DESTINATION bin)
 
 # Not used for tesing for now.
-add_test(NAME GenrouTest3 COMMAND $<TARGET_FILE:TenGenGenrou>)
+add_test(NAME TenGenGenrou COMMAND $<TARGET_FILE:TenGenGenrou>)
