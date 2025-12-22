@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/ModelWrappers.hpp>
@@ -95,7 +96,7 @@ namespace GridKit
             {
               IdxT row = res_indices[static_cast<size_t>(tup.row)];
               IdxT col = var_indices[static_cast<size_t>(tup.col)];
-              if (col != static_cast<IdxT>(-1))
+              if (col != INVALID_INDEX<IdxT>)
               {
                 rtemp.push_back(row);
                 ctemp.push_back(col);

@@ -131,7 +131,7 @@ namespace GridKit
       IdxT     signal_id_{0};
 
     protected:
-      const IdxT bus_id_{static_cast<IdxT>(-1)};
+      const IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       IdxT  size_{0};
       IdxT  nnz_{0};

@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -266,7 +267,7 @@ namespace GridKit
       bool   is_fixed_;        ///< Constant parameter flag.
 
       mutable DependencyMap* dependencies_;
-      static const size_t    INVALID_VAR_NUMBER = static_cast<size_t>(-1);
+      static const size_t    INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
     };
 
     //------------------------------------

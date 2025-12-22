@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
@@ -163,7 +164,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     protected:
-      IdxT bus_id_{static_cast<IdxT>(-1)};
+      IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       IdxT              size_{0};
       IdxT              nnz_{0};

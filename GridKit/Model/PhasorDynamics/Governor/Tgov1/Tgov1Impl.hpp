@@ -147,7 +147,7 @@ namespace GridKit
         ws_.resize(1);
         ws_indices_.resize(1);
         ws_[0]         = 0.0;
-        ws_indices_[0] = static_cast<IdxT>(-1);
+        ws_indices_[0] = INVALID_INDEX<IdxT>;
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)

@@ -325,8 +325,8 @@ namespace GridKit
       // Resize signal variable data
       ws_.resize(2);
       ws_indices_.resize(2);
-      ws_indices_[0] = static_cast<IdxT>(-1);
-      ws_indices_[1] = static_cast<IdxT>(-1);
+      ws_indices_[0] = INVALID_INDEX<IdxT>;
+      ws_indices_[1] = INVALID_INDEX<IdxT>;
 
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
