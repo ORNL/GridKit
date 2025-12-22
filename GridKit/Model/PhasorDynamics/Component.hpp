@@ -129,10 +129,10 @@ namespace GridKit
 
       IdxT& getVariableIndex(IdxT local_index)
       {
-        return variable_indices_.at(local_index);
+        return variable_indices_[local_index];
       }
 
-      const std::map<IdxT, IdxT>& getVariableIndices() const
+      const std::vector<IdxT>& getVariableIndices() const
       {
         return variable_indices_;
       }
@@ -148,19 +148,17 @@ namespace GridKit
         return residual_indices_.at(local_index);
       }
 
-      const std::map<IdxT, IdxT>& getResidualIndices() const
+      const std::vector<IdxT>& getResidualIndices() const
       {
         return residual_indices_;
       }
 
     protected:
-      IdxT                 gridkit_component_id_{0};
-      IdxT                 size_{0};
-      IdxT                 nnz_{0};
-      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level)
-                                              /// variable indices
-      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
-                                              /// residual indices
+      IdxT              gridkit_component_id_{0};
+      IdxT              size_{0};
+      IdxT              nnz_{0};
+      std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
+      std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;

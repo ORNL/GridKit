@@ -82,6 +82,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
+      using Component<ScalarT, IdxT>::variable_indices_;
+      using Component<ScalarT, IdxT>::residual_indices_;
 
     public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
@@ -235,7 +237,7 @@ namespace GridKit
 
       /* Local copies of signal variables */
       std::vector<ScalarT> ws_;
-      std::map<IdxT, IdxT> ws_indices_;
+      std::vector<IdxT>    ws_indices_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

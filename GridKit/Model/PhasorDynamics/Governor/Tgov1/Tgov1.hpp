@@ -70,6 +70,8 @@ namespace GridKit
         using Component<ScalarT, IdxT>::wb_;
         using Component<ScalarT, IdxT>::h_;
         using Component<ScalarT, IdxT>::J_;
+        using Component<ScalarT, IdxT>::variable_indices_;
+        using Component<ScalarT, IdxT>::residual_indices_;
 
         using RealT           = typename Component<ScalarT, IdxT>::RealT;
         using model_data_type = Tgov1Data<RealT, IdxT>;
@@ -125,7 +127,7 @@ namespace GridKit
 
         /* Local copies of signal variables */
         std::vector<ScalarT> ws_;
-        std::map<IdxT, IdxT> ws_indices_;
+        std::vector<IdxT>    ws_indices_;
       };
 
     } // namespace Governor

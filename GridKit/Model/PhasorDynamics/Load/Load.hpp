@@ -39,6 +39,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
+      using Component<ScalarT, IdxT>::variable_indices_;
+      using Component<ScalarT, IdxT>::residual_indices_;
 
     public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;

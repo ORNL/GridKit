@@ -49,6 +49,8 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::J_;
       using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::residual_indices_;
 
     public:
       /**
@@ -325,6 +327,8 @@ namespace GridKit
         yp_.resize(size_);
         f_.resize(size_);
         tag_.resize(size_);
+        variable_indices_.resize(size_);
+        residual_indices_.resize(size_);
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)

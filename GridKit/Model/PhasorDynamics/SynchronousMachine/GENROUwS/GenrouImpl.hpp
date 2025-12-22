@@ -310,10 +310,13 @@ namespace GridKit
     int Genrou<ScalarT, IdxT>::allocate()
     {
       // Resize component model data
-      f_.resize(static_cast<size_t>(size_));
-      y_.resize(static_cast<size_t>(size_));
-      yp_.resize(static_cast<size_t>(size_));
-      tag_.resize(static_cast<size_t>(size_));
+      auto size = static_cast<size_t>(size_);
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      tag_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
 
       // Resize bus data
       wb_.resize(2);
@@ -321,6 +324,7 @@ namespace GridKit
 
       // Resize signal variable data
       ws_.resize(2);
+      ws_indices_.resize(2);
       ws_indices_[0] = static_cast<IdxT>(-1);
       ws_indices_[1] = static_cast<IdxT>(-1);
 

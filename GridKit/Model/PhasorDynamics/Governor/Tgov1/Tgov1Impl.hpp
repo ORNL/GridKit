@@ -140,9 +140,12 @@ namespace GridKit
         y_.resize(size);
         yp_.resize(size);
         tag_.resize(size);
+        variable_indices_.resize(size);
+        residual_indices_.resize(size);
 
         // Resize signal variable data
         ws_.resize(1);
+        ws_indices_.resize(1);
         ws_[0]         = 0.0;
         ws_indices_[0] = static_cast<IdxT>(-1);
 

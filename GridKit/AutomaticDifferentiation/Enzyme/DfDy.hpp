@@ -36,24 +36,24 @@ namespace GridKit
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] n_res - Number of residual functions
          * @param[in] n_var - Number of independent variables
-         * @param[in] res_indices - Map from local residual indices to global indices
-         * @param[in] var_indices - Map from local variable indices to global indices
+         * @param[in] res_indices - Global residual indices
+         * @param[in] var_indices - Global variable indices
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
          * @param[in] alpha - Time derivative jacobian coefficient
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                     model,
-                         size_t                      n_res,
-                         size_t                      n_var,
-                         const std::map<IdxT, IdxT>& res_indices,
-                         const std::map<IdxT, IdxT>& var_indices,
-                         ScalarT*                    y,
-                         ScalarT*                    yp,
-                         ScalarT*                    wb,
-                         RealT                       alpha,
-                         MatrixT&                    jac)
+        static void eval(ModelT*                  model,
+                         size_t                   n_res,
+                         size_t                   n_var,
+                         const std::vector<IdxT>& res_indices,
+                         const std::vector<IdxT>& var_indices,
+                         ScalarT*                 y,
+                         ScalarT*                 yp,
+                         ScalarT*                 wb,
+                         RealT                    alpha,
+                         MatrixT&                 jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -92,8 +92,8 @@ namespace GridKit
             std::vector<ScalarT> valtemp{};
             for (auto& tup : triplets)
             {
-              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
+              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
               valtemp.push_back(tup.val);
             }
             jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
@@ -132,8 +132,8 @@ namespace GridKit
             valtemp.clear();
             for (auto& tup : triplets)
             {
-              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
+              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
               valtemp.push_back(tup.val);
             }
             jac.axpy(alpha, rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
@@ -153,17 +153,17 @@ namespace GridKit
          * @param[in] alpha - Time derivative jacobian coefficient
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                     model,
-                         size_t                      n_res,
-                         size_t                      n_var,
-                         const std::map<IdxT, IdxT>& res_indices,
-                         const std::map<IdxT, IdxT>& var_indices,
-                         ScalarT*                    y,
-                         ScalarT*                    yp,
-                         ScalarT*                    wb,
-                         ScalarT*                    ws,
-                         RealT                       alpha,
-                         MatrixT&                    jac)
+        static void eval(ModelT*                  model,
+                         size_t                   n_res,
+                         size_t                   n_var,
+                         const std::vector<IdxT>& res_indices,
+                         const std::vector<IdxT>& var_indices,
+                         ScalarT*                 y,
+                         ScalarT*                 yp,
+                         ScalarT*                 wb,
+                         ScalarT*                 ws,
+                         RealT                    alpha,
+                         MatrixT&                 jac)
         {
           if (n_res > 0 && n_var > 0)
           {
@@ -204,8 +204,8 @@ namespace GridKit
             std::vector<ScalarT> valtemp{};
             for (auto& tup : triplets)
             {
-              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
+              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
               valtemp.push_back(tup.val);
             }
             jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
@@ -246,8 +246,8 @@ namespace GridKit
             valtemp.clear();
             for (auto& tup : triplets)
             {
-              rtemp.push_back(res_indices.at(static_cast<IdxT>(tup.row)));
-              ctemp.push_back(var_indices.at(static_cast<IdxT>(tup.col)));
+              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
+              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
               valtemp.push_back(tup.val);
             }
             jac.axpy(alpha, rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
