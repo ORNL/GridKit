@@ -1,6 +1,7 @@
 
 #include "Ida.hpp"
 
+#include <format>
 #include <iomanip>
 #include <iostream>
 
@@ -966,6 +967,87 @@ namespace AnalysisManager
     {
       int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "IDAPrintAllStats");
+    }
+
+    /**
+     * @brief Accumulate another stats object into this one, allowing for stats to be kept
+     *        across multiple simulations with IDA.
+     */
+    IdaStats& IdaStats::operator+=(const IdaStats& other)
+    {
+      num_steps_                       += other.num_steps_;
+      num_residual_evals_              += other.num_residual_evals_;
+      num_linear_decompositions_       += other.num_linear_decompositions_;
+      num_error_test_fails_            += other.num_error_test_fails_;
+      num_linear_solves_               += other.num_linear_solves_;
+      num_nonlinear_convergence_fails_ += other.num_nonlinear_convergence_fails_;
+
+      return *this;
+    }
+
+    /**
+     * @brief Generate a string containing all of the stats in a formatted report.
+     *        All columns are aligned. To change the width of a column,
+     *        modify `label_width` or `stat_width`.
+     */
+    std::string IdaStats::report() const
+    {
+      unsigned label_width = 30;
+      unsigned stat_width  = 12;
+      return std::format(
+          "{2:>{0}} : {3:{1}}\n"    // steps
+          "{4:>{0}} : {5:{1}}\n"    // residual evals
+          "{6:>{0}} : {7:{1}}\n"    // linear decomps
+          "{8:>{0}} : {9:{1}}\n"    // error test fails
+          "{10:>{0}} : {11:{1}}\n"  // linear solves
+          "{12:>{0}} : {13:{1}}\n", // nonlinear conv fails
+          label_width,
+          stat_width,
+          "Steps",
+          num_steps_,
+          "Residual evals",
+          num_residual_evals_,
+          "Linear decompositions",
+          num_linear_decompositions_,
+          "Error test failures",
+          num_error_test_fails_,
+          "Linear solves",
+          num_linear_solves_,
+          "Nonlinear convergence failures",
+          num_nonlinear_convergence_fails_);
+    }
+
+    /**
+     * @brief Construct and return an `IdaStats` object containing the statistics of the current IDA workspace.
+     *        Several statistics returned by IDA are ignored because they are about the current state of IDA,
+     *        rather than about the simulation at large.
+     */
+    template <class ScalarT, typename IdxT>
+    IdaStats Ida<ScalarT, IdxT>::getStats() const
+    {
+      IdaStats stats;
+
+      // Dummies for ignoring stats
+      int         dummy;
+      sunrealtype dummy2;
+
+      int retval = IDAGetIntegratorStats(solver_,
+                                         &stats.num_steps_,
+                                         &stats.num_residual_evals_,
+                                         &stats.num_linear_decompositions_,
+                                         &stats.num_error_test_fails_,
+                                         &dummy,
+                                         &dummy,
+                                         &dummy2,
+                                         &dummy2,
+                                         &dummy2,
+                                         &dummy2);
+      checkOutput(retval, "IDAGetIntegratorStats");
+
+      retval = IDAGetNonlinSolvStats(solver_, &stats.num_linear_solves_, &stats.num_nonlinear_convergence_fails_);
+      checkOutput(retval, "IDAGetNonlinSolvStats");
+
+      return stats;
     }
 
     /**

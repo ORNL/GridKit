@@ -24,6 +24,19 @@ namespace AnalysisManager
 {
   namespace Sundials
   {
+    struct IdaStats
+    {
+      long int num_steps_                       = 0;
+      long int num_residual_evals_              = 0;
+      long int num_linear_decompositions_       = 0;
+      long int num_error_test_fails_            = 0;
+      long int num_linear_solves_               = 0;
+      long int num_nonlinear_convergence_fails_ = 0;
+
+      IdaStats&   operator+=(const IdaStats& other);
+      std::string report() const;
+    };
+
     template <class ScalarT, typename IdxT>
     class Ida : public DynamicSolver<ScalarT, IdxT>
     {
@@ -114,6 +127,8 @@ namespace AnalysisManager
       void printOutput(RealT t);
       void printSpecial(RealT t, N_Vector x);
       void printFinalStats();
+
+      IdaStats getStats() const;
 
     private:
       static int Residual(RealT    t,
