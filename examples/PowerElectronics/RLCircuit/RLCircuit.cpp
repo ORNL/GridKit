@@ -134,5 +134,7 @@ int main(int /* argc */, char const** /* argv */)
     std::cout << abs((yfinial[i] - yexact[i]) / yexact[i]) << "\n";
   }
 
+  std::cerr << idas.getStats().report() << '\n';
+
   return 0;
 }
