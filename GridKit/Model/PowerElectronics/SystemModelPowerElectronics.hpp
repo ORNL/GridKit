@@ -63,6 +63,7 @@ namespace GridKit
   {
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
+    using MatrixT        = CircuitComponent<ScalarT, IdxT>::MatrixT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
@@ -151,8 +152,8 @@ namespace GridKit
       };
 
       // A reverse mapping from external system variables -> component variables
-      auto   reverse_extern_map = new std::forward_list<ComponentContribution>[n_extern_];
-      size_t component_nnz      = 0;
+      std::forward_list<ComponentContribution>* reverse_extern_map = new std::forward_list<ComponentContribution>[n_extern_];
+      size_t                                    component_nnz      = 0;
 
       // Loop over all components, evaluate their jacobians, save their sparsity information,
       // and construct the reverse variable mapping.
@@ -161,7 +162,7 @@ namespace GridKit
         component_type* component = components_[comp_idx];
         component->evaluateJacobian();
 
-        auto& comp_jacobian = component->getJacobian();
+        MatrixT& comp_jacobian = component->getJacobian();
 
         for (IdxT local_external_row : component->getExternIndices())
         {
@@ -190,9 +191,11 @@ namespace GridKit
       size_t curr_internal_row = 0;
       for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
-        component_type* component           = components_[comp_idx];
-        auto            comp_externals      = component->getExternIndices();
-        const auto& [rows, columns, values] = component->getJacobian().getEntries();
+        component_type*                                                         component      = components_[comp_idx];
+        std::set<size_t>                                                        comp_externals = component->getExternIndices();
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries        = component->getJacobian().getEntries();
+        const std::vector<IdxT>&                                                rows           = std::get<0>(entries);
+        const std::vector<IdxT>&                                                columns        = std::get<1>(entries);
 
         if (rows.empty())
           continue;
@@ -235,8 +238,8 @@ namespace GridKit
       // may contain external columns.
       for (size_t row_idx = 0; row_idx < curr_internal_row; row_idx++)
       {
-        auto global_row_start = global_col_indices + global_row_indices[row_idx];
-        auto global_row_end   = global_col_indices + global_row_indices[row_idx + 1];
+        IdxT* global_row_start = global_col_indices + global_row_indices[row_idx];
+        IdxT* global_row_end   = global_col_indices + global_row_indices[row_idx + 1];
         std::sort(global_row_start, global_row_end);
       }
 
@@ -250,17 +253,19 @@ namespace GridKit
         // Collect columns from each component which has a row which contributes to this row
         for (ComponentContribution contrib : reverse_extern_map[row - n_intern_])
         {
-          component_type* component           = components_[contrib.comp_idx_];
-          const auto& [rows, columns, values] = component->getJacobian().getEntries();
+          component_type*                                                         component = components_[contrib.comp_idx_];
+          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries   = component->getJacobian().getEntries();
+          const std::vector<IdxT>&                                                rows      = std::get<0>(entries);
+          const std::vector<IdxT>&                                                columns   = std::get<1>(entries);
 
-          auto row_start = std::ranges::lower_bound(rows, contrib.local_row_idx_);
+          typename std::vector<IdxT>::const_iterator row_start = std::ranges::lower_bound(rows, contrib.local_row_idx_);
 
           // It can happen where external contributions are only constants, and do not appear in the jacobian.
           // If that is the case, we won't be able to find local_row_idx_ and must skip this contribution
           if (row_start == rows.end() || *row_start != contrib.local_row_idx_)
             continue;
 
-          auto row_end = std::upper_bound(row_start, rows.end(), contrib.local_row_idx_);
+          typename std::vector<IdxT>::const_iterator row_end = std::upper_bound(row_start, rows.end(), contrib.local_row_idx_);
 
           for (size_t local_elem_idx = std::distance(rows.begin(), row_start);
                local_elem_idx < static_cast<size_t>(std::distance(rows.begin(), row_end));
@@ -280,12 +285,12 @@ namespace GridKit
 
         // Sort the row by column indices. Since the mapping from local indices to global indices isn't monotonically increasing,
         // this is necessary.
-        auto start = global_col_indices + global_row_indices[row];
-        auto end   = global_col_indices + global_row_indices[row + 1];
+        IdxT* start = global_col_indices + global_row_indices[row];
+        IdxT* end   = global_col_indices + global_row_indices[row + 1];
         std::sort(start, end);
 
         // De-duplicate the columns
-        auto new_end                = std::unique(start, end);
+        IdxT* new_end               = std::unique(start, end);
         global_row_indices[row + 1] = global_row_indices[row] + static_cast<IdxT>(std::distance(start, new_end));
       }
       // Allocate new sparsity buffers
@@ -348,7 +353,7 @@ namespace GridKit
         component->allocate();
 
         // Count up the amount of internal variables which get mapped to system variables
-        auto extern_indices = component->getExternIndices();
+        std::set<IdxT> extern_indices = component->getExternIndices();
         for (IdxT comp_var_idx = 0; comp_var_idx < component->size(); comp_var_idx++)
         {
           IdxT sys_var_idx = component->getNodeConnection(comp_var_idx);
@@ -369,8 +374,8 @@ namespace GridKit
       // sorted by these groupings, so the first component is the first block and so on.
       for (size_t comp_idx = 0; comp_idx < components_.size(); comp_idx++)
       {
-        auto component      = components_[comp_idx];
-        auto extern_indices = component->getExternIndices();
+        component_type* component      = components_[comp_idx];
+        std::set<IdxT>  extern_indices = component->getExternIndices();
 
         // Whether or not we've seen a local variable yet
         bool has_seen_local = false;
