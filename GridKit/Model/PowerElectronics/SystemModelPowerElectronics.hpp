@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
@@ -116,6 +117,7 @@ namespace GridKit
       max_steps_ = max_steps;
       // Can choose if to use jacobian
       use_jac_   = use_jac;
+      csr_jac_   = nullptr;
     }
 
     /**
@@ -130,6 +132,9 @@ namespace GridKit
     {
       for (auto comp : components_)
         delete comp;
+
+      if (csr_jac_ != nullptr)
+        delete csr_jac_;
     }
 
     /**
@@ -179,7 +184,7 @@ namespace GridKit
         component_nnz += comp_jacobian.nnz();
       }
 
-      // Allocate the final sparsity pattern info
+      // Allocate the final sparsity pattern info. Not deleted, because ownership is stolen by the jacobian
       IdxT* global_row_indices = new IdxT[size_ + 1];
       IdxT* global_col_indices = new IdxT[component_nnz]; // Use component_nnz as an upper bound on nnz
       global_row_indices[0]    = 0;
@@ -296,17 +301,14 @@ namespace GridKit
       // Allocate new sparsity buffers
       IdxT nnz = global_row_indices[size_];
 
-      csr_jac_.resize(size_, size_);
-      csr_jac_.setNnz(nnz);
-      csr_jac_.allocateMatrixData(LinearAlgebra::memory::HOST);
+      if (csr_jac_ != nullptr)
+        delete csr_jac_;
 
-      // Copy column indices
-      std::copy(global_col_indices, global_col_indices + nnz, csr_jac_.getColData());
-      std::copy(global_row_indices, global_row_indices + size_ + 1, csr_jac_.getRowData());
+      RealT* value_buffer = new RealT[nnz];
+      csr_jac_            = new LinearAlgebra::CsrMatrix<RealT, IdxT>(
+          size_, size_, nnz, &global_row_indices, &global_col_indices, &value_buffer, LinearAlgebra::memory::HOST, LinearAlgebra::memory::HOST);
 
       delete[] reverse_extern_map;
-      delete[] global_row_indices;
-      delete[] global_col_indices;
 
       return 1;
     }
@@ -646,13 +648,13 @@ namespace GridKit
      */
     LinearAlgebra::CsrMatrix<RealT, IdxT>& getCsrJac()
     {
-      return csr_jac_;
+      return *csr_jac_;
     }
 
   private:
     static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
 
-    LinearAlgebra::CsrMatrix<RealT, IdxT> csr_jac_;
+    LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
     std::vector<component_type*> components_;
 
