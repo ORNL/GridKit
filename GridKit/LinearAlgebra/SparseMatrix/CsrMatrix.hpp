@@ -68,13 +68,13 @@ namespace GridKit
 
       // update Values just updates values; it allocates if necessary.
       // values have the same dimensions between different formats
-      virtual int copyValues(const RealT*        new_vals,
-                             memory::MemorySpace memspace_in,
-                             memory::MemorySpace memspace_out);
+      int copyValues(const RealT*        new_vals,
+                     memory::MemorySpace memspace_in,
+                     memory::MemorySpace memspace_out);
 
       // set new values just sets the pointer, use caution.
-      virtual int setValuesPointer(RealT*              new_vals,
-                                   memory::MemorySpace memspace);
+      int setValuesPointer(RealT*              new_vals,
+                           memory::MemorySpace memspace);
 
     private:
       IdxT n_{0};   ///< number of rows
