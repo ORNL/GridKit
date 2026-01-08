@@ -31,7 +31,10 @@ namespace GridKit
       }
     };
 
-    void updateTime(RealT t, RealT a)
+    /**
+     * @note Cannot be marked final, since it is overriden to recurse in the system model.
+     */
+    void updateTime(RealT t, RealT a) override
     {
       this->time_  = t;
       this->alpha_ = a;
@@ -83,175 +86,195 @@ namespace GridKit
      * @param local_index index of local value in vector
      * @return IdxT Index of the same value in the global vector
      */
-    IdxT getNodeConnection(IdxT local_index)
+    IdxT getNodeConnection(IdxT local_index) const
     {
       return connection_nodes_[local_index];
     }
 
   public:
-    virtual IdxT size()
+    IdxT size() final
     {
       return size_;
     }
 
-    virtual IdxT nnz()
+    IdxT size() const
+    {
+      return size_;
+    }
+
+    IdxT nnz() final
     {
       return nnz_;
     }
 
-    virtual IdxT sizeQuadrature()
+    IdxT nnz() const
+    {
+      return nnz_;
+    }
+
+    IdxT sizeQuadrature() final
     {
       return size_quad_;
     }
 
-    virtual IdxT sizeParams()
+    IdxT sizeQuadrature() const
+    {
+      return size_quad_;
+    }
+
+    IdxT sizeParams() final
     {
       return size_opt_;
     }
 
-    virtual void setTolerances(RealT& rel_tol, RealT& abs_tol) const
+    IdxT sizeParams() const
+    {
+      return size_opt_;
+    }
+
+    void setTolerances(RealT& rel_tol, RealT& abs_tol) const final
     {
       rel_tol = rel_tol_;
       abs_tol = abs_tol_;
     }
 
-    virtual void setMaxSteps(IdxT& msa) const
+    void setMaxSteps(IdxT& msa) const final
     {
       msa = max_steps_;
     }
 
-    std::vector<ScalarT>& y()
+    std::vector<ScalarT>& y() final
     {
       return y_;
     }
 
-    const std::vector<ScalarT>& y() const
+    const std::vector<ScalarT>& y() const final
     {
       return y_;
     }
 
-    std::vector<ScalarT>& yp()
+    std::vector<ScalarT>& yp() final
     {
       return yp_;
     }
 
-    const std::vector<ScalarT>& yp() const
+    const std::vector<ScalarT>& yp() const final
     {
       return yp_;
     }
 
-    std::vector<bool>& tag()
+    std::vector<bool>& tag() final
     {
       return tag_;
     }
 
-    const std::vector<bool>& tag() const
+    const std::vector<bool>& tag() const final
     {
       return tag_;
     }
 
-    std::vector<ScalarT>& yB()
+    std::vector<ScalarT>& yB() final
     {
       return yB_;
     }
 
-    const std::vector<ScalarT>& yB() const
+    const std::vector<ScalarT>& yB() const final
     {
       return yB_;
     }
 
-    std::vector<ScalarT>& ypB()
+    std::vector<ScalarT>& ypB() final
     {
       return ypB_;
     }
 
-    const std::vector<ScalarT>& ypB() const
+    const std::vector<ScalarT>& ypB() const final
     {
       return ypB_;
     }
 
-    std::vector<ScalarT>& param()
+    std::vector<ScalarT>& param() final
     {
       return param_;
     }
 
-    const std::vector<ScalarT>& param() const
+    const std::vector<ScalarT>& param() const final
     {
       return param_;
     }
 
-    std::vector<ScalarT>& param_up()
+    std::vector<ScalarT>& param_up() final
     {
       return param_up_;
     }
 
-    const std::vector<ScalarT>& param_up() const
+    const std::vector<ScalarT>& param_up() const final
     {
       return param_up_;
     }
 
-    std::vector<ScalarT>& param_lo()
+    std::vector<ScalarT>& param_lo() final
     {
       return param_lo_;
     }
 
-    const std::vector<ScalarT>& param_lo() const
+    const std::vector<ScalarT>& param_lo() const final
     {
       return param_lo_;
     }
 
-    std::vector<ScalarT>& getResidual()
+    std::vector<ScalarT>& getResidual() final
     {
       return f_;
     }
 
-    const std::vector<ScalarT>& getResidual() const
+    const std::vector<ScalarT>& getResidual() const final
     {
       return f_;
     }
 
-    MatrixT& getJacobian()
+    MatrixT& getJacobian() final
     {
       return jac_;
     }
 
-    const MatrixT& getJacobian() const
+    const MatrixT& getJacobian() const final
     {
       return jac_;
     }
 
-    std::vector<ScalarT>& getIntegrand()
+    std::vector<ScalarT>& getIntegrand() final
     {
       return g_;
     }
 
-    const std::vector<ScalarT>& getIntegrand() const
+    const std::vector<ScalarT>& getIntegrand() const final
     {
       return g_;
     }
 
-    std::vector<ScalarT>& getAdjointResidual()
+    std::vector<ScalarT>& getAdjointResidual() final
     {
       return fB_;
     }
 
-    const std::vector<ScalarT>& getAdjointResidual() const
+    const std::vector<ScalarT>& getAdjointResidual() const final
     {
       return fB_;
     }
 
-    std::vector<ScalarT>& getAdjointIntegrand()
+    std::vector<ScalarT>& getAdjointIntegrand() final
     {
       return gB_;
     }
 
-    const std::vector<ScalarT>& getAdjointIntegrand() const
+    const std::vector<ScalarT>& getAdjointIntegrand() const final
     {
       return gB_;
     }
 
     //@todo Fix ID naming
-    IdxT getIDcomponent()
+    IdxT getIDcomponent() const
     {
       return idc_;
     }
