@@ -21,8 +21,15 @@ namespace GridKit
     using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
     using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-    CircuitComponent()  = default;
-    ~CircuitComponent() = default;
+    CircuitComponent() = default;
+
+    ~CircuitComponent()
+    {
+      if (connection_nodes_ != nullptr)
+      {
+        delete[] connection_nodes_;
+      }
+    };
 
     void updateTime(RealT t, RealT a)
     {
@@ -59,6 +66,11 @@ namespace GridKit
      */
     int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
     {
+      if (connection_nodes_ == nullptr)
+      {
+        connection_nodes_ = new IdxT[size_];
+      }
+
       connection_nodes_[local_index] = global_index;
       return 0;
     }
@@ -73,7 +85,7 @@ namespace GridKit
      */
     IdxT getNodeConnection(IdxT local_index)
     {
-      return connection_nodes_.at(local_index);
+      return connection_nodes_[local_index];
     }
 
   public:
@@ -245,11 +257,11 @@ namespace GridKit
     }
 
   protected:
-    size_t               n_extern_;
-    size_t               n_intern_;
-    std::set<IdxT>       extern_indices_;
+    size_t         n_extern_;
+    size_t         n_intern_;
+    std::set<IdxT> extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-    std::map<IdxT, IdxT> connection_nodes_;
+    IdxT*          connection_nodes_ = nullptr;
 
   protected:
     IdxT size_{0};
