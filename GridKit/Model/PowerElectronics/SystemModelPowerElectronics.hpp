@@ -215,17 +215,21 @@ namespace GridKit
     {
       for (const auto& component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        IdxT                  size = component->size();
+        std::vector<ScalarT>& y    = component->y();
+        std::vector<ScalarT>& yp   = component->yp();
+
+        for (IdxT j = 0; j < size; ++j)
         {
           if (component->getNodeConnection(j) != neg1_)
           {
-            component->y()[j]  = y_[component->getNodeConnection(j)];
-            component->yp()[j] = yp_[component->getNodeConnection(j)];
+            y[j]  = y_[component->getNodeConnection(j)];
+            yp[j] = yp_[component->getNodeConnection(j)];
           }
           else
           {
-            component->y()[j]  = 0.0;
-            component->yp()[j] = 0.0;
+            y[j]  = 0.0;
+            yp[j] = 0.0;
           }
         }
       }
@@ -257,12 +261,15 @@ namespace GridKit
       {
         // TODO:check return type
         component->evaluateResidual();
-        for (IdxT j = 0; j < component->size(); ++j)
+
+        IdxT                        size     = component->size();
+        const std::vector<ScalarT>& residual = component->getResidual();
+        for (IdxT j = 0; j < size; ++j)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)
           {
-            f_[component->getNodeConnection(j)] += component->getResidual()[j];
+            f_[component->getNodeConnection(j)] += residual[j];
           }
         }
       }
