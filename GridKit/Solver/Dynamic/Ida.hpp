@@ -48,7 +48,7 @@ namespace AnalysisManager
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
-      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
+      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model, RealT dt=0);
       ~Ida();
 
       int configureSimulation();
@@ -174,6 +174,8 @@ namespace AnalysisManager
                                   void*    user_data);
 
     private:
+      RealT dt_;
+
       void*           solver_{};
       SUNContext      context_{};
       SUNMatrix       JacobianMat_{};
