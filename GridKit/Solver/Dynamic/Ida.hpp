@@ -184,6 +184,8 @@ namespace AnalysisManager
       int backwardID_{};
 
     private:
+      void configureIDA(void *ida);
+
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
