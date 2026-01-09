@@ -1,18 +1,7 @@
 #pragma once
 
-#include <algorithm>
-#include <array>
-#include <fstream>
-#include <functional>
-#include <iomanip>
 #include <iostream>
-#include <limits>
-#include <memory>
-#include <set>
 #include <string>
-#include <type_traits>
-#include <variant>
-#include <vector>
 
 #include <GridKit/ScalarTraits.hpp>
 
