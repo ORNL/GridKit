@@ -40,6 +40,7 @@
 - Added `GridKitDocs` target for Doxygen documentation.
 - Added a header file defining common math functions (e.g., sigmoid) to be used throughout the code.
 - Added capability to print monitored variables in multiple formats, triggered from `Ida::runSimulation`.
+- Added IDA statistics object which can be accumulated over multiple simulations.
 
 ## v0.1
 
