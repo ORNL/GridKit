@@ -16,8 +16,8 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
-      : DynamicSolver<ScalarT, IdxT>(model)
+    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model, RealT dt)
+      : DynamicSolver<ScalarT, IdxT>(model), dt_(dt)
     {
       int retval = 0;
 
@@ -81,14 +81,44 @@ namespace AnalysisManager
       // Set pointer to model data
       retval = IDASetUserData(solver_, model_);
       checkOutput(retval, "IDASetUserData");
-
+      
       // Set tolerances
       RealT rel_tol;
       RealT abs_tol;
 
       model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
-      retval = IDASStolerances(solver_, rel_tol, abs_tol);
-      checkOutput(retval, "IDASStolerances");
+      
+      if (dt_ > 0) {
+        retval = IDASetMinStep(solver_, dt_);
+        checkOutput(retval, "IDASetMinStep");
+        retval = IDASetMaxStep(solver_, dt_);
+        checkOutput(retval, "IDASetMaxStep");
+        
+        /* Since the starting procedure is first order, the maximum global order
+         * of convergence is two */
+        IDASetMaxOrd(solver_, 2);
+        checkOutput(retval, "IDASetMaxOrd");
+
+
+        /* Enable more nonlinear iterations because a failed nonlinear solve
+         * causes a failed integration with fixed steps */
+        retval = IDASetMaxNonlinIters(solver_, 100);
+        checkOutput(retval, "IDASetMaxNonlinIters");
+
+        // A large number so that the error test will never fail
+        static constexpr RealT fac = 1e10;
+        retval = IDASStolerances(solver_, fac, fac * abs_tol / rel_tol);
+        checkOutput(retval, "IDASStolerances");
+
+        /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
+         * the large tolerances set above, we need to choose this tolerance to
+         * "undo" the fac scaling. */
+        retval = IDASetNonlinConvCoef(solver_, rel_tol / fac);
+        checkOutput(retval, "IDASetNonlinConvCoef");
+      } else {
+        retval = IDASStolerances(solver_, rel_tol, abs_tol);
+        checkOutput(retval, "IDASStolerances");
+      }
 
       IdxT msa;
       model_->setMaxSteps(msa);
