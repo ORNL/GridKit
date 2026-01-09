@@ -133,7 +133,7 @@ namespace GridKit
      *
      * @return int
      */
-    int allocate()
+    int allocate() final
     {
       return 1;
     }
@@ -145,7 +145,7 @@ namespace GridKit
      * @return true if all components have jacobian
      * @return false otherwise
      */
-    bool hasJacobian()
+    bool hasJacobian() final
     {
       if (!this->use_jac_)
         return false;
@@ -192,7 +192,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int initialize()
+    int initialize() final
     {
       // Initialize components
       for (const auto& component : components_)
@@ -215,17 +215,21 @@ namespace GridKit
     {
       for (const auto& component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        IdxT                  size = component->size();
+        std::vector<ScalarT>& y    = component->y();
+        std::vector<ScalarT>& yp   = component->yp();
+
+        for (IdxT j = 0; j < size; ++j)
         {
           if (component->getNodeConnection(j) != neg1_)
           {
-            component->y()[j]  = y_[component->getNodeConnection(j)];
-            component->yp()[j] = yp_[component->getNodeConnection(j)];
+            y[j]  = y_[component->getNodeConnection(j)];
+            yp[j] = yp_[component->getNodeConnection(j)];
           }
           else
           {
-            component->y()[j]  = 0.0;
-            component->yp()[j] = 0.0;
+            y[j]  = 0.0;
+            yp[j] = 0.0;
           }
         }
       }
@@ -242,7 +246,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateResidual()
+    int evaluateResidual() final
     {
       for (IdxT i = 0; i < this->f_.size(); i++)
       {
@@ -257,12 +261,15 @@ namespace GridKit
       {
         // TODO:check return type
         component->evaluateResidual();
-        for (IdxT j = 0; j < component->size(); ++j)
+
+        IdxT                        size     = component->size();
+        const std::vector<ScalarT>& residual = component->getResidual();
+        for (IdxT j = 0; j < size; ++j)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)
           {
-            f_[component->getNodeConnection(j)] += component->getResidual()[j];
+            f_[component->getNodeConnection(j)] += residual[j];
           }
         }
       }
@@ -278,7 +285,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateJacobian()
+    int evaluateJacobian() final
     {
       jac_.zeroMatrix();
       distributeVectors();
@@ -320,7 +327,7 @@ namespace GridKit
     /**
      * @brief Evaluate integrands for the system quadratures.
      */
-    int evaluateIntegrand()
+    int evaluateIntegrand() final
     {
 
       return 0;
@@ -332,7 +339,7 @@ namespace GridKit
      * Updates variables and optimization parameters, then initializes
      * adjoints locally and copies them to the system adjoint vector.
      */
-    int initializeAdjoint()
+    int initializeAdjoint() final
     {
       return 0;
     }
@@ -342,7 +349,7 @@ namespace GridKit
      *
      *
      */
-    int evaluateAdjointResidual()
+    int evaluateAdjointResidual() final
     {
       return 0;
     }
@@ -352,7 +359,7 @@ namespace GridKit
      *
      *
      */
-    int evaluateAdjointIntegrand()
+    int evaluateAdjointIntegrand() final
     {
       return 0;
     }
@@ -363,7 +370,7 @@ namespace GridKit
      * @param t
      * @param a
      */
-    void updateTime(RealT t, RealT a)
+    void updateTime(RealT t, RealT a) final
     {
       for (const auto& component : components_)
       {
