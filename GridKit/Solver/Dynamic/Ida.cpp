@@ -979,7 +979,7 @@ namespace AnalysisManager
       num_residual_evals_              += other.num_residual_evals_;
       num_linear_decompositions_       += other.num_linear_decompositions_;
       num_error_test_fails_            += other.num_error_test_fails_;
-      num_linear_solves_               += other.num_linear_solves_;
+      num_nonlinear_iters_             += other.num_nonlinear_iters_;
       num_nonlinear_convergence_fails_ += other.num_nonlinear_convergence_fails_;
 
       return *this;
@@ -1000,7 +1000,7 @@ namespace AnalysisManager
           << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
           << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
           << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
-          << std::setw(label_width) << "Linear solves" << " : " << std::setw(stat_width) << num_linear_solves_ << '\n'
+          << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
           << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
 
       return out.str();
@@ -1033,7 +1033,7 @@ namespace AnalysisManager
                                          &dummy2);
       checkOutput(retval, "IDAGetIntegratorStats");
 
-      retval = IDAGetNonlinSolvStats(solver_, &stats.num_linear_solves_, &stats.num_nonlinear_convergence_fails_);
+      retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");
 
       return stats;
