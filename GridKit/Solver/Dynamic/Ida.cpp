@@ -1,9 +1,9 @@
 
 #include "Ida.hpp"
 
-#include <format>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -992,29 +992,18 @@ namespace AnalysisManager
      */
     std::string IdaStats::report() const
     {
-      unsigned label_width = 30;
-      unsigned stat_width  = 12;
-      return std::format(
-          "{2:>{0}} : {3:{1}}\n"    // steps
-          "{4:>{0}} : {5:{1}}\n"    // residual evals
-          "{6:>{0}} : {7:{1}}\n"    // linear decomps
-          "{8:>{0}} : {9:{1}}\n"    // error test fails
-          "{10:>{0}} : {11:{1}}\n"  // linear solves
-          "{12:>{0}} : {13:{1}}\n", // nonlinear conv fails
-          label_width,
-          stat_width,
-          "Steps",
-          num_steps_,
-          "Residual evals",
-          num_residual_evals_,
-          "Linear decompositions",
-          num_linear_decompositions_,
-          "Error test failures",
-          num_error_test_fails_,
-          "Linear solves",
-          num_linear_solves_,
-          "Nonlinear convergence failures",
-          num_nonlinear_convergence_fails_);
+      int               label_width = 30;
+      int               stat_width  = 12;
+      std::stringstream out;
+
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
+          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
+          << std::setw(label_width) << "Linear solves" << " : " << std::setw(stat_width) << num_linear_solves_ << '\n'
+          << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
+
+      return out.str();
     }
 
     /**
