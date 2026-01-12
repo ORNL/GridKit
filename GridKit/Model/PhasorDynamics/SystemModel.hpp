@@ -347,9 +347,9 @@ namespace GridKit
 
         // Perform an initial Jacobian evaluation for sparse Jacobians, such that
         // the dynamic solver can querry the NNZ value when it is configured.
-        // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian 
+        // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
         // without needing the Jacobian values.
-        if (hasJacobian()) 
+        if (hasJacobian())
         {
           initialize();
           evaluateResidual();
