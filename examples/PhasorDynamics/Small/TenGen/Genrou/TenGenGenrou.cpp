@@ -96,9 +96,6 @@ int main()
   sys.addComponent(&gen10);
   sys.addComponent(&fault);
   sys.allocate();
-  sys.initialize();
-  sys.evaluateResidual();
-  sys.evaluateJacobian();
 
   real_type dt = 1.0 / 4.0 / 60.0;
 

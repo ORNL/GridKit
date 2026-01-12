@@ -80,9 +80,6 @@ int main(int argc, const char* argv[])
 
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
-  sys.initialize();
-  sys.evaluateResidual();
-  sys.evaluateJacobian();
 
   // Get access to the fault
   auto* fault = sys.getBusFault(0);
