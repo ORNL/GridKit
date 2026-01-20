@@ -60,11 +60,11 @@ namespace GridKit
         node.initialize();
         success *= isEqual(node.V(), V);
 
-        node.I() = I; // inject current
+        node.I() = I; 
         success *= isEqual(node.I(), I);
 
-        node.evaluateResidual(); // should reset to zero
-        success *= isEqual(node.I(), static_cast<ScalarT>(0));
+        node.evaluateResidual(); 
+        success *= isEqual(node.I(), 0.0);
 
         return success.report(__func__);
       }

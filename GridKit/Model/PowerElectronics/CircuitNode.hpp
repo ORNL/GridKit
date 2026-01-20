@@ -68,13 +68,12 @@ namespace GridKit
     // Allocate storage for a single-node voltage and KCL residual
     int allocate()
     {
-      size_ = 1;
-      nnz_  = 0;
+      size_t size = static_cast<size_t>(size_);
 
-      y_.resize(1);
-      yp_.resize(1);
-      f_.resize(1);
-      tag_.resize(1);
+      y_.resize(size);
+      yp_.resize(size);
+      f_.resize(size);
+      tag_.resize(size);
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -82,19 +81,20 @@ namespace GridKit
       return 0;
     }
 
-    /*!
-     * @brief Sets node variables
+    /**
+     * @brief Initialize node variables
      */
     int initialize()
     {
-      y_[0]   = V0_;
-      yp_[0]  = 0.0;
-      f_[0]   = 0.0;
-      tag_[0] = false;
+      y_[0]  = V0_;
+      yp_[0] = 0.0;
 
       return 0;
     }
 
+    /**
+     * @brief Node variables are algebraic.
+     */
     int tagDifferentiable()
     {
       tag_[0] = false;
@@ -102,9 +102,15 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Node does not compute residuals, so here we just reset residual values.
+     *
+     * @warning This implementation assumes node residuals are always evaluated
+     * _before_ component model residuals.
+     *
+     */
     int evaluateResidual()
     {
-      // Components add to this 
       f_[0] = 0.0;
 
       return 0;
@@ -115,10 +121,11 @@ namespace GridKit
       return false;
     }
 
+    /**
+     * @brief There is no Jacobian for node variables
+     */
     int evaluateJacobian()
     {
-      jac_.zeroMatrix();
-
       return 0;
     }
 
@@ -142,16 +149,9 @@ namespace GridKit
       return 0;
     }
 
-    static CircuitNode<ScalarT, IdxT> ground()
-    {
-      CircuitNode<ScalarT, IdxT> g(0.0);
-      g.setNodeID(static_cast<IdxT>(-1));
-      return g;
-    }
-
   private:
     IdxT    id_{static_cast<IdxT>(-1)};
-    IdxT    size_{1};
+    IdxT    size_{0};
     IdxT    nnz_{0};
     IdxT    size_quad_{0};
     IdxT    size_opt_{0};
@@ -160,10 +160,12 @@ namespace GridKit
     std::map<IdxT, IdxT> variable_indices_;
     std::map<IdxT, IdxT> residual_indices_;
 
-    std::vector<ScalarT> y_{0.0};
-    std::vector<ScalarT> yp_{0.0};
-    std::vector<bool>    tag_{false};
-    std::vector<ScalarT> f_{0.0};
+    std::vector<ScalarT> y_;
+    std::vector<ScalarT> yp_;
+    std::vector<bool>    tag_;
+    std::vector<ScalarT> f_;
+    
+    MatrixT J_;
 
     std::vector<ScalarT> g_{};
     std::vector<ScalarT> param_{};
@@ -174,8 +176,6 @@ namespace GridKit
     std::vector<ScalarT> ypB_{};
     std::vector<ScalarT> fB_{};
     std::vector<ScalarT> gB_{};
-
-    MatrixT jac_;
 
     RealT time_{0};
     RealT alpha_{0};
@@ -314,12 +314,12 @@ namespace GridKit
 
     MatrixT& getJacobian() final
     {
-      return jac_;
+      return J_;
     }
 
     const MatrixT& getJacobian() const final
     {
-      return jac_;
+      return J_;
     }
 
     std::vector<ScalarT>& getIntegrand() final
