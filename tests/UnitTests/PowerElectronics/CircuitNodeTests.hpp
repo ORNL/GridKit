@@ -27,7 +27,7 @@ namespace GridKit
         CircuitNode<ScalarT, IdxT>* node = nullptr;
 
         // Default construct
-        node     = new CircuitNode<ScalarT, IdxT>();
+        node = new CircuitNode<ScalarT, IdxT>();
         node->allocate();
         node->initialize();
         success *= isEqual(node->V(), static_cast<ScalarT>(0));
@@ -35,7 +35,7 @@ namespace GridKit
         delete node;
 
         // Construct with initial voltage
-        node     = new CircuitNode<ScalarT, IdxT>(V);
+        node = new CircuitNode<ScalarT, IdxT>(V);
         node->allocate();
         node->initialize();
         success *= isEqual(node->V(), V);
@@ -60,10 +60,10 @@ namespace GridKit
         node.initialize();
         success *= isEqual(node.V(), V);
 
-        node.I() = I; 
-        success *= isEqual(node.I(), I);
+        node.I()  = I;
+        success  *= isEqual(node.I(), I);
 
-        node.evaluateResidual(); 
+        node.evaluateResidual();
         success *= isEqual(node.I(), 0.0);
 
         return success.report(__func__);

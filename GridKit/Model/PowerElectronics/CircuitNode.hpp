@@ -164,7 +164,7 @@ namespace GridKit
     std::vector<ScalarT> yp_;
     std::vector<bool>    tag_;
     std::vector<ScalarT> f_;
-    
+
     MatrixT J_;
 
     std::vector<ScalarT> g_{};
