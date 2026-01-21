@@ -40,7 +40,7 @@ namespace GridKit
       this->alpha_ = a;
     }
 
-    bool hasJacobian()
+    bool hasJacobian() override
     {
       return true;
     }
