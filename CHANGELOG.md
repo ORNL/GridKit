@@ -43,7 +43,7 @@
 - Added IDA statistics object which can be accumulated over multiple simulations.
 - Minor performance improvements to residual evaluation in PowerElectronics module.
 - Added full support for sparse Jacobians obtained with Enzyme in PhasorDynamics.
-
+- Added `Node` class to the PowerElectronics module to separate nodes from circuit components.
 ## v0.1
 
 - Refactored code to support adding different model families.
