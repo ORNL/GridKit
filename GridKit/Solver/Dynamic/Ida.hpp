@@ -19,11 +19,14 @@
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace AnalysisManager
 {
   namespace Sundials
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     struct IdaStats
     {
       long int num_steps_                       = 0;

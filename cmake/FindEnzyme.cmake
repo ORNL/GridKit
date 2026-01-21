@@ -12,6 +12,15 @@ Author(s):
 
 ]]
 
+
+# Error if CMAKE_BUILD_TYPE is not Release or RelWithDebInfo due to an Enzyme bug
+if (NOT ((CMAKE_BUILD_TYPE STREQUAL "Release") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")))
+  message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+  message(FATAL_ERROR "Enzyme builds currently only support Release and RelWithDebInfo as \
+                       CMAKE_BUILD_TYPE due to a bug within the Enzyme library.")
+endif()
+
+# Find Enzyme and necessary programs
 find_package(Enzyme REQUIRED CONFIG 
              PATHS 
              ${ENZYME_DIR}

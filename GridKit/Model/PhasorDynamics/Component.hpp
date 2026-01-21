@@ -3,12 +3,16 @@
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /**
      * @brief Component model implementation base class.
      */
@@ -39,15 +43,15 @@ namespace GridKit
       /// @todo Remove this method. It should be part of DynamicSolver class.
       virtual bool hasJacobian() override
       {
-        return false;
+        return true;
       }
 
-      // virtual void updateTime(RealT t, RealT a)
-      // {
-      //     time_ = t;
-      //     alpha_ = a;
-      //     std::cout << "updateTime: t = " << time_ << "\n";
-      // }
+      virtual void updateTime(RealT t, RealT a) override
+      {
+        time_  = t;
+        alpha_ = a;
+        // std::cout << "updateTime: t = " << time_ << ", alpha = " << alpha_ << "\n";
+      }
 
       virtual void setTolerances(RealT& rtol, RealT& atol) const override
       {
@@ -119,44 +123,42 @@ namespace GridKit
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
-        variable_indices_[local_index] = global_index;
+        variable_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT& getVariableIndex(IdxT local_index)
       {
-        return variable_indices_.at(local_index);
+        return variable_indices_[static_cast<size_t>(local_index)];
       }
 
-      const std::map<IdxT, IdxT>& getVariableIndices() const
+      const std::vector<IdxT>& getVariableIndices() const
       {
         return variable_indices_;
       }
 
       int setResidualIndex(IdxT local_index, IdxT global_index)
       {
-        residual_indices_[local_index] = global_index;
+        residual_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT& getResidualIndex(IdxT local_index)
       {
-        return residual_indices_.at(local_index);
+        return residual_indices_[static_cast<size_t>(local_index)];
       }
 
-      const std::map<IdxT, IdxT>& getResidualIndices() const
+      const std::vector<IdxT>& getResidualIndices() const
       {
         return residual_indices_;
       }
 
     protected:
-      IdxT                 gridkit_component_id_{0};
-      IdxT                 size_{0};
-      IdxT                 nnz_{0};
-      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level)
-                                              /// variable indices
-      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
-                                              /// residual indices
+      IdxT              gridkit_component_id_{0};
+      IdxT              size_{0};
+      IdxT              nnz_{0};
+      std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
+      std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
@@ -180,7 +182,7 @@ namespace GridKit
 
       ------ WARNING: Temporary ------
 
-      The protexted variable mva_system_base_ is temporarily
+      The protected variable mva_system_base_ is temporarily
       hard coded. This eventually needs to be configured
       from the input JSON format, which specifies the system MVA base.
 

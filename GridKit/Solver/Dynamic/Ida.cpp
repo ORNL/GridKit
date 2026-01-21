@@ -142,15 +142,13 @@ namespace AnalysisManager
         this->configureLinearSolverDense();
       }
 #else
+      /// Todo - Improve error handling capabilities and hasJacobian_ ownership
       if (model_->hasJacobian())
       {
-        /// Todo - Improve error handling capabilities and hasJacobian_ ownership
-        throw std::runtime_error("SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian.");
+        Log::warning() << "SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian. "
+                       << "Falling back to dense Jacobian.\n";
       }
-      else
-      {
-        this->configureLinearSolverDense();
-      }
+      this->configureLinearSolverDense();
 #endif
 
       return retval;
@@ -275,8 +273,11 @@ namespace AnalysisManager
         if (tag_)
           initType = IDA_YA_YDP_INIT;
 
-        retval = IDACalcIC(solver_, initType, 0.1);
+        retval = IDACalcIC(solver_, initType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
+
+        retval = IDAGetConsistentIC(solver_, yy_, yp_);
+        checkOutput(retval, "IDAGetConsistentIC");
 
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());

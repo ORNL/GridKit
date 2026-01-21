@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -409,7 +410,7 @@ namespace GridKit
     }
 
   private:
-    static constexpr IdxT neg1_ = static_cast<IdxT>(-1);
+    static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*> components_;
 

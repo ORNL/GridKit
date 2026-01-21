@@ -292,11 +292,6 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a)
     {
-      if (alpha == 0)
-      {
-        return;
-      }
-
       if (!this->sorted_)
       {
         this->sortSparse();
@@ -372,9 +367,6 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
     {
-      if (alpha == 0)
-        return;
-
       if (!this->sorted_)
       {
         this->sortSparse();

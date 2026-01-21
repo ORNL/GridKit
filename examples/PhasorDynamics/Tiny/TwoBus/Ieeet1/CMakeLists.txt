@@ -15,9 +15,9 @@ target_link_libraries(TwoBusIeeet1Json
 install(TARGETS TwoBusIeeet1Json RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(TwoBusIeeet1.json)
 
-add_test(NAME GenrouTest1_Ieeet1 COMMAND TwoBusIeeet1)
-add_test(NAME GenrouTest1_Ieeet1_Json
+add_test(NAME TwoBusIeeet1 COMMAND TwoBusIeeet1)
+add_test(NAME TwoBusIeeet1Json
     COMMAND TwoBusIeeet1Json ${CMAKE_CURRENT_BINARY_DIR}/TwoBusIeeet1.json)
-add_test(NAME GenrouTest1_Ieeet1_Json_no_arg
+add_test(NAME TwoBusIeeet1Json_no_arg
     COMMAND TwoBusIeeet1Json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

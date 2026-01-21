@@ -13,9 +13,9 @@ target_link_libraries(ThreeBusBasicJson
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusBasic.json)
 
-add_test(NAME GenrouTest2 COMMAND ThreeBusBasic)
-add_test(NAME GenrouTest2Json
+add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
+add_test(NAME ThreeBusBasicJson
     COMMAND ThreeBusBasicJson ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.json)
-add_test(NAME GenrouTest2Json_no_arg
+add_test(NAME ThreeBusBasicJson_no_arg
     COMMAND ThreeBusBasicJson
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

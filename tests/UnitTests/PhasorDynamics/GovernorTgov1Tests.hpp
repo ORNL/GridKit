@@ -272,18 +272,16 @@ namespace GridKit
         gendata.parameters[GenrouParameters::S12]   = 0.;
 
         /// Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian(busdata, gendata);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(busdata, gendata);
 
         /// Jacobian via Enzyme
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(busdata, gendata);
 
         /// Compare DependencyTracking dependencies to Enzyme's
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
-        for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
+        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i], tol));
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
         }
 
         success.expectFailure(); // TODO: Resolve mismatch from sigmoid approximation
@@ -292,7 +290,7 @@ namespace GridKit
       }
 
     private:
-      std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           PhasorDynamics::BusData<ScalarT, IdxT>    busdata,
           PhasorDynamics::GenrouData<ScalarT, IdxT> gendata)
       {
@@ -307,6 +305,7 @@ namespace GridKit
         gov.allocate();
         gen.allocate();
 
+        // Get d/dy
         bus.initialize();
         gen.initialize();
         gov.initialize();
@@ -321,17 +320,72 @@ namespace GridKit
         gen.evaluateResidual();
         gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
                                 // the dependencies
-        std::vector<DependencyTracking::Variable> residual = gov.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y = gov.getResidual();
 
-        /// Print the dependencies
-        for (size_t i = 0; i < residual.size(); ++i)
+        // Get d/dy'
+        bus.initialize();
+        gen.initialize();
+        gov.initialize();
+
+        for (size_t i = 0; i < gov.size(); ++i)
         {
-          std::cout << i << "th residual: ";
-          (residual[i]).print(std::cout);
+          gov.yp()[i].setVariableNumber(i); ///< Governor independent variables
+        }
+
+        bus.evaluateResidual();
+        gen.evaluateResidual();
+        gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
+                                // the dependencies
+        std::vector<DependencyTracking::Variable> residual_yp = gov.getResidual();
+
+        // Print the dependencies
+        for (size_t i = 0; i < residual_y.size(); ++i)
+        {
+          std::cout << i << "th residual, y: ";
+          (residual_y[i]).print(std::cout);
+          std::cout << "\n";
+          std::cout << i << "th residual, yp: ";
+          (residual_yp[i]).print(std::cout);
           std::cout << "\n";
         }
 
-        return residual;
+        // Extract the dependencies and add d/dy' to d/dy
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
+        for (IdxT i = 0; i < residual_y.size(); ++i)
+        {
+          DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
+          DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
+
+          for (const auto& pair_y : dependency_y)
+          {
+            auto index_y = pair_y.first;
+            auto value_y = pair_y.second;
+            auto it_yp   = dependency_yp.find(index_y);
+            if (it_yp != dependency_yp.end())
+            {
+              auto value_yp = it_yp->second;
+              dependencies[i].insert(std::make_pair(index_y, value_y + value_yp));
+            }
+            else
+            {
+              dependencies[i].insert(std::make_pair(index_y, value_y));
+            }
+          }
+
+          // Insert yp dependencies that did not exist in the y dependencies
+          for (const auto& pair_yp : dependency_yp)
+          {
+            auto index_yp = pair_yp.first;
+            auto value_yp = pair_yp.second;
+            auto it_y     = dependency_y.find(index_yp);
+            if (it_y == dependency_y.end())
+            {
+              dependencies[i].insert(std::make_pair(index_yp, value_yp));
+            }
+          }
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -354,6 +408,8 @@ namespace GridKit
         bus.initialize();
         gen.initialize();
         gov.initialize();
+
+        gov.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
         bus.evaluateResidual();
         gen.evaluateResidual();

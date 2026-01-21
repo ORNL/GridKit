@@ -27,7 +27,7 @@ int main()
   using real_type   = double;
   using index_type  = size_t;
 
-  using BusType = BusData<scalar_type, index_type>::BusType;
+  using BusType = BusData<real_type, index_type>::BusType;
 
   std::cout << "Example: TwoBusTgov1 + IEEET1 Exciter\n";
 
@@ -35,7 +35,7 @@ int main()
   // Create model data
   //
 
-  SystemModelData<scalar_type, index_type> data;
+  SystemModelData<real_type, index_type> data;
 
   // Set bus data
   data.bus.resize(2);
@@ -189,11 +189,11 @@ int main()
     // Exc              -> 9 States  -> Start Idx 24
     output.push_back(OutputData{
         t,
-        y_val[0],  // Bus Vr
-        y_val[1],  // Bus Vi
-        y_val[3],  // Gen Speed
-        y_val[23], // Gov Pmech
-        y_val[26], // Exc Efd
+        static_cast<real_type>(y_val[0]),  // Bus Vr
+        static_cast<real_type>(y_val[1]),  // Bus Vi
+        static_cast<real_type>(y_val[3]),  // Gen Speed
+        static_cast<real_type>(y_val[23]), // Gov Pmech
+        static_cast<real_type>(y_val[26]), // Exc Efd
     });
   };
 

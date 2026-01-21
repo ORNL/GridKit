@@ -5,14 +5,18 @@
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     /*!
      * @brief BusBase model implementation base class.
      *
@@ -127,32 +131,32 @@ namespace GridKit
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
-        variable_indices_[local_index] = global_index;
+        variable_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT getVariableIndex(IdxT local_index) const
       {
-        return variable_indices_.at(local_index);
+        return variable_indices_[static_cast<size_t>(local_index)];
       }
 
-      const std::map<IdxT, IdxT>& getVariableIndices() const
+      const std::vector<IdxT>& getVariableIndices() const
       {
         return variable_indices_;
       }
 
       int setResidualIndex(IdxT local_index, IdxT global_index)
       {
-        residual_indices_[local_index] = global_index;
+        residual_indices_[static_cast<size_t>(local_index)] = global_index;
         return 0;
       }
 
       IdxT getResidualIndex(IdxT local_index) const
       {
-        return residual_indices_.at(local_index);
+        return residual_indices_[static_cast<size_t>(local_index)];
       }
 
-      const std::map<IdxT, IdxT>& getResidualIndices() const
+      const std::vector<IdxT>& getResidualIndices() const
       {
         return residual_indices_;
       }
@@ -160,14 +164,12 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     protected:
-      IdxT bus_id_{static_cast<IdxT>(-1)};
+      IdxT bus_id_{INVALID_INDEX<IdxT>};
 
-      IdxT                 size_{0};
-      IdxT                 nnz_{0};
-      std::map<IdxT, IdxT> variable_indices_; ///< Map between local and global (system-level)
-                                              /// variable indices
-      std::map<IdxT, IdxT> residual_indices_; ///< Map between local and global (system-level)
-                                              /// residual indices
+      IdxT              size_{0};
+      IdxT              nnz_{0};
+      std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
+      std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
@@ -178,9 +180,6 @@ namespace GridKit
       std::vector<ScalarT> f_;
 
       MatrixT J_;
-
-      RealT time_;
-      RealT alpha_;
 
       RealT rtol_;
       RealT atol_;

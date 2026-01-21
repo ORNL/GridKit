@@ -75,6 +75,10 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
+        using Component<ScalarT, IdxT>::wb_;
+        using Component<ScalarT, IdxT>::J_;
+        using Component<ScalarT, IdxT>::variable_indices_;
+        using Component<ScalarT, IdxT>::residual_indices_;
 
       public:
         using RealT           = typename Component<ScalarT, IdxT>::RealT;
@@ -100,10 +104,6 @@ namespace GridKit
         int evaluateResidual() override;
         int evaluateJacobian() override;
 
-        void updateTime(RealT /* t */, RealT /* a */) override
-        {
-        }
-
         /// Get the `ComponentSignals` from this `Ieeet1`
         auto getSignals()
             -> ComponentSignals<ScalarT,
@@ -115,6 +115,8 @@ namespace GridKit
         }
 
         const Model::VariableMonitorBase* getMonitor() const override;
+
+        __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
       private:
         // Signal pointers
@@ -149,7 +151,7 @@ namespace GridKit
         ScalarT vUEL_{0};
         ScalarT vOEL_{0};
         ScalarT vS_{0};
-        ScalarT Ec_{0}; // "Compensated" terminal measurment
+        ScalarT Ec_{0}; // "Compensated" terminal measurment, currently unused
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
@@ -162,6 +164,10 @@ namespace GridKit
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();
+
+        /* Local copies of signal variables */
+        std::vector<ScalarT> ws_;
+        std::vector<IdxT>    ws_indices_;
       };
 
     } // namespace Exciter
