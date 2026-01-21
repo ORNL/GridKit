@@ -1,5 +1,10 @@
 /**
  * @file LowerSparseStorage.hpp
+ *
+ * @details This file contains functions used by Enzyme to store sparse Jacobians.
+ *
+ * @todo Replace this inner/lower storage by a more CSR-efficient approach.
+ *
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
@@ -17,13 +22,16 @@ namespace GridKit
       /**
        * @brief Enzyme todense template
        *
+       * @details This is used by Enzyme's auto sparsity analysis. It internally maps dense storage
+       * to sparse ones (where structural zeros are not kept).
+       *
        * @tparam T - return type
        */
       template <typename T>
       extern T __enzyme_todense(void*...) noexcept;
 
       /**
-       * @brief Enzyme sparse storage in triplet format
+       * @brief Enzyme inner sparse storage in triplet format
        *
        * @tparam ScalarT - scalar data type
        */
@@ -46,6 +54,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for float
        *
+       * @todo Separate sparsity analyis from value storage for a known sparsity structure.
+       *       The current implementation always performs sparsity analysis.
        */
       [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storeflt(size_t row, size_t col, float val, std::vector<Triple<float>>& triplets)
       {
@@ -55,6 +65,8 @@ namespace GridKit
       /**
        * @brief Enzyme sparse accumulation for double
        *
+       * @todo Separate sparsity analyis from value storage for a known sparsity structure.
+       *       The current implementation always performs sparsity analysis.
        */
       [[maybe_unused]] __attribute__((enzyme_sparse_accumulate)) static void inner_storedbl(size_t row, size_t col, double val, std::vector<Triple<double>>& triplets)
       {
@@ -63,6 +75,8 @@ namespace GridKit
 
       /**
        * @brief Enzyme sparse store
+       *
+       * @details This takes in a row, column and value and stores them in a vector of triplets
        *
        * @tparam ScalarT - scalar data type
        */

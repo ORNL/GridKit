@@ -58,11 +58,11 @@ namespace GridKit
         {
           if (n_res > 0 && n_var > 0)
           {
-            std::vector<Triple<ScalarT>> triplets;
+            std::vector<Triple<ScalarT>> triplets; //< @todo: Update once sparse storage format changes
             std::vector<ScalarT>         elementary_v(n_var);
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
-              // Sparse storage
+              // Sparse storage. @see LowerSparseStorage.hpp
               ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
 
@@ -70,7 +70,7 @@ namespace GridKit
               std::ranges::fill(elementary_v, 0.0);
               elementary_v[var_i] = 1.0;
 
-              // Autodiff
+              // Core automatic differentiaation intrinsic that will be replaced by a derivative
               __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function, ScalarT>::eval,
                                      enzyme_const,
                                      model,

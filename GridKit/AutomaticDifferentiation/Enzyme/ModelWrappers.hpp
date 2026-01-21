@@ -104,7 +104,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual11
+       * @brief Residual wrapper partial template specialization for BusResidual11 (branch member function)
        *
        */
       template <typename ModelT, typename ScalarT>
@@ -124,7 +124,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual12
+       * @brief Residual wrapper partial template specialization for BusResidual12 (branch member function)
        *
        */
       template <typename ModelT, typename ScalarT>
@@ -144,7 +144,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual21
+       * @brief Residual wrapper partial template specialization for BusResidual21 (branch member function)
        *
        */
       template <typename ModelT, typename ScalarT>
@@ -165,7 +165,7 @@ namespace GridKit
       };
 
       /**
-       * @brief Residual wrapper partial template specialization for BusResidual22
+       * @brief Residual wrapper partial template specialization for BusResidual22 (branch member function)
        *
        */
       template <typename ModelT, typename ScalarT>
