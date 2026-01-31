@@ -170,6 +170,7 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+      absTol_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
