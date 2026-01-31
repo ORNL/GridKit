@@ -38,6 +38,7 @@ namespace GridKit
 
     virtual int allocate();
     virtual int tagDifferentiable();
+    virtual int setAbsoluteTolerance();
     virtual int initialize();
     virtual int evaluateResidual();
     virtual int initializeAdjoint();

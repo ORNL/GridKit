@@ -142,6 +142,15 @@ namespace GridKit
     }
 
     /**
+     * \brief Specify absolute tolerance
+     */
+    template <class ScalarT, typename IdxT>
+    int BusFault<ScalarT, IdxT>::setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
+    /**
      * @brief Bus residual
      *
      */

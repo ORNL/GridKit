@@ -72,6 +72,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance
+   */
+  template <class ScalarT, typename IdxT>
+  int MicrogridLine<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Evaluate residual of microgrid line
    *
    */

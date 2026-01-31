@@ -65,6 +65,11 @@ namespace GridKit
       return 0;
     }
 
+    virtual int setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
     virtual int evaluateResidual()
     {
       return 0;

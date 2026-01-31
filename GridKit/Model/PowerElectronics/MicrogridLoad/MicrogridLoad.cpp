@@ -70,6 +70,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance
+   */
+  template <class ScalarT, typename IdxT>
+  int MicrogridLoad<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Eval Micro Load
    */
   template <class ScalarT, typename IdxT>

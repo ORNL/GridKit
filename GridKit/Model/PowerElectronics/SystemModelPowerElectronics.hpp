@@ -230,6 +230,11 @@ namespace GridKit
       return 0;
     }
 
+    int setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
     /**
      * @brief Evaluate Residuals at each component then collect them
      *

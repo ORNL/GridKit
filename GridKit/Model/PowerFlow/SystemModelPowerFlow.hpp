@@ -216,6 +216,17 @@ namespace GridKit
     }
 
     /**
+     * @todo Specify absolute tolerance
+     *
+     * Specify a "noise" level close to zero for which pure relative error
+     * cannot be used.
+     */
+    int setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
+    /**
      * @brief Compute system residual vector
      *
      * First, update bus and component variables from the system solution

@@ -45,6 +45,7 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::y_;
       using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
       using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::absTol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
       using PhasorDynamics::Component<ScalarT, IdxT>::J_;
       using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
@@ -315,6 +316,7 @@ namespace GridKit
         yp_.resize(size_);
         f_.resize(size_);
         tag_.resize(size_);
+        absTol_.resize(size_);
         variable_indices_.resize(size_);
         residual_indices_.resize(size_);
 
@@ -509,6 +511,39 @@ namespace GridKit
           {
             tag_[component->getVariableIndex(j)] = component->tag()[j];
           }
+        }
+
+        return 0;
+      }
+
+      /**
+       * @todo Specify absolute tolerance
+       *
+       * Specify a "noise" level close to zero for which pure relative error
+       * cannot be used.
+       */
+      int setAbsoluteTolerance()
+      {
+        // Set initial values for global solution vectors
+        IdxT offset = 0;
+        for (const auto& bus : buses_)
+        {
+          bus->setAbsoluteTolerance();
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            absTol_[offset + j] = bus->absoluteTolerance()[j];
+          }
+          offset += bus->size();
+        }
+
+        for (const auto& component : components_)
+        {
+          component->setAbsoluteTolerance();
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            absTol_[offset + j] = component->absoluteTolerance()[j];
+          }
+          offset += component->size();
         }
 
         return 0;

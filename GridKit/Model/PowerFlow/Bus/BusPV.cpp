@@ -88,6 +88,12 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  int BusPV<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
   /*!
    * @brief initialize method sets bus variables to stored initial values.
    */

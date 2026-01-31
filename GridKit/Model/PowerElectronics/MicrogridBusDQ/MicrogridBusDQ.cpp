@@ -68,6 +68,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance
+   */
+  template <class ScalarT, typename IdxT>
+  int MicrogridBusDQ<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Evaluate residual of microgrid line
    * This model has "Virtual resistors". The voltage of the bus divided by its virtual resistance.
    * The components are external to allow for outside components to add inductances to the terms.
