@@ -86,6 +86,7 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+      absTol_.resize(size);
 
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)

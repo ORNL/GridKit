@@ -314,6 +314,7 @@ namespace GridKit
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
       tag_.resize(static_cast<size_t>(size_));
+      absTol_.resize(static_cast<size_t>(size_));
 
       // Resize coupling data
       wb_.resize(2);

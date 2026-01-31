@@ -140,6 +140,7 @@ namespace GridKit
         y_.resize(size);
         yp_.resize(size);
         tag_.resize(size);
+        absTol_.resize(size_);
 
         // Resize external variable data
         ws_.resize(1);

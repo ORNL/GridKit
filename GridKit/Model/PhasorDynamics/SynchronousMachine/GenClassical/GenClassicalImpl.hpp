@@ -170,6 +170,7 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+      absTol_.resize(size);
 
       // Resize coupling data
       wb_.resize(2);
