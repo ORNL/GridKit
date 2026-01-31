@@ -39,6 +39,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::absTol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
@@ -106,6 +107,7 @@ namespace GridKit
       f_.resize(size_);
       fB_.resize(size_);
       tag_.resize(size_);
+      absTol_.resize(size_);
 
       g_.resize(size_quad_);
       gB_.resize(size_quad_ * size_opt_);
@@ -228,6 +230,39 @@ namespace GridKit
         for (IdxT j = 0; j < component->size(); ++j)
         {
           tag_[offset + j] = component->tag()[j];
+        }
+        offset += component->size();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @todo Specify absolute tolerance
+     *
+     * Specify a "noise" level close to zero for which pure relative error
+     * cannot be used.
+     */
+    int setAbsoluteTolerance()
+    {
+      // Set initial values for global solution vectors
+      IdxT offset = 0;
+      for (const auto& bus : buses_)
+      {
+        bus->setAbsoluteTolerance();
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          absTol_[offset + j] = bus->absoluteTolerance()[j];
+        }
+        offset += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        component->setAbsoluteTolerance();
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          absTol_[offset + j] = component->absoluteTolerance()[j];
         }
         offset += component->size();
       }

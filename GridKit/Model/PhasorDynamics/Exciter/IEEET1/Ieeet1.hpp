@@ -98,6 +98,7 @@ namespace GridKit
         int verify() const override;
         int initialize() override;
         int tagDifferentiable() override;
+        int setAbsoluteTolerance() override;
         int evaluateResidual() override;
         int evaluateJacobian() override;
 

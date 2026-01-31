@@ -83,6 +83,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance.
+   */
+  template <class ScalarT, typename IdxT>
+  int DistributedGenerator<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Contributes to the resisdual of the Distributed Generator
    *
    */

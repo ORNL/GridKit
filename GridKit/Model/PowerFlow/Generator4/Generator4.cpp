@@ -58,6 +58,7 @@ namespace GridKit
   {
     // std::cout << "Allocate Generator4..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
+    absTol_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
@@ -146,6 +147,15 @@ namespace GridKit
       tag_[static_cast<size_t>(i)] = false;
     }
 
+    return 0;
+  }
+
+  /**
+   * \brief Specify absolute tolerance
+   */
+  template <class ScalarT, typename IdxT>
+  int Generator4<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
     return 0;
   }
 

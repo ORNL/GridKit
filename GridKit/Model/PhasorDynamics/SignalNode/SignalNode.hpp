@@ -37,6 +37,7 @@ namespace GridKit
       virtual int allocate() override;
       virtual int initialize() override;
       virtual int tagDifferentiable() override;
+      virtual int setAbsoluteTolerance() override;
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;
 

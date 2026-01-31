@@ -31,12 +31,13 @@ namespace GridKit
       {
       }
 
-      virtual int allocate()          = 0;
-      virtual int initialize()        = 0;
-      virtual int tagDifferentiable() = 0;
-      virtual int evaluateResidual()  = 0;
-      virtual int evaluateJacobian()  = 0;
-      virtual int evaluateIntegrand() = 0;
+      virtual int allocate()             = 0;
+      virtual int initialize()           = 0;
+      virtual int tagDifferentiable()    = 0;
+      virtual int setAbsoluteTolerance() = 0;
+      virtual int evaluateResidual()     = 0;
+      virtual int evaluateJacobian()     = 0;
+      virtual int evaluateIntegrand()    = 0;
 
       virtual int initializeAdjoint()        = 0;
       virtual int evaluateAdjointResidual()  = 0;

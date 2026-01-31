@@ -33,6 +33,11 @@ namespace GridKit
       return -1;
     }
 
+    int setAbsoluteTolerance()
+    {
+      return -1;
+    }
+
     int evaluateResidual();
     int evaluateJacobian();
 

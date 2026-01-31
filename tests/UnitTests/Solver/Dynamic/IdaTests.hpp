@@ -66,6 +66,11 @@ namespace GridKit
         return 0;
       }
 
+      int setAbsoluteTolerance() override
+      {
+        return 0;
+      }
+
       int evaluateResidual() override
       {
         f_ = y_;

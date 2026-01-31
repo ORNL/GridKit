@@ -64,6 +64,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance
+   */
+  template <class ScalarT, typename IdxT>
+  int Inductor<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Compute the resisdual of the component
    *
    */

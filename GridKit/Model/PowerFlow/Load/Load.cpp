@@ -71,6 +71,15 @@ namespace GridKit
   }
 
   /**
+   * \brief Specify absolute tolerance.
+   */
+  template <class ScalarT, typename IdxT>
+  int Load<ScalarT, IdxT>::setAbsoluteTolerance()
+  {
+    return 0;
+  }
+
+  /**
    * @brief Contributes to the bus residual.
    *
    * Must be connected to a PQ bus.

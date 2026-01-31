@@ -141,6 +141,15 @@ namespace GridKit
     }
 
     /**
+     * @brief Set absolute tolerance
+     */
+    template <class ScalarT, typename IdxT>
+    int Branch<ScalarT, IdxT>::setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
+    /**
      * @brief Bus 1 residual contribution from bus 1 variables
      *
      */

@@ -40,6 +40,12 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    int SignalNode<ScalarT, IdxT>::setAbsoluteTolerance()
+    {
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
     int SignalNode<ScalarT, IdxT>::evaluateResidual()
     {
       return 0;
