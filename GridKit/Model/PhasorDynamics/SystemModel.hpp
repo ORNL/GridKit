@@ -49,20 +49,13 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
       using PhasorDynamics::Component<ScalarT, IdxT>::J_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
 
     public:
       /**
        * @brief Constructor for the system model
        */
       SystemModel()
-      {
-        // Set system model tolerances
-        rel_tol_         = 1e-7;
-        abs_tol_         = 1e-9;
-        this->max_steps_ = 2000;
-      }
+      {}
 
       /**
        * @brief Construct a new System Model object
@@ -80,11 +73,6 @@ namespace GridKit
       {
         using namespace Governor;
         using namespace Exciter;
-
-        // Set system model tolerances
-        rel_tol_         = 1e-7;
-        abs_tol_         = 1e-9;
-        this->max_steps_ = 2000;
 
         owns_components_ = true;
 

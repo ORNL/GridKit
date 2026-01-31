@@ -58,17 +58,6 @@ namespace GridKit
         // No time to update in bus models
       }
 
-      virtual void setTolerances(RealT& rtol, RealT& atol) const override
-      {
-        rtol = rtol_;
-        atol = atol_;
-      }
-
-      virtual void setMaxSteps(IdxT& msa) const override
-      {
-        msa = max_steps_;
-      }
-
       virtual ScalarT&       Vr()       = 0;
       virtual const ScalarT& Vr() const = 0;
       virtual ScalarT&       Vi()       = 0;
@@ -106,6 +95,16 @@ namespace GridKit
       const std::vector<bool>& tag() const override
       {
         return tag_;
+      }
+
+      std::vector<ScalarT>& absoluteTolerance() override
+      {
+        return absTol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const override
+      {
+        return absTol_;
       }
 
       MatrixT& getJacobian() override
@@ -175,6 +174,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> absTol_;
       std::vector<ScalarT> f_;
 
       MatrixT J_;

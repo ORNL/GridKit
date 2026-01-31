@@ -52,8 +52,6 @@ namespace GridKit
     // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -64,11 +62,7 @@ namespace GridKit
      */
     SystemSteadyStateModel()
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
-    {
-      // Set system model tolerances
-      rel_tol_ = 1e-5;
-      abs_tol_ = 1e-5;
-    }
+    {}
 
     /**
      * @brief Construct a new System Steady State Model object. Allows for simple allocation.
@@ -78,9 +72,6 @@ namespace GridKit
     SystemSteadyStateModel(GridKit::PowerFlowData::SystemModelData<ScalarT, IdxT> mp)
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-      rel_tol_ = 1e-5;
-      abs_tol_ = 1e-5;
-
       // add buses
       for (auto busdata : mp.bus)
       {

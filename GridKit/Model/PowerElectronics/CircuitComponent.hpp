@@ -97,12 +97,6 @@ namespace GridKit
       return size_opt_;
     }
 
-    virtual void setTolerances(RealT& rel_tol, RealT& abs_tol) const
-    {
-      rel_tol = rel_tol_;
-      abs_tol = abs_tol_;
-    }
-
     virtual void setMaxSteps(IdxT& msa) const
     {
       msa = max_steps_;
@@ -136,6 +130,16 @@ namespace GridKit
     const std::vector<bool>& tag() const
     {
       return tag_;
+    }
+
+    std::vector<ScalarT>& absoluteTolerance() override
+    {
+      return absTol_;
+    }
+
+    const std::vector<ScalarT>& absoluteTolerance() const override
+    {
+      return absTol_;
     }
 
     std::vector<ScalarT>& yB()
@@ -260,6 +264,7 @@ namespace GridKit
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
     std::vector<bool>    tag_;
+    std::vector<ScalarT> absTol_;
     std::vector<ScalarT> f_;
     std::vector<ScalarT> g_;
 
@@ -276,9 +281,6 @@ namespace GridKit
 
     RealT time_;
     RealT alpha_;
-
-    RealT rel_tol_;
-    RealT abs_tol_;
 
     IdxT max_steps_;
 

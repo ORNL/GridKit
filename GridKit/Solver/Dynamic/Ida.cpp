@@ -16,8 +16,8 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model, RealT dt)
-      : DynamicSolver<ScalarT, IdxT>(model), dt_(dt)
+    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+      : DynamicSolver<ScalarT, IdxT>(model)
     {
       int retval = 0;
 
@@ -82,10 +82,8 @@ namespace AnalysisManager
       retval = IDASetUserData(solver_, model_);
       checkOutput(retval, "IDASetUserData");
 
-      configureIDA(solver_);
-
       // Tag differential variables
-      std::vector<bool>& tag = model_->tag();
+      const std::vector<bool>& tag = model_->tag();
       if (static_cast<IdxT>(tag.size()) == model_->size())
       {
         tag_ = N_VClone(yy_);
@@ -98,6 +96,12 @@ namespace AnalysisManager
         retval = IDASetSuppressAlg(solver_, SUNTRUE);
         checkOutput(retval, "IDASetSuppressAlg");
       }
+
+      const std::vector<ScalarT>& absTol = model_->absoluteTolerance();
+      absTol_ = N_VClone(yy_);
+      checkAllocation((void*) absTol_, "N_VClone");
+      copyVec(absTol, absTol_);
+      setTolerance(DEFAULT_REL_TOL);
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -140,64 +144,6 @@ namespace AnalysisManager
 #endif
 
       return retval;
-    }
-
-    /**
-     * @brief Configure IDA for forward or backward simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::configureIDA(void *ida)
-    {
-      int retval = 0;
-      
-      // Set tolerances
-      RealT rel_tol;
-      RealT abs_tol;
-
-      model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
-      
-      if (dt_ > 0) {
-        retval = IDASetMinStep(ida, dt_);
-        checkOutput(retval, "IDASetMinStep");
-        retval = IDASetMaxStep(ida, dt_);
-        checkOutput(retval, "IDASetMaxStep");
-        
-        /* Since the starting procedure is first order, the maximum global order
-         * of convergence is two */
-        IDASetMaxOrd(ida, 2);
-        checkOutput(retval, "IDASetMaxOrd");
-
-
-        /* Enable more nonlinear iterations because a failed nonlinear solve
-         * causes a failed integration with fixed steps */
-        retval = IDASetMaxNonlinIters(ida, 100);
-        checkOutput(retval, "IDASetMaxNonlinIters");
-
-        // Set a large tolerance so the error test will never fail
-        static constexpr RealT FIXED_STEP_TOL_FAC = 1e10;
-        retval = IDASStolerances(ida, FIXED_STEP_TOL_FAC,
-          FIXED_STEP_TOL_FAC * abs_tol / rel_tol);
-        checkOutput(retval, "IDASStolerances");
-
-        /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
-         * the large tolerances set above, we need to choose this tolerance to
-         * "undo" the fac scaling. */
-        retval = IDASetNonlinConvCoef(ida, rel_tol / FIXED_STEP_TOL_FAC);
-        checkOutput(retval, "IDASetNonlinConvCoef");
-      } else {
-        retval = IDASStolerances(ida, rel_tol, abs_tol);
-        checkOutput(retval, "IDASStolerances");
-      }
-
-      IdxT msa;
-      model_->setMaxSteps(msa);
-
-      /// \todo Need to set max number of steps based on user input!
-      retval = IDASetMaxNumSteps(ida, static_cast<long>(msa));
-      checkOutput(retval, "IDASetMaxNumSteps");
     }
 
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
@@ -418,6 +364,7 @@ namespace AnalysisManager
       N_VDestroy(yy_);
       N_VDestroy(yp_);
       N_VDestroy(tag_);
+      N_VDestroy(absTol_);
       N_VDestroy(yy0_);
       N_VDestroy(yp0_);
       SUNLinSolFree(linearSolver_);
@@ -446,12 +393,7 @@ namespace AnalysisManager
       checkOutput(retval, "IDAQuadInit");
 
       // Set tolerances and error control for quadratures
-      RealT rel_tol, abs_tol;
-      model_->setTolerances(rel_tol, abs_tol);
-
-      // Set tolerances for quadrature stricter than for integration
-      retval = IDAQuadSStolerances(solver_, rel_tol * 0.1, abs_tol * 0.1);
-      checkOutput(retval, "IDAQuadSStolerances");
+      setQuadratureTolerance(0.1 * DEFAULT_REL_TOL, 0.1);
 
       // Include quadrature in eror checking
       retval = IDASetQuadErrCon(solver_, SUNTRUE);
@@ -588,8 +530,6 @@ namespace AnalysisManager
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(RealT tf)
     {
       int   retval = 0;
-      RealT rel_tol;
-      RealT abs_tol;
 
       model_->initializeAdjoint();
 
@@ -604,10 +544,10 @@ namespace AnalysisManager
       retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
+      setBackwardTolerance(DEFAULT_REL_TOL);
+
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
-
-      configureIDA(IDAGetAdjIDABmem(solver_, backwardID_));
 
       // Allocate Jacobian matrix, if not already
       if (JacobianMatB_ == nullptr)
@@ -633,10 +573,7 @@ namespace AnalysisManager
       retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
       checkOutput(retval, "IDAQuadInitB");
 
-      // retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*1.1, abs_tol*1.1);
-      model_->setTolerances(rel_tol, abs_tol);
-      retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol * 0.1, abs_tol * 0.1);
-      checkOutput(retval, "IDAQuadSStolerancesB");
+      setBackwardQuadratureTolerance(0.1 * DEFAULT_REL_TOL, 0.1);
 
       // Include quadratures in error control
       retval = IDASetQuadErrConB(solver_, backwardID_, SUNTRUE);
@@ -958,7 +895,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(RealT t)
+    void Ida<ScalarT, IdxT>::printOutput(RealT t) const
     {
       RealT* yval  = N_VGetArrayPointer(yy_);
       RealT* ypval = N_VGetArrayPointer(yp_);
@@ -982,7 +919,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y)
+    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y) const
     {
       RealT* yval = N_VGetArrayPointer(y);
       IdxT   N    = static_cast<IdxT>(N_VGetLength(y));
@@ -1002,7 +939,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printFinalStats()
+    void Ida<ScalarT, IdxT>::printFinalStats() const
     {
       int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "IDAPrintAllStats");
@@ -1038,6 +975,127 @@ namespace AnalysisManager
         std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
         throw SundialsException();
       }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTimeStep(ScalarT timeStep) {
+      setTimeStep(solver_, timeStep);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardTimeStep(ScalarT timeStep) {
+      setTimeStep(IDAGetAdjIDABmem(solver_, backwardID_), timeStep);
+    }
+    
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTimeStep(void *mem, ScalarT timeStep) {
+      int retval = 0;
+      retval = IDASetMinStep(mem, timeStep);
+      checkOutput(retval, "IDASetMinStep");
+      retval = IDASetMaxStep(mem, timeStep);
+      checkOutput(retval, "IDASetMaxStep");
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac) {
+      setFixedStep(solver_, timeStep, relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac) {
+      setFixedStep(IDAGetAdjIDABmem(solver_, backwardID_), timeStep, relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setFixedStep(void *mem, ScalarT timeStep, ScalarT relTol, ScalarT absTolFac) {
+      setTimeStep(mem, timeStep);
+
+      if (timeStep != 0) {
+        int retval = 0;
+        /* Since the starting procedure is first order, the maximum global order
+        * of convergence is two */
+        retval = IDASetMaxOrd(mem, 2);
+        checkOutput(retval, "IDASetMaxOrd");
+
+        /* Enable more nonlinear iterations because a failed nonlinear solve
+         * causes a failed integration with fixed steps */
+        retval = IDASetMaxNonlinIters(mem, 100);
+        checkOutput(retval, "IDASetMaxNonlinIters");
+
+        // Set a large tolerance so the error test will never fail
+        static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
+        setTolerance(mem, FIXED_STEP_TOL_FAC * relTol, FIXED_STEP_TOL_FAC * absTolFac);
+
+        /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
+         * the large tolerances set above, we need to choose this tolerance to
+         * "undo" the fac scaling. */
+        retval = IDASetNonlinConvCoef(mem, 1 / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetNonlinConvCoef");
+      }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTolerance(ScalarT relTol, ScalarT absTolFac) {
+      setTolerance(solver_, relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT relTol, ScalarT absTolFac) {
+      setTolerance(IDAGetAdjIDABmem(solver_, backwardID_), relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTolerance(void *mem, ScalarT relTol, ScalarT absTolFac) {
+      int retval = 0;
+      if (absTolFac == 1) {
+        retval = IDASVtolerances(mem, relTol, absTol_);
+      } else {
+        N_Vector tmp = N_VClone(absTol_);
+        N_VScale(absTolFac, absTol_, tmp);
+        retval = IDASVtolerances(mem, relTol, tmp);
+        N_VDestroy(tmp);
+      }
+      checkOutput(retval, "IDASVtolerances");
+    }
+    
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxSteps(IdxT maxSteps) {
+      setMaxSteps(solver_, maxSteps);
+    }
+    
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardMaxSteps(IdxT maxSteps) {
+      setMaxSteps(IDAGetAdjIDABmem(solver_, backwardID_), maxSteps);
+    }
+    
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxSteps(void *mem, IdxT maxSteps) {
+      int retval = IDASetMaxNumSteps(mem, maxSteps);
+      checkOutput(retval, "IDASetMaxNumSteps");
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT relTol, ScalarT absTolFac) {
+      setQuadratureTolerance(solver_, relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT relTol, ScalarT absTolFac) {
+      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), relTol, absTolFac);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void *mem, ScalarT relTol, ScalarT absTolFac) {
+      int retval = 0;
+      if (absTolFac == 1) {
+        retval = IDAQuadSVtolerances(mem, relTol, absTol_);
+      } else {
+        N_Vector tmp = N_VClone(absTol_);
+        N_VScale(absTolFac, absTol_, tmp);
+        retval = IDAQuadSVtolerances(mem, relTol, tmp);
+        N_VDestroy(tmp);
+      }
+      checkOutput(retval, "IDAQuadSVtolerances");
     }
 
     // Compiler will prevent building modules with data type incompatible with sunrealtype
