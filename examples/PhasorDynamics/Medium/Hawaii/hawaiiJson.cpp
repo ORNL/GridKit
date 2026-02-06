@@ -27,7 +27,7 @@ int main(int argc, const char* argv[])
   using namespace AnalysisManager::Sundials;
 
   using scalar_type = double;
-  // using real_type   = double;
+  using real_type   = double;
   using index_type  = size_t;
 
   // Read Input JSON File
@@ -73,7 +73,6 @@ int main(int argc, const char* argv[])
   // NOTE Now we try and run the case.
   // Fails for now but left here for future
 
-  /*
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
@@ -100,14 +99,15 @@ int main(int argc, const char* argv[])
   ida.configureSimulation();
 
   // Run simulation - making sure to pass the callback to record output
-  real_type start = static_cast<real_type>(clock());
+  //real_type start = static_cast<real_type>(clock());
+
+  
 
   // Run for 1s
   ida.initializeSimulation(0.0, false);
   int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
   ida.runSimulation(1.0, nout, output_cb);
 
-  */
 
   int status = 0;
   return status;
