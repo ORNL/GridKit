@@ -301,7 +301,7 @@ namespace GridKit
       monitor_->set(Variable::ii1, [this]
                     { return Ii1(); });
       monitor_->set(Variable::im1, [this] { return Ir1(); });
-      // monitor_->set(Variable::p1, [this] { return ?(); });
+      monitor_->set(Variable::p1, [this] { return Ir2(); });
       // monitor_->set(Variable::q1, [this] { return ?(); });
       monitor_->set(Variable::ir2, [this]
                     { return Ir2(); });
