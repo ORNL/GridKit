@@ -523,7 +523,7 @@ namespace GridKit
        * Specify a "noise" level close to zero for which pure relative error
        * cannot be used.
        */
-      int setAbsoluteTolerance()
+      int setAbsoluteTolerance() override
       {
         // Set initial values for global solution vectors
         IdxT offset = 0;

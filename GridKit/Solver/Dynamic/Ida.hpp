@@ -48,7 +48,7 @@ namespace AnalysisManager
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
-      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model, RealT dt = 0);
+      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
       int configureSimulation();
@@ -214,8 +214,6 @@ namespace AnalysisManager
       int backwardID_{};
 
     private:
-      void configureIDA(void* ida);
-
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);

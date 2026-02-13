@@ -145,65 +145,6 @@ namespace AnalysisManager
       return retval;
     }
 
-    /**
-     * @brief Configure IDA for forward or backward simulation
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::configureIDA(void* ida)
-    {
-      int retval = 0;
-
-      // Set tolerances
-      RealT rel_tol;
-      RealT abs_tol;
-
-      model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
-
-      if (dt_ > 0)
-      {
-        retval = IDASetMinStep(ida, dt_);
-        checkOutput(retval, "IDASetMinStep");
-        retval = IDASetMaxStep(ida, dt_);
-        checkOutput(retval, "IDASetMaxStep");
-
-        /* Since the starting procedure is first order, the maximum global order
-         * of convergence is two */
-        IDASetMaxOrd(ida, 2);
-        checkOutput(retval, "IDASetMaxOrd");
-
-        /* Enable more nonlinear iterations because a failed nonlinear solve
-         * causes a failed integration with fixed steps */
-        retval = IDASetMaxNonlinIters(ida, 100);
-        checkOutput(retval, "IDASetMaxNonlinIters");
-
-        // Set a large tolerance so the error test will never fail
-        static constexpr RealT FIXED_STEP_TOL_FAC = 1e10;
-        retval                                    = IDASStolerances(ida, FIXED_STEP_TOL_FAC, FIXED_STEP_TOL_FAC * abs_tol / rel_tol);
-        checkOutput(retval, "IDASStolerances");
-
-        /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
-         * the large tolerances set above, we need to choose this tolerance to
-         * "undo" the fac scaling. */
-        retval = IDASetNonlinConvCoef(ida, rel_tol / FIXED_STEP_TOL_FAC);
-        checkOutput(retval, "IDASetNonlinConvCoef");
-      }
-      else
-      {
-        retval = IDASStolerances(ida, rel_tol, abs_tol);
-        checkOutput(retval, "IDASStolerances");
-      }
-
-      IdxT msa;
-      model_->setMaxSteps(msa);
-
-      /// \todo Need to set max number of steps based on user input!
-      retval = IDASetMaxNumSteps(ida, static_cast<long>(msa));
-      checkOutput(retval, "IDASetMaxNumSteps");
-    }
-
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
     /**
      * @brief Configure a sparse linear solver

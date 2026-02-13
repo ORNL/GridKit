@@ -317,7 +317,7 @@ namespace GridKit
       tag_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-      absTol_.resize(size);
+      abs_tol_.resize(size);
 
       // Resize bus data
       wb_.resize(2);
