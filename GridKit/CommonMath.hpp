@@ -20,7 +20,7 @@ namespace GridKit
      *
      * @tparam ScalarT - scalar data type
      *
-     * @param[in] x
+     * @param[in] x - expected to be of order 1
      * @return value of the sigmoid function
      */
     template <class ScalarT>

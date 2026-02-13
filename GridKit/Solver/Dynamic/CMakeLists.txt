@@ -19,7 +19,8 @@ if (GRIDKIT_ENABLE_SUNDIALS_SPARSE)
       PUBLIC SUNDIALS::nvecserial
       PUBLIC SUNDIALS::idas
       PUBLIC SUNDIALS::sunlinsolklu
-      PUBLIC GridKit::definitions)
+      PUBLIC GridKit::definitions
+      PUBLIC GridKit::utilities_logger)
 else()
   gridkit_add_library(solvers_dyn
     SOURCES
@@ -29,5 +30,6 @@ else()
     LINK_LIBRARIES
       PUBLIC SUNDIALS::nvecserial
       PUBLIC SUNDIALS::idas
-      PUBLIC GridKit::definitions)
+      PUBLIC GridKit::definitions
+      PUBLIC GridKit::utilities_logger)
 endif()

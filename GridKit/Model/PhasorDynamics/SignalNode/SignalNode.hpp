@@ -68,7 +68,7 @@ namespace GridKit
 
       virtual void updateTime(RealT /* t */, RealT /* a */) override
       {
-        // No time to update in bus models
+        // No time to update in signal nodes
       }
 
       std::vector<ScalarT>& y() override
@@ -131,7 +131,7 @@ namespace GridKit
       IdxT     signal_id_{0};
 
     protected:
-      const IdxT bus_id_{static_cast<IdxT>(-1)};
+      const IdxT bus_id_{INVALID_INDEX<IdxT>};
 
       IdxT  size_{0};
       IdxT  nnz_{0};
@@ -144,9 +144,6 @@ namespace GridKit
       std::vector<ScalarT> f_;
 
       MatrixT J_;
-
-      RealT time_;
-      RealT alpha_;
 
       RealT rtol_;
       RealT atol_;

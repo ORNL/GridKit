@@ -15,9 +15,9 @@ target_link_libraries(TwoBusTgov1Json
 install(TARGETS TwoBusTgov1Json RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(TwoBusTgov1.json)
 
-add_test(NAME GenrouTest1_tgov1 COMMAND TwoBusTgov1)
-add_test(NAME GenrouTest1_tgov1_json
+add_test(NAME TwoBusTgov1 COMMAND TwoBusTgov1)
+add_test(NAME TwoBusTgov1Json
     COMMAND TwoBusTgov1Json ${CMAKE_CURRENT_BINARY_DIR}/TwoBusTgov1.json)
-add_test(NAME GenrouTest1_tgov1_json_no_arg
+add_test(NAME TwoBusTgov1Json_no_arg
     COMMAND TwoBusTgov1Json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

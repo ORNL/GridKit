@@ -4,13 +4,13 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/ScalarTraits.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 
 // Include all components
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
@@ -19,8 +19,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using Log = ::GridKit::Utilities::Logger;
-
     /**
      * @brief Prototype for a system model class
      *
@@ -50,6 +48,8 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::absTol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
       using PhasorDynamics::Component<ScalarT, IdxT>::J_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::residual_indices_;
 
     public:
       /**
@@ -317,6 +317,8 @@ namespace GridKit
         f_.resize(size_);
         tag_.resize(size_);
         absTol_.resize(size_);
+        variable_indices_.resize(size_);
+        residual_indices_.resize(size_);
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -325,11 +327,23 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        // Verify component configuration
         int errorCount = this->verify();
         if (errorCount > 0)
         {
           Log::error() << "Component errors: " << errorCount << std::endl;
           throw std::runtime_error("SystemModel allocation failed");
+        }
+
+        // Perform an initial Jacobian evaluation for sparse Jacobians, such that
+        // the dynamic solver can querry the NNZ value when it is configured.
+        // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
+        // without needing the Jacobian values.
+        if (hasJacobian())
+        {
+          initialize();
+          evaluateResidual();
+          evaluateJacobian();
         }
 
         return 0;
@@ -355,14 +369,31 @@ namespace GridKit
       }
 
       /**
-       * @brief Assume that jacobian is not available
+       * @brief Check components for Jacobian availability
        *
        * @return true
        * @return false
        */
       bool hasJacobian() override
       {
-        return false;
+        bool has_jacobian = false;
+#ifdef GRIDKIT_ENABLE_ENZYME
+        has_jacobian = true;
+        for (const auto& component : components_)
+        {
+          has_jacobian = has_jacobian && component->hasJacobian();
+        }
+
+        if (!has_jacobian)
+        {
+          Log::warning() << "GritKit was built with Enzyme, but some models don't have Jacobians available. "
+                         << "Falling back to dense Jacobians in PhasorDynamics.\n";
+        }
+#else
+        Log::warning() << "GritKit was not built with Enzyme. "
+                       << "Falling back to dense Jacobians in PhasorDynamics.\n";
+#endif
+        return has_jacobian;
       }
 
       /**
@@ -491,7 +522,7 @@ namespace GridKit
        * Specify a "noise" level close to zero for which pure relative error
        * cannot be used.
        */
-      int setAbsoluteTolerance()
+      int setAbsoluteTolerance() override
       {
         // Set initial values for global solution vectors
         IdxT offset = 0;
@@ -596,6 +627,7 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
+        J_.zeroMatrix();
         std::vector<IdxT>  ctemp{};
         std::vector<IdxT>  rtemp{};
         std::vector<RealT> valtemp{};
@@ -640,6 +672,8 @@ namespace GridKit
 
         J_.setValues(rtemp, ctemp, valtemp);
 
+        // J_.printMatrix("System Jacobian");
+
         return 0;
       }
 
@@ -682,7 +716,8 @@ namespace GridKit
        */
       void updateTime(RealT t, RealT a) override
       {
-        this->time_ = t;
+        time_  = t;
+        alpha_ = a;
         for (const auto& component : components_)
         {
           component->updateTime(t, a);

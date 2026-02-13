@@ -236,24 +236,22 @@ namespace GridKit
         RealT Xdp{0.5};
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian(H, D, Ra, Xdp);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(H, D, Ra, Xdp);
 
         // Jacobian via Enzyme
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(H, D, Ra, Xdp);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
+        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i]));
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           const RealT H, const RealT D, const RealT Ra, const RealT Xdp)
       {
         DependencyTracking::Variable Vr1{1.0}; ///< Bus-1 real voltage
@@ -261,29 +259,90 @@ namespace GridKit
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+
         bus.allocate();
-        bus.initialize();
         gen.allocate();
+
+        // Get d/dy
+        bus.initialize();
         gen.initialize();
 
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen.y()[i].setVariableNumber(i); ///< Independent variables
+          gen.y()[i].setVariableNumber(i); ///< Generator independent variables
+        }
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.y()[i].setVariableNumber(i + gen.size()); // Bus independent variables
         }
 
+        bus.evaluateResidual();
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual = gen.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y = gen.getResidual();
 
-        /// Print the dependencies
-        for (size_t i = 0; i < residual.size(); ++i)
+        // Get d/dy'
+        bus.initialize();
+        gen.initialize();
+
+        for (size_t i = 0; i < gen.size(); ++i)
         {
-          std::cout << i << "th residual: ";
-          (residual[i]).print(std::cout);
+          gen.yp()[i].setVariableNumber(i); ///< Generator independent variables
+        }
+
+        bus.evaluateResidual();
+        gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
+                                ///< the dependencies
+        std::vector<DependencyTracking::Variable> residual_yp = gen.getResidual();
+
+        // Print the dependencies
+        for (size_t i = 0; i < residual_y.size(); ++i)
+        {
+          std::cout << i << "th residual, y: ";
+          (residual_y[i]).print(std::cout);
+          std::cout << "\n";
+          std::cout << i << "th residual, yp: ";
+          (residual_yp[i]).print(std::cout);
           std::cout << "\n";
         }
 
-        return residual;
+        // Extract the dependencies and add d/dy' to d/dy
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
+        for (IdxT i = 0; i < residual_y.size(); ++i)
+        {
+          DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
+          DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
+
+          for (const auto& pair_y : dependency_y)
+          {
+            auto index_y = pair_y.first;
+            auto value_y = pair_y.second;
+            auto it_yp   = dependency_yp.find(index_y);
+            if (it_yp != dependency_yp.end())
+            {
+              auto value_yp = it_yp->second;
+              dependencies[i].insert(std::make_pair(index_y, value_y + value_yp));
+            }
+            else
+            {
+              dependencies[i].insert(std::make_pair(index_y, value_y));
+            }
+          }
+
+          // Insert yp dependencies that did not exist in the y dependencies
+          for (const auto& pair_yp : dependency_yp)
+          {
+            auto index_yp = pair_yp.first;
+            auto value_yp = pair_yp.second;
+            auto it_y     = dependency_y.find(index_yp);
+            if (it_y == dependency_y.end())
+            {
+              dependencies[i].insert(std::make_pair(index_yp, value_yp));
+            }
+          }
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
@@ -294,12 +353,24 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
         PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+
         bus.allocate();
-        bus.initialize();
         gen.allocate();
+
+        bus.initialize();
         gen.initialize();
 
+        gen.updateTime(0.0, 1.0);
+
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i + gen.size()); // Reset bus variable indices
+          bus.setResidualIndex(i, i + gen.size()); // Reset bus residual indices
+        }
+
+        bus.evaluateResidual();
         gen.evaluateResidual();
+
         gen.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gen.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");

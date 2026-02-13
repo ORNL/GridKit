@@ -47,6 +47,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::mva_system_base_;
+      using Component<ScalarT, IdxT>::variable_indices_;
+      using Component<ScalarT, IdxT>::residual_indices_;
 
     public:
       using bus_type = BusBase<ScalarT, IdxT>;
@@ -80,10 +82,6 @@ namespace GridKit
 
       // Still to be implemented
       int evaluateJacobian() override;
-
-      void updateTime(RealT /* t */, RealT /* a */) override
-      {
-      }
 
       void setPmech(RealT pmech)
       {

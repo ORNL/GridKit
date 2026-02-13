@@ -25,15 +25,15 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-using BusType = GridKit::PhasorDynamics::BusData<scalar_type, index_type>::BusType;
+using BusType = GridKit::PhasorDynamics::BusData<real_type, index_type>::BusType;
 
 struct OutputData
 {
-  real_type   t;
-  scalar_type gen2speed;
-  scalar_type gen3speed;
-  scalar_type v2mag;
-  scalar_type v3mag;
+  real_type t;
+  real_type gen2speed;
+  real_type gen3speed;
+  real_type v2mag;
+  real_type v3mag;
 
   OutputData& operator-=(const OutputData& other)
   {
@@ -45,7 +45,7 @@ struct OutputData
     return *this;
   }
 
-  double norm() const
+  real_type norm() const
   {
     return std::max({
         std::abs(gen2speed),
@@ -84,7 +84,7 @@ int main()
   // Create model data
   //
 
-  SystemModelData<scalar_type, index_type> data;
+  SystemModelData<real_type, index_type> data;
 
   // Set bus data
   data.bus.resize(3);
@@ -103,7 +103,7 @@ int main()
 
   // Bus 2
   data.bus[2].bus_id   = 2;
-  data.bus[2].bus_type = BusData<scalar_type, index_type>::BusType::DEFAULT;
+  data.bus[2].bus_type = BusData<real_type, index_type>::BusType::DEFAULT;
   data.bus[2].Vr0      = 0.9610827543495831;
   data.bus[2].Vi0      = -0.13122476630506485;
 
@@ -187,13 +187,13 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<double>& y_val = sys.y();
+    std::vector<real_type>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                1 + y_val[5],
-                                1 + y_val[10],
-                                std::hypot(y_val[0], y_val[1]),
-                                std::hypot(y_val[2], y_val[3])});
+                                1 + static_cast<real_type>(y_val[5]),
+                                1 + static_cast<real_type>(y_val[10]),
+                                std::hypot(static_cast<real_type>(y_val[0]), static_cast<real_type>(y_val[1])),
+                                std::hypot(static_cast<real_type>(y_val[2]), static_cast<real_type>(y_val[3]))});
   };
 
   // Set up simulation
@@ -201,7 +201,7 @@ int main()
   ida.configureSimulation();
 
   // Run simulation, output each `dt` interval
-  scalar_type start = static_cast<scalar_type>(clock());
+  real_type start = static_cast<real_type>(clock());
   ida.initializeSimulation(0.0, false);
 
   // Run for 1s
@@ -219,19 +219,19 @@ int main()
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
-  double stop = static_cast<double>(clock());
+  real_type stop = static_cast<real_type>(clock());
 
   /* Check worst-case error */
   real_type worst_error      = 0;
   real_type worst_error_time = 0;
 
-  std::ostream  nullout(nullptr);
-  std::ostream& out = nullout;
+  // std::ostream  nullout(nullptr);
+  // std::ostream& out = nullout;
 
-  // // Uncomment code below to print output to a file:
-  // std::ofstream fileout;
-  // fileout.open("Example_ThreeBus_Classical_results.csv");
-  // std::ostream& out = fileout;
+  // Uncomment code below to print output to a file:
+  std::ofstream fileout;
+  fileout.open("Example_ThreeBus_Classical_results.csv");
+  std::ostream& out = fileout;
 
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
   out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";

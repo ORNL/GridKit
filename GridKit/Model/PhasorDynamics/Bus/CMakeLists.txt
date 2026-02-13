@@ -38,8 +38,8 @@ gridkit_add_library(phasor_dynamics_bus_dependency_tracking
   SOURCES
     BusDependencyTracking.cpp
     BusInfiniteDependencyTracking.cpp
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
+  INCLUDE_DIRECTORIES
+    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
     PUBLIC GridKit::phasor_dynamics_core)
 

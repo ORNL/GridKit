@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
 #include "LoadImpl.hpp"
 
@@ -22,21 +22,21 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
-      std::cout << "Evaluate Jacobian for Load..." << std::endl;
-      std::cout << "Jacobian evaluation is experimental!" << std::endl;
+      Log::misc() << "Evaluate Jacobian for Load..." << std::endl;
+      Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-      GridKit::Enzyme::Sparse::BusJacobian<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
-                                           GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
-                                           ScalarT,
-                                           IdxT>::eval(this,
-                                                       static_cast<size_t>(bus_->size()),
-                                                       static_cast<size_t>(bus_->size()),
-                                                       bus_->getResidualIndices(),
-                                                       bus_->getVariableIndices(),
-                                                       y_.data(),
-                                                       yp_.data(),
-                                                       (bus_->y()).data(),
-                                                       bus_->getJacobian());
+      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+                                     ScalarT,
+                                     IdxT>::eval(this,
+                                                 static_cast<size_t>(bus_->size()),
+                                                 static_cast<size_t>(bus_->size()),
+                                                 bus_->getResidualIndices(),
+                                                 bus_->getVariableIndices(),
+                                                 y_.data(),
+                                                 yp_.data(),
+                                                 (bus_->y()).data(),
+                                                 bus_->getJacobian());
 
       return 0;
     }

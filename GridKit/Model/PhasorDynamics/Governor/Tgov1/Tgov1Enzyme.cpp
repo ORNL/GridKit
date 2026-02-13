@@ -4,7 +4,7 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseWrapper.hpp>
+#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
 #include "Tgov1Impl.hpp"
 
@@ -24,40 +24,39 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Tgov1<ScalarT, IdxT>::evaluateJacobian()
       {
-        std::cout << "Evaluate Jacobian for Tgov1..." << std::endl;
-        std::cout << "Jacobian evaluation is experimental!" << std::endl;
+        Log::misc() << "Evaluate Jacobian for Tgov1..." << std::endl;
+        Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-        GridKit::Enzyme::Sparse::InternalJacobianWithSignal<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
-                                                            GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                            ScalarT,
-                                                            IdxT>::eval(this,
-                                                                        f_.size(),
-                                                                        y_.size(),
-                                                                        this->getResidualIndices(),
-                                                                        this->getVariableIndices(),
-                                                                        y_.data(),
-                                                                        yp_.data(),
-                                                                        wb_.data(),
-                                                                        ws_.data(),
-                                                                        J_);
+        J_.zeroMatrix();
 
-        J_.printMatrix("Tgov1 internal Jacobian");
+        GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                      ScalarT,
+                                      IdxT>::eval(this,
+                                                  f_.size(),
+                                                  y_.size(),
+                                                  this->getResidualIndices(),
+                                                  this->getVariableIndices(),
+                                                  y_.data(),
+                                                  yp_.data(),
+                                                  wb_.data(),
+                                                  ws_.data(),
+                                                  alpha_,
+                                                  J_);
 
-        GridKit::Enzyme::Sparse::ExternalJacobian<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
-                                                  GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
-                                                  ScalarT,
-                                                  IdxT>::eval(this,
-                                                              f_.size(),
-                                                              ws_.size(),
-                                                              this->getResidualIndices(),
-                                                              ws_indices_,
-                                                              y_.data(),
-                                                              yp_.data(),
-                                                              wb_.data(),
-                                                              ws_.data(),
-                                                              J_);
-
-        J_.printMatrix("Tgov1 Jacobian after signal evaluation");
+        GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Governor::Tgov1<ScalarT, IdxT>,
+                                       GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal,
+                                       ScalarT,
+                                       IdxT>::eval(this,
+                                                   f_.size(),
+                                                   ws_.size(),
+                                                   this->getResidualIndices(),
+                                                   ws_indices_,
+                                                   y_.data(),
+                                                   yp_.data(),
+                                                   wb_.data(),
+                                                   ws_.data(),
+                                                   J_);
 
         return 0;
       }

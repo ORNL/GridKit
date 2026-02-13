@@ -15,8 +15,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::evaluateJacobian()
     {
-      std::cout << "Evaluate Jacobian for Load..." << std::endl;
-      std::cout << "Jacobian evaluation is not implemented!" << std::endl;
+      Log::misc() << "Evaluate Jacobian for Load..." << std::endl;
+      Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
 
       return 0;
     }

@@ -112,12 +112,12 @@ namespace GridKit
       return tag_;
     }
 
-    std::vector<ScalarT>& absoluteTolerance() override
+    std::vector<ScalarT>& absoluteTolerance()
     {
       return absTol_;
     }
 
-    const std::vector<ScalarT>& absoluteTolerance() const override
+    const std::vector<ScalarT>& absoluteTolerance() const
     {
       return absTol_;
     }

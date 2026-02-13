@@ -123,7 +123,7 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<double>& yval = sys.y();
+    std::vector<real_type>& yval = sys.y();
 
     // Output time
     out << t << ",";
@@ -161,7 +161,7 @@ int main()
   ida.configureSimulation();
 
   // Run simulation, output each `dt` interval
-  scalar_type start = static_cast<scalar_type>(clock());
+  real_type start = static_cast<real_type>(clock());
   ida.initializeSimulation(0.0, false);
 
   // Run for 1s
@@ -179,7 +179,7 @@ int main()
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
-  double stop = static_cast<double>(clock());
+  real_type stop = static_cast<real_type>(clock());
 
   fileout.close();
 

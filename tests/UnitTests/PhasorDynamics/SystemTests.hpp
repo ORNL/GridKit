@@ -204,24 +204,22 @@ namespace GridKit
         data.branch[0].parameters[BranchParameters::B] = 1.2;
 
         // Jacobian via DependencyTracking
-        std::vector<DependencyTracking::Variable> dependency_tracking_residuals = DependencyTrackingJacobian(data);
+        std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(data);
 
         // Jacobian via Enzyme
         std::vector<DependencyTracking::Variable::DependencyMap> enzyme_jacobian = EnzymeJacobian(data);
 
         /// Compare DependencyTracking dependencies to Enzyme's
-        for (size_t i = 0; i < dependency_tracking_residuals.size(); ++i)
+        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
-          DependencyTracking::Variable                       res           = dependency_tracking_residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, enzyme_jacobian[i]));
+          success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
 
         return success.report(__func__);
       }
 
     private:
-      std::vector<DependencyTracking::Variable> DependencyTrackingJacobian(
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
       {
         // Create an empty system model
@@ -239,17 +237,24 @@ namespace GridKit
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residuals = system.getResidual();
+        std::vector<DependencyTracking::Variable> residual = system.getResidual();
 
-        /// Print the dependencies
-        for (size_t i = 0; i < residuals.size(); ++i)
+        // Print the dependencies
+        for (size_t i = 0; i < residual.size(); ++i)
         {
           std::cout << i << "th residual: ";
-          (residuals[i]).print(std::cout);
+          (residual[i]).print(std::cout);
           std::cout << "\n";
         }
 
-        return residuals;
+        // Extract the dependencies
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.size());
+        for (IdxT i = 0; i < residual.size(); ++i)
+        {
+          dependencies[i] = (residual[i]).getDependencies();
+        }
+
+        return dependencies;
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(

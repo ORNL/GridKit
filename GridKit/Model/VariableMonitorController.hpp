@@ -164,7 +164,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { printFullHeader(*sink.os, sink.format); },
+                     { this->printFullHeader(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -256,7 +256,7 @@ namespace GridKit
         {
           std::visit([this](auto&& sink)
                      {
-              printFull(*sink.os, sink.format);
+              this->printFull(*sink.os, sink.format);
               using T = std::remove_cvref_t<decltype(sink)>;
               if constexpr (std::is_same_v<T, Sink<Json>>)
               {
@@ -295,7 +295,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { printFullFooter(*sink.os, sink.format); },
+                     { this->printFullFooter(*sink.os, sink.format); },
                      sink);
         }
       }
@@ -403,7 +403,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { sink.start(); },
+                     { (void) this; sink.start(); },
                      sink);
         }
       }
@@ -416,7 +416,7 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { sink.stop(); },
+                     { (void) this; sink.stop(); },
                      sink);
         }
       }

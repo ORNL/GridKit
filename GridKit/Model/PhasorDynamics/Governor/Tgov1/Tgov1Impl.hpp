@@ -140,12 +140,15 @@ namespace GridKit
         y_.resize(size);
         yp_.resize(size);
         tag_.resize(size);
-        absTol_.resize(size_);
+        absTol_.resize(size);
+        variable_indices_.resize(size);
+        residual_indices_.resize(size);
 
-        // Resize external variable data
+        // Resize signal variable data
         ws_.resize(1);
+        ws_indices_.resize(1);
         ws_[0]         = 0.0;
-        ws_indices_[0] = static_cast<IdxT>(-1);
+        ws_indices_[0] = INVALID_INDEX<IdxT>;
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -248,7 +251,7 @@ namespace GridKit
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* wb,
-          [[maybe_unused]] ScalarT* ws,
+          ScalarT*                  ws,
           ScalarT*                  f)
       {
         // Read Internal Variables
@@ -260,7 +263,7 @@ namespace GridKit
         ScalarT ptx_dot = yp[0];
         ScalarT pv_dot  = yp[1];
 
-        // Set external variable aliases
+        // Set signal variable aliases
         ScalarT omega = ws[0];
 
         // The 'pre-limit' derivative of Pv

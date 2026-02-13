@@ -3,6 +3,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -132,15 +133,13 @@ namespace AnalysisManager
         this->configureLinearSolverDense();
       }
 #else
+      /// Todo - Improve error handling capabilities and hasJacobian_ ownership
       if (model_->hasJacobian())
       {
-        /// Todo - Improve error handling capabilities and hasJacobian_ ownership
-        throw std::runtime_error("SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian.");
+        Log::warning() << "SUNDIALS is not configured with KLU, but the model has a (sparse) Jacobian. "
+                       << "Falling back to dense Jacobian.\n";
       }
-      else
-      {
-        this->configureLinearSolverDense();
-      }
+      this->configureLinearSolverDense();
 #endif
 
       return retval;
@@ -265,8 +264,11 @@ namespace AnalysisManager
         if (tag_)
           initType = IDA_YA_YDP_INIT;
 
-        retval = IDACalcIC(solver_, initType, 0.1);
+        retval = IDACalcIC(solver_, initType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
+
+        retval = IDAGetConsistentIC(solver_, yy_, yp_);
+        checkOutput(retval, "IDAGetConsistentIC");
 
         copyVec(yy_, model_->y());
         copyVec(yp_, model_->yp());
@@ -946,6 +948,76 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Accumulate another stats object into this one, allowing for stats to be kept
+     *        across multiple simulations with IDA.
+     */
+    IdaStats& IdaStats::operator+=(const IdaStats& other)
+    {
+      num_steps_                       += other.num_steps_;
+      num_residual_evals_              += other.num_residual_evals_;
+      num_linear_decompositions_       += other.num_linear_decompositions_;
+      num_error_test_fails_            += other.num_error_test_fails_;
+      num_nonlinear_iters_             += other.num_nonlinear_iters_;
+      num_nonlinear_convergence_fails_ += other.num_nonlinear_convergence_fails_;
+
+      return *this;
+    }
+
+    /**
+     * @brief Generate a string containing all of the stats in a formatted report.
+     *        All columns are aligned. To change the width of a column,
+     *        modify `label_width` or `stat_width`.
+     */
+    std::string IdaStats::report() const
+    {
+      int               label_width = 30;
+      int               stat_width  = 12;
+      std::stringstream out;
+
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
+          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+          << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
+          << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
+          << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
+
+      return out.str();
+    }
+
+    /**
+     * @brief Construct and return an `IdaStats` object containing the statistics of the current IDA workspace.
+     *        Several statistics returned by IDA are ignored because they are about the current state of IDA,
+     *        rather than about the simulation at large.
+     */
+    template <class ScalarT, typename IdxT>
+    IdaStats Ida<ScalarT, IdxT>::getStats() const
+    {
+      IdaStats stats;
+
+      // Dummies for ignoring stats
+      int         dummy;
+      sunrealtype dummy2;
+
+      int retval = IDAGetIntegratorStats(solver_,
+                                         &stats.num_steps_,
+                                         &stats.num_residual_evals_,
+                                         &stats.num_linear_decompositions_,
+                                         &stats.num_error_test_fails_,
+                                         &dummy,
+                                         &dummy,
+                                         &dummy2,
+                                         &dummy2,
+                                         &dummy2,
+                                         &dummy2);
+      checkOutput(retval, "IDAGetIntegratorStats");
+
+      retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
+      checkOutput(retval, "IDAGetNonlinSolvStats");
+
+      return stats;
+    }
+
+    /**
      * @brief Check SUNDIALS allocation
      *
      * @tparam ScalarT
@@ -1070,7 +1142,7 @@ namespace AnalysisManager
     
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::setMaxSteps(void *mem, IdxT maxSteps) {
-      int retval = IDASetMaxNumSteps(mem, maxSteps);
+      int retval = IDASetMaxNumSteps(mem, static_cast<long int>(maxSteps));
       checkOutput(retval, "IDASetMaxNumSteps");
     }
 

@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
