@@ -49,7 +49,7 @@ namespace GridKit
   int Generator2<ScalarT, IdxT>::allocate()
   {
     tag_.resize(static_cast<size_t>(size_));
-    absTol_.resize(static_cast<size_t>(size_));
+    abs_tol_.resize(static_cast<size_t>(size_));
     return 0;
   }
 

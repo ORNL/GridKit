@@ -39,7 +39,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::nnz_;
       using Component<ScalarT, IdxT>::size_;
       using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::absTol_;
+      using Component<ScalarT, IdxT>::abs_tol_;
       using Component<ScalarT, IdxT>::time_;
       using Component<ScalarT, IdxT>::y_;
       using Component<ScalarT, IdxT>::yp_;

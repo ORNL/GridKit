@@ -99,9 +99,9 @@ namespace AnalysisManager
       }
 
       const std::vector<ScalarT>& absTol = model_->absoluteTolerance();
-      absTol_ = N_VClone(yy_);
-      checkAllocation((void*) absTol_, "N_VClone");
-      copyVec(absTol, absTol_);
+      abs_tol_ = N_VClone(yy_);
+      checkAllocation((void*) abs_tol_, "N_VClone");
+      copyVec(absTol, abs_tol_);
       setTolerance(DEFAULT_REL_TOL);
 
       // Set up linear solver
@@ -425,7 +425,7 @@ namespace AnalysisManager
       N_VDestroy(yy_);
       N_VDestroy(yp_);
       N_VDestroy(tag_);
-      N_VDestroy(absTol_);
+      N_VDestroy(abs_tol_);
       N_VDestroy(yy0_);
       N_VDestroy(yp0_);
       SUNLinSolFree(linearSolver_);
@@ -1179,10 +1179,10 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setTolerance(void *mem, ScalarT relTol, ScalarT absTolFac) {
       int retval = 0;
       if (absTolFac == 1) {
-        retval = IDASVtolerances(mem, relTol, absTol_);
+        retval = IDASVtolerances(mem, relTol, abs_tol_);
       } else {
-        N_Vector tmp = N_VClone(absTol_);
-        N_VScale(absTolFac, absTol_, tmp);
+        N_Vector tmp = N_VClone(abs_tol_);
+        N_VScale(absTolFac, abs_tol_, tmp);
         retval = IDASVtolerances(mem, relTol, tmp);
         N_VDestroy(tmp);
       }
@@ -1219,10 +1219,10 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setQuadratureTolerance(void *mem, ScalarT relTol, ScalarT absTolFac) {
       int retval = 0;
       if (absTolFac == 1) {
-        retval = IDAQuadSVtolerances(mem, relTol, absTol_);
+        retval = IDAQuadSVtolerances(mem, relTol, abs_tol_);
       } else {
-        N_Vector tmp = N_VClone(absTol_);
-        N_VScale(absTolFac, absTol_, tmp);
+        N_Vector tmp = N_VClone(abs_tol_);
+        N_VScale(absTolFac, abs_tol_, tmp);
         retval = IDAQuadSVtolerances(mem, relTol, tmp);
         N_VDestroy(tmp);
       }

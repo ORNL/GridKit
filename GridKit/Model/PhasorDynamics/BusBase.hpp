@@ -103,12 +103,12 @@ namespace GridKit
 
       std::vector<ScalarT>& absoluteTolerance() override
       {
-        return absTol_;
+        return abs_tol_;
       }
 
       const std::vector<ScalarT>& absoluteTolerance() const override
       {
-        return absTol_;
+        return abs_tol_;
       }
 
       MatrixT& getJacobian() override
@@ -176,7 +176,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
-      std::vector<ScalarT> absTol_;
+      std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
 
       MatrixT J_;
