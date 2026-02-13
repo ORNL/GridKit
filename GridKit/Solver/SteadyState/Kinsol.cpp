@@ -72,17 +72,6 @@ namespace AnalysisManager
       retval = KINSetUserData(solver_, model_);
       checkOutput(retval, "KINSetUserData");
 
-      // Set tolerances
-      sunrealtype fnormtol;  ///< Residual tolerance
-      sunrealtype scsteptol; ///< Scaled step tolerance
-
-      model_->setTolerances(fnormtol, scsteptol); ///< \todo Function name should be "getTolerances"!
-      retval = KINSetFuncNormTol(solver_, fnormtol);
-      checkOutput(retval, "KINSetFuncNormTol");
-
-      retval = KINSetScaledStepTol(solver_, scsteptol);
-      checkOutput(retval, "KINSetScaledStepTol");
-
       // Set up linear solver
       return this->configureLinearSolver();
     }
@@ -171,7 +160,7 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printOutput()
+    void Kinsol<ScalarT, IdxT>::printOutput() const
     {
       sunrealtype* yval = N_VGetArrayPointer(yy_);
 
@@ -184,7 +173,7 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y)
+    void Kinsol<ScalarT, IdxT>::printSpecial(sunrealtype t, N_Vector y) const
     {
       sunrealtype* yval = N_VGetArrayPointer_Serial(y);
       IdxT         N    = static_cast<IdxT>(N_VGetLength_Serial(y));
@@ -198,10 +187,10 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::printFinalStats()
+    void Kinsol<ScalarT, IdxT>::printFinalStats() const
     {
       int retval = KINPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
-      checkOutput(retval, "IDAPrintAllStats");
+      checkOutput(retval, "KINPrintAllStats");
     }
 
     template <class ScalarT, typename IdxT>
@@ -222,6 +211,15 @@ namespace AnalysisManager
         std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
         throw SundialsException();
       }
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Kinsol<ScalarT, IdxT>::setTolerance(ScalarT tol) {
+      int retval = KINSetFuncNormTol(solver_, tol);
+      checkOutput(retval, "KINSetFuncNormTol");
+
+      retval = KINSetScaledStepTol(solver_, tol);
+      checkOutput(retval, "KINSetScaledStepTol");
     }
 
     // Compiler will prevent building modules with data type incompatible with sunrealtype

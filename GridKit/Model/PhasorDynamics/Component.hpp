@@ -53,15 +53,14 @@ namespace GridKit
         // std::cout << "updateTime: t = " << time_ << ", alpha = " << alpha_ << "\n";
       }
 
-      virtual void setTolerances(RealT& rtol, RealT& atol) const override
+      std::vector<ScalarT>& absoluteTolerance() override
       {
-        rtol = rel_tol_;
-        atol = abs_tol_;
+        return absTol_;
       }
 
-      virtual void setMaxSteps(IdxT& msa) const override
+      const std::vector<ScalarT>& absoluteTolerance() const override
       {
-        msa = max_steps_;
+        return absTol_;
       }
 
       std::vector<ScalarT>& y() override
@@ -163,6 +162,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> absTol_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
       std::vector<ScalarT> wb_;
@@ -175,8 +175,6 @@ namespace GridKit
 
       RealT rel_tol_;
       RealT abs_tol_;
-
-      IdxT max_steps_;
 
       /*
 

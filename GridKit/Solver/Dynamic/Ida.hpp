@@ -48,15 +48,15 @@ namespace AnalysisManager
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
-      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model, RealT dt=0);
+      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 
       int configureSimulation();
-      int configureLinearSolver();
+      int configureLinearSolver(); // TODO: make private
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
-      int configureLinearSolverSparse();
+      int configureLinearSolverSparse(); // TODO: make private
 #endif
-      int configureLinearSolverDense();
+      int configureLinearSolverDense(); // TODO: make private
       int getDefaultInitialCondition();
       int setIntegrationTime(RealT t_init, RealT t_final, int nout);
       int initializeSimulation(RealT t0, bool findConsistent = false);
@@ -127,9 +127,20 @@ namespace AnalysisManager
         return N_VGetArrayPointer(qB_);
       }
 
-      void printOutput(RealT t);
-      void printSpecial(RealT t, N_Vector x);
-      void printFinalStats();
+      void printOutput(RealT t) const;
+      void printSpecial(RealT t, N_Vector x) const;
+      void printFinalStats() const;
+
+      void setTimeStep(ScalarT timeStep) override;
+      void setBackwardTimeStep(ScalarT timeStep);
+      void setFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac=1);
+      void setBackwardFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac=1);
+      void setTolerance(ScalarT relTol, ScalarT absTolFac=1) override;
+      void setBackwardTolerance(ScalarT relTol, ScalarT absTolFac=1);
+      void setQuadratureTolerance(ScalarT relTol, ScalarT);
+      void setBackwardQuadratureTolerance(ScalarT relTol, ScalarT);
+      void setMaxSteps(IdxT maxSteps) override;
+      void setBackwardMaxSteps(IdxT maxSteps);
 
       IdaStats getStats() const;
 
@@ -174,7 +185,7 @@ namespace AnalysisManager
                                   void*    user_data);
 
     private:
-      RealT dt_;
+      static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
 
       void*           solver_{};
       SUNContext      context_{};
@@ -190,6 +201,7 @@ namespace AnalysisManager
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector
       N_Vector tag_{}; ///< Tags differential variables
+      N_Vector absTol_{}; ///< Tags differential variables
       N_Vector q_{};   ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
@@ -202,8 +214,6 @@ namespace AnalysisManager
       int backwardID_{};
 
     private:
-      void configureIDA(void *ida);
-
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
@@ -212,6 +222,12 @@ namespace AnalysisManager
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
+
+      void setTimeStep(void *mem, ScalarT timeStep);
+      void setFixedStep(void *mem, ScalarT timeStep, ScalarT relTol, ScalarT absTolFac);
+      void setTolerance(void *mem, ScalarT relTol, ScalarT absTolFac);
+      void setMaxSteps(void *mem, IdxT maxSteps);
+      void setQuadratureTolerance(void *mem, ScalarT relTol, ScalarT absTolFac);
     };
 
     /// Simple exception to use within Ida class.

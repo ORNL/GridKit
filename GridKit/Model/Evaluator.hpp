@@ -93,8 +93,9 @@ namespace GridKit
       virtual IdxT sizeQuadrature()                              = 0;
       virtual IdxT sizeParams()                                  = 0;
       virtual void updateTime(RealT t, RealT a)                  = 0;
-      virtual void setTolerances(RealT& rtol, RealT& atol) const = 0;
-      virtual void setMaxSteps(IdxT& msa) const                  = 0;
+      
+      virtual std::vector<ScalarT>& absoluteTolerance()             = 0;
+      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
 
       virtual std::vector<ScalarT>&       y()       = 0;
       virtual const std::vector<ScalarT>& y() const = 0;

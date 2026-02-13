@@ -61,15 +61,6 @@ namespace GridKit
         return 0;
       }
 
-      void setTolerances([[maybe_unused]] RealT& rel_tol, [[maybe_unused]] RealT& abs_tol) const override
-      {
-      }
-
-      void setMaxSteps(IdxT& msa) const override
-      {
-        msa = 2000;
-      }
-
       int tagDifferentiable() override
       {
         return 0;
@@ -138,6 +129,16 @@ namespace GridKit
       const std::vector<bool>& tag() const override
       {
         return tag_;
+      }
+
+      std::vector<ScalarT>& absoluteTolerance() override
+      {
+        return absTol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const override
+      {
+        return absTol_;
       }
 
       std::vector<ScalarT>& yB() override
@@ -249,6 +250,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> absTol_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 

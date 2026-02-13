@@ -105,9 +105,9 @@ namespace AnalysisManager
       //     return N_VGetArrayPointer(qB_);
       // }
 
-      void printOutput();
-      void printSpecial(sunrealtype t, N_Vector x);
-      void printFinalStats();
+      void printOutput() const;
+      void printSpecial(sunrealtype t, N_Vector x) const;
+      void printFinalStats() const;
 
     private:
       static int Residual(N_Vector yy, N_Vector rr, void* user_data);
@@ -145,8 +145,11 @@ namespace AnalysisManager
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
-      inline void checkAllocation(void* v, const char* functionName);
-      inline void checkOutput(int retval, const char* functionName);
+      static inline void checkAllocation(void* v, const char* functionName);
+      static inline void checkOutput(int retval, const char* functionName);
+
+
+      void setTolerance(ScalarT tol) override;
     };
 
     /// Simple exception to use within Kinsol class.
