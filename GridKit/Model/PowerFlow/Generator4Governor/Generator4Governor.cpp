@@ -67,7 +67,7 @@ namespace GridKit
   {
     // std::cout << "Allocate Gen2..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
-    absTol_.resize(static_cast<size_t>(size_));
+    abs_tol_.resize(static_cast<size_t>(size_));
 
     return 0;
   }

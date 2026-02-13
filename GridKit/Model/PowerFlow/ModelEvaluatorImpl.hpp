@@ -114,12 +114,12 @@ namespace GridKit
 
     std::vector<ScalarT>& absoluteTolerance()
     {
-      return absTol_;
+      return abs_tol_;
     }
 
     const std::vector<ScalarT>& absoluteTolerance() const
     {
-      return absTol_;
+      return abs_tol_;
     }
 
     std::vector<ScalarT>& yB()
@@ -237,7 +237,7 @@ namespace GridKit
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
     std::vector<bool>    tag_;
-    std::vector<ScalarT> absTol_;
+    std::vector<ScalarT> abs_tol_;
     std::vector<ScalarT> f_;
     std::vector<ScalarT> g_;
 

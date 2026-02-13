@@ -55,12 +55,12 @@ namespace GridKit
 
       std::vector<ScalarT>& absoluteTolerance() override
       {
-        return absTol_;
+        return abs_tol_;
       }
 
       const std::vector<ScalarT>& absoluteTolerance() const override
       {
-        return absTol_;
+        return abs_tol_;
       }
 
       std::vector<ScalarT>& y() override
@@ -162,7 +162,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
-      std::vector<ScalarT> absTol_;
+      std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
       std::vector<ScalarT> wb_;
@@ -172,9 +172,6 @@ namespace GridKit
 
       RealT time_;
       RealT alpha_;
-
-      RealT rel_tol_;
-      RealT abs_tol_;
 
       /*
 

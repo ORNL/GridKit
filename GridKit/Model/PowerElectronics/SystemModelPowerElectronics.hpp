@@ -71,7 +71,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::absTol_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
   public:
     /**
@@ -171,7 +171,7 @@ namespace GridKit
       yp_.resize(size_);
       f_.resize(size_);
       tag_.resize(size_);
-      absTol_.resize(size_);
+      abs_tol_.resize(size_);
 
       return 0;
     }
