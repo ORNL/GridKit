@@ -168,8 +168,19 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      sunindextype n   = static_cast<sunindextype>(model_->size());
-      sunindextype nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+      sunindextype n = static_cast<sunindextype>(model_->size());
+      sunindextype nnz;
+
+      bool useCsrJac = (model_->getCsrJacobian() != nullptr);
+
+      if (useCsrJac)
+      {
+        nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
+      }
+      else
+      {
+        nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
+      }
 
       JacobianMat_ = SUNSparseMatrix(n,
                                      n,
@@ -184,7 +195,14 @@ namespace AnalysisManager
       retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
       checkOutput(retval, "IDASetLinearSolver");
 
-      retval = IDASetJacFn(solver_, this->Jac);
+      if (useCsrJac)
+      {
+        retval = IDASetJacFn(solver_, this->CsrJac);
+      }
+      else
+      {
+        retval = IDASetJacFn(solver_, this->Jac);
+      }
       checkOutput(retval, "IDASetJacFn");
 
       return retval;
@@ -805,6 +823,50 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief CSR Jacobian evaluation
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     *
+     * @todo Update PhasorDynamics to use this implementation.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::CsrJac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
+    {
+      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
+
+      model->updateTime(t, cj);
+      copyVec(yy, model->y());
+      copyVec(yp, model->yp());
+
+      model->evaluateJacobian();
+
+      using CsrMatrix      = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+      const CsrMatrix* Jac = model->getCsrJacobian();
+
+      SUNMatZero(J);
+
+      sunindextype* sun_rptr = SUNSparseMatrix_IndexPointers(J);
+      sunindextype* sun_cind = SUNSparseMatrix_IndexValues(J);
+      RealT*        sun_vals = SUNSparseMatrix_Data(J);
+
+      IdxT n   = Jac->getRows();
+      IdxT nnz = Jac->getNnz();
+
+      // Get reference to the jacobian entries
+      const IdxT*  rptr = Jac->getRowPtr();
+      const IdxT*  cind = Jac->getColInd();
+      const RealT* vals = Jac->getValues();
+
+      // Copy data from model jac to sundials
+      std::copy(rptr, rptr + n + 1, sun_rptr);
+      std::copy(cind, cind + nnz, sun_cind);
+      std::copy(vals, vals + nnz, sun_vals);
+
+      return 0;
+    }
+
+    /**
      * @brief Integrand evaluation
      *
      * @tparam ScalarT
@@ -972,7 +1034,7 @@ namespace AnalysisManager
 
     /**
      * @brief Accumulate another stats object into this one, allowing for stats to be kept
-     *        across multiple simulations with IDA.
+     *        across multiple simulations with IDAs
      */
     IdaStats& IdaStats::operator+=(const IdaStats& other)
     {

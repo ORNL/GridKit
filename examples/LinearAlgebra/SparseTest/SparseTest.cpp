@@ -98,5 +98,79 @@ int main()
     std::cout << "Failed!" << std::endl;
   }
 
+  std::vector<double> v3 = {1.2, 1.8, 1.0, 1.6, 1.4, 1.7, 1.1, 1.5, 1.3};
+  std::vector<size_t> x3 = {1, 2, 0, 0, 2, 1, 0, 2, 1};
+  std::vector<size_t> y3 = {1, 2, 0, 0, 0, 1, 1, 2, 2};
+  size_t              m3 = 3;
+  size_t              n3 = 3;
+
+  GridKit::LinearAlgebra::COO_Matrix<double, size_t> C;
+  C.resetEntries(x3, y3, v3, m3, n3);
+
+  std::vector<size_t> csr_r;
+  std::vector<size_t> csr_c;
+  std::vector<double> csr_v;
+  std::tie(csr_r, csr_c, csr_v) = C.getCsrData();
+
+  std::cout << "C after getCsrData:\n";
+  C.printMatrix();
+
+  for (size_t i = 0; i < csr_r.size() - 1; i++)
+  {
+    std::cout << csr_r[i] << std::endl;
+    size_t rdiff = csr_r[i + 1] - csr_r[i];
+    for (size_t j = 0; j < rdiff; j++)
+    {
+      std::cout << csr_c[j + csr_r[i]] << ", " << csr_v[j + csr_r[i]] << std::endl;
+    }
+  }
+  std::cout << csr_r[csr_r.size() - 1] << std::endl;
+
+  // Basic Verification test
+  std::vector<size_t> csr_rtest   = {0, 2, 4, 6};
+  std::vector<size_t> csr_ctest   = {0, 1, 1, 2, 0, 2};
+  std::vector<double> csr_valtest = {2.6, 1.1, 2.9, 1.3, 1.4, 3.3};
+  std::vector<size_t> maptest     = {2, 5, 0, 0, 4, 2, 1, 5, 3};
+
+  std::vector<size_t> map2csr = C.getMapToCsr();
+
+  assert(csr_rtest.size() == csr_r.size());
+  assert(csr_ctest.size() == csr_c.size());
+  assert(csr_valtest.size() == csr_v.size());
+  assert(maptest.size() == map2csr.size());
+
+  for (size_t i = 0; i < csr_rtest.size(); i++)
+  {
+    if (csr_r[i] != csr_rtest[i])
+    {
+      failval--;
+    }
+  }
+  for (size_t i = 0; i < csr_ctest.size(); i++)
+  {
+    double vdiff = csr_v[i] - csr_valtest[i];
+    if (csr_c[i] != csr_ctest[i] || -1e-14 > vdiff || vdiff > 1e-14)
+    {
+      failval--;
+    }
+  }
+
+  for (size_t i = 0; i < maptest.size(); i++)
+  {
+    if (map2csr[i] != maptest[i])
+    {
+      failval--;
+    }
+  }
+
+  if (failval == 0)
+  {
+    std::cout << "Success!" << std::endl;
+  }
+  else
+  {
+    std::cout << "Failed!" << std::endl;
+  }
+
   return failval;
 }
