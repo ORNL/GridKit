@@ -54,7 +54,8 @@ namespace GridKit
      */
     SystemModel()
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
-    {}
+    {
+    }
 
     /**
      * @brief Destructor for the system model

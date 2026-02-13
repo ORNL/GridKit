@@ -148,7 +148,6 @@ namespace AnalysisManager
       static inline void checkAllocation(void* v, const char* functionName);
       static inline void checkOutput(int retval, const char* functionName);
 
-
       void setTolerance(ScalarT tol) override;
     };
 

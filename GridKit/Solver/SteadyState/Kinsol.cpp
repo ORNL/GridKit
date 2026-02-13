@@ -214,7 +214,8 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::setTolerance(ScalarT tol) {
+    void Kinsol<ScalarT, IdxT>::setTolerance(ScalarT tol)
+    {
       int retval = KINSetFuncNormTol(solver_, tol);
       checkOutput(retval, "KINSetFuncNormTol");
 
