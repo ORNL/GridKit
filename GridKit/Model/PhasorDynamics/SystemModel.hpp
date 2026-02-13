@@ -56,7 +56,8 @@ namespace GridKit
        * @brief Constructor for the system model
        */
       SystemModel()
-      {}
+      {
+      }
 
       /**
        * @brief Construct a new System Model object

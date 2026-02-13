@@ -62,7 +62,8 @@ namespace GridKit
      */
     SystemSteadyStateModel()
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
-    {}
+    {
+    }
 
     /**
      * @brief Construct a new System Steady State Model object. Allows for simple allocation.

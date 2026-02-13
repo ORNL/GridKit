@@ -82,7 +82,7 @@ namespace GridKit
     PowerElectronicsModel()
     {
       // By default don't use the jacobian
-      use_jac_         = false;
+      use_jac_ = false;
     }
 
     /**
@@ -92,10 +92,10 @@ namespace GridKit
      *
      * @post System model parameters set as input
      */
-    PowerElectronicsModel(bool   use_jac   = false)
+    PowerElectronicsModel(bool use_jac = false)
     {
       // Can choose if to use jacobian
-      use_jac_         = use_jac;
+      use_jac_ = use_jac;
     }
 
     /**
