@@ -9,9 +9,11 @@ install(TARGETS ThreeBusBasic RUNTIME DESTINATION ${_install_path})
 add_executable(ThreeBusBasicJson ThreeBusBasicJson.cpp)
 target_link_libraries(ThreeBusBasicJson
 	GridKit::phasor_dynamics_components
-	GridKit::solvers_dyn)
+	GridKit::solvers_dyn
+    GridKit::Utilities)
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusBasic.json)
+gridkit_example_add_file(ThreeBusBasic.ref.csv)
 
 add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
 add_test(NAME ThreeBusBasicJson
