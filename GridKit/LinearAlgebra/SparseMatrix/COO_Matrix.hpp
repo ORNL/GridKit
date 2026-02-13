@@ -226,8 +226,8 @@ namespace GridKit
      * @brief Convert to CSR format with deduplication and index mapping.
      *
      * 1. Sorts the COO entries
-     * 2. Deduplicates entries by summing their values 
-     * 3. Builds CSR row pointers 
+     * 2. Deduplicates entries by summing their values
+     * 3. Builds CSR row pointers
      * 4. Stores the mapping from original COO indices to deduplicated CSR value indices
      *
      * @tparam RealT - Real type for Jacobian entries
