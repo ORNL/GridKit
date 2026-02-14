@@ -171,6 +171,7 @@ namespace AnalysisManager
       sunindextype n = static_cast<sunindextype>(model_->size());
       sunindextype nnz;
 
+      /// @todo Remove this flag and require all apps to configure CsrJac
       bool useCsrJac = (model_->getCsrJacobian() != nullptr);
 
       if (useCsrJac)
@@ -823,7 +824,9 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief CSR Jacobian evaluation
+     * @brief Jacobian evaluation
+     *
+     * @note The model Jacobian is stored in CSR format.
      *
      * @tparam ScalarT
      * @tparam IdxT
@@ -1034,7 +1037,7 @@ namespace AnalysisManager
 
     /**
      * @brief Accumulate another stats object into this one, allowing for stats to be kept
-     *        across multiple simulations with IDAs
+     *        across multiple simulations with IDA
      */
     IdaStats& IdaStats::operator+=(const IdaStats& other)
     {

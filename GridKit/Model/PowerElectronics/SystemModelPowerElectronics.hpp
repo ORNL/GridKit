@@ -136,15 +136,12 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate the system by computing total size from nodes and
-     *        component internal variables.
+     * @brief allocator default
      *
-     * Each node contributes 1 unknown (its voltage). Components that have
-     * internal variables (mapped to ground via INVALID_INDEX) are not
-     * counted here; they must still be wired to a global index via
-     * setExternalConnectionNodes.
+     * @todo this should throw an exception as no allocation without a graph is allowed.
+     * Or needs to be removed from the base class
      *
-     * @return int 0 if successful
+     * @return int
      */
     int allocate() final
     {
@@ -174,18 +171,13 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate the vector data with size amount
-     *
-     * Assembles the global COO from all component Jacobians, sorts and
-     * deduplicates the entries to build a CSR sparsity pattern, and
-     * distributes the mapping back to each component for efficient
-     * value updates during subsequent Jacobian evaluations.
+     * @brief Allocate system vectors and construct the system CSR Jacobian
      *
      * @param[in] s size of the vector (total number of unknowns)
      *
      * @post System model vectors allocated with size s
-     * @post CSR Jacobian sparsity pattern established
-     * @post Per-component CSR mappings computed
+     * @post CSR Jacobian sparsity pattern computed
+     * @post COO->CSR mapping computed
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */

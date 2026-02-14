@@ -1019,14 +1019,17 @@ namespace GridKit
     }
 
     /**
-     * @brief Sorts unordered COO matrix
+     * @brief Sorts unordered COO matrix with mapping
      *
      * Matrix entries can appear in arbitrary order and will be sorted in
      * row-major order before the method returns.
-     * Duplicate entries are not allowed and should be pre-summed.
+     * Duplicate entries are allowed here.
      *
-     * @pre rows, columns, and values are of the same size and represent a COO matrix with no duplicates
-     * @post Matrix entries are sorted in row-major order
+     * The mapping records where each sorted entry came from in the original
+     * arrays: sorted[k] comes from original index map[k].
+     *
+     * @pre rows, columns, and values are of the same size and represent a COO matrix
+     * @post Matrix entries are sorted in row-major order and map stores original indices
      *
      * @todo simple setup. Should add stable sorting since lists are pre-sorted_
      *
@@ -1036,6 +1039,7 @@ namespace GridKit
      * @param rows
      * @param columns
      * @param values
+     * @param map
      */
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values, std::vector<IdxT>& map)
