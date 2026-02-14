@@ -378,6 +378,8 @@ namespace GridKit
         vals[i] = 0.0;
       }
 
+      std::vector<IdxT>& map2csr = jac_.getMapToCsr();
+
       // Update CSR values from component Jacobians
       IdxT counter = 0;
       for (const auto& component : components_)
@@ -391,7 +393,7 @@ namespace GridKit
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
-            vals[jac_.getMapToCsr()[counter]] += v[i];
+            vals[map2csr[counter]] += v[i];
             ++counter;
           }
         }
@@ -494,8 +496,6 @@ namespace GridKit
     std::vector<component_type*> components_;
 
     CsrMatrix* csr_jac_{nullptr};
-
-    std::vector<IdxT> map2csr_; ///< Mapping from COO entry to CSR value index
 
     int  jac_call_count_{0};
     bool use_jac_;

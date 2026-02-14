@@ -87,7 +87,7 @@ namespace GridKit
       IdxT nnz();
 
       std::tuple<IdxT, IdxT> getDimensions();
-      std::vector<IdxT>      getMapToCsr();
+      std::vector<IdxT>&     getMapToCsr();
 
       void printMatrix(std::string name = "");
 
@@ -739,7 +739,7 @@ namespace GridKit
     }
 
     template <typename RealT, typename IdxT>
-    inline std::vector<IdxT> COO_Matrix<RealT, IdxT>::getMapToCsr()
+    inline std::vector<IdxT>& COO_Matrix<RealT, IdxT>::getMapToCsr()
     {
       return map2csr_;
     }
