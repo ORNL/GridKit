@@ -257,7 +257,7 @@ namespace GridKit
       {
         if (row_indices_[i] == row_indices_[w] && column_indices_[i] == column_indices_[w])
         {
-          values_[w]   += values_[i];
+          values_[w]      += values_[i];
           map_to_dedup[i]  = w;
         }
         else
@@ -266,7 +266,7 @@ namespace GridKit
           row_indices_[w]    = row_indices_[i];
           column_indices_[w] = column_indices_[i];
           values_[w]         = values_[i];
-          map_to_dedup[i]       = w;
+          map_to_dedup[i]    = w;
           row_ptrs[row_indices_[w] + 1]++;
         }
       }
