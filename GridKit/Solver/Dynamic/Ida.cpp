@@ -849,22 +849,22 @@ namespace AnalysisManager
 
       SUNMatZero(J);
 
-      sunindextype* sun_rptr = SUNSparseMatrix_IndexPointers(J);
-      sunindextype* sun_cind = SUNSparseMatrix_IndexValues(J);
-      RealT*        sun_vals = SUNSparseMatrix_Data(J);
+      sunindextype* sun_row_ptrs       = SUNSparseMatrix_IndexPointers(J);
+      sunindextype* sun_colunm_indices = SUNSparseMatrix_IndexValues(J);
+      RealT*        sun_values         = SUNSparseMatrix_Data(J);
 
       IdxT n   = Jac->getRows();
       IdxT nnz = Jac->getNnz();
 
       // Get reference to the jacobian entries
-      const IdxT*  rptr = Jac->getRowPtr();
-      const IdxT*  cind = Jac->getColInd();
-      const RealT* vals = Jac->getValues();
+      const IdxT*  row_ptrs       = Jac->getRowPtr();
+      const IdxT*  colunm_indices = Jac->getColInd();
+      const RealT* values         = Jac->getValues();
 
       // Copy data from model jac to sundials
-      std::copy(rptr, rptr + n + 1, sun_rptr);
-      std::copy(cind, cind + nnz, sun_cind);
-      std::copy(vals, vals + nnz, sun_vals);
+      std::copy(row_ptrs, row_ptrs + n + 1, sun_row_ptrs);
+      std::copy(colunm_indices, colunm_indices + nnz, sun_colunm_indices);
+      std::copy(values, values + nnz, sun_values);
 
       return 0;
     }

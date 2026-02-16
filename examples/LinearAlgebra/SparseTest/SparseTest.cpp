@@ -132,12 +132,12 @@ int main()
   std::vector<double> csr_valtest = {2.6, 1.1, 2.9, 1.3, 1.4, 3.3};
   std::vector<size_t> maptest     = {2, 5, 0, 0, 4, 2, 1, 5, 3};
 
-  std::vector<size_t>& map2csr = C.getMapToCsr();
+  std::vector<size_t>& map_to_csr = C.getMapToCsr();
 
   assert(csr_rtest.size() == csr_r.size());
   assert(csr_ctest.size() == csr_c.size());
   assert(csr_valtest.size() == csr_v.size());
-  assert(maptest.size() == map2csr.size());
+  assert(maptest.size() == map_to_csr.size());
 
   for (size_t i = 0; i < csr_rtest.size(); i++)
   {
@@ -157,7 +157,7 @@ int main()
 
   for (size_t i = 0; i < maptest.size(); i++)
   {
-    if (map2csr[i] != maptest[i])
+    if (map_to_csr[i] != maptest[i])
     {
       failval--;
     }

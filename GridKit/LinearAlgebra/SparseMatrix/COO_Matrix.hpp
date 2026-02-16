@@ -36,7 +36,7 @@ namespace GridKit
       IdxT               rows_size_;
       IdxT               columns_size_;
       bool               sorted_;
-      std::vector<IdxT>  map2csr_;
+      std::vector<IdxT>  map_to_csr_;
 
     public:
       // Constructors
@@ -59,7 +59,7 @@ namespace GridKit
       /// Reinitialize COO matrix with new data
       void resetEntries(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, IdxT m, IdxT n);
 
-      /// Convert to CSR with deduplication, storing the COO-to-CSR mapping in map2csr_
+      /// Convert to CSR with deduplication, storing the COO-to-CSR mapping in map_to_csr_
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> getCsrData();
 
       // Set values from vector storage. Will sort before storing
@@ -240,14 +240,14 @@ namespace GridKit
       const IdxT nnz_dup = static_cast<IdxT>(row_indices_.size());
 
       // Sort the entries while preserving the mapping
-      std::vector<IdxT> map2sorted(nnz_dup);
-      sortSparseCOO(row_indices_, column_indices_, values_, map2sorted);
+      std::vector<IdxT> map_to_sorted(nnz_dup);
+      sortSparseCOO(row_indices_, column_indices_, values_, map_to_sorted);
 
       // Deduplicate entries by summing values
       std::vector<IdxT> row_ptrs(rows_size_ + 1, 0);
-      std::vector<IdxT> map2dedup(nnz_dup);
+      std::vector<IdxT> map_to_dedup(nnz_dup);
 
-      map2dedup[0] = 0;
+      map_to_dedup[0] = 0;
       row_ptrs[row_indices_[0] + 1]++;
 
       // Write position
@@ -258,7 +258,7 @@ namespace GridKit
         if (row_indices_[i] == row_indices_[w] && column_indices_[i] == column_indices_[w])
         {
           values_[w]   += values_[i];
-          map2dedup[i]  = w;
+          map_to_dedup[i]  = w;
         }
         else
         {
@@ -266,7 +266,7 @@ namespace GridKit
           row_indices_[w]    = row_indices_[i];
           column_indices_[w] = column_indices_[i];
           values_[w]         = values_[i];
-          map2dedup[i]       = w;
+          map_to_dedup[i]       = w;
           row_ptrs[row_indices_[w] + 1]++;
         }
       }
@@ -278,11 +278,11 @@ namespace GridKit
         row_ptrs[i + 1] += row_ptrs[i];
       }
 
-      // map2csr_: original COO index -> deduplicated CSR index
-      map2csr_.resize(nnz_dup);
+      // map_to_csr_: original COO index -> deduplicated CSR index
+      map_to_csr_.resize(nnz_dup);
       for (IdxT k = 0; k < nnz_dup; ++k)
       {
-        map2csr_[map2sorted[k]] = map2dedup[k];
+        map_to_csr_[map_to_sorted[k]] = map_to_dedup[k];
       }
 
       // Shrink internal arrays to deduplicated size
@@ -741,7 +741,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline std::vector<IdxT>& COO_Matrix<RealT, IdxT>::getMapToCsr()
     {
-      return map2csr_;
+      return map_to_csr_;
     }
 
     /**
@@ -989,31 +989,31 @@ namespace GridKit
       // index based sort code
       //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
       // cannot call sort since two arrays are used instead
-      std::vector<size_t> ordervec(rows.size());
+      std::vector<size_t> order_vec(rows.size());
       std::size_t         n(0);
-      std::generate(std::begin(ordervec), std::end(ordervec), [&]
+      std::generate(std::begin(order_vec), std::end(order_vec), [&]
                     { return n++; });
 
       // Sort by row first then column.
-      std::sort(std::begin(ordervec),
-                std::end(ordervec),
+      std::sort(std::begin(order_vec),
+                std::end(order_vec),
                 [&](auto i1, auto i2)
                 { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
 
       // reorder based of index-sorting. Only swap cost no extra memory.
       //  @todo see if extra memory creation is fine
       //  https://stackoverflow.com/a/22183350
-      for (size_t i = 0; i < ordervec.size(); i++)
+      for (size_t i = 0; i < order_vec.size(); i++)
       {
         // permutation swap
-        while (ordervec[i] != ordervec[ordervec[i]])
+        while (order_vec[i] != order_vec[order_vec[i]])
         {
-          std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
-          std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
-          std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
+          std::swap(rows[order_vec[i]], rows[order_vec[order_vec[i]]]);
+          std::swap(columns[order_vec[i]], columns[order_vec[order_vec[i]]]);
+          std::swap(values[order_vec[i]], values[order_vec[order_vec[i]]]);
 
           // swap orderings
-          std::swap(ordervec[i], ordervec[ordervec[i]]);
+          std::swap(order_vec[i], order_vec[order_vec[i]]);
         }
       }
     }
@@ -1048,35 +1048,35 @@ namespace GridKit
       // index based sort code
       //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
       // cannot call sort since two arrays are used instead
-      std::vector<size_t> ordervec(rows.size());
+      std::vector<size_t> order_vec(rows.size());
       std::size_t         n(0);
-      std::generate(std::begin(ordervec), std::end(ordervec), [&]
+      std::generate(std::begin(order_vec), std::end(order_vec), [&]
                     { return n++; });
 
       // Sort by row first then column.
-      std::sort(std::begin(ordervec),
-                std::end(ordervec),
+      std::sort(std::begin(order_vec),
+                std::end(order_vec),
                 [&](auto i1, auto i2)
                 { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
 
       // Preserve the mapping
-      map.resize(ordervec.size());
-      std::copy(ordervec.begin(), ordervec.end(), map.begin());
+      map.resize(order_vec.size());
+      std::copy(order_vec.begin(), order_vec.end(), map.begin());
 
       // reorder based of index-sorting. Only swap cost no extra memory.
       //  @todo see if extra memory creation is fine
       //  https://stackoverflow.com/a/22183350
-      for (size_t i = 0; i < ordervec.size(); i++)
+      for (size_t i = 0; i < order_vec.size(); i++)
       {
         // permutation swap
-        while (ordervec[i] != ordervec[ordervec[i]])
+        while (order_vec[i] != order_vec[order_vec[i]])
         {
-          std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
-          std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
-          std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
+          std::swap(rows[order_vec[i]], rows[order_vec[order_vec[i]]]);
+          std::swap(columns[order_vec[i]], columns[order_vec[order_vec[i]]]);
+          std::swap(values[order_vec[i]], values[order_vec[order_vec[i]]]);
 
           // swap orderings
-          std::swap(ordervec[i], ordervec[ordervec[i]]);
+          std::swap(order_vec[i], order_vec[order_vec[i]]);
         }
       }
     }
