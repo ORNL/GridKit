@@ -19,6 +19,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Utilities/CliOptions/CliOptions.hpp>
+#include <GridKit/Utilities/TestHelpers.hpp>
 #include <GridKit/Utilities/Testing.hpp>
 
 #define ERROR_TOL 1.0e-4
@@ -27,113 +28,9 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-template <typename T = std::string>
-class Tokenizer
-{
-public:
-  Tokenizer() = delete;
-
-  explicit Tokenizer(const std::string& in, char delimiter = ' ')
-  {
-    std::istringstream iss(in);
-    for (std::string item; std::getline(iss, item, delimiter);)
-    {
-      std::istringstream(item) >> tokens_.emplace_back();
-    }
-  }
-
-  const std::vector<T>& operator()() const
-  {
-    return tokens_;
-  }
-
-private:
-  std::vector<T> tokens_;
-};
-
-enum class Norm
-{
-  L1,
-  L2,
-  LInf
-};
-
-template <std::size_t N>
-struct TimeDataGroup
-{
-  real_type                t;
-  std::array<real_type, N> data;
-
-  TimeDataGroup(const std::vector<real_type>& v) : t{v[0]}
-  {
-    assert(v.size() == N + 1);
-    std::copy(next(begin(v)), end(v), begin(data));
-  }
-
-  template <typename... TArgs>
-  TimeDataGroup(real_type t, TArgs&&... args) : t{t}, data{args...}
-  {
-    static_assert(sizeof...(args) == N);
-  }
-
-private:
-  friend TimeDataGroup operator-(const TimeDataGroup& a, const TimeDataGroup& b)
-  {
-    assert(GridKit::Testing::isEqual(a.t, b.t, ERROR_TOL));
-    TimeDataGroup ret(a);
-    for (std::size_t i = 0; i < N; ++i)
-    {
-      ret.data[i] -= b.data[i];
-    }
-    return ret;
-  }
-
-  friend real_type l1Norm(const TimeDataGroup& a)
-  {
-    real_type mx = 0.0;
-    for (auto v : a.data)
-    {
-      mx = std::max(mx, std::abs(v));
-    }
-    return mx;
-  }
-
-  friend real_type l2Norm(const TimeDataGroup& a)
-  {
-    real_type ret = 0.0;
-    for (auto v : a.data)
-    {
-      ret += v * v;
-    }
-    return std::sqrt(ret);
-  }
-
-  friend real_type lInfNorm(const TimeDataGroup& a)
-  {
-    real_type ret = 0.0;
-    for (auto v : a.data)
-    {
-      ret += std::abs(v);
-    }
-    return ret;
-  }
-
-  friend real_type errorNorm(
-      const TimeDataGroup& a, const TimeDataGroup& b, Norm norm = Norm::L1)
-  {
-    if (norm == Norm::L2)
-    {
-      return l2Norm(a - b);
-    }
-
-    if (norm == Norm::LInf)
-    {
-      return lInfNorm(a - b);
-    }
-
-    return l1Norm(a - b);
-  }
-};
+// NOTES:
+// Write function to compare to CSV files
+//  compare number of lines and number of items per line
 
 int main(int argc, const char* argv[])
 {
@@ -222,37 +119,17 @@ int main(int argc, const char* argv[])
   ida.runSimulation(10.0, nout);
   double stop = static_cast<double>(clock());
 
+  // Stop the variable monitor
   sys.stopMonitor();
 
-  /* Check worst-case error */
-  real_type max_error      = 0;
-  real_type max_error_time = 0;
+  // Generate aggregate errors comparing variable output to reference solution
+  auto errorSet =
+      GridKit::Testing::compareCSV("mon.csv", "ThreeBusBasic.ref.csv");
 
-  std::ifstream ifs("mon.csv");
-  std::ifstream ifs_ref("ThreeBusBasic.ref.csv");
+  // Print the errors
+  errorSet.display();
 
-  std::string line;
-  std::string line_ref;
-  std::getline(ifs, line);
-  std::getline(ifs_ref, line_ref);
-  for (; ifs && ifs_ref; std::getline(ifs, line), std::getline(ifs_ref, line_ref))
-  {
-    TimeDataGroup<5> ref(Tokenizer<real_type>(line_ref, ',')());
-    TimeDataGroup<5> grp(Tokenizer<real_type>(line, ',')());
-
-    auto err = errorNorm(grp, ref);
-
-    if (err > max_error)
-    {
-      max_error      = err;
-      max_error_time = grp.t;
-    }
-  }
-
-  std::cout
-      << "Max error " << max_error
-      << " at time t = " << max_error_time << "\n";
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return max_error < error_allowed ? 0 : 1;
+  return errorSet.total.max_error < error_allowed ? 0 : 1;
 }

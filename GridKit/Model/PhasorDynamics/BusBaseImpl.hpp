@@ -18,7 +18,7 @@ namespace GridKit
       monitor_->set(Variable::Vi, [this]
                     { return Vi(); });
       monitor_->set(Variable::Vm, [this]
-                    { return std::sqrt(Vr()*Vr() + Vi()*Vi()); });
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
       monitor_->set(Variable::Va, [this]
                     { return std::atan2(Vi(), Vr()); });
     }
