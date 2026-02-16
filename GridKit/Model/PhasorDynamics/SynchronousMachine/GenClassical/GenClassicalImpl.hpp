@@ -140,8 +140,10 @@ namespace GridKit
                     { return y_[3]; });
       monitor_->set(Variable::ii, [this]
                     { return y_[4]; });
-      // monitor_->set(Variable::p, [this] { return ?(); });
-      // monitor_->set(Variable::q, [this] { return ?(); });
+      monitor_->set(Variable::p, [this] 
+                    { return Vr()*Ir() + Vi()*Ii(); });
+      monitor_->set(Variable::q, [this] 
+                    { return Vi()*Ir() - Vr()*Ii(); });
       monitor_->set(Variable::delta, [this]
                     { return y_[0]; });
       monitor_->set(Variable::omega, [this]

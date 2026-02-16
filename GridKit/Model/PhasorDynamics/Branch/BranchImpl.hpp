@@ -313,7 +313,7 @@ namespace GridKit
       monitor_->set(Variable::im2, [this] 
                     { return std::sqrt(Ir2()*Ir2() + Ii2()*Ii2()); });
       monitor_->set(Variable::p2, [this] 
-                    { return Vi2()*Ir2() - Vr2()*Ii2(); });
+                    { return Vr2()*Ir2() + Vi2()*Ii2(); });
       monitor_->set(Variable::q2, [this]
                     { return Vi2()*Ir2() - Vr2()*Ii2(); });
     }
