@@ -59,8 +59,8 @@ namespace GridKit
       void setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v);
 
       // BLAS. Will sort before running
-      void  axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a, const bool sort=true);
-      void  axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, const bool sort=true);
+      void  axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a, const bool sort = true);
+      void  axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, const bool sort = true);
       void  scal(RealT alpha);
       RealT frobNorm();
 
@@ -278,7 +278,7 @@ namespace GridKit
 
       this->sorted_ = false;
     }
-    
+
     /**
      * @brief Implements axpy this += alpha * a. Will sort before running
      *
@@ -384,7 +384,7 @@ namespace GridKit
       // iterate for all current values_ in matrix
       for (size_t i = 0; i < this->row_indices_.size(); i++)
       {
-        if (sort) // highjacking sort variable to signify that the sparsity pattern can change 
+        if (sort) // highjacking sort variable to signify that the sparsity pattern can change
         {
           // pushback values_ when they are not in current matrix
           while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
