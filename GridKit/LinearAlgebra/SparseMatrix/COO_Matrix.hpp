@@ -59,8 +59,8 @@ namespace GridKit
       void setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v);
 
       // BLAS. Will sort before running
-      void  axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a);
-      void  axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v);
+      void  axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a, const bool sort=true);
+      void  axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, const bool sort=true);
       void  scal(RealT alpha);
       RealT frobNorm();
 
@@ -70,7 +70,8 @@ namespace GridKit
       void permutationSizeMap(std::vector<IdxT> row_perm, std::vector<IdxT> col_perm, IdxT m, IdxT n);
 
       // Special matrices (zero and identity)
-      void zeroMatrix();
+      void zeroMatrix(); // Actually null matrix
+      void zeroValuedMatrix();
       void identityMatrix(IdxT n);
 
       // Resort values_
@@ -277,7 +278,7 @@ namespace GridKit
 
       this->sorted_ = false;
     }
-
+    
     /**
      * @brief Implements axpy this += alpha * a. Will sort before running
      *
@@ -290,9 +291,9 @@ namespace GridKit
      * @post this = this + alpha * a
      */
     template <typename RealT, typename IdxT>
-    inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a)
+    inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a, const bool sort)
     {
-      if (!this->sorted_)
+      if (!this->sorted_ && sort)
       {
         this->sortSparse();
       }
@@ -314,16 +315,20 @@ namespace GridKit
       // iterate for all current values in matrix
       for (size_t i = 0; i < this->row_indices_.size(); i++)
       {
-        // pushback values when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+        if (sort) // highjacking sort variable to signify that the sparsity pattern can change
         {
-          this->row_indices_.push_back(r[a_iter]);
-          this->column_indices_.push_back(c[a_iter]);
-          this->values_.push_back(alpha * val[a_iter]);
+          // pushback values when they are not in current matrix
+          while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+          {
+            this->row_indices_.push_back(r[a_iter]);
+            this->column_indices_.push_back(c[a_iter]);
+            this->values_.push_back(alpha * val[a_iter]);
 
-          this->checkIncreaseSize(r[a_iter], c[a_iter]);
-          a_iter++;
+            this->checkIncreaseSize(r[a_iter], c[a_iter]);
+            a_iter++;
+          }
         }
+
         if (a_iter >= r.size())
         {
           break;
@@ -365,9 +370,9 @@ namespace GridKit
      * @post this = this + alpha * a
      */
     template <typename RealT, typename IdxT>
-    inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
+    inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, const bool sort)
     {
-      if (!this->sorted_)
+      if (!this->sorted_ && sort)
       {
         this->sortSparse();
       }
@@ -379,16 +384,20 @@ namespace GridKit
       // iterate for all current values_ in matrix
       for (size_t i = 0; i < this->row_indices_.size(); i++)
       {
-        // pushback values_ when they are not in current matrix
-        while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+        if (sort) // highjacking sort variable to signify that the sparsity pattern can change 
         {
-          this->row_indices_.push_back(r[a_iter]);
-          this->column_indices_.push_back(c[a_iter]);
-          this->values_.push_back(alpha * v[a_iter]);
+          // pushback values_ when they are not in current matrix
+          while (a_iter < r.size() && (r[a_iter] < this->row_indices_[i] || (r[a_iter] == this->row_indices_[i] && c[a_iter] < this->column_indices_[i])))
+          {
+            this->row_indices_.push_back(r[a_iter]);
+            this->column_indices_.push_back(c[a_iter]);
+            this->values_.push_back(alpha * v[a_iter]);
 
-          this->checkIncreaseSize(r[a_iter], c[a_iter]);
-          a_iter++;
+            this->checkIncreaseSize(r[a_iter], c[a_iter]);
+            a_iter++;
+          }
         }
+
         if (a_iter >= r.size())
         {
           break;
@@ -518,7 +527,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Turn matrix into the zero matrix. Does not actually delete memory
+     * @brief Turn matrix into the null matrix. Does not actually delete memory
      *
      * @tparam RealT - Real type for Jacobian entries
      * @tparam IdxT - Integer data type for matrix indices
@@ -532,6 +541,22 @@ namespace GridKit
       this->row_indices_.resize(0);
       this->values_.resize(0);
       this->sorted_ = true;
+    }
+
+    /**
+     * @brief Initializes matrix values to 0 without changing the sparsity pattern
+     *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
+     */
+    template <typename RealT, typename IdxT>
+    inline void COO_Matrix<RealT, IdxT>::zeroValuedMatrix()
+    {
+      for (size_t i = 0; i < this->row_indices_.size(); i++)
+      {
+        this->values_[i] = 0.0;
+      }
     }
 
     /**

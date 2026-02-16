@@ -70,44 +70,41 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
+  // Get access to fault 0
+  auto* fault = sys.getBusFault(0);
+
   // NOTE Now we try and run the case.
   // Fails for now but left here for future
 
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
-  // A data structure to keep track of the data
-  struct OutputData
-  {
-    // Output variables are time, real and imaginary voltage and
-    // frequency deviation
-    real_type ti, Vr, Vi, dw;
-  };
-
-  // A list of output for each time step.
-  std::vector<OutputData> output;
-
-  auto output_cb = [&](real_type t)
-  {
-    std::vector<scalar_type>& y_val = sys.y();
-
-    output.push_back(OutputData{t, y_val[0], y_val[1], y_val[3]});
-  };
-
   // Set up simulation
-  Ida<scalar_type, size_t> ida(&sys);
+  Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
 
-  // Run simulation - making sure to pass the callback to record output
-  //real_type start = static_cast<real_type>(clock());
-
-  
+  // Initialize simulation
+  real_type start = static_cast<real_type>(clock());
+  ida.initializeSimulation(0.0, false);
 
   // Run for 1s
-  ida.initializeSimulation(0.0, false);
   int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout, output_cb);
+  ida.runSimulation(1.0, nout);
 
+  // Introduce fault to ground and run for 0.1s
+  fault->setStatus(true);
+  ida.initializeSimulation(1.0, false);
+  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
+  ida.runSimulation(1.1, nout);
+
+  // Clear fault and run until t = 10s.
+  fault->setStatus(false);
+  ida.initializeSimulation(1.1, false);
+  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
+  ida.runSimulation(10.0, nout);
+  real_type stop = static_cast<real_type>(clock());
+
+  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   int status = 0;
   return status;

@@ -149,17 +149,25 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $V_R$ limits $(V_{rmin}, V_{rmax})$.
 ```math
 \begin{aligned}
-   \phi_L(V_R,f)&= \sigma(V_{rmin}-V_R)\sigma(-f)            \\
-   \phi_U(V_R,f)&= \sigma(V_R-V_{rmax})\sigma(f)             \\
-   \phi(V_R,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
+   \phi_L(V_R)&= \sigma(V_R-V_{rmin}) \\
+   \phi_U(V_R)&= \sigma(V_{rmax}-V_R) \\
+   \phi_0(V_R)&= \phi_L + \phi_U - 1  \\
+   \phi(V_R,f)&= \phi_0 \delta(f) + \left[ \phi_L * \sigma(-f) + \phi_U * \sigma(f)\right] \left[ 1-\delta(f) \right] \\
 \end{aligned}
 ```
 
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function.
+The scale of the sigmoid function ($\alpha$ on the order of $10^2$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function.
 ```math
 \begin{aligned}
    \sigma(x) = 
       \dfrac{1}{1+\exp(-\alpha x)}
+\end{aligned}
+```
+
+The derivative of the sigmoid then approximates the delta function.
+```math
+\begin{aligned}
+   \delta(x) = 4 \sigma(x) \left[ 1- \sigma(x) \right]
 \end{aligned}
 ```
 

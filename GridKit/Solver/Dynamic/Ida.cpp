@@ -25,12 +25,6 @@ namespace AnalysisManager
       // Create the SUNDIALS context that all SUNDIALS objects require
       retval = SUNContext_Create(SUN_COMM_NULL, &context_);
       checkOutput(retval, "SUNContext");
-      SUNLogger logger;
-      SUNContext_GetLogger(context_, &logger);
-      SUNLogger_SetErrorFilename(logger, "stdout");
-      SUNLogger_SetWarningFilename(logger, "stdout");
-      SUNLogger_SetInfoFilename(logger, "stdout");
-      SUNLogger_SetDebugFilename(logger, "stdout");
       solver_ = IDACreate(context_);
     }
 
@@ -141,12 +135,10 @@ namespace AnalysisManager
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
       if (model_->hasJacobian())
       {
-        printf("Configuring linear solver sparse.\n");
         this->configureLinearSolverSparse();
       }
       else
       {
-        printf("Configuring linear solver dense.\n");
         this->configureLinearSolverDense();
       }
 #else
@@ -331,8 +323,6 @@ namespace AnalysisManager
       {
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
-
-        std::abort();
 
         if (step_callback.has_value() || model_->monitoring())
         {
@@ -810,20 +800,6 @@ namespace AnalysisManager
       // Copy data from model jac to sundials
       std::copy(c.cbegin(), c.cend(), colvals);
       std::copy(val.cbegin(), val.cend(), data);
-
-      //printf("IDA Jacobian calculation with nnz=%ld rsize=%zu\n", Jac.nnz(), r.size());
-
-      FILE* f = fopen("jacdump.txt", "w");
-      for(uint i = 0; i < r.size(); ++i)
-      {
-        fprintf(f, "%d %d %g\n", r[i], c[i], val[i]);
-      }
-      fclose(f);
-
-
-      FILE* f2 = fopen("jacdump-sun.txt", "w");
-      SUNSparseMatrix_Print(J, f2);
-      fclose(f2);
 
       return 0;
     }
