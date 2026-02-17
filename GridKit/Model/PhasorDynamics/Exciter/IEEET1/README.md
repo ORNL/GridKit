@@ -152,7 +152,7 @@ The indicator function $\phi$ can be defined in terms of a scaled activation fun
    \phi_L(V_R)&= \sigma(V_R-V_{rmin}) \\
    \phi_U(V_R)&= \sigma(V_{rmax}-V_R) \\
    \phi_0(V_R)&= \phi_L + \phi_U - 1  \\
-   \phi(V_R,f)&= \phi_0 \delta(f) + \left[ \phi_L * \sigma(-f) + \phi_U * \sigma(f)\right] \left[ 1-\delta(f) \right] \\
+   \phi(V_R,f)&= \phi_0 \delta(f) + \left[ \phi_L \sigma(-f) + \phi_U \sigma(f)\right] \left[ 1-\delta(f) \right] \\
 \end{aligned}
 ```
 
