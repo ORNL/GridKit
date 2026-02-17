@@ -1,11 +1,12 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iterator>
 #include <vector>
 
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {
@@ -20,13 +21,15 @@ namespace GridKit
       double              t;
       std::vector<double> data;
 
-      OutputAtTime(const std::vector<double>& v) : t{v[0]}
+      OutputAtTime(const std::vector<double>& v)
+        : t{v[0]}
       {
         std::copy(next(begin(v)), end(v), std::back_inserter(data));
       }
 
       template <typename... TArgs>
-      OutputAtTime(double t, TArgs&&... args) : t{t}, data{args...}
+      OutputAtTime(double t, TArgs&&... args)
+        : t{t}, data{args...}
       {
       }
 

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the sparse Jacobian of a vector-valued function

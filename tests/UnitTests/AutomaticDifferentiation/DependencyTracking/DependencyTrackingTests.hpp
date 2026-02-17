@@ -2,8 +2,8 @@
 #include <iostream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {

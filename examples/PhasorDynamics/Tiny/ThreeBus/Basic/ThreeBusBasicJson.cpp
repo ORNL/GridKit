@@ -18,9 +18,9 @@
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/CliOptions/CliOptions.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
-#include <GridKit/Utilities/Testing.hpp>
 
 #define ERROR_TOL 1.0e-4
 

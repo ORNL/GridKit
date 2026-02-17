@@ -1,8 +1,8 @@
 #pragma once
 
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/CliOptions/CliOptions.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
-#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

@@ -12,9 +12,9 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCOO.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
-#include <GridKit/Utilities/Testing.hpp>
 
 namespace GridKit
 {

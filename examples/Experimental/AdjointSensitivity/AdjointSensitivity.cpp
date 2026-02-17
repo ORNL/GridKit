@@ -6,7 +6,7 @@
 #include <GridKit/Model/PowerFlow/Generator4/Generator4.hpp>
 #include <GridKit/Model/PowerFlow/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 /*
  * Compute gradient of an objective function expressed as an integral over

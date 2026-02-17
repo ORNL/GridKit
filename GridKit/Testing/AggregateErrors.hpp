@@ -4,7 +4,7 @@
 #include <format>
 #include <vector>
 
-#include <GridKit/Utilities/Testing/OutputAtTime.hpp>
+#include <GridKit/Testing/OutputAtTime.hpp>
 
 namespace GridKit
 {

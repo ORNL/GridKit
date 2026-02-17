@@ -1,5 +1,4 @@
-#pragma once
-
+#include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -7,10 +6,10 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Testing/CSV.hpp>
+#include <GridKit/Testing/OutputAtTime.hpp>
+#include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-#include <GridKit/Utilities/Testing/AggregateErrors.hpp>
-#include <GridKit/Utilities/Testing/OutputAtTime.hpp>
-#include <GridKit/Utilities/Testing/Tokenizer.hpp>
 
 namespace GridKit
 {
@@ -19,9 +18,6 @@ namespace GridKit
 
     using Log = ::GridKit::Utilities::Logger;
 
-    /**
-     * @brief Throw error if file does not exist or if file fails to open (read)
-     */
     std::ifstream checkOpenFile(const std::string& f)
     {
       if (!std::filesystem::exists(f))
@@ -39,11 +35,6 @@ namespace GridKit
       return ifs;
     }
 
-    /**
-     * @brief Generate ErrorSet for variables in two files
-     *
-     * @note This assumes a "time" variable is always in the first column.
-     */
     ErrorSet compareCSV(const std::string& f_a, const std::string& f_b)
     {
       // Open files and read labels
