@@ -189,19 +189,6 @@ namespace GridKit
       return {row_size_vec, this->column_indices_, this->values_};
     }
 
-      for (IdxT k = 0; k < nnz_dup; ++k)
-      {
-        map_to_csr_[map_to_sorted[k]] = map_to_dedup[k];
-      }
-
-      // Shrink internal arrays to deduplicated size
-      row_indices_.resize(nnz_dedup);
-      column_indices_.resize(nnz_dedup);
-      values_.resize(nnz_dedup);
-
-      return {row_ptrs, column_indices_, values_};
-    }
-
     /**
      * @brief Only creates the row data
      *
