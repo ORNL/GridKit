@@ -1,6 +1,7 @@
 
 
 #define _USE_MATH_DEFINES
+#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -340,7 +341,12 @@ int main(int /* argc */, char const** /* argv */)
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);
 
+  auto t_start = std::chrono::high_resolution_clock::now();
   idas->runSimulation(t_final);
+  auto t_end = std::chrono::high_resolution_clock::now();
+  std::cout << "runSimulation: "
+            << std::chrono::duration<double>(t_end - t_start).count()
+            << " s\n";
 
   std::vector<double>& yfinial = sysmodel->y();
 

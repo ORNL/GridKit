@@ -172,9 +172,9 @@ namespace AnalysisManager
       sunindextype nnz;
 
       /// @todo Remove this flag and require all apps to configure CsrJac
-      bool useCsrJac = (model_->getCsrJacobian() != nullptr);
+      bool use_csr_jac = (model_->getCsrJacobian() != nullptr);
 
-      if (useCsrJac)
+      if (use_csr_jac)
       {
         nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
       }
@@ -196,7 +196,7 @@ namespace AnalysisManager
       retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
       checkOutput(retval, "IDASetLinearSolver");
 
-      if (useCsrJac)
+      if (use_csr_jac)
       {
         retval = IDASetJacFn(solver_, this->CsrJac);
       }
@@ -844,27 +844,27 @@ namespace AnalysisManager
 
       model->evaluateJacobian();
 
-      using CsrMatrix      = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
-      const CsrMatrix* Jac = model->getCsrJacobian();
+      using CsrMatrix = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+      CsrMatrix* Jac  = model->getCsrJacobian();
 
       SUNMatZero(J);
 
-      sunindextype* sun_row_ptrs       = SUNSparseMatrix_IndexPointers(J);
-      sunindextype* sun_colunm_indices = SUNSparseMatrix_IndexValues(J);
-      RealT*        sun_values         = SUNSparseMatrix_Data(J);
+      sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
+      sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
+      RealT*        sun_vals     = SUNSparseMatrix_Data(J);
 
-      IdxT n   = Jac->getRows();
+      IdxT n   = Jac->getNumRows();
       IdxT nnz = Jac->getNnz();
 
       // Get reference to the jacobian entries
-      const IdxT*  row_ptrs       = Jac->getRowPtr();
-      const IdxT*  colunm_indices = Jac->getColInd();
-      const RealT* values         = Jac->getValues();
+      IdxT*  row_ptrs = Jac->getRowData();
+      IdxT*  cols     = Jac->getColData();
+      RealT* vals     = Jac->getValues();
 
       // Copy data from model jac to sundials
       std::copy(row_ptrs, row_ptrs + n + 1, sun_row_ptrs);
-      std::copy(colunm_indices, colunm_indices + nnz, sun_colunm_indices);
-      std::copy(values, values + nnz, sun_values);
+      std::copy(cols, cols + nnz, sun_cols);
+      std::copy(vals, vals + nnz, sun_vals);
 
       return 0;
     }

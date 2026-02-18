@@ -36,7 +36,6 @@ namespace GridKit
       IdxT               rows_size_;
       IdxT               columns_size_;
       bool               sorted_;
-      std::vector<IdxT>  map_to_csr_;
 
     public:
       // Constructors
@@ -55,12 +54,6 @@ namespace GridKit
 
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> setDataToCSR();
       std::vector<IdxT>                                                    getCSRRowData();
-
-      /// Reinitialize COO matrix with new data
-      void resetEntries(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, IdxT m, IdxT n);
-
-      /// Convert to CSR with deduplication, storing the COO-to-CSR mapping in map_to_csr_
-      std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> getCsrData();
 
       // Set values from vector storage. Will sort before storing
       void setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v);
@@ -87,14 +80,12 @@ namespace GridKit
       IdxT nnz();
 
       std::tuple<IdxT, IdxT> getDimensions();
-      std::vector<IdxT>&     getMapToCsr();
 
       void printMatrix(std::string name = "");
 
       void printMatrixMarket(const std::string& filename, const std::string& comment);
 
       static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values);
-      static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values, std::vector<IdxT>& map);
 
     private:
       IdxT indexStartRow(const std::vector<IdxT>& rows, IdxT r);
@@ -198,88 +189,6 @@ namespace GridKit
       return {row_size_vec, this->column_indices_, this->values_};
     }
 
-    /**
-     * @brief Reinitialize the COO matrix with new data.
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     *
-     * @param[in] r row indices
-     * @param[in] c column indices
-     * @param[in] v values
-     * @param[in] m number of rows
-     * @param[in] n number of columns
-     */
-    template <typename RealT, typename IdxT>
-    void COO_Matrix<RealT, IdxT>::resetEntries(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, IdxT m, IdxT n)
-    {
-      this->values_         = v;
-      this->row_indices_    = r;
-      this->column_indices_ = c;
-      this->rows_size_      = m;
-      this->columns_size_   = n;
-      this->sorted_         = false; // Set to false until explicitly sorted, though logically it is sorted.
-    }
-
-    /**
-     * @brief Convert to CSR format with deduplication and index mapping.
-     *
-     * 1. Sorts the COO entries
-     * 2. Deduplicates entries by summing their values
-     * 3. Builds CSR row pointers
-     * 4. Stores the mapping from original COO indices to deduplicated CSR value indices
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     *
-     * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
-     */
-    template <typename RealT, typename IdxT>
-    std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> COO_Matrix<RealT, IdxT>::getCsrData()
-    {
-      const IdxT nnz_dup = static_cast<IdxT>(row_indices_.size());
-
-      // Sort the entries while preserving the mapping
-      std::vector<IdxT> map_to_sorted(nnz_dup);
-      sortSparseCOO(row_indices_, column_indices_, values_, map_to_sorted);
-
-      // Deduplicate entries by summing values
-      std::vector<IdxT> row_ptrs(rows_size_ + 1, 0);
-      std::vector<IdxT> map_to_dedup(nnz_dup);
-
-      map_to_dedup[0] = 0;
-      row_ptrs[row_indices_[0] + 1]++;
-
-      // Write position
-      IdxT w = 0;
-
-      for (IdxT i = 1; i < nnz_dup; ++i)
-      {
-        if (row_indices_[i] == row_indices_[w] && column_indices_[i] == column_indices_[w])
-        {
-          values_[w]      += values_[i];
-          map_to_dedup[i]  = w;
-        }
-        else
-        {
-          ++w;
-          row_indices_[w]    = row_indices_[i];
-          column_indices_[w] = column_indices_[i];
-          values_[w]         = values_[i];
-          map_to_dedup[i]    = w;
-          row_ptrs[row_indices_[w] + 1]++;
-        }
-      }
-      IdxT nnz_dedup = w + 1;
-
-      // Cumulative sum for row pointers
-      for (IdxT i = 0; i < rows_size_; ++i)
-      {
-        row_ptrs[i + 1] += row_ptrs[i];
-      }
-
-      // map_to_csr_: original COO index -> deduplicated CSR index
-      map_to_csr_.resize(nnz_dup);
       for (IdxT k = 0; k < nnz_dup; ++k)
       {
         map_to_csr_[map_to_sorted[k]] = map_to_dedup[k];
@@ -738,12 +647,6 @@ namespace GridKit
       return std::tuple<IdxT, IdxT>(this->rows_size_, this->columns_size_);
     }
 
-    template <typename RealT, typename IdxT>
-    inline std::vector<IdxT>& COO_Matrix<RealT, IdxT>::getMapToCsr()
-    {
-      return map_to_csr_;
-    }
-
     /**
      * @brief Print matrix in sorted order
      *
@@ -989,94 +892,31 @@ namespace GridKit
       // index based sort code
       //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
       // cannot call sort since two arrays are used instead
-      std::vector<size_t> order_vec(rows.size());
+      std::vector<size_t> ordervec(rows.size());
       std::size_t         n(0);
-      std::generate(std::begin(order_vec), std::end(order_vec), [&]
+      std::generate(std::begin(ordervec), std::end(ordervec), [&]
                     { return n++; });
 
       // Sort by row first then column.
-      std::sort(std::begin(order_vec),
-                std::end(order_vec),
+      std::sort(std::begin(ordervec),
+                std::end(ordervec),
                 [&](auto i1, auto i2)
                 { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
 
       // reorder based of index-sorting. Only swap cost no extra memory.
       //  @todo see if extra memory creation is fine
       //  https://stackoverflow.com/a/22183350
-      for (size_t i = 0; i < order_vec.size(); i++)
+      for (size_t i = 0; i < ordervec.size(); i++)
       {
         // permutation swap
-        while (order_vec[i] != order_vec[order_vec[i]])
+        while (ordervec[i] != ordervec[ordervec[i]])
         {
-          std::swap(rows[order_vec[i]], rows[order_vec[order_vec[i]]]);
-          std::swap(columns[order_vec[i]], columns[order_vec[order_vec[i]]]);
-          std::swap(values[order_vec[i]], values[order_vec[order_vec[i]]]);
+          std::swap(rows[ordervec[i]], rows[ordervec[ordervec[i]]]);
+          std::swap(columns[ordervec[i]], columns[ordervec[ordervec[i]]]);
+          std::swap(values[ordervec[i]], values[ordervec[ordervec[i]]]);
 
           // swap orderings
-          std::swap(order_vec[i], order_vec[order_vec[i]]);
-        }
-      }
-    }
-
-    /**
-     * @brief Sorts unordered COO matrix with mapping
-     *
-     * Matrix entries can appear in arbitrary order and will be sorted in
-     * row-major order before the method returns.
-     * Duplicate entries are allowed here.
-     *
-     * The mapping records where each sorted entry came from in the original
-     * arrays: sorted[k] comes from original index map[k].
-     *
-     * @pre rows, columns, and values are of the same size and represent a COO matrix
-     * @post Matrix entries are sorted in row-major order and map stores original indices
-     *
-     * @todo simple setup. Should add stable sorting since lists are pre-sorted_
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     *
-     * @param rows
-     * @param columns
-     * @param values
-     * @param map
-     */
-    template <typename RealT, typename IdxT>
-    inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values, std::vector<IdxT>& map)
-    {
-
-      // index based sort code
-      //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
-      // cannot call sort since two arrays are used instead
-      std::vector<size_t> order_vec(rows.size());
-      std::size_t         n(0);
-      std::generate(std::begin(order_vec), std::end(order_vec), [&]
-                    { return n++; });
-
-      // Sort by row first then column.
-      std::sort(std::begin(order_vec),
-                std::end(order_vec),
-                [&](auto i1, auto i2)
-                { return (rows[i1] < rows[i2]) || (rows[i1] == rows[i2] && columns[i1] < columns[i2]); });
-
-      // Preserve the mapping
-      map.resize(order_vec.size());
-      std::copy(order_vec.begin(), order_vec.end(), map.begin());
-
-      // reorder based of index-sorting. Only swap cost no extra memory.
-      //  @todo see if extra memory creation is fine
-      //  https://stackoverflow.com/a/22183350
-      for (size_t i = 0; i < order_vec.size(); i++)
-      {
-        // permutation swap
-        while (order_vec[i] != order_vec[order_vec[i]])
-        {
-          std::swap(rows[order_vec[i]], rows[order_vec[order_vec[i]]]);
-          std::swap(columns[order_vec[i]], columns[order_vec[order_vec[i]]]);
-          std::swap(values[order_vec[i]], values[order_vec[order_vec[i]]]);
-
-          // swap orderings
-          std::swap(order_vec[i], order_vec[order_vec[i]]);
+          std::swap(ordervec[i], ordervec[ordervec[i]]);
         }
       }
     }

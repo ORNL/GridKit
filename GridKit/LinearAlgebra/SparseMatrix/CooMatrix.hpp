@@ -12,14 +12,14 @@ namespace GridKit
   {
 
     template <typename RealT, typename IdxT>
-    class CsrMatrix
+    class CooMatrix
     {
     public:
-      CsrMatrix();
+      CooMatrix();
 
-      CsrMatrix(IdxT n, IdxT m, IdxT nnz);
+      CooMatrix(IdxT n, IdxT m, IdxT nnz);
 
-      CsrMatrix(IdxT                n,
+      CooMatrix(IdxT                n,
                 IdxT                m,
                 IdxT                nnz,
                 IdxT**              rows,
@@ -28,33 +28,20 @@ namespace GridKit
                 memory::MemorySpace memspace_src = memory::HOST,
                 memory::MemorySpace memspace_dst = memory::HOST);
 
-      ~CsrMatrix();
+      ~CooMatrix();
 
       // accessors
-      IdxT getNumRows();
-      IdxT getNumColumns();
-      IdxT getNnz();
+      IdxT getNumRows() const;
+      IdxT getNumColumns() const;
+      IdxT getNnz() const;
 
-      void setNnz(IdxT nnz_new); // for resetting when removing duplicates
-      int  setUpdated(memory::MemorySpace what);
+      const IdxT* getMapToSorted() const;
+      const IdxT* getMapToDeduplicated() const;
 
       IdxT*  getRowData(memory::MemorySpace memspace = memory::HOST);
       IdxT*  getColData(memory::MemorySpace memspace = memory::HOST);
       RealT* getValues(memory::MemorySpace memspace = memory::HOST);
 
-      int copyDataFrom(const IdxT*         row_data,
-                       const IdxT*         col_data,
-                       const RealT*        val_data,
-                       memory::MemorySpace memspace_in,
-                       memory::MemorySpace memspace_out);
-      int copyDataFrom(const IdxT*         row_data,
-                       const IdxT*         col_data,
-                       const RealT*        val_data,
-                       IdxT                new_nnz,
-                       memory::MemorySpace memspace_in,
-                       memory::MemorySpace memspace_out);
-
-      int allocateMatrixData(memory::MemorySpace memspace);
       int setDataPointers(IdxT*               row_data,
                           IdxT*               col_data,
                           RealT*              val_data,
@@ -66,15 +53,7 @@ namespace GridKit
 
       int syncData(memory::MemorySpace memspace_out);
 
-      // update Values just updates values; it allocates if necessary.
-      // values have the same dimensions between different formats
-      int copyValues(const RealT*        new_vals,
-                     memory::MemorySpace memspace_in,
-                     memory::MemorySpace memspace_out);
-
-      // set new values just sets the pointer, use caution.
-      int setValuesPointer(RealT*              new_vals,
-                           memory::MemorySpace memspace);
+      IdxT* getCsrRowData();
 
     private:
       IdxT n_{0};   ///< number of rows
@@ -101,6 +80,9 @@ namespace GridKit
 
       bool owns_gpu_sparsity_pattern_{false}; ///< for row/col data
       bool owns_gpu_values_{false};           ///< for nonzero values
+
+      IdxT* map_to_sorted_ = {nullptr}; ///< map from orginal to sorted
+      IdxT* map_to_dedup_  = {nullptr}; ///< map from sorted to deduplicated
 
       MemoryHandler mem_; ///< Device memory manager object
     };

@@ -10,6 +10,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
@@ -133,6 +134,7 @@ namespace GridKit
         delete comp;
       }
       delete csr_jac_;
+      delete[] map_to_csr_;
     }
 
     /**
@@ -176,8 +178,8 @@ namespace GridKit
      * @param[in] s size of the vector (total number of unknowns)
      *
      * @post System model vectors allocated with size s
-     * @post CSR Jacobian sparsity pattern computed
-     * @post COO->CSR mapping computed
+     * @post CSR Jacobian sparsity pattern is computed
+     * @post COO->CSR mapping is computed
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -218,10 +220,10 @@ namespace GridKit
         }
       }
 
-      // Allocate COO entries
-      std::vector<IdxT>  rows(static_cast<size_t>(nnz_dup));
-      std::vector<IdxT>  cols(static_cast<size_t>(nnz_dup));
-      std::vector<RealT> vals(static_cast<size_t>(nnz_dup));
+      // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+      IdxT*  rows_dup = new IdxT[nnz_dup];
+      IdxT*  cols_dup = new IdxT[nnz_dup];
+      RealT* vals_dup = new RealT[nnz_dup];
 
       IdxT counter = 0;
       for (const auto& component : components_)
@@ -233,27 +235,42 @@ namespace GridKit
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
-            rows[counter] = component->getNodeConnection(r[i]);
-            cols[counter] = component->getNodeConnection(c[i]);
-            vals[counter] = v[i];
+            rows_dup[counter] = component->getNodeConnection(r[i]);
+            cols_dup[counter] = component->getNodeConnection(c[i]);
+            vals_dup[counter] = v[i];
             counter++;
           }
         }
       }
 
-      // Build a COO from the collected entries
-      jac_.resetEntries(rows, cols, vals, size_, size_);
+      // Build the system COO Jacobian
+      LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
 
-      // Extract CSR data
-      std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>> csrdata = jac_.getCsrData();
-      const auto& [p, c, v]                                                        = csrdata;
+      // Populate CSR data with sort and deduplicate
+      IdxT* row_ptrs = jac.getCsrRowData();
 
-      nnz_ = static_cast<IdxT>(v.size());
+      // Deduplicated nnz
+      nnz_ = jac.getNnz();
 
-      // Instantiate CSR Jacobian
-      csr_jac_ = new CsrMatrix(size_, size_, nnz_);
-      csr_jac_->allocateMatrixData(GridKit::LinearAlgebra::memory::HOST);
-      csr_jac_->addEntries(p.data(), c.data(), v.data());
+      // Allocate cols/vals with deduplicated nnz
+      IdxT*  cols = new IdxT[nnz_];
+      RealT* vals = new RealT[nnz_];
+
+      std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+      std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+
+      // Create the CSR Jacobian
+      csr_jac_ = new CsrMatrix(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+
+      const IdxT* map_to_sorted = jac.getMapToSorted();
+      const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+
+      // Build a mappping from original COO index to CSR index
+      map_to_csr_ = new IdxT[nnz_dup];
+      for (IdxT i = 0; i < nnz_dup; ++i)
+      {
+        map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+      }
 
       return 0;
     }
@@ -370,8 +387,6 @@ namespace GridKit
         vals[i] = 0.0;
       }
 
-      std::vector<IdxT>& map_to_csr = jac_.getMapToCsr();
-
       // Update CSR values from component Jacobians
       IdxT counter = 0;
       for (const auto& component : components_)
@@ -385,7 +400,7 @@ namespace GridKit
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
-            vals[map_to_csr[counter]] += v[i];
+            vals[map_to_csr_[counter]] += v[i];
             ++counter;
           }
         }
@@ -472,7 +487,7 @@ namespace GridKit
       jac_.printMatrixMarket(filename, title);
     }
 
-    const CsrMatrix* getCsrJacobian() const override
+    CsrMatrix* getCsrJacobian() const override
     {
       return csr_jac_;
     }
@@ -487,6 +502,7 @@ namespace GridKit
 
     std::vector<component_type*> components_;
 
+    IdxT*      map_to_csr_{nullptr};
     CsrMatrix* csr_jac_{nullptr};
 
     int  jac_call_count_{0};

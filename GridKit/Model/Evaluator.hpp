@@ -84,7 +84,7 @@ namespace GridKit
       {
       }
 
-      virtual const CsrMatrix* getCsrJacobian() const
+      virtual CsrMatrix* getCsrJacobian() const
       {
         return nullptr;
       }
