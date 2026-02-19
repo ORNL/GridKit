@@ -56,7 +56,6 @@ namespace GridKit
 
       if (j.contains("monitors"))
       {
-        sm.monitor_sink.emplace_back("", MonitorFormat::CSV, ",");
         for (auto&& raw_mon : j.at("monitors"))
         {
           auto file_name = raw_mon.value("file_name", std::string{});
@@ -65,15 +64,7 @@ namespace GridKit
           auto delim     = raw_mon.value("delim", std::string(","));
           if (format.has_value())
           {
-            if (file_name.empty())
-            {
-              sm.monitor_sink.front().format = format.value();
-              sm.monitor_sink.front().delim  = delim;
-            }
-            else
-            {
-              sm.monitor_sink.emplace_back(file_name, format.value(), delim);
-            }
+            sm.monitor_sink.emplace_back(file_name, format.value(), delim);
           }
           else
           {

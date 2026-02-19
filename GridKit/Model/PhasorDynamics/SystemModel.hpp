@@ -345,6 +345,10 @@ namespace GridKit
           throw std::runtime_error("SystemModel allocation failed");
         }
 
+        // Start variable monitors
+        initializeMonitor();
+        startMonitor();
+
         // Perform an initial Jacobian evaluation for sparse Jacobians, such that
         // the dynamic solver can querry the NNZ value when it is configured.
         // @todo Replace with a sparsity analysis that sets the NNZ and allocates the Jacobian
@@ -454,9 +458,6 @@ namespace GridKit
             yp_[component->getVariableIndex(j)] = component->yp()[j];
           }
         }
-
-        initializeMonitor();
-        startMonitor();
 
         return 0;
       }
@@ -604,7 +605,16 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
-        J_.zeroMatrix();
+        bool sort = !jacobian_allocated_; // sort in axpy only if not allocated
+        if (!jacobian_allocated_)
+        {
+          J_.zeroMatrix();
+        }
+        else
+        {
+          J_.zeroValuedMatrix();
+        }
+
         std::vector<IdxT>  ctemp{};
         std::vector<IdxT>  rtemp{};
         std::vector<RealT> valtemp{};
@@ -630,6 +640,12 @@ namespace GridKit
             ctemp.push_back(columns[i]);
             valtemp.push_back(values[i]);
           }
+          // Need axpy because some branches may connect to the same buses, and own the same
+          // off-diagonal locations. @todo implement a more efficient approach.
+          J_.axpy(1.0, rtemp, ctemp, valtemp, sort);
+          rtemp.clear();
+          ctemp.clear();
+          valtemp.clear();
         }
 
         // Bus Jacobians
@@ -647,7 +663,13 @@ namespace GridKit
           }
         }
 
-        J_.setValues(rtemp, ctemp, valtemp);
+        J_.axpy(1.0, rtemp, ctemp, valtemp, sort);
+
+        // Flag Jacobian as allocated
+        if (!jacobian_allocated_)
+        {
+          jacobian_allocated_ = true;
+        }
 
         // J_.printMatrix("System Jacobian");
 
@@ -817,6 +839,7 @@ namespace GridKit
       std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
 
       bool owns_components_{false};
+      bool jacobian_allocated_{false};
 
       /// Variable monitor
       Model::VariableMonitorController<ScalarT> monitor_;

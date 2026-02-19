@@ -47,6 +47,10 @@ namespace GridKit
                },
                "monitors": [
                    {
+                       "file_name": "mon.csv",
+                       "format": "csv"
+                   },
+                   {
                        "file_name": "mon.json",
                        "format": "json"
                    }
@@ -75,7 +79,7 @@ namespace GridKit
         success *= result.freq_base == 60.0;
         success *= result.va_base == 100.0e6;
 
-        success *= result.monitor_sink[0].file_name.empty();
+        success *= result.monitor_sink[0].file_name == "mon.csv";
         success *= result.monitor_sink[0].format == VariableMonitorFormat::CSV;
         success *= result.monitor_sink[1].file_name == "mon.json";
         success *= result.monitor_sink[1].format == VariableMonitorFormat::JSON;

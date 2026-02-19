@@ -95,16 +95,24 @@ smooth approximation (smooth indicator $\phi$) expressed generically as follows.
 The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $P_v$ limits $(P_{vmin}, P_{vmax})$.
 ```math
 \begin{aligned}
-   \phi_L(P_v,f)&= \sigma(P_{vmin}-P_v)\sigma(-f)            \\
-   \phi_U(P_v,f)&= \sigma(P_v-P_{vmax})\sigma(f)             \\
-   \phi(P_v,f)  &= \left[1-\phi_L\right]\left[1-\phi_U\right]\\
+   \phi_L(P_v)&= \sigma(P_v-V_{rmin}) \\
+   \phi_U(P_v)&= \sigma(V_{rmax}-P_v) \\
+   \phi_0(P_v)&= \phi_L + \phi_U - 1  \\
+   \phi(P_v,f)&= \phi_0 \delta(f) + \left[ \phi_L \sigma(-f) + \phi_U \sigma(f)\right] \left[ 1-\delta(f) \right] \\
 \end{aligned}
 ```
 
-The scale of the sigmoid function ($\alpha$ on the order of $10^3$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function.
+The scale of the sigmoid function ($\alpha$ on the order of $10^2$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function.
 ```math
 \begin{aligned}
    \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}
+\end{aligned}
+```
+
+The derivative of the sigmoid then approximates the delta function.
+```math
+\begin{aligned}
+   \delta(x) = 4 \sigma(x) \left[ 1- \sigma(x) \right]
 \end{aligned}
 ```
 

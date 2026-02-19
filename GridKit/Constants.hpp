@@ -20,6 +20,9 @@ namespace GridKit
   inline constexpr RealT THREE = 3.0;
 
   template <typename RealT>
+  inline constexpr RealT FOUR = 4.0;
+
+  template <typename RealT>
   inline constexpr RealT HALF = 0.5;
 
   template <typename RealT>
