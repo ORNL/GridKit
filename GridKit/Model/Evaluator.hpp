@@ -4,6 +4,7 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
@@ -19,8 +20,9 @@ namespace GridKit
     class Evaluator
     {
     public:
-      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
+      using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
+      using CsrMatrix = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
 
       Evaluator()
       {
@@ -80,6 +82,16 @@ namespace GridKit
        */
       virtual void stopMonitor()
       {
+      }
+
+      /**
+       * @brief Return a pointer to the CSR Jacobian
+       *
+       * @todo Remove this and use CsrMatirx for jac_
+       */
+      virtual CsrMatrix* getCsrJacobian() const
+      {
+        return nullptr;
       }
 
       /**

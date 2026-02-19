@@ -18,8 +18,9 @@ namespace GridKit
   class CircuitComponent : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+    using RealT     = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using MatrixT   = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+    using CsrMatrix = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrix;
 
     CircuitComponent() = default;
 

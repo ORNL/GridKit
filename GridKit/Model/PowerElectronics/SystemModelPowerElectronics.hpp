@@ -2,14 +2,18 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
-#include <GridKit/Model/PowerElectronics/CircuitGraph.hpp>
+#include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -60,7 +64,10 @@ namespace GridKit
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using MatrixT        = typename CircuitComponent<ScalarT, IdxT>::MatrixT;
+    using CsrMatrix      = typename CircuitComponent<ScalarT, IdxT>::CsrMatrix;
     using component_type = CircuitComponent<ScalarT, IdxT>;
+    using node_type      = CircuitNode<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -123,7 +130,11 @@ namespace GridKit
     virtual ~PowerElectronicsModel()
     {
       for (auto comp : this->components_)
+      {
         delete comp;
+      }
+      delete csr_jac_;
+      delete[] map_to_csr_;
     }
 
     /**
@@ -162,12 +173,13 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate the vector data with size amount
-     * @todo Add capability to go through component model connection to get the size of the actual vector
+     * @brief Allocate system vectors and construct the system CSR Jacobian
      *
-     * @param[in] s size of the vector
+     * @param[in] s size of the vector (total number of unknowns)
      *
      * @post System model vectors allocated with size s
+     * @post CSR Jacobian sparsity pattern is computed
+     * @post COO->CSR mapping is computed
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -184,6 +196,81 @@ namespace GridKit
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+
+      // Evaluate component Jacobians to get sparsity
+      distributeVectors();
+      for (const auto& component : components_)
+      {
+        component->evaluateJacobian();
+      }
+
+      // Count the number of non-zeros
+      IdxT nnz_dup = 0;
+      for (const auto& component : components_)
+      {
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
+        const auto& [r, c, v]                                                           = entries;
+
+        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
+        {
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          {
+            ++nnz_dup;
+          }
+        }
+      }
+
+      // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+      IdxT*  rows_dup = new IdxT[nnz_dup];
+      IdxT*  cols_dup = new IdxT[nnz_dup];
+      RealT* vals_dup = new RealT[nnz_dup];
+
+      IdxT counter = 0;
+      for (const auto& component : components_)
+      {
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
+        const auto& [r, c, v]                                                           = entries;
+
+        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
+        {
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          {
+            rows_dup[counter] = component->getNodeConnection(r[i]);
+            cols_dup[counter] = component->getNodeConnection(c[i]);
+            vals_dup[counter] = v[i];
+            counter++;
+          }
+        }
+      }
+
+      // Build the system COO Jacobian
+      LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+
+      // Populate CSR data with sort and deduplicate
+      IdxT* row_ptrs = jac.getCsrRowData();
+
+      // Deduplicated nnz
+      nnz_ = jac.getNnz();
+
+      // Allocate cols/vals with deduplicated nnz
+      IdxT*  cols = new IdxT[nnz_];
+      RealT* vals = new RealT[nnz_];
+
+      std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+      std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+
+      // Create the CSR Jacobian
+      csr_jac_ = new CsrMatrix(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+
+      const IdxT* map_to_sorted = jac.getMapToSorted();
+      const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+
+      // Build a mappping from original COO index to CSR index
+      map_to_csr_ = new IdxT[nnz_dup];
+      for (IdxT i = 0; i < nnz_dup; ++i)
+      {
+        map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+      }
 
       return 0;
     }
@@ -237,7 +324,7 @@ namespace GridKit
       return 0;
     }
 
-    int tagDifferentiable()
+    int tagDifferentiable() final
     {
       return 0;
     }
@@ -282,46 +369,44 @@ namespace GridKit
     }
 
     /**
-     * @brief Creates the Sparse COO Jacobian representing  \alpha dF/dy' + dF/dy
+     * @brief Creates the system Jacobian representing \alpha dF/dy' + dF/dy
+     *
+     * Updates the CSR Jacobian values using the per-component mappings
+     * computed during allocate().
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
     int evaluateJacobian() final
     {
-      jac_.zeroMatrix();
       distributeVectors();
 
-      // Evaluate component jacs
+      // Zero out values
+      RealT* vals = csr_jac_->getValues();
+      for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
+      {
+        vals[i] = 0.0;
+      }
+
+      // Update CSR values from component Jacobians
+      IdxT counter = 0;
       for (const auto& component : components_)
       {
         component->evaluateJacobian();
 
-        // get references to local jacobian
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> tpm = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                       = tpm;
+        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
+        const auto& [r, c, v]                                                           = entries;
 
-        // Create copies of data to handle groundings
-        std::vector<IdxT>  rgr;
-        std::vector<IdxT>  cgr;
-        std::vector<RealT> vgr;
-        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); i++)
+        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
-            rgr.push_back(component->getNodeConnection(r[i]));
-            cgr.push_back(component->getNodeConnection(c[i]));
-            vgr.push_back(v[i]);
+            vals[map_to_csr_[counter]] += v[i];
+            ++counter;
           }
         }
-
-        // AXPY to Global Jacobian
-        // elementwise jac_(rgr, cgr) += vgr
-        jac_.axpy(1.0, rgr, cgr, vgr);
       }
 
-      // jac_.printMatrixMarket("ScaleMicrogrid_Jacobian_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Jacobian N2 number " + std::to_string(jac_call_count_));
       jac_call_count_++;
-
       return 0;
     }
 
@@ -330,7 +415,6 @@ namespace GridKit
      */
     int evaluateIntegrand() final
     {
-
       return 0;
     }
 
@@ -398,10 +482,14 @@ namespace GridKit
      * @param[in] filename
      * @param[in] title
      */
-
     void printJacobianMatrixMarket(std::string filename, std::string title)
     {
       jac_.printMatrixMarket(filename, title);
+    }
+
+    CsrMatrix* getCsrJacobian() const override
+    {
+      return csr_jac_;
     }
 
     void addComponent(component_type* component)
@@ -413,6 +501,9 @@ namespace GridKit
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*> components_;
+
+    IdxT*      map_to_csr_{nullptr};
+    CsrMatrix* csr_jac_{nullptr};
 
     int  jac_call_count_{0};
     bool use_jac_;
