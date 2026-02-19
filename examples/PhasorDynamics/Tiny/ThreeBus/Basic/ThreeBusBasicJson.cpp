@@ -99,7 +99,7 @@ int main(int argc, const char* argv[])
   ida.configureSimulation();
 
   // Run simulation, output each `dt` interval
-  scalar_type start = static_cast<scalar_type>(clock());
+  real_type start = static_cast<real_type>(clock());
   ida.initializeSimulation(0.0, false);
 
   // Run for 1s
@@ -117,7 +117,7 @@ int main(int argc, const char* argv[])
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout);
-  double stop = static_cast<double>(clock());
+  real_type stop = static_cast<real_type>(clock());
 
   // Stop the variable monitor
   sys.stopMonitor();
