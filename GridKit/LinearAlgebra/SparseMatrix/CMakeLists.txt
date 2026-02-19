@@ -1,4 +1,4 @@
-gridkit_add_library(sparse
+gridkit_add_library(SparseMatrix
   SOURCES
     CooMatrix.cpp
     CsrMatrix.cpp

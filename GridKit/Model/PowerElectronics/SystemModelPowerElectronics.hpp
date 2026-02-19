@@ -324,7 +324,7 @@ namespace GridKit
       return 0;
     }
 
-    int tagDifferentiable()
+    int tagDifferentiable() final
     {
       return 0;
     }

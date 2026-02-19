@@ -43,6 +43,7 @@ int main(int, char**)
   TestingResults result;
   runTests<double, size_t>("CPU", memory::HOST, result);
   runTests<double, long int>("CPU", memory::HOST, result);
+  runTests<double, int>("CPU", memory::HOST, result);
 
   return result.summary();
 }

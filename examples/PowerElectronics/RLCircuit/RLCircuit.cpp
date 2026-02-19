@@ -97,7 +97,7 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.updateTime(0.0, 1.0);
   sysmodel.evaluateJacobian();
   std::cout << "Intial Jacobian with alpha = 1:\n";
-  sysmodel.getJacobian().printMatrix();
+  sysmodel.getCsrJacobian()->print();
 
   // Create numerical integrator and configure it for the generator model
   AnalysisManager::Sundials::Ida<double, size_t> idas(&sysmodel);

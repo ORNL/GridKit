@@ -403,7 +403,7 @@ namespace GridKit
       map_to_dedup_[0] = 0;
       csr_row_data[h_row_data_[0] + 1]++;
 
-      // Deduplicate sroted entries
+      // Deduplicate sorted entries
       IdxT w = 0;
       for (IdxT i = 1; i < nnz_; i++)
       {
