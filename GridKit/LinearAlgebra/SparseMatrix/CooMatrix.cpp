@@ -365,7 +365,7 @@ namespace GridKit
         return nullptr;
       }
 
-      map_to_sorted_ = new IdxT[nnz_];
+      map_to_sorted_ = new IdxT[static_cast<size_t>(nnz_)];
 
       for (IdxT i = 0; i < nnz_; i++)
       {
@@ -377,9 +377,9 @@ namespace GridKit
                 { if (h_row_data_[a] != h_row_data_[b]) return h_row_data_[a] < h_row_data_[b];
                   return h_col_data_[a] < h_col_data_[b]; });
 
-      IdxT*  row_data_tmp = new IdxT[nnz_];
-      IdxT*  col_data_tmp = new IdxT[nnz_];
-      RealT* val_data_tmp = new RealT[nnz_];
+      IdxT*  row_data_tmp = new IdxT[static_cast<size_t>(nnz_)];
+      IdxT*  col_data_tmp = new IdxT[static_cast<size_t>(nnz_)];
+      RealT* val_data_tmp = new RealT[static_cast<size_t>(nnz_)];
 
       for (IdxT i = 0; i < nnz_; i++)
       {
@@ -397,8 +397,8 @@ namespace GridKit
       delete[] col_data_tmp;
       delete[] val_data_tmp;
 
-      map_to_dedup_      = new IdxT[nnz_];
-      IdxT* csr_row_data = new IdxT[n_ + 1]();
+      map_to_dedup_      = new IdxT[static_cast<size_t>(nnz_)];
+      IdxT* csr_row_data = new IdxT[static_cast<size_t>(n_ + 1)]();
 
       map_to_dedup_[0] = 0;
       csr_row_data[h_row_data_[0] + 1]++;
