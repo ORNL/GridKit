@@ -11,7 +11,7 @@
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 using index_type = size_t;
 using real_type  = double;

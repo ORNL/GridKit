@@ -5,27 +5,31 @@
 
 
 add_executable(test_phasor_bus runBusTests.cpp)
-target_link_libraries(test_phasor_bus GridKit::phasor_dynamics_bus)
+target_link_libraries(test_phasor_bus GridKit::phasor_dynamics_bus
+                                      GridKit::testing)
 
 add_executable(test_phasor_branch runBranchTests.cpp)
 target_link_libraries(test_phasor_branch GridKit::phasor_dynamics_branch
                                          GridKit::phasor_dynamics_branch_dependency_tracking
                                          GridKit::phasor_dynamics_bus
-                                         GridKit::phasor_dynamics_bus_dependency_tracking)
+                                         GridKit::phasor_dynamics_bus_dependency_tracking
+                                         GridKit::testing)
 
 add_executable(test_phasor_load runLoadTests.cpp)
 target_link_libraries(test_phasor_load GridKit::definitions
                                        GridKit::phasor_dynamics_load
                                        GridKit::phasor_dynamics_load_dependency_tracking
                                        GridKit::phasor_dynamics_bus
-                                       GridKit::phasor_dynamics_bus_dependency_tracking)
+                                       GridKit::phasor_dynamics_bus_dependency_tracking
+                                       GridKit::testing)
 
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GridKit::definitions
                                          GridKit::phasor_dynamics_genrou
                                          GridKit::phasor_dynamics_genrou_dependency_tracking
                                          GridKit::phasor_dynamics_bus
-                                         GridKit::phasor_dynamics_bus_dependency_tracking)
+                                         GridKit::phasor_dynamics_bus_dependency_tracking
+                                         GridKit::testing)
 
 add_executable(test_phasor_governortgov1 runGovernorTgov1Tests.cpp)
 target_link_libraries(test_phasor_governortgov1 GridKit::definitions
@@ -35,27 +39,31 @@ target_link_libraries(test_phasor_governortgov1 GridKit::definitions
                                                 GridKit::phasor_dynamics_governortgov1_dependency_tracking
                                                 GridKit::phasor_dynamics_signal
                                                 GridKit::phasor_dynamics_bus
-                                                GridKit::phasor_dynamics_bus_dependency_tracking)
+                                                GridKit::phasor_dynamics_bus_dependency_tracking
+                                                GridKit::testing)
 
 add_executable(test_phasor_gen_classical runGenClassicalTests.cpp)
 target_link_libraries(test_phasor_gen_classical GridKit::definitions
                                                 GridKit::phasor_dynamics_gen_classical
                                                 GridKit::phasor_dynamics_gen_classical_dependency_tracking
                                                 GridKit::phasor_dynamics_bus
-                                                GridKit::phasor_dynamics_bus_dependency_tracking)
+                                                GridKit::phasor_dynamics_bus_dependency_tracking
+                                                GridKit::testing)
 
 
 add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(test_phasor_system GridKit::definitions
                                          GridKit::phasor_dynamics_components
-                                         GridKit::phasor_dynamics_components_dependency_tracking)
+                                         GridKit::phasor_dynamics_components_dependency_tracking
+                                         GridKit::testing)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
   ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json
   COPYONLY)
 
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(test_phasor_system_single_component GridKit::phasor_dynamics_components
-                                                          GridKit::phasor_dynamics_components_dependency_tracking)
+                                                          GridKit::phasor_dynamics_components_dependency_tracking
+                                                          GridKit::testing)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)

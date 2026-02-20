@@ -1,5 +1,5 @@
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {

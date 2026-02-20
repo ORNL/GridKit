@@ -3,7 +3,7 @@
 #include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 /**
  * @brief Standalone example that computes the Jacobian associated with the

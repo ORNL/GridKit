@@ -25,6 +25,9 @@ add_subdirectory(AutomaticDifferentiation)
 # Create solvers
 add_subdirectory(Solver)
 
+# Testing library
+add_subdirectory(Testing)
+
 install(
   FILES
     Constants.hpp

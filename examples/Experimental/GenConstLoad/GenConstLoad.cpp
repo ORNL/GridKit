@@ -12,7 +12,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Solver/Optimization/DynamicConstraint.hpp>
 #include <GridKit/Solver/Optimization/DynamicObjective.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 int main()
 {

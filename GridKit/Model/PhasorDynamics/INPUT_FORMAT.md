@@ -143,7 +143,7 @@ are specified:
   --------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
   `Branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`           | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `Load`        | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
-  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
   `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`            | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 #include "VectorModel.hpp"
 

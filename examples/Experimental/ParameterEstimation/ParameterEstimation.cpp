@@ -12,8 +12,8 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Solver/Optimization/DynamicConstraint.hpp>
 #include <GridKit/Solver/Optimization/DynamicObjective.hpp>
+#include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/FileIO.hpp>
-#include <GridKit/Utilities/Testing.hpp>
 
 #include "lookup_table.hpp"
 

@@ -373,10 +373,10 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(tf, 0.0);
-      if (model_->monitoring())
-      {
-        model_->printMonitoredVariables();
-      }
+      // if (model_->monitoring())
+      // {
+      //   model_->printMonitoredVariables();
+      // }
 
       // std::cout << "\n";
       return retval;

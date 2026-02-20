@@ -12,14 +12,6 @@
         {
             "file_name": "mon.csv",
             "format": "csv"
-        },
-        {
-            "file_name": "mon.json",
-            "format": "json"
-        },
-        {
-            "file_name": "mon.yaml",
-            "format": "yaml"
         }
     ],
     "buses": [
@@ -33,8 +25,7 @@
             },
             "v_base": 138000.0,
             "mon": [
-                "Vr",
-                "Vi"
+                "Vm"
             ]
         },
         {
@@ -47,8 +38,7 @@
             },
             "v_base": 138000.0,
             "mon": [
-                "Vr",
-                "Vi"
+                "Vm"
             ]
         },
         {
@@ -61,8 +51,7 @@
             },
             "v_base": 138000.0,
             "mon": [
-                "Vr",
-                "Vi"
+                "Vm"
             ]
         }
     ],
@@ -159,8 +148,7 @@
                 "S12": 0.0
             },
             "mon": [
-                "delta",
-                "omega"
+                "speed"
             ]
         },
         {
@@ -190,8 +178,7 @@
                 "S12": 0.0
             },
             "mon": [
-                "delta",
-                "omega"
+                "speed"
             ]
         }
     ]

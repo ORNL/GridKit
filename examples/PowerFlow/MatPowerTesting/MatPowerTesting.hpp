@@ -13,7 +13,7 @@
 #include <vector>
 
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace
 {

@@ -8,6 +8,7 @@
  * compares results with data generated for the same system by Poweworld.
  *
  */
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -17,62 +18,25 @@
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/CliOptions/CliOptions.hpp>
 
-#include "ThreeBusBasic.hpp"
+#define ERROR_TOL 1.0e-4
 
 using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-struct OutputData
-{
-  real_type t;
-  real_type gen2speed;
-  real_type gen3speed;
-  real_type v2mag;
-  real_type v3mag;
-
-  OutputData& operator-=(const OutputData& other)
-  {
-    assert(GridKit::Testing::isEqual(t, other.t, reference_tol));
-    gen2speed -= other.gen2speed;
-    gen3speed -= other.gen3speed;
-    v2mag     -= other.v2mag;
-    v3mag     -= other.v3mag;
-    return *this;
-  }
-
-  real_type norm() const
-  {
-    return std::max({
-        std::abs(gen2speed),
-        std::abs(gen3speed),
-        std::abs(v2mag),
-        std::abs(v3mag),
-    });
-  }
-};
-
-const OutputData operator-(const OutputData& lhs, const OutputData& rhs)
-{
-  return OutputData(lhs) -= rhs;
-}
-
-std::ostream& operator<<(std::ostream& out, const OutputData& data)
-{
-  out << data.t << ","
-      << data.gen2speed << ","
-      << data.gen3speed << ","
-      << data.v2mag << ","
-      << data.v3mag;
-  return out;
-}
+// NOTES:
+// Write function to compare to CSV files
+//  compare number of lines and number of items per line
 
 int main(int argc, const char* argv[])
 {
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
+  using namespace GridKit::Utilities;
 
   auto error_allowed = static_cast<real_type>(1e-4);
 
@@ -130,25 +94,6 @@ int main(int argc, const char* argv[])
 
   real_type dt = 1.0 / 4.0 / 60.0;
 
-  std::vector<OutputData> output;
-
-  auto output_cb = [&](real_type t)
-  {
-    std::vector<real_type>& y_val = sys.y();
-
-    // Bus 1 -> +2
-    // Bus 2 -> +2
-    // Gen 1 -> +19 (Start Idx: 4)
-    // Gen 2 -> +19 (Start Idx: 23)
-
-    //
-    output.push_back(OutputData{t,
-                                1.0 + static_cast<real_type>(y_val[5]),                                                                                                                 // Gen 1 Speed -> 4 + 1
-                                1.0 + static_cast<real_type>(y_val[24]),                                                                                                                // Gen 2 Speed -> 23 + 1
-                                std::sqrt(static_cast<real_type>(y_val[0]) * static_cast<real_type>(y_val[0]) + static_cast<real_type>(y_val[1]) * static_cast<real_type>(y_val[1])),   // Bus 1 Vmag
-                                std::sqrt(static_cast<real_type>(y_val[2]) * static_cast<real_type>(y_val[2]) + static_cast<real_type>(y_val[3]) * static_cast<real_type>(y_val[3]))}); // Bus 2 Vmag
-  };
-
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
@@ -159,61 +104,32 @@ int main(int argc, const char* argv[])
 
   // Run for 1s
   int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout, output_cb);
+  ida.runSimulation(1.0, nout);
 
   // Introduce fault to ground and run for 0.1s
   fault->setStatus(true);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
-  ida.runSimulation(1.1, nout, output_cb);
+  ida.runSimulation(1.1, nout);
 
   // Clear fault and run until t = 10s.
   fault->setStatus(false);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
-  ida.runSimulation(10.0, nout, output_cb);
+  ida.runSimulation(10.0, nout);
   real_type stop = static_cast<real_type>(clock());
 
+  // Stop the variable monitor
   sys.stopMonitor();
 
-  /* Check worst-case error */
-  real_type worst_error      = 0;
-  real_type worst_error_time = 0;
+  // Generate aggregate errors comparing variable output to reference solution
+  auto errorSet =
+      GridKit::Testing::compareCSV("mon.csv", "ThreeBusBasic.ref.csv");
 
-  std::ostream  nullout(nullptr);
-  std::ostream& out = nullout;
+  // Print the errors
+  errorSet.display();
 
-  // // Uncomment code below to print output to a file:
-  // std::ofstream fileout;
-  // fileout.open("Example_ThreeBus_Basic_results.csv");
-  // std::ostream& out = fileout;
-
-  out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
-  out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";
-
-  for (index_type i = 0; i < output.size(); ++i)
-  {
-    OutputData ref{reference_solution[i + 1][0],
-                   reference_solution[i + 1][1],
-                   reference_solution[i + 1][2],
-                   reference_solution[i + 1][4],
-                   reference_solution[i + 1][5]};
-    OutputData out_data = output[i];
-
-    out << out_data << '\n';
-
-    real_type err = (out_data - ref).norm();
-    if (err > worst_error)
-    {
-      worst_error      = err;
-      worst_error_time = out_data.t;
-    }
-  }
-  // fileout.close();
-
-  std::cout << "Max error " << worst_error
-            << " at time t = " << worst_error_time << "\n";
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return worst_error < error_allowed ? 0 : 1;
+  return errorSet.total.max_error < error_allowed ? 0 : 1;
 }

@@ -8,6 +8,7 @@ add_library(GridKit::Utilities ALIAS Utilities)
 add_subdirectory(Logger)
 add_subdirectory(CliOptions)
 
+install(TARGETS Utilities EXPORT gridkit-targets)
 install(
   FILES
     Colors.hpp

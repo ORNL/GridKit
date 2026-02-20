@@ -3,8 +3,8 @@
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
-#include <GridKit/Utilities/TestHelpers.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 namespace GridKit
 {

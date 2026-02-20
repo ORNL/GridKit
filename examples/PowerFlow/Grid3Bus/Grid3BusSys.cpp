@@ -25,7 +25,7 @@
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
 #include <GridKit/Model/PowerFlow/SystemModelPowerFlow.hpp>
 #include <GridKit/Solver/SteadyState/Kinsol.hpp>
-#include <GridKit/Utilities/Testing.hpp>
+#include <GridKit/Testing/Testing.hpp>
 
 static const std::string BUS3_DATA_STRING = R"(
 function mpc = case5
