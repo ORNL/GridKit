@@ -40,9 +40,10 @@ namespace GridKit
           std::ostream& os = std::cout, const std::string& indent = "  ") const
       {
         os << indent << label << ":\n"
-           << indent << indent << "(max, time): "
-           << std::format("{:.6e}, {:.3e}", max_error, max_error_time) << '\n'
-           << indent << indent << "L2-norm    : "
+           << indent << indent << "max     : "
+           << std::format("{:.6e} (at time {:.3e})", max_error, max_error_time)
+           << '\n'
+           << indent << indent << "L2-norm : "
            << std::format("{:.6e}", error_norm_L2) << '\n';
         return os;
       }
