@@ -9,9 +9,6 @@
 #include <vector>
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
 #include <GridKit/ScalarTraits.hpp>

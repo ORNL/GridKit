@@ -5,8 +5,6 @@
 #include <vector>
 
 #include <GridKit/Definitions.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
