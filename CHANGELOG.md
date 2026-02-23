@@ -44,7 +44,8 @@
 - Minor performance improvements to residual evaluation in PowerElectronics module.
 - Added full support for sparse Jacobians obtained with Enzyme in PhasorDynamics.
 - Added `Node` class to the PowerElectronics module to separate nodes from circuit components.
-- Refactor Jacobian assembly in `PowerElectronics` module to reuse the CSR pattern.
+- Refactored Jacobian assembly in `PowerElectronics` module to reuse the CSR pattern.
+- Refactored Jacobian assembly in `PhasorDyanmcics` module to reuse the CSR pattern.
 ## v0.1
 
 - Refactored code to support adding different model families.
