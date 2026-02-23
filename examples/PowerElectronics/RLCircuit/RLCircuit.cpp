@@ -73,7 +73,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // Grounding for IDA. If no grounding then circuit is \mu > 1
   // v_0 (grounded)
-  // Create Initial points
+  // Create initial points
   sysmodel.y()[0] = vinit; // v_1
   sysmodel.y()[1] = vinit; // v_2
   sysmodel.y()[2] = 0.0;   // i_L
@@ -87,7 +87,7 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.initialize();
   sysmodel.evaluateResidual();
 
-  std::cout << "Verify Initial Resisdual is Zero: {";
+  std::cout << "Verify initial resisdual is zero: {";
   for (double i : sysmodel.getResidual())
   {
     std::cout << i << ", ";

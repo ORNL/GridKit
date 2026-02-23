@@ -23,6 +23,7 @@ int main(int /* argc */, char const** /* argv */)
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
+  bool   debug_output    = true;
 
   // Create model
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
@@ -288,14 +289,14 @@ int main(int /* argc */, char const** /* argv */)
   std::cout << sysmodel->y().size() << std::endl;
   std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
 
-  // Create Initial points for states
+  // Create initial points for states
   for (size_t i = 0; i < vec_size_total; i++)
   {
     sysmodel->y()[i]  = 0.0;
     sysmodel->yp()[i] = 0.0;
   }
 
-  // Create Initial derivatives specifics generated in MATLAB
+  // Create initial derivatives specifics generated in MATLAB
   // DGs 1
   sysmodel->yp()[2]      = parms1.Vn_;
   sysmodel->yp()[4]      = parms1.Kpv_ * parms1.Vn_;
@@ -316,18 +317,27 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->initialize();
   sysmodel->evaluateResidual();
 
-  // // Optional debugging output
-  // std::vector<double>& fres = sysmodel->getResidual();
-  // std::cout << "Verify Initial Resisdual is Zero: {\n";
-  // for (size_t i = 0; i < fres.size(); i++)
-  // {
-  //   printf("%lu : %e \n", i, fres[i]);
-  // }
-  // std::cout << "}\n";
+  // Optional debuging output
+  if (debug_output)
+  {
+    std::vector<double>& fres = sysmodel->getResidual();
+    std::cout << "Verify initial Resisdual is Zero: {\n";
+    for (size_t i = 0; i < fres.size(); i++)
+    {
+      printf("%lu : %e \n", i, fres[i]);
+    }
+    std::cout << "}\n";
+  }
 
   sysmodel->updateTime(0.0, 1.0e-8);
   sysmodel->evaluateJacobian();
-  std::cout << "Initial Jacobian with alpha:\n";
+
+  // Optional debuging output
+  if (debug_output)
+  {
+    std::cout << "Initial Jacobian with alpha:\n";
+    sysmodel->getCsrJacobian()->print();
+  }
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
@@ -344,12 +354,15 @@ int main(int /* argc */, char const** /* argv */)
 
   std::vector<double>& yfinial = sysmodel->y();
 
-  // // Optional debugging output
-  // std::cout << "Final Vector y\n";
-  // for (size_t i = 0; i < yfinial.size(); i++)
-  // {
-  //   std::cout << yfinial[i] << "\n";
-  // }
+  // Optional debugging output
+  if (debug_output)
+  {
+    std::cout << "Final Vector y\n";
+    for (size_t i = 0; i < yfinial.size(); i++)
+    {
+      std::cout << yfinial[i] << "\n";
+    }
+  }
 
   // Generated from MATLAB code ODE form with tolerances of 1e-12
   std::vector<double> true_vec{
