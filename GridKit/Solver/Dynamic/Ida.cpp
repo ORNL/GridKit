@@ -168,20 +168,8 @@ namespace AnalysisManager
     {
       int retval = 0;
 
-      sunindextype n = static_cast<sunindextype>(model_->size());
-      sunindextype nnz;
-
-      /// @todo Remove this flag and require all apps to configure CsrJac
-      bool use_csr_jac = (model_->getCsrJacobian() != nullptr);
-
-      if (use_csr_jac)
-      {
-        nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
-      }
-      else
-      {
-        nnz = static_cast<sunindextype>((model_->getJacobian()).nnz());
-      }
+      sunindextype n   = static_cast<sunindextype>(model_->size());
+      sunindextype nnz = static_cast<sunindextype>(model_->getCsrJacobian()->getNnz());
 
       JacobianMat_ = SUNSparseMatrix(n,
                                      n,
@@ -196,14 +184,7 @@ namespace AnalysisManager
       retval = IDASetLinearSolver(solver_, linearSolver_, JacobianMat_);
       checkOutput(retval, "IDASetLinearSolver");
 
-      if (use_csr_jac)
-      {
-        retval = IDASetJacFn(solver_, this->CsrJac);
-      }
-      else
-      {
-        retval = IDASetJacFn(solver_, this->Jac);
-      }
+      retval = IDASetJacFn(solver_, this->Jac);
       checkOutput(retval, "IDASetJacFn");
 
       return retval;
@@ -785,56 +766,13 @@ namespace AnalysisManager
     /**
      * @brief Jacobian evaluation
      *
+     * @note The model Jacobian is stored in CSR format.
+     *
      * @tparam ScalarT
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::Jac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
-    {
-
-      GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
-
-      model->updateTime(t, cj);
-      copyVec(yy, model->y());
-      copyVec(yp, model->yp());
-
-      model->evaluateJacobian();
-      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& Jac = model->getJacobian();
-
-      // Get reference to the jacobian entries
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<ScalarT>&> tpm = Jac.getEntries();
-      const auto [r, c, val]                                                        = tpm;
-
-      // get the CSR row pointers from COO matrix
-      std::vector<IdxT> csrrowdata = Jac.getCSRRowData();
-
-      SUNMatZero(J);
-
-      // Set row pointers
-      sunindextype* rowptrs = SUNSparseMatrix_IndexPointers(J);
-      std::copy(csrrowdata.cbegin(), csrrowdata.cend(), rowptrs);
-
-      sunindextype* colvals = SUNSparseMatrix_IndexValues(J);
-      RealT*        data    = SUNSparseMatrix_Data(J);
-      // Copy data from model jac to sundials
-      std::copy(c.cbegin(), c.cend(), colvals);
-      std::copy(val.cbegin(), val.cend(), data);
-
-      return 0;
-    }
-
-    /**
-     * @brief Jacobian evaluation
-     *
-     * @note The model Jacobian is stored in CSR format.
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
-     *
-     * @todo Update PhasorDynamics to use this implementation.
-     */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::CsrJac(RealT t, RealT cj, N_Vector yy, N_Vector yp, N_Vector, SUNMatrix J, void* user_data, N_Vector, N_Vector, N_Vector)
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 

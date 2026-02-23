@@ -151,17 +151,6 @@ namespace AnalysisManager
                      N_Vector  tmp2,
                      N_Vector  tmp3);
 
-      static int CsrJac(RealT     t,
-                        RealT     cj,
-                        N_Vector  yy,
-                        N_Vector  yp,
-                        N_Vector  resvec,
-                        SUNMatrix J,
-                        void*     user_data,
-                        N_Vector  tmp1,
-                        N_Vector  tmp2,
-                        N_Vector  tmp3);
-
       static int Integrand(RealT    t,
                            N_Vector yy,
                            N_Vector yp,
