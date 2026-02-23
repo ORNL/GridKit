@@ -647,7 +647,7 @@ namespace GridKit
           for (const auto& bus : buses_)
           {
             auto bus_jacobian = bus->getJacobian();
-  
+
             std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
@@ -665,7 +665,7 @@ namespace GridKit
           for (const auto& component : components_)
           {
             auto component_jacobian = component->getJacobian();
-    
+
             std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
             const auto [rows, columns, values]                                                                 = component_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
@@ -679,7 +679,7 @@ namespace GridKit
           for (const auto& bus : buses_)
           {
             auto bus_jacobian = bus->getJacobian();
-  
+
             std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
@@ -728,13 +728,13 @@ namespace GridKit
           {
             vals[i] = 0.0;
           }
-    
+
           // Update CSR values from component and bus Jacobians
           IdxT counter = 0;
           for (const auto& component : components_)
           {
             auto component_jacobian = component->getJacobian();
-    
+
             std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
             const auto [rows, columns, values]                                                                 = component_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
@@ -746,7 +746,7 @@ namespace GridKit
           for (const auto& bus : buses_)
           {
             auto bus_jacobian = bus->getJacobian();
-  
+
             std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)

@@ -18,10 +18,10 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     std::vector<DependencyTracking::Variable::DependencyMap> MapFromCsr(LinearAlgebra::CsrMatrix<RealT, IdxT>* matrix)
     {
-      IdxT*  row_data = matrix->getRowData();
+      IdxT*  row_data    = matrix->getRowData();
       IdxT*  column_data = matrix->getColData();
-      RealT* values = matrix->getValues();
-      IdxT n_rows = matrix->getNumRows();
+      RealT* values      = matrix->getValues();
+      IdxT   n_rows      = matrix->getNumRows();
 
       std::vector<DependencyTracking::Variable::DependencyMap> dependencies(n_rows);
 
