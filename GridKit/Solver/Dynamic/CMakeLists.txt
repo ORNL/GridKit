@@ -21,7 +21,7 @@ if (GRIDKIT_ENABLE_SUNDIALS_SPARSE)
       PUBLIC SUNDIALS::sunlinsolklu
       PUBLIC GridKit::definitions
       PUBLIC GridKit::utilities_logger
-      PUBLIC GridKit::SparseMatrix)
+      PUBLIC GridKit::sparse_matrix)
 else()
   gridkit_add_library(solvers_dyn
     SOURCES
@@ -33,5 +33,5 @@ else()
       PUBLIC SUNDIALS::idas
       PUBLIC GridKit::definitions
       PUBLIC GridKit::utilities_logger
-      PUBLIC GridKit::SparseMatrix)
+      PUBLIC GridKit::sparse_matrix)
 endif()
