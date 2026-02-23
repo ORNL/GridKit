@@ -288,14 +288,14 @@ int main(int /* argc */, char const** /* argv */)
   std::cout << sysmodel->y().size() << std::endl;
   std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
 
-  // Create Intial points for states
+  // Create Initial points for states
   for (size_t i = 0; i < vec_size_total; i++)
   {
     sysmodel->y()[i]  = 0.0;
     sysmodel->yp()[i] = 0.0;
   }
 
-  // Create Intial derivatives specifics generated in MATLAB
+  // Create Initial derivatives specifics generated in MATLAB
   // DGs 1
   sysmodel->yp()[2]      = parms1.Vn_;
   sysmodel->yp()[4]      = parms1.Kpv_ * parms1.Vn_;
@@ -318,7 +318,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // // Optional debugging output
   // std::vector<double>& fres = sysmodel->getResidual();
-  // std::cout << "Verify Intial Resisdual is Zero: {\n";
+  // std::cout << "Verify Initial Resisdual is Zero: {\n";
   // for (size_t i = 0; i < fres.size(); i++)
   // {
   //   printf("%lu : %e \n", i, fres[i]);
@@ -327,7 +327,7 @@ int main(int /* argc */, char const** /* argv */)
 
   sysmodel->updateTime(0.0, 1.0e-8);
   sysmodel->evaluateJacobian();
-  std::cout << "Intial Jacobian with alpha:\n";
+  std::cout << "Initial Jacobian with alpha:\n";
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<double, size_t>(sysmodel);
