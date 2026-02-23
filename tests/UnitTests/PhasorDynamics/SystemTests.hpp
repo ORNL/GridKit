@@ -13,7 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -270,10 +270,11 @@ namespace GridKit
         // Evaluate and get the system Jacobian
         system.evaluateResidual();
         system.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> system_jacobian = system.getJacobian();
-        system_jacobian.printMatrix("System Jacobian");
+        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* system_jacobian = system.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: System Jacobian\n";
+        system_jacobian->print();
 
-        return GridKit::Testing::MapFromCOO(system_jacobian);
+        return GridKit::Testing::MapFromCsr(system_jacobian);
       }
 #endif
     };
