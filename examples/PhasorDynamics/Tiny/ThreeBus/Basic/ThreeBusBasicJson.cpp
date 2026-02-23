@@ -20,7 +20,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/CliOptions/CliOptions.hpp>
+#include <GridKit/Utilities/CliOptions/CliArgs.hpp>
 
 #define ERROR_TOL 1.0e-4
 
@@ -37,55 +37,35 @@ int main(int argc, const char* argv[])
   using namespace GridKit::PhasorDynamics;
   using namespace AnalysisManager::Sundials;
   using namespace GridKit::Utilities;
+  using namespace GridKit::Testing;
 
-  auto error_allowed = static_cast<real_type>(1e-4);
+  CliArgs args{{.name     = {"--config", "-c"},
+                .help     = "JSON file describing the network",
+                .defaults = "ThreeBusBasic.case.json",
+                .required = false},
 
-  //
+               {.name     = {"--compare", "-r"},
+                .help     = "Two CSV files to compare:\n"
+                            "<expected-output-file> <reference-file>",
+                .nargs    = 2,
+                .defaults = {"mon.csv", "ThreeBusBasic.ref.csv"}},
+
+               {.name     = {"--tolerance", "-t"},
+                .help     = "Allowable maximum error between compared files",
+                .type     = Argument::Type::Real,
+                .defaults = 1.0e-4}};
+
+  args.parseArgs(argc, argv);
+
   // Input file
-  //
-
-  std::filesystem::path input_file;
-  if (argc < 2)
-  {
-    if (std::filesystem::exists("ThreeBusBasic.case.json"))
-    {
-      input_file = std::filesystem::current_path() / "ThreeBusBasic.case.json";
-    }
-    else
-    {
-      std::cout << "\n"
-                   "ERROR: No input file found or provided.\n"
-                   "\n"
-                   "Usage:\n"
-                   "       ThreeBusBasicJson <json-input-file>\n"
-                   "\n"
-                   "Please provide a JSON input file as a positional command-line \n"
-                   "argument.\n"
-                   "\n"
-                   "By default this example will look for \"ThreeBusBasic.json\" in the \n"
-                   "current working directory and use that if found.\n"
-                   "\n";
-      exit(1);
-    }
-  }
-  else
-  {
-    input_file = argv[1];
-  }
-
+  auto input_file = args["config"]()();
   std::cout << "Example: ThreeBusBasicJson\n";
   std::cout << "Input file: " << input_file << '\n';
 
-  //
   // Create model data
-  //
-
   auto data = parseSystemModelData(input_file);
 
-  //
   // Instantiate system
-  //
-
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
@@ -123,13 +103,26 @@ int main(int argc, const char* argv[])
   sys.stopMonitor();
 
   // Generate aggregate errors comparing variable output to reference solution
-  auto errorSet =
-      GridKit::Testing::compareCSV("mon.csv", "ThreeBusBasic.ref.csv");
+  TestStatus status{true};
+  if (!args["compare"].empty())
+  {
+    const auto& [out_file, ref_file] = args["compare"].as<std::string, 2>();
 
-  // Print the errors
-  errorSet.display();
+    auto errorSet = GridKit::Testing::compareCSV(out_file, ref_file);
+
+    // Print the errors
+    errorSet.display();
+
+    auto error_allowed = args["tolerance"]().as<real_type>();
+
+    if (errorSet.total.max_error >= error_allowed)
+    {
+      status = false;
+    }
+    status.report();
+  }
 
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
-  return errorSet.total.max_error < error_allowed ? 0 : 1;
+  return status.get();
 }
