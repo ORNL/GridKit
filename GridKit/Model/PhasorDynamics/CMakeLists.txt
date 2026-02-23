@@ -20,6 +20,7 @@ gridkit_add_library(phasor_dynamics_core
   LINK_LIBRARIES
     PUBLIC GridKit::definitions
     PUBLIC GridKit::utilities_logger
+    PUBLIC GridKit::sparse_matrix
   INCLUDE_DIRECTORIES
     PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
     PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)

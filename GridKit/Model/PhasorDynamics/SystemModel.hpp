@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <GridKit/Definitions.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
@@ -36,6 +38,7 @@ namespace GridKit
       using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrix      = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrix;
 
       using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
@@ -269,6 +272,16 @@ namespace GridKit
           {
             delete signal;
           }
+        }
+        if (csr_jac_ != nullptr)
+        {
+          delete csr_jac_;
+          csr_jac_ = nullptr;
+        }
+        if (map_to_csr_ != nullptr)
+        {
+          delete[] map_to_csr_;
+          map_to_csr_ = nullptr;
         }
       }
 
@@ -605,75 +618,155 @@ namespace GridKit
        */
       int evaluateJacobian() override
       {
-        bool sort = !jacobian_allocated_; // sort in axpy only if not allocated
-        if (!jacobian_allocated_)
-        {
-          J_.zeroMatrix();
-        }
-        else
-        {
-          J_.zeroValuedMatrix();
-        }
-
-        std::vector<IdxT>  ctemp{};
-        std::vector<IdxT>  rtemp{};
-        std::vector<RealT> valtemp{};
-
         // Initialize bus Jacobians
         for (const auto& bus : buses_)
         {
           bus->evaluateJacobian();
         }
 
-        // Jacobian blocks owed by components
-        // Also updates bus Jacobians
+        // Evaluate component Jacobians and update bus Jacobians
         for (const auto& component : components_)
         {
           component->evaluateJacobian();
-          auto component_jacobian = component->getJacobian();
-
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
-          const auto [rows, columns, values]                                                                 = component_jacobian_entries;
-          for (size_t i = 0; i < rows.size(); ++i)
-          {
-            rtemp.push_back(rows[i]);
-            ctemp.push_back(columns[i]);
-            valtemp.push_back(values[i]);
-          }
-          // Need axpy because some branches may connect to the same buses, and own the same
-          // off-diagonal locations. @todo implement a more efficient approach.
-          J_.axpy(1.0, rtemp, ctemp, valtemp, sort);
-          rtemp.clear();
-          ctemp.clear();
-          valtemp.clear();
         }
 
-        // Bus Jacobians
-        for (const auto& bus : buses_)
+        // Build or update system CSR Jacobian
+        if (csr_jac_ == nullptr)
         {
-          auto bus_jacobian = bus->getJacobian();
-
-          std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
-          const auto [rows, columns, values]                                                           = bus_jacobian_entries;
-          for (size_t i = 0; i < rows.size(); ++i)
+          // Count the number of non-zeros
+          IdxT nnz_dup = 0;
+          for (const auto& component : components_)
           {
-            rtemp.push_back(rows[i]);
-            ctemp.push_back(columns[i]);
-            valtemp.push_back(values[i]);
+            auto component_jacobian = component->getJacobian();
+
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            const auto [rows, columns, values]                                                                 = component_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              ++nnz_dup;
+            }
+          }
+          for (const auto& bus : buses_)
+          {
+            auto bus_jacobian = bus->getJacobian();
+  
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            const auto [rows, columns, values]                                                           = bus_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              ++nnz_dup;
+            }
+          }
+
+          // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+          IdxT*  rows_dup = new IdxT[nnz_dup];
+          IdxT*  cols_dup = new IdxT[nnz_dup];
+          RealT* vals_dup = new RealT[nnz_dup];
+
+          IdxT counter = 0;
+          for (const auto& component : components_)
+          {
+            auto component_jacobian = component->getJacobian();
+    
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            const auto [rows, columns, values]                                                                 = component_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              rows_dup[counter] = rows[i];
+              cols_dup[counter] = columns[i];
+              vals_dup[counter] = values[i];
+              counter++;
+            }
+          }
+          for (const auto& bus : buses_)
+          {
+            auto bus_jacobian = bus->getJacobian();
+  
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            const auto [rows, columns, values]                                                           = bus_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              rows_dup[counter] = rows[i];
+              cols_dup[counter] = columns[i];
+              vals_dup[counter] = values[i];
+              counter++;
+            }
+          }
+
+          // Build the system COO Jacobian
+          LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+
+          // Populate CSR data with sort and deduplicate
+          IdxT* row_ptrs = jac.getCsrRowData();
+
+          // Deduplicated nnz
+          nnz_ = jac.getNnz();
+
+          // Allocate cols/vals with deduplicated nnz
+          IdxT*  cols = new IdxT[nnz_];
+          RealT* vals = new RealT[nnz_];
+
+          std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+          std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+
+          // Create the CSR Jacobian
+          csr_jac_ = new CsrMatrix(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+
+          const IdxT* map_to_sorted = jac.getMapToSorted();
+          const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+
+          // Build a mappping from original COO index to CSR index
+          map_to_csr_ = new IdxT[nnz_dup];
+          for (IdxT i = 0; i < nnz_dup; ++i)
+          {
+            map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
           }
         }
-
-        J_.axpy(1.0, rtemp, ctemp, valtemp, sort);
-
-        // Flag Jacobian as allocated
-        if (!jacobian_allocated_)
+        else
         {
-          jacobian_allocated_ = true;
+          // Zero out values
+          RealT* vals = csr_jac_->getValues();
+          for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
+          {
+            vals[i] = 0.0;
+          }
+    
+          // Update CSR values from component and bus Jacobians
+          IdxT counter = 0;
+          for (const auto& component : components_)
+          {
+            auto component_jacobian = component->getJacobian();
+    
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            const auto [rows, columns, values]                                                                 = component_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              vals[map_to_csr_[counter]] += values[i];
+              ++counter;
+            }
+          }
+          for (const auto& bus : buses_)
+          {
+            auto bus_jacobian = bus->getJacobian();
+  
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            const auto [rows, columns, values]                                                           = bus_jacobian_entries;
+            for (size_t i = 0; i < rows.size(); ++i)
+            {
+              vals[map_to_csr_[counter]] += values[i];
+              ++counter;
+            }
+          }
         }
 
         // J_.printMatrix("System Jacobian");
 
         return 0;
+      }
+
+      CsrMatrix* getCsrJacobian() const override
+      {
+        return csr_jac_;
       }
 
       bool monitoring() const override
@@ -839,7 +932,9 @@ namespace GridKit
       std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
 
       bool owns_components_{false};
-      bool jacobian_allocated_{false};
+
+      IdxT*      map_to_csr_{nullptr};
+      CsrMatrix* csr_jac_{nullptr};
 
       /// Variable monitor
       Model::VariableMonitorController<ScalarT> monitor_;
