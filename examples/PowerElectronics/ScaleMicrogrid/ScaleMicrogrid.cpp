@@ -287,14 +287,14 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
   }
 
-  // Create Intial points for states. Every state is to specified to the zero intially
+  // Create initial points for states. Every state is to specified to the zero intially
   for (index_type i = 0; i < vec_size_total; i++)
   {
     sys_model->y()[i]  = 0.0;
     sys_model->yp()[i] = 0.0;
   }
 
-  // Create Intial derivatives specifics generated in MATLAB
+  // Create initial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * Nsize; i++)
   {
     sys_model->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
@@ -312,7 +312,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   std::vector<real_type>& fres = sys_model->getResidual();
   if (debug_output)
   {
-    std::cout << "Verify Intial Resisdual is Zero: {\n";
+    std::cout << "Verify initial resisdual is zero: {\n";
     for (index_type i = 0; i < fres.size(); i++)
     {
       std::cout << i << " : " << fres[i] << "\n";
@@ -326,7 +326,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // print the jacobian in matrix market format
 
   if (debug_output)
-    std::cout << "Intial Jacobian with alpha:\n";
+  {
+    std::cout << "Initial Jacobian with alpha:\n";
+    sys_model->getCsrJacobian()->print();
+  }
 
   // Create numerical integrator and configure it for the generator model
   auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);

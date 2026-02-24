@@ -1,4 +1,4 @@
-#include "SparseTests.hpp"
+#include "SparseCsrTests.hpp"
 
 using namespace GridKit;
 using namespace LinearAlgebra;

@@ -400,34 +400,41 @@ namespace GridKit
       map_to_dedup_      = new IdxT[static_cast<size_t>(nnz_)];
       IdxT* csr_row_data = new IdxT[static_cast<size_t>(n_ + 1)]();
 
-      map_to_dedup_[0] = 0;
-      csr_row_data[h_row_data_[0] + 1]++;
-
-      // Deduplicate sorted entries
-      IdxT w = 0;
-      for (IdxT i = 1; i < nnz_; i++)
+      if (nnz_ == 0)
       {
-        if (h_row_data_[i] == h_row_data_[w] && h_col_data_[i] == h_col_data_[w])
-        {
-          h_val_data_[w]   += h_val_data_[i];
-          map_to_dedup_[i]  = w;
-        }
-        else
-        {
-          ++w;
-          h_row_data_[w]   = h_row_data_[i];
-          h_col_data_[w]   = h_col_data_[i];
-          h_val_data_[w]   = h_val_data_[i];
-          map_to_dedup_[i] = w;
-          csr_row_data[h_row_data_[w] + 1]++;
-        }
+        csr_row_data[0] = 0;
       }
-      // nnz after deduplication
-      nnz_ = w + 1;
-
-      for (IdxT i = 0; i < n_; i++)
+      else
       {
-        csr_row_data[i + 1] += csr_row_data[i];
+        map_to_dedup_[0] = 0;
+        csr_row_data[h_row_data_[0] + 1]++;
+
+        // Deduplicate sorted entries
+        IdxT w = 0;
+        for (IdxT i = 1; i < nnz_; i++)
+        {
+          if (h_row_data_[i] == h_row_data_[w] && h_col_data_[i] == h_col_data_[w])
+          {
+            h_val_data_[w]   += h_val_data_[i];
+            map_to_dedup_[i]  = w;
+          }
+          else
+          {
+            ++w;
+            h_row_data_[w]   = h_row_data_[i];
+            h_col_data_[w]   = h_col_data_[i];
+            h_val_data_[w]   = h_val_data_[i];
+            map_to_dedup_[i] = w;
+            csr_row_data[h_row_data_[w] + 1]++;
+          }
+        }
+        // nnz after deduplication
+        nnz_ = w + 1;
+
+        for (IdxT i = 0; i < n_; i++)
+        {
+          csr_row_data[i + 1] += csr_row_data[i];
+        }
       }
 
       return csr_row_data;
