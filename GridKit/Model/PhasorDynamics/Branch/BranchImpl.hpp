@@ -300,22 +300,22 @@ namespace GridKit
                     { return Ir1(); });
       monitor_->set(Variable::ii1, [this]
                     { return Ii1(); });
-      monitor_->set(Variable::im1, [this] 
-                    { return std::sqrt(Ir1()*Ir1() + Ii1()*Ii1()); });
+      monitor_->set(Variable::im1, [this]
+                    { return std::sqrt(Ir1() * Ir1() + Ii1() * Ii1()); });
       monitor_->set(Variable::p1, [this]
-                    { return Vr1()*Ir1() + Vi1()*Ii1(); });
+                    { return Vr1() * Ir1() + Vi1() * Ii1(); });
       monitor_->set(Variable::q1, [this]
-                    { return Vi1()*Ir1() - Vr1()*Ii1(); });
+                    { return Vi1() * Ir1() - Vr1() * Ii1(); });
       monitor_->set(Variable::ir2, [this]
                     { return Ir2(); });
       monitor_->set(Variable::ii2, [this]
                     { return Ii2(); });
-      monitor_->set(Variable::im2, [this] 
-                    { return std::sqrt(Ir2()*Ir2() + Ii2()*Ii2()); });
-      monitor_->set(Variable::p2, [this] 
-                    { return Vr2()*Ir2() + Vi2()*Ii2(); });
+      monitor_->set(Variable::im2, [this]
+                    { return std::sqrt(Ir2() * Ir2() + Ii2() * Ii2()); });
+      monitor_->set(Variable::p2, [this]
+                    { return Vr2() * Ir2() + Vi2() * Ii2(); });
       monitor_->set(Variable::q2, [this]
-                    { return Vi2()*Ir2() - Vr2()*Ii2(); });
+                    { return Vi2() * Ir2() - Vr2() * Ii2(); });
     }
 
     /**

@@ -435,8 +435,8 @@ namespace GridKit
         using Variable = model_data_type::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
                       { return efd_signal_->read(); });
-        monitor_->set(Variable::ksat, [this]  
-                      { return SB_ * (((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_)) *    ((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_))); });
+        monitor_->set(Variable::ksat, [this]
+                      { return SB_ * (((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_)) * ((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_))); });
       }
     } // namespace Exciter
   } // namespace PhasorDynamics
