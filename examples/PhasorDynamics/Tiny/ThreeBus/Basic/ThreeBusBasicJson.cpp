@@ -39,10 +39,16 @@ int main(int argc, const char* argv[])
   using namespace GridKit::Utilities;
   using namespace GridKit::Testing;
 
+<<<<<<< HEAD
   CliArgs args{{.name     = {"--config", "-c"},
                 .help     = "JSON file describing the network",
                 .defaults = "ThreeBusBasic.case.json",
                 .required = false},
+=======
+  CliArgs args{{.name     = {"--case", "-c"},
+                .help     = "JSON file describing the system configuration",
+                .required = true},
+>>>>>>> 0165652 (Addressed formatting issues)
 
                {.name     = {"--compare", "-r"},
                 .help     = "Two CSV files to compare:\n"
@@ -58,7 +64,7 @@ int main(int argc, const char* argv[])
   args.parseArgs(argc, argv);
 
   // Input file
-  auto input_file = args["config"]()();
+  auto input_file = args["case"]()();
   std::cout << "Example: ThreeBusBasicJson\n";
   std::cout << "Input file: " << input_file << '\n';
 
@@ -103,7 +109,7 @@ int main(int argc, const char* argv[])
   sys.stopMonitor();
 
   // Generate aggregate errors comparing variable output to reference solution
-  TestStatus status{true};
+  TestStatus status{__func__};
   if (!args["compare"].empty())
   {
     const auto& [out_file, ref_file] = args["compare"].as<std::string, 2>();

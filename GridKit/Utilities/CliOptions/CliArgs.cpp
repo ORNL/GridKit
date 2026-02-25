@@ -33,11 +33,10 @@ namespace GridKit
       return os;
     }
 
-    inline const std::string&
-    typeString(const Argument& arg)
+    inline const std::string& typeString(const Argument& arg)
     {
       static const std::string labelArray[] =
-          {"STR", "REAL", "INT", "BOOL", "UNSPECIFIED"};
+          {"STRING", "REAL", "INT", "BOOL", "UNSPECIFIED"};
       return labelArray[static_cast<int>(arg.type)];
     }
 
@@ -225,20 +224,17 @@ namespace GridKit
       // This is stolen (and simplified) from Boost.ProgramOptions
       inline constexpr unsigned defaultLineLength = 80;
 
-      unsigned
-      getLineLength()
+      unsigned getLineLength()
       {
         return defaultLineLength;
       }
 
-      unsigned
-      getMinHelpLength()
+      unsigned getMinHelpLength()
       {
         return defaultLineLength / 2;
       }
 
-      std::string
-      formatFirstColumn(const Argument& arg)
+      std::string formatFirstColumn(const Argument& arg)
       {
         std::stringstream ss;
         ss << "  ";
@@ -254,11 +250,9 @@ namespace GridKit
         return ss.str();
       }
 
-      unsigned
-      getArgColumnWidth(
-          const std::vector<Argument>& args,
-          const unsigned               lineLength,
-          const unsigned               minHelpLength)
+      unsigned getArgColumnWidth(const std::vector<Argument>& args,
+                                 const unsigned               lineLength,
+                                 const unsigned               minHelpLength)
       {
         const unsigned startOfHelpColumn = lineLength - minHelpLength;
 
@@ -279,14 +273,15 @@ namespace GridKit
         return width;
       }
 
-      void
-      leftPad(std::ostream& os, unsigned width)
+      void leftPad(std::ostream& os, unsigned width)
       {
         os << std::setfill(' ') << std::setw(width) << "";
       }
 
-      void
-      printParagraph(std::ostream& os, std::string_view par, unsigned indent, unsigned lineLength)
+      void printParagraph(std::ostream&    os,
+                          std::string_view par,
+                          unsigned         indent,
+                          unsigned         lineLength)
       {
         // Through remainder of this function, 'lineLength' will be the length
         // available for characters, not including indent.
@@ -350,8 +345,10 @@ namespace GridKit
         }
       }
 
-      void
-      printArgHelp(std::ostream& os, const std::string& desc, unsigned firstColWidth, unsigned lineLength)
+      void printArgHelp(std::ostream&      os,
+                        const std::string& desc,
+                        unsigned           firstColWidth,
+                        unsigned           lineLength)
       {
         // we need to use one char less per line to work correctly if actual
         // console has longer lines
@@ -376,8 +373,10 @@ namespace GridKit
         }
       }
 
-      void
-      printArg(std::ostream& os, const Argument& arg, unsigned firstColWidth, unsigned lineLength)
+      void printArg(std::ostream&   os,
+                    const Argument& arg,
+                    unsigned        firstColWidth,
+                    unsigned        lineLength)
       {
         auto c1 = formatFirstColumn(arg);
         os << c1;
@@ -438,7 +437,7 @@ namespace GridKit
       return ss.str();
     }
 
-    void CliArgs::printHelp(std::ostream& os) const
+    void CliArgs::printUsage(std::ostream& os) const
     {
       os << "Usage: " << app_name_;
       for (auto&& arg : table_)
@@ -446,6 +445,11 @@ namespace GridKit
         os << " " << formatArgUsage(arg);
       }
       os << "\n\n";
+    }
+
+    void CliArgs::printHelp(std::ostream& os) const
+    {
+      printUsage(os);
 
       auto lineLength    = getLineLength();
       auto minHelpLength = getMinHelpLength();

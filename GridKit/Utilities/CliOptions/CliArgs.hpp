@@ -139,6 +139,7 @@ namespace GridKit
 
       void parseArgs(int argc, const char* argv[]);
 
+      void printUsage(std::ostream& os = std::cout) const;
       void printHelp(std::ostream& os = std::cout) const;
 
       const ArgVector& operator[](const std::string& name) const

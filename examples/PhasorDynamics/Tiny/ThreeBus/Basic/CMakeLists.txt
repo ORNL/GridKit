@@ -18,6 +18,7 @@ gridkit_example_add_file(ThreeBusBasic.ref.csv)
 add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
 add_test(NAME ThreeBusBasicJson
     COMMAND ThreeBusBasicJson
+<<<<<<< HEAD
     ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.case.json)
 add_test(NAME ThreeBusBasicJson_no_arg
     COMMAND ThreeBusBasicJson
@@ -25,6 +26,9 @@ add_test(NAME ThreeBusBasicJson_no_arg
 add_test(NAME ThreeBusBasic_cli
     COMMAND ThreeBusBasicJson
         --config ThreeBusBasic.case.json
+=======
+        --case ThreeBusBasic.json
+>>>>>>> 0165652 (Addressed formatting issues)
         --compare mon.csv ThreeBusBasic.ref.csv)
 
 gridkit_example_add_file(ThreeBusBasic.solver.json)
