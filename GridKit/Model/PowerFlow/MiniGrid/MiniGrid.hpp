@@ -33,7 +33,7 @@ namespace GridKit
       return -1;
     }
 
-    int setAbsoluteTolerance()
+    int setAbsoluteTolerance(RealT)
     {
       return -1;
     }

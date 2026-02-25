@@ -49,7 +49,7 @@ namespace GridKit
       int allocate() override;
       int initialize() override;
       int tagDifferentiable() override;
-      int setAbsoluteTolerance() override;
+      int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
 

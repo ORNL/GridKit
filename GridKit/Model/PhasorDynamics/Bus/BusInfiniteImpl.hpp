@@ -99,7 +99,7 @@ namespace GridKit
      * \brief Specify absolute tolerance
      */
     template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::setAbsoluteTolerance()
+    int BusInfinite<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }

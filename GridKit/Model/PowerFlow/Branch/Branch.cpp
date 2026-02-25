@@ -100,7 +100,7 @@ namespace GridKit
    * \brief Specify absolute tolerance.
    */
   template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::setAbsoluteTolerance()
+  int Branch<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
   {
     return 0;
   }

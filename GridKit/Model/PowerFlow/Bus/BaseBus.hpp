@@ -74,7 +74,7 @@ namespace GridKit
       return 0;
     }
 
-    virtual int setAbsoluteTolerance()
+    virtual int setAbsoluteTolerance(RealT)
     {
       return 0;
     }

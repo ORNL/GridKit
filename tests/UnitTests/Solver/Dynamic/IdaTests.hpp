@@ -66,8 +66,9 @@ namespace GridKit
         return 0;
       }
 
-      int setAbsoluteTolerance() override
+      int setAbsoluteTolerance(RealT rel_tol) override
       {
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 

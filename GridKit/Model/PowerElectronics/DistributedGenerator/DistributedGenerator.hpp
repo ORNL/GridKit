@@ -48,6 +48,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::g_;
@@ -72,7 +73,7 @@ namespace GridKit
     int allocate();
     int initialize();
     int tagDifferentiable();
-    int setAbsoluteTolerance();
+    int setAbsoluteTolerance(RealT);
     int evaluateResidual();
     int evaluateJacobian();
     int evaluateIntegrand();

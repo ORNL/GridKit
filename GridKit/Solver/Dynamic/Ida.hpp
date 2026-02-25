@@ -131,14 +131,14 @@ namespace AnalysisManager
       void printSpecial(RealT t, N_Vector x) const;
       void printFinalStats() const;
 
-      void setTimeStep(ScalarT timeStep) override;
-      void setBackwardTimeStep(ScalarT timeStep);
-      void setFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac = 1);
-      void setBackwardFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac = 1);
-      void setTolerance(ScalarT relTol, ScalarT absTolFac = 1) override;
-      void setBackwardTolerance(ScalarT relTol, ScalarT absTolFac = 1);
-      void setQuadratureTolerance(ScalarT relTol, ScalarT);
-      void setBackwardQuadratureTolerance(ScalarT relTol, ScalarT);
+      void setTimeStep(ScalarT time_step) override;
+      void setBackwardTimeStep(ScalarT time_step);
+      void setFixedStep(ScalarT time_step, ScalarT rel_tol, ScalarT abs_tol_fac = 1);
+      void setBackwardFixedStep(ScalarT time_step, ScalarT rel_tol, ScalarT abs_tol_fac = 1);
+      void setTolerance(ScalarT rel_tol, ScalarT abs_tol_fac = 1) override;
+      void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_fac = 1);
+      void setQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_fac = 1);
+      void setBackwardQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_fac = 1);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
 
@@ -223,11 +223,11 @@ namespace AnalysisManager
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
 
-      void setTimeStep(void* mem, ScalarT timeStep);
-      void setFixedStep(void* mem, ScalarT timeStep, ScalarT relTol, ScalarT absTolFac);
-      void setTolerance(void* mem, ScalarT relTol, ScalarT absTolFac);
-      void setMaxSteps(void* mem, IdxT maxSteps);
-      void setQuadratureTolerance(void* mem, ScalarT relTol, ScalarT absTolFac);
+      void setTimeStep(void* mem, ScalarT time_step);
+      void setFixedStep(void* mem, ScalarT time_step, ScalarT rel_tol, ScalarT abs_tol_fac);
+      void setTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_fac);
+      void setMaxSteps(void* mem, IdxT max_steps);
+      void setQuadratureTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_fac);
     };
 
     /// Simple exception to use within Ida class.

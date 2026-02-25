@@ -98,10 +98,8 @@ namespace AnalysisManager
         checkOutput(retval, "IDASetSuppressAlg");
       }
 
-      const std::vector<ScalarT>& absTol = model_->absoluteTolerance();
       abs_tol_                           = N_VClone(yy_);
       checkAllocation((void*) abs_tol_, "N_VClone");
-      copyVec(absTol, abs_tol_);
       setTolerance(DEFAULT_REL_TOL);
 
       // Set up linear solver
@@ -1072,19 +1070,19 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setFixedStep(ScalarT timeStep, ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setFixedStep(solver_, timeStep, relTol, absTolFac);
+      setFixedStep(solver_, timeStep, rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardFixedStep(ScalarT timeStep, ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setBackwardFixedStep(ScalarT timeStep, ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setFixedStep(IDAGetAdjIDABmem(solver_, backwardID_), timeStep, relTol, absTolFac);
+      setFixedStep(IDAGetAdjIDABmem(solver_, backwardID_), timeStep, rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setFixedStep(void* mem, ScalarT timeStep, ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setFixedStep(void* mem, ScalarT timeStep, ScalarT rel_tol, ScalarT abs_tol_fac)
     {
       setTimeStep(mem, timeStep);
 
@@ -1103,7 +1101,7 @@ namespace AnalysisManager
 
         // Set a large tolerance so the error test will never fail
         static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
-        setTolerance(mem, FIXED_STEP_TOL_FAC * relTol, FIXED_STEP_TOL_FAC * absTolFac);
+        setTolerance(mem, FIXED_STEP_TOL_FAC * rel_tol, FIXED_STEP_TOL_FAC * abs_tol_fac);
 
         /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
          * the large tolerances set above, we need to choose this tolerance to
@@ -1114,81 +1112,71 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setTolerance(solver_, relTol, absTolFac);
+      setTolerance(solver_, rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setTolerance(IDAGetAdjIDABmem(solver_, backwardID_), relTol, absTolFac);
+      setTolerance(IDAGetAdjIDABmem(solver_, backwardID_), rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(void* mem, ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_fac)
     {
       int retval = 0;
-      if (absTolFac == 1)
-      {
-        retval = IDASVtolerances(mem, relTol, abs_tol_);
-      }
-      else
-      {
-        N_Vector tmp = N_VClone(abs_tol_);
-        N_VScale(absTolFac, abs_tol_, tmp);
-        retval = IDASVtolerances(mem, relTol, tmp);
-        N_VDestroy(tmp);
-      }
+
+      model_->setAbsoluteTolerance(rel_tol);
+      const std::vector<ScalarT>& abs_tol = model_->absoluteTolerance();
+      copyVec(abs_tol, abs_tol_);
+      N_VScale(abs_tol_fac, abs_tol_, abs_tol_);
+      retval = IDASVtolerances(mem, rel_tol, abs_tol_);
       checkOutput(retval, "IDASVtolerances");
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setMaxSteps(IdxT maxSteps)
+    void Ida<ScalarT, IdxT>::setMaxSteps(IdxT max_steps)
     {
-      setMaxSteps(solver_, maxSteps);
+      setMaxSteps(solver_, max_steps);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardMaxSteps(IdxT maxSteps)
+    void Ida<ScalarT, IdxT>::setBackwardMaxSteps(IdxT max_steps)
     {
-      setMaxSteps(IDAGetAdjIDABmem(solver_, backwardID_), maxSteps);
+      setMaxSteps(IDAGetAdjIDABmem(solver_, backwardID_), max_steps);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setMaxSteps(void* mem, IdxT maxSteps)
+    void Ida<ScalarT, IdxT>::setMaxSteps(void* mem, IdxT max_steps)
     {
-      int retval = IDASetMaxNumSteps(mem, static_cast<long int>(maxSteps));
+      int retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setQuadratureTolerance(solver_, relTol, absTolFac);
+      setQuadratureTolerance(solver_, rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol, ScalarT abs_tol_fac)
     {
-      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), relTol, absTolFac);
+      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), rel_tol, abs_tol_fac);
     }
 
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void* mem, ScalarT relTol, ScalarT absTolFac)
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void* mem, ScalarT rel_tol, ScalarT abs_tol_fac)
     {
       int retval = 0;
-      if (absTolFac == 1)
-      {
-        retval = IDAQuadSVtolerances(mem, relTol, abs_tol_);
-      }
-      else
-      {
-        N_Vector tmp = N_VClone(abs_tol_);
-        N_VScale(absTolFac, abs_tol_, tmp);
-        retval = IDAQuadSVtolerances(mem, relTol, tmp);
-        N_VDestroy(tmp);
-      }
+
+      model_->setAbsoluteTolerance(rel_tol);
+      const std::vector<ScalarT>& abs_tol = model_->absoluteTolerance();
+      copyVec(abs_tol, abs_tol_);
+      N_VScale(abs_tol_fac, abs_tol_, abs_tol_);
+      retval = IDAQuadSVtolerances(mem, rel_tol, abs_tol_);
       checkOutput(retval, "IDAQuadSVtolerances");
     }
 

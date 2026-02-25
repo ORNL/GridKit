@@ -42,7 +42,7 @@ namespace GridKit
       virtual int setBusID(IdxT) override;
       virtual int allocate() override;
       virtual int tagDifferentiable() override;
-      virtual int setAbsoluteTolerance() override;
+      virtual int setAbsoluteTolerance(RealT rel_tol) override;
       virtual int initialize() override;
       virtual int evaluateResidual() override;
       virtual int evaluateJacobian() override;

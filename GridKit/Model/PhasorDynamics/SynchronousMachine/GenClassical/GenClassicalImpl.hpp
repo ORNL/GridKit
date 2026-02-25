@@ -239,8 +239,9 @@ namespace GridKit
      * @brief Set absolute tolerance
      */
     template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::setAbsoluteTolerance()
+    int GenClassical<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

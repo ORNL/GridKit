@@ -230,8 +230,9 @@ namespace GridKit
       return 0;
     }
 
-    int setAbsoluteTolerance()
+    int setAbsoluteTolerance(RealT rel_tol)
     {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

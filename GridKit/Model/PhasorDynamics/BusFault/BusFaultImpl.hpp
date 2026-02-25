@@ -145,7 +145,7 @@ namespace GridKit
      * \brief Specify absolute tolerance
      */
     template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::setAbsoluteTolerance()
+    int BusFault<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }

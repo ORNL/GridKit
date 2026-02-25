@@ -523,13 +523,13 @@ namespace GridKit
        * Specify a "noise" level close to zero for which pure relative error
        * cannot be used.
        */
-      int setAbsoluteTolerance() override
+      int setAbsoluteTolerance(RealT rel_tol) override
       {
         // Set initial values for global solution vectors
         IdxT offset = 0;
         for (const auto& bus : buses_)
         {
-          bus->setAbsoluteTolerance();
+          bus->setAbsoluteTolerance(rel_tol);
           for (IdxT j = 0; j < bus->size(); ++j)
           {
             abs_tol_[offset + j] = bus->absoluteTolerance()[j];
@@ -539,7 +539,7 @@ namespace GridKit
 
         for (const auto& component : components_)
         {
-          component->setAbsoluteTolerance();
+          component->setAbsoluteTolerance(rel_tol);
           for (IdxT j = 0; j < component->size(); ++j)
           {
             abs_tol_[offset + j] = component->absoluteTolerance()[j];

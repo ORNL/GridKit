@@ -47,7 +47,8 @@ namespace GridKit
     // using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
@@ -149,6 +150,8 @@ namespace GridKit
       // Allocate global vectors
       y_.resize(size_);
       f_.resize(size_);
+      tag_.resize(size_);
+      abs_tol_.resize(size_);
 
       return 0;
     }
@@ -222,8 +225,9 @@ namespace GridKit
      * Specify a "noise" level close to zero for which pure relative error
      * cannot be used.
      */
-    int setAbsoluteTolerance()
+    int setAbsoluteTolerance(RealT rel_tol)
     {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
