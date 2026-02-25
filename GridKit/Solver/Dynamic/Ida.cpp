@@ -98,7 +98,7 @@ namespace AnalysisManager
         checkOutput(retval, "IDASetSuppressAlg");
       }
 
-      abs_tol_                           = N_VClone(yy_);
+      abs_tol_ = N_VClone(yy_);
       checkAllocation((void*) abs_tol_, "N_VClone");
       setTolerance(DEFAULT_REL_TOL);
 
