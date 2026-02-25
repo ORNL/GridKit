@@ -144,7 +144,7 @@ namespace GridKit
      * @brief Set absolute tolerance
      */
     template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+    int Branch<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }
