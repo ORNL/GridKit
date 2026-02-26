@@ -28,11 +28,11 @@ namespace GridKit
      *
      * ```
      * CliArgs args{{.name     = {"--opt1"},
-     *               .help     = "an option with an argument"}
+     *               .help     = "an option with an argument"},
      *
      *              {.name     = {"--opt2", "-o"},
      *               .help     = "An option with an argument (and a short-hand)",
-     *               .type     = ArgType::Int,
+     *               .type     = ArgType::Integer,
      *               .defaults = 0},
      *
      *              {.name     = {"--flag1", "-f"},
@@ -77,6 +77,11 @@ namespace GridKit
       void printHelp(std::ostream& os = std::cout) const;
 
       /**
+       * @brief Executable name (known only after calling parseArgs())
+       */
+      const std::string& getAppName() const;
+
+      /**
        * @brief Get the parsed values (or defaults) for the given argument.
        *
        * Arguments may be looked up with either their long-hand or their
@@ -84,6 +89,35 @@ namespace GridKit
        * example from the class description).
        */
       const ArgVector& operator[](const std::string& name) const;
+
+      ///@{
+      /**
+       * @brief Alternative syntax (see ArgVector::as)
+       */
+      template <typename T, std::size_t N>
+      std::array<T, N> get(const std::string& name) const
+      {
+        return (*this)[name].as<T, N>();
+      }
+
+      template <std::size_t N>
+      decltype(auto) get(const std::string& name) const
+      {
+        return (*this)[name].as<N>();
+      }
+
+      template <typename T>
+      decltype(auto) get(const std::string& name) const
+      {
+        return (*this)[name].as<T>();
+      }
+
+      const std::string& get(const std::string& name) const
+      {
+        return get<std::string>(name);
+      }
+
+      ///@}
 
     private:
       /**

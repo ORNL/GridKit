@@ -231,6 +231,11 @@ namespace GridKit
       return ret->second;
     }
 
+    bool looksLikeAnOption(const std::string& raw)
+    {
+      return raw.starts_with("-");
+    }
+
     OptionArgumentPair* CliArgsImpl::findByRawName(const std::string& raw)
     {
       if (raw.starts_with("--"))
@@ -254,32 +259,25 @@ namespace GridKit
       for (int i = 1; i < argc; ++i)
       {
         auto token = std::string(argv[i]);
-        if (!arg)
+        if (looksLikeAnOption(token))
         {
-          // No current argument; find expected option flag
-          arg = findByRawName(token);
-          if (!arg)
+          auto* new_arg = findByRawName(token);
+          if (!new_arg)
           {
-            // TODO: positional argument(s)?
             Log::error() << "CliArgs: unrecognized option \"" << token
                          << "\"\n";
             status = false;
+            arg    = nullptr;
+            continue;
           }
-        }
-        else
-        {
-          // Check if current token is an option flag
-          auto* new_arg = findByRawName(token);
-          if (new_arg)
+          if (arg)
           {
             if (arg->option.flag)
             {
               // handle current arg as flag and move on
               arg->values.vec.assign({true});
-
-              arg = new_arg;
             }
-            else if (arg->values.vec.size() < arg->option.nargs)
+            else if (arg->values.vec.size() != arg->option.nargs)
             {
               // option not given correct number of values
               Log::error() << "CliArgs: option \"" << arg->option.name[0]
@@ -289,25 +287,35 @@ namespace GridKit
               status = false;
             }
           }
-          else
+          arg = new_arg;
+        }
+        else if (arg)
+        {
+          if (arg->option.flag)
           {
-            // set value from current token
-            arg->values.vec.emplace_back(token);
-            if (arg->values.vec.size() == arg->option.nargs)
-            {
-              // reset for next arg
-              arg = nullptr;
-            }
+            Log::error() << "CliArgs: flag option \"" << arg->option.name[0]
+                         << "\" was given an argument (\"" << token << "\")\n";
+            status = false;
           }
+          // set value from current token
+          arg->values.vec.emplace_back(token);
+        }
+        else
+        {
+          // TODO: positional arguments
+          Log::error() << "CliArgs: unrecognized option \"" << token
+                       << "\"\n";
+          status = false;
+          arg    = nullptr;
         }
       }
 
       // Check for final flag argument
       if (arg)
       {
-        // If we found an option flag from the last token, then it must be a
-        // flag because it is not followed by any values
-        if (!arg->option.flag)
+        // If we still have an active arg, it's either a flag (which is OK) or
+        // an option which expects a value that hasn't been given
+        if (!arg->option.flag && arg->values.vec.size() != arg->option.nargs)
         {
           // option not given correct number of values
           Log::error() << "CliArgs: option \"" << arg->option.name[0]
@@ -315,8 +323,6 @@ namespace GridKit
                        << arg->values.vec.size() << " given.\n";
           status = false;
         }
-
-        arg->values.vec.assign({true});
       }
 
       // check for help request
@@ -598,6 +604,11 @@ namespace GridKit
     void CliArgs::printHelp(std::ostream& os) const
     {
       pImpl_->printHelp(os);
+    }
+
+    const std::string& CliArgs::getAppName() const
+    {
+      return pImpl_->app_name_;
     }
 
     const ArgVector& CliArgsImpl::operator[](const std::string& name) const
