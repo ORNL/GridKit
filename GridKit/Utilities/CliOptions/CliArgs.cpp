@@ -14,6 +14,74 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
+    /**
+     * @brief Associate an Option with its parsed arguments
+     */
+    struct OptionArgumentPair
+    {
+      /**
+       * @brief Construct with an Option spec and an empty set of values
+       */
+      explicit OptionArgumentPair(Option opt)
+        : option(std::move(opt))
+      {
+      }
+
+      // OptionArgumentPair(OptionArgumentPair
+
+      /// Reference to existing option
+      Option    option;
+      /// Parsed values
+      ArgVector values{};
+    };
+
+    /**
+     * @brief Implementation of CliArgs
+     */
+    struct CliArgsImpl
+    {
+      ///@{
+      /// @brief Implmentation of CliArgs
+      CliArgsImpl(std::initializer_list<Option> args);
+
+      void parseArgs(int argc, const char* argv[]);
+      void printUsage(std::ostream& os = std::cout) const;
+      void printHelp(std::ostream& os = std::cout) const;
+
+      const ArgVector& operator[](const std::string& name) const;
+      ///@}
+
+      /// Map a name to an Option (fail if duplicate name)
+      void mapName(const std::string& name, OptionArgumentPair* opt);
+      /// Perform sanity assertions and add Option to name_map_
+      void setupArg(OptionArgumentPair& opt);
+
+      /// Option lookup via (hyphenless) name
+      const OptionArgumentPair* findByName(const std::string& name) const;
+
+      /// Option lookup via (hyphenless) name
+      OptionArgumentPair* findByName(const std::string& name)
+      {
+        return const_cast<OptionArgumentPair*>(
+            const_cast<const CliArgsImpl*>(this)->findByName(name));
+      }
+
+      /// Option lookup via raw (hyphened) name
+      OptionArgumentPair* findByRawName(const std::string& raw);
+
+      /// Store application name ("app" placeholder is changed in parseArgs())
+      std::string                                          app_name_{"app"};
+      /// Collection of options
+      std::vector<OptionArgumentPair>                      table_;
+      /// Map of names to options
+      std::unordered_map<std::string, OptionArgumentPair*> name_map_;
+    };
+
+    /**
+     * @brief Stream insertion operator to print all the values in an ArgVector
+     *
+     * @note This is useful mainly for debugging purposes
+     */
     std::ostream& operator<<(std::ostream& os, const ArgVector& av)
     {
       os << "[";
@@ -33,145 +101,197 @@ namespace GridKit
       return os;
     }
 
-    inline const std::string& typeString(const Argument& arg)
+    /**
+     * @brief Map ArgType from Option to string used as part of help description
+     * for an Option
+     */
+    inline const std::string& typeString(const Option& opt)
     {
-      static const std::string labelArray[] =
+      static const std::string labels[] =
           {"STRING", "REAL", "INT", "BOOL", "UNSPECIFIED"};
-      return labelArray[static_cast<int>(arg.type)];
+      return labels[static_cast<int>(opt.type)];
     }
 
-    std::ostream& operator<<(std::ostream& os, const Argument& arg)
+    /**
+     * @brief Stream insertion operator to print an Option specification and
+     * parsed argument(s)
+     *
+     * @note This is useful mainly for debugging purposes
+     */
+    std::ostream& operator<<(std::ostream&             os,
+                             const OptionArgumentPair& arg)
     {
-      os << "name: " << arg.name[0];
-      if (arg.name.size() == 2)
+      os << "  name     : " << arg.option.name[0];
+      if (!arg.option.name[1].empty())
       {
-        os << ", " << arg.name[1] << '\n';
+        os << ", " << arg.option.name[1];
       }
-      os << "help: " << arg.help << '\n';
-      os << "required: " << std::boolalpha << arg.required << '\n';
-      os << "type: " << typeString(arg) << '\n';
-      os << "flag: " << std::boolalpha << arg.flag << '\n';
-      os << "defaults: " << arg.defaults << '\n';
-      os << "nargs: " << arg.nargs << '\n';
-      os << "values: " << arg.values << '\n';
+      os << '\n';
+      os << "  help     : " << arg.option.help << '\n';
+      os << "  required : " << std::boolalpha << arg.option.required << '\n';
+      os << "  type     : " << typeString(arg.option) << '\n';
+      os << "  flag     : " << std::boolalpha << arg.option.flag << '\n';
+      os << "  defaults : " << arg.option.defaults << '\n';
+      os << "  nargs    : " << arg.option.nargs << '\n';
+      os << "  values   : " << arg.values;
+      return os;
+    }
+
+    /// Implementation of CliArgs
+    std::ostream& operator<<(std::ostream& os, const CliArgsImpl& args)
+    {
+      for (auto&& arg : args.table_)
+      {
+        os << arg << "\n\n";
+      }
+      for (auto&& [key, arg] : args.name_map_)
+      {
+        os << key << " =>\n"
+           << *arg << "\n\n";
+      }
       return os;
     }
 
     std::ostream& operator<<(std::ostream& os, const CliArgs& args)
     {
-      for (auto&& arg : args.table_)
-      {
-        os << arg << '\n';
-      }
-      for (auto&& [key, arg] : args.name_map_)
-      {
-        os << key << " =>\n"
-           << *arg << '\n';
-      }
+      os << *(args.pImpl_);
       return os;
     }
 
-    void CliArgs::mapName(const std::string& name, Argument* arg)
+    void CliArgsImpl::mapName(const std::string& name, OptionArgumentPair* arg)
     {
       if (!name_map_.try_emplace(name, arg).second)
       {
-        Log::error() << "CliArgs: attempt to add duplicate option name: \""
-                     << name << "\".\n";
+        auto msg = "CliArgs: attempt to add duplicate option name: \""
+                   + name + "\".";
+        Log::error() << msg << std::endl;
+        throw std::runtime_error(msg);
       }
     }
 
-    void CliArgs::setupArg(Argument& arg)
+    void CliArgsImpl::setupArg(OptionArgumentPair& arg)
     {
-      assert(arg.name.size() == 1 || arg.name.size() == 2);
-      assert(arg.name.at(0).starts_with("--"));
-      mapName(arg.name[0].substr(2), &arg);
-      if (arg.name.size() == 2)
+      const auto& name = arg.option.name;
+      assert(name[0].starts_with("--"));
+      mapName(name[0].substr(2), &arg);
+      if (!name[1].empty())
       {
-        assert(arg.name[1].starts_with("-"));
-        assert(!arg.name[1].starts_with("--"));
-        mapName(arg.name[1].substr(1), &arg);
+        assert(name[1].starts_with("-"));
+        assert(!name[1].starts_with("--"));
+        mapName(name[1].substr(1), &arg);
       }
 
-      if (arg.flag)
+      if (arg.option.flag)
       {
-        arg.values.vec.emplace_back(false);
-        arg.nargs = 0;
+        arg.option.defaults = false;
+        arg.option.nargs    = 0;
       }
     }
 
-    CliArgs::CliArgs(std::initializer_list<Argument> args)
-      : table_(args)
+    CliArgsImpl::CliArgsImpl(std::initializer_list<Option> opts)
     {
-      table_.reserve(table_.size() + 1);
-      for (auto&& arg : table_)
+      // Store and map options
+      table_.reserve(opts.size() + 1);
+      for (auto& opt : opts)
       {
+        auto& arg = table_.emplace_back(opt);
         setupArg(arg);
       }
+
+      // add "help" entry on behalf of the user
       if (!name_map_.count("help") && !name_map_.count("h"))
       {
         auto& help = table_.emplace_back(
-            Argument{.name = {"--help", "-h"},
-                     .help = "Print this help message",
-                     .flag = true});
+            Option{.name = {"--help", "-h"},
+                   .help = "Print this help message",
+                   .flag = true});
         setupArg(help);
       }
     }
 
-    Argument* CliArgs::findArg(const std::string& raw)
+    CliArgs::CliArgs(std::initializer_list<Option> opts)
+      : pImpl_(std::make_unique<CliArgsImpl>(opts))
+    {
+    }
+
+    CliArgs::~CliArgs()
+    {
+    }
+
+    const OptionArgumentPair* CliArgsImpl::findByName(const std::string& name)
+        const
+    {
+      auto ret = name_map_.find(name);
+      if (ret == name_map_.end())
+      {
+        return nullptr;
+      }
+      return ret->second;
+    }
+
+    OptionArgumentPair* CliArgsImpl::findByRawName(const std::string& raw)
     {
       if (raw.starts_with("--"))
       {
-        return name_map_.find(raw.substr(2))->second;
+        return findByName(raw.substr(2));
       }
       else if (raw.starts_with("-"))
       {
-        return name_map_.find(raw.substr(1))->second;
+        return findByName(raw.substr(1));
       }
       return nullptr;
     }
 
-    void CliArgs::parseArgs(int argc, const char* argv[])
+    void CliArgsImpl::parseArgs(int argc, const char* argv[])
     {
-      app_name_ = std::filesystem::path(argv[0]).filename();
+      app_name_   = std::filesystem::path(argv[0]).filename();
+      bool status = true;
 
-      Argument* arg{nullptr};
+      // Current argument (may involve multiple tokens)
+      OptionArgumentPair* arg{nullptr};
       for (int i = 1; i < argc; ++i)
       {
         auto token = std::string(argv[i]);
         if (!arg)
         {
-          arg = findArg(token);
+          // No current argument; find expected option flag
+          arg = findByRawName(token);
           if (!arg)
           {
             // TODO: positional argument(s)?
             Log::error() << "CliArgs: unrecognized option \"" << token
                          << "\"\n";
+            status = false;
           }
         }
         else
         {
-          auto* new_arg = findArg(token);
+          // Check if current token is an option flag
+          auto* new_arg = findByRawName(token);
           if (new_arg)
           {
-            if (arg->flag)
+            if (arg->option.flag)
             {
               // handle current arg as flag and move on
-              arg->values.vec[0] = true;
-              arg                = new_arg;
+              arg->values.vec.assign({true});
+
+              arg = new_arg;
             }
-            else if (arg->values.vec.size() < arg->nargs)
+            else if (arg->values.vec.size() < arg->option.nargs)
             {
               // option not given correct number of values
-              Log::error() << "CliArgs: option \"" << arg->name[0]
-                           << "\" requires " << arg->nargs << " arguments; "
-                           << arg->values.vec.size() << " given.\n";
+              Log::error() << "CliArgs: option \"" << arg->option.name[0]
+                           << "\" requires " << arg->option.nargs
+                           << " arguments; " << arg->values.vec.size()
+                           << " given.\n";
+              status = false;
             }
           }
           else
           {
             // set value from current token
             arg->values.vec.emplace_back(token);
-            if (arg->values.vec.size() == arg->nargs)
+            if (arg->values.vec.size() == arg->option.nargs)
             {
               // reset for next arg
               arg = nullptr;
@@ -179,88 +299,91 @@ namespace GridKit
           }
         }
       }
+
+      // Check for final flag argument
       if (arg)
       {
-        if (arg->flag)
-        {
-          arg->values.vec[0] = true;
-        }
-        else
+        // If we found an option flag from the last token, then it must be a
+        // flag because it is not followed by any values
+        if (!arg->option.flag)
         {
           // option not given correct number of values
-          Log::error() << "CliArgs: option \"" << arg->name[0]
-                       << "\" requires " << arg->nargs << " arguments; "
+          Log::error() << "CliArgs: option \"" << arg->option.name[0]
+                       << "\" requires " << arg->option.nargs << " arguments; "
                        << arg->values.vec.size() << " given.\n";
+          status = false;
         }
+
+        arg->values.vec.assign({true});
       }
 
       // check for help request
-      if ((*this)["help"]().as<bool>())
+      if ((*this)["help"].as<bool>())
       {
         printHelp();
         exit(EXIT_SUCCESS);
       }
 
-      // check that all required arguments have values
+      // check that all required options have values
       for (const auto& arg : table_)
       {
-        bool err = false;
-        if (arg.required && arg.values.vec.size() != arg.nargs)
+        if (arg.option.required && arg.values.vec.size() != arg.option.nargs)
         {
-          Log::error() << "CliArgs: no input given for required argument \""
-                       << arg.name[0] << "\"\n";
-          err = true;
-        }
-        if (err)
-        {
-          printHelp();
-          throw std::runtime_error("CliArgs: requirements not met");
+          Log::error() << "CliArgs: no input given for required option \""
+                       << arg.option.name[0] << "\"\n";
+          status = false;
         }
       }
+
+      // print help and quit if errors have occurred
+      if (!status)
+      {
+        printHelp();
+        throw std::runtime_error("CliArgs: requirements not met");
+      }
+    }
+
+    void CliArgs::parseArgs(int argc, const char* argv[])
+    {
+      pImpl_->parseArgs(argc, argv);
     }
 
     namespace
     {
-      // This is stolen (and simplified) from Boost.ProgramOptions
-      inline constexpr unsigned defaultLineLength = 80;
+      // Items in this anonymous namespace were stolen (and simplified) from
+      // Boost.ProgramOptions
 
-      unsigned getLineLength()
-      {
-        return defaultLineLength;
-      }
+      /// A help line can't be longer than 80 characters
+      inline constexpr unsigned maxLineLength = 80;
 
-      unsigned getMinHelpLength()
-      {
-        return defaultLineLength / 2;
-      }
+      /// Column for help descriptions will be half the total line length
+      inline constexpr unsigned minHelpLength = maxLineLength / 2;
 
-      std::string formatFirstColumn(const Argument& arg)
+      std::string formatFirstColumn(const Option& opt)
       {
         std::stringstream ss;
         ss << "  ";
-        if (arg.name.size() == 2)
+        if (!opt.name[1].empty())
         {
-          ss << arg.name[1] << ", ";
+          ss << opt.name[1] << ", ";
         }
-        ss << arg.name[0];
-        if (arg.type != Argument::Type::Unspecified)
+        ss << opt.name[0];
+        if (opt.type != ArgType::Unspecified)
         {
-          ss << " (" << typeString(arg) << ")";
+          ss << " (" << typeString(opt) << ")";
         }
         return ss.str();
       }
 
-      unsigned getArgColumnWidth(const std::vector<Argument>& args,
-                                 const unsigned               lineLength,
-                                 const unsigned               minHelpLength)
+      unsigned getArgColumnWidth(const std::vector<OptionArgumentPair>& args)
       {
-        const unsigned startOfHelpColumn = lineLength - minHelpLength;
+        const unsigned startOfHelpColumn = maxLineLength - minHelpLength;
 
         // Find the maximum width of the option column
         unsigned width{23};
         for (auto&& arg : args)
         {
-          auto c1 = formatFirstColumn(arg);
+          auto c1 = formatFirstColumn(arg.option);
           width   = std::max(width, static_cast<unsigned>(c1.size()));
         }
 
@@ -373,15 +496,14 @@ namespace GridKit
         }
       }
 
-      void printArg(std::ostream&   os,
-                    const Argument& arg,
-                    unsigned        firstColWidth,
-                    unsigned        lineLength)
+      void printOption(std::ostream& os,
+                       const Option& opt,
+                       unsigned      firstColWidth)
       {
-        auto c1 = formatFirstColumn(arg);
+        auto c1 = formatFirstColumn(opt);
         os << c1;
 
-        if (!arg.help.empty())
+        if (!opt.help.empty())
         {
           unsigned padSize = firstColWidth - static_cast<unsigned>(c1.size());
           if (c1.size() >= firstColWidth)
@@ -391,16 +513,19 @@ namespace GridKit
           }
           leftPad(os, padSize);
 
-          auto desc = arg.help;
-          if (!arg.defaults.empty())
+          auto desc = opt.help;
+          if (!opt.flag && !opt.defaults.empty())
           {
-            desc += "\ndefault: " + (std::stringstream() << arg.defaults).str();
+            desc += "\ndefault: " + (std::stringstream() << opt.defaults).str();
           }
-          printArgHelp(os, desc, firstColWidth, lineLength);
+          printArgHelp(os, desc, firstColWidth, maxLineLength);
         }
       }
     } // namespace
 
+    /**
+     * @brief Convert a string to all uppercase
+     */
     std::string toUpper(std::string str)
     {
       std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
@@ -408,58 +533,90 @@ namespace GridKit
       return str;
     }
 
-    std::string formatArgUsage(const Argument& arg)
+    /**
+     * @brief Format the portion of the usage expression for a single Option
+     */
+    std::string formatOptionUsage(const Option& opt)
     {
       std::stringstream ss;
-      if (!arg.required)
+      if (!opt.required)
       {
         ss << "[";
       }
-      if (arg.name.size() == 2)
+      if (!opt.name[1].empty())
       {
-        ss << arg.name[1];
+        ss << opt.name[1];
       }
       else
       {
-        ss << arg.name[0];
+        ss << opt.name[0];
       }
 
-      auto placeholder = toUpper(arg.name[0].substr(2));
-      for (std::size_t i = 0; i < arg.nargs; ++i)
+      auto placeholder = toUpper(opt.name[0].substr(2));
+      for (std::size_t i = 0; i < opt.nargs; ++i)
       {
         ss << " " << placeholder;
       }
 
-      if (!arg.required)
+      if (!opt.required)
       {
         ss << "]";
       }
       return ss.str();
     }
 
-    void CliArgs::printUsage(std::ostream& os) const
+    void CliArgsImpl::printUsage(std::ostream& os) const
     {
       os << "Usage: " << app_name_;
       for (auto&& arg : table_)
       {
-        os << " " << formatArgUsage(arg);
+        os << " " << formatOptionUsage(arg.option);
       }
       os << "\n\n";
     }
 
-    void CliArgs::printHelp(std::ostream& os) const
+    void CliArgs::printUsage(std::ostream& os) const
+    {
+      pImpl_->printUsage(os);
+    }
+
+    void CliArgsImpl::printHelp(std::ostream& os) const
     {
       printUsage(os);
 
-      auto lineLength    = getLineLength();
-      auto minHelpLength = getMinHelpLength();
-      auto width         = getArgColumnWidth(table_, lineLength, minHelpLength);
+      auto width = getArgColumnWidth(table_);
 
       for (auto&& arg : table_)
       {
-        printArg(os, arg, width, lineLength);
+        printOption(os, arg.option, width);
         os << "\n";
       }
+    }
+
+    void CliArgs::printHelp(std::ostream& os) const
+    {
+      pImpl_->printHelp(os);
+    }
+
+    const ArgVector& CliArgsImpl::operator[](const std::string& name) const
+    {
+      auto arg = findByName(name);
+      if (!arg)
+      {
+        auto msg = "CliArgs: unrecognized option requested: \"" + name + "\"";
+        Log::error() << msg << '\n';
+        throw std::runtime_error(msg);
+      }
+      if (arg->values.empty() && !arg->option.defaults.empty())
+      {
+        return arg->option.defaults;
+      }
+      return arg->values;
+    }
+
+    const ArgVector& CliArgs::operator[](const std::string& name) const
+    {
+      return (*pImpl_)[name];
     }
 
   } // namespace Utilities

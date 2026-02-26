@@ -28,10 +28,6 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-// NOTES:
-// Write function to compare to CSV files
-//  compare number of lines and number of items per line
-
 int main(int argc, const char* argv[])
 {
   using namespace GridKit::PhasorDynamics;
@@ -58,13 +54,13 @@ int main(int argc, const char* argv[])
 
                {.name     = {"--tolerance", "-t"},
                 .help     = "Allowable maximum error between compared files",
-                .type     = Argument::Type::Real,
+                .type     = ArgType::Real,
                 .defaults = 1.0e-4}};
 
   args.parseArgs(argc, argv);
 
   // Input file
-  auto input_file = args["case"]()();
+  auto input_file = args["case"]();
   std::cout << "Example: ThreeBusBasicJson\n";
   std::cout << "Input file: " << input_file << '\n';
 
@@ -112,14 +108,14 @@ int main(int argc, const char* argv[])
   TestStatus status{__func__};
   if (!args["compare"].empty())
   {
-    const auto& [out_file, ref_file] = args["compare"].as<std::string, 2>();
+    const auto& [out_file, ref_file] = args["compare"].as<2>();
 
     auto errorSet = GridKit::Testing::compareCSV(out_file, ref_file);
 
     // Print the errors
     errorSet.display();
 
-    auto error_allowed = args["tolerance"]().as<real_type>();
+    auto error_allowed = args["tolerance"].as<real_type>();
 
     if (errorSet.total.max_error >= error_allowed)
     {
