@@ -10,9 +10,7 @@
  */
 #include <cmath>
 #include <ctime>
-#include <filesystem>
-#include <fstream>
-#include <vector>
+#include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
@@ -20,7 +18,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/CliOptions/CliArgs.hpp>
+#include <GridKit/Utilities/CliArgs/CliArgs.hpp>
 
 #define ERROR_TOL 1.0e-4
 

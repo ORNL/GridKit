@@ -4,8 +4,10 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 
-#include <GridKit/Utilities/CliOptions/CliArgs.hpp>
+#include <GridKit/Utilities/CliArgs/CliArgs.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
