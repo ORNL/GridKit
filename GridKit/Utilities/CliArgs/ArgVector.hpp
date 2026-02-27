@@ -126,5 +126,5 @@ namespace GridKit
       friend class CliArgsImpl;
     };
 
-  }
-}
+  } // namespace Utilities
+} // namespace GridKit
