@@ -85,7 +85,7 @@ None.
 
 2 outputs are model variables of the branch model: $I_r$ and $I_i$.
 
-There are 3 calculated outputs for the branch model: current magnitude $|I|$, active power $P_1$ and reactive power $Q_1$. They are calculated as follows:
+There are 3 calculated outputs for the branch model: current magnitude $|I|$, active power $P$ and reactive power $Q$. They are calculated as follows:
 ``` math
 \begin{aligned}
       |I| &= \sqrt{(I_{r})^2 + (I_{i})^2} \\
@@ -107,13 +107,13 @@ In an AC electrical system, the complex power $S$ can be calculated from the vol
 \end{aligned}
 ```
 
-$P_1$ is the real component of $S$. It is the power that actually does useful work. 
+$P$ is the real component of $S$. It is the power that actually does useful work. 
 
-$Q_1$ is the imaginary component of $S$. It is the power that oscillates back and forth between capacitors and inductors. 
+$Q$ is the imaginary component of $S$. It is the power that oscillates back and forth between capacitors and inductors. 
 
-Positive active power values indicate that Bus 1 supplies active power into the branch. Negative values imply that Bus 1 is absorbing the active power. 
+Positive $P_1$ values indicate that Bus 1 supplies active power into the branch. Negative values imply that Bus 1 is absorbing the active power. 
 $\newline$
-The same sign convention applies to reactive power: positive $Q$ corresponds to injection into the branch, and negative $Q$ corresponds to absorption from the branch.
+The same sign convention applies to reactive power: positive $Q_1$ corresponds to injection into the branch by Bus 1, and negative $Q_1$ corresponds to absorption from the branch.
 
 The same output variables are computed for Bus 2 following the identical procedure used for Bus 1.
 

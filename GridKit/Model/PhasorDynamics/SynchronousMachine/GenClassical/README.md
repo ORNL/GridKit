@@ -158,3 +158,34 @@ P_{m} &= T_{e}
 ```
 
 With this, we initialize the machine at a steady state.
+
+
+## Model Outputs
+
+There are 6 output variables for this model, 4 of which are internal and 2 which are calculated.
+
+### Internal Variables
+The model ouputs the real and imaginary currents, $I_r$ and $I_i$, respectively. 
+The machine's angle $\delta$ and speed $\omega$ are also output.
+
+
+### Calculated Variables
+In an AC electrical system, the complex power $S$ can be calculated from the voltage phasor $V$ and current phasor, $I$. By defenition, $S=VI^*$, where $I^*$ is the complex conjugate of $I$. Thus; 
+
+``` math
+\begin{aligned}
+      S &= (V_r + V_i) (I_r - I_i)\\
+      S &= V_r I_r - V_r I_i + V_i I_r + V_i I_i\\
+      S &= (V_r I_r + V_i I_i) + (V_i I_r - V_r I_i)\\
+      \Re({S}) &= V_r I_r + V_i I_i\\
+      \Im({S}) &= V_i I_r - V_r I_i
+\end{aligned}
+```
+
+$P$ is the real component of $S$. It is the power that actually does useful work. 
+
+$Q$ is the imaginary component of $S$. It is the power that oscillates back and forth between capacitors and inductors. 
+
+Positive active power values indicate that the machine supplies active power into the system. Negative values imply that the machine is absorbing the active power. 
+$\newline$
+The same sign convention applies to reactive power: positive $Q$ corresponds to injection by the generator, and negative $Q$ corresponds to absorption from the system.
