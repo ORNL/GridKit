@@ -371,8 +371,10 @@ namespace GridKit
         bus.evaluateResidual();
         gen.evaluateResidual();
 
+        bus.evaluateJacobian();
         gen.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gen.getJacobian();
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& model_jacobian = gen.getJacobian();
+        model_jacobian.deduplicate();
         model_jacobian.printMatrix("Model Jacobian");
 
         return GridKit::Testing::MapFromCOO(model_jacobian);

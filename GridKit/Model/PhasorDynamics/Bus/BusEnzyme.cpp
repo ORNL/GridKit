@@ -27,12 +27,34 @@ namespace GridKit
       Log::misc() << "Evaluate Jacobian for Bus..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-      J_.zeroMatrix();
+      if (J_rows_buffer_ == nullptr)
+      {
+        J_.zeroMatrix();
 
-      std::vector<IdxT>    rtemp   = {residual_indices_.at(0), residual_indices_.at(0), residual_indices_.at(1), residual_indices_.at(1)};
-      std::vector<IdxT>    ctemp   = {variable_indices_.at(0), variable_indices_.at(1), variable_indices_.at(0), variable_indices_.at(1)};
-      std::vector<ScalarT> valtemp = {0.0, 0.0, 0.0, 0.0};
-      J_.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+        // Reserve space for a dense matrix of size_*size_.
+        // Enyme will compute the appropriate nnz from sparsification.
+        J_rows_buffer_ = new IdxT[4];
+        J_cols_buffer_ = new IdxT[4];
+        J_vals_buffer_ = new RealT[4];
+
+        J_rows_buffer_[0] = residual_indices_.at(0);
+        J_rows_buffer_[1] = residual_indices_.at(0);
+        J_rows_buffer_[2] = residual_indices_.at(1);
+        J_rows_buffer_[3] = residual_indices_.at(1);
+        J_cols_buffer_[0] = variable_indices_.at(0);
+        J_cols_buffer_[1] = variable_indices_.at(1);
+        J_cols_buffer_[2] = variable_indices_.at(0);
+        J_cols_buffer_[3] = variable_indices_.at(1);
+        J_vals_buffer_[0] = 0.0;
+        J_vals_buffer_[1] = 0.0;
+        J_vals_buffer_[2] = 0.0;
+        J_vals_buffer_[3] = 0.0;
+        J_.setValues(1.0, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, 4); //< @todo: Update once sparse storage format changes
+      }
+      else
+      {
+        J_.zeroValuedMatrix();
+      }
       return 0;
     }
 

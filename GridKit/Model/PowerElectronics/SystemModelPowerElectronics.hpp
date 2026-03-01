@@ -62,7 +62,7 @@ namespace GridKit
   {
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using MatrixT        = typename CircuitComponent<ScalarT, IdxT>::MatrixT;
-    using CsrMatrix      = typename CircuitComponent<ScalarT, IdxT>::CsrMatrix;
+    using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = CircuitNode<ScalarT, IdxT>;
 
@@ -257,7 +257,7 @@ namespace GridKit
       std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
 
       // Create the CSR Jacobian
-      csr_jac_ = new CsrMatrix(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+      csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
 
       const IdxT* map_to_sorted = jac.getMapToSorted();
       const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
@@ -484,7 +484,7 @@ namespace GridKit
       jac_.printMatrixMarket(filename, title);
     }
 
-    CsrMatrix* getCsrJacobian() const override
+    CsrMatrixT* getCsrJacobian() const override
     {
       return csr_jac_;
     }
@@ -499,8 +499,8 @@ namespace GridKit
 
     std::vector<component_type*> components_;
 
-    IdxT*      map_to_csr_{nullptr};
-    CsrMatrix* csr_jac_{nullptr};
+    IdxT*       map_to_csr_{nullptr};
+    CsrMatrixT* csr_jac_{nullptr};
 
     int  jac_call_count_{0};
     bool use_jac_;

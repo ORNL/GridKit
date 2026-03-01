@@ -114,7 +114,7 @@ int main(int /* argc */, char const** /* argv */)
 
   std::vector<double>& yfinial = sysmodel.y();
 
-  std::cout << "Final Vector y\n";
+  std::cout << "Final vector y\n";
   for (size_t i = 0; i < yfinial.size(); i++)
   {
     std::cout << yfinial[i] << "\n";
@@ -128,7 +128,7 @@ int main(int /* argc */, char const** /* argv */)
   yexact[3] = yexact[2];
   yexact[1] = vinit + rinit * yexact[2];
 
-  std::cout << "Element-wise Relative error at t=" << t_final << "\n";
+  std::cout << "Element-wise relative error at t=" << t_final << "\n";
   for (size_t i = 0; i < yfinial.size(); i++)
   {
     std::cout << abs((yfinial[i] - yexact[i]) / yexact[i]) << "\n";

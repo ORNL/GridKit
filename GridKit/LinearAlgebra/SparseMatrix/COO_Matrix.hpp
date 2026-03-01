@@ -48,7 +48,7 @@ namespace GridKit
 
       // --- Functions which call sort ---
       std::tuple<std::vector<IdxT>, std::vector<RealT>>                       getRowCopy(IdxT r);
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> getEntries();
+      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> getEntries(const bool sort = true);
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>    getEntryCopies();
       std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>    getEntryCopiesSubMatrix(std::vector<IdxT> submap);
 
@@ -57,10 +57,12 @@ namespace GridKit
 
       // Set values from vector storage. Will sort before storing
       void setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v);
+      void setValues(RealT alpha, IdxT* r, IdxT* c, RealT* v, IdxT nnz);
 
       // BLAS. Will sort before running
       void  axpy(RealT alpha, COO_Matrix<RealT, IdxT>& a, const bool sort = true);
       void  axpy(RealT alpha, std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v, const bool sort = true);
+      void  axpy(RealT alpha, IdxT* r, IdxT* c, RealT* v, IdxT nnz);
       void  scal(RealT alpha);
       RealT frobNorm();
 
@@ -78,6 +80,7 @@ namespace GridKit
       void sortSparse();
       bool isSorted();
       IdxT nnz();
+      void deduplicate();
 
       std::tuple<IdxT, IdxT> getDimensions();
 
@@ -85,7 +88,7 @@ namespace GridKit
 
       void printMatrixMarket(const std::string& filename, const std::string& comment);
 
-      static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values);
+      static void sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values, size_t nnz);
 
     private:
       IdxT indexStartRow(const std::vector<IdxT>& rows, IdxT r);
@@ -135,9 +138,9 @@ namespace GridKit
      * @return std::tuple<std::vector<IdxT>, std::vector<IdxT>, std::vector<RealT>>
      */
     template <typename RealT, typename IdxT>
-    inline std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> COO_Matrix<RealT, IdxT>::getEntries()
+    inline std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> COO_Matrix<RealT, IdxT>::getEntries(const bool sort)
     {
-      if (!this->sorted_)
+      if (!this->sorted_ && sort)
       {
         this->sortSparse();
       }
@@ -239,7 +242,7 @@ namespace GridKit
     inline void COO_Matrix<RealT, IdxT>::setValues(std::vector<IdxT> r, std::vector<IdxT> c, std::vector<RealT> v)
     {
       // sort input
-      this->sortSparseCOO(r, c, v);
+      this->sortSparseCOO(r, c, v, r.size());
 
       // Duplicated with axpy. Could replace with function depdent on lambda expression
       size_t a_iter = 0;
@@ -276,6 +279,32 @@ namespace GridKit
         this->checkIncreaseSize(r[i], c[i]);
       }
 
+      this->sorted_ = false;
+    }
+
+    /**
+     * @brief Append coordinates and values of the matrix without sorting or deduplicating.
+     *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
+     * @param[in] r row indices to be stored
+     * @param[in] c column indices to be stored
+     * @param[in] v values to be stored
+     * @param[in] nnz to be stored 
+     *
+     */
+    template <typename RealT, typename IdxT>
+    inline void COO_Matrix<RealT, IdxT>::setValues(RealT alpha, IdxT* r, IdxT* c, RealT* v, IdxT nnz)
+    {
+      for (size_t i = 0; i < static_cast<size_t>(nnz); i++)
+      {
+        this->row_indices_.emplace_back(r[i]);
+        this->column_indices_.emplace_back(c[i]);
+        this->values_.emplace_back(alpha * v[i]);
+
+        this->checkIncreaseSize(r[i], c[i]);
+      }
       this->sorted_ = false;
     }
 
@@ -378,7 +407,7 @@ namespace GridKit
       }
 
       // sort input
-      this->sortSparseCOO(r, c, v);
+      this->sortSparseCOO(r, c, v, r.size());
 
       size_t a_iter = 0;
       // iterate for all current values_ in matrix
@@ -420,6 +449,94 @@ namespace GridKit
       }
 
       this->sorted_ = false;
+    }
+
+    /**
+     * @brief Append coordinates and values of the matrix without sorting or deduplicating.
+     *
+     * Need to deduplicate bus entries right away to get around the new mappings introduced by bus faults.
+     *
+     * Only use for buses, which are 2x2, so the cost of loops is not uncontrolled. Don't allow resizing.
+     *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     *
+     * @param[in] r row indices to be stored
+     * @param[in] c column indices to be stored
+     * @param[in] v values to be stored
+     * @param[in] nnz to be stored 
+     *
+     */
+    template <typename RealT, typename IdxT>
+    inline void COO_Matrix<RealT, IdxT>::axpy(RealT alpha, IdxT* r, IdxT* c, RealT* v, IdxT nnz)
+    {
+      if (this->row_indices_.size() == 0) // Do nothing for infinite bus
+      {
+      }
+      else if (this->row_indices_.size() == 4)
+      {
+        for (size_t i = 0; i < this->row_indices_.size(); i++)
+        {
+          for (size_t j = 0; j < static_cast<size_t>(nnz); j++)
+          {
+            if (this->row_indices_[i] == r[j] && this->column_indices_[i] == c[j])
+            {
+              this->values_[i] += alpha * v[j];
+            }
+          }
+        }
+      }
+      else
+      {
+        std::cout << "Warning: Unexpected size in axpy\n";
+      }
+
+      this->sorted_ = false;
+    }
+
+    /**
+     * @brief Deduplicate matrix entries
+     *
+     * @node This is currently only used in component-level Jacobian tests,
+     * which don't use CooMatrix or CsrMatrix yet, to compare with Dependency::Tracking maps.
+     *
+     * @tparam RealT - Real type for Jacobian entries
+     * @tparam IdxT - Integer data type for matrix indices
+     */
+    template <typename RealT, typename IdxT>
+    inline void COO_Matrix<RealT, IdxT>::deduplicate()
+    {
+      std::vector<IdxT>  row_temp = this->row_indices_;
+      std::vector<IdxT>  col_temp = this->column_indices_;
+      std::vector<RealT> val_temp = this->values_;
+
+      this->row_indices_.clear();
+      this->column_indices_.clear();
+      this->values_.clear();
+
+      IdxT nnz = 0;
+      for (size_t i = 0; i < row_temp.size(); i++)
+      {
+        IdxT  row    = row_temp[i];
+        IdxT  col    = col_temp[i];
+        RealT val    = val_temp[i];
+        bool  exists = false;
+        for (size_t j = 0; j < nnz; j++)
+        {
+          if (this->row_indices_[j] == row && this->column_indices_[j] == col)
+          {
+            this->values_[j] += val;
+            exists            = true;
+          }
+        }
+        if (!exists)
+        {
+          this->row_indices_.emplace_back(row);
+          this->column_indices_.emplace_back(col);
+          this->values_.emplace_back(val);
+          nnz++;
+        }
+      }
     }
 
     /**
@@ -595,7 +712,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline void COO_Matrix<RealT, IdxT>::sortSparse()
     {
-      this->sortSparseCOO(this->row_indices_, this->column_indices_, this->values_);
+      this->sortSparseCOO(this->row_indices_, this->column_indices_, this->values_, (this->row_indices_).size());
       this->sorted_ = true;
     }
 
@@ -873,13 +990,13 @@ namespace GridKit
      * @param values
      */
     template <typename RealT, typename IdxT>
-    inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values)
+    inline void COO_Matrix<RealT, IdxT>::sortSparseCOO(std::vector<IdxT>& rows, std::vector<IdxT>& columns, std::vector<RealT>& values, size_t nnz)
     {
 
       // index based sort code
       //  https://stackoverflow.com/questions/25921706/creating-a-vector-of-indices-of-a-sorted_-vector
       // cannot call sort since two arrays are used instead
-      std::vector<size_t> ordervec(rows.size());
+      std::vector<size_t> ordervec(nnz);
       std::size_t         n(0);
       std::generate(std::begin(ordervec), std::end(ordervec), [&]
                     { return n++; });

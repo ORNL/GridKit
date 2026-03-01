@@ -28,6 +28,19 @@ namespace GridKit
       {
       }
 
+      virtual ~Component()
+      {
+        if (J_rows_buffer_ != nullptr)
+        {
+          delete[] J_rows_buffer_;
+          delete[] J_cols_buffer_;
+          delete[] J_vals_buffer_;
+          J_rows_buffer_ = nullptr;
+          J_cols_buffer_ = nullptr;
+          J_vals_buffer_ = nullptr;
+        }
+      }
+
       virtual int verify() const = 0;
 
       virtual IdxT size() override
@@ -169,6 +182,9 @@ namespace GridKit
       std::vector<ScalarT> h_;
 
       MatrixT J_;
+      IdxT*  J_rows_buffer_{nullptr};
+      IdxT*  J_cols_buffer_{nullptr};
+      RealT* J_vals_buffer_{nullptr};
 
       RealT time_;
       RealT alpha_;

@@ -24,6 +24,9 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::yp_;
       using BusBase<ScalarT, IdxT>::f_;
       using BusBase<ScalarT, IdxT>::J_;
+      using BusBase<ScalarT, IdxT>::J_rows_buffer_;
+      using BusBase<ScalarT, IdxT>::J_cols_buffer_;
+      using BusBase<ScalarT, IdxT>::J_vals_buffer_;
       using BusBase<ScalarT, IdxT>::tag_;
       using BusBase<ScalarT, IdxT>::variable_indices_;
       using BusBase<ScalarT, IdxT>::residual_indices_;
@@ -38,58 +41,57 @@ namespace GridKit
       Bus(const DataT& data);
       virtual ~Bus();
 
-      virtual int setBusID(IdxT) override;
-      virtual int allocate() override;
-      virtual int tagDifferentiable() override;
-      virtual int initialize() override;
-      virtual int evaluateResidual() override;
-      virtual int evaluateJacobian() override;
+      virtual int setBusID(IdxT) override final;
+      virtual int allocate() override final;
+      virtual int tagDifferentiable() override final;
+      virtual int initialize() override final;
+      virtual int evaluateResidual() override final;
+      virtual int evaluateJacobian() override final;
 
-      virtual BusTypeT BusType() const override
+      virtual BusTypeT BusType() const override final
       {
         return BusTypeT::DEFAULT;
       }
 
-      virtual ScalarT& Vr() override
+      virtual ScalarT& Vr() override final
       {
         return y_[0];
       }
 
-      virtual const ScalarT& Vr() const override
+      virtual const ScalarT& Vr() const override final
       {
         return y_[0];
       }
 
-      virtual ScalarT& Vi() override
+      virtual ScalarT& Vi() override final
       {
         return y_[1];
       }
 
-      virtual const ScalarT& Vi() const override
+      virtual const ScalarT& Vi() const override final
       {
         return y_[1];
       }
 
-      virtual ScalarT& Ir() override
+      virtual ScalarT& Ir() override final
       {
         return f_[0];
       }
 
-      virtual const ScalarT& Ir() const override
+      virtual const ScalarT& Ir() const override final
       {
         return f_[0];
       }
 
-      virtual ScalarT& Ii() override
+      virtual ScalarT& Ii() override final
       {
         return f_[1];
       }
 
-      virtual const ScalarT& Ii() const override
+      virtual const ScalarT& Ii() const override final
       {
         return f_[1];
       }
-
     private:
       ScalarT Vr0_{0.0};
       ScalarT Vi0_{0.0};

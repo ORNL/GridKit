@@ -25,17 +25,26 @@ namespace GridKit
       Log::misc() << "Evaluate Jacobian for Load..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
+      if (J_rows_buffer_ == nullptr)
+      {
+        J_rows_buffer_ = new IdxT[4];
+        J_cols_buffer_ = new IdxT[4];
+        J_vals_buffer_ = new RealT[4];
+      }
       GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                      ScalarT,
                                      IdxT>::eval(this,
                                                  static_cast<size_t>(bus_->size()),
                                                  static_cast<size_t>(bus_->size()),
-                                                 bus_->getResidualIndices(),
-                                                 bus_->getVariableIndices(),
+                                                 (bus_->getResidualIndices()).data(),
+                                                 (bus_->getVariableIndices()).data(),
                                                  y_.data(),
                                                  yp_.data(),
                                                  (bus_->y()).data(),
+                                                 J_rows_buffer_,
+                                                 J_cols_buffer_,
+                                                 J_vals_buffer_,
                                                  bus_->getJacobian());
 
       return 0;

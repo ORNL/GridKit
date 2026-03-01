@@ -35,54 +35,54 @@ namespace GridKit
       BusInfinite(const DataT& data);
       virtual ~BusInfinite();
 
-      virtual int setBusID(IdxT) override;
-      virtual int allocate() override;
-      virtual int tagDifferentiable() override;
-      virtual int initialize() override;
-      virtual int evaluateResidual() override;
-      virtual int evaluateJacobian() override;
+      virtual int setBusID(IdxT) override final;
+      virtual int allocate() override final;
+      virtual int tagDifferentiable() override final;
+      virtual int initialize() override final;
+      virtual int evaluateResidual() override final;
+      virtual int evaluateJacobian() override final;
 
-      virtual BusTypeT BusType() const override
+      virtual BusTypeT BusType() const override final
       {
         return BusTypeT::SLACK;
       }
 
-      virtual ScalarT& Vr() override
+      virtual ScalarT& Vr() override final
       {
         return Vr_;
       }
 
-      virtual const ScalarT& Vr() const override
+      virtual const ScalarT& Vr() const override final
       {
         return Vr_;
       }
 
-      virtual ScalarT& Vi() override
+      virtual ScalarT& Vi() override final
       {
         return Vi_;
       }
 
-      virtual const ScalarT& Vi() const override
+      virtual const ScalarT& Vi() const override final
       {
         return Vi_;
       }
 
-      virtual ScalarT& Ir() override
+      virtual ScalarT& Ir() override final
       {
         return Ir_;
       }
 
-      virtual const ScalarT& Ir() const override
+      virtual const ScalarT& Ir() const override final
       {
         return Ir_;
       }
 
-      virtual ScalarT& Ii() override
+      virtual ScalarT& Ii() override final
       {
         return Ii_;
       }
 
-      virtual const ScalarT& Ii() const override
+      virtual const ScalarT& Ii() const override final
       {
         return Ii_;
       }

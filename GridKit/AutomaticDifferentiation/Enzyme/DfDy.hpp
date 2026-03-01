@@ -44,27 +44,40 @@ namespace GridKit
          * @param[in] alpha - Time derivative jacobian coefficient
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                  model,
-                         size_t                   n_res,
-                         size_t                   n_var,
-                         const std::vector<IdxT>& res_indices,
-                         const std::vector<IdxT>& var_indices,
-                         ScalarT*                 y,
-                         ScalarT*                 yp,
-                         ScalarT*                 wb,
-                         RealT                    alpha,
-                         MatrixT&                 jac)
+        static void eval(ModelT*     model,
+                         size_t      n_res,
+                         size_t      n_var,
+                         const IdxT* res_indices,
+                         const IdxT* var_indices,
+                         ScalarT*    y,
+                         ScalarT*    yp,
+                         ScalarT*    wb,
+                         RealT       alpha,
+                         IdxT*       rows,
+                         IdxT*       cols,
+                         RealT*      vals,
+                         MatrixT&    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
             // df/dy
-            std::vector<Triple<ScalarT>> triplets; //< @todo: Update once sparse storage format changes
-            std::vector<ScalarT>         elementary_v(n_var);
+            std::vector<ScalarT> elementary_v(n_var);
+            IdxT                 nnz = 0;
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
+                                                           (void*) ident_store<ScalarT, IdxT>,
+                                                           var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
+                                                             (void*) sparse_store<ScalarT, IdxT>,
+                                                             var_i,
+                                                             res_indices,
+                                                             var_indices,
+                                                             rows,
+                                                             cols,
+                                                             vals,
+                                                             &nnz);
 
               // Elementary vector for Jacobian-vector product
               std::ranges::fill(elementary_v, 0.0);
@@ -87,24 +100,25 @@ namespace GridKit
             }
 
             // Store result
-            std::vector<IdxT>    ctemp{};
-            std::vector<IdxT>    rtemp{};
-            std::vector<ScalarT> valtemp{};
-            for (auto& tup : triplets)
-            {
-              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
-              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
-              valtemp.push_back(tup.val);
-            }
-            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+            jac.setValues(1.0, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
 
             // df/dy'
-            triplets.clear();
+            nnz = 0;
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
+                                                           (void*) ident_store<ScalarT, IdxT>,
+                                                           var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
+                                                             (void*) sparse_store<ScalarT, IdxT>,
+                                                             var_i,
+                                                             res_indices,
+                                                             var_indices,
+                                                             rows,
+                                                             cols,
+                                                             vals,
+                                                             &nnz);
 
               // Elementary vector for Jacobian-vector product
               std::ranges::fill(elementary_v, 0.0);
@@ -127,16 +141,7 @@ namespace GridKit
             }
 
             // Store result
-            ctemp.clear();
-            rtemp.clear();
-            valtemp.clear();
-            for (auto& tup : triplets)
-            {
-              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
-              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
-              valtemp.push_back(tup.val);
-            }
-            jac.axpy(alpha, rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+            jac.setValues(alpha, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
           }
         }
 
@@ -153,28 +158,41 @@ namespace GridKit
          * @param[in] alpha - Time derivative jacobian coefficient
          * @param[in,out] jac - Jacobian
          */
-        static void eval(ModelT*                  model,
-                         size_t                   n_res,
-                         size_t                   n_var,
-                         const std::vector<IdxT>& res_indices,
-                         const std::vector<IdxT>& var_indices,
-                         ScalarT*                 y,
-                         ScalarT*                 yp,
-                         ScalarT*                 wb,
-                         ScalarT*                 ws,
-                         RealT                    alpha,
-                         MatrixT&                 jac)
+        static void eval(ModelT*     model,
+                         size_t      n_res,
+                         size_t      n_var,
+                         const IdxT* res_indices,
+                         const IdxT* var_indices,
+                         ScalarT*    y,
+                         ScalarT*    yp,
+                         ScalarT*    wb,
+                         ScalarT*    ws,
+                         RealT       alpha,
+                         IdxT*       rows,
+                         IdxT*       cols,
+                         RealT*      vals,
+                         MatrixT&    jac)
         {
           if (n_res > 0 && n_var > 0)
           {
             // df/dy
-            std::vector<Triple<ScalarT>> triplets; //< @todo: Update once sparse storage format changes
-            std::vector<ScalarT>         elementary_v(n_var);
+            std::vector<ScalarT> elementary_v(n_var);
+            IdxT                 nnz = 0;
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
+                                                           (void*) ident_store<ScalarT, IdxT>,
+                                                           var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
+                                                             (void*) sparse_store<ScalarT, IdxT>,
+                                                             var_i,
+                                                             res_indices,
+                                                             var_indices,
+                                                             rows,
+                                                             cols,
+                                                             vals,
+                                                             &nnz);
 
               // Elementary vector for Jacobian-vector product
               std::ranges::fill(elementary_v, 0.0);
@@ -199,24 +217,25 @@ namespace GridKit
             }
 
             // Store result
-            std::vector<IdxT>    ctemp{};
-            std::vector<IdxT>    rtemp{};
-            std::vector<ScalarT> valtemp{};
-            for (auto& tup : triplets)
-            {
-              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
-              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
-              valtemp.push_back(tup.val);
-            }
-            jac.setValues(rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+            jac.setValues(1.0, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
 
             // df/dy'
-            triplets.clear();
+            nnz = 0;
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
-              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT>, (void*) ident_store<ScalarT>, var_i);
-              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT>, (void*) sparse_store<ScalarT>, var_i, &triplets);
+              ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, IdxT>,
+                                                           (void*) ident_store<ScalarT, IdxT>,
+                                                           var_i);
+              ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
+                                                             (void*) sparse_store<ScalarT, IdxT>,
+                                                             var_i,
+                                                             res_indices,
+                                                             var_indices,
+                                                             rows,
+                                                             cols,
+                                                             vals,
+                                                             &nnz);
 
               // Elementary vector for Jacobian-vector product
               std::ranges::fill(elementary_v, 0.0);
@@ -241,16 +260,7 @@ namespace GridKit
             }
 
             // Store result
-            ctemp.clear();
-            rtemp.clear();
-            valtemp.clear();
-            for (auto& tup : triplets)
-            {
-              rtemp.push_back(res_indices[static_cast<size_t>(tup.row)]);
-              ctemp.push_back(var_indices[static_cast<size_t>(tup.col)]);
-              valtemp.push_back(tup.val);
-            }
-            jac.axpy(alpha, rtemp, ctemp, valtemp); //< @todo: Update once sparse storage format changes
+            jac.setValues(alpha, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
           }
         }
       };

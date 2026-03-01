@@ -180,8 +180,8 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     CooMatrix<RealT, IdxT>::~CooMatrix()
     {
-      this->destroyMatrixData(memory::HOST);
-      this->destroyMatrixData(memory::DEVICE);
+      destroyMatrixData(memory::HOST);
+      destroyMatrixData(memory::DEVICE);
       delete[] map_to_sorted_;
       delete[] map_to_dedup_;
     }
@@ -204,7 +204,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     IdxT CooMatrix<RealT, IdxT>::getNumRows() const
     {
-      return this->n_;
+      return n_;
     }
 
     /**
@@ -215,7 +215,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     IdxT CooMatrix<RealT, IdxT>::getNumColumns() const
     {
-      return this->m_;
+      return m_;
     }
 
     /**
@@ -226,7 +226,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     IdxT CooMatrix<RealT, IdxT>::getNnz() const
     {
-      return this->nnz_;
+      return nnz_;
     }
 
     /**
@@ -460,9 +460,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_row_data_;
+        return h_row_data_;
       case DEVICE:
-        return this->d_row_data_;
+        return d_row_data_;
       default:
         return nullptr;
       }
@@ -476,9 +476,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_col_data_;
+        return h_col_data_;
       case DEVICE:
-        return this->d_col_data_;
+        return d_col_data_;
       default:
         return nullptr;
       }
@@ -492,9 +492,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_val_data_;
+        return h_val_data_;
       case DEVICE:
-        return this->d_val_data_;
+        return d_val_data_;
       default:
         return nullptr;
       }
@@ -595,14 +595,11 @@ namespace GridKit
     void CooMatrix<RealT, IdxT>::print(std::ostream& out, IdxT indexing_base)
     {
       out << std::scientific << std::setprecision(std::numeric_limits<RealT>::digits10);
-      for (IdxT i = 0; i < n_; ++i)
+      for (IdxT i = 0; i < nnz_; ++i)
       {
-        for (IdxT j = h_row_data_[i]; j < h_row_data_[i + 1]; ++j)
-        {
-          out << i + indexing_base << " "
-              << h_col_data_[j] + indexing_base << " "
-              << h_val_data_[j] << "\n";
-        }
+        out << h_row_data_[i] + indexing_base << " "
+            << h_col_data_[i] + indexing_base << " "
+            << h_val_data_[i] << "\n";
       }
     }
 
