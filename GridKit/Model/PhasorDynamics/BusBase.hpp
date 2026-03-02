@@ -180,9 +180,9 @@ namespace GridKit
       std::vector<ScalarT> f_;
 
       MatrixT J_;
-      IdxT*  J_rows_buffer_{nullptr};
-      IdxT*  J_cols_buffer_{nullptr};
-      RealT* J_vals_buffer_{nullptr};
+      IdxT*   J_rows_buffer_{nullptr};
+      IdxT*   J_cols_buffer_{nullptr};
+      RealT*  J_vals_buffer_{nullptr};
 
       RealT rtol_;
       RealT atol_;

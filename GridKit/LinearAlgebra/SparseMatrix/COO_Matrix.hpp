@@ -291,7 +291,7 @@ namespace GridKit
      * @param[in] r row indices to be stored
      * @param[in] c column indices to be stored
      * @param[in] v values to be stored
-     * @param[in] nnz to be stored 
+     * @param[in] nnz to be stored
      *
      */
     template <typename RealT, typename IdxT>
@@ -464,7 +464,7 @@ namespace GridKit
      * @param[in] r row indices to be stored
      * @param[in] c column indices to be stored
      * @param[in] v values to be stored
-     * @param[in] nnz to be stored 
+     * @param[in] nnz to be stored
      *
      */
     template <typename RealT, typename IdxT>

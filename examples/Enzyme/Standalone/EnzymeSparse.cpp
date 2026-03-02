@@ -65,7 +65,7 @@ SparseMatrix* jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y)
 template <typename ScalarT>
 __attribute__((noinline)) SparseMatrix* jac_f(size_t N, ScalarT* input)
 {
-  size_t*  index_maps = new size_t[N];
+  size_t* index_maps = new size_t[N];
   for (size_t i = 0; i < N; i++)
   {
     index_maps[i] = i;
@@ -74,7 +74,7 @@ __attribute__((noinline)) SparseMatrix* jac_f(size_t N, ScalarT* input)
   size_t*  rows_buffer = new size_t[N * N];
   size_t*  cols_buffer = new size_t[N * N];
   ScalarT* vals_buffer = new ScalarT[N * N];
-  size_t               current_nnz = 0;
+  size_t   current_nnz = 0;
   for (size_t i = 0; i < N; i++)
   {
     ScalarT* output   = __enzyme_todense<ScalarT*>((void*) ident_load<ScalarT, size_t>,
@@ -149,7 +149,7 @@ void check(SparseMatrix* matrix_1, SparseMatrix* matrix_2, int& fail)
 int main()
 {
   /// Vector and matrix declarations
-  size_t              N   = 5;
+  size_t              N = 5;
   std::vector<double> x(N);
   std::vector<double> sq(N);
 
