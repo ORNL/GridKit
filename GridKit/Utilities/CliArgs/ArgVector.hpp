@@ -123,7 +123,7 @@ namespace GridKit
       /// Internal set of values
       std::vector<ArgValue> vec;
 
-      friend class CliArgsImpl;
+      friend struct CliArgsImpl;
     };
 
   } // namespace Utilities

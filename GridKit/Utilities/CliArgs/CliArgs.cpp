@@ -406,7 +406,7 @@ namespace GridKit
 
       void leftPad(std::ostream& os, unsigned width)
       {
-        os << std::setfill(' ') << std::setw(width) << "";
+        os << std::setfill(' ') << std::setw(static_cast<int>(width)) << "";
       }
 
       void printParagraph(std::ostream&    os,

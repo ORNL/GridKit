@@ -115,10 +115,8 @@ int main(int argc, const char* argv[])
 
     auto error_allowed = args["tolerance"].as<real_type>();
 
-    if (errorSet.total.max_error >= error_allowed)
-    {
-      status = false;
-    }
+    status *= errorSet.total.max_error < error_allowed;
+
     status.report();
   }
 
