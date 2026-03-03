@@ -178,8 +178,8 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     CsrMatrix<RealT, IdxT>::~CsrMatrix()
     {
-      this->destroyMatrixData(memory::HOST);
-      this->destroyMatrixData(memory::DEVICE);
+      destroyMatrixData(memory::HOST);
+      destroyMatrixData(memory::DEVICE);
     }
 
     /**
@@ -198,9 +198,9 @@ namespace GridKit
      * @return number of matrix rows.
      */
     template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNumRows()
+    IdxT CsrMatrix<RealT, IdxT>::getNumRows() const
     {
-      return this->n_;
+      return n_;
     }
 
     /**
@@ -209,9 +209,9 @@ namespace GridKit
      * @return number of matrix columns.
      */
     template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNumColumns()
+    IdxT CsrMatrix<RealT, IdxT>::getNumColumns() const
     {
-      return this->m_;
+      return m_;
     }
 
     /**
@@ -220,9 +220,9 @@ namespace GridKit
      * @return number of non-zeros.
      */
     template <typename RealT, typename IdxT>
-    IdxT CsrMatrix<RealT, IdxT>::getNnz()
+    IdxT CsrMatrix<RealT, IdxT>::getNnz() const
     {
-      return this->nnz_;
+      return nnz_;
     }
 
     /**
@@ -233,7 +233,7 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     void CsrMatrix<RealT, IdxT>::setNnz(IdxT nnz_new)
     {
-      this->nnz_ = nnz_new;
+      nnz_ = nnz_new;
     }
 
     /**
@@ -435,8 +435,8 @@ namespace GridKit
         // check if cpu data allocated
         if (h_val_data_ == nullptr)
         {
-          this->h_val_data_ = new RealT[static_cast<size_t>(nnz_current)];
-          owns_cpu_values_  = true;
+          h_val_data_      = new RealT[static_cast<size_t>(nnz_current)];
+          owns_cpu_values_ = true;
         }
       }
 
@@ -531,9 +531,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_row_data_;
+        return h_row_data_;
       case DEVICE:
-        return this->d_row_data_;
+        return d_row_data_;
       default:
         return nullptr;
       }
@@ -547,9 +547,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_col_data_;
+        return h_col_data_;
       case DEVICE:
-        return this->d_col_data_;
+        return d_col_data_;
       default:
         return nullptr;
       }
@@ -563,9 +563,9 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        return this->h_val_data_;
+        return h_val_data_;
       case DEVICE:
-        return this->d_val_data_;
+        return d_val_data_;
       default:
         return nullptr;
       }
@@ -606,14 +606,14 @@ namespace GridKit
 
         if ((h_row_data_ == nullptr) && (h_col_data_ == nullptr))
         {
-          this->h_row_data_          = new IdxT[static_cast<size_t>(n_ + 1)];
-          this->h_col_data_          = new IdxT[static_cast<size_t>(nnz_current)];
+          h_row_data_                = new IdxT[static_cast<size_t>(n_ + 1)];
+          h_col_data_                = new IdxT[static_cast<size_t>(nnz_current)];
           owns_cpu_sparsity_pattern_ = true;
         }
         if (h_val_data_ == nullptr)
         {
-          this->h_val_data_ = new RealT[static_cast<size_t>(nnz_current)];
-          owns_cpu_values_  = true;
+          h_val_data_      = new RealT[static_cast<size_t>(nnz_current)];
+          owns_cpu_values_ = true;
         }
       }
 
@@ -689,11 +689,11 @@ namespace GridKit
 
       if (memspace == memory::HOST)
       {
-        this->h_row_data_ = new IdxT[static_cast<size_t>(n_ + 1)];
+        h_row_data_ = new IdxT[static_cast<size_t>(n_ + 1)];
         std::fill(h_row_data_, h_row_data_ + n_ + 1, 0);
-        this->h_col_data_ = new IdxT[static_cast<size_t>(nnz_current)];
+        h_col_data_ = new IdxT[static_cast<size_t>(nnz_current)];
         std::fill(h_col_data_, h_col_data_ + nnz_current, 0);
-        this->h_val_data_ = new RealT[static_cast<size_t>(nnz_current)];
+        h_val_data_ = new RealT[static_cast<size_t>(nnz_current)];
         std::fill(h_val_data_, h_val_data_ + nnz_current, 0.0);
         owns_cpu_sparsity_pattern_ = true;
         owns_cpu_values_           = true;

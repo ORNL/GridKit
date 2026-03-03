@@ -50,13 +50,6 @@ int main(int /* argc */, char const** /* argv */)
 
   dg.evaluateResidual();
 
-  // std::cout << "Output: {";
-  // for (double i : dg.getResidual())
-  // {
-  //   printf("%e ,", i);
-  // }
-  // std::cout << "}\n";
-
   // Generated from matlab code with same parameters and inputs
   std::vector<double> true_vec{3.141592277589793e+02,
                                8.941907747838389e-01,

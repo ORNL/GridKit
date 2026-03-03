@@ -39,6 +39,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
+      using Component<ScalarT, IdxT>::J_rows_buffer_;
+      using Component<ScalarT, IdxT>::J_cols_buffer_;
+      using Component<ScalarT, IdxT>::J_vals_buffer_;
       using Component<ScalarT, IdxT>::variable_indices_;
       using Component<ScalarT, IdxT>::residual_indices_;
 
@@ -53,14 +56,14 @@ namespace GridKit
       Load(bus_type* bus, const model_data_type& data);
       virtual ~Load();
 
-      virtual int setGridKitComponentID(IdxT) override;
-      virtual int allocate() override;
-      virtual int initialize() override;
-      virtual int tagDifferentiable() override;
-      virtual int evaluateResidual() override;
-      virtual int evaluateJacobian() override;
+      virtual int setGridKitComponentID(IdxT) override final;
+      virtual int allocate() override final;
+      virtual int initialize() override final;
+      virtual int tagDifferentiable() override final;
+      virtual int evaluateResidual() override final;
+      virtual int evaluateJacobian() override final;
 
-      virtual int verify() const override
+      virtual int verify() const override final
       {
         return 0;
       }

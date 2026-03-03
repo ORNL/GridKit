@@ -33,6 +33,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::yp_;
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
+      using Component<ScalarT, IdxT>::J_rows_buffer_;
+      using Component<ScalarT, IdxT>::J_cols_buffer_;
+      using Component<ScalarT, IdxT>::J_vals_buffer_;
 
     public:
       using bus_type = BusBase<ScalarT, IdxT>;
@@ -45,19 +48,19 @@ namespace GridKit
       BusFault(bus_type* bus, const DataT& data);
       ~BusFault();
 
-      int setGridKitComponentID(IdxT) override;
-      int allocate() override;
-      int initialize() override;
-      int tagDifferentiable() override;
-      int evaluateResidual() override;
-      int evaluateJacobian() override;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int evaluateResidual() override final;
+      int evaluateJacobian() override final;
 
-      int verify() const override
+      int verify() const override final
       {
         return 0;
       }
 
-      void updateTime(RealT /* t */, RealT /* a */) override
+      void updateTime(RealT /* t */, RealT /* a */) override final
       {
       }
 

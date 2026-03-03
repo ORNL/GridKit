@@ -81,6 +81,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::J_rows_buffer_;
+      using Component<ScalarT, IdxT>::J_cols_buffer_;
+      using Component<ScalarT, IdxT>::J_vals_buffer_;
       using Component<ScalarT, IdxT>::mva_system_base_;
       using Component<ScalarT, IdxT>::variable_indices_;
       using Component<ScalarT, IdxT>::residual_indices_;
@@ -125,15 +128,15 @@ namespace GridKit
              RealT     S12);
       ~Genrou();
 
-      int setGridKitComponentID(IdxT) override;
-      int allocate() override;
-      int verify() const override;
-      int initialize() override;
-      int tagDifferentiable() override;
-      int evaluateResidual() override;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int verify() const override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int evaluateResidual() override final;
 
       // Still to be implemented
-      int evaluateJacobian() override;
+      int evaluateJacobian() override final;
 
       // Temporary access functions for governor
       // Should be abstracted

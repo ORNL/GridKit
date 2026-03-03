@@ -119,6 +119,7 @@ namespace GridKit
         PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
         bus.allocate();
         load.allocate();
+        bus.evaluateJacobian();
         load.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = bus.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");

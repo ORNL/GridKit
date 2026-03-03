@@ -31,9 +31,9 @@ namespace GridKit
       ~CsrMatrix();
 
       // accessors
-      IdxT getNumRows();
-      IdxT getNumColumns();
-      IdxT getNnz();
+      IdxT getNumRows() const;
+      IdxT getNumColumns() const;
+      IdxT getNnz() const;
 
       void setNnz(IdxT nnz_new); // for resetting when removing duplicates
       int  setUpdated(memory::MemorySpace what);

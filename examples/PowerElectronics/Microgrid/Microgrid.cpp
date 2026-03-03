@@ -321,10 +321,10 @@ int main(int /* argc */, char const** /* argv */)
   if (debug_output)
   {
     std::vector<double>& fres = sysmodel->getResidual();
-    std::cout << "Verify initial Resisdual is Zero: {\n";
+    std::cout << "Verify initial resisdual is zero: {\n";
     for (size_t i = 0; i < fres.size(); i++)
     {
-      printf("%lu : %e \n", i, fres[i]);
+      std::cout << i << " :" << fres[i] << "\n";
     }
     std::cout << "}\n";
   }
@@ -357,7 +357,7 @@ int main(int /* argc */, char const** /* argv */)
   // Optional debugging output
   if (debug_output)
   {
-    std::cout << "Final Vector y\n";
+    std::cout << "Final vector y\n";
     for (size_t i = 0; i < yfinial.size(); i++)
     {
       std::cout << yfinial[i] << "\n";
@@ -437,13 +437,7 @@ int main(int /* argc */, char const** /* argv */)
       3.604108939430972e+02,
       -3.492842627398574e+01};
 
-  // std::cout << "Test the Relative Error\n";
-  // for (size_t i = 0; i < true_vec.size(); i++)
-  // {
-  //   printf("%lu : %e ,\n", i, abs(true_vec[i] - yfinial[i]) / abs(true_vec[i]));
-  // }
-
-  std::cout << "Testing the DistributedGenerator model ...\n";
+  std::cout << "Testing Migrogrid ...\n";
   double error_allowed = 1e-4;
   double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)

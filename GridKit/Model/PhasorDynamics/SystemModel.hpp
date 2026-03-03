@@ -36,7 +36,7 @@ namespace GridKit
       using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrix      = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrix;
+      using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
 
       using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
       using PhasorDynamics::Component<ScalarT, IdxT>::size_;
@@ -637,7 +637,7 @@ namespace GridKit
           {
             auto component_jacobian = component->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                                 = component_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -648,7 +648,7 @@ namespace GridKit
           {
             auto bus_jacobian = bus->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -666,7 +666,7 @@ namespace GridKit
           {
             auto component_jacobian = component->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                                 = component_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -680,7 +680,7 @@ namespace GridKit
           {
             auto bus_jacobian = bus->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -708,7 +708,7 @@ namespace GridKit
           std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
 
           // Create the CSR Jacobian
-          csr_jac_ = new CsrMatrix(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+          csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
 
           const IdxT* map_to_sorted = jac.getMapToSorted();
           const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
@@ -735,7 +735,7 @@ namespace GridKit
           {
             auto component_jacobian = component->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> component_jacobian_entries = component_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                                 = component_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -747,7 +747,7 @@ namespace GridKit
           {
             auto bus_jacobian = bus->getJacobian();
 
-            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries();
+            std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> bus_jacobian_entries = bus_jacobian.getEntries(false);
             const auto [rows, columns, values]                                                           = bus_jacobian_entries;
             for (size_t i = 0; i < rows.size(); ++i)
             {
@@ -762,7 +762,7 @@ namespace GridKit
         return 0;
       }
 
-      CsrMatrix* getCsrJacobian() const override
+      CsrMatrixT* getCsrJacobian() const override
       {
         return csr_jac_;
       }
@@ -931,8 +931,8 @@ namespace GridKit
 
       bool owns_components_{false};
 
-      IdxT*      map_to_csr_{nullptr};
-      CsrMatrix* csr_jac_{nullptr};
+      IdxT*       map_to_csr_{nullptr};
+      CsrMatrixT* csr_jac_{nullptr};
 
       /// Variable monitor
       Model::VariableMonitorController<ScalarT> monitor_;

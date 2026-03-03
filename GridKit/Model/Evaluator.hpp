@@ -21,9 +21,9 @@ namespace GridKit
     class Evaluator
     {
     public:
-      using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using MatrixT   = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
-      using CsrMatrix = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+      using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using MatrixT    = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
+      using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
 
       Evaluator()
       {
@@ -90,7 +90,7 @@ namespace GridKit
        *
        * @todo Remove this and use CsrMatirx for jac_
        */
-      virtual CsrMatrix* getCsrJacobian() const
+      virtual CsrMatrixT* getCsrJacobian() const
       {
         return nullptr;
       }

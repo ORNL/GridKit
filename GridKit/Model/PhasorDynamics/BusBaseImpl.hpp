@@ -26,6 +26,15 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     BusBase<ScalarT, IdxT>::~BusBase()
     {
+      if (J_rows_buffer_ != nullptr)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_ = nullptr;
+        J_cols_buffer_ = nullptr;
+        J_vals_buffer_ = nullptr;
+      }
     }
 
     template <typename ScalarT, typename IdxT>

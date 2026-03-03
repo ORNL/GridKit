@@ -358,7 +358,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type sum_bottom = 0.0;
 
   // check relative error
-  std::cout << "Test the Relative Error for N = " << Nsize << "\n";
+  std::cout << "Test the relative error for N = " << Nsize << "\n";
   for (index_type i = 0; i < true_vec->size(); i++)
   {
     // Print the Elementwise Relative Error
@@ -370,7 +370,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   real_type norm2error = (sqrt(sum_top) / sqrt(sum_bottom));
-  std::cout << "2-Norm Relative Error: " << norm2error << std::endl;
+  std::cout << "2-Norm relative error: " << norm2error << std::endl;
   test_pass = norm2error < error_tol;
 
   delete idas;

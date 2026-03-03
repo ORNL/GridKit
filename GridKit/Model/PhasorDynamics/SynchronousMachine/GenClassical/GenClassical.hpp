@@ -45,6 +45,9 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::J_;
+      using Component<ScalarT, IdxT>::J_rows_buffer_;
+      using Component<ScalarT, IdxT>::J_cols_buffer_;
+      using Component<ScalarT, IdxT>::J_vals_buffer_;
       using Component<ScalarT, IdxT>::mva_system_base_;
       using Component<ScalarT, IdxT>::variable_indices_;
       using Component<ScalarT, IdxT>::residual_indices_;
@@ -67,19 +70,19 @@ namespace GridKit
       GenClassical(bus_type* bus, const DataT& data);
       ~GenClassical();
 
-      int setGridKitComponentID(IdxT) override;
-      int allocate() override;
-      int initialize() override;
-      int tagDifferentiable() override;
-      int evaluateResidual() override;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int evaluateResidual() override final;
 
-      int verify() const override
+      int verify() const override final
       {
         return 0;
       }
 
       // Still to be implemented
-      int evaluateJacobian() override;
+      int evaluateJacobian() override final;
 
       void setPmech(RealT pmech)
       {

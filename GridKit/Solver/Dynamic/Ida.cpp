@@ -782,8 +782,8 @@ namespace AnalysisManager
 
       model->evaluateJacobian();
 
-      using CsrMatrix = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
-      CsrMatrix* Jac  = model->getCsrJacobian();
+      using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+      CsrMatrixT* Jac  = model->getCsrJacobian();
 
       SUNMatZero(J);
 
