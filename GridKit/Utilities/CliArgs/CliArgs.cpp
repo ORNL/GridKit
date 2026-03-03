@@ -84,8 +84,9 @@ namespace GridKit
      *
      * @note This is useful mainly for debugging purposes
      */
-    std::ostream& operator<<(std::ostream& os, const ArgVector& av)
+    std::string format(const ArgVector& av)
     {
+      std::stringstream os;
       os << "[";
       if (av.empty())
       {
@@ -100,7 +101,7 @@ namespace GridKit
         }
         os << "]";
       }
-      return os;
+      return os.str();
     }
 
     /**
@@ -133,9 +134,9 @@ namespace GridKit
       os << "  required : " << std::boolalpha << arg.option.required << '\n';
       os << "  type     : " << typeString(arg.option) << '\n';
       os << "  flag     : " << std::boolalpha << arg.option.flag << '\n';
-      os << "  defaults : " << arg.option.defaults << '\n';
+      os << "  defaults : " << format(arg.option.defaults) << '\n';
       os << "  nargs    : " << arg.option.nargs << '\n';
-      os << "  values   : " << arg.values;
+      os << "  values   : " << format(arg.values);
       return os;
     }
 
@@ -524,7 +525,7 @@ namespace GridKit
           auto desc = opt.help;
           if (!opt.flag && !opt.defaults.empty())
           {
-            desc += "\ndefault: " + (std::stringstream() << opt.defaults).str();
+            desc += "\ndefault: " + format(opt.defaults);
           }
           printArgHelp(os, desc, firstColWidth, maxLineLength);
         }

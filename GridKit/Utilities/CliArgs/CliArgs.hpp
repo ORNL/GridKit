@@ -114,7 +114,7 @@ namespace GridKit
 
       const std::string& get(const std::string& name) const
       {
-        return get<std::string>(name);
+        return (*this)[name]();
       }
 
       ///@}

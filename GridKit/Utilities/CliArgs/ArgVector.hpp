@@ -84,7 +84,7 @@ namespace GridKit
       template <typename T>
       decltype(auto) as() const
       {
-        return get<T>(vec[0]);
+        return vec[0].as<T>();
       }
 
       /**
@@ -92,7 +92,7 @@ namespace GridKit
        */
       const std::string& operator()() const
       {
-        return get<std::string>(vec[0]);
+        return vec[0].get();
       }
 
       /**

@@ -86,38 +86,5 @@ namespace GridKit
       std::string value_{};
     };
 
-    namespace Detail
-    {
-      template <typename T>
-      struct ArgValGetHelper
-      {
-        T operator()(const ArgValue& val) const
-        {
-          return val.as<T>();
-        }
-      };
-
-      template <>
-      struct ArgValGetHelper<std::string>
-      {
-        const std::string& operator()(const ArgValue& val) const
-        {
-          return val.get();
-        }
-      };
-    } // namespace Detail
-
-    /**
-     * @brief Get internal value from an ArgValue object as a specified type.
-     *
-     * The implementation is specialized via Detail::ArgValGetHelper simply in
-     * order to avoid a copy for the case when T is std::string
-     */
-    template <typename T>
-    decltype(auto) get(const ArgValue& val)
-    {
-      return Detail::ArgValGetHelper<T>{}(val);
-    }
-
   } // namespace Utilities
 } // namespace GridKit
