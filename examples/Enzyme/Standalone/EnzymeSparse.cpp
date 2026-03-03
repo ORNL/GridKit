@@ -58,6 +58,7 @@ SparseMatrix* jac_f_ref(std::vector<ScalarT> x, std::vector<ScalarT> y)
       }
     }
   }
+  // Hijacking constructor sets rows, cols and vals to nullptr
   return new SparseMatrix(N, N, current_nnz, &rows, &cols, &vals);
 }
 
