@@ -1052,7 +1052,7 @@ namespace AnalysisManager
 
     /**
      * @brief Set fixed step size and tolerances for the nonlinear solver
-     * 
+     *
      * @param time_step The fixed step size to use
      * @param rel_tol The relative tolerance to use for the nonlinear solver
      * @param abs_tol_override If positive, this value will be used as the
@@ -1068,10 +1068,11 @@ namespace AnalysisManager
     {
       setFixedStep(solver_, time_step, rel_tol, abs_tol_override);
     }
+
     /**
      * @brief Set fixed step size and tolerances for the nonlinear solver for
      *        the backward simulation
-     * 
+     *
      * @param time_step The fixed step size to use
      * @param rel_tol The relative tolerance to use for the nonlinear solver
      * @param abs_tol_override If positive, this value will be used as the
@@ -1094,7 +1095,7 @@ namespace AnalysisManager
     /**
      * @brief A helper function to set fixed step size and tolerances for the
      *        nonlinear solver
-     * 
+     *
      * @param mem The IDA memory (either forward or backward)
      * @param time_step The fixed step size to use
      * @param rel_tol The relative tolerance to use for the nonlinear solver
@@ -1105,7 +1106,7 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setFixedStep(void* mem,
+    void Ida<ScalarT, IdxT>::setFixedStep(void*   mem,
                                           ScalarT time_step,
                                           ScalarT rel_tol,
                                           ScalarT abs_tol_override)
@@ -1118,20 +1119,20 @@ namespace AnalysisManager
 
       /* Since the starting procedure is first order, the maximum global order
        * of convergence is two */
-      retval     = IDASetMaxOrd(mem, 2);
+      retval = IDASetMaxOrd(mem, 2);
       checkOutput(retval, "IDASetMaxOrd");
 
       /* Enable more nonlinear iterations because a failed nonlinear solve
-      * causes a failed integration with fixed steps */
+       * causes a failed integration with fixed steps */
       retval = IDASetMaxNonlinIters(mem, 100);
       checkOutput(retval, "IDASetMaxNonlinIters");
 
       // Set a large tolerance so the error test will never fail
       static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
       setTolerance(mem,
-                  FIXED_STEP_TOL_FAC * rel_tol,
-                  FIXED_STEP_TOL_FAC * abs_tol_override,
-                  FIXED_STEP_TOL_FAC);
+                   FIXED_STEP_TOL_FAC * rel_tol,
+                   FIXED_STEP_TOL_FAC * abs_tol_override,
+                   FIXED_STEP_TOL_FAC);
 
       /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
        * the large tolerances set above, we need to choose this tolerance to
@@ -1143,7 +1144,7 @@ namespace AnalysisManager
     /**
      * @brief Set the relative tolerance and optionally override the absolute
      *        tolerance
-     * 
+     *
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
@@ -1153,7 +1154,7 @@ namespace AnalysisManager
      */
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol,
-                                         ScalarT abs_tol_override)
+                                          ScalarT abs_tol_override)
     {
       setTolerance(solver_, rel_tol, abs_tol_override);
     }
@@ -1161,7 +1162,7 @@ namespace AnalysisManager
     /**
      * @brief Set the relative tolerance and optionally override the absolute
      *        tolerance for the backward simulation
-     * 
+     *
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
@@ -1179,9 +1180,9 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief A helper function to set the relative tolerance and optionally 
+     * @brief A helper function to set the relative tolerance and optionally
      *        override the absolute tolerance
-     * 
+     *
      * @param mem The IDA memory (either forward or backward)
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
@@ -1193,7 +1194,7 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setTolerance(void* mem,
+    void Ida<ScalarT, IdxT>::setTolerance(void*   mem,
                                           ScalarT rel_tol,
                                           ScalarT abs_tol_override,
                                           ScalarT abs_tol_fac)
@@ -1217,7 +1218,7 @@ namespace AnalysisManager
 
     /**
      * @brief Set the maximum number of steps
-     * 
+     *
      * @param max_steps The maximum number of steps
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
@@ -1230,7 +1231,7 @@ namespace AnalysisManager
 
     /**
      * @brief Set the maximum number of steps for the backward simulation
-     * 
+     *
      * @param max_steps The maximum number of steps
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
@@ -1243,7 +1244,7 @@ namespace AnalysisManager
 
     /**
      * @brief A helper function to set the maximum number of steps
-     * 
+     *
      * @param mem The IDA memory (either forward or backward)
      * @param max_steps The maximum number of steps
      * @tparam ScalarT Scalar data type
@@ -1259,7 +1260,7 @@ namespace AnalysisManager
     /**
      * @brief Set the quadrature relative tolerance and optionally override the
      *        absolute tolerance
-     * 
+     *
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
@@ -1277,7 +1278,7 @@ namespace AnalysisManager
     /**
      * @brief Set the quadrature relative tolerance and optionally override the
      *        absolute tolerance for the backward simulation
-     * 
+     *
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
      *        absolute tolerance rather than the model's default absolute
@@ -1290,14 +1291,14 @@ namespace AnalysisManager
                                                             ScalarT abs_tol_override)
     {
       setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_),
-                              rel_tol,
-                              abs_tol_override);
+                             rel_tol,
+                             abs_tol_override);
     }
 
     /**
      * @brief A helper function to set the quadrature relative tolerance and
      *        optionally override the absolute tolerance
-     * 
+     *
      * @param mem The IDA memory (either forward or backward)
      * @param rel_tol The relative tolerance to use
      * @param abs_tol_override If positive, this value will be used as the
@@ -1307,7 +1308,7 @@ namespace AnalysisManager
      * @tparam IdxT Index data type
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void* mem,
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void*   mem,
                                                     ScalarT rel_tol,
                                                     ScalarT abs_tol_override)
     {
