@@ -76,7 +76,7 @@ int main(int argc, const char* argv[])
   Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
 
-  real_type start = static_cast<real_type>(clock());
+  real_type   start = static_cast<real_type>(clock());
   std::string phase = "setup";
 
   // Get access to fault 0.

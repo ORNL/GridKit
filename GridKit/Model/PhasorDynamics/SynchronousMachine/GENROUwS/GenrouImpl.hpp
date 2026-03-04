@@ -407,9 +407,9 @@ namespace GridKit
       ScalarT psidpp = vq / (ONE<RealT> + omega);
       ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       ScalarT psiqp  = (Xqpp_ - Xl_) * iq - psiqpp;
-      ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
-      ScalarT psidp = psidpp - (Xdpp_ - Xl_) * id;
-      ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
+      ScalarT Edp    = psiqp - (Xqp_ - Xl_) * iq;
+      ScalarT psidp  = psidpp - (Xdpp_ - Xl_) * id;
+      ScalarT Eqp    = psidp + (Xdp_ - Xl_) * id;
 
       /* Now we have the state variables, solve for alg. variables */
       ScalarT ksat;
