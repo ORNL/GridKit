@@ -85,7 +85,8 @@ namespace AnalysisManager
 
       // Tag differential variables
       const std::vector<bool>& tag = model_->tag();
-      if (static_cast<IdxT>(tag.size()) != model_->size()) {
+      if (static_cast<IdxT>(tag.size()) != model_->size())
+      {
         std::cerr << "\nModel tag size does not match model size.\n\n";
         throw SundialsException();
       }
@@ -1322,7 +1323,8 @@ namespace AnalysisManager
 
       model_->setAbsoluteTolerance(rel_tol);
       const std::vector<ScalarT>& abs_tol = model_->absoluteTolerance();
-      if (static_cast<IdxT>(abs_tol.size()) != model_->size()) {
+      if (static_cast<IdxT>(abs_tol.size()) != model_->size())
+      {
         std::cerr << "\nModel absolute tolerance does not match model size.\n\n";
         throw SundialsException();
       }
