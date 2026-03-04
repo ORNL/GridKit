@@ -228,18 +228,18 @@ namespace AnalysisManager
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
 
-      void setFixedStep(void* mem,
+      void setFixedStep(void*   mem,
                         ScalarT time_step,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override);
-      void setTolerance(void* mem,
-                       ScalarT rel_tol,
-                      ScalarT abs_tol_override,
-                      ScalarT abs_tol_fac = 1);
+      void setTolerance(void*   mem,
+                        ScalarT rel_tol,
+                        ScalarT abs_tol_override,
+                        ScalarT abs_tol_fac = 1);
       void setMaxSteps(void* mem, IdxT max_steps);
-      void setQuadratureTolerance(void* mem,
-                                 ScalarT rel_tol,
-                                 ScalarT abs_tol_override);
+      void setQuadratureTolerance(void*   mem,
+                                  ScalarT rel_tol,
+                                  ScalarT abs_tol_override);
     };
 
     /// Simple exception to use within Ida class.
