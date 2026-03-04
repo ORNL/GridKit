@@ -1,0 +1,118 @@
+# IEEEST
+
+The **IEEEST** model is a standard IEEE power system stabilizer used in transient stability simulations.  
+It consists of a 4th-order notch filter, two lead–lag blocks, a washout block, and an output limiter with input cutout logic.
+
+Notes:
+- The **cutout logic uses** $V_{ct}$ (as labeled in the block diagram), not $u_d$.
+
+## Block Diagram
+
+TBD
+
+## Model Parameters
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$A_1$ | [s] | Notch filter denominator coefficient |
+$A_2$ | [s²] | Notch filter denominator coefficient |
+$A_3$ | [s] | Notch filter denominator coefficient |
+$A_4$ | [s²] | Notch filter denominator coefficient |
+$A_5$ | [s] | Notch filter numerator coefficient |
+$A_6$ | [s²] | Notch filter numerator coefficient |
+$T_1$ | [s] | Lead–lag 1 numerator time constant |
+$T_2$ | [s] | Lead–lag 1 denominator time constant |
+$T_3$ | [s] | Lead–lag 2 numerator time constant |
+$T_4$ | [s] | Lead–lag 2 denominator time constant |
+$T_5$ | [s] | Washout numerator time constant |
+$T_6$ | [s] | Washout denominator time constant |
+$K_s$ | [p.u.] | Stabilizer gain |
+$L_{s\min}$ | [p.u.] | Minimum stabilizer output limit |
+$L_{s\max}$ | [p.u.] | Maximum stabilizer output limit |
+$V_{cl}$ | [p.u.] | Lower input cutout threshold |
+$V_{cu}$ | [p.u.] | Upper input cutout threshold |
+$T_{delay}$ | [s] | Input time delay |
+
+### Model Derived Parameters
+```math
+\begin{aligned}
+a_0 &= 1 \\
+a_1 &= A_1 + A_3 \\
+a_2 &= A_2 + A_4 + A_1A_3 \\
+a_3 &= A_1A_4 + A_2A_3 \\
+a_4 &= A_2A_4
+\end{aligned}
+```
+
+## Model Variables
+
+### Internal Variables
+
+#### Differential
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$x_1$ | [-] | Notch filter state |
+$x_2$ | [-] | Notch filter state |
+$x_3$ | [-] | Notch filter state |
+$x_4$ | [-] | Notch filter state |
+$x_5$ | [-] | Lead–lag 1 state |
+$x_6$ | [-] | Lead–lag 2 state |
+$x_7$ | [-] | Washout state |
+
+#### Algebraic
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$u_d$ | [p.u.] | Delayed stabilizer input | $u_d(t)=u(t-T_{delay})$
+$v_4$ | [p.u.] | Notch filter output |
+$v_5$ | [p.u.] | Lead–lag 1 output |
+$v_6$ | [p.u.] | Lead–lag 2 output |
+$v_7$ | [p.u.] | Unlimited stabilizer signal |
+$V_{ss}$ | [p.u.] | Limited stabilizer signal |
+$V_s$ | [p.u.] | Stabilizer output |
+
+### External Variables
+
+#### Algebraic
+
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$u$ | [p.u.] | Stabilizer input signal |
+$V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block diagram
+
+## Model Equations
+
+### Differential Equations
+```math
+\begin{aligned}
+\dot{x}_1 &= x_2 \\
+\dot{x}_2 &= x_3 \\
+\dot{x}_3 &= x_4 \\
+\dot{x}_4 &= -\frac{a_0}{a_4}x_1
+            -\frac{a_1}{a_4}x_2
+            -\frac{a_2}{a_4}x_3
+            -\frac{a_3}{a_4}x_4
+            +\frac{1}{a_4}u_d \\
+\dot{x}_5 &= \frac{v_4 - x_5}{T_2} \\
+\dot{x}_6 &= \frac{v_5 - x_6}{T_4} \\
+\dot{x}_7 &= \frac{v_6 - x_7}{T_6}
+\end{aligned}
+```
+
+### Algebraic Equations
+```math
+\begin{aligned}
+0 &= -u_d + u(t-T_{delay}) \\
+0 &= -v_4 + x_1 + A_5 x_2 + A_6 x_3 \\
+0 &= -v_5 + x_5 + \frac{T_1}{T_2}(v_4 - x_5) \\
+0 &= -v_6 + x_6 + \frac{T_3}{T_4}(v_5 - x_6) \\
+0 &= -v_7 + K_s \frac{T_5}{T_6}(v_6 - x_7) \\
+0 &= -V_{ss} + \min\!\big(\max(v_7, L_{s\min}), L_{s\max}\big) \\
+0 &= -V_s +
+\begin{cases}
+V_{ss}, & V_{cl} < V_{ct} < V_{cu} \\
+0, & \text{otherwise}
+\end{cases}
+\end{aligned}
+```
