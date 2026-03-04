@@ -85,16 +85,17 @@ namespace AnalysisManager
 
       // Tag differential variables
       const std::vector<bool>& tag = model_->tag();
-      if (static_cast<IdxT>(tag.size()) == model_->size())
-      {
-        tag_ = N_VClone(yy_);
-        checkAllocation((void*) tag_, "N_VClone");
-        model_->tagDifferentiable();
-        copyVec(tag, tag_);
-
-        retval = IDASetId(solver_, tag_);
-        checkOutput(retval, "IDASetId");
+      if (static_cast<IdxT>(tag.size()) != model_->size()) {
+        std::cerr << "\nModel tag size does not match model size.\n\n";
+        throw SundialsException();
       }
+      tag_ = N_VClone(yy_);
+      checkAllocation((void*) tag_, "N_VClone");
+      model_->tagDifferentiable();
+      copyVec(tag, tag_);
+
+      retval = IDASetId(solver_, tag_);
+      checkOutput(retval, "IDASetId");
 
       abs_tol_ = N_VClone(yy_);
       checkAllocation((void*) abs_tol_, "N_VClone");
@@ -1320,6 +1321,10 @@ namespace AnalysisManager
 
       model_->setAbsoluteTolerance(rel_tol);
       const std::vector<ScalarT>& abs_tol = model_->absoluteTolerance();
+      if (static_cast<IdxT>(abs_tol.size()) != model_->size()) {
+        std::cerr << "\nModel absolute tolerance does not match model size.\n\n";
+        throw SundialsException();
+      }
       copyVec(abs_tol, abs_tol_);
       retval = IDAQuadSVtolerances(mem, rel_tol, abs_tol_);
       checkOutput(retval, "IDAQuadSVtolerances");
