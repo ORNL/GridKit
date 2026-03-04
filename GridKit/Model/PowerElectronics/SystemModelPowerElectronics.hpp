@@ -74,7 +74,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::jac_;
-    using CircuitComponent<ScalarT, IdxT>::rel_tol_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
   public:
@@ -85,35 +85,21 @@ namespace GridKit
      */
     PowerElectronicsModel()
     {
-      // Set system model parameters as default
-      rel_tol_         = 1e-4;
-      abs_tol_         = 1e-4;
-      this->max_steps_ = 2000;
       // By default don't use the jacobian
-      use_jac_         = false;
+      use_jac_ = false;
     }
 
     /**
      * @brief Constructor for the system model
      *
-     * @param[in] rel_tol Relative tolerance for the system model
-     * @param[in] abs_tol Absolute tolerance for the system model
      * @param[in] use_jac Boolean to choose if to use jacobian
-     * @param[in] max_steps Maximum number of steps for the system model
      *
      * @post System model parameters set as input
      */
-    PowerElectronicsModel(double rel_tol   = 1e-4,
-                          double abs_tol   = 1e-4,
-                          bool   use_jac   = false,
-                          IdxT   max_steps = 2000)
+    PowerElectronicsModel(bool use_jac = false)
     {
-      // Set system model tolerances from input
-      rel_tol_         = rel_tol;
-      abs_tol_         = abs_tol;
-      this->max_steps_ = max_steps;
       // Can choose if to use jacobian
-      use_jac_         = use_jac;
+      use_jac_ = use_jac;
     }
 
     /**
@@ -193,6 +179,8 @@ namespace GridKit
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+      tag_.resize(size_);
+      abs_tol_.resize(size_);
 
       // Evaluate component Jacobians to get sparsity
       distributeVectors();
@@ -323,6 +311,24 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
+      return 0;
+    }
+    
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     * 
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     * 
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol) final
+    {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

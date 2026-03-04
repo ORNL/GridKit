@@ -8,7 +8,8 @@ int main()
   GridKit::Testing::TestingResults           result;
   GridKit::Testing::IdaTests<double, size_t> test;
 
-  result += test.test();
+  result += test.callback();
+  result += test.fixedStep();
 
   return result.summary();
 }

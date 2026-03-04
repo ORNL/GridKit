@@ -127,9 +127,25 @@ namespace AnalysisManager
         return N_VGetArrayPointer(qB_);
       }
 
-      void printOutput(RealT t);
-      void printSpecial(RealT t, N_Vector x);
-      void printFinalStats();
+      void printOutput(RealT t) const;
+      void printSpecial(RealT t, N_Vector x) const;
+      void printFinalStats() const;
+
+      void setFixedStep(ScalarT time_step,
+                        ScalarT rel_tol,
+                        ScalarT abs_tol_override = 0);
+      void setBackwardFixedStep(ScalarT time_step,
+                                ScalarT rel_tol,
+                                ScalarT abs_tol_override = 0);
+      using DynamicSolver<ScalarT, IdxT>::setTolerance;
+      void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
+      void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
+      void setQuadratureTolerance(ScalarT rel_tol,
+                                  ScalarT abs_tol_override = 0);
+      void setBackwardQuadratureTolerance(ScalarT rel_tol,
+                                          ScalarT abs_tol_override = 0);
+      void setMaxSteps(IdxT maxSteps) override;
+      void setBackwardMaxSteps(IdxT maxSteps);
 
       IdaStats getStats() const;
 
@@ -174,6 +190,8 @@ namespace AnalysisManager
                                   void*    user_data);
 
     private:
+      static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
+
       void*           solver_{};
       SUNContext      context_{};
       SUNMatrix       JacobianMat_{};
@@ -185,10 +203,11 @@ namespace AnalysisManager
       RealT t_final_{};
       int   nout_{}; ///< Number of integration outputs
 
-      N_Vector yy_{};  ///< Solution vector
-      N_Vector yp_{};  ///< Solution derivatives vector
-      N_Vector tag_{}; ///< Tags differential variables
-      N_Vector q_{};   ///< Integrand vector
+      N_Vector yy_{};      ///< Solution vector
+      N_Vector yp_{};      ///< Solution derivatives vector
+      N_Vector tag_{};     ///< Tags differential variables
+      N_Vector abs_tol_{}; ///< Absolute tolerance vector
+      N_Vector q_{};       ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
       N_Vector yp0_{}; ///< Storage for initial derivatives
@@ -208,6 +227,19 @@ namespace AnalysisManager
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
+
+      void setFixedStep(void* mem,
+                        ScalarT time_step,
+                        ScalarT rel_tol,
+                        ScalarT abs_tol_override);
+      void setTolerance(void* mem,
+                       ScalarT rel_tol,
+                      ScalarT abs_tol_override,
+                      ScalarT abs_tol_fac = 1);
+      void setMaxSteps(void* mem, IdxT max_steps);
+      void setQuadratureTolerance(void* mem,
+                                 ScalarT rel_tol,
+                                 ScalarT abs_tol_override);
     };
 
     /// Simple exception to use within Ida class.

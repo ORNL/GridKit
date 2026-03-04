@@ -46,10 +46,9 @@ namespace GridKit
       using PhasorDynamics::Component<ScalarT, IdxT>::y_;
       using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
       using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
+      using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::f_;
       using PhasorDynamics::Component<ScalarT, IdxT>::J_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
       using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
       using PhasorDynamics::Component<ScalarT, IdxT>::residual_indices_;
 
@@ -59,10 +58,6 @@ namespace GridKit
        */
       SystemModel()
       {
-        // Set system model tolerances
-        rel_tol_         = 1e-7;
-        abs_tol_         = 1e-9;
-        this->max_steps_ = 2000;
       }
 
       /**
@@ -81,11 +76,6 @@ namespace GridKit
       {
         using namespace Governor;
         using namespace Exciter;
-
-        // Set system model tolerances
-        rel_tol_         = 1e-7;
-        abs_tol_         = 1e-9;
-        this->max_steps_ = 2000;
 
         owns_components_ = true;
 
@@ -338,6 +328,7 @@ namespace GridKit
         yp_.resize(size_);
         f_.resize(size_);
         tag_.resize(size_);
+        abs_tol_.resize(size_);
         variable_indices_.resize(size_);
         residual_indices_.resize(size_);
 
@@ -533,6 +524,43 @@ namespace GridKit
           {
             tag_[component->getVariableIndex(j)] = component->tag()[j];
           }
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       * 
+       * @param rel_tol The relative tolerance which can be used to pick the
+       *        absolute tolerance.
+       * @return int 0 if successful, non-zero otherwise.
+       * 
+       * This represents a "noise" level close to zero for which pure relative
+       * error cannot be used.
+       */
+      int setAbsoluteTolerance(RealT rel_tol) override
+      {
+        // Set initial values for global solution vectors
+        IdxT offset = 0;
+        for (const auto& bus : buses_)
+        {
+          bus->setAbsoluteTolerance(rel_tol);
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+          }
+          offset += bus->size();
+        }
+
+        for (const auto& component : components_)
+        {
+          component->setAbsoluteTolerance(rel_tol);
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            abs_tol_[offset + j] = component->absoluteTolerance()[j];
+          }
+          offset += component->size();
         }
 
         return 0;

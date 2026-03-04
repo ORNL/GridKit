@@ -28,6 +28,7 @@ namespace GridKit
       using BusBase<ScalarT, IdxT>::J_cols_buffer_;
       using BusBase<ScalarT, IdxT>::J_vals_buffer_;
       using BusBase<ScalarT, IdxT>::tag_;
+      using BusBase<ScalarT, IdxT>::abs_tol_;
       using BusBase<ScalarT, IdxT>::variable_indices_;
       using BusBase<ScalarT, IdxT>::residual_indices_;
 
@@ -44,6 +45,7 @@ namespace GridKit
       virtual int setBusID(IdxT) override final;
       virtual int allocate() override final;
       virtual int tagDifferentiable() override final;
+      virtual int setAbsoluteTolerance(RealT rel_tol) override final;
       virtual int initialize() override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
