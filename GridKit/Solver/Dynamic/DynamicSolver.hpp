@@ -23,6 +23,14 @@ namespace AnalysisManager
       return model_;
     }
 
+    void setTolerance(ScalarT rel_tol)
+    {
+      setTolerance(rel_tol, 0);
+    }
+
+    virtual void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) = 0;
+    virtual void setMaxSteps(IdxT msa)                                   = 0;
+
   protected:
     GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
   };

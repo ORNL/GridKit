@@ -25,6 +25,7 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
@@ -45,6 +46,7 @@ namespace GridKit
     int allocate();
     int initialize();
     int tagDifferentiable();
+    int setAbsoluteTolerance(RealT);
     int evaluateResidual();
     int evaluateJacobian();
     int evaluateIntegrand();

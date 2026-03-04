@@ -20,14 +20,13 @@ int main(int /* argc */, char const** /* argv */)
 {
   /// @todo Needs to be modified. Some components are small relative to others thus
   /// there error is high (or could be matlab vector issue)
-  double abs_tol         = 1.0e-8;
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
   bool   debug_output    = true;
 
   // Create model
-  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
+  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(use_jac);
 
   // Modeled after the problem in the paper
   double RN = 1.0e4;
@@ -223,6 +222,8 @@ int main(int /* argc */, char const** /* argv */)
 
   // setup simulation
   idas->configureSimulation();
+  idas->setTolerance(rel_tol);
+  idas->setMaxSteps(max_step_number);
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);
 
