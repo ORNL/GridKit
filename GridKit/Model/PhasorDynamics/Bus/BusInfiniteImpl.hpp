@@ -113,13 +113,13 @@ namespace GridKit
 
     /**
      * @brief Compute the absolute tolerance for each variable in the model
-     * 
+     *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      * @return int 0 if successful, non-zero otherwise.
-     * 
+     *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */

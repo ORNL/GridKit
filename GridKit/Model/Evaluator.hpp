@@ -40,11 +40,11 @@ namespace GridKit
       virtual int tagDifferentiable()                 = 0;
       /**
        * @brief Compute the absolute tolerance for each variable in the model
-       * 
+       *
        * @param rel_tol The relative tolerance which can be used to pick the
        *        absolute tolerance.
        * @return int 0 if successful, non-zero otherwise.
-       * 
+       *
        * This represents a "noise" level close to zero for which pure relative
        * error cannot be used.
        */
@@ -122,17 +122,17 @@ namespace GridKit
 
       /**
        * @brief Get the absolute tolerance for each variable in the model
-       * 
+       *
        * @return a reference to the absolute tolerance vector.
-       * 
+       *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
       virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
       /**
        * @brief Get the absolute tolerance for each variable in the model
-       * 
+       *
        * @return a const reference to the absolute tolerance vector.
-       * 
+       *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
       virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
