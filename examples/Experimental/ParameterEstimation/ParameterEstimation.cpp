@@ -52,6 +52,7 @@ int main()
 
   // setup simulation
   idas.configureSimulation();
+  idas.setTolerance(1e-7, 1e-9);
   idas.configureAdjoint();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);

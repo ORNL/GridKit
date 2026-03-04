@@ -46,6 +46,7 @@ namespace GridKit
     int allocate();
     int initialize();
     int tagDifferentiable();
+    int setAbsoluteTolerance(RealT);
     int evaluateResidual();
     int evaluateJacobian();
     int evaluateIntegrand();
