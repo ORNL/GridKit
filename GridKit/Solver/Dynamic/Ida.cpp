@@ -94,8 +94,6 @@ namespace AnalysisManager
 
         retval = IDASetId(solver_, tag_);
         checkOutput(retval, "IDASetId");
-        retval = IDASetSuppressAlg(solver_, SUNTRUE);
-        checkOutput(retval, "IDASetSuppressAlg");
       }
 
       abs_tol_ = N_VClone(yy_);

@@ -49,7 +49,7 @@ int main()
   idas->configureSimulation();
   idas->configureAdjoint();
   idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init);
+  idas->initializeSimulation(t_init, true);
   idas->configureQuadrature();
   idas->initializeQuadrature();
 
@@ -59,8 +59,8 @@ int main()
   // create initial condition after a fault
   {
     idas->getSavedInitialCondition();
-    idas->initializeSimulation(t_init);
     gen->V() = 0.0;
+    idas->initializeSimulation(t_init, true);
     idas->runSimulation(0.1, 20);
     gen->V() = 1.0;
     idas->saveInitialCondition();
@@ -71,7 +71,7 @@ int main()
 
   // Compute the objective function as an integral over the system trajectory
   idas->getSavedInitialCondition();
-  idas->initializeSimulation(t_init);
+  idas->initializeSimulation(t_init, true);
   idas->initializeQuadrature();
   idas->runSimulationQuadrature(t_final, 100);
 
@@ -88,7 +88,7 @@ int main()
   {
     model->param()[i] += eps;
     idas->getSavedInitialCondition();
-    idas->initializeSimulation(t_init);
+    idas->initializeSimulation(t_init, true);
     idas->initializeQuadrature();
     idas->runSimulationQuadrature(t_final, 100);
 
@@ -107,7 +107,7 @@ int main()
   // Compute gradient of the objective function using adjoint method
   idas->initializeAdjoint();
   idas->getSavedInitialCondition();
-  idas->initializeSimulation(t_init);
+  idas->initializeSimulation(t_init, true);
   idas->initializeQuadrature();
   idas->runForwardSimulation(t_final, 100);
 

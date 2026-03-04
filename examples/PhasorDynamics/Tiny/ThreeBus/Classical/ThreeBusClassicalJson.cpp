@@ -149,7 +149,7 @@ int main(int argc, const char* argv[])
 
   // Run simulation, output each `dt` interval
   real_type start = static_cast<real_type>(clock());
-  ida.initializeSimulation(0.0, false);
+  ida.initializeSimulation(0.0, true);
 
   // Run for 1s
   int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
@@ -157,13 +157,13 @@ int main(int argc, const char* argv[])
 
   // Introduce fault to ground and run for 0.1s
   fault->setStatus(true);
-  ida.initializeSimulation(1.0, false);
+  ida.initializeSimulation(1.0, true);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
   fault->setStatus(false);
-  ida.initializeSimulation(1.1, false);
+  ida.initializeSimulation(1.1, true);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
