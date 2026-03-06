@@ -21,6 +21,15 @@ namespace GridKit
      */
     class ArgValue
     {
+      /**
+       * @brief Check that T != ArgValue
+       *
+       * @note this is used to work around an issue with libc++
+       */
+      template <typename T>
+      static constexpr bool notAnArgValue =
+          !std::is_same_v<std::remove_reference_t<T>, ArgValue>;
+
     public:
       /**
        * @brief Default construction results in empty value
@@ -28,13 +37,26 @@ namespace GridKit
       ArgValue() = default;
 
       /**
+       * @brief Copy constructor
+       */
+      ArgValue(const ArgValue&) = default;
+
+      /**
+       * @brief Move constructor
+       */
+      ArgValue(ArgValue&&) = default;
+
+      /**
        * @brief Construct from any value
        */
       template <typename T>
-      ArgValue(T&& val)
+      ArgValue(T&& val, std::enable_if_t<notAnArgValue<T>, int> = 0)
         : value_((std::stringstream() << val).str())
       {
       }
+
+      ArgValue& operator=(const ArgValue&) = default;
+      ArgValue& operator=(ArgValue&&)      = default;
 
       /**
        * @brief Assign any value

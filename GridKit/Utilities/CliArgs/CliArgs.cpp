@@ -271,24 +271,21 @@ namespace GridKit
             arg    = nullptr;
             continue;
           }
-          if (arg)
+          if (arg && arg->values.vec.size() != arg->option.nargs)
           {
-            if (arg->option.flag)
-            {
-              // handle current arg as flag and move on
-              arg->values.vec.assign({true});
-            }
-            else if (arg->values.vec.size() != arg->option.nargs)
-            {
-              // option not given correct number of values
-              Log::error() << "CliArgs: option \"" << arg->option.name[0]
-                           << "\" requires " << arg->option.nargs
-                           << " arguments; " << arg->values.vec.size()
-                           << " given.\n";
-              status = false;
-            }
+            // option not given correct number of values
+            Log::error() << "CliArgs: option \"" << arg->option.name[0]
+                         << "\" requires " << arg->option.nargs
+                         << " arguments; " << arg->values.vec.size()
+                         << " given.\n";
+            status = false;
           }
           arg = new_arg;
+          if (arg->option.flag)
+          {
+            // handle current arg as flag and move on
+            arg->values = true;
+          }
         }
         else if (arg)
         {
