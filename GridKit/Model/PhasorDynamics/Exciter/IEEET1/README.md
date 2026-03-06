@@ -226,10 +226,6 @@ excitation limiters are non-existant. As of now, we assume there is no compensat
 ```
 ## Model Outputs
 
-There are 2 outputs for this model: $E_{fd}$ and $k_{sat}$.
+The field voltage, $E_{fd}$, is an internal model variable.
 
-$E_{fd}$ is the field voltage applied to the rotor winding i.e. the control input to the synchronous machine. Its value is calculated from the internal model variable.
-
-$k_{sat}$ is calculated using the formula from the smooth piecewise approximation (above). It represents the magnetic saturation coefficient of the exciter and models the nonlinear magnetization characteristics of the generator at high field voltage levels.
-
-Magnetic saturation is modeled using a sigmoid function, which ensures small $k_{sat}$ values at low excitation and a steep rise as the field voltage increases.
+The magnetic saturation coefficient $k_{sat}$ is calculated from $E_{fd}$ using the the smooth piecewise version (above).

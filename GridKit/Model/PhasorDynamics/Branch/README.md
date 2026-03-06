@@ -83,39 +83,32 @@ None.
 
 # Model Outputs
 
-2 outputs are model variables of the branch model: $I_r$ and $I_i$.
+Real and imaginary current at the branch's two buses
+are model variables of the branch model: $I_{r1}$, $I_{i1}$, $I_{r2}$, 
+and $I_{i2}$.
 
-There are 3 calculated outputs for the branch model: current magnitude $|I|$, active power $P$ and reactive power $Q$. They are calculated as follows:
+Current magnitude $I_{m1}$ and $I_{m2}$ are the phasor magnitude of the current.
 ``` math
 \begin{aligned}
-      |I| &= \sqrt{(I_{r})^2 + (I_{i})^2} \\
-      P &= V_{r} I_{r} + V_{i} I_{i}\\
-      Q &= V_{i} I_{r} - V_{r} I_{i}
-\end{aligned}
-```
-$|I|$ is the absolute value of the current phasor, independent of its direction or phase angle. The calculation above refelcts this as the geometric length.
-
-In an AC electrical system, the complex power $S$ can be calculated from the voltage phasor $V$ and current phasor, $I$. By defenition, $S=VI^*$, where $I^*$ is the complex conjugate of $I$. Thus; 
-
-``` math
-\begin{aligned}
-      S &= (V_r + V_i) (I_r - I_i)\\
-      S &= V_r I_r - V_r I_i + V_i I_r + V_i I_i\\
-      S &= (V_r I_r + V_i I_i) + (V_i I_r - V_r I_i)\\
-      \Re({S}) &= V_r I_r + V_i I_i\\
-      \Im({S}) &= V_i I_r - V_r I_i
+      I_{m1} &= \sqrt{(I_{r1})^2 + (I_{i1})^2} \\
+      I_{m2} &= \sqrt{(I_{r2})^2 + (I_{i2})^2}
 \end{aligned}
 ```
 
-$P$ is the real component of $S$. It is the power that actually does useful work. 
+Active and reactive power ($P_1$, $Q_1$, $P_2$, and $Q_2$) 
+are the real and imaginary parts of the complex power at each end of the branch,
+where the complex power is defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
+``` math
+\begin{aligned}
+      P_1 &= V_{r1} I_{r1} + V_{i1} I_{i1}\\
+      Q_1 &= V_{i1} I_{r1} - V_{r1} I_{i1} \\
+      P_2 &= V_{r2} I_{r2} + V_{i2} I_{i2}\\
+      Q_2 &= V_{i2} I_{r2} - V_{r2} I_{i2}
+\end{aligned}
+```
 
-$Q$ is the imaginary component of $S$. It is the power that oscillates back and forth between capacitors and inductors. 
-
-Positive $P_1$ values indicate that Bus 1 supplies active power into the branch. Negative values imply that Bus 1 is absorbing the active power. 
-$\newline$
-The same sign convention applies to reactive power: positive $Q_1$ corresponds to injection into the branch by Bus 1, and negative $Q_1$ corresponds to absorption from the branch.
-
-The same output variables are computed for Bus 2 following the identical procedure used for Bus 1.
+Current and power in these output variables are defined as \emph{leaving}
+the associated bus.
 
 # Transformer Branch Model
 

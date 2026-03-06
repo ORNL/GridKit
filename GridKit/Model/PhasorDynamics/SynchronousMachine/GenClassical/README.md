@@ -162,30 +162,18 @@ With this, we initialize the machine at a steady state.
 
 ## Model Outputs
 
-There are 6 output variables for this model, 4 of which are internal and 2 which are calculated.
+Real and imaginary currents, $I_r$ and $I_i$, are model algebraic variables,
+oriented as leaving the machine (i.e. entering the bus).
 
-### Internal Variables
-The model ouputs the real and imaginary currents, $I_r$ and $I_i$, respectively. 
-The machine's angle $\delta$ and speed $\omega$ are also output.
+Machine angle $\delta$ and speed $\omega$ are model state variables.
 
-
-### Calculated Variables
-In an AC electrical system, the complex power $S$ can be calculated from the voltage phasor $V$ and current phasor, $I$. By defenition, $S=VI^*$, where $I^*$ is the complex conjugate of $I$. Thus; 
-
+Active and reactive power ($P$, and $Q$) 
+are the real and imaginary parts of the complex power, 
+defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
 ``` math
 \begin{aligned}
-      S &= (V_r + V_i) (I_r - I_i)\\
-      S &= V_r I_r - V_r I_i + V_i I_r + V_i I_i\\
-      S &= (V_r I_r + V_i I_i) + (V_i I_r - V_r I_i)\\
-      \Re({S}) &= V_r I_r + V_i I_i\\
-      \Im({S}) &= V_i I_r - V_r I_i
+      P &= V_{r} I_{r} + V_{i} I_{i}\\
+      Q &= V_{i} I_{r} - V_{r} I_{i}
 \end{aligned}
 ```
-
-$P$ is the real component of $S$. It is the power that actually does useful work. 
-
-$Q$ is the imaginary component of $S$. It is the power that oscillates back and forth between capacitors and inductors. 
-
-Positive active power values indicate that the machine supplies active power into the system. Negative values imply that the machine is absorbing the active power. 
-$\newline$
-The same sign convention applies to reactive power: positive $Q$ corresponds to injection by the generator, and negative $Q$ corresponds to absorption from the system.
+Power outputs are oriented leaving the machine (i.e. entering the bus).
