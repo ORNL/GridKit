@@ -224,3 +224,8 @@ excitation limiters are non-existant. As of now, we assume there is no compensat
     k_{sat} &= 0 \\
 \end{aligned}
 ```
+## Model Outputs
+
+The field voltage, $E_{fd}$, is an internal model variable.
+
+The magnetic saturation coefficient $k_{sat}$ is calculated from $E_{fd}$ using the the smooth piecewise version (above).

@@ -184,3 +184,24 @@ of $\psi''$, which is independent of $\delta$.
   \right]
 \end{aligned}
 ```
+
+## Model Outputs
+
+Real and imaginary currents, $I_r$ and $I_i$, are model algebraic variables,
+oriented as leaving the machine (i.e. entering the bus).
+
+Machine relative angle $\delta$ and speed deviation $\omega$ 
+are model state variables. Note that $\omega=0$ corresponds to synchronous
+speed operation. A separate output variable, speed,
+reports the per-unit machine speed, defined by $\omega + 1$.
+
+Active and reactive power ($P$, and $Q$) 
+are the real and imaginary parts of the complex power, 
+defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
+``` math
+\begin{aligned}
+      P &= V_{r} I_{r} + V_{i} I_{i}\\
+      Q &= V_{i} I_{r} - V_{r} I_{i}
+\end{aligned}
+```
+Power outputs are oriented leaving the machine (i.e. entering the bus).

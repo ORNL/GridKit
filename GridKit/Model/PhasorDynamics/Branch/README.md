@@ -81,7 +81,34 @@ None.
 \end{aligned}
 ```
 
+# Model Outputs
 
+Real and imaginary current at the branch's two buses
+are model variables of the branch model: $I_{r1}$, $I_{i1}$, $I_{r2}$, 
+and $I_{i2}$.
+Current is oriented leaving the branch (i.e. entering the bus).
+
+Current magnitude $I_{m1}$ and $I_{m2}$ are the phasor magnitude of the current.
+``` math
+\begin{aligned}
+      I_{m1} &= \sqrt{(I_{r1})^2 + (I_{i1})^2} \\
+      I_{m2} &= \sqrt{(I_{r2})^2 + (I_{i2})^2}
+\end{aligned}
+```
+
+Active and reactive power ($P_1$, $Q_1$, $P_2$, and $Q_2$) 
+are the real and imaginary parts of the complex power at each end of the branch,
+where the complex power is defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
+``` math
+\begin{aligned}
+      P_1 &= V_{r1} I_{r1} + V_{i1} I_{i1}\\
+      Q_1 &= V_{i1} I_{r1} - V_{r1} I_{i1} \\
+      P_2 &= V_{r2} I_{r2} + V_{i2} I_{i2}\\
+      Q_2 &= V_{i2} I_{r2} - V_{r2} I_{i2}
+\end{aligned}
+```
+
+Real and reactive power are oriented leaving the branch (i.e. entering the bus).
 
 # Transformer Branch Model
 
