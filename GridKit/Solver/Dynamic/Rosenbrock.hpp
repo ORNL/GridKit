@@ -618,10 +618,9 @@ namespace Integrator
       [[likely]]
       if (!tab_.is_w || !skip_lu_)
       {
-        double dtXgamma = -1.0 / (dt * tab_.gamma);
         y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_);
         y0_copied = true;
-        model_->updateTime(t0, -dtXgamma);
+        model_->updateTime(t0, -1.0 / (dt * tab_.gamma));
         model_->evaluateJacobian();
         GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
         jacobian_->setDataPointers(
