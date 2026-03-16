@@ -345,8 +345,7 @@ namespace GridKit
         model.initialize();
 
         ReSolve::LinAlgWorkspaceCpu linear_workspace;
-        // ReSolve::SystemSolver       lin_solver(&linear_workspace, "klu", "klu", "klu");
-        ReSolve::SystemSolver       lin_solver(&linear_workspace, "none", "none", "randgmres", "ilu0");
+        ReSolve::SystemSolver       lin_solver(&linear_workspace, "klu", "klu", "klu");
         ReSolve::VectorHandler      vec_handler;
 
         lin_solver.initialize();
