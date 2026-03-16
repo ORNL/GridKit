@@ -337,7 +337,7 @@ namespace GridKit
       using Rosenbrock = Integrator::Rosenbrock<ScalarT, IdxT>;
 
     public:
-      TestOutcome test_order(Rosenbrock::Tableau&& tab)
+      TestOutcome test_order(Rosenbrock::Tableau&& tab, double step_exponent_lower, double step_exponent_upper)
       {
         TestStatus success = true;
 
@@ -361,9 +361,7 @@ namespace GridKit
         double              final_time = 2.0;
         std::vector<double> out_times  = {final_time};
 
-        double step_exponent_lower = -1.0;
-        double step_exponent_upper = -5.0;
-        size_t num_samples         = 11;
+        size_t num_samples = 21;
 
         std::vector<double> step_sizes;
         std::vector<double> errors;
@@ -387,6 +385,8 @@ namespace GridKit
         for (size_t i = 0; i < num_samples; i++)
         {
           double step_size = std::pow(10, step_exponent_lower + static_cast<double>(i) * (step_exponent_upper - step_exponent_lower) / static_cast<double>(num_samples - 1));
+          double num_steps = round((final_time - 0.5) / step_size);
+          step_size        = (final_time - 0.5) / num_steps;
           step_sizes.push_back(step_size);
 
           model.initialize();
