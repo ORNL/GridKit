@@ -781,7 +781,7 @@ namespace Integrator
         {
           for (size_t j = 0; j < tab_.order - 2; j++)
           {
-            vector_handler_.axpy(tab_.H[j * (tab_.num_stages - 2) + i], stages_[i].get(), dense_coeff_[j].get(), memspace_);
+            vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], stages_[i].get(), dense_coeff_[j].get(), memspace_);
           }
         }
       }
