@@ -334,11 +334,14 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class RosenbrockTests
     {
+      using Rosenbrock = Integrator::Rosenbrock<ScalarT, IdxT>;
+
     public:
-      TestOutcome test()
+      TestOutcome test_order(Rosenbrock::Tableau&& tab)
       {
-        using Rosenbrock   = Integrator::Rosenbrock<ScalarT, IdxT>;
         TestStatus success = true;
+
+        uint8_t expected_order = tab.order;
 
         Model::TrigonometricDaeEvaluator<ScalarT, IdxT> model;
         model.allocate();
@@ -350,7 +353,7 @@ namespace GridKit
 
         lin_solver.initialize();
 
-        Rosenbrock integrator(Rosenbrock::Tableau::lin_implicit_euler(), &model, lin_solver, vec_handler, nullptr);
+        Rosenbrock integrator(std::move(tab), &model, lin_solver, vec_handler, nullptr);
         integrator.allocate();
 
         Integrator::FixedStep step_controller;
@@ -381,7 +384,7 @@ namespace GridKit
           errors.push_back(std::sqrt(error) / std::sqrt(sol_norm));
         };
 
-        for (size_t i = 0; i < 1; i++)
+        for (size_t i = 0; i < num_samples; i++)
         {
           double step_size = std::pow(10, step_exponent_lower + static_cast<double>(i) * (step_exponent_upper - step_exponent_lower) / static_cast<double>(num_samples - 1));
           step_sizes.push_back(step_size);
@@ -391,7 +394,8 @@ namespace GridKit
 
           typename Rosenbrock::Parameters params;
           params.starting_step = step_size;
-          integrator.integrate(out_times, step_controller, params, out_cb, step_cb);
+          params.max_steps     = static_cast<size_t>(ceil((final_time - 0.5) / step_size)) + 10;
+          integrator.integrate(out_times, step_controller, params, out_cb);
         }
 
         std::cerr << "Step sizes\n";
@@ -405,7 +409,19 @@ namespace GridKit
         {
           std::cerr << std::scientific << std::setprecision(20) << error << ' ';
         }
-        std::cerr << '\n';
+        std::cerr << "\n\n";
+
+        std::vector<double> pairwise_orders;
+        double              empirical_order = 0.0;
+        for (size_t i = 1; i < num_samples; i++)
+        {
+          pairwise_orders.push_back((log(errors[i]) - log(errors[i - 1])) / (log(step_sizes[i]) - log(step_sizes[i - 1])));
+          empirical_order += pairwise_orders.back();
+        }
+        empirical_order /= static_cast<double>(num_samples - 1);
+
+        std::cerr << "Empirical order: " << std::fixed << std::setprecision(5) << empirical_order << " v.s. expected " << static_cast<unsigned>(expected_order) << '\n';
+        success *= empirical_order > expected_order * 0.85;
 
         return success.report(__func__);
       }
