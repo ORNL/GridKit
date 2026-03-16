@@ -419,6 +419,8 @@ namespace Integrator
       }
       mass_->copyFromExternal(mass.get(), memspace_, memspace_);
 
+      stats_ = Stats();
+
       return 0;
     }
 
