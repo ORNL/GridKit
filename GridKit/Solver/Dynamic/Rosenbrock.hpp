@@ -629,13 +629,6 @@ namespace Integrator
             model_jacobian->getValues(),
             memspace_);
 
-        std::cerr << "Jacobian values:\n";
-        for (size_t i = 0; i < model_jacobian->getNnz(); i++)
-        {
-          std::cerr << std::scientific << std::setprecision(5) << std::setw(12) << model_jacobian->getValues()[i] << ' ';
-        }
-        std::cerr << "\n\n";
-
         [[likely]]
         if (jacobian_analyzed_)
         {
@@ -668,24 +661,10 @@ namespace Integrator
         RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
         vector_handler_.scal(-1, RHS_first_stage_.get(), memspace_);
 
-        std::cerr << "RHS_first_stage_:\n";
-        for (size_t i = 0; i < RHS_first_stage_->getSize(); i++)
-        {
-          std::cerr << std::scientific << std::setprecision(5) << std::setw(12) << RHS_first_stage_->getData(memspace_)[i] << ' ';
-        }
-        std::cerr << "\n\n";
-
         stats_.f_evals++;
       }
       lin_solver_.solve(RHS_first_stage_.get(), stages_[0].get());
       stats_.decomp_solves++;
-
-      std::cerr << "Stage 0:\n";
-      for (size_t i = 0; i < stages_[0]->getSize(); i++)
-      {
-        std::cerr << std::scientific << std::setprecision(5) << std::setw(12) << stages_[0]->getData(memspace_)[i] << ' ';
-      }
-      std::cerr << "\n\n";
 
       // Rest of stages
       for (size_t i = 1; i < tab_.num_stages; i++)

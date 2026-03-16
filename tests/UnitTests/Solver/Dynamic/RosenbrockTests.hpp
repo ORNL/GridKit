@@ -380,16 +380,6 @@ namespace GridKit
           sol_norm += std::pow(tanh(final_time), 2);
 
           errors.push_back(std::sqrt(error) / std::sqrt(sol_norm));
-
-          std::cerr << "Callback called at t = " << t << '\n';
-        };
-
-        auto step_cb = [&](const Rosenbrock::StepInfo& step_info)
-        {
-          std::cerr << step_info.report() << '\n'
-                    << "Current state:\n"
-                    << model.y()[0] << ',' << model.y()[1] << '\n'
-                    << std::sinh(step_info.sim_time) << ',' << std::tanh(step_info.sim_time) << "\n\n";
         };
 
         for (size_t i = 0; i < 1; i++)
