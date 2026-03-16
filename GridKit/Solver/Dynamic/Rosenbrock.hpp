@@ -287,7 +287,7 @@ namespace Integrator
 
         re.C[0] = 2.0;
 
-        return std::move(re);
+        return re;
       }
     };
 
