@@ -1,3 +1,4 @@
+#include "GridKit/Solver/Dynamic/Rosenbrock.hpp"
 #include "RosenbrockTests.hpp"
 
 int main()
@@ -8,7 +9,7 @@ int main()
   GridKit::Testing::TestingResults               result;
   GridKit::Testing::RosenbrockTests<double, int> test;
 
-  result += test.test();
+  result += test.test_order(Integrator::Rosenbrock<double, int>::Tableau::lin_implicit_euler());
 
   return result.summary();
 }
