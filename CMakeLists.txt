@@ -33,6 +33,9 @@ option(GridKit_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
 # Enzyme support is disabled by default
 option(GridKit_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 
+# ReSolve support is disabled by default
+option(GridKit_ENABLE_RESOLVE "Enable ReSolve support" OFF)
+
 # Enable the address sanitizer
 option(GridKit_ENABLE_ASAN "Enable the address sanitizer" OFF)
 
@@ -52,6 +55,7 @@ list(
   IPOPT
   SUNDIALS
   ENZYME
+  RESOLVE
   ASAN
   UBSAN
   OPENMP)
@@ -145,6 +149,13 @@ endif()
 
 if(GRIDKIT_ENABLE_THREADS)
   find_package(Threads REQUIRED)
+endif()
+
+if(GRIDKIT_ENABLE_RESOLVE)
+  find_package(ReSolve CONFIG 
+    PATHS ${ReSolve_DIR} ${ReSolve_DIR}/share/resolve/cmake
+    ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
+    REQUIRED)
 endif()
 
 # Macro that adds libraries
