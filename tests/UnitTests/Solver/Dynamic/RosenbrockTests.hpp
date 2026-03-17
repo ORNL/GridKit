@@ -354,7 +354,11 @@ namespace GridKit
         lin_solver.initialize();
 
         Rosenbrock integrator(std::move(tab), &model, lin_solver, vec_handler, nullptr);
-        integrator.allocate();
+        if (integrator.allocate())
+        {
+          success = false;
+          return success.report(__func__);
+        }
 
         Integrator::FixedStep step_controller;
 
@@ -390,12 +394,20 @@ namespace GridKit
           step_sizes.push_back(step_size);
 
           model.initialize();
-          integrator.initializeSimulation(0.5);
+          if (integrator.initializeSimulation(0.5))
+          {
+            success = false;
+            return success.report(__func__);
+          }
 
           typename Rosenbrock::Parameters params;
           params.starting_step = step_size;
           params.max_steps     = static_cast<size_t>(ceil((final_time - 0.5) / step_size)) + 10;
-          integrator.integrate(out_times, step_controller, params, out_cb);
+          if (integrator.integrate(out_times, step_controller, params, out_cb))
+          {
+            success = false;
+            return success.report(__func__);
+          }
         }
 
         std::cerr << "Step sizes\n";
