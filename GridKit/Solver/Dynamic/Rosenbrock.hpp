@@ -408,7 +408,7 @@ namespace Integrator
 
     /**
      * @brief Whether or not the integrator should attempt to skip Jacobian decomposition on the next step. Controlled by the
-     *        time stepping algorithm in `integrate()`. Generally, this should only be set if we suspect the Jacobian for the
+     *        time stepping algorithm in \link integrate() \endlink . Generally, this should only be set if we suspect the Jacobian for the
      *        last step is a good enough approximation of the Jacobian on the next step. Non-ROW methods need exact Jacobians,
      *        so this should only be set for ROW methods, and when the step size for the next step is the same as the step size
      *        as the previous step.
@@ -419,7 +419,7 @@ namespace Integrator
     /**
      * @brief Whether or not the integrator should attempt to skip the residual function evaluation of the first stage on the
      *        next step. This should only be used when a step is rejected and the residual function is evaluated at the exact
-     *        same arguments as the previous step. Then `RHS_first_stage_` can be re-used rather than re-calculated.
+     *        same arguments as the previous step. Then \ref RHS_first_stage_ can be re-used rather than re-calculated.
      *
      */
     bool skip_f_ = false;
@@ -445,7 +445,7 @@ namespace Integrator
     GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
 
     /**
-     * @brief The linear solver to be used during integration in `time_step()`.
+     * @brief The linear solver to be used during integration in \link time_step() \endlink.
      *
      */
     ReSolve::SystemSolver&  lin_solver_;
@@ -456,7 +456,7 @@ namespace Integrator
     ReSolve::VectorHandler& vector_handler_;
 
     /**
-     * @brief The `ErrorNorm` to be used by the `StepController` in `integrate()`.
+     * @brief The `ErrorNorm` to be used by the `StepController` in \link integrate() \endlink.
      *
      * @note Can be `nullptr` if no `ErrorNorm` is configured, in case the `StepController` does not need an error to be calculated.
      *
@@ -506,7 +506,7 @@ namespace Integrator
     Parameters params_;
 
     /**
-     * @brief Running statistics of the integrator. Reset by `initializeSimulation()`.
+     * @brief Running statistics of the integrator. Reset by \link initializeSimulation() \endlink.
      *
      */
     Stats stats_;
@@ -559,7 +559,7 @@ namespace Integrator
 
       /**
        * @brief Right-hand side of linear solve used in the first stage.
-       *        Stored separately from `RHS_` since it can be re-used by future steps if the current step is rejected.
+       *        Stored separately from \ref RHS_ since it can be re-used by future steps if the current step is rejected.
        *
        * @see `skip_f_`
        *
@@ -598,7 +598,7 @@ namespace Integrator
        *        errors when the Jacobian differs significantly, so this flag should be reset when
        *        a significant event can happen, such as re-initializing the simulation.
        *
-       * @see `initializeSimulation()`
+       * @see \link initializeSimulation() \endlink
        *
        */
       bool jacobian_analyzed_ = false;
@@ -614,7 +614,7 @@ namespace Integrator
     /**
      * @brief Dense output interpolation nodes. Used to generate output states in-between steps.
      *
-     * @see `calc_dense_coeff()`, `interp_dense()`
+     * @see \link calc_dense_coeff() \endlink, \link interp_dense() \endlink
      *
      */
     std::unique_ptr<std::unique_ptr<State>[]> dense_coeff_;
