@@ -41,6 +41,7 @@ if (GRIDKIT_ENABLE_RESOLVE)
   gridkit_add_library(rosenbrock
     SOURCES
       Rosenbrock.cpp
+      RosenbrockTableaus.cpp
     HEADERS
       ${_install_headers}
     LINK_LIBRARIES
