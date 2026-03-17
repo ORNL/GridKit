@@ -160,43 +160,43 @@ namespace Integrator
   {
     size_t size = static_cast<size_t>(model_->size());
 
-    y_prev_          = std::make_unique<State>(size);
-    y_cur_           = std::make_unique<State>(size);
-    y_interp_        = std::make_unique<State>(size);
-    asum_            = std::make_unique<State>(size);
-    csum_            = std::make_unique<State>(size);
-    RHS_             = std::make_unique<State>(size);
-    RHS_first_stage_ = std::make_unique<State>(size);
-    dFdt_            = std::make_unique<State>(size);
-    mass_            = std::make_unique<State>(size);
-    y_new_           = std::make_unique<State>(size);
+    y_prev_                     = std::make_unique<State>(size);
+    y_cur_                      = std::make_unique<State>(size);
+    y_new_                      = std::make_unique<State>(size);
+    y_interp_                   = std::make_unique<State>(size);
+    workspace_.asum_            = std::make_unique<State>(size);
+    workspace_.csum_            = std::make_unique<State>(size);
+    workspace_.RHS_             = std::make_unique<State>(size);
+    workspace_.RHS_first_stage_ = std::make_unique<State>(size);
+    workspace_.dFdt_            = std::make_unique<State>(size);
+    workspace_.mass_            = std::make_unique<State>(size);
 
     BUBBLE_FAIL(y_prev_->allocate(memspace_));
     BUBBLE_FAIL(y_cur_->allocate(memspace_));
-    BUBBLE_FAIL(y_interp_->allocate(memspace_));
-    BUBBLE_FAIL(asum_->allocate(memspace_));
-    BUBBLE_FAIL(csum_->allocate(memspace_));
-    BUBBLE_FAIL(RHS_->allocate(memspace_));
-    BUBBLE_FAIL(RHS_first_stage_->allocate(memspace_));
-    BUBBLE_FAIL(dFdt_->allocate(memspace_));
-    BUBBLE_FAIL(mass_->allocate(memspace_));
     BUBBLE_FAIL(y_new_->allocate(memspace_));
+    BUBBLE_FAIL(y_interp_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.asum_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.csum_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.RHS_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.RHS_first_stage_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.dFdt_->allocate(memspace_));
+    BUBBLE_FAIL(workspace_.mass_->allocate(memspace_));
 
     if (tab_.e)
     {
       auto [can_use_stage, err_stage] = tab_.error_estimator_stage();
       if (!can_use_stage)
       {
-        err_est_ = std::make_unique<State>(size);
-        BUBBLE_FAIL(err_est_->allocate(memspace_));
+        workspace_.err_est_ = std::make_unique<State>(size);
+        BUBBLE_FAIL(workspace_.err_est_->allocate(memspace_));
       }
     }
 
-    stages_ = std::make_unique<std::unique_ptr<State>[]>(tab_.num_stages);
+    workspace_.stages_ = std::make_unique<std::unique_ptr<State>[]>(tab_.num_stages);
     for (size_t i = 0; i < tab_.num_stages; i++)
     {
-      stages_[i] = std::make_unique<State>(size);
-      BUBBLE_FAIL(stages_[i]->allocate(memspace_));
+      workspace_.stages_[i] = std::make_unique<State>(size);
+      BUBBLE_FAIL(workspace_.stages_[i]->allocate(memspace_));
     }
 
     if (tab_.order > 2)
@@ -209,7 +209,7 @@ namespace Integrator
       }
     }
 
-    jacobian_ = std::make_unique<ReSolve::matrix::Csr>(size, size, model_->getCsrJacobian()->getNnz());
+    workspace_.jacobian_ = std::make_unique<ReSolve::matrix::Csr>(size, size, model_->getCsrJacobian()->getNnz());
 
     return 0;
   }
@@ -219,15 +219,15 @@ namespace Integrator
   {
     current_time_ = t0;
     BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().data(), memspace_, memspace_));
-    jacobian_analyzed_ = false;
+    workspace_.jacobian_analyzed_ = false;
 
     GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-    BUBBLE_FAIL(jacobian_->setDataPointers(
+    BUBBLE_FAIL(workspace_.jacobian_->setDataPointers(
         model_jacobian->getRowData(),
         model_jacobian->getColData(),
         model_jacobian->getValues(),
         memspace_));
-    BUBBLE_FAIL(lin_solver_.setMatrix(jacobian_.get()));
+    BUBBLE_FAIL(lin_solver_.setMatrix(workspace_.jacobian_.get()));
     BUBBLE_FAIL(lin_solver_.analyze());
     BUBBLE_FAIL(lin_solver_.preconditionerSetup());
 
@@ -242,7 +242,7 @@ namespace Integrator
     {
       mass[i] = model_->tag()[i] ? 1.0 : 0.0;
     }
-    BUBBLE_FAIL(mass_->copyFromExternal(mass.get(), memspace_, memspace_));
+    BUBBLE_FAIL(workspace_.mass_->copyFromExternal(mass.get(), memspace_, memspace_));
 
     stats_ = Stats();
 
@@ -331,7 +331,7 @@ namespace Integrator
 
           std::swap(y_prev_, y_cur_);
           std::swap(y_cur_, y_new_);
-          dense_coefficients_valid = false;
+          dense_coefficients_valid_ = false;
         }
         else
         {
@@ -383,10 +383,10 @@ namespace Integrator
       {
         if (tab_.hasDenseOutput())
         {
-          if (!dense_coefficients_valid)
+          if (!dense_coefficients_valid_)
           {
             BUBBLE_FAIL(calc_dense_coeff());
-            dense_coefficients_valid = true;
+            dense_coefficients_valid_ = true;
           }
 
           double theta = (out_time - current_time_) / prev_step_size_ + 1;
@@ -434,20 +434,21 @@ namespace Integrator
       model_->updateTime(t0, -1.0 / (dt * tab_.gamma));
       BUBBLE_FAIL(model_->evaluateJacobian());
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-      BUBBLE_FAIL(jacobian_->setDataPointers(
+      BUBBLE_FAIL(workspace_.jacobian_->setDataPointers(
           model_jacobian->getRowData(),
           model_jacobian->getColData(),
           model_jacobian->getValues(),
           memspace_));
 
       [[likely]]
-      if (jacobian_analyzed_)
+      if (workspace_.jacobian_analyzed_)
       {
         BUBBLE_FAIL(lin_solver_.refactorize());
       }
       else
       {
         BUBBLE_FAIL(lin_solver_.factorize());
+        workspace_.jacobian_analyzed_ = true;
       }
 
       stats_.jac_evals++;
@@ -469,12 +470,12 @@ namespace Integrator
       }
       model_->updateTime(t0, 0.0);
       BUBBLE_FAIL(model_->evaluateResidual());
-      BUBBLE_FAIL(RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
-      vector_handler_.scal(-1, RHS_first_stage_.get(), memspace_);
+      BUBBLE_FAIL(workspace_.RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
+      vector_handler_.scal(-1, workspace_.RHS_first_stage_.get(), memspace_);
 
       stats_.f_evals++;
     }
-    BUBBLE_FAIL(lin_solver_.solve(RHS_first_stage_.get(), stages_[0].get()));
+    BUBBLE_FAIL(lin_solver_.solve(workspace_.RHS_first_stage_.get(), workspace_.stages_[0].get()));
     stats_.decomp_solves++;
 
     // Rest of stages
@@ -485,41 +486,41 @@ namespace Integrator
       if (i > 1 && tab_.can_reuse_asum(i))
       {
         if (tab_.A[tab_.num_stages * i + i - 1] != 0.0)
-          vector_handler_.axpy(tab_.A[tab_.num_stages * i + i - 1], stages_[i - 1].get(), asum_.get(), memspace_);
+          vector_handler_.axpy(tab_.A[tab_.num_stages * i + i - 1], workspace_.stages_[i - 1].get(), workspace_.asum_.get(), memspace_);
       }
       else
       {
-        BUBBLE_FAIL(asum_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
+        BUBBLE_FAIL(workspace_.asum_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
 
         for (size_t j = 0; j < i; j++)
         {
           if (tab_.A[tab_.num_stages * i + j] != 0.0)
-            vector_handler_.axpy(tab_.A[tab_.num_stages * i + j], stages_[j].get(), asum_.get(), memspace_);
+            vector_handler_.axpy(tab_.A[tab_.num_stages * i + j], workspace_.stages_[j].get(), workspace_.asum_.get(), memspace_);
         }
       }
 
       // Calculate csum
       // TODO: Since csum is multiplied by the mass matrix, we can reduce calculations by just not calculating some indices
-      BUBBLE_FAIL(csum_->setToZero(memspace_));
+      BUBBLE_FAIL(workspace_.csum_->setToZero(memspace_));
       for (size_t j = 0; j < i; j++)
       {
         if (tab_.C[i * tab_.num_stages + j] != 0.0)
         {
-          vector_handler_.axpy(tab_.C[i * tab_.num_stages + j] / dt, stages_[j].get(), csum_.get(), memspace_);
+          vector_handler_.axpy(tab_.C[i * tab_.num_stages + j] / dt, workspace_.stages_[j].get(), workspace_.csum_.get(), memspace_);
         }
       }
 
       // TODO: non-autonomous model
-      BUBBLE_FAIL(asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
+      BUBBLE_FAIL(workspace_.asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
       model_->updateTime(t0 + tab_.alpha_sum[i] * dt, 0.0);
       BUBBLE_FAIL(model_->evaluateResidual());
-      RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
+      workspace_.RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
 
-      vector_handler_.scal(-1, RHS_.get(), memspace_);
-      vector_handler_.scal(mass_.get(), csum_.get(), memspace_);
-      vector_handler_.axpy(-1, csum_.get(), RHS_.get(), memspace_);
+      vector_handler_.scal(-1, workspace_.RHS_.get(), memspace_);
+      vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);
+      vector_handler_.axpy(-1, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
 
-      BUBBLE_FAIL(lin_solver_.solve(RHS_.get(), stages_[i].get()));
+      BUBBLE_FAIL(lin_solver_.solve(workspace_.RHS_.get(), workspace_.stages_[i].get()));
       stats_.f_evals++;
       stats_.decomp_solves++;
     }
@@ -529,8 +530,8 @@ namespace Integrator
     // plus some multiple of the last stage. In that case we can avoid a matmul
     if (tab_.can_reuse_asum_for_out())
     {
-      std::swap(asum_, y_new_);
-      vector_handler_.axpy(tab_.m[tab_.num_stages - 1], stages_[tab_.num_stages - 1].get(), y_new_.get(), memspace_);
+      std::swap(workspace_.asum_, y_new_);
+      vector_handler_.axpy(tab_.m[tab_.num_stages - 1], workspace_.stages_[tab_.num_stages - 1].get(), y_new_.get(), memspace_);
     }
     else
     {
@@ -540,7 +541,7 @@ namespace Integrator
       {
         if (tab_.m[j] != 0.0)
         {
-          vector_handler_.axpy(tab_.m[j], stages_[j].get(), y_new_.get(), memspace_);
+          vector_handler_.axpy(tab_.m[j], workspace_.stages_[j].get(), y_new_.get(), memspace_);
         }
       }
     }
@@ -555,28 +556,28 @@ namespace Integrator
 
     if (can_use_stage)
     {
-      return *stages_[err_stage];
+      return *workspace_.stages_[err_stage];
     }
     else
     {
       // TODO: could make this function return recoverable errors by using std::variant
-      int err_code = err_est_->copyFromExternal(stages_[0].get(), memspace_, memspace_);
+      int err_code = workspace_.err_est_->copyFromExternal(workspace_.stages_[0].get(), memspace_, memspace_);
 
       if (err_code)
       {
         throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
       }
 
-      vector_handler_.scal(tab_.e[0], stages_[0].get(), memspace_);
+      vector_handler_.scal(tab_.e[0], workspace_.stages_[0].get(), memspace_);
       for (size_t j = 1; j < tab_.num_stages; j++)
       {
         if (tab_.e[j] != 0.0)
         {
-          vector_handler_.axpy(tab_.e[j], stages_[j].get(), err_est_.get(), memspace_);
+          vector_handler_.axpy(tab_.e[j], workspace_.stages_[j].get(), workspace_.err_est_.get(), memspace_);
         }
       }
 
-      return *err_est_;
+      return *workspace_.err_est_;
     }
   }
 
@@ -594,7 +595,7 @@ namespace Integrator
       {
         for (size_t j = 0; j < tab_.order - 2; j++)
         {
-          vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], stages_[i].get(), dense_coeff_[j].get(), memspace_);
+          vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], workspace_.stages_[i].get(), dense_coeff_[j].get(), memspace_);
         }
       }
     }
