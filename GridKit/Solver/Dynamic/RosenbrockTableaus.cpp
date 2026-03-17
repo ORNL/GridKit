@@ -49,7 +49,7 @@ namespace Integrator
         .alpha_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
         .gamma_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
         .m          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-        .e          = {},
+        .e          = std::make_unique_for_overwrite<RealT[]>(num_stages),
         .A          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
         .C          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
         .H          = std::make_unique_for_overwrite<RealT[]>(num_stages * 3),
@@ -85,6 +85,15 @@ namespace Integrator
     re.m[5] = 1.0;
     re.m[6] = 1.0;
     re.m[7] = 1.0;
+
+    re.e[0] = 0.0;
+    re.e[1] = 0.0;
+    re.e[2] = 0.0;
+    re.e[3] = 0.0;
+    re.e[4] = 0.0;
+    re.e[5] = 0.0;
+    re.e[6] = 0.0;
+    re.e[7] = 1.0;
 
     re.A[1 * 8 + 0] = 3.0;
 
