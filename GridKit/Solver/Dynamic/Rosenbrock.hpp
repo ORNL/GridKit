@@ -3,18 +3,13 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <format>
-#include <iomanip>
-#include <ios>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include <sundials/sundials_nvector.h>
+#include <GridKit/Model/Evaluator.hpp>
 
-#include "GridKit/Model/Evaluator.hpp"
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/SystemSolver.hpp>
@@ -22,13 +17,6 @@
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
-
-#define BUBBLE_FAIL(arg) \
-  do                     \
-  {                      \
-    if (int err = (arg)) \
-      return err;        \
-  } while (false)
 
 namespace Integrator
 {
@@ -43,8 +31,8 @@ namespace Integrator
   class StepController
   {
   public:
-    virtual constexpr StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) = 0;
-    virtual constexpr bool        usesError() const                                                 = 0;
+    virtual StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) = 0;
+    virtual bool        usesError() const                                                 = 0;
   };
 
   class ErrorNorm
@@ -70,37 +58,8 @@ namespace Integrator
       bool   skip_f;
       bool   accepted;
 
-      std::string csv_report() const
-      {
-        std::stringstream out;
-        out << std::scientific << std::setprecision(20)
-            << sim_time << ','
-            << step_size << ','
-            << next_step_size << ','
-            << err_est << ','
-            << step_no << ','
-            << skip_lu << ','
-            << skip_f << ','
-            << accepted;
-
-        return out.str();
-      }
-
-      std::string report() const
-      {
-        std::stringstream out;
-        out << std::scientific << std::setprecision(20)
-            << "Simulation Time: " << sim_time << '\n'
-            << "Step Size:       " << step_size << '\n'
-            << "Next Step Size:  " << next_step_size << '\n'
-            << "Error Estimate:  " << err_est << '\n'
-            << "Step Number:     " << step_no << '\n'
-            << "Skip LU:         " << skip_lu << '\n'
-            << "Skip F:          " << skip_f << '\n'
-            << "Accepted:        " << accepted;
-
-        return out.str();
-      }
+      std::string csv_report() const;
+      std::string report() const;
     };
 
     struct Stats
@@ -115,38 +74,8 @@ namespace Integrator
       double                min_step      = INFINITY;
       double                max_step      = 0;
 
-      std::string report() const
-      {
-        std::stringstream out;
-        out << "Rejections: " << rejections.size()
-            << "\nSteps: " << num_steps
-            << "\nSkip LU Steps: " << skip_lu_steps.size()
-            << "\nMin Step: " << min_step
-            << "\nMax Step: " << max_step
-            << "\nRHS Function Evals: " << f_evals
-            << "\nRHS Function Skipped: " << f_skipped
-            << "\nJacobian Evals: " << jac_evals
-            << "\nLinear Solves: " << decomp_solves;
-
-        return out.str();
-      }
-
-      Stats& operator+=(const Stats& other)
-      {
-        rejections.insert(rejections.end(), other.rejections.begin(), other.rejections.end());
-        skip_lu_steps.insert(skip_lu_steps.end(), other.skip_lu_steps.begin(), other.skip_lu_steps.end());
-
-        num_steps     += other.num_steps;
-        f_evals       += other.f_evals;
-        f_skipped     += other.f_skipped;
-        jac_evals     += other.jac_evals;
-        decomp_solves += other.decomp_solves;
-
-        min_step = std::min(min_step, other.min_step);
-        max_step = std::max(max_step, other.max_step);
-
-        return *this;
-      }
+      std::string report() const;
+      Stats&      operator+=(const Stats& other);
     };
 
     struct Parameters
@@ -200,7 +129,7 @@ namespace Integrator
       /// @brief Whether or not this tableau contains an embedded method
       constexpr bool has_embedded() const
       {
-        return e == nullptr;
+        return static_cast<bool>(e);
       }
 
       constexpr bool hasDenseOutput() const
@@ -213,237 +142,12 @@ namespace Integrator
         return A[row * num_stages + col];
       }
 
-      constexpr bool can_reuse_asum(size_t stage) const
-      {
-        assert(stage < num_stages);
+      constexpr bool                     can_reuse_asum(size_t stage) const;
+      constexpr bool                     can_reuse_asum_for_out() const;
+      constexpr std::tuple<bool, size_t> error_estimator_stage() const;
 
-        if (stage == 0)
-          return false;
-        else
-        {
-          for (size_t j = 0; j < stage - 1; j++)
-          {
-            if (getA(stage, j) != getA(stage - 1, j))
-            {
-              return false;
-            }
-          }
-          return true;
-        }
-      }
-
-      constexpr bool can_reuse_asum_for_out() const
-      {
-        if (num_stages == 1)
-          return false;
-
-        for (size_t j = 0; j < num_stages - 1; j++)
-        {
-          if (getA(num_stages - 1, j) != m[j])
-          {
-            return false;
-          }
-        }
-
-        return true;
-      }
-
-      constexpr std::tuple<bool, size_t> error_estimator_stage() const
-      {
-        std::tuple<bool, size_t> re = {false, 0};
-        for (size_t j = 0; j < num_stages; j++)
-        {
-          if (e[j] == 1.0 && !std::get<0>(re))
-          {
-            re = {true, j};
-          }
-          else if (e[j] != 0.0)
-          {
-            return {false, 0};
-          }
-        }
-        return re;
-      }
-
-      static constexpr Tableau lin_implicit_euler()
-      {
-        constexpr size_t num_stages = 1;
-
-        Tableau re = {
-            .num_stages = num_stages,
-            .gamma      = 1.0,
-            .alpha_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .gamma_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .m          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .e          = {},
-            .A          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-            .C          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-            .H          = {},
-            .order      = 1,
-            .is_krylov  = true,
-            .is_w       = false,
-            .is_dae     = true,
-        };
-
-        re.alpha_sum[0] = 0.0;
-
-        re.gamma_sum[0] = 1.0;
-
-        re.m[0] = 1.0;
-
-        re.A[0] = 0.0;
-
-        re.C[0] = 2.0;
-
-        return re;
-      }
-
-      static constexpr Tableau rodas5p()
-      {
-        constexpr size_t num_stages = 8;
-
-        Tableau re = {
-            .num_stages = num_stages,
-            .gamma      = 0.21193756319429014,
-            .alpha_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .gamma_sum  = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .m          = std::make_unique_for_overwrite<RealT[]>(num_stages),
-            .e          = {},
-            .A          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-            .C          = std::make_unique_for_overwrite<RealT[]>(num_stages * num_stages),
-            .H          = std::make_unique_for_overwrite<RealT[]>(num_stages * 3),
-            .order      = 5,
-            .is_krylov  = false,
-            .is_w       = false,
-            .is_dae     = true,
-        };
-
-        re.alpha_sum[0] = 0.0;
-        re.alpha_sum[1] = 0.6358126895828704;
-        re.alpha_sum[2] = 0.4095798393397535;
-        re.alpha_sum[3] = 0.9769306725060716;
-        re.alpha_sum[4] = 0.4288403609558664;
-        re.alpha_sum[5] = 1.0;
-        re.alpha_sum[6] = 1.0;
-        re.alpha_sum[7] = 1.0;
-
-        re.gamma_sum[0] = 0.21193756319429014;
-        re.gamma_sum[1] = -0.42387512638858027;
-        re.gamma_sum[2] = -0.3384627126235924;
-        re.gamma_sum[3] = 1.8046452872882734;
-        re.gamma_sum[4] = 2.325825639765069;
-        re.gamma_sum[5] = 0.0;
-        re.gamma_sum[6] = 0.0;
-        re.gamma_sum[7] = 0.0;
-
-        re.m[0] = -7.502846399306121;
-        re.m[1] = 2.561846144803919;
-        re.m[2] = -11.627539656261098;
-        re.m[3] = -0.18268767659942256;
-        re.m[4] = 0.030198172008377946;
-        re.m[5] = 1.0;
-        re.m[6] = 1.0;
-        re.m[7] = 1.0;
-
-        re.A[1 * 8 + 0] = 3.0;
-
-        re.A[2 * 8 + 0] = 2.849394379747939;
-        re.A[2 * 8 + 1] = 0.45842242204463923;
-
-        re.A[3 * 8 + 0] = -6.954028509809101;
-        re.A[3 * 8 + 1] = 2.489845061869568;
-        re.A[3 * 8 + 2] = -10.358996098473584;
-
-        re.A[4 * 8 + 0] = 2.8029986275628964;
-        re.A[4 * 8 + 1] = 0.5072464736228206;
-        re.A[4 * 8 + 2] = -0.3988312541770524;
-        re.A[4 * 8 + 3] = -0.04721187230404641;
-
-        re.A[5 * 8 + 0] = -7.502846399306121;
-        re.A[5 * 8 + 1] = 2.561846144803919;
-        re.A[5 * 8 + 2] = -11.627539656261098;
-        re.A[5 * 8 + 3] = -0.18268767659942256;
-        re.A[5 * 8 + 4] = 0.030198172008377946;
-
-        re.A[6 * 8 + 0] = -7.502846399306121;
-        re.A[6 * 8 + 1] = 2.561846144803919;
-        re.A[6 * 8 + 2] = -11.627539656261098;
-        re.A[6 * 8 + 3] = -0.18268767659942256;
-        re.A[6 * 8 + 4] = 0.030198172008377946;
-        re.A[6 * 8 + 5] = 1.0;
-
-        re.A[7 * 8 + 0] = -7.502846399306121;
-        re.A[7 * 8 + 1] = 2.561846144803919;
-        re.A[7 * 8 + 2] = -11.627539656261098;
-        re.A[7 * 8 + 3] = -0.18268767659942256;
-        re.A[7 * 8 + 4] = 0.030198172008377946;
-        re.A[7 * 8 + 5] = 1.0;
-        re.A[7 * 8 + 6] = 1.0;
-
-        re.C[1 * 8 + 0] = -14.155112264123755;
-
-        re.C[2 * 8 + 0] = -17.97296035885952;
-        re.C[2 * 8 + 1] = -2.859693295451294;
-
-        re.C[3 * 8 + 0] = 147.12150275711716;
-        re.C[3 * 8 + 1] = -1.41221402718213;
-        re.C[3 * 8 + 2] = 71.68940251302358;
-
-        re.C[4 * 8 + 0] = 165.43517024871676;
-        re.C[4 * 8 + 1] = -0.4592823456491126;
-        re.C[4 * 8 + 2] = 42.90938336958603;
-        re.C[4 * 8 + 3] = -5.961986721573306;
-
-        re.C[5 * 8 + 0] = 24.854864614690072;
-        re.C[5 * 8 + 1] = -3.0009227002832186;
-        re.C[5 * 8 + 2] = 47.4931110020768;
-        re.C[5 * 8 + 3] = 5.5814197821558125;
-        re.C[5 * 8 + 4] = -0.6610691825249471;
-
-        re.C[6 * 8 + 0] = 30.91273214028599;
-        re.C[6 * 8 + 1] = -3.1208243349937974;
-        re.C[6 * 8 + 2] = 77.79954646070892;
-        re.C[6 * 8 + 3] = 34.28646028294783;
-        re.C[6 * 8 + 4] = -19.097331116725623;
-        re.C[6 * 8 + 5] = -28.087943162872662;
-
-        re.C[7 * 8 + 0] = 37.80277123390563;
-        re.C[7 * 8 + 1] = -3.2571969029072276;
-        re.C[7 * 8 + 2] = 112.26918849496327;
-        re.C[7 * 8 + 3] = 66.9347231244047;
-        re.C[7 * 8 + 4] = -40.06618937091002;
-        re.C[7 * 8 + 5] = -54.66780262877968;
-        re.C[7 * 8 + 6] = -9.48861652309627;
-
-        re.H[0 * 8 + 0] = 25.948786856663858;
-        re.H[0 * 8 + 1] = -2.5579724845846235;
-        re.H[0 * 8 + 2] = 10.433815404888879;
-        re.H[0 * 8 + 3] = -2.3679251022685204;
-        re.H[0 * 8 + 4] = 0.524948541321073;
-        re.H[0 * 8 + 5] = 1.1241088310450404;
-        re.H[0 * 8 + 6] = 0.4272876194431874;
-        re.H[0 * 8 + 7] = -0.17202221070155493;
-
-        re.H[1 * 8 + 0] = -9.91568850695171;
-        re.H[1 * 8 + 1] = -0.9689944594115154;
-        re.H[1 * 8 + 2] = 3.0438037242978453;
-        re.H[1 * 8 + 3] = -24.495224566215796;
-        re.H[1 * 8 + 4] = 20.176138334709044;
-        re.H[1 * 8 + 5] = 15.98066361424651;
-        re.H[1 * 8 + 6] = -6.789040303419874;
-        re.H[1 * 8 + 7] = -6.710236069923372;
-
-        re.H[2 * 8 + 0] = 11.419903575922262;
-        re.H[2 * 8 + 1] = 2.8879645146136994;
-        re.H[2 * 8 + 2] = 72.92137995996029;
-        re.H[2 * 8 + 3] = 80.12511834622643;
-        re.H[2 * 8 + 4] = -52.072871366152654;
-        re.H[2 * 8 + 5] = -59.78993625266729;
-        re.H[2 * 8 + 6] = -0.15582684282751913;
-        re.H[2 * 8 + 7] = 4.883087185713722;
-
-        return re;
-      }
+      static Tableau lin_implicit_euler();
+      static Tableau rodas5p();
     };
 
   private:
@@ -482,279 +186,20 @@ namespace Integrator
                ReSolve::SystemSolver&                    lin_solver,
                ReSolve::VectorHandler&                   vector_handler,
                const ErrorNorm*                          err_norm,
-               ReSolve::memory::MemorySpace              memspace = ReSolve::memory::HOST)
-      : tab_(std::move(tab)),
-        model_(model),
-        lin_solver_(lin_solver),
-        vector_handler_(vector_handler),
-        err_norm_(err_norm),
-        memspace_(memspace)
-    {
-    }
+               ReSolve::memory::MemorySpace              memspace = ReSolve::memory::HOST);
 
     [[nodiscard("May fail. Check error code.")]]
-    int allocate()
-    {
-      size_t size = static_cast<size_t>(model_->size());
-
-      y_prev_          = std::make_unique<State>(size);
-      y_cur_           = std::make_unique<State>(size);
-      y_interp_        = std::make_unique<State>(size);
-      asum_            = std::make_unique<State>(size);
-      csum_            = std::make_unique<State>(size);
-      RHS_             = std::make_unique<State>(size);
-      RHS_first_stage_ = std::make_unique<State>(size);
-      dFdt_            = std::make_unique<State>(size);
-      mass_            = std::make_unique<State>(size);
-      y_new_           = std::make_unique<State>(size);
-
-      BUBBLE_FAIL(y_prev_->allocate(memspace_));
-      BUBBLE_FAIL(y_cur_->allocate(memspace_));
-      BUBBLE_FAIL(y_interp_->allocate(memspace_));
-      BUBBLE_FAIL(asum_->allocate(memspace_));
-      BUBBLE_FAIL(csum_->allocate(memspace_));
-      BUBBLE_FAIL(RHS_->allocate(memspace_));
-      BUBBLE_FAIL(RHS_first_stage_->allocate(memspace_));
-      BUBBLE_FAIL(dFdt_->allocate(memspace_));
-      BUBBLE_FAIL(mass_->allocate(memspace_));
-      BUBBLE_FAIL(y_new_->allocate(memspace_));
-
-      if (tab_.e)
-      {
-        auto [can_use_stage, err_stage] = tab_.error_estimator_stage();
-        if (!can_use_stage)
-        {
-          err_est_ = std::make_unique<State>(size);
-          BUBBLE_FAIL(err_est_->allocate(memspace_));
-        }
-      }
-
-      stages_ = std::make_unique<std::unique_ptr<State>[]>(tab_.num_stages);
-      for (size_t i = 0; i < tab_.num_stages; i++)
-      {
-        stages_[i] = std::make_unique<State>(size);
-        BUBBLE_FAIL(stages_[i]->allocate(memspace_));
-      }
-
-      if (tab_.order > 2)
-      {
-        dense_coeff_ = std::make_unique<std::unique_ptr<State>[]>(tab_.order - 2);
-        for (size_t i = 0; i < tab_.order - 2; i++)
-        {
-          dense_coeff_[i] = std::make_unique<State>(size);
-          BUBBLE_FAIL(dense_coeff_[i]->allocate(memspace_));
-        }
-      }
-
-      jacobian_ = std::make_unique<ReSolve::matrix::Csr>(size, size, model_->getCsrJacobian()->getNnz());
-
-      return 0;
-    }
+    int allocate();
 
     [[nodiscard("May fail. Check error code.")]]
-    int initializeSimulation(RealT t0)
-    {
-      current_time_ = t0;
-      BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().data(), memspace_, memspace_));
-      jacobian_analyzed_ = false;
-
-      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-      BUBBLE_FAIL(jacobian_->setDataPointers(
-          model_jacobian->getRowData(),
-          model_jacobian->getColData(),
-          model_jacobian->getValues(),
-          memspace_));
-      BUBBLE_FAIL(lin_solver_.setMatrix(jacobian_.get()));
-      BUBBLE_FAIL(lin_solver_.analyze());
-      BUBBLE_FAIL(lin_solver_.preconditionerSetup());
-
-      if (model_->tag().size() != static_cast<size_t>(model_->size()))
-      {
-        std::cerr << "Model tag is either unset or does not match the size of the model\n";
-        return 1;
-      }
-
-      std::unique_ptr<RealT[]> mass = std::make_unique<RealT[]>(model_->tag().size());
-      for (size_t i = 0; i < static_cast<size_t>(model_->size()); i++)
-      {
-        mass[i] = model_->tag()[i] ? 1.0 : 0.0;
-      }
-      BUBBLE_FAIL(mass_->copyFromExternal(mass.get(), memspace_, memspace_));
-
-      stats_ = Stats();
-
-      return 0;
-    }
+    int initializeSimulation(RealT t0);
 
     [[nodiscard("May fail. Check error code.")]]
     int integrate(const std::vector<double>&                          out_times,
                   StepController&                                     step_controller,
                   Parameters                                          params  = {},
                   std::optional<std::function<void(double)>>          out_cb  = {},
-                  std::optional<std::function<void(const StepInfo&)>> step_cb = {})
-    {
-      skip_lu_ = false;
-      skip_f_  = false;
-
-      bool prev_accept = true;
-      step_size_       = params.starting_step;
-
-      double next_step_size;
-
-      // Kahan summation time buffer. The "leftover" time that was lost when trying to add h at some point that needs to be added
-      // later
-      double time_buffer = 0;
-
-      for (double out_time : out_times)
-      {
-        while (current_time_ < out_time && stats_.num_steps < params.max_steps)
-        {
-          BUBBLE_FAIL(time_step(current_time_, step_size_));
-
-          double err = 0;
-
-          if (step_controller.usesError())
-          {
-            if (err_norm_ == nullptr)
-            {
-              std::cerr << "The provided step controller requires the use of an error norm, but none was provided!\n";
-
-              return -1;
-            }
-
-            State& err_vec = error_estimate();
-            err            = err_norm_->errorNorm(err_vec, *y_new_, *y_cur_, vector_handler_, memspace_);
-          }
-
-          StepControl next_step = step_controller.nextStep(err,
-                                                           StepControl{
-                                                               .accept    = prev_accept,
-                                                               .step_size = step_size_,
-                                                           },
-                                                           tab_.order);
-          prev_accept           = next_step.accept;
-          next_step_size        = next_step.step_size;
-
-          if (prev_accept)
-          {
-            // Try to add the leftover time that we've stored up
-            double step_size_adj = step_size_ + time_buffer;
-            double next_time     = current_time_ + step_size_adj;
-
-            // Kahan summation - keep track of how much of step_size_adj we weren't able to add to current_time
-            // due to lack of precision
-            time_buffer   = step_size_adj - (next_time - current_time_);
-            current_time_ = next_time;
-
-            // step_cb(current_time, yout);
-            skip_f_ = false;
-
-            stats_.num_steps++;
-            if (skip_lu_)
-            {
-              stats_.skip_lu_steps.push_back(StepInfo{
-                  .sim_time       = current_time_,
-                  .step_size      = step_size_,
-                  .next_step_size = next_step_size,
-                  .err_est        = err,
-                  .step_no        = stats_.num_steps,
-                  .skip_lu        = skip_lu_,
-                  .skip_f         = skip_f_,
-                  .accepted       = prev_accept,
-              });
-            }
-            stats_.min_step = std::min(stats_.min_step, step_size_);
-            stats_.max_step = std::max(stats_.max_step, step_size_);
-
-            std::swap(y_prev_, y_cur_);
-            std::swap(y_cur_, y_new_);
-            dense_coefficients_valid = false;
-          }
-          else
-          {
-            skip_f_ = true;
-
-            stats_.rejections.push_back(StepInfo{
-                .sim_time       = current_time_,
-                .step_size      = step_size_,
-                .next_step_size = next_step_size,
-                .err_est        = err,
-                .step_no        = stats_.num_steps,
-                .skip_lu        = skip_lu_,
-                .skip_f         = skip_f_,
-                .accepted       = prev_accept,
-            });
-          }
-
-          double step_gain = next_step_size / step_size_;
-          if (params.skip_lu && step_gain >= 1 && step_gain <= 1.2)
-          {
-            skip_lu_ = true;
-          }
-          else
-          {
-            skip_lu_        = false;
-            prev_step_size_ = step_size_;
-            step_size_      = next_step_size;
-          }
-
-          if (step_cb)
-          {
-            BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
-            model_->updateTime(current_time_, 0.0);
-
-            (*step_cb)(StepInfo{
-                .sim_time       = current_time_,
-                .step_size      = step_size_,
-                .next_step_size = next_step_size,
-                .err_est        = err,
-                .step_no        = stats_.num_steps,
-                .skip_lu        = skip_lu_,
-                .skip_f         = skip_f_,
-                .accepted       = prev_accept,
-            });
-          }
-        }
-
-        if (current_time_ >= out_time)
-        {
-          if (tab_.hasDenseOutput())
-          {
-            if (!dense_coefficients_valid)
-            {
-              BUBBLE_FAIL(calc_dense_coeff());
-              dense_coefficients_valid = true;
-            }
-
-            double theta = (out_time - current_time_) / prev_step_size_ + 1;
-            BUBBLE_FAIL(interp_dense(theta));
-          }
-          else
-          {
-            // TODO: Put code for alternative interpolation (Abdou) here
-            double theta = (out_time - current_time_) / prev_step_size_ + 1;
-            BUBBLE_FAIL(y_interp_->copyFromExternal(y_prev_.get(), memspace_, memspace_));
-            vector_handler_.scal(1 - theta, y_interp_.get(), memspace_);
-            vector_handler_.axpy(theta, y_cur_.get(), y_interp_.get(), memspace_);
-          }
-
-          if (out_cb)
-          {
-            BUBBLE_FAIL(y_interp_->copyToExternal(model_->y().data(), memspace_, memspace_));
-            model_->updateTime(out_time, 0.0);
-
-            (*out_cb)(out_time);
-          }
-        }
-        else
-        {
-          BUBBLE_FAIL(y_interp_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
-          break;
-        }
-      }
-
-      return 0;
-    }
+                  std::optional<std::function<void(const StepInfo&)>> step_cb = {});
 
   private:
     std::unique_ptr<State> asum_;
@@ -774,219 +219,15 @@ namespace Integrator
 
   public:
     [[nodiscard("May fail. Check error code.")]]
-    int time_step(double t0, double dt)
-    {
-      bool y0_copied = false;
+    int time_step(double t0, double dt);
 
-      // Form the left-hand side of the system
-      // Can sometimes be skipped if the method is a w-method
-      [[likely]]
-      if (!tab_.is_w || !skip_lu_)
-      {
-        BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
-        y0_copied = true;
-        model_->updateTime(t0, -1.0 / (dt * tab_.gamma));
-        BUBBLE_FAIL(model_->evaluateJacobian());
-        GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-        BUBBLE_FAIL(jacobian_->setDataPointers(
-            model_jacobian->getRowData(),
-            model_jacobian->getColData(),
-            model_jacobian->getValues(),
-            memspace_));
-
-        [[likely]]
-        if (jacobian_analyzed_)
-        {
-          BUBBLE_FAIL(lin_solver_.refactorize());
-        }
-        else
-        {
-          BUBBLE_FAIL(lin_solver_.factorize());
-        }
-
-        stats_.jac_evals++;
-      }
-
-      // First stage
-      [[unlikely]]
-      if (skip_f_)
-      {
-        stats_.f_skipped++;
-      }
-      else
-      {
-        // TODO: non-autonomous model
-        if (!y0_copied)
-        {
-          BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
-          y0_copied = true;
-        }
-        model_->updateTime(t0, 0.0);
-        BUBBLE_FAIL(model_->evaluateResidual());
-        BUBBLE_FAIL(RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
-        vector_handler_.scal(-1, RHS_first_stage_.get(), memspace_);
-
-        stats_.f_evals++;
-      }
-      BUBBLE_FAIL(lin_solver_.solve(RHS_first_stage_.get(), stages_[0].get()));
-      stats_.decomp_solves++;
-
-      // Rest of stages
-      for (size_t i = 1; i < tab_.num_stages; i++)
-      {
-        // Calculate asum
-        // We can sometimes reuse asum from the previous stage
-        if (i > 1 && tab_.can_reuse_asum(i))
-        {
-          if (tab_.A[tab_.num_stages * i + i - 1] != 0.0)
-            vector_handler_.axpy(tab_.A[tab_.num_stages * i + i - 1], stages_[i - 1].get(), asum_.get(), memspace_);
-        }
-        else
-        {
-          BUBBLE_FAIL(asum_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
-
-          for (size_t j = 0; j < i; j++)
-          {
-            if (tab_.A[tab_.num_stages * i + j] != 0.0)
-              vector_handler_.axpy(tab_.A[tab_.num_stages * i + j], stages_[j].get(), asum_.get(), memspace_);
-          }
-        }
-
-        // Calculate csum
-        // TODO: Since csum is multiplied by the mass matrix, we can reduce calculations by just not calculating some indices
-        BUBBLE_FAIL(csum_->setToZero(memspace_));
-        for (size_t j = 0; j < i; j++)
-        {
-          if (tab_.C[i * tab_.num_stages + j] != 0.0)
-          {
-            vector_handler_.axpy(tab_.C[i * tab_.num_stages + j] / dt, stages_[j].get(), csum_.get(), memspace_);
-          }
-        }
-
-        // TODO: non-autonomous model
-        BUBBLE_FAIL(asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
-        model_->updateTime(t0 + tab_.alpha_sum[i] * dt, 0.0);
-        BUBBLE_FAIL(model_->evaluateResidual());
-        RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
-
-        vector_handler_.scal(-1, RHS_.get(), memspace_);
-        vector_handler_.scal(mass_.get(), csum_.get(), memspace_);
-        vector_handler_.axpy(-1, csum_.get(), RHS_.get(), memspace_);
-
-        BUBBLE_FAIL(lin_solver_.solve(RHS_.get(), stages_[i].get()));
-        stats_.f_evals++;
-        stats_.decomp_solves++;
-      }
-
-      // Compute the solution at time t + dt
-      // It happens often where the solution is just asum of the last stage
-      // plus some multiple of the last stage. In that case we can avoid a matmul
-      if (tab_.can_reuse_asum_for_out())
-      {
-        std::swap(asum_, y_new_);
-        vector_handler_.axpy(tab_.m[tab_.num_stages - 1], stages_[tab_.num_stages - 1].get(), y_new_.get(), memspace_);
-      }
-      else
-      {
-        BUBBLE_FAIL(y_new_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
-
-        for (size_t j = 0; j < tab_.num_stages; j++)
-        {
-          if (tab_.m[j] != 0.0)
-          {
-            vector_handler_.axpy(tab_.m[j], stages_[j].get(), y_new_.get(), memspace_);
-          }
-        }
-      }
-
-      return 0;
-    }
-
-    State& error_estimate() const
-    {
-      auto [can_use_stage, err_stage] = tab_.error_estimator_stage();
-
-      if (can_use_stage)
-      {
-        return *stages_[err_stage];
-      }
-      else
-      {
-        // TODO: could make this function return recoverable errors by using std::variant
-        int err_code = err_est_->copyFromExternal(stages_[0].get(), memspace_, memspace_);
-
-        if (err_code)
-        {
-          throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
-        }
-
-        vector_handler_.scal(tab_.e[0], stages_[0].get(), memspace_);
-        for (size_t j = 1; j < tab_.num_stages; j++)
-        {
-          if (tab_.e[j] != 0.0)
-          {
-            vector_handler_.axpy(tab_.e[j], stages_[j].get(), err_est_.get(), memspace_);
-          }
-        }
-
-        return *err_est_;
-      }
-    }
-
-    constexpr bool has_dense_output()
-    {
-      return static_cast<bool>(tab_.H);
-    }
-
-    int calc_dense_coeff()
-    {
-      if (tab_.order > 2)
-      {
-        for (size_t j = 0; j < tab_.order - 2; j++)
-        {
-          BUBBLE_FAIL(dense_coeff_[j]->setToZero(memspace_));
-        }
-
-        for (size_t i = 0; i < tab_.num_stages; i++)
-        {
-          for (size_t j = 0; j < tab_.order - 2; j++)
-          {
-            vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], stages_[i].get(), dense_coeff_[j].get(), memspace_);
-          }
-        }
-      }
-
-      return 0;
-    }
+    State& error_estimate() const;
 
     [[nodiscard("May fail. Check error code.")]]
-    int interp_dense(double theta)
-    {
-      double one = 1.0;
-      if (tab_.order > 2)
-      {
-        BUBBLE_FAIL(y_interp_->copyFromExternal(dense_coeff_[tab_.order - 3].get(), memspace_, memspace_));
+    int calc_dense_coeff();
 
-        for (size_t i = 1; i < tab_.order - 2; i++)
-        {
-          vector_handler_.scal(theta, y_interp_.get(), memspace_);
-          vector_handler_.axpy(one, dense_coeff_[tab_.order - 3 - i].get(), y_interp_.get(), memspace_);
-        }
-      }
-      else
-      {
-        BUBBLE_FAIL(y_interp_->setToZero(memspace_));
-      }
-
-      double omt = 1 - theta;
-
-      vector_handler_.scal(omt, y_interp_.get(), memspace_);
-      vector_handler_.axpy(one, y_cur_.get(), y_interp_.get(), memspace_);
-      vector_handler_.scal(theta, y_interp_.get(), memspace_);
-      vector_handler_.axpy(omt, y_prev_.get(), y_interp_.get(), memspace_);
-
-      return 0;
-    }
+    [[nodiscard("May fail. Check error code.")]]
+    int interp_dense(double theta);
   };
 
   class AdaptiveStep : public StepController
@@ -1003,17 +244,7 @@ namespace Integrator
     {
     }
 
-    constexpr StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) final
-    {
-      StepControl next_step = prev_step;
-
-      double h_mult = std::min(params_.facmax, std::max(params_.facscale * std::pow(err, -1.0 / method_order), params_.facmin));
-
-      next_step.accept     = err <= 1;
-      next_step.step_size *= h_mult;
-
-      return next_step;
-    }
+    StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) final;
 
     constexpr bool usesError() const final
     {
@@ -1023,15 +254,9 @@ namespace Integrator
 
   class FixedStep : public StepController
   {
-    StepControl nextStep([[maybe_unused]] double err, [[maybe_unused]] StepControl prev_step, [[maybe_unused]] uint8_t method_order)
-    {
-      return StepControl{
-          .accept    = true,
-          .step_size = prev_step.step_size,
-      };
-    }
+    StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) final;
 
-    bool usesError() const final
+    constexpr bool usesError() const final
     {
       return false;
     }
@@ -1057,23 +282,6 @@ namespace Integrator
     {
     }
 
-    double errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const final
-    {
-      double one = 1.0;
-      workspace_.out_->copyFromExternal(&err, memspace, memspace);
-      workspace_.scale_->copyFromExternal(&y, memspace, memspace);
-      workspace_.yprev_abs_->copyFromExternal(&yprev, memspace, memspace);
-
-      handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);
-      handler.abs(workspace_.yprev_abs_.get(), workspace_.scale_.get(), memspace);
-      handler.max(workspace_.yprev_abs_.get(), workspace_.scale_.get(), workspace_.yprev_abs_.get(), memspace);
-      handler.scal(params_.rtol, workspace_.scale_.get(), memspace);
-      handler.axpy(one, params_.atol.get(), workspace_.scale_.get(), memspace);
-      handler.scaleInv(workspace_.scale_.get(), workspace_.out_.get(), memspace);
-
-      return handler.amax(workspace_.out_.get(), memspace);
-    }
+    double errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const final;
   };
 } // namespace Integrator
-
-#undef BUBBLE_FAIL
