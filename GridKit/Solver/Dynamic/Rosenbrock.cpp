@@ -122,18 +122,18 @@ namespace Integrator
   }
 
   template <class ScalarT, typename IdxT>
-  constexpr std::tuple<bool, size_t> Rosenbrock<ScalarT, IdxT>::Tableau::error_estimator_stage() const
+  constexpr std::optional<size_t> Rosenbrock<ScalarT, IdxT>::Tableau::error_estimator_stage() const
   {
-    std::tuple<bool, size_t> re = {false, 0};
+    std::optional<size_t> re;
     for (size_t j = 0; j < num_stages; j++)
     {
-      if (e[j] == 1.0 && !std::get<0>(re))
+      if (e[j] == 1.0 && !re)
       {
-        re = {true, j};
+        re = j;
       }
       else if (e[j] != 0.0)
       {
-        return {false, 0};
+        return {};
       }
     }
     return re;
@@ -184,8 +184,8 @@ namespace Integrator
 
     if (tab_.e)
     {
-      auto [can_use_stage, err_stage] = tab_.error_estimator_stage();
-      if (!can_use_stage)
+      std::optional<size_t> err_est_stage = tab_.error_estimator_stage();
+      if (!err_est_stage)
       {
         workspace_.err_est_ = std::make_unique<State>(size);
         BUBBLE_FAIL(workspace_.err_est_->allocate(memspace_));
@@ -552,11 +552,11 @@ namespace Integrator
   template <class ScalarT, typename IdxT>
   State& Rosenbrock<ScalarT, IdxT>::error_estimate() const
   {
-    auto [can_use_stage, err_stage] = tab_.error_estimator_stage();
+    std::optional<size_t> err_stage = tab_.error_estimator_stage();
 
-    if (can_use_stage)
+    if (err_stage)
     {
-      return *workspace_.stages_[err_stage];
+      return *workspace_.stages_[*err_stage];
     }
     else
     {

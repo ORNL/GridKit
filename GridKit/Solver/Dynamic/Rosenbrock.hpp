@@ -383,9 +383,9 @@ namespace Integrator
         return A[row * num_stages + col];
       }
 
-      constexpr bool                     can_reuse_asum(size_t stage) const;
-      constexpr bool                     can_reuse_asum_for_out() const;
-      constexpr std::tuple<bool, size_t> error_estimator_stage() const;
+      constexpr bool                  can_reuse_asum(size_t stage) const;
+      constexpr bool                  can_reuse_asum_for_out() const;
+      constexpr std::optional<size_t> error_estimator_stage() const;
 
       static Tableau lin_implicit_euler();
       static Tableau rodas5p();
