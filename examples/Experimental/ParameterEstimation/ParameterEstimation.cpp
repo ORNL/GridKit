@@ -55,7 +55,7 @@ int main()
   idas.setTolerance(1e-7, 1e-9);
   idas.configureAdjoint();
   idas.getDefaultInitialCondition();
-  idas.initializeSimulation(t_init);
+  idas.initializeSimulation(t_init, true);
   idas.configureQuadrature();
   idas.initializeQuadrature();
 
@@ -66,8 +66,8 @@ int main()
   // create initial condition after a fault
   {
     idas.getSavedInitialCondition();
-    idas.initializeSimulation(t_init);
     gen.V() = 0.0;
+    idas.initializeSimulation(t_init, true);
     idas.runSimulation(t_clear, 20);
     gen.V() = 1.0;
     idas.saveInitialCondition();
