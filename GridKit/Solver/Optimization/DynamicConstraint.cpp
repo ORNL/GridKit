@@ -148,7 +148,7 @@ namespace AnalysisManager
 
       // Evaluate objective function
       integrator_->getSavedInitialCondition();
-      integrator_->initializeSimulation(t_init_);
+      integrator_->initializeSimulation(t_init_, true);
       integrator_->initializeQuadrature();
 
       int status = 0;
@@ -199,7 +199,7 @@ namespace AnalysisManager
         integrator_->initializeAdjoint();
 
         integrator_->getSavedInitialCondition();
-        integrator_->initializeSimulation(t_init_);
+        integrator_->initializeSimulation(t_init_, true);
         integrator_->initializeQuadrature();
 
         int status = 0;
