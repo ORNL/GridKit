@@ -33,8 +33,7 @@ namespace Integrator
      *        the next state and re-step with the new `step_size`.
      *
      */
-    bool accept;
-
+    bool   accept;
     /**
      * @brief The step size the next step should take.
      *
@@ -60,12 +59,11 @@ namespace Integrator
      * @return StepControl
      */
     virtual StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) = 0;
-
     /**
      * @brief Return whether or not the `nextStep` method implementation uses the `err` parameter. If `false`, this parameter is not calculated.
      *
      */
-    virtual bool usesError() const = 0;
+    virtual bool        usesError() const                                                 = 0;
   };
 
   /**
@@ -113,48 +111,41 @@ namespace Integrator
        *
        */
       double sim_time;
-
       /**
        * @brief The size of the step.
        *
        */
       double step_size;
-
       /**
        * @brief The size of the next step, as governed by the current `StepController` in use.
        *
        */
       double next_step_size;
-
       /**
        * @brief The estimated error made by the step, as calculated by the current `ErrorNorm` in use.
        *
        */
       double err_est;
-
       /**
        * @brief The step number, starting at 1.
        *
        */
       size_t step_no;
-
       /**
        * @brief Whether or not the integrator decided to skip computing the decomposition of the Jacobian on this step.
        *
        */
-      bool skip_lu;
-
+      bool   skip_lu;
       /**
        * @brief Whether or not the integrator decided to skip evaluating the residual on the first stage on this step.
        *
        */
-      bool skip_f;
-
+      bool   skip_f;
       /**
        * @brief Whether or not this step was accepted by the `StepController` in use.
        *
        */
-      bool accepted;
+      bool   accepted;
 
       std::string csv_report() const;
       std::string report() const;
@@ -171,54 +162,46 @@ namespace Integrator
        *
        */
       std::vector<StepInfo> rejections;
-
       /**
        * @brief Information of each step which the integrator decided to skip re-factoring the Jacobian.
        *
        */
       std::vector<StepInfo> skip_lu_steps;
-
       /**
        * @brief How many steps the integrator has taken.
        *
        */
-      size_t num_steps = 0;
-
+      size_t                num_steps     = 0;
       /**
        * @brief Number of model residual function evaluations.
        *
        */
-      size_t f_evals = 0;
-
+      size_t                f_evals       = 0;
       /**
        * @brief Number of model residual function evaluations which have been skipped by the integrator.
        *
        */
-      size_t f_skipped = 0;
-
+      size_t                f_skipped     = 0;
       /**
        * @brief Number of model Jacobian evaluations.
        *
        */
-      size_t jac_evals = 0;
-
+      size_t                jac_evals     = 0;
       /**
        * @brief Number of linear solves against the model Jacobian.
        *
        */
-      size_t decomp_solves = 0;
-
+      size_t                decomp_solves = 0;
       /**
        * @brief Minimum step size.
        *
        */
-      double min_step = INFINITY;
-
+      double                min_step      = INFINITY;
       /**
        * @brief Maximum step size.
        *
        */
-      double max_step = 0;
+      double                max_step      = 0;
 
       std::string report() const;
       Stats&      operator+=(const Stats& other);
@@ -236,14 +219,12 @@ namespace Integrator
        * @todo Consider adding a starting step size selector to select this automatically.
        */
       double starting_step = 1e-5;
-
       /**
        * @brief The maximum number of steps the integrator should take. If the integrator has not reached the final time before
        *        taking this many steps, then integration is stopped. For more details, see `integrate()`.
        *
        */
-      size_t max_steps = 2000;
-
+      size_t max_steps     = 2000;
       /**
        * @brief Whether or not the integrator should attempt to skip Jacobian decompositions.
        *
@@ -251,7 +232,7 @@ namespace Integrator
        *       the time taken to compute each step. However, the overall number of steps taken will increase.
        *
        */
-      bool skip_lu = false;
+      bool   skip_lu       = false;
     };
 
     /**
@@ -266,14 +247,12 @@ namespace Integrator
        * @brief The number of stages used by the method. Each stage requires one model residual evaluation.
        *
        */
-      size_t num_stages;
-
+      size_t                   num_stages;
       /**
        * @brief The coefficient along the diagonal of the Gamma matrix.
        *
        */
-      RealT gamma;
-
+      RealT                    gamma;
       /**
        * @brief A vector of sums of rows of the alpha matrix. These are the classic
        *        Runge-Kutta 'c' coefficients, or abscissae. The size of this vector
@@ -281,42 +260,36 @@ namespace Integrator
        *
        */
       std::unique_ptr<RealT[]> alpha_sum;
-
       /**
        * @brief A vector of sums of rows of the Gamma matrix. The size of this vector
        *        should be equal to `num_stages`.
        *
        */
       std::unique_ptr<RealT[]> gamma_sum;
-
       /**
        * @brief A vector of weights for constructing the final solution from the stages.
        *        The size of this vector should be equal to `num_stages`.
        *
        */
       std::unique_ptr<RealT[]> m;
-
       /**
        * @brief OPTIONAL vector of coefficients for the embedded error method. If it exists,
        *        the size of this vector should be equal to `num_stages`.
        *
        */
       std::unique_ptr<RealT[]> e;
-
       /**
        * @brief The transformed A coefficient matrix. Strictly lower triangular and stored in dense row-major form.
        *        Upper triangular terms are not accessed. Should be `num_stages` by `num_stages` large.
        *
        */
       std::unique_ptr<RealT[]> A;
-
       /**
        * @brief The transformed C coefficient matrix. Strictly lower triangular and stored in dense row-major form.
        *        Upper triangular terms are not accessed. Should be `num_stages` by `num_stages` large.
        *
        */
       std::unique_ptr<RealT[]> C;
-
       /**
        * @brief OPTIONAL matrix of dense coefficients. Defines how the stages should be transformed into interpolant
        *        nodes for computing dense output. The interpolating polynomial has an order one less than the order of
@@ -325,7 +298,6 @@ namespace Integrator
        *
        */
       std::unique_ptr<RealT[]> H;
-
       /**
        * @brief What ODE order these coefficients satisfy. If `is_dae` is true, then the coefficients must additionally satisfy
        *        DAE conditions up to this order. If `is_w` is true, then the coefficients must additionally satisfy ROW conditions
@@ -334,27 +306,24 @@ namespace Integrator
        */
 
       uint8_t order;
-
       /**
        * @brief Whether or not these coefficients are appropriate to use in a Rosenbrock-Krylov (ROK) solver.
        *
        */
-      bool is_krylov;
-
+      bool    is_krylov;
       /**
        * @brief Whether or not these coefficients satisfy Rosenbrock-W (ROW) order conditions up to `order`.
        *        The integrator may take advantage of this fact by e.g. using time-delay Jacobians to speed up computation.
        *
        */
-      bool is_w;
-
+      bool    is_w;
       /**
        * @brief Whether or not these coefficients satisfy DAE order conditions up to `order`. If this is not true,
        *        these coefficients should not be used to solve models with algebraic conditions (indicated by a
        *        `Model::Evaluator::tag_` value of 0).
        *
        */
-      bool is_dae;
+      bool    is_dae;
 
       /**
        * @brief Whether or not this tableau contains an embedded error estimator method.
@@ -397,15 +366,13 @@ namespace Integrator
      *        the initial step after resuming.
      *
      */
-    double step_size_ = 0;
-
+    double step_size_                = 0;
     /**
      * @brief The step size of the previous step. Used for operations which need to be done on the current step, but step size
      *        control for the next step has already been performed.
      *
      */
-    double prev_step_size_ = 0;
-
+    double prev_step_size_           = 0;
     /**
      * @brief Whether or not the integrator should attempt to skip Jacobian decomposition on the next step. Controlled by the
      *        time stepping algorithm in \link integrate() \endlink . Generally, this should only be set if we suspect the Jacobian for the
@@ -414,60 +381,55 @@ namespace Integrator
      *        as the previous step.
      *
      */
-    bool skip_lu_ = false;
-
+    bool   skip_lu_                  = false;
     /**
      * @brief Whether or not the integrator should attempt to skip the residual function evaluation of the first stage on the
      *        next step. This should only be used when a step is rejected and the residual function is evaluated at the exact
      *        same arguments as the previous step. Then \ref RHS_first_stage_ can be re-used rather than re-calculated.
      *
      */
-    bool skip_f_ = false;
-
+    bool   skip_f_                   = false;
     /**
      * @brief Keeps track of whether or not the integrator currently has valid dense coefficients.
      *        i.e. they have been computed and haven't been invalidated by taking another step. This can be used to avoid
      *        re-computing dense coefficients when interpolating states multiple times in one step.
      *
      */
-    bool dense_coefficients_valid_ = false;
+    bool   dense_coefficients_valid_ = false;
 
     /**
      * @brief The tableau of Rosenbrock coefficients currently being used by the integrator.
      *
      */
-    Tableau tab_;
-
+    Tableau                                   tab_;
     /**
      * @brief The model being simulated.
      *
      */
     GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
-
     /**
      * @brief The linear solver to be used during integration in \link time_step() \endlink.
      *
      */
-    ReSolve::SystemSolver&  lin_solver_;
+    ReSolve::SystemSolver&                    lin_solver_;
     /**
      * @brief The vector handler to be used for vector operations by the integrator.
      *
      */
-    ReSolve::VectorHandler& vector_handler_;
-
+    ReSolve::VectorHandler&                   vector_handler_;
     /**
      * @brief The `ErrorNorm` to be used by the `StepController` in \link integrate() \endlink.
      *
      * @note Can be `nullptr` if no `ErrorNorm` is configured, in case the `StepController` does not need an error to be calculated.
      *
+     * @todo Should be removed from the `Rosenbrock` class. Whether or not this is needed is dependent on the `StepController`, so it should be stored there.
      */
-    const ErrorNorm* err_norm_;
-
+    const ErrorNorm*                          err_norm_;
     /**
      * @brief The memory space where linear algebra operations hsould be done in.
      *
      */
-    ReSolve::memory::MemorySpace memspace_;
+    ReSolve::memory::MemorySpace              memspace_;
 
     /**
      * @brief The current simulation time.
@@ -480,19 +442,16 @@ namespace Integrator
      *
      */
     std::unique_ptr<State> y_prev_;
-
     /**
      * @brief The state on the current step.
      *
      */
     std::unique_ptr<State> y_cur_;
-
     /**
      * @brief The incoming state for the next step.
      *
      */
     std::unique_ptr<State> y_new_;
-
     /**
      * @brief Used as output for dense output interpolation.
      *
@@ -544,19 +503,16 @@ namespace Integrator
        *
        */
       std::unique_ptr<State> asum_;
-
       /**
        * @brief Sum of C-weighted states used in linearization in a stage.
        *
        */
       std::unique_ptr<State> csum_;
-
       /**
        * @brief Right-hand side of linear solve used in a stage.
        *
        */
       std::unique_ptr<State> RHS_;
-
       /**
        * @brief Right-hand side of linear solve used in the first stage.
        *        Stored separately from \ref RHS_ since it can be re-used by future steps if the current step is rejected.
@@ -565,19 +521,16 @@ namespace Integrator
        *
        */
       std::unique_ptr<State> RHS_first_stage_;
-
       /**
        * @brief Time Jacobian for non-autonomous models. Currently unused, since models are assumed to be autonomous.
        *
        */
       std::unique_ptr<State> dFdt_;
-
       /**
        * @brief Vector representation of a diagonal mass matrix.
        *
        */
       std::unique_ptr<State> mass_;
-
       /**
        * @brief Estimated error produced by a step in a method with an empbedded error estimator.
        *
@@ -653,8 +606,7 @@ namespace Integrator
        * @note Should be between 0 and 1.
        *
        */
-      double facmin = 0.2;
-
+      double facmin   = 0.2;
       /**
        * @brief The maximum multiple by which the step size can be multiplied to obtain the new step size.
        *        Decreasing this will make the integrator more conservative in selecting the step size -
@@ -663,8 +615,7 @@ namespace Integrator
        * @note Should be greater than 1.
        *
        */
-      double facmax = 5.0;
-
+      double facmax   = 5.0;
       /**
        * @brief A "fudge factor" introduced to decrease risk of failing a step. The larger the fudge factor,
        *        the more likely steps will fail, but fewer steps will be taken.
@@ -718,20 +669,56 @@ namespace Integrator
     }
   };
 
+  /**
+   * @brief The infinity error norm, which requires the error in every component in the system
+   *        to meet tolerance.
+   *
+   */
   class InfNorm : public ErrorNorm
   {
+    /**
+     * @brief A workspace for the linear algebra operations required to calculate the norm.
+     *
+     */
     mutable struct
     {
+      /**
+       * @brief The final vector which will have its norm taken.
+       *
+       */
       std::unique_ptr<State> out_;
+      /**
+       * @brief The vector which will be used to scale the error in accordance with the tolerances.
+       *
+       */
       std::unique_ptr<State> scale_;
+      /**
+       * @brief The absolute value of yprev. Used to calculate \ref scale_
+       *
+       */
       std::unique_ptr<State> yprev_abs_;
     } workspace_;
 
   public:
+    /**
+     * @brief The configurable parameters of the error norm.
+     *
+     */
     struct Parameters
     {
+      /**
+       * @brief A vector of absolute tolerances for each component. The norm will attempt to reject errors
+       *        in each component above this tolerance.
+       *
+       */
       std::unique_ptr<State> atol;
-      double                 rtol;
+
+      /**
+       * @brief The relative tolerance. The norm will attempt to reject any error larger in percentage of
+       *        the solution's maximum element than this.
+       *
+       */
+      double rtol;
     } params_;
 
     InfNorm(Parameters&& params) : params_(std::move(params))
