@@ -6,6 +6,14 @@
 
 #include <sundials/sundials_types.h>
 
+/**
+ * @brief A small helper macro to "bubble" errors. The Rosenbrock implementations call many
+ * fallible model and linear algebra functions, and often the only thing that can be
+ * done when one of these fails is to fail the current function as well. This macro
+ * wraps a fallible function call and causes the current function to fail as well,
+ * returning the same error code as the called function.
+ *
+ */
 #define BUBBLE_FAIL(arg) \
   do                     \
   {                      \
@@ -15,6 +23,12 @@
 
 namespace Integrator
 {
+  /**
+   * @brief Constructs a single-line report string out of the `StepInfo` object which is suitable to be included in a CSV file.
+   *
+   * Useful if you would like to plot step info.
+   *
+   */
   template <class ScalarT, typename IdxT>
   std::string Rosenbrock<ScalarT, IdxT>::StepInfo::csv_report() const
   {
@@ -32,6 +46,12 @@ namespace Integrator
     return out.str();
   }
 
+  /**
+   * @brief Constructs a human-readable report string out of the `StepInfo` object.
+   *
+   * Useful for debug dumps.
+   *
+   */
   template <class ScalarT, typename IdxT>
   std::string Rosenbrock<ScalarT, IdxT>::StepInfo::report() const
   {
@@ -49,6 +69,12 @@ namespace Integrator
     return out.str();
   }
 
+  /**
+   * @brief Constructs a human-readable report string out of the `Stats` object.
+   *
+   * Useful for reporting at the end of a simulation.
+   *
+   */
   template <class ScalarT, typename IdxT>
   std::string Rosenbrock<ScalarT, IdxT>::Stats::report() const
   {
@@ -66,6 +92,14 @@ namespace Integrator
     return out.str();
   }
 
+  /**
+   * @brief Accumulate statistics into one object. Useful to collect statistics over runs of several simulations, such as when
+   *        there is a discrete event.
+   *
+   * @param other The other statistics to add to this one.
+   *
+   * @todo Right now, the step numbers for \ref rejections and \ref skip_lu_steps are impossible to tell apart from the different simulations.
+   */
   template <class ScalarT, typename IdxT>
   Rosenbrock<ScalarT, IdxT>::Stats::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
   {
@@ -84,6 +118,19 @@ namespace Integrator
     return *this;
   }
 
+  /**
+   * @brief Checks to see if the \ref asum_ variable can be re-used from the previous stage.
+   *
+   * Often, a row in the Rosenbrock A matrix is the exact same as the previous row, but with an additional
+   * non-zero element at the end. In this case, the \ref asum_ variable is the exact same as the previous stage,
+   * but with one extra additional term. The integrator can take advantage of this and reduce a matmul for computing
+   * \ref asum_ down to a single `axpy`.
+   *
+   * Typically, \ref asum_ is only initialized if it needs to be re-calculated from scratch. For this reason, this
+   * function will always return `false` for `stage == 0`, forcing \ref asum_ to be initialized for the first stage.
+   *
+   * @param stage The stage being checked.
+   */
   template <class ScalarT, typename IdxT>
   constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::can_reuse_asum(size_t stage) const
   {
@@ -104,6 +151,18 @@ namespace Integrator
     }
   }
 
+  /**
+   * @brief Checks to see if the \ref asum_ variable can be re-used from the last stage to compute the output state
+   *
+   * Often, the Rosenbrock m vector is the exact same as the last row in the A matrix, but with an additional
+   * non-zero element at the end. In this case, the output state for a step is equal to the \ref asum_ variables from
+   * the last stage but with a single weighted vector added to it. The integrator can take advantage of this and reduce
+   * a matmul for computing the final state down to a single `axpy`.
+   *
+   * If a method has only a single stage, then \ref asum_ will not have been initialized (as it will just be equal to y0).
+   * Therefore, this method will return `false`.
+   *
+   */
   template <class ScalarT, typename IdxT>
   constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::can_reuse_asum_for_out() const
   {
@@ -121,9 +180,21 @@ namespace Integrator
     return true;
   }
 
+  /**
+   * @brief Returns the index of a stage which can be used as an embedded error estimator, if that stage exists.
+   *
+   * Sometimes, Rosenbrock methods are designed in such a way where a stage can be used as an embedded error estimator.
+   * Typically, the embedded error estimator is a linear combination of the stages, so in this particular case the
+   * weights will be 1 on the estimator stage and 0 on all other stages.
+   *
+   * @pre This function is only valid to call if there is an embedded error estimator and its coefficients
+   * are included in this tableau.
+   */
   template <class ScalarT, typename IdxT>
   constexpr std::optional<size_t> Rosenbrock<ScalarT, IdxT>::Tableau::error_estimator_stage() const
   {
+    assert(e);
+
     std::optional<size_t> re;
     for (size_t j = 0; j < num_stages; j++)
     {
@@ -139,6 +210,19 @@ namespace Integrator
     return re;
   }
 
+  /**
+   * @brief Construct a new Rosenbrock integrator.
+   *
+   * @param tab The tableau to be used for this integrator. Since tableaus contain `std::unique_ptr`, it must be moved into the integrator.
+   * @param model The model to be simulated. Despite taking a pointer, this must be a valid pointer to an `Evaluator`.
+   * @param lin_solver The linear solver to be used when constructing stages during simulation. The reference must remain valid for as long
+   * as the Rosenbrock integrator lives.
+   * @param vector_handler The vector handler to be used when simulating. The reference must remain valid for as long as the Rosenbrock
+   * integrator lives.
+   * @param err_norm The error norm to use in calculating error for the `StepController`. Will not be accessed if the `StepController`
+   * does not need error (such as `FixedStep`), so `nullptr` can be passed in that circumstance.
+   * @param memspace The memory space that linear algebra operations should be performed in.
+   */
   template <class ScalarT, typename IdxT>
   Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                 tab,
                                         GridKit::Model::Evaluator<ScalarT, IdxT>* model,
@@ -155,6 +239,16 @@ namespace Integrator
   {
   }
 
+  /**
+   * @brief Allocates memory based on the the size of \ref model_. Must be called before other methods.
+   *
+   * @note This method can fail.
+   *
+   * @pre Allocates the Jacobian matrix, which requires knowledge of the number of nonzero elements. This must be known at this point,
+   * so `allocate()` must be called beforehand on \ref model_ to count the nonzero elements and allocate the CSR Jacobian.
+   *
+   * @return An error code, with 0 as success.
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::allocate()
   {
@@ -214,6 +308,22 @@ namespace Integrator
     return 0;
   }
 
+  /**
+   * @brief Initializes the simulation. Must be called before \ref integrate() or \ref time_step(). Must also be called after
+   * discrete events.
+   *
+   * - Sets the simulation time to `t0` and copies the initial condition from \ref model_.
+   * - Analyzes \ref model_ Jacobian sparsity and runs the preconditioner
+   * - Generates the mass matrix from \ref Evaluator::tag(). If the tag is not properly set, then initialization will fail.
+   * - Resets \ref stats_.
+   *
+   * @note This method can fail.
+   *
+   * @pre Must call \ref allocate() before this.
+   *
+   * @param t0 The starting simulation time.
+   * @return An error code, with 0 as success.
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::initializeSimulation(RealT t0)
   {
@@ -249,6 +359,16 @@ namespace Integrator
     return 0;
   }
 
+  /**
+   * @brief Test
+   *
+   * @param out_times
+   * @param step_controller
+   * @param params
+   * @param out_cb
+   * @param step_cb
+   * @return int
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<double>&                          out_times,
                                            StepController&                                     step_controller,
@@ -419,27 +539,86 @@ namespace Integrator
     return 0;
   }
 
+  /**
+   * @brief Advance the simulation forward by one step, storing the new state in \ref y_new_.
+   *
+   * Apply the Rosenbrock scheme using the stored tableau. Each stage \f(u_i\f) is calculated as
+   *
+   * \f[\left(J - \frac{1}{h\gamma} M\right)u_i = -f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) - M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j,\f]
+   *
+   * and the next state \f(y_1\f) is calculated as
+   *
+   * \f[y_1 = y_0 + \sum_{j = 1}^sm_ju_j\f]
+   *
+   * where the coefficients \f(\gamma, \alpha_i, a_{ij}, c_{ij}, m_j\f) come from the tableau, and the mass matrix \f(M\f) and Jacobian \f(J\f) come from the model.
+   *
+   * This method uses some state which is maintained between calls for future calls to `time_step()` and to communicate with \ref integrate():
+   * - \ref y_cur_ is used as \f(y_0\f) and \ref y_new_ is used as \f(y_1\f)
+   * - \ref asum_ is used as \f(y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\f) for every stage except the first. Often, \f(a_{ij} = a_{i-1,j}\f), so this variable
+   * can be re-used between stages to save computation. Similarly, often \f(a_{ij} = m_j\f), so this variable can be re-used for computing \ref y_new_.
+   * - \ref csum_ is used as \f(M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j\f) for every stage except the first
+   * - \ref RHS_ is used as \f(f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) + M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j\f), i.e.
+   * the residual evaluated at \ref asum_ plus \ref csum_, for every stage but the first.
+   * - \ref RHS_first_stage_ is used as a special \ref RHS_ for the first stage, since it may need to be saved for the next step for the \ref skip_f_ flag.
+   * Since \f(\alpha_1 = 0\f) always, this will have a value of \f(f \left(t_0, y_0\right)\f).
+   * - \ref stages_ stores all of the stages \f(u_i\f). These stages are necessary to be used in future calls to \ref error_estimate() and \ref calc_dense_coeff().
+   * - \ref skip_lu_ is used as a flag set by \ref integrate() to indicate that it is appropriate to use a time-delay Jacobian by re-using the factorization
+   * of the last step.
+   * - \ref skip_f_ is used as a flag set by \ref integrate() to indicate that \f(t_0, y_0\f) have not changed since the last time `time_step()` was called,
+   * so \ref RHS_first_stage_ can be re-used from the previous step. This will only happen when a step was rejected, so \ref skip_lu_ should always be false,
+   * and the entire first stage can't be re-used.
+   * - \ref jacobian_analyzed_ keeps track of whether the Jacobian has been factored in a previous call to `time_step()`. If so, then it can be re-factored
+   * in a faster way. The first factor must be done on actual data, so it cannot be performed pre-simulation.
+   *
+   * @pre Must call \ref initializeSimulation() beforehand.
+   *
+   * @note This method can fail.
+   *
+   * @todo This currently does not work with non-autonomous models. Some thought needs to be put in for how we want non-autonomous models to work.
+   *
+   * @todo It doesn't really make sense to pass `t0` here, which may be inconsistent with \ref current_time_.
+   * This function should just use \ref current_time_ in place of `t0`.
+   *
+   * @todo It doesn't really make sense for this method to be `public` since it relies on proper setup via \ref integrate().
+   *
+   * @todo May be able to move the copying of model jacobian pointers to \ref allocate().
+   *
+   * @todo Since \ref csum_ is multiplied by the mass matrix (which is currently diagonal with 0s for algebraic components), we can save some computation
+   * by only computing the differential parts of \ref csum_ and storing it in the same variable as \ref RHS_.
+   *
+   * @param t0 \f(t_0\f) in the above formula
+   * @param dt \f(h\f) in the above formula. The next state \f(y_1\f) will be an estimate of the state at \f(t_1 = t_0 + h\f).
+   * @return An error code, with 0 as success.
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::time_step(double t0, double dt)
   {
+    // A flag to keep track of if y0 (stored in y_cur_) has been copied in to the model already, to avoid double-copying
+    // for evaluating the Jacobian and residual on stage 1 (both evaluated at y0).
     bool y0_copied = false;
 
-    // Form the left-hand side of the system
-    // Can sometimes be skipped if the method is a w-method
+    // Form the left-hand side of the system. This is constant between stages.
+    // Can sometimes be skipped if the method allows for time-delay Jacobians (such as w-methods).
     [[likely]]
     if (!tab_.is_w || !skip_lu_)
     {
       BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
       y0_copied = true;
+
+      // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
+      // so we need a negative here since df/dy' = M.
       model_->updateTime(t0, -1.0 / (dt * tab_.gamma));
       BUBBLE_FAIL(model_->evaluateJacobian());
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
+
+      // TODO: This can likely be moved to allocate? These pointers should be consistent throughout the simulation
       BUBBLE_FAIL(workspace_.jacobian_->setDataPointers(
           model_jacobian->getRowData(),
           model_jacobian->getColData(),
           model_jacobian->getValues(),
           memspace_));
 
+      // We must factorize first (slower) and then can re-factorize (faster) on later steps
       [[likely]]
       if (workspace_.jacobian_analyzed_)
       {
