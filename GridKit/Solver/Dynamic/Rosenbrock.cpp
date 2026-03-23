@@ -972,9 +972,12 @@ namespace Integrator
     handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);
     handler.abs(workspace_.yprev_abs_.get(), workspace_.scale_.get(), memspace);
     handler.max(workspace_.yprev_abs_.get(), workspace_.scale_.get(), workspace_.yprev_abs_.get(), memspace);
+
+    // TODO: This scal shouldn't be necessary, but axpy doesn't support scaling the y parameter. In the future,
+    // the scaling should be able to be put on the next axpy.
     handler.scal(params_.rtol, workspace_.scale_.get(), memspace);
     handler.axpy(1.0, params_.atol.get(), workspace_.scale_.get(), memspace);
-    handler.scaleInv(workspace_.scale_.get(), workspace_.out_.get(), memspace);
+    handler.diagSolve(workspace_.scale_.get(), workspace_.out_.get(), memspace);
 
     return handler.amax(workspace_.out_.get(), memspace);
   }
