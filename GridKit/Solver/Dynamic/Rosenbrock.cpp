@@ -319,7 +319,7 @@ namespace Integrator
    *
    * @note This method can fail.
    *
-   * @pre Must call \ref allocate() before this.
+   * @pre Must have called \ref allocate().
    *
    * @param t0 The starting simulation time.
    * @return An error code, with 0 as success.
@@ -360,14 +360,41 @@ namespace Integrator
   }
 
   /**
-   * @brief Test
+   * @brief Simulate the given model, producing output at the given output times.
    *
-   * @param out_times
-   * @param step_controller
-   * @param params
-   * @param out_cb
-   * @param step_cb
-   * @return int
+   * Implements a simple time stepping algorithm and facilitates output.
+   * 1. Calls \ref time_step() to move the simulation forward by \ref step_size_ (starting at `params.starting_step`).
+   * 2. Consults the `step_controller` to see if the step is accepted, and what the next \ref step_size_ should be.
+   * 3. If accepted, advance simulation by adding \ref step_size_ to \ref current_time_ using Kahan summation and shifting
+   * \ref y_new_ -> \ref y_cur_ -> \ref y_prev_.
+   * 4. Any time we step over an output time, calculate dense coefficients if available.
+   * 5. For each output time stepped over in the last step, interpolate the output at that time and call `out_cb`.
+   *
+   * Time is advanced to at least the final output time. The simulation may step over the final time, so if you
+   * wish to restart simulation from the final output time, make sure to re-initialize the model's state and call
+   * \ref initializeSimulation().
+   *
+   * @note This method can fail.
+   *
+   * @pre Must have called \ref initializeSimulation().
+   *
+   * @todo A higher-order Hermite interpolation can be used as a fallback for interpolation when dense coefficients don't exist.
+   * Each step needs to sample the residual function at the beginning (and therefore end) of the step, which contains derivative
+   * information. This derivative information can be re-used for Hermite interpolation.
+   *
+   * @todo It doesn't really make sense to have the error estimator separate from the step controller, since your choice of one will
+   * affect your choice of the other. The error estimator should probably be inside the step controller, then accessed if needed.
+   *
+   * @param out_times The times at which output is wanted. The simulation will stop once the final output time has been reached.
+   * @param step_controller The step size controller to use during the simulation.
+   * @param params The parameters to use during the simulation.
+   * @param out_cb An optional function which, if provided, will be called once for each time in `out_times`. The simulation time of the
+   * output is passed as the only argument. Before being called, the model will be updated with the output state and can be queried
+   * separately by the callback if needed.
+   * @param step_cb An optional function which, if provided, will be called once for each step the integrator takes. Information about the
+   * step which was just taken is provided as the argument. Before being called, the model will be updated with the current value of the state
+   * an can be queried separately by the callback if needed. Useful for debugging simulations.
+   * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<double>&                          out_times,
@@ -388,6 +415,7 @@ namespace Integrator
     // later
     double time_buffer = 0;
 
+    // Generate output for each output time
     for (double out_time : out_times)
     {
       while (current_time_ < out_time && stats_.num_steps < params.max_steps)
@@ -429,8 +457,9 @@ namespace Integrator
           time_buffer   = step_size_adj - (next_time - current_time_);
           current_time_ = next_time;
 
-          // step_cb(current_time, yout);
-          skip_f_ = false;
+          // Since time is advancing, we need to re-evaluate the residual function and dense coefficients
+          skip_f_                   = false;
+          dense_coefficients_valid_ = false;
 
           stats_.num_steps++;
           if (skip_lu_)
@@ -451,7 +480,6 @@ namespace Integrator
 
           std::swap(y_prev_, y_cur_);
           std::swap(y_cur_, y_new_);
-          dense_coefficients_valid_ = false;
         }
         else
         {
@@ -469,6 +497,8 @@ namespace Integrator
           });
         }
 
+        // Check if we can use time delay Jacobians. If we would have increased the step size (but not too much),
+        // instead keep the step size the same and use time-delay Jacobian.
         double step_gain = next_step_size / step_size_;
         if (params.skip_lu && step_gain >= 1 && step_gain <= 1.2)
         {
@@ -481,6 +511,7 @@ namespace Integrator
           step_size_      = next_step_size;
         }
 
+        // If there is a step_cb, update the model state and call it
         if (step_cb)
         {
           BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
@@ -499,8 +530,11 @@ namespace Integrator
         }
       }
 
+      // Check to make sure integration was paused because we reached an output time.
+      // Other reasons, like hitting max step count, shouldn't generate output.
       if (current_time_ >= out_time)
       {
+        // Generate output at the appropriate time.
         if (tab_.hasDenseOutput())
         {
           if (!dense_coefficients_valid_)
@@ -521,6 +555,7 @@ namespace Integrator
           vector_handler_.axpy(theta, y_cur_.get(), y_interp_.get(), memspace_);
         }
 
+        // Update model with output and call out_cb if it exists
         if (out_cb)
         {
           BUBBLE_FAIL(y_interp_->copyToExternal(model_->y().data(), memspace_, memspace_));
@@ -557,8 +592,9 @@ namespace Integrator
    * - \ref asum_ is used as \f(y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\f) for every stage except the first. Often, \f(a_{ij} = a_{i-1,j}\f), so this variable
    * can be re-used between stages to save computation. Similarly, often \f(a_{ij} = m_j\f), so this variable can be re-used for computing \ref y_new_.
    * - \ref csum_ is used as \f(M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j\f) for every stage except the first
-   * - \ref RHS_ is used as \f(f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) + M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j\f), i.e.
-   * the residual evaluated at \ref asum_ plus \ref csum_, for every stage but the first.
+   * - \ref RHS_ is used as \f(-f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) - M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j\f), i.e.
+   * the residual evaluated at \ref asum_ plus \ref csum_, for every stage but the first. This is used as the right-hand side vector for the linear solve to solve
+   * for the stage value \f(u_i\f).
    * - \ref RHS_first_stage_ is used as a special \ref RHS_ for the first stage, since it may need to be saved for the next step for the \ref skip_f_ flag.
    * Since \f(\alpha_1 = 0\f) always, this will have a value of \f(f \left(t_0, y_0\right)\f).
    * - \ref stages_ stores all of the stages \f(u_i\f). These stages are necessary to be used in future calls to \ref error_estimate() and \ref calc_dense_coeff().
@@ -728,9 +764,31 @@ namespace Integrator
     return 0;
   }
 
+  /**
+   * @brief Calculates an estimation of the error produced by the last call to \ref time_step() which can be used as the
+   * `err` argument for \ref ErrorNorm::errorNorm().
+   *
+   * Calculate the embedded error as
+   *
+   * \f[\hat{e} = \sum_{j = 1}^s e_j u_j,\f]
+   *
+   * where \f(e_j\f) are tableau coefficients and \f(u_j\f) are stages computed by \ref time_step(). It happens often that
+   * \f(e_j = 0\f) for all but one stage, where \f(e_j = 1\f). In that case, the stage itself is used as the error estimate,
+   * and extra calculation can be avoided. For this reason, a reference to the estimate is returned to avoid an unnecessary copy.
+   *
+   * @pre Must call \ref time_step(), and tableau must have coefficients for an embedded error estimator.
+   * @note This method can fail.
+   *
+   * @todo This function is fallible, but the return type makes it difficult to return an error code. Right now it will throw an
+   * error, but it should be refactored to allow returning an error code, such as by returning `std::variant`.
+   *
+   * @return A reference to the estimated error.
+   */
   template <class ScalarT, typename IdxT>
   State& Rosenbrock<ScalarT, IdxT>::error_estimate() const
   {
+    // Test to see if the tableau allows us to use a stage as the error estimate,
+    // avoiding extra computation.
     std::optional<size_t> err_stage = tab_.error_estimator_stage();
 
     if (err_stage)
@@ -747,7 +805,7 @@ namespace Integrator
         throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
       }
 
-      vector_handler_.scal(tab_.e[0], workspace_.stages_[0].get(), memspace_);
+      vector_handler_.scal(tab_.e[0], workspace_.err_est_.get(), memspace_);
       for (size_t j = 1; j < tab_.num_stages; j++)
       {
         if (tab_.e[j] != 0.0)
@@ -760,6 +818,18 @@ namespace Integrator
     }
   }
 
+  /**
+   * @brief Calculate the interpolation nodes used by \ref interp_dense() based on \ref stages_ computed by
+   * the last call to \ref time_step(). Nodes are stored in \ref dense_coeff_. Only needs to be called once,
+   * but can be invalidated by future calls to \ref time_step(). \ref integrate() keeps track of \ref dense_coefficients_valid_,
+   * which tells you if this function is needed to be called.
+   *
+   * @pre Must call \ref time_step() first.
+   *
+   * @note This method can fail.
+   *
+   * @return An error code, with 0 as success.
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::calc_dense_coeff()
   {
@@ -782,10 +852,37 @@ namespace Integrator
     return 0;
   }
 
+  /**
+   * @brief Calculate an interpolated state at \f(\theta = \frac{t - t_0}{h}\f) between the initial state
+   * \f(y_0\f) and final state \f(y_1\f) of the last step taken using dense interpolation nodes calculated
+   * by \ref calc_dense_coeff().
+   *
+   * For a valid interpolation of appropriate order, \f(\theta\f) must be in \f([0, 1]\f), although values
+   * beyond 1 can be used for extrapolation if desired.
+   *
+   * Uses a number of interpolation nodes equal to the order. Since \f(y_0\f) and \f(y_1\f) are interpolation
+   * nodes, this method will only access \ref dense_coeff_ if the method's order is greater than 2.
+   *
+   * The inteporlation is calculated as
+   *
+   * \f[y(\theta) = (1 - \theta) y_0 + \theta \left(y_1 + (1 - \theta) \sum_{i = 1}^{p-2} \theta^{i-1} \hat{y}_i\right),\f]
+   *
+   * where \f(\hat{y}_i\f) are the dense interpolation nodes calculated in \ref calc_dense_coeff() and \f(p\f) is the order of the method.
+   * This calculation is carried out using synthetic division.
+   *
+   * @pre Must call \ref calc_dense_coeff() first.
+   *
+   * @note This method can fail.
+   *
+   * @note If `theta` is very close to 0 or very close to 1, it might be better to simply use \ref y_prev_ or \ref y_cur_ instead of
+   * calculating this interpolation.
+   *
+   * @param theta The fraction of time during the last step taken to calculate the interpolation at. \f(\theta = \frac{t - t_0}{h}\f)
+   * @return An error code, with 0 as success.
+   */
   template <class ScalarT, typename IdxT>
   int Rosenbrock<ScalarT, IdxT>::interp_dense(double theta)
   {
-    double one = 1.0;
     if (tab_.order > 2)
     {
       BUBBLE_FAIL(y_interp_->copyFromExternal(dense_coeff_[tab_.order - 3].get(), memspace_, memspace_));
@@ -793,24 +890,31 @@ namespace Integrator
       for (size_t i = 1; i < tab_.order - 2; i++)
       {
         vector_handler_.scal(theta, y_interp_.get(), memspace_);
-        vector_handler_.axpy(one, dense_coeff_[tab_.order - 3 - i].get(), y_interp_.get(), memspace_);
+        vector_handler_.axpy(1.0, dense_coeff_[tab_.order - 3 - i].get(), y_interp_.get(), memspace_);
       }
+
+      // TODO: This scal can be removed and absorbed into the next axpy, except that it currently isn't possible to put a scalar
+      // multiple on the y term.
+      vector_handler_.scal(1 - theta, y_interp_.get(), memspace_);
     }
     else
     {
       BUBBLE_FAIL(y_interp_->setToZero(memspace_));
     }
 
-    double omt = 1 - theta;
-
-    vector_handler_.scal(omt, y_interp_.get(), memspace_);
-    vector_handler_.axpy(one, y_cur_.get(), y_interp_.get(), memspace_);
+    vector_handler_.axpy(1.0, y_cur_.get(), y_interp_.get(), memspace_);
     vector_handler_.scal(theta, y_interp_.get(), memspace_);
-    vector_handler_.axpy(omt, y_prev_.get(), y_interp_.get(), memspace_);
+    vector_handler_.axpy(1 - theta, y_prev_.get(), y_interp_.get(), memspace_);
 
     return 0;
   }
 
+  /**
+   * @brief Standard textbook adaptive controller. Accept if `err <= 1` and use
+   *
+   * \f[h_{new} = h * \min \left\{fac_{max}, \max\left\{fac_{min}, fac_{scale} \cdot e ^{-1/p}\right\}\right\}.\f]
+   *
+   */
   StepControl AdaptiveStep::nextStep(double err, StepControl prev_step, uint8_t method_order)
   {
     StepControl next_step = prev_step;
@@ -823,7 +927,11 @@ namespace Integrator
     return next_step;
   }
 
-  StepControl FixedStep::nextStep([[maybe_unused]] double err, [[maybe_unused]] StepControl prev_step, [[maybe_unused]] uint8_t method_order)
+  /**
+   * @brief Fixed step - accept every step, no matter the error, and keep the step size the same.
+   *
+   */
+  StepControl FixedStep::nextStep([[maybe_unused]] double err, StepControl prev_step, [[maybe_unused]] uint8_t method_order)
   {
     return StepControl{
         .accept    = true,
@@ -831,11 +939,35 @@ namespace Integrator
     };
   }
 
+  /**
+   * @brief Calculate the infinity error norm as
+   *
+   * \f[e = \max\left\{\frac{|\hat{e}_i|}{Atol_i + Rtol \cdot \max\{|y_{0i}|, |y_{1i}|\}}\right\}_i,\f]
+   *
+   * where \f(y_0\f) is the initial state, \f(y_1\f) is the next state, and \f(\hat{e}\f) is the estimated error made in calculating
+   * the next state (typically \f(\hat{e} = y_1 - \hat{y}_1\f) for some different-order approximation \f(\hat{y}_1\f)).
+   *
+   * @param err \f(\hat{e}\f) in the above formula.
+   * @param y \f(y_1\f) in the above formula.
+   * @param yprev \f(y_0\f) in the above formula.
+   * @param handler The handler to be used for performing linear algebra operations.
+   * @param memspace The memory space to be used for performing linear lagebra operations.
+   * @see `Rosenbrock::error_estimate()`
+   */
   double InfNorm::errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const
   {
-    workspace_.out_->copyFromExternal(&err, memspace, memspace);
-    workspace_.scale_->copyFromExternal(&y, memspace, memspace);
-    workspace_.yprev_abs_->copyFromExternal(&yprev, memspace, memspace);
+    if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
+    {
+      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+    }
+    if (int err_code = workspace_.scale_->copyFromExternal(&y, memspace, memspace))
+    {
+      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+    }
+    if (int err_code = workspace_.yprev_abs_->copyFromExternal(&yprev, memspace, memspace))
+    {
+      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+    }
 
     handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);
     handler.abs(workspace_.yprev_abs_.get(), workspace_.scale_.get(), memspace);
