@@ -45,6 +45,7 @@ namespace Integrator
    * @brief Interface for step size controllers. Used by `Rosenbrock` integrators to decide when to accept/reject steps and
    *        what size each step should be.
    *
+   * @todo It may be best to have \ref usesError() return a reference to the \ref ErrorNorm that should be used.
    */
   class StepController
   {
@@ -83,6 +84,8 @@ namespace Integrator
      * @param handler A vector handler which can be used to facilitate vector operations.
      * @param memspace The memory space which vector operations should be performed in/.
      * @return double The error.
+     *
+     * @todo Allow this method to fail, since it will likely involve linear algebra calls.
      */
     virtual double errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const = 0;
   };
