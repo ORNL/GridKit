@@ -38,6 +38,12 @@ namespace Integrator
     return re;
   }
 
+  /**
+   * @brief
+   *
+   * @todo Add paper citation.
+   *
+   */
   template <class ScalarT, typename IdxT>
   Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::rodas5p()
   {
