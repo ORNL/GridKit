@@ -215,6 +215,7 @@ namespace Integrator
    *
    * @param tab The tableau to be used for this integrator. Since tableaus contain `std::unique_ptr`, it must be moved into the integrator.
    * @param model The model to be simulated. Despite taking a pointer, this must be a valid pointer to an `Evaluator`.
+   * Must have \ref Evaluator::tag() set, and must be in Hessenberg form (\f(F(\dot y, y) = \dot y - f(y)\f)).
    * @param lin_solver The linear solver to be used when constructing stages during simulation. The reference must remain valid for as long
    * as the Rosenbrock integrator lives.
    * @param vector_handler The vector handler to be used when simulating. The reference must remain valid for as long as the Rosenbrock
@@ -319,7 +320,9 @@ namespace Integrator
    *
    * @note This method can fail.
    *
-   * @pre Must have called \ref allocate().
+   * @pre Must have called \ref allocate(). The `model.tag_` variable must be properly constructed.
+   *
+   * @todo Document mass matrix construction
    *
    * @param t0 The starting simulation time.
    * @return An error code, with 0 as success.
@@ -384,6 +387,8 @@ namespace Integrator
    *
    * @todo It doesn't really make sense to have the error estimator separate from the step controller, since your choice of one will
    * affect your choice of the other. The error estimator should probably be inside the step controller, then accessed if needed.
+   *
+   * @todo Return an error when max steps is hit.
    *
    * @param out_times The times at which output is wanted. The simulation will stop once the final output time has been reached.
    * @param step_controller The step size controller to use during the simulation.
