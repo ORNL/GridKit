@@ -390,6 +390,10 @@ namespace Integrator
    *
    * @todo Return an error when max steps is hit.
    *
+   * @todo Check if current time is close enough to output time, and skip interpolation
+   *
+   * @todo Configure upper bound for skip lu step size increase
+   *
    * @param out_times The times at which output is wanted. The simulation will stop once the final output time has been reached.
    * @param step_controller The step size controller to use during the simulation.
    * @param params The parameters to use during the simulation.
@@ -504,6 +508,7 @@ namespace Integrator
 
         // Check if we can use time delay Jacobians. If we would have increased the step size (but not too much),
         // instead keep the step size the same and use time-delay Jacobian.
+        // TODO: configure upper bound here
         double step_gain = next_step_size / step_size_;
         if (params.skip_lu && step_gain >= 1 && step_gain <= 1.2)
         {
@@ -539,6 +544,10 @@ namespace Integrator
       // Other reasons, like hitting max step count, shouldn't generate output.
       if (current_time_ >= out_time)
       {
+        // Theta = (t - t0) / h = (t - t1) / h + 1
+        // current_time_ is t1 here
+        double theta = (out_time - current_time_) / prev_step_size_ + 1;
+
         // Generate output at the appropriate time.
         if (tab_.hasDenseOutput())
         {
@@ -548,13 +557,11 @@ namespace Integrator
             dense_coefficients_valid_ = true;
           }
 
-          double theta = (out_time - current_time_) / prev_step_size_ + 1;
           BUBBLE_FAIL(interp_dense(theta));
         }
         else
         {
           // TODO: Put code for alternative interpolation (Abdou) here
-          double theta = (out_time - current_time_) / prev_step_size_ + 1;
           BUBBLE_FAIL(y_interp_->copyFromExternal(y_prev_.get(), memspace_, memspace_));
           vector_handler_.scal(1 - theta, y_interp_.get(), memspace_);
           vector_handler_.axpy(theta, y_cur_.get(), y_interp_.get(), memspace_);
@@ -736,6 +743,7 @@ namespace Integrator
       BUBBLE_FAIL(model_->evaluateResidual());
       workspace_.RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
 
+      // TODO: examine if this -1 is correct
       vector_handler_.scal(-1, workspace_.RHS_.get(), memspace_);
       vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);
       vector_handler_.axpy(-1, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
@@ -947,7 +955,7 @@ namespace Integrator
   /**
    * @brief Calculate the infinity error norm as
    *
-   * \f[e = \max\left\{\frac{|\hat{e}_i|}{Atol_i + Rtol \cdot \max\{|y_{0i}|, |y_{1i}|\}}\right\}_i,\f]
+   * \f[e = \max_i\frac{|\hat{e}_i|}{Atol_i + Rtol \cdot \max\{|y_{0i}|, |y_{1i}|\}},\f]
    *
    * where \f(y_0\f) is the initial state, \f(y_1\f) is the next state, and \f(\hat{e}\f) is the estimated error made in calculating
    * the next state (typically \f(\hat{e} = y_1 - \hat{y}_1\f) for some different-order approximation \f(\hat{y}_1\f)).
@@ -976,7 +984,7 @@ namespace Integrator
 
     handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);
     handler.abs(workspace_.yprev_abs_.get(), workspace_.scale_.get(), memspace);
-    handler.max(workspace_.yprev_abs_.get(), workspace_.scale_.get(), workspace_.yprev_abs_.get(), memspace);
+    handler.max(workspace_.yprev_abs_.get(), workspace_.scale_.get(), workspace_.scale_.get(), memspace);
 
     // TODO: This scal shouldn't be necessary, but axpy doesn't support scaling the y parameter. In the future,
     // the scaling should be able to be put on the next axpy.
