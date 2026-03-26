@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <GridKit/Model/PowerElectronics/Bus.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -98,6 +99,9 @@ int main(int /* argc */, char const** /* argv */)
   size_t vec_size_total = vec_size_internals + vec_size_externals;
 
   size_t indexv = 0;
+
+  std::unique_ptr<GridKit::PowerElectronics::Bus<double, size_t>> bus = std::make_unique<GridKit::PowerElectronics::Bus<double, size_t>>();
+  sysmodel->addBus(&*bus);
 
   // dg 1
   GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(0, parms1, true);

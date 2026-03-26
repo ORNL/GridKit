@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/PowerElectronics/Bus.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
 #include <GridKit/ScalarTraits.hpp>
@@ -63,6 +64,7 @@ namespace GridKit
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
+    using bus_type       = PowerElectronics::Bus<ScalarT, IdxT>;
     using node_type      = CircuitNode<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
@@ -486,10 +488,16 @@ namespace GridKit
       components_.push_back(component);
     }
 
+    void addBus(bus_type* bus)
+    {
+      buses_.push_back(bus);
+    }
+
   private:
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*> components_;
+    std::vector<bus_type*>       buses_;
 
     IdxT*       map_to_csr_{nullptr};
     CsrMatrixT* csr_jac_{nullptr};
