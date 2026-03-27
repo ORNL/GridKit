@@ -1,13 +1,13 @@
-
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
-#include <GridKit/Model/PowerElectronics/Bus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -100,8 +100,21 @@ int main(int /* argc */, char const** /* argv */)
 
   size_t indexv = 0;
 
-  std::unique_ptr<GridKit::PowerElectronics::Bus<double, size_t>> bus = std::make_unique<GridKit::PowerElectronics::Bus<double, size_t>>();
-  sysmodel->addBus(&*bus);
+  using Bus                 = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  std::unique_ptr<Bus> bus1 = std::make_unique<Bus>();
+  std::unique_ptr<Bus> bus2 = std::make_unique<Bus>();
+  std::unique_ptr<Bus> bus3 = std::make_unique<Bus>();
+  std::unique_ptr<Bus> bus4 = std::make_unique<Bus>();
+
+  sysmodel->addNode(&*bus1);
+  sysmodel->addNode(&*bus2);
+  sysmodel->addNode(&*bus3);
+  sysmodel->addNode(&*bus4);
+
+  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
+  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+
+  sysmodel->addNode(&*dg_signal);
 
   // dg 1
   GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(0, parms1, true);
@@ -264,31 +277,31 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->addComponent(load2);
 
   // Virtual PQ Buses
-  GridKit::MicrogridBusDQ<double, size_t>* bus1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN);
 
-  bus1->setExternalConnectionNodes(0, dqbus1);
-  bus1->setExternalConnectionNodes(1, dqbus1 + 1);
-  sysmodel->addComponent(bus1);
+  bus_para_1->setExternalConnectionNodes(0, dqbus1);
+  bus_para_1->setExternalConnectionNodes(1, dqbus1 + 1);
+  sysmodel->addComponent(bus_para_1);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN);
 
-  bus2->setExternalConnectionNodes(0, dqbus2);
-  bus2->setExternalConnectionNodes(1, dqbus2 + 1);
-  sysmodel->addComponent(bus2);
+  bus_para_2->setExternalConnectionNodes(0, dqbus2);
+  bus_para_2->setExternalConnectionNodes(1, dqbus2 + 1);
+  sysmodel->addComponent(bus_para_2);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN);
 
-  bus3->setExternalConnectionNodes(0, dqbus3);
-  bus3->setExternalConnectionNodes(1, dqbus3 + 1);
-  sysmodel->addComponent(bus3);
+  bus_para_3->setExternalConnectionNodes(0, dqbus3);
+  bus_para_3->setExternalConnectionNodes(1, dqbus3 + 1);
+  sysmodel->addComponent(bus_para_3);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN);
 
-  bus4->setExternalConnectionNodes(0, dqbus4);
-  bus4->setExternalConnectionNodes(1, dqbus4 + 1);
-  sysmodel->addComponent(bus4);
+  bus_para_4->setExternalConnectionNodes(0, dqbus4);
+  bus_para_4->setExternalConnectionNodes(1, dqbus4 + 1);
+  sysmodel->addComponent(bus_para_4);
 
-  sysmodel->allocate(vec_size_total);
+  sysmodel->allocate();
 
   std::cout << sysmodel->y().size() << std::endl;
   std::cout << vec_size_internals << ", " << vec_size_externals << "\n";

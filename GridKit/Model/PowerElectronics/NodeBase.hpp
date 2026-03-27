@@ -9,15 +9,29 @@ namespace GridKit
   namespace PowerElectronics
   {
     template <typename ScalarT, typename IdxT>
-    class Bus : public Model::Evaluator<ScalarT, IdxT>
+    class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
+      NodeBase(size_t n_intern, size_t n_extern) : n_intern_(n_intern), n_extern_(n_extern)
+      {
+      }
+
       IdxT size() final
       {
-        return size_;
+        return n_extern_ + n_intern_;
+      }
+
+      size_t getExternSize()
+      {
+        return n_extern_;
+      }
+
+      size_t getInternalSize()
+      {
+        return n_intern_;
       }
 
       IdxT nnz() final
@@ -104,11 +118,6 @@ namespace GridKit
        */
       int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
       {
-        if (!connection_nodes_)
-        {
-          connection_nodes_ = std::make_unique<IdxT[]>(size_);
-        }
-
         connection_nodes_[local_index] = global_index;
         return 0;
       }
@@ -126,10 +135,10 @@ namespace GridKit
         return connection_nodes_[local_index];
       }
 
-      int allocate() final
+      int allocate() override
       {
         // Temporary while we use std::vector in the code
-        size_t size = static_cast<size_t>(size_);
+        size_t size = static_cast<size_t>(n_intern_ + n_extern_);
 
         // Resize component model data
         f_.resize(size);
@@ -139,6 +148,8 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
+        connection_nodes_ = std::make_unique<IdxT[]>(size);
+
         return 0;
       }
 
@@ -147,7 +158,7 @@ namespace GridKit
         return 0;
       }
 
-      int initialize() final
+      int initialize() override
       {
         // TODO: fill this in
         return 0;
@@ -166,7 +177,9 @@ namespace GridKit
     private:
       IdxT bus_id_{INVALID_INDEX<IdxT>};
 
-      IdxT              size_{0};
+      size_t n_extern_;
+      size_t n_intern_;
+
       IdxT              nnz_{0};
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
