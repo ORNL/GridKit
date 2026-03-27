@@ -134,30 +134,6 @@ namespace GridKit
     }
 
     /**
-     * @brief allocator default
-     *
-     * @todo this should throw an exception as no allocation without a graph is allowed.
-     * Or needs to be removed from the base class
-     *
-     * @return int
-     */
-    int allocate() final
-    {
-      size_ = 0;
-      for (component_type* comp : components_)
-      {
-        size_ += comp->getInternalSize();
-      }
-
-      for (node_type* node : nodes_)
-      {
-        size_ += node->getInternalSize();
-      }
-
-      return allocate(size_);
-    }
-
-    /**
      * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
      *
      *
@@ -179,7 +155,6 @@ namespace GridKit
       return true;
     }
 
-  private:
     /**
      * @brief Allocate system vectors and construct the system CSR Jacobian
      *
@@ -191,13 +166,19 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int allocate(IdxT s)
+    int allocate() final
     {
-      // Allocate all components
-      size_ = s;
-      for (const auto& component : components_)
+      size_ = 0;
+      for (component_type* comp : components_)
       {
-        component->allocate();
+        comp->allocate();
+        size_ += comp->getInternalSize();
+      }
+
+      for (node_type* node : nodes_)
+      {
+        node->allocate();
+        size_ += node->getInternalSize();
       }
 
       // Allocate global vectors
@@ -286,7 +267,6 @@ namespace GridKit
       return 0;
     }
 
-  public:
     /**
      * @brief Set intial y and y' of each component
      *
