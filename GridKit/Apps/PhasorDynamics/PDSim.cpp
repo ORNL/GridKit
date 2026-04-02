@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
 
   // Generate aggregate errors comparing variable output to reference solution
   std::string func{"monitor file vs reference file"};
-  TestStatus status{func.c_str()};
+  TestStatus  status{func.c_str()};
   if (!study.output_file.empty() && !study.reference_file.empty())
   {
     auto errorSet = compareCSV(study.output_file, study.reference_file);
