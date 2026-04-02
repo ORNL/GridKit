@@ -55,6 +55,16 @@ namespace GridKit
         return *this;
       }
 
+      operator bool() const
+      {
+        return outcome_ == TestOutcome::PASS;
+      }
+
+      int get() const
+      {
+        return outcome_;
+      }
+
       void skipTest()
       {
         outcome_ = TestOutcome::SKIP;

@@ -79,7 +79,7 @@ namespace GridKit
         /// Output format
         Format      format;
         /// Delimiter (used only with CSV format currently)
-        std::string delim;
+        std::string delim{","};
       };
 
       virtual ~VariableMonitorBase()
