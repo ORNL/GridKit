@@ -21,3 +21,7 @@ add_test(NAME ThreeBusBasicJson
 add_test(NAME ThreeBusBasicJson_no_arg
     COMMAND ThreeBusBasicJson
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(NAME ThreeBusBasic_using_app
+    COMMAND PDSim ${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasic.study.json
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
