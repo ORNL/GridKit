@@ -60,7 +60,7 @@ None.
 The origin of the algebraic equations is easier to understand in complex form:
 ``` math
 \begin{aligned}
-S &= S_z  \left(\frac{|V|}{V_0}\right)^2 + S_I \left(\frac{|V|}{V_0}\right) + S_P
+S &= S_z  \left(\frac{|V|}{V_0}\right)^2 + S_I \left(\frac{|V|}{V_0}\right) + S_P \\
 S &= V I^*
 \end{aligned}
 ```
