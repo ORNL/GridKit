@@ -50,8 +50,8 @@ None.
 ### Algebraic Equations
 ``` math
 \begin{aligned}
-0 &= I_{r} - (P_{0} V_{r} + Q_{0} V_{i}) (\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt(V_r^2+V_i^2)} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P) \\
-0 &= I_{i} - (P_{0} V_{i} - Q_{0} V_{r}) (\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt(V_r^2+V_i^2)} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P)
+0 &= I_{r} - (P_{0} V_{r} + Q_{0} V_{i}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right) \\
+0 &= I_{i} - (P_{0} V_{i} - Q_{0} V_{r}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right)
 \end{aligned}
 ```
 
@@ -60,7 +60,7 @@ None.
 The origin of the algebraic equations is easier to understand in complex form:
 ``` math
 \begin{aligned}
-S &= S_z  \(\frac{|V|}{V_0}\)^2 + S_I \(\frac{|V|}{V_0}\) + S_P
+S &= S_z  \left(\frac{|V|}{V_0}\right)^2 + S_I \left(\frac{|V|}{V_0}\\right) + S_P
 S &= V I^*
 \end{aligned}
 ```
