@@ -136,6 +136,19 @@ namespace GridKit
           addComponent(load);
         }
 
+        // Add zip loads
+        /// @todo Add zip loads to JSON parser
+        for (const auto& loadzipdata : data.loadzip)
+        {
+          IdxT bus_index = 0;
+          if (loadzipdata.ports.contains(LoadZIPData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = loadzipdata.ports.at(LoadZIPData<ScalarT, IdxT>::Ports::bus);
+          }
+          auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
+          addComponent(loadzip);
+        }
+
         // Add GENROU generators
         for (const auto& gendata : data.genrou)
         {
