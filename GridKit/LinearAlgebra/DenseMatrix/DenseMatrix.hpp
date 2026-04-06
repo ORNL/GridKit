@@ -38,6 +38,7 @@ namespace GridKit
       RealT                    getValue(const IdxT i, const IdxT j) const;
       void                     setValue(const IdxT i, const IdxT j, const RealT value);
       void                     setValues(COO_Matrix<RealT, IdxT> values_COO);
+      void                     setValues(size_t nnz, const IdxT* rows_coo, const IdxT* cols_coo, const RealT* vals_coo);
       std::vector<RealT>*      getValues();
       COO_Matrix<RealT, IdxT>* getValuesCOO();
 
@@ -120,6 +121,23 @@ namespace GridKit
       for (IdxT idx = 0; idx < values_COO.nnz(); ++idx)
       {
         this->setValue(rcord[idx], ccord[idx], vals[idx]);
+      }
+    }
+
+    /**
+     * @brief DenseMatrix value setter from individual COO arrays. Calls \ref setValue() for each input.
+     *
+     * @param nnz Size of array inputs
+     * @param rows_coo Row indices
+     * @param cols_coo Column indices
+     * @param vals_coo Values
+     */
+    template <typename RealT, typename IdxT>
+    void DenseMatrix<RealT, IdxT>::setValues(size_t nnz, const IdxT* rows_coo, const IdxT* cols_coo, const RealT* vals_coo)
+    {
+      for (size_t idx = 0; idx < nnz; ++idx)
+      {
+        this->setValue(rows_coo[idx], cols_coo[idx], vals_coo[idx]);
       }
     }
 
