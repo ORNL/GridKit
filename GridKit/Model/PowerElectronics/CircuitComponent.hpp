@@ -92,6 +92,16 @@ namespace GridKit
       return connection_nodes_[local_index];
     }
 
+    /**
+     * @brief Allocates all of the internal buffers for the component.
+     * If a components needs a more specialized allocation (such as by having additional internal buffers),
+     * it should override this function and then call it in the body to ensure it stays up-to-date with
+     * new implementations.
+     *
+     * @pre \ref nnz_ and \ref size_ must be set. Typically these are set by the child object in its constructor.
+     *
+     * @return An error code, or 0 if success
+     */
     int allocate() override
     {
       jacobian_coo_rows_   = std::make_unique<IdxT[]>(nnz_);
@@ -136,11 +146,26 @@ namespace GridKit
     }
 
   protected:
+    /**
+     * @brief Reset the Jacobian so it can be constructed. Helper method for \ref setJacValues().
+     * Sets \ref current_jac_size_ to 0 so that future calls to `setJacValues()` will override previous values.
+     *
+     */
     void zeroJacMatrix()
     {
       current_jac_size_ = 0;
     }
 
+    /**
+     * @brief Helper method for adding values to the Jacobian. Copies the rows, cols, and vals buffers and appends
+     * them to the end of the corresponding Jacobian buffers. Uses \ref current_jac_size_ to tell where the end of
+     * the Jacobian currently is.
+     *
+     * @pre `rows`, `cols`, `vals` must all be the same size
+     * @pre \ref allocate() must be called first.
+     * @pre Must call \ref zeroJacMatrix() before starting construction of a new Jacobian
+     * @pre The must be enough room for the values in the allocated buffers, i.e. `current_jac_size_ + rows.size() <= nnz_`
+     */
     void setJacValues(const std::vector<IdxT>& rows, const std::vector<IdxT>& cols, const std::vector<RealT>& vals)
     {
       assert(rows.size() == cols.size());
@@ -149,7 +174,6 @@ namespace GridKit
 
       for (size_t i = 0; i < rows.size(); i++)
       {
-
         jacobian_coo_rows_[current_jac_size_]   = rows[i];
         jacobian_coo_cols_[current_jac_size_]   = cols[i];
         jacobian_coo_values_[current_jac_size_] = vals[i];
@@ -359,10 +383,12 @@ namespace GridKit
     IdxT size_quad_{0};
     IdxT size_opt_{0};
 
+    // COO Jacobian buffers
     std::unique_ptr<IdxT[]>  jacobian_coo_rows_;
     std::unique_ptr<IdxT[]>  jacobian_coo_cols_;
     std::unique_ptr<RealT[]> jacobian_coo_values_;
 
+    /// The number of non-zero elements currently inserted into the Jacobian. See \ref setJacValues()
     size_t current_jac_size_{0};
 
     std::vector<ScalarT> y_;
