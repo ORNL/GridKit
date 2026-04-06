@@ -170,8 +170,8 @@ int main(int argc, const char* argv[])
   real_type worst_error      = 0;
   real_type worst_error_time = 0;
 
-  std::ostream  nullout(nullptr);
-  //std::ostream& out = nullout;
+  std::ostream nullout(nullptr);
+  // std::ostream& out = nullout;
 
   // Uncomment code below to print output to a file:
   std::ofstream fileout;

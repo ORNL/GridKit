@@ -10,9 +10,9 @@ namespace GridKit
     /// Initial parameters for a loadZIP
     enum class LoadZIPParameters
     {
-      P0, ///< Load nominal real power
-      Q0, ///< Load nominal reactive power
-      V0, ///< Load nominal reactive power
+      P0,     ///< Load nominal real power
+      Q0,     ///< Load nominal reactive power
+      V0,     ///< Load nominal reactive power
       alphaI, ///< Fraction of load to be represented as constant current
       alphaP, ///< Fraction of load to be represented as constant power
     };
@@ -43,10 +43,10 @@ namespace GridKit
      */
     template <typename RealT, typename IdxT>
     struct LoadZIPData : public ComponentData<RealT,
-                                           IdxT,
-                                           LoadZIPParameters,
-                                           LoadZIPPorts,
-                                           LoadZIPMonitorableVariables>
+                                              IdxT,
+                                              LoadZIPParameters,
+                                              LoadZIPPorts,
+                                              LoadZIPMonitorableVariables>
     {
       LoadZIPData() = default;
 

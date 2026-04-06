@@ -38,7 +38,7 @@ namespace GridKit
       using GenrouDataT       = GenrouData<RealT, IdxT>;
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
-      using LoadZIPDataT         = LoadZIPData<RealT, IdxT>;
+      using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
       using SignalDataT       = SignalNodeData<RealT, IdxT>;
       using MonitorSinkSpec   = Model::VariableMonitorBase::SinkSpec;
 
@@ -85,7 +85,7 @@ namespace GridKit
       std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
       std::vector<GenClassicalDataT> genclassical; ///< Classical generator instances within the model
       std::vector<LoadDataT>         load;         ///< Loads within the model
-      std::vector<LoadZIPDataT>         loadzip;         ///< Loads within the model
+      std::vector<LoadZIPDataT>      loadzip;      ///< Loads within the model
       std::vector<Tgov1DataT>        gov;          ///< Governors within the model
       std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes

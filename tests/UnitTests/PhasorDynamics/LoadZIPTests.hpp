@@ -62,7 +62,7 @@ namespace GridKit
         const ScalarT Ii{-8.84};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>  load(&bus, P0, Q0, V0, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, P0, Q0, V0, alphaI, alphaP);
         bus.allocate();
         load.allocate();
         load.evaluateResidual();
@@ -72,7 +72,6 @@ namespace GridKit
 
         return success.report(__func__);
       }
-
     };
 
   } // namespace Testing
