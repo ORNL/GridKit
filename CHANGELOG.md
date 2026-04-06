@@ -49,6 +49,7 @@
 - Removed `COO_Matrix` class use in `PowerElectronics` module.
 - Added phasor dynamics application to generalize examples
 - Added LoadZIP model component type.
+- Added component model developer checklist to a README file.
 
 ## v0.1
 

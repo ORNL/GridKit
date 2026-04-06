@@ -49,13 +49,15 @@ We recommend developers follow these steps when adding new component models:
 4. Create unit tests in `tests/UnitTesting/PhasorDynamics` directory. Unit
    test should include:
     1. Constructor tests (smoke tests).
-    2. Residual evaluation test (pick input variables to get easy to verify
-       residual values).
+    2. Residual evaluation test (substitute variables in the residual that
+       check all computations in the residual function; avoid zeros and ones
+       as inputs).
     3. Jacobian evaluation test (Enzyme generated Jacobian must match Jacobian
        created using dependency tracking variables).
-    4. Initialization test (initialize to arbitrary, easy to verify values).
-    5. Initialize and evaluate residual test (initialization should ensure
-       residual evaluates to zero within prescribed tolerance).
+    4. Initialization test (verify that component correctly sets initial
+       values).
+    5. Combined initialization and residual evaluation test (initialization
+       should ensure residual evaluates to zero within prescribed tolerance).
 5. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 
 
