@@ -17,7 +17,7 @@ files:
                                    using dependency tracking data type (a.k.a
                                    tapeless automatic differentiation).
 - `MyModelEnzyme.cpp`: Compilation unit for Jacobian evaluation with Enzyme.
-- `MyModelimpl.hpp`: Actual model implementation.
+- `MyModelImpl.hpp`: Actual model implementation.
 
 In essence, a component model developer needs to implement model data
 structures in `MyModelData.hpp` file and model equations in `MyModelImpl.hpp`
@@ -45,9 +45,12 @@ We recommend developers follow these steps when adding new component models:
    builds correctly.
     - You may want to start with a "dummy" implementation first to make sure
       the build and installation works correctly before proceeding to the
-      implementation.
-4. Create unit tests in `tests/UnitTesting/PhasorDynamics` directory. Unit
-   test should include:
+      implementation. 
+4. Create unit tests in `tests/UnitTesting/PhasorDynamics` directory. The
+   implementation consists of `MyModelTests.hpp` with implementation of
+   individual unit tests, the test driver in `runMyModelTests.cpp`, and
+   `CMakeLists.txt` with build and installation configuration of tests. Unit
+   test should be include:
     1. Constructor tests (smoke tests).
     2. Residual evaluation test (substitute variables in the residual that
        check all computations in the residual function; avoid zeros and ones
@@ -58,7 +61,16 @@ We recommend developers follow these steps when adding new component models:
        values).
     5. Combined initialization and residual evaluation test (initialization
        should ensure residual evaluates to zero within prescribed tolerance).
-5. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
+5. Once model is tested, add it to the system composer. This requires following steps:
+    1. Add header file `MyModel.hpp` to `ComponentLibrary.hpp`, so that
+       `MyModel` declaration is visible to the `SystemModel` class.
+    3. Modify `SystemModelJsonParser.hpp` so that `MyModel` is recognized by the
+       parser.
+    4. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
+       model.
+    5. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
+       system composer.
+7. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 
 
 
