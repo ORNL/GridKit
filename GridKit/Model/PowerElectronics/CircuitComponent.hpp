@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <map>
+#include <memory>
 #include <set>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -90,6 +90,72 @@ namespace GridKit
     IdxT getNodeConnection(IdxT local_index) const
     {
       return connection_nodes_[local_index];
+    }
+
+    int allocate() override
+    {
+      jacobian_coo_rows_   = std::make_unique<IdxT[]>(nnz_);
+      jacobian_coo_cols_   = std::make_unique<IdxT[]>(nnz_);
+      jacobian_coo_values_ = std::make_unique<RealT[]>(nnz_);
+
+      y_.resize(static_cast<size_t>(size_));
+      yp_.resize(static_cast<size_t>(size_));
+      f_.resize(static_cast<size_t>(size_));
+
+      return 0;
+    }
+
+    IdxT* jacobianCooRows()
+    {
+      return jacobian_coo_rows_.get();
+    }
+
+    const IdxT* jacobianCooRows() const
+    {
+      return jacobian_coo_rows_.get();
+    }
+
+    IdxT* jacobianCooCols()
+    {
+      return jacobian_coo_cols_.get();
+    }
+
+    const IdxT* jacobianCooCols() const
+    {
+      return jacobian_coo_cols_.get();
+    }
+
+    RealT* jacobianCooValues()
+    {
+      return jacobian_coo_values_.get();
+    }
+
+    const RealT* jacobianCooValues() const
+    {
+      return jacobian_coo_values_.get();
+    }
+
+  protected:
+    void zeroJacMatrix()
+    {
+      current_jac_size_ = 0;
+    }
+
+    void setJacValues(const std::vector<IdxT>& rows, const std::vector<IdxT>& cols, const std::vector<RealT>& vals)
+    {
+      assert(rows.size() == cols.size());
+      assert(rows.size() == vals.size());
+      assert(current_jac_size_ + rows.size() <= nnz_);
+
+      for (size_t i = 0; i < rows.size(); i++)
+      {
+
+        jacobian_coo_rows_[current_jac_size_]   = rows[i];
+        jacobian_coo_cols_[current_jac_size_]   = cols[i];
+        jacobian_coo_values_[current_jac_size_] = vals[i];
+
+        current_jac_size_++;
+      }
     }
 
   public:
@@ -292,6 +358,12 @@ namespace GridKit
     IdxT nnz_{0};
     IdxT size_quad_{0};
     IdxT size_opt_{0};
+
+    std::unique_ptr<IdxT[]>  jacobian_coo_rows_;
+    std::unique_ptr<IdxT[]>  jacobian_coo_cols_;
+    std::unique_ptr<RealT[]> jacobian_coo_values_;
+
+    size_t current_jac_size_{0};
 
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
