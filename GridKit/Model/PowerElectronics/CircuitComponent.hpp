@@ -104,9 +104,9 @@ namespace GridKit
      */
     int allocate() override
     {
-      jacobian_coo_rows_   = std::make_unique<IdxT[]>(nnz_);
-      jacobian_coo_cols_   = std::make_unique<IdxT[]>(nnz_);
-      jacobian_coo_values_ = std::make_unique<RealT[]>(nnz_);
+      jacobian_coo_rows_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+      jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+      jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
@@ -170,7 +170,7 @@ namespace GridKit
     {
       assert(rows.size() == cols.size());
       assert(rows.size() == vals.size());
-      assert(current_jac_size_ + rows.size() <= nnz_);
+      assert(current_jac_size_ + rows.size() <= static_cast<size_t>(nnz_));
 
       for (size_t i = 0; i < rows.size(); i++)
       {
