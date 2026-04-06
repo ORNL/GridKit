@@ -56,7 +56,7 @@ We recommend developers follow these steps when adding new component models:
     4. Initialization test (initialize to arbitrary, easy to verify values).
     5. Initialize and evaluate residual test (initialization should ensure
        residual evaluates to zero within prescribed tolerance).
-5. Recommended: Create an example using the new component.
+5. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 
 
 
