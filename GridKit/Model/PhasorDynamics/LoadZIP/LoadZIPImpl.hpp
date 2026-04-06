@@ -27,8 +27,7 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type* bus, RealT P0, RealT Q0, 
-      RealT V0, RealT alphaI, RealT alphaP)
+    LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP)
       : bus_(bus),
         P0_(P0),
         Q0_(Q0),
@@ -42,7 +41,7 @@ namespace GridKit
 
     template <class ScalarT, typename IdxT>
     LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type*              bus,
-                              const model_data_type& data)
+                                    const model_data_type& data)
       : bus_(bus)
     {
       if (data.parameters.contains(model_data_type::Parameters::P0))
@@ -136,16 +135,16 @@ namespace GridKit
         [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
     {
       ScalarT one{1.0};
-      ScalarT Vr = wb[0];
-      ScalarT Vi = wb[1];
-      ScalarT Vm2 = Vr*Vr + Vi*Vi;
-      ScalarT Vm = std::sqrt(Vm2);
-      ScalarT ifrac = (one / (V0_*V0_) * (one - alphaI_ - alphaP_)
-        + one / (V0_ * Vm) * alphaI_ + one / Vm2 * alphaP_);
-      ScalarT Ir = -(P0_ * Vr + Q0_ * Vi) * ifrac;
-      ScalarT Ii = -(P0_ * Vi - Q0_ * Vr) * ifrac;
-      h[0]       = Ir;
-      h[1]       = Ii;
+      ScalarT Vr    = wb[0];
+      ScalarT Vi    = wb[1];
+      ScalarT Vm2   = Vr * Vr + Vi * Vi;
+      ScalarT Vm    = std::sqrt(Vm2);
+      ScalarT ifrac = (one / (V0_ * V0_) * (one - alphaI_ - alphaP_)
+                       + one / (V0_ * Vm) * alphaI_ + one / Vm2 * alphaP_);
+      ScalarT Ir    = -(P0_ * Vr + Q0_ * Vi) * ifrac;
+      ScalarT Ii    = -(P0_ * Vi - Q0_ * Vr) * ifrac;
+      h[0]          = Ir;
+      h[1]          = Ii;
 
       return 0;
     }

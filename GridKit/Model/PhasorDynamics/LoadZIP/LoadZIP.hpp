@@ -52,8 +52,7 @@ namespace GridKit
       using MonitorT        = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
       LoadZIP(bus_type* bus);
-      LoadZIP(bus_type* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI,
-        RealT alphaP);
+      LoadZIP(bus_type* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP);
       LoadZIP(bus_type* bus, const model_data_type& data);
       virtual ~LoadZIP();
 
@@ -84,12 +83,12 @@ namespace GridKit
       {
         V0_ = V0;
       }
-      
+
       void setalphaI(RealT alphaI)
       {
         alphaI_ = alphaI;
       }
-      
+
       void setalphaP(RealT alphaP)
       {
         alphaP_ = alphaP;
@@ -130,7 +129,6 @@ namespace GridKit
       RealT     V0_{1.0};
       RealT     alphaI_{0};
       RealT     alphaP_{0};
-
 
       std::unique_ptr<MonitorT> monitor_;
     };
