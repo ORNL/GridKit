@@ -118,6 +118,12 @@ namespace GridKit
           raw_component.get_to(load);
           sm.load.push_back(load);
         }
+        else if (kind == "LoadZIP")
+        {
+          typename SystemModelData<RealT, IdxT>::LoadZIPDataT loadzip;
+          raw_component.get_to(loadzip);
+          sm.loadzip.push_back(loadzip);
+        }
         else if (kind == "Tgov1")
         {
           typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
