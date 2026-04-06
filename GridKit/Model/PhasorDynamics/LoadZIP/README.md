@@ -50,8 +50,34 @@ None.
 ### Algebraic Equations
 ``` math
 \begin{aligned}
-0 &= I_{r} - (P_{0} V_{r} + Q_{0} V_{i}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right) \\
-0 &= I_{i} - (P_{0} V_{i} - Q_{0} V_{r}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right)
+0 &= I_{r} + (P_{0} V_{r} + Q_{0} V_{i}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right) \\
+0 &= I_{i} + (P_{0} V_{i} - Q_{0} V_{r}) \left(\frac{1}{V_0^2} (1 - \alpha_I - \alpha_P) + \frac{1}{V_0 \sqrt{V_r^2+V_i^2}} \alpha_I + \frac{1}{V_r^2+V_I^2} \alpha_P\right)
+\end{aligned}
+```
+
+### Initialization Procedure
+Use the algebraic equations to solve for $I_{r}$ and $I_{i}$.
+
+### Model Outputs
+Real and imaginary values of the load current are the variables 
+$I_{r}$ and $I_{i}$.
+
+Current is oriented leaving the load (i.e. entering the bus).
+
+Current magnitude $I_{m}$ is the phasor magnitude of the current.
+``` math
+\begin{aligned}
+      I_{m} &= \sqrt{(I_{r})^2 + (I_{i})^2}
+\end{aligned}
+```
+
+Active and reactive power ($P$ and $Q$)
+are the real and imaginary parts of the complex power,
+where the complex power is defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
+``` math
+\begin{aligned}
+      P &= V_{r} I_{r} + V_{i} I_{i}\\
+      Q &= V_{i} I_{r} - V_{r} I_{i}
 \end{aligned}
 ```
 
