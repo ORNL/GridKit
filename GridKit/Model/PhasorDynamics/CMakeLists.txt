@@ -36,6 +36,7 @@ add_subdirectory(BusFault)
 add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)
+add_subdirectory(LoadZIP)
 add_subdirectory(SynchronousMachine)
 
 add_subdirectory(SignalNode)
