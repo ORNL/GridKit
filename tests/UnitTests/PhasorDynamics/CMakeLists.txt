@@ -23,6 +23,14 @@ target_link_libraries(test_phasor_load GridKit::definitions
                                        GridKit::phasor_dynamics_bus_dependency_tracking
                                        GridKit::testing)
 
+add_executable(test_phasor_loadzip runLoadZIPTests.cpp)
+target_link_libraries(test_phasor_loadzip GridKit::definitions
+                                      GridKit::phasor_dynamics_loadzip
+                                      GridKit::phasor_dynamics_loadzip_dependency_tracking
+                                      GridKit::phasor_dynamics_bus
+                                      GridKit::phasor_dynamics_bus_dependency_tracking
+                                      GridKit::testing)
+
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GridKit::definitions
                                          GridKit::phasor_dynamics_genrou
