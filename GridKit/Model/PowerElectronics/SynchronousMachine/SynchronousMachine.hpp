@@ -36,7 +36,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -48,7 +47,6 @@ namespace GridKit
     SynchronousMachine(IdxT id, RealT Lls, std::tuple<RealT, RealT> Llkq, RealT Llfd, RealT Llkd, RealT Lmq, RealT Lmd, RealT Rs, std::tuple<RealT, RealT> Rkq, RealT Rfd, RealT Rkd, RealT RJ, RealT P, RealT mub);
     virtual ~SynchronousMachine();
 
-    int allocate();
     int initialize();
     int tagDifferentiable();
     int evaluateResidual();

@@ -24,25 +24,12 @@ namespace GridKit
     n_extern_       = 2;
     extern_indices_ = {0, 1};
     idc_            = id;
+    nnz_            = 5;
   }
 
   template <class ScalarT, typename IdxT>
   Inductor<ScalarT, IdxT>::~Inductor()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int Inductor<ScalarT, IdxT>::allocate()
-  {
-
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -89,22 +76,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Inductor<ScalarT, IdxT>::evaluateJacobian()
   {
-    jac_.zeroMatrix();
+    this->zeroJacMatrix();
 
     // Create dF/dy
-    std::vector<IdxT>  rcord{0, 1, 2, 2};
-    std::vector<IdxT>  ccord{2, 2, 0, 1};
-    std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0};
-    jac_.setValues(rcord, ccord, vals);
-
-    // Create dF/dy'
-    std::vector<IdxT>  rcordder{2};
-    std::vector<IdxT>  ccordder{2};
-    std::vector<RealT> valsder{-L_};
-    MatrixT            Jacder = MatrixT(rcordder, ccordder, valsder, 3, 3);
-
-    // Perform dF/dy + \alpha dF/dy'
-    jac_.axpy(alpha_, Jacder);
+    std::vector<IdxT>  rcord{0, 1, 2, 2, 2};
+    std::vector<IdxT>  ccord{2, 2, 0, 1, 2};
+    std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0, -L_ * alpha_};
+    this->setJacValues(rcord, ccord, vals);
 
     return 0;
   }

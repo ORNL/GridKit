@@ -34,7 +34,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -46,11 +45,10 @@ namespace GridKit
     VoltageSource(IdxT id, RealT V);
     virtual ~VoltageSource();
 
-    int allocate();
     int initialize();
     int tagDifferentiable();
     int evaluateResidual();
-    int evaluateJacobian();
+    int evaluateJacobian() final;
     int evaluateIntegrand();
 
     int initializeAdjoint();

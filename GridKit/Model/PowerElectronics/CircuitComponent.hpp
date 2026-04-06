@@ -302,12 +302,12 @@ namespace GridKit
 
     MatrixT& getJacobian() final
     {
-      return jac_;
+      throw "Not Implemented";
     }
 
     const MatrixT& getJacobian() const final
     {
-      return jac_;
+      throw "Not Implemented";
     }
 
     std::vector<ScalarT>& getIntegrand() final
@@ -375,8 +375,6 @@ namespace GridKit
     std::vector<ScalarT> ypB_;
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
-
-    MatrixT jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;

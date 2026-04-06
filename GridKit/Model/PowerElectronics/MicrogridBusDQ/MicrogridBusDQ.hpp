@@ -34,7 +34,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -46,7 +45,6 @@ namespace GridKit
     MicrogridBusDQ(IdxT id, RealT RN);
     virtual ~MicrogridBusDQ();
 
-    int allocate();
     int initialize();
     int tagDifferentiable();
     int evaluateResidual();

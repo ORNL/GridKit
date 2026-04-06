@@ -39,8 +39,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class DistributedGenerator : public CircuitComponent<ScalarT, IdxT>
   {
-    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -55,7 +54,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -69,7 +67,6 @@ namespace GridKit
                          bool                                        reference_frame);
     virtual ~DistributedGenerator();
 
-    int allocate();
     int initialize();
     int tagDifferentiable();
     int evaluateResidual();
