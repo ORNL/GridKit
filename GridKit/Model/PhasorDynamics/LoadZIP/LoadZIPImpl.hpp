@@ -130,6 +130,19 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int LoadZIP<ScalarT, IdxT>::initialize()
     {
+      ScalarT vr    = Vr();
+      ScalarT vi    = Vi();
+      ScalarT Vm2   = vr * vr + vi * vi;
+      ScalarT Vm    = std::sqrt(Vm2);
+      ScalarT ifrac = (ONE<RealT> / (V0_ * V0_) * (ONE<RealT> - alphaI_ - alphaP_)
+                       + ONE<RealT> / (V0_ * Vm) * alphaI_ + ONE<RealT> / Vm2 * alphaP_);
+      ScalarT ir    = -(P0_ * vr + Q0_ * vi) * ifrac;
+      ScalarT ii    = -(P0_ * vi - Q0_ * vr) * ifrac;
+      y_[0]         = ir;
+      y_[1]         = ii;
+
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
       return 0;
     }
 
