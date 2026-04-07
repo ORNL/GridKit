@@ -104,7 +104,7 @@ namespace GridKit
         return success.report(__func__);
       }
 
-  private:
+    private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           const RealT P0, const RealT Q0, const RealT V0, const RealT alphaI, const RealT alphaP)
       {

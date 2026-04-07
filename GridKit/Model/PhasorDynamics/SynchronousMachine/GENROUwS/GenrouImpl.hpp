@@ -407,11 +407,11 @@ namespace GridKit
       ScalarT psidpp = vq / (ONE<RealT> + omega);
       ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       ScalarT psiqp  = -(-(Xqp_ - Xl_) * iq + psiqpp * (Xqp_ - Xl_) / (Xqpp_ - Xl_))
-                       / (ONE<RealT> + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
-      ScalarT Edp    = psiqp - (Xqp_ - Xl_) * iq;
-      ScalarT psidp  = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
-                       / (ONE<RealT> + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
-      ScalarT Eqp    = psidp + (Xdp_ - Xl_) * id;
+                      / (ONE<RealT> + (Xqp_ - Xqpp_) / (Xqpp_ - Xl_));
+      ScalarT Edp   = psiqp - (Xqp_ - Xl_) * iq;
+      ScalarT psidp = -((Xdp_ - Xl_) * id - psidpp * (Xdp_ - Xl_) / (Xdpp_ - Xl_))
+                      / (ONE<RealT> + (Xdp_ - Xdpp_) / (Xdpp_ - Xl_));
+      ScalarT Eqp = psidp + (Xdp_ - Xl_) * id;
 
       /* Now we have the state variables, solve for alg. variables */
       ScalarT ksat;
@@ -437,9 +437,9 @@ namespace GridKit
       y_[16]      = ii;
       // y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
       y_[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-                    - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
-      y_[18]      = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-                    + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
+               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
+      y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
 
       // Set Setpoint mechanical power, which may or may not be used
       pmech_set_ = Te;
