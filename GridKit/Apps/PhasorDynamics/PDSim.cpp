@@ -39,9 +39,6 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
 
-  // Get access to fault 0
-  auto* fault = sys.getBusFault(0);
-
   real_type dt = study.dt;
 
   // Set up simulation
@@ -51,27 +48,24 @@ int main(int argc, const char* argv[])
   // Run simulation, output each `dt` interval
   real_type start = static_cast<real_type>(clock());
 
-  using EventType = SystemEvent::Type;
   ida.initializeSimulation(0.0, false);
 
   real_type curr_time = 0.0;
-  for (const auto& event : study.events)
+  for (const auto& cue : study.schedule)
   {
-    // Run to event time
-    int nout = static_cast<int>(std::round((event.time - curr_time) / dt));
-    ida.runSimulation(event.time, nout);
+    // Run to scheduled time
+    int nout = static_cast<int>(std::round((cue.time - curr_time) / dt));
+    ida.runSimulation(cue.time, nout);
 
-    // Set up run for event (to start at event time)
-    if (event.type == EventType::FAULT_ON)
+    // Execute action
+    const auto& ev = study.event_map.at(cue.event);
+    if (ev.type == "bus_fault")
     {
-      fault->setStatus(true);
+      sys.getBusFault(study.fault_map.at(cue.event))->setStatus(cue.action == "on");
     }
-    else if (event.type == EventType::FAULT_OFF)
-    {
-      fault->setStatus(false);
-    }
-    ida.initializeSimulation(event.time, false);
-    curr_time = event.time;
+
+    ida.initializeSimulation(cue.time, false);
+    curr_time = cue.time;
   }
 
   // Run to final time

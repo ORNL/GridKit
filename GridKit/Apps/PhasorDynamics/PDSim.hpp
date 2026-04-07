@@ -2,11 +2,12 @@
 
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <vector>
 
-#include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -16,56 +17,58 @@ namespace GridKit
   {
     namespace fs = ::std::filesystem;
 
+    using json = ::nlohmann::json;
+    using Log  = ::GridKit::Utilities::Logger;
+
     struct SystemEvent
     {
-      enum class Type
-      {
-        FAULT_ON,
-        FAULT_OFF
-      };
+      std::string id;
+      std::string type;   // "bus_fault", future: "branch_trip", etc.
+      json        params; // type-specific data
+    };
 
+    struct Cue
+    {
       double      time;
-      Type        type;
-      std::size_t element_id;
+      std::string event;  // references SystemEvent::id
+      std::string action; // "on", "off", etc.
     };
 
     struct StudyData
     {
-      fs::path                 system_model_file;
-      double                   dt;
-      double                   tmax;
-      std::vector<SystemEvent> events;
-      fs::path                 output_file;
-      fs::path                 reference_file;
-      double                   error_tol;
-      SystemModelData<>        model_data;
+      fs::path                           system_model_file;
+      double                             dt;
+      double                             tmax;
+      std::vector<SystemEvent>           events;
+      std::vector<Cue>                   schedule;
+      fs::path                           output_file;
+      fs::path                           reference_file;
+      double                             error_tol;
+      SystemModelData<>                  model_data;
+      std::map<std::string, SystemEvent> event_map; // event id → event
+      std::map<std::string, size_t>      fault_map; // event id → fault index
     };
-
-    using json = ::nlohmann::json;
-    using Log  = ::GridKit::Utilities::Logger;
 
     void from_json(const json& j, StudyData& c)
     {
-      using namespace magic_enum;
-
       j.at("system_model_file").get_to(c.system_model_file);
       j.at("dt").get_to(c.dt);
       j.at("tmax").get_to(c.tmax);
 
       for (auto& raw_event : j.at("events"))
       {
-        auto& event = c.events.emplace_back();
-        raw_event.at("time").get_to(event.time);
-        raw_event.at("element_id").get_to(event.element_id);
+        auto& ev = c.events.emplace_back();
+        raw_event.at("id").get_to(ev.id);
+        raw_event.at("type").get_to(ev.type);
+        ev.params = raw_event;
+      }
 
-        auto type_str   = raw_event.at("type").get<std::string>();
-        using EventType = SystemEvent::Type;
-        auto type_wrap  = enum_cast<EventType>(type_str, case_insensitive);
-        if (!type_wrap.has_value())
-        {
-          Log::error() << "Unable to parse event type \"" << type_str << "\"\n";
-        }
-        event.type = type_wrap.value();
+      for (auto& raw_action : j.at("schedule"))
+      {
+        auto& sa = c.schedule.emplace_back();
+        raw_action.at("time").get_to(sa.time);
+        raw_action.at("event").get_to(sa.event);
+        raw_action.at("action").get_to(sa.action);
       }
 
       if (j.contains("output_file"))
@@ -118,6 +121,25 @@ namespace GridKit
 
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
+
+      // Build event lookups and inject event data into model
+      size_t fault_idx = 0;
+      for (const auto& ev : data.events)
+      {
+        data.event_map[ev.id] = ev;
+
+        if (ev.type == "bus_fault")
+        {
+          using BFD = BusFaultData<double, size_t>;
+          BFD bfd;
+          bfd.parameters[BFD::Parameters::R]      = ev.params.value("R", 0.0);
+          bfd.parameters[BFD::Parameters::X]      = ev.params.value("X", 1e-5);
+          bfd.parameters[BFD::Parameters::state0] = false;
+          bfd.ports[BFD::Ports::bus]              = ev.params.at("bus").get<size_t>();
+          data.model_data.bus_fault.push_back(bfd);
+          data.fault_map[ev.id] = fault_idx++;
+        }
+      }
       std::string model_output_file;
       for (const auto& sink : data.model_data.monitor_sink)
       {
@@ -130,7 +152,7 @@ namespace GridKit
       {
         data.model_data.monitor_sink.emplace_back(data.output_file, csv);
       }
-      else
+      else if (data.output_file != model_output_file)
       {
         if (exists(data.output_file))
         {
