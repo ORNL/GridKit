@@ -134,7 +134,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int LoadZIP<ScalarT, IdxT>::tagDifferentiable()
     {
-      tag_[0] = false;  
+      tag_[0] = false;
       tag_[1] = false;
       return 0;
     }
@@ -174,23 +174,26 @@ namespace GridKit
 
     /**
      * @brief Internal residual
-     * 
+     *
      */
     template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::evaluateInternalResidual(ScalarT* y,
-      [[maybe_unused]] ScalarT* yp, ScalarT* wb, [[maybe_unused]] ScalarT* ws, ScalarT* f)
+    int LoadZIP<ScalarT, IdxT>::evaluateInternalResidual(ScalarT*                  y,
+                                                         [[maybe_unused]] ScalarT* yp,
+                                                         ScalarT*                  wb,
+                                                         [[maybe_unused]] ScalarT* ws,
+                                                         ScalarT*                  f)
     {
       ScalarT one{1.0};
-      ScalarT Vr = wb[0];
-      ScalarT Vi = wb[1];
-      ScalarT Ir = y[0];
-      ScalarT Ii = y[1];
-      ScalarT Vm2 = Vr*Vr + Vi*Vi;
-      ScalarT Vm = std::sqrt(Vm2);
-      ScalarT ifrac = (one / (V0_*V0_) * (one - alphaI_ - alphaP_)
-        + one / (V0_ * Vm) * alphaI_ + one / Vm2 * alphaP_);
-      f[0] = Ir + (P0_ * Vr + Q0_ * Vi) * ifrac;
-      f[1] = Ii + (P0_ * Vi - Q0_ * Vr) * ifrac;
+      ScalarT Vr    = wb[0];
+      ScalarT Vi    = wb[1];
+      ScalarT Ir    = y[0];
+      ScalarT Ii    = y[1];
+      ScalarT Vm2   = Vr * Vr + Vi * Vi;
+      ScalarT Vm    = std::sqrt(Vm2);
+      ScalarT ifrac = (one / (V0_ * V0_) * (one - alphaI_ - alphaP_)
+                       + one / (V0_ * Vm) * alphaI_ + one / Vm2 * alphaP_);
+      f[0]          = Ir + (P0_ * Vr + Q0_ * Vi) * ifrac;
+      f[1]          = Ii + (P0_ * Vi - Q0_ * Vr) * ifrac;
       return 0;
     }
 
