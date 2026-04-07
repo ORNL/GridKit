@@ -39,6 +39,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
+      using Component<ScalarT, IdxT>::f_;
       using Component<ScalarT, IdxT>::J_rows_buffer_;
       using Component<ScalarT, IdxT>::J_cols_buffer_;
       using Component<ScalarT, IdxT>::J_vals_buffer_;
@@ -121,6 +122,8 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT* y,
+        ScalarT* yp, ScalarT* wb, ScalarT* ws, ScalarT* f);
 
     private:
       bus_type* bus_{nullptr};
@@ -131,6 +134,8 @@ namespace GridKit
       RealT     alphaP_{0};
 
       std::unique_ptr<MonitorT> monitor_;
+      std::vector<ScalarT> ws_;
+      std::vector<IdxT>    ws_indices_;
     };
 
   } // namespace PhasorDynamics
