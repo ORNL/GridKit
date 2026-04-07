@@ -67,6 +67,8 @@ namespace GridKit
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
+    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
@@ -168,18 +170,21 @@ namespace GridKit
      */
     int allocate() final
     {
-      size_ = 0;
+      size_     = 0;
+      n_intern_ = 0;
+      n_extern_ = 0;
       for (component_type* comp : components_)
       {
         comp->allocate();
-        size_ += comp->getInternalSize();
+        n_intern_ += comp->getInternalSize();
       }
 
       for (node_type* node : nodes_)
       {
         node->allocate();
-        size_ += node->getInternalSize();
+        n_intern_ += node->getInternalSize();
       }
+      size_ = n_intern_ + n_extern_;
 
       // Allocate global vectors
       y_.resize(size_);
