@@ -132,7 +132,7 @@ namespace GridKit
 
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load.y()[i].setVariableNumber(i); ///< loaderator independent variables
+          load.y()[i].setVariableNumber(i); ///< load independent variables
         }
         for (size_t i = 0; i < bus.size(); ++i)
         {
@@ -150,7 +150,7 @@ namespace GridKit
 
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load.yp()[i].setVariableNumber(i); ///< loaderator independent variables
+          load.yp()[i].setVariableNumber(i); ///< load independent variables
         }
 
         bus.evaluateResidual();
