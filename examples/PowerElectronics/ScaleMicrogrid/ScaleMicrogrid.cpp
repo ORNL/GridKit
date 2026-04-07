@@ -1,12 +1,13 @@
-
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
+#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -182,6 +183,19 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // Total size of the vector setup
   index_type vec_size_total = vec_size_internals + vec_size_externals;
 
+  using Bus                                     = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  std::unique_ptr<std::unique_ptr<Bus>[]> buses = std::make_unique<std::unique_ptr<Bus>[]>(2 * Nsize);
+  for (size_t i = 0; i < 2 * Nsize; i++)
+  {
+    buses[i] = std::make_unique<Bus>();
+    sys_model->addNode(&*buses[i]);
+  }
+
+  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
+  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+
+  sys_model->addNode(&*dg_signal);
+
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
@@ -279,7 +293,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   // allocate all the intial conditions
-  sys_model->allocate(vec_size_total);
+  sys_model->allocate();
 
   if (debug_output)
   {
