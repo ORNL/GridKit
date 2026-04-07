@@ -74,7 +74,7 @@ namespace GridKit
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
-        if(!isEqual(bus.Ir(), Ir) || !isEqual(bus.Ii(), Ii))
+        if (!isEqual(bus.Ir(), Ir) || !isEqual(bus.Ii(), Ii))
         {
           std::cout << "Expected Ir: " << Ir << ", Obtained Ir: " << bus.Ir() << "\n";
           std::cout << "Expected Ii: " << Ii << ", Obtained Ii: " << bus.Ii() << "\n";
