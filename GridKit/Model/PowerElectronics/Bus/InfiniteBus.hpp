@@ -22,6 +22,8 @@ namespace GridKit
           return err_code;
 
         y()[0] = voltage_;
+
+        return 0;
       }
 
     private:

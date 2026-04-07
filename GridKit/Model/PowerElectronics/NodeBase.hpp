@@ -177,8 +177,8 @@ namespace GridKit
     private:
       IdxT bus_id_{INVALID_INDEX<IdxT>};
 
-      size_t n_extern_;
       size_t n_intern_;
+      size_t n_extern_;
 
       IdxT              nnz_{0};
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
