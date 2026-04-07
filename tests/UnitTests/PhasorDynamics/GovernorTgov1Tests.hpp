@@ -417,6 +417,7 @@ namespace GridKit
 
         gov.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gov.getJacobian();
+        model_jacobian.deduplicate();
         model_jacobian.printMatrix("Model Jacobian");
 
         return GridKit::Testing::MapFromCOO(model_jacobian);
