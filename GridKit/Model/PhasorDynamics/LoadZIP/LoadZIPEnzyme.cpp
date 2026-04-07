@@ -28,22 +28,23 @@ namespace GridKit
         J_vals_buffer_ = new RealT[4];
       }
 
-      // GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
-      //                               GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
-      //                               ScalarT,
-      //                               IdxT>::eval(this,
-      //                                           f_.size(),
-      //                                           y_.size(),
-      //                                           (this->getResidualIndices()).data(),
-      //                                           (this->getVariableIndices()).data(),
-      //                                           y_.data(),
-      //                                           yp_.data(),
-      //                                           wb_.data(),
-      //                                           alpha_,
-      //                                           J_rows_buffer_,
-      //                                           J_cols_buffer_,
-      //                                           J_vals_buffer_,
-      //                                           J_);
+      // DfDy call without alpha_ to indicate that df/dy' is null
+      // @todo: deduce from a compile-time differential tag
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                    ScalarT,
+                                    IdxT>::eval(this,
+                                                f_.size(),
+                                                y_.size(),
+                                                (this->getResidualIndices()).data(),
+                                                (this->getVariableIndices()).data(),
+                                                y_.data(),
+                                                yp_.data(),
+                                                wb_.data(),
+                                                J_rows_buffer_,
+                                                J_cols_buffer_,
+                                                J_vals_buffer_,
+                                                J_);
 
       GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,

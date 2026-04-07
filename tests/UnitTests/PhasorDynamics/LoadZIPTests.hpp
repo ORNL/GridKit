@@ -108,8 +108,6 @@ namespace GridKit
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i]));
         }
 
-        success.expectFailure(); // TODO: Activate df/dy term in Enzyme Jacobian
-
         return success.report(__func__);
       }
 
