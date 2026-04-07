@@ -134,8 +134,9 @@ namespace GridKit
       ScalarT vi    = Vi();
       ScalarT Vm2   = vr * vr + vi * vi;
       ScalarT Vm    = std::sqrt(Vm2);
-      ScalarT ifrac = (ONE<RealT> / (V0_ * V0_) * (ONE<RealT> - alphaI_ - alphaP_)
-                       + ONE<RealT> / (V0_ * Vm) * alphaI_ + ONE<RealT> / Vm2 * alphaP_);
+      ScalarT ifrac = (ONE<RealT> - alphaI_ - alphaP_) / (V0_ * V0_)
+                      + alphaI_ / (V0_ * Vm)
+                      + alphaP_ / Vm2;
       ScalarT ir    = -(P0_ * vr + Q0_ * vi) * ifrac;
       ScalarT ii    = -(P0_ * vi - Q0_ * vr) * ifrac;
       y_[0]         = ir;
@@ -210,8 +211,9 @@ namespace GridKit
       ScalarT Ii    = y[1];
       ScalarT Vm2   = Vr * Vr + Vi * Vi;
       ScalarT Vm    = std::sqrt(Vm2);
-      ScalarT ifrac = (ONE<RealT> / (V0_ * V0_) * (ONE<RealT> - alphaI_ - alphaP_)
-                       + ONE<RealT> / (V0_ * Vm) * alphaI_ + ONE<RealT> / Vm2 * alphaP_);
+      ScalarT ifrac = (ONE<RealT> - alphaI_ - alphaP_) / (V0_ * V0_)
+                      + alphaI_ / (V0_ * Vm)
+                      + alphaP_ / Vm2;
       f[0]          = Ir + (P0_ * Vr + Q0_ * Vi) * ifrac;
       f[1]          = Ii + (P0_ * Vi - Q0_ * Vr) * ifrac;
       return 0;
