@@ -106,14 +106,19 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
+      // Resize coupling data
       wb_.resize(2);
-
-      ws_.resize(1);
-      ws_indices_.resize(1);
-      ws_[0]         = 0.0;
-      ws_indices_[0] = INVALID_INDEX<IdxT>;
-
       h_.resize(2);
+
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
 
       return 0;
     }
@@ -145,7 +150,10 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) int LoadZIP<ScalarT, IdxT>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, [[maybe_unused]] ScalarT* wb, ScalarT* h)
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        [[maybe_unused]] ScalarT* wb,
+        ScalarT*                  h)
     {
       ScalarT Ir = y[0];
       ScalarT Ii = y[1];
@@ -164,7 +172,7 @@ namespace GridKit
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
@@ -177,21 +185,20 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::evaluateInternalResidual(ScalarT*                  y,
-                                                         [[maybe_unused]] ScalarT* yp,
-                                                         ScalarT*                  wb,
-                                                         [[maybe_unused]] ScalarT* ws,
-                                                         ScalarT*                  f)
+    __attribute__((always_inline)) int LoadZIP<ScalarT, IdxT>::evaluateInternalResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  f)
     {
-      ScalarT one{1.0};
       ScalarT Vr    = wb[0];
       ScalarT Vi    = wb[1];
       ScalarT Ir    = y[0];
       ScalarT Ii    = y[1];
       ScalarT Vm2   = Vr * Vr + Vi * Vi;
       ScalarT Vm    = std::sqrt(Vm2);
-      ScalarT ifrac = (one / (V0_ * V0_) * (one - alphaI_ - alphaP_)
-                       + one / (V0_ * Vm) * alphaI_ + one / Vm2 * alphaP_);
+      ScalarT ifrac = (ONE<RealT> / (V0_ * V0_) * (ONE<RealT> - alphaI_ - alphaP_)
+                       + ONE<RealT> / (V0_ * Vm) * alphaI_ + ONE<RealT> / Vm2 * alphaP_);
       f[0]          = Ir + (P0_ * Vr + Q0_ * Vi) * ifrac;
       f[1]          = Ii + (P0_ * Vi - Q0_ * Vr) * ifrac;
       return 0;

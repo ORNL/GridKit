@@ -35,17 +35,17 @@ namespace GridKit
                                      GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                      ScalarT,
                                      IdxT>::eval(this,
-                                                 static_cast<size_t>(bus_->size()),
-                                                 static_cast<size_t>(bus_->size()),
-                                                 (bus_->getResidualIndices()).data(),
-                                                 (bus_->getVariableIndices()).data(),
-                                                 y_.data(),
-                                                 yp_.data(),
-                                                 (bus_->y()).data(),
-                                                 J_rows_buffer_,
-                                                 J_cols_buffer_,
-                                                 J_vals_buffer_,
-                                                 bus_->getJacobian());
+                                                  static_cast<size_t>(bus_->size()),
+                                                  static_cast<size_t>(bus_->size()),
+                                                  (bus_->getResidualIndices()).data(),
+                                                  (bus_->getVariableIndices()).data(),
+                                                  y_.data(),
+                                                  yp_.data(),
+                                                  (bus_->y()).data(),
+                                                  J_rows_buffer_,
+                                                  J_cols_buffer_,
+                                                  J_vals_buffer_,
+                                                  bus_->getJacobian());
 
       return 0;
     }

@@ -20,19 +20,38 @@ namespace GridKit
       Log::misc() << "Evaluate Jacobian for LoadZIP..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
+      J_.zeroMatrix();
       if (J_rows_buffer_ == nullptr)
       {
         J_rows_buffer_ = new IdxT[4];
         J_cols_buffer_ = new IdxT[4];
         J_vals_buffer_ = new RealT[4];
       }
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
+                                    ScalarT,
+                                    IdxT>::eval(this,
+                                                f_.size(),
+                                                y_.size(),
+                                                (this->getResidualIndices()).data(),
+                                                (this->getVariableIndices()).data(),
+                                                y_.data(),
+                                                yp_.data(),
+                                                wb_.data(),
+                                                alpha_,
+                                                J_rows_buffer_,
+                                                J_cols_buffer_,
+                                                J_vals_buffer_,
+                                                J_);
+
+      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                      ScalarT,
                                      IdxT>::eval(this,
+                                                 f_.size(),
                                                  static_cast<size_t>(bus_->size()),
-                                                 static_cast<size_t>(bus_->size()),
-                                                 (bus_->getResidualIndices()).data(),
+                                                 (this->getResidualIndices()).data(),
                                                  (bus_->getVariableIndices()).data(),
                                                  y_.data(),
                                                  yp_.data(),
@@ -40,7 +59,23 @@ namespace GridKit
                                                  J_rows_buffer_,
                                                  J_cols_buffer_,
                                                  J_vals_buffer_,
-                                                 bus_->getJacobian());
+                                                 J_);
+
+      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
+                                    GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
+                                    ScalarT,
+                                    IdxT>::eval(this,
+                                                static_cast<size_t>(bus_->size()),
+                                                y_.size(),
+                                                (bus_->getResidualIndices()).data(),
+                                                (this->getVariableIndices()).data(),
+                                                y_.data(),
+                                                yp_.data(),
+                                                wb_.data(),
+                                                J_rows_buffer_,
+                                                J_cols_buffer_,
+                                                J_vals_buffer_,
+                                                J_);
 
       return 0;
     }

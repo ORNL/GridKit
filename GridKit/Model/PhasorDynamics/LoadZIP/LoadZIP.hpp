@@ -40,6 +40,7 @@ namespace GridKit
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
       using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::J_rows_buffer_;
       using Component<ScalarT, IdxT>::J_cols_buffer_;
       using Component<ScalarT, IdxT>::J_vals_buffer_;
@@ -55,16 +56,16 @@ namespace GridKit
       LoadZIP(bus_type* bus);
       LoadZIP(bus_type* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP);
       LoadZIP(bus_type* bus, const model_data_type& data);
-      virtual ~LoadZIP();
+      ~LoadZIP();
 
-      virtual int setGridKitComponentID(IdxT) override final;
-      virtual int allocate() override final;
-      virtual int initialize() override final;
-      virtual int tagDifferentiable() override final;
-      virtual int evaluateResidual() override final;
-      virtual int evaluateJacobian() override final;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int evaluateResidual() override final;
+      int evaluateJacobian() override final;
 
-      virtual int verify() const override final
+      int verify() const override final
       {
         return 0;
       }
@@ -122,11 +123,7 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT* y,
-                                                                         ScalarT* yp,
-                                                                         ScalarT* wb,
-                                                                         ScalarT* ws,
-                                                                         ScalarT* f);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};
@@ -137,8 +134,6 @@ namespace GridKit
       RealT     alphaP_{0};
 
       std::unique_ptr<MonitorT> monitor_;
-      std::vector<ScalarT>      ws_;
-      std::vector<IdxT>         ws_indices_;
     };
 
   } // namespace PhasorDynamics
