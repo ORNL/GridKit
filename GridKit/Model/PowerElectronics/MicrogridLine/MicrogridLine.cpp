@@ -33,24 +33,12 @@ namespace GridKit
     n_extern_       = 5;
     extern_indices_ = {0, 1, 2, 3, 4};
     idc_            = id;
+    nnz_            = 14;
   }
 
   template <class ScalarT, typename IdxT>
   MicrogridLine<ScalarT, IdxT>::~MicrogridLine()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int MicrogridLine<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -106,34 +94,25 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::evaluateJacobian()
   {
-    jac_.zeroMatrix();
+    this->zeroJacMatrix();
 
     // Create dF/dy
     std::vector<IdxT>  rtemp{1, 2, 3, 4};
     std::vector<IdxT>  ctemp{5, 6, 5, 6};
     std::vector<RealT> valtemp{-1.0, -1.0, 1.0, 1.0};
-    jac_.setValues(rtemp, ctemp, valtemp);
+    this->setJacValues(rtemp, ctemp, valtemp);
 
     std::vector<IdxT> ccord{0, 1, 3, 5, 6};
 
     std::vector<IdxT>  rcord(ccord.size(), 5);
     std::vector<RealT> vals{};
-    vals = {static_cast<RealT>(y_[6]), (1.0 / L_), -(1.0 / L_), -(R_ / L_), static_cast<RealT>(y_[0])};
-    jac_.setValues(rcord, ccord, vals);
+    vals = {static_cast<RealT>(y_[6]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y_[0])};
+    this->setJacValues(rcord, ccord, vals);
 
     std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
     std::fill(rcord.begin(), rcord.end(), 6);
-    vals = {-static_cast<RealT>(y_[5]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_)};
-    jac_.setValues(rcord, ccor2, vals);
-
-    // Create -dF/dy'
-    std::vector<IdxT>  rcordder{5, 6};
-    std::vector<IdxT>  ccordder{5, 6};
-    std::vector<RealT> valsder{-1.0, -1.0};
-    MatrixT            Jacder = MatrixT(rcordder, ccordder, valsder, 7, 7);
-
-    // Perform dF/dy + \alpha dF/dy'
-    jac_.axpy(alpha_, Jacder);
+    vals = {-static_cast<RealT>(y_[5]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_) - alpha_};
+    this->setJacValues(rcord, ccor2, vals);
 
     return 0;
   }

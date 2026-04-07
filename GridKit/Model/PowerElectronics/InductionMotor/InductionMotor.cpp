@@ -45,18 +45,6 @@ namespace GridKit
   {
   }
 
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-    return 0;
-  }
-
   /**
    * Initialization of the grid model
    */

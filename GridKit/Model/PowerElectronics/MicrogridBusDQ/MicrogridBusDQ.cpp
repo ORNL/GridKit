@@ -29,24 +29,12 @@ namespace GridKit
     n_extern_       = 2;
     extern_indices_ = {0, 1};
     idc_            = id;
+    nnz_            = 2;
   }
 
   template <class ScalarT, typename IdxT>
   MicrogridBusDQ<ScalarT, IdxT>::~MicrogridBusDQ()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int MicrogridBusDQ<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -95,13 +83,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridBusDQ<ScalarT, IdxT>::evaluateJacobian()
   {
-    jac_.zeroMatrix();
+    this->zeroJacMatrix();
 
     // Create dF/dy
     std::vector<IdxT>  rtemp{0, 1};
     std::vector<IdxT>  ctemp{0, 1};
     std::vector<RealT> vals{-1.0 / RN_, -1.0 / RN_};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     return 0;
   }

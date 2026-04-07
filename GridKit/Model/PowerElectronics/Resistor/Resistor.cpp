@@ -24,24 +24,12 @@ namespace GridKit
     n_extern_       = 2;
     extern_indices_ = {0, 1};
     idc_            = id;
+    nnz_            = 4;
   }
 
   template <class ScalarT, typename IdxT>
   Resistor<ScalarT, IdxT>::~Resistor()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int Resistor<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -79,13 +67,14 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::evaluateJacobian()
   {
+    this->zeroJacMatrix();
 
     // Create dF/dy
     // does compiler make constant???
     std::vector<IdxT>  rcord{0, 0, 1, 1};
     std::vector<IdxT>  ccord{0, 1, 0, 1};
     std::vector<RealT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
-    jac_.setValues(rcord, ccord, vals);
+    this->setJacValues(rcord, ccord, vals);
 
     return 0;
   }

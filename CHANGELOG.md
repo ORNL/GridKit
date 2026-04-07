@@ -46,6 +46,8 @@
 - Added `Node` class to the PowerElectronics module to separate nodes from circuit components.
 - Refactored Jacobian assembly in `PowerElectronics` module to reuse the CSR pattern.
 - Refactored Jacobian assembly in `PhasorDyanmcics` module to reuse the CSR pattern.
+- Removed `COO_Matrix` class use in `PowerElectronics` module.
+
 ## v0.1
 
 - Refactored code to support adding different model families.

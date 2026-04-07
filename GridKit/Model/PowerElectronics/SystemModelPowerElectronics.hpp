@@ -61,7 +61,6 @@ namespace GridKit
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using MatrixT        = typename CircuitComponent<ScalarT, IdxT>::MatrixT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = CircuitNode<ScalarT, IdxT>;
@@ -73,7 +72,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::y_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
@@ -196,19 +194,20 @@ namespace GridKit
 
       // Evaluate component Jacobians to get sparsity
       distributeVectors();
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
         component->evaluateJacobian();
       }
 
       // Count the number of non-zeros
       IdxT nnz_dup = 0;
-      for (const auto& component : components_)
+      for (const component_type* component : components_)
       {
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                           = entries;
+        const IdxT* r   = component->jacobianCooRows();
+        const IdxT* c   = component->jacobianCooCols();
+        IdxT        nnz = component->nnz();
 
-        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
+        for (IdxT i = 0; i < nnz; ++i)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
@@ -225,10 +224,12 @@ namespace GridKit
       IdxT counter = 0;
       for (const auto& component : components_)
       {
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                           = entries;
+        const IdxT*  r   = component->jacobianCooRows();
+        const IdxT*  c   = component->jacobianCooCols();
+        const RealT* v   = component->jacobianCooValues();
+        IdxT         nnz = component->nnz();
 
-        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
+        for (IdxT i = 0; i < nnz; ++i)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
@@ -390,10 +391,12 @@ namespace GridKit
       {
         component->evaluateJacobian();
 
-        std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = component->getJacobian().getEntries();
-        const auto& [r, c, v]                                                           = entries;
+        const IdxT*  r   = component->jacobianCooRows();
+        const IdxT*  c   = component->jacobianCooCols();
+        const RealT* v   = component->jacobianCooValues();
+        IdxT         nnz = component->nnz();
 
-        for (IdxT i = 0; i < static_cast<IdxT>(r.size()); ++i)
+        for (IdxT i = 0; i < nnz; ++i)
         {
           if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
@@ -471,17 +474,6 @@ namespace GridKit
     void printResidualMatrixMarket(std::string filename, std::string title)
     {
       writeVectorToMatrixMarket(f_, filename, title);
-    }
-
-    /**
-     * @brief print the system Jacobian in COO format
-     *
-     * @param[in] filename
-     * @param[in] title
-     */
-    void printJacobianMatrixMarket(std::string filename, std::string title)
-    {
-      jac_.printMatrixMarket(filename, title);
     }
 
     CsrMatrixT* getCsrJacobian() const override

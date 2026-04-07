@@ -322,7 +322,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   sys_model->updateTime(0.0, 1.0e-8);
   sys_model->evaluateJacobian();
-  sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Jacobian N" + std::to_string(Nsize));
+  // sys_model->printJacobianMatrixMarket("ScaleMicrogrid_Jacobian_N" + std::to_string(Nsize) + ".mtx", "ScaleMicrogrid Jacobian N" + std::to_string(Nsize));
   // print the jacobian in matrix market format
 
   if (debug_output)

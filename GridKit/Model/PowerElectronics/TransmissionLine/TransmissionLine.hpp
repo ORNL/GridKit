@@ -38,7 +38,6 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -50,7 +49,6 @@ namespace GridKit
     TransmissionLine(IdxT id, RealT R, RealT X, RealT B);
     virtual ~TransmissionLine();
 
-    int allocate();
     int initialize();
     int tagDifferentiable();
     int evaluateResidual();

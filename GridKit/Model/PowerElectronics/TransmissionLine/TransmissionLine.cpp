@@ -32,6 +32,7 @@ namespace GridKit
     n_extern_       = 8;
     extern_indices_ = {0, 1, 2, 3, 4, 5, 6, 7};
     idc_            = id;
+    nnz_            = 44;
 
     RealT magImpendence = 1.0 / (R_ * R_ + X_ * X_);
     YReMat_             = magImpendence * R_;
@@ -42,19 +43,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   TransmissionLine<ScalarT, IdxT>::~TransmissionLine()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -137,30 +125,31 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int TransmissionLine<ScalarT, IdxT>::evaluateJacobian()
   {
+    this->zeroJacMatrix();
 
     // Create dF/dy
     std::vector<IdxT>  rtemp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
     std::vector<IdxT>  ctemp{8, 9, 10, 11, 8, 9, 10, 11, 8, 9, 10, 11};
     std::vector<RealT> vals{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     std::vector<IdxT> ccord{0, 1, 2, 3, 4, 5, 6, 7};
 
     std::vector<IdxT> rcord(ccord.size(), 8);
     vals = {YReMat_, -YImMatDi_, -YReMat_, -YImMatOff_, -YReMat_, YImMatDi_, YReMat_, YImMatOff_};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     std::fill(rcord.begin(), rcord.end(), 9);
     vals = {YImMatDi_, YReMat_, YImMatOff_, -YReMat_, -YImMatDi_, -YReMat_, -YImMatOff_, YReMat_};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     std::fill(rcord.begin(), rcord.end(), 10);
     vals = {-YReMat_, -YImMatDi_, YReMat_, -YImMatOff_, YReMat_, YImMatDi_, -YReMat_, YImMatOff_};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     std::fill(rcord.begin(), rcord.end(), 11);
     vals = {YImMatDi_, -YReMat_, YImMatOff_, YReMat_, -YImMatDi_, YReMat_, -YImMatOff_, -YReMat_};
-    jac_.setValues(rtemp, ctemp, vals);
+    this->setJacValues(rtemp, ctemp, vals);
 
     return 0;
   }

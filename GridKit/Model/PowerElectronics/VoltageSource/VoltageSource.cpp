@@ -24,24 +24,12 @@ namespace GridKit
     n_extern_       = 2;
     extern_indices_ = {0, 1};
     idc_            = id;
+    nnz_            = 4;
   }
 
   template <class ScalarT, typename IdxT>
   VoltageSource<ScalarT, IdxT>::~VoltageSource()
   {
-  }
-
-  /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
-   */
-  template <class ScalarT, typename IdxT>
-  int VoltageSource<ScalarT, IdxT>::allocate()
-  {
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
-
-    return 0;
   }
 
   /**
@@ -80,11 +68,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::evaluateJacobian()
   {
+    this->zeroJacMatrix();
+
     // Create dF/dy
     std::vector<IdxT>  rcord{0, 1, 2, 2};
     std::vector<IdxT>  ccord{2, 2, 0, 1};
     std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0};
-    jac_.setValues(rcord, ccord, vals);
+    this->setJacValues(rcord, ccord, vals);
 
     return 0;
   }

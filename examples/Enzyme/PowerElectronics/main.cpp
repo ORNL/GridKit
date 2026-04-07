@@ -158,12 +158,12 @@ int main()
   // Residual evaluation and reference Jacobian
   dg->evaluateResidual();
   dg->evaluateJacobian();
-  std::vector<double> y       = dg->y();
-  std::vector<double> yp      = dg->yp();
-  std::vector<double> res     = dg->getResidual();
-  SparseMatrix        jac_ref = dg->getJacobian();
-  DenseMatrix         jac_ref_dense(dg->size(), dg->size());
-  jac_ref_dense.setValues(jac_ref);
+  std::vector<double> y   = dg->y();
+  std::vector<double> yp  = dg->yp();
+  std::vector<double> res = dg->getResidual();
+
+  DenseMatrix jac_ref_dense(dg->size(), dg->size());
+  jac_ref_dense.setValues(dg->nnz(), dg->jacobianCooRows(), dg->jacobianCooCols(), dg->jacobianCooValues());
 
   // Enzyme Jacobian
   DenseMatrix jac_autodiff(dg->size(), dg->size());
