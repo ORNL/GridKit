@@ -99,7 +99,7 @@ namespace GridKit
 
             // Store result
             jac.setValues(1.0, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
-            
+
             // There is no df/dy' when alpha is not passed as an argument
             // @todo: Implement a generic way to identify these cases at compile time
           }
