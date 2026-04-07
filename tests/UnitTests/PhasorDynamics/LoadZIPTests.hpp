@@ -49,17 +49,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        RealT P0{2.0};
+        RealT P0{1.0};
         RealT Q0{0.5};
         RealT V0{2.0};
-        RealT alphaI{4.0};
-        RealT alphaP{2.0};
+        RealT alphaI{2.0};
+        RealT alphaP{15.0};
 
-        ScalarT Vr{0.3}; ///< Bus real voltage
-        ScalarT Vi{0.4}; ///< Bus imaginary voltage
+        ScalarT Vr{3.0}; ///< Bus real voltage
+        ScalarT Vi{4.0}; ///< Bus imaginary voltage
 
-        const ScalarT Ir{-10.88}; ///< Solution real current
-        const ScalarT Ii{-8.84};  ///< Solution imaginary current
+        const ScalarT Ir{16.0}; ///< Solution real current
+        const ScalarT Ii{8.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
         PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, P0, Q0, V0, alphaI, alphaP);
@@ -74,8 +74,11 @@ namespace GridKit
         success *= isEqual(bus.Ir(), Ir);
         success *= isEqual(bus.Ii(), Ii);
 
-        success.expectFailure(); // TODO: Check the reference solution values
-                                 // and the implementation
+        if(!isEqual(bus.Ir(), Ir) || !isEqual(bus.Ii(), Ii))
+        {
+          std::cout << "Expected Ir: " << Ir << ", Obtained Ir: " << bus.Ir() << "\n";
+          std::cout << "Expected Ii: " << Ii << ", Obtained Ii: " << bus.Ii() << "\n";
+        }
 
         return success.report(__func__);
       }
