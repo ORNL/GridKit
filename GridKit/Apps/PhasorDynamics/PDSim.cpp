@@ -35,6 +35,11 @@ int main(int argc, const char* argv[])
 
   auto study = parseStudyData(argv[1]);
 
+  if (!study.name.empty())
+  {
+    Log::summary() << "Study: " << study.name << std::endl;
+  }
+
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
@@ -80,9 +85,9 @@ int main(int argc, const char* argv[])
   // Generate aggregate errors comparing variable output to reference solution
   std::string func{"monitor file vs reference file"};
   TestStatus  status{func.c_str()};
-  if (!study.output_file.empty() && !study.reference_file.empty())
+  if (!study.output.file_name.empty() && !study.reference_file.empty())
   {
-    auto errorSet = compareCSV(study.output_file, study.reference_file);
+    auto errorSet = compareCSV(study.output.file_name, study.reference_file);
 
     // Print the errors
     errorSet.display();

@@ -1,1 +1,3 @@
-add_subdirectory(PhasorDynamics)
+if(TARGET SUNDIALS::idas)
+  add_subdirectory(PhasorDynamics)
+endif()

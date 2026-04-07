@@ -8,12 +8,6 @@
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
-    "monitors": [
-        {
-            "file_name": "mon.csv",
-            "format": "csv"
-        }
-    ],
     "buses": [
         {
             "number": 0,

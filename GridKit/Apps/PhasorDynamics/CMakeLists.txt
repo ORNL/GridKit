@@ -6,7 +6,6 @@ target_link_libraries(PDSim
     GridKit::Utilities
     GridKit::testing)
 target_include_directories(PDSim PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-    ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include)
 
 install(TARGETS PDSim EXPORT gridkit-targets RUNTIME)
