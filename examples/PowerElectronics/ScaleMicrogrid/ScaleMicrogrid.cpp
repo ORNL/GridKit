@@ -198,14 +198,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
-                                                                 true);
-  // ref motor
-  dg_ref->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
-  dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
-  //"grounding" of the difference
-  dg_ref->setExternalConnectionNodes(3, static_cast<index_type>(-1));
+                                                                 true,
+                                                                 &*dg_signal,
+                                                                 &*buses[0]);
   sys_model->addComponent(dg_ref);
 
   // Keep track of models and index location
@@ -216,12 +211,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     // current DG to add
     auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
                                                                DGParams_list[i],
-                                                               false);
-    // ref motor
-    dg->setExternalConnectionNodes(0, vec_size_internals);
-    // outputs
-    dg->setExternalConnectionNodes(1, vdqbus_index[i]);
-    dg->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
+                                                               false,
+                                                               &*dg_signal,
+                                                               &*buses[i]);
     sys_model->addComponent(dg);
   }
 

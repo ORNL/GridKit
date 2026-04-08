@@ -115,42 +115,23 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->addNode(&*bus4);
 
   // dg 1
-  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(0, parms1, true);
-  // ref motor
-  dg1->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg1->setExternalConnectionNodes(1, dqbus1);
-  dg1->setExternalConnectionNodes(2, dqbus1 + 1);
-  //"grounding" of the difference
-  dg1->setExternalConnectionNodes(3, static_cast<size_t>(-1));
+  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(
+      0, parms1, true, &*dg_signal, &*bus1);
   sysmodel->addComponent(dg1);
 
   // dg 2
-  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(1, parms1, false);
-  // ref motor
-  dg2->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg2->setExternalConnectionNodes(1, dqbus2);
-  dg2->setExternalConnectionNodes(2, dqbus2 + 1);
+  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(
+      1, parms1, false, &*dg_signal, &*bus2);
   sysmodel->addComponent(dg2);
 
   // dg 3
-  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(2, parms2, false);
-  // ref motor
-  dg3->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg3->setExternalConnectionNodes(1, dqbus3);
-  dg3->setExternalConnectionNodes(2, dqbus3 + 1);
+  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(
+      2, parms2, false, &*dg_signal, &*bus3);
   sysmodel->addComponent(dg3);
 
   // dg 4
-  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(3, parms2, false);
-  // ref motor
-  dg4->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg4->setExternalConnectionNodes(1, dqbus4);
-  dg4->setExternalConnectionNodes(2, dqbus4 + 1);
-
+  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(
+      3, parms2, false, &*dg_signal, &*bus4);
   sysmodel->addComponent(dg4);
 
   // Lines

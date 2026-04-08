@@ -3,6 +3,7 @@
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 
 namespace GridKit
 {
@@ -40,6 +41,7 @@ namespace GridKit
   class DistributedGenerator : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -64,10 +66,13 @@ namespace GridKit
   public:
     DistributedGenerator(IdxT                                        id,
                          DistributedGeneratorParameters<RealT, IdxT> parm,
-                         bool                                        reference_frame);
+                         bool                                        reference_frame,
+                         NodeT*                                      node_ref,
+                         NodeT*                                      node_bus);
     virtual ~DistributedGenerator();
 
     int initialize();
+    int allocate() final;
     int tagDifferentiable();
     int evaluateResidual();
     int evaluateJacobian();
@@ -94,5 +99,8 @@ namespace GridKit
     RealT rLc_;
     RealT Lc_;
     bool  refframe_;
+
+    NodeT* node_ref_;
+    NodeT* node_bus_;
   };
 } // namespace GridKit
