@@ -55,13 +55,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // voltage source
   idoff++;
-  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit);
-  // Form index to node uid realations
-  // input
-  vsource->setExternalConnectionNodes(0, static_cast<size_t>(-1));
-  // output
-  vsource->setExternalConnectionNodes(1, 2);
-
+  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit, &*bus_iv, &*bus_vr);
   sysmodel.addComponent(vsource);
 
   sysmodel.allocate();
