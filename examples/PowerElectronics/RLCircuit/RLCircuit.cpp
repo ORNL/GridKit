@@ -50,13 +50,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // resistor
   idoff++;
-  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit);
-  // Form index to node uid realations
-  // input
-  resis->setExternalConnectionNodes(0, 2);
-  // output
-  resis->setExternalConnectionNodes(1, 3);
-  // add
+  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit, &*bus_vr, &*bus_ir);
   sysmodel.addComponent(resis);
 
   // voltage source
