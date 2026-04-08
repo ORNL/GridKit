@@ -248,12 +248,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   {
     auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
                                                                 rload_list[i],
-                                                                Lload_list[i]);
-    // ref motor
-    load_model->setExternalConnectionNodes(0, vec_size_internals);
-    // input connections
-    load_model->setExternalConnectionNodes(1, vdqbus_index[2 * i]);
-    load_model->setExternalConnectionNodes(2, vdqbus_index[2 * i] + 1);
+                                                                Lload_list[i],
+                                                                &*dg_signal,
+                                                                &*buses[2 * i]);
     sys_model->addComponent(load_model);
   }
 

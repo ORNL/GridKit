@@ -194,21 +194,11 @@ int main(int /* argc */, char const** /* argv */)
   //  loads
 
   // load 1
-  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1);
-  // ref motor
-  load1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load1->setExternalConnectionNodes(1, dqbus1);
-  load1->setExternalConnectionNodes(2, dqbus1 + 1);
+  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &*dg_signal, &*bus1);
   sysmodel->addComponent(load1);
 
   // load 2
-  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2);
-  // ref motor
-  load2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load2->setExternalConnectionNodes(1, dqbus3);
-  load2->setExternalConnectionNodes(2, dqbus3 + 1);
+  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &*dg_signal, &*bus3);
   sysmodel->addComponent(load2);
 
   // Virtual PQ Buses
