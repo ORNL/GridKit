@@ -180,8 +180,8 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /*
-       *Verifies the residual evaluates to zero for the initial conditions
+      /**
+       * Verifies the residual evaluates to zero for the initial conditions
        */
       TestOutcome zeroInitialResidual()
       {
