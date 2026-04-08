@@ -36,22 +36,16 @@ int main(int /* argc */, char const** /* argv */)
 
   using Bus                           = GridKit::PowerElectronics::Bus<double, size_t>;
   using InfiniteBus                   = GridKit::PowerElectronics::InfiniteBus<double, size_t>;
-  std::unique_ptr<Bus>         bus_ir = std::make_unique<Bus>();
   std::unique_ptr<InfiniteBus> bus_iv = std::make_unique<InfiniteBus>(0.0);
   std::unique_ptr<Bus>         bus_vr = std::make_unique<Bus>();
+  std::unique_ptr<Bus>         bus_ir = std::make_unique<Bus>();
 
-  sysmodel.addNode(&*bus_ir);
   sysmodel.addNode(&*bus_iv);
   sysmodel.addNode(&*bus_vr);
+  sysmodel.addNode(&*bus_ir);
 
   // inductor
-  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit);
-  // Form index to node uid realations
-  //  input
-  induct->setExternalConnectionNodes(0, 3);
-  // output
-  induct->setExternalConnectionNodes(1, static_cast<size_t>(-1));
-  // add component
+  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit, &*bus_ir, &*bus_iv);
   sysmodel.addComponent(induct);
 
   // resistor

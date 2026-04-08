@@ -26,6 +26,16 @@ namespace GridKit
         return 0;
       }
 
+      int allocate() final
+      {
+        if (int err_code = NodeBase<ScalarT, IdxT>::allocate())
+          return err_code;
+
+        this->setExternalConnectionNodes(0, INVALID_INDEX<IdxT>);
+
+        return 0;
+      }
+
     private:
       ScalarT voltage_;
     };
