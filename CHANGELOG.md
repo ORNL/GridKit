@@ -47,6 +47,7 @@
 - Refactored Jacobian assembly in `PowerElectronics` module to reuse the CSR pattern.
 - Refactored Jacobian assembly in `PhasorDyanmcics` module to reuse the CSR pattern.
 - Removed `COO_Matrix` class use in `PowerElectronics` module.
+- Added phasor dynamics application to generalize examples
 
 ## v0.1
 

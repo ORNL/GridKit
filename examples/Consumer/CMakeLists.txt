@@ -15,7 +15,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
   install(
     FILES
       ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.hpp
-      ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.json
+      ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.case.json
     DESTINATION ${_rel_consumer_path})
   list(APPEND GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
     GridKit::phasor_dynamics_components

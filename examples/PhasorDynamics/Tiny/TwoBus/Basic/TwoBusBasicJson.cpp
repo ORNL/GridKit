@@ -35,9 +35,9 @@ int main(int argc, const char* argv[])
   std::filesystem::path input_file;
   if (argc < 2)
   {
-    if (std::filesystem::exists("TwoBusBasic.json"))
+    if (std::filesystem::exists("TwoBusBasic.case.json"))
     {
-      input_file = std::filesystem::current_path() / "TwoBusBasic.json";
+      input_file = std::filesystem::current_path() / "TwoBusBasic.case.json";
     }
     else
     {
