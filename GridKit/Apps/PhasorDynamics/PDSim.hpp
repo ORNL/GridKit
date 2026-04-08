@@ -16,34 +16,56 @@ namespace GridKit
   {
     namespace fs = ::std::filesystem;
 
+    /**
+     * @brief Describes an event that is used to modify the simulation at the
+     * given time point
+     */
     struct SystemEvent
     {
+      /// Type of event determines action performed
       enum class Type
       {
         FAULT_ON,
         FAULT_OFF
       };
 
+      /// Time event takes place
       double      time;
+      /// Event type
       Type        type;
+      /// ID of element used in event (e.g., bus fault id)
       std::size_t element_id;
     };
 
+    /**
+     * @brief Data defined in JSON file for parameterized study
+     */
     struct StudyData
     {
+      /// path to system model JSON file
       fs::path                 system_model_file;
+      /// time step size
       double                   dt;
+      /// max time
       double                   tmax;
+      /// set of system events
       std::vector<SystemEvent> events;
+      /// path to output file
       fs::path                 output_file;
+      /// path to reference file for validation
       fs::path                 reference_file;
+      /// Error tolerance (between output file and reference file)
       double                   error_tol;
+      /// Instance of model data
       SystemModelData<>        model_data;
     };
 
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
+    /**
+     * @brief JSON parser implemntation for `StudyData`
+     */
     void from_json(const json& j, StudyData& c)
     {
       using namespace magic_enum;
@@ -71,10 +93,6 @@ namespace GridKit
       if (j.contains("output_file"))
       {
         j.at("output_file").get_to(c.output_file);
-        if (!c.output_file.is_absolute())
-        {
-          // c.output_file =
-        }
       }
 
       if (j.contains("reference_file"))
@@ -85,6 +103,9 @@ namespace GridKit
       c.error_tol = j.value("error_tolerance", 1.0e-4);
     }
 
+    /**
+     * @brief Check for existence and successful input file open
+     */
     std::ifstream openFile(const fs::path& file_path)
     {
       if (!exists(file_path))
@@ -99,6 +120,10 @@ namespace GridKit
       return fs;
     }
 
+    /**
+     * @brief Wrapper function to parse `StudyData` from JSON and perform
+     * follow-up configuration
+     */
     StudyData parseStudyData(const fs::path& file_path)
     {
       auto data = StudyData(json::parse(openFile(file_path)));
@@ -119,6 +144,7 @@ namespace GridKit
       auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
       data.model_data = parseSystemModelData(data.system_model_file);
       std::string model_output_file;
+      // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
         if (sink.format == csv && sink.delim == ",")
@@ -126,22 +152,33 @@ namespace GridKit
           model_output_file = sink.file_name;
         }
       }
+
       if (model_output_file.empty())
       {
+        // Add study output file to model if one did not already exist
         data.model_data.monitor_sink.emplace_back(data.output_file, csv);
       }
       else
       {
-        if (exists(data.output_file))
+        if (data.output_file.empty())
         {
-          if ((!is_symlink(data.output_file)) || (read_symlink(data.output_file) != model_output_file))
-          {
-            Log::error() << "Study output file not usable" << std::endl;
-          }
+          data.output_file = model_output_file;
         }
         else
         {
-          fs::create_symlink(model_output_file, data.output_file);
+          // If model file already specifies a CSV output file, then the study
+          // output file must be a symlink to the model output file
+          if (exists(data.output_file))
+          {
+            if ((!is_symlink(data.output_file)) || (read_symlink(data.output_file) != model_output_file))
+            {
+              Log::error() << "Study output file not usable" << std::endl;
+            }
+          }
+          else
+          {
+            fs::create_symlink(model_output_file, data.output_file);
+          }
         }
       }
 

@@ -8,22 +8,28 @@
         "freq_base": 60.0,
         "va_base": 100e6
     },
+    "monitors": [
+        {
+            "file_name": "mon.csv",
+            "format": "csv"
+        }
+    ],
     "buses": [
         { 
             "number": 0,
             "class": "bus",
-            "name": "Bus 1",
+            "name": "Bus_1",
             "init": {
                 "Vr":0.9949877346411762,
                 "Vi":0.09999703952427966
             },
             "v_base": 115e3,
-            "mon": ["Vr", "Vi"]
+            "mon": ["Vm"]
         },
         { 
             "number": 1,
             "class": "infinite_bus",
-            "name": "Bus 2",
+            "name": "Bus_2",
             "init": {
                 "Vr":1.0,
                 "Vi":0.0
@@ -62,7 +68,7 @@
                 "S10":0.0,
                 "S12":0.0
             },
-            "mon": ["delta", "omega"]
+            "mon": ["speed"]
         },
         { 
             "class": "BusFault",

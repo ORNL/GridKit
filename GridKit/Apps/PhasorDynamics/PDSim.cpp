@@ -39,21 +39,19 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
 
-  // Get access to fault 0
-  auto* fault = sys.getBusFault(0);
-
   real_type dt = study.dt;
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
   ida.configureSimulation();
 
-  // Run simulation, output each `dt` interval
+  // Start timer
   real_type start = static_cast<real_type>(clock());
 
   using EventType = SystemEvent::Type;
-  ida.initializeSimulation(0.0, false);
 
+  // Initilize simultation for first run
+  ida.initializeSimulation(0.0, false);
   real_type curr_time = 0.0;
   for (const auto& event : study.events)
   {
@@ -64,12 +62,14 @@ int main(int argc, const char* argv[])
     // Set up run for event (to start at event time)
     if (event.type == EventType::FAULT_ON)
     {
-      fault->setStatus(true);
+      sys.getBusFault(event.element_id)->setStatus(true);
     }
     else if (event.type == EventType::FAULT_OFF)
     {
-      fault->setStatus(false);
+      sys.getBusFault(event.element_id)->setStatus(false);
     }
+
+    // Re-initialize simulation at event time
     ida.initializeSimulation(event.time, false);
     curr_time = event.time;
   }
@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
 
   // Generate aggregate errors comparing variable output to reference solution
   std::string func{"monitor file vs reference file"};
-  TestStatus status{func.c_str()};
+  TestStatus  status{func.c_str()};
   if (!study.output_file.empty() && !study.reference_file.empty())
   {
     auto errorSet = compareCSV(study.output_file, study.reference_file);
@@ -93,11 +93,13 @@ int main(int argc, const char* argv[])
     // Print the errors
     errorSet.display();
 
+    // Check against specified tolerance
     status *= errorSet.total.max_error < study.error_tol;
 
     status.report();
   }
 
+  // Report run time
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
 
   return status.get();

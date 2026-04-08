@@ -12,16 +12,17 @@ target_link_libraries(ThreeBusBasicJson
 	GridKit::solvers_dyn
     GridKit::testing)
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
-gridkit_example_add_file(ThreeBusBasic.json)
+gridkit_example_add_file(ThreeBusBasic.case.json)
 gridkit_example_add_file(ThreeBusBasic.ref.csv)
 
 add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
 add_test(NAME ThreeBusBasicJson
-    COMMAND ThreeBusBasicJson ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.json)
+    COMMAND ThreeBusBasicJson ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.case.json)
 add_test(NAME ThreeBusBasicJson_no_arg
     COMMAND ThreeBusBasicJson
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+gridkit_example_add_file(ThreeBusBasic.solver.json)
 add_test(NAME ThreeBusBasic_using_app
-    COMMAND PDSim ${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasic.study.json
+    COMMAND PDSim ThreeBusBasic.solver.json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
