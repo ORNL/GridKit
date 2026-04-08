@@ -49,17 +49,17 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        RealT P0{1.0};
+        RealT P0{2.0};
         RealT Q0{0.5};
-        RealT V0{2.0};
-        RealT alphaI{2.0};
-        RealT alphaP{15.0};
+        RealT V0{0.2};
+        RealT alphaI{0.2};
+        RealT alphaP{0.4};
 
-        ScalarT Vr{3.0}; ///< Bus real voltage
-        ScalarT Vi{4.0}; ///< Bus imaginary voltage
+        ScalarT Vr{0.3}; ///< Bus real voltage
+        ScalarT Vi{0.4}; ///< Bus imaginary voltage
 
-        const ScalarT Ir{16.0}; ///< Solution real current
-        const ScalarT Ii{8.0};  ///< Solution imaginary current
+        const ScalarT Ir{-10.88}; ///< Solution real current
+        const ScalarT Ii{-8.84};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
         PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, P0, Q0, V0, alphaI, alphaP);
