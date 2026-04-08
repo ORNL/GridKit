@@ -111,6 +111,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(GridKit)
 
+# Create applications
+add_subdirectory(application)
+
 # Create examples and tests
 include(CTest)
 add_subdirectory(examples)

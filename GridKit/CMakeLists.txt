@@ -28,9 +28,6 @@ add_subdirectory(Solver)
 # Testing library
 add_subdirectory(Testing)
 
-# Create applications
-add_subdirectory(Apps)
-
 install(
   FILES
     Constants.hpp
