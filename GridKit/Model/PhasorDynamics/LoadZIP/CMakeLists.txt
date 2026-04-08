@@ -1,7 +1,7 @@
 
 set(_install_headers
   LoadZIP.hpp
-  LoadDataZIP.hpp)
+  LoadZIPData.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(phasor_dynamics_loadzip
