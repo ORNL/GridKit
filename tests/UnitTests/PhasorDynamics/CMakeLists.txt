@@ -23,6 +23,14 @@ target_link_libraries(test_phasor_load GridKit::definitions
                                        GridKit::phasor_dynamics_bus_dependency_tracking
                                        GridKit::testing)
 
+add_executable(test_phasor_loadzip runLoadZIPTests.cpp)
+target_link_libraries(test_phasor_loadzip GridKit::definitions
+                                      GridKit::phasor_dynamics_loadzip
+                                      GridKit::phasor_dynamics_loadzip_dependency_tracking
+                                      GridKit::phasor_dynamics_bus
+                                      GridKit::phasor_dynamics_bus_dependency_tracking
+                                      GridKit::testing)
+
 add_executable(test_phasor_genrou runGenrouTests.cpp)
 target_link_libraries(test_phasor_genrou GridKit::definitions
                                          GridKit::phasor_dynamics_genrou
@@ -71,6 +79,7 @@ add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governortgov1)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
+add_test(NAME PhasorDynamicsLoadZIPTest COMMAND test_phasor_loadzip)
 add_test(NAME PhasorDynamicsSystemTest COMMAND test_phasor_system
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
@@ -78,6 +87,7 @@ add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system
 install(TARGETS test_phasor_bus
                 test_phasor_branch
                 test_phasor_load
+                test_phasor_loadzip
                 test_phasor_genrou
                 test_phasor_governortgov1
                 test_phasor_gen_classical

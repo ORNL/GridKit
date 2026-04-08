@@ -48,6 +48,7 @@
 - Refactored Jacobian assembly in `PhasorDyanmcics` module to reuse the CSR pattern.
 - Removed `COO_Matrix` class use in `PowerElectronics` module.
 - Added phasor dynamics application to generalize examples
+- Added LoadZIP model component type.
 
 ## v0.1
 
