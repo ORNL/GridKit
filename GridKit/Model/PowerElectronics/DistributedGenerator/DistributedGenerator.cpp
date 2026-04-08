@@ -39,12 +39,20 @@ namespace GridKit
   {
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-    size_           = 16;
-    n_intern_       = refframe_ ? 12 : 13;
-    n_extern_       = 3;
-    extern_indices_ = {0, 1, 2};
-    idc_            = id;
-    nnz_            = refframe_ ? 80 : 78;
+    size_     = 16;
+    n_intern_ = refframe_ ? 12 : 13;
+    n_extern_ = refframe_ ? 4 : 3;
+    idc_      = id;
+    nnz_      = refframe_ ? 80 : 78;
+
+    if (refframe_)
+    {
+      extern_indices_ = {0, 1, 2, 3};
+    }
+    else
+    {
+      extern_indices_ = {0, 1, 2};
+    }
   }
 
   template <class ScalarT, typename IdxT>

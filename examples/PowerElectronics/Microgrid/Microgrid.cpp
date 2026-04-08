@@ -98,8 +98,6 @@ int main(int /* argc */, char const** /* argv */)
 
   size_t vec_size_total = vec_size_internals + vec_size_externals;
 
-  size_t indexv = 0;
-
   using Bus                 = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   std::unique_ptr<Bus> bus1 = std::make_unique<Bus>();
   std::unique_ptr<Bus> bus2 = std::make_unique<Bus>();
@@ -125,13 +123,6 @@ int main(int /* argc */, char const** /* argv */)
   dg1->setExternalConnectionNodes(2, dqbus1 + 1);
   //"grounding" of the difference
   dg1->setExternalConnectionNodes(3, static_cast<size_t>(-1));
-  // internal connections
-  for (size_t i = 0; i < 12; i++)
-  {
-
-    dg1->setExternalConnectionNodes(4 + i, indexv + i);
-  }
-  indexv += 12;
   sysmodel->addComponent(dg1);
 
   // dg 2
@@ -141,13 +132,6 @@ int main(int /* argc */, char const** /* argv */)
   // outputs
   dg2->setExternalConnectionNodes(1, dqbus2);
   dg2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
   sysmodel->addComponent(dg2);
 
   // dg 3
@@ -157,13 +141,6 @@ int main(int /* argc */, char const** /* argv */)
   // outputs
   dg3->setExternalConnectionNodes(1, dqbus3);
   dg3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg3->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
   sysmodel->addComponent(dg3);
 
   // dg 4
@@ -174,13 +151,6 @@ int main(int /* argc */, char const** /* argv */)
   dg4->setExternalConnectionNodes(1, dqbus4);
   dg4->setExternalConnectionNodes(2, dqbus4 + 1);
 
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg4->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
   sysmodel->addComponent(dg4);
 
   // Lines
@@ -195,13 +165,6 @@ int main(int /* argc */, char const** /* argv */)
   // output connections
   l1->setExternalConnectionNodes(3, dqbus2);
   l1->setExternalConnectionNodes(4, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l1->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
   sysmodel->addComponent(l1);
 
   // line 2
@@ -214,13 +177,6 @@ int main(int /* argc */, char const** /* argv */)
   // output connections
   l2->setExternalConnectionNodes(3, dqbus3);
   l2->setExternalConnectionNodes(4, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l2->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
   sysmodel->addComponent(l2);
 
   // line 3
@@ -233,13 +189,6 @@ int main(int /* argc */, char const** /* argv */)
   // output connections
   l3->setExternalConnectionNodes(3, dqbus4);
   l3->setExternalConnectionNodes(4, dqbus4 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l3->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
   sysmodel->addComponent(l3);
 
   //  loads
@@ -251,13 +200,6 @@ int main(int /* argc */, char const** /* argv */)
   // input connections
   load1->setExternalConnectionNodes(1, dqbus1);
   load1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load1->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
   sysmodel->addComponent(load1);
 
   // load 2
@@ -267,13 +209,6 @@ int main(int /* argc */, char const** /* argv */)
   // input connections
   load2->setExternalConnectionNodes(1, dqbus3);
   load2->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
   sysmodel->addComponent(load2);
 
   // Virtual PQ Buses

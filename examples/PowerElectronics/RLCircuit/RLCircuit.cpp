@@ -48,11 +48,9 @@ int main(int /* argc */, char const** /* argv */)
   GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit);
   // Form index to node uid realations
   //  input
-  induct->setExternalConnectionNodes(0, 1);
+  induct->setExternalConnectionNodes(0, 3);
   // output
   induct->setExternalConnectionNodes(1, static_cast<size_t>(-1));
-  // internal
-  induct->setExternalConnectionNodes(2, 2);
   // add component
   sysmodel.addComponent(induct);
 
@@ -61,9 +59,9 @@ int main(int /* argc */, char const** /* argv */)
   GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit);
   // Form index to node uid realations
   // input
-  resis->setExternalConnectionNodes(0, 0);
+  resis->setExternalConnectionNodes(0, 2);
   // output
-  resis->setExternalConnectionNodes(1, 1);
+  resis->setExternalConnectionNodes(1, 3);
   // add
   sysmodel.addComponent(resis);
 
@@ -74,9 +72,7 @@ int main(int /* argc */, char const** /* argv */)
   // input
   vsource->setExternalConnectionNodes(0, static_cast<size_t>(-1));
   // output
-  vsource->setExternalConnectionNodes(1, 0);
-  // internal
-  vsource->setExternalConnectionNodes(2, 3);
+  vsource->setExternalConnectionNodes(1, 2);
 
   sysmodel.addComponent(vsource);
 
@@ -87,15 +83,15 @@ int main(int /* argc */, char const** /* argv */)
   // Grounding for IDA. If no grounding then circuit is \mu > 1
   // v_0 (grounded)
   // Create initial points
-  sysmodel.y()[0] = vinit; // v_1
-  sysmodel.y()[1] = vinit; // v_2
-  sysmodel.y()[2] = 0.0;   // i_L
-  sysmodel.y()[3] = 0.0;   // i_s
+  sysmodel.y()[0] = 0.0;   // i_L
+  sysmodel.y()[1] = 0.0;   // i_s
+  sysmodel.y()[2] = vinit; // v_1
+  sysmodel.y()[3] = vinit; // v_2
 
-  sysmodel.yp()[0] = 0.0;            // v'_1
-  sysmodel.yp()[1] = 0.0;            // v'_2
-  sysmodel.yp()[2] = -vinit / linit; // i'_s
-  sysmodel.yp()[3] = -vinit / linit; // i'_L
+  sysmodel.yp()[0] = -vinit / linit; // i'_s
+  sysmodel.yp()[1] = -vinit / linit; // i'_L
+  sysmodel.yp()[2] = 0.0;            // v'_1
+  sysmodel.yp()[3] = 0.0;            // v'_2
 
   sysmodel.initialize();
   sysmodel.evaluateResidual();
@@ -136,10 +132,10 @@ int main(int /* argc */, char const** /* argv */)
   std::vector<double> yexact(4);
 
   // analytical solution to the circuit
-  yexact[0] = vinit;
-  yexact[2] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
-  yexact[3] = yexact[2];
-  yexact[1] = vinit + rinit * yexact[2];
+  yexact[2] = vinit;
+  yexact[0] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
+  yexact[1] = yexact[0];
+  yexact[3] = vinit + rinit * yexact[0];
 
   std::cout << "Element-wise relative error at t=" << t_final << "\n";
   for (size_t i = 0; i < yfinial.size(); i++)

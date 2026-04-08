@@ -184,15 +184,8 @@ int printMicrogridSystems(index_type N_size)
   dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
   //"grounding" of the difference
   dg_ref->setExternalConnectionNodes(3, static_cast<size_t>(-1));
-  // internal connections
-  for (index_type i = 0; i < 12; i++)
-  {
-    dg_ref->setExternalConnectionNodes(4 + i, i);
-  }
-  sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
-  index_type indexv   = 12;
   index_type model_id = 1;
   // Add all other DGs
   for (index_type i = 1; i < 2 * N_size; i++)
@@ -206,12 +199,6 @@ int printMicrogridSystems(index_type N_size)
     // outputs
     dg->setExternalConnectionNodes(1, vdqbus_index[i]);
     dg->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-    // internal connections
-    for (index_type j = 0; j < 13; j++)
-    {
-      dg->setExternalConnectionNodes(3 + j, indexv + j);
-    }
-    indexv += 13;
     sys_model.addComponent(dg);
   }
 
@@ -230,12 +217,6 @@ int printMicrogridSystems(index_type N_size)
     // output connections
     line_model->setExternalConnectionNodes(3, vdqbus_index[i + 1]);
     line_model->setExternalConnectionNodes(4, vdqbus_index[i + 1] + 1);
-    // internal connections
-    for (index_type j = 0; j < 2; j++)
-    {
-      line_model->setExternalConnectionNodes(5 + j, indexv + j);
-    }
-    indexv += 2;
     sys_model.addComponent(line_model);
   }
 
@@ -250,12 +231,6 @@ int printMicrogridSystems(index_type N_size)
     // input connections
     load_model->setExternalConnectionNodes(1, vdqbus_index[2 * i]);
     load_model->setExternalConnectionNodes(2, vdqbus_index[2 * i] + 1);
-    // internal connections
-    for (index_type j = 0; j < 2; j++)
-    {
-      load_model->setExternalConnectionNodes(3 + j, indexv + j);
-    }
-    indexv += 2;
     sys_model.addComponent(load_model);
   }
 
@@ -270,7 +245,7 @@ int printMicrogridSystems(index_type N_size)
   }
 
   // allocate all the initial conditions
-  sys_model.allocate(vec_size_total);
+  sys_model.allocate();
 
   // Create Initial points for states. Every state is set to zero initially
   for (index_type i = 0; i < vec_size_total; i++)

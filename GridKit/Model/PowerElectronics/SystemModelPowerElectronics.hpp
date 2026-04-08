@@ -170,26 +170,58 @@ namespace GridKit
      */
     int allocate() final
     {
-      size_     = 0;
-      n_intern_ = 0;
-      n_extern_ = 0;
+      size_t component_internal_size = 0;
       for (component_type* comp : components_)
       {
-        comp->allocate();
-        n_intern_ += comp->getInternalSize();
+        component_internal_size += comp->getInternalSize();
       }
 
+      size_t node_internal_size = 0;
       for (node_type* node : nodes_)
       {
-        node->allocate();
-        n_intern_ += node->getInternalSize();
+        node_internal_size += node->getInternalSize();
       }
-      size_ = n_intern_ + n_extern_;
+
+      n_intern_ = component_internal_size + node_internal_size;
+      n_extern_ = 0;
+      size_     = n_intern_ + n_extern_;
 
       // Allocate global vectors
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+
+      { // Start node internal indexing after all component internals for proper KLU ordering
+        size_t node_internal_idx = component_internal_size;
+        for (node_type* node : nodes_)
+        {
+          node->allocate();
+
+          for (size_t i = 0; i < node->getInternalSize(); i++)
+          {
+            node->setExternalConnectionNodes(i, node_internal_idx);
+            node_internal_idx++;
+          }
+        }
+      }
+
+      {
+        size_t component_internal_idx = 0;
+        for (component_type* comp : components_)
+        {
+          comp->allocate();
+
+          const auto& external_indices = comp->getExternIndices();
+          for (size_t i = 0; i < comp->size(); i++)
+          {
+            if (!external_indices.contains(i))
+            {
+              comp->setExternalConnectionNodes(i, component_internal_idx);
+              component_internal_idx++;
+            }
+          }
+        }
+      }
 
       // Evaluate component Jacobians to get sparsity
       distributeVectors();
