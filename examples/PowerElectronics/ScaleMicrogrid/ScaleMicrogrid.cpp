@@ -183,6 +183,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // Total size of the vector setup
   index_type vec_size_total = vec_size_internals + vec_size_externals;
 
+  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
+  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+  sys_model->addNode(&*dg_signal);
+
   using Bus                                     = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   std::unique_ptr<std::unique_ptr<Bus>[]> buses = std::make_unique<std::unique_ptr<Bus>[]>(2 * Nsize);
   for (size_t i = 0; i < 2 * Nsize; i++)
@@ -190,11 +194,6 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     buses[i] = std::make_unique<Bus>();
     sys_model->addNode(&*buses[i]);
   }
-
-  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
-  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
-
-  sys_model->addNode(&*dg_signal);
 
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
@@ -261,10 +260,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // Add all the microgrid Virtual DQ Buses
   for (index_type i = 0; i < 2 * Nsize; i++)
   {
-    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
-
-    virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
-    virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, &*buses[i]);
     sys_model->addComponent(virDQbus_model);
   }
 

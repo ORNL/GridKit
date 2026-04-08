@@ -20,9 +20,10 @@ namespace GridKit
    * Timothy C. Green, Section E
    */
   template <class ScalarT, typename IdxT>
-  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, RealT RN)
-    : RN_(RN)
+  MicrogridBusDQ<ScalarT, IdxT>::MicrogridBusDQ(IdxT id, RealT RN, NodeT* node1)
+    : RN_(RN), node1_(node1)
   {
+    assert(node1_->size() == 2);
     // externals [vbus_d, vbus_q]
     size_           = 2;
     n_intern_       = 0;
@@ -90,6 +91,17 @@ namespace GridKit
     std::vector<IdxT>  ctemp{0, 1};
     std::vector<RealT> vals{-1.0 / RN_, -1.0 / RN_};
     this->setJacValues(rtemp, ctemp, vals);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int MicrogridBusDQ<ScalarT, IdxT>::allocate()
+  {
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
+    this->setExternalConnectionNodes(0, node1_->getNodeConnection(0));
+    this->setExternalConnectionNodes(1, node1_->getNodeConnection(1));
 
     return 0;
   }

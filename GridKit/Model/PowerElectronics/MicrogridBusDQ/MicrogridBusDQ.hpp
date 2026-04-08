@@ -3,6 +3,7 @@
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 
 namespace GridKit
 {
@@ -20,6 +21,7 @@ namespace GridKit
   class MicrogridBusDQ : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -42,10 +44,11 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    MicrogridBusDQ(IdxT id, RealT RN);
+    MicrogridBusDQ(IdxT id, RealT RN, NodeT* node1);
     virtual ~MicrogridBusDQ();
 
     int initialize();
+    int allocate() final;
     int tagDifferentiable();
     int evaluateResidual();
     int evaluateJacobian();
@@ -57,6 +60,7 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    RealT RN_;
+    RealT  RN_;
+    NodeT* node1_;
   };
 } // namespace GridKit

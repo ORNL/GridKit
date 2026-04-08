@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -173,6 +175,18 @@ int printMicrogridSystems(index_type N_size)
   // Total size of the vector setup
   index_type vec_size_total = vec_size_internals + vec_size_externals;
 
+  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
+  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+  sys_model.addNode(&*dg_signal);
+
+  using Bus                                     = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  std::unique_ptr<std::unique_ptr<Bus>[]> buses = std::make_unique<std::unique_ptr<Bus>[]>(2 * N_size);
+  for (size_t i = 0; i < 2 * N_size; i++)
+  {
+    buses[i] = std::make_unique<Bus>();
+    sys_model.addNode(&*buses[i]);
+  }
+
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
@@ -184,6 +198,7 @@ int printMicrogridSystems(index_type N_size)
   dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
   //"grounding" of the difference
   dg_ref->setExternalConnectionNodes(3, static_cast<size_t>(-1));
+  sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
   index_type model_id = 1;
@@ -237,10 +252,7 @@ int printMicrogridSystems(index_type N_size)
   // Add all the microgrid Virtual DQ Buses
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
-
-    virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
-    virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, &*buses[i]);
     sys_model.addComponent(virDQbus_model);
   }
 
