@@ -159,9 +159,8 @@ from the steady-state initial conditions.
   k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
   P_{m}    &= T_{elec} \\
-  \psi^{'}_d  &=
-  \dfrac{\psi^{''}_d-X_{d5}X_{d2}I_d}{X_{d5}+1}\\
-  \psi^{'}_q  &=\dfrac{X_{q5}X_{q2}I_q-\psi^{''}_q}{X_{q5}+1}\\
+  \psi_d'  &= \psi_d'' - (X_d'' - X_\ell)I_d \\
+  \psi_q'  &= (X_q'' - X_\ell)I_q - \psi_q'' \\
   E^{'}_d     &=\psi^{'}_q - X_{q2}I_q \\
   E^{'}_q     &=\psi^{'}_d + X_{d2}I_d \\
   E_{fd}      &= E'_{q}+X_{d1}I_{d}+\psi^{''}_{d}k_{sat} \\
