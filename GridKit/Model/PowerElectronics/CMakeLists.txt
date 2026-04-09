@@ -8,6 +8,7 @@ target_include_directories(power_electronics_circuit_node
 add_library(GridKit::power_electronics_circuit_node
   ALIAS power_electronics_circuit_node)
 
+add_subdirectory(Bus)
 add_subdirectory(Capacitor)
 add_subdirectory(Resistor)
 add_subdirectory(VoltageSource)
