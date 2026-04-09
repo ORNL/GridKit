@@ -160,21 +160,6 @@ int printMicrogridSystems(index_type N_size)
     Lload_list[0] = Lload1;
   }
 
-  //							DGs	+		- refframe	   Lines +				Loads
-  index_type vec_size_internals = 13 * (2 * N_size) - 1 + (2 + 4 * (N_size - 1)) + 2 * N_size;
-  //							\omegaref + BusDQ
-  index_type vec_size_externals = 1 + 2 * (2 * N_size);
-
-  std::vector<index_type> vdqbus_index(2 * N_size, 0);
-  vdqbus_index[0] = vec_size_internals + 1;
-  for (index_type i = 1; i < vdqbus_index.size(); i++)
-  {
-    vdqbus_index[i] = vdqbus_index[i - 1] + 2;
-  }
-
-  // Total size of the vector setup
-  index_type vec_size_total = vec_size_internals + vec_size_externals;
-
   using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
   std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
   sys_model.addNode(&*dg_signal);
@@ -215,15 +200,10 @@ int printMicrogridSystems(index_type N_size)
     // line
     auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
                                                                 rline_list[i],
-                                                                Lline_list[i]);
-    // ref motor
-    line_model->setExternalConnectionNodes(0, vec_size_internals);
-    // input connections
-    line_model->setExternalConnectionNodes(1, vdqbus_index[i]);
-    line_model->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-    // output connections
-    line_model->setExternalConnectionNodes(3, vdqbus_index[i + 1]);
-    line_model->setExternalConnectionNodes(4, vdqbus_index[i + 1] + 1);
+                                                                Lline_list[i],
+                                                                &*dg_signal,
+                                                                &*buses[i],
+                                                                &*buses[i + 1]);
     sys_model.addComponent(line_model);
   }
 
@@ -249,7 +229,7 @@ int printMicrogridSystems(index_type N_size)
   sys_model.allocate();
 
   // Create Initial points for states. Every state is set to zero initially
-  for (index_type i = 0; i < vec_size_total; i++)
+  for (index_type i = 0; i < sys_model.size(); i++)
   {
     sys_model.y()[i]  = 0.0;
     sys_model.yp()[i] = 0.0;
@@ -264,7 +244,7 @@ int printMicrogridSystems(index_type N_size)
   }
 
   // since the initial P_com = 0, set the initial vector to the reference frame
-  sys_model.y()[vec_size_internals] = DG_parms1.wb_;
+  sys_model.y()[dg_signal->getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model.initialize();
   sys_model.evaluateResidual();

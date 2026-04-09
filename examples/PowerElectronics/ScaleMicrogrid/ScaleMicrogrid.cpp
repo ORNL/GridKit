@@ -168,21 +168,6 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   rload_list[0] = rload1;
   Lload_list[0] = Lload1;
 
-  //							DGs	+		- refframe	   Lines +				Loads
-  index_type vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
-  //							\omegaref + BusDQ
-  index_type vec_size_externals = 1 + 2 * (2 * Nsize);
-
-  std::vector<index_type> vdqbus_index(2 * Nsize, 0);
-  vdqbus_index[0] = vec_size_internals + 1;
-  for (index_type i = 1; i < vdqbus_index.size(); i++)
-  {
-    vdqbus_index[i] = vdqbus_index[i - 1] + 2;
-  }
-
-  // Total size of the vector setup
-  index_type vec_size_total = vec_size_internals + vec_size_externals;
-
   using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
   std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
   sys_model->addNode(&*dg_signal);
@@ -223,15 +208,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
     // line
     auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
                                                                 rline_list[i],
-                                                                Lline_list[i]);
-    // ref motor
-    line_model->setExternalConnectionNodes(0, vec_size_internals);
-    // input connections
-    line_model->setExternalConnectionNodes(1, vdqbus_index[i]);
-    line_model->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-    // output connections
-    line_model->setExternalConnectionNodes(3, vdqbus_index[i + 1]);
-    line_model->setExternalConnectionNodes(4, vdqbus_index[i + 1] + 1);
+                                                                Lline_list[i],
+                                                                &*dg_signal,
+                                                                &*buses[i],
+                                                                &*buses[i + 1]);
     sys_model->addComponent(line_model);
   }
 
@@ -259,11 +239,10 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   if (debug_output)
   {
     std::cout << sys_model->y().size() << std::endl;
-    std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
   }
 
   // Create initial points for states. Every state is to specified to the zero intially
-  for (index_type i = 0; i < vec_size_total; i++)
+  for (index_type i = 0; i < sys_model->size(); i++)
   {
     sys_model->y()[i]  = 0.0;
     sys_model->yp()[i] = 0.0;
@@ -278,7 +257,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
-  sys_model->y()[vec_size_internals] = DG_parms1.wb_;
+  sys_model->y()[dg_signal->getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model->initialize();
   sys_model->evaluateResidual();

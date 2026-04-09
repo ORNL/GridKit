@@ -85,19 +85,6 @@ int main(int /* argc */, char const** /* argv */)
   double rload2 = 2.0;
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  // indexing sets
-  size_t Nsize              = 2;
-  //							DGs	+		- refframe	   Lines +				Loads
-  size_t vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
-  //							\omegaref + BusDQ
-  size_t vec_size_externals = 1 + 2 * (2 * Nsize);
-  size_t dqbus1             = vec_size_internals + 1;
-  size_t dqbus2             = vec_size_internals + 3;
-  size_t dqbus3             = vec_size_internals + 5;
-  size_t dqbus4             = vec_size_internals + 7;
-
-  size_t vec_size_total = vec_size_internals + vec_size_externals;
-
   using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
   std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
 
@@ -137,39 +124,18 @@ int main(int /* argc */, char const** /* argv */)
   // Lines
 
   // line 1
-  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(4, rline1, Lline1);
-  // ref motor
-  l1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l1->setExternalConnectionNodes(1, dqbus1);
-  l1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // output connections
-  l1->setExternalConnectionNodes(3, dqbus2);
-  l1->setExternalConnectionNodes(4, dqbus2 + 1);
+  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(
+      4, rline1, Lline1, &*dg_signal, &*bus1, &*bus2);
   sysmodel->addComponent(l1);
 
   // line 2
-  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(5, rline2, Lline2);
-  // ref motor
-  l2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l2->setExternalConnectionNodes(1, dqbus2);
-  l2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // output connections
-  l2->setExternalConnectionNodes(3, dqbus3);
-  l2->setExternalConnectionNodes(4, dqbus3 + 1);
+  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(
+      5, rline2, Lline2, &*dg_signal, &*bus2, &*bus3);
   sysmodel->addComponent(l2);
 
   // line 3
-  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(6, rline3, Lline3);
-  // ref motor
-  l3->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l3->setExternalConnectionNodes(1, dqbus3);
-  l3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // output connections
-  l3->setExternalConnectionNodes(3, dqbus4);
-  l3->setExternalConnectionNodes(4, dqbus4 + 1);
+  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(
+      6, rline3, Lline3, &*dg_signal, &*bus3, &*bus4);
   sysmodel->addComponent(l3);
 
   //  loads
@@ -198,10 +164,9 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->allocate();
 
   std::cout << sysmodel->y().size() << std::endl;
-  std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
 
   // Create initial points for states
-  for (size_t i = 0; i < vec_size_total; i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
     sysmodel->y()[i]  = 0.0;
     sysmodel->yp()[i] = 0.0;
@@ -223,7 +188,7 @@ int main(int /* argc */, char const** /* argv */)
   }
 
   // since the intial P_com = 0
-  sysmodel->y()[vec_size_internals] = parms1.wb_;
+  sysmodel->y()[dg_signal->getNodeConnection(0)] = parms1.wb_;
 
   sysmodel->initialize();
   sysmodel->evaluateResidual();
