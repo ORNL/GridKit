@@ -10,7 +10,8 @@ namespace GridKit
     class DGSignal : public NodeBase<ScalarT, IdxT>
     {
     public:
-      DGSignal() : NodeBase<ScalarT, IdxT>(1, 0)
+      DGSignal()
+        : NodeBase<ScalarT, IdxT>(1, 0)
       {
       }
     };

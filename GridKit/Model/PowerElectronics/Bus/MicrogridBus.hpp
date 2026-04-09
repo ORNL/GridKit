@@ -10,7 +10,8 @@ namespace GridKit
     class MicrogridBus : public NodeBase<ScalarT, IdxT>
     {
     public:
-      MicrogridBus() : NodeBase<ScalarT, IdxT>(2, 0)
+      MicrogridBus()
+        : NodeBase<ScalarT, IdxT>(2, 0)
       {
       }
     };

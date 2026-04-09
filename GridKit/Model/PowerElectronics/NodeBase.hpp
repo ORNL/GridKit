@@ -15,7 +15,8 @@ namespace GridKit
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-      NodeBase(size_t n_intern, size_t n_extern) : n_intern_(n_intern), n_extern_(n_extern)
+      NodeBase(size_t n_intern, size_t n_extern)
+        : n_intern_(n_intern), n_extern_(n_extern)
       {
       }
 

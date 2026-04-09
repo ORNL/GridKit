@@ -12,7 +12,8 @@ namespace GridKit
       using NodeBase<ScalarT, IdxT>::y;
 
     public:
-      InfiniteBus(ScalarT voltage) : NodeBase<ScalarT, IdxT>(0, 1), voltage_(voltage)
+      InfiniteBus(ScalarT voltage)
+        : NodeBase<ScalarT, IdxT>(0, 1), voltage_(voltage)
       {
       }
 
