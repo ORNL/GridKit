@@ -53,6 +53,7 @@
 - Added IEEEST Stabilizer Model
 - Added SEXS-PTI Exciter Model
 - Added 200 Bus Synthetic Illinois Case
+- Added node objects to `PowerElectronics` module & updated all examples to make use of them.
 
 ## v0.1
 
