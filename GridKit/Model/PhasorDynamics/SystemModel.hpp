@@ -81,6 +81,7 @@ namespace GridKit
       {
         using namespace Governor;
         using namespace Exciter;
+        using namespace Stabilizer;
 
         // Set system model tolerances
         rel_tol_         = 1e-7;
@@ -238,7 +239,39 @@ namespace GridKit
             exciter->getSignals().template assignSignalNode<Ieeet1InternalVariables::EFD>(getSignal(efd));
           }
 
+          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::vs))
+          {
+            IdxT vs = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::vs);
+            exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::VS>(getSignal(vs));
+          }
+
           addComponent(exciter);
+        }
+
+        // Add IEEEST stabilizers
+        for (const auto& stabdata : data.stabilizer)
+        {
+          auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
+
+          if (stabdata.ports.contains(IeeestPorts::input))
+          {
+            IdxT input = stabdata.ports.at(IeeestPorts::input);
+            stabilizer->getSignals().template attachSignalNode<IeeestExternalVariables::U>(getSignal(input));
+          }
+
+          if (stabdata.ports.contains(IeeestPorts::cutout))
+          {
+            IdxT cutout = stabdata.ports.at(IeeestPorts::cutout);
+            stabilizer->getSignals().template attachSignalNode<IeeestExternalVariables::VCT>(getSignal(cutout));
+          }
+
+          if (stabdata.ports.contains(IeeestPorts::output))
+          {
+            IdxT output = stabdata.ports.at(IeeestPorts::output);
+            stabilizer->getSignals().template assignSignalNode<IeeestInternalVariables::VS>(getSignal(output));
+          }
+
+          addComponent(stabilizer);
         }
 
         // Add faults

@@ -14,6 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -35,6 +36,7 @@ namespace GridKit
       using BusFaultDataT     = BusFaultData<RealT, IdxT>;
       using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
       using Ieeet1DataT       = Exciter::Ieeet1Data<RealT, IdxT>;
+      using IeeestDataT       = Stabilizer::IeeestData<RealT, IdxT>;
       using GenrouDataT       = GenrouData<RealT, IdxT>;
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
@@ -88,6 +90,7 @@ namespace GridKit
       std::vector<LoadZIPDataT>      loadzip;      ///< Loads within the model
       std::vector<Tgov1DataT>        gov;          ///< Governors within the model
       std::vector<Ieeet1DataT>       exciter;      ///< Exciters within the model
+      std::vector<IeeestDataT>       stabilizer;   ///< Stabilizers within the model
       std::vector<SignalDataT>       signal;       ///< Signal nodes
 
       /// Monitor sink specs

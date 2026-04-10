@@ -60,6 +60,7 @@ namespace GridKit
         OMEGA, ///< Generator speed deviation
         VREAL, ///< Real bus voltage
         VIMAG, ///< Imaginary bus voltage
+        VS,    ///< Stabilizer output signal
         MAXIMUM,
       };
 

@@ -129,10 +129,12 @@ namespace GridKit
         wb_.resize(2);
 
         // Resize signal variable data
-        ws_.resize(1);
-        ws_indices_.resize(1);
+        ws_.resize(2);
+        ws_indices_.resize(2);
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
+        ws_[1]         = 0.0;
+        ws_indices_[1] = INVALID_INDEX<IdxT>;
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -157,6 +159,7 @@ namespace GridKit
       int Ieeet1<ScalarT, IdxT>::verify() const
       {
         static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
+        static constexpr auto VS    = Ieeet1ExternalVariables::VS;
 
         int ret = 0;
 
@@ -165,6 +168,15 @@ namespace GridKit
           if (!signals_.template isLinked<OMEGA>())
           {
             Log::error() << "Ieeet1: omega signal attached with no linked generator\n";
+            ret += 1;
+          }
+        }
+
+        if (signals_.template isAttached<VS>())
+        {
+          if (!signals_.template isLinked<VS>())
+          {
+            Log::error() << "Ieeet1: VS signal attached with no linked source\n";
             ret += 1;
           }
         }
@@ -202,24 +214,29 @@ namespace GridKit
         ScalarT vimag = bus_->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
-        // Derived from External initial values
-        ScalarT vr  = Ke_ * efd0;
+        // Saturation at the initial operating point
+        ScalarT efd_sat = (efd0 - SA_) * Math::sigmoid(efd0 - SA_);
+        ScalarT ksat0   = SB_ * efd_sat * efd_sat;
+        ScalarT ve0     = ksat0 * efd0;
+
+        // Derived from External initial values (includes saturation)
+        ScalarT vr  = Ke_ * efd0 + ve0;
         ScalarT vfx = Kf_ / Tf_ * efd0;
-        ScalarT vtr = Ke_ / Ka_ * efd0;
+        ScalarT vtr = vr / Ka_;
 
         // Vref (setpoint = terminal + error)
         vref_ = Ec + vtr;
 
         // IVP for Internal Variables
-        y_[0] = Ec;   // y0 - vts  - Sensed term volt
-        y_[1] = vr;   // y1 - vr   - Voltage reg
-        y_[2] = efd0; // y2 - efdp - Efd pre mult
-        y_[3] = vfx;  // y3 - vfx  - Exciter feedback
-        y_[4] = vtr;  // y4 - vtr  - Term Volt Err
-        y_[5] = 0;    // y5 - vf   - Feedback volt
-        y_[6] = 0;    // y6 - ve   - Excit. Cntrl Volt
-        y_[7] = efd0; // y7 - efd  - Efd
-        y_[8] = 0;    // y8 - ksat - Saturation
+        y_[0] = Ec;    // y0 - vts  - Sensed term volt
+        y_[1] = vr;    // y1 - vr   - Voltage reg
+        y_[2] = efd0;  // y2 - efdp - Efd pre mult
+        y_[3] = vfx;   // y3 - vfx  - Exciter feedback
+        y_[4] = vtr;   // y4 - vtr  - Term Volt Err
+        y_[5] = 0;     // y5 - vf   - Feedback volt
+        y_[6] = ve0;   // y6 - ve   - Excit. Cntrl Volt
+        y_[7] = efd0;  // y7 - efd  - Efd
+        y_[8] = ksat0; // y8 - ksat - Saturation
 
         // Steady State Conditions
         yp_[0] = 0.0;
@@ -294,7 +311,8 @@ namespace GridKit
         ScalarT vfx_dot  = yp[3];
 
         // Set signal variable aliases
-        ScalarT omega = ws[0];
+        ScalarT omega     = ws[0];
+        ScalarT vs_signal = ws[1];
 
         // The 'pre-limit' derivative of Pv
         ScalarT func            = -vr + Ka_ * vtr;
@@ -308,7 +326,7 @@ namespace GridKit
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
-        f[4] = -vts + vref_ + vUEL_ + vOEL_ + vS_ - vtr - vf;
+        f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
         f[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
         f[6] = -ve + ksat * efdp;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
@@ -339,6 +357,15 @@ namespace GridKit
         {
           ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
           ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
+        }
+
+        // VS signal (stabilizer output, optional)
+        ws_[1]         = 0.0;
+        ws_indices_[1] = INVALID_INDEX<IdxT>;
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        {
+          ws_[1]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
         }
 
         // Bus voltages
