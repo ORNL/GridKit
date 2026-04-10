@@ -1,0 +1,10 @@
+{
+    "system_model_file": "wecc.json",
+    "dt": 0.00416666666666,
+    "tmax": 20,
+    "events": [
+        {"time": 10, "type": "fault_on", "element_id": 0},
+        {"time": 10.1, "type": "fault_off", "element_id": 0}
+    ],
+    "output_file": "wecc.csv"
+}
