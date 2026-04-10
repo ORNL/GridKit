@@ -143,6 +143,25 @@ namespace GridKit
         RealT a3_{0};
         RealT a4_{0};
 
+        // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
+        RealT use_4th_order_{0};
+        RealT use_3rd_order_{0};
+        RealT use_2nd_order_{0};
+        RealT safe_inv_a4_{0};
+        RealT safe_inv_a3_{0};
+        RealT safe_inv_a2_{0};
+        RealT use_T2_block_{1};
+        RealT bypass_T2_block_{0};
+        RealT safe_inv_T2_{1};
+        RealT use_T4_block_{1};
+        RealT bypass_T4_block_{0};
+        RealT safe_inv_T4_{1};
+        RealT use_T6_block_{1};
+        RealT bypass_T6_block_{0};
+        RealT safe_inv_T6_{1};
+        RealT use_cutout_{1};
+        RealT bypass_cutout_{0};
+
         ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
 
         std::unique_ptr<MonitorT> monitor_;

@@ -124,6 +124,30 @@ namespace GridKit
         a2_ = A2_ + A4_ + A1_ * A3_;
         a3_ = A1_ * A4_ + A2_ * A3_;
         a4_ = A2_ * A4_;
+
+        // Precompute masks and safe inverse coefficients so the residual stays branch-free.
+        use_4th_order_ = static_cast<RealT>(a4_ != 0.0);
+        use_3rd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ != 0.0);
+        use_2nd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
+        safe_inv_a4_   = use_4th_order_ / (a4_ + (1.0 - use_4th_order_));
+        safe_inv_a3_   = use_3rd_order_ / (a3_ + (1.0 - use_3rd_order_));
+        safe_inv_a2_   = use_2nd_order_ / (a2_ + (1.0 - use_2nd_order_));
+
+        use_T2_block_    = static_cast<RealT>(T2_ != 0.0);
+        bypass_T2_block_ = 1.0 - use_T2_block_;
+        safe_inv_T2_     = use_T2_block_ / (T2_ + bypass_T2_block_);
+
+        use_T4_block_    = static_cast<RealT>(T4_ != 0.0);
+        bypass_T4_block_ = 1.0 - use_T4_block_;
+        safe_inv_T4_     = use_T4_block_ / (T4_ + bypass_T4_block_);
+
+        use_T6_block_    = static_cast<RealT>(T6_ != 0.0);
+        bypass_T6_block_ = 1.0 - use_T6_block_;
+        safe_inv_T6_     = use_T6_block_ / (T6_ + bypass_T6_block_);
+
+        // Vcl = Vcu = 0 means "cutout disabled" (passthrough: vs = vss).
+        use_cutout_    = static_cast<RealT>(Vcl_ != 0.0 || Vcu_ != 0.0);
+        bypass_cutout_ = 1.0 - use_cutout_;
       }
 
       template <class ScalarT, typename IdxT>
@@ -194,24 +218,9 @@ namespace GridKit
           }
         }
 
-        if (a4_ == 0)
+        if (a4_ == 0 && a3_ == 0 && a2_ == 0)
         {
-          Log::error() << "Ieeest: a4 = A2*A4 = 0, notch filter denominator is zero\n";
-          ret += 1;
-        }
-        if (T2_ == 0)
-        {
-          Log::error() << "Ieeest: T2 = 0, lead-lag 1 denominator is zero\n";
-          ret += 1;
-        }
-        if (T4_ == 0)
-        {
-          Log::error() << "Ieeest: T4 = 0, lead-lag 2 denominator is zero\n";
-          ret += 1;
-        }
-        if (T6_ == 0)
-        {
-          Log::error() << "Ieeest: T6 = 0, washout denominator is zero\n";
+          Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
           ret += 1;
         }
 
@@ -284,24 +293,27 @@ namespace GridKit
         ScalarT vct = ws[1];
 
         f[0] = -x1_dot + x2;
-        f[1] = -x2_dot + x3;
-        f[2] = -x3_dot + x4;
-        f[3] = -x4_dot + (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) / a4_;
-        f[4] = -x5_dot + (v4 - x5) / T2_;
-        f[5] = -x6_dot + (v5 - x6) / T4_;
-        f[6] = -x7_dot + (v6 - x7) / T6_;
+        f[1] = -x2_dot + (use_4th_order_ + use_3rd_order_) * x3
+               + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
+        f[2] = -x3_dot + use_4th_order_ * x4
+               + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u) * safe_inv_a3_;
+        f[3] = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
 
-        f[7]  = -v4 + x1 + A5_ * x2 + A6_ * x3;
-        f[8]  = -v5 + x5 + (T1_ / T2_) * (v4 - x5);
-        f[9]  = -v6 + x6 + (T3_ / T4_) * (v5 - x6);
-        f[10] = -v7 + Ks_ * (T5_ / T6_) * (v6 - x7);
+        f[4] = -x5_dot + use_T2_block_ * (v4 - x5) * safe_inv_T2_;
+        f[5] = -x6_dot + use_T4_block_ * (v5 - x6) * safe_inv_T4_;
+        f[6] = -x7_dot + use_T6_block_ * (v6 - x7) * safe_inv_T6_;
+
+        f[7]  = -v4 + x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3;
+        f[8]  = -v5 + bypass_T2_block_ * v4 + use_T2_block_ * (x5 + T1_ * (v4 - x5) * safe_inv_T2_);
+        f[9]  = -v6 + bypass_T4_block_ * v5 + use_T4_block_ * (x6 + T3_ * (v5 - x6) * safe_inv_T4_);
+        f[10] = -v7 + bypass_T6_block_ * Ks_ * v6 + use_T6_block_ * Ks_ * T5_ * (v6 - x7) * safe_inv_T6_;
+
         f[11] = -vss + v7 * Math::indicator_zero(Lsmin_, Lsmax_, v7)
                 + Lsmin_ * Math::sigmoid(Lsmin_ - v7)
                 + Lsmax_ * Math::sigmoid(v7 - Lsmax_);
-        // This uses the product form sigmoid(a)*sigmoid(b) instead — a different
-        // smooth window approximation that is ~1 inside and ~0 outside the range,
-        // but not numerically identical to indicator_zero.
-        f[12] = -vs + vss * Math::sigmoid(vct - Vcl_) * Math::sigmoid(Vcu_ - vct);
+        // Cutout: Vcl=Vcu=0 means disabled (passthrough). Otherwise, sigmoid window.
+        f[12] = -vs + bypass_cutout_ * vss
+                + use_cutout_ * vss * Math::sigmoid(vct - Vcl_) * Math::sigmoid(Vcu_ - vct);
 
         return 0;
       }
