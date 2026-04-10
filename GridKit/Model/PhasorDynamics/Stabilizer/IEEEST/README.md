@@ -17,26 +17,26 @@ Notes:
 
 ## Model Parameters
 
-Symbol | Units | Description | Note
+Symbol | Units | Description | Typical Value | Note
 ------ | ----- | ----------- | ----
-$A_1$ | [s] | Notch filter denominator coefficient |
-$A_2$ | [s²] | Notch filter denominator coefficient |
-$A_3$ | [s] | Notch filter denominator coefficient |
-$A_4$ | [s²] | Notch filter denominator coefficient |
-$A_5$ | [s] | Notch filter numerator coefficient |
-$A_6$ | [s²] | Notch filter numerator coefficient |
-$T_1$ | [s] | Lead–lag 1 numerator time constant |
-$T_2$ | [s] | Lead–lag 1 denominator time constant |
-$T_3$ | [s] | Lead–lag 2 numerator time constant |
-$T_4$ | [s] | Lead–lag 2 denominator time constant |
-$T_5$ | [s] | Washout numerator time constant |
-$T_6$ | [s] | Washout denominator time constant |
-$K_s$ | [p.u.] | Stabilizer gain |
-$L_{s\min}$ | [p.u.] | Minimum stabilizer output limit |
-$L_{s\max}$ | [p.u.] | Maximum stabilizer output limit |
-$V_{cl}$ | [p.u.] | Lower input cutout threshold |
-$V_{cu}$ | [p.u.] | Upper input cutout threshold |
-$T_{delay}$ | [s] | Input time delay |
+$A_1$ | [s] | Notch filter denominator coefficient | 1.013
+$A_2$ | [s²] | Notch filter denominator coefficient | 0.013
+$A_3$ | [s] | Notch filter denominator coefficient | 0.0
+$A_4$ | [s²] | Notch filter denominator coefficient | 0.0
+$A_5$ | [s] | Notch filter numerator coefficient | 1.013
+$A_6$ | [s²] | Notch filter numerator coefficient | 0.113
+$T_1$ | [s] | Lead–lag 1 numerator time constant | 0.0
+$T_2$ | [s] | Lead–lag 1 denominator time constant | 0.02
+$T_3$ | [s] | Lead–lag 2 numerator time constant | 0.0
+$T_4$ | [s] | Lead–lag 2 denominator time constant | 0.0
+$T_5$ | [s] | Washout numerator time constant | 1.65
+$T_6$ | [s] | Washout denominator time constant | 1.65
+$K_s$ | [p.u.] | Stabilizer gain | 3.0
+$L_{s\min}$ | [p.u.] | Minimum stabilizer output limit | 0.1
+$L_{s\max}$ | [p.u.] | Maximum stabilizer output limit | -0.1
+$V_{cl}$ | [p.u.] | Lower input cutout threshold | 0.0
+$V_{cu}$ | [p.u.] | Upper input cutout threshold | 0.0
+$T_{delay}$ | [s] | Input time delay | 0.0
 
 ### Model Derived Parameters
 ```math
@@ -69,7 +69,6 @@ $x_7$ | [-] | Washout state |
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$u_d$ | [p.u.] | Delayed stabilizer input |
 $v_4$ | [p.u.] | Notch filter output |
 $v_5$ | [p.u.] | Lead–lag 1 output |
 $v_6$ | [p.u.] | Lead–lag 2 output |
@@ -102,7 +101,7 @@ $V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block
             -\dfrac{a_1}{a_4}x_2
             -\dfrac{a_2}{a_4}x_3
             -\dfrac{a_3}{a_4}x_4
-            +\dfrac{1}{a_4}u_d \\
+            +\dfrac{1}{a_4}u\\
 \dot{x}_5 &= \dfrac{1}{T_2}(v_4 - x_5) \\
 \dot{x}_6 &= \dfrac{1}{T_4}(v_5 - x_6)\\
 \dot{x}_7 &= \dfrac{1}{T_6}(v_6 - x_7)
@@ -112,7 +111,6 @@ $V_{ct}$ | [p.u.] | Cutout signal (compared to $V_{cl},V_{cu}$) | from the block
 ### Algebraic Equations
 ```math
 \begin{aligned}
-0 &= -u_d + u(t-T_{delay}) \\
 0 &= -v_4 + x_1 + A_5 x_2 + A_6 x_3 \\
 0 &= -v_5 + x_5 + \dfrac{T_1}{T_2}(v_4 - x_5) \\
 0 &= -v_6 + x_6 + \dfrac{T_3}{T_4}(v_5 - x_6) \\

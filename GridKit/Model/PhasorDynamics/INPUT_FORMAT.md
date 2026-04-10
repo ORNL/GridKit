@@ -85,7 +85,7 @@ a bus and has the following fields:
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | Optional string containing the name of the node. This may be empty or non-unique
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
-  `v_base`           | Optional floating point value giving the voltage base in volts (V). 
+  `v_base`           | Optional floating point value giving the voltage base in volts (V).
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `freq_base`        | Optional field to override the system frequency base at this bus
   `va_base`          | Optional field to override the system power base at this bus
@@ -147,6 +147,7 @@ are specified:
   `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`            | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
+  `Ieeest`      | the IEEEST stabilizer model                          | `input`, `output`, `cutout`\*    | `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `T1`, `T2`, `T3`, `T4`, `T5`, `T6`, `Ks`, `Lsmin`, `Lsmax`, `Vcl`, `Vcu`, `Tdelay` | `vs`
   `BusFault`    | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
 
 Ports marked with \* are optional and, if missing, will be assumed to be
