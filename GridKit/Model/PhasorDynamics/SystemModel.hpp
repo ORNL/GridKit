@@ -248,6 +248,31 @@ namespace GridKit
           addComponent(exciter);
         }
 
+        for (const auto& excitedata : data.sexspti)
+        {
+          IdxT  bus_index = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::bus);
+          auto* bus_ptr   = getBus(bus_index);
+
+          IdxT  efd_index  = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::efd);
+          auto* efd_signal = getSignal(efd_index);
+
+          signal_type* vs_signal = nullptr;
+          if (excitedata.ports.contains(SexsPtiData<ScalarT, IdxT>::Ports::vs))
+          {
+            vs_signal = getSignal(excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::vs));
+          }
+
+          auto* exciter = new SexsPti<ScalarT, IdxT>(bus_ptr, excitedata);
+
+          exciter->getSignals().template assignSignalNode<SexsPtiInternalVariables::EFD>(efd_signal);
+          if (vs_signal != nullptr)
+          {
+            exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VS>(vs_signal);
+          }
+
+          addComponent(exciter);
+        }
+
         // Add IEEEST stabilizers
         for (const auto& stabdata : data.stabilizer)
         {
@@ -604,26 +629,15 @@ namespace GridKit
        */
       int evaluateResidual() override
       {
-        // Update variables and evaluate component residuals
+        updateVariables();
+
         for (const auto& bus : buses_)
         {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[bus->getVariableIndex(j)];
-            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
-          }
-
           bus->evaluateResidual();
         }
 
         for (const auto& component : components_)
         {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[component->getVariableIndex(j)];
-            component->yp()[j] = yp_[component->getVariableIndex(j)];
-          }
-
           component->evaluateResidual();
         }
 
