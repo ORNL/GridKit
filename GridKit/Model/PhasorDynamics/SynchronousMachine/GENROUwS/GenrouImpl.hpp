@@ -387,66 +387,100 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Genrou<ScalarT, IdxT>::initialize()
     {
-      /* Initialization tricks -- assuming NO saturation */
-      ScalarT vr    = Vr();
-      ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
-      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
-      ScalarT vm2   = vr * vr + vi * vi;
-      ScalarT Er    = vr + (Ra_ * p * vr + Ra_ * q * vi - Xq_ * p * vi + Xq_ * q * vr) / vm2;
-      ScalarT Ei    = vi + (Ra_ * p * vi - Ra_ * q * vr + Xq_ * p * vr + Xq_ * q * vi) / vm2;
-      ScalarT delta = std::atan2(Ei, Er);
+      // Saturated initialization with ksat iteration.
+      // See README "With Saturation" and plan for derivation.
+
+      // Network Frame Terminal Values
+      ScalarT vr  = Vr();
+      ScalarT vi  = Vi();
+      ScalarT p   = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
+      ScalarT q   = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
+      ScalarT vm2 = vr * vr + vi * vi;
+      ScalarT vm  = std::sqrt(vm2);
+      ScalarT ir  = (p * vr + q * vi) / vm2;
+      ScalarT ii  = (p * vi - q * vr) / vm2;
+
+      // Initial ksat guess from |V|
+      ScalarT ksat = SB_ * (vm - SA_) * (vm - SA_);
+
+      ScalarT delta, id, iq, vd, vq;
+      ScalarT psiqpp, psidpp, psipp;
+      ScalarT Edp, psiqp, psidp, Eqp;
+
+      static constexpr int   max_iter  = 10;
+      static constexpr RealT ksat_tol  = 1e-12;
+      ScalarT                ksat_prev = ksat + ONE<RealT>; // force first iteration
+
+      for (int iter = 0; iter < max_iter; ++iter)
+      {
+        // Convergence check (skip first iteration)
+        ScalarT ksat_err = ksat - ksat_prev;
+        if (iter > 0 && ksat_err * ksat_err < ksat_tol * ksat_tol)
+          break;
+        ksat_prev = ksat;
+
+        // Compute all variables consistent with current ksat
+        ScalarT ksat_prime = ONE<RealT> + Xqd_ * ksat;
+        ScalarT Xsat_delta = ksat_prime * Xdpp_ + Xq_ - Xqpp_;
+
+        delta  = std::atan2((vi + Ra_ * ii) * ksat_prime + Xsat_delta * ir,
+                           (vr + Ra_ * ir) * ksat_prime - Xsat_delta * ii);
+        id     = ir * std::sin(delta) - ii * std::cos(delta);
+        iq     = ir * std::cos(delta) + ii * std::sin(delta);
+        vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
+        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
+        psiqpp = -vd;
+        psidpp = vq;
+        Edp    = (Xq1_ - Xqd_ * (Xqp_ - Xqpp_) * ksat) * iq / (ONE<RealT> + Xqd_ * ksat);
+        psiqp  = Edp + Xq2_ * iq;
+        psidp  = psidpp - (Xdpp_ - Xl_) * id;
+        Eqp    = psidp + (Xdp_ - Xl_) * id;
+
+        // Update ksat from flux-linkage psipp for next iteration
+        ScalarT psiqpp_fl = -psiqp * Xq4_ - Edp * Xq5_;
+        ScalarT psidpp_fl = psidp * Xd4_ + Eqp * Xd5_;
+        psipp             = std::sqrt(psiqpp_fl * psiqpp_fl + psidpp_fl * psidpp_fl);
+        ksat              = SB_ * (psipp - SA_) * (psipp - SA_);
+
+        if (iter == max_iter - 1)
+        {
+          Log::warning() << "Genrou: saturated initialization did not converge"
+                         << " (ksat_err=" << ksat_err << ")\n";
+        }
+      }
+
+      // Assign from converged values using flux-linkage forms
       ScalarT omega(0.0);
-      ScalarT ir     = (p * vr + q * vi) / vm2;
-      ScalarT ii     = (p * vi - q * vr) / vm2;
-      ScalarT id     = ir * std::sin(delta) - ii * std::cos(delta);
-      ScalarT iq     = ir * std::cos(delta) + ii * std::sin(delta);
-      ScalarT vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
-      ScalarT vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
-      ScalarT psiqpp = -vd / (ONE<RealT> + omega);
-      ScalarT psidpp = vq / (ONE<RealT> + omega);
-      ScalarT Te     = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
-      ScalarT psiqp  = (Xqpp_ - Xl_) * iq - psiqpp;
-      ScalarT Edp    = psiqp - (Xqp_ - Xl_) * iq;
-      ScalarT psidp  = psidpp - (Xdpp_ - Xl_) * id;
-      ScalarT Eqp    = psidp + (Xdp_ - Xl_) * id;
 
-      /* Now we have the state variables, solve for alg. variables */
-      ScalarT ksat;
-      ScalarT psipp;
-
-      y_[0] = delta; //= 0.55399038;
-      y_[1] = omega; // = 0;
-      y_[2] = Eqp;   // = 0.995472581;
-      y_[3] = psidp; // = 0.971299567;
-      y_[4] = psiqp; // = 0.306880069;
-      y_[5] = Edp;   // = 0;
-
+      y_[0] = delta;
+      y_[1] = omega;
+      y_[2] = Eqp;
+      y_[3] = psidp;
+      y_[4] = psiqp;
+      y_[5] = Edp;
       y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
       y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
       y_[10] = vd = -psiqpp * (ONE<RealT> + omega);
       y_[11] = vq = psidpp * (ONE<RealT> + omega);
-      y_[12] = Te = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      y_[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
       y_[13]      = id;
       y_[14]      = iq;
       y_[15]      = ir;
       y_[16]      = ii;
-      // y_[17] = efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
       y_[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, real */
+               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
       y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta)); /* inort, imag */
+               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      // Set Setpoint mechanical power, which may or may not be used
+      ScalarT Te = y_[12];
       pmech_set_ = Te;
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
         signals_.template writeExternalVariable<GenrouExternalVariables::PM>(Te);
       }
 
-      // Set Efield signal (may or may not exist)
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
       if (signals_.template isAttached<GenrouExternalVariables::EFD>())
       {
