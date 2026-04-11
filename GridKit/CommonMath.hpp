@@ -119,10 +119,12 @@ namespace GridKit
         const ScalarT x,
         const ScalarT f)
     {
-      return indicator_zero(limit_min, limit_max, f) * dsigmoid(f) + //
-             (indicator_low(limit_min, x) * sigmoid(-f) +            //
-              indicator_high(limit_max, x) * sigmoid(f))
-                 * (ONE<RealT> - dsigmoid(f));
+      ScalarT above_min = indicator_low(limit_min, x);
+      ScalarT below_max = indicator_high(limit_max, x);
+
+      return above_min * below_max +                  //
+             (ONE<RealT> - below_max) * sigmoid(-f) + //
+             (ONE<RealT> - above_min) * sigmoid(f);
     }
   } // namespace Math
 } // namespace GridKit
