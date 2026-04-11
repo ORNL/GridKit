@@ -4,6 +4,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIP.hpp>

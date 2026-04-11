@@ -50,6 +50,12 @@ target_link_libraries(test_phasor_governortgov1 GridKit::definitions
                                                 GridKit::phasor_dynamics_bus_dependency_tracking
                                                 GridKit::testing)
 
+add_executable(test_phasor_exciter_sexspti runExciterSexsPtiTests.cpp)
+target_link_libraries(test_phasor_exciter_sexspti GridKit::definitions
+                                                  GridKit::phasor_dynamics_components
+                                                  GridKit::phasor_dynamics_components_dependency_tracking
+                                                  GridKit::testing)
+
 add_executable(test_phasor_stabilizer_ieeest runStabilizerIeeestTests.cpp)
 target_link_libraries(test_phasor_stabilizer_ieeest GridKit::definitions
                                                     GridKit::phasor_dynamics_stabilizer_ieeest
@@ -84,6 +90,7 @@ add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governortgov1)
+add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_ieeest)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
@@ -98,6 +105,7 @@ install(TARGETS test_phasor_bus
                 test_phasor_loadzip
                 test_phasor_genrou
                 test_phasor_governortgov1
+                test_phasor_exciter_sexspti
                 test_phasor_stabilizer_ieeest
                 test_phasor_gen_classical
                 test_phasor_system 
