@@ -752,9 +752,9 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(tres, 0.0);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
+      model->updateTime(tres, 0.0);
 
       model->evaluateResidual();
       const std::vector<ScalarT>& f = model->getResidual();
@@ -776,9 +776,9 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(t, cj);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
+      model->updateTime(t, cj);
 
       model->evaluateJacobian();
 

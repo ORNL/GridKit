@@ -571,26 +571,15 @@ namespace GridKit
        */
       int evaluateResidual() override
       {
-        // Update variables and evaluate component residuals
+        updateVariables();
+
         for (const auto& bus : buses_)
         {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[bus->getVariableIndex(j)];
-            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
-          }
-
           bus->evaluateResidual();
         }
 
         for (const auto& component : components_)
         {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[component->getVariableIndex(j)];
-            component->yp()[j] = yp_[component->getVariableIndex(j)];
-          }
-
           component->evaluateResidual();
         }
 
