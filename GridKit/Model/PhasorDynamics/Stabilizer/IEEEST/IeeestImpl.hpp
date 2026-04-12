@@ -126,6 +126,9 @@ namespace GridKit
         a4_ = A2_ * A4_;
 
         // Precompute masks and safe inverse coefficients so the residual stays branch-free.
+        use_notch_    = static_cast<RealT>(a2_ != 0.0 || a3_ != 0.0 || a4_ != 0.0);
+        bypass_notch_ = 1.0 - use_notch_;
+
         use_4th_order_ = static_cast<RealT>(a4_ != 0.0);
         use_3rd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ != 0.0);
         use_2nd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
@@ -218,7 +221,7 @@ namespace GridKit
           }
         }
 
-        if (a4_ == 0 && a3_ == 0 && a2_ == 0)
+        if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
         {
           Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
           ret += 1;
@@ -292,7 +295,7 @@ namespace GridKit
         ScalarT u   = ws[0];
         ScalarT vct = ws[1];
 
-        f[0] = -x1_dot + x2;
+        f[0] = -x1_dot + use_notch_ * x2;
         f[1] = -x2_dot + (use_4th_order_ + use_3rd_order_) * x3
                + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
         f[2] = -x3_dot + use_4th_order_ * x4
@@ -303,7 +306,7 @@ namespace GridKit
         f[5] = -x6_dot + use_T4_block_ * (v5 - x6) * safe_inv_T4_;
         f[6] = -x7_dot + use_T6_block_ * (v6 - x7) * safe_inv_T6_;
 
-        f[7]  = -v4 + x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3;
+        f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3);
         f[8]  = -v5 + bypass_T2_block_ * v4 + use_T2_block_ * (x5 + T1_ * (v4 - x5) * safe_inv_T2_);
         f[9]  = -v6 + bypass_T4_block_ * v5 + use_T4_block_ * (x6 + T3_ * (v5 - x6) * safe_inv_T4_);
         f[10] = -v7 + bypass_T6_block_ * Ks_ * v6 + use_T6_block_ * Ks_ * T5_ * (v6 - x7) * safe_inv_T6_;
