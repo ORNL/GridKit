@@ -2,7 +2,7 @@
     "header": {
         "format_version": 0.1,
         "format_revision": 1,
-        "case_name": "ACTIVSg2000.PWB",
+        "case_name": "ACTIVSg2000",
         "case_description": "",
         "case_comments": "",
         "freq_base": 60.0,
