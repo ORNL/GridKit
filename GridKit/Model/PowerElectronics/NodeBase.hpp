@@ -22,7 +22,7 @@ namespace GridKit
 
       IdxT size() final
       {
-        return n_extern_ + n_intern_;
+        return static_cast<IdxT>(n_extern_ + n_intern_);
       }
 
       size_t getExternSize()
@@ -133,7 +133,7 @@ namespace GridKit
        */
       IdxT getNodeConnection(IdxT local_index) const
       {
-        return connection_nodes_[local_index];
+        return connection_nodes_[static_cast<size_t>(local_index)];
       }
 
       int allocate() override
