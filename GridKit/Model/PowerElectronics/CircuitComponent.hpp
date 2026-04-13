@@ -145,6 +145,14 @@ namespace GridKit
       return jacobian_coo_values_.get();
     }
 
+    /**
+     * @brief Evaluating the residual of a CircuitComponent should be done by evaluating the
+     * internal residuals and external residuals. CircuitComponents should overload those
+     * functions for their residuals (and the system will call those function instead of this one),
+     * so there is no reason to overload this functionality.
+     *
+     * @return An error code, or 0 is successful.
+     */
     int evaluateResidual() final
     {
       if (int err_code = evaluateInternalResidual())
@@ -153,8 +161,20 @@ namespace GridKit
       return evaluateExternalResidual();
     }
 
+    /**
+     * @brief Evaluate all of the residuals of internal variables of the component,
+     * modifying \ref f_.
+     *
+     * @return An error code, or 0 if successful.
+     */
     virtual int evaluateInternalResidual() = 0;
 
+    /**
+     * @brief Evaluate all of the residuals of external variables of the component,
+     * modifying \ref f_
+     *
+     * @return An error code, or 0 if successful.
+     */
     virtual int evaluateExternalResidual() = 0;
 
   protected:
