@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
-#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -153,8 +153,8 @@ int main()
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
 
-  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
-  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+  using SignalNode                      = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  std::unique_ptr<SignalNode> dg_signal = std::make_unique<SignalNode>();
 
   using Bus                = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   std::unique_ptr<Bus> bus = std::make_unique<Bus>();

@@ -7,10 +7,10 @@ namespace GridKit
   namespace PowerElectronics
   {
     template <typename ScalarT, typename IdxT>
-    class DGSignal : public NodeBase<ScalarT, IdxT>
+    class SignalNode : public NodeBase<ScalarT, IdxT>
     {
     public:
-      DGSignal()
+      SignalNode()
         : NodeBase<ScalarT, IdxT>(1, 0)
       {
       }

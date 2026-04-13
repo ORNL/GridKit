@@ -1,7 +1,7 @@
 install(
   FILES
     Bus.hpp
-	DGSignal.hpp
+	SignalNode.hpp
 	InfiniteBus.hpp
 	MicrogridBus.hpp
   DESTINATION

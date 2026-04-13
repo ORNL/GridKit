@@ -6,8 +6,8 @@
 #include <iostream>
 #include <memory>
 
-#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -85,8 +85,8 @@ int main(int /* argc */, char const** /* argv */)
   double rload2 = 2.0;
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  using DGSignal                      = GridKit::PowerElectronics::DGSignal<double, size_t>;
-  std::unique_ptr<DGSignal> dg_signal = std::make_unique<DGSignal>();
+  using SignalNode                      = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  std::unique_ptr<SignalNode> dg_signal = std::make_unique<SignalNode>();
 
   sysmodel->addNode(&*dg_signal);
 

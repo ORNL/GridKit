@@ -8,8 +8,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include <GridKit/Model/PowerElectronics/Bus/DGSignal.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 
 /**
@@ -40,8 +40,8 @@ int main(int /* argc */, char const** /* argv */)
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
 
-  using DGSignal = GridKit::PowerElectronics::DGSignal<double, size_t>;
-  DGSignal dg_signal;
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
 
   using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   Bus bus;
