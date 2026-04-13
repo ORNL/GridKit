@@ -145,6 +145,18 @@ namespace GridKit
       return jacobian_coo_values_.get();
     }
 
+    int evaluateResidual() final
+    {
+      if (int err_code = evaluateInternalResidual())
+        return err_code;
+
+      return evaluateExternalResidual();
+    }
+
+    virtual int evaluateInternalResidual() = 0;
+
+    virtual int evaluateExternalResidual() = 0;
+
   protected:
     /**
      * @brief Reset the Jacobian so it can be constructed. Helper method for \ref setJacValues().

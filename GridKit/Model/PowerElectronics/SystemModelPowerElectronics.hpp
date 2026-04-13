@@ -363,7 +363,7 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateResidual() final
+    int evaluateInternalResidual() final
     {
       for (IdxT i = 0; i < this->f_.size(); i++)
       {
@@ -374,10 +374,17 @@ namespace GridKit
 
       // Update system residual vector
 
+      // Evaluate component internal residuals - this is embarassingly parallel
+      for (component_type* component : components_)
+      {
+        if (int err_code = component->evaluateInternalResidual())
+          return err_code;
+      }
+
       for (const auto& component : components_)
       {
-        // TODO:check return type
-        component->evaluateResidual();
+        if (int err_code = component->evaluateExternalResidual())
+          return err_code;
 
         IdxT                        size     = component->size();
         const std::vector<ScalarT>& residual = component->getResidual();
@@ -391,9 +398,14 @@ namespace GridKit
         }
       }
 
-      // Uncomment to print the residual in matrix market format
-      // writeVectorToMatrixMarket(f_, "ScaleMicrogrid_Residual_N2_number" + std::to_string(jac_call_count_) + ".mtx", "Residual N2 number " + std::to_string(jac_call_count_));
+      return 0;
+    }
 
+    /**
+     * @todo implement this for nested systems
+     */
+    int evaluateExternalResidual() final
+    {
       return 0;
     }
 

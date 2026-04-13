@@ -82,21 +82,8 @@ namespace GridKit
    * To express this for Modified Nodal Analysis the Voltages of the admittance matrix are put into voltage drops
    */
   template <class ScalarT, typename IdxT>
-  int TransmissionLine<ScalarT, IdxT>::evaluateResidual()
+  int TransmissionLine<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    // input
-    f_[0] = y_[8];
-    f_[1] = y_[9];
-
-    f_[2] = y_[10];
-    f_[3] = y_[11];
-    // ouput
-    f_[4] = -y_[8];
-    f_[5] = -y_[9];
-
-    f_[6] = -y_[10];
-    f_[7] = -y_[11];
-
     // Voltage drop accross terminals
     ScalarT V1re = y_[0] - y_[4];
     ScalarT V1im = y_[1] - y_[5];
@@ -111,6 +98,25 @@ namespace GridKit
     // row2
     f_[10] = YReMat_ * (V2re - V1re) - (YImMatOff_ * V1im + YImMatDi_ * V2im) - y_[10];
     f_[11] = YReMat_ * (V2im - V1im) + (YImMatOff_ * V1re + YImMatDi_ * V2re) - y_[11];
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int TransmissionLine<ScalarT, IdxT>::evaluateExternalResidual()
+  {
+    // input
+    f_[0] = y_[8];
+    f_[1] = y_[9];
+
+    f_[2] = y_[10];
+    f_[3] = y_[11];
+    // ouput
+    f_[4] = -y_[8];
+    f_[5] = -y_[9];
+
+    f_[6] = -y_[10];
+    f_[7] = -y_[11];
 
     return 0;
   }
