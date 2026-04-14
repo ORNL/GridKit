@@ -24,14 +24,6 @@ namespace GridKit
 
     CircuitComponent() = default;
 
-    ~CircuitComponent()
-    {
-      if (connection_nodes_ != nullptr)
-      {
-        delete[] connection_nodes_;
-      }
-    };
-
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
      */
@@ -70,12 +62,7 @@ namespace GridKit
      */
     int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
     {
-      if (connection_nodes_ == nullptr)
-      {
-        connection_nodes_ = new IdxT[static_cast<size_t>(size_)];
-      }
-
-      connection_nodes_[local_index] = global_index;
+      connection_nodes_[static_cast<size_t>(local_index)] = global_index;
       return 0;
     }
 
@@ -107,6 +94,8 @@ namespace GridKit
       jacobian_coo_rows_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+
+      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
@@ -403,11 +392,11 @@ namespace GridKit
     }
 
   protected:
-    size_t         n_extern_;
-    size_t         n_intern_;
-    std::set<IdxT> extern_indices_;
+    size_t                  n_extern_;
+    size_t                  n_intern_;
+    std::set<IdxT>          extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-    IdxT*          connection_nodes_ = nullptr;
+    std::unique_ptr<IdxT[]> connection_nodes_;
 
   protected:
     IdxT size_{0};
