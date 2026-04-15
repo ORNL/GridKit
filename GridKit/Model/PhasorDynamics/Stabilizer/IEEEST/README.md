@@ -18,7 +18,7 @@ Notes:
 ## Model Parameters
 
 Symbol | Units | Description | Typical Value | Note
------- | ----- | ----------- | ----
+------ | ----- | ----------- | -------------- | ----
 $A_1$ | [s] | Notch filter denominator coefficient | 1.013
 $A_2$ | [s²] | Notch filter denominator coefficient | 0.013
 $A_3$ | [s] | Notch filter denominator coefficient | 0.0
