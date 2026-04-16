@@ -14,13 +14,13 @@ namespace GridKit
     {
       using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
       monitor_->set(Variable::Vr, [this]
-                    { return Vr(); });
+                    { return v(0); });
       monitor_->set(Variable::Vi, [this]
-                    { return Vi(); });
+                    { return v(1); });
       monitor_->set(Variable::Vm, [this]
-                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+                    { return std::sqrt(v(0) * v(0) + v(1) * v(1)); });
       monitor_->set(Variable::Va, [this]
-                    { return std::atan2(Vi(), Vr()); });
+                    { return std::atan2(v(1), v(0)); });
     }
 
     template <typename ScalarT, typename IdxT>

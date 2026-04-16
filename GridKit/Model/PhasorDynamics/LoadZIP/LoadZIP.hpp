@@ -101,22 +101,22 @@ namespace GridKit
 
       ScalarT& Vr()
       {
-        return bus_->Vr();
+        return bus_->v(0);
       }
 
       ScalarT& Vi()
       {
-        return bus_->Vi();
+        return bus_->v(1);
       }
 
       ScalarT& Ir()
       {
-        return bus_->Ir();
+        return bus_->i(0);
       }
 
       ScalarT& Ii()
       {
-        return bus_->Ii();
+        return bus_->i(1);
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;

@@ -53,44 +53,29 @@ namespace GridKit
         return BusTypeT::DEFAULT;
       }
 
-      virtual ScalarT& Vr() override final
+      virtual IdxT count() const override final
       {
-        return y_[0];
+        return 2;
       }
 
-      virtual const ScalarT& Vr() const override final
+      virtual ScalarT& v(IdxT k) override final
       {
-        return y_[0];
+        return y_[static_cast<size_t>(k)];
       }
 
-      virtual ScalarT& Vi() override final
+      virtual const ScalarT& v(IdxT k) const override final
       {
-        return y_[1];
+        return y_[static_cast<size_t>(k)];
       }
 
-      virtual const ScalarT& Vi() const override final
+      virtual ScalarT& i(IdxT k) override final
       {
-        return y_[1];
+        return f_[static_cast<size_t>(k)];
       }
 
-      virtual ScalarT& Ir() override final
+      virtual const ScalarT& i(IdxT k) const override final
       {
-        return f_[0];
-      }
-
-      virtual const ScalarT& Ir() const override final
-      {
-        return f_[0];
-      }
-
-      virtual ScalarT& Ii() override final
-      {
-        return f_[1];
-      }
-
-      virtual const ScalarT& Ii() const override final
-      {
-        return f_[1];
+        return f_[static_cast<size_t>(k)];
       }
 
     private:

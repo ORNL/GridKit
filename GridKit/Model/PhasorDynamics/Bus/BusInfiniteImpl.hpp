@@ -37,7 +37,7 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite(ScalarT Vr, ScalarT Vi)
-      : Vr_(Vr), Vi_(Vi)
+      : v_{Vr, Vi}
     {
       size_ = 0;
     }
@@ -56,8 +56,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite(const DataT& data)
       : BusBase<ScalarT, IdxT>(data),
-        Vr_(data.Vr0),
-        Vi_(data.Vi0)
+        v_{ScalarT(data.Vr0), ScalarT(data.Vi0)}
     {
       size_ = 0;
     }
@@ -109,8 +108,8 @@ namespace GridKit
      *
      * Infinite bus does not compute residuals, so here we just reset
      * current values to zero. Components connected to the infinite bus
-     * will add their currents to Ir_ and Ii_. The resultant will be slack
-     * current that the infinite bus has to pick up.
+     * will add their currents to i_[0] and i_[1]. The resultant will be
+     * the slack current that the infinite bus has to pick up.
      *
      * @warning This implementation assumes bus residuals are always evaluated
      * _before_ component model residuals.
@@ -119,8 +118,8 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusInfinite<ScalarT, IdxT>::evaluateResidual()
     {
-      Ir_ = 0.0;
-      Ii_ = 0.0;
+      i_[0] = 0.0;
+      i_[1] = 0.0;
       return 0;
     }
 

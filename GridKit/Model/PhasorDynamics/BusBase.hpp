@@ -73,14 +73,21 @@ namespace GridKit
         msa = max_steps_;
       }
 
-      virtual ScalarT&       Vr()       = 0;
-      virtual const ScalarT& Vr() const = 0;
-      virtual ScalarT&       Vi()       = 0;
-      virtual const ScalarT& Vi() const = 0;
-      virtual ScalarT&       Ir()       = 0;
-      virtual const ScalarT& Ir() const = 0;
-      virtual ScalarT&       Ii()       = 0;
-      virtual const ScalarT& Ii() const = 0;
+      /// @brief Number of terminal slots exposed by this bus.
+      ///
+      /// Phasor-domain buses expose 2 slots (real and imaginary components of
+      /// terminal voltage and current). Future EMT-domain buses will expose 3
+      /// slots (abc phases). Branch models consult this value at allocate()
+      /// time to verify structural compatibility with connected buses.
+      virtual IdxT count() const = 0;
+
+      /// @brief Access terminal voltage slot @p k.
+      virtual ScalarT&       v(IdxT k)       = 0;
+      virtual const ScalarT& v(IdxT k) const = 0;
+
+      /// @brief Access terminal current-balance residual slot @p k.
+      virtual ScalarT&       i(IdxT k)       = 0;
+      virtual const ScalarT& i(IdxT k) const = 0;
 
       std::vector<ScalarT>& y() override
       {

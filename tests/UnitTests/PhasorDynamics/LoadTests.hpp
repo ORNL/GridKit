@@ -64,8 +64,8 @@ namespace GridKit
         load.allocate();
         load.evaluateResidual();
 
-        success *= isEqual(bus.Ir(), Ir);
-        success *= isEqual(bus.Ii(), Ii);
+        success *= isEqual(bus.i(0), Ir);
+        success *= isEqual(bus.i(1), Ii);
 
         return success.report(__func__);
       }
@@ -90,7 +90,7 @@ namespace GridKit
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus.Ir(), bus.Ii()};
+        std::vector<DependencyTracking::Variable>                residuals{bus.i(0), bus.i(1)};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X);
 
         /// Compare dependencies computed automatically to the ones computed analytically

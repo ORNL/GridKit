@@ -95,10 +95,10 @@ namespace GridKit
         auto* bus0 = system->getBus(0);
         auto* bus1 = system->getBus(1);
 
-        success *= isEqual(bus0->Ir(), Ir0);
-        success *= isEqual(bus0->Ii(), Ii0);
-        success *= isEqual(bus1->Ir(), Ir1);
-        success *= isEqual(bus1->Ii(), Ii1);
+        success *= isEqual(bus0->i(0), Ir0);
+        success *= isEqual(bus0->i(1), Ii0);
+        success *= isEqual(bus1->i(0), Ir1);
+        success *= isEqual(bus1->i(1), Ii1);
 
         delete system;
         system = nullptr;
@@ -143,10 +143,10 @@ namespace GridKit
         system.initialize();
         system.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
-        success *= isEqual(bus2.Ir(), Ir2);
-        success *= isEqual(bus2.Ii(), Ii2);
+        success *= isEqual(bus1.i(0), Ir1);
+        success *= isEqual(bus1.i(1), Ii1);
+        success *= isEqual(bus2.i(0), Ir2);
+        success *= isEqual(bus2.i(1), Ii2);
 
         return success.report(__func__);
       }

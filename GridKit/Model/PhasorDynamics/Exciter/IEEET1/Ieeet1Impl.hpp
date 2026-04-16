@@ -210,8 +210,8 @@ namespace GridKit
         }
 
         // Terminal Voltage
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
+        ScalarT vreal = bus_->v(0);
+        ScalarT vimag = bus_->v(1);
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
         // Saturation at the initial operating point
@@ -369,8 +369,8 @@ namespace GridKit
         }
 
         // Bus voltages
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        wb_[0] = bus_->v(0);
+        wb_[1] = bus_->v(1);
 
         // Residual evaluation
         evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());

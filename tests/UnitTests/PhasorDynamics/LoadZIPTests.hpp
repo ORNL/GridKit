@@ -71,13 +71,13 @@ namespace GridKit
 
         load.evaluateResidual();
 
-        success *= isEqual(bus.Ir(), Ir);
-        success *= isEqual(bus.Ii(), Ii);
+        success *= isEqual(bus.i(0), Ir);
+        success *= isEqual(bus.i(1), Ii);
 
-        if (!isEqual(bus.Ir(), Ir) || !isEqual(bus.Ii(), Ii))
+        if (!isEqual(bus.i(0), Ir) || !isEqual(bus.i(1), Ii))
         {
-          std::cout << "Expected Ir: " << Ir << ", Obtained Ir: " << bus.Ir() << "\n";
-          std::cout << "Expected Ii: " << Ii << ", Obtained Ii: " << bus.Ii() << "\n";
+          std::cout << "Expected Ir: " << Ir << ", Obtained Ir: " << bus.i(0) << "\n";
+          std::cout << "Expected Ii: " << Ii << ", Obtained Ii: " << bus.i(1) << "\n";
         }
 
         return success.report(__func__);

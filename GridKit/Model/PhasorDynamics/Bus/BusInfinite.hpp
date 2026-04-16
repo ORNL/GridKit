@@ -47,56 +47,34 @@ namespace GridKit
         return BusTypeT::SLACK;
       }
 
-      virtual ScalarT& Vr() override final
+      virtual IdxT count() const override final
       {
-        return Vr_;
+        return 2;
       }
 
-      virtual const ScalarT& Vr() const override final
+      virtual ScalarT& v(IdxT k) override final
       {
-        return Vr_;
+        return v_[static_cast<size_t>(k)];
       }
 
-      virtual ScalarT& Vi() override final
+      virtual const ScalarT& v(IdxT k) const override final
       {
-        return Vi_;
+        return v_[static_cast<size_t>(k)];
       }
 
-      virtual const ScalarT& Vi() const override final
+      virtual ScalarT& i(IdxT k) override final
       {
-        return Vi_;
+        return i_[static_cast<size_t>(k)];
       }
 
-      virtual ScalarT& Ir() override final
+      virtual const ScalarT& i(IdxT k) const override final
       {
-        return Ir_;
-      }
-
-      virtual const ScalarT& Ir() const override final
-      {
-        return Ir_;
-      }
-
-      virtual ScalarT& Ii() override final
-      {
-        return Ii_;
-      }
-
-      virtual const ScalarT& Ii() const override final
-      {
-        return Ii_;
+        return i_[static_cast<size_t>(k)];
       }
 
     private:
-      ScalarT Vr_{0.0};
-      ScalarT Vi_{0.0};
-      ScalarT Ir_{0.0};
-      ScalarT Ii_{0.0};
-
-      ScalarT VrB_{0.0};
-      ScalarT ViB_{0.0};
-      ScalarT IrB_{0.0};
-      ScalarT IiB_{0.0};
+      ScalarT v_[2]{};
+      ScalarT i_[2]{};
     };
 
   } // namespace PhasorDynamics

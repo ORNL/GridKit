@@ -71,10 +71,10 @@ namespace GridKit
         branch.allocate();
         branch.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
-        success *= isEqual(bus2.Ir(), Ir2);
-        success *= isEqual(bus2.Ii(), Ii2);
+        success *= isEqual(bus1.i(0), Ir1);
+        success *= isEqual(bus1.i(1), Ii1);
+        success *= isEqual(bus2.i(0), Ir2);
+        success *= isEqual(bus2.i(1), Ii2);
 
         return success.report(__func__);
       }
@@ -106,7 +106,7 @@ namespace GridKit
         branch.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                    ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        std::vector<DependencyTracking::Variable>                residuals{bus1.i(0), bus1.i(1), bus2.i(0), bus2.i(1)};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B);
 
         /// Compare dependencies computed automatically to the ones computed analytically
@@ -156,14 +156,14 @@ namespace GridKit
         branch.setR(R);
         bus1.evaluateResidual(); // <- set Ir1 to zero
         branch.evaluateResidual();
-        success *= isEqual(bus1.Ir(), res_R);
+        success *= isEqual(bus1.i(0), res_R);
         branch.setR(zero);
 
         // Test setting branch series reactance
         branch.setX(X);
         bus1.evaluateResidual(); // <- set Ir1 to zero
         branch.evaluateResidual();
-        success *= isEqual(bus1.Ir(), res_X);
+        success *= isEqual(bus1.i(0), res_X);
         branch.setX(zero);
         return success.report(__func__);
 
@@ -171,14 +171,14 @@ namespace GridKit
         branch.setG(G);
         bus1.evaluateResidual(); // <- set Ir1 to zero
         branch.evaluateResidual();
-        success *= isEqual(bus1.Ir(), res_G);
+        success *= isEqual(bus1.i(0), res_G);
         branch.setG(zero);
 
         // Test setting branch shunt charging
         branch.setB(B);
         bus1.evaluateResidual(); // <- set Ir1 to zero
         branch.evaluateResidual();
-        success *= isEqual(bus1.Ir(), res_B);
+        success *= isEqual(bus1.i(0), res_B);
         branch.setB(zero);
 
         return success.report(__func__);

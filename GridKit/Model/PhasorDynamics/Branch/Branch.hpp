@@ -115,42 +115,42 @@ namespace GridKit
 
       ScalarT& Vr1()
       {
-        return bus1_->Vr();
+        return bus1_->v(0);
       }
 
       ScalarT& Vi1()
       {
-        return bus1_->Vi();
+        return bus1_->v(1);
       }
 
       ScalarT& Ir1()
       {
-        return bus1_->Ir();
+        return bus1_->i(0);
       }
 
       ScalarT& Ii1()
       {
-        return bus1_->Ii();
+        return bus1_->i(1);
       }
 
       ScalarT& Vr2()
       {
-        return bus2_->Vr();
+        return bus2_->v(0);
       }
 
       ScalarT& Vi2()
       {
-        return bus2_->Vi();
+        return bus2_->v(1);
       }
 
       ScalarT& Ir2()
       {
-        return bus2_->Ir();
+        return bus2_->i(0);
       }
 
       ScalarT& Ii2()
       {
-        return bus2_->Ii();
+        return bus2_->i(1);
       }
 
     public:
