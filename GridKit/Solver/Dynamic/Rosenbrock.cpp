@@ -101,7 +101,7 @@ namespace Integrator
    * @todo Right now, the step numbers for \ref rejections and \ref skip_lu_steps are impossible to tell apart from the different simulations.
    */
   template <class ScalarT, typename IdxT>
-  Rosenbrock<ScalarT, IdxT>::Stats::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
+  typename Rosenbrock<ScalarT, IdxT>::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
   {
     rejections.insert(rejections.end(), other.rejections.begin(), other.rejections.end());
     skip_lu_steps.insert(skip_lu_steps.end(), other.skip_lu_steps.begin(), other.skip_lu_steps.end());
@@ -297,7 +297,7 @@ namespace Integrator
     if (tab_.order > 2)
     {
       dense_coeff_ = std::make_unique<std::unique_ptr<State>[]>(tab_.order - 2);
-      for (size_t i = 0; i < tab_.order - 2; i++)
+      for (size_t i = 0; i < static_cast<size_t>(tab_.order - 2); i++)
       {
         dense_coeff_[i] = std::make_unique<State>(size);
         BUBBLE_FAIL(dense_coeff_[i]->allocate(memspace_));
@@ -848,14 +848,14 @@ namespace Integrator
   {
     if (tab_.order > 2)
     {
-      for (size_t j = 0; j < tab_.order - 2; j++)
+      for (size_t j = 0; j < static_cast<size_t>(tab_.order - 2); j++)
       {
         BUBBLE_FAIL(dense_coeff_[j]->setToZero(memspace_));
       }
 
       for (size_t i = 0; i < tab_.num_stages; i++)
       {
-        for (size_t j = 0; j < tab_.order - 2; j++)
+        for (size_t j = 0; j < static_cast<size_t>(tab_.order - 2); j++)
         {
           vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], workspace_.stages_[i].get(), dense_coeff_[j].get(), memspace_);
         }
@@ -900,7 +900,7 @@ namespace Integrator
     {
       BUBBLE_FAIL(y_interp_->copyFromExternal(dense_coeff_[tab_.order - 3].get(), memspace_, memspace_));
 
-      for (size_t i = 1; i < tab_.order - 2; i++)
+      for (size_t i = 1; i < static_cast<size_t>(tab_.order - 2); i++)
       {
         vector_handler_.scal(theta, y_interp_.get(), memspace_);
         vector_handler_.axpy(1.0, dense_coeff_[tab_.order - 3 - i].get(), y_interp_.get(), memspace_);
