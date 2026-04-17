@@ -8,5 +8,6 @@
 #include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>

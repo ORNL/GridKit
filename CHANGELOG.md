@@ -20,7 +20,7 @@
 - Added clang formatting pre-commit.
 - CMake fixes.
 - Fixed warnings, memory leaks, and failed asserts.
-- Added Tgov1 example. 
+- Added Tgov1 example.
 - Added 10 generator example.
 - Improved data structures.
 - Removed dead code.
@@ -50,6 +50,7 @@
 - Added phasor dynamics application to generalize examples
 - Added LoadZIP model component type.
 - Added component model developer checklist to a README file.
+- Added IEEEST Stabilizer Model
 
 ## v0.1
 

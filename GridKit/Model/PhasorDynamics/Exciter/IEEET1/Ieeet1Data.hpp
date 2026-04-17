@@ -40,6 +40,7 @@ namespace GridKit
         bus,   ///< Unique ID of the terminal bus
         speed, ///< Unique ID of the generator speed signal
         efd,   ///< Unique ID of the output efd signal
+        vs,    ///< Unique ID of the stabilizer output signal (optional)
       };
 
       /// Variables able to be monitored for a IEEET1 Exciter model
