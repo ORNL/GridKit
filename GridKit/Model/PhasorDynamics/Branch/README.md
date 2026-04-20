@@ -4,6 +4,12 @@ Transmission lines and different types of transformers (traditional, Load
 Tap-Changing transformers (LTC) and Phase Angle Regulators (PARs)) can be
 modeled with a common branch model.
 
+Concrete branch models derive from the abstract `BranchBase` and are
+constructed through `BranchFactory`, dispatching on `BranchData::BranchType`.
+The LINE type documented below is the phasor $`\pi`$-model and is currently
+the only implemented branch. LUMPED_EMT and TRANSFORMER types are reserved
+for future implementation.
+
 The most common circuit that is used to represent the transmission line model
 is $`\pi`$ circuit as shown in Figure 1. The positive flow direction is into
 buses. Commonly used convention is to define positive direction to be from
@@ -81,7 +87,7 @@ None.
 \end{aligned}
 ```
 
-# Model Outputs
+## Model Outputs
 
 Real and imaginary current at the branch's two buses
 are model variables of the branch model: $I_{r1}$, $I_{i1}$, $I_{r2}$, 
@@ -110,7 +116,7 @@ where the complex power is defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
 
 Real and reactive power are oriented leaving the branch (i.e. entering the bus).
 
-# Transformer Branch Model
+## Transformer Branch Model
 
 **Note: Transformer model not yet implemented**
 

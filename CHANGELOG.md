@@ -51,6 +51,8 @@
 - Added LoadZIP model component type.
 - Added component model developer checklist to a README file.
 - Added IEEEST Stabilizer Model
+- Added `BranchBase` abstract class and `BranchFactory` to support additional branch types (only LINE phasor $`\pi`$-model currently implemented).
+- Generalized Bus terminal voltage and current accessors.
 
 ## v0.1
 
