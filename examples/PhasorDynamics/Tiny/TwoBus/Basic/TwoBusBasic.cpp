@@ -60,6 +60,7 @@ int main()
   data.branch[0].parameters[BranchParameters::X] = 0.1;
   data.branch[0].parameters[BranchParameters::G] = 0.0;
   data.branch[0].parameters[BranchParameters::B] = 0.0;
+  data.branch[0].branch_type                     = BranchData<real_type, index_type>::BranchType::LINE;
 
   // Set generator data
   data.genrou.resize(1);

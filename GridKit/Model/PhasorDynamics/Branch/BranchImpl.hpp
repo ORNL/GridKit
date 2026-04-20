@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
@@ -28,16 +29,13 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(0.0),
+      : R_(0.0),
         X_(0.01),
         G_(0.0),
-        B_(0.0),
-        bus1_id_(0),
-        bus2_id_(0)
+        B_(0.0)
     {
-      size_ = 0;
+      this->ports_ = {bus1, bus2};
+      size_        = 0;
       setDerivedParams();
     }
 
@@ -60,27 +58,22 @@ namespace GridKit
                                   RealT     X,
                                   RealT     G,
                                   RealT     B)
-      : bus1_(bus1),
-        bus2_(bus2),
-        R_(R),
+      : R_(R),
         X_(X),
         G_(G),
-        B_(B),
-        bus1_id_(0),
-        bus2_id_(0)
+        B_(B)
     {
+      this->ports_ = {bus1, bus2};
       setDerivedParams();
     }
 
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data)
-      : bus1_(bus1),
-        bus2_(bus2),
-        monitor_(std::make_unique<MonitorT>(data))
+      : monitor_(std::make_unique<MonitorT>(data))
     {
+      this->ports_ = {bus1, bus2};
       initializeParameters(data);
       initializeMonitor();
-
       size_ = 0;
       setDerivedParams();
     }
@@ -107,12 +100,48 @@ namespace GridKit
       return 0;
     }
 
+    template <class ScalarT, typename IdxT>
+    int Branch<ScalarT, IdxT>::setBranchID(IdxT branch_id)
+    {
+      branch_id_ = branch_id;
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Branch<ScalarT, IdxT>::verifyPorts() const
+    {
+      if (this->portCount() != 2)
+      {
+        throw std::runtime_error(
+            "Branch requires exactly 2 ports, got "
+            + std::to_string(this->portCount()));
+      }
+
+      for (IdxT k = 0; k < this->portCount(); ++k)
+      {
+        if (!this->ports_[static_cast<size_t>(k)])
+        {
+          throw std::runtime_error(
+              "Branch port " + std::to_string(k) + " is null");
+        }
+        if (this->ports_[static_cast<size_t>(k)]->count() != 2)
+        {
+          throw std::runtime_error(
+              "Branch requires port width 2, but port " + std::to_string(k)
+              + " has width "
+              + std::to_string(this->ports_[static_cast<size_t>(k)]->count()));
+        }
+      }
+      return 0;
+    }
+
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::allocate()
     {
+      this->verifyPorts();
       // std::cout << "Allocate Branch..." << std::endl;
 
       wb_.resize(2);
@@ -273,16 +302,6 @@ namespace GridKit
       if (data.parameters.contains(model_data_type::Parameters::B))
       {
         B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus1))
-      {
-        bus1_id_ = data.ports.at(model_data_type::Ports::bus1);
-      }
-
-      if (data.ports.contains(model_data_type::Ports::bus2))
-      {
-        bus2_id_ = data.ports.at(model_data_type::Ports::bus2);
       }
     }
 

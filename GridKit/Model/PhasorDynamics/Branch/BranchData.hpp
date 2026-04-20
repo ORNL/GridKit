@@ -63,6 +63,17 @@ namespace GridKit
       using Parameters           = BranchParameters;
       using Ports                = BranchPorts;
       using MonitorableVariables = BranchMonitorableVariables;
+
+      /// @brief Concrete branch kind this data configures.
+      enum class BranchType
+      {
+        INVALID,
+        LINE,        ///< Phasor pi-model (Branch)
+        LUMPED_EMT,  ///< reserved, not yet implemented
+        TRANSFORMER, ///< reserved, not yet implemented
+      };
+
+      BranchType branch_type{BranchType::LINE};
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

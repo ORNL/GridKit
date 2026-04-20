@@ -13,6 +13,7 @@
 #include <GridKit/ScalarTraits.hpp>
 
 // Include all components
+#include <GridKit/Model/PhasorDynamics/Branch/BranchFactory.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 
 namespace GridKit
@@ -120,7 +121,7 @@ namespace GridKit
             bus2_index = branchdata.ports.at(BranchData<ScalarT, IdxT>::Ports::bus2);
           }
 
-          auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index), getBus(bus2_index), branchdata);
+          auto* branch = BranchFactory<ScalarT, IdxT>::create(branchdata, getBus(bus1_index), getBus(bus2_index));
           addComponent(branch);
         }
 

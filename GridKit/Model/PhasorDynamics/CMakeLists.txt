@@ -11,6 +11,7 @@ gridkit_add_library(phasor_dynamics_core
     SystemModelData.cpp
   HEADERS
     BusBase.hpp
+    BranchBase.hpp
     Component.hpp
     ComponentData.hpp
     ComponentLibrary.hpp

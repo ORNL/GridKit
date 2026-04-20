@@ -117,6 +117,7 @@ int main()
   data.branch[0].parameters[BranchParameters::X] = 0.21;
   data.branch[0].parameters[BranchParameters::G] = 0.0;
   data.branch[0].parameters[BranchParameters::B] = 0.1;
+  data.branch[0].branch_type                     = BranchData<real_type, index_type>::BranchType::LINE;
 
   // Branch 0-2
   data.branch[1].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
@@ -125,6 +126,7 @@ int main()
   data.branch[1].parameters[BranchParameters::X] = 0.15;
   data.branch[1].parameters[BranchParameters::G] = 0.0;
   data.branch[1].parameters[BranchParameters::B] = 0.12;
+  data.branch[1].branch_type                     = BranchData<real_type, index_type>::BranchType::LINE;
 
   // Branch 1-2
   data.branch[2].ports[BranchPorts::bus1]        = data.bus[1].bus_id;
@@ -133,6 +135,7 @@ int main()
   data.branch[2].parameters[BranchParameters::X] = 0.27;
   data.branch[2].parameters[BranchParameters::G] = 0.0;
   data.branch[2].parameters[BranchParameters::B] = 0.45;
+  data.branch[2].branch_type                     = BranchData<real_type, index_type>::BranchType::LINE;
 
   // Set generator data
   data.genclassical.resize(2);

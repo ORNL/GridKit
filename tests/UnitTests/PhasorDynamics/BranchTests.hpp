@@ -1,5 +1,7 @@
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
@@ -180,6 +182,37 @@ namespace GridKit
         branch.evaluateResidual();
         success *= isEqual(bus1.i(0), res_B);
         branch.setB(zero);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome verifyPortsThrowsOnNullPort()
+      {
+        TestStatus success = true;
+
+        auto* bus1 = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
+
+        PhasorDynamics::Branch<ScalarT, IdxT>* branch =
+            new PhasorDynamics::Branch<ScalarT, IdxT>(bus1, nullptr);
+
+        bool        threw = false;
+        std::string what_msg;
+        try
+        {
+          branch->allocate();
+        }
+        catch (const std::runtime_error& e)
+        {
+          threw    = true;
+          what_msg = e.what();
+        }
+
+        success *= threw;
+        success *= (what_msg.find("port 1") != std::string::npos);
+        success *= (what_msg.find("is null") != std::string::npos);
+
+        delete branch;
+        delete bus1;
 
         return success.report(__func__);
       }

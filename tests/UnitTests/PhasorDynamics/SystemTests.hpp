@@ -79,6 +79,7 @@ namespace GridKit
         data.branch[0].parameters[BranchParameters::X] = 4.0;
         data.branch[0].parameters[BranchParameters::G] = 0.2;
         data.branch[0].parameters[BranchParameters::B] = 1.2;
+        data.branch[0].branch_type                     = PhasorDynamics::BranchData<ScalarT, IdxT>::BranchType::LINE;
 
         // Create an empty system model
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);
@@ -202,6 +203,7 @@ namespace GridKit
         data.branch[0].parameters[BranchParameters::X] = 4.0;
         data.branch[0].parameters[BranchParameters::G] = 0.2;
         data.branch[0].parameters[BranchParameters::B] = 1.2;
+        data.branch[0].branch_type                     = PhasorDynamics::BranchData<ScalarT, IdxT>::BranchType::LINE;
 
         // Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(data);

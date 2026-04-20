@@ -7,7 +7,9 @@
 
 set(_install_headers
   Branch.hpp
-  BranchData.hpp)
+  BranchData.hpp
+  BranchDataJSONParser.hpp
+  BranchFactory.hpp)
 
 if(GRIDKIT_ENABLE_ENZYME)
   gridkit_add_library(phasor_dynamics_branch

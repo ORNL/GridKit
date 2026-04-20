@@ -9,6 +9,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
+#include <GridKit/Model/PhasorDynamics/BranchBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -38,7 +39,7 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>
+    class Branch : public BranchBase<ScalarT, IdxT>
     {
       using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::size_;
@@ -57,6 +58,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_vals_buffer_;
       using Component<ScalarT, IdxT>::variable_indices_;
       using Component<ScalarT, IdxT>::residual_indices_;
+      using BranchBase<ScalarT, IdxT>::ports_;
+      using BranchBase<ScalarT, IdxT>::branch_id_;
 
     public:
       using RealT           = typename Component<ScalarT, IdxT>::RealT;
@@ -75,6 +78,8 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
+      virtual int setBranchID(IdxT) override final;
+      virtual int verifyPorts() const override final;
 
       virtual int verify() const override final
       {
@@ -115,42 +120,42 @@ namespace GridKit
 
       ScalarT& Vr1()
       {
-        return bus1_->v(0);
+        return this->port(0)->v(0);
       }
 
       ScalarT& Vi1()
       {
-        return bus1_->v(1);
+        return this->port(0)->v(1);
       }
 
       ScalarT& Ir1()
       {
-        return bus1_->i(0);
+        return this->port(0)->i(0);
       }
 
       ScalarT& Ii1()
       {
-        return bus1_->i(1);
+        return this->port(0)->i(1);
       }
 
       ScalarT& Vr2()
       {
-        return bus2_->v(0);
+        return this->port(1)->v(0);
       }
 
       ScalarT& Vi2()
       {
-        return bus2_->v(1);
+        return this->port(1)->v(1);
       }
 
       ScalarT& Ir2()
       {
-        return bus2_->i(0);
+        return this->port(1)->i(0);
       }
 
       ScalarT& Ii2()
       {
-        return bus2_->i(1);
+        return this->port(1)->i(1);
       }
 
     public:
@@ -160,14 +165,10 @@ namespace GridKit
       __attribute__((always_inline)) inline int evaluateBusResidual22(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
-      bus_type* bus1_;
-      bus_type* bus2_;
-      RealT     R_{0.0};
-      RealT     X_{0.0};
-      RealT     G_{0.0};
-      RealT     B_{0.0};
-      IdxT      bus1_id_{0};
-      IdxT      bus2_id_{0};
+      RealT R_{0.0};
+      RealT X_{0.0};
+      RealT G_{0.0};
+      RealT B_{0.0};
 
       /* Derived parameters */
       RealT b_;

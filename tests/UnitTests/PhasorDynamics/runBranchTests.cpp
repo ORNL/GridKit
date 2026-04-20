@@ -12,6 +12,7 @@ int main()
   result += test.accessors();
   result += test.residual();
   result += test.jacobian();
+  result += test.verifyPortsThrowsOnNullPort();
 
   return result.summary();
 }

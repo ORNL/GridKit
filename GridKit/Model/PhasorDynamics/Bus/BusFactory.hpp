@@ -32,7 +32,10 @@ namespace GridKit
           bus = new BusInfinite<ScalarT, IdxT>(data);
           break;
         default:
-          // Throw exception
+          // TODO: align with BranchFactory::create — throw std::runtime_error on
+          // unrecognized bus_type instead of logging and returning nullptr, so
+          // misconfiguration fails at construction rather than propagating a
+          // null pointer through SystemModel::build.
           std::cout << "Bus type " << static_cast<int>(data.bus_type) << " unrecognized.\n";
         }
         return bus;

@@ -5,6 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Model/PhasorDynamics/Branch/BranchDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
