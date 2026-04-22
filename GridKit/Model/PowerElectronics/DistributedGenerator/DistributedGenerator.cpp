@@ -43,17 +43,17 @@ namespace GridKit
   {
     assert(refframe_ || node_ref_->size() == 1);
     assert(node_bus_->size() == 2);
-    // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
+    // internals [Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi, \delta_i]
     // externals [\omega_ref, vba_out, vbb_out]
     size_     = 16;
     n_intern_ = refframe_ ? 12 : 13;
     n_extern_ = refframe_ ? 4 : 3;
     idc_      = id;
-    nnz_      = refframe_ ? 80 : 78;
+    nnz_      = refframe_ ? 77 : 78;
 
     if (refframe_)
     {
-      extern_indices_ = {0, 1, 2, 3};
+      extern_indices_ = {0, 1, 2, 15};
     }
     else
     {
@@ -91,54 +91,56 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    ScalarT omega = wb_ - mp_ * y_[4];
+    ScalarT omega = wb_ - mp_ * y_[3];
 
     // Take incoming voltages to current rotator reference frame
-    ScalarT vbd_in = std::cos(y_[3]) * y_[1] + std::sin(y_[3]) * y_[2];
-    ScalarT vbq_in = -std::sin(y_[3]) * y_[1] + std::cos(y_[3]) * y_[2];
+    ScalarT vbd_in = std::cos(y_[15]) * y_[1] + std::sin(y_[15]) * y_[2];
+    ScalarT vbq_in = -std::sin(y_[15]) * y_[1] + std::cos(y_[15]) * y_[2];
 
     // ### Internal Componenets ##
-    // Rotor difference angle
-    f_[3] = -yp_[3] + omega - y_[0];
-
     // P and Q equations
-    f_[4] = -yp_[4] + wc_ * (y_[12] * y_[14] + y_[13] * y_[15] - y_[4]);
-    f_[5] = -yp_[5] + wc_ * (-y_[12] * y_[15] + y_[13] * y_[14] - y_[5]);
+    f_[3] = -yp_[3] + wc_ * (y_[11] * y_[13] + y_[12] * y_[14] - y_[3]);
+    f_[4] = -yp_[4] + wc_ * (-y_[11] * y_[14] + y_[12] * y_[13] - y_[4]);
 
     // Voltage control
-    ScalarT vod_star = Vn_ - nq_ * y_[5];
+    ScalarT vod_star = Vn_ - nq_ * y_[4];
     ScalarT voq_star = static_cast<ScalarT>(0.0);
 
-    f_[6] = -yp_[6] + vod_star - y_[12];
-    f_[7] = -yp_[7] + voq_star - y_[13];
+    f_[5] = -yp_[5] + vod_star - y_[11];
+    f_[6] = -yp_[6] + voq_star - y_[12];
 
-    ScalarT ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6];
-    ScalarT ilq_star = F_ * y_[15] + wb_ * Cf_ * y_[12] + Kpv_ * (voq_star - y_[13]) + Kiv_ * y_[7];
+    ScalarT ild_star = F_ * y_[13] - wb_ * Cf_ * y_[12] + Kpv_ * (vod_star - y_[11]) + Kiv_ * y_[5];
+    ScalarT ilq_star = F_ * y_[14] + wb_ * Cf_ * y_[11] + Kpv_ * (voq_star - y_[12]) + Kiv_ * y_[6];
 
     // Current control
-    f_[8] = -yp_[8] + ild_star - y_[10];
-    f_[9] = -yp_[9] + ilq_star - y_[11];
+    f_[7] = -yp_[7] + ild_star - y_[9];
+    f_[8] = -yp_[8] + ilq_star - y_[10];
 
-    ScalarT vid_star = -wb_ * Lf_ * y_[11] + Kpc_ * (ild_star - y_[10]) + Kic_ * y_[8];
-    ScalarT viq_star = wb_ * Lf_ * y_[10] + Kpc_ * (ilq_star - y_[11]) + Kic_ * y_[9];
+    ScalarT vid_star = -wb_ * Lf_ * y_[10] + Kpc_ * (ild_star - y_[9]) + Kic_ * y_[7];
+    ScalarT viq_star = wb_ * Lf_ * y_[9] + Kpc_ * (ilq_star - y_[10]) + Kic_ * y_[8];
 
     // Output LC Filter
-    f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] + omega * y_[11] + (vid_star - y_[12]) / Lf_;
-    f_[11] = -yp_[11] - (rLf_ / Lf_) * y_[11] - omega * y_[10] + (viq_star - y_[13]) / Lf_;
+    f_[9]  = -yp_[9] - (rLf_ / Lf_) * y_[9] + omega * y_[10] + (vid_star - y_[11]) / Lf_;
+    f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] - omega * y_[9] + (viq_star - y_[12]) / Lf_;
 
-    f_[12] = -yp_[12] + omega * y_[13] + (y_[10] - y_[14]) / Cf_;
-    f_[13] = -yp_[13] - omega * y_[12] + (y_[11] - y_[15]) / Cf_;
+    f_[11] = -yp_[11] + omega * y_[12] + (y_[9] - y_[13]) / Cf_;
+    f_[12] = -yp_[12] - omega * y_[11] + (y_[10] - y_[14]) / Cf_;
 
     // Output Connector
-    f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] + omega * y_[15] + (y_[12] - vbd_in) / Lc_;
-    f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - omega * y_[14] + (y_[13] - vbq_in) / Lc_;
+    f_[13] = -yp_[13] - (rLc_ / Lc_) * y_[13] + omega * y_[14] + (y_[11] - vbd_in) / Lc_;
+    f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] - omega * y_[13] + (y_[12] - vbq_in) / Lc_;
+
+    // Rotor difference angle
+    if (!refframe_)
+      f_[15] = -yp_[15] + omega - y_[0];
+
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    ScalarT omega = wb_ - mp_ * y_[4];
+    ScalarT omega = wb_ - mp_ * y_[3];
     // ref common ref motor angle
     if (refframe_)
     {
@@ -151,8 +153,8 @@ namespace GridKit
 
     // output
     // current transformed to common frame
-    f_[1] = std::cos(y_[3]) * y_[14] - std::sin(y_[3]) * y_[15];
-    f_[2] = std::sin(y_[3]) * y_[14] + std::cos(y_[3]) * y_[15];
+    f_[1] = std::cos(y_[15]) * y_[13] - std::sin(y_[15]) * y_[14];
+    f_[2] = std::sin(y_[15]) * y_[13] + std::cos(y_[15]) * y_[14];
     return 0;
   }
 
@@ -195,39 +197,34 @@ namespace GridKit
     // Create dF/dy
     // r = 1
 
-    ctemp = {3, 14, 15};
+    ctemp = {13, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(1);
-    valtemp = {-sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[14]) - cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[15]),
-               cos(static_cast<RealT>(y_[3])),
-               -sin(static_cast<RealT>(y_[3]))};
+    valtemp = {
+        cos(static_cast<RealT>(y_[15])),
+        -sin(static_cast<RealT>(y_[15])),
+        -sin(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[13]) - cos(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[14]),
+    };
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 2
 
-    ctemp = {3, 14, 15};
+    ctemp = {13, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(2);
-    valtemp = {cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[14]) - sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[15]),
-               sin(static_cast<RealT>(y_[3])),
-               cos(static_cast<RealT>(y_[3]))};
-    this->setJacValues(rtemp, ctemp, valtemp);
-
-    // r = 3
-
-    ctemp = {0, 3, 4};
-    rtemp.clear();
-    for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(3);
-    valtemp = {-1.0, -alpha_, -mp_};
+    valtemp = {
+        sin(static_cast<RealT>(y_[15])),
+        cos(static_cast<RealT>(y_[15])),
+        cos(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[13]) - sin(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[14]),
+    };
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 0
     if (refframe_)
     {
-      ctemp = {0, 4};
+      ctemp = {0, 3};
       rtemp.clear();
       for (size_t i = 0; i < ctemp.size(); i++)
         rtemp.push_back(0);
@@ -235,140 +232,155 @@ namespace GridKit
       this->setJacValues(rtemp, ctemp, valtemp);
     }
 
+    // r = 3
+    ctemp = {3, 11, 12, 13, 14};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++)
+      rtemp.push_back(3);
+    valtemp = {-wc_ - alpha_,
+               wc_ * static_cast<RealT>(y_[13]),
+               wc_ * static_cast<RealT>(y_[14]),
+               wc_ * static_cast<RealT>(y_[11]),
+               wc_ * static_cast<RealT>(y_[12])};
+    this->setJacValues(rtemp, ctemp, valtemp);
+
     // r = 4
-    ctemp = {4, 12, 13, 14, 15};
+    ctemp = {4, 11, 12, 13, 14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(4);
     valtemp = {-wc_ - alpha_,
-               wc_ * static_cast<RealT>(y_[14]),
-               wc_ * static_cast<RealT>(y_[15]),
+               -wc_ * static_cast<RealT>(y_[14]),
+               wc_ * static_cast<RealT>(y_[13]),
                wc_ * static_cast<RealT>(y_[12]),
-               wc_ * static_cast<RealT>(y_[13])};
+               -wc_ * static_cast<RealT>(y_[11])};
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 5
-    ctemp = {5, 12, 13, 14, 15};
+    ctemp = {4, 5, 11};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(5);
-    valtemp = {-wc_ - alpha_,
-               -wc_ * static_cast<RealT>(y_[15]),
-               wc_ * static_cast<RealT>(y_[14]),
-               wc_ * static_cast<RealT>(y_[13]),
-               -wc_ * static_cast<RealT>(y_[12])};
-    this->setJacValues(rtemp, ctemp, valtemp);
-
-    // r = 6
-    ctemp = {5, 6, 12};
-    rtemp.clear();
-    for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(6);
     valtemp = {-nq_, -alpha_, -1.0};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 7
-    ctemp = {7, 13};
+    // r = 6
+    ctemp = {6, 12};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(7);
+      rtemp.push_back(6);
     valtemp = {-alpha_, -1.0};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 8
-    ctemp = {5, 6, 8, 10, 12, 13, 14};
+    // r = 7
+    ctemp = {4, 5, 7, 9, 11, 12, 13};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(8);
+      rtemp.push_back(7);
     valtemp = {-Kpv_ * nq_, Kiv_, -alpha_, -1.0, -Kpv_, -Cf_ * wb_, F_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 9
-    ctemp = {7, 9, 11, 12, 13, 15};
+    // r = 8
+    ctemp = {6, 8, 10, 11, 12, 14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(9);
+      rtemp.push_back(8);
     valtemp = {Kiv_, -alpha_, -1.0, Cf_ * wb_, -Kpv_, F_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 10
-    ctemp = {4, 5, 6, 8, 10, 11, 12, 13, 14};
+    // r = 9
+    ctemp = {3, 4, 5, 7, 9, 10, 11, 12, 13};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(10);
-    valtemp = {-mp_ * static_cast<RealT>(y_[11]),
+      rtemp.push_back(9);
+    valtemp = {-mp_ * static_cast<RealT>(y_[10]),
                -(Kpc_ * Kpv_ * nq_) / Lf_,
                (Kpc_ * Kiv_) / Lf_,
                Kic_ / Lf_,
                -(Kpc_ + rLf_) / Lf_ - alpha_,
-               -mp_ * static_cast<RealT>(y_[4]),
+               -mp_ * static_cast<RealT>(y_[3]),
                -(Kpc_ * Kpv_ + 1.0) / Lf_,
                -(Cf_ * Kpc_ * wb_) / Lf_,
                (F_ * Kpc_) / Lf_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 11
-    ctemp = {4, 7, 9, 10, 11, 12, 13, 15};
+    // r = 10
+    ctemp = {3, 6, 8, 9, 10, 11, 12, 14};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(11);
-    valtemp = {mp_ * static_cast<RealT>(y_[10]),
+      rtemp.push_back(10);
+    valtemp = {mp_ * static_cast<RealT>(y_[9]),
                (Kiv_ * Kpc_) / Lf_,
                Kic_ / Lf_,
-               mp_ * static_cast<RealT>(y_[4]),
+               mp_ * static_cast<RealT>(y_[3]),
                -(Kpc_ + rLf_) / Lf_ - alpha_,
                (Cf_ * Kpc_ * wb_) / Lf_,
                -(Kpc_ * Kpv_ + 1.0) / Lf_,
                (F_ * Kpc_) / Lf_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 12
-    ctemp = {4, 10, 12, 13, 14};
+    // r = 11
+    ctemp = {3, 9, 11, 12, 13};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(12);
-    valtemp = {-mp_ * static_cast<RealT>(y_[13]),
+      rtemp.push_back(11);
+    valtemp = {-mp_ * static_cast<RealT>(y_[12]),
                1.0 / Cf_,
                -alpha_,
-               wb_ - mp_ * static_cast<RealT>(y_[4]),
+               wb_ - mp_ * static_cast<RealT>(y_[3]),
                -1.0 / Cf_};
     this->setJacValues(rtemp, ctemp, valtemp);
 
+    // r = 12
+    ctemp = {3, 10, 11, 12, 14};
+    rtemp.clear();
+    for (size_t i = 0; i < ctemp.size(); i++)
+      rtemp.push_back(12);
+    valtemp = {mp_ * static_cast<RealT>(y_[11]), 1.0 / Cf_, -wb_ + mp_ * static_cast<RealT>(y_[3]), -alpha_, -1.0 / Cf_};
+    this->setJacValues(rtemp, ctemp, valtemp);
+
     // r = 13
-    ctemp = {4, 11, 12, 13, 15};
+    ctemp = {1, 2, 3, 11, 13, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(13);
-    valtemp = {mp_ * static_cast<RealT>(y_[12]), 1.0 / Cf_, -wb_ + mp_ * static_cast<RealT>(y_[4]), -alpha_, -1.0 / Cf_};
+    valtemp = {
+        (1.0 / Lc_) * -cos(static_cast<RealT>(y_[15])),
+        (1.0 / Lc_) * -sin(static_cast<RealT>(y_[15])),
+        -mp_ * static_cast<RealT>(y_[14]),
+        1.0 / Lc_,
+        -rLc_ / Lc_ - alpha_,
+        wb_ - mp_ * static_cast<RealT>(y_[3]),
+        (1.0 / Lc_) * (sin(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[1]) - cos(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[2])),
+    };
     this->setJacValues(rtemp, ctemp, valtemp);
 
     // r = 14
-    ctemp = {1, 2, 3, 4, 12, 14, 15};
+    ctemp = {1, 2, 3, 12, 13, 14, 15};
     rtemp.clear();
     for (size_t i = 0; i < ctemp.size(); i++)
       rtemp.push_back(14);
-    valtemp = {(1.0 / Lc_) * -cos(static_cast<RealT>(y_[3])),
-               (1.0 / Lc_) * -sin(static_cast<RealT>(y_[3])),
-               (1.0 / Lc_) * (sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[1]) - cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[2])),
-               -mp_ * static_cast<RealT>(y_[15]),
-               1.0 / Lc_,
-               -rLc_ / Lc_ - alpha_,
-               wb_ - mp_ * static_cast<RealT>(y_[4])};
+    valtemp = {
+        (1.0 / Lc_) * sin(static_cast<RealT>(y_[15])),
+        (1.0 / Lc_) * -cos(static_cast<RealT>(y_[15])),
+        mp_ * static_cast<RealT>(y_[13]),
+        1.0 / Lc_,
+        -wb_ + mp_ * static_cast<RealT>(y_[3]),
+        -rLc_ / Lc_ - alpha_,
+        (1.0 / Lc_) * (cos(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[1]) + sin(static_cast<RealT>(y_[15])) * static_cast<RealT>(y_[2])),
+    };
     this->setJacValues(rtemp, ctemp, valtemp);
 
-    // r = 15
-    ctemp = {1, 2, 3, 4, 13, 14, 15};
-    rtemp.clear();
-    for (size_t i = 0; i < ctemp.size(); i++)
-      rtemp.push_back(15);
-    valtemp = {(1.0 / Lc_) * sin(static_cast<RealT>(y_[3])),
-               (1.0 / Lc_) * -cos(static_cast<RealT>(y_[3])),
-               (1.0 / Lc_) * (cos(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[1]) + sin(static_cast<RealT>(y_[3])) * static_cast<RealT>(y_[2])),
-               mp_ * static_cast<RealT>(y_[14]),
-               1.0 / Lc_,
-               -wb_ + mp_ * static_cast<RealT>(y_[4]),
-               -rLc_ / Lc_ - alpha_};
-    this->setJacValues(rtemp, ctemp, valtemp);
+    if (!refframe_)
+    {
+      // r = 15
+      ctemp = {0, 3, 15};
+      rtemp.clear();
+      for (size_t i = 0; i < ctemp.size(); i++)
+        rtemp.push_back(15);
+      valtemp = {-1.0, -mp_, -alpha_};
+      this->setJacValues(rtemp, ctemp, valtemp);
+    }
 
     return 0;
   }
@@ -384,7 +396,7 @@ namespace GridKit
 
     if (refframe_)
     {
-      this->setExternalConnectionNodes(3, INVALID_INDEX<IdxT>);
+      this->setExternalConnectionNodes(15, INVALID_INDEX<IdxT>);
     }
 
     return 0;

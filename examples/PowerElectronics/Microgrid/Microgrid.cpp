@@ -177,14 +177,14 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel->yp()[2]      = parms1.Vn_;
   sysmodel->yp()[4]      = parms1.Kpv_ * parms1.Vn_;
   sysmodel->yp()[6]      = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
-  sysmodel->yp()[12 + 3] = parms1.Vn_;
-  sysmodel->yp()[12 + 5] = parms1.Kpv_ * parms1.Vn_;
-  sysmodel->yp()[12 + 7] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
+  sysmodel->yp()[12 + 2] = parms1.Vn_;
+  sysmodel->yp()[12 + 4] = parms1.Kpv_ * parms1.Vn_;
+  sysmodel->yp()[12 + 6] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
   for (size_t i = 2; i < 4; i++)
   {
-    sysmodel->yp()[13 * i - 1 + 3] = parms2.Vn_;
-    sysmodel->yp()[13 * i - 1 + 5] = parms2.Kpv_ * parms2.Vn_;
-    sysmodel->yp()[13 * i - 1 + 7] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
+    sysmodel->yp()[13 * i - 1 + 2] = parms2.Vn_;
+    sysmodel->yp()[13 * i - 1 + 4] = parms2.Kpv_ * parms2.Vn_;
+    sysmodel->yp()[13 * i - 1 + 6] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
   }
 
   // since the intial P_com = 0
@@ -254,7 +254,6 @@ int main(int /* argc */, char const** /* argv */)
       -2.668928293656362e-06,
       6.321941919221522e+01,
       -3.509200178595996e+01,
-      -7.555954467454730e-03,
       2.297580486511343e+04,
       8.742028429066131e+03,
       3.710079564796484e-02,
@@ -267,7 +266,7 @@ int main(int /* argc */, char const** /* argv */)
       3.465673854181523e-05,
       6.232933406188410e+01,
       -2.371564475187742e+01,
-      -8.273939686941580e-02,
+      -7.555954467454730e-03,
       1.727775042678524e+04,
       1.649365247247288e+04,
       3.116555157570849e-02,
@@ -280,7 +279,7 @@ int main(int /* argc */, char const** /* argv */)
       -1.496407194199739e-04,
       4.861823504694532e+01,
       -4.642797132602495e+01,
-      -8.445727984408551e-02,
+      -8.273939686941580e-02,
       1.727723725566433e+04,
       9.182386962936238e+03,
       3.024959333190777e-02,
@@ -293,6 +292,7 @@ int main(int /* argc */, char const** /* argv */)
       1.076423957830039e-04,
       4.718938116520511e+01,
       -2.507094256286497e+01,
+      -8.445727984408551e-02,
       -1.881248349415025e+01,
       2.114714832305742e+01,
       4.329946674909793e+01,
