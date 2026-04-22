@@ -88,6 +88,7 @@ namespace GridKit
 
         int setGridKitComponentID(IdxT) override final;
         int allocate() override final;
+        int setSignalNodes() override final;
         int verify() const override final;
         int initialize() override final;
         int tagDifferentiable() override final;

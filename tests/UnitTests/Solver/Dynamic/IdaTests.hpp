@@ -110,32 +110,32 @@ namespace GridKit
       {
       }
 
-      std::vector<ScalarT>& y() override
+      std::span<ScalarT> y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override
+      std::span<const ScalarT> y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override
+      std::span<ScalarT> yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override
+      std::span<const ScalarT> yp() const override
       {
         return yp_;
       }
 
-      std::vector<bool>& tag() override
+      std::span<int> tag() override
       {
         return tag_;
       }
 
-      const std::vector<bool>& tag() const override
+      std::span<const int> tag() const override
       {
         return tag_;
       }
@@ -248,7 +248,7 @@ namespace GridKit
     protected:
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
+      std::vector<int>     tag_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 

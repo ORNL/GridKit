@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -109,14 +110,14 @@ namespace GridKit
       virtual void setTolerances(RealT& rtol, RealT& atol) const = 0;
       virtual void setMaxSteps(IdxT& msa) const                  = 0;
 
-      virtual std::vector<ScalarT>&       y()       = 0;
-      virtual const std::vector<ScalarT>& y() const = 0;
+      virtual std::span<ScalarT>       y()       = 0;
+      virtual std::span<const ScalarT> y() const = 0;
 
-      virtual std::vector<ScalarT>&       yp()       = 0;
-      virtual const std::vector<ScalarT>& yp() const = 0;
+      virtual std::span<ScalarT>       yp()       = 0;
+      virtual std::span<const ScalarT> yp() const = 0;
 
-      virtual std::vector<bool>&       tag()       = 0;
-      virtual const std::vector<bool>& tag() const = 0;
+      virtual std::span<int>       tag()       = 0;
+      virtual std::span<const int> tag() const = 0;
 
       virtual std::vector<ScalarT>&       yB()       = 0;
       virtual const std::vector<ScalarT>& yB() const = 0;

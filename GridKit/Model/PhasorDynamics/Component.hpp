@@ -77,32 +77,32 @@ namespace GridKit
         msa = max_steps_;
       }
 
-      std::vector<ScalarT>& y() override
+      std::span<ScalarT> y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override
+      std::span<const ScalarT> y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override
+      std::span<ScalarT> yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override
+      std::span<const ScalarT> yp() const override
       {
         return yp_;
       }
 
-      std::vector<bool>& tag() override
+      std::span<int> tag() override
       {
         return tag_;
       }
 
-      const std::vector<bool>& tag() const override
+      std::span<const int> tag() const override
       {
         return tag_;
       }
@@ -132,6 +132,23 @@ namespace GridKit
       IdxT getGridKitComponentID() const
       {
         return gridkit_component_id_;
+      }
+
+      void setVariableStartIndex(IdxT global_index)
+      {
+        variable_start_ = global_index;
+      }
+
+      void setVariableRefs(std::span<ScalarT> y, std::span<ScalarT> yp, std::span<int> tag)
+      {
+        y_   = y.subspan(variable_start_, size_);
+        yp_  = yp.subspan(variable_start_, size_);
+        tag_ = tag.subspan(variable_start_, size_);
+      }
+
+      virtual int setSignalNodes()
+      {
+        return 0;
       }
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
@@ -170,12 +187,13 @@ namespace GridKit
       IdxT              gridkit_component_id_{0};
       IdxT              size_{0};
       IdxT              nnz_{0};
+      IdxT              variable_start_{0};
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
+      std::span<ScalarT>   y_;
+      std::span<ScalarT>   yp_;
+      std::span<int>       tag_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
       std::vector<ScalarT> wb_;

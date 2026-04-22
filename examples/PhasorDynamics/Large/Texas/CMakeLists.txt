@@ -5,7 +5,9 @@ target_link_libraries(texas
     GridKit::phasor_dynamics_core
 	GridKit::phasor_dynamics_components
 	GridKit::phasor_dynamics_signal
-	GridKit::solvers_dyn)
+	GridKit::solvers_dyn
+    GridKit::testing
+    )
 install(TARGETS texas RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(texas.json)
 

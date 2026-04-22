@@ -119,9 +119,9 @@ namespace GridKit
         // Resize component model data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
         f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
+        // y_.resize(size);
+        // yp_.resize(size);
+        // tag_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -143,12 +143,17 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        return 0;
+      }
+
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::setSignalNodes()
+      {
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
           signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], &(this->getVariableIndex(7)));
         }
-
         return 0;
       }
 

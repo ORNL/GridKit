@@ -341,7 +341,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   idas->runSimulation(t_final);
 
-  std::vector<real_type>& yfinal = sys_model->y();
+  std::span<real_type> yfinal = sys_model->y();
 
   if (debug_output)
   {

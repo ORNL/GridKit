@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <set>
+#include <span>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -82,34 +83,34 @@ namespace GridKit
       virtual ScalarT&       Ii()       = 0;
       virtual const ScalarT& Ii() const = 0;
 
-      std::vector<ScalarT>& y() override
+      std::span<ScalarT> y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override
+      std::span<const ScalarT> y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override
+      std::span<ScalarT> yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override
+      std::span<const ScalarT> yp() const override
       {
         return yp_;
       }
 
-      std::vector<bool>& tag() override
+      std::span<int> tag() override
       {
-        return tag_;
+        throw std::runtime_error("not implemented");
       }
 
-      const std::vector<bool>& tag() const override
+      std::span<const int> tag() const override
       {
-        return tag_;
+        throw std::runtime_error("not implemented");
       }
 
       MatrixT& getJacobian() override
@@ -127,6 +128,18 @@ namespace GridKit
       virtual const IdxT busID() const
       {
         return bus_id_;
+      }
+
+      void setVariableStartIndex(IdxT global_index)
+      {
+        variable_start_ = global_index;
+      }
+
+      void setVariableRefs(std::span<ScalarT> y, std::span<ScalarT> yp, std::span<int> tag)
+      {
+        y_   = y.subspan(variable_start_, size_);
+        yp_  = yp.subspan(variable_start_, size_);
+        tag_ = tag.subspan(variable_start_, size_);
       }
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
@@ -168,15 +181,16 @@ namespace GridKit
 
       IdxT              size_{0};
       IdxT              nnz_{0};
+      IdxT              variable_start_{0};
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
+      std::span<ScalarT>   y_;
+      std::span<ScalarT>   yp_;
+      std::span<int>       tag_;
       std::vector<ScalarT> f_;
 
       MatrixT J_;

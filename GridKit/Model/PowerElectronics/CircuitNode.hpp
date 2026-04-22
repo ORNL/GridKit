@@ -162,7 +162,7 @@ namespace GridKit
 
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
-    std::vector<bool>    tag_;
+    std::vector<int>    tag_;
     std::vector<ScalarT> f_;
 
     MatrixT J_;
@@ -222,32 +222,32 @@ namespace GridKit
       msa = max_steps_;
     }
 
-    std::vector<ScalarT>& y() final
+    std::span<ScalarT> y() final
     {
       return y_;
     }
 
-    const std::vector<ScalarT>& y() const final
+    std::span<const ScalarT> y() const final
     {
       return y_;
     }
 
-    std::vector<ScalarT>& yp() final
+    std::span<ScalarT> yp() final
     {
       return yp_;
     }
 
-    const std::vector<ScalarT>& yp() const final
+    std::span<const ScalarT> yp() const final
     {
       return yp_;
     }
 
-    std::vector<bool>& tag() final
+    std::span<int> tag() final
     {
       return tag_;
     }
 
-    const std::vector<bool>& tag() const final
+    std::span<const int> tag() const final
     {
       return tag_;
     }

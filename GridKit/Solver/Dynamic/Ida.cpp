@@ -99,7 +99,7 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxNumSteps");
 
       // Tag differential variables
-      std::vector<bool>& tag = model_->tag();
+      std::span<int> tag = model_->tag();
       if (static_cast<IdxT>(tag.size()) == model_->size())
       {
         tag_ = N_VClone(yy_);
@@ -884,7 +884,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
+    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::span<ScalarT> y)
     {
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, y.size(), y.begin());
@@ -897,10 +897,10 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(std::span<const ScalarT> x, N_Vector y)
     {
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy(x.cbegin(), x.cend(), ydata);
+      std::copy(x.begin(), x.end(), ydata);
     }
 
     /**
@@ -910,10 +910,10 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(const std::span<const int> x, N_Vector y)
     {
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy(x.cbegin(), x.cend(), ydata);
+      std::copy(x.begin(), x.end(), ydata);
     }
 
     /**

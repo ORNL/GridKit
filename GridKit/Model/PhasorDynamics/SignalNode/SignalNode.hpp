@@ -81,32 +81,32 @@ namespace GridKit
         msa = max_steps_;
       }
 
-      std::vector<ScalarT>& y() override final
+      std::span<ScalarT> y() override final
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override final
+      std::span<const ScalarT> y() const override final
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override final
+      std::span<ScalarT> yp() override final
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override final
+      std::span<const ScalarT> yp() const override final
       {
         return yp_;
       }
 
-      std::vector<bool>& tag() override final
+      std::span<int> tag() override final
       {
         return tag_;
       }
 
-      const std::vector<bool>& tag() const override final
+      std::span<const int> tag() const override final
       {
         return tag_;
       }
@@ -139,7 +139,7 @@ namespace GridKit
 
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
+      std::vector<int>    tag_;
       std::vector<ScalarT> f_;
 
       MatrixT J_;

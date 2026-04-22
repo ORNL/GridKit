@@ -30,30 +30,55 @@ namespace GridKit
      *
      */
     template <class ScalarT, typename IdxT>
-    class SystemModel : public PhasorDynamics::Component<ScalarT, IdxT>
+    class SystemModel : public Model::Evaluator<ScalarT, IdxT>
     {
       using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
       using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
       using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using MatrixT        = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-      using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::size_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::nnz_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::time_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::alpha_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::y_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::f_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::J_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::residual_indices_;
+    protected:
+      IdxT              gridkit_component_id_{0};
+      IdxT              size_{0};
+      IdxT              nnz_{0};
+      std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
+      std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
+
+      std::vector<ScalarT> y_;
+      std::vector<ScalarT> yp_;
+      std::vector<int>     tag_;
+      std::vector<ScalarT> f_;
+      // std::vector<ScalarT> g_;
+      // std::vector<ScalarT> wb_;
+      // std::vector<ScalarT> h_;
+
+      MatrixT J_;
+      // IdxT*   J_rows_buffer_{nullptr};
+      // IdxT*   J_cols_buffer_{nullptr};
+      // RealT*  J_vals_buffer_{nullptr};
+
+      RealT time_;
+      RealT alpha_;
+
+      RealT rel_tol_;
+      RealT abs_tol_;
+
+      IdxT max_steps_;
 
     public:
+      virtual void setTolerances(RealT& rtol, RealT& atol) const override
+      {
+        rtol = rel_tol_;
+        atol = abs_tol_;
+      }
+
+      virtual void setMaxSteps(IdxT& msa) const override
+      {
+        msa = max_steps_;
+      }
+
       /**
        * @brief Constructor for the system model
        */
@@ -335,11 +360,11 @@ namespace GridKit
        * @note Should default to 0. The system model could be used as a
        * component in a larger system that would need to set this value.
        */
-      int setGridKitComponentID(IdxT component_id) override
-      {
-        gridkit_component_id_ = component_id;
-        return 0;
-      }
+      // int setGridKitComponentID(IdxT component_id) override
+      // {
+      //   gridkit_component_id_ = component_id;
+      //   return 0;
+      // }
 
       /**
        * @brief Allocate buses, components, and system objects.
@@ -359,6 +384,7 @@ namespace GridKit
         for (const auto& bus : buses_)
         {
           bus->allocate();
+          bus->setVariableStartIndex(size_);
           for (IdxT j = 0; j < bus->size(); ++j)
           {
             bus->setVariableIndex(j, size_ + j);
@@ -371,6 +397,7 @@ namespace GridKit
         for (const auto& component : components_)
         {
           component->allocate();
+          component->setVariableStartIndex(size_);
           for (IdxT j = 0; j < component->size(); ++j)
           {
             component->setVariableIndex(j, size_ + j);
@@ -392,6 +419,16 @@ namespace GridKit
         {
           this->setVariableIndex(j, j);
           this->setResidualIndex(j, j);
+        }
+
+        for (const auto& bus : buses_)
+        {
+          bus->setVariableRefs(y_, yp_, tag_);
+        }
+        for (const auto& component : components_)
+        {
+          component->setVariableRefs(y_, yp_, tag_);
+          component->setSignalNodes();
         }
 
         // Verify component configuration
@@ -426,7 +463,8 @@ namespace GridKit
        * This method accumulates and returns the number of errors given by
        * components. It should return 0 when all is well.
        */
-      int verify() const override
+      // int verify() const override
+      int verify() const
       {
         int ret = 0;
 
@@ -492,14 +530,14 @@ namespace GridKit
           bus->initialize();
         }
 
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            y_[bus->getVariableIndex(j)]  = bus->y()[j];
-            yp_[bus->getVariableIndex(j)] = bus->yp()[j];
-          }
-        }
+        // for (const auto& bus : buses_)
+        // {
+        //   for (IdxT j = 0; j < bus->size(); ++j)
+        //   {
+        //     y_[bus->getVariableIndex(j)]  = bus->y()[j];
+        //     yp_[bus->getVariableIndex(j)] = bus->yp()[j];
+        //   }
+        // }
 
         // Initialize components
         for (const auto& component : components_)
@@ -507,14 +545,14 @@ namespace GridKit
           component->initialize();
         }
 
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            y_[component->getVariableIndex(j)]  = component->y()[j];
-            yp_[component->getVariableIndex(j)] = component->yp()[j];
-          }
-        }
+        // for (const auto& component : components_)
+        // {
+        //   for (IdxT j = 0; j < component->size(); ++j)
+        //   {
+        //     y_[component->getVariableIndex(j)]  = component->y()[j];
+        //     yp_[component->getVariableIndex(j)] = component->yp()[j];
+        //   }
+        // }
 
         return 0;
       }
@@ -566,19 +604,19 @@ namespace GridKit
         for (const auto& bus : buses_)
         {
           bus->tagDifferentiable();
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            tag_[bus->getVariableIndex(j)] = bus->tag()[j];
-          }
+          // for (IdxT j = 0; j < bus->size(); ++j)
+          // {
+          //   tag_[bus->getVariableIndex(j)] = bus->tag()[j];
+          // }
         }
 
         for (const auto& component : components_)
         {
           component->tagDifferentiable();
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            tag_[component->getVariableIndex(j)] = component->tag()[j];
-          }
+          // for (IdxT j = 0; j < component->size(); ++j)
+          // {
+          //   tag_[component->getVariableIndex(j)] = component->tag()[j];
+          // }
         }
 
         return 0;
@@ -607,22 +645,22 @@ namespace GridKit
         // Update variables and evaluate component residuals
         for (const auto& bus : buses_)
         {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[bus->getVariableIndex(j)];
-            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
-          }
+          // for (IdxT j = 0; j < bus->size(); ++j)
+          // {
+          //   bus->y()[j]  = y_[bus->getVariableIndex(j)];
+          //   bus->yp()[j] = yp_[bus->getVariableIndex(j)];
+          // }
 
           bus->evaluateResidual();
         }
 
         for (const auto& component : components_)
         {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[component->getVariableIndex(j)];
-            component->yp()[j] = yp_[component->getVariableIndex(j)];
-          }
+          // for (IdxT j = 0; j < component->size(); ++j)
+          // {
+          //   component->y()[j]  = y_[component->getVariableIndex(j)];
+          //   component->yp()[j] = yp_[component->getVariableIndex(j)];
+          // }
 
           component->evaluateResidual();
         }
@@ -828,22 +866,22 @@ namespace GridKit
        */
       void updateVariables()
       {
-        for (const auto& bus : buses_)
-        {
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            bus->y()[j]  = y_[bus->getVariableIndex(j)];
-            bus->yp()[j] = yp_[bus->getVariableIndex(j)];
-          }
-        }
-        for (const auto& component : components_)
-        {
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            component->y()[j]  = y_[component->getVariableIndex(j)];
-            component->yp()[j] = yp_[component->getVariableIndex(j)];
-          }
-        }
+        // for (const auto& bus : buses_)
+        // {
+        //   for (IdxT j = 0; j < bus->size(); ++j)
+        //   {
+        //     bus->y()[j]  = y_[bus->getVariableIndex(j)];
+        //     bus->yp()[j] = yp_[bus->getVariableIndex(j)];
+        //   }
+        // }
+        // for (const auto& component : components_)
+        // {
+        //   for (IdxT j = 0; j < component->size(); ++j)
+        //   {
+        //     component->y()[j]  = y_[component->getVariableIndex(j)];
+        //     component->yp()[j] = yp_[component->getVariableIndex(j)];
+        //   }
+        // }
       }
 
       /**
@@ -982,6 +1020,211 @@ namespace GridKit
 
       /// Variable monitor
       Model::VariableMonitorController<ScalarT> monitor_;
+
+    public:
+      virtual IdxT size() override
+      {
+        return size_;
+      }
+
+      virtual IdxT nnz() override
+      {
+        return nnz_;
+      }
+
+      std::span<ScalarT> y() override
+      {
+        return y_;
+      }
+
+      std::span<const ScalarT> y() const override
+      {
+        return y_;
+      }
+
+      std::span<ScalarT> yp() override
+      {
+        return yp_;
+      }
+
+      std::span<const ScalarT> yp() const override
+      {
+        return yp_;
+      }
+
+      std::span<int> tag() override
+      {
+        return tag_;
+      }
+
+      std::span<const int> tag() const override
+      {
+        return tag_;
+      }
+
+      std::vector<ScalarT>& getResidual() override
+      {
+        return f_;
+      }
+
+      const std::vector<ScalarT>& getResidual() const override
+      {
+        return f_;
+      }
+
+      MatrixT& getJacobian() override
+      {
+        return J_;
+      }
+
+      const MatrixT& getJacobian() const override
+      {
+        return J_;
+      }
+
+      int setVariableIndex(IdxT local_index, IdxT global_index)
+      {
+        variable_indices_[static_cast<size_t>(local_index)] = global_index;
+        return 0;
+      }
+
+      IdxT getVariableIndex(IdxT local_index) const
+      {
+        return variable_indices_[static_cast<size_t>(local_index)];
+      }
+
+      const std::vector<IdxT>& getVariableIndices() const
+      {
+        return variable_indices_;
+      }
+
+      int setResidualIndex(IdxT local_index, IdxT global_index)
+      {
+        residual_indices_[static_cast<size_t>(local_index)] = global_index;
+        return 0;
+      }
+
+      IdxT getResidualIndex(IdxT local_index) const
+      {
+        return residual_indices_[static_cast<size_t>(local_index)];
+      }
+
+      const std::vector<IdxT>& getResidualIndices() const
+      {
+        return residual_indices_;
+      }
+
+      virtual IdxT sizeQuadrature() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 0;
+      }
+
+      virtual IdxT sizeParams() override
+      {
+        throw "ERROR: Method not implemented!\n";
+        return 0;
+      }
+
+      std::vector<ScalarT>& yB() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& yB() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& ypB() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& ypB() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& param() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& param() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& param_up() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& param_up() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& param_lo() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& param_lo() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      int evaluateIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      int initializeAdjoint() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      int evaluateAdjointResidual() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      int evaluateAdjointIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& getIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& getIntegrand() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& getAdjointResidual() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& getAdjointResidual() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      std::vector<ScalarT>& getAdjointIntegrand() override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
+
+      const std::vector<ScalarT>& getAdjointIntegrand() const override
+      {
+        throw "ERROR: Method not implemented!\n";
+      }
     }; // class SystemModel
 
   } // namespace PhasorDynamics

@@ -210,7 +210,7 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<real_type>& y_val = sys.y();
+    std::span<real_type> y_val = sys.y();
 
     // Bus 1 -> +2
     // Bus 2 -> +2

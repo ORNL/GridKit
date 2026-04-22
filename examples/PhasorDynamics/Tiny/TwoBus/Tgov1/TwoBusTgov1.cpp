@@ -154,7 +154,7 @@ int main()
   // push it into output, which is updated outside the callback.
   auto output_cb = [&](real_type t)
   {
-    std::vector<scalar_type>& y_val = sys.y();
+    std::span<scalar_type> y_val = sys.y();
 
     output.push_back(OutputData{t,
                                 static_cast<real_type>(y_val[0]),

@@ -301,9 +301,9 @@ namespace GridKit
     {
       for (const auto& component : components_)
       {
-        IdxT                  size = component->size();
-        std::vector<ScalarT>& y    = component->y();
-        std::vector<ScalarT>& yp   = component->yp();
+        IdxT               size = component->size();
+        std::span<ScalarT> y    = component->y();
+        std::span<ScalarT> yp   = component->yp();
 
         for (IdxT j = 0; j < size; ++j)
         {

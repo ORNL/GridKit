@@ -316,9 +316,9 @@ namespace GridKit
       // Resize component model data
       auto size = static_cast<size_t>(size_);
       f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      tag_.resize(size);
+      // y_.resize(size);
+      // yp_.resize(size);
+      // tag_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
@@ -339,12 +339,17 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
+      return 0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Genrou<ScalarT, IdxT>::setSignalNodes()
+    {
       // Set output signals
       if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
       {
         signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
       }
-
       return 0;
     }
 

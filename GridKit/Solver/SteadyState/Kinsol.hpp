@@ -140,9 +140,9 @@ namespace AnalysisManager
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
-      static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
-      static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
-      static void copyVec(const std::vector<bool>& x, N_Vector y);
+      static void copyVec(const N_Vector x, std::span<ScalarT> y);
+      static void copyVec(std::span<const ScalarT> x, N_Vector y);
+      static void copyVec(std::span<const int> x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       inline void checkAllocation(void* v, const char* functionName);

@@ -162,9 +162,9 @@ namespace GridKit
       {
         auto size = static_cast<size_t>(size_);
         f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
+        // y_.resize(size);
+        // yp_.resize(size);
+        // tag_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 

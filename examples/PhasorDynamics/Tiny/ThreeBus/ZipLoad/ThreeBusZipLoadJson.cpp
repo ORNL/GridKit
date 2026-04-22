@@ -132,7 +132,7 @@ int main(int argc, const char* argv[])
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<real_type>& y_val = sys.y();
+    std::span<real_type> y_val = sys.y();
 
     output.push_back(OutputData{t,
                                 1 + static_cast<real_type>(y_val[7]),

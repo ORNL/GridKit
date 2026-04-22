@@ -157,17 +157,17 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, std::span<ScalarT> y)
     {
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, y.size(), y.begin());
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
+    void Kinsol<ScalarT, IdxT>::copyVec(std::span<const ScalarT> x, N_Vector y)
     {
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy_n(x.cbegin(), x.size(), ydata);
+      std::copy_n(x.begin(), x.size(), ydata);
     }
 
     template <class ScalarT, typename IdxT>

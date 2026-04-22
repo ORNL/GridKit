@@ -112,7 +112,7 @@ int main(int /* argc */, char const** /* argv */)
 
   idas.runSimulation(t_final);
 
-  std::vector<double>& yfinial = sysmodel.y();
+  std::span<double> yfinial = sysmodel.y();
 
   std::cout << "Final vector y\n";
   for (size_t i = 0; i < yfinial.size(); i++)

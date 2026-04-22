@@ -137,9 +137,9 @@ namespace GridKit
         // Allocate local component data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
         f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
+        // y_.resize(size);
+        // yp_.resize(size);
+        // tag_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -156,12 +156,17 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        return 0;
+      }
+
+      template <class ScalarT, typename IdxT>
+      int Tgov1<ScalarT, IdxT>::setSignalNodes()
+      {
         // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], &(this->getVariableIndex(2)));
         }
-
         return 0;
       }
 

@@ -158,8 +158,8 @@ int main()
   // Residual evaluation and reference Jacobian
   dg->evaluateResidual();
   dg->evaluateJacobian();
-  std::vector<double> y   = dg->y();
-  std::vector<double> yp  = dg->yp();
+  std::span<double>   y   = dg->y();
+  std::span<double>   yp  = dg->yp();
   std::vector<double> res = dg->getResidual();
 
   DenseMatrix jac_ref_dense(dg->size(), dg->size());
