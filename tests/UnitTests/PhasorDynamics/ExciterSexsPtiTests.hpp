@@ -229,9 +229,8 @@ namespace GridKit
 
         auto missing_efd = data;
         missing_efd.sexspti[0].ports.erase(SexsPtiPorts::efd);
-        success *= throws<std::out_of_range>(
-            [&]()
-            { SystemModel<ScalarT, IdxT> bad_system(missing_efd); });
+        SystemModel<ScalarT, IdxT> missing_efd_system(missing_efd);
+        success *= (missing_efd_system.verify() > 0);
 
         return success.report(__func__);
       }

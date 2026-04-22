@@ -250,24 +250,24 @@ namespace GridKit
 
         for (const auto& excitedata : data.sexspti)
         {
-          IdxT  bus_index = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::bus);
-          auto* bus_ptr   = getBus(bus_index);
-
-          IdxT  efd_index  = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::efd);
-          auto* efd_signal = getSignal(efd_index);
-
-          signal_type* vs_signal = nullptr;
-          if (excitedata.ports.contains(SexsPtiData<ScalarT, IdxT>::Ports::vs))
+          IdxT bus_index = 0;
+          if (excitedata.ports.contains(SexsPtiData<ScalarT, IdxT>::Ports::bus))
           {
-            vs_signal = getSignal(excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::vs));
+            bus_index = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::bus);
           }
 
-          auto* exciter = new SexsPti<ScalarT, IdxT>(bus_ptr, excitedata);
+          auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
 
-          exciter->getSignals().template assignSignalNode<SexsPtiInternalVariables::EFD>(efd_signal);
-          if (vs_signal != nullptr)
+          if (excitedata.ports.contains(SexsPtiData<ScalarT, IdxT>::Ports::efd))
           {
-            exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VS>(vs_signal);
+            IdxT efd = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::efd);
+            exciter->getSignals().template assignSignalNode<SexsPtiInternalVariables::EFD>(getSignal(efd));
+          }
+
+          if (excitedata.ports.contains(SexsPtiData<ScalarT, IdxT>::Ports::vs))
+          {
+            IdxT vs = excitedata.ports.at(SexsPtiData<ScalarT, IdxT>::Ports::vs);
+            exciter->getSignals().template attachSignalNode<SexsPtiExternalVariables::VS>(getSignal(vs));
           }
 
           addComponent(exciter);

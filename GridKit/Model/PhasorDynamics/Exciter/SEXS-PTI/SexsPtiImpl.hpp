@@ -123,6 +123,12 @@ namespace GridKit
           ret += 1;
         }
 
+        if (!signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        {
+          Log::error() << "SexsPti: required EFD signal is not assigned\n";
+          ret += 1;
+        }
+
         if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
         {
           if (!signals_.template isLinked<SexsPtiExternalVariables::VS>())
