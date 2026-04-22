@@ -473,9 +473,9 @@ namespace AnalysisManager
       }
 
       // Final copy out. No gaurentee last residual evaluation is final step.
-      model_->updateTime(tf, 0.0);
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
+      model_->updateTime(tf, 0.0);
 
       return retval;
     }
@@ -669,9 +669,9 @@ namespace AnalysisManager
       }
 
       // Final copy out. No gaurentee last residual evaluation is final step.
-      model_->updateTime(tf, 0.0);
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
+      model_->updateTime(tf, 0.0);
 
       return retval;
     }
@@ -752,9 +752,9 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(tres, 0.0);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
+      model->updateTime(tres, 0.0);
 
       model->evaluateResidual();
       const std::vector<ScalarT>& f = model->getResidual();
@@ -776,9 +776,9 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(t, cj);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
+      model->updateTime(t, cj);
 
       model->evaluateJacobian();
 
@@ -818,9 +818,9 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
+      model->updateTime(tt, 0.0);
 
       model->evaluateIntegrand();
       const std::vector<ScalarT>& g = model->getIntegrand();
@@ -840,11 +840,11 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
       copyVec(yyB, model->yB());
       copyVec(ypB, model->ypB());
+      model->updateTime(tt, 0.0);
 
       model->evaluateAdjointResidual();
       const std::vector<ScalarT>& fB = model->getAdjointResidual();
@@ -864,11 +864,11 @@ namespace AnalysisManager
     {
       GridKit::Model::Evaluator<ScalarT, IdxT>* model = static_cast<GridKit::Model::Evaluator<ScalarT, IdxT>*>(user_data);
 
-      model->updateTime(tt, 0.0);
       copyVec(yy, model->y());
       copyVec(yp, model->yp());
       copyVec(yyB, model->yB());
       copyVec(ypB, model->ypB());
+      model->updateTime(tt, 0.0);
 
       model->evaluateAdjointIntegrand();
       const std::vector<ScalarT>& gB = model->getAdjointIntegrand();
