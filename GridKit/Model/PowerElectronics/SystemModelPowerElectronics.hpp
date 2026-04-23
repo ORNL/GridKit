@@ -168,6 +168,9 @@ namespace GridKit
      * @post System model vectors allocated with size s
      * @post CSR Jacobian sparsity pattern is computed
      * @post COO->CSR mapping is computed
+     * @post Every component's \ref CircuitComponent::int_, \ref CircuitComponent::intp_, and \ref CircuitComponent::int_f_ pointers
+     * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
+     * and residuals.
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -209,11 +212,14 @@ namespace GridKit
       }
 
       {
+        // The offset for each component's internal variables in the system vector.
+        // They start at 0, and are stacked of each other.
         size_t component_internal_idx = 0;
         for (component_type* comp : components_)
         {
           comp->allocate();
 
+          // Update component internal pointers to their correct offsets
           comp->setInternalPointer(&y_[component_internal_idx]);
           comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
           comp->setInternalResidualPointer(&f_[component_internal_idx]);

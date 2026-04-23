@@ -427,8 +427,11 @@ namespace GridKit
     /// The number of non-zero elements currently inserted into the Jacobian. See \ref setJacValues()
     size_t current_jac_size_{0};
 
+    /// @brief A pointer to the internal variables of this component.
     const ScalarT* int_;
+    /// @brief A pointer to the internal derivatives of this component.
     const ScalarT* intp_;
+    /// @brief A pointer to the internal residuals of this component
     ScalarT*       int_f_;
 
     std::vector<ScalarT> y_;
