@@ -73,8 +73,11 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::intp_;
     using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::int_f_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
@@ -211,6 +214,10 @@ namespace GridKit
         {
           comp->allocate();
 
+          comp->setInternalPointer(&y_[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
+          comp->setInternalResidualPointer(&f_[component_internal_idx]);
+
           const auto& external_indices = comp->getExternIndices();
           for (size_t i = 0; i < comp->size(); i++)
           {
@@ -330,13 +337,13 @@ namespace GridKit
      */
     int distributeVectors()
     {
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
-        IdxT                  size = component->size();
-        std::vector<ScalarT>& y    = component->y();
-        std::vector<ScalarT>& yp   = component->yp();
+        std::vector<ScalarT>&   y         = component->y();
+        std::vector<ScalarT>&   yp        = component->yp();
+        const std::set<size_t>& externals = component->getExternIndices();
 
-        for (IdxT j = 0; j < size; ++j)
+        for (size_t j : externals)
         {
           if (component->getNodeConnection(j) != neg1_)
           {

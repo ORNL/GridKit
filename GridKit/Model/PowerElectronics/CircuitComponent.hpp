@@ -166,6 +166,21 @@ namespace GridKit
      */
     virtual int evaluateExternalResidual() = 0;
 
+    void setInternalPointer(const ScalarT* internals)
+    {
+      int_ = internals;
+    }
+
+    void setInternalDerivativePointer(const ScalarT* internals_p)
+    {
+      intp_ = internals_p;
+    }
+
+    void setInternalResidualPointer(ScalarT* internal_res)
+    {
+      int_f_ = internal_res;
+    }
+
   protected:
     /**
      * @brief Reset the Jacobian so it can be constructed. Helper method for \ref setJacValues().
@@ -411,6 +426,10 @@ namespace GridKit
 
     /// The number of non-zero elements currently inserted into the Jacobian. See \ref setJacValues()
     size_t current_jac_size_{0};
+
+    const ScalarT* int_;
+    const ScalarT* intp_;
+    ScalarT*       int_f_;
 
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
