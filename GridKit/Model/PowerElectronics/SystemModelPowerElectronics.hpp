@@ -388,14 +388,15 @@ namespace GridKit
           return err_code;
       }
 
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
 
-        IdxT                        size     = component->size();
-        const std::vector<ScalarT>& residual = component->getResidual();
-        for (IdxT j = 0; j < size; ++j)
+        const std::vector<ScalarT>& residual  = component->getResidual();
+        const std::set<size_t>&     externals = component->getExternIndices();
+
+        for (size_t j : externals)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)
