@@ -12,6 +12,7 @@ install(TARGETS Utilities EXPORT gridkit-targets)
 install(
   FILES
     Colors.hpp
+    Errors.hpp
     FileIO.hpp
     MapFromCOO.hpp
   DESTINATION

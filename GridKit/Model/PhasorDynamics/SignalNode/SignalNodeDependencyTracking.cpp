@@ -1,6 +1,8 @@
 /**
  * @file SignalNode model implementation.
  */
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "SignalNodeImpl.hpp"
 
 namespace GridKit

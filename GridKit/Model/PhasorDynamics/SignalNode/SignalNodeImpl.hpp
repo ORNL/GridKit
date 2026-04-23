@@ -10,45 +10,13 @@ namespace GridKit
   {
     template <class ScalarT, typename IdxT>
     SignalNode<ScalarT, IdxT>::SignalNode()
-      : size_(0)
     {
     }
 
     template <class ScalarT, typename IdxT>
     SignalNode<ScalarT, IdxT>::SignalNode(const SignalNodeData<RealT, IdxT>& data)
-      : signal_id_(data.signal_id),
-        size_(0)
+      : signal_id_(data.signal_id)
     {
-    }
-
-    template <class ScalarT, typename IdxT>
-    int SignalNode<ScalarT, IdxT>::allocate()
-    {
-      return 0;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int SignalNode<ScalarT, IdxT>::initialize()
-    {
-      return 0;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int SignalNode<ScalarT, IdxT>::tagDifferentiable()
-    {
-      return 0;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int SignalNode<ScalarT, IdxT>::evaluateResidual()
-    {
-      return 0;
-    }
-
-    template <class ScalarT, typename IdxT>
-    int SignalNode<ScalarT, IdxT>::evaluateJacobian()
-    {
-      return 0;
     }
 
     template <class ScalarT, typename IdxT>
