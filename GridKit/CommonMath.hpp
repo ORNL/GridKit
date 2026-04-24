@@ -101,7 +101,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Net Indicator function for regulator limits
+     * @brief Smooth anti-windup indicator for a limited state variable
      *
      * @tparam ScalarT - Scalar data type
      * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
@@ -109,8 +109,9 @@ namespace GridKit
      * @param[in] limit_min - Minimum limit
      * @param[in] limit_max - Maximum limit
      * @param[in] x - State variable
-     * @param[in] f - Conditional derivative of state variable
-     * @return Scalar value indicating limit activation
+     * @param[in] f - Pre-limit derivative of the state variable
+     * @return Scalar value in [0, 1]: 1 when dynamics should pass through,
+     *         0 when integration should be blocked.
      */
     template <class ScalarT, typename RealT>
     __attribute__((always_inline)) inline ScalarT indicator(
@@ -119,10 +120,12 @@ namespace GridKit
         const ScalarT x,
         const ScalarT f)
     {
-      return indicator_zero(limit_min, limit_max, f) * dsigmoid(f) + //
-             (indicator_low(limit_min, x) * sigmoid(-f) +            //
-              indicator_high(limit_max, x) * sigmoid(f))
-                 * (ONE<RealT> - dsigmoid(f));
+      ScalarT above_min = indicator_low(limit_min, x);
+      ScalarT below_max = indicator_high(limit_max, x);
+
+      return above_min * below_max +                  //
+             (ONE<RealT> - below_max) * sigmoid(-f) + //
+             (ONE<RealT> - above_min) * sigmoid(f);
     }
   } // namespace Math
 } // namespace GridKit

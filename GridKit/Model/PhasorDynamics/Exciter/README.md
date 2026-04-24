@@ -1,7 +1,7 @@
 # **Exciter Models**
 
-> [!NOTE]  
-> Only the IEEET1 Exciter is currently implemented.
+> [!NOTE]
+> IEEET1 and SEXS-PTI exciters are currently implemented.
 
 
 ## Introduction
@@ -14,3 +14,4 @@ device internal voltage.
 There are a few standard Exciter models
 - IEEE Type 1 Excitation Model (See [IEEET1](IEEET1/README.md))
 - IEEE DC1 Excitation Model (See [EXDC1](EXDC1/README.md))
+- Simplified Excitation System Model (See [SEXS-PTI](SEXS-PTI/README.md))
