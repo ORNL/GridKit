@@ -27,6 +27,10 @@ namespace GridKit
       ExciterSexsPtiTests()  = default;
       ~ExciterSexsPtiTests() = default;
 
+      // Init and saturated-limiter checks are exact algebraic identities
+      // (no iteration, sigmoid underflowed to 0/1 at the depths tested here).
+      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-14);
+
       TestOutcome constructor()
       {
         TestStatus success = true;
@@ -69,15 +73,15 @@ namespace GridKit
 
         success *= efd_node.linked();
         success *= (efd_node.getVariableIndex() == 1);
-        success *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), static_cast<ScalarT>(1.0e-12));
-        success *= isEqual(exciter.y()[0], static_cast<ScalarT>(-0.048), static_cast<ScalarT>(1.0e-12));
-        success *= isEqual(exciter.y()[1], static_cast<ScalarT>(1.2), static_cast<ScalarT>(1.0e-12));
-        success *= isEqual(exciter.y()[2], static_cast<ScalarT>(0.12), static_cast<ScalarT>(1.0e-12));
+        success *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), kTol);
+        success *= isEqual(exciter.y()[0], static_cast<ScalarT>(-0.048), kTol);
+        success *= isEqual(exciter.y()[1], static_cast<ScalarT>(1.2), kTol);
+        success *= isEqual(exciter.y()[2], static_cast<ScalarT>(0.12), kTol);
 
         const auto& f = exciter.getResidual();
         for (size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f[i], static_cast<ScalarT>(0.0), static_cast<ScalarT>(1.0e-10)))
+          if (!isEqual(f[i], static_cast<ScalarT>(0.0), kTol))
           {
             std::cout << "Non-zero SEXS-PTI residual at index " << i << ": " << f[i] << "\n";
             success = false;
@@ -115,7 +119,7 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
-        success *= isEqual(exciter.getResidual()[2], vs_value, static_cast<ScalarT>(1.0e-12));
+        success *= isEqual(exciter.getResidual()[2], vs_value, kTol);
 
         return success.report(__func__);
       }
@@ -132,32 +136,51 @@ namespace GridKit
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
         exciter.allocate();
         exciter.initialize();
-
-        exciter.y()[0]  = -1.0;
-        exciter.y()[1]  = 10.0;
-        exciter.y()[2]  = 1.0;
         exciter.yp()[0] = 0.0;
         exciter.yp()[1] = 0.0;
-        exciter.evaluateResidual();
-        auto blocked = std::abs(exciter.getResidual()[1]);
 
+        // Windup: Efd = 10 is far above Efdmax = 5 and the pre-limit
+        // derivative f = +15 drives further past the limit. The indicator
+        // saturates to 0, so residual[1] = 0 exactly.
+        exciter.y()[0] = -1.0;
+        exciter.y()[1] = 10.0;
+        exciter.y()[2] = 1.0;
+        exciter.evaluateResidual();
+        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(0.0), kTol);
+
+        // Release: same over-limit Efd, but f = -37.5 < 0 restores toward
+        // the interior. The indicator saturates to 1, so residual[1] = f.
         exciter.y()[0] = 1.0;
         exciter.y()[1] = 10.0;
         exciter.y()[2] = 0.0;
         exciter.evaluateResidual();
-        auto returning = std::abs(exciter.getResidual()[1]);
+        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(-37.5), kTol);
 
-        success *= (blocked < static_cast<ScalarT>(1.0e-8));
-        success *= (returning > static_cast<ScalarT>(1.0));
+        // Mirror (windup below Efdmin): Efd = -10 with f = -15 drives further
+        // past the lower limit. Indicator saturates to 0, residual[1] = 0.
+        exciter.y()[0] = 1.0;
+        exciter.y()[1] = -10.0;
+        exciter.y()[2] = -1.0;
+        exciter.evaluateResidual();
+        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(0.0), kTol);
 
-        // Regression guard: the limiter direction follows the SEXS g term.
-        // A small positive g should be blocked when Efd is above Efdmax.
+        // Mirror (release above Efdmin): Efd = -10 with f = +37.5 pulls back
+        // toward the interior. Indicator saturates to 1, residual[1] = f.
+        exciter.y()[0] = -1.0;
+        exciter.y()[1] = -10.0;
+        exciter.y()[2] = 0.0;
+        exciter.evaluateResidual();
+        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(37.5), kTol);
+
+        // Regression guard: Efd barely above Efdmax with a small positive f.
+        // Here the sigmoid is not fully saturated, so the residual is small
+        // but not exactly zero; it should still be orders of magnitude below
+        // f = 0.125 itself.
         exciter.y()[0] = -0.2575;
         exciter.y()[1] = 5.05;
         exciter.y()[2] = 0.0;
         exciter.evaluateResidual();
-        auto small_push_above_limit  = std::abs(exciter.getResidual()[1]);
-        success                     *= (small_push_above_limit < static_cast<ScalarT>(1.0e-5));
+        success *= (std::abs(exciter.getResidual()[1]) < static_cast<ScalarT>(1.0e-5));
 
         return success.report(__func__);
       }
@@ -261,7 +284,7 @@ namespace GridKit
         success                              *= (system.evaluateResidual() == 0);
         success                              *= isEqual(system.getResidual()[consumer_vtr_residual],
                            static_cast<ScalarT>(0.75),
-                           static_cast<ScalarT>(1.0e-12));
+                           kTol);
 
         return success.report(__func__);
       }
