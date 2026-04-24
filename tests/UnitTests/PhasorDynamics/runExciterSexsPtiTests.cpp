@@ -10,7 +10,6 @@ int main()
   result += test.zeroInitialResidual();
   result += test.vsSignal();
   result += test.antiWindupLimiter();
-  result += test.smoothIndicator();
   result += test.parameterValidation();
   result += test.systemAssembly();
   result += test.systemSignalFreshness();

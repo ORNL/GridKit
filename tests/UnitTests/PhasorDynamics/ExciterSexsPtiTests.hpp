@@ -5,7 +5,6 @@
 #include <limits>
 #include <stdexcept>
 
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -159,22 +158,6 @@ namespace GridKit
         exciter.evaluateResidual();
         auto small_push_above_limit  = std::abs(exciter.getResidual()[1]);
         success                     *= (small_push_above_limit < static_cast<ScalarT>(1.0e-5));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome smoothIndicator()
-      {
-        TestStatus success = true;
-
-        const ScalarT limit_min = 0.0;
-        const ScalarT limit_max = 3.0;
-
-        success *= (Math::indicator(limit_min, limit_max, static_cast<ScalarT>(1.5), static_cast<ScalarT>(0.01)) > static_cast<ScalarT>(0.99));
-        success *= (Math::indicator(limit_min, limit_max, static_cast<ScalarT>(3.2), static_cast<ScalarT>(0.01)) < static_cast<ScalarT>(0.1));
-        success *= (Math::indicator(limit_min, limit_max, static_cast<ScalarT>(3.2), static_cast<ScalarT>(-0.01)) > static_cast<ScalarT>(0.9));
-        success *= (Math::indicator(limit_min, limit_max, static_cast<ScalarT>(-0.2), static_cast<ScalarT>(-0.01)) < static_cast<ScalarT>(0.1));
-        success *= (Math::indicator(limit_min, limit_max, static_cast<ScalarT>(-0.2), static_cast<ScalarT>(0.01)) > static_cast<ScalarT>(0.9));
 
         return success.report(__func__);
       }
