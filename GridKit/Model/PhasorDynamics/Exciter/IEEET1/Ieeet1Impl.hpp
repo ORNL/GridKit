@@ -187,9 +187,15 @@ namespace GridKit
       /**
        * @brief Initialization of the Exciter
        *
-       * Sets/configures all of the initial values of the exciter
-       * by assuming no saturation and steady-state.
+       * Solves for a steady-state initial condition that satisfies
+       * F(y, yp=0, t=0) = 0 exactly for every residual equation.
        *
+       * Inputs:
+       *   - EFD assigned by the generator (read from y_[7]).
+       *   - Bus voltage, used to form the sensed terminal voltage Ec.
+       *   - Attached external signals (omega, V_S)
+       *
+       * Saturation is included via ksat computed from efdp and SA, SB.
        */
       template <class ScalarT, typename IdxT>
       int Ieeet1<ScalarT, IdxT>::initialize()
@@ -209,45 +215,47 @@ namespace GridKit
           efd0 = y_[7]; ///<- generator needs to be initialized first
         }
 
+        ScalarT omega{0};
+        ScalarT vs{0};
+        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
+        {
+          omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
+        }
+        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        {
+          vs = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+        }
+
         // Terminal Voltage
         ScalarT vreal = bus_->Vr();
         ScalarT vimag = bus_->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
-        // Saturation at the initial operating point
-        ScalarT efd_sat = (efd0 - SA_) * Math::sigmoid(efd0 - SA_);
-        ScalarT ksat0   = SB_ * efd_sat * efd_sat;
-        ScalarT ve0     = ksat0 * efd0;
+        ScalarT efdp    = efd0 / (ONE<RealT> + omega * Ispdlim_);
+        ScalarT efd_sat = (efdp - SA_) * Math::sigmoid(efdp - SA_);
+        ScalarT ksat    = SB_ * efd_sat * efd_sat;
+        ScalarT ve      = ksat * efdp;
+        ScalarT vr      = Ke_ * efdp + ve;
+        ScalarT vtr     = vr / Ka_;
+        ScalarT vf{0};
+        ScalarT vfx = (Kf_ / Tf_) * efdp;
 
-        // Derived from External initial values (includes saturation)
-        ScalarT vr  = Ke_ * efd0 + ve0;
-        ScalarT vfx = Kf_ / Tf_ * efd0;
-        ScalarT vtr = vr / Ka_;
+        vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
-        // Vref (setpoint = terminal + error)
-        vref_ = Ec + vtr;
+        y_[0] = Ec;   // y0 - vts  - Sensed term volt
+        y_[1] = vr;   // y1 - vr   - Voltage reg
+        y_[2] = efdp; // y2 - efdp - Efd pre mult
+        y_[3] = vfx;  // y3 - vfx  - Exciter feedback
+        y_[4] = vtr;  // y4 - vtr  - Term Volt Err
+        y_[5] = vf;   // y5 - vf   - Feedback volt
+        y_[6] = ve;   // y6 - ve   - Excit. Cntrl Volt
+        y_[7] = efd0; // y7 - efd  - Efd
+        y_[8] = ksat; // y8 - ksat - Saturation
 
-        // IVP for Internal Variables
-        y_[0] = Ec;    // y0 - vts  - Sensed term volt
-        y_[1] = vr;    // y1 - vr   - Voltage reg
-        y_[2] = efd0;  // y2 - efdp - Efd pre mult
-        y_[3] = vfx;   // y3 - vfx  - Exciter feedback
-        y_[4] = vtr;   // y4 - vtr  - Term Volt Err
-        y_[5] = 0;     // y5 - vf   - Feedback volt
-        y_[6] = ve0;   // y6 - ve   - Excit. Cntrl Volt
-        y_[7] = efd0;  // y7 - efd  - Efd
-        y_[8] = ksat0; // y8 - ksat - Saturation
-
-        // Steady State Conditions
-        yp_[0] = 0.0;
-        yp_[1] = 0.0;
-        yp_[2] = 0.0;
-        yp_[3] = 0.0;
-        yp_[4] = 0.0;
-        yp_[5] = 0.0;
-        yp_[6] = 0.0;
-        yp_[7] = 0.0;
-        yp_[8] = 0.0;
+        for (size_t i = 0; i < yp_.size(); ++i)
+        {
+          yp_[i] = 0.0;
+        }
 
         return 0;
       }
@@ -314,14 +322,14 @@ namespace GridKit
         ScalarT omega     = ws[0];
         ScalarT vs_signal = ws[1];
 
-        // The 'pre-limit' derivative of Pv
-        ScalarT func            = -vr + Ka_ * vtr;
-        ScalarT func_normalized = func * 12.0 / 240.0; // Arbitrary normalization to use standardized sigmoid
+        // The 'pre-limit' derivative of Vr.
+        ScalarT func            = (-vr + Ka_ * vtr) / Ta_;
+        ScalarT func_normalized = func / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
         ScalarT vr_ind          = Math::indicator(Vrmin_, Vrmax_, vr, func_normalized);
 
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
-        f[1] = -vr_dot + vr_ind * func / Ta_;
+        f[1] = -vr_dot + vr_ind * func;
         f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 

@@ -62,22 +62,29 @@ $V_{UEL}$       | [p.u.] | Under-excitation limiter signal              | Consta
 
 ### Differential Equations
 
-Define $g = -E_{fd} + \dfrac{K}{T_B}(-V_R+T_A V_{tr})$ for readability.
+The SEXS-PTI differential equations, as derived from the model diagram. Define the pre-limit derivative of $E_{fd}$
+
+```math
+f = \dfrac{1}{T_E}\left[-E_{fd} + \dfrac{K}{T_B}(-V_R + T_A V_{tr})\right]
+```
+
+so that $\dot E_{fd}$ can be written in piecewise form compactly.
 
 ```math
 \begin{aligned}
-  \dot V_R &=
-    -V_{tr} + \dfrac{1}{T_B}(-V_R + T_A V_{tr}) \\
-  \dot E_{fd} &=
-    \dfrac{\chi(E_{fd}, g)}{T_E}g
+  \dot V_R      &= -V_{tr} + \dfrac{1}{T_B}(-V_R + T_A V_{tr}) \\
+  \dot E_{fd}   &=
+  \begin{cases}
+     f
+        &  \text{if } (E_{fd,\min} < E_{fd} < E_{fd,\max}) & \lor \\
+        &  \quad (E_{fd} \leq E_{fd,\min} \land f > 0)     & \lor \\
+        &  \quad (E_{fd} \geq E_{fd,\max} \land f < 0)            \\
+     0  &  \text{else}
+  \end{cases}
 \end{aligned}
 ```
 
-$\chi(E_{fd}, g)$ is the smooth anti-windup indicator used by the GridKit
-limiter utilities. The implementation passes a bounded, sign-preserving
-direction for $g$ into the smooth gate, while the differential equation still
-uses the physical $g$ term. The limiter attenuates the derivative when
-$E_{fd}$ is at a limit and $g$ would push it farther beyond that limit.
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
 
 ### Algebraic Equations
 

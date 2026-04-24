@@ -197,12 +197,11 @@ namespace GridKit
         ScalarT Ec = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         ScalarT vs = ws[0];
 
-        ScalarT g           = -efd + (K_ / Tb_) * (-vr + Ta_ * vtr);
-        ScalarT g_direction = g / std::sqrt(ONE<RealT> + g * g);
-        ScalarT efd_ind     = Math::indicator(Efdmin_, Efdmax_, efd, g_direction);
+        ScalarT func    = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
+        ScalarT efd_ind = Math::indicator(Efdmin_, Efdmax_, efd, func);
 
         f[0] = -vr_dot + (-vr + Ta_ * vtr) / Tb_ - vtr;
-        f[1] = -efd_dot + efd_ind * g / Te_;
+        f[1] = -efd_dot + efd_ind * func;
         f[2] = -vtr - Ec + vref_ + vs + vOEL_ + vUEL_;
 
         return 0;

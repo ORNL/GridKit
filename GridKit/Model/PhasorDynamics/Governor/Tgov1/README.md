@@ -53,13 +53,19 @@ $P_{ref}$       | [p.u.] | Reference Power                   | Either a constant
 ## Model Equations
 
 ### Differential Equations
-The TGOV1 differential equations, as derived from the model diagram. By defining an auxillary valve function $f=-P_{v} + (P_{ref}-\omega)/R$ one can write the piecewise definition of $\dot P_v$ compactly.
+The TGOV1 differential equations, as derived from the model diagram. Define the pre-limit derivative of $P_v$
+
+```math
+f = \dfrac{1}{T_1}\left[-P_v + \dfrac{1}{R}(P_{ref} - \omega)\right]
+```
+
+so that $\dot P_v$ can be written in piecewise form compactly.
 ```math
 \begin{aligned}
    \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
-   \dot{P}_{v}    &= \dfrac{1}{T_1}
+   \dot{P}_{v}    &=
    \begin{cases}
-      -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
+      f
          &  \text{if } (P_{vmin} < P_v < P_{vmax}) & \lor \\
          &  \quad (P_v \leq P_{vmin} \land f>0)    & \lor \\
          &  \quad(P_v \geq P_{vmax} \land f<0)            \\
@@ -77,44 +83,7 @@ The algebraic equation dictating the mechnical power output.
 \end{aligned}
 ```
 
-#### Smooth Piecewise Approximation
-The domain of the state variable is enforced
-through the piece-wise definition above. This may need to be expressed as a
-smooth approximation (smooth indicator $\phi$) expressed generically as follows.
-```math
-\begin{aligned}
-   f(P_v)      &= \dfrac{1}{T_1}
-      \left[
-         -P_{v} + \dfrac{1}{R}(P_{ref}-\omega)
-      \right] \\
-   \dot{P}_{v} &= 
-            \phi(P_v, f) \cdot f(P_v)
-\end{aligned}
-```
-
-The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $P_v$ limits $(P_{vmin}, P_{vmax})$.
-```math
-\begin{aligned}
-   \phi_L(P_v)&= \sigma(P_v-V_{rmin}) \\
-   \phi_U(P_v)&= \sigma(V_{rmax}-P_v) \\
-   \phi_0(P_v)&= \phi_L + \phi_U - 1  \\
-   \phi(P_v,f)&= \phi_0 \delta(f) + \left[ \phi_L \sigma(-f) + \phi_U \sigma(f)\right] \left[ 1-\delta(f) \right] \\
-\end{aligned}
-```
-
-The scale of the sigmoid function ($\alpha$ on the order of $10^2$) should be chosen so that for all practical parameters of the TGOV1 model, the sigmoid acts as a step function.
-```math
-\begin{aligned}
-   \sigma(x) =\dfrac{1}{1+\exp(-\alpha x)}
-\end{aligned}
-```
-
-The derivative of the sigmoid then approximates the delta function.
-```math
-\begin{aligned}
-   \delta(x) = 4 \sigma(x) \left[ 1- \sigma(x) \right]
-\end{aligned}
-```
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
 
 ## Initialization
 At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_{m}$ which is equal to the electric torque.

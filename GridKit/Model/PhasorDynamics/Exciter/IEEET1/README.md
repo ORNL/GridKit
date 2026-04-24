@@ -111,13 +111,19 @@ $V_{S}$         | [p.u.] | Input from stabilizer controller               |
 
 ### Differential Equations
 
-The IEEET1 differential equations, as derived from the model diagram.  By defining an auxillary valve function $f=-V_{R}+K_{a}V_{tr}$ one can write the piecewise definition of $\dot V_R$ compactly.
+The IEEET1 differential equations, as derived from the model diagram. Define the pre-limit derivative of $V_R$
+
+```math
+f = \dfrac{1}{T_A}\left[-V_R + K_a V_{tr}\right]
+```
+
+so that $\dot V_R$ can be written in piecewise form compactly.
 ```math
 \begin{aligned}
    \dot{V}_{ts}   &= \dfrac{1}{T_R}(E_C-V_{ts}) \\
-   \dot{V}_{R}    &= \dfrac{1}{T_A}
+   \dot{V}_{R}    &=
    \begin{cases}
-      -V_{R} + K_{a}V_{tr}
+      f
          &  \text{if } (V_{rmin} < V_R < V_{rmax}) & \lor \\
          &  \quad (V_R \leq V_{rmin} \land f>0)    & \lor \\
          &  \quad(V_R \geq V_{rmax} \land f<0)            \\
@@ -128,48 +134,7 @@ The IEEET1 differential equations, as derived from the model diagram.  By defini
 \end{aligned}
 ```
 
-#### Smooth Piecewise Approximation (Differential) 
-
-The domain of the state variable $V_{R}\in(V_{rmin}, V_{rmax})$ is enforced
-through the piece-wise definition above. This may need to be expressed as a
-smooth approximation (smooth indicator $\phi$) expressed generically as follows.
-```math
-\begin{aligned}
-   f(V_R)     
-            &= 
-            \dfrac{1}{T_A}
-            \left[
-               -V_{R}+K_{a}V_{tr}
-            \right] \\
-   \dot{V}_R &= 
-            \phi(V_R, f) \cdot f(V_R)
-\end{aligned}
-```
-
-The indicator function $\phi$ can be defined in terms of a scaled activation function ($\sigma$, sigmoid) and the $V_R$ limits $(V_{rmin}, V_{rmax})$.
-```math
-\begin{aligned}
-   \phi_L(V_R)&= \sigma(V_R-V_{rmin}) \\
-   \phi_U(V_R)&= \sigma(V_{rmax}-V_R) \\
-   \phi_0(V_R)&= \phi_L + \phi_U - 1  \\
-   \phi(V_R,f)&= \phi_0 \delta(f) + \left[ \phi_L \sigma(-f) + \phi_U \sigma(f)\right] \left[ 1-\delta(f) \right] \\
-\end{aligned}
-```
-
-The scale of the sigmoid function ($\alpha$ on the order of $10^2$) should be chosen so that for all practical parameters of the IEEET1 model, the sigmoid acts as a step function.
-```math
-\begin{aligned}
-   \sigma(x) = 
-      \dfrac{1}{1+\exp(-\alpha x)}
-\end{aligned}
-```
-
-The derivative of the sigmoid then approximates the delta function.
-```math
-\begin{aligned}
-   \delta(x) = 4 \sigma(x) \left[ 1- \sigma(x) \right]
-\end{aligned}
-```
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
 
 ### Algebraic Equations
 
@@ -205,25 +170,24 @@ The approximation approaches an exact solution as $\alpha\to\infty$.
 
 ## Initialization
 
-At steady state we assume that $V_R$ is at or within its limits, 
-and that the exciter is not saturated. The field $E_{fd}$ can be 
-obtained through the steady-state conditions of the machine. 
-We also assume for the moment that the stabilizer and over/under 
-excitation limiters are non-existant. As of now, we assume there is no compensation impedence and that $E_C$ is simply the terminal voltage magnitude.
+The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and solves the steady-state algebraic chain so all residuals vanish with $\dot y = 0$. There is no compensation impedance, so $E_C$ is taken as the terminal voltage magnitude. Saturation and the speed-limit flag are included directly; $V_{ref}$ is set to close the $V_{tr}$ equation with the current auxiliary inputs.
+
 ```math
 \begin{aligned}
-    E_{fd}' &= E_{fd}  \\
-    V_R     &= K_E E_{fd} \\
-    V_{fx}  &= \dfrac{K_F}{T_F} E_{fd} \\
-    V_{tr}  &= \dfrac{K_E}{K_{a}} E_{fd} \\
-    E_C     &= V_{term}\\
-    V_{ts}  &= V_{term}\\
-    V_{ref} &= E_c + V_{tr} \\
-    V_{f}   &= 0 \\
-    V_{E}   &= 0 \\
-    k_{sat} &= 0 \\
+   E_C      &= \sqrt{V_r^2 + V_i^2} \\
+   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{spdlm}\,\omega} \\
+   k_{sat}  &= S_B\big[(E_{fd}' - S_A)\,\sigma(E_{fd}' - S_A)\big]^2 \\
+   V_E      &= k_{sat}\, E_{fd}' \\
+   V_R      &= K_E\, E_{fd}' + V_E \\
+   V_{tr}   &= \dfrac{V_R}{K_a} \\
+   V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
+   V_{ts}   &= E_C \\
+   V_f      &= 0 \\
+   V_{ref}  &= E_C + V_{tr} - V_{UEL} - V_{OEL} - V_S
 \end{aligned}
 ```
+
+All internal derivatives initialize to zero.
 ## Model Outputs
 
 The field voltage, $E_{fd}$, is an internal model variable.
