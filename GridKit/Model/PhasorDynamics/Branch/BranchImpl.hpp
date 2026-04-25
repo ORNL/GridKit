@@ -97,6 +97,20 @@ namespace GridKit
       // std::cout << "Destroy Branch..." << std::endl;
     }
 
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::apply(Action action)
+    {
+      switch (action)
+      {
+      case Action::On:
+        status_ = RealT{1.0};
+        break;
+      case Action::Off:
+        status_ = RealT{0.0};
+        break;
+      }
+    }
+
     /**
      * @brief Set the component ID
      */
@@ -155,8 +169,8 @@ namespace GridKit
       ScalarT Vi1 = wb[1];
       ScalarT Ir1 = -(g_ + 0.5 * G_) * Vr1 + (b_ + 0.5 * B_) * Vi1;
       ScalarT Ii1 = -(b_ + 0.5 * B_) * Vr1 - (g_ + 0.5 * G_) * Vi1;
-      h[0]        = Ir1;
-      h[1]        = Ii1;
+      h[0]        = status_ * Ir1;
+      h[1]        = status_ * Ii1;
 
       return 0;
     }
@@ -176,8 +190,8 @@ namespace GridKit
       ScalarT Vi2 = wb[1];
       ScalarT Ir1 = g_ * Vr2 - b_ * Vi2;
       ScalarT Ii1 = b_ * Vr2 + g_ * Vi2;
-      h[0]        = Ir1;
-      h[1]        = Ii1;
+      h[0]        = status_ * Ir1;
+      h[1]        = status_ * Ii1;
 
       return 0;
     }
@@ -197,8 +211,8 @@ namespace GridKit
       ScalarT Vi1 = wb[1];
       ScalarT Ir2 = g_ * Vr1 - b_ * Vi1;
       ScalarT Ii2 = b_ * Vr1 + g_ * Vi1;
-      h[0]        = Ir2;
-      h[1]        = Ii2;
+      h[0]        = status_ * Ir2;
+      h[1]        = status_ * Ii2;
 
       return 0;
     }
@@ -218,8 +232,8 @@ namespace GridKit
       ScalarT Vi2 = wb[1];
       ScalarT Ir2 = -(g_ + 0.5 * G_) * Vr2 + (b_ + 0.5 * B_) * Vi2;
       ScalarT Ii2 = -(b_ + 0.5 * B_) * Vr2 - (g_ + 0.5 * G_) * Vi2;
-      h[0]        = Ir2;
-      h[1]        = Ii2;
+      h[0]        = status_ * Ir2;
+      h[1]        = status_ * Ii2;
 
       return 0;
     }
@@ -273,6 +287,13 @@ namespace GridKit
       if (data.parameters.contains(model_data_type::Parameters::B))
       {
         B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::state0))
+      {
+        status_ = std::get<bool>(data.parameters.at(model_data_type::Parameters::state0))
+                      ? RealT{1.0}
+                      : RealT{0.0};
       }
 
       if (data.ports.contains(model_data_type::Ports::bus1))

@@ -125,7 +125,7 @@ namespace GridKit
           }
 
           auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index), getBus(bus2_index), branchdata);
-          addComponent(branch);
+          addComponent(branch, branchdata.disambiguation_string);
         }
 
         // Add loads

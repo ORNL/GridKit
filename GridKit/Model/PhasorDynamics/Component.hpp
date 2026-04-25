@@ -15,10 +15,9 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    /// Project-wide control actions. Today only BusFault uses cues, so this
-    /// vocabulary is small. When a second action-bearing component arrives,
-    /// either add its actions here (if they read naturally as shared verbs)
-    /// or switch to per-component action enums + typed dispatch.
+    /// Project-wide control actions shared by cue-targetable components such
+    /// as BusFault and Branch. If future runtime controls stop fitting these
+    /// verbs naturally, switch to per-component action enums + typed dispatch.
     enum class Action
     {
       On,

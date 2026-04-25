@@ -15,10 +15,11 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters
     {
-      R, ///< Line series resistance
-      X, ///< Line series reactance
-      G, ///< Line shunt conductance
-      B, ///< Line shunt charging
+      R,      ///< Line series resistance
+      X,      ///< Line series reactance
+      G,      ///< Line shunt conductance
+      B,      ///< Line shunt charging
+      state0, ///< Initial branch status (true = closed/in-service, default true)
     };
 
     /// Ports for a branch

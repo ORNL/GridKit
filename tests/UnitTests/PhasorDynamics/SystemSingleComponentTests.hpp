@@ -49,6 +49,69 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome branchTrip()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus1, bus2;
+        system->addBus(&bus1);
+        system->addBus(&bus2);
+
+        // Branch data with realistic R/X/G/B so setDerivedParams stays finite.
+        PhasorDynamics::BranchData<RealT, IdxT> branch_data;
+        branch_data.disambiguation_string                           = "br_0";
+        branch_data.parameters[PhasorDynamics::BranchParameters::R] = 0.05;
+        branch_data.parameters[PhasorDynamics::BranchParameters::X] = 0.21;
+        branch_data.parameters[PhasorDynamics::BranchParameters::G] = 0.0;
+        branch_data.parameters[PhasorDynamics::BranchParameters::B] = 0.1;
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, branch_data);
+        system->addComponent(&branch, branch_data.disambiguation_string);
+
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+
+        // Default: branch is closed (in service)
+        success *= branch.status() == true;
+
+        // Open via cue
+        try
+        {
+          system->cue("br_0", PhasorDynamics::Action::Off);
+        }
+        catch (...)
+        {
+          success *= false;
+        }
+        success *= branch.status() == false;
+
+        // Close via cue
+        try
+        {
+          system->cue("br_0", PhasorDynamics::Action::On);
+        }
+        catch (...)
+        {
+          success *= false;
+        }
+        success *= branch.status() == true;
+
+        // state0 = false -> branch starts open without a cue.
+        PhasorDynamics::BranchData<RealT, IdxT> open_data;
+        open_data.parameters[PhasorDynamics::BranchParameters::R]      = 0.05;
+        open_data.parameters[PhasorDynamics::BranchParameters::X]      = 0.21;
+        open_data.parameters[PhasorDynamics::BranchParameters::state0] = false;
+        PhasorDynamics::Branch<ScalarT, IdxT> open_branch(&bus1, &bus2, open_data);
+        success *= open_branch.status() == false;
+
+        delete system;
+        system = nullptr;
+
+        return success.report(__func__);
+      }
+
       TestOutcome bus()
       {
         TestStatus success = true;

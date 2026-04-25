@@ -106,6 +106,16 @@ namespace GridKit
         setDerivedParams();
       }
 
+      /// True when the branch is in service (closed). The underlying
+      /// `status_` is a smooth multiplier (1.0 closed / 0.0 open) so that
+      /// `evaluateBusResidualNN` kernels see a constant expression structure
+      bool status() const
+      {
+        return status_ > RealT{0.5};
+      }
+
+      void apply(Action action) override final;
+
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
@@ -166,6 +176,7 @@ namespace GridKit
       RealT     X_{0.0};
       RealT     G_{0.0};
       RealT     B_{0.0};
+      RealT     status_{1.0}; ///< Multiplier on residual contributions: 1.0 = closed, 0.0 = open
       IdxT      bus1_id_{0};
       IdxT      bus2_id_{0};
 

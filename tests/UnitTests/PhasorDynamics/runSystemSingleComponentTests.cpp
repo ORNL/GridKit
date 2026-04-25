@@ -9,6 +9,7 @@ int main()
   GridKit::Testing::SystemSingleComponentTests<double, size_t> test;
 
   result += test.branch();
+  result += test.branchTrip();
   result += test.bus();
   result += test.busFault();
   result += test.ieeet1();

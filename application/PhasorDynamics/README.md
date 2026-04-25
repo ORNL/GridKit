@@ -7,7 +7,7 @@ simulations. It reads a JSON solver file that specifies the case (system
 model) to load, the simulation parameters, an optional schedule of runtime
 cues, and output configuration.
 
-Components that respond to runtime control (e.g. `BusFault`) are declared in
+Components that respond to runtime control (e.g. `BusFault`, `Branch`) are declared in
 the case file as ordinary devices. The solver file's `schedule` then drives
 their state changes by referencing each component's `id` from the case file.
 
@@ -66,6 +66,7 @@ last cue, it runs to `tmax`.
   Class       | Action vocabulary | Effect
   ------------|-------------------|----------------------------------------------
   `BusFault`  | `on`, `off`       | Engage or clear the fault impedance at the bus
+  `Branch`    | `on`, `off`       | Close or open the branch (in service / tripped)
 
 A device is cue-targetable only if its `id` is referenced by the schedule.
 Devices whose class does not accept cues (or unknown actions) cause
