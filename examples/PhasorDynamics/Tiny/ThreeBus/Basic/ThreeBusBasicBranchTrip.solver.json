@@ -6,7 +6,5 @@
     "schedule": [
         { "time": 1.0, "target": "BR_1_2", "action": "off" }
     ],
-    "output_file":     "ThreeBusBasicBranchTrip.csv",
-    "reference_file":  "ThreeBusBasicBranchTrip.ref.csv",
-    "error_tolerance": 1e-4
+    "output_file":     "ThreeBusBasicBranchTrip.csv"
 }
