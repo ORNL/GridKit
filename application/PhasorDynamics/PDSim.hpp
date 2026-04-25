@@ -1,12 +1,16 @@
 #pragma once
 
+#include <cassert>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
-#include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -16,135 +20,120 @@ namespace GridKit
   {
     namespace fs = ::std::filesystem;
 
-    /**
-     * @brief Describes an event that is used to modify the simulation at the
-     * given time point
-     */
-    struct SystemEvent
-    {
-      /// Type of event determines action performed
-      enum class Type
-      {
-        FAULT_ON,
-        FAULT_OFF
-      };
-
-      /// Time event takes place
-      double      time;
-      /// Event type
-      Type        type;
-      /// ID of element used in event (e.g., bus fault id)
-      std::size_t element_id;
-    };
-
-    /**
-     * @brief Data defined in JSON file for parameterized study
-     */
-    struct StudyData
-    {
-      /// path to system model JSON file
-      fs::path                 system_model_file;
-      /// time step size
-      double                   dt;
-      /// max time
-      double                   tmax;
-      /// set of system events
-      std::vector<SystemEvent> events;
-      /// path to output file
-      fs::path                 output_file;
-      /// path to reference file for validation
-      fs::path                 reference_file;
-      /// Error tolerance (between output file and reference file)
-      double                   error_tol;
-      /// Instance of model data
-      SystemModelData<>        model_data;
-    };
-
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
-    /**
-     * @brief JSON parser implemntation for `StudyData`
-     */
-    void from_json(const json& j, StudyData& c)
+    /// One scheduled cue: at `time`, deliver `action` to `target`.
+    /// Consumed by PDSim — `time` drives integration, `target`+`action` are
+    /// forwarded to `SystemModel::cue`. Components themselves never see this.
+    struct Cue
     {
-      using namespace magic_enum;
+      double      time{0.0};
+      std::string target;
+      Action      action{Action::Off};
+    };
 
-      j.at("system_model_file").get_to(c.system_model_file);
-      j.at("dt").get_to(c.dt);
-      j.at("tmax").get_to(c.tmax);
+    struct StudyData
+    {
+      int               format_version{1};
+      fs::path          case_file;
+      double            dt{0.0};
+      double            tmax{0.0};
+      std::vector<Cue>  schedule;
+      fs::path          output_file;
+      fs::path          reference_file;
+      double            error_tol{1.0e-4};
+      SystemModelData<> model_data;
+    };
 
-      for (auto& raw_event : j.at("events"))
-      {
-        auto& event = c.events.emplace_back();
-        raw_event.at("time").get_to(event.time);
-        raw_event.at("element_id").get_to(event.element_id);
-
-        auto type_str   = raw_event.at("type").get<std::string>();
-        using EventType = SystemEvent::Type;
-        auto type_wrap  = enum_cast<EventType>(type_str, case_insensitive);
-        if (!type_wrap.has_value())
-        {
-          Log::error() << "Unable to parse event type \"" << type_str << "\"\n";
-        }
-        event.type = type_wrap.value();
-      }
-
-      if (j.contains("output_file"))
-      {
-        j.at("output_file").get_to(c.output_file);
-      }
-
-      if (j.contains("reference_file"))
-      {
-        j.at("reference_file").get_to(c.reference_file);
-      }
-
-      c.error_tol = j.value("error_tolerance", 1.0e-4);
-    }
-
-    /**
-     * @brief Check for existence and successful input file open
-     */
-    std::ifstream openFile(const fs::path& file_path)
+    inline std::ifstream openFile(const fs::path& file_path)
     {
       if (!exists(file_path))
       {
         Log::error() << "File not found: " << file_path << std::endl;
+        throw std::runtime_error("File not found: " + file_path.string());
       }
       auto fs = std::ifstream(file_path);
       if (!fs)
       {
         Log::error() << "Failed to open file: " << file_path << std::endl;
+        throw std::runtime_error("Failed to open file: " + file_path.string());
       }
       return fs;
     }
 
-    /**
-     * @brief Wrapper function to parse `StudyData` from JSON and perform
-     * follow-up configuration
-     */
-    StudyData parseStudyData(const fs::path& file_path)
+    inline StudyData parseStudyData(const fs::path& file_path)
     {
-      auto data = StudyData(json::parse(openFile(file_path)));
+      auto raw = json::parse(openFile(file_path));
 
-      auto loc = file_path.parent_path();
-      if (!data.system_model_file.is_absolute())
+      StudyData data;
+
+      data.format_version = raw.value("format_version", 1);
+      if (data.format_version != 1)
       {
-        data.system_model_file = loc / data.system_model_file;
+        throw std::runtime_error(
+            "Unsupported solver file format_version: "
+            + std::to_string(data.format_version));
       }
-      if (!data.reference_file.empty())
+
+      raw.at("case_file").get_to(data.case_file);
+      auto loc = file_path.parent_path();
+      if (!data.case_file.is_absolute())
       {
+        data.case_file = loc / data.case_file;
+      }
+
+      raw.at("dt").get_to(data.dt);
+      raw.at("tmax").get_to(data.tmax);
+
+      if (raw.contains("output_file"))
+      {
+        raw.at("output_file").get_to(data.output_file);
+      }
+      if (raw.contains("reference_file"))
+      {
+        raw.at("reference_file").get_to(data.reference_file);
         if (!data.reference_file.is_absolute())
         {
           data.reference_file = loc / data.reference_file;
         }
       }
+      data.error_tol = raw.value("error_tolerance", 1.0e-4);
 
-      auto csv        = ::GridKit::Model::VariableMonitorFormat::CSV;
-      data.model_data = parseSystemModelData(data.system_model_file);
+      data.model_data = parseSystemModelData(data.case_file);
+
+      if (raw.contains("schedule"))
+      {
+        double last_time = -std::numeric_limits<double>::infinity();
+        for (const auto& raw_cue : raw.at("schedule"))
+        {
+          Cue cue;
+          raw_cue.at("time").get_to(cue.time);
+          raw_cue.at("target").get_to(cue.target);
+
+          std::string action_str;
+          raw_cue.at("action").get_to(action_str);
+          if (action_str == "on")
+            cue.action = Action::On;
+          else if (action_str == "off")
+            cue.action = Action::Off;
+          else
+            throw std::runtime_error(
+                "Solver file: unknown action '" + action_str + "' (valid: on, off)");
+
+          assert(cue.time <= data.tmax);
+          if (cue.time < last_time)
+          {
+            throw std::runtime_error(
+                "Solver file: schedule is not monotone non-decreasing in time");
+          }
+          last_time = cue.time;
+          data.schedule.push_back(std::move(cue));
+        }
+      }
+
+      auto        csv = ::GridKit::Model::VariableMonitorFormat::CSV;
       std::string model_output_file;
-      // Find output file (CSV) specified in model input file
       for (const auto& sink : data.model_data.monitor_sink)
       {
         if (sink.format == csv && sink.delim == ",")
@@ -155,8 +144,10 @@ namespace GridKit
 
       if (model_output_file.empty())
       {
-        // Add study output file to model if one did not already exist
-        data.model_data.monitor_sink.emplace_back(data.output_file, csv);
+        if (!data.output_file.empty())
+        {
+          data.model_data.monitor_sink.emplace_back(data.output_file.string(), csv);
+        }
       }
       else
       {
@@ -164,13 +155,12 @@ namespace GridKit
         {
           data.output_file = model_output_file;
         }
-        else
+        else if (data.output_file.string() != model_output_file)
         {
-          // If model file already specifies a CSV output file, then the study
-          // output file must be a symlink to the model output file
           if (exists(data.output_file))
           {
-            if ((!is_symlink(data.output_file)) || (read_symlink(data.output_file) != model_output_file))
+            if ((!is_symlink(data.output_file))
+                || (read_symlink(data.output_file) != model_output_file))
             {
               Log::error() << "Study output file not usable" << std::endl;
             }

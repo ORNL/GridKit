@@ -2,6 +2,10 @@
 
 #include <cassert>
 #include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <GridKit/Definitions.hpp>
@@ -308,7 +312,7 @@ namespace GridKit
             bus_index = faultdata.ports.at(BusFaultData<ScalarT, IdxT>::Ports::bus);
           }
           auto* fault = new BusFault<ScalarT, IdxT>(getBus(bus_index), faultdata);
-          addFault(fault);
+          addComponent(fault, faultdata.disambiguation_string);
         }
 
         for (const auto& sink : data.monitor_sink)
@@ -905,11 +909,8 @@ namespace GridKit
       /**
        * @brief Add component
        *
-       * Add component at the end of the components array and set GridKit's component ID
-       *
-       * @todo: No integer user-facing component_id for now, but we could map GridKit's
-       * component ID to the disambiguation_string
-       *
+       * Add component at the end of the components array and set GridKit's component ID.
+       * This overload does not register the component for cue routing.
        */
       void addComponent(component_type* component)
       {
@@ -919,18 +920,17 @@ namespace GridKit
       }
 
       /**
-       * @brief Add fault
+       * @brief Add component and register it as a cue target under `id`.
        *
-       * The fault is added to the components array, and we keep a map to its
-       * location, so it can easily be accessed.
-       *
+       * The id originates from the case JSON (`"id"` field, parsed into
+       * `data.disambiguation_string`). It is stored only here, in the system's
+       * routing map — the component itself does not carry it.
        */
-      void addFault(component_type* component)
+      void addComponent(component_type* component, const std::string& id)
       {
-        IdxT gridkit_component_id                = static_cast<IdxT>(components_.size());
-        IdxT gridkit_fault_id                    = static_cast<IdxT>(gridkit_fault_indices_.size());
-        gridkit_fault_indices_[gridkit_fault_id] = gridkit_component_id;
         addComponent(component);
+        if (!id.empty())
+          by_id_[id] = component;
       }
 
       /**
@@ -967,27 +967,20 @@ namespace GridKit
         return components_[gridkit_component_id];
       }
 
-      /**
-       * @brief Return pointer to a bus fault model
-       *
-       * This function is used to provide easier access to setting and
-       * clearing faults from the SystemModel interface.
-       *
-       */
-      BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id)
+      /// Route a cue to the component registered under `target`.
+      void cue(const std::string& target, Action action)
       {
-        IdxT component_id = gridkit_fault_indices_.at(fault_id);
-        return dynamic_cast<BusFault<ScalarT, IdxT>*>(components_[component_id]);
+        by_id_.at(target)->apply(action);
       }
 
     private:
-      std::vector<bus_type*>       buses_;
-      std::vector<signal_type*>    signals_;
-      std::vector<component_type*> components_;
+      std::vector<bus_type*>                           buses_;
+      std::vector<signal_type*>                        signals_;
+      std::vector<component_type*>                     components_;
+      std::unordered_map<std::string, component_type*> by_id_; ///< Routing map for cues
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id
-      std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
 
       bool owns_components_{false};
 

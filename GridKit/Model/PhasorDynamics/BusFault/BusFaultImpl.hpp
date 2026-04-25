@@ -184,6 +184,20 @@ namespace GridKit
       return monitor_.get();
     }
 
+    template <class ScalarT, typename IdxT>
+    void BusFault<ScalarT, IdxT>::apply(Action action)
+    {
+      switch (action)
+      {
+      case Action::On:
+        status_ = true;
+        break;
+      case Action::Off:
+        status_ = false;
+        break;
+      }
+    }
+
     /**
      * @brief Derived parameters
      *

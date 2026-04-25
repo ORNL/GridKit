@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -78,8 +79,10 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus);
-        system->addFault(&fault);
+        PhasorDynamics::BusFaultData<RealT, IdxT> fault_data;
+        fault_data.disambiguation_string = "fault_0";
+        PhasorDynamics::BusFault<ScalarT, IdxT> fault(&bus, fault_data);
+        system->addComponent(&fault, fault_data.disambiguation_string);
 
         success *= system->allocate() == 0;
         success *= system->initialize() == 0;
@@ -87,6 +90,28 @@ namespace GridKit
         success *= system->evaluateJacobian() == 0;
         success *= system->size() == 0;
         success *= system->size() == fault.size();
+
+        // Cue routes to the matching child via SystemModel::cue.
+        try
+        {
+          system->cue("fault_0", PhasorDynamics::Action::On);
+        }
+        catch (...)
+        {
+          success *= false;
+        }
+
+        // Unknown target throws.
+        bool threw = false;
+        try
+        {
+          system->cue("no_such", PhasorDynamics::Action::On);
+        }
+        catch (const std::exception&)
+        {
+          threw = true;
+        }
+        success *= threw;
 
         delete system;
         system = nullptr;

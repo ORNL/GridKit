@@ -1,11 +1,14 @@
 {
-    "system_model_file": "TwoBusBasic.case.json",
-    "dt":   0.00416666666666,
-    "tmax":  10,
-    "events": [
-        {"time": 1, "type": "fault_on", "element_id": 0},
-        {"time": 1.1, "type": "fault_off", "element_id": 0}
+    "format_version": 1,
+    "case_file":      "TwoBusBasic.case.json",
+    "dt":             0.00416666666666,
+    "tmax":           10,
+
+    "schedule": [
+        { "time": 1.0,  "target": "0", "action": "on"  },
+        { "time": 1.1,  "target": "0", "action": "off" }
     ],
-    "reference_file": "TwoBusBasic.ref.csv",
-    "error_tolerance":  2.01e-4
+
+    "reference_file":  "TwoBusBasic.ref.csv",
+    "error_tolerance": 2.01e-4
 }

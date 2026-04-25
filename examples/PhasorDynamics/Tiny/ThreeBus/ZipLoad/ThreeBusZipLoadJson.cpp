@@ -123,9 +123,6 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
-  // Get access to fault 0
-  auto* fault = sys.getBusFault(0);
-
   real_type dt = 1.0 / 4.0 / 60.0;
 
   std::vector<OutputData> output;
@@ -154,13 +151,13 @@ int main(int argc, const char* argv[])
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault to ground and run for 0.1s
-  fault->setStatus(true);
+  sys.cue("bus_fault_2", Action::On);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
-  fault->setStatus(false);
+  sys.cue("bus_fault_2", Action::Off);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

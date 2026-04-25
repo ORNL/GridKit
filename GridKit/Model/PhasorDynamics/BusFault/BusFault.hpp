@@ -64,6 +64,8 @@ namespace GridKit
       {
       }
 
+      void apply(Action action) override final;
+
     public:
       void setR(RealT R)
       {
@@ -75,11 +77,6 @@ namespace GridKit
       {
         X_ = X;
         setDerivedParams();
-      }
-
-      void setStatus(bool status)
-      {
-        status_ = status;
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;

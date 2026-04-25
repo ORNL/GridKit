@@ -78,6 +78,7 @@ int main()
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-3;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;
+  data.bus_fault[0].disambiguation_string                  = "fault_0";
 
   // Set generator data
   data.genrou.resize(1);
@@ -144,9 +145,6 @@ int main()
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
-  // Get access to the fault
-  auto* fault = sys.getBusFault(0);
-
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
@@ -210,13 +208,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault and run for the next 0.1s
-  fault->setStatus(true);
+  sys.cue("fault_0", Action::On);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
-  fault->setStatus(false);
+  sys.cue("fault_0", Action::Off);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

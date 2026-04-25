@@ -169,13 +169,13 @@ int main()
   ida.runSimulation(1.0, nout, output_cb);
 
   // Introduce fault to ground and run for 0.1s
-  fault.setStatus(1);
+  fault.apply(Action::On);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
-  fault.setStatus(0);
+  fault.apply(Action::Off);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);

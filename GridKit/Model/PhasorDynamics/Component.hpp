@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -12,6 +14,16 @@ namespace GridKit
   namespace PhasorDynamics
   {
     using Log = ::GridKit::Utilities::Logger;
+
+    /// Project-wide control actions. Today only BusFault uses cues, so this
+    /// vocabulary is small. When a second action-bearing component arrives,
+    /// either add its actions here (if they read naturally as shared verbs)
+    /// or switch to per-component action enums + typed dispatch.
+    enum class Action
+    {
+      On,
+      Off,
+    };
 
     /**
      * @brief Component model implementation base class.
@@ -42,6 +54,15 @@ namespace GridKit
       }
 
       virtual int verify() const = 0;
+
+      /// Cue dispatch. Called by PDSim only at IDA re-init points; never
+      /// during integration. Default throws — Components without a runtime
+      /// control surface inherit the default and ignore cues.
+      /// SystemModel's routing layer wraps the throw with the target id.
+      virtual void apply(Action)
+      {
+        throw std::runtime_error("Component does not accept cues");
+      }
 
       virtual IdxT size() override
       {

@@ -71,9 +71,6 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(data);
   sys.allocate();
 
-  // Get access to fault 0
-  auto* fault = sys.getBusFault(0);
-
   // Set time step to 1/4 of a 60Hz cycle.
   real_type dt = 1.0 / 4.0 / 60.0;
 
@@ -89,13 +86,13 @@ int main(int argc, const char* argv[])
   ida.runSimulation(1.0, nout);
 
   // Introduce fault to ground and run for 0.1s
-  fault->setStatus(true);
+  sys.cue("fault_1", Action::On);
   ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout);
 
   // Clear fault and run until t = 10s.
-  fault->setStatus(false);
+  sys.cue("fault_1", Action::Off);
   ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout);

@@ -79,15 +79,6 @@ int main(int argc, const char* argv[])
   real_type   start = static_cast<real_type>(clock());
   std::string phase = "setup";
 
-  // Get access to fault 0.
-  auto* fault = sys.getBusFault(0);
-  if (fault == nullptr)
-  {
-    std::cerr << "ERROR: Texas input is missing BusFault component at index 0.\n";
-    sys.stopMonitor();
-    return 2;
-  }
-
   try
   {
     phase = "pre-fault";
@@ -98,14 +89,14 @@ int main(int argc, const char* argv[])
 
     phase = "fault";
     std::cout << "[fault] t = 10.0 -> 10.15\n";
-    fault->setStatus(true);
+    sys.cue("fault_1", Action::On);
     ida.initializeSimulation(10.0, false);
     nout = static_cast<int>(std::round((10.15 - 10.0) / dt));
     ida.runSimulation(10.15, nout);
 
     phase = "post-fault";
     std::cout << "[post-fault] t = 10.15 -> 20.0\n";
-    fault->setStatus(false);
+    sys.cue("fault_1", Action::Off);
     ida.initializeSimulation(10.15, false);
     nout = static_cast<int>(std::round((20.0 - 10.15) / dt));
     ida.runSimulation(20.0, nout);

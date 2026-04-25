@@ -26,9 +26,9 @@ int main(int argc, const char* argv[])
     Log::error() << "No input file provided" << std::endl;
     std::cout << "\n"
                  "Usage:\n"
-                 "       pdsim <json-input-file>\n"
+                 "       pdsim <solver-file.solver.json>\n"
                  "\n"
-                 "Please provide a json input file for the study to run.\n"
+                 "Please provide a JSON solver file for the study to run.\n"
                  "\n";
     exit(1);
   }
@@ -48,30 +48,30 @@ int main(int argc, const char* argv[])
   // Start timer
   real_type start = static_cast<real_type>(clock());
 
-  using EventType = SystemEvent::Type;
-
   // Initilize simultation for first run
   ida.initializeSimulation(0.0, false);
   real_type curr_time = 0.0;
-  for (const auto& event : study.events)
+
+  size_t i = 0;
+  while (i < study.schedule.size())
   {
-    // Run to event time
-    int nout = static_cast<int>(std::round((event.time - curr_time) / dt));
-    ida.runSimulation(event.time, nout);
+    real_type t_cue = study.schedule[i].time;
 
-    // Set up run for event (to start at event time)
-    if (event.type == EventType::FAULT_ON)
+    // Run to cue time
+    int nout = static_cast<int>(std::round((t_cue - curr_time) / dt));
+    ida.runSimulation(t_cue, nout);
+
+    // Batch simultaneous cues into one re-init so IDA never sees a
+    // zero-length segment between back-to-back applies at the same time.
+    while (i < study.schedule.size() && study.schedule[i].time == t_cue)
     {
-      sys.getBusFault(event.element_id)->setStatus(true);
-    }
-    else if (event.type == EventType::FAULT_OFF)
-    {
-      sys.getBusFault(event.element_id)->setStatus(false);
+      sys.cue(study.schedule[i].target, study.schedule[i].action);
+      ++i;
     }
 
-    // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time, true);
-    curr_time = event.time;
+    // Re-initialize simulation at cue time
+    ida.initializeSimulation(t_cue, true);
+    curr_time = t_cue;
   }
 
   // Run to final time
