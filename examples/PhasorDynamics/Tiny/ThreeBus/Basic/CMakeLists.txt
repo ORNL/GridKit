@@ -14,7 +14,6 @@ target_link_libraries(ThreeBusBasicJson
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusBasic.case.json)
 gridkit_example_add_file(ThreeBusBasic.ref.csv)
-gridkit_example_add_file(ThreeBusBasicBranchTrip.ref.csv)
 
 add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
 add_test(NAME ThreeBusBasicJson
