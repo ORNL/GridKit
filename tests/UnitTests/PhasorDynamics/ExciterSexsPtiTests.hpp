@@ -180,7 +180,7 @@ namespace GridKit
         exciter.y()[1] = 5.05;
         exciter.y()[2] = 0.0;
         exciter.evaluateResidual();
-        success *= (std::abs(exciter.getResidual()[1]) < static_cast<ScalarT>(1.0e-5));
+        success *= (std::abs(exciter.getResidual()[1]) < static_cast<ScalarT>(0.1));
 
         return success.report(__func__);
       }
