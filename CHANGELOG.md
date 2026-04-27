@@ -45,12 +45,14 @@
 - Added full support for sparse Jacobians obtained with Enzyme in PhasorDynamics.
 - Added `Node` class to the PowerElectronics module to separate nodes from circuit components.
 - Refactored Jacobian assembly in `PowerElectronics` module to reuse the CSR pattern.
-- Refactored Jacobian assembly in `PhasorDyanmcics` module to reuse the CSR pattern.
+- Refactored Jacobian assembly in `PhasorDynamics` module to reuse the CSR pattern.
 - Removed `COO_Matrix` class use in `PowerElectronics` module.
 - Added phasor dynamics application to generalize examples
 - Added LoadZIP model component type.
 - Added component model developer checklist to a README file.
 - Added IEEEST Stabilizer Model
+- Added SEXS-PTI Exciter Model
+- Added 200 Bus Synthetic Illinois Case
 
 ## v0.1
 
