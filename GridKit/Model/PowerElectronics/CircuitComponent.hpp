@@ -55,6 +55,14 @@ namespace GridKit
       return this->extern_indices_;
     }
 
+    struct ExternalConnection
+    {
+      const ScalarT* y_;
+      const ScalarT* yp_;
+      ScalarT*       f_;
+      IdxT           idx_;
+    };
+
     /**
      * @brief Create the mappings from local to global indices
      *
@@ -62,9 +70,27 @@ namespace GridKit
      * @param global_index
      * @return int
      */
-    int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
+    int setInternalConnectionNodes(size_t local_index, size_t global_index)
     {
-      connection_nodes_[static_cast<size_t>(local_index)] = global_index;
+      assert(!extern_indices_.contains(local_index));
+      connection_nodes_[local_index] = global_index;
+      return 0;
+    }
+
+    /**
+     * @brief Create the mappings from local to global indices
+     *
+     * @param local_index
+     * @param global_index
+     * @return int
+     */
+    int setExternalConnectionNodes(size_t local_index, ExternalConnection global_index)
+    {
+      assert(extern_indices_.contains(local_index));
+      y_ext_[local_index]            = global_index.y_;
+      yp_ext_[local_index]           = global_index.yp_;
+      f_ext_[local_index]            = global_index.f_;
+      connection_nodes_[local_index] = global_index.idx_;
       return 0;
     }
 
@@ -74,11 +100,24 @@ namespace GridKit
      * f(local_index) = global_index
      *
      * @param local_index index of local value in vector
-     * @return IdxT Index of the same value in the global vector
+     * @return size_t Index of the same value in the global vector
      */
-    IdxT getNodeConnection(IdxT local_index) const
+    ExternalConnection getNodeConnection(size_t local_index) const
     {
-      return connection_nodes_[local_index];
+      return ExternalConnection{
+          .y_   = y_ext_[local_index],
+          .yp_  = yp_ext_[local_index],
+          .f_   = f_ext_[local_index],
+          .idx_ = connection_nodes_[local_index],
+      };
+    }
+
+    int initialize() override
+    {
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
+      return 0;
     }
 
     /**
@@ -97,7 +136,10 @@ namespace GridKit
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
 
-      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+      y_ext_            = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      yp_ext_           = std::make_unique<const ScalarT*[]>(static_cast<size_t>(size_));
+      f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
+      connection_nodes_ = std::make_unique<size_t[]>(static_cast<size_t>(size_));
 
       if (!allocated_)
       {
@@ -150,6 +192,8 @@ namespace GridKit
     {
       if (int err_code = evaluateInternalResidual())
         return err_code;
+
+      f_.setDataUpdated();
 
       return evaluateExternalResidual();
     }
@@ -403,19 +447,27 @@ namespace GridKit
     /**
      * @brief Allocate state and residual storage owned by this component.
      */
-    void allocateVectors(IdxT n)
+    void allocateVectors(IdxT n, bool system = false)
     {
-      y_.resize(n);
-      yp_.resize(n);
-      f_.resize(n);
       abs_tol_.resize(n);
+
+      if (system)
+      {
+        y_.resize(n);
+        yp_.resize(n);
+        f_.resize(n);
+
+        y_int_  = y_.getData();
+        yp_int_ = yp_.getData();
+        f_int_  = f_.getData();
+      }
     }
 
-    size_t                  n_extern_;
-    size_t                  n_intern_;
-    std::set<IdxT>          extern_indices_;
+    size_t                    n_extern_;
+    size_t                    n_intern_;
+    std::set<IdxT>            extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-    std::unique_ptr<IdxT[]> connection_nodes_;
+    std::unique_ptr<size_t[]> connection_nodes_;
 
   protected:
     IdxT size_{0};
@@ -438,11 +490,16 @@ namespace GridKit
     /// @brief A pointer to the internal residuals of this component
     ScalarT*       f_int_;
 
-    VectorT           y_;
-    VectorT           yp_;
+    std::unique_ptr<const ScalarT*[]> y_ext_;
+    std::unique_ptr<const ScalarT*[]> yp_ext_;
+    std::unique_ptr<ScalarT*[]>       f_ext_;
+
+    VectorT y_;
+    VectorT yp_;
+    VectorT f_;
+
     std::vector<bool> tag_;
     VectorT           abs_tol_;
-    VectorT           f_;
 
     VectorT g_;
 

@@ -9,7 +9,11 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     class GroundedBus : public NodeBase<ScalarT, IdxT>
     {
-      using NodeBase<ScalarT, IdxT>::y;
+      using ExternalConnection = typename CircuitComponent<ScalarT, IdxT>::ExternalConnection;
+
+      using NodeBase<ScalarT, IdxT>::y_ext_;
+      using NodeBase<ScalarT, IdxT>::yp_ext_;
+      using NodeBase<ScalarT, IdxT>::f_ext_;
 
     public:
       GroundedBus(ScalarT voltage)
@@ -17,30 +21,19 @@ namespace GridKit
       {
       }
 
-      int initialize() final
-      {
-        if (int err_code = NodeBase<ScalarT, IdxT>::initialize())
-          return err_code;
-
-        auto* y_data = y().getData();
-        y_data[0]    = voltage_;
-        y().setDataUpdated();
-
-        return 0;
-      }
-
       int allocate() final
       {
         if (int err_code = NodeBase<ScalarT, IdxT>::allocate())
           return err_code;
 
-        this->setExternalConnectionNodes(0, INVALID_INDEX<IdxT>);
+        this->setExternalConnectionNodes(0, ExternalConnection{.y_ = &voltage_, .yp_ = &dummy_, .f_ = &dummy_, .idx_ = INVALID_INDEX<IdxT>});
 
         return 0;
       }
 
     private:
       ScalarT voltage_;
+      ScalarT dummy_;
     };
   } // namespace PowerElectronics
 } // namespace GridKit

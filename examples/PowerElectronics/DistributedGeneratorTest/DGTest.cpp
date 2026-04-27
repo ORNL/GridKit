@@ -11,6 +11,7 @@
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
+#include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 
 /**
@@ -74,16 +75,21 @@ int main(int /* argc */, char const** /* argv */)
   bus.allocate();
   dg.allocate();
 
-  std::copy(t2.begin(), t2.end(), dg.y().getData());
-  std::copy(t1.begin(), t1.end(), dg.yp().getData());
-  std::copy(res.begin(), res.end(), dg.getResidual().getData());
-  dg.y().setDataUpdated();
-  dg.yp().setDataUpdated();
-  dg.getResidual().setDataUpdated();
-  auto* dg_res = dg.getResidual().getData();
   dg.setInternalPointer(&t2[dg.getExternSize()]);
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
-  dg.setInternalResidualPointer(&dg_res[dg.getExternSize()]);
+  dg.setInternalResidualPointer(&res[dg.getExternSize()]);
+
+  using ExternalConnection = GridKit::CircuitComponent<double, size_t>::ExternalConnection;
+
+  for (size_t idx : dg.getExternIndices())
+  {
+    ExternalConnection connection{
+        .y_   = &t2[idx],
+        .yp_  = &t1[idx],
+        .f_   = &res[idx],
+        .idx_ = idx};
+    dg.setExternalConnectionNodes(idx, connection);
+  }
 
   dg.evaluateResidual();
 
@@ -108,7 +114,7 @@ int main(int /* argc */, char const** /* argv */)
   double error_allowed = 10 * std::numeric_limits<double>::epsilon();
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - dg_res[i]) / std::abs(1.0 + true_vec[i]);
+    double error = std::abs(true_vec[i] - res[i]) / std::abs(1.0 + true_vec[i]);
     if (error > error_allowed)
     {
       std::cout << "Model error for equation " << i << " is: " << error << "\n";
