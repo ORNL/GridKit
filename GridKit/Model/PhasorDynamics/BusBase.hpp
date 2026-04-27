@@ -7,7 +7,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
-#include <GridKit/Model/PhasorDynamics/ConstituentModel.hpp>
+#include <GridKit/Model/PhasorDynamics/GridElement.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -22,11 +22,11 @@ namespace GridKit
      *
      */
     template <typename ScalarT, typename IdxT>
-    class BusBase : public ConstituentModel<ScalarT, IdxT>
+    class BusBase : public GridElement<ScalarT, IdxT>
     {
     public:
-      using RealT    = typename ConstituentModel<ScalarT, IdxT>::RealT;
-      using MatrixT  = typename ConstituentModel<ScalarT, IdxT>::MatrixT;
+      using RealT    = typename GridElement<ScalarT, IdxT>::RealT;
+      using MatrixT  = typename GridElement<ScalarT, IdxT>::MatrixT;
       using BusTypeT = typename BusData<RealT, IdxT>::BusType;
       using MonitorT = Model::VariableMonitor<BusBase, BusData>;
 

@@ -16,7 +16,7 @@ gridkit_add_library(phasor_dynamics_core
     ComponentData.hpp
     ComponentLibrary.hpp
     ComponentSignals.hpp
-    ConstituentModel.hpp
+    GridElement.hpp
     SystemModel.hpp
     SystemModelData.hpp
   LINK_LIBRARIES

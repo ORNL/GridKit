@@ -4,7 +4,7 @@
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
-#include <GridKit/Model/PhasorDynamics/ConstituentModel.hpp>
+#include <GridKit/Model/PhasorDynamics/GridElement.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -17,11 +17,11 @@ namespace GridKit
      * @brief Component model implementation base class.
      */
     template <class ScalarT, typename IdxT>
-    class Component : public ConstituentModel<ScalarT, IdxT>
+    class Component : public GridElement<ScalarT, IdxT>
     {
     public:
-      using RealT   = typename ConstituentModel<ScalarT, IdxT>::RealT;
-      using MatrixT = typename ConstituentModel<ScalarT, IdxT>::MatrixT;
+      using RealT   = typename GridElement<ScalarT, IdxT>::RealT;
+      using MatrixT = typename GridElement<ScalarT, IdxT>::MatrixT;
 
       Component() = default;
 

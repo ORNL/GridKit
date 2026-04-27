@@ -18,18 +18,18 @@ namespace GridKit
      * @brief Model base class for all system constituents
      */
     template <class ScalarT, typename IdxT>
-    class ConstituentModel : public Model::Evaluator<ScalarT, IdxT>
+    class GridElement : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-      ConstituentModel()
+      GridElement()
         : size_{0}
       {
       }
 
-      virtual ~ConstituentModel()
+      virtual ~GridElement()
       {
         if (J_rows_buffer_ != nullptr)
         {
@@ -187,6 +187,8 @@ namespace GridKit
       using NotImplementedError = GridKit::Utilities::NotImplementedError;
 
     public:
+      // TODO: evaluate how this complies with xSDK guidelines
+
       [[noreturn]] IdxT sizeQuadrature() override
       {
         throw NotImplementedError(__func__);
