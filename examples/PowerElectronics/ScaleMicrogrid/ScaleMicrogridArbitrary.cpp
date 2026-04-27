@@ -160,24 +160,24 @@ int printMicrogridSystems(index_type N_size)
     Lload_list[0] = Lload1;
   }
 
-  using SignalNode                      = GridKit::PowerElectronics::SignalNode<double, size_t>;
-  std::unique_ptr<SignalNode> dg_signal = std::make_unique<SignalNode>();
-  sys_model.addNode(&*dg_signal);
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
+  sys_model.addNode(&dg_signal);
 
   using Bus                                     = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   std::unique_ptr<std::unique_ptr<Bus>[]> buses = std::make_unique<std::unique_ptr<Bus>[]>(2 * N_size);
   for (size_t i = 0; i < 2 * N_size; i++)
   {
     buses[i] = std::make_unique<Bus>();
-    sys_model.addNode(&*buses[i]);
+    sys_model.addNode(buses[i].get());
   }
 
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
                                                                  true,
-                                                                 &*dg_signal,
-                                                                 &*buses[0]);
+                                                                 &dg_signal,
+                                                                 buses[0].get());
   sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
@@ -189,8 +189,8 @@ int printMicrogridSystems(index_type N_size)
     auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
                                                                DGParams_list[i],
                                                                false,
-                                                               &*dg_signal,
-                                                               &*buses[i]);
+                                                               &dg_signal,
+                                                               buses[i].get());
     sys_model.addComponent(dg);
   }
 
@@ -201,9 +201,9 @@ int printMicrogridSystems(index_type N_size)
     auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
                                                                 rline_list[i],
                                                                 Lline_list[i],
-                                                                &*dg_signal,
-                                                                &*buses[i],
-                                                                &*buses[i + 1]);
+                                                                &dg_signal,
+                                                                buses[i].get(),
+                                                                buses[i + 1].get());
     sys_model.addComponent(line_model);
   }
 
@@ -213,15 +213,15 @@ int printMicrogridSystems(index_type N_size)
     auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
                                                                 rload_list[i],
                                                                 Lload_list[i],
-                                                                &*dg_signal,
-                                                                &*buses[2 * i]);
+                                                                &dg_signal,
+                                                                buses[2 * i].get());
     sys_model.addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, &*buses[i]);
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, buses[i].get());
     sys_model.addComponent(virDQbus_model);
   }
 
@@ -244,7 +244,7 @@ int printMicrogridSystems(index_type N_size)
   }
 
   // since the initial P_com = 0, set the initial vector to the reference frame
-  sys_model.y()[dg_signal->getNodeConnection(0)] = DG_parms1.wb_;
+  sys_model.y()[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model.initialize();
   sys_model.evaluateResidual();

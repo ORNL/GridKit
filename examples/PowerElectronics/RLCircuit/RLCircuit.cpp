@@ -34,28 +34,28 @@ int main(int /* argc */, char const** /* argv */)
   double linit = 1.0;
   double vinit = 1.0;
 
-  using Bus                           = GridKit::PowerElectronics::Bus<double, size_t>;
-  using InfiniteBus                   = GridKit::PowerElectronics::InfiniteBus<double, size_t>;
-  std::unique_ptr<InfiniteBus> bus_iv = std::make_unique<InfiniteBus>(0.0);
-  std::unique_ptr<Bus>         bus_vr = std::make_unique<Bus>();
-  std::unique_ptr<Bus>         bus_ir = std::make_unique<Bus>();
+  using Bus         = GridKit::PowerElectronics::Bus<double, size_t>;
+  using InfiniteBus = GridKit::PowerElectronics::InfiniteBus<double, size_t>;
+  InfiniteBus bus_iv(0.0);
+  Bus         bus_vr;
+  Bus         bus_ir;
 
-  sysmodel.addNode(&*bus_iv);
-  sysmodel.addNode(&*bus_vr);
-  sysmodel.addNode(&*bus_ir);
+  sysmodel.addNode(&bus_iv);
+  sysmodel.addNode(&bus_vr);
+  sysmodel.addNode(&bus_ir);
 
   // inductor
-  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit, &*bus_ir, &*bus_iv);
+  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit, &bus_ir, &bus_iv);
   sysmodel.addComponent(induct);
 
   // resistor
   idoff++;
-  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit, &*bus_vr, &*bus_ir);
+  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit, &bus_vr, &bus_ir);
   sysmodel.addComponent(resis);
 
   // voltage source
   idoff++;
-  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit, &*bus_iv, &*bus_vr);
+  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit, &bus_iv, &bus_vr);
   sysmodel.addComponent(vsource);
 
   sysmodel.allocate();

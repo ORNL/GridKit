@@ -153,15 +153,15 @@ int main()
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
 
-  using SignalNode                      = GridKit::PowerElectronics::SignalNode<double, size_t>;
-  std::unique_ptr<SignalNode> dg_signal = std::make_unique<SignalNode>();
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
 
-  using Bus                = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
-  std::unique_ptr<Bus> bus = std::make_unique<Bus>();
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus;
 
-  DG* dg = new DG(0, parms, true, &*dg_signal, &*bus);
-  dg_signal->allocate();
-  bus->allocate();
+  DG* dg = new DG(0, parms, true, &dg_signal, &bus);
+  dg_signal.allocate();
+  bus.allocate();
   dg->allocate();
   dg->initialize();
   dg->updateTime(0.0, 0.0);

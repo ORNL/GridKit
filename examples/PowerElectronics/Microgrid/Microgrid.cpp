@@ -85,80 +85,80 @@ int main(int /* argc */, char const** /* argv */)
   double rload2 = 2.0;
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  using SignalNode                      = GridKit::PowerElectronics::SignalNode<double, size_t>;
-  std::unique_ptr<SignalNode> dg_signal = std::make_unique<SignalNode>();
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
 
-  sysmodel->addNode(&*dg_signal);
+  sysmodel->addNode(&dg_signal);
 
-  using Bus                 = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
-  std::unique_ptr<Bus> bus1 = std::make_unique<Bus>();
-  std::unique_ptr<Bus> bus2 = std::make_unique<Bus>();
-  std::unique_ptr<Bus> bus3 = std::make_unique<Bus>();
-  std::unique_ptr<Bus> bus4 = std::make_unique<Bus>();
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus1;
+  Bus bus2;
+  Bus bus3;
+  Bus bus4;
 
-  sysmodel->addNode(&*bus1);
-  sysmodel->addNode(&*bus2);
-  sysmodel->addNode(&*bus3);
-  sysmodel->addNode(&*bus4);
+  sysmodel->addNode(&bus1);
+  sysmodel->addNode(&bus2);
+  sysmodel->addNode(&bus3);
+  sysmodel->addNode(&bus4);
 
   // dg 1
   GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(
-      0, parms1, true, &*dg_signal, &*bus1);
+      0, parms1, true, &dg_signal, &bus1);
   sysmodel->addComponent(dg1);
 
   // dg 2
   GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(
-      1, parms1, false, &*dg_signal, &*bus2);
+      1, parms1, false, &dg_signal, &bus2);
   sysmodel->addComponent(dg2);
 
   // dg 3
   GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(
-      2, parms2, false, &*dg_signal, &*bus3);
+      2, parms2, false, &dg_signal, &bus3);
   sysmodel->addComponent(dg3);
 
   // dg 4
   GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(
-      3, parms2, false, &*dg_signal, &*bus4);
+      3, parms2, false, &dg_signal, &bus4);
   sysmodel->addComponent(dg4);
 
   // Lines
 
   // line 1
   GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(
-      4, rline1, Lline1, &*dg_signal, &*bus1, &*bus2);
+      4, rline1, Lline1, &dg_signal, &bus1, &bus2);
   sysmodel->addComponent(l1);
 
   // line 2
   GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(
-      5, rline2, Lline2, &*dg_signal, &*bus2, &*bus3);
+      5, rline2, Lline2, &dg_signal, &bus2, &bus3);
   sysmodel->addComponent(l2);
 
   // line 3
   GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(
-      6, rline3, Lline3, &*dg_signal, &*bus3, &*bus4);
+      6, rline3, Lline3, &dg_signal, &bus3, &bus4);
   sysmodel->addComponent(l3);
 
   //  loads
 
   // load 1
-  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &*dg_signal, &*bus1);
+  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &dg_signal, &bus1);
   sysmodel->addComponent(load1);
 
   // load 2
-  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &*dg_signal, &*bus3);
+  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &dg_signal, &bus3);
   sysmodel->addComponent(load2);
 
   // Virtual PQ Buses
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN, &*bus1);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN, &bus1);
   sysmodel->addComponent(bus_para_1);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN, &*bus2);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN, &bus2);
   sysmodel->addComponent(bus_para_2);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN, &*bus3);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN, &bus3);
   sysmodel->addComponent(bus_para_3);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN, &*bus4);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN, &bus4);
   sysmodel->addComponent(bus_para_4);
 
   sysmodel->allocate();
@@ -188,7 +188,7 @@ int main(int /* argc */, char const** /* argv */)
   }
 
   // since the intial P_com = 0
-  sysmodel->y()[dg_signal->getNodeConnection(0)] = parms1.wb_;
+  sysmodel->y()[dg_signal.getNodeConnection(0)] = parms1.wb_;
 
   sysmodel->initialize();
   sysmodel->evaluateResidual();
