@@ -7,12 +7,12 @@ namespace GridKit
   namespace PowerElectronics
   {
     template <typename ScalarT, typename IdxT>
-    class InfiniteBus : public NodeBase<ScalarT, IdxT>
+    class GroundedBus : public NodeBase<ScalarT, IdxT>
     {
       using NodeBase<ScalarT, IdxT>::y;
 
     public:
-      InfiniteBus(ScalarT voltage)
+      GroundedBus(ScalarT voltage)
         : NodeBase<ScalarT, IdxT>(0, 1), voltage_(voltage)
       {
       }

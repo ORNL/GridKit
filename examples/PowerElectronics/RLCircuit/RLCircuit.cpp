@@ -8,7 +8,7 @@
 #include <memory>
 
 #include <GridKit/Model/PowerElectronics/Bus/Bus.hpp>
-#include <GridKit/Model/PowerElectronics/Bus/InfiniteBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/GroundedBus.hpp>
 #include <GridKit/Model/PowerElectronics/Capacitor/Capacitor.hpp>
 #include <GridKit/Model/PowerElectronics/Inductor/Inductor.hpp>
 #include <GridKit/Model/PowerElectronics/Resistor/Resistor.hpp>
@@ -35,8 +35,8 @@ int main(int /* argc */, char const** /* argv */)
   double vinit = 1.0;
 
   using Bus         = GridKit::PowerElectronics::Bus<double, size_t>;
-  using InfiniteBus = GridKit::PowerElectronics::InfiniteBus<double, size_t>;
-  InfiniteBus bus_iv(0.0);
+  using GroundedBus = GridKit::PowerElectronics::GroundedBus<double, size_t>;
+  GroundedBus bus_iv(0.0);
   Bus         bus_vr;
   Bus         bus_ir;
 
