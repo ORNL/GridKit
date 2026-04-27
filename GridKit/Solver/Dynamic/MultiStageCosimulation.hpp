@@ -3,9 +3,9 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 
 #include <sundials/sundials_types.h>
@@ -42,9 +42,9 @@ namespace Integrator
     int timestepper(const std::vector<double>&                 out_times,
                     std::optional<std::function<void(double)>> out_cb = {});
 
-    int distributeLocal(const State* global_y);
+    int distributeLocal(const State& global_y);
 
-    int distributeCoupling(const State* global_y, int stage);
+    int distributeCoupling(const State& global_y, int stage);
 
     int allocate();
 
@@ -88,35 +88,35 @@ namespace Integrator
      * @brief linear solver for the sub-integrator
      *
      */
-    std::vector<ReSolve::SystemSolver> lin_solver;
+    std::vector<std::unique_ptr<ReSolve::SystemSolver>> lin_solver_;
 
     /**
      *
-     * @brief Containes vectors of initial conditions for every step
+     * @brief Contains vectors of initial conditions for every step
      *
      */
-    std::unique_ptr<std::unique_ptr<State>[]> x0_local_;
+    std::vector<State> x0_local_;
 
     /**
      *
      * @brief Vectors of coupling matrices for each partition
      *
      */
-    std::unique_ptr<std::unique_ptr<State>[]> coupling_Mat_;
+    std::vector<State> coupling_mat_;
 
     /**
      *
      * @brief Vector of stages
      *
      */
-    std::unique_ptr<State> stages_;
+    State stages_;
 
     /**
      *
-     * @brief Vector of stages
+     * @brief partition solution multi-dimensional vectors
      *
      */
-    std::unique_ptr<State> partition_solution_;
+    State partition_solution_;
 
     /**
      *
@@ -128,6 +128,6 @@ namespace Integrator
      *
      *@brief Vector of solvers
      */
-    std::vector<Rosenbrock*> solvers;
-  }
+    std::vector<std::unique_ptr<Rosenbrock>> solvers_;
+  };
 } // namespace Integrator

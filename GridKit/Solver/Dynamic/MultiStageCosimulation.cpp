@@ -5,50 +5,50 @@
 
 #include <cmath>
 #include <cstddef>
-#include <format>
-#include <iterator>
 #include <vector>
 
 namespace Integrator
 {
 
+  // TODO: Complete implementation
   template <class ScalarT, typename IdxT>
   int MultiStageCosimulation<ScalarT, IdxT>::allocate()
   {
-    x0_local_     = std::make_unique<std::unique_ptr<State>[]>(num_partitions_);
-    coupling_Mat_ = std::make_unique<std::unique_ptr<State>[]>(num_partitions_);
 
     for (size_t p = 0; p < num_partitions_; ++p)
     {
-      auto* part         = partitions_[p];
-      int   num_coupling = part->getCouplingSize();
-      int   num_states   = part->getStateSize();
+      auto* part = partitions_[p];
 
-      x0_local_[p]     = std::make_unique<State>(num_states);
-      coupling_Mat_[p] = std::make_unique<State>(num_coupling, num_stages_);
+      int num_coupling = part->getCouplingSize();
+      int num_states   = part->getStateSize();
 
-      x0_local_[p]->allocate(memspace_);
-      coupling_Mat_[p]->allocate(memspace_);
+      x0_local_[p]     = State(num_states);
+      coupling_mat_[p] = State(num_coupling, num_stages_);
+
+      x0_local_[p].allocate(memspace_);
+      coupling_mat_[p].allocate(memspace_);
     }
 
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
-  int MultiStageCosimulation<ScalarT, IdxT>::distributeLocal(const State* global_y)
+  int MultiStageCosimulation<ScalarT, IdxT>::distributeLocal(const State& global_y)
   {
+
+    auto* global_data = global_y.getData(memspace_);
 
     for (size_t p = 0; p < num_partitions_; ++p)
     {
-      auto&       part     = partitions_[p];
-      const auto& external = part.getExternalIndices();
-      size_t      n        = part.size();
+      auto*  part     = partitions_[p];
+      auto&  internal = part->getInternalIndecies(); // TODO: add this function to partition evaluate
+      size_t n        = part->size();
 
-      auto* local_data = x0_local_[p].get()->getData(p, memspace_);
+      auto* local_data = x0_local_[p].getData(memspace_);
 
       for (size_t i = 0; i < n; ++i)
       {
-        local_data[i] = global_y[external[i]];
+        local_data[i] = global_data[internal[i]];
       }
     }
 
@@ -56,33 +56,36 @@ namespace Integrator
   }
 
   template <class ScalarT, typename IdxT>
-  int MultiStageCosimulation<ScalarT, IdxT>::distributeCoupling(const State* global_y, int stage)
+  int MultiStageCosimulation<ScalarT, IdxT>::distributeCoupling(const State& global_y, int stage)
   {
-    const IdxT num_parts = static_cast<IdxT>(partitions_.size());
 
-    for (IdxT p = 0; p < num_parts; ++p)
+    auto* global_data = global_y.getData(memspace_);
+
+    for (size_t p = 0; p < num_partitions_; ++p)
     {
-      auto*      part     = partitions_[p];
-      auto       external = part->getCoupling();
-      const IdxT n        = part->size();
+      auto*  part     = partitions_[p];
+      auto&  external = part->getExternalIndices(); // TODO: add this function to partition evaluate
+      size_t n        = part->size();
 
-      auto* local_data = x0_local_[p].get()->getData(p, memspace_);
+      auto* local_data = coupling_mat_[p].getData(stage, memspace_);
 
-      for (IdxT i = 0; i < n; ++i)
+      for (size_t i = 0; i < n; ++i)
       {
-        local_data[i] = global_y[external[i]];
+        local_data[i] = global_data[external[i]];
       }
     }
 
     return 0;
   }
 
+  // TODO: Complete implementation
   template <class ScalarT, typename IdxT>
   int MultiStageCosimulation<ScalarT, IdxT>::timestep(const State& global_y)
   {
     return 0;
   }
 
+  // TODO: Complete implementation
   template <class ScalarT, typename IdxT>
   int MultiStageCosimulation<ScalarT, IdxT>::partitionSolve()
   {
@@ -94,7 +97,8 @@ namespace Integrator
       for (auto* partitionEvaluator : partitions_)
       {
 
-        partitionEvaluator->addForcing(coupling);
+        // TODO: add a coupling function to the partition
+        partitionEvaluator->addForcing();
 
         if (i + 1 < max_iterations_)
         {
@@ -113,8 +117,6 @@ namespace Integrator
         break;
       }
     }
-
-    std::swap(stages_, partition_solutions_);
 
     return 0;
   }
