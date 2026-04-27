@@ -144,6 +144,8 @@ namespace GridKit
         RealT a4_{0};
 
         // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
+        RealT use_notch_{0};
+        RealT bypass_notch_{1};
         RealT use_4th_order_{0};
         RealT use_3rd_order_{0};
         RealT use_2nd_order_{0};

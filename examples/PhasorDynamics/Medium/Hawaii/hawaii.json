@@ -2,7 +2,7 @@
     "header": {
         "format_version": 0.1,
         "format_revision": 1,
-        "case_name": "Hawaii40_20231026",
+        "case_name": "Hawaii",
         "case_description": "A modified Hawaii 37 Bus Case that only has synchronous machines.",
         "case_comments": "No Case Comments",
         "freq_base": 60.0,
