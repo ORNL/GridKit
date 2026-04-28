@@ -27,7 +27,7 @@ set(GRIDKIT_THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
 option(GridKit_ENABLE_IPOPT "Enable Ipopt support" OFF)
 
 # SUNDIALS support is disabled by default
-option(GridKit_ENABLE_SUNDIALS "Enable SUNDIALS support" ON)
+option(GridKit_ENABLE_SUNDIALS "Enable SUNDIALS support" OFF)
 
 # Enzyme support is disabled by default
 option(GridKit_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)

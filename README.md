@@ -37,25 +37,38 @@ Note, you may need to run the second step periodically as our third party depend
 
 ### Installing
 
-GridKit™ uses CMake for build configuration. Per CMake best practices it is recommended
-to build GridKit™ outside the source directory. Building GridKit™ can be as simple as executing
+GridKit™ uses CMake for build configuration. The build directory must be
+outside the source tree:
 ```bash
-cmake source_dir
-make
-make install
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ../GridKit
+cmake --build .
+cmake --install .
 ```
-in the build directory. Dependencies should be autodetected if they are installed in
-standard locations, otherwise you need to specify the location of the dependency
-manually. For example:
+Dependencies are autodetected if installed in standard locations, otherwise
+specify their location explicitly. For example:
 ```bash
-cmake -DSUNDIALS_DIR=/path/to/sundials/install source_dir
+cmake -DSUNDIALS_DIR=/path/to/sundials/install ../GridKit
 ```
-You can also use `ccmake` or `cmake-gui` tools to adjust GridKit™ build configuration.
+You can also use `ccmake` or `cmake-gui` to adjust the build configuration.
+
+See [INSTALL.md](INSTALL.md) for full instructions, including how to build
+each optional dependency and all available CMake options.
 
 ### Testing
 
-Several examples are built together with GridKit™ libraries. These are also used
-as functionality test and executed by running `ctest` in the build directory.
+Several examples are built together with GridKit™ libraries and serve as
+functionality tests. Run them with `ctest` in the build directory:
+```bash
+ctest --output-on-failure
+```
+To verify the installed CMake configuration works correctly for downstream
+projects, run the installation test after `cmake --install`:
+```bash
+make test_install
+```
+See [Testing the installation](INSTALL.md#testing-the-installation) in
+[INSTALL.md](INSTALL.md) for details.
 
 ## Contributors
 
