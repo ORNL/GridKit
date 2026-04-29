@@ -49,7 +49,24 @@ int main(int /* argc */, char const** /* argv */)
   GridKit::DistributedGenerator<double, size_t> dg(0, parms, true, &dg_signal, &bus);
 
   std::vector<double> t1(16, 0.0);
-  std::vector<double> t2{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
+  std::vector<double> t2{
+      0.0,
+      0.1,
+      0.2,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.5,
+      0.3,
+  };
 
   dg_signal.allocate();
   bus.allocate();
@@ -64,7 +81,6 @@ int main(int /* argc */, char const** /* argv */)
   std::vector<double> true_vec{3.141592277589793e+02,
                                8.941907747838389e-01,
                                1.846733023014284e+00,
-                               3.141592277589793e+02,
                                1.014543000000000e+02,
                                -1.507680000000000e+01,
                                3.787993500000000e+02,
