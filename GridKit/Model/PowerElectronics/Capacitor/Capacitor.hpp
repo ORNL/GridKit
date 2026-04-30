@@ -47,7 +47,8 @@ namespace GridKit
 
     int initialize();
     int tagDifferentiable();
-    int evaluateResidual();
+    int evaluateInternalResidual() final;
+    int evaluateExternalResidual() final;
     int evaluateJacobian();
     int evaluateIntegrand();
 

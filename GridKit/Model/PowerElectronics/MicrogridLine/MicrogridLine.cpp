@@ -70,22 +70,27 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  int MicrogridLine<ScalarT, IdxT>::evaluateResidual()
+  int MicrogridLine<ScalarT, IdxT>::evaluateInternalResidual()
+  {
+    f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0] * y_[6] + (y_[1] - y_[3]) / L_;
+    f_[6] = -yp_[6] - (R_ / L_) * y_[6] - y_[0] * y_[5] + (y_[2] - y_[4]) / L_;
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int MicrogridLine<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // ref motor
     f_[0] = 0.0;
 
-    // input
+    // Port 1
     f_[1] = -y_[5];
     f_[2] = -y_[6];
 
-    // output
+    // Port 2
     f_[3] = y_[5];
     f_[4] = y_[6];
-
-    // Internal variables
-    f_[5] = -yp_[5] - (R_ / L_) * y_[5] + y_[0] * y_[6] + (y_[1] - y_[3]) / L_;
-    f_[6] = -yp_[6] - (R_ / L_) * y_[6] - y_[0] * y_[5] + (y_[2] - y_[4]) / L_;
 
     return 0;
   }

@@ -65,7 +65,16 @@ namespace GridKit
    * @brief Eval Micro Load
    */
   template <class ScalarT, typename IdxT>
-  int MicrogridLoad<ScalarT, IdxT>::evaluateResidual()
+  int MicrogridLoad<ScalarT, IdxT>::evaluateInternalResidual()
+  {
+    f_[3] = -yp_[3] - (R_ / L_) * y_[3] + y_[0] * y_[4] + y_[1] / L_;
+    f_[4] = -yp_[4] - (R_ / L_) * y_[4] - y_[0] * y_[3] + y_[2] / L_;
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int MicrogridLoad<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // ref motor
     f_[0] = 0.0;
@@ -75,10 +84,6 @@ namespace GridKit
     // input
     f_[1] = -y_[3];
     f_[2] = -y_[4];
-
-    // Internal variables
-    f_[3] = -yp_[3] - (R_ / L_) * y_[3] + y_[0] * y_[4] + y_[1] / L_;
-    f_[4] = -yp_[4] - (R_ / L_) * y_[4] - y_[0] * y_[3] + y_[2] / L_;
 
     return 0;
   }

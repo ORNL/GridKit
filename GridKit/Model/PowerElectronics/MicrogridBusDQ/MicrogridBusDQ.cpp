@@ -56,8 +56,14 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  int MicrogridBusDQ<ScalarT, IdxT>::evaluateInternalResidual()
+  {
+    return 0;
+  }
+
   /**
-   * @brief Evaluate residual of microgrid line
+   * @brief Evaluate residual
    * This model has "Virtual resistors". The voltage of the bus divided by its virtual resistance.
    * The components are external to allow for outside components to add inductances to the terms.
    *
@@ -65,7 +71,7 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  int MicrogridBusDQ<ScalarT, IdxT>::evaluateResidual()
+  int MicrogridBusDQ<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // bus voltage
     f_[0] = -y_[0] / RN_;

@@ -57,7 +57,13 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  int Resistor<ScalarT, IdxT>::evaluateResidual()
+  int Resistor<ScalarT, IdxT>::evaluateInternalResidual()
+  {
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int Resistor<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // input
     f_[0] = (y_[0] - y_[1]) / R_;

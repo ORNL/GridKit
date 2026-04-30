@@ -89,26 +89,9 @@ namespace GridKit
    *
    */
   template <class ScalarT, typename IdxT>
-  int DistributedGenerator<ScalarT, IdxT>::evaluateResidual()
+  int DistributedGenerator<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    //   ### Externals Componenets ###
-
     ScalarT omega = wb_ - mp_ * y_[4];
-    // ref common ref motor angle
-    /// @todo fix boolian conditional, unclear result
-    if (refframe_)
-    {
-      f_[0] = omega - y_[0];
-    }
-    else
-    {
-      f_[0] = 0.0;
-    }
-
-    // output
-    // current transformed to common frame
-    f_[1] = std::cos(y_[3]) * y_[14] - std::sin(y_[3]) * y_[15];
-    f_[2] = std::sin(y_[3]) * y_[14] + std::cos(y_[3]) * y_[15];
 
     // Take incoming voltages to current rotator reference frame
     ScalarT vbd_in = std::cos(y_[3]) * y_[1] + std::sin(y_[3]) * y_[2];
@@ -149,6 +132,27 @@ namespace GridKit
     // Output Connector
     f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] + omega * y_[15] + (y_[12] - vbd_in) / Lc_;
     f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - omega * y_[14] + (y_[13] - vbq_in) / Lc_;
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int DistributedGenerator<ScalarT, IdxT>::evaluateExternalResidual()
+  {
+    ScalarT omega = wb_ - mp_ * y_[4];
+    // ref common ref motor angle
+    if (refframe_)
+    {
+      f_[0] = omega - y_[0];
+    }
+    else
+    {
+      f_[0] = 0.0;
+    }
+
+    // output
+    // current transformed to common frame
+    f_[1] = std::cos(y_[3]) * y_[14] - std::sin(y_[3]) * y_[15];
+    f_[2] = std::sin(y_[3]) * y_[14] + std::cos(y_[3]) * y_[15];
     return 0;
   }
 

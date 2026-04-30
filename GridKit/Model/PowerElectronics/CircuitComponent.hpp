@@ -24,14 +24,6 @@ namespace GridKit
 
     CircuitComponent() = default;
 
-    ~CircuitComponent()
-    {
-      if (connection_nodes_ != nullptr)
-      {
-        delete[] connection_nodes_;
-      }
-    };
-
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
      */
@@ -70,12 +62,7 @@ namespace GridKit
      */
     int setExternalConnectionNodes(IdxT local_index, IdxT global_index)
     {
-      if (connection_nodes_ == nullptr)
-      {
-        connection_nodes_ = new IdxT[static_cast<size_t>(size_)];
-      }
-
-      connection_nodes_[local_index] = global_index;
+      connection_nodes_[static_cast<size_t>(local_index)] = global_index;
       return 0;
     }
 
@@ -107,6 +94,8 @@ namespace GridKit
       jacobian_coo_rows_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_cols_   = std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
       jacobian_coo_values_ = std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+
+      connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
@@ -144,6 +133,38 @@ namespace GridKit
     {
       return jacobian_coo_values_.get();
     }
+
+    /**
+     * @brief Evaluating the residual of a CircuitComponent should be done by evaluating the
+     * internal residuals and external residuals. CircuitComponents should overload those
+     * functions for their residuals (and the system will call those function instead of this one),
+     * so there is no reason to overload this functionality.
+     *
+     * @return An error code, or 0 is successful.
+     */
+    int evaluateResidual() final
+    {
+      if (int err_code = evaluateInternalResidual())
+        return err_code;
+
+      return evaluateExternalResidual();
+    }
+
+    /**
+     * @brief Evaluate all of the residuals of internal variables of the component,
+     * modifying \ref f_.
+     *
+     * @return An error code, or 0 if successful.
+     */
+    virtual int evaluateInternalResidual() = 0;
+
+    /**
+     * @brief Evaluate all of the residuals of external variables of the component,
+     * modifying \ref f_
+     *
+     * @return An error code, or 0 if successful.
+     */
+    virtual int evaluateExternalResidual() = 0;
 
   protected:
     /**
@@ -371,11 +392,11 @@ namespace GridKit
     }
 
   protected:
-    size_t         n_extern_;
-    size_t         n_intern_;
-    std::set<IdxT> extern_indices_;
+    size_t                  n_extern_;
+    size_t                  n_intern_;
+    std::set<IdxT>          extern_indices_;
     ///@todo may want to replace the mapping of connection_nodes to Node objects instead of IdxT. Allows for container free setup
-    IdxT*          connection_nodes_ = nullptr;
+    std::unique_ptr<IdxT[]> connection_nodes_;
 
   protected:
     IdxT size_{0};
