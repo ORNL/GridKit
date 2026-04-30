@@ -140,7 +140,6 @@ namespace GridKit
   {
     ScalarT omega = wb_ - mp_ * y_[4];
     // ref common ref motor angle
-    /// @todo fix boolian conditional, unclear result
     if (refframe_)
     {
       f_[0] = omega - y_[0];
