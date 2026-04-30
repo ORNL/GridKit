@@ -48,7 +48,13 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> yp_, std::vect
 
   constexpr bool ref_frame_ = true;
 
-  double omega = wb_ - mp_ * y_[4];
+  using ScalarT = double;
+
+  ScalarT omega = wb_ - mp_ * y_[3];
+
+  ScalarT vbd_in = std::cos(y_[15]) * y_[1] + std::sin(y_[15]) * y_[2];
+  ScalarT vbq_in = -std::sin(y_[15]) * y_[1] + std::cos(y_[15]) * y_[2];
+
   if (ref_frame_)
   {
     f_[0] = omega - y_[0];
@@ -58,39 +64,47 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> yp_, std::vect
     f_[0] = 0.0;
   }
 
-  f_[1] = cos(y_[3]) * y_[14] - sin(y_[3]) * y_[15];
-  f_[2] = sin(y_[3]) * y_[14] + cos(y_[3]) * y_[15];
+  // output
+  // current transformed to common frame
+  f_[1] = std::cos(y_[15]) * y_[13] - std::sin(y_[15]) * y_[14];
+  f_[2] = std::sin(y_[15]) * y_[13] + std::cos(y_[15]) * y_[14];
 
-  double vbd_in = cos(y_[3]) * y_[1] + sin(y_[3]) * y_[2];
-  double vbq_in = -sin(y_[3]) * y_[1] + cos(y_[3]) * y_[2];
+  // ### Internal Componenets ##
+  // P and Q equations
+  f_[3] = -yp_[3] + wc_ * (y_[11] * y_[13] + y_[12] * y_[14] - y_[3]);
+  f_[4] = -yp_[4] + wc_ * (-y_[11] * y_[14] + y_[12] * y_[13] - y_[4]);
 
-  f_[3] = -yp_[3] + omega - y_[0];
-  f_[4] = -yp_[4] + wc_ * (y_[12] * y_[14] + y_[13] * y_[15] - y_[4]);
-  f_[5] = -yp_[5] + wc_ * (-y_[12] * y_[15] + y_[13] * y_[14] - y_[5]);
+  // Voltage control
+  ScalarT vod_star = Vn_ - nq_ * y_[4];
+  ScalarT voq_star = static_cast<ScalarT>(0.0);
 
-  double vod_star = Vn_ - nq_ * y_[5];
-  double voq_star = 0.0;
+  f_[5] = -yp_[5] + vod_star - y_[11];
+  f_[6] = -yp_[6] + voq_star - y_[12];
 
-  f_[6] = -yp_[6] + vod_star - y_[12];
-  f_[7] = -yp_[7] + voq_star - y_[13];
+  ScalarT ild_star = F_ * y_[13] - wb_ * Cf_ * y_[12] + Kpv_ * (vod_star - y_[11]) + Kiv_ * y_[5];
+  ScalarT ilq_star = F_ * y_[14] + wb_ * Cf_ * y_[11] + Kpv_ * (voq_star - y_[12]) + Kiv_ * y_[6];
 
-  double ild_star = F_ * y_[14] - wb_ * Cf_ * y_[13] + Kpv_ * (vod_star - y_[12]) + Kiv_ * y_[6];
-  double ilq_star = F_ * y_[15] + wb_ * Cf_ * y_[12] + Kpv_ * (voq_star - y_[13]) + Kiv_ * y_[7];
+  // Current control
+  f_[7] = -yp_[7] + ild_star - y_[9];
+  f_[8] = -yp_[8] + ilq_star - y_[10];
 
-  f_[8] = -yp_[8] + ild_star - y_[10];
-  f_[9] = -yp_[9] + ilq_star - y_[11];
+  ScalarT vid_star = -wb_ * Lf_ * y_[10] + Kpc_ * (ild_star - y_[9]) + Kic_ * y_[7];
+  ScalarT viq_star = wb_ * Lf_ * y_[9] + Kpc_ * (ilq_star - y_[10]) + Kic_ * y_[8];
 
-  double vid_star = -wb_ * Lf_ * y_[11] + Kpc_ * (ild_star - y_[10]) + Kic_ * y_[8];
-  double viq_star = wb_ * Lf_ * y_[10] + Kpc_ * (ilq_star - y_[11]) + Kic_ * y_[9];
+  // Output LC Filter
+  f_[9]  = -yp_[9] - (rLf_ / Lf_) * y_[9] + omega * y_[10] + (vid_star - y_[11]) / Lf_;
+  f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] - omega * y_[9] + (viq_star - y_[12]) / Lf_;
 
-  f_[10] = -yp_[10] - (rLf_ / Lf_) * y_[10] + omega * y_[11] + (vid_star - y_[12]) / Lf_;
-  f_[11] = -yp_[11] - (rLf_ / Lf_) * y_[11] - omega * y_[10] + (viq_star - y_[13]) / Lf_;
+  f_[11] = -yp_[11] + omega * y_[12] + (y_[9] - y_[13]) / Cf_;
+  f_[12] = -yp_[12] - omega * y_[11] + (y_[10] - y_[14]) / Cf_;
 
-  f_[12] = -yp_[12] + omega * y_[13] + (y_[10] - y_[14]) / Cf_;
-  f_[13] = -yp_[13] - omega * y_[12] + (y_[11] - y_[15]) / Cf_;
+  // Output Connector
+  f_[13] = -yp_[13] - (rLc_ / Lc_) * y_[13] + omega * y_[14] + (y_[11] - vbd_in) / Lc_;
+  f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] - omega * y_[13] + (y_[12] - vbq_in) / Lc_;
 
-  f_[14] = -yp_[14] - (rLc_ / Lc_) * y_[14] + omega * y_[15] + (y_[12] - vbd_in) / Lc_;
-  f_[15] = -yp_[15] - (rLc_ / Lc_) * y_[15] - omega * y_[14] + (y_[13] - vbq_in) / Lc_;
+  // Rotor difference angle
+  if (!ref_frame_)
+    f_[15] = -yp_[15] + omega - y_[0];
 }
 
 // Function that computes the Jacobian via automatic differentiation
