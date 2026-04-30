@@ -109,22 +109,18 @@ void evaluateResidual(std::vector<double> y_, std::vector<double> yp_, std::vect
 
 // Function that computes the Jacobian via automatic differentiation
 template <typename T>
-void EnzymeModelJacobian(T* model, DenseMatrix& jac)
+void EnzymeModelJacobian(T* model, DenseMatrix& jac, const std::vector<double>& y, const std::vector<double>& res)
 {
   size_t              N = model->size();
-  std::vector<double> y(N);
   std::vector<double> yp(N);
   std::vector<double> v(N);
-  std::vector<double> res(N);
   std::vector<double> d_res(N);
   for (size_t idy = 0; idy < N; ++idy)
   {
     // Elementary vector for Jacobian-vector product
     for (size_t idx = 0; idx < N; ++idx)
     {
-      y[idx]   = (model->y())[idx];
-      res[idx] = (model->getResidual())[idx];
-      v[idx]   = 0.0;
+      v[idx] = 0.0;
     }
     v[idy] = 1.0;
 
@@ -180,19 +176,30 @@ int main()
   dg->initialize();
   dg->updateTime(0.0, 0.0);
 
+  std::vector<double> y(dg->size());
+  std::vector<double> yp(dg->size());
+  std::vector<double> res(dg->size());
+
+  dg->setInternalPointer(&y[dg->getExternSize()]);
+  dg->setInternalDerivativePointer(&yp[dg->getExternSize()]);
+  dg->setInternalResidualPointer(&res[dg->getExternSize()]);
+
   // Residual evaluation and reference Jacobian
   dg->evaluateResidual();
   dg->evaluateJacobian();
-  std::vector<double> y   = dg->y();
-  std::vector<double> yp  = dg->yp();
-  std::vector<double> res = dg->getResidual();
+
+  for (size_t i = 0; i < dg->getExternSize(); i++)
+  {
+    y[i]   = dg->y()[i];
+    res[i] = dg->getResidual()[i];
+  }
 
   DenseMatrix jac_ref_dense(dg->size(), dg->size());
   jac_ref_dense.setValues(dg->nnz(), dg->jacobianCooRows(), dg->jacobianCooCols(), dg->jacobianCooValues());
 
   // Enzyme Jacobian
   DenseMatrix jac_autodiff(dg->size(), dg->size());
-  EnzymeModelJacobian<DG>(dg, jac_autodiff);
+  EnzymeModelJacobian<DG>(dg, jac_autodiff, y, res);
 
   // Check
   int  fail    = 0;
