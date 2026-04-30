@@ -84,11 +84,11 @@ namespace GridKit
     // ref motor
     f_[0] = 0.0;
 
-    // input
+    // Port 1
     f_[1] = -y_[5];
     f_[2] = -y_[6];
 
-    // output
+    // Port 2
     f_[3] = y_[5];
     f_[4] = y_[6];
 
