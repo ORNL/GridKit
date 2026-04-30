@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -12,35 +10,18 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using Log = ::GridKit::Utilities::Logger;
-
-    /**
-     * @brief Model base class for all system constituents
-     */
-    template <class ScalarT, typename IdxT>
-    class GridElement : public Model::Evaluator<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class GridElement : public Model::Evaluator<ScalarP, IdxP>
     {
     public:
+      using ScalarT = ScalarP;
+      using IdxT    = IdxP;
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
-      GridElement()
-        : size_{0}
-      {
-      }
+      GridElement() = default;
 
-      virtual ~GridElement()
-      {
-        if (J_rows_buffer_ != nullptr)
-        {
-          delete[] J_rows_buffer_;
-          delete[] J_cols_buffer_;
-          delete[] J_vals_buffer_;
-          J_rows_buffer_ = nullptr;
-          J_cols_buffer_ = nullptr;
-          J_vals_buffer_ = nullptr;
-        }
-      }
+      virtual ~GridElement();
 
       virtual int verify() const = 0;
 
@@ -54,16 +35,9 @@ namespace GridKit
         return nnz_;
       }
 
-      void setTolerances(RealT& rtol, RealT& atol) const override
-      {
-        rtol = rel_tol_;
-        atol = abs_tol_;
-      }
+      void setTolerances(RealT& rtol, RealT& atol) const override;
 
-      void setMaxSteps(IdxT& msa) const override
-      {
-        msa = max_steps_;
-      }
+      void setMaxSteps(IdxT& msa) const override;
 
       std::vector<ScalarT>& y() override
       {
@@ -115,32 +89,18 @@ namespace GridKit
         return J_;
       }
 
-      int setVariableIndex(IdxT local_index, IdxT global_index)
-      {
-        variable_indices_[static_cast<size_t>(local_index)] = global_index;
-        return 0;
-      }
+      void setVariableIndex(IdxT local_index, IdxT global_index);
 
-      IdxT& getVariableIndex(IdxT local_index)
-      {
-        return variable_indices_[static_cast<size_t>(local_index)];
-      }
+      IdxT& getVariableIndex(IdxT local_index);
 
       const std::vector<IdxT>& getVariableIndices() const
       {
         return variable_indices_;
       }
 
-      int setResidualIndex(IdxT local_index, IdxT global_index)
-      {
-        residual_indices_[static_cast<size_t>(local_index)] = global_index;
-        return 0;
-      }
+      void setResidualIndex(IdxT local_index, IdxT global_index);
 
-      IdxT& getResidualIndex(IdxT local_index)
-      {
-        return residual_indices_[static_cast<size_t>(local_index)];
-      }
+      IdxT& getResidualIndex(IdxT local_index);
 
       const std::vector<IdxT>& getResidualIndices() const
       {
@@ -183,121 +143,6 @@ namespace GridKit
       std::vector<ScalarT> param_{};
       std::vector<ScalarT> param_up_{};
       std::vector<ScalarT> param_lo_{};
-
-      using NotImplementedError = GridKit::Utilities::NotImplementedError;
-
-    public:
-      // TODO: evaluate how this complies with xSDK guidelines
-
-      [[noreturn]] IdxT sizeQuadrature() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] IdxT sizeParams() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& yB() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& yB() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& ypB() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& ypB() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& param() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& param() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& param_up() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& param_up() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& param_lo() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& param_lo() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] int evaluateIntegrand() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] int initializeAdjoint() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] int evaluateAdjointResidual() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] int evaluateAdjointIntegrand() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& getIntegrand() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& getIntegrand() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& getAdjointResidual() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& getAdjointResidual() const override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] std::vector<ScalarT>& getAdjointIntegrand() override
-      {
-        throw NotImplementedError(__func__);
-      }
-
-      [[noreturn]] const std::vector<ScalarT>& getAdjointIntegrand() const override
-      {
-        throw NotImplementedError(__func__);
-      }
     };
 
   } // namespace PhasorDynamics

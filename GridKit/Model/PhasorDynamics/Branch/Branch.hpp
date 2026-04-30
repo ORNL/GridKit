@@ -10,18 +10,17 @@
 
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 // Forward declarations.
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class BusBase;
 
-    template <typename RealT, typename IdxT>
+    template <typename RealP, typename IdxP>
     struct BranchData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -30,6 +29,34 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename, typename>
+    class Branch;
+
+    enum class BranchInternalVariables : size_t
+    {
+      MAXIMUM
+    };
+
+    enum class BranchExternalVariables : size_t
+    {
+      MAXIMUM
+    };
+
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<Branch<ScalarP, IdxP>>
+    {
+      using BranchT = Branch<ScalarP, IdxP>;
+
+      using ElementT           = BranchT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = BranchData<RealT, IdxT>;
+      using InternalVariablesT = BranchInternalVariables;
+      using ExternalVariablesT = BranchExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
     /**
      * @brief Implementation of a pi-model branch between two buses.
      *
@@ -37,36 +64,39 @@ namespace GridKit
      * direction is into the busses.
      *
      */
-    template <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class Branch : public ConnectedElement<Branch<ScalarP, IdxP>>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      using ConnectedElement<Branch>::gridkit_component_id_;
+      using ConnectedElement<Branch>::size_;
+      using ConnectedElement<Branch>::nnz_;
+      using ConnectedElement<Branch>::time_;
+      using ConnectedElement<Branch>::alpha_;
+      using ConnectedElement<Branch>::y_;
+      using ConnectedElement<Branch>::yp_;
+      using ConnectedElement<Branch>::tag_;
+      using ConnectedElement<Branch>::f_;
+      using ConnectedElement<Branch>::wb_;
+      using ConnectedElement<Branch>::h_;
+      using ConnectedElement<Branch>::J_;
+      using ConnectedElement<Branch>::J_rows_buffer_;
+      using ConnectedElement<Branch>::J_cols_buffer_;
+      using ConnectedElement<Branch>::J_vals_buffer_;
+      using ConnectedElement<Branch>::variable_indices_;
+      using ConnectedElement<Branch>::residual_indices_;
+      using ConnectedElement<Branch>::monitor_;
 
     public:
-      using RealT           = typename Component<ScalarT, IdxT>::RealT;
-      using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = BranchData<RealT, IdxT>;
-      using MonitorT        = Model::VariableMonitor<Branch, BranchData>;
+      using ScalarT    = typename ConnectedElement<Branch>::ScalarT;
+      using IdxT       = typename ConnectedElement<Branch>::IdxT;
+      using RealT      = typename ConnectedElement<Branch>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = BranchData<RealT, IdxT>;
+      using MonitorT   = typename ConnectedElement<Branch>::MonitorT;
 
-      Branch(bus_type* bus1, bus_type* bus2);
-      Branch(bus_type* bus1, bus_type* bus2, RealT R, RealT X, RealT G, RealT B);
-      Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
+      Branch(BusT* bus1, BusT* bus2);
+      Branch(BusT* bus1, BusT* bus2, RealT R, RealT X, RealT G, RealT B);
+      Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
       virtual ~Branch();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -109,7 +139,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeParameters(const model_data_type& data);
+      void initializeParameters(const ModelDataT& data);
       void initializeMonitor();
       void setDerivedParams();
 
@@ -160,21 +190,18 @@ namespace GridKit
       __attribute__((always_inline)) inline int evaluateBusResidual22(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
-      bus_type* bus1_;
-      bus_type* bus2_;
-      RealT     R_{0.0};
-      RealT     X_{0.0};
-      RealT     G_{0.0};
-      RealT     B_{0.0};
-      IdxT      bus1_id_{0};
-      IdxT      bus2_id_{0};
+      BusT* bus1_;
+      BusT* bus2_;
+      RealT R_{0.0};
+      RealT X_{0.0};
+      RealT G_{0.0};
+      RealT B_{0.0};
+      IdxT  bus1_id_{0};
+      IdxT  bus2_id_{0};
 
       /* Derived parameters */
       RealT b_;
       RealT g_;
-
-      /// Variable monitor
-      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

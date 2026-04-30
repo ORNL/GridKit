@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElementImpl.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
-#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
@@ -19,17 +19,15 @@ namespace GridKit
      * - Number of equations = 0
      * - Number of independent variables = 0
      */
-    template <class ScalarT, typename IdxT>
-    Load<ScalarT, IdxT>::Load(bus_type* bus)
+    template <typename ScalarP, typename IdxP>
+    Load<ScalarP, IdxP>::Load(BusT* bus)
       : bus_(bus)
     {
       size_ = 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    Load<ScalarT, IdxT>::Load(bus_type* bus,
-                              RealT     R,
-                              RealT     X)
+    template <typename ScalarP, typename IdxP>
+    Load<ScalarP, IdxP>::Load(BusT* bus, RealT R, RealT X)
       : bus_(bus),
         R_(R),
         X_(X)
@@ -38,22 +36,22 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    Load<ScalarT, IdxT>::Load(bus_type*              bus,
-                              const model_data_type& data)
-      : bus_(bus)
+    template <typename ScalarP, typename IdxP>
+    Load<ScalarP, IdxP>::Load(BusT* bus, const ModelDataT& data)
+      : ConnectedElement<Load>(data),
+        bus_(bus)
     {
-      if (data.parameters.contains(model_data_type::Parameters::R))
+      if (data.parameters.contains(ModelDataT::Parameters::R))
       {
-        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::X))
+      if (data.parameters.contains(ModelDataT::Parameters::X))
       {
-        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
       }
 
-      // using Variable = typename model_data_type::MonitorableVariables;
+      // using Variable = typename ModelDataT::MonitorableVariables;
       // monitor_->set(Variable::p, [this] { return ?; });
       // monitor_->set(Variable::q, [this] { return ?; });
 
@@ -61,8 +59,8 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    Load<ScalarT, IdxT>::~Load()
+    template <typename ScalarP, typename IdxP>
+    Load<ScalarP, IdxP>::~Load()
     {
       // std::cout << "Destroy Load..." << std::endl;
     }
@@ -70,8 +68,8 @@ namespace GridKit
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename ScalarP, typename IdxP>
+    int Load<ScalarP, IdxP>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -80,8 +78,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::allocate()
+    template <typename ScalarP, typename IdxP>
+    int Load<ScalarP, IdxP>::allocate()
     {
       // std::cout << "Allocate Load..." << std::endl;
 
@@ -95,8 +93,8 @@ namespace GridKit
      * Initialization of the load model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::initialize()
+    template <typename ScalarP, typename IdxP>
+    int Load<ScalarP, IdxP>::initialize()
     {
       return 0;
     }
@@ -104,8 +102,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::tagDifferentiable()
+    template <typename ScalarP, typename IdxP>
+    int Load<ScalarP, IdxP>::tagDifferentiable()
     {
       return 0;
     }
@@ -114,8 +112,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename ScalarP, typename IdxP>
+    __attribute__((always_inline)) int Load<ScalarP, IdxP>::evaluateBusResidual(
         [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
     {
       ScalarT Vr = wb[0];
@@ -132,8 +130,8 @@ namespace GridKit
      * @brief Residual contribution of the load is pushed to the bus.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::evaluateResidual()
+    template <typename ScalarP, typename IdxP>
+    int Load<ScalarP, IdxP>::evaluateResidual()
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
@@ -148,17 +146,11 @@ namespace GridKit
      * @brief Derived parameters
      *
      */
-    template <class ScalarT, typename IdxT>
-    void Load<ScalarT, IdxT>::setDerivedParams()
+    template <typename ScalarP, typename IdxP>
+    void Load<ScalarP, IdxP>::setDerivedParams()
     {
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);
-    }
-
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* Load<ScalarT, IdxT>::getMonitor() const
-    {
-      return monitor_.get();
     }
 
   } // namespace PhasorDynamics

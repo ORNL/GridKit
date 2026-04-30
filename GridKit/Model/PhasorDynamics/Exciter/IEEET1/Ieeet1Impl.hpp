@@ -11,10 +11,10 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElementImpl.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
@@ -30,11 +30,9 @@ namespace GridKit
       /**
        * @brief  Constructor for IEEET1 Exciter
        *
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
        */
-      template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type* bus)
+      template <typename ScalarP, typename IdxP>
+      Ieeet1<ScalarP, IdxP>::Ieeet1(BusT* bus)
         : bus_(bus)
       {
         size_ = 9;
@@ -47,20 +45,17 @@ namespace GridKit
        * @param bus   Signal used for terminal reference vmag
        * @param speed Signal used for machine relative speed
        * @param efd   Signal used for E field
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
        */
-      template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(signal_type*           efd_signal,
-                                    signal_type*           speed_signal,
-                                    bus_type*              bus,
-                                    const model_data_type& data)
-        : efd_signal_(efd_signal),
+      template <typename ScalarP, typename IdxP>
+      Ieeet1<ScalarP, IdxP>::Ieeet1(SignalT*          efd_signal,
+                                    SignalT*          speed_signal,
+                                    BusT*             bus,
+                                    const ModelDataT& data)
+        : ConnectedElement<Ieeet1>(data),
+          efd_signal_(efd_signal),
           speed_signal_(speed_signal),
-          bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+          bus_(bus)
       {
-
         // Parse data struct into model
         this->initModelParams(data);
 
@@ -75,15 +70,12 @@ namespace GridKit
        *
        * @param bus   Signal used for terminal reference vmag
        * @param data  Data object to store parameters
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
        */
-      template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
-                                    const model_data_type& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      template <typename ScalarP, typename IdxP>
+      Ieeet1<ScalarP, IdxP>::Ieeet1(BusT* bus, const ModelDataT& data)
+        : bus_(bus)
       {
+        monitor_ = std::make_unique<MonitorT>(data);
 
         // Parse data struct into model
         this->initModelParams(data);
@@ -94,16 +86,16 @@ namespace GridKit
         size_ = 9;
       }
 
-      template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::~Ieeet1()
+      template <typename ScalarP, typename IdxP>
+      Ieeet1<ScalarP, IdxP>::~Ieeet1()
       {
       }
 
       /**
        * @brief Set the component ID
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::setGridKitComponentID(IdxT component_id)
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -113,8 +105,8 @@ namespace GridKit
        * @brief Allocate memory for model
        *
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::allocate()
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::allocate()
       {
         // Resize component model data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
@@ -155,8 +147,8 @@ namespace GridKit
       /**
        * @brief verify method checks that attached signals are also linked
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::verify() const
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::verify() const
       {
         static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
         static constexpr auto VS    = Ieeet1ExternalVariables::VS;
@@ -197,8 +189,8 @@ namespace GridKit
        *
        * Saturation is included via ksat computed from efdp and SA, SB.
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::initialize()
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::initialize()
       {
 
         // External Variables
@@ -263,12 +255,10 @@ namespace GridKit
       /**
        * @brief  Identify differential variables.
        *
-       * @tparam ScalarT Scalar data type
-       * @tparam IdxT Index data type
        * @return int 0
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::tagDifferentiable()
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::tagDifferentiable()
       {
 
         tag_[0] = true;  // y0 - vts  - Sensed term volt
@@ -288,8 +278,8 @@ namespace GridKit
        * @brief Internal Residual
        *
        */
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Ieeet1<ScalarT, IdxT>::evaluateInternalResidual(
+      template <typename ScalarP, typename IdxP>
+      __attribute__((always_inline)) inline int Ieeet1<ScalarP, IdxP>::evaluateInternalResidual(
           ScalarT* y,
           ScalarT* yp,
           ScalarT* wb,
@@ -349,8 +339,8 @@ namespace GridKit
        * @brief Residual evaluation
        *
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::evaluateResidual()
+      template <typename ScalarP, typename IdxP>
+      int Ieeet1<ScalarP, IdxP>::evaluateResidual()
       {
         // Set Input Variables
         // Meta PR Note: This seems to be very slow,
@@ -389,65 +379,65 @@ namespace GridKit
       /**
        * @brief Initialization Exciter Parameters from data structure
        */
-      template <class ScalarT, typename IdxT>
-      void Ieeet1<ScalarT, IdxT>::initModelParams(const model_data_type& data)
+      template <typename ScalarP, typename IdxP>
+      void Ieeet1<ScalarP, IdxP>::initModelParams(const ModelDataT& data)
       {
 
-        if (data.parameters.contains(model_data_type::Parameters::Tr))
+        if (data.parameters.contains(ModelDataT::Parameters::Tr))
         {
-          Tr_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tr));
+          Tr_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tr));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Ka))
+        if (data.parameters.contains(ModelDataT::Parameters::Ka))
         {
-          Ka_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ka));
+          Ka_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ka));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Ta))
+        if (data.parameters.contains(ModelDataT::Parameters::Ta))
         {
-          Ta_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ta));
+          Ta_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ta));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Ke))
+        if (data.parameters.contains(ModelDataT::Parameters::Ke))
         {
-          Ke_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ke));
+          Ke_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ke));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Te))
+        if (data.parameters.contains(ModelDataT::Parameters::Te))
         {
-          Te_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Te));
+          Te_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Te));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Kf))
+        if (data.parameters.contains(ModelDataT::Parameters::Kf))
         {
-          Kf_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Kf));
+          Kf_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Kf));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Tf))
+        if (data.parameters.contains(ModelDataT::Parameters::Tf))
         {
-          Tf_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tf));
+          Tf_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tf));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Vrmin))
+        if (data.parameters.contains(ModelDataT::Parameters::Vrmin))
         {
-          Vrmin_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vrmin));
+          Vrmin_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vrmin));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Vrmax))
+        if (data.parameters.contains(ModelDataT::Parameters::Vrmax))
         {
-          Vrmax_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vrmax));
+          Vrmax_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vrmax));
         }
-        if (data.parameters.contains(model_data_type::Parameters::E1))
+        if (data.parameters.contains(ModelDataT::Parameters::E1))
         {
-          E1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::E1));
+          E1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::E1));
         }
-        if (data.parameters.contains(model_data_type::Parameters::E2))
+        if (data.parameters.contains(ModelDataT::Parameters::E2))
         {
-          E2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::E2));
+          E2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::E2));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Se1))
+        if (data.parameters.contains(ModelDataT::Parameters::Se1))
         {
-          Se1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Se1));
+          Se1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Se1));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Se2))
+        if (data.parameters.contains(ModelDataT::Parameters::Se2))
         {
-          Se2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Se2));
+          Se2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Se2));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Ispdlim))
+        if (data.parameters.contains(ModelDataT::Parameters::Ispdlim))
         {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ispdlim));
+          Ispdlim_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ispdlim));
         }
 
         // Derived Parameters
@@ -458,16 +448,10 @@ namespace GridKit
         SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
       }
 
-      template <class ScalarT, typename IdxT>
-      const Model::VariableMonitorBase* Ieeet1<ScalarT, IdxT>::getMonitor() const
+      template <typename ScalarP, typename IdxP>
+      void Ieeet1<ScalarP, IdxP>::initializeMonitor()
       {
-        return monitor_.get();
-      }
-
-      template <class ScalarT, typename IdxT>
-      void Ieeet1<ScalarT, IdxT>::initializeMonitor()
-      {
-        using Variable = model_data_type::MonitorableVariables;
+        using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
                       { return efd_signal_->read(); });
         monitor_->set(Variable::ksat, [this]

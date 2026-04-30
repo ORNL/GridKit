@@ -9,22 +9,21 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class BusBase;
 
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class SignalNode;
 
-    template <typename RealT, typename IdxT>
+    template <typename RealP, typename IdxP>
     struct GenrouData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -33,6 +32,9 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename, typename>
+    class Genrou;
+
     /// Internal variables of a `Genrou`
     enum class GenrouInternalVariables : size_t
     {
@@ -66,66 +68,85 @@ namespace GridKit
       MAXIMUM,
     };
 
-    template <class ScalarT, typename IdxT>
-    class Genrou : public Component<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<Genrou<ScalarP, IdxP>>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::mva_system_base_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      using GenrouT = Genrou<ScalarP, IdxP>;
+
+      using ElementT           = GenrouT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = GenrouData<RealT, IdxT>;
+      using InternalVariablesT = GenrouInternalVariables;
+      using ExternalVariablesT = GenrouExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
+    template <class ScalarP, typename IdxP>
+    class Genrou : public ConnectedElement<Genrou<ScalarP, IdxP>>
+    {
+      using ConnectedElement<Genrou>::gridkit_component_id_;
+      using ConnectedElement<Genrou>::alpha_;
+      using ConnectedElement<Genrou>::f_;
+      using ConnectedElement<Genrou>::nnz_;
+      using ConnectedElement<Genrou>::size_;
+      using ConnectedElement<Genrou>::tag_;
+      using ConnectedElement<Genrou>::time_;
+      using ConnectedElement<Genrou>::y_;
+      using ConnectedElement<Genrou>::yp_;
+      using ConnectedElement<Genrou>::wb_;
+      using ConnectedElement<Genrou>::h_;
+      using ConnectedElement<Genrou>::J_;
+      using ConnectedElement<Genrou>::J_rows_buffer_;
+      using ConnectedElement<Genrou>::J_cols_buffer_;
+      using ConnectedElement<Genrou>::J_vals_buffer_;
+      using ConnectedElement<Genrou>::mva_system_base_;
+      using ConnectedElement<Genrou>::variable_indices_;
+      using ConnectedElement<Genrou>::residual_indices_;
+      using ConnectedElement<Genrou>::monitor_;
+      using ConnectedElement<Genrou>::signals_;
 
     public:
-      using RealT           = typename Component<ScalarT, IdxT>::RealT;
-      using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = GenrouData<RealT, IdxT>;
-      using signal_type     = SignalNode<ScalarT, IdxT>;
-      using MonitorT        = Model::VariableMonitor<Genrou, GenrouData>;
+      using ScalarT    = typename ConnectedElement<Genrou>::ScalarT;
+      using IdxT       = typename ConnectedElement<Genrou>::IdxT;
+      using RealT      = typename ConnectedElement<Genrou>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = GenrouData<RealT, IdxT>;
+      using MonitorT   = typename ConnectedElement<Genrou>::MonitorT;
+      using SignalT    = SignalNode<ScalarT, IdxT>;
 
-      Genrou(bus_type* bus, IdxT unit_id);
-      Genrou(bus_type*              bus,
-             signal_type*           omega,
-             signal_type*           pmech,
-             const model_data_type& data);
-      Genrou(bus_type*              bus,
-             signal_type*           omega,
-             signal_type*           pmech,
-             signal_type*           efd,
-             const model_data_type& data);
-      Genrou(bus_type* bus, const model_data_type& data);
-      Genrou(bus_type* bus,
-             IdxT      unit_id,
-             RealT     p0,
-             RealT     q0,
-             RealT     H,
-             RealT     D,
-             RealT     Ra,
-             RealT     Tdop,
-             RealT     Tdopp,
-             RealT     Tqopp,
-             RealT     Tqop,
-             RealT     Xd,
-             RealT     Xdp,
-             RealT     Xdpp,
-             RealT     Xq,
-             RealT     Xqp,
-             RealT     Xqpp,
-             RealT     Xl,
-             RealT     S10,
-             RealT     S12);
+      Genrou(BusT* bus, IdxT unit_id);
+      Genrou(BusT*             bus,
+             SignalT*          omega,
+             SignalT*          pmech,
+             const ModelDataT& data);
+      Genrou(BusT*             bus,
+             SignalT*          omega,
+             SignalT*          pmech,
+             SignalT*          efd,
+             const ModelDataT& data);
+      Genrou(BusT* bus, const ModelDataT& data);
+      Genrou(BusT* bus,
+             IdxT  unit_id,
+             RealT p0,
+             RealT q0,
+             RealT H,
+             RealT D,
+             RealT Ra,
+             RealT Tdop,
+             RealT Tdopp,
+             RealT Tqopp,
+             RealT Tqop,
+             RealT Xd,
+             RealT Xdp,
+             RealT Xdpp,
+             RealT Xq,
+             RealT Xqp,
+             RealT Xqpp,
+             RealT Xl,
+             RealT S10,
+             RealT S12);
       ~Genrou();
 
       int setGridKitComponentID(IdxT) override final;
@@ -143,20 +164,8 @@ namespace GridKit
       ScalarT getSpeed();
       ScalarT getTorque();
 
-      /// Get the `ComponentSignals` from this `Genrou`
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              GenrouInternalVariables,
-                              GenrouExternalVariables>&
-      {
-        return signals_;
-      }
-
-      const Model::VariableMonitorBase* getMonitor() const override;
-
     private:
-      void initializeParameters(const model_data_type& data);
+      void initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
@@ -187,12 +196,9 @@ namespace GridKit
 
     private:
       /* Identification */
-      bus_type* bus_;
-      IdxT      bus_id_{0};
-      IdxT      unit_id_; //< @todo this should be removed
-
-      /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
+      BusT* bus_;
+      IdxT  bus_id_{0};
+      IdxT  unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       RealT p0_{0.0};
@@ -241,9 +247,6 @@ namespace GridKit
       /* Local copies of signal variables */
       std::vector<ScalarT> ws_;
       std::vector<IdxT>    ws_indices_;
-
-      /// Variable monitor
-      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

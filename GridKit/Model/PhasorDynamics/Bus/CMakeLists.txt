@@ -17,9 +17,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       BusInfinite.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core)
 else()
   gridkit_add_library(phasor_dynamics_bus
@@ -28,9 +27,8 @@ else()
       BusInfinite.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core)
 endif()
 
@@ -38,9 +36,8 @@ gridkit_add_library(phasor_dynamics_bus_dependency_tracking
   SOURCES
     BusDependencyTracking.cpp
     BusInfiniteDependencyTracking.cpp
-  INCLUDE_DIRECTORIES
-    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
+    PRIVATE GridKit::phasor_dynamics_utils
     PUBLIC GridKit::phasor_dynamics_core)
 
 # Link to interface target for all components

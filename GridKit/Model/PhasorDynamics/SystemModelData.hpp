@@ -24,6 +24,11 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    enum class SystemModelMonitorableVariables
+    {
+      none
+    };
+
     /// A structure containing all of the data needed to reproduce a
     /// system model
     ///
@@ -32,19 +37,20 @@ namespace GridKit
     template <typename RealT = double, typename IdxT = size_t>
     struct SystemModelData
     {
-      using BranchDataT       = BranchData<RealT, IdxT>;
-      using BusDataT          = BusData<RealT, IdxT>;
-      using BusFaultDataT     = BusFaultData<RealT, IdxT>;
-      using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
-      using Ieeet1DataT       = Exciter::Ieeet1Data<RealT, IdxT>;
-      using SexsPtiDataT      = Exciter::SexsPtiData<RealT, IdxT>;
-      using IeeestDataT       = Stabilizer::IeeestData<RealT, IdxT>;
-      using GenrouDataT       = GenrouData<RealT, IdxT>;
-      using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
-      using LoadDataT         = LoadData<RealT, IdxT>;
-      using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
-      using SignalDataT       = SignalNodeData<RealT, IdxT>;
-      using MonitorSinkSpec   = Model::VariableMonitorBase::SinkSpec;
+      using BranchDataT          = BranchData<RealT, IdxT>;
+      using BusDataT             = BusData<RealT, IdxT>;
+      using BusFaultDataT        = BusFaultData<RealT, IdxT>;
+      using Tgov1DataT           = Governor::Tgov1Data<RealT, IdxT>;
+      using Ieeet1DataT          = Exciter::Ieeet1Data<RealT, IdxT>;
+      using SexsPtiDataT         = Exciter::SexsPtiData<RealT, IdxT>;
+      using IeeestDataT          = Stabilizer::IeeestData<RealT, IdxT>;
+      using GenrouDataT          = GenrouData<RealT, IdxT>;
+      using GenClassicalDataT    = GenClassicalData<RealT, IdxT>;
+      using LoadDataT            = LoadData<RealT, IdxT>;
+      using LoadZIPDataT         = LoadZIPData<RealT, IdxT>;
+      using SignalDataT          = SignalNodeData<RealT, IdxT>;
+      using MonitorSinkSpec      = Model::VariableMonitorBase::SinkSpec;
+      using MonitorableVariables = SystemModelMonitorableVariables;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from

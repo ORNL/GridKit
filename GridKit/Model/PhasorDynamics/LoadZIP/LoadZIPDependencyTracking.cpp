@@ -1,3 +1,4 @@
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 
 #include "LoadZIPImpl.hpp"
 

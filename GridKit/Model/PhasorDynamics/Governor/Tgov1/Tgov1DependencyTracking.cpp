@@ -3,6 +3,8 @@
  *
  */
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "Tgov1Impl.hpp"
 
 namespace GridKit

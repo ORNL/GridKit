@@ -2,11 +2,30 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename, typename>
+    class Bus;
+
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<Bus<ScalarP, IdxP>>
+    {
+      using BusT = Bus<ScalarP, IdxP>;
+
+      using ElementT           = BusT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = BusData<RealT, IdxT>;
+      using InternalVariablesT = BusInternalVariables;
+      using ExternalVariablesT = BusExternalVariables;
+      using InterfaceT         = BusBase<ScalarT, IdxT>;
+    };
+
     /*!
      * @brief Implementation of a PQ bus.
      *
@@ -15,30 +34,33 @@ namespace GridKit
      *
      *
      */
-    template <class ScalarT, typename IdxT>
-    class Bus : public BusBase<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class Bus : public ConnectedElement<Bus<ScalarP, IdxP>>
     {
-      using BusBase<ScalarT, IdxT>::bus_id_;
-      using BusBase<ScalarT, IdxT>::size_;
-      using BusBase<ScalarT, IdxT>::y_;
-      using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::J_;
-      using BusBase<ScalarT, IdxT>::J_rows_buffer_;
-      using BusBase<ScalarT, IdxT>::J_cols_buffer_;
-      using BusBase<ScalarT, IdxT>::J_vals_buffer_;
-      using BusBase<ScalarT, IdxT>::tag_;
-      using BusBase<ScalarT, IdxT>::variable_indices_;
-      using BusBase<ScalarT, IdxT>::residual_indices_;
+      using ConnectedElement<Bus>::bus_id_;
+      using ConnectedElement<Bus>::size_;
+      using ConnectedElement<Bus>::y_;
+      using ConnectedElement<Bus>::yp_;
+      using ConnectedElement<Bus>::f_;
+      using ConnectedElement<Bus>::J_;
+      using ConnectedElement<Bus>::J_rows_buffer_;
+      using ConnectedElement<Bus>::J_cols_buffer_;
+      using ConnectedElement<Bus>::J_vals_buffer_;
+      using ConnectedElement<Bus>::tag_;
+      using ConnectedElement<Bus>::variable_indices_;
+      using ConnectedElement<Bus>::residual_indices_;
+      using ConnectedElement<Bus>::monitor_;
 
     public:
-      using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
-      using DataT    = BusData<RealT, IdxT>;
-      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
+      using ScalarT    = typename ConnectedElement<Bus>::ScalarT;
+      using IdxT       = typename ConnectedElement<Bus>::IdxT;
+      using RealT      = typename ConnectedElement<Bus>::RealT;
+      using ModelDataT = BusData<RealT, IdxT>;
+      using BusTypeT   = typename ConnectedElement<Bus>::BusTypeT;
 
       Bus();
       Bus(ScalarT Vr, ScalarT Vi);
-      Bus(const DataT& data);
+      Bus(const ModelDataT& data);
       virtual ~Bus();
 
       virtual int setBusID(IdxT) override final;

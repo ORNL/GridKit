@@ -1,3 +1,5 @@
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "GenrouImpl.hpp"
 
 namespace GridKit

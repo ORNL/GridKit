@@ -22,8 +22,8 @@ namespace GridKit
      * - Number of quadratures = 0
      * - Number of optimization parameters = 0
      */
-    template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus()
+    template <typename ScalarP, typename IdxP>
+    Bus<ScalarP, IdxP>::Bus()
       : Vr0_(0.0), Vi0_(0.0)
     {
       size_ = 2;
@@ -40,8 +40,8 @@ namespace GridKit
      * - Number of quadratures = 0
      * - Number of optimization parameters = 0
      */
-    template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus(ScalarT Vr, ScalarT Vi)
+    template <typename ScalarP, typename IdxP>
+    Bus<ScalarP, IdxP>::Bus(ScalarT Vr, ScalarT Vi)
       : Vr0_(Vr), Vi0_(Vi)
     {
       size_ = 2;
@@ -50,24 +50,30 @@ namespace GridKit
     /**
      * @brief Construct a new Bus
      *
-     * @tparam ScalarT - type of scalar variables
-     * @tparam IdxT    - type for vector/matrix indices
      * @param[in] data - structure with bus data
      */
-    template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::Bus(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data),
+    template <typename ScalarP, typename IdxP>
+    Bus<ScalarP, IdxP>::Bus(const ModelDataT& data)
+      : ConnectedElement<Bus>(data),
         Vr0_(data.Vr0),
         Vi0_(data.Vi0)
     {
-      // std::cout << "Create Bus..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
       size_ = 2;
+
+      using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
+
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
     }
 
-    template <class ScalarT, typename IdxT>
-    Bus<ScalarT, IdxT>::~Bus()
+    template <typename ScalarP, typename IdxP>
+    Bus<ScalarP, IdxP>::~Bus()
     {
       // std::cout << "Destroy PQ bus ..." << std::endl;
     }
@@ -75,8 +81,8 @@ namespace GridKit
     /*!
      * @brief allocate method resizes local solution and residual vectors.
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::allocate()
+    template <typename ScalarP, typename IdxP>
+    int Bus<ScalarP, IdxP>::allocate()
     {
       // Temporary while we use std::vector in the code
       size_t size = static_cast<size_t>(size_);
@@ -102,8 +108,8 @@ namespace GridKit
     /**
      * @brief Set the bus ID
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::setBusID(IdxT bus_id)
+    template <typename ScalarP, typename IdxP>
+    int Bus<ScalarP, IdxP>::setBusID(IdxT bus_id)
     {
       bus_id_ = bus_id;
       return 0;
@@ -112,8 +118,8 @@ namespace GridKit
     /*!
      * @brief Bus variables are algebraic.
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::tagDifferentiable()
+    template <typename ScalarP, typename IdxP>
+    int Bus<ScalarP, IdxP>::tagDifferentiable()
     {
       tag_[0] = false;
       tag_[1] = false;
@@ -123,8 +129,8 @@ namespace GridKit
     /*!
      * @brief initialize method sets bus variables to stored initial values.
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::initialize()
+    template <typename ScalarP, typename IdxP>
+    int Bus<ScalarP, IdxP>::initialize()
     {
       // std::cout << "Initialize Bus..." << std::endl;
       y_[0]  = Vr0_;
@@ -142,8 +148,8 @@ namespace GridKit
      * _before_ component model residuals.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateResidual()
+    template <typename ScalarP, typename IdxP>
+    int Bus<ScalarP, IdxP>::evaluateResidual()
     {
       // std::cout << "Evaluating residual of a PQ bus ...\n";
       f_[0] = 0.0;

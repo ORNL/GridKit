@@ -7,6 +7,8 @@
  *
  */
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "Ieeet1Impl.hpp"
 
 namespace GridKit

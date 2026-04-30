@@ -25,23 +25,21 @@ namespace GridKit
      * break. That way other monitors can print likewise on the same line, and
      * the line can be ended by the control monitor.
      */
-    template <typename ScalarT,
-              typename IdxT,
-              template <typename, typename> typename EvalT,
-              template <typename, typename> typename DataT>
-    class VariableMonitor<EvalT<ScalarT, IdxT>, DataT>
-      : public VariableMonitorBase
+    template <typename EvalP>
+    class VariableMonitor : public VariableMonitorBase
     {
       template <typename>
       friend class VariableMonitorController;
 
     public:
+      /// Simulation scalar value type
+      using ScalarT      = typename EvalP::RealT;
       /// Underlying real value type
-      using RealT        = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      /// Type of (EvalT)Data class expected to have MonitorableVariables enum
-      using ObjData      = DataT<RealT, IdxT>;
+      using RealT        = typename EvalP::RealT;
+      /// Type of (EvalP)Data class expected to have MonitorableVariables enum
+      using ModelDataT   = typename EvalP::ModelDataT;
       /// Enum of valid monitorable variables
-      using VariableEnum = typename ObjData::MonitorableVariables;
+      using VariableEnum = typename ModelDataT::MonitorableVariables;
       ///@{
       /// @brief Alias
       using Csv          = VariableMonitorBase::Csv;
@@ -67,13 +65,13 @@ namespace GridKit
       }
 
       /**
-       * @brief Construct from ObjData object
+       * @brief Construct from ModelDataT object
        *
        * Constructs the monitor label from elements of the data object
        *
        * @param data Expected to be derived from ComponentData
        */
-      VariableMonitor(const ObjData& data)
+      VariableMonitor(const ModelDataT& data)
         : VariableMonitor(data.device_class + "_" + data.disambiguation_string,
                           data.monitored_variables)
       {

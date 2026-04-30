@@ -4,6 +4,8 @@
  *
  */
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "BranchImpl.hpp"
 
 namespace GridKit

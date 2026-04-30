@@ -4,6 +4,8 @@
  * @brief Dependency-tracking instantiations for the SEXS-PTI exciter model.
  */
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "SexsPtiImpl.hpp"
 
 namespace GridKit

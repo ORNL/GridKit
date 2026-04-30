@@ -13,11 +13,10 @@ if(GRIDKIT_ENABLE_ENZYME)
       IeeestEnzyme.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
       PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal
+      PRIVATE GridKit::phasor_dynamics_utils
       PRIVATE ClangEnzymeFlags
     COMPILE_OPTIONS
       PRIVATE -mllvm -enzyme-auto-sparsity=1 -fno-math-errno)
@@ -27,9 +26,8 @@ else()
       Ieeest.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal)
 endif()
@@ -37,9 +35,8 @@ endif()
 gridkit_add_library(phasor_dynamics_stabilizer_ieeest_dependency_tracking
   SOURCES
     IeeestDependencyTracking.cpp
-  INCLUDE_DIRECTORIES
-    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
+    PRIVATE GridKit::phasor_dynamics_utils
     PUBLIC GridKit::phasor_dynamics_core
     PUBLIC GridKit::phasor_dynamics_signal_dependency_tracking)
 

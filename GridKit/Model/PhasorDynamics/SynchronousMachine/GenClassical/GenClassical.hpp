@@ -8,19 +8,18 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class BusBase;
 
-    template <typename RealT, typename IdxT>
+    template <typename RealP, typename IdxP>
     struct GenClassicalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -29,45 +28,76 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename, typename>
+    class GenClassical;
 
-    template <class ScalarT, typename IdxT>
-    class GenClassical : public Component<ScalarT, IdxT>
+    enum class GenClassicalInternalVariables : size_t
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::mva_system_base_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      MAXIMUM
+    };
+
+    enum class GenClassicalExternalVariables : size_t
+    {
+      MAXIMUM
+    };
+
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<GenClassical<ScalarP, IdxP>>
+    {
+      using GenClassicalT = GenClassical<ScalarP, IdxP>;
+
+      using ElementT           = GenClassicalT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = GenClassicalData<RealT, IdxT>;
+      using InternalVariablesT = GenClassicalInternalVariables;
+      using ExternalVariablesT = GenClassicalExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
+    template <typename ScalarP, typename IdxP>
+    class GenClassical : public ConnectedElement<GenClassical<ScalarP, IdxP>>
+    {
+      using ConnectedElement<GenClassical>::gridkit_component_id_;
+      using ConnectedElement<GenClassical>::alpha_;
+      using ConnectedElement<GenClassical>::f_;
+      using ConnectedElement<GenClassical>::nnz_;
+      using ConnectedElement<GenClassical>::size_;
+      using ConnectedElement<GenClassical>::tag_;
+      using ConnectedElement<GenClassical>::time_;
+      using ConnectedElement<GenClassical>::y_;
+      using ConnectedElement<GenClassical>::yp_;
+      using ConnectedElement<GenClassical>::wb_;
+      using ConnectedElement<GenClassical>::h_;
+      using ConnectedElement<GenClassical>::J_;
+      using ConnectedElement<GenClassical>::J_rows_buffer_;
+      using ConnectedElement<GenClassical>::J_cols_buffer_;
+      using ConnectedElement<GenClassical>::J_vals_buffer_;
+      using ConnectedElement<GenClassical>::mva_system_base_;
+      using ConnectedElement<GenClassical>::variable_indices_;
+      using ConnectedElement<GenClassical>::residual_indices_;
+      using ConnectedElement<GenClassical>::monitor_;
+      using ConnectedElement<GenClassical>::signals_;
 
     public:
-      using bus_type = BusBase<ScalarT, IdxT>;
-      using RealT    = typename Component<ScalarT, IdxT>::RealT;
-      using DataT    = GenClassicalData<RealT, IdxT>;
-      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
+      using ScalarT    = typename ConnectedElement<GenClassical>::ScalarT;
+      using IdxT       = typename ConnectedElement<GenClassical>::IdxT;
+      using RealT      = typename ConnectedElement<GenClassical>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using MonitorT   = typename ConnectedElement<GenClassical>::MonitorT;
+      using ModelDataT = GenClassicalData<RealT, IdxT>;
 
-      GenClassical(bus_type* bus, int unit_id);
-      GenClassical(bus_type* bus,
-                   int       unit_id,
-                   RealT     p0,
-                   RealT     q0,
-                   RealT     H,
-                   RealT     D,
-                   RealT     Ra,
-                   RealT     Xdp);
-      GenClassical(bus_type* bus, const DataT& data);
+      GenClassical(BusT* bus, int unit_id);
+      GenClassical(BusT* bus,
+                   int   unit_id,
+                   RealT p0,
+                   RealT q0,
+                   RealT H,
+                   RealT D,
+                   RealT Ra,
+                   RealT Xdp);
+      GenClassical(BusT* bus, const ModelDataT& data);
       ~GenClassical();
 
       int setGridKitComponentID(IdxT) override final;
@@ -93,8 +123,6 @@ namespace GridKit
       {
         ep_set_ = ep;
       }
-
-      const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
       void initializeMonitor();
@@ -126,9 +154,9 @@ namespace GridKit
 
     private:
       /* Identification */
-      bus_type* bus_;
-      IdxT      bus_id_{0};
-      int       unit_id_; //< @todo this should be removed
+      BusT* bus_;
+      IdxT  bus_id_{0};
+      int   unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       RealT p0_{0.0};
@@ -148,9 +176,6 @@ namespace GridKit
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_;
       ScalarT ep_set_;
-
-      /// Variable monitor
-      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

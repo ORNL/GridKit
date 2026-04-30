@@ -4,6 +4,8 @@
  * @brief DependencyTracking Jacobian stub and template instantiations for IEEEST Stabilizer.
  */
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "IeeestImpl.hpp"
 
 namespace GridKit

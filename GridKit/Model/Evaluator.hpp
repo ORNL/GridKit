@@ -17,10 +17,12 @@ namespace GridKit
      * @brief Abstract class describing a model.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <class ScalarP, typename IdxP>
     class Evaluator
     {
     public:
+      using ScalarT    = ScalarP;
+      using IdxT       = IdxP;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using MatrixT    = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;

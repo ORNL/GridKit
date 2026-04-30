@@ -8,38 +8,38 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
-    SignalNode<ScalarT, IdxT>::SignalNode()
+    template <typename ScalarP, typename IdxP>
+    SignalNode<ScalarP, IdxP>::SignalNode()
     {
     }
 
-    template <class ScalarT, typename IdxT>
-    SignalNode<ScalarT, IdxT>::SignalNode(const SignalNodeData<RealT, IdxT>& data)
+    template <typename ScalarP, typename IdxP>
+    SignalNode<ScalarP, IdxP>::SignalNode(const SignalNodeData<RealT, IdxT>& data)
       : signal_id_(data.signal_id)
     {
     }
 
-    template <class ScalarT, typename IdxT>
-    void SignalNode<ScalarT, IdxT>::set(ScalarT* signal, IdxT* variable_index)
+    template <typename ScalarP, typename IdxP>
+    void SignalNode<ScalarP, IdxP>::set(ScalarT* signal, IdxT* variable_index)
     {
       signal_         = signal;
       variable_index_ = variable_index;
     }
 
-    template <class ScalarT, typename IdxT>
-    bool SignalNode<ScalarT, IdxT>::linked() const
+    template <typename ScalarP, typename IdxP>
+    bool SignalNode<ScalarP, IdxP>::linked() const
     {
       return (signal_) && (variable_index_);
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT SignalNode<ScalarT, IdxT>::read() const
+    template <typename ScalarP, typename IdxP>
+    ScalarP SignalNode<ScalarP, IdxP>::read() const
     {
       return *signal_;
     }
 
-    template <class ScalarT, typename IdxT>
-    void SignalNode<ScalarT, IdxT>::init(ScalarT signal)
+    template <typename ScalarP, typename IdxP>
+    void SignalNode<ScalarP, IdxP>::init(ScalarT signal)
     {
       *signal_ = signal;
     }

@@ -5,11 +5,11 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElementImpl.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
-#include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -27,8 +27,8 @@ namespace GridKit
      * - Number of quadratures = 0
      * - Number of optimization parameters = 0
      */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, IdxT unit_id)
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::Genrou(BusT* bus, IdxT unit_id)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -59,27 +59,27 @@ namespace GridKit
     /**
      * @brief Constructor for a GENROU generator model with saturation
      */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus,
-                                  IdxT      unit_id,
-                                  RealT     p0,
-                                  RealT     q0,
-                                  RealT     H,
-                                  RealT     D,
-                                  RealT     Ra,
-                                  RealT     Tdop,
-                                  RealT     Tdopp,
-                                  RealT     Tqopp,
-                                  RealT     Tqop,
-                                  RealT     Xd,
-                                  RealT     Xdp,
-                                  RealT     Xdpp,
-                                  RealT     Xq,
-                                  RealT     Xqp,
-                                  RealT     Xqpp,
-                                  RealT     Xl,
-                                  RealT     S10,
-                                  RealT     S12)
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::Genrou(BusT* bus,
+                                  IdxT  unit_id,
+                                  RealT p0,
+                                  RealT q0,
+                                  RealT H,
+                                  RealT D,
+                                  RealT Ra,
+                                  RealT Tdop,
+                                  RealT Tdopp,
+                                  RealT Tqopp,
+                                  RealT Tqop,
+                                  RealT Xd,
+                                  RealT Xdp,
+                                  RealT Xdpp,
+                                  RealT Xq,
+                                  RealT Xqp,
+                                  RealT Xqpp,
+                                  RealT Xl,
+                                  RealT S10,
+                                  RealT S12)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -110,11 +110,11 @@ namespace GridKit
     /**
      * @brief Constructor for a GENROU generator model with saturation
      */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, const model_data_type& data)
-      : bus_(bus),
-        unit_id_(1),
-        monitor_(std::make_unique<MonitorT>(data))
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::Genrou(BusT* bus, const ModelDataT& data)
+      : ConnectedElement<Genrou>(data),
+        bus_(bus),
+        unit_id_(1)
     {
       initializeParameters(data);
       initializeMonitor();
@@ -126,11 +126,11 @@ namespace GridKit
     /**
      * @brief Constructor for a GENROU generator model with saturation
      */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, const model_data_type& data)
-      : bus_(bus),
-        unit_id_(1),
-        monitor_(std::make_unique<MonitorT>(data))
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, const ModelDataT& data)
+      : ConnectedElement<Genrou>(data),
+        bus_(bus),
+        unit_id_(1)
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
@@ -144,11 +144,11 @@ namespace GridKit
     /**
      * @brief Constructor for a GENROU generator model with saturation
      */
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::Genrou(bus_type* bus, signal_type* omega, signal_type* pmech, signal_type* efd, const model_data_type& data)
-      : bus_(bus),
-        unit_id_(1),
-        monitor_(std::make_unique<MonitorT>(data))
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, SignalT* efd, const ModelDataT& data)
+      : ConnectedElement<Genrou>(data),
+        bus_(bus),
+        unit_id_(1)
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
       signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
@@ -160,127 +160,121 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    Genrou<ScalarT, IdxT>::~Genrou()
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::~Genrou()
     {
     }
 
     /// Helper function to extract and assign model parameters from the model's associated
     /// data structure.
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+    template <typename ScalarP, typename IdxP>
+    void Genrou<ScalarP, IdxP>::initializeParameters(const ModelDataT& data)
     {
-      if (data.parameters.contains(model_data_type::Parameters::p0))
+      if (data.parameters.contains(ModelDataT::Parameters::p0))
       {
-        p0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::p0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::q0))
+      if (data.parameters.contains(ModelDataT::Parameters::q0))
       {
-        q0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::q0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::H))
+      if (data.parameters.contains(ModelDataT::Parameters::H))
       {
-        H_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::H));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::D))
+      if (data.parameters.contains(ModelDataT::Parameters::D))
       {
-        D_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::D));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Ra))
+      if (data.parameters.contains(ModelDataT::Parameters::Ra))
       {
-        Ra_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ra));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tdop))
+      if (data.parameters.contains(ModelDataT::Parameters::Tdop))
       {
-        Tdop_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdop));
+        Tdop_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdop));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
+      if (data.parameters.contains(ModelDataT::Parameters::Tdopp))
       {
-        Tdopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdopp));
+        Tdopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdopp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
+      if (data.parameters.contains(ModelDataT::Parameters::Tqopp))
       {
-        Tqopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tqopp));
+        Tqopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tqopp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tqop))
+      if (data.parameters.contains(ModelDataT::Parameters::Tqop))
       {
-        Tqop_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tqop));
+        Tqop_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tqop));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xd))
+      if (data.parameters.contains(ModelDataT::Parameters::Xd))
       {
-        Xd_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xd));
+        Xd_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xd));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xdp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xdp))
       {
-        Xdp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xdpp))
       {
-        Xdpp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdpp));
+        Xdpp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdpp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xq))
+      if (data.parameters.contains(ModelDataT::Parameters::Xq))
       {
-        Xq_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xq));
+        Xq_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xq));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xqp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xqp))
       {
-        Xqp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xqp));
+        Xqp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xqp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xqpp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xqpp))
       {
-        Xqpp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xqpp));
+        Xqpp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xqpp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xl))
+      if (data.parameters.contains(ModelDataT::Parameters::Xl))
       {
-        Xl_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xl));
+        Xl_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xl));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::S10))
+      if (data.parameters.contains(ModelDataT::Parameters::S10))
       {
-        S10_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S10));
+        S10_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S10));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::S12))
+      if (data.parameters.contains(ModelDataT::Parameters::S12))
       {
-        S12_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S12));
+        S12_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S12));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::mva_base))
+      if (data.parameters.contains(ModelDataT::Parameters::mva_base))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::mva_base));
+        mva_base_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::mva_base));
       }
 
-      if (data.ports.contains(model_data_type::Ports::bus))
+      if (data.ports.contains(ModelDataT::Ports::bus))
       {
-        bus_id_ = data.ports.at(model_data_type::Ports::bus);
+        bus_id_ = data.ports.at(ModelDataT::Ports::bus);
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* Genrou<ScalarT, IdxT>::getMonitor() const
+    template <typename ScalarP, typename IdxP>
+    void Genrou<ScalarP, IdxP>::initializeMonitor()
     {
-      return monitor_.get();
-    }
-
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::initializeMonitor()
-    {
-      using Variable = typename model_data_type::MonitorableVariables;
+      using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
                     { return y_[15]; });
       monitor_->set(Variable::ii, [this]
@@ -300,8 +294,8 @@ namespace GridKit
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -310,8 +304,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::allocate()
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::allocate()
     {
       // Resize component model data
       auto size = static_cast<size_t>(size_);
@@ -351,8 +345,8 @@ namespace GridKit
     /**
      * @brief verify method checks that attached signals are also linked
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::verify() const
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::verify() const
     {
       static constexpr auto PM  = GenrouExternalVariables::PM;
       static constexpr auto EFD = GenrouExternalVariables::EFD;
@@ -384,8 +378,8 @@ namespace GridKit
      * Initialization of the branch model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::initialize()
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::initialize()
     {
       // Saturated initialization with ksat iteration.
       // See README "With Saturation" and plan for derivation.
@@ -498,8 +492,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::tagDifferentiable()
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::tagDifferentiable()
     {
       for (IdxT i = 0; i < size_; ++i)
       {
@@ -512,8 +506,8 @@ namespace GridKit
      * @brief Internal residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateInternalResidual(
+    template <typename ScalarP, typename IdxP>
+    __attribute__((always_inline)) inline int Genrou<ScalarP, IdxP>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
@@ -589,8 +583,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Genrou<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename ScalarP, typename IdxP>
+    __attribute__((always_inline)) inline int Genrou<ScalarP, IdxP>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -611,8 +605,8 @@ namespace GridKit
      * \brief Residual evaluation and contribution to the connected bus
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Genrou<ScalarT, IdxT>::evaluateResidual()
+    template <typename ScalarP, typename IdxP>
+    int Genrou<ScalarP, IdxP>::evaluateResidual()
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
@@ -648,24 +642,22 @@ namespace GridKit
     /**
      * @brief Access generator relative speed
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
-    template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getSpeed()
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::ScalarT Genrou<ScalarP, IdxP>::getSpeed()
     {
       return y_[1];
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT Genrou<ScalarT, IdxT>::getTorque()
+    template <typename ScalarP, typename IdxP>
+    Genrou<ScalarP, IdxP>::ScalarT Genrou<ScalarP, IdxP>::getTorque()
     {
       return y_[12];
     }
 
-    template <class ScalarT, typename IdxT>
-    void Genrou<ScalarT, IdxT>::setDerivedParams()
+    template <typename ScalarP, typename IdxP>
+    void Genrou<ScalarP, IdxP>::setDerivedParams()
     {
       SA_ = 0;
       SB_ = 0;

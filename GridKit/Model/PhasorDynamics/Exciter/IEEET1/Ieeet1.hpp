@@ -10,8 +10,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 // Forward declarations
 namespace GridKit
@@ -20,14 +19,14 @@ namespace GridKit
   {
     namespace Exciter
     {
-      template <typename RealT, typename IdxT>
+      template <typename RealP, typename IdxP>
       struct Ieeet1Data;
     } // namespace Exciter
 
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class BusBase;
 
-    template <class ScalarT, typename IdxT>
+    template <typename ScalarP, typename IdxP>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -39,6 +38,9 @@ namespace GridKit
   {
     namespace Exciter
     {
+      template <typename, typename>
+      class Ieeet1;
+
       /// Internal variables of a `Ieeet1`
       enum class Ieeet1InternalVariables : size_t
       {
@@ -63,41 +65,65 @@ namespace GridKit
         VS,    ///< Stabilizer output signal
         MAXIMUM,
       };
+    } // namespace Exciter
 
-      template <class ScalarT, typename IdxT>
-      class Ieeet1 : public Component<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<Exciter::Ieeet1<ScalarP, IdxP>>
+    {
+      using Ieeet1T = Exciter::Ieeet1<ScalarP, IdxP>;
+
+      using ElementT           = Ieeet1T;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = Exciter::Ieeet1Data<RealT, IdxT>;
+      using InternalVariablesT = Exciter::Ieeet1InternalVariables;
+      using ExternalVariablesT = Exciter::Ieeet1ExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
+    namespace Exciter
+    {
+      template <typename ScalarP, typename IdxP>
+      class Ieeet1 : public ConnectedElement<Ieeet1<ScalarP, IdxP>>
       {
-        using Component<ScalarT, IdxT>::gridkit_component_id_;
-        using Component<ScalarT, IdxT>::alpha_;
-        using Component<ScalarT, IdxT>::f_;
-        using Component<ScalarT, IdxT>::nnz_;
-        using Component<ScalarT, IdxT>::size_;
-        using Component<ScalarT, IdxT>::tag_;
-        using Component<ScalarT, IdxT>::time_;
-        using Component<ScalarT, IdxT>::y_;
-        using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::wb_;
-        using Component<ScalarT, IdxT>::J_;
-        using Component<ScalarT, IdxT>::J_rows_buffer_;
-        using Component<ScalarT, IdxT>::J_cols_buffer_;
-        using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::variable_indices_;
-        using Component<ScalarT, IdxT>::residual_indices_;
+        using ConnectedElement<Ieeet1>::gridkit_component_id_;
+        using ConnectedElement<Ieeet1>::alpha_;
+        using ConnectedElement<Ieeet1>::f_;
+        using ConnectedElement<Ieeet1>::nnz_;
+        using ConnectedElement<Ieeet1>::size_;
+        using ConnectedElement<Ieeet1>::tag_;
+        using ConnectedElement<Ieeet1>::time_;
+        using ConnectedElement<Ieeet1>::y_;
+        using ConnectedElement<Ieeet1>::yp_;
+        using ConnectedElement<Ieeet1>::wb_;
+        using ConnectedElement<Ieeet1>::J_;
+        using ConnectedElement<Ieeet1>::J_rows_buffer_;
+        using ConnectedElement<Ieeet1>::J_cols_buffer_;
+        using ConnectedElement<Ieeet1>::J_vals_buffer_;
+        using ConnectedElement<Ieeet1>::variable_indices_;
+        using ConnectedElement<Ieeet1>::residual_indices_;
+        using ConnectedElement<Ieeet1>::signals_;
+        using ConnectedElement<Ieeet1>::monitor_;
 
       public:
-        using RealT           = typename Component<ScalarT, IdxT>::RealT;
-        using model_data_type = Ieeet1Data<RealT, IdxT>;
-        using signal_type     = SignalNode<ScalarT, IdxT>;
-        using bus_type        = BusBase<ScalarT, IdxT>;
-        using MonitorT        = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
+        using ScalarT    = typename ConnectedElement<Ieeet1>::ScalarT;
+        using IdxT       = typename ConnectedElement<Ieeet1>::IdxT;
+        using RealT      = typename ConnectedElement<Ieeet1>::RealT;
+        using ModelDataT = Ieeet1Data<RealT, IdxT>;
+        using SignalT    = SignalNode<ScalarT, IdxT>;
+        using BusT       = BusBase<ScalarT, IdxT>;
+        using MonitorT   = typename ConnectedElement<Ieeet1>::MonitorT;
 
-        Ieeet1(bus_type* bus);
-        Ieeet1(signal_type*           efd_signal,
-               signal_type*           speed_signal,
-               bus_type*              bus,
-               const model_data_type& data);
-        Ieeet1(bus_type*              bus,
-               const model_data_type& data);
+        Ieeet1(BusT* bus);
+
+        Ieeet1(SignalT*          efd_signal,
+               SignalT*          speed_signal,
+               BusT*             bus,
+               const ModelDataT& data);
+
+        Ieeet1(BusT* bus, const ModelDataT& data);
+
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -108,25 +134,13 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
-        /// Get the `ComponentSignals` from this `Ieeet1`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                Ieeet1InternalVariables,
-                                Ieeet1ExternalVariables>&
-        {
-          return signals_;
-        }
-
-        const Model::VariableMonitorBase* getMonitor() const override;
-
         __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
       private:
         // Signal pointers
-        signal_type* efd_signal_;
-        signal_type* speed_signal_;
-        bus_type*    bus_;
+        SignalT* efd_signal_;
+        SignalT* speed_signal_;
+        BusT*    bus_;
 
         // Model Input parameters
         RealT Tr_;      ///< Time constant for voltage sensing
@@ -157,14 +171,8 @@ namespace GridKit
         ScalarT vS_{0};
         ScalarT Ec_{0}; // "Compensated" terminal measurment, currently unused
 
-        /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
-
-        /// Variable monitor
-        std::unique_ptr<MonitorT> monitor_;
-
         // Parameter initialization function
-        void initModelParams(const model_data_type& data);
+        void initModelParams(const ModelDataT& data);
 
         /// Associate variable getter functions with enum values
         void initializeMonitor();

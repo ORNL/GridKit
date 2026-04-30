@@ -15,13 +15,11 @@
 #include <variant>
 #include <vector>
 
-#include <GridKit/ScalarTraits.hpp>
-
 namespace GridKit
 {
   namespace Model
   {
-    template <typename ScalarT>
+    template <typename ScalarP>
     class VariableMonitorController;
 
     /**
@@ -137,7 +135,7 @@ namespace GridKit
       ///@}
     };
 
-    template <typename EvalT, template <typename, typename> typename DataT>
+    template <typename EvalP>
     class VariableMonitor;
 
   } // namespace Model

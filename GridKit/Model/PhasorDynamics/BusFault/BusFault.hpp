@@ -3,15 +3,14 @@
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 // Forward declaration of BusData structure
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename RealT, typename IdxT>
+    template <typename RealP, typename IdxP>
     struct BusFaultData;
   }
 } // namespace GridKit
@@ -20,32 +19,63 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
-    class BusFault : public Component<ScalarT, IdxT>
+    template <typename, typename>
+    class BusFault;
+
+    enum class BusFaultInternalVariables : size_t
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
+      MAXIMUM
+    };
+
+    enum class BusFaultExternalVariables : size_t
+    {
+      MAXIMUM
+    };
+
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<BusFault<ScalarP, IdxP>>
+    {
+      using BusFaultT = BusFault<ScalarP, IdxP>;
+
+      using ElementT           = BusFaultT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = BusFaultData<RealT, IdxT>;
+      using InternalVariablesT = BusFaultInternalVariables;
+      using ExternalVariablesT = BusFaultExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
+    template <typename ScalarP, typename IdxP>
+    class BusFault : public ConnectedElement<BusFault<ScalarP, IdxP>>
+    {
+      using ConnectedElement<BusFault>::gridkit_component_id_;
+      using ConnectedElement<BusFault>::alpha_;
+      using ConnectedElement<BusFault>::nnz_;
+      using ConnectedElement<BusFault>::size_;
+      using ConnectedElement<BusFault>::tag_;
+      using ConnectedElement<BusFault>::time_;
+      using ConnectedElement<BusFault>::y_;
+      using ConnectedElement<BusFault>::yp_;
+      using ConnectedElement<BusFault>::wb_;
+      using ConnectedElement<BusFault>::h_;
+      using ConnectedElement<BusFault>::J_rows_buffer_;
+      using ConnectedElement<BusFault>::J_cols_buffer_;
+      using ConnectedElement<BusFault>::J_vals_buffer_;
+      using ConnectedElement<BusFault>::monitor_;
 
     public:
-      using bus_type = BusBase<ScalarT, IdxT>;
-      using RealT    = typename Component<ScalarT, IdxT>::RealT;
-      using DataT    = BusFaultData<RealT, IdxT>;
-      using MonitorT = Model::VariableMonitor<BusFault, BusFaultData>;
+      using ScalarT    = typename ConnectedElement<BusFault>::ScalarT;
+      using IdxT       = typename ConnectedElement<BusFault>::IdxT;
+      using RealT      = typename ConnectedElement<BusFault>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = BusFaultData<RealT, IdxT>;
+      using MonitorT   = typename ConnectedElement<BusFault>::MonitorT;
 
-      BusFault(bus_type* bus);
-      BusFault(bus_type* bus, RealT R, RealT X, int status);
-      BusFault(bus_type* bus, const DataT& data);
+      BusFault(BusT* bus);
+      BusFault(BusT* bus, RealT R, RealT X, int status);
+      BusFault(BusT* bus, const ModelDataT& data);
       ~BusFault();
 
       int setGridKitComponentID(IdxT) override final;
@@ -82,8 +112,6 @@ namespace GridKit
         status_ = status;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override;
-
     private:
       void setDerivedParams();
 
@@ -111,18 +139,15 @@ namespace GridKit
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
-      bus_type* bus_;
-      RealT     R_{0.0};
-      RealT     X_{0.0};
-      bool      status_{false};
-      IdxT      bus_id_{0};
+      BusT* bus_;
+      RealT R_{0.0};
+      RealT X_{0.0};
+      bool  status_{false};
+      IdxT  bus_id_{0};
 
       /* Derivied parameters */
       RealT B_;
       RealT G_;
-
-      /// Variable monitor
-      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics

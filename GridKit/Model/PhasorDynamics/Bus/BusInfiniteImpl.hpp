@@ -5,6 +5,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusBaseImpl.hpp>
+#include <GridKit/Model/PhasorDynamics/GridElementImpl.hpp>
 
 namespace GridKit
 {
@@ -20,10 +21,9 @@ namespace GridKit
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
      */
-    template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::BusInfinite()
+    template <typename ScalarP, typename IdxP>
+    BusInfinite<ScalarP, IdxP>::BusInfinite()
     {
-      size_ = 0;
     }
 
     /*!
@@ -35,11 +35,10 @@ namespace GridKit
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
      */
-    template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::BusInfinite(ScalarT Vr, ScalarT Vi)
+    template <typename ScalarP, typename IdxP>
+    BusInfinite<ScalarP, IdxP>::BusInfinite(ScalarT Vr, ScalarT Vi)
       : Vr_(Vr), Vi_(Vi)
     {
-      size_ = 0;
     }
 
     /**
@@ -49,29 +48,36 @@ namespace GridKit
      * - Number of equations = 0 (size_)
      * - Number of variables = 0 (size_)
 
-     * @tparam ScalarT - type of scalar variables
-     * @tparam IdxT    - type for vector/matrix indices
      * @param[in] data - structure with bus data
      */
-    template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::BusInfinite(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data),
+    template <typename ScalarP, typename IdxP>
+    BusInfinite<ScalarP, IdxP>::BusInfinite(const ModelDataT& data)
+      : ConnectedElement<BusInfinite>(data),
         Vr_(data.Vr0),
         Vi_(data.Vi0)
     {
-      size_ = 0;
+      using Variable = typename BusData<RealT, IdxT>::MonitorableVariables;
+
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
     }
 
-    template <class ScalarT, typename IdxT>
-    BusInfinite<ScalarT, IdxT>::~BusInfinite()
+    template <typename ScalarP, typename IdxP>
+    BusInfinite<ScalarP, IdxP>::~BusInfinite()
     {
     }
 
     /**
      * @brief Set the bus ID
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::setBusID(IdxT bus_id)
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::setBusID(IdxT bus_id)
     {
       bus_id_ = bus_id;
       return 0;
@@ -80,8 +86,8 @@ namespace GridKit
     /*!
      * @brief allocate method resizes local solution and residual vectors.
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::allocate()
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::allocate()
     {
       return 0;
     }
@@ -89,8 +95,8 @@ namespace GridKit
     /**
      * @brief Tag differentiable variables
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::tagDifferentiable()
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::tagDifferentiable()
     {
       return 0;
     }
@@ -98,8 +104,8 @@ namespace GridKit
     /*!
      * @brief initialize method sets bus variables to stored initial values.
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::initialize()
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::initialize()
     {
       return 0;
     }
@@ -116,8 +122,8 @@ namespace GridKit
      * _before_ component model residuals.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::evaluateResidual()
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::evaluateResidual()
     {
       Ir_ = 0.0;
       Ii_ = 0.0;
@@ -127,12 +133,10 @@ namespace GridKit
     /**
      * @brief There is no Jacobian for slack variables
      *
-     * @tparam ScalarT - data type for Jacobian elements
-     * @tparam IdxT    - data type for matrix indices
      * @return int - error code
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::evaluateJacobian()
+    template <typename ScalarP, typename IdxP>
+    int BusInfinite<ScalarP, IdxP>::evaluateJacobian()
     {
       return 0;
     }

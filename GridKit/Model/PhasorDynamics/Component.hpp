@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/GridElement.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -11,19 +10,24 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using Log = ::GridKit::Utilities::Logger;
-
     /**
      * @brief Component model implementation base class.
      */
-    template <class ScalarT, typename IdxT>
-    class Component : public GridElement<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class Component : public GridElement<ScalarP, IdxP>
     {
     public:
-      using RealT   = typename GridElement<ScalarT, IdxT>::RealT;
-      using MatrixT = typename GridElement<ScalarT, IdxT>::MatrixT;
+      using ScalarT = ScalarP;
+      using IdxT    = IdxP;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
 
       Component() = default;
+
+      template <typename ModelDataP>
+      Component([[maybe_unused]] const ModelDataP& data)
+      {
+      }
 
       virtual ~Component()
       {
@@ -54,8 +58,8 @@ namespace GridKit
       std::vector<ScalarT> wb_;
       std::vector<ScalarT> h_;
 
-      RealT time_;
-      RealT alpha_;
+      RealT time_{};
+      RealT alpha_{};
 
       /*
 

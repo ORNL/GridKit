@@ -23,6 +23,7 @@ namespace GridKit
     void from_json(const json& j, BusData<RealT, IdxT>& bd)
     {
       j.at("name").get_to(bd.name);
+      bd.disambiguation_string = bd.name;
 
       std::stringstream error_context;
       error_context << "\n\tSee bus number " << bd.bus_id

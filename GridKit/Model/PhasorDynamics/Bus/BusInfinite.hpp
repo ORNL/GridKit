@@ -2,37 +2,59 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename, typename>
+    class BusInfinite;
+
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<BusInfinite<ScalarP, IdxP>>
+    {
+      using BusT = BusInfinite<ScalarP, IdxP>;
+
+      using ElementT           = BusT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = BusData<RealT, IdxT>;
+      using InternalVariablesT = BusInternalVariables;
+      using ExternalVariablesT = BusExternalVariables;
+      using InterfaceT         = BusBase<ScalarT, IdxT>;
+    };
+
     /*!
      * @brief Implementation of an "infinite" bus.
      *
      *
      *
      */
-    template <class ScalarT, typename IdxT>
-    class BusInfinite : public BusBase<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class BusInfinite : public ConnectedElement<BusInfinite<ScalarP, IdxP>>
     {
-      using BusBase<ScalarT, IdxT>::bus_id_;
-      using BusBase<ScalarT, IdxT>::size_;
-      using BusBase<ScalarT, IdxT>::y_;
-      using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::J_;
-      using BusBase<ScalarT, IdxT>::variable_indices_;
-      using BusBase<ScalarT, IdxT>::residual_indices_;
+      using ConnectedElement<BusInfinite>::bus_id_;
+      using ConnectedElement<BusInfinite>::size_;
+      using ConnectedElement<BusInfinite>::y_;
+      using ConnectedElement<BusInfinite>::yp_;
+      using ConnectedElement<BusInfinite>::f_;
+      using ConnectedElement<BusInfinite>::J_;
+      using ConnectedElement<BusInfinite>::variable_indices_;
+      using ConnectedElement<BusInfinite>::residual_indices_;
+      using ConnectedElement<BusInfinite>::monitor_;
 
     public:
-      using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
-      using DataT    = BusData<RealT, IdxT>;
-      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
+      using ScalarT    = typename ConnectedElement<BusInfinite>::ScalarT;
+      using IdxT       = typename ConnectedElement<BusInfinite>::IdxT;
+      using RealT      = typename ConnectedElement<BusInfinite>::RealT;
+      using ModelDataT = BusData<RealT, IdxT>;
+      using BusTypeT   = typename ConnectedElement<BusInfinite>::BusTypeT;
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(const DataT& data);
+      BusInfinite(const ModelDataT& data);
       virtual ~BusInfinite();
 
       virtual int setBusID(IdxT) override final;

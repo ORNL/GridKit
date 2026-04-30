@@ -9,9 +9,8 @@ if(GRIDKIT_ENABLE_ENZYME)
       GenrouEnzyme.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal 
       PRIVATE ClangEnzymeFlags
@@ -23,9 +22,8 @@ else()
       Genrou.cpp
     HEADERS
       ${_install_headers}
-    INCLUDE_DIRECTORIES
-      PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal)
 endif()
@@ -33,9 +31,8 @@ endif()
 gridkit_add_library(phasor_dynamics_genrou_dependency_tracking
   SOURCES
     GenrouDependencyTracking.cpp
-  INCLUDE_DIRECTORIES
-    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include
   LINK_LIBRARIES
+    PRIVATE GridKit::phasor_dynamics_utils
     PUBLIC GridKit::phasor_dynamics_core
     PUBLIC GridKit::phasor_dynamics_signal_dependency_tracking)
 

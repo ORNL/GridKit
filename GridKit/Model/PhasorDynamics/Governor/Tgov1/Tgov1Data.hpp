@@ -37,8 +37,8 @@ namespace GridKit
       enum class Tgov1Ports
       {
         bus,
-        speed,
-        pmech,
+        speed, // input (attach)
+        pmech, // output (assign)
       };
 
       /**

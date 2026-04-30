@@ -7,6 +7,8 @@
 #include <ostream>
 #include <string>
 
+#include <GridKit/ScalarTraits.hpp>
+
 namespace GridKit
 {
   namespace Model
@@ -18,10 +20,12 @@ namespace GridKit
      * High-level print functions (without parameters) manage printing for all
      * monitors for multiple output sinks.
      */
-    template <typename ScalarT>
+    template <typename ScalarP>
     class VariableMonitorController : public VariableMonitorBase
     {
     public:
+      /// Simulation scalar value type
+      using ScalarT  = ScalarP;
       /// Underlying real value type
       using RealT    = typename GridKit::ScalarTraits<ScalarT>::RealT;
       ///@{

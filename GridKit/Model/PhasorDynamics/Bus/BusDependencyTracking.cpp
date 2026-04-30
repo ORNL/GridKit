@@ -1,4 +1,6 @@
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+
 #include "BusImpl.hpp"
 
 namespace GridKit

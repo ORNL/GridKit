@@ -37,7 +37,11 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     struct BusData
     {
+      std::string device_class{"Bus"}; ///< Classification
+
       std::string name; ///< A name given to this bus
+
+      std::string disambiguation_string; ///< Same as name
 
       RealT Vr0{1.0}; ///< Initial value for the real bus voltage
       RealT Vi0{0.0}; ///< Initial value for the imaginary bus voltage

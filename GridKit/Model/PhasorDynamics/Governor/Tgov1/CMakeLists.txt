@@ -15,6 +15,7 @@ if(GRIDKIT_ENABLE_ENZYME)
     HEADERS
       ${_install_headers}
     LINK_LIBRARIES
+      PRIVATE GridKit::phasor_dynamics_utils
       PUBLIC GridKit::phasor_dynamics_core
       PUBLIC GridKit::phasor_dynamics_signal
       PRIVATE ClangEnzymeFlags
@@ -27,14 +28,16 @@ else()
     HEADERS
       ${_install_headers}
     LINK_LIBRARIES
-      GridKit::phasor_dynamics_core
-      GridKit::phasor_dynamics_signal)
+      PRIVATE GridKit::phasor_dynamics_utils
+      PUBLIC GridKit::phasor_dynamics_core
+      PUBLIC GridKit::phasor_dynamics_signal)
 endif()
 
 gridkit_add_library(phasor_dynamics_governortgov1_dependency_tracking
   SOURCES
     Tgov1DependencyTracking.cpp
   LINK_LIBRARIES
+    PRIVATE GridKit::phasor_dynamics_utils
     PUBLIC GridKit::phasor_dynamics_core
     PUBLIC GridKit::phasor_dynamics_signal_dependency_tracking)
 

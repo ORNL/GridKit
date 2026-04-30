@@ -7,8 +7,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
+#include <GridKit/Model/PhasorDynamics/ConnectedElement.hpp>
 
 namespace GridKit
 {
@@ -16,13 +15,9 @@ namespace GridKit
   {
     namespace Stabilizer
     {
-      template <typename RealT, typename IdxT>
+      template <typename RealP, typename IdxP>
       struct IeeestData;
     } // namespace Stabilizer
-
-    template <class ScalarT, typename IdxT>
-    class SignalNode;
-
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -32,6 +27,9 @@ namespace GridKit
   {
     namespace Stabilizer
     {
+      template <typename, typename>
+      class Ieeest;
+
       /// Internal variables of a `Ieeest`
       enum class IeeestInternalVariables : size_t
       {
@@ -58,36 +56,57 @@ namespace GridKit
         VCT, ///< Cutout signal
         MAXIMUM,
       };
+    } // namespace Stabilizer
 
-      template <class ScalarT, typename IdxT>
-      class Ieeest : public Component<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    struct ConnectedElementTraits<Stabilizer::Ieeest<ScalarP, IdxP>>
+    {
+      using IeeestT = Stabilizer::Ieeest<ScalarP, IdxP>;
+
+      using ElementT           = IeeestT;
+      using ScalarT            = ScalarP;
+      using IdxT               = IdxP;
+      using RealT              = typename ScalarTraits<ScalarT>::RealT;
+      using ModelDataT         = Stabilizer::IeeestData<RealT, IdxT>;
+      using InternalVariablesT = Stabilizer::IeeestInternalVariables;
+      using ExternalVariablesT = Stabilizer::IeeestExternalVariables;
+      using InterfaceT         = Component<ScalarT, IdxT>;
+    };
+
+    namespace Stabilizer
+    {
+      template <typename ScalarP, typename IdxP>
+      class Ieeest : public ConnectedElement<Ieeest<ScalarP, IdxP>>
       {
-        using Component<ScalarT, IdxT>::gridkit_component_id_;
-        using Component<ScalarT, IdxT>::alpha_;
-        using Component<ScalarT, IdxT>::f_;
-        using Component<ScalarT, IdxT>::nnz_;
-        using Component<ScalarT, IdxT>::size_;
-        using Component<ScalarT, IdxT>::tag_;
-        using Component<ScalarT, IdxT>::time_;
-        using Component<ScalarT, IdxT>::y_;
-        using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::wb_;
-        using Component<ScalarT, IdxT>::h_;
-        using Component<ScalarT, IdxT>::J_;
-        using Component<ScalarT, IdxT>::J_rows_buffer_;
-        using Component<ScalarT, IdxT>::J_cols_buffer_;
-        using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::variable_indices_;
-        using Component<ScalarT, IdxT>::residual_indices_;
+        using ConnectedElement<Ieeest>::gridkit_component_id_;
+        using ConnectedElement<Ieeest>::alpha_;
+        using ConnectedElement<Ieeest>::f_;
+        using ConnectedElement<Ieeest>::nnz_;
+        using ConnectedElement<Ieeest>::size_;
+        using ConnectedElement<Ieeest>::tag_;
+        using ConnectedElement<Ieeest>::time_;
+        using ConnectedElement<Ieeest>::y_;
+        using ConnectedElement<Ieeest>::yp_;
+        using ConnectedElement<Ieeest>::wb_;
+        using ConnectedElement<Ieeest>::h_;
+        using ConnectedElement<Ieeest>::J_;
+        using ConnectedElement<Ieeest>::J_rows_buffer_;
+        using ConnectedElement<Ieeest>::J_cols_buffer_;
+        using ConnectedElement<Ieeest>::J_vals_buffer_;
+        using ConnectedElement<Ieeest>::variable_indices_;
+        using ConnectedElement<Ieeest>::residual_indices_;
+        using ConnectedElement<Ieeest>::monitor_;
+        using ConnectedElement<Ieeest>::signals_;
 
       public:
-        using RealT           = typename Component<ScalarT, IdxT>::RealT;
-        using model_data_type = IeeestData<RealT, IdxT>;
-        using signal_type     = SignalNode<ScalarT, IdxT>;
-        using MonitorT        = Model::VariableMonitor<Ieeest, IeeestData>;
+        using ScalarT    = typename ConnectedElement<Ieeest>::ScalarT;
+        using IdxT       = typename ConnectedElement<Ieeest>::IdxT;
+        using RealT      = typename ConnectedElement<Ieeest>::RealT;
+        using ModelDataT = IeeestData<RealT, IdxT>;
+        using MonitorT   = typename ConnectedElement<Ieeest>::MonitorT;
 
         Ieeest();
-        Ieeest(const model_data_type& data);
+        Ieeest(const ModelDataT& data);
         ~Ieeest();
 
         int setGridKitComponentID(IdxT) override final;
@@ -97,18 +116,6 @@ namespace GridKit
         int tagDifferentiable() override final;
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
-
-        /// Get the `ComponentSignals` from this `Ieeest`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                IeeestInternalVariables,
-                                IeeestExternalVariables>&
-        {
-          return signals_;
-        }
-
-        const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             ScalarT*,
@@ -164,11 +171,7 @@ namespace GridKit
         RealT use_cutout_{1};
         RealT bypass_cutout_{0};
 
-        ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
-
-        std::unique_ptr<MonitorT> monitor_;
-
-        void initializeParameters(const model_data_type& data);
+        void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
 
         std::vector<ScalarT> ws_;

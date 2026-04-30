@@ -1,15 +1,15 @@
-
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 
-#include "BusInfiniteImpl.hpp"
+#include "SystemModelImpl.hpp"
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+
     // Available template instantiations
-    template class BusInfinite<DependencyTracking::Variable, long int>;
-    template class BusInfinite<DependencyTracking::Variable, size_t>;
+    // template class SystemModel<DependencyTracking::Variable, long int>;
+    template class SystemModel<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

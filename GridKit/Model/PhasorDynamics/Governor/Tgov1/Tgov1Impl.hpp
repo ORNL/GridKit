@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 
+#include <GridKit/Model/PhasorDynamics/ConnectedElementImpl.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -30,8 +31,8 @@ namespace GridKit
        * @brief Constructs a Tgov1 governor model without setting its parameters
        *
        */
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1()
+      template <typename ScalarP, typename IdxP>
+      Tgov1<ScalarP, IdxP>::Tgov1()
       {
         size_ = 3;
       }
@@ -42,8 +43,8 @@ namespace GridKit
        * @param pmech $P_m$ internal variable signal node
        * @param omega $\Delta_\omega$ external variable signal node
        */
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(signal_type* pmech, signal_type* omega)
+      template <typename ScalarP, typename IdxP>
+      Tgov1<ScalarP, IdxP>::Tgov1(SignalT* pmech, SignalT* omega)
         : R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
@@ -64,8 +65,9 @@ namespace GridKit
        *
        * @param data Data to initialize the model from.
        */
-      template <class ScalarT, typename IdxT>
-      Tgov1<ScalarT, IdxT>::Tgov1(const model_data_type& data)
+      template <typename ScalarP, typename IdxP>
+      Tgov1<ScalarP, IdxP>::Tgov1(const ModelDataT& data)
+        : ConnectedElement<Tgov1>(data)
       {
         initializeParameters(data);
         size_ = 3;
@@ -74,55 +76,55 @@ namespace GridKit
       /**
        * @brief Helper function to extract and assign model parameters.
        *
-       * Parses values from the model_data_type and assigns them to internal
+       * Parses values from the ModelDataT and assigns them to internal
        * parameters.
        *
        * @param data Structure containing model parameters.
        */
-      template <class ScalarT, typename IdxT>
-      void Tgov1<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+      template <typename ScalarP, typename IdxP>
+      void Tgov1<ScalarP, IdxP>::initializeParameters(const ModelDataT& data)
       {
-        if (data.parameters.contains(model_data_type::Parameters::R))
+        if (data.parameters.contains(ModelDataT::Parameters::R))
         {
-          R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
+          R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::Pvmin))
+        if (data.parameters.contains(ModelDataT::Parameters::Pvmin))
         {
-          Pvmin_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Pvmin));
+          Pvmin_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Pvmin));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::Pvmax))
+        if (data.parameters.contains(ModelDataT::Parameters::Pvmax))
         {
-          Pvmax_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Pvmax));
+          Pvmax_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Pvmax));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::T1))
+        if (data.parameters.contains(ModelDataT::Parameters::T1))
         {
-          T1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T1));
+          T1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T1));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::T2))
+        if (data.parameters.contains(ModelDataT::Parameters::T2))
         {
-          T2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T2));
+          T2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T2));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::T3))
+        if (data.parameters.contains(ModelDataT::Parameters::T3))
         {
-          T3_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T3));
+          T3_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T3));
         }
 
-        if (data.parameters.contains(model_data_type::Parameters::Dt))
+        if (data.parameters.contains(ModelDataT::Parameters::Dt))
         {
-          Dt_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Dt));
+          Dt_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Dt));
         }
       }
 
       /**
        * @brief Set the component ID
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::setGridKitComponentID(IdxT component_id)
       {
         gridkit_component_id_ = component_id;
         return 0;
@@ -131,8 +133,8 @@ namespace GridKit
       /*!
        * @brief Allocate memory for model
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::allocate()
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::allocate()
       {
         // Allocate local component data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
@@ -168,8 +170,8 @@ namespace GridKit
       /**
        * @brief verify method checks that attached signals are also linked
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::verify() const
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::verify() const
       {
         static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
 
@@ -191,8 +193,8 @@ namespace GridKit
        * @brief Initialization of the Governor
        *
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::initialize()
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::initialize()
       {
         ScalarT p0{0};
 
@@ -221,8 +223,8 @@ namespace GridKit
       /**
        * @brief Identify differential variables.
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::tagDifferentiable()
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::tagDifferentiable()
       {
 
         tag_[0] = true;  // Pv
@@ -236,8 +238,8 @@ namespace GridKit
        * @brief Internal residuals
        *
        */
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Tgov1<ScalarT, IdxT>::evaluateInternalResidual(
+      template <typename ScalarP, typename IdxP>
+      __attribute__((always_inline)) inline int Tgov1<ScalarP, IdxP>::evaluateInternalResidual(
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* wb,
@@ -274,8 +276,8 @@ namespace GridKit
        * @brief Residuals of system equations
        *
        */
-      template <class ScalarT, typename IdxT>
-      int Tgov1<ScalarT, IdxT>::evaluateResidual()
+      template <typename ScalarP, typename IdxP>
+      int Tgov1<ScalarP, IdxP>::evaluateResidual()
       {
         // Input Variables
         if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())

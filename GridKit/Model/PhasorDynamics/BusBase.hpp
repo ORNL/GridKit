@@ -4,31 +4,42 @@
 #include <set>
 #include <vector>
 
-#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/GridElement.hpp>
-#include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    using Log = ::GridKit::Utilities::Logger;
+    template <typename, typename>
+    class BusBase;
+
+    enum class BusInternalVariables : size_t
+    {
+      MAXIMUM
+    };
+
+    enum class BusExternalVariables : size_t
+    {
+      MAXIMUM
+    };
 
     /*!
      * @brief BusBase model implementation base class.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    class BusBase : public GridElement<ScalarT, IdxT>
+    template <typename ScalarP, typename IdxP>
+    class BusBase : public GridElement<ScalarP, IdxP>
     {
     public:
-      using RealT    = typename GridElement<ScalarT, IdxT>::RealT;
-      using MatrixT  = typename GridElement<ScalarT, IdxT>::MatrixT;
-      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
-      using MonitorT = Model::VariableMonitor<BusBase, BusData>;
+      using ScalarT    = typename GridElement<ScalarP, IdxP>::ScalarT;
+      using IdxT       = typename GridElement<ScalarP, IdxP>::IdxT;
+      using RealT      = typename GridElement<ScalarP, IdxP>::RealT;
+      using MatrixT    = typename GridElement<ScalarP, IdxP>::MatrixT;
+      using ModelDataT = BusData<RealT, IdxT>;
+      using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
 
       BusBase() = default;
 
@@ -73,13 +84,8 @@ namespace GridKit
         return bus_id_;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override;
-
     protected:
       IdxT bus_id_{INVALID_INDEX<IdxT>};
-
-      /// Variable monitor
-      std::unique_ptr<MonitorT> monitor_;
     };
 
   } // namespace PhasorDynamics
