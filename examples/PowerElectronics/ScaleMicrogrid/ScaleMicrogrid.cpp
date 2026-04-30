@@ -251,9 +251,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   // Create initial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * Nsize; i++)
   {
-    sys_model->yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    sys_model->yp()[13 * i - 1 + 2] = DGParams_list[i].Vn_;
+    sys_model->yp()[13 * i - 1 + 4] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    sys_model->yp()[13 * i - 1 + 6] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
