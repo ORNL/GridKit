@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include <GridKit/LinearAlgebra/DenseMatrix/DenseMatrix.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -150,7 +152,16 @@ int main()
   parms.Lf_  = 1.35e-3;
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
-  DG* dg     = new DG(0, parms, true);
+
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
+
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus;
+
+  DG* dg = new DG(0, parms, true, &dg_signal, &bus);
+  dg_signal.allocate();
+  bus.allocate();
   dg->allocate();
   dg->initialize();
   dg->updateTime(0.0, 0.0);

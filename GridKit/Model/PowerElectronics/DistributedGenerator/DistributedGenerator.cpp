@@ -19,7 +19,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   DistributedGenerator<ScalarT, IdxT>::DistributedGenerator(IdxT                                        id,
                                                             DistributedGeneratorParameters<RealT, IdxT> parm,
-                                                            bool                                        reference_frame)
+                                                            bool                                        reference_frame,
+                                                            NodeT*                                      node_ref,
+                                                            NodeT*                                      node_bus)
     : wb_(parm.wb_),
       wc_(parm.wc_),
       mp_(parm.mp_),
@@ -35,16 +37,28 @@ namespace GridKit
       Lf_(parm.Lf_),
       rLc_(parm.rLc_),
       Lc_(parm.Lc_),
-      refframe_(reference_frame)
+      refframe_(reference_frame),
+      node_ref_(node_ref),
+      node_bus_(node_bus)
   {
+    assert(refframe_ || node_ref_->size() == 1);
+    assert(node_bus_->size() == 2);
     // internals [\delta_i, Pi, Qi, phi_di, phi_qi, gamma_di, gamma_qi, il_di, il_qi, vo_di, vo_qi, io_di, io_qi]
     // externals [\omega_ref, vba_out, vbb_out]
-    size_           = 16;
-    n_intern_       = 13;
-    n_extern_       = 3;
-    extern_indices_ = {0, 1, 2};
-    idc_            = id;
-    nnz_            = refframe_ ? 80 : 78;
+    size_     = 16;
+    n_intern_ = refframe_ ? 12 : 13;
+    n_extern_ = refframe_ ? 4 : 3;
+    idc_      = id;
+    nnz_      = refframe_ ? 80 : 78;
+
+    if (refframe_)
+    {
+      extern_indices_ = {0, 1, 2, 3};
+    }
+    else
+    {
+      extern_indices_ = {0, 1, 2};
+    }
   }
 
   template <class ScalarT, typename IdxT>
@@ -351,6 +365,23 @@ namespace GridKit
                -wb_ + mp_ * static_cast<RealT>(y_[4]),
                -rLc_ / Lc_ - alpha_};
     this->setJacValues(rtemp, ctemp, valtemp);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int DistributedGenerator<ScalarT, IdxT>::allocate()
+  {
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
+    this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
+    this->setExternalConnectionNodes(1, node_bus_->getNodeConnection(0));
+    this->setExternalConnectionNodes(2, node_bus_->getNodeConnection(1));
+
+    if (refframe_)
+    {
+      this->setExternalConnectionNodes(3, INVALID_INDEX<IdxT>);
+    }
 
     return 0;
   }

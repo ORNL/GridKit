@@ -16,9 +16,11 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, RealT V)
-    : V_(V)
+  VoltageSource<ScalarT, IdxT>::VoltageSource(IdxT id, RealT V, NodeT* node1, NodeT* node2)
+    : V_(V), node1_(node1), node2_(node2)
   {
+    assert(node1_->size() == 1);
+    assert(node2_->size() == 1);
     size_           = 3;
     n_intern_       = 1;
     n_extern_       = 2;
@@ -75,6 +77,17 @@ namespace GridKit
     std::vector<IdxT>  ccord{2, 2, 0, 1};
     std::vector<RealT> vals{-1.0, 1.0, -1.0, 1.0};
     this->setJacValues(rcord, ccord, vals);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int VoltageSource<ScalarT, IdxT>::allocate()
+  {
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
+    this->setExternalConnectionNodes(0, node1_->getNodeConnection(0));
+    this->setExternalConnectionNodes(1, node2_->getNodeConnection(0));
 
     return 0;
   }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 
 namespace GridKit
 {
@@ -20,6 +21,7 @@ namespace GridKit
   class Resistor : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -42,10 +44,11 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    Resistor(IdxT id, RealT R);
+    Resistor(IdxT id, RealT R, NodeT* node1, NodeT* node2);
     virtual ~Resistor();
 
     int initialize();
+    int allocate() final;
     int tagDifferentiable();
     int evaluateResidual();
     int evaluateJacobian();
@@ -57,6 +60,8 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    RealT R_;
+    RealT  R_;
+    NodeT* node1_;
+    NodeT* node2_;
   };
 } // namespace GridKit

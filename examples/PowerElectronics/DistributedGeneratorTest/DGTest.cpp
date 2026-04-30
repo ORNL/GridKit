@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 
 /**
@@ -38,11 +40,19 @@ int main(int /* argc */, char const** /* argv */)
   parms.rLc_ = 0.03;
   parms.Lc_  = 0.35e-3;
 
-  GridKit::DistributedGenerator<double, size_t> dg(0, parms, true);
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
+
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus;
+
+  GridKit::DistributedGenerator<double, size_t> dg(0, parms, true, &dg_signal, &bus);
 
   std::vector<double> t1(16, 0.0);
   std::vector<double> t2{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
 
+  dg_signal.allocate();
+  bus.allocate();
   dg.allocate();
 
   dg.y()  = t2;

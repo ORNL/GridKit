@@ -72,7 +72,7 @@ namespace GridKit
     {
       if (connection_nodes_ == nullptr)
       {
-        connection_nodes_ = new IdxT[size_];
+        connection_nodes_ = new IdxT[static_cast<size_t>(size_)];
       }
 
       connection_nodes_[local_index] = global_index;

@@ -22,10 +22,16 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, RealT R, RealT L)
+  MicrogridLine<ScalarT, IdxT>::MicrogridLine(IdxT id, RealT R, RealT L, NodeT* node_ref, NodeT* bus1, NodeT* bus2)
     : R_(R),
-      L_(L)
+      L_(L),
+      node_ref_(node_ref),
+      bus1_(bus1),
+      bus2_(bus2)
   {
+    assert(node_ref_->size() == 1);
+    assert(bus1_->size() == 2);
+    assert(bus2_->size() == 2);
     // internals [id, iq]
     // externals [\omegaref, vbd_in, vbq_in, vbd_out, vbq_out]
     size_           = 7;
@@ -113,6 +119,20 @@ namespace GridKit
     std::fill(rcord.begin(), rcord.end(), 6);
     vals = {-static_cast<RealT>(y_[5]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_) - alpha_};
     this->setJacValues(rcord, ccor2, vals);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int MicrogridLine<ScalarT, IdxT>::allocate()
+  {
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
+    this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
+    this->setExternalConnectionNodes(1, bus1_->getNodeConnection(0));
+    this->setExternalConnectionNodes(2, bus1_->getNodeConnection(1));
+    this->setExternalConnectionNodes(3, bus2_->getNodeConnection(0));
+    this->setExternalConnectionNodes(4, bus2_->getNodeConnection(1));
 
     return 0;
   }

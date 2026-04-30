@@ -11,6 +11,7 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
@@ -63,9 +64,11 @@ namespace GridKit
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
-    using node_type      = CircuitNode<ScalarT, IdxT>;
+    using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
+    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
@@ -133,19 +136,6 @@ namespace GridKit
     }
 
     /**
-     * @brief allocator default
-     *
-     * @todo this should throw an exception as no allocation without a graph is allowed.
-     * Or needs to be removed from the base class
-     *
-     * @return int
-     */
-    int allocate() final
-    {
-      return 1;
-    }
-
-    /**
      * @brief Will check if each component has jacobian avalible. If one doesn't have it, return false.
      *
      *
@@ -178,19 +168,60 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int allocate(IdxT s)
+    int allocate() final
     {
-      // Allocate all components
-      size_ = s;
-      for (const auto& component : components_)
+      size_t component_internal_size = 0;
+      for (component_type* comp : components_)
       {
-        component->allocate();
+        component_internal_size += comp->getInternalSize();
       }
+
+      size_t node_internal_size = 0;
+      for (node_type* node : nodes_)
+      {
+        node_internal_size += node->getInternalSize();
+      }
+
+      n_intern_ = component_internal_size + node_internal_size;
+      n_extern_ = 0;
+      size_     = n_intern_ + n_extern_;
 
       // Allocate global vectors
       y_.resize(size_);
       yp_.resize(size_);
       f_.resize(size_);
+
+      { // Start node internal indexing after all component internals for proper KLU ordering
+        size_t node_internal_idx = component_internal_size;
+        for (node_type* node : nodes_)
+        {
+          node->allocate();
+
+          for (size_t i = 0; i < node->getInternalSize(); i++)
+          {
+            node->setExternalConnectionNodes(i, node_internal_idx);
+            node_internal_idx++;
+          }
+        }
+      }
+
+      {
+        size_t component_internal_idx = 0;
+        for (component_type* comp : components_)
+        {
+          comp->allocate();
+
+          const auto& external_indices = comp->getExternIndices();
+          for (size_t i = 0; i < comp->size(); i++)
+          {
+            if (!external_indices.contains(i))
+            {
+              comp->setExternalConnectionNodes(i, component_internal_idx);
+              component_internal_idx++;
+            }
+          }
+        }
+      }
 
       // Evaluate component Jacobians to get sparsity
       distributeVectors();
@@ -486,10 +517,16 @@ namespace GridKit
       components_.push_back(component);
     }
 
+    void addNode(node_type* node)
+    {
+      nodes_.push_back(node);
+    }
+
   private:
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*> components_;
+    std::vector<node_type*>      nodes_;
 
     IdxT*       map_to_csr_{nullptr};
     CsrMatrixT* csr_jac_{nullptr};

@@ -1,12 +1,13 @@
-
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -84,213 +85,88 @@ int main(int /* argc */, char const** /* argv */)
   double rload2 = 2.0;
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  // indexing sets
-  size_t Nsize              = 2;
-  //							DGs	+		- refframe	   Lines +				Loads
-  size_t vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
-  //							\omegaref + BusDQ
-  size_t vec_size_externals = 1 + 2 * (2 * Nsize);
-  size_t dqbus1             = vec_size_internals + 1;
-  size_t dqbus2             = vec_size_internals + 3;
-  size_t dqbus3             = vec_size_internals + 5;
-  size_t dqbus4             = vec_size_internals + 7;
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
 
-  size_t vec_size_total = vec_size_internals + vec_size_externals;
+  sysmodel->addNode(&dg_signal);
 
-  size_t indexv = 0;
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus1;
+  Bus bus2;
+  Bus bus3;
+  Bus bus4;
+
+  sysmodel->addNode(&bus1);
+  sysmodel->addNode(&bus2);
+  sysmodel->addNode(&bus3);
+  sysmodel->addNode(&bus4);
 
   // dg 1
-  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(0, parms1, true);
-  // ref motor
-  dg1->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg1->setExternalConnectionNodes(1, dqbus1);
-  dg1->setExternalConnectionNodes(2, dqbus1 + 1);
-  //"grounding" of the difference
-  dg1->setExternalConnectionNodes(3, static_cast<size_t>(-1));
-  // internal connections
-  for (size_t i = 0; i < 12; i++)
-  {
-
-    dg1->setExternalConnectionNodes(4 + i, indexv + i);
-  }
-  indexv += 12;
+  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(
+      0, parms1, true, &dg_signal, &bus1);
   sysmodel->addComponent(dg1);
 
   // dg 2
-  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(1, parms1, false);
-  // ref motor
-  dg2->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg2->setExternalConnectionNodes(1, dqbus2);
-  dg2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(
+      1, parms1, false, &dg_signal, &bus2);
   sysmodel->addComponent(dg2);
 
   // dg 3
-  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(2, parms2, false);
-  // ref motor
-  dg3->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg3->setExternalConnectionNodes(1, dqbus3);
-  dg3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg3->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(
+      2, parms2, false, &dg_signal, &bus3);
   sysmodel->addComponent(dg3);
 
   // dg 4
-  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(3, parms2, false);
-  // ref motor
-  dg4->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg4->setExternalConnectionNodes(1, dqbus4);
-  dg4->setExternalConnectionNodes(2, dqbus4 + 1);
-
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg4->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(
+      3, parms2, false, &dg_signal, &bus4);
   sysmodel->addComponent(dg4);
 
   // Lines
 
   // line 1
-  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(4, rline1, Lline1);
-  // ref motor
-  l1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l1->setExternalConnectionNodes(1, dqbus1);
-  l1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // output connections
-  l1->setExternalConnectionNodes(3, dqbus2);
-  l1->setExternalConnectionNodes(4, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l1->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(
+      4, rline1, Lline1, &dg_signal, &bus1, &bus2);
   sysmodel->addComponent(l1);
 
   // line 2
-  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(5, rline2, Lline2);
-  // ref motor
-  l2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l2->setExternalConnectionNodes(1, dqbus2);
-  l2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // output connections
-  l2->setExternalConnectionNodes(3, dqbus3);
-  l2->setExternalConnectionNodes(4, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l2->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(
+      5, rline2, Lline2, &dg_signal, &bus2, &bus3);
   sysmodel->addComponent(l2);
 
   // line 3
-  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(6, rline3, Lline3);
-  // ref motor
-  l3->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l3->setExternalConnectionNodes(1, dqbus3);
-  l3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // output connections
-  l3->setExternalConnectionNodes(3, dqbus4);
-  l3->setExternalConnectionNodes(4, dqbus4 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l3->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(
+      6, rline3, Lline3, &dg_signal, &bus3, &bus4);
   sysmodel->addComponent(l3);
 
   //  loads
 
   // load 1
-  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1);
-  // ref motor
-  load1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load1->setExternalConnectionNodes(1, dqbus1);
-  load1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load1->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &dg_signal, &bus1);
   sysmodel->addComponent(load1);
 
   // load 2
-  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2);
-  // ref motor
-  load2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load2->setExternalConnectionNodes(1, dqbus3);
-  load2->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &dg_signal, &bus3);
   sysmodel->addComponent(load2);
 
   // Virtual PQ Buses
-  GridKit::MicrogridBusDQ<double, size_t>* bus1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN, &bus1);
+  sysmodel->addComponent(bus_para_1);
 
-  bus1->setExternalConnectionNodes(0, dqbus1);
-  bus1->setExternalConnectionNodes(1, dqbus1 + 1);
-  sysmodel->addComponent(bus1);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN, &bus2);
+  sysmodel->addComponent(bus_para_2);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN, &bus3);
+  sysmodel->addComponent(bus_para_3);
 
-  bus2->setExternalConnectionNodes(0, dqbus2);
-  bus2->setExternalConnectionNodes(1, dqbus2 + 1);
-  sysmodel->addComponent(bus2);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN, &bus4);
+  sysmodel->addComponent(bus_para_4);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN);
-
-  bus3->setExternalConnectionNodes(0, dqbus3);
-  bus3->setExternalConnectionNodes(1, dqbus3 + 1);
-  sysmodel->addComponent(bus3);
-
-  GridKit::MicrogridBusDQ<double, size_t>* bus4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN);
-
-  bus4->setExternalConnectionNodes(0, dqbus4);
-  bus4->setExternalConnectionNodes(1, dqbus4 + 1);
-  sysmodel->addComponent(bus4);
-
-  sysmodel->allocate(vec_size_total);
+  sysmodel->allocate();
 
   std::cout << sysmodel->y().size() << std::endl;
-  std::cout << vec_size_internals << ", " << vec_size_externals << "\n";
 
   // Create initial points for states
-  for (size_t i = 0; i < vec_size_total; i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
     sysmodel->y()[i]  = 0.0;
     sysmodel->yp()[i] = 0.0;
@@ -312,7 +188,7 @@ int main(int /* argc */, char const** /* argv */)
   }
 
   // since the intial P_com = 0
-  sysmodel->y()[vec_size_internals] = parms1.wb_;
+  sysmodel->y()[dg_signal.getNodeConnection(0)] = parms1.wb_;
 
   sysmodel->initialize();
   sysmodel->evaluateResidual();

@@ -16,9 +16,11 @@ namespace GridKit
    */
 
   template <class ScalarT, typename IdxT>
-  Resistor<ScalarT, IdxT>::Resistor(IdxT id, RealT R)
-    : R_(R)
+  Resistor<ScalarT, IdxT>::Resistor(IdxT id, RealT R, NodeT* node1, NodeT* node2)
+    : R_(R), node1_(node1), node2_(node2)
   {
+    assert(node1_->size() == 1);
+    assert(node2_->size() == 1);
     size_           = 2;
     n_intern_       = 0;
     n_extern_       = 2;
@@ -75,6 +77,17 @@ namespace GridKit
     std::vector<IdxT>  ccord{0, 1, 0, 1};
     std::vector<RealT> vals{1.0 / R_, -1.0 / R_, -1.0 / R_, 1.0 / R_};
     this->setJacValues(rcord, ccord, vals);
+
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int Resistor<ScalarT, IdxT>::allocate()
+  {
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
+    this->setExternalConnectionNodes(0, node1_->getNodeConnection(0));
+    this->setExternalConnectionNodes(1, node2_->getNodeConnection(0));
 
     return 0;
   }

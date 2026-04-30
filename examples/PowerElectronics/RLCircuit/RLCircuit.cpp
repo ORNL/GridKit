@@ -5,7 +5,10 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
+#include <GridKit/Model/PowerElectronics/Bus/Bus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/GroundedBus.hpp>
 #include <GridKit/Model/PowerElectronics/Capacitor/Capacitor.hpp>
 #include <GridKit/Model/PowerElectronics/Inductor/Inductor.hpp>
 #include <GridKit/Model/PowerElectronics/Resistor/Resistor.hpp>
@@ -31,58 +34,46 @@ int main(int /* argc */, char const** /* argv */)
   double linit = 1.0;
   double vinit = 1.0;
 
+  using Bus         = GridKit::PowerElectronics::Bus<double, size_t>;
+  using GroundedBus = GridKit::PowerElectronics::GroundedBus<double, size_t>;
+  GroundedBus bus_iv(0.0);
+  Bus         bus_vr;
+  Bus         bus_ir;
+
+  sysmodel.addNode(&bus_iv);
+  sysmodel.addNode(&bus_vr);
+  sysmodel.addNode(&bus_ir);
+
   // inductor
-  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit);
-  // Form index to node uid realations
-  //  input
-  induct->setExternalConnectionNodes(0, 1);
-  // output
-  induct->setExternalConnectionNodes(1, static_cast<size_t>(-1));
-  // internal
-  induct->setExternalConnectionNodes(2, 2);
-  // add component
+  GridKit::Inductor<double, size_t>* induct = new GridKit::Inductor<double, size_t>(idoff, linit, &bus_ir, &bus_iv);
   sysmodel.addComponent(induct);
 
   // resistor
   idoff++;
-  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit);
-  // Form index to node uid realations
-  // input
-  resis->setExternalConnectionNodes(0, 0);
-  // output
-  resis->setExternalConnectionNodes(1, 1);
-  // add
+  GridKit::Resistor<double, size_t>* resis = new GridKit::Resistor<double, size_t>(idoff, rinit, &bus_vr, &bus_ir);
   sysmodel.addComponent(resis);
 
   // voltage source
   idoff++;
-  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit);
-  // Form index to node uid realations
-  // input
-  vsource->setExternalConnectionNodes(0, static_cast<size_t>(-1));
-  // output
-  vsource->setExternalConnectionNodes(1, 0);
-  // internal
-  vsource->setExternalConnectionNodes(2, 3);
-
+  GridKit::VoltageSource<double, size_t>* vsource = new GridKit::VoltageSource<double, size_t>(idoff, vinit, &bus_iv, &bus_vr);
   sysmodel.addComponent(vsource);
 
-  sysmodel.allocate(4);
+  sysmodel.allocate();
 
   std::cout << sysmodel.y().size() << std::endl;
 
   // Grounding for IDA. If no grounding then circuit is \mu > 1
   // v_0 (grounded)
   // Create initial points
-  sysmodel.y()[0] = vinit; // v_1
-  sysmodel.y()[1] = vinit; // v_2
-  sysmodel.y()[2] = 0.0;   // i_L
-  sysmodel.y()[3] = 0.0;   // i_s
+  sysmodel.y()[0] = 0.0;   // i_L
+  sysmodel.y()[1] = 0.0;   // i_s
+  sysmodel.y()[2] = vinit; // v_1
+  sysmodel.y()[3] = vinit; // v_2
 
-  sysmodel.yp()[0] = 0.0;            // v'_1
-  sysmodel.yp()[1] = 0.0;            // v'_2
-  sysmodel.yp()[2] = -vinit / linit; // i'_s
-  sysmodel.yp()[3] = -vinit / linit; // i'_L
+  sysmodel.yp()[0] = -vinit / linit; // i'_s
+  sysmodel.yp()[1] = -vinit / linit; // i'_L
+  sysmodel.yp()[2] = 0.0;            // v'_1
+  sysmodel.yp()[3] = 0.0;            // v'_2
 
   sysmodel.initialize();
   sysmodel.evaluateResidual();
@@ -123,10 +114,10 @@ int main(int /* argc */, char const** /* argv */)
   std::vector<double> yexact(4);
 
   // analytical solution to the circuit
-  yexact[0] = vinit;
-  yexact[2] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
-  yexact[3] = yexact[2];
-  yexact[1] = vinit + rinit * yexact[2];
+  yexact[2] = vinit;
+  yexact[0] = (vinit / rinit) * (exp(-(rinit / linit) * t_final) - 1.0);
+  yexact[1] = yexact[0];
+  yexact[3] = vinit + rinit * yexact[0];
 
   std::cout << "Element-wise relative error at t=" << t_final << "\n";
   for (size_t i = 0; i < yfinial.size(); i++)

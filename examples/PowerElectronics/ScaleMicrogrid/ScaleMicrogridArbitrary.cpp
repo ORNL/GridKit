@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -158,41 +160,27 @@ int printMicrogridSystems(index_type N_size)
     Lload_list[0] = Lload1;
   }
 
-  //							DGs	+		- refframe	   Lines +				Loads
-  index_type vec_size_internals = 13 * (2 * N_size) - 1 + (2 + 4 * (N_size - 1)) + 2 * N_size;
-  //							\omegaref + BusDQ
-  index_type vec_size_externals = 1 + 2 * (2 * N_size);
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
+  sys_model.addNode(&dg_signal);
 
-  std::vector<index_type> vdqbus_index(2 * N_size, 0);
-  vdqbus_index[0] = vec_size_internals + 1;
-  for (index_type i = 1; i < vdqbus_index.size(); i++)
+  using Bus                                     = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  std::unique_ptr<std::unique_ptr<Bus>[]> buses = std::make_unique<std::unique_ptr<Bus>[]>(2 * N_size);
+  for (size_t i = 0; i < 2 * N_size; i++)
   {
-    vdqbus_index[i] = vdqbus_index[i - 1] + 2;
+    buses[i] = std::make_unique<Bus>();
+    sys_model.addNode(buses[i].get());
   }
-
-  // Total size of the vector setup
-  index_type vec_size_total = vec_size_internals + vec_size_externals;
 
   // Create the reference DG
   auto* dg_ref = new DistributedGenerator<real_type, index_type>(0,
                                                                  DGParams_list[0],
-                                                                 true);
-  // ref motor
-  dg_ref->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg_ref->setExternalConnectionNodes(1, vdqbus_index[0]);
-  dg_ref->setExternalConnectionNodes(2, vdqbus_index[0] + 1);
-  //"grounding" of the difference
-  dg_ref->setExternalConnectionNodes(3, static_cast<size_t>(-1));
-  // internal connections
-  for (index_type i = 0; i < 12; i++)
-  {
-    dg_ref->setExternalConnectionNodes(4 + i, i);
-  }
+                                                                 true,
+                                                                 &dg_signal,
+                                                                 buses[0].get());
   sys_model.addComponent(dg_ref);
 
   // Keep track of models and index location
-  index_type indexv   = 12;
   index_type model_id = 1;
   // Add all other DGs
   for (index_type i = 1; i < 2 * N_size; i++)
@@ -200,18 +188,9 @@ int printMicrogridSystems(index_type N_size)
     // current DG to add
     auto* dg = new DistributedGenerator<real_type, index_type>(model_id++,
                                                                DGParams_list[i],
-                                                               false);
-    // ref motor
-    dg->setExternalConnectionNodes(0, vec_size_internals);
-    // outputs
-    dg->setExternalConnectionNodes(1, vdqbus_index[i]);
-    dg->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-    // internal connections
-    for (index_type j = 0; j < 13; j++)
-    {
-      dg->setExternalConnectionNodes(3 + j, indexv + j);
-    }
-    indexv += 13;
+                                                               false,
+                                                               &dg_signal,
+                                                               buses[i].get());
     sys_model.addComponent(dg);
   }
 
@@ -221,21 +200,10 @@ int printMicrogridSystems(index_type N_size)
     // line
     auto* line_model = new MicrogridLine<real_type, index_type>(model_id++,
                                                                 rline_list[i],
-                                                                Lline_list[i]);
-    // ref motor
-    line_model->setExternalConnectionNodes(0, vec_size_internals);
-    // input connections
-    line_model->setExternalConnectionNodes(1, vdqbus_index[i]);
-    line_model->setExternalConnectionNodes(2, vdqbus_index[i] + 1);
-    // output connections
-    line_model->setExternalConnectionNodes(3, vdqbus_index[i + 1]);
-    line_model->setExternalConnectionNodes(4, vdqbus_index[i + 1] + 1);
-    // internal connections
-    for (index_type j = 0; j < 2; j++)
-    {
-      line_model->setExternalConnectionNodes(5 + j, indexv + j);
-    }
-    indexv += 2;
+                                                                Lline_list[i],
+                                                                &dg_signal,
+                                                                buses[i].get(),
+                                                                buses[i + 1].get());
     sys_model.addComponent(line_model);
   }
 
@@ -244,36 +212,24 @@ int printMicrogridSystems(index_type N_size)
   {
     auto* load_model = new MicrogridLoad<real_type, index_type>(model_id++,
                                                                 rload_list[i],
-                                                                Lload_list[i]);
-    // ref motor
-    load_model->setExternalConnectionNodes(0, vec_size_internals);
-    // input connections
-    load_model->setExternalConnectionNodes(1, vdqbus_index[2 * i]);
-    load_model->setExternalConnectionNodes(2, vdqbus_index[2 * i] + 1);
-    // internal connections
-    for (index_type j = 0; j < 2; j++)
-    {
-      load_model->setExternalConnectionNodes(3 + j, indexv + j);
-    }
-    indexv += 2;
+                                                                Lload_list[i],
+                                                                &dg_signal,
+                                                                buses[2 * i].get());
     sys_model.addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN);
-
-    virDQbus_model->setExternalConnectionNodes(0, vdqbus_index[i]);
-    virDQbus_model->setExternalConnectionNodes(1, vdqbus_index[i] + 1);
+    auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, buses[i].get());
     sys_model.addComponent(virDQbus_model);
   }
 
   // allocate all the initial conditions
-  sys_model.allocate(vec_size_total);
+  sys_model.allocate();
 
   // Create Initial points for states. Every state is set to zero initially
-  for (index_type i = 0; i < vec_size_total; i++)
+  for (index_type i = 0; i < sys_model.size(); i++)
   {
     sys_model.y()[i]  = 0.0;
     sys_model.yp()[i] = 0.0;
@@ -288,7 +244,7 @@ int printMicrogridSystems(index_type N_size)
   }
 
   // since the initial P_com = 0, set the initial vector to the reference frame
-  sys_model.y()[vec_size_internals] = DG_parms1.wb_;
+  sys_model.y()[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model.initialize();
   sys_model.evaluateResidual();
