@@ -231,8 +231,10 @@ cmake --install build
 
 ### Enzyme
 
-Enzyme support is experimental. Only `Release` and `RelWithDebInfo` build
-types are supported due to a known Enzyme limitation.
+Enzyme support is experimental. There is a known bug in Enzyme
+that causes errors when compiler optimization is turned off with
+`-O0` flag. A workaround is to use `Release` or `RelWithDebInfo`
+build types in CMake.
 
 Enzyme requires a matching LLVM installation (currently tested with LLVM 16)
 and must be compiled with the same Clang used to build GridKit.
