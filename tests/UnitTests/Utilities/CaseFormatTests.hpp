@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelDataJSONParser.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -63,6 +64,8 @@ namespace GridKit
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
                    { "class": "Genrou", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
+                   { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
+                          "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} }
                ]
             })";
@@ -88,6 +91,7 @@ namespace GridKit
         success *= result.branch.size() == 1;
         success *= result.bus_fault.size() == 1;
         success *= result.genrou.size() == 1;
+        success *= result.gensal.size() == 1;
         success *= result.load.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
@@ -137,6 +141,15 @@ namespace GridKit
         success *= result.genrou[0].disambiguation_string == "1";
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
+
+        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::p0]) == 1.0;
+        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::q0]) == 0.05013;
+        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xd]) == 2.1;
+        success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xq]) == 0.5;
+        success *= result.gensal[0].ports[GensalPorts::bus] == 1;
+        success *= result.gensal[0].disambiguation_string == "2";
+        success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::delta);
+        success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::omega);
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;

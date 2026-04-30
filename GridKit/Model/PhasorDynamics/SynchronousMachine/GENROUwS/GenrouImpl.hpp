@@ -401,7 +401,8 @@ namespace GridKit
       ScalarT ii  = (p * vi - q * vr) / vm2;
 
       // Initial ksat guess from |V|
-      ScalarT ksat = SB_ * (vm - SA_) * (vm - SA_);
+      ScalarT vm_sat = vm - SA_;
+      ScalarT ksat   = (vm_sat > ZERO<RealT>) ? SB_ * vm_sat * vm_sat : ScalarT{ZERO<RealT>};
 
       ScalarT delta, id, iq, vd, vq;
       ScalarT psiqpp, psidpp, psipp;
@@ -428,7 +429,7 @@ namespace GridKit
         id     = ir * std::sin(delta) - ii * std::cos(delta);
         iq     = ir * std::cos(delta) + ii * std::sin(delta);
         vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
-        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
+        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ + iq * Ra_;
         psiqpp = -vd;
         psidpp = vq;
         Edp    = (Xq1_ - Xqd_ * (Xqp_ - Xqpp_) * ksat) * iq / (ONE<RealT> + Xqd_ * ksat);
@@ -440,7 +441,8 @@ namespace GridKit
         ScalarT psiqpp_fl = -psiqp * Xq4_ - Edp * Xq5_;
         ScalarT psidpp_fl = psidp * Xd4_ + Eqp * Xd5_;
         psipp             = std::sqrt(psiqpp_fl * psiqpp_fl + psidpp_fl * psidpp_fl);
-        ksat              = SB_ * (psipp - SA_) * (psipp - SA_);
+        ScalarT psipp_sat = psipp - SA_;
+        ksat              = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
 
         if (iter == max_iter - 1)
         {
@@ -460,8 +462,9 @@ namespace GridKit
       y_[5] = Edp;
       y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
-      y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
+      y_[8] = psipp     = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      ScalarT psipp_sat = psipp - SA_;
+      y_[9] = ksat = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
       y_[10] = vd = -psiqpp * (ONE<RealT> + omega);
       y_[11] = vq = psidpp * (ONE<RealT> + omega);
       y_[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
@@ -566,17 +569,18 @@ namespace GridKit
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
-      f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
-      f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
-      f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f[10] = vd + psiqpp * (ONE<RealT> + omega);
-      f[11] = vq - psidpp * (ONE<RealT> + omega);
-      f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir + G_ * vr - B_ * vi - inr;
-      f[16] = ii + B_ * vr + G_ * vi - ini;
+      f[6]              = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
+      f[7]              = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[8]              = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
+      ScalarT psipp_sat = psipp - SA_;
+      f[9]              = ksat - SB_ * psipp_sat * psipp_sat * Math::sigmoid(psipp_sat);
+      f[10]             = vd + psiqpp * (ONE<RealT> + omega);
+      f[11]             = vq - psidpp * (ONE<RealT> + omega);
+      f[12]             = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[13]             = id - (ir * std::sin(delta) - ii * std::cos(delta));
+      f[14]             = iq - (ir * std::cos(delta) + ii * std::sin(delta));
+      f[15]             = ir + G_ * vr - B_ * vi - inr;
+      f[16]             = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));

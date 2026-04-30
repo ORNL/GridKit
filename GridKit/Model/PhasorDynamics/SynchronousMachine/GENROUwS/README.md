@@ -131,7 +131,7 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -V_{d} -\psi''_{q}(1+\omega)\\
   0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
-  0 &= -k_{sat} + S_B (\psi''-S_A)^2 \\
+  0 &= -k_{sat} + S_B(\psi''-S_A)^2\sigma(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
@@ -156,7 +156,11 @@ from the steady-state initial conditions.
   \psi^{''}_{d} &= V_q \\
   \psi^{''}_{q} &= -V_d \\
   \psi^{''} &= \sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
-  k_{sat}     &= S_B(\psi^{''}-S_A)^2 \\
+  k_{sat}     &=
+    \begin{cases}
+      S_B(\psi^{''}-S_A)^2, & \psi^{''} > S_A\\
+      0, & \psi^{''} \le S_A
+    \end{cases}\\
   T_{elec}    &= (\psi''_{d} - I_dX_d^{''})I_q-(\psi''_{q} - I_qX_d^{''})I_d \\
   P_{m}    &= T_{elec} \\
   \psi_d'  &= \psi_d'' - (X_d'' - X_\ell)I_d \\

@@ -17,6 +17,7 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
@@ -40,6 +41,7 @@ namespace GridKit
       using SexsPtiDataT      = Exciter::SexsPtiData<RealT, IdxT>;
       using IeeestDataT       = Stabilizer::IeeestData<RealT, IdxT>;
       using GenrouDataT       = GenrouData<RealT, IdxT>;
+      using GensalDataT       = GensalData<RealT, IdxT>;
       using GenClassicalDataT = GenClassicalData<RealT, IdxT>;
       using LoadDataT         = LoadData<RealT, IdxT>;
       using LoadZIPDataT      = LoadZIPData<RealT, IdxT>;
@@ -87,6 +89,7 @@ namespace GridKit
       std::vector<BranchDataT>       branch;       ///< Branches within the model
       std::vector<BusFaultDataT>     bus_fault;    ///< Bus faults within the model
       std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
+      std::vector<GensalDataT>       gensal;       ///< GENSAL instances within the model
       std::vector<GenClassicalDataT> genclassical; ///< Classical generator instances within the model
       std::vector<LoadDataT>         load;         ///< Loads within the model
       std::vector<LoadZIPDataT>      loadzip;      ///< Loads within the model

@@ -185,6 +185,38 @@ namespace GridKit
           addComponent(gen);
         }
 
+        // Add GENSAL generators
+        for (const auto& gendata : data.gensal)
+        {
+          IdxT bus_index = 0;
+          if (gendata.ports.contains(GensalData<ScalarT, IdxT>::Ports::bus))
+          {
+            bus_index = gendata.ports.at(GensalData<ScalarT, IdxT>::Ports::bus);
+          }
+
+          auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
+
+          if (gendata.ports.contains(GensalData<ScalarT, IdxT>::Ports::speed))
+          {
+            IdxT speed = gendata.ports.at(GensalData<ScalarT, IdxT>::Ports::speed);
+            gen->getSignals().template assignSignalNode<GensalInternalVariables::OMEGA>(getSignal(speed));
+          }
+
+          if (gendata.ports.contains(GensalData<ScalarT, IdxT>::Ports::pmech))
+          {
+            IdxT pmech = gendata.ports.at(GensalData<ScalarT, IdxT>::Ports::pmech);
+            gen->getSignals().template attachSignalNode<GensalExternalVariables::PM>(getSignal(pmech));
+          }
+
+          if (gendata.ports.contains(GensalData<ScalarT, IdxT>::Ports::efd))
+          {
+            IdxT efd = gendata.ports.at(GensalData<ScalarT, IdxT>::Ports::efd);
+            gen->getSignals().template attachSignalNode<GensalExternalVariables::EFD>(getSignal(efd));
+          }
+
+          addComponent(gen);
+        }
+
         // Add classical generators
         for (const auto& gendata : data.genclassical)
         {

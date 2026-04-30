@@ -6,4 +6,5 @@
 # ]]
 
 add_subdirectory(GENROUwS)
+add_subdirectory(GENSALwS)
 add_subdirectory(GenClassical)

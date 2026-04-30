@@ -1,13 +1,10 @@
 # General Synchronous Machine Model
 
-> [!NOTE]
-> Only the GENROU and classical generator models have been implemented.
-
 ## Convention
 
 <div align="center">
   <img align="center" src="../../../../docs/Figures/SM1.JPG">
-  
+
   Figure 1: Synchronous Machine. Figure courtesy of
   [PowerWorld](https://www.powerworld.com/files/Synchronous-Machines.pdf/)
 </div>
