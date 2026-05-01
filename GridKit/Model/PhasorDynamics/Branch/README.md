@@ -147,6 +147,23 @@ The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
 These current contributions are added to the connected bus residuals with
 positive sign because branch current is oriented entering the bus.
 
+## Actions
+
+This component accepts the following runtime events via `apply(Action)`. See
+[EVENTS.md](../EVENTS.md) for the dispatch model and JSON schema.
+
+JSON `"action"` | Params              | Effect
+----------------|---------------------|----------------------------------------------------------------------
+`"open"`        | none                | Sets line status $S = 0$.
+`"close"`       | none                | Sets line status $S = 1$.
+`"fault"`       | `R`, `X`, `percent` | Applies a fault impedance at fraction $f = \text{percent}/100$ from bus 1.
+`"clear"`       | none                | Clears the active fault.
+
+The line status $S$ masks branch residual contributions, so the Jacobian
+sparsity pattern remains fixed across open and close events. While a fault is
+engaged, the line is split at the fault location and the fault admittance is
+included in the equivalent two-port admittance. Line charging is unchanged.
+
 ## Initialization
 
 The Branch model has no internal state to initialize. During construction or
