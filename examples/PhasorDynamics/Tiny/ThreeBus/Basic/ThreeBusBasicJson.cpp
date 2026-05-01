@@ -33,27 +33,28 @@ int main(int argc, const char* argv[])
   using namespace GridKit::Utilities;
   using namespace GridKit::Testing;
 
-<<<<<<< HEAD
-  CliArgs args{{.name     = {"--config", "-c"},
-                .help     = "JSON file describing the network",
-                .defaults = "ThreeBusBasic.case.json",
-                .required = false},
-=======
-  CliArgs args{{.name     = {"--case", "-c"},
-                .help     = "JSON file describing the system configuration",
-                .required = true},
->>>>>>> 0165652 (Addressed formatting issues)
+  CliArgs args{
+      {
+          .name     = {"--case", "-c"},
+          .help     = "JSON file describing the system configuration",
+          .required = false,
+          .defaults = "ThreeBusBasic.case.json",
+      },
 
-               {.name     = {"--compare", "-r"},
-                .help     = "Two CSV files to compare:\n"
-                            "<expected-output-file> <reference-file>",
-                .nargs    = 2,
-                .defaults = {"mon.csv", "ThreeBusBasic.ref.csv"}},
+      {
+          .name     = {"--compare", "-r"},
+          .help     = "Two CSV files to compare:\n"
+                      "<expected-output-file> <reference-file>",
+          .nargs    = 2,
+          .defaults = {"mon.csv", "ThreeBusBasic.ref.csv"},
+      },
 
-               {.name     = {"--tolerance", "-t"},
-                .help     = "Allowable maximum error between compared files",
-                .type     = ArgType::Real,
-                .defaults = 1.0e-4}};
+      {
+          .name     = {"--tolerance", "-t"},
+          .help     = "Allowable maximum error between compared files",
+          .type     = ArgType::Real,
+          .defaults = 1.0e-4,
+      }};
 
   args.parseArgs(argc, argv);
 

@@ -54,6 +54,11 @@ namespace GridKit
       {
       }
 
+      ArgVector(std::initializer_list<ArgValue> vals)
+        : vec{vals}
+      {
+      }
+
       /**
        * @brief Interpret as `N` values of type `T`
        */

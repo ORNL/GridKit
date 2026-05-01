@@ -99,9 +99,10 @@ namespace GridKit
                      {.name = {"--tol", "-t"},
                       .type = ArgType::Real},
 
-                     {.name  = {"--params", "-p"},
-                      .type  = ArgType::Real,
-                      .nargs = 3}};
+                     {.name     = {"--params", "-p"},
+                      .type     = ArgType::Real,
+                      .nargs    = 3,
+                      .defaults = {0, 0, 0}}};
 
         CommandLine cl{
             "phony",

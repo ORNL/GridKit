@@ -8,14 +8,9 @@ install(TARGETS ThreeBusBasic RUNTIME DESTINATION ${_install_path})
 
 add_executable(ThreeBusBasicJson ThreeBusBasicJson.cpp)
 target_link_libraries(ThreeBusBasicJson
-<<<<<<< HEAD
-    GridKit::phasor_dynamics_components
-    GridKit::solvers_dyn
-=======
 	GridKit::phasor_dynamics_components
 	GridKit::solvers_dyn
     GridKit::utilities_cli_args
->>>>>>> d12c280 (Restructured files and made CliArgs its own proper library target)
     GridKit::testing)
 install(TARGETS ThreeBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(ThreeBusBasic.case.json)
@@ -24,17 +19,7 @@ gridkit_example_add_file(ThreeBusBasic.ref.csv)
 add_test(NAME ThreeBusBasic COMMAND ThreeBusBasic)
 add_test(NAME ThreeBusBasicJson
     COMMAND ThreeBusBasicJson
-<<<<<<< HEAD
-    ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasic.case.json)
-add_test(NAME ThreeBusBasicJson_no_arg
-    COMMAND ThreeBusBasicJson
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_test(NAME ThreeBusBasic_cli
-    COMMAND ThreeBusBasicJson
-        --config ThreeBusBasic.case.json
-=======
-        --case ThreeBusBasic.json
->>>>>>> 0165652 (Addressed formatting issues)
+        --case ThreeBusBasic.case.json
         --compare mon.csv ThreeBusBasic.ref.csv)
 
 gridkit_example_add_file(ThreeBusBasic.solver.json)

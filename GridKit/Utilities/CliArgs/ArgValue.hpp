@@ -24,15 +24,29 @@ namespace GridKit
       /**
        * @brief Check that T != ArgValue
        *
-       * @note this is used to work around an issue with libc++
        */
       template <typename T>
       static constexpr bool notAnArgValue =
           !std::is_same_v<std::remove_reference_t<T>, ArgValue>;
 
+      /**
+       * @brief Check that T != std::initializer_list<ArgValue>
+       */
+      template <typename T>
+      static constexpr bool notAnArgValueList =
+          !std::is_same_v<std::remove_reference_t<T>, std::initializer_list<ArgValue>>;
+
+      /**
+       * @brief Check that T is not an ArgValue or list of ArgValues
+       */
+      template <typename T>
+      static constexpr bool notArgValue = notAnArgValue<T> && notAnArgValueList<T>;
+
     public:
       /**
        * @brief Default construction results in empty value
+       *
+       * @note the SFINAE parameter is used to work around an issue with libc++
        */
       ArgValue() = default;
 
@@ -50,7 +64,7 @@ namespace GridKit
        * @brief Construct from any value
        */
       template <typename T>
-      ArgValue(T&& val, std::enable_if_t<notAnArgValue<T>, int> = 0)
+      ArgValue(T&& val, std::enable_if_t<notArgValue<T>, int> = 0)
         : value_((std::stringstream() << val).str())
       {
       }
