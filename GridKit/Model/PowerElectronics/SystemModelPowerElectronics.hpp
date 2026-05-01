@@ -73,11 +73,11 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
-    using CircuitComponent<ScalarT, IdxT>::int_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
-    using CircuitComponent<ScalarT, IdxT>::intp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::int_f_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
@@ -168,7 +168,7 @@ namespace GridKit
      * @post System model vectors allocated with size s
      * @post CSR Jacobian sparsity pattern is computed
      * @post COO->CSR mapping is computed
-     * @post Every component's \ref CircuitComponent::int_, \ref CircuitComponent::intp_, and \ref CircuitComponent::int_f_ pointers
+     * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
      * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
      * and residuals.
      *

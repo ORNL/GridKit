@@ -72,8 +72,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    int_f_[0] = -intp_[0] - (R_ / L_) * int_[0] + y_[0] * int_[1] + (y_[1] - y_[3]) / L_;
-    int_f_[1] = -intp_[1] - (R_ / L_) * int_[1] - y_[0] * int_[0] + (y_[2] - y_[4]) / L_;
+    f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + y_[0] * y_int_[1] + (y_[1] - y_[3]) / L_;
+    f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - y_[0] * y_int_[0] + (y_[2] - y_[4]) / L_;
 
     return 0;
   }
@@ -85,12 +85,12 @@ namespace GridKit
     f_[0] = 0.0;
 
     // Port 1
-    f_[1] = -int_[0];
-    f_[2] = -int_[1];
+    f_[1] = -y_int_[0];
+    f_[2] = -y_int_[1];
 
     // Port 2
-    f_[3] = int_[0];
-    f_[4] = int_[1];
+    f_[3] = y_int_[0];
+    f_[4] = y_int_[1];
 
     return 0;
   }
@@ -117,12 +117,12 @@ namespace GridKit
 
     std::vector<IdxT>  rcord(ccord.size(), 5);
     std::vector<RealT> vals{};
-    vals = {static_cast<RealT>(int_[1]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y_[0])};
+    vals = {static_cast<RealT>(y_int_[1]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y_[0])};
     this->setJacValues(rcord, ccord, vals);
 
     std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
     std::fill(rcord.begin(), rcord.end(), 6);
-    vals = {-static_cast<RealT>(int_[0]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_) - alpha_};
+    vals = {-static_cast<RealT>(y_int_[0]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_) - alpha_};
     this->setJacValues(rcord, ccor2, vals);
 
     return 0;

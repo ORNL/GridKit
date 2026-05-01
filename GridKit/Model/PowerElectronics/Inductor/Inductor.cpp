@@ -58,7 +58,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Inductor<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    int_f_[0] = -L_ * intp_[0] + y_[1] - y_[0];
+    f_int_[0] = -L_ * yp_int_[0] + y_[1] - y_[0];
     return 0;
   }
 
@@ -66,9 +66,9 @@ namespace GridKit
   int Inductor<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // input
-    f_[0] = -int_[0];
+    f_[0] = -y_int_[0];
     // output
-    f_[1] = int_[0];
+    f_[1] = y_int_[0];
     return 0;
   }
 

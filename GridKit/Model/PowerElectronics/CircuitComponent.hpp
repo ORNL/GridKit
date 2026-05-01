@@ -168,17 +168,17 @@ namespace GridKit
 
     void setInternalPointer(const ScalarT* internals)
     {
-      int_ = internals;
+      y_int_ = internals;
     }
 
     void setInternalDerivativePointer(const ScalarT* internals_p)
     {
-      intp_ = internals_p;
+      yp_int_ = internals_p;
     }
 
     void setInternalResidualPointer(ScalarT* internal_res)
     {
-      int_f_ = internal_res;
+      f_int_ = internal_res;
     }
 
   protected:
@@ -428,11 +428,11 @@ namespace GridKit
     size_t current_jac_size_{0};
 
     /// @brief A pointer to the internal variables of this component.
-    const ScalarT* int_;
+    const ScalarT* y_int_;
     /// @brief A pointer to the internal derivatives of this component.
-    const ScalarT* intp_;
+    const ScalarT* yp_int_;
     /// @brief A pointer to the internal residuals of this component
-    ScalarT*       int_f_;
+    ScalarT*       f_int_;
 
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;

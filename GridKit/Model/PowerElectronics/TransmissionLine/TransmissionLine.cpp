@@ -92,12 +92,12 @@ namespace GridKit
 
     // Internal variables
     // row 1
-    int_f_[0] = YReMat_ * (V1re - V2re) - (YImMatDi_ * V1im + YImMatOff_ * V2im) - int_[0];
-    int_f_[1] = YReMat_ * (V1im - V2im) + (YImMatDi_ * V1re + YImMatOff_ * V2re) - int_[1];
+    f_int_[0] = YReMat_ * (V1re - V2re) - (YImMatDi_ * V1im + YImMatOff_ * V2im) - y_int_[0];
+    f_int_[1] = YReMat_ * (V1im - V2im) + (YImMatDi_ * V1re + YImMatOff_ * V2re) - y_int_[1];
 
     // row2
-    int_f_[2] = YReMat_ * (V2re - V1re) - (YImMatOff_ * V1im + YImMatDi_ * V2im) - int_[2];
-    int_f_[3] = YReMat_ * (V2im - V1im) + (YImMatOff_ * V1re + YImMatDi_ * V2re) - int_[3];
+    f_int_[2] = YReMat_ * (V2re - V1re) - (YImMatOff_ * V1im + YImMatDi_ * V2im) - y_int_[2];
+    f_int_[3] = YReMat_ * (V2im - V1im) + (YImMatOff_ * V1re + YImMatDi_ * V2re) - y_int_[3];
 
     return 0;
   }
@@ -106,17 +106,17 @@ namespace GridKit
   int TransmissionLine<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // input
-    f_[0] = int_[0];
-    f_[1] = int_[1];
+    f_[0] = y_int_[0];
+    f_[1] = y_int_[1];
 
-    f_[2] = int_[2];
-    f_[3] = int_[3];
+    f_[2] = y_int_[2];
+    f_[3] = y_int_[3];
     // ouput
-    f_[4] = -int_[0];
-    f_[5] = -int_[1];
+    f_[4] = -y_int_[0];
+    f_[5] = -y_int_[1];
 
-    f_[6] = -int_[2];
-    f_[7] = -int_[3];
+    f_[6] = -y_int_[2];
+    f_[7] = -y_int_[3];
 
     return 0;
   }
