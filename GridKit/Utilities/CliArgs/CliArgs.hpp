@@ -55,7 +55,7 @@ namespace GridKit
       /**
        * @brief Construct with braced list (see class description)
        */
-      CliArgs(std::initializer_list<Option> args);
+      explicit CliArgs(std::initializer_list<Option> args);
 
       /// Destructor
       ~CliArgs();

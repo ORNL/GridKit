@@ -157,6 +157,12 @@ namespace GridKit
       }
     }
 
+    bool notANumber(const std::string& raw)
+    {
+      double v;
+      return (std::stringstream(raw) >> v).fail();
+    }
+
     void CliArgsImpl::setupArg(OptionArgumentPair& arg)
     {
       const auto& name = arg.option.name;
@@ -166,6 +172,13 @@ namespace GridKit
       {
         assert(name[1].starts_with("-"));
         assert(!name[1].starts_with("--"));
+        if (!notANumber(name[1]))
+        {
+          auto msg = "CliArgs: Cannot use number as option name: \""
+                     + name[1] + "\".";
+          Log::error() << msg << std::endl;
+          throw std::runtime_error(msg);
+        }
         mapName(name[1].substr(1), &arg);
       }
 
@@ -210,7 +223,7 @@ namespace GridKit
 
     bool looksLikeAnOption(const std::string& raw)
     {
-      return raw.starts_with("-");
+      return raw.starts_with("-") && notANumber(raw);
     }
 
     OptionArgumentPair* CliArgsImpl::findByRawName(const std::string& raw)
@@ -247,12 +260,12 @@ namespace GridKit
             arg    = nullptr;
             continue;
           }
-          if (arg && arg->values.vec.size() != arg->option.nargs)
+          if (arg && arg->values.size() != arg->option.nargs)
           {
             // option not given correct number of values
             Log::error() << "CliArgs: option \"" << arg->option.name[0]
                          << "\" requires " << arg->option.nargs
-                         << " arguments; " << arg->values.vec.size()
+                         << " arguments; " << arg->values.size()
                          << " given.\n";
             status = false;
           }
@@ -272,7 +285,7 @@ namespace GridKit
             status = false;
           }
           // set value from current token
-          arg->values.vec.emplace_back(token);
+          arg->values.vec_.emplace_back(token);
         }
         else
         {
@@ -289,12 +302,12 @@ namespace GridKit
       {
         // If we still have an active arg, it's either a flag (which is OK) or
         // an option which expects a value that hasn't been given
-        if (!arg->option.flag && arg->values.vec.size() != arg->option.nargs)
+        if (!arg->option.flag && arg->values.size() != arg->option.nargs)
         {
           // option not given correct number of values
           Log::error() << "CliArgs: option \"" << arg->option.name[0]
                        << "\" requires " << arg->option.nargs << " arguments; "
-                       << arg->values.vec.size() << " given.\n";
+                       << arg->values.size() << " given.\n";
           status = false;
         }
       }
@@ -309,7 +322,7 @@ namespace GridKit
       // check that all required options have values
       for (const auto& arg : table_)
       {
-        if (arg.option.required && arg.values.vec.size() != arg.option.nargs)
+        if (arg.option.required && arg.values.size() != arg.option.nargs)
         {
           Log::error() << "CliArgs: no input given for required option \""
                        << arg.option.name[0] << "\"\n";

@@ -5,8 +5,11 @@
 
 #pragma once
 
+#include <any>
 #include <sstream>
 #include <string>
+
+#include <GridKit/Utilities/String.hpp>
 
 namespace GridKit
 {
@@ -112,9 +115,7 @@ namespace GridKit
       template <typename T>
       T as() const
       {
-        T ret;
-        std::stringstream(value_) >> ret;
-        return ret;
+        return GridKit::Utilities::parse<T>(value_);
       }
 
     private:

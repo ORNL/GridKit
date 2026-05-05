@@ -50,12 +50,12 @@ namespace GridKit
        */
       template <typename T>
       ArgVector(T&& val)
-        : vec{val}
+        : vec_{val}
       {
       }
 
       ArgVector(std::initializer_list<ArgValue> vals)
-        : vec{vals}
+        : vec_{vals}
       {
       }
 
@@ -65,11 +65,11 @@ namespace GridKit
       template <typename T, std::size_t N>
       std::array<T, N> as() const
       {
-        assert(vec.size() == N);
+        assert(vec_.size() == N);
         std::array<T, N> ret;
         for (std::size_t i = 0; i < N; ++i)
         {
-          ret[i] = vec[i].as<T>();
+          ret[i] = vec_[i].as<T>();
         }
         return ret;
       }
@@ -89,7 +89,7 @@ namespace GridKit
       template <typename T>
       decltype(auto) as() const
       {
-        return vec[0].as<T>();
+        return vec_[0].as<T>();
       }
 
       /**
@@ -97,7 +97,7 @@ namespace GridKit
        */
       const std::string& operator()() const
       {
-        return vec[0].get();
+        return vec_[0].get();
       }
 
       /**
@@ -105,7 +105,7 @@ namespace GridKit
        */
       const ArgValue& operator[](std::size_t i) const
       {
-        return vec[i];
+        return vec_[i];
       }
 
       /**
@@ -113,7 +113,7 @@ namespace GridKit
        */
       bool empty() const
       {
-        return vec.empty();
+        return vec_.empty();
       }
 
       /**
@@ -121,12 +121,12 @@ namespace GridKit
        */
       std::size_t size() const
       {
-        return vec.size();
+        return vec_.size();
       }
 
     private:
       /// Internal set of values
-      std::vector<ArgValue> vec;
+      std::vector<ArgValue> vec_;
 
       friend struct CliArgsImpl;
     };

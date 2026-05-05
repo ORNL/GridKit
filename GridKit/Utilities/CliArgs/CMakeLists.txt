@@ -3,6 +3,9 @@ gridkit_add_library(utilities_cli_args
     CliArgs.cpp
   HEADERS
     CliArgs.hpp
+    ArgValue.hpp
+    ArgVector.hpp
+    Option.hpp
   LINK_LIBRARIES
     PUBLIC GridKit::utilities_logger
   )

@@ -117,8 +117,8 @@ namespace GridKit
             "0.01",
             "--params",
             "0.025",
-            "1.14",
-            "21"};
+            "-1.14",
+            "-21"};
 
         args.parseArgs(cl.argc, cl.argv);
 
@@ -143,8 +143,8 @@ namespace GridKit
         auto [x, y, z] = args["params"].as<double, 3>();
 
         status *= isEqual(x, 0.025);
-        status *= isEqual(y, 1.14);
-        status *= isEqual(z, 21.0);
+        status *= isEqual(y, -1.14);
+        status *= isEqual(z, -21.0);
         status *=
             args.get<double, 3>("params") == args["params"].as<double, 3>();
 
@@ -201,6 +201,11 @@ namespace GridKit
         // passing a value to a flag option
         Log::misc() << "Expect error because flag options don't take args\n";
         status *= argsAreBad(CommandLine{"app", "--opt1", "val", "-f", "bad"});
+
+        Log::misc() << "Expect error because option name can't be a number\n";
+        status *= throws<std::runtime_error>(
+            []
+            { CliArgs args{{.name = {"--one", "-1"}}}; });
 
         return status.report(__func__);
       }
