@@ -57,6 +57,7 @@
 - Separated internal and external residuals of `PowerElectronics` models.
 - Added `CliArgs` class for better management of command-line options.
 - Remove data copying between system and components in `PowerElectronics` models.
+- Added multi-contingency analysis application.
 
 ## v0.1
 
