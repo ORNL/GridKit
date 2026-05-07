@@ -18,7 +18,7 @@ int main()
   result += test.genClassical();
   result += test.tgov1();
 
-  // The following components are not tested here because they require signal attachments
+  // @todo The following components are not tested here because they require non-trivial constructors
   // PhasorDynamics::Exciter::SexsPti
   // PhasorDynamics::Stabilizer::Ieeest
 
