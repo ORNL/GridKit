@@ -1,4 +1,4 @@
-add_executable(PDSim PDSim.cpp CTGStudy.cpp)
+add_executable(PDSim PDSim.cpp)
 target_link_libraries(PDSim
     PUBLIC
     GridKit::phasor_dynamics_components
