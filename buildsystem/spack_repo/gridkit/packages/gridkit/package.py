@@ -20,7 +20,7 @@ class Gridkit(CMakePackage):
     variant("ipopt", default=False, description="Enable/Disable Ipopt")
     variant("klu", default=False, description="Enable/Disable KLU")
     variant("sundials", default=False, description="Enable/Disable SUNDIALS")
-    variant("ubsan", default=False, description="Enable/Disable undefined behavir sanitizer")
+    variant("ubsan", default=False, description="Enable/Disable undefined behavior sanitizer")
 
     conflicts("+klu", when="~sundials")
 

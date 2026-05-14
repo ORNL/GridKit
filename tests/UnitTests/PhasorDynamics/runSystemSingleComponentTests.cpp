@@ -13,9 +13,14 @@ int main()
   result += test.busFault();
   result += test.ieeet1();
   result += test.load();
+  result += test.loadZIP();
   result += test.genrou();
   result += test.genClassical();
   result += test.tgov1();
+
+  // @todo The following components are not tested here because they require non-trivial constructors
+  // PhasorDynamics::Exciter::SexsPti
+  // PhasorDynamics::Stabilizer::Ieeest
 
   return result.summary();
 }

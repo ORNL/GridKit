@@ -103,6 +103,7 @@ namespace GridKit
       int setBusID(IdxT bus_id)
       {
         bus_id_ = bus_id;
+        return 0;
       }
 
       IdxT busID() const

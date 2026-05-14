@@ -64,15 +64,16 @@ We recommend developers follow these steps when adding new component models:
 5. Once model is tested, add it to the system composer. This requires following steps:
     1. Add header file `MyModel.hpp` to `ComponentLibrary.hpp`, so that
        `MyModel` declaration is visible to the `SystemModel` class.
-    3. Modify `SystemModelJsonParser.hpp` so that `MyModel` is recognized by the
+    2. Modify `SystemModelJsonParser.hpp` so that `MyModel` is recognized by the
        parser.
-    4. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
+    3. Modify `SystemModelData.hpp` so that `MyModelData` is visible to the system
        model.
-    5. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
+    4. Modify `SystemModel.hpp` so that `MyModel` components can be connected by the
        system composer.
-7. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
-
-
+    5. Recommended: If applicable, add a smoke test to
+       `tests/UnitTesting/PhasorDynamics/SystemSingleComponentTests.hpp` for the
+       basic construction of `MyModel` through `SystemModel`.
+6. Recommended: Create an example in `examples/PhasorDynamics` using the new component.
 
 ## Input file parser
 

@@ -142,6 +142,30 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome loadZIP()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
+        system->addBus(&bus);
+
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus);
+        system->addComponent(&load);
+
+        success *= system->allocate() == 0;
+        success *= system->initialize() == 0;
+        success *= system->evaluateResidual() == 0;
+        success *= system->evaluateJacobian() == 0;
+        success *= system->size() == load.size();
+
+        delete system;
+        system = nullptr;
+
+        return success.report(__func__);
+      }
+
       TestOutcome genrou()
       {
         TestStatus success = true;
