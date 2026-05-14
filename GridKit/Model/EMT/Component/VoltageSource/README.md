@@ -1,6 +1,6 @@
-# SourceEMT Model
+# VoltageSource Model
 
-`SourceEMT` represents a three-phase voltage source in instantaneous abc
+`VoltageSource` represents a three-phase voltage source in instantaneous abc
 coordinates. The source waveform is configurable by phase magnitude and phase
 offset for each phase and is otherwise constant. Each source terminal is
 connected to the EMT bus through a phase resistance.
@@ -15,6 +15,7 @@ $E_c$         | [V]        | Source voltage magnitude, phase c   | RMS
 $\phi_a$      | [rad]      | Source phase offset, phase a        |
 $\phi_b$      | [rad]      | Source phase offset, phase b        |
 $\phi_c$      | [rad]      | Source phase offset, phase c        |
+$\omega_0$    | [rad/s]    | Source angular frequency            |
 $R_a$         | [$\Omega$] | Terminal resistance, phase a        |
 $R_b$         | [$\Omega$] | Terminal resistance, phase b        |
 $R_c$         | [$\Omega$] | Terminal resistance, phase c        |
@@ -44,11 +45,9 @@ of equations.
 
 #### Differential
 
-Symbol  | Units | Description             | Note
---------|-------|-------------------------|------------------
-$v_a$   | [V]   | Terminal voltage, phase a | owned by EMT bus
-$v_b$   | [V]   | Terminal voltage, phase b | owned by EMT bus
-$v_c$   | [V]   | Terminal voltage, phase c | owned by EMT bus
+Symbol           | Units | Description                                  | Note
+-----------------|-------|----------------------------------------------|---------------------------------
+$\mathbf{v}$     | [V]   | Terminal voltage vector, owned by EMT bus    | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -67,8 +66,8 @@ None.
 ### Bus Residual Contributions
 
 The source contributes current to the KCL residual at its terminal bus.
-Each expression is accumulated into the owning bus residual. Given the
-nominal angular frequency $\omega_0 = 2\pi f_0$, the source waveform is:
+The injection vector is accumulated into the owning bus residual. Given source
+angular frequency $\omega_0$, the source waveform is:
 
 ``` math
 \begin{aligned}
@@ -81,11 +80,12 @@ e_c(t) &= \sqrt{2}\,E_c\cos(\omega_0 t + \phi_c)
 The current contribution is positive into the bus:
 
 ``` math
-\begin{aligned}
-\Delta i_a &= \dfrac{e_a(t)-v_a}{R_a} \\
-\Delta i_b &= \dfrac{e_b(t)-v_b}{R_b} \\
-\Delta i_c &= \dfrac{e_c(t)-v_c}{R_c}
-\end{aligned}
+\mathbf{i}^\text{inj} :=
+\begin{bmatrix}
+  \dfrac{e_a(t)-v_a}{R_a} \\
+  \dfrac{e_b(t)-v_b}{R_b} \\
+  \dfrac{e_c(t)-v_c}{R_c}
+\end{bmatrix}
 ```
 
 ## Initialization
@@ -99,3 +99,11 @@ e_b(0) &= \sqrt{2}\,E_b\cos(\phi_b) \\
 e_c(0) &= \sqrt{2}\,E_c\cos(\phi_c)
 \end{aligned}
 ```
+
+## Model Outputs
+
+Candidate monitorable outputs include the source waveform components
+$e_a(t)$, $e_b(t)$, and $e_c(t)$.
+
+The terminal current injection expression is documented above as
+$\mathbf{i}^\text{inj}$.

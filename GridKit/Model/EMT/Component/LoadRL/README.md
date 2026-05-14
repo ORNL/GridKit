@@ -1,8 +1,8 @@
-# LoadEMT Model
+# LoadRL Model
 
-`LoadEMT` represents a three-phase RL load in instantaneous abc coordinates.
-The load owns three differential current variables, one for each phase. Load
-current $\mathbf{i}$ is directed from the load into the bus.
+`LoadRL` represents a three-phase RL load in instantaneous abc coordinates.
+The load owns the three-phase differential current vector $\mathbf{i}$,
+which is directed from the load into the bus.
 
 ## Model Parameters
 
@@ -30,11 +30,9 @@ $L_c$   | [H]        | Load inductance, phase c    |
 
 #### Differential
 
-Symbol              | Units | Description              | Note
---------------------|-------|--------------------------|---------------------------------
-$i_a$               | [A]   | Load current, phase a     | directed from load into bus
-$i_b$               | [A]   | Load current, phase b     | directed from load into bus
-$i_c$               | [A]   | Load current, phase c     | directed from load into bus
+Symbol              | Units | Description                                    | Note
+--------------------|-------|------------------------------------------------|---------------------------------
+$\mathbf{i}$        | [A]   | Load current vector, directed from load into bus | $\mathbf{i} = [i_a, i_b, i_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -49,11 +47,9 @@ of equations.
 
 #### Differential
 
-Symbol  | Units | Description             | Note
---------|-------|-------------------------|------------------
-$v_a$   | [V]   | Terminal voltage, phase a | owned by EMT bus
-$v_b$   | [V]   | Terminal voltage, phase b | owned by EMT bus
-$v_c$   | [V]   | Terminal voltage, phase c | owned by EMT bus
+Symbol           | Units | Description                                  | Note
+-----------------|-------|----------------------------------------------|---------------------------------
+$\mathbf{v}$     | [V]   | Terminal voltage vector, owned by EMT bus    | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -64,13 +60,7 @@ None.
 ### Differential Equations
 
 ``` math
-\dot{\mathbf{i}} = -\mathbf{L}^{-1}\left(\mathbf{v} + \mathbf{R}\,\mathbf{i}\right)
-```
-
-(or, alternatively)
-
-``` math
-0 = \mathbf{v} + \mathbf{R}\,\mathbf{i} + \mathbf{L}\dot{\mathbf{i}}
+0 = \mathbf{R}\,\mathbf{i} + \mathbf{L}\dot{\mathbf{i}} + \mathbf{v}
 ```
 
 ### Algebraic Equations
@@ -83,7 +73,7 @@ The RL load contributes to the KCL residual at its terminal bus. The
 expression is accumulated into the owning bus residual.
 
 ``` math
-\Delta \mathbf{i} = \mathbf{i}
+\mathbf{i}^\text{inj} := \mathbf{i}
 ```
 
 ## Initialization
@@ -107,3 +97,7 @@ consistency:
 ``` math
 \dot{\mathbf{i}}(0) = -\mathbf{L}^{-1}\left(\mathbf{v}(0) + \mathbf{R}\,\mathbf{i}(0)\right)
 ```
+
+## Model Outputs
+
+Candidate monitorable outputs include the load current components $i_a$, $i_b$, and $i_c$ (into the bus).

@@ -1,6 +1,6 @@
-# EMT Bus Model
+# Bus Model
 
-`BusEMT` represents a three-phase bus in instantaneous abc coordinates. The
+`Bus` represents a three-phase bus in instantaneous abc coordinates. The
 bus voltages are differential variables, and the model equations enforce
 three-phase current balance at the bus.
 
@@ -20,9 +20,7 @@ None.
 
 Symbol   | Units | Description        | Note
 ---------|-------|--------------------|--------------------------------
-$v_a$    | [V]   | Bus voltage, phase a |
-$v_b$    | [V]   | Bus voltage, phase b |
-$v_c$    | [V]   | Bus voltage, phase c |
+$\mathbf{v}$ | [V] | Bus voltage vector | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -42,20 +40,18 @@ None.
 
 ### Differential Equations
 
-An explicit $\dot{\mathbf{v}} = \ldots$ form is not used because the
-effective shunt admittances depends on connected components and is not
+An explicit representation for $\dot{\mathbf{v}}$ is not used because
+the effective shunt admittances depend on connected components and are not
 known at the bus level. The implicit DAE solver operates directly on
-the accumulated KCL residual.
+the accumulated KCL residual:
 
 ``` math
 \begin{aligned}
-0 &= \sum_{e \in \mathcal{E}} \Delta i_{a}^{e} \\
-0 &= \sum_{e \in \mathcal{E}} \Delta i_{b}^{e} \\
-0 &= \sum_{e \in \mathcal{E}} \Delta i_{c}^{e}
+0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^\text{inj}_e
 \end{aligned}
 ```
 
-where $\Delta i_{a}^{e}$, $\Delta i_{b}^{e}$, and $\Delta i_{c}^{e}$ are the phase-current contributions
+where $\mathbf{i}^\text{inj}_e$ is the vector of phase-current injections
 of connected component $e$ into the bus, which are a function of the bus voltage and bus voltage derivative.
 
 ### Algebraic Equations
