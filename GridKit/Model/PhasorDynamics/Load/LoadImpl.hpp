@@ -16,14 +16,14 @@ namespace GridKit
      * @brief Constructor for a pi-model load
      *
      * System sizes:
-     * - Number of equations = 0
-     * - Number of independent variables = 0
+     * - Number of equations = 2
+     * - Number of independent variables = 2
      */
     template <class ScalarT, typename IdxT>
     Load<ScalarT, IdxT>::Load(bus_type* bus)
       : bus_(bus)
     {
-      size_ = 0;
+      size_ = 2;
     }
 
     template <class ScalarT, typename IdxT>
@@ -34,7 +34,7 @@ namespace GridKit
         R_(R),
         X_(X)
     {
-      size_ = 0;
+      size_ = 2;
       setDerivedParams();
     }
 
@@ -57,7 +57,7 @@ namespace GridKit
       // monitor_->set(Variable::p, [this] { return ?; });
       // monitor_->set(Variable::q, [this] { return ?; });
 
-      size_ = 0;
+      size_ = 2;
       setDerivedParams();
     }
 
@@ -84,9 +84,25 @@ namespace GridKit
     int Load<ScalarT, IdxT>::allocate()
     {
       // std::cout << "Allocate Load..." << std::endl;
+      
+      auto size = static_cast<size_t>(size_); // avoid compiler warnings
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      tag_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
 
+      // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
+
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
 
       return 0;
     }
@@ -98,6 +114,17 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::initialize()
     {
+      ScalarT vr = Vr();
+      ScalarT vi = Vi();
+      ScalarT ir = -(g_ * vr - b_ * vi);
+      ScalarT ii = -(b_ * vr + g_ * vi);
+
+      y_[0] = ir;
+      y_[1] = ii;
+
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
+
       return 0;
     }
 
@@ -107,6 +134,9 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Load<ScalarT, IdxT>::tagDifferentiable()
     {
+      tag_[0] = false;
+      tag_[1] = false;
+
       return 0;
     }
 
@@ -116,14 +146,36 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        [[maybe_unused]] ScalarT* wb,
+        ScalarT*                  h)
     {
-      ScalarT Vr = wb[0];
-      ScalarT Vi = wb[1];
-      ScalarT Ir = -g_ * Vr + b_ * Vi;
-      ScalarT Ii = -b_ * Vr - g_ * Vi;
+      ScalarT Ir = y[0];
+      ScalarT Ii = y[1];
       h[0]       = Ir;
       h[1]       = Ii;
+
+      return 0;
+    }
+
+    /**
+     * @brief Internal residual
+     *
+     */
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) int Load<ScalarT, IdxT>::evaluateInternalResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  f)
+    {
+      ScalarT Vr  = wb[0];
+      ScalarT Vi  = wb[1];
+      ScalarT Ir  = y[0];
+      ScalarT Ii  = y[1];
+      f[0]        = Ir + g_ * Vr - b_ * Vi;
+      f[1]        = Ii + b_ * Vr + g_ * Vi;
 
       return 0;
     }
@@ -137,6 +189,7 @@ namespace GridKit
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
       evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];

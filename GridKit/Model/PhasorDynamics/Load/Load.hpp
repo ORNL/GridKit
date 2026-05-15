@@ -39,6 +39,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::tag_;
       using Component<ScalarT, IdxT>::wb_;
       using Component<ScalarT, IdxT>::h_;
+      using Component<ScalarT, IdxT>::f_;
+      using Component<ScalarT, IdxT>::J_;
       using Component<ScalarT, IdxT>::J_rows_buffer_;
       using Component<ScalarT, IdxT>::J_cols_buffer_;
       using Component<ScalarT, IdxT>::J_vals_buffer_;
@@ -107,6 +109,7 @@ namespace GridKit
 
     public:
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
       bus_type* bus_{nullptr};

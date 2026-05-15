@@ -190,8 +190,8 @@ int main()
     std::vector<real_type>& y_val = sys.y();
 
     output.push_back(OutputData{t,
-                                1 + static_cast<real_type>(y_val[5]),
-                                1 + static_cast<real_type>(y_val[10]),
+                                1 + static_cast<real_type>(y_val[7]),
+                                1 + static_cast<real_type>(y_val[12]),
                                 std::hypot(static_cast<real_type>(y_val[0]), static_cast<real_type>(y_val[1])),
                                 std::hypot(static_cast<real_type>(y_val[2]), static_cast<real_type>(y_val[3]))});
   };

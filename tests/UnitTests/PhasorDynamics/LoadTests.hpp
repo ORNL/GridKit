@@ -60,8 +60,14 @@ namespace GridKit
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
         PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
+
         bus.allocate();
         load.allocate();
+
+        bus.initialize();
+        load.initialize();
+
+        bus.evaluateResidual();
         load.evaluateResidual();
 
         success *= isEqual(bus.Ir(), Ir);
@@ -80,18 +86,30 @@ namespace GridKit
         DependencyTracking::Variable Vr{10.0}; ///< Bus real voltage
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
 
-        Vr.setVariableNumber(0); ///< Independent variables: first
-        Vi.setVariableNumber(1); ///< Independent variables: second
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>  bus(Vr, Vi);
+        PhasorDynamics::Load<DependencyTracking::Variable, IdxT> load(&bus, R, X);
 
-        PhasorDynamics::BusInfinite<DependencyTracking::Variable, IdxT> bus(Vr, Vi);
-        PhasorDynamics::Load<DependencyTracking::Variable, IdxT>        load(&bus, R, X);
         bus.allocate();
         load.allocate();
+
+        bus.initialize();
+        load.initialize();
+
+        for (size_t i = 0; i < load.size(); ++i)
+        {
+          load.y()[i].setVariableNumber(i); ///< load independent variables
+        }
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.y()[i].setVariableNumber(i + load.size()); // Bus independent variables
+        }
+
+        bus.evaluateResidual();
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals{bus.Ir(), bus.Ii()};
-        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X);
+        std::vector<DependencyTracking::Variable>                residuals = load.getResidual();
+        std::vector<DependencyTracking::Variable::DependencyMap> ref       = analyticalJacobian(R, X);
 
         /// Compare dependencies computed automatically to the ones computed analytically
         for (size_t i = 0; i < residuals.size(); ++i)
@@ -117,11 +135,23 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>  bus(Vr, Vi);
         PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+
         bus.allocate();
         load.allocate();
+
+        bus.initialize();
+        load.initialize();
+
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
+          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+        }
+
         bus.evaluateJacobian();
         load.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = bus.getJacobian();
+
+        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = load.getJacobian();
         model_jacobian.printMatrix("Model Jacobian");
 
         /// Compare model Jacobian wih dependencies computed analytically
@@ -143,15 +173,9 @@ namespace GridKit
         const RealT b = -X / (R * R + X * X);
         const RealT g = R / (R * R + X * X);
 
-        RealT dIr_dVr = -g;
-        RealT dIr_dVi = b;
-
-        RealT dIi_dVr = -b;
-        RealT dIi_dVi = -g;
-
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
-        dependencies[0] = {{0, dIr_dVr}, {1, dIr_dVi}};
-        dependencies[1] = {{0, dIi_dVr}, {1, dIi_dVi}};
+        dependencies[0] = {{0, 1.0}, {2, g}, {3, -b}};
+        dependencies[1] = {{1, 1.0}, {2, b}, {3, g}};
 
         return dependencies;
       }
