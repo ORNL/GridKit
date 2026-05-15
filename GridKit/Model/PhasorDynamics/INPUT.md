@@ -1,8 +1,8 @@
 # PhasorDynamics Input Format
 
 A PhasorDynamics input file is a JSON object that describes one dynamic phasor
-case: metadata, buses, network branches, devices, non-network signals, and
-monitor output sinks.
+case: metadata, buses, components, signals, and
+Monitor output sinks.
 
 This document defines the portable file-level schema and the canonical component
 class strings. Component-specific `params`, `init`, `ports`, and `mon` entries
@@ -25,11 +25,9 @@ The root JSON object has these fields:
 | --- | --- | --- | --- |
 | `header` | Yes | object | Case metadata and system base values. |
 | `buses` | Yes | array | Bus objects. |
-| `branches` | Yes | array | Network branch objects. |
-| `devices` | Yes | array | Non-branch component objects. |
-| `signals` | Yes | array | Non-network signal objects. |
+| `components` | Yes | array | Non-branch component objects. |
+| `signals` | No | array | Non-network signal objects. |
 | `monitors` | No | array | Monitor sink objects. |
-| `extension` | No | object | Implementation-defined root data. |
 
 ```json
 {
@@ -43,9 +41,7 @@ The root JSON object has these fields:
     "va_base": 100000000.0
   },
   "buses": [],
-  "branches": [],
-  "devices": [],
-  "signals": []
+  "components": [],
 }
 ```
 
@@ -71,8 +67,7 @@ versions such as `0.1` are invalid.
 The model topology is split across three component arrays:
 
 - `buses` contains bus objects identified by integer bus number.
-- `branches` contains network branch objects identified by string ID.
-- `devices` contains non-branch components identified by string ID.
+- `components` contains non-branch components identified by string ID.
 
 ### Bus Object
 
@@ -86,7 +81,7 @@ The model topology is split across three component arrays:
 | `mon` | No | array | Ordered monitor variable names. Duplicate entries are invalid. |
 | `extension` | No | object | Implementation-defined bus data. |
 
-### Branch and Device Object
+### Device Object
 
 | Field | Required | Type | Description |
 | --- | --- | --- | --- |
@@ -109,7 +104,6 @@ References are scoped by target category:
 | Target category | Identifier |
 | --- | --- |
 | Bus | Bus `number` integer. |
-| Branch | Branch `id` string. |
 | Device | Device `id` string. |
 | Signal | Signal `signal_id` integer. |
 
@@ -118,7 +112,7 @@ object in that category. References are not globally unique because the port
 contract determines the namespace.
 
 Physical network attachment is represented by ports that target buses, branches,
-or devices. Bus voltage and current balance variables are intrinsic model
+or components. Bus voltage and current balance variables are intrinsic model
 variables and are not authored as root `signals`.
 
 ## Signal Objects
@@ -133,7 +127,7 @@ objects do not have `class`, `params`, `init`, `ports`, or `mon` fields.
 | `extension` | No | object | Implementation-defined signal data. |
 
 Signals are initialized through connected component models, class-defined
-defaults, or explicit source devices.
+defaults, or explicit source components.
 
 Unless a component README defines different behavior, signal nets obey these
 rules:
@@ -143,7 +137,7 @@ rules:
   default.
 - Multiple producers for the same signal are invalid unless aggregation is
   class-defined.
-- Connected signal ports must agree on dimension.
+- Connected signal ports must agree on the dimension.
 
 ## Monitor Sinks
 
@@ -151,8 +145,8 @@ Component `mon` entries select class-defined variables for output. The listed
 order is the requested output order. Composite monitor variables expand as
 defined by the component class.
 
-`monitors` declares output sinks. If `monitors` is omitted, monitor output uses
-CSV to standard output with comma delimiter.
+`monitors` declares output sinks. If `monitors` is omitted, the monitor output uses
+CSV to standard output with a comma delimiter.
 
 | Field | Required | Type | Description |
 | --- | --- | --- | --- |
@@ -171,17 +165,17 @@ extension.
 | --- | --- | --- | --- | --- |
 | `buses` | Bus | `bus` | Positive-sequence AC phasor bus. | [Bus](Bus/README.md) |
 | `buses` | Bus | `infinite_bus` | Positive-sequence AC phasor bus with fixed voltage. | [Bus](Bus/README.md) |
-| `branches` | Branch | `Line` | Two-terminal line model. | [Branch](Branch/README.md) |
-| `branches` | Branch | `Transformer` | Transformer branch model. Reserved; unimplemented. | [Branch](Branch/README.md) |
-| `devices` | Load | `Load` | Static impedance load. | [Load](Load/README.md) |
-| `devices` | Load | `LoadZIP` | Static ZIP load. | [LoadZIP](LoadZIP/README.md) |
-| `devices` | Machine | `Genrou` | Sixth-order round-rotor synchronous machine. | [GENROU](SynchronousMachine/GENROUwS/README.md) |
-| `devices` | Machine | `GenClassical` | Classical synchronous machine. | [GenClassical](SynchronousMachine/GenClassical/README.md) |
-| `devices` | Controller | `Tgov1` | TGOV1 turbine governor. | [TGOV1](Governor/Tgov1/README.md) |
-| `devices` | Controller | `Ieeet1` | IEEE Type 1 excitation system. | [IEEET1](Exciter/IEEET1/README.md) |
-| `devices` | Controller | `SexsPti` | SEXS-PTI simplified excitation system. | [SEXS-PTI](Exciter/SEXS-PTI/README.md) |
-| `devices` | Controller | `Ieeest` | IEEEST stabilizer. | [IEEEST](Stabilizer/IEEEST/README.md) |
-| `devices` | Event | `BusFault` | Impedance-based fault at a bus. | [BusFault](BusFault/README.md) |
+| `components` | Branch | `Line` | Two-terminal line model. | [Branch](Branch/README.md) |
+| `components` | Branch | `Transformer` | Transformer branch model. Reserved; unimplemented. | [Branch](Branch/README.md) |
+| `components` | Load | `Load` | Static impedance load. | [Load](Load/README.md) |
+| `components` | Load | `LoadZIP` | Static ZIP load. | [LoadZIP](LoadZIP/README.md) |
+| `components` | Machine | `Genrou` | Sixth-order round-rotor synchronous machine. | [GENROU](SynchronousMachine/GENROUwS/README.md) |
+| `components` | Machine | `GenClassical` | Classical synchronous machine. | [GenClassical](SynchronousMachine/GenClassical/README.md) |
+| `components` | Controller | `Tgov1` | TGOV1 turbine governor. | [TGOV1](Governor/Tgov1/README.md) |
+| `components` | Controller | `Ieeet1` | IEEE Type 1 excitation system. | [IEEET1](Exciter/IEEET1/README.md) |
+| `components` | Controller | `SexsPti` | SEXS-PTI simplified excitation system. | [SEXS-PTI](Exciter/SEXS-PTI/README.md) |
+| `components` | Controller | `Ieeest` | IEEEST stabilizer. | [IEEEST](Stabilizer/IEEEST/README.md) |
+| `components` | Event | `BusFault` | Impedance-based fault at a bus. | [BusFault](BusFault/README.md) |
 
 Root `signals` entries declare signal nets and do not use component classes.
 
