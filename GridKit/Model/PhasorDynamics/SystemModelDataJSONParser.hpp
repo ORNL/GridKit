@@ -94,6 +94,12 @@ namespace GridKit
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class").get<std::string>();
+        if (kind == "CoSim")
+        {
+          typename SystemModelData<RealT, IdxT>::CoSimDataT cosim;
+          raw_component.get_to(cosim);
+          sm.cosim.push_back(cosim);
+        }
         if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;

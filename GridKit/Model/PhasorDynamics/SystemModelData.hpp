@@ -9,6 +9,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
+#include <GridKit/Model/PhasorDynamics/Connector/CoSimData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
@@ -35,6 +36,7 @@ namespace GridKit
     {
       using BranchDataT       = BranchData<RealT, IdxT>;
       using BusDataT          = BusData<RealT, IdxT>;
+      using CoSimDataT        = Connector::CoSimData<RealT, IdxT>;
       using BusFaultDataT     = BusFaultData<RealT, IdxT>;
       using Tgov1DataT        = Governor::Tgov1Data<RealT, IdxT>;
       using Ieeet1DataT       = Exciter::Ieeet1Data<RealT, IdxT>;
@@ -86,6 +88,7 @@ namespace GridKit
       /// - Associate component type to its corresponding enum
       /// - Consolidate components to allow writing to them using the enum as the argument
       std::vector<BusDataT>          bus;          ///< Buses within the model
+      std::vector<CoSimDataT>        cosim;        ///< Co-simulation interfaces within the model
       std::vector<BranchDataT>       branch;       ///< Branches within the model
       std::vector<BusFaultDataT>     bus_fault;    ///< Bus faults within the model
       std::vector<GenrouDataT>       genrou;       ///< GENROU instances within the model
