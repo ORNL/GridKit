@@ -49,6 +49,7 @@ namespace GridKit
         TestStatus success = true;
 
         auto data = makeTestData();
+
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
 
