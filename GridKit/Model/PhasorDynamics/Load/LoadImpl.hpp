@@ -84,7 +84,7 @@ namespace GridKit
     int Load<ScalarT, IdxT>::allocate()
     {
       // std::cout << "Allocate Load..." << std::endl;
-      
+
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
       f_.resize(size);
       y_.resize(size);
@@ -170,12 +170,12 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  f)
     {
-      ScalarT Vr  = wb[0];
-      ScalarT Vi  = wb[1];
-      ScalarT Ir  = y[0];
-      ScalarT Ii  = y[1];
-      f[0]        = Ir + g_ * Vr - b_ * Vi;
-      f[1]        = Ii + b_ * Vr + g_ * Vi;
+      ScalarT Vr = wb[0];
+      ScalarT Vi = wb[1];
+      ScalarT Ir = y[0];
+      ScalarT Ii = y[1];
+      f[0]       = Ir + g_ * Vr - b_ * Vi;
+      f[1]       = Ii + b_ * Vr + g_ * Vi;
 
       return 0;
     }
