@@ -55,6 +55,7 @@
 - Added 200 Bus Synthetic Illinois Case
 - Added node objects to `PowerElectronics` module & updated all examples to make use of them.
 - Separated internal and external residuals of `PowerElectronics` models.
+- Added `CliArgs` class for better management of command-line options.
 
 ## v0.1
 

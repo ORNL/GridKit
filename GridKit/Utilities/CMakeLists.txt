@@ -6,6 +6,7 @@ target_include_directories(Utilities INTERFACE
 add_library(GridKit::Utilities ALIAS Utilities)
 
 add_subdirectory(Logger)
+add_subdirectory(CliArgs)
 add_subdirectory(CliOptions)
 
 install(TARGETS Utilities EXPORT gridkit-targets)

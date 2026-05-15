@@ -15,11 +15,18 @@ add_executable(test_cli_options runCliOptionsTests.cpp)
 target_link_libraries(test_cli_options PRIVATE
     GridKit::utilities_cli_options
     GridKit::testing)
+add_executable(test_cli_args runCliArgsTests.cpp)
+target_link_libraries(test_cli_args PRIVATE
+    GridKit::utilities_cli_args
+    GridKit::utilities_logger
+    GridKit::testing)
 
 add_test(NAME UtilitiesCaseFormatTest COMMAND test_case_format)
 add_test(NAME UtilitiesLoggerTest COMMAND test_logger)
 add_test(NAME UtilitiesCliOptionsTest COMMAND test_cli_options)
+add_test(NAME UtilitiesCliArgsTest COMMAND test_cli_args)
 
 install(TARGETS test_case_format)
 install(TARGETS test_logger)
 install(TARGETS test_cli_options)
+install(TARGETS test_cli_args)
