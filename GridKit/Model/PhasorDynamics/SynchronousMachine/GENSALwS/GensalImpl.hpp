@@ -137,15 +137,33 @@ namespace GridKit
       monitor_->set(Variable::ii, [this]
                     { return y_[13]; });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * Ir() + Vi() * Ii(); });
+                    { return Vr() * y_[12] + Vi() * y_[13]; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * Ir() - Vr() * Ii(); });
+                    { return Vi() * y_[12] - Vr() * y_[13]; });
       monitor_->set(Variable::delta, [this]
                     { return y_[0]; });
       monitor_->set(Variable::omega, [this]
                     { return y_[1]; });
       monitor_->set(Variable::speed, [this]
                     { return 1.0 + y_[1]; });
+      monitor_->set(Variable::Eqp, [this]
+                    { return y_[2]; });
+      monitor_->set(Variable::psidp, [this]
+                    { return y_[3]; });
+      monitor_->set(Variable::psiqpp, [this]
+                    { return y_[4]; });
+      monitor_->set(Variable::psidpp, [this]
+                    { return y_[5]; });
+      monitor_->set(Variable::vd, [this]
+                    { return y_[7]; });
+      monitor_->set(Variable::vq, [this]
+                    { return y_[8]; });
+      monitor_->set(Variable::te, [this]
+                    { return y_[9]; });
+      monitor_->set(Variable::id, [this]
+                    { return y_[10]; });
+      monitor_->set(Variable::iq, [this]
+                    { return y_[11]; });
     }
 
     /**

@@ -47,11 +47,11 @@
 - Refactored Jacobian assembly in `PhasorDynamics` module to reuse the CSR pattern.
 - Removed `COO_Matrix` class use in `PowerElectronics` module.
 - Added phasor dynamics application to generalize examples
-- Added LoadZIP model component type.
+- Added `LoadZIP` model component type.
 - Added component model developer checklist to a README file.
-- Added IEEEST Stabilizer Model
-- Added SEXS-PTI Exciter Model
-- Added GENSAL Machine Model
+- Added `IEEEST` Stabilizer Model
+- Added `SEXS-PTI` Exciter Model
+- Added `GENSAL` Machine Model
 - Added 200 Bus Synthetic Illinois Case
 - Added node objects to `PowerElectronics` module & updated all examples to make use of them.
 - Separated internal and external residuals of `PowerElectronics` models.

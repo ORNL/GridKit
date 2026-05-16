@@ -51,7 +51,16 @@ namespace GridKit
       q,
       delta,
       omega,
-      speed
+      speed,
+      Eqp,
+      psidp,
+      psiqpp,
+      psidpp,
+      vd,
+      vq,
+      te,
+      id,
+      iq
     };
 
     /**
