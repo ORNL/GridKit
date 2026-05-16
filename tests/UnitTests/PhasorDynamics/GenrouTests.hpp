@@ -1,13 +1,16 @@
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/MapFromCOO.hpp>
 
 namespace GridKit
@@ -20,7 +23,39 @@ namespace GridKit
     {
     private:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using GenrouDataT             = PhasorDynamics::GenrouData<RealT, IdxT>;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon(); // added this: was not originally there
+
+      static GenrouDataT makeGenrouData()
+      {
+        using Parameter = typename GenrouDataT::Parameters;
+        using Port      = typename GenrouDataT::Ports;
+
+        GenrouDataT data;
+        data.device_class                 = "Genrou";
+        data.disambiguation_string        = "1";
+        data.ports[Port::bus]             = 1;
+        data.parameters[Parameter::p0]    = RealT{1.0};
+        data.parameters[Parameter::q0]    = RealT{0.05013};
+        data.parameters[Parameter::H]     = RealT{3.0};
+        data.parameters[Parameter::D]     = RealT{0.0};
+        data.parameters[Parameter::Ra]    = RealT{0.0};
+        data.parameters[Parameter::Tdop]  = RealT{7.0};
+        data.parameters[Parameter::Tdopp] = RealT{0.04};
+        data.parameters[Parameter::Tqop]  = RealT{0.75};
+        data.parameters[Parameter::Tqopp] = RealT{0.05};
+        data.parameters[Parameter::Xd]    = RealT{2.1};
+        data.parameters[Parameter::Xdp]   = RealT{0.2};
+        data.parameters[Parameter::Xdpp]  = RealT{0.18};
+        data.parameters[Parameter::Xq]    = RealT{0.5};
+        data.parameters[Parameter::Xqp]   = RealT{0.5};
+        data.parameters[Parameter::Xqpp]  = RealT{0.18};
+        data.parameters[Parameter::Xl]    = RealT{0.15};
+        data.parameters[Parameter::S10]   = RealT{0.0};
+        data.parameters[Parameter::S12]   = RealT{0.0};
+
+        return data;
+      }
 
     public:
       GenrouTests()  = default;
@@ -97,6 +132,54 @@ namespace GridKit
         {
           if (!isEqual(f_val, 0.0, tol))
             success = false;
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks monitored terminal current and power use system base.
+       */
+      TestOutcome monitor_system_base()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenrouDataT::Parameters;
+        using Variable  = typename GenrouDataT::MonitorableVariables;
+
+        auto data                            = makeGenrouData();
+        data.parameters[Parameter::mva_base] = RealT{50.0};
+        data.monitored_variables.insert(Variable::ir);
+        data.monitored_variables.insert(Variable::p);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.setSystemBase(60.0, 100.0e6);
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(gen.getMonitor());
+
+        std::stringstream os;
+        monitor.print(os, Model::VariableMonitorBase::Csv{});
+
+        auto values = Tokenizer<RealT>(os.str(), ',')();
+        if (values.size() == 3)
+        {
+          success *= isEqual(values[1], 1.0, tol_);
+          success *= isEqual(values[2], 1.0, tol_);
+        }
+        else
+        {
+          success = false;
         }
 
         return success.report(__func__);

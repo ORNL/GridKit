@@ -137,13 +137,13 @@ namespace GridKit
     {
       using Variable = typename DataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
-                    { return y_[3]; });
+                    { return toSystemBase(y_[3]); });
       monitor_->set(Variable::ii, [this]
-                    { return y_[4]; });
+                    { return toSystemBase(y_[4]); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * Ir() + Vi() * Ii(); });
+                    { return toSystemBase(Vr() * y_[3] + Vi() * y_[4]); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * Ir() - Vr() * Ii(); });
+                    { return toSystemBase(Vi() * y_[3] - Vr() * y_[4]); });
       monitor_->set(Variable::delta, [this]
                     { return y_[0]; });
       monitor_->set(Variable::omega, [this]
@@ -197,8 +197,8 @@ namespace GridKit
     {
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
-      ScalarT p     = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
-      ScalarT q     = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
+      ScalarT p     = toMachineBase(static_cast<ScalarT>(p0_));
+      ScalarT q     = toMachineBase(static_cast<ScalarT>(q0_));
       ScalarT vm2   = vr * vr + vi * vi;
       ScalarT ir    = (p * vr + q * vi) / vm2;
       ScalarT ii    = (p * vi - q * vr) / vm2;
@@ -265,7 +265,7 @@ namespace GridKit
       const ScalarT vi = wb[1];
 
       // GenClassical differential equations
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * 60.0);
+      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
 
       // GenClassical algebraic equations
@@ -290,8 +290,8 @@ namespace GridKit
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];
-      h[0]             = ir * mva_base_ / mva_system_base_;
-      h[1]             = ii * mva_base_ / mva_system_base_;
+      h[0]             = toSystemBase(ir);
+      h[1]             = toSystemBase(ii);
 
       return 0;
     }
@@ -318,8 +318,9 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     void GenClassical<ScalarT, IdxT>::setDerivedParams()
     {
-      G_ = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
-      B_ = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
+      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
     }
 
   } // namespace PhasorDynamics

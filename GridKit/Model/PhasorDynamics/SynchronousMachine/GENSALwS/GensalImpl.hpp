@@ -133,13 +133,13 @@ namespace GridKit
     {
       using Variable = typename model_data_type::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
-                    { return y_[12]; });
+                    { return toSystemBase(y_[12]); });
       monitor_->set(Variable::ii, [this]
-                    { return y_[13]; });
+                    { return toSystemBase(y_[13]); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_[12] + Vi() * y_[13]; });
+                    { return toSystemBase(Vr() * y_[12] + Vi() * y_[13]); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_[12] - Vr() * y_[13]; });
+                    { return toSystemBase(Vi() * y_[12] - Vr() * y_[13]); });
       monitor_->set(Variable::delta, [this]
                     { return y_[0]; });
       monitor_->set(Variable::omega, [this]
@@ -259,8 +259,8 @@ namespace GridKit
       // Network frame terminal values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
-      ScalarT q   = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
+      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
@@ -380,9 +380,7 @@ namespace GridKit
       ScalarT efd   = ws[1];
 
       /* 5 Gensal differential equations */
-      // TODO: Replace hard-coded 60 Hz with the model's resolved frequency base
-      // once frequency-base ownership/propagation is designed consistently.
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * 60.0);
+      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
       f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat));
       f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
@@ -423,8 +421,8 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
-      h[0] = (inr - vr * G_ + vi * B_) * mva_base_ / mva_system_base_;
-      h[1] = (ini - vr * B_ - vi * G_) * mva_base_ / mva_system_base_;
+      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
+      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 
       return 0;
     }
@@ -498,17 +496,20 @@ namespace GridKit
         SA_ = (1.2 * s112 + ONE<RealT>) / (s112 + ONE<RealT>);
         SB_ = (1.2 * s112 - ONE<RealT>) / (s112 - ONE<RealT>);
         if (SB_ < SA_)
+        {
           SA_ = SB_;
+        }
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
       }
-      Xd1_ = Xd_ - Xdp_;
-      Xd2_ = Xdp_ - Xl_;
-      Xd3_ = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
-      Xd4_ = (Xdp_ - Xdpp_) / Xd2_;
-      Xd5_ = (Xdpp_ - Xl_) / Xd2_;
-      Xq2_ = Xq_ - Xdpp_;
-      G_   = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
-      B_   = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+      Xd1_             = Xd_ - Xdp_;
+      Xd2_             = Xdp_ - Xl_;
+      Xd3_             = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
+      Xd4_             = (Xdp_ - Xdpp_) / Xd2_;
+      Xd5_             = (Xdpp_ - Xl_) / Xd2_;
+      Xq2_             = Xq_ - Xdpp_;
+      G_               = Ra_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+      B_               = -Xdpp_ / (Ra_ * Ra_ + Xdpp_ * Xdpp_);
+      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

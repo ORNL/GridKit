@@ -24,20 +24,22 @@ Notes:
 
 Symbol      | Units   | Description                                | Typical Value | Note
 ------------|---------|--------------------------------------------|---------------| ------
-$\omega_0$  | [rad/s] | synchronous frequency                      | $2\pi \cdot 60$
+$P_0$       | [p.u.]  | Initial active power injection             | 1.0 |
+$Q_0$       | [p.u.]  | Initial reactive power injection           | 0.0 |
 $H$         | [s]     | rotor inertia                              | 3
 $D$         | [p.u.]  | damping coefficient                        | 0
 $R_a$       | [p.u.]  | winding resistance                         | 0
-$X_{\ell}$  | [p.u.]  | Stator leakage reactance                   | 0.15 |
+$T'_{d0}$   | [s]     | Open circuit direct axis transient time const. | 7 |
+$T''_{d0}$  | [s]     | Open circuit direct axis sub-transient time const. | 0.04 |
+$T''_{q0}$  | [s]     | Open circuit quadrature axis sub-transient time const. | 0.05 |
 $X_d$       | [p.u.]  | Direct axis synchronous reactance          | 2.1 |
 $X'_d$      | [p.u.]  | Direct axis transient reactance            | 0.2 |
 $X''_d$     | [p.u.]  | Direct axis sub-transient reactance        | 0.18 |
 $X_q$       | [p.u.]  | Quadrature axis synchronous reactance      | 0.5 |
-$T'_{d0}$   | [s]     | Open circuit direct axis transient time const. | 7 |
-$T''_{d0}$  | [s]     | Open circuit direct axis sub-transient time const. | 0.04 |
-$T''_{q0}$  | [s]     | Open circuit quadrature axis sub-transient time const. | 0.05 |
+$X_{\ell}$  | [p.u.]  | Stator leakage reactance                   | 0.15 |
 $S_{10}$    | [p.u.]  | Saturation factor at 1.0 pu flux           | 0 |
 $S_{12}$    | [p.u.]  | Saturation factor at 1.2 pu flux           | 0 |
+$S_\mathrm{mach}$ | [MVA] | Machine power base                  | 100 |
 
 ### Model Derived Parameters
 ``` math
@@ -48,9 +50,13 @@ $S_{12}$    | [p.u.]  | Saturation factor at 1.2 pu flux           | 0 |
   S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
   X_{d1} &= X_d-X_d'                 & X_{q2} &= X_q-X_d'' \\
   X_{d2} &= X_d'-X_\ell              & X_{d3} &= (X_d'-X_d'')/X_{d2}^2 \\
-  X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{d5} &= (X_d''-X_\ell)/X_{d2}
+  X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{d5} &= (X_d''-X_\ell)/X_{d2} \\
+  f_\mathrm{base} &= f_\mathrm{sys} &
+  S_\mathrm{mach,VA} &= 10^6 S_\mathrm{mach}
 \end{aligned}
 ```
+
+System bases are taken from the system at initialization.
 
 ## Model Variables
 
@@ -97,7 +103,7 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system        | Ow
 ### Differential Equations
 ``` math
 \begin{aligned}
-  \dot\delta       &= \omega\cdot\omega_0 \\
+  \dot\delta       &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega       &= \dfrac{1}{2H}\left(\dfrac{P_m-D\omega}{1+\omega}
                     - T_e\right)\\
   \dot{E}'_q       &= \dfrac{1}{T'_{d0}}
@@ -155,10 +161,19 @@ steady-state GENSAL equations.
 
 Symbol     | Units  | Description                       | Note
 -----------|--------|-----------------------------------|------
-$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine
-$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine
-$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine
-$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine
+$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
+$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
+$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
+$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
 $\delta$   | [rad]  | Machine internal rotor angle      |
 $\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed
-$speed$    | [p.u.] | Per-unit machine speed            | $1+\omega$
+$\text{speed}$ | [p.u.] | Per-unit machine speed            | $1+\omega$
+$E'_q$     | [p.u.] | Quadrature axis transient flux    | Machine base
+$\psi'_d$  | [p.u.] | Direct axis transient flux        | Machine base
+$\psi''_q$ | [p.u.] | Total q-axis subtransient flux    | Machine base
+$\psi''_d$ | [p.u.] | Total d-axis subtransient flux    | Machine base
+$V_d$      | [p.u.] | Machine internal voltage, d-axis  | Machine base
+$V_q$      | [p.u.] | Machine internal voltage, q-axis  | Machine base
+$T_e$      | [p.u.] | Electrical torque                 | Machine base
+$I_d$      | [p.u.] | Terminal current, d-axis          | Machine base
+$I_q$      | [p.u.] | Terminal current, q-axis          | Machine base

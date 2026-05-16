@@ -41,6 +41,18 @@ namespace GridKit
         alpha_ = a;
       }
 
+      /**
+       * @brief Set system frequency and power bases.
+       *
+       * @param[in] freq_system_base - System frequency base in Hz.
+       * @param[in] va_system_base - System power base in VA.
+       */
+      void setSystemBase(RealT freq_system_base, RealT va_system_base)
+      {
+        freq_system_base_ = freq_system_base;
+        va_system_base_   = va_system_base;
+      }
+
       virtual int setGridKitComponentID(IdxT) = 0;
 
       IdxT getGridKitComponentID() const
@@ -57,17 +69,8 @@ namespace GridKit
       RealT time_;
       RealT alpha_;
 
-      /*
-
-      ------ WARNING: Temporary ------
-
-      The protected variable mva_system_base_ is temporarily
-      hard coded. This eventually needs to be configured
-      from the input JSON format, which specifies the system MVA base.
-
-      */
-
-      RealT mva_system_base_{100.0};
+      RealT freq_system_base_{60.0};
+      RealT va_system_base_{100.0e6};
     };
 
   } // namespace PhasorDynamics

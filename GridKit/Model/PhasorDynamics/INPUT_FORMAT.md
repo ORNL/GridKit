@@ -87,8 +87,6 @@ a bus and has the following fields:
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
   `v_base`           | Optional floating point value giving the voltage base in volts (V).
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
-  `freq_base`        | Optional field to override the system frequency base at this bus
-  `va_base`          | Optional field to override the system power base at this bus
   `extension`        | Optional field containing an object with implementation-defined keys
 
 #### Bus classes
@@ -143,8 +141,8 @@ are specified:
   --------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
   `Branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`           | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `Load`        | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
-  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Tqop`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
-  `Gensal`      | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
+  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqop`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
+  `Gensal`      | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
   `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`

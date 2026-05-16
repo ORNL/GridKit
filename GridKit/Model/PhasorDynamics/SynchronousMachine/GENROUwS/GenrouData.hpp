@@ -33,7 +33,7 @@ namespace GridKit
       Xl,       ///< Stator leakage reactance
       S10,      ///< Saturation factor at 1.0 pu flux
       S12,      ///< Saturation factor at 1.2 pu flux
-      mva_base, ///< MVA base of the genrou model (TODO usa Component class parameter `mva`)
+      mva_base, ///< MVA base of the genrou model
     };
 
     /// Ports for a Genrou generator model

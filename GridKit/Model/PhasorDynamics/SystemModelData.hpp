@@ -77,8 +77,8 @@ namespace GridKit
       /// Additional comments about the case being described by this model
       std::string case_comments;
 
-      RealT freq_base; ///< System frequency base in Hz
-      RealT va_base;   ///< System power base in VA
+      RealT freq_base{60.0};  ///< System frequency base in Hz
+      RealT va_base{100.0e6}; ///< System power base in VA
 
       /// @todo Create an enum identifying all available component models and
       /// consolidate components in a single container.

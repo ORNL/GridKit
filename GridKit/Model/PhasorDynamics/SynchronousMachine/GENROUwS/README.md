@@ -20,23 +20,25 @@ Notes:
 
 Symbol     | Units   | Description                     | Typical Value | Note
 -----------|---------|---------------------------------|---------------| ------
-$\omega_0$ | [rad/s] | synchronous frequency           | $2\pi \cdot 60$
+$P_0$      | [p.u.]  | Initial active power injection  | 1.0 |
+$Q_0$      | [p.u.]  | Initial reactive power injection | 0.0 |
 $H$        | [s]     | rotor inertia                   | 3
 $D$        | [p.u.]  | damping coefficient             | 0
 $R_a$      | [p.u.]  | winding resistance              | 0
-$X_{\ell}$ | [p.u.]  | Stator leakage reactance        | 0.15 | 
-$X_{d}$    | [p.u.]  | Direct axis synchronous reactance | 2.1 | 
-$X'_{d}$   | [p.u.]  | Direct axis transient reactance | 0.2 | 
-$X''_{d}$  | [p.u.]  | Direct axis sub-transient reactance | 0.18 | 
-$X_{q}$    | [p.u.]  | Quadrature axis synchronous reactance | 0.5 | 
-$X'_{q}$   | [p.u.]  | Quadrature axis transient reactance | 0.5 | 
-$X''_{q}$  | [p.u.]  | Quadrature axis sub-transient reactance | 0.18 | 
-$T'_{d0}$  | [s]     | Open circuit direct axis transient time const. | 7 | 
-$T''_{d0}$ | [s]     | Open circuit direct axis sub-transient time const. | 0.04 | 
-$T'_{q0}$  | [s]     | Open circuit quadrature axis transient time const. | 0.75 | 
-$T''_{q0}$ | [s]     | Open circuit quadrature axis sub-transient time const. | 0.05 | 
-$S_{10}$   | [p.u.]  | Saturation factor at 1.0 pu flux | 0 | 
-$S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 | 
+$T'_{d0}$  | [s]     | Open circuit direct axis transient time const. | 7 |
+$T''_{d0}$ | [s]     | Open circuit direct axis sub-transient time const. | 0.04 |
+$T'_{q0}$  | [s]     | Open circuit quadrature axis transient time const. | 0.75 |
+$T''_{q0}$ | [s]     | Open circuit quadrature axis sub-transient time const. | 0.05 |
+$X_{d}$    | [p.u.]  | Direct axis synchronous reactance | 2.1 |
+$X'_{d}$   | [p.u.]  | Direct axis transient reactance | 0.2 |
+$X''_{d}$  | [p.u.]  | Direct axis sub-transient reactance | 0.18 |
+$X_{q}$    | [p.u.]  | Quadrature axis synchronous reactance | 0.5 |
+$X'_{q}$   | [p.u.]  | Quadrature axis transient reactance | 0.5 |
+$X''_{q}$  | [p.u.]  | Quadrature axis sub-transient reactance | 0.18 |
+$X_{\ell}$ | [p.u.]  | Stator leakage reactance        | 0.15 |
+$S_{10}$   | [p.u.]  | Saturation factor at 1.0 pu flux | 0 |
+$S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
+$S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
 
 ### Model Derived Parameters
 ``` math
@@ -50,9 +52,13 @@ $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
   X_{d3} &= (X_d'-X_d'')/X_{d2}^2    & X_{q3} &= (X_q'-X_q'')/X_{q2}^2 \\
   X_{d4} &= (X_d'-X_d'')/X_{d2}      & X_{q4} &= (X_q'-X_q'')/X_{q2} \\
   X_{d5} &= (X_d''-X_\ell)/X_{d2}    & X_{q5} &= (X_q''-X_\ell)/X_{q2}\\
-  X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell)
+  X_{qd} &= (X_q-X_\ell)/(X_d-X_\ell) \\
+  f_\mathrm{base} &= f_\mathrm{sys} &
+  S_\mathrm{mach,VA} &= 10^6 S_\mathrm{mach}
 \end{aligned}
 ```
+
+System bases are taken from the system at initialization.
 
 ## Model Variables
 
@@ -100,9 +106,10 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 ## Model Equations
 
 ### Differential Equations
+
 ``` math
 \begin{aligned}
-  \dot\delta      &= \omega\cdot\omega_0 \\
+  \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
   \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
                    - T_{elec}\right)\\
   \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
@@ -190,21 +197,12 @@ of $\psi''$, which is independent of $\delta$.
 
 ## Model Outputs
 
-Real and imaginary currents, $I_r$ and $I_i$, are model algebraic variables,
-oriented as leaving the machine (i.e. entering the bus).
-
-Machine relative angle $\delta$ and speed deviation $\omega$ 
-are model state variables. Note that $\omega=0$ corresponds to synchronous
-speed operation. A separate output variable, speed,
-reports the per-unit machine speed, defined by $\omega + 1$.
-
-Active and reactive power ($P$, and $Q$) 
-are the real and imaginary parts of the complex power, 
-defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
-``` math
-\begin{aligned}
-      P &= V_{r} I_{r} + V_{i} I_{i}\\
-      Q &= V_{i} I_{r} - V_{r} I_{i}
-\end{aligned}
-```
-Power outputs are oriented leaving the machine (i.e. entering the bus).
+Symbol     | Units  | Description                       | Note
+-----------|--------|-----------------------------------|------
+$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
+$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
+$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
+$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
+$\delta$   | [rad]  | Machine internal rotor angle      |
+$\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed
+$\text{speed}$ | [p.u.] | Per-unit machine speed            | $1+\omega$

@@ -2,13 +2,16 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/Gensal.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/MapFromCOO.hpp>
 
 namespace GridKit
@@ -144,6 +147,81 @@ namespace GridKit
             success = false;
             break;
           }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks GENSAL uses the configured system frequency base.
+       */
+      TestOutcome frequency_base()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        auto                                  data = makeGensalData();
+        PhasorDynamics::Gensal<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+
+        gen.setSystemBase(50.0, 100.0e6);
+        gen.allocate();
+
+        gen.y()[1]  = 1.0;
+        gen.yp()[0] = TWO<RealT> * M_PI * 50.0;
+
+        gen.evaluateResidual();
+
+        success *= isEqual(gen.getResidual()[0], 0.0, tol_);
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks monitored terminal current and power use system base.
+       */
+      TestOutcome monitor_system_base()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GensalDataT::Parameters;
+        using Variable  = typename GensalDataT::MonitorableVariables;
+
+        auto data                            = makeGensalData();
+        data.parameters[Parameter::mva_base] = RealT{50.0};
+        data.monitored_variables.insert(Variable::ir);
+        data.monitored_variables.insert(Variable::p);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
+        PhasorDynamics::Gensal<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.setSystemBase(60.0, 100.0e6);
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(gen.getMonitor());
+
+        std::stringstream os;
+        monitor.print(os, Model::VariableMonitorBase::Csv{});
+
+        auto values = Tokenizer<RealT>(os.str(), ',')();
+        if (values.size() == 3)
+        {
+          success *= isEqual(values[1], 1.0, tol_);
+          success *= isEqual(values[2], 1.0, tol_);
+        }
+        else
+        {
+          success = false;
         }
 
         return success.report(__func__);

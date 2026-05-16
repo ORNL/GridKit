@@ -90,6 +90,9 @@ namespace GridKit
 
         owns_components_ = true;
 
+        // Store parsed system bases before constructing data-driven components.
+        this->setSystemBase(data.freq_base, data.va_base);
+
         // Add electrical buses
         for (const auto& busdata : data.bus)
         {
@@ -935,6 +938,22 @@ namespace GridKit
       }
 
       /**
+       * @brief Set system bases and propagate them to existing components.
+       *
+       * @param[in] freq_system_base - System frequency base in Hz.
+       * @param[in] va_system_base - System power base in VA.
+       */
+      void setSystemBase(RealT freq_system_base, RealT va_system_base)
+      {
+        component_type::setSystemBase(freq_system_base, va_system_base);
+
+        for (auto* component : components_)
+        {
+          component->setSystemBase(freq_system_base, va_system_base);
+        }
+      }
+
+      /**
        * @brief Add component
        *
        * Add component at the end of the components array and set GridKit's component ID
@@ -947,6 +966,8 @@ namespace GridKit
       {
         IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
         component->setGridKitComponentID(gridkit_component_id);
+        component->setSystemBase(this->freq_system_base_,
+                                 this->va_system_base_);
         components_.push_back(component);
       }
 

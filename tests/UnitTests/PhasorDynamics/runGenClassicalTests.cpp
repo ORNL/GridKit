@@ -8,6 +8,7 @@ int main()
 
   result += test.constructor();
   result += test.residual();
+  result += test.monitor_system_base();
   result += test.initial();
   result += test.zeroInitialResidual();
 #ifdef GRIDKIT_ENABLE_ENZYME
