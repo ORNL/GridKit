@@ -41,7 +41,7 @@ None.
 ### External Variables
 
 External variables enter component model equations but are owned by
-other components. The EMT bus at the load terminal owns the voltage
+other components. The EMT bus at the load port owns the voltage
 variable and provides the equation needed to have a balanced system
 of equations.
 
@@ -49,7 +49,7 @@ of equations.
 
 Symbol           | Units | Description                                  | Note
 -----------------|-------|----------------------------------------------|---------------------------------
-$\mathbf{v}$     | [V]   | Terminal voltage vector, owned by EMT bus    | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
+$\mathbf{v}$     | [V]   | Port voltage vector, owned by EMT bus        | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -69,7 +69,7 @@ None.
 
 ### Bus Residual Contributions
 
-The RL load contributes to the KCL residual at its terminal bus. The
+The RL load contributes to the KCL residual at its port bus. The
 expression is accumulated into the owning bus residual.
 
 ``` math
@@ -100,4 +100,5 @@ consistency:
 
 ## Model Outputs
 
-Candidate monitorable outputs include the load current components $i_a$, $i_b$, and $i_c$ (into the bus).
+Candidate monitorable outputs include the load current components $i_a$, $i_b$,
+and $i_c$ into the bus.

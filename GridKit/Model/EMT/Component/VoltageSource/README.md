@@ -2,7 +2,7 @@
 
 `VoltageSource` represents a three-phase voltage source in instantaneous abc
 coordinates. The source waveform is configurable by phase magnitude and phase
-offset for each phase and is otherwise constant. Each source terminal is
+offset for each phase and is otherwise constant. Each source port is
 connected to the EMT bus through a phase resistance.
 
 ## Model Parameters
@@ -39,7 +39,7 @@ None.
 ### External Variables
 
 External variables enter component model equations but are owned by
-other components. The EMT bus at the source terminal owns the voltage
+other components. The EMT bus at the source port owns the voltage
 variable and provides the equation needed to have a balanced system
 of equations.
 
@@ -47,7 +47,7 @@ of equations.
 
 Symbol           | Units | Description                                  | Note
 -----------------|-------|----------------------------------------------|---------------------------------
-$\mathbf{v}$     | [V]   | Terminal voltage vector, owned by EMT bus    | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
+$\mathbf{v}$     | [V]   | Port voltage vector, owned by EMT bus        | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -65,7 +65,7 @@ None.
 
 ### Bus Residual Contributions
 
-The source contributes current to the KCL residual at its terminal bus.
+The source contributes current to the KCL residual at its port bus.
 The injection vector is accumulated into the owning bus residual. Given source
 angular frequency $\omega_0$, the source waveform is:
 
@@ -105,5 +105,5 @@ e_c(0) &= \sqrt{2}\,E_c\cos(\phi_c)
 Candidate monitorable outputs include the source waveform components
 $e_a(t)$, $e_b(t)$, and $e_c(t)$.
 
-The terminal current injection expression is documented above as
+The port current injection expression is documented above as
 $\mathbf{i}^\text{inj}$.

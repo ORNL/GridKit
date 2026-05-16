@@ -13,12 +13,14 @@ EMT design and implementation develop.
 - Current injection terms are written as positive into buses.
 
 
-## Model Families
+## Model Categories
 
-The current EMT documentation is organized into one of three families:
+The current EMT documentation is organized into two categories:
 - `Bus`
-- `Branch`
 - `Component`
+
+Branch models such as `BranchLumpedConstant` are documented under
+`Component/Branch` because they are EMT components connected to buses.
 
 ## Open Design Notes
 
