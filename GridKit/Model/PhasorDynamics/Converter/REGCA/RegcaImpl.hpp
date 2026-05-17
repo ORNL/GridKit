@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <variant>
 
 #include <GridKit/Model/PhasorDynamics/BusBase.hpp>
@@ -47,15 +48,44 @@ namespace GridKit
       }
 
       template <class ScalarT, typename IdxT>
+      void Regca<ScalarT, IdxT>::setDerivedParameters()
+      {
+        Mp_                = static_cast<RealT>(100.0) * Rpmax_;
+        use_lvpl_          = sL_ ? ONE<RealT> : ZERO<RealT>;
+        bypass_lvpl_       = ONE<RealT> - use_lvpl_;
+        iq_use_upper_      = (Q0_ > ZERO<RealT>) ? ONE<RealT> : ZERO<RealT>;
+        iq_use_lower_      = ONE<RealT> - iq_use_upper_;
+        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      }
+
+      template <class ScalarT, typename IdxT>
+      ScalarT Regca<ScalarT, IdxT>::activeCurrentLowerRateBound(ScalarT ip) const
+      {
+        return -Rpmax_ - (Mp_ - Rpmax_) * Math::sigmoid(ip);
+      }
+
+      template <class ScalarT, typename IdxT>
+      ScalarT Regca<ScalarT, IdxT>::activeCurrentUpperRateBound(ScalarT ip, ScalarT il) const
+      {
+        const ScalarT sigma_ip = Math::sigmoid(ip);
+        return Mp_ * (ONE<RealT> - sigma_ip)
+               + Rpmax_ * sigma_ip * (bypass_lvpl_ + use_lvpl_ * Math::sigmoid(il - ip));
+      }
+
+      template <class ScalarT, typename IdxT>
       void Regca<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
       {
         using Params = typename model_data_type::Parameters;
         using Ports  = typename model_data_type::Ports;
 
-        auto loadReal = [&](auto key, RealT& target)
+        parameter_error_count_ = 0;
+
+        auto loadRequiredReal = [&](auto key, RealT& target, const char* name)
         {
           if (!data.parameters.contains(key))
           {
+            Log::error() << "Regca: missing required parameter '" << name << "'\n";
+            ++parameter_error_count_;
             return;
           }
 
@@ -68,12 +98,19 @@ namespace GridKit
           {
             target = static_cast<RealT>(*index_value);
           }
+          else
+          {
+            Log::error() << "Regca: parameter '" << name << "' must be numeric\n";
+            ++parameter_error_count_;
+          }
         };
 
-        auto loadBool = [&](auto key, bool& target)
+        auto loadRequiredSwitch = [&](auto key, bool& target, const char* name)
         {
           if (!data.parameters.contains(key))
           {
+            Log::error() << "Regca: missing required parameter '" << name << "'\n";
+            ++parameter_error_count_;
             return;
           }
 
@@ -82,32 +119,40 @@ namespace GridKit
           {
             target = *bool_value;
           }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
+          else if (const auto* index_value = std::get_if<IdxT>(&value);
+                   index_value && (*index_value == 0 || *index_value == 1))
           {
-            target = (*index_value != 0);
+            target = (*index_value == 1);
+          }
+          else
+          {
+            Log::error() << "Regca: parameter '" << name << "' must be bool or 0/1\n";
+            ++parameter_error_count_;
           }
         };
 
-        loadReal(Params::P0, P0_);
-        loadReal(Params::Q0, Q0_);
-        loadReal(Params::Sconv, Sconv_);
-        loadReal(Params::Tg, Tg_);
-        loadReal(Params::TM, TM_);
-        loadReal(Params::Rqmax, Rqmax_);
-        loadReal(Params::Rqmin, Rqmin_);
-        loadReal(Params::Rpmax, Rpmax_);
-        loadBool(Params::sL, sL_);
-        loadReal(Params::IL1, IL1_);
-        loadReal(Params::VL0, VL0_);
-        loadReal(Params::VL1, VL1_);
-        loadReal(Params::VA0, VA0_);
-        loadReal(Params::VA1, VA1_);
-        loadReal(Params::Vhvmax, Vhvmax_);
+        loadRequiredReal(Params::P0, P0_, "P0");
+        loadRequiredReal(Params::Q0, Q0_, "Q0");
+        loadRequiredReal(Params::mva_base, mva_base_, "mva_base");
+        loadRequiredReal(Params::Tg, Tg_, "Tg");
+        loadRequiredReal(Params::TM, TM_, "TM");
+        loadRequiredReal(Params::Rqmax, Rqmax_, "Rqmax");
+        loadRequiredReal(Params::Rqmin, Rqmin_, "Rqmin");
+        loadRequiredReal(Params::Rpmax, Rpmax_, "Rpmax");
+        loadRequiredSwitch(Params::sL, sL_, "sL");
+        loadRequiredReal(Params::IL1, IL1_, "IL1");
+        loadRequiredReal(Params::VL0, VL0_, "VL0");
+        loadRequiredReal(Params::VL1, VL1_, "VL1");
+        loadRequiredReal(Params::VA0, VA0_, "VA0");
+        loadRequiredReal(Params::VA1, VA1_, "VA1");
+        loadRequiredReal(Params::Vhvmax, Vhvmax_, "Vhvmax");
 
         if (data.ports.contains(Ports::bus))
         {
           bus_id_ = data.ports.at(Ports::bus);
         }
+
+        setDerivedParameters();
       }
 
       template <class ScalarT, typename IdxT>
@@ -129,10 +174,12 @@ namespace GridKit
                       { return y_[index(RegcaInternalVariables::IR)]; });
         monitor_->set(Variable::ii, [this, index]
                       { return y_[index(RegcaInternalVariables::II)]; });
-        monitor_->set(Variable::p, []
-                      { return ScalarT{0}; });
-        monitor_->set(Variable::q, []
-                      { return ScalarT{0}; });
+        monitor_->set(Variable::p, [this, index]
+                      { return toSystemBase(Vr() * y_[index(RegcaInternalVariables::IR)]
+                                            + Vi() * y_[index(RegcaInternalVariables::II)]); });
+        monitor_->set(Variable::q, [this, index]
+                      { return toSystemBase(Vi() * y_[index(RegcaInternalVariables::IR)]
+                                            - Vr() * y_[index(RegcaInternalVariables::II)]); });
         monitor_->set(Variable::vt, [this, index]
                       { return y_[index(RegcaInternalVariables::VT)]; });
         monitor_->set(Variable::vm, [this, index]
@@ -190,13 +237,32 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Regca<ScalarT, IdxT>::verify() const
       {
-        int ret = 0;
+        int ret = static_cast<int>(parameter_error_count_);
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Regca: " << message << '\n';
+            ret += 1;
+          }
+        };
 
         if (bus_ == nullptr)
         {
           Log::error() << "Regca: bus pointer is null\n";
           ret += 1;
         }
+
+        check(mva_base_ > ZERO<RealT>, "mva_base must be positive");
+        check(Tg_ > ZERO<RealT>, "Tg must be positive");
+        check(TM_ > ZERO<RealT>, "TM must be positive");
+        check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
+        check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
+        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
+        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_, "VA0/VA1 must satisfy 0 <= VA0 < VA1");
+        check(Vhvmax_ > ZERO<RealT>, "Vhvmax must be positive");
 
         if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
         {
@@ -222,8 +288,87 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       int Regca<ScalarT, IdxT>::initialize()
       {
-        std::fill(y_.begin(), y_.end(), ScalarT{0});
-        std::fill(yp_.begin(), yp_.end(), ScalarT{0});
+        if (bus_ == nullptr)
+        {
+          Log::error() << "Regca: cannot initialize with null bus\n";
+          return 1;
+        }
+
+        if (parameter_error_count_ > 0 || mva_base_ <= ZERO<RealT> || Tg_ <= ZERO<RealT>
+            || TM_ <= ZERO<RealT> || Rpmax_ <= ZERO<RealT>
+            || !(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_)
+            || IL1_ < ZERO<RealT> || !(ZERO<RealT> <= VL0_ && VL0_ < VL1_)
+            || !(ZERO<RealT> <= VA0_ && VA0_ < VA1_) || Vhvmax_ <= ZERO<RealT>)
+        {
+          Log::error() << "Regca: cannot initialize with invalid parameters\n";
+          return 1;
+        }
+
+        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
+        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
+
+        const ScalarT vr  = Vr();
+        const ScalarT vi  = Vi();
+        const ScalarT vt2 = vr * vr + vi * vi;
+        const ScalarT vt  = std::sqrt(vt2);
+
+        if (vt <= ZERO<RealT>)
+        {
+          Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
+          return 1;
+        }
+
+        if (vt >= Vhvmax_)
+        {
+          Log::error() << "Regca: terminal voltage magnitude must be less than Vhvmax at initialization\n";
+          return 1;
+        }
+
+        const ScalarT ir0 = toComponentBase((P0_ * vr + Q0_ * vi) / vt2);
+        const ScalarT ii0 = toComponentBase((P0_ * vi - Q0_ * vr) / vt2);
+
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        if (ir0 != ZERO<RealT> && (vt <= VA0_ || lvacm <= ZERO<RealT>) )
+        {
+          Log::error() << "Regca: LVACM gain is zero with nonzero initial active current\n";
+          return 1;
+        }
+
+        y_[VM]      = vt;
+        y_[VT]      = vt;
+        y_[IL]      = Math::linseg(vt, VL0_, VL1_, IL1_);
+        y_[IR]      = ir0;
+        y_[II]      = ii0;
+        y_[IP]      = ir0 / lvacm;
+        y_[IQEXTRA] = ZERO<RealT>;
+        y_[IQ]      = -ii0;
+        y_[LP]      = activeCurrentLowerRateBound(y_[IP]);
+        y_[UP]      = activeCurrentUpperRateBound(y_[IP], y_[IL]);
+
+        ipcmd_set_ = y_[IP];
+        iqcmd_set_ = y_[IQ];
+
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>()
+            && signals_.template isLinked<RegcaExternalVariables::IPCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd_set_);
+        }
+
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>()
+            && signals_.template isLinked<RegcaExternalVariables::IQCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IQCMD>(iqcmd_set_);
+        }
+
+        std::fill(yp_.begin(), yp_.end(), ZERO<RealT>);
         return 0;
       }
 
@@ -239,51 +384,106 @@ namespace GridKit
 
       template <class ScalarT, typename IdxT>
       __attribute__((always_inline)) inline int Regca<ScalarT, IdxT>::evaluateInternalResidual(
-          [[maybe_unused]] ScalarT* y,
-          [[maybe_unused]] ScalarT* yp,
-          [[maybe_unused]] ScalarT* wb,
-          [[maybe_unused]] ScalarT* ws,
-          ScalarT*                  f)
+          ScalarT* y,
+          ScalarT* yp,
+          ScalarT* wb,
+          ScalarT* ws,
+          ScalarT* f)
       {
-        for (IdxT i = 0; i < size_; ++i)
-        {
-          f[static_cast<size_t>(i)] = ScalarT{0};
-        }
+        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
+        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
+
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        const ScalarT vm      = y[VM];
+        const ScalarT iq      = y[IQ];
+        const ScalarT ip      = y[IP];
+        const ScalarT vt      = y[VT];
+        const ScalarT ii      = y[II];
+        const ScalarT iqextra = y[IQEXTRA];
+        const ScalarT il      = y[IL];
+        const ScalarT ir      = y[IR];
+        const ScalarT lp      = y[LP];
+        const ScalarT up      = y[UP];
+
+        const ScalarT vm_dot = yp[VM];
+        const ScalarT iq_dot = yp[IQ];
+        const ScalarT ip_dot = yp[IP];
+
+        const ScalarT vr = wb[0];
+        const ScalarT vi = wb[1];
+
+        const ScalarT ipcmd = ws[IPCMD];
+        const ScalarT iqcmd = ws[IQCMD];
+
+        const ScalarT fq = (iqcmd - iq) / Tg_;
+        const ScalarT fp = (ipcmd - ip) / Tg_;
+
+        const ScalarT iq_rate =
+            iq_use_upper_ * (fq - Math::ramp(fq - Rqmax_))
+            + iq_use_lower_ * (fq + Math::ramp(Rqmin_ - fq));
+
+        const ScalarT ip_rate = lp + Math::ramp(fp - lp) - Math::ramp(fp - up);
+
+        f[VM]      = -vm_dot + (vt - vm) / TM_;
+        f[IQ]      = -iq_dot + iq_rate;
+        f[IP]      = -ip_dot + ip_rate;
+        f[VT]      = vt * vt - vr * vr - vi * vi;
+        f[II]      = -ii - iq + iqextra;
+        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - (Vhvmax_ - vt));
+        f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
+        f[IR]      = -ir + ip * Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        f[LP]      = -lp + activeCurrentLowerRateBound(ip);
+        f[UP]      = -up + activeCurrentUpperRateBound(ip, il);
 
         return 0;
       }
 
       template <class ScalarT, typename IdxT>
       __attribute__((always_inline)) inline int Regca<ScalarT, IdxT>::evaluateBusResidual(
-          [[maybe_unused]] ScalarT* y,
+          ScalarT*                  y,
           [[maybe_unused]] ScalarT* yp,
           [[maybe_unused]] ScalarT* wb,
           ScalarT*                  h)
       {
-        h[0] = ScalarT{0};
-        h[1] = ScalarT{0};
+        const auto II = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
+
+        h[0] = toSystemBase(y[IR]);
+        h[1] = toSystemBase(y[II]);
         return 0;
       }
 
       template <class ScalarT, typename IdxT>
       int Regca<ScalarT, IdxT>::evaluateResidual()
       {
-        std::fill(ws_.begin(), ws_.end(), ScalarT{0});
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        ws_[IPCMD] = ipcmd_set_;
+        ws_[IQCMD] = iqcmd_set_;
         std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
 
         if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
         {
-          const auto index = static_cast<size_t>(RegcaExternalVariables::IPCMD);
-          ws_[index]       = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
-          ws_indices_[index] =
+          ws_[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
+          ws_indices_[IPCMD] =
               signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
         }
 
         if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
         {
-          const auto index = static_cast<size_t>(RegcaExternalVariables::IQCMD);
-          ws_[index]       = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
-          ws_indices_[index] =
+          ws_[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
+          ws_indices_[IQCMD] =
               signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
         }
 

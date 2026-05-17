@@ -17,21 +17,21 @@ namespace GridKit
       /// Parameter keys for the REGCA converter model.
       enum class RegcaParameters
       {
-        P0,    ///< Initial active power injection on system base
-        Q0,    ///< Initial reactive power injection on system base
-        Sconv, ///< Converter/model power base
-        Tg,    ///< Converter current-control lag time constant
-        TM,    ///< Terminal voltage sensor time constant
-        Rqmax, ///< Reactive-current recovery positive rate limit
-        Rqmin, ///< Reactive-current recovery negative rate limit
-        Rpmax, ///< Active-current magnitude recovery rate limit
-        sL,    ///< LVPL switch
-        IL1,   ///< LVPL upper-current ceiling
-        VL0,   ///< LVPL zero-crossing voltage
-        VL1,   ///< LVPL upper breakpoint voltage
-        VA0,   ///< LVACM lower breakpoint voltage
-        VA1,   ///< LVACM upper breakpoint voltage
-        Vhvmax ///< Terminal-voltage ceiling for HV reactive management
+        P0,       ///< Initial active power injection on system base
+        Q0,       ///< Initial reactive power injection on system base
+        mva_base, ///< MVA base of the REGCA model
+        Tg,       ///< Converter current-control lag time constant
+        TM,       ///< Terminal voltage sensor time constant
+        Rqmax,    ///< Reactive-current recovery positive rate limit
+        Rqmin,    ///< Reactive-current recovery negative rate limit
+        Rpmax,    ///< Active-current magnitude recovery rate limit
+        sL,       ///< LVPL switch
+        IL1,      ///< LVPL upper-current ceiling
+        VL0,      ///< LVPL zero-crossing voltage
+        VL1,      ///< LVPL upper breakpoint voltage
+        VA0,      ///< LVACM lower breakpoint voltage
+        VA1,      ///< LVACM upper breakpoint voltage
+        Vhvmax    ///< Terminal-voltage ceiling for HV reactive management
       };
 
       /// Ports for the REGCA converter model.

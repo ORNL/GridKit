@@ -25,7 +25,7 @@ Symbol                           | Units    | Description                       
 ---------------------------------|----------|-------------------------------------------------------|---------------|------
 $P_{\mathrm{0}}$                 | [p.u.]   | Initial active power injection                        |               | On system base
 $Q_{\mathrm{0}}$                 | [p.u.]   | Initial reactive power injection                      |               | On system base
-$S^{\mathrm{conv}}$              | [MVA]    | Converter/model power base                            | TBD           |
+$S^{\text{base}}$                | [MVA]    | REGCA model power base                                | TBD           | JSON key: `mva_base`
 $T_{\mathrm{g}}$                 | [sec]    | Converter current-control lag time constant           | TBD           |
 $T_M$                            | [sec]    | Terminal voltage sensor time constant                 | TBD           | Block name: `Tfltr`
 $R_{\mathrm{q}}^{\max}$           | [p.u./s] | Reactive-current recovery positive rate limit         | TBD           | Block name: `Iqrmax`
@@ -45,7 +45,7 @@ Implementations should reject or report invalid parameter sets:
 
 ```math
 \begin{aligned}
-  S^{\mathrm{conv}} &> 0 &
+  S^{\text{base}} &> 0 &
   T_{\mathrm{g}} &> 0 &
   T_M &> 0 \\
   R_{\mathrm{p}}^{\max} &> 0 &
@@ -241,8 +241,8 @@ REGCA currents:
 
 ```math
 \begin{aligned}
-  I_{\mathrm{r}}^{\mathrm{inj}} &:= I_{\mathrm{r}}\dfrac{S^{\mathrm{conv}}}{S^{\mathrm{sys}}} \\
-  I_{\mathrm{i}}^{\mathrm{inj}} &:= I_{\mathrm{i}}\dfrac{S^{\mathrm{conv}}}{S^{\mathrm{sys}}}
+  I_{\mathrm{r}}^{\mathrm{inj}} &:= I_{\mathrm{r}}\dfrac{S^{\text{base}}}{S^{\text{sys}}} \\
+  I_{\mathrm{i}}^{\mathrm{inj}} &:= I_{\mathrm{i}}\dfrac{S^{\text{base}}}{S^{\text{sys}}}
 \end{aligned}
 ```
 
@@ -257,9 +257,9 @@ steady-state initial values:
 \begin{aligned}
   V_T                    &= \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2} \\
   I_\mathrm{r0}           &= \dfrac{P_0 V_\mathrm{r} + Q_0 V_\mathrm{i}}{V_T^2}
-                              \dfrac{S^\mathrm{sys}}{S^\mathrm{conv}} \\
+                              \dfrac{S^{\text{sys}}}{S^{\text{base}}} \\
   I_\mathrm{i0}           &= \dfrac{P_0 V_\mathrm{i} - Q_0 V_\mathrm{r}}{V_T^2}
-                              \dfrac{S^\mathrm{sys}}{S^\mathrm{conv}} \\
+                              \dfrac{S^{\text{sys}}}{S^{\text{base}}} \\
   V_{M0}                  &= V_T \\
   I_{L0}                  &= \text{linseg}(V_T;\ V_{L0},\ V_{L1},\ I_{L1}) \\
   I_\mathrm{p0}           &= \dfrac{I_\mathrm{r0}}

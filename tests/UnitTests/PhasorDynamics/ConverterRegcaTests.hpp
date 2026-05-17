@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
-#include <limits>
 #include <sstream>
 #include <variant>
+#include <vector>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
@@ -14,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/MapFromCOO.hpp>
 
 namespace GridKit
 {
@@ -28,7 +31,7 @@ namespace GridKit
       ConverterRegcaTests()  = default;
       ~ConverterRegcaTests() = default;
 
-      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-14);
+      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-10);
 
       TestOutcome constructor()
       {
@@ -39,11 +42,42 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
         success *= (minimal.size() == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM));
         success *= (minimal.getMonitor() == nullptr);
+        success *= (minimal.verify() > 0);
 
         auto                                            data = makeTestData();
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> from_data(&bus, data);
         success *= (from_data.size() == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM));
         success *= (from_data.getMonitor() != nullptr);
+        success *= (from_data.verify() == 0);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome parameterValidation()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+
+        auto missing = makeTestData();
+        missing.parameters.erase(PhasorDynamics::Converter::RegcaParameters::Tg);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_model(&bus, missing);
+        success *= (missing_model.verify() > 0);
+
+        auto bad_switch                                                       = makeTestData();
+        bad_switch.parameters[PhasorDynamics::Converter::RegcaParameters::sL] = static_cast<IdxT>(2);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
+        success *= (bad_switch_model.verify() > 0);
+
+        success *= invalidParameterCase(bus, Params::mva_base, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::Tg, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::TM, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::Rpmax, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::Rqmin, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::IL1, static_cast<RealT>(-0.1));
+        success *= invalidParameterCase(bus, Params::VL1, static_cast<RealT>(0.3));
+        success *= invalidParameterCase(bus, Params::VA1, static_cast<RealT>(0.3));
+        success *= invalidParameterCase(bus, Params::Vhvmax, static_cast<RealT>(0.0));
 
         return success.report(__func__);
       }
@@ -65,14 +99,10 @@ namespace GridKit
         success *= (regca.evaluateResidual() == 0);
         success *= (regca.evaluateJacobian() == 0);
 
-        const auto& y  = regca.y();
-        const auto& yp = regca.yp();
-        const auto& f  = regca.getResidual();
         for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
         {
-          success *= isEqual(y[i], static_cast<ScalarT>(0.0), kTol);
-          success *= isEqual(yp[i], static_cast<ScalarT>(0.0), kTol);
-          success *= isEqual(f[i], static_cast<ScalarT>(0.0), kTol);
+          success *= isEqual(regca.yp()[i], static_cast<ScalarT>(0.0), kTol);
+          success *= isEqual(regca.getResidual()[i], static_cast<ScalarT>(0.0), kTol);
         }
 
         using Vars = PhasorDynamics::Converter::RegcaInternalVariables;
@@ -84,8 +114,98 @@ namespace GridKit
           success *= (regca.tag()[i] == expected);
         }
 
-        success *= isEqual(bus.Ir(), static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(1.0), kTol);
         success *= isEqual(bus.Ii(), static_cast<ScalarT>(0.0), kTol);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome steadyStateInitializationGolden()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.8, 0.6);
+        bus.allocate();
+        bus.initialize();
+
+        auto data = makeGoldenTestData(static_cast<RealT>(0.2), true);
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        regca.allocate();
+        success *= (regca.initialize() == 0);
+
+        const std::vector<ScalarT> expected_y = {
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(-0.44),
+            static_cast<ScalarT>(0.92),
+            static_cast<ScalarT>(1.0),
+            static_cast<ScalarT>(0.44),
+            static_cast<ScalarT>(0.0),
+            static_cast<ScalarT>(1.1),
+            static_cast<ScalarT>(0.92),
+            static_cast<ScalarT>(-70.0),
+            static_cast<ScalarT>(0.7)};
+
+        success *= vectorMatches(regca.y(), expected_y, "REGCA initialization state");
+        for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
+        {
+          success *= isEqual(regca.yp()[i], static_cast<ScalarT>(0.0), kTol);
+        }
+
+        return success.report(__func__);
+      }
+
+      TestOutcome attachedSignalInitialization()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        auto                                            data = makeTestData();
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
+        ScalarT                                   ipcmd_value{0.0};
+        ScalarT                                   iqcmd_value{0.0};
+        IdxT                                      ipcmd_index = 21;
+        IdxT                                      iqcmd_index = 22;
+
+        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        regca.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::IPCMD>(&ipcmd_node);
+        regca.getSignals().template attachSignalNode<PhasorDynamics::Converter::RegcaExternalVariables::IQCMD>(&iqcmd_node);
+
+        regca.allocate();
+        success *= (regca.initialize() == 0);
+
+        success *= isEqual(ipcmd_value, static_cast<ScalarT>(1.0), kTol);
+        success *= isEqual(iqcmd_value, static_cast<ScalarT>(0.0), kTol);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome invalidInitialization()
+      {
+        TestStatus success = true;
+
+        auto data = makeTestData();
+
+        PhasorDynamics::Bus<ScalarT, IdxT> high_voltage_bus(1.3, 0.0);
+        high_voltage_bus.allocate();
+        high_voltage_bus.initialize();
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> high_voltage_regca(&high_voltage_bus, data);
+        high_voltage_regca.allocate();
+        success *= (high_voltage_regca.initialize() > 0);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> low_voltage_bus(0.2, 0.0);
+        low_voltage_bus.allocate();
+        low_voltage_bus.initialize();
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> low_voltage_regca(&low_voltage_bus, data);
+        low_voltage_regca.allocate();
+        success *= (low_voltage_regca.initialize() > 0);
 
         return success.report(__func__);
       }
@@ -123,8 +243,68 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(nullptr);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(nullptr, makeTestData());
         success *= (regca.verify() > 0);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome residualGoldenVectors()
+      {
+        TestStatus success = true;
+
+        const std::vector<ScalarT> positive_q_lvpl = {
+            static_cast<ScalarT>(0.29),
+            static_cast<ScalarT>(0.52),
+            static_cast<ScalarT>(0.21999997439919405),
+            static_cast<ScalarT>(-0.0046000000000000485),
+            static_cast<ScalarT>(0.05000000000000002),
+            static_cast<ScalarT>(-0.03),
+            static_cast<ScalarT>(0.29199937917427254),
+            static_cast<ScalarT>(0.3499999999675074),
+            static_cast<ScalarT>(-69.6),
+            static_cast<ScalarT>(-0.2999999999999803)};
+
+        const std::vector<ScalarT> nonpositive_q_no_lvpl = {
+            static_cast<ScalarT>(0.29),
+            static_cast<ScalarT>(1.5200000000000002),
+            static_cast<ScalarT>(0.21999997439919405),
+            static_cast<ScalarT>(-0.0046000000000000485),
+            static_cast<ScalarT>(0.05000000000000002),
+            static_cast<ScalarT>(-0.03),
+            static_cast<ScalarT>(0.29199937917427254),
+            static_cast<ScalarT>(0.3499999999675074),
+            static_cast<ScalarT>(-69.6),
+            static_cast<ScalarT>(0.39999999999999997)};
+
+        success *= residualGoldenVectorCase(static_cast<RealT>(0.2), true, positive_q_lvpl);
+        success *= residualGoldenVectorCase(static_cast<RealT>(-0.2), false, nonpositive_q_no_lvpl);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome busInjection()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.8, 0.6);
+        bus.allocate();
+        bus.initialize();
+
+        auto data                                                             = makeTestData();
+        data.parameters[PhasorDynamics::Converter::RegcaParameters::P0]       = static_cast<RealT>(0.8);
+        data.parameters[PhasorDynamics::Converter::RegcaParameters::Q0]       = static_cast<RealT>(-0.1);
+        data.parameters[PhasorDynamics::Converter::RegcaParameters::mva_base] = static_cast<RealT>(50.0);
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        regca.allocate();
+        success *= (regca.initialize() == 0);
+
+        bus.evaluateResidual();
+        success *= (regca.evaluateResidual() == 0);
+
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(0.58), kTol);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(0.56), kTol);
 
         return success.report(__func__);
       }
@@ -138,8 +318,8 @@ namespace GridKit
   "header": {
     "format_version": 0,
     "format_revision": 1,
-    "case_name": "REGCA skeleton",
-    "case_description": "REGCA parser smoke test",
+    "case_name": "REGCA full model",
+    "case_description": "REGCA parser behavior test",
     "case_comments": "",
     "freq_base": 60.0,
     "va_base": 100000000.0
@@ -155,7 +335,7 @@ namespace GridKit
       "params": {
         "P0": 1.0,
         "Q0": 0.0,
-        "Sconv": 100,
+        "mva_base": 100,
         "Tg": 0.02,
         "TM": 0.02,
         "Rqmax": 999.0,
@@ -169,7 +349,7 @@ namespace GridKit
         "VA1": 0.9,
         "Vhvmax": 1.2
       },
-      "mon": ["ir", "ii"]
+      "mon": ["ir", "ii", "p", "q"]
     }
   ]
 }
@@ -179,7 +359,7 @@ namespace GridKit
         success   *= (data.regca.size() == 1);
         success   *= (data.regca[0].device_class == "Regca");
         success   *= (data.regca[0].ports.at(PhasorDynamics::Converter::RegcaPorts::bus) == 1);
-        success   *= (std::get_if<size_t>(&data.regca[0].parameters.at(PhasorDynamics::Converter::RegcaParameters::Sconv)) != nullptr);
+        success   *= (std::get_if<size_t>(&data.regca[0].parameters.at(PhasorDynamics::Converter::RegcaParameters::mva_base)) != nullptr);
         success   *= (std::get_if<bool>(&data.regca[0].parameters.at(PhasorDynamics::Converter::RegcaParameters::sL)) != nullptr);
 
         PhasorDynamics::SystemModel<double, size_t> system(data);
@@ -189,18 +369,49 @@ namespace GridKit
         success *= (system.evaluateResidual() == 0);
         success *= (system.evaluateJacobian() == 0);
         success *= (system.size() == 12);
-        success *= isEqual(system.getResidual()[0], 0.0, static_cast<double>(kTol));
+        success *= isEqual(system.getResidual()[0], 1.0, static_cast<double>(kTol));
         success *= isEqual(system.getResidual()[1], 0.0, static_cast<double>(kTol));
+        for (size_t i = 2; i < system.getResidual().size(); ++i)
+        {
+          success *= isEqual(system.getResidual()[i], 0.0, static_cast<double>(kTol));
+        }
 
         return success.report(__func__);
       }
 
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome jacobian()
+      {
+        TestStatus success = true;
+
+        auto dependency_tracking_jacobian = DependencyTrackingJacobian();
+        auto enzyme_jacobian              = EnzymeJacobian();
+
+        success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
+        const auto nrows  = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
+        for (size_t i = 0; i < nrows; ++i)
+        {
+          success *= isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], static_cast<RealT>(1.0e-8));
+        }
+
+        return success.report(__func__);
+      }
+#endif
+
     private:
+      using Params = PhasorDynamics::Converter::RegcaParameters;
+      using Vars   = PhasorDynamics::Converter::RegcaInternalVariables;
+      using Ext    = PhasorDynamics::Converter::RegcaExternalVariables;
+
+      static size_t index(Vars variable)
+      {
+        return static_cast<size_t>(variable);
+      }
+
       auto makeTestData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {
-        using Params = PhasorDynamics::Converter::RegcaParameters;
-        using Ports  = PhasorDynamics::Converter::RegcaPorts;
-        using Mon    = PhasorDynamics::Converter::RegcaMonitorableVariables;
+        using Ports = PhasorDynamics::Converter::RegcaPorts;
+        using Mon   = PhasorDynamics::Converter::RegcaMonitorableVariables;
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
         data.device_class          = "Regca";
@@ -209,24 +420,247 @@ namespace GridKit
         data.monitored_variables.insert(Mon::ir);
         data.monitored_variables.insert(Mon::ii);
 
-        data.parameters[Params::P0]     = static_cast<RealT>(1.0);
-        data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
-        data.parameters[Params::Sconv]  = static_cast<IdxT>(100);
-        data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
-        data.parameters[Params::TM]     = static_cast<RealT>(0.02);
-        data.parameters[Params::Rqmax]  = static_cast<RealT>(999.0);
-        data.parameters[Params::Rqmin]  = static_cast<RealT>(-999.0);
-        data.parameters[Params::Rpmax]  = static_cast<RealT>(999.0);
-        data.parameters[Params::sL]     = true;
+        data.parameters[Params::P0]       = static_cast<RealT>(1.0);
+        data.parameters[Params::Q0]       = static_cast<RealT>(0.0);
+        data.parameters[Params::mva_base] = static_cast<IdxT>(100);
+        data.parameters[Params::Tg]       = static_cast<RealT>(0.02);
+        data.parameters[Params::TM]       = static_cast<RealT>(0.02);
+        data.parameters[Params::Rqmax]    = static_cast<RealT>(999.0);
+        data.parameters[Params::Rqmin]    = static_cast<RealT>(-999.0);
+        data.parameters[Params::Rpmax]    = static_cast<RealT>(999.0);
+        data.parameters[Params::sL]       = true;
+        data.parameters[Params::IL1]      = static_cast<RealT>(1.1);
+        data.parameters[Params::VL0]      = static_cast<RealT>(0.4);
+        data.parameters[Params::VL1]      = static_cast<RealT>(0.9);
+        data.parameters[Params::VA0]      = static_cast<RealT>(0.4);
+        data.parameters[Params::VA1]      = static_cast<RealT>(0.9);
+        data.parameters[Params::Vhvmax]   = static_cast<RealT>(1.2);
+
+        return data;
+      }
+
+      auto makeGoldenTestData(RealT q0, bool use_lvpl) -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
+      {
+        auto data                       = makeTestData();
+        data.parameters[Params::Q0]     = q0;
+        data.parameters[Params::Tg]     = static_cast<RealT>(0.2);
+        data.parameters[Params::TM]     = static_cast<RealT>(0.4);
+        data.parameters[Params::Rqmax]  = static_cast<RealT>(0.5);
+        data.parameters[Params::Rqmin]  = static_cast<RealT>(-0.6);
+        data.parameters[Params::Rpmax]  = static_cast<RealT>(0.7);
+        data.parameters[Params::sL]     = use_lvpl;
         data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
         data.parameters[Params::VL0]    = static_cast<RealT>(0.4);
         data.parameters[Params::VL1]    = static_cast<RealT>(0.9);
         data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
         data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
-        data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
-
+        data.parameters[Params::Vhvmax] = static_cast<RealT>(1.3);
         return data;
       }
+
+      bool invalidParameterCase(PhasorDynamics::Bus<ScalarT, IdxT>& bus, Params param, RealT value)
+      {
+        auto data              = makeTestData();
+        data.parameters[param] = value;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
+        return model.verify() > 0;
+      }
+
+      bool vectorMatches(const std::vector<ScalarT>& actual,
+                         const std::vector<ScalarT>& expected,
+                         const char*                 label) const
+      {
+        bool       success = (actual.size() == expected.size());
+        const auto n       = std::min(actual.size(), expected.size());
+        for (size_t i = 0; i < n; ++i)
+        {
+          if (!isEqual(actual[i], expected[i], kTol))
+          {
+            std::cout << label << " mismatch at row " << i << ": "
+                      << actual[i] << " != " << expected[i] << "\n";
+            success = false;
+          }
+        }
+        return success;
+      }
+
+      void setGoldenResidualState(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca)
+      {
+        regca.y()[index(Vars::VM)]      = static_cast<ScalarT>(0.86);
+        regca.y()[index(Vars::IQ)]      = static_cast<ScalarT>(-0.2);
+        regca.y()[index(Vars::IP)]      = static_cast<ScalarT>(0.85);
+        regca.y()[index(Vars::VT)]      = static_cast<ScalarT>(0.98);
+        regca.y()[index(Vars::II)]      = static_cast<ScalarT>(0.18);
+        regca.y()[index(Vars::IQEXTRA)] = static_cast<ScalarT>(0.03);
+        regca.y()[index(Vars::IL)]      = static_cast<ScalarT>(0.72);
+        regca.y()[index(Vars::IR)]      = static_cast<ScalarT>(0.5);
+        regca.y()[index(Vars::LP)]      = static_cast<ScalarT>(-0.4);
+        regca.y()[index(Vars::UP)]      = static_cast<ScalarT>(0.3);
+
+        regca.yp()[index(Vars::VM)] = static_cast<ScalarT>(0.01);
+        regca.yp()[index(Vars::IQ)] = static_cast<ScalarT>(-0.02);
+        regca.yp()[index(Vars::IP)] = static_cast<ScalarT>(0.03);
+      }
+
+      bool residualGoldenVectorCase(RealT q0, bool use_lvpl, const std::vector<ScalarT>& expected)
+      {
+        bool success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.95, 0.25);
+        bus.allocate();
+        bus.initialize();
+
+        auto                                            data = makeGoldenTestData(q0, use_lvpl);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        regca.allocate();
+
+        setGoldenResidualState(regca);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
+        ScalarT                                   ipcmd_value{0.9};
+        ScalarT                                   iqcmd_value{0.1};
+        IdxT                                      ipcmd_index = 21;
+        IdxT                                      iqcmd_index = 22;
+        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+
+        bus.evaluateResidual();
+        regca.evaluateResidual();
+
+        success *= vectorMatches(regca.getResidual(), expected, "REGCA residual");
+
+        return success;
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      void setJacobianState(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca,
+                            PhasorDynamics::Bus<ScalarT, IdxT>&              bus)
+      {
+        bus.y()[0] = static_cast<ScalarT>(0.95);
+        bus.y()[1] = static_cast<ScalarT>(0.25);
+
+        setGoldenResidualState(regca);
+      }
+
+      void setJacobianStateDep(
+          PhasorDynamics::Converter::Regca<DependencyTracking::Variable, IdxT>& regca,
+          PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>&              bus)
+      {
+        bus.y()[0].setValue(0.95);
+        bus.y()[1].setValue(0.25);
+
+        regca.y()[index(Vars::VM)].setValue(0.86);
+        regca.y()[index(Vars::IQ)].setValue(-0.2);
+        regca.y()[index(Vars::IP)].setValue(0.85);
+        regca.y()[index(Vars::VT)].setValue(0.98);
+        regca.y()[index(Vars::II)].setValue(0.18);
+        regca.y()[index(Vars::IQEXTRA)].setValue(0.03);
+        regca.y()[index(Vars::IL)].setValue(0.72);
+        regca.y()[index(Vars::IR)].setValue(0.5);
+        regca.y()[index(Vars::LP)].setValue(-0.4);
+        regca.y()[index(Vars::UP)].setValue(0.3);
+
+        regca.yp()[index(Vars::VM)].setValue(0.01);
+        regca.yp()[index(Vars::IQ)].setValue(-0.02);
+        regca.yp()[index(Vars::IP)].setValue(0.03);
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian()
+      {
+        using DepVar = DependencyTracking::Variable;
+
+        auto data = makeGoldenTestData(static_cast<RealT>(0.2), true);
+
+        PhasorDynamics::Bus<DepVar, IdxT>              bus(DepVar{0.95}, DepVar{0.25});
+        PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, data);
+
+        PhasorDynamics::SignalNode<DepVar, IdxT> ipcmd_node;
+        PhasorDynamics::SignalNode<DepVar, IdxT> iqcmd_node;
+        DepVar                                   ipcmd_value{0.9};
+        DepVar                                   iqcmd_value{0.1};
+        IdxT                                     ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT                                     iqcmd_index = static_cast<IdxT>(regca.size() + bus.size() + 1);
+
+        bus.allocate();
+        regca.allocate();
+        bus.initialize();
+        setJacobianStateDep(regca, bus);
+
+        for (IdxT i = 0; i < regca.size(); ++i)
+        {
+          regca.y()[static_cast<size_t>(i)].setVariableNumber(i);
+          regca.yp()[static_cast<size_t>(i)].setVariableNumber(i);
+        }
+        for (IdxT i = 0; i < bus.size(); ++i)
+        {
+          bus.y()[static_cast<size_t>(i)].setVariableNumber(i + regca.size());
+        }
+        ipcmd_value.setVariableNumber(ipcmd_index);
+        iqcmd_value.setVariableNumber(iqcmd_index);
+
+        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+
+        bus.evaluateResidual();
+        regca.evaluateResidual();
+
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(
+            static_cast<size_t>(regca.size() + bus.size()));
+        for (IdxT i = 0; i < regca.size(); ++i)
+        {
+          dependencies[static_cast<size_t>(i)] = regca.getResidual()[static_cast<size_t>(i)].getDependencies();
+        }
+        dependencies[static_cast<size_t>(regca.size())]     = bus.Ir().getDependencies();
+        dependencies[static_cast<size_t>(regca.size() + 1)] = bus.Ii().getDependencies();
+
+        return dependencies;
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian()
+      {
+        auto data = makeGoldenTestData(static_cast<RealT>(0.2), true);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>              bus(0.95, 0.25);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
+        ScalarT                                   ipcmd_value{0.9};
+        ScalarT                                   iqcmd_value{0.1};
+        IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT                                      iqcmd_index = static_cast<IdxT>(regca.size() + bus.size() + 1);
+
+        bus.allocate();
+        regca.allocate();
+        for (IdxT i = 0; i < bus.size(); ++i)
+        {
+          bus.setVariableIndex(i, i + regca.size());
+          bus.setResidualIndex(i, i + regca.size());
+        }
+
+        bus.initialize();
+        setJacobianState(regca, bus);
+        regca.updateTime(0.0, 1.0);
+
+        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+
+        bus.evaluateResidual();
+        regca.evaluateResidual();
+        regca.evaluateJacobian();
+
+        auto model_jacobian = regca.getJacobian();
+        model_jacobian.deduplicate();
+        return MapFromCOO(model_jacobian);
+      }
+#endif
     };
   } // namespace Testing
 } // namespace GridKit
