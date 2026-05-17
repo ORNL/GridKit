@@ -153,7 +153,31 @@ namespace GridKit
     }
 
     /**
-     * @brief Smooth two-sided deadband function
+     * @brief Smooth Type 1 no-offset two-sided deadband function
+     *
+     * Smooth approximation to a deadband that returns zero inside the band and
+     * passes the input through unchanged outside the band.
+     *
+     * @tparam ScalarT - scalar data type
+     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     *
+     * @param[in] x - Input signal
+     * @param[in] lower - Lower breakpoint
+     * @param[in] upper - Upper breakpoint
+     * @return Smooth no-offset deadbanded value
+     */
+    template <class ScalarT, typename RealT>
+    __attribute__((always_inline)) inline ScalarT deadband1(
+        const ScalarT x,
+        const RealT   lower,
+        const RealT   upper)
+    {
+      assert(lower <= upper);
+      return x * (sigmoid(lower - x) + sigmoid(x - upper));
+    }
+
+    /**
+     * @brief Smooth Type 2 offset two-sided deadband function
      *
      * Smooth approximation to x - min(max(x, lower), upper), composed from the
      * smooth ramp function.
@@ -164,10 +188,10 @@ namespace GridKit
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
      * @param[in] upper - Upper breakpoint
-     * @return Smooth deadbanded value
+     * @return Smooth offset deadbanded value
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT deadband(
+    __attribute__((always_inline)) inline ScalarT deadband2(
         const ScalarT x,
         const RealT   lower,
         const RealT   upper)

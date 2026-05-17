@@ -179,6 +179,34 @@ namespace GridKit
                 getSignal(iqcmd));
           }
 
+          if (regcadata.ports.contains(DataT::Ports::ibranchr))
+          {
+            const IdxT ibranchr = regcadata.ports.at(DataT::Ports::ibranchr);
+            regca->getSignals().template assignSignalNode<Converter::RegcaInternalVariables::IR>(
+                getSignal(ibranchr));
+          }
+
+          if (regcadata.ports.contains(DataT::Ports::ibranchi))
+          {
+            const IdxT ibranchi = regcadata.ports.at(DataT::Ports::ibranchi);
+            regca->getSignals().template assignSignalNode<Converter::RegcaInternalVariables::II>(
+                getSignal(ibranchi));
+          }
+
+          if (regcadata.ports.contains(DataT::Ports::pbranch))
+          {
+            const IdxT pbranch = regcadata.ports.at(DataT::Ports::pbranch);
+            regca->getSignals().template assignSignalNode<Converter::RegcaInternalVariables::PBR>(
+                getSignal(pbranch));
+          }
+
+          if (regcadata.ports.contains(DataT::Ports::qbranch))
+          {
+            const IdxT qbranch = regcadata.ports.at(DataT::Ports::qbranch);
+            regca->getSignals().template assignSignalNode<Converter::RegcaInternalVariables::QBR>(
+                getSignal(qbranch));
+          }
+
           addComponent(regca);
         }
 

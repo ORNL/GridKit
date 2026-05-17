@@ -161,7 +161,7 @@ Symbol                          | Units  | Description                         |
 $V_T$                           | [p.u.] | Terminal voltage magnitude          |
 $V_{\mathrm{meas}}^{\mathrm{safe}}$ | [p.u.] | Safe filtered terminal voltage for divider blocks | Lower bounded by 0.01
 $s_{\mathrm{dip}}$              | [binary] | Voltage-dip/overvoltage freeze indicator | 1 when outside voltage thresholds
-$V_{\mathrm{err}}$              | [p.u.] | Deadbanded voltage error            | Defined by CommonMath `deadband`
+$V_{\mathrm{err}}$              | [p.u.] | Deadbanded voltage error            | Defined by CommonMath `deadband2`
 $I_{\mathrm{qv}}$               | [p.u.] | Reactive-current injection candidate | Converter base
 $Q_{\mathrm{ref}}$              | [p.u.] | Selected reactive-power reference   | From power-factor or external reactive-power command
 $e_Q$                           | [p.u.] | Reactive-power control error        | Limited $Q_{\mathrm{ref}}$ minus $Q_{\mathrm{gen}}$
@@ -262,7 +262,7 @@ The algebraic targets use CommonMath helper notation where applicable:
   0 &= -V_T^2 + V_\mathrm r^2 + V_\mathrm i^2 \\
   0 &= -V_\mathrm{meas}^\mathrm{safe} + \max(V_\mathrm{meas}, 0.01) \\
   0 &= -s_\mathrm{dip} + \text{outside}(V_T, V_\mathrm{dip}, V_\mathrm{up}) \\
-  0 &= -V_\mathrm{err} + \text{deadband}(V_\mathrm{ref0} - V_\mathrm{meas}, D_\mathrm{bd1}, D_\mathrm{bd2}) \\
+  0 &= -V_\mathrm{err} + \text{deadband2}(V_\mathrm{ref0} - V_\mathrm{meas}, D_\mathrm{bd1}, D_\mathrm{bd2}) \\
   0 &= -I_\mathrm{qv} + \text{clamp}(K_\mathrm{qv} V_\mathrm{err}, I_\mathrm{qinj}^{\min}, I_\mathrm{qinj}^{\max}) \\
   0 &= -Q_\mathrm{ref}
        + s_\mathrm{pf} P_\mathrm{meas}\tan(\phi_\mathrm{pf}^\mathrm{ref})
@@ -290,7 +290,7 @@ The algebraic targets use CommonMath helper notation where applicable:
 
 The $V_T$, $I_{\mathrm{q}}^{\mathrm{circ}}$, and $I_{\mathrm{p}}^{\mathrm{circ}}$ variables use nonnegative branches of squared algebraic residuals. This preserves the $s_{PQ}=0$ Q-priority and $s_{PQ}=1$ P-priority current-circle behavior without explicit square roots; a consistent solution should satisfy the nonnegative branch and nonnegative radicands.
 
-CommonMath defines the helper targets and smooth approximations for [min, max, clamp, deadband, and outside](../../../../CommonMath.md#derived-functions).
+CommonMath defines the helper targets and smooth approximations for [min, max, clamp, deadband2, and outside](../../../../CommonMath.md#derived-functions).
 
 ## Initialization
 
@@ -324,7 +324,7 @@ Then evaluate the upstream algebraic chain:
 \begin{aligned}
   V_{\mathrm{meas},0}^{\mathrm{safe}} &= \text{max}(V_{\mathrm{meas},0}, 0.01) \\
   s_{\mathrm{dip},0} &= \text{outside}(V_{T,0}, V_{\mathrm{dip}}, V_{\mathrm{up}}) \\
-  V_{\mathrm{err},0} &= \text{deadband}(V_{\mathrm{ref0}} - V_{\mathrm{meas},0}, D_{\mathrm{bd1}}, D_{\mathrm{bd2}}) \\
+  V_{\mathrm{err},0} &= \text{deadband2}(V_{\mathrm{ref0}} - V_{\mathrm{meas},0}, D_{\mathrm{bd1}}, D_{\mathrm{bd2}}) \\
   I_{\mathrm{qv},0} &= \text{clamp}(K_{\mathrm{qv}} V_{\mathrm{err},0}, I_{\mathrm{qinj}}^{\min}, I_{\mathrm{qinj}}^{\max}) \\
   Q_{\mathrm{ref},0} &= s_{\mathrm{pf}} P_{\mathrm{meas},0}\tan(\phi_{\mathrm{pf},0}^{\mathrm{ref}}) + s_{\mathrm{pf}}^{\mathrm{off}} Q_{\mathrm{ext},0} \\
   e_{Q,0} &= \text{clamp}(Q_{\mathrm{ref},0}, Q^{\min}, Q^{\max}) - Q_{\mathrm{gen},0} \\

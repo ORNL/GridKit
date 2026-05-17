@@ -49,7 +49,8 @@ The scale $\mu=4\cdot f_{\text{sync}}=240$ is chosen so $\sigma$ behaves like a 
 | `max` | Smooth binary maximum | `REECA` |
 | `min` | Smooth binary minimum | `REECA` |
 | `clamp` | Bounded saturation | `IEEEST` |
-| `deadband` | Signed two-sided deadband | `REECA` |
+| `deadband1` | Type 1 no-offset signed two-sided deadband | - |
+| `deadband2` | Type 2 offset signed two-sided deadband | `REECA` |
 | `slew` | Symmetric slew-rate limiter | - |
 | `linseg` | Saturated linear segment contribution | `REGCA`, `REECA` |
 | `above` | Above-lower-limit indicator | - |
@@ -84,7 +85,15 @@ x & \ell \le x \le u \\
 u & x > u
 \end{cases}
 \\
-\text{deadband}(x;\ell,u)
+\text{deadband1}(x;\ell,u)
+&=
+\begin{cases}
+x & x < \ell \\
+0 & \ell \le x \le u \\
+x & x > u
+\end{cases}
+\\
+\text{deadband2}(x;\ell,u)
 &=
 \begin{cases}
 x-\ell & x < \ell \\
@@ -156,7 +165,8 @@ f & x \ge u \land f < 0 \\
 \text{max}(x,y) &= y+\rho(x-y) \\
 \text{min}(x,y) &= x-\rho(x-y) \\
 \text{clamp}(x;\ell,u) &= \ell+\rho(x-\ell)-\rho(x-u) \\
-\text{deadband}(x;\ell,u) &= \rho(x-u)-\rho(\ell-x) \\
+\text{deadband1}(x;\ell,u) &= x\left[\sigma(\ell-x)+\sigma(x-u)\right] \\
+\text{deadband2}(x;\ell,u) &= \rho(x-u)-\rho(\ell-x) \\
 \text{slew}(f;r) &= -r+\rho(f+r)-\rho(f-r) \\
 \text{linseg}(x;a,b,h) &= \dfrac{h}{b-a}\left[\rho(x-a)-\rho(x-b)\right] \\
 \text{above}(x;\ell) &= \sigma(x-\ell) \\
