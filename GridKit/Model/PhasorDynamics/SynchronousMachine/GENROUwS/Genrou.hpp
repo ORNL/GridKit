@@ -170,10 +170,7 @@ namespace GridKit
        * mismatch is not a concern here because the model is formulated at the
        * machine terminals using the connected bus voltage base.
        */
-      ScalarT toMachineBase(ScalarT value) const
-      {
-        return value * va_system_base_ / va_machine_base_;
-      }
+      ScalarT toMachineBase(ScalarT value) const;
 
       /**
        * @brief Convert per-unit current or power from machine base to system base.
@@ -183,10 +180,7 @@ namespace GridKit
        * mismatch is not a concern here because the model is formulated at the
        * machine terminals using the connected bus voltage base.
        */
-      ScalarT toSystemBase(ScalarT value) const
-      {
-        return value * va_machine_base_ / va_system_base_;
-      }
+      ScalarT toSystemBase(ScalarT value) const;
 
       ScalarT& Vr()
       {

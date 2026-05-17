@@ -129,6 +129,18 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    ScalarT Gensal<ScalarT, IdxT>::toMachineBase(ScalarT value) const
+    {
+      return value * va_system_base_ / va_machine_base_;
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT Gensal<ScalarT, IdxT>::toSystemBase(ScalarT value) const
+    {
+      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
+    }
+
+    template <class ScalarT, typename IdxT>
     void Gensal<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;

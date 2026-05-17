@@ -25,7 +25,7 @@ namespace GridKit
     private:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       using GensalDataT             = PhasorDynamics::GensalData<RealT, IdxT>;
-      static constexpr ScalarT tol_ = 1000 * std::numeric_limits<ScalarT>::epsilon();
+      static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
 
       static GensalDataT makeGensalData()
       {
