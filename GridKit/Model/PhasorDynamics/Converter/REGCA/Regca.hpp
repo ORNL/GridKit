@@ -46,6 +46,8 @@ namespace GridKit
         IR,      ///< Real injected current
         LP,      ///< Active-current lower rate bound
         UP,      ///< Active-current upper rate bound
+        PBR,     ///< Active-power output on system base
+        QBR,     ///< Reactive-power output on system base
         MAXIMUM,
       };
 
@@ -68,12 +70,12 @@ namespace GridKit
         using Component<ScalarT, IdxT>::J_cols_buffer_;
         using Component<ScalarT, IdxT>::J_rows_buffer_;
         using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::mva_system_base_;
         using Component<ScalarT, IdxT>::nnz_;
         using Component<ScalarT, IdxT>::residual_indices_;
         using Component<ScalarT, IdxT>::size_;
         using Component<ScalarT, IdxT>::tag_;
         using Component<ScalarT, IdxT>::time_;
+        using Component<ScalarT, IdxT>::va_system_base_;
         using Component<ScalarT, IdxT>::variable_indices_;
         using Component<ScalarT, IdxT>::wb_;
         using Component<ScalarT, IdxT>::y_;
@@ -117,6 +119,20 @@ namespace GridKit
       private:
         void initializeParameters(const model_data_type& data);
         void initializeMonitor();
+        void setDerivedParameters();
+
+        ScalarT toComponentBase(ScalarT value) const
+        {
+          return value * va_system_base_ / va_converter_base_;
+        }
+
+        ScalarT toSystemBase(ScalarT value) const
+        {
+          return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+        }
+
+        ScalarT activeCurrentLowerRateBound(ScalarT ip) const;
+        ScalarT activeCurrentUpperRateBound(ScalarT ip, ScalarT il) const;
 
         ScalarT& Vr()
         {
@@ -142,7 +158,7 @@ namespace GridKit
 
         RealT P0_{0};
         RealT Q0_{0};
-        RealT Sconv_{0};
+        RealT mva_base_{0};
         RealT Tg_{0};
         RealT TM_{0};
         RealT Rqmax_{0};
@@ -156,6 +172,17 @@ namespace GridKit
         RealT VA1_{0};
         RealT Vhvmax_{0};
         IdxT  bus_id_{0};
+
+        IdxT  parameter_error_count_{0};
+        RealT Mp_{0};
+        RealT va_converter_base_{0};
+        RealT use_lvpl_{0};
+        RealT bypass_lvpl_{1};
+        RealT iq_use_upper_{0};
+        RealT iq_use_lower_{1};
+
+        ScalarT ipcmd_set_{0};
+        ScalarT iqcmd_set_{0};
 
         ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;

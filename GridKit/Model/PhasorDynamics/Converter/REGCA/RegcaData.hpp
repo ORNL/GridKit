@@ -17,9 +17,9 @@ namespace GridKit
       /// Parameter keys for the REGCA converter model.
       enum class RegcaParameters
       {
-        P0,    ///< Initial active power injection on system base
-        Q0,    ///< Initial reactive power injection on system base
-        Sconv, ///< Converter/model power base
+        P0,    ///< Initial active power on system base
+        Q0,    ///< Initial reactive power on system base
+        mva,   ///< MVA base of the REGCA model
         Tg,    ///< Converter current-control lag time constant
         TM,    ///< Terminal voltage sensor time constant
         Rqmax, ///< Reactive-current recovery positive rate limit
@@ -37,9 +37,13 @@ namespace GridKit
       /// Ports for the REGCA converter model.
       enum class RegcaPorts
       {
-        bus,   ///< Terminal bus ID
-        ipcmd, ///< Optional active-current command signal ID
-        iqcmd  ///< Optional reactive-current command signal ID
+        bus,      ///< Terminal bus ID
+        ipcmd,    ///< Optional active-current command signal ID
+        iqcmd,    ///< Optional reactive-current command signal ID
+        ibranchr, ///< Optional real current measurement output signal ID
+        ibranchi, ///< Optional imaginary current measurement output signal ID
+        pbranch,  ///< Optional active-power measurement output signal ID
+        qbranch   ///< Optional reactive-power measurement output signal ID
       };
 
       /// Variables available through the monitor interface.
