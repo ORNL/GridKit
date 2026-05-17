@@ -82,6 +82,7 @@ namespace GridKit
         using namespace Governor;
         using namespace Exciter;
         using namespace Stabilizer;
+        using namespace Converter;
 
         // Set system model tolerances
         rel_tol_         = 1e-7;
@@ -149,6 +150,36 @@ namespace GridKit
           }
 
           addComponent(adapter);
+        }
+
+        // Add REGCA converters
+        for (const auto& regcadata : data.regca)
+        {
+          using DataT = typename SystemModelData<RealT, IdxT>::RegcaDataT;
+
+          IdxT bus_index = 0;
+          if (regcadata.ports.contains(DataT::Ports::bus))
+          {
+            bus_index = regcadata.ports.at(DataT::Ports::bus);
+          }
+
+          auto* regca = new Converter::Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
+
+          if (regcadata.ports.contains(DataT::Ports::ipcmd))
+          {
+            const IdxT ipcmd = regcadata.ports.at(DataT::Ports::ipcmd);
+            regca->getSignals().template attachSignalNode<Converter::RegcaExternalVariables::IPCMD>(
+                getSignal(ipcmd));
+          }
+
+          if (regcadata.ports.contains(DataT::Ports::iqcmd))
+          {
+            const IdxT iqcmd = regcadata.ports.at(DataT::Ports::iqcmd);
+            regca->getSignals().template attachSignalNode<Converter::RegcaExternalVariables::IQCMD>(
+                getSignal(iqcmd));
+          }
+
+          addComponent(regca);
         }
 
         // Add branches
