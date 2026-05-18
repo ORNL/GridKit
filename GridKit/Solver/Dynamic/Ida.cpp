@@ -273,6 +273,15 @@ namespace AnalysisManager
         if (tag_)
           initType = IDA_YA_YDP_INIT;
 
+        // Loosen IDA's IC Newton/linesearch: discrete events (i.e. fault)
+        // can move the algebraic solution far away from previous op point.
+        // the bumped values below let
+        // Newton work harder before quitting
+        IDASetMaxNumItersIC(solver_, 100);
+        IDASetMaxBacksIC(solver_, 1000);
+        IDASetNonlinConvCoefIC(solver_, 1.0e-3);
+        IDASetLineSearchOffIC(solver_, SUNTRUE);
+
         retval = IDACalcIC(solver_, initType, t0 + 0.1);
         checkOutput(retval, "IDACalcIC");
 

@@ -1,0 +1,187 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "TwoBusIBR",
+        "case_description": "Two-bus IBR test: REGCA + REECA feeding a constant-impedance load through a losslessbranch, bus fault on the load bus",
+        "case_comments": "",
+        "freq_base": 60.0,
+        "va_base": 100000000.0
+    },
+    "monitors": [
+        {
+            "file_name": "TwoBusIBR.mon.csv",
+            "format": "csv"
+        }
+    ],
+    "buses": [
+        {
+            "number": 1,
+            "class": "bus",
+            "name": "IBR_Bus",
+            "init": {
+                "Vr": 1.0,
+                "Vi": 0.0
+            },
+            "v_base": 115000.0,
+            "mon": ["Vm"]
+        },
+        {
+            "number": 2,
+            "class": "bus",
+            "name": "Load_Bus",
+            "init": {
+                "Vr": 0.858726,
+                "Vi": -0.224525
+            },
+            "v_base": 115000.0,
+            "mon": ["Vm"]
+        }
+    ],
+    "signals": [
+        {
+            "signal_id": 101,
+            "name": "ipcmd"
+        },
+        {
+            "signal_id": 102,
+            "name": "iqcmd"
+        }
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 2
+            },
+            "id": "BR",
+            "params": {
+                "R": 0.0,
+                "X": 0.3,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "LoadZIP",
+            "ports": {
+                "bus": 2
+            },
+            "id": "LD",
+            "params": {
+                "P0": 0.95,
+                "Q0": 0.30,
+                "V0": 1.0,
+                "alphaI": 0.0,
+                "alphaP": 0.0
+            }
+        },
+        {
+            "class": "Regca",
+            "ports": {
+                "bus": 1,
+                "ipcmd": 101,
+                "iqcmd": 102
+            },
+            "id": "RG",
+            "params": {
+                "P0": 0.748417,
+                "Q0": 0.470913,
+                "Sconv": 100.0,
+                "Tg": 0.02,
+                "TM": 0.02,
+                "Rqmax": 0.5,
+                "Rqmin": -0.5,
+                "Rpmax": 1.0,
+                "sL": true,
+                "IL1": 1.1,
+                "VL0": 0.4,
+                "VL1": 0.9,
+                "VA0": 0.4,
+                "VA1": 0.9,
+                "Vhvmax": 1.2
+            },
+            "mon": ["p", "q", "ir", "ii", "vt", "vm", "ip", "iq", "iqextra", "il", "lp", "up"]
+        },
+        {
+            "class": "Reeca",
+            "ports": {
+                "bus": 1,
+                "iqcmd": 102,
+                "ipcmd": 101
+            },
+            "id": "RC",
+            "params": {
+                "Sbase": 100.0,
+                "spf": false,
+                "sV": true,
+                "sQ": true,
+                "sP": false,
+                "sPQ": true,
+                "Trv": 0.02,
+                "Tp": 0.02,
+                "Vdip": 0.92,
+                "Vup": 1.08,
+                "Dbd1": -0.02,
+                "Dbd2": 0.02,
+                "Kqv": 5.0,
+                "Iql1": -1.1,
+                "Iqh1": 1.1,
+                "Iqfrz": 0.0,
+                "Thld": 0.0,
+                "Qmax": 0.75,
+                "Qmin": -0.75,
+                "Kqp": 0.1,
+                "Kqi": 0.2,
+                "Vmax": 1.1,
+                "Vmin": 0.9,
+                "Vref1": 0.0,
+                "Kvp": 0.1,
+                "Kvi": 0.2,
+                "Tiq": 0.02,
+                "Tpord": 0.02,
+                "dPmax": 999.0,
+                "dPmin": -999.0,
+                "Pmax": 1.0,
+                "Pmin": 0.0,
+                "Imax": 1.2,
+                "vq1": 0.0,
+                "lq1": 1.0,
+                "vq2": 0.4,
+                "lq2": 1.0,
+                "vq3": 0.7,
+                "lq3": 1.0,
+                "vq4": 1.1,
+                "lq4": 1.0,
+                "vp1": 0.0,
+                "lp1": 0.0,
+                "vp2": 0.4,
+                "lp2": 0.4,
+                "vp3": 0.7,
+                "lp3": 0.9,
+                "vp4": 1.1,
+                "lp4": 1.0,
+                "Thld2": 0.0
+            },
+            "init": {
+                "pe": 0.748417,
+                "qgen": 0.470913
+            },
+            "mon": ["vmeas", "pmeas", "ipcmd", "iqcmd", "sdip", "pord", "piq", "piv", "qv", "iqv", "iqbase", "ipmax", "iqmax", "qref", "vqctrl"]
+        },
+        {
+            "class": "BusFault",
+            "ports": {
+                "bus": 2
+            },
+            "id": "FT",
+            "params": {
+                "state0": false,
+                "R": 0.0,
+                "X": 5.0
+            },
+            "mon": ["state"]
+        }
+    ]
+}
