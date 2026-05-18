@@ -214,13 +214,14 @@ int main()
 
     // Bus 1 -> +2
     // Bus 2 -> +2
-    // Gen 1 -> +19 (Start Idx: 4)
-    // Gen 2 -> +19 (Start Idx: 23)
+    // Load  -> +2
+    // Gen 1 -> +19 (Start Idx: 6)
+    // Gen 2 -> +19 (Start Idx: 25)
 
     //
     output.push_back(OutputData{t,
-                                1.0 + static_cast<real_type>(y_val[5]),                                                                                                                 // Gen 1 Speed -> 4 + 1
-                                1.0 + static_cast<real_type>(y_val[24]),                                                                                                                // Gen 2 Speed -> 23 + 1
+                                1.0 + static_cast<real_type>(y_val[7]),                                                                                                                 // Gen 1 Speed -> 4 + 1
+                                1.0 + static_cast<real_type>(y_val[26]),                                                                                                                // Gen 2 Speed -> 23 + 1
                                 std::sqrt(static_cast<real_type>(y_val[0]) * static_cast<real_type>(y_val[0]) + static_cast<real_type>(y_val[1]) * static_cast<real_type>(y_val[1])),   // Bus 1 Vmag
                                 std::sqrt(static_cast<real_type>(y_val[2]) * static_cast<real_type>(y_val[2]) + static_cast<real_type>(y_val[3]) * static_cast<real_type>(y_val[3]))}); // Bus 2 Vmag
   };

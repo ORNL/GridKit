@@ -2,7 +2,7 @@
 
 Load modeling is one of the more complex aspects of power system dynamics.
 The simplest model, which is used for this challenge problem, is to model
-the load as a complex shunt impedance $$ R + jX $$.
+the load as a complex shunt impedance $R + jX$.
 
 
 ## Model Parameters

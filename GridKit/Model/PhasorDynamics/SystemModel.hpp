@@ -817,7 +817,8 @@ namespace GridKit
           }
         }
 
-        // J_.printMatrix("System Jacobian");
+        // std::cout << "System Jacobian\n";
+        // csr_jac_->print(std::cout);
 
         return 0;
       }
