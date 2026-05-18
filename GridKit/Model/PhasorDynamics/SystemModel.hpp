@@ -359,6 +359,78 @@ namespace GridKit
           addComponent(stabilizer);
         }
 
+        // Add REECA converter controls after signal-producing controls.
+        for (const auto& reecadata : data.reeca)
+        {
+          using DataT = typename SystemModelData<RealT, IdxT>::ReecaDataT;
+
+          IdxT bus_index = 0;
+          if (reecadata.ports.contains(DataT::Ports::bus))
+          {
+            bus_index = reecadata.ports.at(DataT::Ports::bus);
+          }
+
+          auto* reeca = new Converter::Reeca<ScalarT, IdxT>(getBus(bus_index), reecadata);
+
+          if (reecadata.ports.contains(DataT::Ports::pe))
+          {
+            const IdxT pe = reecadata.ports.at(DataT::Ports::pe);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::PE>(
+                getSignal(pe));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::qgen))
+          {
+            const IdxT qgen = reecadata.ports.at(DataT::Ports::qgen);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::QGEN>(
+                getSignal(qgen));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::omega))
+          {
+            const IdxT omega = reecadata.ports.at(DataT::Ports::omega);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::OMEGA>(
+                getSignal(omega));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::qext))
+          {
+            const IdxT qext = reecadata.ports.at(DataT::Ports::qext);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::QEXT>(
+                getSignal(qext));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::pfaref))
+          {
+            const IdxT pfaref = reecadata.ports.at(DataT::Ports::pfaref);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::PFAREF>(
+                getSignal(pfaref));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::pref))
+          {
+            const IdxT pref = reecadata.ports.at(DataT::Ports::pref);
+            reeca->getSignals().template attachSignalNode<Converter::ReecaExternalVariables::PREF>(
+                getSignal(pref));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::iqcmd))
+          {
+            const IdxT iqcmd = reecadata.ports.at(DataT::Ports::iqcmd);
+            reeca->getSignals().template assignSignalNode<Converter::ReecaInternalVariables::IQCMD>(
+                getSignal(iqcmd));
+          }
+
+          if (reecadata.ports.contains(DataT::Ports::ipcmd))
+          {
+            const IdxT ipcmd = reecadata.ports.at(DataT::Ports::ipcmd);
+            reeca->getSignals().template assignSignalNode<Converter::ReecaInternalVariables::IPCMD>(
+                getSignal(ipcmd));
+          }
+
+          addComponent(reeca);
+        }
+
         // Add faults
         for (const auto& faultdata : data.bus_fault)
         {

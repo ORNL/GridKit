@@ -3,6 +3,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REECA/Reeca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>

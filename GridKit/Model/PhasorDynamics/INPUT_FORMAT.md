@@ -127,6 +127,7 @@ represent a device and has the following fields:
   `ports`           | An object mapping the object's port names (depending on the device class as specified in the table below) to the associated bus number to which it is connected. Any field listed under variables available to monitor can also be added here as a read-only port
   `id`              | A string disambiguating the device from others. Each device in a class must have a unique combination of required port bus numbers and this string. This string should be 1 or 2 characters long.
   `params`          | An object mapping initialization parameters to numerical values, depending on the class. See the table below for more information
+  `init`            | Optional object mapping external-input names to initialization values. The available initialization variables are determined by the device class. If this object is missing, all device external inputs use model defaults.
   `mon`             | Optional field, which is an array specifying variables to record the value of in an output channel. Available variables are determined by the device class, as specified in the table below
   `extension`       | Optional field containing an object with implementation-defined keys
 
@@ -145,6 +146,7 @@ are specified:
   `Gensal`      | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
   `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Regca`       | WECC REGCA renewable generator/converter model       | `bus`, `ipcmd`\*, `iqcmd`\*             | `P0`, `Q0`, `mva_base`, `Tg`, `TM`, `Rqmax`, `Rqmin`, `Rpmax`, `sL`, `IL1`, `VL0`, `VL1`, `VA0`, `VA1`, `Vhvmax` | `ir`, `ii`, `p`, `q`, `vt`, `vm`, `ip`, `iq`, `iqextra`, `il`, `lp`, `up`
+  `Reeca`       | WECC REECA renewable generator/converter control model | `bus`, `pe`\*, `qgen`\*, `omega`\*, `qext`\*, `pfaref`\*, `pref`\*, `iqcmd`\*, `ipcmd`\* | `Sbase`, `spf`, `sV`, `sQ`, `sP`, `sPQ`, `Trv`, `Tp`, `Vref0`\*, `Vdip`, `Vup`, `Dbd1`, `Dbd2`, `Kqv`, `Iql1`, `Iqh1`, `Iqfrz`, `Thld`, `Qmax`, `Qmin`, `Kqp`, `Kqi`, `Vmax`, `Vmin`, `Vref1`, `Kvp`, `Kvi`, `Tiq`, `Tpord`, `dPmax`, `dPmin`, `Pmax`, `Pmin`, `Imax`, `vq1`, `lq1`, `vq2`, `lq2`, `vq3`, `lq3`, `vq4`, `lq4`, `vp1`, `lp1`, `vp2`, `lp2`, `vp3`, `lp3`, `vp4`, `lp4`, `Thld2`\* | `iqcmd`, `ipcmd`, `vmeas`, `pmeas`, `piq`, `piv`, `qv`, `pord`, `qref`, `sdip`, `iqmax`, `ipmax`, `iqv`, `vqctrl`, `iqbase`
   `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
   `SexsPti`     | the SEXS-PTI simplified exciter model                | `bus`, `efd`, `vs`\*             | `Ta`, `Tb`, `Te`, `K`, `Efdmax`, `Efdmin` | `efd`
@@ -153,6 +155,19 @@ are specified:
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.
+
+For `Reeca`, `pe` and `qgen` must each have either a linked signal port or a
+matching initialization value in the device `init` object. Accepted `Reeca`
+`init` keys are external-input names: `pe`, `qgen`, `omega`, `qext`,
+`pfaref`, and `pref`. The `pe`, `qgen`, `qext`, and `pref` values are
+system-base per-unit values and are converted to the REECA model base
+internally. The `pfaref` port or `init.pfaref` is required when `spf` is true
+and optional when `spf` is false. The `iqcmd` and `ipcmd` ports are optional
+output signal ports for standalone tests, and should be shared with downstream
+command inputs when composing a converter stack on the same current-command
+base. PowerWorld's default `Thld2` value is 0.5, but the GridKit REECA
+default is 0 until voltage-recovery timer/history behavior is implemented;
+nonzero `Thld2` values are rejected.
 
 ## Example File for a 2-Bus System
 
