@@ -259,32 +259,76 @@ The algebraic targets use CommonMath helper notation where applicable:
 
 ```math
 \begin{aligned}
-  0 &= -V_T^2 + V_\mathrm r^2 + V_\mathrm i^2 \\
-  0 &= -V_\mathrm{meas}^\mathrm{safe} + \max(V_\mathrm{meas}, 0.01) \\
-  0 &= -s_\mathrm{dip} + \text{outside}(V_T, V_\mathrm{dip}, V_\mathrm{up}) \\
-  0 &= -V_\mathrm{err} + \text{deadband}(V_\mathrm{ref0} - V_\mathrm{meas}, D_\mathrm{bd1}, D_\mathrm{bd2}) \\
-  0 &= -I_\mathrm{qv} + \text{clamp}(K_\mathrm{qv} V_\mathrm{err}, I_\mathrm{qinj}^{\min}, I_\mathrm{qinj}^{\max}) \\
-  0 &= -Q_\mathrm{ref}
-       + s_\mathrm{pf} P_\mathrm{meas}\tan(\phi_\mathrm{pf}^\mathrm{ref})
-       + s_\mathrm{pf}^\mathrm{off} Q_\mathrm{ext} \\
-  0 &= -e_Q + \text{clamp}(Q_\mathrm{ref}, Q^{\min}, Q^{\max}) - Q_\mathrm{gen} \\
-  0 &= -V_\mathrm{PIQ} + \text{clamp}(K_\mathrm{qp} e_Q + x_\mathrm{PIQ}, V^{\min}, V^{\max}) \\
-  0 &= -e_\mathrm{PIV} + s_V V_\mathrm{PIQ} + s_V^\mathrm{off}(Q_\mathrm{ref} + V_\mathrm{ref1}) - V_\mathrm{meas} \\
-  0 &= -T_\mathrm{pord} f_\mathrm{pord} + (1 + s_P\omega)P_\mathrm{ref} - P_\mathrm{ord} \\
-  0 &= -r_\mathrm{pord} + \text{clamp}(f_\mathrm{pord}, R_P^{\min}, R_P^{\max})
-\end{aligned}
-```
-
-```math
-\begin{aligned}
-  0 &= -{I_\mathrm{q}^\mathrm{circ}}^2 + (I^{\max})^2 - s_{PQ}(I_\mathrm{p}^\mathrm{cmd})^2 \\
-  0 &= -{I_\mathrm{p}^\mathrm{circ}}^2 + (I^{\max})^2 - s_{PQ}^\mathrm{off}(I_\mathrm{q}^\mathrm{cmd})^2 \\
-  0 &= -I_\mathrm{q}^{\max} + \text{min}(g_q(V_\mathrm{meas}), I_\mathrm{q}^\mathrm{circ}) \\
-  0 &= -I_\mathrm{p}^{\max} + \text{min}(g_p(V_\mathrm{meas}), I_\mathrm{p}^\mathrm{circ}) \\
-  0 &= -I_\mathrm{qbase} + \text{clamp}(K_\mathrm{vp} e_\mathrm{PIV} + x_\mathrm{PIV}, -I_\mathrm{q}^{\max}, I_\mathrm{q}^{\max}) \\
-  0 &= -I_\mathrm{q}^\mathrm{raw} + s_Q I_\mathrm{qbase} + s_Q^\mathrm{off} Q_V + s_\mathrm{dip} I_\mathrm{qv} \\
-  0 &= -I_\mathrm{q}^\mathrm{cmd} + \text{clamp}(I_\mathrm{q}^\mathrm{raw}, -I_\mathrm{q}^{\max}, I_\mathrm{q}^{\max}) \\
-  0 &= -I_\mathrm{p}^\mathrm{cmd} + \text{clamp}(P_\mathrm{ord}/V_\mathrm{meas}^\mathrm{safe}, 0, I_\mathrm{p}^{\max})
+  0 &= -V_T^2 + V_{\mathrm{r}}^2 + V_{\mathrm{i}}^2 \\
+  0 &= -V_{\mathrm{meas}}^{\mathrm{safe}}
+       + \text{max}(V_{\mathrm{meas}}, 0.01) \\
+  0 &= -s_{\mathrm{dip}}
+       + \text{outside}(V_T, V_{\mathrm{dip}}, V_{\mathrm{up}}) \\
+  0 &= -V_{\mathrm{err}}
+       + \text{deadband}\!\left(
+          V_{\mathrm{ref0}} - V_{\mathrm{meas}},
+          D_{\mathrm{bd1}},
+          D_{\mathrm{bd2}}
+        \right) \\
+  0 &= -I_{\mathrm{qv}}
+       + \text{clamp}\!\left(
+          K_{\mathrm{qv}} V_{\mathrm{err}},
+          I_{\mathrm{qinj}}^{\min},
+          I_{\mathrm{qinj}}^{\max}
+        \right) \\
+  0 &= -Q_{\mathrm{ref}}
+       + s_{\mathrm{pf}} P_{\mathrm{meas}}\tan(\phi_{\mathrm{pf}}^{\mathrm{ref}})
+       + s_{\mathrm{pf}}^{\mathrm{off}} Q_{\mathrm{ext}} \\
+  0 &= -e_Q
+       + \text{clamp}\!\left(Q_{\mathrm{ref}}, Q^{\min}, Q^{\max}\right)
+       - Q_{\mathrm{gen}} \\
+  0 &= -V_{\mathrm{PIQ}}
+       + \text{clamp}\!\left(
+          K_{\mathrm{qp}} e_Q + x_{\mathrm{PIQ}},
+          V^{\min},
+          V^{\max}
+        \right) \\
+  0 &= -e_{\mathrm{PIV}}
+       + s_V V_{\mathrm{PIQ}}
+       + s_V^{\mathrm{off}}(Q_{\mathrm{ref}} + V_{\mathrm{ref1}})
+       - V_{\mathrm{meas}} \\
+  0 &= -T_{\mathrm{pord}} f_{\mathrm{pord}}
+       + (1 + s_P\omega)P_{\mathrm{ref}}
+       - P_{\mathrm{ord}} \\
+  0 &= -r_{\mathrm{pord}}
+       + \text{clamp}\!\left(
+          f_{\mathrm{pord}},
+          R_P^{\min},
+          R_P^{\max}
+        \right) \\
+  0 &= -{I_{\mathrm{q}}^{\mathrm{circ}}}^2
+       + (I^{\max})^2 - s_{PQ}(I_{\mathrm{p}}^{\mathrm{cmd}})^2 \\
+  0 &= -{I_{\mathrm{p}}^{\mathrm{circ}}}^2
+       + (I^{\max})^2 - s_{PQ}^{\mathrm{off}}(I_{\mathrm{q}}^{\mathrm{cmd}})^2 \\
+  0 &= -I_{\mathrm{q}}^{\max}
+       + \text{min}(g_q(V_{\mathrm{meas}}), I_{\mathrm{q}}^{\mathrm{circ}}) \\
+  0 &= -I_{\mathrm{p}}^{\max}
+       + \text{min}(g_p(V_{\mathrm{meas}}), I_{\mathrm{p}}^{\mathrm{circ}}) \\
+  0 &= -I_{\mathrm{qbase}}
+       + \text{clamp}\!\left(
+          K_{\mathrm{vp}} e_{\mathrm{PIV}} + x_{\mathrm{PIV}},
+          -I_{\mathrm{q}}^{\max},
+          I_{\mathrm{q}}^{\max}
+        \right) \\
+  0 &= -I_{\mathrm{q}}^{\mathrm{raw}}
+       + s_Q I_{\mathrm{qbase}} + s_Q^{\mathrm{off}} Q_V + s_{\mathrm{dip}} I_{\mathrm{qv}} \\
+  0 &= -I_{\mathrm{q}}^{\mathrm{cmd}}
+       + \text{clamp}\!\left(
+          I_{\mathrm{q}}^{\mathrm{raw}},
+          -I_{\mathrm{q}}^{\max},
+          I_{\mathrm{q}}^{\max}
+        \right) \\
+  0 &= -I_{\mathrm{p}}^{\mathrm{cmd}}
+       + \text{clamp}\!\left(
+          P_{\mathrm{ord}}/V_{\mathrm{meas}}^{\mathrm{safe}},
+          0,
+          I_{\mathrm{p}}^{\max}
+        \right)
 \end{aligned}
 ```
 
