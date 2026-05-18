@@ -21,11 +21,14 @@ namespace GridKit
               typename IdxT,
               typename Parameters,
               typename Ports,
-              typename MonitorableVariables>
+              typename MonitorableVariables,
+              typename ExternalVariables>
       requires std::is_enum_v<Parameters>
                && std::is_enum_v<Ports>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports, MonitorableVariables>& c)
+               && std::is_enum_v<ExternalVariables>
+               && requires { ExternalVariables::MAXIMUM; }
+    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports, MonitorableVariables, ExternalVariables>& c)
     {
       j.at("class").get_to(c.device_class);
 
@@ -69,6 +72,58 @@ namespace GridKit
           Log::error() << "\n\tInitial parameter \"" << raw_parameter.key()
                        << "\" has no value." << error_context.str()
                        << std::endl;
+        }
+      }
+
+      if (j.contains("init"))
+      {
+        for (auto& raw_initial_value : j.at("init").items())
+        {
+          using magic_enum::case_insensitive;
+
+          auto key = magic_enum::enum_cast<ExternalVariables>(
+              raw_initial_value.key(), case_insensitive);
+          if (!key.has_value() || key.value() == ExternalVariables::MAXIMUM)
+          {
+            Log::error() << "\n\tInvalid external initial value: \""
+                         << raw_initial_value.key()
+                         << "\" has no value." << error_context.str()
+                         << std::endl;
+            ++c.input_error_count;
+            continue;
+          }
+
+          if (c.external_initial_values.contains(key.value()))
+          {
+            Log::error() << "\n\tDuplicate external initial value: \""
+                         << raw_initial_value.key() << "\"."
+                         << error_context.str() << std::endl;
+            ++c.input_error_count;
+            continue;
+          }
+
+          const auto& value = raw_initial_value.value();
+          if (value.is_boolean())
+          {
+            c.external_initial_values[key.value()] = value.template get<bool>();
+          }
+          else if (value.is_number_float())
+          {
+            c.external_initial_values[key.value()] = value.template get<RealT>();
+          }
+          else if (value.is_number_integer())
+          {
+            c.external_initial_values[key.value()] = value.template get<IdxT>();
+          }
+          else
+          {
+            Log::error() << "\n\tInvalid initial value type: "
+                         << "\"" << raw_initial_value.key() << "\": "
+                         << value
+                         << " (typed as \"" << value.type_name()
+                         << "\")." << error_context.str() << std::endl;
+            ++c.input_error_count;
+          }
         }
       }
 
