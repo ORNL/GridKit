@@ -2,9 +2,11 @@
 #pragma once
 
 #include <exception>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <optional>
+#include <string>
 
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_context.h>
@@ -29,15 +31,51 @@ namespace AnalysisManager
 
     struct IdaStats
     {
-      long int num_steps_                       = 0;
-      long int num_residual_evals_              = 0;
-      long int num_linear_decompositions_       = 0;
-      long int num_error_test_fails_            = 0;
-      long int num_nonlinear_iters_             = 0;
-      long int num_nonlinear_convergence_fails_ = 0;
+      std::string sundials_version_;
+      int         sundials_logging_level_          = 0;
+      long int    num_steps_                       = 0;
+      long int    num_residual_evals_              = 0;
+      long int    num_linear_solver_setups_        = 0;
+      long int    num_error_test_fails_            = 0;
+      long int    num_backtrack_operations_        = 0;
+      long int    num_nonlinear_iters_             = 0;
+      long int    num_nonlinear_convergence_fails_ = 0;
+      long int    num_nonlinear_step_fails_        = 0;
+      long int    num_jacobian_evals_              = 0;
+      long int    num_jacobian_eval_steps_         = 0;
+      long int    num_linear_iters_                = 0;
+      long int    num_linear_convergence_fails_    = 0;
+      long int    num_linear_residual_evals_       = 0;
+      long int    num_preconditioner_evals_        = 0;
+      long int    num_preconditioner_solves_       = 0;
+      long int    num_jtimes_setup_evals_          = 0;
+      long int    num_jtimes_evals_                = 0;
+      long int    last_linear_flag_                = 0;
+      std::string last_linear_flag_name_;
+      int         last_order_          = 0;
+      int         current_order_       = 0;
+      sunrealtype actual_initial_step_ = 0.0;
+      sunrealtype last_step_           = 0.0;
+      sunrealtype current_step_        = 0.0;
+      sunrealtype current_time_        = 0.0;
+      sunrealtype current_cj_          = 0.0;
+      sunrealtype jacobian_time_       = 0.0;
+      sunrealtype jacobian_cj_         = 0.0;
 
       IdaStats&   operator+=(const IdaStats& other);
       std::string report() const;
+    };
+
+    enum class IdaLogLevel
+    {
+      Error   = 1,
+      Warning = 2
+    };
+
+    struct IdaLogOptions
+    {
+      std::filesystem::path file;
+      IdaLogLevel           level{IdaLogLevel::Warning};
     };
 
     template <class ScalarT, typename IdxT>
@@ -48,7 +86,8 @@ namespace AnalysisManager
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
-      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
+      Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model,
+          std::optional<IdaLogOptions>              log_options = {});
       ~Ida();
 
       int configureSimulation();
@@ -59,7 +98,9 @@ namespace AnalysisManager
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
       int setIntegrationTime(RealT t_init, RealT t_final, int nout);
-      int initializeSimulation(RealT t0, bool findConsistent = false);
+      int initializeSimulation(RealT                t0,
+                               bool                 findConsistent  = false,
+                               std::optional<RealT> consistent_tout = {});
 
       int runSimulation(RealT tf, int nout = 1, std::optional<std::function<void(RealT)>> step_callback = {});
       int deleteSimulation();
@@ -197,10 +238,12 @@ namespace AnalysisManager
       N_Vector ypB_{}; ///< Adjoint solution derivatives vector
       N_Vector qB_{};  ///< Backward integrand vector
 
-      int backwardID_{};
+      int       backwardID_{};
+      SUNLogger logger_{};
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
+      void        configureLogger(const IdaLogOptions& options);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);

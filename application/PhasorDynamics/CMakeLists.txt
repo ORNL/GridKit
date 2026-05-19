@@ -3,6 +3,7 @@ target_link_libraries(PDSim
     PUBLIC
     GridKit::phasor_dynamics_components
     GridKit::solvers_dyn
+    GridKit::solvers_dyn_io
     GridKit::Utilities
     GridKit::testing)
 target_include_directories(PDSim PRIVATE

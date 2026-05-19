@@ -7,6 +7,8 @@
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
+#include <sundials/sundials_config.h>
+#include <sundials/sundials_logger.h>
 
 #include <GridKit/Model/Evaluator.hpp>
 
@@ -17,7 +19,8 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
+    Ida<ScalarT, IdxT>::Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model,
+                            std::optional<IdaLogOptions>              log_options)
       : DynamicSolver<ScalarT, IdxT>(model)
     {
       int retval = 0;
@@ -25,6 +28,10 @@ namespace AnalysisManager
       // Create the SUNDIALS context that all SUNDIALS objects require
       retval = SUNContext_Create(SUN_COMM_NULL, &context_);
       checkOutput(retval, "SUNContext");
+      if (log_options.has_value())
+      {
+        configureLogger(*log_options);
+      }
       solver_ = IDACreate(context_);
     }
 
@@ -43,6 +50,11 @@ namespace AnalysisManager
       deleteAdjoint();
       deleteSimulation();
       deleteBackwardSimulation();
+      if (logger_)
+      {
+        SUNContext_SetLogger(context_, nullptr);
+        SUNLogger_Destroy(&logger_);
+      }
       SUNContext_Free(&context_);
     }
 
@@ -255,7 +267,9 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::initializeSimulation(RealT t0, bool findConsistent)
+    int Ida<ScalarT, IdxT>::initializeSimulation(RealT                t0,
+                                                 bool                 findConsistent,
+                                                 std::optional<RealT> consistent_tout)
     {
       int retval = 0;
 
@@ -282,7 +296,7 @@ namespace AnalysisManager
         IDASetNonlinConvCoefIC(solver_, 1.0e-3);
         IDASetLineSearchOffIC(solver_, SUNTRUE);
 
-        retval = IDACalcIC(solver_, initType, t0 + 0.1);
+        retval = IDACalcIC(solver_, initType, consistent_tout.value_or(t0 + 0.1));
         checkOutput(retval, "IDACalcIC");
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
@@ -982,18 +996,62 @@ namespace AnalysisManager
       checkOutput(retval, "IDAPrintAllStats");
     }
 
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::configureLogger(const IdaLogOptions& options)
+    {
+      int retval = SUNLogger_Create(SUN_COMM_NULL, 0, &logger_);
+      checkOutput(retval, "SUNLogger_Create");
+
+      const auto file = options.file.string();
+      retval          = SUNLogger_SetErrorFilename(logger_, file.c_str());
+      checkOutput(retval, "SUNLogger_SetErrorFilename");
+      if (options.level == IdaLogLevel::Warning)
+      {
+        retval = SUNLogger_SetWarningFilename(logger_, file.c_str());
+        checkOutput(retval, "SUNLogger_SetWarningFilename");
+      }
+
+      retval = SUNContext_SetLogger(context_, logger_);
+      checkOutput(retval, "SUNContext_SetLogger");
+    }
+
     /**
      * @brief Accumulate another stats object into this one, allowing for stats to be kept
      *        across multiple simulations with IDA
      */
     IdaStats& IdaStats::operator+=(const IdaStats& other)
     {
+      sundials_version_                 = other.sundials_version_;
+      sundials_logging_level_           = other.sundials_logging_level_;
       num_steps_                       += other.num_steps_;
       num_residual_evals_              += other.num_residual_evals_;
-      num_linear_decompositions_       += other.num_linear_decompositions_;
+      num_linear_solver_setups_        += other.num_linear_solver_setups_;
       num_error_test_fails_            += other.num_error_test_fails_;
+      num_backtrack_operations_        += other.num_backtrack_operations_;
       num_nonlinear_iters_             += other.num_nonlinear_iters_;
       num_nonlinear_convergence_fails_ += other.num_nonlinear_convergence_fails_;
+      num_nonlinear_step_fails_        += other.num_nonlinear_step_fails_;
+      num_jacobian_evals_              += other.num_jacobian_evals_;
+      num_linear_iters_                += other.num_linear_iters_;
+      num_linear_convergence_fails_    += other.num_linear_convergence_fails_;
+      num_linear_residual_evals_       += other.num_linear_residual_evals_;
+      num_preconditioner_evals_        += other.num_preconditioner_evals_;
+      num_preconditioner_solves_       += other.num_preconditioner_solves_;
+      num_jtimes_setup_evals_          += other.num_jtimes_setup_evals_;
+      num_jtimes_evals_                += other.num_jtimes_evals_;
+
+      last_linear_flag_        = other.last_linear_flag_;
+      last_linear_flag_name_   = other.last_linear_flag_name_;
+      num_jacobian_eval_steps_ = other.num_jacobian_eval_steps_;
+      last_order_              = other.last_order_;
+      current_order_           = other.current_order_;
+      actual_initial_step_     = other.actual_initial_step_;
+      last_step_               = other.last_step_;
+      current_step_            = other.current_step_;
+      current_time_            = other.current_time_;
+      current_cj_              = other.current_cj_;
+      jacobian_time_           = other.jacobian_time_;
+      jacobian_cj_             = other.jacobian_cj_;
 
       return *this;
     }
@@ -1009,12 +1067,15 @@ namespace AnalysisManager
       int               stat_width  = 12;
       std::stringstream out;
 
-      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
-          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
-          << std::setw(label_width) << "Linear decompositions" << " : " << std::setw(stat_width) << num_linear_decompositions_ << '\n'
+      out << std::setw(label_width) << "Steps" << " : " << std::setw(stat_width) << num_steps_ << '\n'
+          << std::setw(label_width) << "Residual evals" << " : " << std::setw(stat_width) << num_residual_evals_ << '\n'
+          << std::setw(label_width) << "Linear solver setups" << " : " << std::setw(stat_width) << num_linear_solver_setups_ << '\n'
           << std::setw(label_width) << "Error test failures" << " : " << std::setw(stat_width) << num_error_test_fails_ << '\n'
           << std::setw(label_width) << "Nonlinear iterations" << " : " << std::setw(stat_width) << num_nonlinear_iters_ << '\n'
-          << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_;
+          << std::setw(label_width) << "Nonlinear convergence failures" << " : " << std::setw(stat_width) << num_nonlinear_convergence_fails_ << '\n'
+          << std::setw(label_width) << "Jacobian evals" << " : " << std::setw(stat_width) << num_jacobian_evals_ << '\n'
+          << std::setw(label_width) << "Linear iterations" << " : " << std::setw(stat_width) << num_linear_iters_ << '\n'
+          << std::setw(label_width) << "Linear convergence failures" << " : " << std::setw(stat_width) << num_linear_convergence_fails_;
 
       return out.str();
     }
@@ -1028,26 +1089,60 @@ namespace AnalysisManager
     IdaStats Ida<ScalarT, IdxT>::getStats() const
     {
       IdaStats stats;
-
-      // Dummies for ignoring stats
-      int         dummy;
-      sunrealtype dummy2;
+      stats.sundials_version_       = SUNDIALS_VERSION;
+      stats.sundials_logging_level_ = SUNDIALS_LOGGING_LEVEL;
 
       int retval = IDAGetIntegratorStats(solver_,
                                          &stats.num_steps_,
                                          &stats.num_residual_evals_,
-                                         &stats.num_linear_decompositions_,
+                                         &stats.num_linear_solver_setups_,
                                          &stats.num_error_test_fails_,
-                                         &dummy,
-                                         &dummy,
-                                         &dummy2,
-                                         &dummy2,
-                                         &dummy2,
-                                         &dummy2);
+                                         &stats.last_order_,
+                                         &stats.current_order_,
+                                         &stats.actual_initial_step_,
+                                         &stats.last_step_,
+                                         &stats.current_step_,
+                                         &stats.current_time_);
       checkOutput(retval, "IDAGetIntegratorStats");
 
       retval = IDAGetNonlinSolvStats(solver_, &stats.num_nonlinear_iters_, &stats.num_nonlinear_convergence_fails_);
       checkOutput(retval, "IDAGetNonlinSolvStats");
+
+      retval = IDAGetNumBacktrackOps(solver_, &stats.num_backtrack_operations_);
+      checkOutput(retval, "IDAGetNumBacktrackOps");
+      retval = IDAGetNumStepSolveFails(solver_, &stats.num_nonlinear_step_fails_);
+      checkOutput(retval, "IDAGetNumStepSolveFails");
+      retval = IDAGetCurrentCj(solver_, &stats.current_cj_);
+      checkOutput(retval, "IDAGetCurrentCj");
+
+      retval = IDAGetNumJacEvals(solver_, &stats.num_jacobian_evals_);
+      checkOutput(retval, "IDAGetNumJacEvals");
+      retval = IDAGetJacNumSteps(solver_, &stats.num_jacobian_eval_steps_);
+      checkOutput(retval, "IDAGetJacNumSteps");
+      retval = IDAGetJacTime(solver_, &stats.jacobian_time_);
+      checkOutput(retval, "IDAGetJacTime");
+      retval = IDAGetJacCj(solver_, &stats.jacobian_cj_);
+      checkOutput(retval, "IDAGetJacCj");
+      retval = IDAGetNumLinIters(solver_, &stats.num_linear_iters_);
+      checkOutput(retval, "IDAGetNumLinIters");
+      retval = IDAGetNumLinConvFails(solver_, &stats.num_linear_convergence_fails_);
+      checkOutput(retval, "IDAGetNumLinConvFails");
+      retval = IDAGetNumLinResEvals(solver_, &stats.num_linear_residual_evals_);
+      checkOutput(retval, "IDAGetNumLinResEvals");
+      retval = IDAGetNumPrecEvals(solver_, &stats.num_preconditioner_evals_);
+      checkOutput(retval, "IDAGetNumPrecEvals");
+      retval = IDAGetNumPrecSolves(solver_, &stats.num_preconditioner_solves_);
+      checkOutput(retval, "IDAGetNumPrecSolves");
+      retval = IDAGetNumJTSetupEvals(solver_, &stats.num_jtimes_setup_evals_);
+      checkOutput(retval, "IDAGetNumJTSetupEvals");
+      retval = IDAGetNumJtimesEvals(solver_, &stats.num_jtimes_evals_);
+      checkOutput(retval, "IDAGetNumJtimesEvals");
+      retval = IDAGetLastLinFlag(solver_, &stats.last_linear_flag_);
+      checkOutput(retval, "IDAGetLastLinFlag");
+      if (char* flag_name = IDAGetLinReturnFlagName(stats.last_linear_flag_))
+      {
+        stats.last_linear_flag_name_ = flag_name;
+      }
 
       return stats;
     }
