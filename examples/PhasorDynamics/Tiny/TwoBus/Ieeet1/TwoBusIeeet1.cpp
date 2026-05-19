@@ -51,7 +51,7 @@ int main()
   data.bus[1].Vi0      = 0.0;
 
   // Set signal nodes data
-  data.signal.resize(3);
+  data.signal.resize(4);
 
   data.signal[0].name      = "omega";
   data.signal[0].signal_id = 0;
@@ -61,6 +61,9 @@ int main()
 
   data.signal[2].name      = "Efd";
   data.signal[2].signal_id = 2;
+
+  data.signal[3].name      = "Ec";
+  data.signal[3].signal_id = 3;
 
   // Set branch data
   data.branch.resize(1);
@@ -85,11 +88,13 @@ int main()
   data.genrou[0].ports[GenrouPorts::speed]           = 0;
   data.genrou[0].ports[GenrouPorts::pmech]           = 1;
   data.genrou[0].ports[GenrouPorts::efd]             = 2;
+  data.genrou[0].ports[GenrouPorts::ec]              = 3;
   data.genrou[0].parameters[GenrouParameters::p0]    = 1.;
   data.genrou[0].parameters[GenrouParameters::q0]    = 0.05013;
   data.genrou[0].parameters[GenrouParameters::H]     = 3.;
   data.genrou[0].parameters[GenrouParameters::D]     = 0.;
   data.genrou[0].parameters[GenrouParameters::Ra]    = 0.;
+  data.genrou[0].parameters[GenrouParameters::Xc]    = 0.;
   data.genrou[0].parameters[GenrouParameters::Tdop]  = 7.;
   data.genrou[0].parameters[GenrouParameters::Tdopp] = .04;
   data.genrou[0].parameters[GenrouParameters::Tqopp] = .05;
@@ -122,7 +127,8 @@ int main()
 
   data.exciter[0].ports[Ieeet1Ports::speed]                      = 0;
   data.exciter[0].ports[Ieeet1Ports::efd]                        = 2;
-  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.001; // (BUG: Nonfunctional if Tr = 0)
+  data.exciter[0].ports[Ieeet1Ports::ec]                         = 3;
+  data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.0;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ke]      = -0.06;
@@ -182,18 +188,17 @@ int main()
   {
     std::vector<scalar_type>& y_val = sys.y();
 
-    // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
     // Bus              -> 2 States
-    // Genrou           -> 19 States -> Start Idx 2
-    // Gov              -> 3 States  -> Start Idx 21
-    // Exc              -> 9 States  -> Start Idx 24
+    // Genrou           -> 20 States -> Start Idx 2
+    // Gov              -> 3 States  -> Start Idx 22
+    // Exc              -> 9 States  -> Start Idx 25
     output.push_back(OutputData{
         t,
         static_cast<real_type>(y_val[0]),  // Bus Vr
         static_cast<real_type>(y_val[1]),  // Bus Vi
         static_cast<real_type>(y_val[3]),  // Gen Speed
-        static_cast<real_type>(y_val[23]), // Gov Pmech
-        static_cast<real_type>(y_val[26]), // Exc Efd
+        static_cast<real_type>(y_val[24]), // Gov Pmech
+        static_cast<real_type>(y_val[27]), // Exc Efd
     });
   };
 

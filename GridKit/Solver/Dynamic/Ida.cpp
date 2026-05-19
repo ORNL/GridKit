@@ -58,6 +58,14 @@ namespace AnalysisManager
       SUNContext_Free(&context_);
     }
 
+    template <class ScalarT, typename IdxT>
+    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::currentInternalTime()
+    {
+      sunrealtype t = 0.0;
+      IDAGetCurrentTime(solver_, &t);
+      return static_cast<RealT>(t);
+    }
+
     /**
      * @brief Configure the simulation
      *

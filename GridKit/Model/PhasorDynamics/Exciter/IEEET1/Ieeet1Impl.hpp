@@ -10,7 +10,6 @@
 #include <cmath>
 #include <iostream>
 
-#include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
@@ -34,8 +33,7 @@ namespace GridKit
        * @tparam IdxT Index data type
        */
       template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type* bus)
-        : bus_(bus)
+      Ieeet1<ScalarT, IdxT>::Ieeet1()
       {
         size_ = 9;
       }
@@ -44,7 +42,6 @@ namespace GridKit
        * @brief  Constructor for IEEET1 Exciter
        *
        * @param data  Data object to store parameters
-       * @param bus   Signal used for terminal reference vmag
        * @param speed Signal used for machine relative speed
        * @param efd   Signal used for E field
        * @tparam ScalarT Scalar data type
@@ -53,11 +50,9 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Ieeet1<ScalarT, IdxT>::Ieeet1(signal_type*           efd_signal,
                                     signal_type*           speed_signal,
-                                    bus_type*              bus,
                                     const model_data_type& data)
         : efd_signal_(efd_signal),
           speed_signal_(speed_signal),
-          bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
 
@@ -73,16 +68,13 @@ namespace GridKit
       /**
        * @brief  Constructor for IEEET1 Exciter
        *
-       * @param bus   Signal used for terminal reference vmag
        * @param data  Data object to store parameters
        * @tparam ScalarT Scalar data type
        * @tparam IdxT Index data type
        */
       template <class ScalarT, typename IdxT>
-      Ieeet1<ScalarT, IdxT>::Ieeet1(bus_type*              bus,
-                                    const model_data_type& data)
-        : bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
+      Ieeet1<ScalarT, IdxT>::Ieeet1(const model_data_type& data)
+        : monitor_(std::make_unique<MonitorT>(data))
       {
 
         // Parse data struct into model
@@ -125,16 +117,15 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        // Resize bus data
-        wb_.resize(2);
-
         // Resize signal variable data
-        ws_.resize(2);
-        ws_indices_.resize(2);
+        ws_.resize(3);
+        ws_indices_.resize(3);
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
         ws_[1]         = 0.0;
         ws_indices_[1] = INVALID_INDEX<IdxT>;
+        ws_[2]         = 0.0;
+        ws_indices_[2] = INVALID_INDEX<IdxT>;
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -160,6 +151,7 @@ namespace GridKit
       {
         static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
         static constexpr auto VS    = Ieeet1ExternalVariables::VS;
+        static constexpr auto EC    = Ieeet1ExternalVariables::EC;
 
         int ret = 0;
 
@@ -177,6 +169,15 @@ namespace GridKit
           if (!signals_.template isLinked<VS>())
           {
             Log::error() << "Ieeet1: VS signal attached with no linked source\n";
+            ret += 1;
+          }
+        }
+
+        if (signals_.template isAttached<EC>())
+        {
+          if (!signals_.template isLinked<EC>())
+          {
+            Log::error() << "Ieeet1: EC signal attached with no linked generator\n";
             ret += 1;
           }
         }
@@ -226,10 +227,11 @@ namespace GridKit
           vs = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
         }
 
-        // Terminal Voltage
-        ScalarT vreal = bus_->Vr();
-        ScalarT vimag = bus_->Vi();
-        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
+        ScalarT Ec{0};
+        if (signals_.template isAttached<Ieeet1ExternalVariables::EC>())
+        {
+          Ec = signals_.template readExternalVariable<Ieeet1ExternalVariables::EC>();
+        }
 
         ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
         ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
@@ -270,15 +272,15 @@ namespace GridKit
       int Ieeet1<ScalarT, IdxT>::tagDifferentiable()
       {
 
-        tag_[0] = true;  // y0 - vts  - Sensed term volt
-        tag_[1] = true;  // y1 - vr   - Voltage reg
-        tag_[2] = true;  // y2 - efdp - Efd pre mult
-        tag_[3] = true;  // y3 - vfx  - Exciter feedback
-        tag_[4] = false; // y4 - vtr  - Term Volt Err
-        tag_[5] = false; // y5 - vf   - Feedback volt
-        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false; // y7 - efd  - Efd
-        tag_[8] = false; // y8 - ksat - Saturation
+        tag_[0] = (Tr_ != 0.0); // y0 - vts  - Sensed term volt (alg if Tr=0)
+        tag_[1] = (Ta_ != 0.0); // y1 - vr   - Voltage reg     (alg if Ta=0)
+        tag_[2] = (Te_ != 0.0); // y2 - efdp - Efd pre mult    (alg if Te=0)
+        tag_[3] = (Tf_ != 0.0); // y3 - vfx  - Exciter feedback(alg if Tf=0)
+        tag_[4] = false;        // y4 - vtr  - Term Volt Err
+        tag_[5] = false;        // y5 - vf   - Feedback volt
+        tag_[6] = false;        // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false;        // y7 - efd  - Efd
+        tag_[8] = false;        // y8 - ksat - Saturation
 
         return 0;
       }
@@ -289,17 +291,12 @@ namespace GridKit
        */
       template <class ScalarT, typename IdxT>
       __attribute__((always_inline)) inline int Ieeet1<ScalarT, IdxT>::evaluateInternalResidual(
-          ScalarT* y,
-          ScalarT* yp,
-          ScalarT* wb,
-          ScalarT* ws,
-          ScalarT* f)
+          ScalarT*                  y,
+          ScalarT*                  yp,
+          [[maybe_unused]] ScalarT* wb,
+          ScalarT*                  ws,
+          ScalarT*                  f)
       {
-        // Read E comp (terminal voltage, unless compensation impedance)
-        ScalarT vreal = wb[0];
-        ScalarT vimag = wb[1];
-        ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
-
         // Read Internal Variables
         ScalarT vts  = y[0]; // y0 - Sensed term volt
         ScalarT vr   = y[1]; // y1 - Voltage reg
@@ -320,23 +317,19 @@ namespace GridKit
         // Set signal variable aliases
         ScalarT omega     = ws[0];
         ScalarT vs_signal = ws[1];
-
-        // The 'pre-limit' derivative of Vr.
-        ScalarT func            = (-vr + Ka_ * vtr) / Ta_;
-        ScalarT func_normalized = func / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
-        ScalarT vr_ind          = Math::indicator(vr, func_normalized, Vrmin_, Vrmax_);
+        ScalarT Ec        = ws[2];
 
         // Internal Differential Equations
-        f[0] = -vts_dot + (Ec - vts) / Tr_;
-        f[1] = -vr_dot + vr_ind * func;
-        f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
-        f[3] = -vfx_dot + vf / Tf_;
+        f[0] = -Tr_ * vts_dot + (Ec - vts);
+        f[1] = -Ta_ * vr_dot + Math::antiwindup(vr, -vr + Ka_ * vtr, Vrmin_, Vrmax_);
+        f[2] = -Te_ * efdp_dot + (vr - ve - Ke_ * efdp);
+        f[3] = -Tf_ * vfx_dot + vf;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
-        f[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
+        f[5] = -Tf_ * vf + Kf_ * efdp - Tf_ * vfx;
         f[6] = -ve + ksat * efdp;
-        f[7] = -efd + efdp + omega * efdp * Ispdlim_;
+        f[7] = -efd + (ONE<RealT> + omega * Ispdlim_) * efdp;
 
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
@@ -374,12 +367,15 @@ namespace GridKit
           ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
         }
 
-        // Bus voltages
-        wb_[0] = bus_->Vr();
-        wb_[1] = bus_->Vi();
+        // EC signal (compensated terminal voltage from the machine)
+        if (signals_.template isAttached<Ieeet1ExternalVariables::EC>())
+        {
+          ws_[2]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::EC>();
+          ws_indices_[2] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::EC>();
+        }
 
         // Residual evaluation
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        evaluateInternalResidual(y_.data(), yp_.data(), nullptr, ws_.data(), f_.data());
 
         return 0;
       }

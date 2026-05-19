@@ -216,6 +216,12 @@ namespace GridKit
             gen->getSignals().template attachSignalNode<GenrouExternalVariables::EFD>(getSignal(efd));
           }
 
+          if (gendata.ports.contains(GenrouData<ScalarT, IdxT>::Ports::ec))
+          {
+            IdxT ec = gendata.ports.at(GenrouData<ScalarT, IdxT>::Ports::ec);
+            gen->getSignals().template assignSignalNode<GenrouInternalVariables::EC>(getSignal(ec));
+          }
+
           addComponent(gen);
         }
 
@@ -285,13 +291,7 @@ namespace GridKit
 
         for (const auto& excitedata : data.exciter)
         {
-          IdxT bus_index = 0;
-          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::bus))
-          {
-            bus_index = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::bus);
-          }
-
-          auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
+          auto* exciter = new Ieeet1<ScalarT, IdxT>(excitedata);
 
           if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::speed))
           {
@@ -309,6 +309,12 @@ namespace GridKit
           {
             IdxT vs = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::vs);
             exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::VS>(getSignal(vs));
+          }
+
+          if (excitedata.ports.contains(Ieeet1Data<ScalarT, IdxT>::Ports::ec))
+          {
+            IdxT ec = excitedata.ports.at(Ieeet1Data<ScalarT, IdxT>::Ports::ec);
+            exciter->getSignals().template attachSignalNode<Ieeet1ExternalVariables::EC>(getSignal(ec));
           }
 
           addComponent(exciter);
@@ -1116,6 +1122,18 @@ namespace GridKit
       {
         // gridkit_component_id_ is set by System model and guarantied to be unique
         return components_[gridkit_component_id];
+      }
+
+      /// @brief Read-only view of all buses (for diagnostic walks).
+      const std::vector<bus_type*>& getBuses() const
+      {
+        return buses_;
+      }
+
+      /// @brief Read-only view of all components (for diagnostic walks).
+      const std::vector<component_type*>& getComponents() const
+      {
+        return components_;
       }
 
       /**

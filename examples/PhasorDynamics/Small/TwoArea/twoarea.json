@@ -648,7 +648,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 1,
                 "speed": 0,
                 "efd": 8
             },
@@ -673,7 +672,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 2,
                 "speed": 2,
                 "efd": 9
             },
@@ -698,7 +696,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 3,
                 "speed": 4,
                 "efd": 10
             },
@@ -723,7 +720,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 4,
                 "speed": 6,
                 "efd": 11
             },

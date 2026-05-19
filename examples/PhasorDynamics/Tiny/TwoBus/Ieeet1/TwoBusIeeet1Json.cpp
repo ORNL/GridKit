@@ -115,18 +115,17 @@ int main(int argc, const char* argv[])
   {
     std::vector<scalar_type>& y_val = sys.y();
 
-    // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
     // Bus              -> 2 States
-    // Genrou           -> 19 States -> Start Idx 2
-    // Gov              -> 3 States  -> Start Idx 21
-    // Exc              -> 9 States  -> Start Idx 24
+    // Genrou           -> 20 States -> Start Idx 2
+    // Gov              -> 3 States  -> Start Idx 22
+    // Exc              -> 9 States  -> Start Idx 25
     output.push_back(OutputData{
         t,
         static_cast<real_type>(y_val[0]),  // Bus Vr
         static_cast<real_type>(y_val[1]),  // Bus Vi
         static_cast<real_type>(y_val[3]),  // Gen Speed
-        static_cast<real_type>(y_val[23]), // Gov Pmech
-        static_cast<real_type>(y_val[26]), // Exc Efd
+        static_cast<real_type>(y_val[24]), // Gov Pmech
+        static_cast<real_type>(y_val[27]), // Exc Efd
     });
   };
 
@@ -145,14 +144,14 @@ int main(int argc, const char* argv[])
   // Introduce fault and run for the next 0.1s
   // fault.setStatus(true);
   fault->setStatus(true);
-  ida.initializeSimulation(1.0, false);
+  ida.initializeSimulation(1.0, true);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear the fault and run until t = 10s.
   // fault.setStatus(false);
   fault->setStatus(false);
-  ida.initializeSimulation(1.1, false);
+  ida.initializeSimulation(1.1, true);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());

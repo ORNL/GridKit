@@ -31,9 +31,8 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(3.0, 4.0);
-        auto                               data    = makeTestData();
-        auto*                              exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(&bus, data);
+        auto  data    = makeTestData();
+        auto* exciter = new PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>(data);
 
         success *= (exciter != nullptr);
         success *= (exciter->size() == 9);
@@ -50,13 +49,15 @@ namespace GridKit
 
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
 
-        bus.allocate();
+        ScalarT                                   ec_value = 5.0;
+        IdxT                                      ec_index = INVALID_INDEX<IdxT>;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ec_signal;
+        ec_signal.set(&ec_value, &ec_index);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::EC>(&ec_signal);
+
         exciter.allocate();
-
-        bus.initialize();
         exciter.initialize();
 
         exciter.evaluateResidual();
@@ -104,34 +105,29 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        DependencyTracking::Variable                                        Vr1{3.0};
-        DependencyTracking::Variable                                        Vi1{4.0};
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>             bus(Vr1, Vi1);
-        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::Ieeet1<DependencyTracking::Variable, IdxT> exciter(data);
 
-        bus.allocate();
+        DependencyTracking::Variable                                   ec_value{5.0};
+        IdxT                                                           ec_index = INVALID_INDEX<IdxT>;
+        PhasorDynamics::SignalNode<DependencyTracking::Variable, IdxT> ec_signal;
+        ec_signal.set(&ec_value, &ec_index);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::EC>(&ec_signal);
+
         exciter.allocate();
 
         // Get d/dy
-        bus.initialize();
         exciter.initialize();
 
         for (size_t i = 0; i < exciter.size(); ++i)
         {
           exciter.y()[i].setVariableNumber(i); ///< Exciter independent variables
         }
-        for (size_t i = 0; i < bus.size(); ++i)
-        {
-          bus.y()[i].setVariableNumber(i + exciter.size()); // Bus independent variables
-        }
 
-        bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
         std::vector<DependencyTracking::Variable> residual_y = exciter.getResidual();
 
         // Get d/dy'
-        bus.initialize();
         exciter.initialize();
 
         for (size_t i = 0; i < exciter.size(); ++i)
@@ -139,7 +135,6 @@ namespace GridKit
           exciter.yp()[i].setVariableNumber(i); ///< Exciter independent variables
         }
 
-        bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
         std::vector<DependencyTracking::Variable> residual_yp = exciter.getResidual();
@@ -198,27 +193,22 @@ namespace GridKit
       {
         auto data = makeTestData();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(data);
 
-        bus.allocate();
+        ScalarT                                   ec_value = 5.0;
+        IdxT                                      ec_index = INVALID_INDEX<IdxT>;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> ec_signal;
+        ec_signal.set(&ec_value, &ec_index);
+        exciter.getSignals().template attachSignalNode<PhasorDynamics::Exciter::Ieeet1ExternalVariables::EC>(&ec_signal);
+
         exciter.allocate();
 
-        bus.initialize();
         exciter.initialize();
 
         exciter.updateTime(0.0, 1.0); // Set alpha to 1.0 to verify d/dy' term
 
-        for (size_t i = 0; i < bus.size(); ++i)
-        {
-          bus.setVariableIndex(i, i + exciter.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + exciter.size()); // Reset bus residual indices
-        }
-
-        bus.evaluateResidual();
         exciter.evaluateResidual();
 
-        bus.evaluateJacobian();
         exciter.evaluateJacobian();
         GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& model_jacobian = exciter.getJacobian();
         model_jacobian.deduplicate();

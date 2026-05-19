@@ -4629,7 +4629,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 2,
                 "speed": 0,
                 "efd": 78
             },
@@ -4654,7 +4653,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 2,
                 "speed": 2,
                 "efd": 79
             },
@@ -4679,7 +4677,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 2,
                 "speed": 4,
                 "efd": 80
             },
@@ -4704,7 +4701,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 2,
                 "speed": 6,
                 "efd": 81
             },
@@ -4729,7 +4725,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 8,
                 "efd": 82
             },
@@ -4754,7 +4749,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 10,
                 "efd": 83
             },
@@ -4779,7 +4773,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 12,
                 "efd": 84
             },
@@ -4804,7 +4797,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 14,
                 "efd": 85
             },
@@ -4829,7 +4821,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 16,
                 "efd": 86
             },
@@ -4854,7 +4845,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 18,
                 "efd": 87
             },
@@ -4879,7 +4869,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 20,
                 "efd": 88
             },
@@ -4904,7 +4893,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 22,
                 "efd": 89
             },
@@ -4929,7 +4917,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 24,
                 "efd": 90
             },
@@ -4954,7 +4941,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 23,
                 "speed": 26,
                 "efd": 91
             },
@@ -4979,7 +4965,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 26,
                 "speed": 28,
                 "efd": 92
             },
@@ -5004,7 +4989,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 26,
                 "speed": 30,
                 "efd": 93
             },
@@ -5029,7 +5013,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 27,
                 "speed": 32,
                 "efd": 94
             },
@@ -5054,7 +5037,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 27,
                 "speed": 34,
                 "efd": 95
             },
@@ -5079,7 +5061,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 28,
                 "speed": 36,
                 "efd": 96
             },
@@ -5104,7 +5085,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 28,
                 "speed": 38,
                 "efd": 97
             },
@@ -5129,7 +5109,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 33,
                 "speed": 40,
                 "efd": 98
             },
@@ -5154,7 +5133,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 42,
                 "efd": 99
             },
@@ -5179,7 +5157,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 44,
                 "efd": 100
             },
@@ -5204,7 +5181,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 46,
                 "efd": 101
             },
@@ -5229,7 +5205,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 48,
                 "efd": 102
             },
@@ -5254,7 +5229,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 50,
                 "efd": 103
             },
@@ -5279,7 +5253,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 34,
                 "speed": 52,
                 "efd": 104
             },
@@ -5304,7 +5277,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 54,
                 "efd": 105
             },
@@ -5329,7 +5301,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 56,
                 "efd": 106
             },
@@ -5354,7 +5325,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 58,
                 "efd": 107
             },
@@ -5379,7 +5349,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 60,
                 "efd": 108
             },
@@ -5404,7 +5373,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 62,
                 "efd": 109
             },
@@ -5429,7 +5397,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 35,
                 "speed": 64,
                 "efd": 110
             },
@@ -5454,7 +5421,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 36,
                 "speed": 66,
                 "efd": 111
             },
@@ -5479,7 +5445,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 36,
                 "speed": 68,
                 "efd": 112
             },
@@ -5504,7 +5469,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 36,
                 "speed": 70,
                 "efd": 113
             },
@@ -5529,7 +5493,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 36,
                 "speed": 72,
                 "efd": 114
             },
@@ -5554,7 +5517,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 37,
                 "speed": 74,
                 "efd": 115
             },
@@ -5579,7 +5541,6 @@
         {
             "class": "Ieeet1",
             "ports": {
-                "bus": 37,
                 "speed": 76,
                 "efd": 116
             },

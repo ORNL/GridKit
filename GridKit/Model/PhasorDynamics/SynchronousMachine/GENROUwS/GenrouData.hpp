@@ -20,6 +20,8 @@ namespace GridKit
       H,        ///< Rotor inertia
       D,        ///< Damping coefficient
       Ra,       ///< Winding resistance
+      Rc,       ///< Compensation resistance sensed by exciter
+      Xc,       ///< Compensation reactance sensed by exciter
       Tdop,     ///< Open circuit direct axis transient time
       Tdopp,    ///< Open circuit direct axis sub-transient time
       Tqop,     ///< Open circuit quadrature axis transient
@@ -43,6 +45,7 @@ namespace GridKit
       pmech, ///< Unique ID of the bus providing the exciter signal
       speed, ///< Unique ID of the bus providing the governor signal
       efd,   ///< Unique ID of the bus providing exciter field signal
+      ec,    ///< Unique ID of the signal carrying compensated terminal voltage to exciter
     };
 
     /// Variables able to be monitored for a Genrou generator model

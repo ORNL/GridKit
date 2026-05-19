@@ -102,6 +102,8 @@ namespace GridKit
                                                   3,
                                                   0,
                                                   0,
+                                                  0,
+                                                  0,
                                                   7,
                                                   0.04,
                                                   0.05,
@@ -197,6 +199,8 @@ namespace GridKit
         RealT H{3};
         RealT D{.5};
         RealT Ra{.1};
+        RealT Rc{0};
+        RealT Xc{0};
         RealT Tdop{7};
         RealT Tdopp{.04};
         RealT Tqopp{.05};
@@ -215,21 +219,21 @@ namespace GridKit
         ScalarT Vi1{0};   ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Rc, Xc, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
         const std::vector<ScalarT> res_answer = {
-            -2 * M_PI * 60.0,
-            -static_cast<ScalarT>(10.) / static_cast<ScalarT>(9.),
-            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(525.),
-            -54.75,
-            -9.6,
-            static_cast<ScalarT>(892.) / static_cast<ScalarT>(375.),
+            2 * M_PI * 60.0,
+            static_cast<ScalarT>(20.) / static_cast<ScalarT>(3.),
+            static_cast<ScalarT>(223.) / static_cast<ScalarT>(75.),
+            2.19,
+            0.48,
+            -static_cast<ScalarT>(223.) / static_cast<ScalarT>(125.),
             0.21,
             -0.07,
-            -0.19223748416156686,
-            2.0,
+            0.0408,
+            1.8896749891587163,
             1.4,
             0.31,
             2.211,
@@ -238,7 +242,8 @@ namespace GridKit
             static_cast<ScalarT>(64.) / static_cast<ScalarT>(65.),
             -static_cast<ScalarT>(237.) / static_cast<ScalarT>(130.),
             -static_cast<ScalarT>(141.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.)};
+            -static_cast<ScalarT>(241.) / static_cast<ScalarT>(260.),
+            0.05};
 
         bus.allocate();
         bus.initialize();
@@ -269,6 +274,7 @@ namespace GridKit
         gen.y()[16] = .25;  // ii
         gen.y()[17] = .3;   // inr
         gen.y()[18] = .15;  // ini
+        gen.y()[19] = 1.05; // EC
 
         // Set derivative values matching the answer key
         gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
@@ -339,6 +345,8 @@ namespace GridKit
                                                                        1,
                                                                        0.05013,
                                                                        3,
+                                                                       0,
+                                                                       0,
                                                                        0,
                                                                        0,
                                                                        7,
@@ -450,6 +458,8 @@ namespace GridKit
                                                   1,
                                                   0.05013,
                                                   3,
+                                                  0,
+                                                  0,
                                                   0,
                                                   0,
                                                   7,

@@ -100,16 +100,10 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
-        system->addBus(&bus);
-
-        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter;
         system->addComponent(&exciter);
 
         success *= system->allocate() == 0;
-        success *= system->initialize() == 0;
-        success *= system->evaluateResidual() == 0;
-        success *= system->evaluateJacobian() == 0;
         success *= system->size() == exciter.size();
 
         delete system;

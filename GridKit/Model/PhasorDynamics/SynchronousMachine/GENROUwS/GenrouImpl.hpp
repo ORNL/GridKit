@@ -37,6 +37,8 @@ namespace GridKit
         H_(3.),
         D_(0.),
         Ra_(0.),
+        Rc_(0.),
+        Xc_(0.06),
         Tdop_(7.),
         Tdopp_(.04),
         Tqopp_(.05),
@@ -52,7 +54,7 @@ namespace GridKit
         S12_(0.),
         mva_base_(100.)
     {
-      size_ = 19;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -67,6 +69,8 @@ namespace GridKit
                                   RealT     H,
                                   RealT     D,
                                   RealT     Ra,
+                                  RealT     Rc,
+                                  RealT     Xc,
                                   RealT     Tdop,
                                   RealT     Tdopp,
                                   RealT     Tqopp,
@@ -88,6 +92,8 @@ namespace GridKit
         H_(H),
         D_(D),
         Ra_(Ra),
+        Rc_(Rc),
+        Xc_(Xc),
         Tdop_(Tdop),
         Tdopp_(Tdopp),
         Tqopp_(Tqopp),
@@ -103,7 +109,7 @@ namespace GridKit
         S12_(S12),
         mva_base_(100.)
     {
-      size_ = 19;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -119,7 +125,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 19;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -137,7 +143,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 19;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -156,7 +162,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 19;
+      size_ = 20;
       setDerivedParams();
     }
 
@@ -193,6 +199,16 @@ namespace GridKit
       if (data.parameters.contains(model_data_type::Parameters::Ra))
       {
         Ra_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ra));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Rc))
+      {
+        Rc_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Rc));
+      }
+
+      if (data.parameters.contains(model_data_type::Parameters::Xc))
+      {
+        Xc_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xc));
       }
 
       if (data.parameters.contains(model_data_type::Parameters::Tdop))
@@ -357,6 +373,11 @@ namespace GridKit
         signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
       }
 
+      if (signals_.template isAssigned<GenrouInternalVariables::EC>())
+      {
+        signals_.template getSignalNode<GenrouInternalVariables::EC>()->set(&y_[19], &(this->getVariableIndex(19)));
+      }
+
       return 0;
     }
 
@@ -488,6 +509,7 @@ namespace GridKit
                - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
       y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
                + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y_[19] = std::sqrt((vr + Rc_ * ir - Xc_ * ii) * (vr + Rc_ * ir - Xc_ * ii) + (vi + Rc_ * ii + Xc_ * ir) * (vi + Rc_ * ii + Xc_ * ir));
 
       ScalarT Te = y_[12];
       pmech_set_ = Te;
@@ -555,6 +577,7 @@ namespace GridKit
       ScalarT ii     = y[16];
       ScalarT inr    = y[17];
       ScalarT ini    = y[18];
+      ScalarT ec     = y[19];
 
       /* Read derivatives */
       ScalarT delta_dot = yp[0];
@@ -572,31 +595,33 @@ namespace GridKit
       ScalarT pmech = ws[0];
       ScalarT efd   = ws[1];
 
-      /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
-      f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
-      f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
-      f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
-      f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
-      f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
+      /* 6 Genrou differential equations (T*xdot form) */
+      f[0] = -delta_dot + omega * (TWO<RealT> * M_PI * freq_system_base_);
+      f[1] = -TWO<RealT> * H_ * omega_dot + (pmech - D_ * omega) / (ONE<RealT> + omega) - telec;
+      f[2] = -Tdop_ * Eqp_dot + efd - Eqp - Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) - psidpp * ksat;
+      f[3] = -Tdopp_ * psidp_dot + Eqp - psidp - Xd2_ * id;
+      f[4] = -Tqopp_ * psiqp_dot + Edp - psiqp + Xq2_ * iq;
+      f[5] = -Tqop_ * Edp_dot - Edp + Xq1_ * (iq - Xq3_ * (Edp - psiqp + Xq2_ * iq)) + Xqd_ * psiqpp * ksat;
 
-      /* 11 Genrou algebraic equations */
-      f[6]              = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
-      f[7]              = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f[8]              = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
-      ScalarT psipp_sat = psipp - SA_;
-      f[9]              = ksat - SB_ * psipp_sat * psipp_sat * Math::sigmoid(psipp_sat);
-      f[10]             = vd + psiqpp * (ONE<RealT> + omega);
-      f[11]             = vq - psidpp * (ONE<RealT> + omega);
-      f[12]             = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13]             = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[14]             = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15]             = ir + G_ * vr - B_ * vi - inr;
-      f[16]             = ii + B_ * vr + G_ * vi - ini;
+      /* 12 Genrou algebraic equations */
+      f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
+      f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[8]  = -psipp * psipp + psidpp * psidpp + psiqpp * psiqpp;
+      f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
+      f[10] = vd + psiqpp * (ONE<RealT> + omega);
+      f[11] = vq - psidpp * (ONE<RealT> + omega);
+      f[12] = telec - (psidpp - id * Xdpp_) * iq + (psiqpp - iq * Xdpp_) * id;
+      f[13] = id - ir * std::sin(delta) + ii * std::cos(delta);
+      f[14] = iq - ir * std::cos(delta) - ii * std::sin(delta);
+      f[15] = ir + G_ * vr - B_ * vi - inr;
+      f[16] = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
       f[18] = ini - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
+
+      /* Compensated terminal voltage E_C (sent to exciter) */
+      f[19] = ec - std::sqrt((vr + Rc_ * ir - Xc_ * ii) * (vr + Rc_ * ir - Xc_ * ii) + (vi + Rc_ * ii + Xc_ * ir) * (vi + Rc_ * ii + Xc_ * ir));
 
       return 0;
     }

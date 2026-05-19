@@ -38,21 +38,24 @@ namespace GridKit
     {
       DELTA,  ///< $\delta$
       OMEGA,  ///< $\omega$
+      EPQ,    ///< $E'_q$
       PSIPD,  ///< $\psi'_d$
       PSIPQ,  ///< $\psi'_q$
       EPD,    ///< $E'_d$
-      EPQ,    ///< $E'_q$
+      PSIPPQ, ///< $\psi''_q$
+      PSIPPD, ///< $\psi''_d$
+      PSIPP,  ///< $\psi''$
+      KSAT,   ///< $k_{sat}$
       VD,     ///< $V_d$
       VQ,     ///< $V_q$
+      TE,     ///< $T_e$
       ID,     ///< $I_d$
       IQ,     ///< $I_q$
       IR,     ///< $I_r$
       II,     ///< $I_i$
-      PSIPPQ, ///< $\psi''_q$
-      PSIPPD, ///< $\psi''_d$
-      PSIPP,  ///< $\psi''$
-      TE,     ///< $T_e$
-      KSAT,   ///< $k_{sat}$
+      INR,    ///< $I_{nr}$
+      INI,    ///< $I_{ni}$
+      EC,     ///< $E_C$
       MAXIMUM,
     };
 
@@ -114,6 +117,8 @@ namespace GridKit
              RealT     H,
              RealT     D,
              RealT     Ra,
+             RealT     Rc,
+             RealT     Xc,
              RealT     Tdop,
              RealT     Tdopp,
              RealT     Tqopp,
@@ -223,6 +228,8 @@ namespace GridKit
       RealT H_{0.0};
       RealT D_{0.0};
       RealT Ra_{0.0};
+      RealT Rc_{0.0};
+      RealT Xc_{0.06};
       RealT Tdop_{0.0};
       RealT Tdopp_{0.0};
       RealT Tqopp_{0.0};

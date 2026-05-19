@@ -25,9 +25,6 @@ namespace GridKit
     } // namespace Exciter
 
     template <class ScalarT, typename IdxT>
-    class BusBase;
-
-    template <class ScalarT, typename IdxT>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -58,8 +55,7 @@ namespace GridKit
       enum class Ieeet1ExternalVariables : size_t
       {
         OMEGA, ///< Generator speed deviation
-        VREAL, ///< Real bus voltage
-        VIMAG, ///< Imaginary bus voltage
+        EC,    ///< Compensated machine terminal voltage from generator
         VS,    ///< Stabilizer output signal
         MAXIMUM,
       };
@@ -76,7 +72,6 @@ namespace GridKit
         using Component<ScalarT, IdxT>::time_;
         using Component<ScalarT, IdxT>::y_;
         using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::wb_;
         using Component<ScalarT, IdxT>::J_;
         using Component<ScalarT, IdxT>::J_rows_buffer_;
         using Component<ScalarT, IdxT>::J_cols_buffer_;
@@ -88,16 +83,13 @@ namespace GridKit
         using RealT           = typename Component<ScalarT, IdxT>::RealT;
         using model_data_type = Ieeet1Data<RealT, IdxT>;
         using signal_type     = SignalNode<ScalarT, IdxT>;
-        using bus_type        = BusBase<ScalarT, IdxT>;
         using MonitorT        = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
-        Ieeet1(bus_type* bus);
+        Ieeet1();
         Ieeet1(signal_type*           efd_signal,
                signal_type*           speed_signal,
-               bus_type*              bus,
                const model_data_type& data);
-        Ieeet1(bus_type*              bus,
-               const model_data_type& data);
+        Ieeet1(const model_data_type& data);
         ~Ieeet1();
 
         int setGridKitComponentID(IdxT) override final;
@@ -124,9 +116,8 @@ namespace GridKit
 
       private:
         // Signal pointers
-        signal_type* efd_signal_;
-        signal_type* speed_signal_;
-        bus_type*    bus_;
+        signal_type* efd_signal_{nullptr};
+        signal_type* speed_signal_{nullptr};
 
         // Model Input parameters
         RealT Tr_;      ///< Time constant for voltage sensing
@@ -155,7 +146,6 @@ namespace GridKit
         ScalarT vUEL_{0};
         ScalarT vOEL_{0};
         ScalarT vS_{0};
-        ScalarT Ec_{0}; // "Compensated" terminal measurment, currently unused
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;

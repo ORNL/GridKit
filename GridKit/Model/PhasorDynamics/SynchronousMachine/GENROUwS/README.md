@@ -11,8 +11,8 @@ Notes:
 ## Block Diagram
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
-   
-  Figure 2: GENROU. Figure courtesy of 
+
+  Figure 2: GENROU. Figure courtesy of
   [PowerWorld](https://www.powerworld.com/WebHelp/)
 </div>
 
@@ -25,6 +25,8 @@ $Q_0$      | [p.u.]  | Initial reactive power injection | 0.0 |
 $H$        | [s]     | rotor inertia                   | 3
 $D$        | [p.u.]  | damping coefficient             | 0
 $R_a$      | [p.u.]  | winding resistance              | 0
+$R_c$      | [p.u.]  | Compensation resistance for $E_C$ sensed by exciter | 0
+$X_c$      | [p.u.]  | Compensation reactance for $E_C$ sensed by exciter | 0.06
 $T'_{d0}$  | [s]     | Open circuit direct axis transient time const. | 7 |
 $T''_{d0}$ | [s]     | Open circuit direct axis sub-transient time const. | 0.04 |
 $T'_{q0}$  | [s]     | Open circuit quadrature axis transient time const. | 0.75 |
@@ -40,12 +42,20 @@ $S_{10}$   | [p.u.]  | Saturation factor at 1.0 pu flux | 0 |
 $S_{12}$   | [p.u.]  | Saturation factor at 1.2 pu flux | 0 |
 $S_\mathrm{mach}$ | [MVA] | Machine power base        | 100 |
 
+The line-drop compensation impedance $R_c + jX_c$ represents the impedance
+between the generator terminal and the point at which the exciter senses
+voltage (e.g., the high side of the step-up transformer). The implemented
+output is
+$E_C=\sqrt{(V_r + R_c I_r - X_c I_i)^2 + (V_i + R_c I_i + X_c I_r)^2}$.
+A nonzero $X_c$ can keep $|E_C|$ supported by reactive current during fault
+transients without raising the physical bus voltage.
+
 ### Model Derived Parameters
 ``` math
 \begin{aligned}
   G      &=  \dfrac{R_a}{R_a^2+(X_q'')^2} &
   B      &= -\dfrac{X_q''}{R_a^2+(X_q'')^2}\\
-  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} & 
+  S_A    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} +1}{\sqrt{S_{10}/S_{12}} +1} &
   S_B    &= \dfrac{1.2\sqrt{S_{10}/S_{12}} -1}{\sqrt{S_{10}/S_{12}} -1} \\
   X_{d1} &= X_d-X_d'                 & X_{q1} &= X_q-X_q' \\
   X_{d2} &= X_d'-X_\ell              & X_{q2} &= X_q'-X_\ell\\
@@ -70,18 +80,18 @@ Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
 $\delta$  | [rad]  | Machine internal rotor angle      |
 $\omega$  | [p.u.] | Machine Speed Deviation           | Optionally read by governor or stabilizer component
-$\psi'_d$ | [p.u.] | Direct axis subtransient flux     | 
-$\psi'_q$ | [p.u.] | Quadrature axis subtransient flux | 
-$E'_d$    | [p.u.] | Direct axis transient flux        | 
-$E'_q$    | [p.u.] | Quadrature axis subtransient flux | 
+$\psi'_d$ | [p.u.] | Direct axis subtransient flux     |
+$\psi'_q$ | [p.u.] | Quadrature axis subtransient flux |
+$E'_d$    | [p.u.] | Direct axis transient flux        |
+$E'_q$    | [p.u.] | Quadrature axis subtransient flux |
 
 #### Algebraic
 Symbol      | Units  | Description                       | Note
 ------------|--------|---------------------------------  | ------
-$V_d$       | [p.u.] | Machine internal voltage, d-axis  | 
-$V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
-$I_d$       | [p.u.] | Terminal current, d-axis          | 
-$I_q$       | [p.u.] | Terminal current, q-axis          | 
+$V_d$       | [p.u.] | Machine internal voltage, d-axis  |
+$V_q$       | [p.u.] | Machine internal voltage, q-axis  |
+$I_d$       | [p.u.] | Terminal current, d-axis          |
+$I_q$       | [p.u.] | Terminal current, q-axis          |
 $I_r$       | [p.u.] | Terminal current, real component on network reference frame      | Read by bus and optionally by controllers
 $I_i$       | [p.u.] | Terminal current, imaginary component on network reference frame | Read by bus and optionally by controllers
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |
@@ -89,6 +99,7 @@ $\psi''_d$  | [p.u.] | Total d-axis subtransient flux    |
 $\psi''$    | [p.u.] | Machine total subtransient flux   |
 $T_{e}$     | [p.u.] | Electrical torque                 |
 $k_{sat}$   | [p.u.] | Saturation coefficient            |
+$E_C$       | [p.u.] | Compensated terminal voltage      | Sent to exciter
 
 ### External Variables
 
@@ -109,22 +120,16 @@ $E_{fd}$ | [p.u.] | Field winding voltage from the excitation system | Owned by 
 
 ``` math
 \begin{aligned}
-  \dot\delta      &= \omega \cdot 2\pi f_\mathrm{base} \\
-  \dot\omega      &= \dfrac{1}{2H}\left(\dfrac{P_{m}-D\omega}{1+\omega}
-                   - T_{elec}\right)\\
-  \dot{\psi}'_{d} &= \dfrac{1}{T''_{d0}}(E'_{q}-\psi'_{d}-X_{d2}I_{d})\\
-  \dot{\psi}'_{q} &= \dfrac{1}{T''_{q0}}(E'_{d}-\psi'_{q}+X_{q2}I_{q})\\
-  \dot{E}'_{d}    &= \dfrac{1}{T'_{q0}}
-    \left( -E'_{d}+X_{q1}
+  0 &= -\dot\delta              + \omega\cdot 2\pi f_\mathrm{base} \\
+  0 &= -2H\,\dot\omega          + \dfrac{P_{m}-D\omega}{1+\omega} - T_{elec} \\
+  0 &= -T''_{d0}\,\dot{\psi}'_{d} + E'_{q}-\psi'_{d}-X_{d2}I_{d} \\
+  0 &= -T''_{q0}\,\dot{\psi}'_{q} + E'_{d}-\psi'_{q}+X_{q2}I_{q} \\
+  0 &= -T'_{q0}\,\dot{E}'_{d}   - E'_{d}+X_{q1}
       (I_{q}-X_{q3}(E'_{d}-\psi'_{q}+X_{q2}I_{q}))
-      + X_{qd}\psi''_{q}k_{sat}
-    \right) \\
-  \dot{E}'_{q} &= \dfrac{1}{T'_{d0}}
-    \left(
-      E_{fd}-E'_{q}-X_{d1}
+      + X_{qd}\psi''_{q}k_{sat} \\
+  0 &= -T'_{d0}\,\dot{E}'_{q}   + E_{fd}-E'_{q}-X_{d1}
       (I_{d}+X_{d3}(E'_{q}-\psi'_{d}-X_{d2}I_{d}))
-      -\psi''_{d}k_{sat}
-    \right)\\
+      -\psi''_{d}k_{sat} \\
 \end{aligned}
 ```
 
@@ -134,27 +139,28 @@ Note that for implementation purposes, some of these equations may be simplified
 \begin{aligned}
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
-  0 &= -\psi'' +\sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
+  0 &= -(\psi'')^2 + (\psi''_{d})^2+(\psi''_{q})^2 \\
   0 &= -V_{d} -\psi''_{q}(1+\omega)\\
   0 &= -V_{q}  +\psi''_{d}(1+\omega)\\
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
-  0 &= -k_{sat} + S_B(\psi''-S_A)^2\sigma(\psi''-S_A) \\
+  0 &= -k_{sat} + S_B(\psi''-S_A)^2 \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
+  0 &= -E_C^2 + (V_r + R_c I_r - X_c I_i)^2 + (V_i + R_c I_i + X_c I_r)^2
 \end{aligned}
 ```
 
 ## Initialization
 
 ### Without Saturation
-Presume there is no saturation to simplify the solution procedure for the initial 
+Presume there is no saturation to simplify the solution procedure for the initial
 conditions.
 
-Using the power-flow solution, we have explicit solutions for the following 
+Using the power-flow solution, we have explicit solutions for the following
 variables. The internal variables $I_d$, $I_q$, $V_d$, and $V_q$ are calculated
-from the network interface equations. The remaining are algebraically solved 
+from the network interface equations. The remaining are algebraically solved
 from the steady-state initial conditions.
 ``` math
 \begin{aligned}

@@ -126,6 +126,27 @@ namespace AnalysisManager
         return 0;
       }
 
+      /**
+       * @brief Read-only pointer to IDA's current internal yy_ data.
+       *
+       * After a SUNDIALS failure, yy_/yp_ reflect IDA's last attempted state
+       * (which is what we want to diagnose). Exposed as a borrowed pointer so
+       * callers can inspect it without copying; no allocation, no ownership
+       * transfer.
+       */
+      const RealT* yyData()
+      {
+        return N_VGetArrayPointer(yy_);
+      }
+
+      const RealT* ypData()
+      {
+        return N_VGetArrayPointer(yp_);
+      }
+
+      /// @brief Time at which IDA's current internal state is valid (queries SUNDIALS).
+      RealT currentInternalTime();
+
       int getSavedInitialCondition()
       {
         N_VScale(1.0, yy0_, yy_);
