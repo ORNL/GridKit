@@ -51,16 +51,16 @@ namespace GridKit
     /**
      * @brief Contains modeling data for a GenClassical generator model.
      *
-     * @tparam RealT Real parameter data type
-     * @tparam IdxT  Integer parameter data type
+     * @tparam real_type  Real parameter data type
+     * @tparam index_type Integer parameter data type
      *
      * Integer parameters are of the same type as matrix and vector indices.
      *
      * @todo Decide on naming scheme for model parameters.
      */
-    template <typename RealT, typename IdxT>
-    struct GenClassicalData : public ComponentData<RealT,
-                                                   IdxT,
+    template <typename real_type, typename index_type>
+    struct GenClassicalData : public ComponentData<real_type,
+                                                   index_type,
                                                    GenClassicalParameters,
                                                    GenClassicalPorts,
                                                    GenClassicalMonitorableVariables>

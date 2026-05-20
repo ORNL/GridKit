@@ -23,10 +23,12 @@ namespace GridKit
      * @brief BusBase model implementation base class.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    class BusBase : public Model::Evaluator<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class BusBase : public Model::Evaluator<scalar_type, index_type>
     {
     public:
+      using ScalarT  = scalar_type;
+      using IdxT     = index_type;
       using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using MatrixT  = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
       using BusTypeT = typename BusData<RealT, IdxT>::BusType;

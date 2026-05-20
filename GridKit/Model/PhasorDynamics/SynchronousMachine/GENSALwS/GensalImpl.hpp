@@ -19,8 +19,8 @@ namespace GridKit
     /**
      * @brief Constructor for a GENSAL generator model with saturation
      */
-    template <class ScalarT, typename IdxT>
-    Gensal<ScalarT, IdxT>::Gensal(bus_type* bus, const model_data_type& data)
+    template <typename scalar_type, typename index_type>
+    Gensal<scalar_type, index_type>::Gensal(BusT* bus, const ModelDataT& data)
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
@@ -31,119 +31,119 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    Gensal<ScalarT, IdxT>::~Gensal()
+    template <typename scalar_type, typename index_type>
+    Gensal<scalar_type, index_type>::~Gensal()
     {
     }
 
     /// Helper function to extract and assign model parameters from the model's associated
     /// data structure.
-    template <class ScalarT, typename IdxT>
-    void Gensal<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+    template <typename scalar_type, typename index_type>
+    void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      if (data.parameters.contains(model_data_type::Parameters::p0))
+      if (data.parameters.contains(ModelDataT::Parameters::p0))
       {
-        p0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::p0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::q0))
+      if (data.parameters.contains(ModelDataT::Parameters::q0))
       {
-        q0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::q0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::H))
+      if (data.parameters.contains(ModelDataT::Parameters::H))
       {
-        H_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::H));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::D))
+      if (data.parameters.contains(ModelDataT::Parameters::D))
       {
-        D_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::D));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Ra))
+      if (data.parameters.contains(ModelDataT::Parameters::Ra))
       {
-        Ra_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ra));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tdop))
+      if (data.parameters.contains(ModelDataT::Parameters::Tdop))
       {
-        Tdop_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdop));
+        Tdop_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdop));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tdopp))
+      if (data.parameters.contains(ModelDataT::Parameters::Tdopp))
       {
-        Tdopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdopp));
+        Tdopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdopp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Tqopp))
+      if (data.parameters.contains(ModelDataT::Parameters::Tqopp))
       {
-        Tqopp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tqopp));
+        Tqopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tqopp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xd))
+      if (data.parameters.contains(ModelDataT::Parameters::Xd))
       {
-        Xd_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xd));
+        Xd_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xd));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xdp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xdp))
       {
-        Xdp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xdpp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xdpp))
       {
-        Xdpp_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xdpp));
+        Xdpp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdpp));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xq))
+      if (data.parameters.contains(ModelDataT::Parameters::Xq))
       {
-        Xq_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xq));
+        Xq_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xq));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Xl))
+      if (data.parameters.contains(ModelDataT::Parameters::Xl))
       {
-        Xl_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Xl));
+        Xl_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xl));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::S10))
+      if (data.parameters.contains(ModelDataT::Parameters::S10))
       {
-        S10_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S10));
+        S10_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S10));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::S12))
+      if (data.parameters.contains(ModelDataT::Parameters::S12))
       {
-        S12_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S12));
+        S12_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S12));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::mva))
+      if (data.parameters.contains(ModelDataT::Parameters::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::mva));
+        mva_base_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::mva));
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* Gensal<ScalarT, IdxT>::getMonitor() const
+    template <typename scalar_type, typename index_type>
+    const Model::VariableMonitorBase* Gensal<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT Gensal<ScalarT, IdxT>::toMachineBase(ScalarT value) const
+    template <typename scalar_type, typename index_type>
+    scalar_type Gensal<scalar_type, index_type>::toMachineBase(ScalarT value) const
     {
       return value * va_system_base_ / va_machine_base_;
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT Gensal<ScalarT, IdxT>::toSystemBase(ScalarT value) const
+    template <typename scalar_type, typename index_type>
+    scalar_type Gensal<scalar_type, index_type>::toSystemBase(ScalarT value) const
     {
       return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
     }
 
-    template <class ScalarT, typename IdxT>
-    void Gensal<ScalarT, IdxT>::initializeMonitor()
+    template <typename scalar_type, typename index_type>
+    void Gensal<scalar_type, index_type>::initializeMonitor()
     {
-      using Variable = typename model_data_type::MonitorableVariables;
+      using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
                     { return toSystemBase(y_[12]); });
       monitor_->set(Variable::ii, [this]
@@ -181,8 +181,8 @@ namespace GridKit
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -191,8 +191,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::allocate()
     {
       // Resize component model data
       auto size = static_cast<size_t>(size_);
@@ -232,8 +232,8 @@ namespace GridKit
     /**
      * @brief verify method checks that attached signals are also linked
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::verify() const
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::verify() const
     {
       static constexpr auto PM  = GensalExternalVariables::PM;
       static constexpr auto EFD = GensalExternalVariables::EFD;
@@ -265,8 +265,8 @@ namespace GridKit
      * Initialization of the generator model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::initialize()
     {
       // Network frame terminal values
       ScalarT vr  = Vr();
@@ -336,8 +336,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::tagDifferentiable()
     {
       for (IdxT i = 0; i < size_; ++i)
       {
@@ -350,8 +350,8 @@ namespace GridKit
      * @brief Internal residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Gensal<ScalarT, IdxT>::evaluateInternalResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
@@ -421,8 +421,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Gensal<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -443,8 +443,8 @@ namespace GridKit
      * \brief Residual evaluation and contribution to the connected bus
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::evaluateResidual()
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
@@ -480,24 +480,22 @@ namespace GridKit
     /**
      * @brief Access generator relative speed
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
-    template <class ScalarT, typename IdxT>
-    ScalarT Gensal<ScalarT, IdxT>::getSpeed()
+    template <typename scalar_type, typename index_type>
+    scalar_type Gensal<scalar_type, index_type>::getSpeed()
     {
       return y_[1];
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT Gensal<ScalarT, IdxT>::getTorque()
+    template <typename scalar_type, typename index_type>
+    scalar_type Gensal<scalar_type, index_type>::getTorque()
     {
       return y_[9];
     }
 
-    template <class ScalarT, typename IdxT>
-    void Gensal<ScalarT, IdxT>::setDerivedParams()
+    template <typename scalar_type, typename index_type>
+    void Gensal<scalar_type, index_type>::setDerivedParams()
     {
       SA_ = 0;
       SB_ = 0;

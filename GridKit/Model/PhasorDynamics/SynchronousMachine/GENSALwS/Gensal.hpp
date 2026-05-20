@@ -17,10 +17,10 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct GensalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -61,36 +61,38 @@ namespace GridKit
       MAXIMUM,
     };
 
-    template <class ScalarT, typename IdxT>
-    class Gensal : public Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class Gensal : public Component<scalar_type, index_type>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::freq_system_base_;
-      using Component<ScalarT, IdxT>::va_system_base_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::f_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::J_;
+      using Component<scalar_type, index_type>::J_rows_buffer_;
+      using Component<scalar_type, index_type>::J_cols_buffer_;
+      using Component<scalar_type, index_type>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::freq_system_base_;
+      using Component<scalar_type, index_type>::va_system_base_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
 
     public:
-      using RealT           = typename Component<ScalarT, IdxT>::RealT;
-      using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = GensalData<RealT, IdxT>;
-      using MonitorT        = Model::VariableMonitor<Gensal, GensalData>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Component<ScalarT, IdxT>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = GensalData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<Gensal, GensalData>;
 
-      Gensal(bus_type* bus, const model_data_type& data);
+      Gensal(BusT* bus, const ModelDataT& data);
       ~Gensal();
 
       int setGridKitComponentID(IdxT) override final;
@@ -121,7 +123,7 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeParameters(const model_data_type& data);
+      void initializeParameters(const ModelDataT& data);
       /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
@@ -172,7 +174,7 @@ namespace GridKit
 
     private:
       /* Identification */
-      bus_type* bus_;
+      BusT* bus_;
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;

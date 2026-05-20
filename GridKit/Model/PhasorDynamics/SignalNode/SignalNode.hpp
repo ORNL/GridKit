@@ -7,7 +7,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct SignalNodeData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -20,11 +20,13 @@ namespace GridKit
      * @brief SignalNode model implementation base class.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SignalNode
     {
     public:
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       SignalNode();
       SignalNode(const SignalNodeData<RealT, IdxT>& data);

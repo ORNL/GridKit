@@ -24,16 +24,16 @@ namespace GridKit
     {
       using Log = ::GridKit::Utilities::Logger;
 
-      template <class ScalarT, typename IdxT>
-      SexsPti<ScalarT, IdxT>::SexsPti(bus_type* bus)
+      template <typename scalar_type, typename index_type>
+      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus)
         : bus_(bus)
       {
         size_ = 3;
       }
 
-      template <class ScalarT, typename IdxT>
-      SexsPti<ScalarT, IdxT>::SexsPti(bus_type*              bus,
-                                      const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      SexsPti<scalar_type, index_type>::SexsPti(BusT*             bus,
+                                                const ModelDataT& data)
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
@@ -42,20 +42,20 @@ namespace GridKit
         size_ = 3;
       }
 
-      template <class ScalarT, typename IdxT>
-      SexsPti<ScalarT, IdxT>::~SexsPti()
+      template <typename scalar_type, typename index_type>
+      SexsPti<scalar_type, index_type>::~SexsPti()
       {
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
         gridkit_component_id_ = component_id;
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::allocate()
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::allocate()
       {
         auto size = static_cast<size_t>(size_);
         f_.resize(size);
@@ -87,8 +87,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::verify() const
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::verify() const
       {
         int ret = missing_param_count_;
 
@@ -141,8 +141,8 @@ namespace GridKit
         return ret;
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::initialize()
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::initialize()
       {
         ScalarT efd0{0.0};
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
@@ -170,8 +170,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::tagDifferentiable()
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::tagDifferentiable()
       {
         tag_[0] = true;
         tag_[1] = true;
@@ -180,8 +180,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int SexsPti<ScalarT, IdxT>::evaluateInternalResidual(
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int SexsPti<scalar_type, index_type>::evaluateInternalResidual(
           ScalarT* y,
           ScalarT* yp,
           ScalarT* wb,
@@ -208,8 +208,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::evaluateResidual()
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateResidual()
       {
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
@@ -227,10 +227,10 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      void SexsPti<ScalarT, IdxT>::initModelParams(const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      void SexsPti<scalar_type, index_type>::initModelParams(const ModelDataT& data)
       {
-        using Params = typename model_data_type::Parameters;
+        using Params = typename ModelDataT::Parameters;
 
         missing_param_count_ = 0;
 
@@ -255,16 +255,16 @@ namespace GridKit
         load(Params::Efdmin, Efdmin_, "Efdmin");
       }
 
-      template <class ScalarT, typename IdxT>
-      const Model::VariableMonitorBase* SexsPti<ScalarT, IdxT>::getMonitor() const
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* SexsPti<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();
       }
 
-      template <class ScalarT, typename IdxT>
-      void SexsPti<ScalarT, IdxT>::initializeMonitor()
+      template <typename scalar_type, typename index_type>
+      void SexsPti<scalar_type, index_type>::initializeMonitor()
       {
-        using Variable = typename model_data_type::MonitorableVariables;
+        using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
                       { return y_[1]; });
       }

@@ -52,11 +52,15 @@ namespace GridKit
       /**
        * @brief Modeling data for TGOV1 Governor using ComponentData base.
        *
-       * @tparam RealT Real number type (e.g., double)
-       * @tparam IdxT  Index type (e.g., size_t)
+       * @tparam real_type  Real number type (e.g., double)
+       * @tparam index_type Index type (e.g., size_t)
        */
-      template <typename RealT, typename IdxT>
-      struct Tgov1Data : public ComponentData<RealT, IdxT, Tgov1Parameters, Tgov1Ports, Tgov1MonitorableVariables>
+      template <typename real_type, typename index_type>
+      struct Tgov1Data : public ComponentData<real_type,
+                                              index_type,
+                                              Tgov1Parameters,
+                                              Tgov1Ports,
+                                              Tgov1MonitorableVariables>
       {
         Tgov1Data() = default;
 

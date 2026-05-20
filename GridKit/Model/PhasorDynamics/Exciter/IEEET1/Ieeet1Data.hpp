@@ -53,14 +53,14 @@ namespace GridKit
       /**
        * @brief Contains modeling data for a IEEET1 Exciter model.
        *
-       * @tparam RealT Real parameter data type
-       * @tparam IdxT  Integer parameter data type
+       * @tparam real_type  Real parameter data type
+       * @tparam index_type Integer parameter data type
        *
        * Integer parameters are of the same type as matrix and vector indices.
        */
-      template <typename RealT, typename IdxT>
-      struct Ieeet1Data : public ComponentData<RealT,
-                                               IdxT,
+      template <typename real_type, typename index_type>
+      struct Ieeet1Data : public ComponentData<real_type,
+                                               index_type,
                                                Ieeet1Parameters,
                                                Ieeet1Ports,
                                                Ieeet1MonitorableVariables>

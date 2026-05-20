@@ -19,14 +19,14 @@ namespace GridKit
   {
     namespace Governor
     {
-      template <typename RealT, typename IdxT>
+      template <typename real_type, typename index_type>
       struct Tgov1Data;
     } // namespace Governor
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class Genrou;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -55,35 +55,37 @@ namespace GridKit
         MAXIMUM,
       };
 
-      template <class ScalarT, typename IdxT>
-      class Tgov1 : public Component<ScalarT, IdxT>
+      template <typename scalar_type, typename index_type>
+      class Tgov1 : public Component<scalar_type, index_type>
       {
-        using Component<ScalarT, IdxT>::gridkit_component_id_;
-        using Component<ScalarT, IdxT>::alpha_;
-        using Component<ScalarT, IdxT>::f_;
-        using Component<ScalarT, IdxT>::nnz_;
-        using Component<ScalarT, IdxT>::size_;
-        using Component<ScalarT, IdxT>::tag_;
-        using Component<ScalarT, IdxT>::time_;
-        using Component<ScalarT, IdxT>::y_;
-        using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::wb_;
-        using Component<ScalarT, IdxT>::h_;
-        using Component<ScalarT, IdxT>::J_;
-        using Component<ScalarT, IdxT>::J_rows_buffer_;
-        using Component<ScalarT, IdxT>::J_cols_buffer_;
-        using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::variable_indices_;
-        using Component<ScalarT, IdxT>::residual_indices_;
-
-        using RealT           = typename Component<ScalarT, IdxT>::RealT;
-        using model_data_type = Tgov1Data<RealT, IdxT>;
-        using signal_type     = SignalNode<ScalarT, IdxT>;
+        using Component<scalar_type, index_type>::gridkit_component_id_;
+        using Component<scalar_type, index_type>::alpha_;
+        using Component<scalar_type, index_type>::f_;
+        using Component<scalar_type, index_type>::nnz_;
+        using Component<scalar_type, index_type>::size_;
+        using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::time_;
+        using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::yp_;
+        using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::J_;
+        using Component<scalar_type, index_type>::J_rows_buffer_;
+        using Component<scalar_type, index_type>::J_cols_buffer_;
+        using Component<scalar_type, index_type>::J_vals_buffer_;
+        using Component<scalar_type, index_type>::variable_indices_;
+        using Component<scalar_type, index_type>::residual_indices_;
 
       public:
+        using ScalarT    = scalar_type;
+        using IdxT       = index_type;
+        using RealT      = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT = Tgov1Data<RealT, IdxT>;
+        using SignalT    = SignalNode<ScalarT, IdxT>;
+
         Tgov1();
-        Tgov1(signal_type*, signal_type*);
-        Tgov1(const model_data_type&);
+        Tgov1(SignalT*, SignalT*);
+        Tgov1(const ModelDataT&);
         ~Tgov1() = default;
 
         int setGridKitComponentID(IdxT) override final;
@@ -126,7 +128,7 @@ namespace GridKit
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
         // Parameter initialization function
-        void initializeParameters(const model_data_type& data);
+        void initializeParameters(const ModelDataT& data);
 
         /* Local copies of signal variables */
         std::vector<ScalarT> ws_;

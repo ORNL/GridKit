@@ -8,12 +8,10 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation not implemented
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::evaluateJacobian()
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for LoadZIP..." << std::endl;
       Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;

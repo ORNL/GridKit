@@ -23,7 +23,7 @@ namespace GridKit
 {
   namespace Model
   {
-    template <typename ScalarT>
+    template <typename scalar_type>
     class VariableMonitorController;
 
     namespace VariableMonitorDetail
@@ -165,7 +165,7 @@ namespace GridKit
       ///@}
     };
 
-    template <typename EvalT, template <typename, typename> typename DataT>
+    template <typename eval_type, template <typename, typename> typename model_data_type>
     class VariableMonitor;
 
   } // namespace Model

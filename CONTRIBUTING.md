@@ -240,15 +240,17 @@ Always declare type aliases with the `using` keyword rather than `typedef typena
   typedef typename GridKit::ScalarTraits<ScalarT>::RealT RealT; // No
 ```
 
-Types that are used as template parameters should use uppercase camel name format, 
-similar to classes, with the `T` suffix to indicate that it is a type. 
-For consistency, use the same name everywhere the same type is used.
+Types that are used as template parameters should use `snake_case` format, with
+the `_type` suffix to indicate that it is a type.  Types used within class
+implementation code and provided in the public class interface should use
+`UpperCamelT` format, similar to class names, but with a `T` suffix.  For
+consistency, create aliases for template type parameters (*e.g.,* `using ScalarT
+= scalar_type;`) and use the same name everywhere the same type is used.
 
 ```c++
-  template <typename RealT> ...; // Yes
-  template <typename real_type>; // No, `_type` used in a template parameter name
+  template <typename real_type> ...; // Yes
+  template <typename RealT>; // No, using format reserved for interface types
 ```
-
 
 ### Constants
 

@@ -11,7 +11,7 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct BusFaultData;
   }
 } // namespace GridKit
@@ -20,32 +20,34 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
-    class BusFault : public Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class BusFault : public Component<scalar_type, index_type>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::J_rows_buffer_;
+      using Component<scalar_type, index_type>::J_cols_buffer_;
+      using Component<scalar_type, index_type>::J_vals_buffer_;
 
     public:
-      using bus_type = BusBase<ScalarT, IdxT>;
-      using RealT    = typename Component<ScalarT, IdxT>::RealT;
-      using DataT    = BusFaultData<RealT, IdxT>;
-      using MonitorT = Model::VariableMonitor<BusFault, BusFaultData>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Component<ScalarT, IdxT>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = BusFaultData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<BusFault, BusFaultData>;
 
-      BusFault(bus_type* bus);
-      BusFault(bus_type* bus, RealT R, RealT X, int status);
-      BusFault(bus_type* bus, const DataT& data);
+      BusFault(BusT* bus);
+      BusFault(BusT* bus, RealT R, RealT X, int status);
+      BusFault(BusT* bus, const ModelDataT& data);
       ~BusFault();
 
       int setGridKitComponentID(IdxT) override final;
@@ -111,11 +113,11 @@ namespace GridKit
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
-      bus_type* bus_;
-      RealT     R_{0.0};
-      RealT     X_{0.0};
-      bool      status_{false};
-      IdxT      bus_id_{0};
+      BusT* bus_;
+      RealT R_{0.0};
+      RealT X_{0.0};
+      bool  status_{false};
+      IdxT  bus_id_{0};
 
       /* Derivied parameters */
       RealT B_;

@@ -59,12 +59,12 @@ namespace GridKit
       /**
        * @brief Contains modeling data for a IEEEST Stabilizer model.
        *
-       * @tparam RealT Real parameter data type
-       * @tparam IdxT  Integer parameter data type
+       * @tparam real_type  Real parameter data type
+       * @tparam index_type Integer parameter data type
        */
-      template <typename RealT, typename IdxT>
-      struct IeeestData : public ComponentData<RealT,
-                                               IdxT,
+      template <typename real_type, typename index_type>
+      struct IeeestData : public ComponentData<real_type,
+                                               index_type,
                                                IeeestParameters,
                                                IeeestPorts,
                                                IeeestMonitorableVariables>

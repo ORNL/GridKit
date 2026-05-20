@@ -39,9 +39,9 @@ namespace GridKit
         efd ///< Field voltage output
       };
 
-      template <typename RealT, typename IdxT>
-      struct SexsPtiData : public ComponentData<RealT,
-                                                IdxT,
+      template <typename real_type, typename index_type>
+      struct SexsPtiData : public ComponentData<real_type,
+                                                index_type,
                                                 SexsPtiParameters,
                                                 SexsPtiPorts,
                                                 SexsPtiMonitorableVariables>

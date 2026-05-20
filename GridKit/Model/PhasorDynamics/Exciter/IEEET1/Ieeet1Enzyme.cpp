@@ -17,12 +17,10 @@ namespace GridKit
       /**
        * @brief Jacobian evaluation not implemented yet
        *
-       * @tparam ScalarT - Scalar data type
-       * @tparam IdxT    - Index data type
        * @return int - error code, 0 = success
        */
-      template <class ScalarT, typename IdxT>
-      int Ieeet1<ScalarT, IdxT>::evaluateJacobian()
+      template <class scalar_type, typename index_type>
+      int Ieeet1<scalar_type, index_type>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for Ieeet1..." << std::endl;
         Log::misc() << "Jacobian evaluation is experimental!" << std::endl;

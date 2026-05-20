@@ -31,9 +31,11 @@ namespace GridKit
     ///
     /// In particular, this structure is modeled after the grid dynamics
     /// case format, which is described within `INPUT_FORMAT.md`
-    template <typename RealT = double, typename IdxT = size_t>
+    template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
+      using RealT                   = real_type;
+      using IdxT                    = index_type;
       using BranchDataT             = BranchData<RealT, IdxT>;
       using BusDataT                = BusData<RealT, IdxT>;
       using BusToSignalAdapterDataT = BusToSignalAdapterData<RealT, IdxT>;
