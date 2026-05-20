@@ -1,0 +1,138 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "GENSAL two-bus validation",
+        "case_description": "Two-bus case: GENSAL machine on Bus_1, 100 MW resistive load on Bus_2, lossless tie line X=0.1, bus fault on Bus_2",
+        "case_comments": "Validates GENSAL trajectory against an external (PowerWorld) reference. Monitors machine differential states.",
+        "freq_base": 60.0,
+        "va_base": 100e6
+    },
+    "monitors": [
+        {
+            "file_name": "mon.csv",
+            "format": "csv"
+        }
+    ],
+    "buses": [
+        {
+            "number": 1,
+            "class": "bus",
+            "name": "Bus_1",
+            "init": {
+                "Vr": 1.0,
+                "Vi": 0.0
+            },
+            "v_base": 138e3
+        },
+        {
+            "number": 2,
+            "class": "bus",
+            "name": "Bus_2",
+            "init": {
+                "Vr": 0.9898978476307575,
+                "Vi": -0.09999998417733978
+            },
+            "v_base": 138e3
+        }
+    ],
+    "signals": [
+        { "signal_id": 0, "name": "gensal_1_1_speed_deviation" },
+        { "signal_id": 1, "name": "gensal_1_1_mechanical_power" },
+        { "signal_id": 2, "name": "gensal_1_1_excitation_field" }
+    ],
+    "devices": [
+        {
+            "class": "Gensal",
+            "ports": {"bus": 1, "speed": 0, "pmech": 1, "efd": 2},
+            "id": "gensal_1_1",
+            "params": {
+                "p0": 1.0,
+                "q0": 0.10102,
+                "H": 3.0,
+                "D": 0.0,
+                "Ra": 0.0,
+                "Tdop": 7.0,
+                "Tdopp": 0.04,
+                "Tqopp": 0.05,
+                "Xd": 2.1,
+                "Xdp": 0.2,
+                "Xdpp": 0.18,
+                "Xq": 0.5,
+                "Xl": 0.15,
+                "S10": 0.0,
+                "S12": 0.0,
+                "mva_base": 100.0
+            },
+            "mon": ["delta", "speed", "Eqp", "psidp", "psiqpp"]
+        },
+        {
+            "class": "Tgov1",
+            "ports": {"bus": 1, "speed": 0, "pmech": 1},
+            "id": "tgov1_1_1",
+            "params": {
+                "R": 0.05,
+                "T1": 0.5,
+                "T2": 2.5,
+                "T3": 7.5,
+                "Pvmin": 0.0,
+                "Pvmax": 1.2,
+                "Dt": 0.0
+            }
+        },
+        {
+            "class": "Ieeet1",
+            "ports": {"bus": 1, "speed": 0, "efd": 2},
+            "id": "ieeet1_1_1",
+            "params": {
+                "Tr": 0.000001,
+                "Ka": 50.0,
+                "Ta": 0.04,
+                "Ke": -0.06,
+                "Te": 0.6,
+                "Kf": 0.09,
+                "Tf": 1.46,
+                "Vrmin": -1.0,
+                "Vrmax": 1.0,
+                "E1": 2.8,
+                "E2": 3.73,
+                "Se1": 0.04,
+                "Se2": 0.33,
+                "Ispdlim": 0.0
+            }
+        },
+        {
+            "class": "Branch",
+            "ports": {"bus1": 1, "bus2": 2},
+            "id": "BR_1_2",
+            "params": {
+                "R": 0.0,
+                "X": 0.1,
+                "G": 0.0,
+                "B": 0.0
+            }
+        },
+        {
+            "class": "LoadZIP",
+            "ports": {"bus": 2},
+            "id": "load_2",
+            "params": {
+                "P0": 1.0,
+                "Q0": 0.0,
+                "V0": 0.99494,
+                "alphaI": 0.0,
+                "alphaP": 0.0
+            }
+        },
+        {
+            "class": "BusFault",
+            "ports": {"bus": 2},
+            "id": "0",
+            "params": {
+                "state0": false,
+                "R": 0.0,
+                "X": 0.01
+            }
+        }
+    ]
+}

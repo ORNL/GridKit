@@ -84,7 +84,8 @@ namespace GridKit
       using Component<ScalarT, IdxT>::J_rows_buffer_;
       using Component<ScalarT, IdxT>::J_cols_buffer_;
       using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::mva_system_base_;
+      using Component<ScalarT, IdxT>::freq_system_base_;
+      using Component<ScalarT, IdxT>::va_system_base_;
       using Component<ScalarT, IdxT>::variable_indices_;
       using Component<ScalarT, IdxT>::residual_indices_;
 
@@ -161,6 +162,26 @@ namespace GridKit
       void initializeMonitor();
       void setDerivedParams();
 
+      /**
+       * @brief Convert per-unit current or power from system base to machine base.
+       *
+       * @note For terminal-current quantities, this scaling assumes the machine
+       * voltage base matches the interfacing bus voltage base. A voltage-base
+       * mismatch is not a concern here because the model is formulated at the
+       * machine terminals using the connected bus voltage base.
+       */
+      ScalarT toMachineBase(ScalarT value) const;
+
+      /**
+       * @brief Convert per-unit current or power from machine base to system base.
+       *
+       * @note For terminal-current quantities, this scaling assumes the machine
+       * voltage base matches the interfacing bus voltage base. A voltage-base
+       * mismatch is not a concern here because the model is formulated at the
+       * machine terminals using the connected bus voltage base.
+       */
+      ScalarT toSystemBase(ScalarT value) const;
+
       ScalarT& Vr()
       {
         return bus_->Vr();
@@ -233,6 +254,7 @@ namespace GridKit
       RealT Xqd_;
       RealT G_;
       RealT B_;
+      RealT va_machine_base_;
 
       /* Setpoints for control variables (determined at initialization) */
       ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set

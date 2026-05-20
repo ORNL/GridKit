@@ -1,0 +1,11 @@
+{
+    "system_model_file": "Gensal.case.json",
+    "dt": 0.00416666666666,
+    "tmax": 30.0,
+    "events": [
+        {"time": 1.0, "type": "fault_on",  "element_id": 0},
+        {"time": 1.1, "type": "fault_off", "element_id": 0}
+    ],
+    "reference_file": "Gensal.ref.csv",
+    "error_tolerance": 5e-2
+}

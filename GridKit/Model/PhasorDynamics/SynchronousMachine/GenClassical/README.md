@@ -9,16 +9,20 @@ it is equivalent to a driven damped pendulum model.
 
 Symbol      | Units   | Description                     | Note
 ------------|---------|---------------------------------|----------------------
-$\omega_0$  | [rad/s] | synchronous frequency           |
+$P_0$       | [p.u.]  | initial active power injection  |
+$Q_0$       | [p.u.]  | initial reactive power injection |
 $H$         | [s]     | rotor inertia                   |
 $D$         | [p.u.]  | damping coefficient             |
 $R_a$       | [p.u.]  | winding resistance              |
 $X_{dp}$    | [p.u.]  | machine reactance parameter     |
+$S_\mathrm{mach}$ | [MVA] | machine power base        |
 
 ### Model Derived Parameters
 
 - $G = \dfrac{R_a}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding conductance
 - $B = \dfrac{-X_{dp}}{R_a^2 + X_{dp}^2} ~~~$ equivalent stator winding susceptance
+- $f_\mathrm{base} = f_\mathrm{sys} ~~~$ frequency base taken from the system at initialization
+- $S_\mathrm{mach,VA} = 10^6 S_\mathrm{mach} ~~~$ derived machine base used for machine-base/system-base conversions
 
 <br>
 
@@ -74,7 +78,7 @@ $E_p$  | [p.u.]  | field winding voltage         | owned by exciter, constant if
 
 ```math 
 \begin{aligned}
-\dot{\delta} &= \omega \cdot \omega_0 \\
+\dot{\delta} &= \omega \cdot 2\pi f_\mathrm{base} \\
 \dot{\omega} &= \frac{1}{2H}\left( \frac{P_{m} - D\omega}{1+\omega}   - T_{e}\right)
 \end{aligned}
 ```
@@ -162,18 +166,11 @@ With this, we initialize the machine at a steady state.
 
 ## Model Outputs
 
-Real and imaginary currents, $I_r$ and $I_i$, are model algebraic variables,
-oriented as leaving the machine (i.e. entering the bus).
-
-Machine angle $\delta$ and speed $\omega$ are model state variables.
-
-Active and reactive power ($P$, and $Q$) 
-are the real and imaginary parts of the complex power, 
-defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
-``` math
-\begin{aligned}
-      P &= V_{r} I_{r} + V_{i} I_{i}\\
-      Q &= V_{i} I_{r} - V_{r} I_{i}
-\end{aligned}
-```
-Power outputs are oriented leaving the machine (i.e. entering the bus).
+Symbol     | Units  | Description                       | Note
+-----------|--------|-----------------------------------|------
+$I_r$      | [p.u.] | Terminal current, real component on network reference frame | Oriented leaving the machine, system base
+$I_i$      | [p.u.] | Terminal current, imaginary component on network reference frame | Oriented leaving the machine, system base
+$P$        | [p.u.] | Active power, $V_rI_r+V_iI_i$     | Oriented leaving the machine, system base
+$Q$        | [p.u.] | Reactive power, $V_iI_r-V_rI_i$   | Oriented leaving the machine, system base
+$\delta$   | [rad]  | Machine internal rotor angle      |
+$\omega$   | [p.u.] | Machine speed deviation           | $\omega=0$ at synchronous speed

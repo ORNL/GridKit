@@ -9,14 +9,17 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassical.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Testing/Tokenizer.hpp>
 #include <GridKit/Utilities/MapFromCOO.hpp>
 
 namespace GridKit
@@ -29,7 +32,27 @@ namespace GridKit
     {
     private:
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using GenClassicalDataT       = PhasorDynamics::GenClassicalData<RealT, IdxT>;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();
+
+      static GenClassicalDataT makeGenClassicalData()
+      {
+        using Parameter = typename GenClassicalDataT::Parameters;
+        using Port      = typename GenClassicalDataT::Ports;
+
+        GenClassicalDataT data;
+        data.device_class               = "GenClassical";
+        data.disambiguation_string      = "1";
+        data.ports[Port::bus]           = 1;
+        data.parameters[Parameter::p0]  = RealT{1.0};
+        data.parameters[Parameter::q0]  = RealT{0.0};
+        data.parameters[Parameter::H]   = RealT{0.5};
+        data.parameters[Parameter::D]   = RealT{0.0};
+        data.parameters[Parameter::Ra]  = RealT{0.0};
+        data.parameters[Parameter::Xdp] = RealT{0.5};
+
+        return data;
+      }
 
     public:
       GenClassicalTests()  = default;
@@ -118,6 +141,54 @@ namespace GridKit
             success = false;
             break;
           }
+        }
+
+        return success.report(__func__);
+      }
+
+      /**
+       * @brief Checks monitored terminal current and power use system base.
+       */
+      TestOutcome monitor_system_base()
+      {
+        TestStatus success = true;
+
+        using Parameter = typename GenClassicalDataT::Parameters;
+        using Variable  = typename GenClassicalDataT::MonitorableVariables;
+
+        auto data                            = makeGenClassicalData();
+        data.parameters[Parameter::mva_base] = RealT{50.0};
+        data.monitored_variables.insert(Variable::ir);
+        data.monitored_variables.insert(Variable::p);
+
+        PhasorDynamics::Bus<ScalarT, IdxT>          bus(1.0, 0.0);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, data);
+
+        bus.allocate();
+        bus.initialize();
+        bus.evaluateResidual();
+
+        gen.setSystemBase(60.0, 100.0e6);
+        gen.allocate();
+        gen.initialize();
+        gen.evaluateResidual();
+
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(gen.getMonitor());
+
+        std::stringstream os;
+        monitor.print(os, Model::VariableMonitorBase::Csv{});
+
+        auto values = Tokenizer<RealT>(os.str(), ',')();
+        if (values.size() == 3)
+        {
+          success *= isEqual(values[1], 1.0, tol_);
+          success *= isEqual(values[2], 1.0, tol_);
+        }
+        else
+        {
+          success = false;
         }
 
         return success.report(__func__);

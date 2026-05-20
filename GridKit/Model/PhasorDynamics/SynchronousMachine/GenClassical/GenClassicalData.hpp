@@ -25,6 +25,11 @@ namespace GridKit
     };
 
     /// Ports supported for a classical generator model
+    ///
+    /// @warning GenClassical signal support is incomplete. These legacy port
+    /// names are not wired by SystemModel today; the intended refactor is to
+    /// align this model with Genrou/Gensal by supporting `pmech`, `speed`, and
+    /// `efd` ports through ComponentSignals.
     enum class GenClassicalPorts
     {
       bus,             ///< Unique ID of the connecting bus

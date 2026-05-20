@@ -43,7 +43,7 @@ Have not been implemented in GridKit:
 - GGOV1
 - HYGOV
 - IEEEG1
-- GENSAL
+- GENSAL (In GridKit, not added to this case yet)
 - IEEEST (In GridKit, not added to this case yet)
 
 The following examples needs to be constructed with this case.

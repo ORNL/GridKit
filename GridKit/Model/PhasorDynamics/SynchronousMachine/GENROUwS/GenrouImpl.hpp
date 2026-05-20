@@ -278,17 +278,29 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    ScalarT Genrou<ScalarT, IdxT>::toMachineBase(ScalarT value) const
+    {
+      return value * va_system_base_ / va_machine_base_;
+    }
+
+    template <class ScalarT, typename IdxT>
+    ScalarT Genrou<ScalarT, IdxT>::toSystemBase(ScalarT value) const
+    {
+      return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
+    }
+
+    template <class ScalarT, typename IdxT>
     void Genrou<ScalarT, IdxT>::initializeMonitor()
     {
       using Variable = typename model_data_type::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
-                    { return y_[15]; });
+                    { return toSystemBase(y_[15]); });
       monitor_->set(Variable::ii, [this]
-                    { return y_[16]; });
+                    { return toSystemBase(y_[16]); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * Ir() + Vi() * Ii(); });
+                    { return toSystemBase(Vr() * y_[15] + Vi() * y_[16]); });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * Ir() - Vr() * Ii(); });
+                    { return toSystemBase(Vi() * y_[15] - Vr() * y_[16]); });
       monitor_->set(Variable::delta, [this]
                     { return y_[0]; });
       monitor_->set(Variable::omega, [this]
@@ -393,15 +405,16 @@ namespace GridKit
       // Network Frame Terminal Values
       ScalarT vr  = Vr();
       ScalarT vi  = Vi();
-      ScalarT p   = static_cast<ScalarT>(p0_) * mva_system_base_ / mva_base_;
-      ScalarT q   = static_cast<ScalarT>(q0_) * mva_system_base_ / mva_base_;
+      ScalarT p   = toMachineBase(static_cast<ScalarT>(p0_));
+      ScalarT q   = toMachineBase(static_cast<ScalarT>(q0_));
       ScalarT vm2 = vr * vr + vi * vi;
       ScalarT vm  = std::sqrt(vm2);
       ScalarT ir  = (p * vr + q * vi) / vm2;
       ScalarT ii  = (p * vi - q * vr) / vm2;
 
       // Initial ksat guess from |V|
-      ScalarT ksat = SB_ * (vm - SA_) * (vm - SA_);
+      ScalarT vm_sat = vm - SA_;
+      ScalarT ksat   = (vm_sat > ZERO<RealT>) ? SB_ * vm_sat * vm_sat : ScalarT{ZERO<RealT>};
 
       ScalarT delta, id, iq, vd, vq;
       ScalarT psiqpp, psidpp, psipp;
@@ -428,7 +441,7 @@ namespace GridKit
         id     = ir * std::sin(delta) - ii * std::cos(delta);
         iq     = ir * std::cos(delta) + ii * std::sin(delta);
         vd     = vr * std::sin(delta) - vi * std::cos(delta) + id * Ra_ - iq * Xqpp_;
-        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ - iq * Ra_;
+        vq     = vr * std::cos(delta) + vi * std::sin(delta) + id * Xqpp_ + iq * Ra_;
         psiqpp = -vd;
         psidpp = vq;
         Edp    = (Xq1_ - Xqd_ * (Xqp_ - Xqpp_) * ksat) * iq / (ONE<RealT> + Xqd_ * ksat);
@@ -440,7 +453,8 @@ namespace GridKit
         ScalarT psiqpp_fl = -psiqp * Xq4_ - Edp * Xq5_;
         ScalarT psidpp_fl = psidp * Xd4_ + Eqp * Xd5_;
         psipp             = std::sqrt(psiqpp_fl * psiqpp_fl + psidpp_fl * psidpp_fl);
-        ksat              = SB_ * (psipp - SA_) * (psipp - SA_);
+        ScalarT psipp_sat = psipp - SA_;
+        ksat              = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
 
         if (iter == max_iter - 1)
         {
@@ -460,8 +474,9 @@ namespace GridKit
       y_[5] = Edp;
       y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
       y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y_[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
-      y_[9] = ksat = SB_ * ((psipp - SA_) * (psipp - SA_));
+      y_[8] = psipp     = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      ScalarT psipp_sat = psipp - SA_;
+      y_[9] = ksat = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
       y_[10] = vd = -psiqpp * (ONE<RealT> + omega);
       y_[11] = vq = psidpp * (ONE<RealT> + omega);
       y_[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
@@ -558,7 +573,7 @@ namespace GridKit
       ScalarT efd   = ws[1];
 
       /* 6 Genrou differential equations */
-      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * 60.0);
+      f[0] = delta_dot - omega * (TWO<RealT> * M_PI * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
       f[2] = Eqp_dot - (ONE<RealT> / Tdop_) * (efd - (Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat));
       f[3] = psidp_dot - (ONE<RealT> / Tdopp_) * (Eqp - psidp - Xd2_ * id);
@@ -566,17 +581,18 @@ namespace GridKit
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
       /* 11 Genrou algebraic equations */
-      f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
-      f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
-      f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
-      f[9]  = ksat - SB_ * ((psipp - SA_) * (psipp - SA_));
-      f[10] = vd + psiqpp * (ONE<RealT> + omega);
-      f[11] = vq - psidpp * (ONE<RealT> + omega);
-      f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir + G_ * vr - B_ * vi - inr;
-      f[16] = ii + B_ * vr + G_ * vi - ini;
+      f[6]              = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
+      f[7]              = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
+      f[8]              = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
+      ScalarT psipp_sat = psipp - SA_;
+      f[9]              = ksat - SB_ * psipp_sat * psipp_sat * Math::sigmoid(psipp_sat);
+      f[10]             = vd + psiqpp * (ONE<RealT> + omega);
+      f[11]             = vq - psidpp * (ONE<RealT> + omega);
+      f[12]             = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[13]             = id - (ir * std::sin(delta) - ii * std::cos(delta));
+      f[14]             = iq - (ir * std::cos(delta) + ii * std::sin(delta));
+      f[15]             = ir + G_ * vr - B_ * vi - inr;
+      f[16]             = ii + B_ * vr + G_ * vi - ini;
 
       /* 2 Genrou current source definitions */
       f[17] = inr - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq));
@@ -601,8 +617,8 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
-      h[0] = (inr - vr * G_ + vi * B_) * mva_base_ / mva_system_base_;
-      h[1] = (ini - vr * B_ - vi * G_) * mva_base_ / mva_system_base_;
+      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
+      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 
       return 0;
     }
@@ -679,19 +695,20 @@ namespace GridKit
           SA_ = SB_;
         SB_ = S12_ / ((SA_ - 1.2) * (SA_ - 1.2));
       }
-      Xd1_ = Xd_ - Xdp_;
-      Xd2_ = Xdp_ - Xl_;
-      Xd3_ = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
-      Xd4_ = (Xdp_ - Xdpp_) / Xd2_;
-      Xd5_ = (Xdpp_ - Xl_) / Xd2_;
-      Xq1_ = Xq_ - Xqp_;
-      Xq2_ = Xqp_ - Xl_;
-      Xq3_ = (Xqp_ - Xqpp_) / (Xq2_ * Xq2_);
-      Xq4_ = (Xqp_ - Xqpp_) / Xq2_;
-      Xq5_ = (Xqpp_ - Xl_) / Xq2_;
-      Xqd_ = (Xq_ - Xl_) / (Xd_ - Xl_);
-      G_   = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
-      B_   = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+      Xd1_             = Xd_ - Xdp_;
+      Xd2_             = Xdp_ - Xl_;
+      Xd3_             = (Xdp_ - Xdpp_) / (Xd2_ * Xd2_);
+      Xd4_             = (Xdp_ - Xdpp_) / Xd2_;
+      Xd5_             = (Xdpp_ - Xl_) / Xd2_;
+      Xq1_             = Xq_ - Xqp_;
+      Xq2_             = Xqp_ - Xl_;
+      Xq3_             = (Xqp_ - Xqpp_) / (Xq2_ * Xq2_);
+      Xq4_             = (Xqp_ - Xqpp_) / Xq2_;
+      Xq5_             = (Xqpp_ - Xl_) / Xq2_;
+      Xqd_             = (Xq_ - Xl_) / (Xd_ - Xl_);
+      G_               = Ra_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+      B_               = -Xqpp_ / (Ra_ * Ra_ + Xqpp_ * Xqpp_);
+      va_machine_base_ = mva_base_ * static_cast<RealT>(1.0e6);
     }
   } // namespace PhasorDynamics
 } // namespace GridKit

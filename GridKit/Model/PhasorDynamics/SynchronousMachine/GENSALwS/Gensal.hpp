@@ -1,7 +1,7 @@
 /**
- * @file GenClassical.hpp
- * @author Abdourahman Barry (abdourahman@vt.edu)
- * @author Slaven Peles (peless@ornl.gov)
+ * @file Gensal.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of a GENSAL generator model.
  *
  */
 
@@ -9,7 +9,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -21,7 +21,7 @@ namespace GridKit
     class BusBase;
 
     template <typename RealT, typename IdxT>
-    struct GenClassicalData;
+    struct GensalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -29,9 +29,40 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    /// Internal variables of a `Gensal`
+    enum class GensalInternalVariables : size_t
+    {
+      DELTA,  ///< rotor angle
+      OMEGA,  ///< speed deviation
+      EPQ,    ///< q-axis transient voltage
+      PSIPD,  ///< d-axis transient flux
+      PSIPPQ, ///< q-axis subtransient flux
+      PSIPPD, ///< d-axis subtransient flux
+      KSAT,   ///< saturation signal
+      VD,     ///< d-axis terminal voltage
+      VQ,     ///< q-axis terminal voltage
+      TE,     ///< electrical torque
+      ID,     ///< d-axis current
+      IQ,     ///< q-axis current
+      IR,     ///< network real current
+      II,     ///< network imaginary current
+      INR,    ///< Norton source real current
+      INI,    ///< Norton source imaginary current
+      MAXIMUM,
+    };
+
+    /// External variables of a `Gensal`
+    enum class GensalExternalVariables : size_t
+    {
+      VR,  ///< network real voltage
+      VI,  ///< network imaginary voltage
+      PM,  ///< mechanical power
+      EFD, ///< field voltage
+      MAXIMUM,
+    };
 
     template <class ScalarT, typename IdxT>
-    class GenClassical : public Component<ScalarT, IdxT>
+    class Gensal : public Component<ScalarT, IdxT>
     {
       using Component<ScalarT, IdxT>::gridkit_component_id_;
       using Component<ScalarT, IdxT>::alpha_;
@@ -54,50 +85,44 @@ namespace GridKit
       using Component<ScalarT, IdxT>::residual_indices_;
 
     public:
-      using bus_type = BusBase<ScalarT, IdxT>;
-      using RealT    = typename Component<ScalarT, IdxT>::RealT;
-      using DataT    = GenClassicalData<RealT, IdxT>;
-      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
+      using RealT           = typename Component<ScalarT, IdxT>::RealT;
+      using bus_type        = BusBase<ScalarT, IdxT>;
+      using model_data_type = GensalData<RealT, IdxT>;
+      using MonitorT        = Model::VariableMonitor<Gensal, GensalData>;
 
-      GenClassical(bus_type* bus, int unit_id);
-      GenClassical(bus_type* bus,
-                   int       unit_id,
-                   RealT     p0,
-                   RealT     q0,
-                   RealT     H,
-                   RealT     D,
-                   RealT     Ra,
-                   RealT     Xdp);
-      GenClassical(bus_type* bus, const DataT& data);
-      ~GenClassical();
+      Gensal(bus_type* bus, const model_data_type& data);
+      ~Gensal();
 
       int setGridKitComponentID(IdxT) override final;
       int allocate() override final;
+      int verify() const override final;
       int initialize() override final;
       int tagDifferentiable() override final;
       int evaluateResidual() override final;
 
-      int verify() const override final
-      {
-        return 0;
-      }
-
       // Still to be implemented
       int evaluateJacobian() override final;
 
-      void setPmech(RealT pmech)
-      {
-        pmech_set_ = pmech;
-      }
+      // Temporary access functions for governor
+      // Should be abstracted
+      ScalarT getSpeed();
+      ScalarT getTorque();
 
-      void setEp(RealT ep)
+      /// Get the `ComponentSignals` from this `Gensal`
+      auto getSignals()
+          -> ComponentSignals<ScalarT,
+                              IdxT,
+                              GensalInternalVariables,
+                              GensalExternalVariables>&
       {
-        ep_set_ = ep;
+        return signals_;
       }
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
+      void initializeParameters(const model_data_type& data);
+      /// Associate variable getter functions with enum values
       void initializeMonitor();
       void setDerivedParams();
 
@@ -142,34 +167,56 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
       __attribute__((always_inline)) inline int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
       /* Identification */
       bus_type* bus_;
-      IdxT      bus_id_{0};
-      int       unit_id_; //< @todo this should be removed
+
+      /// Component signal extension
+      ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};
       RealT q0_{0.0};
 
       /* Input parameters */
-      RealT H_{0.0};
+      RealT H_{3.0};
       RealT D_{0.0};
       RealT Ra_{0.0};
-      RealT Xdp_{0.0};
+      RealT Tdop_{7.0};
+      RealT Tdopp_{0.04};
+      RealT Tqopp_{0.05};
+      RealT Xd_{2.1};
+      RealT Xdp_{0.2};
+      RealT Xdpp_{0.18};
+      RealT Xq_{0.5};
+      RealT Xl_{0.15};
+      RealT S10_{0.0};
+      RealT S12_{0.0};
       RealT mva_base_{100.0};
 
-      /* Derivied parameters */
+      /* Derived parameters */
+      RealT SA_;
+      RealT SB_;
+      RealT Xd1_;
+      RealT Xd2_;
+      RealT Xd3_;
+      RealT Xd4_;
+      RealT Xd5_;
+      RealT Xq2_;
       RealT G_;
       RealT B_;
       RealT va_machine_base_;
 
       /* Setpoints for control variables (determined at initialization) */
-      ScalarT pmech_set_;
-      ScalarT ep_set_;
+      ScalarT pmech_set_{0.0}; // TODO remove default initialization and ensure this gets set
+      ScalarT efd_set_{0.0};   // TODO remove default initialization and ensure this gets set
+
+      /* Local copies of signal variables */
+      std::vector<ScalarT> ws_;
+      std::vector<IdxT>    ws_indices_;
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
