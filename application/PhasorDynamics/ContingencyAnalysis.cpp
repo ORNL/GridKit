@@ -1,6 +1,5 @@
+#include <filesystem>
 #include <future>
-#include <thread>
-#include <tuple>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -23,6 +22,15 @@ TestStatus runStudy(std::size_t faultId, StudyData studyData)
   for (auto& event : studyData.events)
   {
     event.element_id = faultId;
+  }
+
+  // Make distinct output files
+  for (auto& sink : studyData.model_data.monitor_sink)
+  {
+    auto path      = std::filesystem::path(sink.file_name);
+    auto ext       = path.extension().string();
+    auto name      = path.stem().string();
+    sink.file_name = name + "_" + std::to_string(faultId) + ext;
   }
 
   try
@@ -104,10 +112,8 @@ int main(int argc, const char* argv[])
 
   // runStudySerial(studyData, statVec);
 #ifdef _OPENMP
-  std::cout << "omp\n";
   runStudyOpenMP(studyData, statVec);
 #else
-  std::cout << "async\n";
   runStudyAsync(studyData, statVec);
 #endif
 
