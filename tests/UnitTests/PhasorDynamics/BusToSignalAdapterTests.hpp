@@ -1,8 +1,8 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Connector/CoSim.hpp>
-#include <GridKit/Model/PhasorDynamics/Connector/CoSimData.hpp>
+#include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapter.hpp>
+#include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -13,17 +13,17 @@ namespace GridKit
   namespace Testing
   {
     template <class ScalarT, typename IdxT>
-    class CoSimTests
+    class BusToSignalAdapterTests
     {
     public:
-      using CoSimT     = PhasorDynamics::Connector::CoSim<ScalarT, IdxT>;
-      using RealT      = typename CoSimT::RealT;
+      using AdapterT   = PhasorDynamics::BusToSignalAdapter<ScalarT, IdxT>;
+      using RealT      = typename AdapterT::RealT;
       using BusT       = PhasorDynamics::Bus<ScalarT, IdxT>;
       using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
       using SignalT    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
 
-      CoSimTests()  = default;
-      ~CoSimTests() = default;
+      BusToSignalAdapterTests()  = default;
+      ~BusToSignalAdapterTests() = default;
 
       TestOutcome constructor()
       {
@@ -31,13 +31,13 @@ namespace GridKit
 
         auto* bus = new BusT(1.0, 0.0);
 
-        ComponentT* cosim = new CoSimT(bus);
+        ComponentT* adapter = new AdapterT(bus);
 
-        success *= (cosim != nullptr);
+        success *= (adapter != nullptr);
 
-        if (cosim)
+        if (adapter)
         {
-          delete cosim;
+          delete adapter;
         }
         delete bus;
 
@@ -70,23 +70,23 @@ namespace GridKit
         ir_sig.set(&Ir, &ir_index);
         ii_sig.set(&Ii, &ii_index);
 
-        using namespace GridKit::PhasorDynamics::Connector;
-        constexpr auto VREAL = CoSimInternalVariables::VREAL;
-        constexpr auto VIMAG = CoSimInternalVariables::VIMAG;
-        constexpr auto IREAL = CoSimExternalVariables::IREAL;
-        constexpr auto IIMAG = CoSimExternalVariables::IIMAG;
+        using namespace GridKit::PhasorDynamics;
+        constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
+        constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
+        constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
+        constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
 
-        auto cosim = CoSimT(&bus);
-        cosim.getSignals().template assignSignalNode<VREAL>(&vr_sig);
-        cosim.getSignals().template assignSignalNode<VIMAG>(&vi_sig);
-        cosim.getSignals().template attachSignalNode<IREAL>(&ir_sig);
-        cosim.getSignals().template attachSignalNode<IIMAG>(&ii_sig);
-        cosim.allocate();
-        success *= (cosim.verify() == 0);
+        auto adapter = AdapterT(&bus);
+        adapter.getSignals().template assignSignalNode<VREAL>(&vr_sig);
+        adapter.getSignals().template assignSignalNode<VIMAG>(&vi_sig);
+        adapter.getSignals().template attachSignalNode<IREAL>(&ir_sig);
+        adapter.getSignals().template attachSignalNode<IIMAG>(&ii_sig);
+        adapter.allocate();
+        success *= (adapter.verify() == 0);
         success *= (vr_sig.read() == Vr);
         success *= (vi_sig.read() == Vi);
 
-        cosim.evaluateResidual();
+        adapter.evaluateResidual();
         success *= (bus.Ir() == Ir_ref);
         success *= (bus.Ii() == Ii_ref);
 

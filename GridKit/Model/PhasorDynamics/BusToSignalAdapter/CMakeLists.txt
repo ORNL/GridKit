@@ -4,27 +4,27 @@
 # ]]
 
 set(_install_headers
-  CoSim.hpp
-  CoSimData.hpp)
+  BusToSignalAdapter.hpp
+  BusToSignalAdapterData.hpp)
 
-gridkit_add_library(phasor_dynamics_connector_cosim
+gridkit_add_library(phasor_dynamics_bustosignaladapter
   SOURCES
-    CoSim.cpp
+    BusToSignalAdapter.cpp
   HEADERS
     ${_install_headers}
   LINK_LIBRARIES
     GridKit::phasor_dynamics_core
     GridKit::phasor_dynamics_signal)
 
-gridkit_add_library(phasor_dynamics_connector_cosim_dependency_tracking
+gridkit_add_library(phasor_dynamics_bustosignaladapter_dependency_tracking
   SOURCES
-    CoSimDependencyTracking.cpp
+    BusToSignalAdapterDependencyTracking.cpp
   LINK_LIBRARIES
     GridKit::phasor_dynamics_core
     GridKit::phasor_dynamics_signal_dependency_tracking)
 
 # Link to interface target for all components
 target_link_libraries(phasor_dynamics_components
-  INTERFACE GridKit::phasor_dynamics_connector_cosim)
+  INTERFACE GridKit::phasor_dynamics_bustosignaladapter)
 target_link_libraries(phasor_dynamics_components_dependency_tracking
-  INTERFACE GridKit::phasor_dynamics_connector_cosim_dependency_tracking)
+  INTERFACE GridKit::phasor_dynamics_bustosignaladapter_dependency_tracking)

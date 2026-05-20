@@ -79,7 +79,6 @@ namespace GridKit
       SystemModel(SystemModelData<RealT, IdxT>& data)
         : monitor_(time_)
       {
-        using namespace Connector;
         using namespace Governor;
         using namespace Exciter;
         using namespace Stabilizer;
@@ -109,43 +108,47 @@ namespace GridKit
           addSignal(signal);
         }
 
-        // Add Co-simulation connectors
-        for (const auto& cosimdata : data.cosim)
+        // Add bus-to-signal adapters
+        for (const auto& adapterdata : data.adapter)
         {
-          using CoSimPorts = CoSimData<ScalarT, IdxT>::Ports;
-          IdxT bus_index   = 0;
-          if (cosimdata.ports.contains(CoSimPorts::bus))
+          using AdapterPorts = BusToSignalAdapterData<ScalarT, IdxT>::Ports;
+          IdxT bus_index     = 0;
+          if (adapterdata.ports.contains(AdapterPorts::bus))
           {
-            bus_index = cosimdata.ports.at(CoSimPorts::bus);
+            bus_index = adapterdata.ports.at(AdapterPorts::bus);
           }
 
-          auto* cosim = new CoSim<ScalarT, IdxT>(getBus(bus_index));
+          auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index));
 
-          if (cosimdata.ports.contains(CoSimPorts::vr))
+          if (adapterdata.ports.contains(AdapterPorts::vr))
           {
-            IdxT vr = cosimdata.ports.at(CoSimPorts::vr);
-            cosim->getSignals().template assignSignalNode<CoSimInternalVariables::VREAL>(getSignal(vr));
+            IdxT           vr    = adapterdata.ports.at(AdapterPorts::vr);
+            constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
+            adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
           }
 
-          if (cosimdata.ports.contains(CoSimPorts::vi))
+          if (adapterdata.ports.contains(AdapterPorts::vi))
           {
-            IdxT vi = cosimdata.ports.at(CoSimPorts::vi);
-            cosim->getSignals().template assignSignalNode<CoSimInternalVariables::VIMAG>(getSignal(vi));
+            IdxT           vi    = adapterdata.ports.at(AdapterPorts::vi);
+            constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
+            adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
           }
 
-          if (cosimdata.ports.contains(CoSimPorts::ir))
+          if (adapterdata.ports.contains(AdapterPorts::ir))
           {
-            IdxT ir = cosimdata.ports.at(CoSimPorts::ir);
-            cosim->getSignals().template attachSignalNode<CoSimExternalVariables::IREAL>(getSignal(ir));
+            IdxT           ir    = adapterdata.ports.at(AdapterPorts::ir);
+            constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
+            adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
           }
 
-          if (cosimdata.ports.contains(CoSimPorts::ii))
+          if (adapterdata.ports.contains(AdapterPorts::ii))
           {
-            IdxT ii = cosimdata.ports.at(CoSimPorts::ii);
-            cosim->getSignals().template attachSignalNode<CoSimExternalVariables::IIMAG>(getSignal(ii));
+            IdxT           ii    = adapterdata.ports.at(AdapterPorts::ii);
+            constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+            adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
           }
 
-          addComponent(cosim);
+          addComponent(adapter);
         }
 
         // Add branches
