@@ -76,11 +76,21 @@ namespace GridKit
       using SystemModelT = SystemModel<ScalarT, IdxT>;
       using IdaT         = AnalysisManager::Sundials::Ida<ScalarT, IdxT>;
 
+      struct Print
+      {
+        bool value{true};
+
+        operator bool() const noexcept
+        {
+          return value;
+        }
+      };
+
       CTGStudy(const StudyData& data);
 
       void run();
 
-      GridKit::Testing::TestStatus checkStatus(bool print = true) const;
+      GridKit::Testing::TestStatus checkStatus(Print print = Print(true)) const;
 
       DurationT getRunTime() const
       {

@@ -191,7 +191,7 @@ namespace GridKit
       dur_            = stop - start;
     }
 
-    TestStatus CTGStudy::checkStatus(bool print) const
+    TestStatus CTGStudy::checkStatus(Print print) const
     {
       // Generate aggregate errors comparing variable output to reference solution
       std::string func{"monitor file vs reference file"};
