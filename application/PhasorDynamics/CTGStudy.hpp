@@ -76,6 +76,9 @@ namespace GridKit
       using SystemModelT = SystemModel<ScalarT, IdxT>;
       using IdaT         = AnalysisManager::Sundials::Ida<ScalarT, IdxT>;
 
+      /**
+       * @brief Wrapper to make toggle explicit in code
+       */
       struct Print
       {
         bool value{true};
@@ -86,21 +89,46 @@ namespace GridKit
         }
       };
 
+      /**
+       * @brief Set up study using StudyData object
+       */
       CTGStudy(const StudyData& data);
 
+      /**
+       * @brief Run the study
+       */
       void run();
 
+      /**
+       * @brief Check the status of the study after running
+       *
+       * If a reference output file was provided this will compare with results
+       * of current run.
+       *
+       * @param print Toggle whether to print errors and status to console
+       *
+       * @return result of error comparison if reference file is provided,
+       * otherwise a passing status.
+       */
       GridKit::Testing::TestStatus checkStatus(Print print = Print(true)) const;
 
+      /**
+       * @brief Study runs are timed internally. This function gets the stored
+       * duration of the run() call.
+       */
       DurationT getRunTime() const
       {
         return dur_;
       }
 
     private:
+      /// Specification read from input file
       StudyData    study_data_;
+      /// Instance of system model
       SystemModelT sys_;
+      /// Solver instance
       IdaT         ida_;
+      /// Duration of run() call
       DurationT    dur_{};
     };
 
