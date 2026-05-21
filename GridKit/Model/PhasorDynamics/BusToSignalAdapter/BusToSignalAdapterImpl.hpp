@@ -54,13 +54,10 @@ namespace GridKit
     {
       static constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
       static constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-      // FIXME: using a placeholder for variable index here is wrong. But it
-      //        also seems like nothing ever uses the index from the signal.
-      //        So we should either...
-      //        - add methods to BusBase to get variable indices (satisfy the
-      //          interface correctly)
-      //        - remove variable index from SignalNode (because maybe it is
-      //          not actually needed)
+
+      // vr_index_ and vi_index_ are both set to INVALID_INDEX. This component
+      // simply passes voltage from bus to output signal, so indices are
+      // ignored.
       if (signals_.template isAssigned<VREAL>())
       {
         signals_.template getSignalNode<VREAL>()->set(&bus_->Vr(), &vr_index_);
@@ -111,18 +108,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int BusToSignalAdapter<ScalarT, IdxT>::initialize()
     {
-      static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-      static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-
-      if (signals_.template isAttached<IREAL>())
-      {
-        bus_->Ir() += signals_.template readExternalVariable<IREAL>();
-      }
-      if (signals_.template isAttached<IIMAG>())
-      {
-        bus_->Ii() += signals_.template readExternalVariable<IIMAG>();
-      }
-
       return 0;
     }
 
