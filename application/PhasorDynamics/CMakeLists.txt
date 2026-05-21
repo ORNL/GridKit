@@ -9,7 +9,7 @@ target_include_directories(DynamicSimulation PRIVATE
   ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
   ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
-add_executable(ContingencyAnalysis ContingencyAnalysis.cpp CTGStudy.cpp)
+add_executable(ContingencyAnalysis ContingencyAnalysis.cpp)
 target_link_libraries(ContingencyAnalysis
   PUBLIC
   GridKit::phasor_dynamics_components
