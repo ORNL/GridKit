@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
@@ -87,8 +88,8 @@ namespace GridKit
 
     private:
       // Placeholders for variable indices (see note in allocate() method)
-      IdxT vr_index_{0};
-      IdxT vi_index_{0};
+      IdxT vr_index_{INVALID_INDEX<IdxT>};
+      IdxT vi_index_{INVALID_INDEX<IdxT>};
 
       // Signal pointers
       signal_type* ir_signal_;
