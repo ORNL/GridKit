@@ -137,19 +137,19 @@ For more information, see the detailed documentation for each device class conta
 As of the current version and revision, the following device classes
 are specified:
 
-  Device class  | Description                                          | Ports                            | Initialization parameters   | Variables available to monitor
-  --------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
-  `Branch`      | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`           | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
-  `Load`        | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
-  `Genrou`      | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqop`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
-  `Gensal`      | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
-  `GenClassical`| the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
-  `Tgov1 `      | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
-  `Ieeet1`      | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
-  `SexsPti`     | the SEXS-PTI simplified exciter model                | `bus`, `efd`, `vs`\*             | `Ta`, `Tb`, `Te`, `K`, `Efdmax`, `Efdmin` | `efd`
+  Device class         | Description                                          | Ports                            | Initialization parameters   | Variables available to monitor
+  ---------------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
+  `Branch`             | a basic algebraic pi model for a line or transformer | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`           | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `Load`               | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
+  `Genrou`             | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqop`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
+  `Gensal`             | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva_base`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
+  `GenClassical`       | the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva_base` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
+  `Tgov1 `             | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
+  `Ieeet1`             | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
+  `SexsPti`            | the SEXS-PTI simplified exciter model                | `bus`, `efd`, `vs`\*             | `Ta`, `Tb`, `Te`, `K`, `Efdmax`, `Efdmin` | `efd`
   `Ieeest`      | the IEEEST stabilizer model                          | `input`, `output`                | `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `T1`, `T2`, `T3`, `T4`, `T5`, `T6`, `Ks`, `Lsmin`, `Lsmax`, `Vcl`, `Vcu`, `Tdelay` | `vss`
-  `BusFault`    | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
-  `CoSim`       | co-simulation interface component                    | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
+  `BusFault`           | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
+  `BusToSignalAdapter` | signal adapter component for a bus                   | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
 
 Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.

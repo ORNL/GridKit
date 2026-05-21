@@ -157,7 +157,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Residual evaluation
+     * @brief Jacobian evaluation
      */
     template <class ScalarT, typename IdxT>
     int BusToSignalAdapter<ScalarT, IdxT>::evaluateJacobian()
