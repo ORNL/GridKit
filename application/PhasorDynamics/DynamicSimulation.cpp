@@ -1,5 +1,3 @@
-#include "PDSim.hpp"
-
 #include <filesystem>
 #include <fstream>
 
@@ -8,7 +6,7 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-using Log = GridKit::Utilities::Logger;
+#include "AnalysisUtilities.hpp"
 
 using namespace GridKit::PhasorDynamics;
 using namespace GridKit::Testing;
@@ -21,18 +19,7 @@ using index_type  = size_t;
 int main(int argc, const char* argv[])
 {
   // Study file
-  if (argc < 2)
-  {
-    Log::error() << "No input file provided" << std::endl;
-    std::cout << "\n"
-                 "Usage:\n"
-                 "       pdsim <json-input-file>\n"
-                 "\n"
-                 "Please provide a json input file for the study to run.\n"
-                 "\n";
-    exit(1);
-  }
-
+  checkCommandLine(argc, "DynamicSimulation");
   auto study = parseStudyData(argv[1]);
 
   // Instantiate system
