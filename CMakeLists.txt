@@ -107,6 +107,10 @@ if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
 endif()
 
+if(GRIDKIT_ENABLE_OPENMP)
+  find_package(OpenMP REQUIRED)
+endif()
+
 # Macro that adds libraries
 include(GridkitAddLibrary)
 

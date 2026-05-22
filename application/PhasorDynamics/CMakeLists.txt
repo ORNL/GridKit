@@ -21,7 +21,6 @@ target_include_directories(ContingencyAnalysis PRIVATE
   ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
 if(GRIDKIT_ENABLE_OPENMP)
-  find_package(OpenMP REQUIRED)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
