@@ -8,5 +8,6 @@
     ],
     "output_file": "ThreeBus_six_cycle_fault_bus1.csv",
     "reference_file": "ThreeBusBasic.ref.csv",
+    "error_type": "absolute",
     "error_tolerance":  1e-4
 }

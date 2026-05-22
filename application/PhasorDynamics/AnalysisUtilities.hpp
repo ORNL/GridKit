@@ -62,6 +62,10 @@ namespace GridKit
       fs::path                 reference_file;
       /// Error tolerance (between output file and reference file)
       double                   error_tol;
+      /// Type of total error (relative or absolute)
+      Testing::ErrorType       error_type;
+      /// Smallest value at which to scale for relative error
+      double                   abs_err_threshold;
       /// Instance of model data
       SystemModelData<>        model_data;
     };
@@ -107,6 +111,25 @@ namespace GridKit
       }
 
       c.error_tol = j.value("error_tolerance", 1.0e-4);
+
+      using ErrorType = Testing::ErrorType;
+      if (j.contains("error_type"))
+      {
+        auto type_str  = j.at("error_type").get<std::string>();
+        auto type_wrap = enum_cast<ErrorType>(type_str, case_insensitive);
+        if (!type_wrap.has_value())
+        {
+          Log::error() << "Invalid error type \"" << type_str << "\"; "
+                       << "must be either \"relative\" or \"absolute\"";
+        }
+        c.error_type = type_wrap.value();
+      }
+      else
+      {
+        c.error_type = ErrorType::RELATIVE;
+      }
+
+      c.abs_err_threshold = j.value("abs_err_threshold", Testing::DEFAULT_ABS_ERROR_THRESHOLD);
     }
 
     /**
@@ -223,16 +246,19 @@ namespace GridKit
       const auto& ref_file = study_data.reference_file;
       if (!out_file.empty() && !ref_file.empty())
       {
-        auto errorSet = Testing::compareCSV(out_file, ref_file);
+        auto errorSet = Testing::compareCSV(out_file,
+                                            ref_file,
+                                            study_data.error_type,
+                                            study_data.abs_err_threshold);
 
         // Print the errors
         if (print_results)
         {
-          errorSet.display();
+          errorSet->display();
         }
 
         // Check against specified tolerance
-        status *= errorSet.total.max_error < study_data.error_tol;
+        status *= errorSet->total_error.max < study_data.error_tol;
 
         if (print_results)
         {
