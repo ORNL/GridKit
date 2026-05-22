@@ -20,8 +20,7 @@ target_include_directories(ContingencyAnalysis PRIVATE
   ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
   ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
-option(GridKit_ENABLE_OPENMP "Use OpenMP in contingency analysis application" ON)
-if(GridKit_ENABLE_OPENMP)
+if(GRIDKIT_ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)
 endif()

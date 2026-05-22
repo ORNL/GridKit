@@ -38,8 +38,11 @@ option(GridKit_ENABLE_ASAN "Enable the address sanitizer" OFF)
 # Enable the undefined behavior sanitizer
 option(GridKit_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 
+# Enable OpenMP
+option(GridKit_ENABLE_OPENMP "Use OpenMP in contingency analysis application" ON)
+
 # This allows use of "GRIDKIT_*" versions of the above options
-list(APPEND _gridkit_enable_options IPOPT SUNDIALS ENZYME ASAN UBSAN)
+list(APPEND _gridkit_enable_options IPOPT SUNDIALS ENZYME ASAN UBSAN OPENMP)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})
