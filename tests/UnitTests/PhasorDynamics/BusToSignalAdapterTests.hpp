@@ -65,8 +65,8 @@ namespace GridKit
         auto ir_sig = SignalT({.name = "ir", .signal_id = 2});
         auto ii_sig = SignalT({.name = "ii", .signal_id = 3});
 
-        IdxT ir_index;
-        IdxT ii_index;
+        IdxT ir_index{INVALID_INDEX<IdxT>};
+        IdxT ii_index{INVALID_INDEX<IdxT>};
         ir_sig.set(&Ir, &ir_index);
         ii_sig.set(&Ii, &ii_index);
 
