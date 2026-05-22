@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -11,6 +12,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -23,6 +25,32 @@ namespace GridKit
   {
     template <typename ScalarT>
     class VariableMonitorController;
+
+    namespace VariableMonitorDetail
+    {
+      template <typename RealT>
+      void appendCsvReal(std::string& out, RealT value)
+      {
+        std::array<char, 128> buffer{};
+        constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
+
+        auto [ptr, ec] = std::to_chars(buffer.data(),
+                                       buffer.data() + buffer.size(),
+                                       value,
+                                       std::chars_format::scientific,
+                                       precision);
+        if (ec == std::errc{})
+        {
+          out.append(buffer.data(), static_cast<std::size_t>(ptr - buffer.data()));
+          return;
+        }
+
+        std::ostringstream os;
+        os.precision(precision);
+        os << std::scientific << value;
+        out += os.str();
+      }
+    } // namespace VariableMonitorDetail
 
     /**
      * @enum VariableMonitorFormat
@@ -106,6 +134,13 @@ namespace GridKit
       {
       }
 
+      virtual void appendCsvHeader(std::string& out, Csv csv) const
+      {
+        std::ostringstream os;
+        printHeader(os, csv);
+        out += os.str();
+      }
+
       ///@}
 
       ///@{
@@ -115,6 +150,16 @@ namespace GridKit
       virtual void print(std::ostream&, Csv) const  = 0;
       virtual void print(std::ostream&, Json) const = 0;
       virtual void print(std::ostream&, Yaml) const = 0;
+
+      virtual void appendCsv(std::string& out, Csv csv) const
+      {
+        std::ostringstream os;
+        constexpr auto     max_prec = std::numeric_limits<double>::digits10 + 1;
+        os.precision(max_prec);
+        os << std::scientific;
+        print(os, csv);
+        out += os.str();
+      }
 
       ///@}
 

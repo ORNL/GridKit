@@ -142,6 +142,29 @@ namespace GridKit
         os << "[\n";
       }
 
+      void appendCsvHeader(std::string& out, Csv csv) const override
+      {
+        out += "t";
+        for (auto&& var : variables_)
+        {
+          out += csv.delim;
+          out += var.label;
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->appendCsvHeader(out, csv);
+        }
+      }
+
+      void printFullHeader(std::ostream& os, Csv csv) const
+      {
+        csv_line_.clear();
+        appendCsvHeader(csv_line_, csv);
+        csv_line_ += '\n';
+        os.write(csv_line_.data(), static_cast<std::streamsize>(csv_line_.size()));
+      }
+
       /**
        * @brief Organize header output for this and all submonitors
        */
@@ -180,6 +203,21 @@ namespace GridKit
         for (auto* mon : monitors_)
         {
           mon->print(os, csv);
+        }
+      }
+
+      void appendCsv(std::string& out, Csv csv) const override
+      {
+        VariableMonitorDetail::appendCsvReal(out, *time_);
+        for (auto&& var : variables_)
+        {
+          out += csv.delim;
+          VariableMonitorDetail::appendCsvReal(out, *var.value);
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->appendCsv(out, csv);
         }
       }
 
@@ -229,6 +267,14 @@ namespace GridKit
         {
           mon->print(os, Yaml());
         }
+      }
+
+      void printFull(std::ostream& os, Csv csv) const
+      {
+        csv_line_.clear();
+        appendCsv(csv_line_, csv);
+        csv_line_ += '\n';
+        os.write(csv_line_.data(), static_cast<std::streamsize>(csv_line_.size()));
       }
 
       /**
@@ -439,6 +485,9 @@ namespace GridKit
 
       /// Collection of extra top-level monitored variables
       std::vector<Variable> variables_;
+
+      /// Reused line buffer for CSV output
+      mutable std::string csv_line_;
     };
   } // namespace Model
 } // namespace GridKit

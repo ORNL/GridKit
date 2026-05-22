@@ -114,6 +114,22 @@ namespace GridKit
         {
           os << f();
         }
+
+        void appendCsv(std::string& out) const
+        {
+          using RetValueT = std::remove_cvref_t<RetT>;
+
+          if constexpr (std::is_floating_point_v<RetValueT>)
+          {
+            VariableMonitorDetail::appendCsvReal(out, static_cast<RealT>(f()));
+          }
+          else
+          {
+            std::ostringstream os;
+            os << f();
+            out += os.str();
+          }
+        }
       };
 
       template <typename FuncT>
@@ -124,6 +140,11 @@ namespace GridKit
         void operator()(std::ostream& os) const
         {
           os << static_cast<RealT>(f());
+        }
+
+        void appendCsv(std::string& out) const
+        {
+          VariableMonitorDetail::appendCsvReal(out, static_cast<RealT>(f()));
         }
       };
 
@@ -138,12 +159,26 @@ namespace GridKit
 
         template <typename FuncT>
         ValuePrinter(FuncT f)
-          : impl_{ValuePrinterType<FuncT>(f)}
         {
+          auto printer = ValuePrinterType<FuncT>{f};
+          impl_        = [printer](std::ostream& os)
+          {
+            printer(os);
+          };
+          append_csv_ = [printer](std::string& out)
+          {
+            printer.appendCsv(out);
+          };
+        }
+
+        void appendCsv(std::string& out) const
+        {
+          append_csv_(out);
         }
 
       private:
         std::function<void(std::ostream&)> impl_;
+        std::function<void(std::string&)>  append_csv_;
 
         friend std::ostream& operator<<(std::ostream& os, const ValuePrinter& p)
         {
@@ -167,6 +202,26 @@ namespace GridKit
         for (auto v : variables_)
         {
           os << csv.delim << f_[static_cast<size_t>(enum_integer(v))];
+        }
+      }
+
+      void appendCsvHeader(std::string& out, Csv csv) const override
+      {
+        for (auto v : variables_)
+        {
+          out += csv.delim;
+          out += label_;
+          out += '_';
+          out += enum_name(v);
+        }
+      }
+
+      void appendCsv(std::string& out, Csv csv) const override
+      {
+        for (auto v : variables_)
+        {
+          out += csv.delim;
+          f_[static_cast<size_t>(enum_integer(v))].appendCsv(out);
         }
       }
 
