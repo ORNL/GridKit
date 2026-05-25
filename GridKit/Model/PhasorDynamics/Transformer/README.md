@@ -24,24 +24,23 @@ $\theta$    | [rad]   | LTC phase shift                 | 0             |
 
 ```math
 \begin{aligned}
-  m &= \dfrac{1}{a} \\
-  G_{br} &= \dfrac{R}{R^2 + X^2} \\
-  B_{br} &= -\dfrac{X}{R^2 + X^2} \\
-  \mathbf{M} &=
-    \begin{bmatrix}
-      m & 0 \\
-      0 & e^{j\theta}
-    \end{bmatrix} \\
+  Y_{\text{br}} &= \dfrac{1}{R + jX} \\
+  Y_{\text{sh}} &= G + jB \\
   \mathbf{Y} &=
     \begin{bmatrix}
-      -Y_{br} & Y_{br} \\
-      Y_{br} & -Y_{br}
+      -Y_{\text{br}} & Y_{\text{br}} \\
+      Y_{\text{br}} & -Y_{\text{br}}
     \end{bmatrix}
     +
     \dfrac{1}{2}
     \begin{bmatrix}
-      -Y_{sh} & 0 \\
-      0 & -Y_{sh}
+      -Y_{\text{sh}} & 0 \\
+      0 & -Y_{\text{sh}}
+    \end{bmatrix} \\
+  \mathbf{M} &=
+    \begin{bmatrix}
+      a^{-1} & 0 \\
+      0 & e^{j\theta}
     \end{bmatrix} \\
   \mathbf{Y}' &= \mathbf{M}^{\dagger}\mathbf{Y}\mathbf{M}
 \end{aligned}
@@ -59,10 +58,10 @@ None.
 
 Symbol | Units | Description | Note
 -------|-------|-------------|-----
-$I_r^{\mathrm{from}}$ | [p.u.] | Current injection, real component, from bus | Positive into the from bus
-$I_i^{\mathrm{from}}$ | [p.u.] | Current injection, imaginary component, from bus | Positive into the from bus
-$I_r^{\mathrm{to}}$ | [p.u.] | Current injection, real component, to bus | Positive into the to bus
-$I_i^{\mathrm{to}}$ | [p.u.] | Current injection, imaginary component, to bus | Positive into the to bus
+$I_{\text{r}}^{\mathrm{from}}$ | [p.u.] | Current injection, real component, from bus | Positive into the from bus
+$I_{\text{i}}^{\mathrm{from}}$ | [p.u.] | Current injection, imaginary component, from bus | Positive into the from bus
+$I_{\text{r}}^{\mathrm{to}}$ | [p.u.] | Current injection, real component, to bus | Positive into the to bus
+$I_{\text{i}}^{\mathrm{to}}$ | [p.u.] | Current injection, imaginary component, to bus | Positive into the to bus
 
 ### External Variables
 
@@ -74,10 +73,10 @@ None.
 
 Symbol | Units | Description | Note
 -------|-------|-------------|-----
-$V_r^{\mathrm{from}}$ | [p.u.] | Terminal voltage, real component, from bus | Owned by bus object
-$V_i^{\mathrm{from}}$ | [p.u.] | Terminal voltage, imaginary component, from bus | Owned by bus object
-$V_r^{\mathrm{to}}$ | [p.u.] | Terminal voltage, real component, to bus | Owned by bus object
-$V_i^{\mathrm{to}}$ | [p.u.] | Terminal voltage, imaginary component, to bus | Owned by bus object
+$V_{\text{r}}^{\mathrm{from}}$ | [p.u.] | Terminal voltage, real component, from bus | Owned by bus object
+$V_{\text{i}}^{\mathrm{from}}$ | [p.u.] | Terminal voltage, imaginary component, from bus | Owned by bus object
+$V_{\text{r}}^{\mathrm{to}}$ | [p.u.] | Terminal voltage, real component, to bus | Owned by bus object
+$V_{\text{i}}^{\mathrm{to}}$ | [p.u.] | Terminal voltage, imaginary component, to bus | Owned by bus object
 
 ## Model Equations
 
@@ -92,26 +91,28 @@ $\mathbf{0} = -\mathbf{I} + \mathbf{Y}'\mathbf{V}$, or expanded as:
 
 ```math
 \begin{aligned}
-  0 &= -I_r^{\mathrm{from}}
-       &+ G'_{ff}V_r^{\mathrm{from}} &- B'_{ff}V_i^{\mathrm{from}}
-       &+ G'_{ft}V_r^{\mathrm{to}}   &- B'_{ft}V_i^{\mathrm{to}} \\
-  0 &= -I_i^{\mathrm{from}}
-       &+ B'_{ff}V_r^{\mathrm{from}} &+ G'_{ff}V_i^{\mathrm{from}}
-       &+ B'_{ft}V_r^{\mathrm{to}}   &+ G'_{ft}V_i^{\mathrm{to}} \\
-  0 &= -I_r^{\mathrm{to}}
-       &+ G'_{tf}V_r^{\mathrm{from}} &- B'_{tf}V_i^{\mathrm{from}}
-       &+ G'_{tt}V_r^{\mathrm{to}}   &- B'_{tt}V_i^{\mathrm{to}} \\
-  0 &= -I_i^{\mathrm{to}}
-       &+ B'_{tf}V_r^{\mathrm{from}} &+ G'_{tf}V_i^{\mathrm{from}}
-       &+ B'_{tt}V_r^{\mathrm{to}}   &+ G'_{tt}V_i^{\mathrm{to}}
+  0 &= -I_{\text{r}}^{\mathrm{from}}
+       &+ G'_{\text{ff}}V_{\text{r}}^{\mathrm{from}} &- B'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
+       &+ G'_{\text{ft}}V_{\text{r}}^{\mathrm{to}}   &- B'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
+  0 &= -I_{\text{i}}^{\mathrm{from}}
+       &+ B'_{\text{ff}}V_{\text{r}}^{\mathrm{from}} &+ G'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
+       &+ B'_{\text{ft}}V_{\text{r}}^{\mathrm{to}}   &+ G'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
+  0 &= -I_{\text{r}}^{\mathrm{to}}
+       &+ G'_{\text{tf}}V_{\text{r}}^{\mathrm{from}} &- B'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
+       &+ G'_{\text{tt}}V_{\text{r}}^{\mathrm{to}}   &- B'_{\text{tt}}V_{\text{i}}^{\mathrm{to}} \\
+  0 &= -I_{\text{i}}^{\mathrm{to}}
+       &+ B'_{\text{tf}}V_{\text{r}}^{\mathrm{from}} &+ G'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
+       &+ B'_{\text{tt}}V_{\text{r}}^{\mathrm{to}}   &+ G'_{\text{tt}}V_{\text{i}}^{\mathrm{to}}
 \end{aligned}
 ```
-
-## Network Interface
 
 ## Initialization
 
 ## Model Outputs
 
-Output | Units | Description | Note
--------|-------|-------------|-----
+Symbol | Units  | Description                              | Note
+-------|--------|------------------------------------------|------
+$I_{\text{r}}^{\mathrm{from}}$ | [p.u.] | Current injection, real component, from bus | Oriented entering the from bus
+$I_{\text{i}}^{\mathrm{from}}$ | [p.u.] | Current injection, imaginary component, from bus | Oriented entering the from bus
+$I_{\text{r}}^{\mathrm{to}}$   | [p.u.] | Current injection, real component, to bus | Oriented entering the to bus
+$I_{\text{i}}^{\mathrm{to}}$   | [p.u.] | Current injection, imaginary component, to bus | Oriented entering the to bus
