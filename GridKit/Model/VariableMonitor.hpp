@@ -29,7 +29,7 @@ namespace GridKit
     namespace VariableMonitorDetail
     {
       template <typename RealT>
-      void appendCsvReal(std::string& out, RealT value)
+      void appendReal(std::string& out, RealT value)
       {
         std::array<char, 128> buffer{};
         constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
@@ -124,21 +124,35 @@ namespace GridKit
       /**
        * @brief Print items relevant to the start of a file
        */
-      virtual void printHeader(std::ostream&, Csv) const = 0;
+      virtual void printHeader(std::ostream& os, Csv csv) const
+      {
+        std::string out;
+        appendHeader(out, csv);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
 
-      virtual void printHeader(std::ostream&, Json) const
+      virtual void printHeader(std::ostream& os, Json json) const
+      {
+        std::string out;
+        appendHeader(out, json);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void printHeader(std::ostream& os, Yaml yaml) const
+      {
+        std::string out;
+        appendHeader(out, yaml);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void appendHeader(std::string&, Csv) const = 0;
+
+      virtual void appendHeader(std::string&, Json) const
       {
       }
 
-      virtual void printHeader(std::ostream&, Yaml) const
+      virtual void appendHeader(std::string&, Yaml) const
       {
-      }
-
-      virtual void appendCsvHeader(std::string& out, Csv csv) const
-      {
-        std::ostringstream os;
-        printHeader(os, csv);
-        out += os.str();
       }
 
       ///@}
@@ -147,19 +161,30 @@ namespace GridKit
       /**
        * @brief Print monitored variables at current state
        */
-      virtual void print(std::ostream&, Csv) const  = 0;
-      virtual void print(std::ostream&, Json) const = 0;
-      virtual void print(std::ostream&, Yaml) const = 0;
-
-      virtual void appendCsv(std::string& out, Csv csv) const
+      virtual void print(std::ostream& os, Csv csv) const
       {
-        std::ostringstream os;
-        constexpr auto     max_prec = std::numeric_limits<double>::digits10 + 1;
-        os.precision(max_prec);
-        os << std::scientific;
-        print(os, csv);
-        out += os.str();
+        std::string out;
+        append(out, csv);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
       }
+
+      virtual void print(std::ostream& os, Json json) const
+      {
+        std::string out;
+        append(out, json);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void print(std::ostream& os, Yaml yaml) const
+      {
+        std::string out;
+        append(out, yaml);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void append(std::string&, Csv) const  = 0;
+      virtual void append(std::string&, Json) const = 0;
+      virtual void append(std::string&, Yaml) const = 0;
 
       ///@}
 
@@ -167,15 +192,36 @@ namespace GridKit
       /**
        * @brief Print items relevant to the end of a file
        */
-      virtual void printFooter(std::ostream&, Csv) const
+      virtual void printFooter(std::ostream& os, Csv csv) const
+      {
+        std::string out;
+        appendFooter(out, csv);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void printFooter(std::ostream& os, Json json) const
+      {
+        std::string out;
+        appendFooter(out, json);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void printFooter(std::ostream& os, Yaml yaml) const
+      {
+        std::string out;
+        appendFooter(out, yaml);
+        os.write(out.data(), static_cast<std::streamsize>(out.size()));
+      }
+
+      virtual void appendFooter(std::string&, Csv) const
       {
       }
 
-      virtual void printFooter(std::ostream&, Json) const
+      virtual void appendFooter(std::string&, Json) const
       {
       }
 
-      virtual void printFooter(std::ostream&, Yaml) const
+      virtual void appendFooter(std::string&, Yaml) const
       {
       }
 

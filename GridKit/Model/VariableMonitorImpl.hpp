@@ -19,11 +19,11 @@ namespace GridKit
      * @brief Manage printing variables associated with a specific component or
      * bus
      *
-     * Implementations of the print functions print under the assumption of a
-     * larger context. For example, the Csv version prints the delimiter and the
-     * value (or label for the header) for each monitored value without a line
-     * break. That way other monitors can print likewise on the same line, and
-     * the line can be ended by the control monitor.
+     * Append functions assume a larger output context. For example, the CSV
+     * version appends the delimiter and the value (or label for the header) for
+     * each monitored value without a line break. That way other monitors can
+     * append likewise on the same line, and the line can be ended by the control
+     * monitor.
      */
     template <typename ScalarT,
               typename IdxT,
@@ -115,13 +115,13 @@ namespace GridKit
           os << f();
         }
 
-        void appendCsv(std::string& out) const
+        void appendValue(std::string& out) const
         {
           using RetValueT = std::remove_cvref_t<RetT>;
 
           if constexpr (std::is_floating_point_v<RetValueT>)
           {
-            VariableMonitorDetail::appendCsvReal(out, static_cast<RealT>(f()));
+            VariableMonitorDetail::appendReal(out, static_cast<RealT>(f()));
           }
           else
           {
@@ -142,9 +142,9 @@ namespace GridKit
           os << static_cast<RealT>(f());
         }
 
-        void appendCsv(std::string& out) const
+        void appendValue(std::string& out) const
         {
-          VariableMonitorDetail::appendCsvReal(out, static_cast<RealT>(f()));
+          VariableMonitorDetail::appendReal(out, static_cast<RealT>(f()));
         }
       };
 
@@ -165,20 +165,20 @@ namespace GridKit
           {
             printer(os);
           };
-          append_csv_ = [printer](std::string& out)
+          append_value_ = [printer](std::string& out)
           {
-            printer.appendCsv(out);
+            printer.appendValue(out);
           };
         }
 
-        void appendCsv(std::string& out) const
+        void appendValue(std::string& out) const
         {
-          append_csv_(out);
+          append_value_(out);
         }
 
       private:
         std::function<void(std::ostream&)> impl_;
-        std::function<void(std::string&)>  append_csv_;
+        std::function<void(std::string&)>  append_value_;
 
         friend std::ostream& operator<<(std::ostream& os, const ValuePrinter& p)
         {
@@ -189,23 +189,7 @@ namespace GridKit
 
       ///@}
 
-      void printHeader(std::ostream& os, Csv csv) const override
-      {
-        for (auto v : variables_)
-        {
-          os << csv.delim << label_ << '_' << enum_name(v);
-        }
-      }
-
-      void print(std::ostream& os, Csv csv) const override
-      {
-        for (auto v : variables_)
-        {
-          os << csv.delim << f_[static_cast<size_t>(enum_integer(v))];
-        }
-      }
-
-      void appendCsvHeader(std::string& out, Csv csv) const override
+      void appendHeader(std::string& out, Csv csv) const override
       {
         for (auto v : variables_)
         {
@@ -216,71 +200,81 @@ namespace GridKit
         }
       }
 
-      void appendCsv(std::string& out, Csv csv) const override
+      void append(std::string& out, Csv csv) const override
       {
         for (auto v : variables_)
         {
           out += csv.delim;
-          f_[static_cast<size_t>(enum_integer(v))].appendCsv(out);
+          f_[static_cast<size_t>(enum_integer(v))].appendValue(out);
         }
       }
 
       /**
        * @brief Print single variable
        */
-      void print(std::ostream& os, VariableEnum v, Json) const
+      void printVariable(std::ostream& os, VariableEnum v, Json) const
       {
         os << indent_ << std::quoted(enum_name(v)) << ": "
            << f_[static_cast<size_t>(enum_integer(v))] << ",\n";
       }
 
-      void print(std::ostream& os, Json) const override
+      void append(std::string& out, Json) const override
       {
         if (empty())
         {
           return;
         }
+
+        std::ostringstream os;
+        os.precision(std::numeric_limits<RealT>::digits10 + 1);
+        os << std::scientific;
+
         os << indent_ << std::quoted(label_) << ": {\n";
         indent_.append(2, ' ');
         std::ostringstream v_os;
         v_os.copyfmt(os);
         for (auto v : variables_)
         {
-          print(v_os, v, Json());
+          printVariable(v_os, v, Json());
         }
         auto vars = v_os.view();
         vars.remove_suffix(2);
         os << vars << '\n';
         indent_.erase(indent_.size() - 2);
         os << indent_ << "}";
-      }
 
-      void printHeader(std::ostream&, Yaml) const override
-      {
+        out += os.str();
       }
 
       /**
        * @brief Print single variable
        */
-      void print(std::ostream& os, VariableEnum v, Yaml) const
+      void printVariable(std::ostream& os, VariableEnum v, Yaml) const
       {
         os << indent_ << enum_name(v) << ": " << f_[static_cast<size_t>(enum_integer(v))]
            << '\n';
       }
 
-      void print(std::ostream& os, Yaml) const override
+      void append(std::string& out, Yaml) const override
       {
         if (empty())
         {
           return;
         }
+
+        std::ostringstream os;
+        os.precision(std::numeric_limits<RealT>::digits10 + 1);
+        os << std::scientific;
+
         os << indent_ << label_ << ":\n";
         indent_.append(2, ' ');
         for (auto v : variables_)
         {
-          print(os, v, Yaml());
+          printVariable(os, v, Yaml());
         }
         indent_.erase(indent_.size() - 2);
+
+        out += os.str();
       }
 
     private:
