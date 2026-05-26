@@ -319,16 +319,10 @@ namespace GridKit
             stabilizer->getSignals().template attachSignalNode<IeeestExternalVariables::U>(getSignal(input));
           }
 
-          if (stabdata.ports.contains(IeeestPorts::cutout))
-          {
-            IdxT cutout = stabdata.ports.at(IeeestPorts::cutout);
-            stabilizer->getSignals().template attachSignalNode<IeeestExternalVariables::VCT>(getSignal(cutout));
-          }
-
           if (stabdata.ports.contains(IeeestPorts::output))
           {
             IdxT output = stabdata.ports.at(IeeestPorts::output);
-            stabilizer->getSignals().template assignSignalNode<IeeestInternalVariables::VS>(getSignal(output));
+            stabilizer->getSignals().template assignSignalNode<IeeestInternalVariables::VSS>(getSignal(output));
           }
 
           addComponent(stabilizer);

@@ -26,7 +26,7 @@ namespace GridKit
       template <class ScalarT, typename IdxT>
       Ieeest<ScalarT, IdxT>::Ieeest()
       {
-        size_ = 13;
+        size_ = 12;
       }
 
       template <class ScalarT, typename IdxT>
@@ -35,7 +35,7 @@ namespace GridKit
       {
         initializeParameters(data);
         initializeMonitor();
-        size_ = 13;
+        size_ = 12;
       }
 
       template <class ScalarT, typename IdxT>
@@ -138,19 +138,12 @@ namespace GridKit
 
         use_T2_block_    = static_cast<RealT>(T2_ != 0.0);
         bypass_T2_block_ = 1.0 - use_T2_block_;
-        safe_inv_T2_     = use_T2_block_ / (T2_ + bypass_T2_block_);
 
         use_T4_block_    = static_cast<RealT>(T4_ != 0.0);
         bypass_T4_block_ = 1.0 - use_T4_block_;
-        safe_inv_T4_     = use_T4_block_ / (T4_ + bypass_T4_block_);
 
         use_T6_block_    = static_cast<RealT>(T6_ != 0.0);
         bypass_T6_block_ = 1.0 - use_T6_block_;
-        safe_inv_T6_     = use_T6_block_ / (T6_ + bypass_T6_block_);
-
-        // Vcl = Vcu = 0 means "cutout disabled" (passthrough: vs = vss).
-        use_cutout_    = static_cast<RealT>(Vcl_ != 0.0 || Vcu_ != 0.0);
-        bypass_cutout_ = 1.0 - use_cutout_;
       }
 
       template <class ScalarT, typename IdxT>
@@ -171,12 +164,10 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        ws_.resize(2);
-        ws_indices_.resize(2);
+        ws_.resize(1);
+        ws_indices_.resize(1);
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
-        ws_[1]         = 0.0;
-        ws_indices_[1] = INVALID_INDEX<IdxT>;
 
         for (IdxT j = 0; j < size_; ++j)
         {
@@ -184,10 +175,10 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<IeeestInternalVariables::VS>())
+        if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
         {
-          signals_.template getSignalNode<IeeestInternalVariables::VS>()->set(
-              &y_[12], &(this->getVariableIndex(12)));
+          signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
+              &y_[11], &(this->getVariableIndex(11)));
         }
 
         return 0;
@@ -210,15 +201,6 @@ namespace GridKit
         {
           Log::error() << "Ieeest: required input signal U is not attached\n";
           ret += 1;
-        }
-
-        if (signals_.template isAttached<IeeestExternalVariables::VCT>())
-        {
-          if (!signals_.template isLinked<IeeestExternalVariables::VCT>())
-          {
-            Log::error() << "Ieeest: cutout signal VCT attached with no linked source\n";
-            ret += 1;
-          }
         }
 
         if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
@@ -249,15 +231,14 @@ namespace GridKit
         tag_[1]  = true;
         tag_[2]  = true;
         tag_[3]  = true;
-        tag_[4]  = true;
-        tag_[5]  = true;
-        tag_[6]  = true;
+        tag_[4]  = (T2_ != 0.0);
+        tag_[5]  = (T4_ != 0.0);
+        tag_[6]  = (T6_ != 0.0);
         tag_[7]  = false;
         tag_[8]  = false;
         tag_[9]  = false;
         tag_[10] = false;
         tag_[11] = false;
-        tag_[12] = false;
 
         return 0;
       }
@@ -282,7 +263,6 @@ namespace GridKit
         ScalarT v6  = y[9];
         ScalarT v7  = y[10];
         ScalarT vss = y[11];
-        ScalarT vs  = y[12];
 
         ScalarT x1_dot = yp[0];
         ScalarT x2_dot = yp[1];
@@ -292,31 +272,22 @@ namespace GridKit
         ScalarT x6_dot = yp[5];
         ScalarT x7_dot = yp[6];
 
-        ScalarT u   = ws[0];
-        ScalarT vct = ws[1];
+        ScalarT u = ws[0];
 
         f[0] = -x1_dot + use_notch_ * x2;
         f[1] = -x2_dot + (use_4th_order_ + use_3rd_order_) * x3
                + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
         f[2] = -x3_dot + use_4th_order_ * x4
                + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u) * safe_inv_a3_;
-        f[3] = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
-
-        f[4] = -x5_dot + use_T2_block_ * (v4 - x5) * safe_inv_T2_;
-        f[5] = -x6_dot + use_T4_block_ * (v5 - x6) * safe_inv_T4_;
-        f[6] = -x7_dot + use_T6_block_ * (v6 - x7) * safe_inv_T6_;
-
+        f[3]  = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
+        f[4]  = -T2_ * x5_dot - x5 + v4;
+        f[5]  = -T4_ * x6_dot - x6 + v5;
+        f[6]  = -T6_ * x7_dot - x7 + v6;
         f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3);
-        f[8]  = -v5 + bypass_T2_block_ * v4 + use_T2_block_ * (x5 + T1_ * (v4 - x5) * safe_inv_T2_);
-        f[9]  = -v6 + bypass_T4_block_ * v5 + use_T4_block_ * (x6 + T3_ * (v5 - x6) * safe_inv_T4_);
-        f[10] = -v7 + bypass_T6_block_ * Ks_ * v6 + use_T6_block_ * Ks_ * T5_ * (v6 - x7) * safe_inv_T6_;
-
-        f[11] = -vss + v7 * Math::indicator_zero(Lsmin_, Lsmax_, v7)
-                + Lsmin_ * Math::sigmoid(Lsmin_ - v7)
-                + Lsmax_ * Math::sigmoid(v7 - Lsmax_);
-        // Cutout: Vcl=Vcu=0 means disabled (passthrough). Otherwise, sigmoid window.
-        f[12] = -vs + bypass_cutout_ * vss
-                + use_cutout_ * vss * Math::sigmoid(vct - Vcl_) * Math::sigmoid(Vcu_ - vct);
+        f[8]  = use_T2_block_ * (-T2_ * (v5 - x5) + T1_ * (v4 - x5)) + bypass_T2_block_ * (v4 - v5);
+        f[9]  = use_T4_block_ * (-T4_ * (v6 - x6) + T3_ * (v5 - x6)) + bypass_T4_block_ * (v5 - v6);
+        f[10] = use_T6_block_ * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7)) + bypass_T6_block_ * (Ks_ * v6 - v7);
+        f[11] = -vss + Math::clamp(v7, Lsmin_, Lsmax_);
 
         return 0;
       }
@@ -328,13 +299,6 @@ namespace GridKit
         {
           ws_[0]         = signals_.template readExternalVariable<IeeestExternalVariables::U>();
           ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
-        }
-
-        ws_[1] = (Vcl_ + Vcu_) / TWO<RealT>;
-        if (signals_.template isAttached<IeeestExternalVariables::VCT>())
-        {
-          ws_[1]         = signals_.template readExternalVariable<IeeestExternalVariables::VCT>();
-          ws_indices_[1] = signals_.template readExternalVariableIndex<IeeestExternalVariables::VCT>();
         }
 
         evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
@@ -352,8 +316,8 @@ namespace GridKit
       void Ieeest<ScalarT, IdxT>::initializeMonitor()
       {
         using Variable = typename model_data_type::MonitorableVariables;
-        monitor_->set(Variable::vs, [this]
-                      { return y_[12]; });
+        monitor_->set(Variable::vss, [this]
+                      { return y_[11]; });
       }
 
     } // namespace Stabilizer

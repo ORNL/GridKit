@@ -18,8 +18,8 @@ $R$         | [p.u.] | Droop Constant                    | 0.05 |
 $T_1$       | [sec]  | Valve Time Delay                  | 0.5  |
 $T_2$       | [sec]  | Turbine Numerator Time Constant   | 2.5  |
 $T_3$       | [sec]  | Turbine Delay                     | 7.5  |
-$P_{vmax}$  | [p.u.] | Max Valve Position                | 1    | 
-$P_{vmin}$  | [p.u.] | Min Valve Position                | 0    | 
+$P_v^{\max}$ | [p.u.] | Max Valve Position                | 1    |
+$P_v^{\min}$ | [p.u.] | Min Valve Position                | 0    |
 $D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    | 
 
 ## Model Variables 
@@ -31,12 +31,12 @@ $D_t$       | [p.u.] | Turbine Damping Coefficient       | 0    |
 Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
 $P_{tx}$  | [p.u.] | Turbine Power (State 1 in Fig. 1) |
-$P_{v}$   | [p.u.] | Valve Position (State 2 in Fig. 1)| 
+$P_v$     | [p.u.] | Valve Position (State 2 in Fig. 1)|
 
 #### Algebraic
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$P_{m}$         | [p.u.] | Mechnical Power to Generator      | Read by a Machine Model
+$P_m$           | [p.u.] | Mechnical Power to Generator      | Read by a Machine Model
 
 ### External Variables
 
@@ -62,13 +62,13 @@ f = \dfrac{1}{T_1}\left[-P_v + \dfrac{1}{R}(P_{ref} - \omega)\right]
 so that $\dot P_v$ can be written in piecewise form compactly.
 ```math
 \begin{aligned}
-   \dot{P}_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
-   \dot{P}_{v}    &=
+   \dot P_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
+   \dot P_v      &=
    \begin{cases}
       f
-         &  \text{if } (P_{vmin} < P_v < P_{vmax}) & \lor \\
-         &  \quad (P_v \leq P_{vmin} \land f>0)    & \lor \\
-         &  \quad(P_v \geq P_{vmax} \land f<0)            \\
+         &  \text{if } (P_v^{\min} < P_v < P_v^{\max}) & \lor \\
+         &  \quad (P_v \leq P_v^{\min} \land f>0)       & \lor \\
+         &  \quad(P_v \geq P_v^{\max} \land f<0)            \\
       0  
          &  \text{else}
    \end{cases}
@@ -79,26 +79,26 @@ so that $\dot P_v$ can be written in piecewise form compactly.
 The algebraic equation dictating the mechnical power output.
 ```math
 \begin{aligned}
-   P_{m} &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
+   P_m &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
 \end{aligned}
 ```
 
 In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
 
 ## Initialization
-At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_{m}$ which is equal to the electric torque.
+At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_m$ which is equal to the electric torque.
 ```math
 \begin{aligned}
-   P_{tx}  &= (T_3-T_2) P_{m}\\
-   P_{v}   &= P_{m}\\
-   \dot{P}_{tx} &=0\\
-   \dot{P}_{v}  &=0\\
+   P_{tx}  &= (T_3-T_2) P_m\\
+   P_v     &= P_m\\
+   \dot P_{tx} &=0\\
+   \dot P_v    &=0\\
 \end{aligned}
 ```
 
 And if the reference power is a constant parameter, we can determine the value by solving the steady state equations.
 ```math
 \begin{aligned}
-   P_{ref}  &= R P_{m}\\
+   P_{ref}  &= R P_m\\
 \end{aligned}
 ```

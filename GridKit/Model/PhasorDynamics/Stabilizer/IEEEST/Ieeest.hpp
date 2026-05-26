@@ -46,16 +46,14 @@ namespace GridKit
         V5,  ///< Lead-lag 1 output
         V6,  ///< Lead-lag 2 output
         V7,  ///< Unlimited stabilizer signal
-        VSS, ///< Limited stabilizer signal
-        VS,  ///< Stabilizer output
+        VSS, ///< Limited stabilizer signal (model output)
         MAXIMUM,
       };
 
       /// External variables of a `Ieeest`
       enum class IeeestExternalVariables : size_t
       {
-        U,   ///< Stabilizer input signal
-        VCT, ///< Cutout signal
+        U, ///< Stabilizer input signal
         MAXIMUM,
       };
 
@@ -134,7 +132,7 @@ namespace GridKit
         RealT Lsmin_{-0.1};
         RealT Lsmax_{0.1};
         RealT Vcl_{0};
-        RealT Vcu_{1.5};
+        RealT Vcu_{0};
         RealT Tdelay_{0};
 
         RealT a0_{1};
@@ -154,15 +152,10 @@ namespace GridKit
         RealT safe_inv_a2_{0};
         RealT use_T2_block_{1};
         RealT bypass_T2_block_{0};
-        RealT safe_inv_T2_{1};
         RealT use_T4_block_{1};
         RealT bypass_T4_block_{0};
-        RealT safe_inv_T4_{1};
         RealT use_T6_block_{1};
         RealT bypass_T6_block_{0};
-        RealT safe_inv_T6_{1};
-        RealT use_cutout_{1};
-        RealT bypass_cutout_{0};
 
         ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
 

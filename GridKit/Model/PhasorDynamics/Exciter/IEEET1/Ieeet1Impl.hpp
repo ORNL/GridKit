@@ -231,12 +231,11 @@ namespace GridKit
         ScalarT vimag = bus_->Vi();
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
 
-        ScalarT efdp    = efd0 / (ONE<RealT> + omega * Ispdlim_);
-        ScalarT efd_sat = (efdp - SA_) * Math::sigmoid(efdp - SA_);
-        ScalarT ksat    = SB_ * efd_sat * efd_sat;
-        ScalarT ve      = ksat * efdp;
-        ScalarT vr      = Ke_ * efdp + ve;
-        ScalarT vtr     = vr / Ka_;
+        ScalarT efdp = efd0 / (ONE<RealT> + omega * Ispdlim_);
+        ScalarT ksat = SB_ * Math::qramp(efdp - SA_);
+        ScalarT ve   = ksat * efdp;
+        ScalarT vr   = Ke_ * efdp + ve;
+        ScalarT vtr  = vr / Ka_;
         ScalarT vf{0};
         ScalarT vfx = (Kf_ / Tf_) * efdp;
 
@@ -325,7 +324,7 @@ namespace GridKit
         // The 'pre-limit' derivative of Vr.
         ScalarT func            = (-vr + Ka_ * vtr) / Ta_;
         ScalarT func_normalized = func / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
-        ScalarT vr_ind          = Math::indicator(Vrmin_, Vrmax_, vr, func_normalized);
+        ScalarT vr_ind          = Math::indicator(vr, func_normalized, Vrmin_, Vrmax_);
 
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
@@ -339,8 +338,7 @@ namespace GridKit
         f[6] = -ve + ksat * efdp;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
 
-        ScalarT efd_sat = (efdp - SA_) * (Math::sigmoid(efdp - SA_));
-        f[8]            = -ksat + SB_ * efd_sat * efd_sat;
+        f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
         return 0;
       }
@@ -471,7 +469,7 @@ namespace GridKit
         monitor_->set(Variable::efd, [this]
                       { return efd_signal_->read(); });
         monitor_->set(Variable::ksat, [this]
-                      { return SB_ * (((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_)) * ((y_[2] - SA_) * Math::sigmoid(y_[2] - SA_))); });
+                      { return SB_ * Math::qramp(y_[2] - SA_); });
       }
     } // namespace Exciter
   } // namespace PhasorDynamics
