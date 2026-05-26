@@ -92,17 +92,17 @@ $\mathbf{0} = -\mathbf{I} + \mathbf{Y}'\mathbf{V}$, or expanded as:
 ```math
 \begin{aligned}
   0 &= -I_{\text{r}}^{\mathrm{from}}
-       &+ G'_{\text{ff}}V_{\text{r}}^{\mathrm{from}} &- B'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
-       &+ G'_{\text{ft}}V_{\text{r}}^{\mathrm{to}}   &- B'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
+       &+ G'_{\text{ff}}V_r^{\mathrm{from}} &- B'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
+       &+ G'_{\text{ft}}V_r^{\mathrm{to}}   &- B'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
   0 &= -I_{\text{i}}^{\mathrm{from}}
-       &+ B'_{\text{ff}}V_{\text{r}}^{\mathrm{from}} &+ G'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
-       &+ B'_{\text{ft}}V_{\text{r}}^{\mathrm{to}}   &+ G'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
+       &+ B'_{\text{ff}}V_r^{\mathrm{from}} &+ G'_{\text{ff}}V_{\text{i}}^{\mathrm{from}}
+       &+ B'_{\text{ft}}V_r^{\mathrm{to}}   &+ G'_{\text{ft}}V_{\text{i}}^{\mathrm{to}} \\
   0 &= -I_{\text{r}}^{\mathrm{to}}
-       &+ G'_{\text{tf}}V_{\text{r}}^{\mathrm{from}} &- B'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
-       &+ G'_{\text{tt}}V_{\text{r}}^{\mathrm{to}}   &- B'_{\text{tt}}V_{\text{i}}^{\mathrm{to}} \\
+       &+ G'_{\text{tf}}V_r^{\mathrm{from}} &- B'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
+       &+ G'_{\text{tt}}V_r^{\mathrm{to}}   &- B'_{\text{tt}}V_{\text{i}}^{\mathrm{to}} \\
   0 &= -I_{\text{i}}^{\mathrm{to}}
-       &+ B'_{\text{tf}}V_{\text{r}}^{\mathrm{from}} &+ G'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
-       &+ B'_{\text{tt}}V_{\text{r}}^{\mathrm{to}}   &+ G'_{\text{tt}}V_{\text{i}}^{\mathrm{to}}
+       &+ B'_{\text{tf}}V_r^{\mathrm{from}} &+ G'_{\text{tf}}V_{\text{i}}^{\mathrm{from}}
+       &+ B'_{\text{tt}}V_r^{\mathrm{to}}   &+ G'_{\text{tt}}V_{\text{i}}^{\mathrm{to}}
 \end{aligned}
 ```
 
