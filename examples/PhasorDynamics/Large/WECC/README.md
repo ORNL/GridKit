@@ -44,7 +44,7 @@ The following event types are provided for this case.
 Only one exciter model is outstanding:
 - REECB1
 - GAST_PTI
-- REGC_A
+- REGCA
 - REPCA1
 
 The following examples needs to be constructed with this case.

@@ -42,7 +42,7 @@ The following event types are provided for this case.
 The following models are not implemented in GridKit and are represented using surrogate models.
 
 - IEEEST (In GridKit, not yet added to this case)
-- REGC_A
+- REGCA
 - IEEEG1
 - GGOV1
 - ESST4B
