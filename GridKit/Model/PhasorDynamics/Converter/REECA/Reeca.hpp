@@ -75,12 +75,12 @@ namespace GridKit
         using Component<ScalarT, IdxT>::J_cols_buffer_;
         using Component<ScalarT, IdxT>::J_rows_buffer_;
         using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::mva_system_base_;
         using Component<ScalarT, IdxT>::nnz_;
         using Component<ScalarT, IdxT>::residual_indices_;
         using Component<ScalarT, IdxT>::size_;
         using Component<ScalarT, IdxT>::tag_;
         using Component<ScalarT, IdxT>::time_;
+        using Component<ScalarT, IdxT>::va_system_base_;
         using Component<ScalarT, IdxT>::variable_indices_;
         using Component<ScalarT, IdxT>::wb_;
         using Component<ScalarT, IdxT>::y_;
@@ -126,7 +126,7 @@ namespace GridKit
 
         RealT vaSystemBase() const
         {
-          return mva_system_base_ * static_cast<RealT>(1.0e6);
+          return va_system_base_;
         }
 
         RealT vaReecaBase() const
