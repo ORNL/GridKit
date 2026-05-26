@@ -18,8 +18,8 @@ $T_A$           | [sec]  | Numerator time constant of lag-lead block     |      
 $T_B$           | [sec]  | Denominator time constant of lag-lead block   |               |
 $T_E$           | [sec]  | Exciter field time constant                   |               |
 $K$             | [p.u.] | Voltage regulator gain                        |               |
-$E_{fd,\max}$   | [p.u.] | Maximum excitation output                     |               |
-$E_{fd,\min}$   | [p.u.] | Minimum excitation output                     |               |
+$E_{fd}^{\max}$ | [p.u.] | Maximum excitation output                     |               |
+$E_{fd}^{\min}$ | [p.u.] | Minimum excitation output                     |               |
 
 PowerWorld/PSS/E SEXS_PTI data often gives $T_A/T_B$ as a ratio. GridKit stores
 $T_A$ and $T_B$ separately, so convert ratio-format data with
@@ -76,9 +76,9 @@ so that $\dot E_{fd}$ can be written in piecewise form compactly.
   \dot E_{fd}   &=
   \begin{cases}
      f
-        &  \text{if } (E_{fd,\min} < E_{fd} < E_{fd,\max}) & \lor \\
-        &  \quad (E_{fd} \leq E_{fd,\min} \land f > 0)     & \lor \\
-        &  \quad (E_{fd} \geq E_{fd,\max} \land f < 0)            \\
+        &  \text{if } (E_{fd}^{\min} < E_{fd} < E_{fd}^{\max}) & \lor \\
+        &  \quad (E_{fd} \leq E_{fd}^{\min} \land f > 0)       & \lor \\
+        &  \quad (E_{fd} \geq E_{fd}^{\max} \land f < 0)            \\
      0  &  \text{else}
   \end{cases}
 \end{aligned}

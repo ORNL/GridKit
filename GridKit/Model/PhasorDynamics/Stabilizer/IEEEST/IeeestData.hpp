@@ -34,8 +34,8 @@ namespace GridKit
         Ks,     ///< Stabilizer gain
         Lsmin,  ///< Minimum stabilizer output limit
         Lsmax,  ///< Maximum stabilizer output limit
-        Vcl,    ///< Lower input cutout threshold
-        Vcu,    ///< Upper input cutout threshold
+        Vcl,    ///< Lower input cutout threshold (not modeled)
+        Vcu,    ///< Upper input cutout threshold (not modeled)
         Tdelay, ///< Input time delay (not modeled)
       };
 
@@ -45,7 +45,6 @@ namespace GridKit
       enum class IeeestPorts
       {
         input,  ///< Unique ID of the stabilizer input signal
-        cutout, ///< Unique ID of the cutout signal
         output, ///< Unique ID of the stabilizer output signal
       };
 
@@ -54,7 +53,7 @@ namespace GridKit
        */
       enum class IeeestMonitorableVariables
       {
-        vs, ///< Stabilizer output
+        vss, ///< Stabilizer output (limited signal)
       };
 
       /**

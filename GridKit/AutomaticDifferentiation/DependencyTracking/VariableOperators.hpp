@@ -311,6 +311,12 @@ namespace GridKit
       return 1.0 / x;
     }
 
+    /// Derivative of log(1 + x).
+    inline double log1p_derivative(double x)
+    {
+      return 1.0 / (1.0 + x);
+    }
+
     /// Derivative of logarithm to base 10 function: 1/(x*log(10)).
     inline double log10_derivative(double x)
     {
@@ -377,6 +383,7 @@ namespace std
   IMPL_FUN_1(tanh, GridKit::DependencyTracking::tanh_derivative)
   IMPL_FUN_1(exp, GridKit::DependencyTracking::exp_derivative)
   IMPL_FUN_1(log, GridKit::DependencyTracking::log_derivative)
+  IMPL_FUN_1(log1p, GridKit::DependencyTracking::log1p_derivative)
   IMPL_FUN_1(log10, GridKit::DependencyTracking::log10_derivative)
   IMPL_FUN_1(sqrt, GridKit::DependencyTracking::sqrt_derivative)
   IMPL_FUN_1(abs, GridKit::DependencyTracking::abs_derivative)

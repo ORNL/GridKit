@@ -49,24 +49,24 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        // Create signal nodes for input (u) and output (Vs)
+        // Create signal nodes for input (u) and output (Vss)
         PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vs_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
         ScalarT                                   u_value{0.0};
-        IdxT                                      u_index = 13; // beyond internal variables
-        ScalarT                                   vs_value{0.0};
-        IdxT                                      vs_index = INVALID_INDEX<IdxT>;
+        IdxT                                      u_index = 12; // beyond internal variables
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
         // Link signal nodes to backing storage
         u_node.set(&u_value, &u_index);
-        vs_node.set(&vs_value, &vs_index);
+        vss_node.set(&vss_value, &vss_index);
 
         auto                                              data = makeTestData();
         PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
 
-        // Wire: stabilizer reads u_node as input, writes vs_node as output
+        // Wire: stabilizer reads u_node as input, writes vss_node as output
         stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VS>(&vs_node);
+        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
 
         stab.allocate();
         success *= (stab.verify() == 0);
@@ -85,9 +85,9 @@ namespace GridKit
         }
 
         // Verify output signal is linked and reads the correct value
-        success *= vs_node.linked();
-        success *= (vs_node.getVariableIndex() == 12);
-        success *= isEqual(vs_node.read(), static_cast<ScalarT>(0.0), tol);
+        success *= vss_node.linked();
+        success *= (vss_node.getVariableIndex() == 11);
+        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.0), tol);
 
         return success.report(__func__);
       }
@@ -103,20 +103,20 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vs_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
         ScalarT                                   u_value{0.5};
-        IdxT                                      u_index = 13;
-        ScalarT                                   vs_value{0.0};
-        IdxT                                      vs_index = INVALID_INDEX<IdxT>;
+        IdxT                                      u_index = 12;
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
         u_node.set(&u_value, &u_index);
-        vs_node.set(&vs_value, &vs_index);
+        vss_node.set(&vss_value, &vss_index);
 
         auto                                              data = makeTestData();
         PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
 
         stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VS>(&vs_node);
+        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -129,24 +129,23 @@ namespace GridKit
             0.28,   // f[1]:  -x2_dot + x3
             0.37,   // f[2]:  -x3_dot + x4
             1.0975, // f[3]:  -x4_dot + (-a0*x1 - a1*x2 - a2*x3 - a3*x4 + u) / a4
-            0.25,   // f[4]:  -x5_dot + (v4 - x5) / T2
-            0.24,   // f[5]:  -x6_dot + (v5 - x6) / T4
-            -0.01,  // f[6]:  -x7_dot + (v6 - x7) / T6
+            0.25,   // f[4]:  -T2*x5_dot - x5 + v4
+            0.24,   // f[5]:  -T4*x6_dot - x6 + v5
+            -0.05,  // f[6]:  -T6*x7_dot - x7 + v6
             -0.42,  // f[7]:  -v4 + x1 + A5*x2 + A6*x3
-            -0.25,  // f[8]:  -v5 + x5 + (T1/T2)*(v4 - x5)
-            -0.31,  // f[9]:  -v6 + x6 + (T3/T4)*(v5 - x6)
-            1.15,   // f[10]: -v7 + Ks*(T5/T6)*(v6 - x7)
+            -0.25,  // f[8]:  -T2*(v5 - x5) + T1*(v4 - x5)
+            -0.31,  // f[9]:  -T4*(v6 - x6) + T3*(v5 - x6)
+            5.75,   // f[10]: -T6*v7 + Ks*T5*(v6 - x7)
             0.0,    // f[11]: limiter (v7=0.05 within [-0.1, 0.1])
-            0.0,    // f[12]: cutout  (Vct=0.75 within [0.0, 1.5])
         };
 
-        // Looser tolerance for f[11],f[12] — smooth sigmoid approximations
+        // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
         const auto loose_tol = static_cast<RealT>(1.0e-4);
         auto&      residual  = stab.getResidual();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          auto test_tol = (i >= 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
+          auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
           if (!isEqual(residual[i], res_answer[i], test_tol))
           {
             std::cout << "Incorrect result for residual " << i << ": "
@@ -157,7 +156,7 @@ namespace GridKit
         }
 
         // Verify output signal reads the stabilizer output
-        success *= isEqual(vs_node.read(), static_cast<ScalarT>(0.05), loose_tol);
+        success *= isEqual(vss_node.read(), static_cast<ScalarT>(0.05), loose_tol);
 
         return success.report(__func__);
       }
@@ -196,18 +195,18 @@ namespace GridKit
 
         // Set up signal nodes with DependencyTracking scalar type
         PhasorDynamics::SignalNode<DepVar, IdxT> u_node;
-        PhasorDynamics::SignalNode<DepVar, IdxT> vs_node;
+        PhasorDynamics::SignalNode<DepVar, IdxT> vss_node;
         DepVar                                   u_value{0.5};
-        IdxT                                     u_index = 13;
-        DepVar                                   vs_value{0.0};
-        IdxT                                     vs_index = INVALID_INDEX<IdxT>;
+        IdxT                                     u_index = 12;
+        DepVar                                   vss_value{0.0};
+        IdxT                                     vss_index = INVALID_INDEX<IdxT>;
 
         u_node.set(&u_value, &u_index);
-        vs_node.set(&vs_value, &vs_index);
+        vss_node.set(&vss_value, &vss_index);
 
         PhasorDynamics::Stabilizer::Ieeest<DepVar, IdxT> stab(ieeestdata);
         stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VS>(&vs_node);
+        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -287,18 +286,18 @@ namespace GridKit
           PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> ieeestdata)
       {
         PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> vs_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
         ScalarT                                   u_value{0.5};
-        IdxT                                      u_index = 13;
-        ScalarT                                   vs_value{0.0};
-        IdxT                                      vs_index = INVALID_INDEX<IdxT>;
+        IdxT                                      u_index = 12;
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
 
         u_node.set(&u_value, &u_index);
-        vs_node.set(&vs_value, &vs_index);
+        vss_node.set(&vss_value, &vss_index);
 
         PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(ieeestdata);
         stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
-        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VS>(&vs_node);
+        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
 
         stab.allocate();
         stab.initialize();
@@ -331,7 +330,7 @@ namespace GridKit
         PhasorDynamics::Stabilizer::IeeestData<RealT, IdxT> data;
         data.device_class          = "stabilizer";
         data.disambiguation_string = "ieeest_test";
-        data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vs);
+        data.monitored_variables.insert(PhasorDynamics::Stabilizer::IeeestMonitorableVariables::vss);
 
         data.parameters[Params::A1]     = 0.1;
         data.parameters[Params::A2]     = 0.2;
@@ -349,7 +348,7 @@ namespace GridKit
         data.parameters[Params::Lsmin]  = -0.1;
         data.parameters[Params::Lsmax]  = 0.1;
         data.parameters[Params::Vcl]    = 0.0;
-        data.parameters[Params::Vcu]    = 1.5;
+        data.parameters[Params::Vcu]    = 0.0;
         data.parameters[Params::Tdelay] = 0.0;
 
         return data;
@@ -372,8 +371,7 @@ namespace GridKit
         stab.y()[8]  = 0.9;  // v5
         stab.y()[9]  = 1.0;  // v6
         stab.y()[10] = 0.05; // v7  (within limiter range)
-        stab.y()[11] = 0.05; // Vss
-        stab.y()[12] = 0.05; // Vs
+        stab.y()[11] = 0.05; // Vss (model output)
 
         stab.yp()[0] = 0.01; // x1_dot
         stab.yp()[1] = 0.02; // x2_dot
@@ -402,7 +400,6 @@ namespace GridKit
         stab.y()[9].setValue(1.0);
         stab.y()[10].setValue(0.05);
         stab.y()[11].setValue(0.05);
-        stab.y()[12].setValue(0.05);
 
         stab.yp()[0].setValue(0.01);
         stab.yp()[1].setValue(0.02);
