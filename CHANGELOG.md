@@ -56,6 +56,7 @@
 - Added node objects to `PowerElectronics` module & updated all examples to make use of them.
 - Separated internal and external residuals of `PowerElectronics` models.
 - Added `CliArgs` class for better management of command-line options.
+- Remove data copying between system and components in `PowerElectronics` models.
 
 ## v0.1
 

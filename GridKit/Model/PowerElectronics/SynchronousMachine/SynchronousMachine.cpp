@@ -94,18 +94,18 @@ namespace GridKit
     ScalarT                  llkq1 = static_cast<ScalarT>(std::get<0>(Llkq_));
     [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
-    ScalarT cos1   = std::cos((P_ / 2.0) * y_[5]);
-    ScalarT sin1   = std::sin((P_ / 2.0) * y_[5]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
+    ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    f_[5] = (-2.0 / 3.0) * (y_[0] * cos1 + y_[1] * cos23m + y_[2] * cos23p) + Rs_ * y_[6] + (Lls_ + Lmq_) * yp_[6] + Lmq_ * yp_[9] + Lmq_ * yp_[10] + y_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_[7] + Lmd_ * y_[11] + Lmd_ * y_[12]);
-    f_[6] = (-2.0 / 3.0) * (y_[0] * sin1 - y_[1] * sin23m - y_[2] * sin23p) + Rs_ * y_[7] + (Lls_ + Lmd_) * yp_[7] + Lmd_ * yp_[11] + Lmd_ * yp_[12] - y_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_[6] + Lmq_ * y_[9] + Lmq_ * y_[10]);
-    f_[7] = (-1.0 / 3.0) * (y_[0] + y_[1] + y_[2]) + Rs_ * y_[8] + Lls_ * yp_[8];
-    f_[8] = rkq1 * y_[9] + (llkq1 + Lmq_) * yp_[9] + Lmq_ * yp_[6] + Lmq_ * yp_[10];
-    f_[9] = rkq1 * y_[9] + (llkq1 + Lmq_) * yp_[9] + Lmq_ * yp_[6] + Lmq_ * yp_[10];
+    f_int_[0] = (-2.0 / 3.0) * (y_[0] * cos1 + y_[1] * cos23m + y_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + y_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
+    f_int_[1] = (-2.0 / 3.0) * (y_[0] * sin1 - y_[1] * sin23m - y_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - y_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
+    f_int_[2] = (-1.0 / 3.0) * (y_[0] + y_[1] + y_[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
+    f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
+    f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
     return 0;
   }
 
@@ -115,18 +115,18 @@ namespace GridKit
     [[maybe_unused]] ScalarT rkq2  = static_cast<ScalarT>(std::get<1>(Rkq_));
     [[maybe_unused]] ScalarT llkq2 = static_cast<ScalarT>(std::get<1>(Llkq_));
 
-    ScalarT cos1   = std::cos((P_ / 2.0) * y_[5]);
-    ScalarT sin1   = std::sin((P_ / 2.0) * y_[5]);
-    ScalarT cos23m = std::cos((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT sin23m = std::sin((P_ / 2.0) * y_[5] - (2.0 / 3.0) * M_PI);
-    ScalarT cos23p = std::cos((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
-    ScalarT sin23p = std::sin((P_ / 2.0) * y_[5] + (2.0 / 3.0) * M_PI);
+    ScalarT cos1   = std::cos((P_ / 2.0) * y_int_[0]);
+    ScalarT sin1   = std::sin((P_ / 2.0) * y_int_[0]);
+    ScalarT cos23m = std::cos((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
+    ScalarT sin23m = std::sin((P_ / 2.0) * y_int_[0] - (2.0 / 3.0) * M_PI);
+    ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
+    ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    f_[0] = y_[6] * cos1 + y_[7] * sin1 + y_[8];
-    f_[1] = y_[6] * cos23m + y_[7] * sin23m + y_[8];
-    f_[2] = y_[6] * cos23p + y_[7] * sin23p + y_[8];
-    f_[3] = RJ_ * yp_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_[6] * (y_[7] + y_[11] + y_[12]) - Lmq_ * y_[7] * (y_[6] + y_[9] + y_[0]));
-    f_[4] = yp_[5] - y_[4];
+    f_[0] = y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
+    f_[1] = y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
+    f_[2] = y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
+    f_[3] = RJ_ * yp_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + y_[0]));
+    f_[4] = yp_int_[0] - y_[4];
     return 0;
   }
 

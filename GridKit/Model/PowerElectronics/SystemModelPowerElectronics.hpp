@@ -73,8 +73,11 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
@@ -165,6 +168,9 @@ namespace GridKit
      * @post System model vectors allocated with size s
      * @post CSR Jacobian sparsity pattern is computed
      * @post COO->CSR mapping is computed
+     * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
+     * are set to their appropriate offsets in the system vector, allowing them to directly access their internal variables, derivatives,
+     * and residuals.
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
@@ -206,10 +212,17 @@ namespace GridKit
       }
 
       {
+        // The offset for each component's internal variables in the system vector.
+        // They start at 0, and are stacked on top of each other.
         size_t component_internal_idx = 0;
         for (component_type* comp : components_)
         {
           comp->allocate();
+
+          // Update component internal pointers to their correct offsets
+          comp->setInternalPointer(&y_[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
+          comp->setInternalResidualPointer(&f_[component_internal_idx]);
 
           const auto& external_indices = comp->getExternIndices();
           for (size_t i = 0; i < comp->size(); i++)
@@ -330,13 +343,13 @@ namespace GridKit
      */
     int distributeVectors()
     {
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
-        IdxT                  size = component->size();
-        std::vector<ScalarT>& y    = component->y();
-        std::vector<ScalarT>& yp   = component->yp();
+        std::vector<ScalarT>&   y         = component->y();
+        std::vector<ScalarT>&   yp        = component->yp();
+        const std::set<size_t>& externals = component->getExternIndices();
 
-        for (IdxT j = 0; j < size; ++j)
+        for (size_t j : externals)
         {
           if (component->getNodeConnection(j) != neg1_)
           {
@@ -381,14 +394,15 @@ namespace GridKit
           return err_code;
       }
 
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
 
-        IdxT                        size     = component->size();
-        const std::vector<ScalarT>& residual = component->getResidual();
-        for (IdxT j = 0; j < size; ++j)
+        const std::vector<ScalarT>& residual  = component->getResidual();
+        const std::set<size_t>&     externals = component->getExternIndices();
+
+        for (size_t j : externals)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)

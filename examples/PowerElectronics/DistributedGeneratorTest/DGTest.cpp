@@ -46,7 +46,7 @@ int main(int /* argc */, char const** /* argv */)
   using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
   Bus bus;
 
-  GridKit::DistributedGenerator<double, size_t> dg(0, parms, true, &dg_signal, &bus);
+  GridKit::DistributedGenerator<double, size_t> dg(0, parms, false, &dg_signal, &bus);
 
   std::vector<double> t1(16, 0.0);
   std::vector<double> t2{
@@ -67,18 +67,23 @@ int main(int /* argc */, char const** /* argv */)
       1.5,
       0.3,
   };
+  std::vector<double> res(16, 0.0);
 
   dg_signal.allocate();
   bus.allocate();
   dg.allocate();
 
-  dg.y()  = t2;
-  dg.yp() = t1;
+  dg.y()           = t2;
+  dg.yp()          = t1;
+  dg.getResidual() = res;
+  dg.setInternalPointer(&t2[dg.getExternSize()]);
+  dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
+  dg.setInternalResidualPointer(&dg.getResidual()[dg.getExternSize()]);
 
   dg.evaluateResidual();
 
   // Generated from matlab code with same parameters and inputs
-  std::vector<double> true_vec{3.141592277589793e+02,
+  std::vector<double> true_vec{0,
                                8.941907747838389e-01,
                                1.846733023014284e+00,
                                1.014543000000000e+02,

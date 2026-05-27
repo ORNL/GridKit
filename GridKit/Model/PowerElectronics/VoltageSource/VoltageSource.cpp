@@ -59,7 +59,7 @@ namespace GridKit
   int VoltageSource<ScalarT, IdxT>::evaluateInternalResidual()
   {
     // internal
-    f_[2] = y_[1] - y_[0] - V_;
+    f_int_[0] = y_[1] - y_[0] - V_;
     return 0;
   }
 
@@ -67,9 +67,9 @@ namespace GridKit
   int VoltageSource<ScalarT, IdxT>::evaluateExternalResidual()
   {
     // input
-    f_[0] = -y_[2];
+    f_[0] = -y_int_[0];
     // ouput
-    f_[1] = y_[2];
+    f_[1] = y_int_[0];
     return 0;
   }
 
