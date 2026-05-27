@@ -213,7 +213,7 @@ namespace GridKit
 
       {
         // The offset for each component's internal variables in the system vector.
-        // They start at 0, and are stacked of each other.
+        // They start at 0, and are stacked on top of each other.
         size_t component_internal_idx = 0;
         for (component_type* comp : components_)
         {
