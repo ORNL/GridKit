@@ -210,6 +210,89 @@ namespace GridKit
           addComponent(regca);
         }
 
+        // Add REPCA plant controllers
+        for (const auto& repcadata : data.repca)
+        {
+          using DataT = typename SystemModelData<RealT, IdxT>::RepcaDataT;
+
+          IdxT bus_index = 0;
+          if (repcadata.ports.contains(DataT::Ports::bus))
+          {
+            bus_index = repcadata.ports.at(DataT::Ports::bus);
+          }
+
+          auto* repca = new Repca<ScalarT, IdxT>(getBus(bus_index), repcadata);
+
+          if (repcadata.ports.contains(DataT::Ports::ibranchr))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::ibranchr);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::IBRANCHR>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::ibranchi))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::ibranchi);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::IBRANCHI>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::qbranch))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::qbranch);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::QBRANCH>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::pbranch))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::pbranch);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::PBRANCH>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::vref))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::vref);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::VREF>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::qref))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::qref);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::QREF>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::pplantref))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::pplantref);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::PPLANTREF>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::freq))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::freq);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::FREQ>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::freqref))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::freqref);
+            repca->getSignals().template attachSignalNode<RepcaExternalVariables::FREQREF>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::qext))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::qext);
+            repca->getSignals().template assignSignalNode<RepcaInternalVariables::QEXT>(
+                getSignal(signal));
+          }
+          if (repcadata.ports.contains(DataT::Ports::pext))
+          {
+            const IdxT signal = repcadata.ports.at(DataT::Ports::pext);
+            repca->getSignals().template assignSignalNode<RepcaInternalVariables::PEXT>(
+                getSignal(signal));
+          }
+
+          addComponent(repca);
+        }
+
         // Add branches
         for (const auto& branchdata : data.branch)
         {
