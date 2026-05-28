@@ -1,7 +1,7 @@
 add_library(Utilities INTERFACE)
-target_include_directories(Utilities INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(
+  Utilities
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 
 add_library(GridKit::Utilities ALIAS Utilities)
 
@@ -10,10 +10,8 @@ add_subdirectory(CliArgs)
 
 install(TARGETS Utilities EXPORT gridkit-targets)
 install(
-  FILES
-    Colors.hpp
-    Errors.hpp
-    FileIO.hpp
-    MapFromCOO.hpp
-  DESTINATION
-    include/GridKit/Utilities)
+  FILES Colors.hpp
+        Errors.hpp
+        FileIO.hpp
+        MapFromCOO.hpp
+  DESTINATION include/GridKit/Utilities)

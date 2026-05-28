@@ -4,5 +4,5 @@
 #]]
 
 if(TARGET SUNDIALS::idas)
-    add_subdirectory(Dynamic)
+  add_subdirectory(Dynamic)
 endif()

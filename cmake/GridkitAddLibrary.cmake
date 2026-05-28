@@ -1,4 +1,3 @@
-
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
@@ -36,8 +35,12 @@ macro(gridkit_add_library target)
       COMPILE_OPTIONS)
 
   # parse arguments
-  cmake_parse_arguments(gridkit_add_library
-    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(
+    gridkit_add_library
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN})
 
   # add library with sources
   add_library(${target} ${gridkit_add_library_SOURCES})
@@ -49,12 +52,10 @@ macro(gridkit_add_library target)
   endif()
 
   # set include dirs
-  target_include_directories(${target} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>)
+  target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                                              $<INSTALL_INTERFACE:include>)
   if(gridkit_add_library_INCLUDE_DIRECTORIES)
-    target_include_directories(${target}
-      ${gridkit_add_library_INCLUDE_DIRECTORIES})
+    target_include_directories(${target} ${gridkit_add_library_INCLUDE_DIRECTORIES})
   endif()
 
   # add compile options
@@ -76,18 +77,23 @@ macro(gridkit_add_library target)
   set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_output_name})
 
   # set the library version
-  set_target_properties(${target} PROPERTIES
-    VERSION ${GridKit_VERSION}
-    SOVERSION ${GridKit_VERSION_MAJOR})
+  set_target_properties(${target} PROPERTIES VERSION ${GridKit_VERSION} SOVERSION
+                                                                        ${GridKit_VERSION_MAJOR})
 
   # install
-  install(TARGETS ${target} DESTINATION lib EXPORT gridkit-targets)
+  install(
+    TARGETS ${target}
+    DESTINATION lib
+    EXPORT gridkit-targets)
   if(gridkit_add_library_HEADERS)
-    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR
-      BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE _rel_path)
-    install(FILES ${gridkit_add_library_HEADERS}
-      DESTINATION include/${_rel_path})
+    cmake_path(
+      RELATIVE_PATH
+      CMAKE_CURRENT_SOURCE_DIR
+      BASE_DIRECTORY
+      ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE
+      _rel_path)
+    install(FILES ${gridkit_add_library_HEADERS} DESTINATION include/${_rel_path})
   endif()
 
 endmacro()
