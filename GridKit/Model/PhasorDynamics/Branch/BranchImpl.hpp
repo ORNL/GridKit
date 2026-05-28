@@ -439,7 +439,17 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     void Branch<ScalarT, IdxT>::setDerivedParams()
     {
-      const RealT denom   = R_ * R_ + X_ * X_;
+      y11_ = {};
+      y12_ = {};
+      y21_ = {};
+      y22_ = {};
+
+      const RealT denom = R_ * R_ + X_ * X_;
+      if (denom == RealT{0.0} || tap_ == RealT{0.0})
+      {
+        return;
+      }
+
       const RealT g       = R_ / denom;
       const RealT b       = -X_ / denom;
       const RealT inv_tap = RealT{1.0} / tap_;
