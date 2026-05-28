@@ -1,4 +1,3 @@
-
 add_executable(rlcircuit RLCircuit.cpp)
 target_link_libraries(
   rlcircuit

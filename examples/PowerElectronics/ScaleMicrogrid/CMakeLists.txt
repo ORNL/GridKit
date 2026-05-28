@@ -1,4 +1,3 @@
-
 add_executable(scalemicrogrid ScaleMicrogrid.cpp)
 add_executable(scalemicrogridarbitrary ScaleMicrogridArbitrary.cpp)
 target_link_libraries(

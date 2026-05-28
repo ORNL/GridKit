@@ -1,4 +1,3 @@
-
 add_executable(dgtest DGTest.cpp)
 target_link_libraries(
   dgtest

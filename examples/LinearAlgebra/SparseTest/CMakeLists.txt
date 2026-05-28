@@ -1,4 +1,3 @@
-
 add_executable(spmattest SparseTest.cpp)
 target_link_libraries(
   spmattest GridKit::sparse_matrix)
