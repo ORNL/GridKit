@@ -35,6 +35,7 @@ target_link_libraries(phasor_dynamics_components_dependency_tracking
 add_subdirectory(Branch)
 add_subdirectory(Bus)
 add_subdirectory(BusFault)
+add_subdirectory(BusToSignalAdapter)
 add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)

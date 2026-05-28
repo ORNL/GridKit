@@ -108,6 +108,49 @@ namespace GridKit
           addSignal(signal);
         }
 
+        // Add bus-to-signal adapters
+        for (const auto& adapterdata : data.adapter)
+        {
+          using AdapterPorts = BusToSignalAdapterData<ScalarT, IdxT>::Ports;
+          IdxT bus_index     = 0;
+          if (adapterdata.ports.contains(AdapterPorts::bus))
+          {
+            bus_index = adapterdata.ports.at(AdapterPorts::bus);
+          }
+
+          auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index));
+
+          if (adapterdata.ports.contains(AdapterPorts::vr))
+          {
+            IdxT           vr    = adapterdata.ports.at(AdapterPorts::vr);
+            constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
+            adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
+          }
+
+          if (adapterdata.ports.contains(AdapterPorts::vi))
+          {
+            IdxT           vi    = adapterdata.ports.at(AdapterPorts::vi);
+            constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
+            adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
+          }
+
+          if (adapterdata.ports.contains(AdapterPorts::ir))
+          {
+            IdxT           ir    = adapterdata.ports.at(AdapterPorts::ir);
+            constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
+            adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
+          }
+
+          if (adapterdata.ports.contains(AdapterPorts::ii))
+          {
+            IdxT           ii    = adapterdata.ports.at(AdapterPorts::ii);
+            constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+            adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
+          }
+
+          addComponent(adapter);
+        }
+
         // Add branches
         for (const auto& branchdata : data.branch)
         {

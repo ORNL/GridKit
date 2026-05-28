@@ -94,6 +94,12 @@ namespace GridKit
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class").get<std::string>();
+        if (kind == "BusToSignalAdapter")
+        {
+          typename SystemModelData<RealT, IdxT>::BusToSignalAdapterDataT adapter;
+          raw_component.get_to(adapter);
+          sm.adapter.push_back(adapter);
+        }
         if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;

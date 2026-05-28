@@ -8,6 +8,13 @@ add_executable(test_phasor_bus runBusTests.cpp)
 target_link_libraries(test_phasor_bus GridKit::phasor_dynamics_bus
                                       GridKit::testing)
 
+add_executable(test_phasor_bustosignaladapter runBusToSignalAdapterTests.cpp)
+target_link_libraries(test_phasor_bustosignaladapter GridKit::phasor_dynamics_bus
+                                                     GridKit::phasor_dynamics_bus_dependency_tracking
+                                                     GridKit::phasor_dynamics_bustosignaladapter
+                                                     GridKit::phasor_dynamics_bustosignaladapter_dependency_tracking
+                                                     GridKit::testing)
+
 add_executable(test_phasor_branch runBranchTests.cpp)
 target_link_libraries(test_phasor_branch GridKit::phasor_dynamics_branch
                                          GridKit::phasor_dynamics_branch_dependency_tracking
@@ -101,6 +108,7 @@ target_link_libraries(test_phasor_system_single_component GridKit::phasor_dynami
                                                           GridKit::testing)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
+add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosignaladapter)
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
@@ -116,6 +124,7 @@ add_test(NAME PhasorDynamicsSystemTest COMMAND test_phasor_system
 add_test(NAME PhasorDynamicsSystemSingleComponentTest COMMAND test_phasor_system_single_component)
 
 install(TARGETS test_phasor_bus
+                test_phasor_bustosignaladapter
                 test_phasor_branch
                 test_phasor_load
                 test_phasor_loadzip
