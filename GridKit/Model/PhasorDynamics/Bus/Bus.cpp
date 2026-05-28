@@ -22,6 +22,8 @@ namespace GridKit
     }
 
     // Available template instantiations
+    template class BusBase<double, long int>;
+    template class BusBase<double, size_t>;
     template class Bus<double, long int>;
     template class Bus<double, size_t>;
 

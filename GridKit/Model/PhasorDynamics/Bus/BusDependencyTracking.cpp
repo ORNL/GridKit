@@ -22,6 +22,8 @@ namespace GridKit
     }
 
     // Available template instantiations
+    template class BusBase<DependencyTracking::Variable, long int>;
+    template class BusBase<DependencyTracking::Variable, size_t>;
     template class Bus<DependencyTracking::Variable, long int>;
     template class Bus<DependencyTracking::Variable, size_t>;
 
