@@ -1,13 +1,17 @@
 #pragma once
 
 #include <filesystem>
+#include <format>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <vector>
 
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
@@ -15,6 +19,8 @@ namespace GridKit
   namespace PhasorDynamics
   {
     namespace fs = ::std::filesystem;
+
+    using Log = GridKit::Utilities::Logger;
 
     /**
      * @brief Describes an event that is used to modify the simulation at the
@@ -184,5 +190,54 @@ namespace GridKit
 
       return data;
     }
+
+    void checkCommandLine(int argc, const std::string& appName)
+    {
+      if (argc < 2)
+      {
+        Log::error() << "No input file provided" << std::endl;
+        std::cout << std::format(
+            "\n"
+            "Usage:\n"
+            "       {} <json-input-file>\n"
+            "\n"
+            "Please provide a json input file for the study to run.\n"
+            "\n",
+            appName);
+        exit(1);
+      }
+    }
+
+    Testing::TestStatus checkErrors(
+        const StudyData& study_data,
+        bool             print_results = true)
+    {
+      // Generate aggregate errors comparing variable output to reference solution
+      auto func   = std::string{"monitor file vs reference file"};
+      auto status = Testing::TestStatus{func.c_str()};
+
+      const auto& out_file = study_data.output_file;
+      const auto& ref_file = study_data.reference_file;
+      if (!out_file.empty() && !ref_file.empty())
+      {
+        auto errorSet = Testing::compareCSV(out_file, ref_file);
+
+        // Print the errors
+        if (print_results)
+        {
+          errorSet.display();
+        }
+
+        // Check against specified tolerance
+        status *= errorSet.total.max_error < study_data.error_tol;
+
+        if (print_results)
+        {
+          status.report();
+        }
+      }
+      return status;
+    }
+
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -24,5 +24,5 @@ add_test(NAME ThreeBusBasicJson
 
 gridkit_example_add_file(ThreeBusBasic.solver.json)
 add_test(NAME ThreeBusBasic_pdsim
-    COMMAND PDSim ThreeBusBasic.solver.json
+    COMMAND DynamicSimulation ThreeBusBasic.solver.json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

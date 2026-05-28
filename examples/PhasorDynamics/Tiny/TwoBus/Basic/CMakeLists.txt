@@ -22,6 +22,6 @@ add_test(NAME TwoBusBasicJson_no_arg
 
 gridkit_example_add_file(TwoBusBasic.solver.json)
 gridkit_example_add_file(TwoBusBasic.ref.csv)
-add_test(NAME TwoBusBasic_using_app
-    COMMAND PDSim TwoBusBasic.solver.json
+add_test(NAME TwoBusBasic_pdsim
+    COMMAND DynamicSimulation TwoBusBasic.solver.json
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
