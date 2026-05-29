@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -89,6 +90,7 @@ namespace GridKit
       f_.resize(size);
       y_.resize(size);
       yp_.resize(size);
+      abs_tol_.resize(size);
       tag_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
@@ -153,8 +155,9 @@ namespace GridKit
      * error cannot be used.
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+    int Load<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

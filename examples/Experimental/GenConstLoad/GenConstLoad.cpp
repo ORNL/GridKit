@@ -47,8 +47,10 @@ int main()
   // setup simulation
   idas->configureSimulation();
   idas->configureAdjoint();
+  idas->setMaxSteps(1000);
+  idas->setBackwardMaxSteps(1000);
   idas->getDefaultInitialCondition();
-  idas->initializeSimulation(t_init, true);
+  idas->initializeSimulation(t_init);
   idas->configureQuadrature();
   idas->initializeQuadrature();
 
@@ -80,7 +82,7 @@ int main()
   // Configure Ipopt application
   ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
   ipoptApp->Options()->SetNumericValue("tol", tol);
-  ipoptApp->Options()->SetIntegerValue("print_level", 5);
+  ipoptApp->Options()->SetIntegerValue("print_level", 0);
 
   // Create interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =

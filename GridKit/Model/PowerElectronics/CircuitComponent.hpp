@@ -99,6 +99,7 @@ namespace GridKit
 
       y_.resize(static_cast<size_t>(size_));
       yp_.resize(static_cast<size_t>(size_));
+      abs_tol_.resize(static_cast<size_t>(size_));
       f_.resize(static_cast<size_t>(size_));
 
       return 0;

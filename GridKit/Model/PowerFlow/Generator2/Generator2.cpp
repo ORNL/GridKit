@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include "Generator2.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -58,6 +59,13 @@ namespace GridKit
   {
     tag_[0] = true;
     tag_[1] = true;
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int Generator2<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  {
+    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
     return 0;
   }
 
