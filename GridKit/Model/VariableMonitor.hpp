@@ -102,10 +102,10 @@ namespace GridKit
        */
       struct SinkSpec
       {
-        /// Output file name (empty for stdout)
-        std::string file_name;
         /// Output format
         Format      format;
+        /// Output file name (empty for stdout)
+        std::string file_name{};
         /// Delimiter (used only with CSV format currently)
         std::string delim{","};
       };
@@ -124,27 +124,6 @@ namespace GridKit
       /**
        * @brief Print items relevant to the start of a file
        */
-      virtual void printHeader(std::ostream& os, Csv csv) const
-      {
-        std::string out;
-        appendHeader(out, csv);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void printHeader(std::ostream& os, Json json) const
-      {
-        std::string out;
-        appendHeader(out, json);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void printHeader(std::ostream& os, Yaml yaml) const
-      {
-        std::string out;
-        appendHeader(out, yaml);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
       virtual void appendHeader(std::string&, Csv) const = 0;
 
       virtual void appendHeader(std::string&, Json) const
@@ -161,27 +140,6 @@ namespace GridKit
       /**
        * @brief Print monitored variables at current state
        */
-      virtual void print(std::ostream& os, Csv csv) const
-      {
-        std::string out;
-        append(out, csv);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void print(std::ostream& os, Json json) const
-      {
-        std::string out;
-        append(out, json);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void print(std::ostream& os, Yaml yaml) const
-      {
-        std::string out;
-        append(out, yaml);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
       virtual void append(std::string&, Csv) const  = 0;
       virtual void append(std::string&, Json) const = 0;
       virtual void append(std::string&, Yaml) const = 0;
@@ -192,27 +150,6 @@ namespace GridKit
       /**
        * @brief Print items relevant to the end of a file
        */
-      virtual void printFooter(std::ostream& os, Csv csv) const
-      {
-        std::string out;
-        appendFooter(out, csv);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void printFooter(std::ostream& os, Json json) const
-      {
-        std::string out;
-        appendFooter(out, json);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
-      virtual void printFooter(std::ostream& os, Yaml yaml) const
-      {
-        std::string out;
-        appendFooter(out, yaml);
-        os.write(out.data(), static_cast<std::streamsize>(out.size()));
-      }
-
       virtual void appendFooter(std::string&, Csv) const
       {
       }

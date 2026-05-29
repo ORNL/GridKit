@@ -72,11 +72,11 @@ namespace GridKit
        *
        * @param spec Specifies details for the sink.
        */
-      void addSink(const SinkSpec& spec)
+      void addSink(const SinkSpec& spec, std::ostream& os = std::cout)
       {
         if (spec.file_name.empty())
         {
-          sinks_.push_back(make_sink(spec, std::cout));
+          sinks_.push_back(make_sink(spec, os));
         }
         else
         {
@@ -125,9 +125,6 @@ namespace GridKit
         }
       }
 
-      /// @copydoc VariableMonitorBase::printHeader
-      using VariableMonitorBase::printHeader;
-
       /**
        * @brief Organize header output for this and all submonitors
        */
@@ -152,9 +149,6 @@ namespace GridKit
                      sink);
         }
       }
-
-      /// @copydoc VariableMonitorBase::print
-      using VariableMonitorBase::print;
 
       /**
        * @brief Organize variable output for this and all submonitors
@@ -186,9 +180,6 @@ namespace GridKit
                      sink);
         }
       }
-
-      /// @copydoc VariableMonitorBase::printFooter
-      using VariableMonitorBase::printFooter;
 
       /**
        * @brief Organize footer output for this and all submonitors

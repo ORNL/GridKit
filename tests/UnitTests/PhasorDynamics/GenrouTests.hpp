@@ -169,7 +169,8 @@ namespace GridKit
         monitor.addMonitor(gen.getMonitor());
 
         std::stringstream os;
-        monitor.print(os, Model::VariableMonitorBase::Csv{});
+        monitor.addSink({Model::VariableMonitorFormat::CSV}, os);
+        monitor.print();
 
         auto values = Tokenizer<RealT>(os.str(), ',')();
         if (values.size() == 3)
