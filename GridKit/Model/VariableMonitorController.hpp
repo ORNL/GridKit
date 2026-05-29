@@ -249,11 +249,11 @@ namespace GridKit
 
       void append(std::string& out, Csv csv) const override
       {
-        VariableMonitorDetail::appendReal(out, *time_);
+        out += VariableMonitorDetail::formatReal(*time_);
         for (auto&& var : variables_)
         {
           out += csv.delim;
-          VariableMonitorDetail::appendReal(out, *var.value);
+          out += VariableMonitorDetail::formatReal(*var.value);
         }
 
         for (auto* mon : monitors_)
