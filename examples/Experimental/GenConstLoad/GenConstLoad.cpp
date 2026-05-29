@@ -47,8 +47,6 @@ int main()
   // setup simulation
   idas->configureSimulation();
   idas->configureAdjoint();
-  idas->setMaxSteps(1000);
-  idas->setBackwardMaxSteps(1000);
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);
   idas->configureQuadrature();
