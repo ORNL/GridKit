@@ -152,7 +152,7 @@ namespace GridKit
           addComponent(adapter);
         }
 
-        // Add REGCA converters
+        // Add REGCA converters before REECB so REGCA initializes the current commands first.
         for (const auto& regcadata : data.regca)
         {
           using DataT = typename SystemModelData<RealT, IdxT>::RegcaDataT;
@@ -208,6 +208,65 @@ namespace GridKit
           }
 
           addComponent(regca);
+        }
+
+        // Add REECB electrical controllers
+        for (const auto& reecbdata : data.reecb)
+        {
+          using DataT = typename SystemModelData<RealT, IdxT>::ReecbDataT;
+
+          IdxT bus_index = 0;
+          if (reecbdata.ports.contains(DataT::Ports::bus))
+          {
+            bus_index = reecbdata.ports.at(DataT::Ports::bus);
+          }
+
+          auto* reecb = new Reecb<ScalarT, IdxT>(getBus(bus_index), reecbdata);
+
+          if (reecbdata.ports.contains(DataT::Ports::pe))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::pe);
+            reecb->getSignals().template attachSignalNode<ReecbExternalVariables::PE>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::qgen))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::qgen);
+            reecb->getSignals().template attachSignalNode<ReecbExternalVariables::QGEN>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::qext))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::qext);
+            reecb->getSignals().template attachSignalNode<ReecbExternalVariables::QEXT>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::pfaref))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::pfaref);
+            reecb->getSignals().template attachSignalNode<ReecbExternalVariables::PFAREF>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::pref))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::pref);
+            reecb->getSignals().template attachSignalNode<ReecbExternalVariables::PREF>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::iqcmd))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::iqcmd);
+            reecb->getSignals().template assignSignalNode<ReecbInternalVariables::IQCMD>(
+                getSignal(signal));
+          }
+          if (reecbdata.ports.contains(DataT::Ports::ipcmd))
+          {
+            const IdxT signal = reecbdata.ports.at(DataT::Ports::ipcmd);
+            reecb->getSignals().template assignSignalNode<ReecbInternalVariables::IPCMD>(
+                getSignal(signal));
+          }
+
+          addComponent(reecb);
         }
 
         // Add branches

@@ -15,7 +15,7 @@ namespace GridKit
      *
      * @note The sigmoid constant (mu) value is chosen to balance accuracy
      * and finite derivatives. Large values more closely approximate a step
-     * function, but lead to inf or NaN derivatives.
+     * function, but can make the transition numerically stiff.
      *
      * @tparam ScalarT - scalar data type
      *
@@ -27,7 +27,7 @@ namespace GridKit
     {
       using RealT               = typename GridKit::ScalarTraits<ScalarT>::RealT;
       static constexpr RealT MU = 240.0;
-      return ONE<RealT> / (ONE<RealT> + std::exp(-MU * x));
+      return HALF<RealT> * (ONE<RealT> + std::tanh(HALF<RealT> * MU * x));
     }
 
     /**
@@ -159,7 +159,8 @@ namespace GridKit
      * passes the input through unchanged outside the band.
      *
      * @tparam ScalarT - scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam LowerT - data type of the lower limit
+     * @tparam UpperT - data type of the upper limit
      *
      * @param[in] x - Input signal
      * @param[in] lower - Lower breakpoint
@@ -355,13 +356,15 @@ namespace GridKit
      * @return Scalar value in [0, 1]: 1 when dynamics should pass through,
      *         0 when integration should be blocked.
      */
-    template <class ScalarT, typename RealT>
+    template <class ScalarT, typename LowerT, typename UpperT>
     __attribute__((always_inline)) inline ScalarT indicator(
         const ScalarT x,
         const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+        const LowerT  limit_min,
+        const UpperT  limit_max)
     {
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
       assert(limit_min <= limit_max);
 
       ScalarT above_min = above(x, limit_min);
@@ -381,7 +384,8 @@ namespace GridKit
      * and blocks motion that would push further into saturation.
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam LowerT - data type of the lower limit
+     * @tparam UpperT - data type of the upper limit
      *
      * @param[in] x - Limited state or limited output signal
      * @param[in] f - Pre-limit derivative
@@ -389,12 +393,12 @@ namespace GridKit
      * @param[in] limit_max - Maximum limit
      * @return Smooth anti-windup limited derivative
      */
-    template <class ScalarT, typename RealT>
+    template <class ScalarT, typename LowerT, typename UpperT>
     __attribute__((always_inline)) inline ScalarT antiwindup(
         const ScalarT x,
         const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+        const LowerT  limit_min,
+        const UpperT  limit_max)
     {
       return indicator(x, f, limit_min, limit_max) * f;
     }

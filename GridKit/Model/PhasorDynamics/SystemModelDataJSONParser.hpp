@@ -142,6 +142,12 @@ namespace GridKit
           raw_component.get_to(regca);
           sm.regca.push_back(regca);
         }
+        else if (kind == "Reecb")
+        {
+          typename SystemModelData<RealT, IdxT>::ReecbDataT reecb;
+          raw_component.get_to(reecb);
+          sm.reecb.push_back(reecb);
+        }
         else if (kind == "Tgov1")
         {
           typename SystemModelData<RealT, IdxT>::Tgov1DataT gov;
