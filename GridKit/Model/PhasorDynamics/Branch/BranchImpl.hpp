@@ -8,7 +8,10 @@
  */
 
 #include <cmath>
-#include <iostream>
+#include <complex>
+#include <variant>
+
+#include <magic_enum/magic_enum.hpp>
 
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
@@ -20,7 +23,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Constructor for a pi-model branch
+     * @brief Constructor for a line or off-nominal transformer branch
      *
      * Model size:
      * - Number of equations = 0
@@ -34,6 +37,8 @@ namespace GridKit
         X_(0.01),
         G_(0.0),
         B_(0.0),
+        tap_(1.0),
+        phase_(0.0),
         bus1_id_(0),
         bus2_id_(0)
     {
@@ -50,8 +55,10 @@ namespace GridKit
      * @param bus2 - pointer to bus-2
      * @param R - line series resistance
      * @param X - line series reactance
-     * @param G - line shunt conductance
-     * @param B - line shunt charging
+     * @param G - total shunt conductance
+     * @param B - total shunt susceptance
+     * @param tap - off-nominal tap magnitude on bus1 side
+     * @param phase - phase shift angle in radians
      */
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::Branch(bus_type* bus1,
@@ -59,16 +66,21 @@ namespace GridKit
                                   RealT     R,
                                   RealT     X,
                                   RealT     G,
-                                  RealT     B)
+                                  RealT     B,
+                                  RealT     tap,
+                                  RealT     phase)
       : bus1_(bus1),
         bus2_(bus2),
         R_(R),
         X_(X),
         G_(G),
         B_(B),
+        tap_(tap),
+        phase_(phase),
         bus1_id_(0),
         bus2_id_(0)
     {
+      size_ = 0;
       setDerivedParams();
     }
 
@@ -94,7 +106,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     Branch<ScalarT, IdxT>::~Branch()
     {
-      // std::cout << "Destroy Branch..." << std::endl;
     }
 
     /**
@@ -113,8 +124,6 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::allocate()
     {
-      // std::cout << "Allocate Branch..." << std::endl;
-
       wb_.resize(2);
       h_.resize(2);
 
@@ -140,6 +149,60 @@ namespace GridKit
       return 0;
     }
 
+    template <class ScalarT, typename IdxT>
+    int Branch<ScalarT, IdxT>::verify() const
+    {
+      int ret = parameter_error_count_;
+
+      auto check = [&](bool condition, const char* message)
+      {
+        if (!condition)
+        {
+          Log::error() << "Branch: " << message << '\n';
+          ret += 1;
+        }
+      };
+
+      check(bus1_ != nullptr, "bus1 pointer is null");
+      check(bus2_ != nullptr, "bus2 pointer is null");
+
+      check(std::isfinite(R_), "R must be finite");
+      check(std::isfinite(X_), "X must be finite");
+      check(std::isfinite(G_), "G must be finite");
+      check(std::isfinite(B_), "B must be finite");
+      check(std::isfinite(tap_), "tap must be finite");
+      check(std::isfinite(phase_), "phase must be finite");
+      check(R_ * R_ + X_ * X_ > RealT{0.0}, "R and X cannot both be zero");
+      check(tap_ > RealT{0.0}, "tap must be positive");
+
+      return ret;
+    }
+
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::addAdmittanceContribution(
+        const AdmittanceBlock& y,
+        const ScalarT&         Vr,
+        const ScalarT&         Vi,
+        ScalarT&               Ir,
+        ScalarT&               Ii)
+    {
+      Ir += y.G * Vr - y.B * Vi;
+      Ii += y.B * Vr + y.G * Vi;
+    }
+
+    template <class ScalarT, typename IdxT>
+    __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::evaluateAdmittanceBlock(
+        const AdmittanceBlock& y,
+        const ScalarT*         wb,
+        ScalarT*               h)
+    {
+      const ScalarT Vr = wb[0];
+      const ScalarT Vi = wb[1];
+
+      h[0] = y.G * Vr - y.B * Vi;
+      h[1] = y.B * Vr + y.G * Vi;
+    }
+
     /**
      * @brief Bus 1 residual contribution from bus 1 variables
      *
@@ -151,12 +214,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr1 = wb[0];
-      ScalarT Vi1 = wb[1];
-      ScalarT Ir1 = -(g_ + 0.5 * G_) * Vr1 + (b_ + 0.5 * B_) * Vi1;
-      ScalarT Ii1 = -(b_ + 0.5 * B_) * Vr1 - (g_ + 0.5 * G_) * Vi1;
-      h[0]        = Ir1;
-      h[1]        = Ii1;
+      evaluateAdmittanceBlock(y11_, wb, h);
 
       return 0;
     }
@@ -172,12 +230,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr2 = wb[0];
-      ScalarT Vi2 = wb[1];
-      ScalarT Ir1 = g_ * Vr2 - b_ * Vi2;
-      ScalarT Ii1 = b_ * Vr2 + g_ * Vi2;
-      h[0]        = Ir1;
-      h[1]        = Ii1;
+      evaluateAdmittanceBlock(y12_, wb, h);
 
       return 0;
     }
@@ -193,12 +246,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr1 = wb[0];
-      ScalarT Vi1 = wb[1];
-      ScalarT Ir2 = g_ * Vr1 - b_ * Vi1;
-      ScalarT Ii2 = b_ * Vr1 + g_ * Vi1;
-      h[0]        = Ir2;
-      h[1]        = Ii2;
+      evaluateAdmittanceBlock(y21_, wb, h);
 
       return 0;
     }
@@ -214,12 +262,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      ScalarT Vr2 = wb[0];
-      ScalarT Vi2 = wb[1];
-      ScalarT Ir2 = -(g_ + 0.5 * G_) * Vr2 + (b_ + 0.5 * B_) * Vi2;
-      ScalarT Ii2 = -(b_ + 0.5 * B_) * Vr2 - (g_ + 0.5 * G_) * Vi2;
-      h[0]        = Ir2;
-      h[1]        = Ii2;
+      evaluateAdmittanceBlock(y22_, wb, h);
 
       return 0;
     }
@@ -231,49 +274,51 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     int Branch<ScalarT, IdxT>::evaluateResidual()
     {
-      wb_[0] = Vr1();
-      wb_[1] = Vi1();
-      evaluateBusResidual11(y_.data(), yp_.data(), wb_.data(), h_.data());
-      Ir1() += h_[0];
-      Ii1() += h_[1];
-      evaluateBusResidual21(y_.data(), yp_.data(), wb_.data(), h_.data());
-      Ir2() += h_[0];
-      Ii2() += h_[1];
+      ScalarT ir1{0.0};
+      ScalarT ii1{0.0};
+      ScalarT ir2{0.0};
+      ScalarT ii2{0.0};
 
-      wb_[0] = Vr2();
-      wb_[1] = Vi2();
-      evaluateBusResidual12(y_.data(), yp_.data(), wb_.data(), h_.data());
-      Ir1() += h_[0];
-      Ii1() += h_[1];
-      evaluateBusResidual22(y_.data(), yp_.data(), wb_.data(), h_.data());
-      Ir2() += h_[0];
-      Ii2() += h_[1];
+      terminalCurrent1(ir1, ii1);
+      terminalCurrent2(ir2, ii2);
+
+      Ir1() += ir1;
+      Ii1() += ii1;
+      Ir2() += ir2;
+      Ii2() += ii2;
 
       return 0;
     }
 
     template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
+    {
+      Ir = ScalarT{0.0};
+      Ii = ScalarT{0.0};
+
+      addAdmittanceContribution(y11_, Vr1(), Vi1(), Ir, Ii);
+      addAdmittanceContribution(y12_, Vr2(), Vi2(), Ir, Ii);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
+    {
+      Ir = ScalarT{0.0};
+      Ii = ScalarT{0.0};
+
+      addAdmittanceContribution(y21_, Vr1(), Vi1(), Ir, Ii);
+      addAdmittanceContribution(y22_, Vr2(), Vi2(), Ir, Ii);
+    }
+
+    template <class ScalarT, typename IdxT>
     void Branch<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
     {
-      if (data.parameters.contains(model_data_type::Parameters::R))
-      {
-        R_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::R));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::X))
-      {
-        X_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::X));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::G))
-      {
-        G_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::G));
-      }
-
-      if (data.parameters.contains(model_data_type::Parameters::B))
-      {
-        B_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::B));
-      }
+      readRealParameter(data, model_data_type::Parameters::R, R_);
+      readRealParameter(data, model_data_type::Parameters::X, X_);
+      readRealParameter(data, model_data_type::Parameters::G, G_);
+      readRealParameter(data, model_data_type::Parameters::B, B_);
+      readRealParameter(data, model_data_type::Parameters::tap, tap_);
+      readRealParameter(data, model_data_type::Parameters::phase, phase_);
 
       if (data.ports.contains(model_data_type::Ports::bus1))
       {
@@ -287,6 +332,35 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
+    bool Branch<ScalarT, IdxT>::readRealParameter(const model_data_type&               data,
+                                                  typename model_data_type::Parameters parameter,
+                                                  RealT&                               target)
+    {
+      if (!data.parameters.contains(parameter))
+      {
+        return false;
+      }
+
+      const auto& value = data.parameters.at(parameter);
+      if (const auto* real_value = std::get_if<RealT>(&value))
+      {
+        target = *real_value;
+        return true;
+      }
+
+      if (const auto* integer_value = std::get_if<IdxT>(&value))
+      {
+        target = static_cast<RealT>(*integer_value);
+        return true;
+      }
+
+      Log::error() << "Branch: parameter " << magic_enum::enum_name(parameter)
+                   << " must be numeric\n";
+      parameter_error_count_ += 1;
+      return false;
+    }
+
+    template <class ScalarT, typename IdxT>
     const Model::VariableMonitorBase* Branch<ScalarT, IdxT>::getMonitor() const
     {
       return monitor_.get();
@@ -297,25 +371,65 @@ namespace GridKit
     {
       using Variable = typename model_data_type::MonitorableVariables;
       monitor_->set(Variable::ir1, [this]
-                    { return Ir1(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent1(Ir, Ii);
+                      return Ir; });
       monitor_->set(Variable::ii1, [this]
-                    { return Ii1(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent1(Ir, Ii);
+                      return Ii; });
       monitor_->set(Variable::im1, [this]
-                    { return std::sqrt(Ir1() * Ir1() + Ii1() * Ii1()); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent1(Ir, Ii);
+                      return std::sqrt(Ir * Ir + Ii * Ii); });
       monitor_->set(Variable::p1, [this]
-                    { return Vr1() * Ir1() + Vi1() * Ii1(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent1(Ir, Ii);
+                      return Vr1() * Ir + Vi1() * Ii; });
       monitor_->set(Variable::q1, [this]
-                    { return Vi1() * Ir1() - Vr1() * Ii1(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent1(Ir, Ii);
+                      return Vi1() * Ir - Vr1() * Ii; });
       monitor_->set(Variable::ir2, [this]
-                    { return Ir2(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent2(Ir, Ii);
+                      return Ir; });
       monitor_->set(Variable::ii2, [this]
-                    { return Ii2(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent2(Ir, Ii);
+                      return Ii; });
       monitor_->set(Variable::im2, [this]
-                    { return std::sqrt(Ir2() * Ir2() + Ii2() * Ii2()); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent2(Ir, Ii);
+                      return std::sqrt(Ir * Ir + Ii * Ii); });
       monitor_->set(Variable::p2, [this]
-                    { return Vr2() * Ir2() + Vi2() * Ii2(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent2(Ir, Ii);
+                      return Vr2() * Ir + Vi2() * Ii; });
       monitor_->set(Variable::q2, [this]
-                    { return Vi2() * Ir2() - Vr2() * Ii2(); });
+                    {
+                      ScalarT Ir;
+                      ScalarT Ii;
+                      terminalCurrent2(Ir, Ii);
+                      return Vi2() * Ir - Vr2() * Ii; });
     }
 
     /**
@@ -325,8 +439,28 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     void Branch<ScalarT, IdxT>::setDerivedParams()
     {
-      b_ = -X_ / (R_ * R_ + X_ * X_);
-      g_ = R_ / (R_ * R_ + X_ * X_);
+      const RealT denom   = R_ * R_ + X_ * X_;
+      const RealT g       = R_ / denom;
+      const RealT b       = -X_ / denom;
+      const RealT inv_tap = RealT{1.0} / tap_;
+
+      const std::complex<RealT> ybr{g, b};
+      const std::complex<RealT> ysh{G_, B_};
+      const std::complex<RealT> rotation{std::cos(phase_), std::sin(phase_)};
+      const std::complex<RealT> ydiag = -(ybr + RealT{0.5} * ysh);
+
+      setAdmittanceBlock(y11_, ydiag * inv_tap * inv_tap);
+      setAdmittanceBlock(y12_, ybr * rotation * inv_tap);
+      setAdmittanceBlock(y21_, ybr * std::conj(rotation) * inv_tap);
+      setAdmittanceBlock(y22_, ydiag);
+    }
+
+    template <class ScalarT, typename IdxT>
+    void Branch<ScalarT, IdxT>::setAdmittanceBlock(AdmittanceBlock&           block,
+                                                   const std::complex<RealT>& y)
+    {
+      block.G = y.real();
+      block.B = y.imag();
     }
 
   } // namespace PhasorDynamics

@@ -59,6 +59,7 @@
 - Remove data copying between system and components in `PowerElectronics` models.
 - Added multi-contingency analysis application.
 - Added `BusToSignalAdapter` component for communicating bus voltages and injection currents.
+- Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
 
 ## v0.1
 
