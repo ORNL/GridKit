@@ -32,9 +32,7 @@ namespace GridKit
 
       BusBase() = default;
 
-      explicit BusBase(const BusData<RealT, IdxT>& data);
-
-      virtual ~BusBase();
+      virtual ~BusBase() = default;
 
       int verify() const override
       {
@@ -73,7 +71,10 @@ namespace GridKit
         return bus_id_;
       }
 
-      const Model::VariableMonitorBase* getMonitor() const override;
+      const Model::VariableMonitorBase* getMonitor() const override
+      {
+        return monitor_.get();
+      }
 
     protected:
       IdxT bus_id_{INVALID_INDEX<IdxT>};

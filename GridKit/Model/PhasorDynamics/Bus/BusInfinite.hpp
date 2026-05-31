@@ -17,6 +17,7 @@ namespace GridKit
     class BusInfinite : public BusBase<ScalarT, IdxT>
     {
       using BusBase<ScalarT, IdxT>::bus_id_;
+      using BusBase<ScalarT, IdxT>::monitor_;
       using BusBase<ScalarT, IdxT>::size_;
       using BusBase<ScalarT, IdxT>::y_;
       using BusBase<ScalarT, IdxT>::yp_;
@@ -27,6 +28,7 @@ namespace GridKit
 
     public:
       using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
+      using MonitorT = typename BusBase<ScalarT, IdxT>::MonitorT;
       using DataT    = BusData<RealT, IdxT>;
       using BusTypeT = typename BusData<RealT, IdxT>::BusType;
 
