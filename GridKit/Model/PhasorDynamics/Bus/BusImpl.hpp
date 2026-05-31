@@ -10,6 +10,14 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename ScalarT, typename IdxT>
+    BusBase<ScalarT, IdxT>::~BusBase() = default;
+
+    template <typename ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* BusBase<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
+    }
 
     /*!
      * @brief Constructor for a phasor dynamics bus.
