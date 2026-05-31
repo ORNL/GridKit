@@ -66,14 +66,18 @@ namespace GridKit
       : Vr_(data.Vr0),
         Vi_(data.Vi0)
     {
-      bus_id_ = data.bus_id;
-      size_   = 0;
-      monitor_ = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
+      bus_id_        = data.bus_id;
+      size_          = 0;
+      monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
       using Variable = typename DataT::MonitorableVariables;
-      monitor_->set(Variable::Vr, [this] { return Vr(); });
-      monitor_->set(Variable::Vi, [this] { return Vi(); });
-      monitor_->set(Variable::Vm, [this] { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
-      monitor_->set(Variable::Va, [this] { return std::atan2(Vi(), Vr()); });
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
     }
 
     template <class ScalarT, typename IdxT>
