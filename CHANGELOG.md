@@ -60,6 +60,7 @@
 - Added multi-contingency analysis application.
 - Added `BusToSignalAdapter` component for communicating bus voltages and injection currents.
 - Added cmake-format hooks, including in pre-commit.
+- Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
 
 ## v0.1
 

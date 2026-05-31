@@ -61,7 +61,7 @@ namespace GridKit
                    { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
                ],
                "devices": [
-                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
+                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
                    { "class": "Genrou", "ports": {"bus":1}, "id": "1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
@@ -114,6 +114,8 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
         success *= result.branch[0].ports[BranchPorts::bus1] == 1;
         success *= result.branch[0].ports[BranchPorts::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "1";
@@ -188,7 +190,7 @@ namespace GridKit
                    { "signal_id": 3, "name": "Excitation Field"}
                ],
                "devices": [
-                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0} },
+                   { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "BR1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
                    { "class": "Genrou", "ports": {"bus":1, "speed": 1, "pmech":2, "efd":3}, "id": "DV1", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05, "Tqop":0.75, "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xqp": 0.0, "Xqpp":0.18, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "Tgov1", "ports": {"bus":1, "speed": 1, "pmech":2}, "id": "DV2", "params": {"R":0.05, "T1":0.5,"T2":2.5, "T3":7.5, "Pvmax":0.0, "Pvmin":1.0, "Dt":0.0}},
                    { "class": "Ieeet1", "ports": {"bus":1, "speed": 1, "efd":3}, "id": "DV3", "params": {"Tr":0.001, "Ka":50.0, "Ta":0.04, "Ke":-0.06, "Te":0.6, "Kf":0.09, "Tf":1.46, "Vrmin":-1.0, "Vrmax":1.0, "E1":2.8, "E2":3.373, "Se1":0.04, "Se2":0.33, "Ispdlim":0.0}},
@@ -245,6 +247,8 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::X]) == 0.1;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::G]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
+        success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
         success *= result.branch[0].ports[BranchPorts::bus1] == 1;
         success *= result.branch[0].ports[BranchPorts::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "BR1";
