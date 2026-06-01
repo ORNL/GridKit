@@ -1,144 +1,191 @@
-# Transmission Line Branch Model
+# **Branch Model**
 
-Transmission lines and different types of transformers (traditional, Load
-Tap-Changing transformers (LTC) and Phase Angle Regulators (PARs)) can be
-modeled with a common branch model.
+The Branch model represents a two-terminal phasor-domain $\pi$ branch with an
+optional off-nominal tap magnitude and phase shift on bus 1. Terminal current
+contributions are oriented entering the adjacent buses.
 
-The most common circuit that is used to represent the transmission line model
-is $`\pi`$ circuit as shown in Figure 1. The positive flow direction is into
-buses. Commonly used convention is to define positive direction to be from
-sending to receiving bus. We decide to use this symmetric convention because it
-provides more flexibility for modeling.
+Notes:
+- Setting $\tau = 1$ and $\theta = 0$ gives the ordinary symmetric
+  transmission-line $\pi$ model.
+- $G$ and $B$ are total branch shunt values split equally between terminals.
+- The branch has no solver-owned variables; it contributes current residuals
+  directly to the connected buses.
+
+## Circuit Diagram
+
+An ideal complex tap is placed on the bus-1 side of the branch equivalent. The
+ordinary transmission-line $\pi$ model is recovered with $\tau = 1$ and
+$\theta = 0$.
 
 <div align="center">
-   <img align="center" src="../../../../docs/Figures/branch_phasor_dynamics.png">
+   <img align="center" src="../../../../docs/Figures/transformer-branch.png">
 
-  Figure 1: Transmission line $`\pi`$ equivalent circuit
+  Figure 1: Branch equivalent circuit
 </div>
 
 ## Model Parameters
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$R$  | [p.u.] | Branch series resistance  | 
-$X$  | [p.u.] | Branch series reactance  | 
-$G$  | [p.u.] | Branch shunt conductance  | 
-$B$  | [p.u.] | Branch shunt susceptance  | 
+Symbol      | Units   | Description                                      | Typical Value | Note
+------------|---------|--------------------------------------------------|---------------|------
+$R$         | [p.u.]  | Branch series resistance                         |               |
+$X$         | [p.u.]  | Branch series reactance                          |               |
+$G$         | [p.u.]  | Total branch shunt conductance                   | 0             |
+$B$         | [p.u.]  | Total branch shunt susceptance                   | 0             |
+$\tau$      | [p.u.]  | Off-nominal tap magnitude on bus-1 side          | 1             | Parameter name: `tap`
+$\theta$    | [rad]   | Phase-shift angle                                | 0             | Parameter name: `phase`
 
-### Model Derived Parameters
-Note the difference between little-g and big-G, little-b, big-B in these equations.
-``` math
+### Parameter Validation
+
+Invalid Branch parameter sets are rejected by the following checks:
+
+```math
 \begin{aligned}
-  g   &=\dfrac{R}{R^2 + X^2} \\
-  b   &= -\dfrac{X}{R^2 + X^2}\\
+  &R, X, G, B, \tau, \theta \in \mathbb{R}\ \text{and finite} \\
+  &R^2 + X^2 > 0 \\
+  &\tau > 0
 \end{aligned}
 ```
 
+### Model Derived Parameters
+
+The series and shunt admittances are:
+
+```math
+\begin{aligned}
+  Y_{\mathrm{br}} &= \dfrac{1}{R + jX} \\
+  Y_{\mathrm{sh}} &= G + jB
+\end{aligned}
+```
+
+The nominal $\pi$-branch admittance matrix is the sum of the series and shunt
+admittance contributions:
+
+```math
+\begin{aligned}
+  \mathbf{Y}_0
+    &=
+    \begin{bmatrix}
+      -Y_{\mathrm{br}} & Y_{\mathrm{br}} \\
+      Y_{\mathrm{br}}
+      & -Y_{\mathrm{br}}
+    \end{bmatrix}
+    +
+    \dfrac{1}{2}
+    \begin{bmatrix}
+      -Y_{\mathrm{sh}} & 0 \\
+      0 & -Y_{\mathrm{sh}}
+    \end{bmatrix}
+\end{aligned}
+```
+
+The off-nominal transformer transformation uses bus 1 as the tap side:
+
+```math
+\begin{aligned}
+  \mathbf{M}
+    &=
+    \begin{bmatrix}
+      \tau^{-1} & 0 \\
+      0 & e^{j\theta}
+    \end{bmatrix} \\
+  \mathbf{Y} &= \mathbf{M}^{\dagger}\mathbf{Y}_0\mathbf{M}
+\end{aligned}
+```
+
+For the equations below, write each entry as $Y_{mn}=G_{mn}+jB_{mn}$.
 
 ## Model Variables
 
 ### Internal Variables
 
 #### Differential
+
 None.
 
 #### Algebraic
 
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$I_{r1}$  | [p.u.] | Terminal current, real component, bus 1  | Read by bus
-$I_{i1}$  | [p.u.] | Terminal current, imaginary component, bus 1  |  Read by bus
-$I_{r2}$  | [p.u.] | Terminal current, real component, bus 2  | Read by bus
-$I_{i2}$  | [p.u.] | Terminal current, imaginary component, bus 2  |  Read by bus
-
+None.
 
 ### External Variables
 
 #### Differential
+
 None.
 
 #### Algebraic
-Symbol      | Units   | Description                     | Note
-------------|---------|---------------------------------| ------
-$V_{r1}$  | [p.u.] | Terminal voltage, real component, bus 1 | owned by bus object
-$V_{i1}$  | [p.u.] | Terminal voltage, imaginary component, bus 1 | owned by bus object
-$V_{r2}$  | [p.u.] | Terminal voltage, real component, bus 2 | owned by bus object
-$V_{i2}$  | [p.u.] | Terminal voltage, imaginary component, bus 2 | owned by bus object
 
+Symbol      | Units   | Description                             | Note
+------------|---------|-----------------------------------------|------
+$V_{r1}$    | [p.u.]  | Terminal voltage, real component, bus 1 | Owned by bus object
+$V_{i1}$    | [p.u.]  | Terminal voltage, imaginary component, bus 1 | Owned by bus object
+$V_{r2}$    | [p.u.]  | Terminal voltage, real component, bus 2 | Owned by bus object
+$V_{i2}$    | [p.u.]  | Terminal voltage, imaginary component, bus 2 | Owned by bus object
 
 ## Model Equations
 
 ### Differential Equations
+
 None.
 
 ### Algebraic Equations
-``` math
-\begin{aligned}
-      0 &= - I_{r1} -\left(g + \dfrac{G}{2}\right) V_{r1} + \left(b + \dfrac{B}{2}\right) V_{i1} + g V_{r2} - b V_{i2}\\
-      0 &= I_{i1} - \left(b + \dfrac{B}{2}\right) V_{r1} - \left(g + \dfrac{G}{2}\right) V_{i1} + b V_{r2} + g V_{i2}\\
-      0 &= I_{r2} + g V_{r1} - b V_{i1} - \left(g + \dfrac{G}{2}\right) V_{r2} + \left(b + \dfrac{B}{2}\right) V_{i2}\\
-      0 &= I_{i2} + b V_{r1} + g V_{i1} - \left(b + \dfrac{B}{2}\right) V_{r2} - \left(g + \dfrac{G}{2}\right) V_{i2}
-\end{aligned}
-```
 
-# Model Outputs
-
-Real and imaginary current at the branch's two buses
-are model variables of the branch model: $I_{r1}$, $I_{i1}$, $I_{r2}$, 
-and $I_{i2}$.
-Current is oriented leaving the branch (i.e. entering the bus).
-
-Current magnitude $I_{m1}$ and $I_{m2}$ are the phasor magnitude of the current.
-``` math
-\begin{aligned}
-      I_{m1} &= \sqrt{(I_{r1})^2 + (I_{i1})^2} \\
-      I_{m2} &= \sqrt{(I_{r2})^2 + (I_{i2})^2}
-\end{aligned}
-```
-
-Active and reactive power ($P_1$, $Q_1$, $P_2$, and $Q_2$) 
-are the real and imaginary parts of the complex power at each end of the branch,
-where the complex power is defined as $S=VI^{\ast}=(V_r + j V_i)(I_r - jI_i)$
-``` math
-\begin{aligned}
-      P_1 &= V_{r1} I_{r1} + V_{i1} I_{i1}\\
-      Q_1 &= V_{i1} I_{r1} - V_{r1} I_{i1} \\
-      P_2 &= V_{r2} I_{r2} + V_{i2} I_{i2}\\
-      Q_2 &= V_{i2} I_{r2} - V_{r2} I_{i2}
-\end{aligned}
-```
-
-Real and reactive power are oriented leaving the branch (i.e. entering the bus).
-
-# Transformer Branch Model
-
-**Note: Transformer model not yet implemented**
-
-The branch model can be created by adding the ideal transformer in series with
-the $`\pi`$ circuit as shown in Figure 2 where $`\tau`$ is a tap ratio
-magnitude and $`\theta`$ is the phase shift angle and
-$`N = \tau e^{j \theta}`$.
-
-<div align="center">
-   <img align="center" src="../../../../docs/Figures/transformer-branch.png">
-   
-   
-  Figure 2: Branch equivalent circuit
-</div>
-
-
-The branch admitance matrix is then:
+The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
 
 ```math
-\mathbf{Y}_{BR}=
-\begin{bmatrix}
- -\left(g + jb + \dfrac{G+jB}{2} \right) \dfrac{1}{\tau^2} & (g + jb)\dfrac{1}{\tau e^{-j\theta}}\\
-                                                           &                                     \\
-     (g + jb)\dfrac{1}{\tau e^{j\theta}}                   & -\left(g + jb + \dfrac{G+jB}{2}\right)
-\end{bmatrix}
+\begin{aligned}
+  I_{r1} &= G_{11} V_{r1} - B_{11} V_{i1}
+         + G_{12} V_{r2} - B_{12} V_{i2} \\
+  I_{i1} &= B_{11} V_{r1} + G_{11} V_{i1}
+         + B_{12} V_{r2} + G_{12} V_{i2} \\
+  I_{r2} &= G_{21} V_{r1} - B_{21} V_{i1}
+         + G_{22} V_{r2} - B_{22} V_{i2} \\
+  I_{i2} &= B_{21} V_{r1} + G_{21} V_{i1}
+         + B_{22} V_{r2} + G_{22} V_{i2}
+\end{aligned}
 ```
 
-### Branch contribution to residuals at adjacent busses
+These current contributions are added to the connected bus residuals with
+positive sign because branch current is oriented entering the bus.
 
-The currents entering adjacent buses are obtained in a similar manner as for
-the $`\pi`$-model.
+## Initialization
+
+The Branch model has no internal state to initialize. During construction or
+parameter updates, the component computes $\mathbf{Y}$ from the current
+parameter values. Initial terminal current and power monitor values are
+evaluated from the connected bus voltages. Parameter verification rejects the
+invalid cases listed above.
+
+## Model Outputs
+
+Output | Units  | Description                                  | Note
+-------|--------|----------------------------------------------|------
+`ir1`  | [p.u.] | Terminal current, real component, bus 1      | Oriented entering bus 1
+`ii1`  | [p.u.] | Terminal current, imaginary component, bus 1 | Oriented entering bus 1
+`im1`  | [p.u.] | Terminal current magnitude, bus 1            |
+`p1`   | [p.u.] | Active power at bus 1 terminal               | Positive entering bus 1
+`q1`   | [p.u.] | Reactive power at bus 1 terminal             | Positive entering bus 1
+`ir2`  | [p.u.] | Terminal current, real component, bus 2      | Oriented entering bus 2
+`ii2`  | [p.u.] | Terminal current, imaginary component, bus 2 | Oriented entering bus 2
+`im2`  | [p.u.] | Terminal current magnitude, bus 2            |
+`p2`   | [p.u.] | Active power at bus 2 terminal               | Positive entering bus 2
+`q2`   | [p.u.] | Reactive power at bus 2 terminal             | Positive entering bus 2
+
+Current magnitudes are:
+
+```math
+\begin{aligned}
+  I_{m1} &= \sqrt{I_{r1}^2 + I_{i1}^2} \\
+  I_{m2} &= \sqrt{I_{r2}^2 + I_{i2}^2}
+\end{aligned}
+```
+
+Complex power at each end is defined as $S=VI^{\ast}$:
+
+```math
+\begin{aligned}
+  P_1 &= V_{r1} I_{r1} + V_{i1} I_{i1} \\
+  Q_1 &= V_{i1} I_{r1} - V_{r1} I_{i1} \\
+  P_2 &= V_{r2} I_{r2} + V_{i2} I_{i2} \\
+  Q_2 &= V_{i2} I_{r2} - V_{r2} I_{i2}
+\end{aligned}
+```

@@ -1,7 +1,7 @@
 /**
  * @file BranchData.hpp
  * @author Slaven Peles (peless@ornl.gov)
- * @brief Modeling data for branches (transmission lines)
+ * @brief Modeling data for branches
  *
  */
 #pragma once
@@ -15,10 +15,12 @@ namespace GridKit
     /// Initial parameters for a branch
     enum class BranchParameters
     {
-      R, ///< Line series resistance
-      X, ///< Line series reactance
-      G, ///< Line shunt conductance
-      B, ///< Line shunt charging
+      R,     ///< Line series resistance
+      X,     ///< Line series reactance
+      G,     ///< Total shunt conductance
+      B,     ///< Total shunt susceptance
+      tap,   ///< Off-nominal tap magnitude on bus1 side
+      phase, ///< Phase shift angle in radians
     };
 
     /// Ports for a branch

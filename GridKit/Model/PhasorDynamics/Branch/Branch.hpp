@@ -31,7 +31,7 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Implementation of a pi-model branch between two buses.
+     * @brief Implementation of a line or off-nominal transformer branch between two buses.
      *
      * The model is implemented in Cartesian coordinates. Positive current
      * direction is into the busses.
@@ -65,7 +65,14 @@ namespace GridKit
       using MonitorT        = Model::VariableMonitor<Branch, BranchData>;
 
       Branch(bus_type* bus1, bus_type* bus2);
-      Branch(bus_type* bus1, bus_type* bus2, RealT R, RealT X, RealT G, RealT B);
+      Branch(bus_type* bus1,
+             bus_type* bus2,
+             RealT     R,
+             RealT     X,
+             RealT     G,
+             RealT     B,
+             RealT     tap   = 1.0,
+             RealT     phase = 0.0);
       Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
       virtual ~Branch();
 
@@ -75,11 +82,7 @@ namespace GridKit
       virtual int tagDifferentiable() override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
-
-      virtual int verify() const override final
-      {
-        return 0;
-      }
+      virtual int verify() const override final;
 
       void setR(RealT R)
       {
@@ -89,7 +92,6 @@ namespace GridKit
 
       void setX(RealT X)
       {
-        // std::cout << "Setting X ...\n";
         X_ = X;
         setDerivedParams();
       }
@@ -106,12 +108,39 @@ namespace GridKit
         setDerivedParams();
       }
 
+      void setTap(RealT tap)
+      {
+        tap_ = tap;
+        setDerivedParams();
+      }
+
+      void setPhase(RealT phase)
+      {
+        phase_ = phase;
+        setDerivedParams();
+      }
+
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void initializeParameters(const model_data_type& data);
-      void initializeMonitor();
-      void setDerivedParams();
+      void                                              initializeParameters(const model_data_type& data);
+      void                                              initializeMonitor();
+      void                                              setDerivedParams();
+      void                                              terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
+      void                                              terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
+      bool                                              readRealParameter(const model_data_type&               data,
+                                                                          typename model_data_type::Parameters parameter,
+                                                                          RealT&                               target);
+      static __attribute__((always_inline)) inline void addAdmittanceContribution(RealT          G,
+                                                                                  RealT          B,
+                                                                                  const ScalarT& Vr,
+                                                                                  const ScalarT& Vi,
+                                                                                  ScalarT&       Ir,
+                                                                                  ScalarT&       Ii);
+      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(RealT          G,
+                                                                                RealT          B,
+                                                                                const ScalarT* wb,
+                                                                                ScalarT*       h);
 
       ScalarT& Vr1()
       {
@@ -166,12 +195,21 @@ namespace GridKit
       RealT     X_{0.0};
       RealT     G_{0.0};
       RealT     B_{0.0};
+      RealT     tap_{1.0};
+      RealT     phase_{0.0};
       IdxT      bus1_id_{0};
       IdxT      bus2_id_{0};
 
-      /* Derived parameters */
-      RealT b_;
-      RealT g_;
+      RealT g11_{0.0};
+      RealT b11_{0.0};
+      RealT g12_{0.0};
+      RealT b12_{0.0};
+      RealT g21_{0.0};
+      RealT b21_{0.0};
+      RealT g22_{0.0};
+      RealT b22_{0.0};
+
+      int parameter_error_count_{0};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
