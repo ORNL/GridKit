@@ -8,7 +8,6 @@
  */
 
 #include <cmath>
-#include <complex>
 #include <variant>
 
 #include <magic_enum/magic_enum.hpp>
@@ -180,27 +179,29 @@ namespace GridKit
 
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::addAdmittanceContribution(
-        const AdmittanceBlock& y,
-        const ScalarT&         Vr,
-        const ScalarT&         Vi,
-        ScalarT&               Ir,
-        ScalarT&               Ii)
+        RealT          G,
+        RealT          B,
+        const ScalarT& Vr,
+        const ScalarT& Vi,
+        ScalarT&       Ir,
+        ScalarT&       Ii)
     {
-      Ir += y.G * Vr - y.B * Vi;
-      Ii += y.B * Vr + y.G * Vi;
+      Ir += G * Vr - B * Vi;
+      Ii += B * Vr + G * Vi;
     }
 
     template <class ScalarT, typename IdxT>
     __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::evaluateAdmittanceBlock(
-        const AdmittanceBlock& y,
-        const ScalarT*         wb,
-        ScalarT*               h)
+        RealT          G,
+        RealT          B,
+        const ScalarT* wb,
+        ScalarT*       h)
     {
       const ScalarT Vr = wb[0];
       const ScalarT Vi = wb[1];
 
-      h[0] = y.G * Vr - y.B * Vi;
-      h[1] = y.B * Vr + y.G * Vi;
+      h[0] = G * Vr - B * Vi;
+      h[1] = B * Vr + G * Vi;
     }
 
     /**
@@ -214,7 +215,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      evaluateAdmittanceBlock(y11_, wb, h);
+      evaluateAdmittanceBlock(g11_, b11_, wb, h);
 
       return 0;
     }
@@ -230,7 +231,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      evaluateAdmittanceBlock(y12_, wb, h);
+      evaluateAdmittanceBlock(g12_, b12_, wb, h);
 
       return 0;
     }
@@ -246,7 +247,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      evaluateAdmittanceBlock(y21_, wb, h);
+      evaluateAdmittanceBlock(g21_, b21_, wb, h);
 
       return 0;
     }
@@ -262,7 +263,7 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  h)
     {
-      evaluateAdmittanceBlock(y22_, wb, h);
+      evaluateAdmittanceBlock(g22_, b22_, wb, h);
 
       return 0;
     }
@@ -296,8 +297,8 @@ namespace GridKit
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
-      addAdmittanceContribution(y11_, Vr1(), Vi1(), Ir, Ii);
-      addAdmittanceContribution(y12_, Vr2(), Vi2(), Ir, Ii);
+      addAdmittanceContribution(g11_, b11_, Vr1(), Vi1(), Ir, Ii);
+      addAdmittanceContribution(g12_, b12_, Vr2(), Vi2(), Ir, Ii);
     }
 
     template <class ScalarT, typename IdxT>
@@ -306,8 +307,8 @@ namespace GridKit
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
 
-      addAdmittanceContribution(y21_, Vr1(), Vi1(), Ir, Ii);
-      addAdmittanceContribution(y22_, Vr2(), Vi2(), Ir, Ii);
+      addAdmittanceContribution(g21_, b21_, Vr1(), Vi1(), Ir, Ii);
+      addAdmittanceContribution(g22_, b22_, Vr2(), Vi2(), Ir, Ii);
     }
 
     template <class ScalarT, typename IdxT>
@@ -439,28 +440,41 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     void Branch<ScalarT, IdxT>::setDerivedParams()
     {
-      const RealT denom   = R_ * R_ + X_ * X_;
-      const RealT g       = R_ / denom;
-      const RealT b       = -X_ / denom;
+      g11_ = RealT{0.0};
+      b11_ = RealT{0.0};
+      g12_ = RealT{0.0};
+      b12_ = RealT{0.0};
+      g21_ = RealT{0.0};
+      b21_ = RealT{0.0};
+      g22_ = RealT{0.0};
+      b22_ = RealT{0.0};
+
+      const RealT denom = R_ * R_ + X_ * X_;
+      if (denom == RealT{0.0} || tap_ == RealT{0.0})
+      {
+        return;
+      }
+
+      const RealT g_br    = R_ / denom;
+      const RealT b_br    = -X_ / denom;
       const RealT inv_tap = RealT{1.0} / tap_;
+      const RealT cos_ph  = std::cos(phase_);
+      const RealT sin_ph  = std::sin(phase_);
 
-      const std::complex<RealT> ybr{g, b};
-      const std::complex<RealT> ysh{G_, B_};
-      const std::complex<RealT> rotation{std::cos(phase_), std::sin(phase_)};
-      const std::complex<RealT> ydiag = -(ybr + RealT{0.5} * ysh);
+      const RealT g_diag = -(g_br + RealT{0.5} * G_);
+      const RealT b_diag = -(b_br + RealT{0.5} * B_);
 
-      setAdmittanceBlock(y11_, ydiag * inv_tap * inv_tap);
-      setAdmittanceBlock(y12_, ybr * rotation * inv_tap);
-      setAdmittanceBlock(y21_, ybr * std::conj(rotation) * inv_tap);
-      setAdmittanceBlock(y22_, ydiag);
-    }
+      g11_ = g_diag * inv_tap * inv_tap;
+      b11_ = b_diag * inv_tap * inv_tap;
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::setAdmittanceBlock(AdmittanceBlock&           block,
-                                                   const std::complex<RealT>& y)
-    {
-      block.G = y.real();
-      block.B = y.imag();
+      g12_ = (g_br * cos_ph - b_br * sin_ph) * inv_tap;
+      b12_ = (b_br * cos_ph + g_br * sin_ph) * inv_tap;
+
+      g21_ = (g_br * cos_ph + b_br * sin_ph) * inv_tap;
+      b21_ = (b_br * cos_ph - g_br * sin_ph) * inv_tap;
+
+      g22_ = g_diag;
+      b22_ = b_diag;
     }
 
   } // namespace PhasorDynamics
