@@ -8,8 +8,6 @@
  */
 #pragma once
 
-#include <complex>
-
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
@@ -139,7 +137,6 @@ namespace GridKit
       bool                                              readRealParameter(const model_data_type&               data,
                                                                           typename model_data_type::Parameters parameter,
                                                                           RealT&                               target);
-      static void                                       setAdmittanceBlock(AdmittanceBlock& block, const std::complex<RealT>& y);
       static __attribute__((always_inline)) inline void addAdmittanceContribution(const AdmittanceBlock& y,
                                                                                   const ScalarT&         Vr,
                                                                                   const ScalarT&         Vi,

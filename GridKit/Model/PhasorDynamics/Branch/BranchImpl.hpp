@@ -8,7 +8,6 @@
  */
 
 #include <cmath>
-#include <complex>
 #include <variant>
 
 #include <magic_enum/magic_enum.hpp>
@@ -450,27 +449,26 @@ namespace GridKit
         return;
       }
 
-      const RealT g       = R_ / denom;
-      const RealT b       = -X_ / denom;
+      const RealT g_br    = R_ / denom;
+      const RealT b_br    = -X_ / denom;
       const RealT inv_tap = RealT{1.0} / tap_;
+      const RealT cos_ph  = std::cos(phase_);
+      const RealT sin_ph  = std::sin(phase_);
 
-      const std::complex<RealT> ybr{g, b};
-      const std::complex<RealT> ysh{G_, B_};
-      const std::complex<RealT> rotation{std::cos(phase_), std::sin(phase_)};
-      const std::complex<RealT> ydiag = -(ybr + RealT{0.5} * ysh);
+      const RealT g_diag = -(g_br + RealT{0.5} * G_);
+      const RealT b_diag = -(b_br + RealT{0.5} * B_);
 
-      setAdmittanceBlock(y11_, ydiag * inv_tap * inv_tap);
-      setAdmittanceBlock(y12_, ybr * rotation * inv_tap);
-      setAdmittanceBlock(y21_, ybr * std::conj(rotation) * inv_tap);
-      setAdmittanceBlock(y22_, ydiag);
-    }
+      y11_.G = g_diag * inv_tap * inv_tap;
+      y11_.B = b_diag * inv_tap * inv_tap;
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::setAdmittanceBlock(AdmittanceBlock&           block,
-                                                   const std::complex<RealT>& y)
-    {
-      block.G = y.real();
-      block.B = y.imag();
+      y12_.G = (g_br * cos_ph - b_br * sin_ph) * inv_tap;
+      y12_.B = (b_br * cos_ph + g_br * sin_ph) * inv_tap;
+
+      y21_.G = (g_br * cos_ph + b_br * sin_ph) * inv_tap;
+      y21_.B = (b_br * cos_ph - g_br * sin_ph) * inv_tap;
+
+      y22_.G = g_diag;
+      y22_.B = b_diag;
     }
 
   } // namespace PhasorDynamics
