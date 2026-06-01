@@ -1,4 +1,3 @@
-
 # [[
 #  Author(s):
 #    - Luke Lowery <lukel@tamu.edu>

@@ -3,8 +3,7 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-gridkit_add_library(branch
-  SOURCES
-    Branch.cpp
-  HEADERS
-    Branch.hpp)
+gridkit_add_library(
+  branch
+  SOURCES Branch.cpp
+  HEADERS Branch.hpp)

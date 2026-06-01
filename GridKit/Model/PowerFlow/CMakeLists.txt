@@ -14,10 +14,8 @@ add_subdirectory(Load)
 add_subdirectory(MiniGrid)
 
 install(
-  FILES
-    MatpowerParser.hpp
-    PowerFlowData.hpp
-    SystemModel.hpp
-    SystemModelPowerFlow.hpp
-  DESTINATION
-    include/GridKit/Model/PowerFlow)
+  FILES MatpowerParser.hpp
+        PowerFlowData.hpp
+        SystemModel.hpp
+        SystemModelPowerFlow.hpp
+  DESTINATION include/GridKit/Model/PowerFlow)

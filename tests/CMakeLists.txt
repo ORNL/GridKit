@@ -1,5 +1,5 @@
 if(NOT BUILD_TESTING)
-    return()
+  return()
 endif()
 
 add_subdirectory(UnitTests)

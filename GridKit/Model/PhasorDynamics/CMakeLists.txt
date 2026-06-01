@@ -6,30 +6,36 @@
 add_library(phasor_dynamics_components INTERFACE)
 add_library(phasor_dynamics_components_dependency_tracking INTERFACE)
 
-gridkit_add_library(phasor_dynamics_core
-  SOURCES
-    SystemModelData.cpp
-  HEADERS
-    BusBase.hpp
-    BusBaseImpl.hpp
-    Component.hpp
-    ComponentData.hpp
-    ComponentLibrary.hpp
-    ComponentSignals.hpp
-    GridElement.hpp
-    SystemModel.hpp
-    SystemModelData.hpp
+gridkit_add_library(
+  phasor_dynamics_core
+  SOURCES SystemModelData.cpp
+  HEADERS BusBase.hpp
+          BusBaseImpl.hpp
+          Component.hpp
+          ComponentData.hpp
+          ComponentLibrary.hpp
+          ComponentSignals.hpp
+          GridElement.hpp
+          SystemModel.hpp
+          SystemModelData.hpp
   LINK_LIBRARIES
-    PUBLIC GridKit::definitions
-    PUBLIC GridKit::utilities_logger
-    PUBLIC GridKit::sparse_matrix
+    PUBLIC
+    GridKit::definitions
+    PUBLIC
+    GridKit::utilities_logger
+    PUBLIC
+    GridKit::sparse_matrix
   INCLUDE_DIRECTORIES
-    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-    PRIVATE ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+    PRIVATE
+    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+    PRIVATE
+    ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
 
-target_link_libraries(phasor_dynamics_components
+target_link_libraries(
+  phasor_dynamics_components
   INTERFACE GridKit::phasor_dynamics_core)
-target_link_libraries(phasor_dynamics_components_dependency_tracking
+target_link_libraries(
+  phasor_dynamics_components_dependency_tracking
   INTERFACE GridKit::phasor_dynamics_core)
 
 add_subdirectory(Branch)
@@ -45,12 +51,9 @@ add_subdirectory(SynchronousMachine)
 
 add_subdirectory(SignalNode)
 
-add_library(GridKit::phasor_dynamics_components
-  ALIAS phasor_dynamics_components)
-add_library(GridKit::phasor_dynamics_components_dependency_tracking
-  ALIAS phasor_dynamics_components_dependency_tracking)
+add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
+add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS
+            phasor_dynamics_components_dependency_tracking)
 
-install(TARGETS
-  phasor_dynamics_components
-  phasor_dynamics_components_dependency_tracking
-  EXPORT gridkit-targets)
+install(TARGETS phasor_dynamics_components phasor_dynamics_components_dependency_tracking
+        EXPORT gridkit-targets)

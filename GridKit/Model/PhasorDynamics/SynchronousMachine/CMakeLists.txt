@@ -1,4 +1,3 @@
-
 # [[
 #  Author(s):
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
