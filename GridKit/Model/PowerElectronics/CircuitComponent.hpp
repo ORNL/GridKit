@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <map>
 #include <set>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -32,6 +31,49 @@ namespace GridKit
       }
     };
 
+    CircuitComponent(const CircuitComponent& other)
+      : n_extern_(other.n_extern_),
+        n_intern_(other.n_intern_),
+        extern_indices_(other.extern_indices_),
+        size_(other.size_),
+        nnz_(other.nnz_),
+        size_quad_(other.size_quad_),
+        size_opt_(other.size_opt_),
+        y_(other.y_),
+        yp_(other.yp_),
+        tag_(other.tag_),
+        f_(other.f_),
+        g_(other.g_),
+        yB_(other.yB_),
+        ypB_(other.ypB_),
+        fB_(other.fB_),
+        gB_(other.gB_),
+        jac_(other.jac_),
+        param_(other.param_),
+        param_up_(other.param_up_),
+        param_lo_(other.param_lo_),
+        time_(other.time_),
+        alpha_(other.alpha_),
+        rel_tol_(other.rel_tol_),
+        abs_tol_(other.abs_tol_),
+        max_steps_(other.max_steps_),
+        idc_(other.idc_)
+    {
+      if (other.connection_nodes_ != nullptr)
+      {
+        connection_nodes_ = new IdxT[size_];
+
+        std::copy(
+            other.connection_nodes_,
+            other.connection_nodes_ + size_,
+            connection_nodes_);
+      }
+      else
+      {
+        connection_nodes_ = nullptr;
+      }
+    }
+
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
      */
@@ -56,7 +98,7 @@ namespace GridKit
       return this->n_intern_;
     }
 
-    std::set<size_t> getExternIndices()
+    std::set<IdxT> getExternIndices()
     {
       return this->extern_indices_;
     }
