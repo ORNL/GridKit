@@ -21,6 +21,7 @@ add_subdirectory(TransmissionLine)
 add_subdirectory(MicrogridLoad)
 add_subdirectory(MicrogridLine)
 add_subdirectory(MicrogridBusDQ)
+add_subdirectory(PartitionInterface)
 
 install(
   FILES CircuitComponent.hpp
