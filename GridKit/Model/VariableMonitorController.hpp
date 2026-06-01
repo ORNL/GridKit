@@ -72,11 +72,11 @@ namespace GridKit
        *
        * @param spec Specifies details for the sink.
        */
-      void addSink(const SinkSpec& spec)
+      void addSink(const SinkSpec& spec, std::ostream& os = std::cout)
       {
         if (spec.file_name.empty())
         {
-          sinks_.push_back(make_sink(spec, std::cout));
+          sinks_.push_back(make_sink(spec, os));
         }
         else
         {
@@ -125,35 +125,16 @@ namespace GridKit
         }
       }
 
-      /// @copydoc VariableMonitorBase::printHeader
-      using VariableMonitorBase::printHeader;
-
-      void printHeader(std::ostream& os, Csv csv) const override
-      {
-        os << "t";
-        for (auto&& var : variables_)
-        {
-          os << csv.delim << var.label;
-        }
-      }
-
-      void printHeader(std::ostream& os, Json) const override
-      {
-        os << "[\n";
-      }
-
       /**
        * @brief Organize header output for this and all submonitors
        */
       template <typename FormatT>
       void printFullHeader(std::ostream& os, FormatT fmt) const
       {
-        this->printHeader(os, fmt);
-        for (auto* mon : monitors_)
-        {
-          mon->printHeader(os, fmt);
-        }
-        os << '\n';
+        buffer_.clear();
+        appendHeader(buffer_, fmt);
+        buffer_ += '\n';
+        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -169,82 +150,16 @@ namespace GridKit
         }
       }
 
-      void print(std::ostream& os, Csv csv) const override
-      {
-        os << *time_;
-        for (auto&& var : variables_)
-        {
-          os << csv.delim << *var.value;
-        }
-
-        for (auto* mon : monitors_)
-        {
-          mon->print(os, csv);
-        }
-      }
-
-      void print(std::ostream& os, Json json) const override
-      {
-        std::string indent = "  ";
-        if (json.after_first)
-        {
-          os << indent << ",\n";
-        }
-        os << indent << "{\n";
-        indent.append(2, ' ');
-
-        os << indent << std::quoted("t") << ": " << *time_ << ",\n";
-        for (auto&& var : variables_)
-        {
-          os << indent << std::quoted(var.label) << ": " << *var.value << ",\n";
-        }
-
-        auto after_first = false;
-        for (auto* mon : monitors_)
-        {
-          if (after_first)
-          {
-            os << ",\n";
-          }
-          mon->print(os, Json());
-          after_first = true;
-        }
-
-        indent.erase(indent.size() - 2);
-        os << '\n'
-           << indent << "}";
-      }
-
-      void print(std::ostream& os, Yaml) const override
-      {
-        std::string indent = "  ";
-        os << indent << "- t: " << *time_ << '\n';
-        indent.append(2, ' ');
-        for (auto&& var : variables_)
-        {
-          os << indent << var.label << ": " << *var.value << '\n';
-        }
-
-        for (auto* mon : monitors_)
-        {
-          mon->print(os, Yaml());
-        }
-      }
-
       /**
        * @brief Organize variable output for this and all submonitors
        */
       template <typename FormatT>
       void printFull(std::ostream& os, FormatT fmt) const
       {
-        const auto     orig_prec = os.precision();
-        constexpr auto max_prec  = std::numeric_limits<RealT>::digits10 + 1;
-        os.precision(max_prec);
-        os << std::scientific;
-        this->print(os, fmt);
-        os << '\n';
-        os << std::defaultfloat;
-        os.precision(orig_prec);
+        buffer_.clear();
+        append(buffer_, fmt);
+        buffer_ += '\n';
+        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -266,25 +181,15 @@ namespace GridKit
         }
       }
 
-      /// @copydoc VariableMonitorBase::printFooter
-      using VariableMonitorBase::printFooter;
-
-      void printFooter(std::ostream& os, Json) const override
-      {
-        os << "\n]\n";
-      }
-
       /**
        * @brief Organize footer output for this and all submonitors
        */
       template <typename FormatT>
-      void printFullFooter(std::ostream& os, FormatT format) const
+      void printFullFooter(std::ostream& os, FormatT fmt) const
       {
-        for (auto* mon : monitors_)
-        {
-          mon->printFooter(os, format);
-        }
-        this->printFooter(os, format);
+        buffer_.clear();
+        appendFooter(buffer_, fmt);
+        os.write(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
       }
 
       /**
@@ -297,6 +202,143 @@ namespace GridKit
           std::visit([this](auto&& sink)
                      { this->printFullFooter(*sink.os, sink.format); },
                      sink);
+        }
+      }
+
+    protected:
+      void appendHeader(std::string& out, Csv csv) const override
+      {
+        out += "t";
+        for (auto&& var : variables_)
+        {
+          out += csv.delim;
+          out += var.label;
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->appendHeader(out, csv);
+        }
+      }
+
+      void appendHeader(std::string& out, Json json) const override
+      {
+        out += "[\n";
+        for (auto* mon : monitors_)
+        {
+          mon->appendHeader(out, json);
+        }
+      }
+
+      void appendHeader(std::string& out, Yaml yaml) const override
+      {
+        for (auto* mon : monitors_)
+        {
+          mon->appendHeader(out, yaml);
+        }
+      }
+
+      void append(std::string& out, Csv csv) const override
+      {
+        out += VariableMonitorDetail::formatReal(*time_);
+        for (auto&& var : variables_)
+        {
+          out += csv.delim;
+          out += VariableMonitorDetail::formatReal(*var.value);
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->append(out, csv);
+        }
+      }
+
+      void append(std::string& out, Json json) const override
+      {
+        std::ostringstream os;
+        os.precision(std::numeric_limits<RealT>::digits10 + 1);
+        os << std::scientific;
+
+        std::string indent = "  ";
+        if (json.after_first)
+        {
+          os << indent << ",\n";
+        }
+        os << indent << "{\n";
+        indent.append(2, ' ');
+
+        os << indent << std::quoted("t") << ": " << *time_ << ",\n";
+        for (auto&& var : variables_)
+        {
+          os << indent << std::quoted(var.label) << ": " << *var.value << ",\n";
+        }
+
+        auto after_first = false;
+        for (auto* mon : monitors_)
+        {
+          if (after_first)
+          {
+            os << ",\n";
+          }
+          std::string monitor_out;
+          mon->append(monitor_out, Json());
+          os << monitor_out;
+          after_first = true;
+        }
+
+        indent.erase(indent.size() - 2);
+        os << '\n'
+           << indent << "}";
+
+        out += os.str();
+      }
+
+      void append(std::string& out, Yaml yaml) const override
+      {
+        std::ostringstream os;
+        os.precision(std::numeric_limits<RealT>::digits10 + 1);
+        os << std::scientific;
+
+        std::string indent = "  ";
+        os << indent << "- t: " << *time_ << '\n';
+        indent.append(2, ' ');
+        for (auto&& var : variables_)
+        {
+          os << indent << var.label << ": " << *var.value << '\n';
+        }
+
+        for (auto* mon : monitors_)
+        {
+          std::string monitor_out;
+          mon->append(monitor_out, yaml);
+          os << monitor_out;
+        }
+
+        out += os.str();
+      }
+
+      void appendFooter(std::string& out, Csv csv) const override
+      {
+        for (auto* mon : monitors_)
+        {
+          mon->appendFooter(out, csv);
+        }
+      }
+
+      void appendFooter(std::string& out, Json json) const override
+      {
+        for (auto* mon : monitors_)
+        {
+          mon->appendFooter(out, json);
+        }
+        out += "\n]\n";
+      }
+
+      void appendFooter(std::string& out, Yaml yaml) const override
+      {
+        for (auto* mon : monitors_)
+        {
+          mon->appendFooter(out, yaml);
         }
       }
 
@@ -439,6 +481,9 @@ namespace GridKit
 
       /// Collection of extra top-level monitored variables
       std::vector<Variable> variables_;
+
+      /// Reused output buffer
+      mutable std::string buffer_;
     };
   } // namespace Model
 } // namespace GridKit

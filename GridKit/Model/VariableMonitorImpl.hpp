@@ -19,11 +19,11 @@ namespace GridKit
      * @brief Manage printing variables associated with a specific component or
      * bus
      *
-     * Implementations of the print functions print under the assumption of a
-     * larger context. For example, the Csv version prints the delimiter and the
-     * value (or label for the header) for each monitored value without a line
-     * break. That way other monitors can print likewise on the same line, and
-     * the line can be ended by the control monitor.
+     * Append functions assume a larger output context. For example, the CSV
+     * version appends the delimiter and the value (or label for the header) for
+     * each monitored value without a line break. That way other monitors can
+     * append likewise on the same line, and the line can be ended by the control
+     * monitor.
      */
     template <typename ScalarT,
               typename IdxT,
@@ -97,7 +97,7 @@ namespace GridKit
       template <typename FuncT>
       void set(VariableEnum v, FuncT f)
       {
-        f_[static_cast<size_t>(enum_integer(v))] = ValuePrinter{f};
+        f_[static_cast<size_t>(enum_integer(v))] = ValueFormatter{f};
       }
 
     private:
@@ -106,124 +106,128 @@ namespace GridKit
        * @brief Functors to handle printing different types
        */
       template <typename FuncT, typename RetT>
-      struct ValuePrinterImpl
+      struct ValueFormatterImpl
       {
         FuncT f;
 
-        void operator()(std::ostream& os) const
+        std::string operator()() const
         {
-          os << f();
+          using RetValueT = std::remove_cvref_t<RetT>;
+
+          if constexpr (std::is_floating_point_v<RetValueT>
+                        || std::is_same_v<RetValueT, ScalarT>)
+          {
+            return VariableMonitorDetail::formatReal(static_cast<RealT>(f()));
+          }
+          else
+          {
+            return (std::ostringstream{} << f()).str();
+          }
         }
       };
 
       template <typename FuncT>
-      struct ValuePrinterImpl<FuncT, ScalarT>
-      {
-        FuncT f;
+      using ValueFormatterType =
+          ValueFormatterImpl<FuncT, std::invoke_result_t<FuncT>>;
 
-        void operator()(std::ostream& os) const
-        {
-          os << static_cast<RealT>(f());
-        }
-      };
-
-      template <typename FuncT>
-      using ValuePrinterType =
-          ValuePrinterImpl<FuncT, std::invoke_result_t<FuncT>>;
-
-      class ValuePrinter
+      class ValueFormatter
       {
       public:
-        ValuePrinter() = default;
+        ValueFormatter() = default;
 
         template <typename FuncT>
-        ValuePrinter(FuncT f)
-          : impl_{ValuePrinterType<FuncT>(f)}
+        ValueFormatter(FuncT f)
+          : impl_{ValueFormatterType<FuncT>{f}}
         {
+        }
+
+        std::string operator()() const
+        {
+          return impl_();
         }
 
       private:
-        std::function<void(std::ostream&)> impl_;
-
-        friend std::ostream& operator<<(std::ostream& os, const ValuePrinter& p)
-        {
-          p.impl_(os);
-          return os;
-        }
+        std::function<std::string(void)> impl_;
       };
 
       ///@}
 
-      void printHeader(std::ostream& os, Csv csv) const override
+      void appendHeader(std::string& out, Csv csv) const override
       {
         for (auto v : variables_)
         {
-          os << csv.delim << label_ << '_' << enum_name(v);
+          out += csv.delim;
+          out += label_;
+          out += '_';
+          out.append(enum_name(v));
         }
       }
 
-      void print(std::ostream& os, Csv csv) const override
+      void append(std::string& out, Csv csv) const override
       {
         for (auto v : variables_)
         {
-          os << csv.delim << f_[static_cast<size_t>(enum_integer(v))];
+          out += csv.delim;
+          out += f_[static_cast<size_t>(enum_integer(v))]();
         }
       }
 
       /**
-       * @brief Print single variable
+       * @brief Append single variable
        */
-      void print(std::ostream& os, VariableEnum v, Json) const
+      void appendVariable(std::string& out, VariableEnum v, Json) const
       {
-        os << indent_ << std::quoted(enum_name(v)) << ": "
-           << f_[static_cast<size_t>(enum_integer(v))] << ",\n";
+        out += indent_ + "\"";
+        out.append(enum_name(v));
+        out += "\": ";
+        out += f_[static_cast<size_t>(enum_integer(v))]();
+        out += ",\n";
       }
 
-      void print(std::ostream& os, Json) const override
+      void append(std::string& out, Json) const override
       {
         if (empty())
         {
           return;
         }
-        os << indent_ << std::quoted(label_) << ": {\n";
+
+        out += indent_ + "\"" + label_ + "\": {\n";
         indent_.append(2, ' ');
-        std::ostringstream v_os;
-        v_os.copyfmt(os);
         for (auto v : variables_)
         {
-          print(v_os, v, Json());
+          appendVariable(out, v, Json());
         }
-        auto vars = v_os.view();
-        vars.remove_suffix(2);
-        os << vars << '\n';
+        // Remove comma after last entry
+        out.erase(out.size() - 2);
+        out += '\n';
         indent_.erase(indent_.size() - 2);
-        os << indent_ << "}";
-      }
-
-      void printHeader(std::ostream&, Yaml) const override
-      {
+        out += indent_ + "}";
       }
 
       /**
-       * @brief Print single variable
+       * @brief Append single variable
        */
-      void print(std::ostream& os, VariableEnum v, Yaml) const
+      void appendVariable(std::string& out, VariableEnum v, Yaml) const
       {
-        os << indent_ << enum_name(v) << ": " << f_[static_cast<size_t>(enum_integer(v))]
-           << '\n';
+        out += indent_;
+        out.append(enum_name(v));
+        out += ": ";
+        out += f_[static_cast<size_t>(enum_integer(v))]();
+        out += '\n';
       }
 
-      void print(std::ostream& os, Yaml) const override
+      void append(std::string& out, Yaml) const override
       {
         if (empty())
         {
           return;
         }
-        os << indent_ << label_ << ":\n";
+
+        out += indent_ + label_ + ":\n";
         indent_.append(2, ' ');
         for (auto v : variables_)
         {
-          print(os, v, Yaml());
+          appendVariable(out, v, Yaml());
         }
         indent_.erase(indent_.size() - 2);
       }
@@ -233,13 +237,13 @@ namespace GridKit
       static constexpr auto enum_size_ = enum_count<VariableEnum>();
 
       /// Set of functions associated with each enum value
-      std::array<ValuePrinter, enum_size_> f_;
+      std::array<ValueFormatter, enum_size_> f_;
       /// Set of selected enum values
-      std::vector<VariableEnum>            variables_;
+      std::vector<VariableEnum>              variables_;
       /// Indent string used for formatting
-      mutable std::string                  indent_{"    "};
+      mutable std::string                    indent_{"    "};
       /// Monitor disambiguation label
-      std::string                          label_;
+      std::string                            label_;
     };
   } // namespace Model
 } // namespace GridKit

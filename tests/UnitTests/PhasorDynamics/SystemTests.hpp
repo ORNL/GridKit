@@ -2,6 +2,8 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>

@@ -64,7 +64,7 @@ namespace GridKit
           auto delim     = raw_mon.value("delim", std::string(","));
           if (format.has_value())
           {
-            sm.monitor_sink.emplace_back(file_name, format.value(), delim);
+            sm.monitor_sink.emplace_back(format.value(), file_name, delim);
           }
           else
           {

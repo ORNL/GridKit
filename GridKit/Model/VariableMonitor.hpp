@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -11,6 +12,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <type_traits>
 #include <variant>
 #include <vector>
@@ -23,6 +25,32 @@ namespace GridKit
   {
     template <typename ScalarT>
     class VariableMonitorController;
+
+    namespace VariableMonitorDetail
+    {
+      template <typename RealT>
+      std::string formatReal(RealT value)
+      {
+        std::array<char, 128> buffer{};
+        constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
+
+        auto [ptr, ec] = std::to_chars(buffer.data(),
+                                       buffer.data() + buffer.size(),
+                                       value,
+                                       std::chars_format::scientific,
+                                       precision);
+
+        if (ec == std::errc{})
+        {
+          return std::string(buffer.data(), ptr);
+        }
+
+        std::ostringstream os;
+        os.precision(precision);
+        os << std::scientific << value;
+        return os.str();
+      }
+    } // namespace VariableMonitorDetail
 
     /**
      * @enum VariableMonitorFormat
@@ -74,10 +102,10 @@ namespace GridKit
        */
       struct SinkSpec
       {
-        /// Output file name (empty for stdout)
-        std::string file_name;
         /// Output format
         Format      format;
+        /// Output file name (empty for stdout)
+        std::string file_name{};
         /// Delimiter (used only with CSV format currently)
         std::string delim{","};
       };
@@ -96,13 +124,13 @@ namespace GridKit
       /**
        * @brief Print items relevant to the start of a file
        */
-      virtual void printHeader(std::ostream&, Csv) const = 0;
+      virtual void appendHeader(std::string&, Csv) const = 0;
 
-      virtual void printHeader(std::ostream&, Json) const
+      virtual void appendHeader(std::string&, Json) const
       {
       }
 
-      virtual void printHeader(std::ostream&, Yaml) const
+      virtual void appendHeader(std::string&, Yaml) const
       {
       }
 
@@ -112,9 +140,9 @@ namespace GridKit
       /**
        * @brief Print monitored variables at current state
        */
-      virtual void print(std::ostream&, Csv) const  = 0;
-      virtual void print(std::ostream&, Json) const = 0;
-      virtual void print(std::ostream&, Yaml) const = 0;
+      virtual void append(std::string&, Csv) const  = 0;
+      virtual void append(std::string&, Json) const = 0;
+      virtual void append(std::string&, Yaml) const = 0;
 
       ///@}
 
@@ -122,15 +150,15 @@ namespace GridKit
       /**
        * @brief Print items relevant to the end of a file
        */
-      virtual void printFooter(std::ostream&, Csv) const
+      virtual void appendFooter(std::string&, Csv) const
       {
       }
 
-      virtual void printFooter(std::ostream&, Json) const
+      virtual void appendFooter(std::string&, Json) const
       {
       }
 
-      virtual void printFooter(std::ostream&, Yaml) const
+      virtual void appendFooter(std::string&, Yaml) const
       {
       }
 
