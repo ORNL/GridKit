@@ -5,10 +5,10 @@ inverter-coupled resources. In GridKit it is represented as a controlled
 current source at the network interface.
 
 Notes:
-- LVACM uses the unfiltered terminal voltage $V_T$; LVPL uses the filtered voltage $V_M$.
-- Internal currents are on converter base; bus injections are converted to system base in the network interface.
-- Exported branch power measurements are on system base.
-- HVRCM is represented by internal algebraic current $I_{\mathrm{q}}^{\mathrm{extra}}$.
+- Internal currents are on converter base.
+- Bus injections and exported branch powers are on system base.
+- LVACM uses $V_T$; LVPL uses $V_M$.
+- HVRCM is represented by algebraic current $I_{\mathrm{q}}^{\mathrm{extra}}$.
 
 ## Block Diagram
 
@@ -22,23 +22,26 @@ Standard REGCA converter-interface model.
 
 ## Model Parameters
 
-Symbol                           | Units    | Description                                           | Typical Value | Note
----------------------------------|----------|-------------------------------------------------------|---------------|------
-$P_0$                            | [p.u.]   | Initial active power injection on system base         | TBD           | JSON key: `P0`; fallback command source
-$Q_0$                            | [p.u.]   | Initial reactive power injection on system base       | TBD           | JSON key: `Q0`; fallback command source
-$S^{\text{base}}$                | [MVA]    | REGCA model power base                                | TBD           | JSON key: `mva`
-$T_{\mathrm{g}}$                 | [sec]    | Converter current-control lag time constant           | TBD           |
-$T_M$                            | [sec]    | Terminal voltage sensor time constant                 | TBD           | Block name: `Tfltr`
-$R_{\mathrm{q}}^{\max}$           | [p.u./s] | Reactive-current recovery positive rate limit         | TBD           | Block name: `Iqrmax`
-$R_{\mathrm{q}}^{\min}$           | [p.u./s] | Reactive-current recovery negative rate limit         | TBD           | Block name: `Iqrmin`
-$R_{\mathrm{p}}^{\max}$           | [p.u./s] | Active-current magnitude recovery rate limit          | TBD           | Block name: `rrpwr`
-$s_L$                            | [binary] | LVPL switch                                           | TBD           | Block name: `LPVLSW`
-$I_{L1}$                         | [p.u.]   | LVPL upper-current ceiling                            | TBD           | Block name: `Lvpl1`
-$V_{L0}$                         | [p.u.]   | LVPL zero-crossing voltage                            | TBD           | Block name: `xerox`
-$V_{L1}$                         | [p.u.]   | LVPL upper breakpoint voltage                         | TBD           | Block name: `brkpt`
-$V_{A0}$                         | [p.u.]   | LVACM lower breakpoint voltage                        | TBD           | Block name: `Lvpnt0`
-$V_{A1}$                         | [p.u.]   | LVACM upper breakpoint voltage                        | TBD           | Block name: `Lvpnt1`
-$V_{\mathrm{hv}}^{\max}$          | [p.u.]   | Terminal-voltage ceiling for HV reactive management   | TBD           | Block name: `Vlim`
+Symbol                           | Units    | JSON     | Description                                           | Typical Value | Note
+---------------------------------|----------|----------|-------------------------------------------------------|---------------|------
+$P_0$                            | [p.u.]   | `P0`     | Initial active power injection on system base         | 1.0           | Required initialization source
+$Q_0$                            | [p.u.]   | `Q0`     | Initial reactive power injection on system base       | 0.0           | Required initialization source
+$S^{\mathrm{base}}$              | [MVA]    | `mva`    | REGCA model power base                                | 100.0         |
+$T_{\mathrm{g}}$                 | [sec]    | `Tg`     | Converter current-control lag time constant           | 0.02          | Block name: `Tg`
+$T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
+$R_{\mathrm{q}}^{\max}$           | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`; GridKit requires $R_{\mathrm{q}}^{\max} > 0$
+$R_{\mathrm{q}}^{\min}$           | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`; GridKit requires $R_{\mathrm{q}}^{\min} < 0$
+$R_{\mathrm{p}}^{\max}$           | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
+$s_L$                            | [binary] | `sL`     | LVPL switch                                           | 1             | Block name: `LPVLSW`
+$I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`
+$V_{L0}$                         | [p.u.]   | `VL0`    | LVPL zero-crossing voltage                            | 0.4           | Block name: `zerox`
+$V_{L1}$                         | [p.u.]   | `VL1`    | LVPL upper breakpoint voltage                         | 0.9           | Block name: `brkpt`
+$V_{A0}$                         | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                        | 0.4           | Block name: `LVPnt0`
+$V_{A1}$                         | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                        | 0.9           | Block name: `LVPnt1`
+$V_{\mathrm{hv}}^{\max}$          | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling for HV reactive management   | 1.2           | Block name: `VLim`
+
+PowerWorld fields `Qmin`, `Khv`, and `Xe` are not parameters of this GridKit
+REGCA implementation.
 
 ### Parameter Validation
 
@@ -46,7 +49,7 @@ Implementations should reject or report invalid parameter sets:
 
 ```math
 \begin{aligned}
-  S^{\text{base}} &> 0 &
+  S^{\mathrm{base}} &> 0 &
   T_{\mathrm{g}} &> 0 &
   T_M &> 0 \\
   R_{\mathrm{p}}^{\max} &> 0 &
@@ -61,16 +64,14 @@ Implementations should reject or report invalid parameter sets:
 
 ### Model Derived Parameters
 
-The smooth active-current bound equations use $M_{\mathrm{p}}$, a numerical
-relaxation for inactive $\pm\infty$ rate bounds:
+The active-current bounds use finite surrogate $M_{\mathrm{p}}$ for inactive
+$\pm\infty$ limits:
 
 ```math
 M_{\mathrm{p}} = 100 R_{\mathrm{p}}^{\max}
 ```
 
-$M_{\mathrm{p}}$ is not a physical REGCA parameter; it should be large enough
-that inactive bounds do not bind expected $f_{\mathrm{p}}$ values while staying
-moderate enough to keep the smooth clamp well conditioned.
+$M_{\mathrm{p}}$ is not a physical REGCA parameter.
 
 ## Model Variables
 
@@ -112,134 +113,67 @@ $V_{\mathrm{i}}$                | [p.u.] | Terminal voltage, imaginary component
 $I_{\mathrm{p}}^{\mathrm{cmd}}$ | [p.u.] | Active-current command in the terminal-voltage reference frame   | Converter base; owned by REEC, constant if no REEC is connected
 $I_{\mathrm{q}}^{\mathrm{cmd}}$ | [p.u.] | Reactive-current command in the terminal-voltage reference frame | Converter base; owned by REEC, constant if no REEC is connected
 
-When either `ipcmd` or `iqcmd` port is omitted, REGCA derives the missing
-constant command from the optional `P0`/`Q0` pair. If `P0`/`Q0` are omitted,
-the fallback commands are zero.
+REGCA initializes its current commands from the required `P0`/`Q0` power-flow
+injection and writes those resolved commands to any attached `ipcmd`/`iqcmd`
+ports. If no controller is connected, the resolved initialization commands are
+held constant during residual evaluation.
 
 ## Model Equations
 
-Define the pre-limit current derivatives:
-
-```math
-\begin{aligned}
-  f_{\mathrm{q}} &= \dfrac{1}{T_{\mathrm{g}}}(I_{\mathrm{q}}^{\mathrm{cmd}} - I_{\mathrm{q}}) \\
-  f_{\mathrm{p}} &= \dfrac{1}{T_{\mathrm{g}}}(I_{\mathrm{p}}^{\mathrm{cmd}} - I_{\mathrm{p}})
-\end{aligned}
-```
-
 ### Differential Equations
 
-The state equations use CommonMath helper notation:
+The state equations use CommonMath helper notation. The $I_{\mathrm{q}}$
+limiter branch is selected by the initialized reactive-current command.
 
 ```math
 \begin{aligned}
   0 &= -T_M \dot V_M - V_M + V_T \\
-  0 &= -\dot I_{\mathrm{q}}  +
+  0 &= -T_{\mathrm{g}}\dot I_{\mathrm{q}} +
+       (I_{\mathrm{q}}^{\mathrm{cmd}} - I_{\mathrm{q}}) +
     \begin{cases}
-      \min(f_{\mathrm{q}}, R_{\mathrm{q}}^{\max}) & I_{\mathrm{q},0}^{\mathrm{cmd}} > 0 \\
-      \max(f_{\mathrm{q}}, R_{\mathrm{q}}^{\min}) & I_{\mathrm{q},0}^{\mathrm{cmd}} \le 0
+      -\rho(I_{\mathrm{q}}^{\mathrm{cmd}} - I_{\mathrm{q}} - T_{\mathrm{g}}R_{\mathrm{q}}^{\max})
+        & I_{\mathrm{q},0}^{\mathrm{cmd}} > 0 \\
+      \rho(T_{\mathrm{g}}R_{\mathrm{q}}^{\min} - (I_{\mathrm{q}}^{\mathrm{cmd}} - I_{\mathrm{q}}))
+        & I_{\mathrm{q},0}^{\mathrm{cmd}} \le 0
     \end{cases} \\
-  0 &= -\dot I_{\mathrm{p}} + \text{clamp}(f_{\mathrm{p}}, \ell_{\mathrm{p}}, u_{\mathrm{p}})
+  0 &= -T_{\mathrm{g}}\dot I_{\mathrm{p}}
+       + T_{\mathrm{g}}\ell_{\mathrm{p}}
+       + \rho(I_{\mathrm{p}}^{\mathrm{cmd}} - I_{\mathrm{p}} - T_{\mathrm{g}}\ell_{\mathrm{p}})
+       - \rho(I_{\mathrm{p}}^{\mathrm{cmd}} - I_{\mathrm{p}} - T_{\mathrm{g}}u_{\mathrm{p}})
 \end{aligned}
 ```
 
-The $I_{\mathrm{q}}$ branch is selected by the initial reactive-current
-command. CommonMath defines the helper targets and smooth approximations for
-[min, max, and clamp](../../../../CommonMath.md#derived-functions).
+CommonMath defines the [linear segment, ramp, and sigmoid helpers](../../../../CommonMath.md#derived-functions).
 
 ### Algebraic Equations
 
-The exact algebraic targets are:
+The algebraic equations are:
 
 ```math
 \begin{aligned}
   0 &= -V_T^2 + V_{\mathrm{r}}^2 + V_{\mathrm{i}}^2 \\
   0 &= -V_T I_{\mathrm{i}}
-       + I_{\mathrm{p}}V_{\mathrm{i}}
-         \begin{cases}
-           0                                     & V_T \le V_{A0} \\
-           \dfrac{V_T - V_{A0}}{V_{A1} - V_{A0}} & V_{A0} < V_T < V_{A1} \\
-           1                                     & V_T \ge V_{A1}
-         \end{cases}
-       - (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{r}} \\
-  0 &=
-  \begin{cases}
-    I_{\mathrm{q}}^{\mathrm{extra}}
-      & V_T < V_{\mathrm{hv}}^{\max} \\
-    V_T - V_{\mathrm{hv}}^{\max}
-      & I_{\mathrm{q}}^{\mathrm{extra}} > 0
-  \end{cases} \\
-  0 &= -I_L
-       + I_{L1}
-         \begin{cases}
-           0                                     & V_M \le V_{L0} \\
-           \dfrac{V_M - V_{L0}}{V_{L1} - V_{L0}} & V_{L0} < V_M < V_{L1} \\
-           1                                     & V_M \ge V_{L1}
-         \end{cases} \\
-  0 &= -V_T I_{\mathrm{r}}
-       + I_{\mathrm{p}}V_{\mathrm{r}}
-         \begin{cases}
-           0                                     & V_T \le V_{A0} \\
-           \dfrac{V_T - V_{A0}}{V_{A1} - V_{A0}} & V_{A0} < V_T < V_{A1} \\
-           1                                     & V_T \ge V_{A1}
-         \end{cases}
-       + (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{i}} \\
-  0 &= -\ell_{\mathrm{p}} +
-    \begin{cases}
-      -R_{\mathrm{p}}^{\max} & I_{\mathrm{p}} \le 0 \\
-      -\infty                & I_{\mathrm{p}} > 0
-    \end{cases} \\
-  0 &= -u_{\mathrm{p}} +
-    \begin{cases}
-      R_{\mathrm{p}}^{\max} & I_{\mathrm{p}} \ge 0 \ \land\ (s_L = 0 \lor I_{\mathrm{p}} < I_L) \\
-      0                    & s_L = 1 \ \land\ I_{\mathrm{p}} \ge I_L \\
-      \infty               & I_{\mathrm{p}} < 0
-    \end{cases} \\
-  0 &= -P_{\mathrm{br}}
-       + \dfrac{S^{\text{base}}}{S^{\text{sys}}}
-         \left(V_{\mathrm{r}} I_{\mathrm{r}} + V_{\mathrm{i}} I_{\mathrm{i}}\right) \\
-  0 &= -Q_{\mathrm{br}}
-       + \dfrac{S^{\text{base}}}{S^{\text{sys}}}
-         \left(V_{\mathrm{i}} I_{\mathrm{r}} - V_{\mathrm{r}} I_{\mathrm{i}}\right)
-\end{aligned}
-```
-
-GridKit implements the algebraic residuals with smooth $\text{linseg}$,
-$\rho$, and $\sigma$ operators; CommonMath defines the
-[linear segment, ramp, and sigmoid helpers](../../../../CommonMath.md#derived-functions).
-An equivalent residual form is:
-
-```math
-\begin{aligned}
-  0 &= -V_T^2 + V_{\mathrm{r}}^2 + V_{\mathrm{i}}^2 \\
-  0 &= -V_T I_{\mathrm{i}}
-       + I_{\mathrm{p}}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)V_{\mathrm{i}}
-       - (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{r}} \\
+       - (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{r}}
+       + V_{\mathrm{i}}I_{\mathrm{p}}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1) \\
   0 &= -I_{\mathrm{q}}^{\mathrm{extra}}
-       + \rho\!\left(I_{\mathrm{q}}^{\mathrm{extra}} - (V_{\mathrm{hv}}^{\max} - V_T)\right) \\
+       + \rho(V_T - V_{\mathrm{hv}}^{\max}) \\
   0 &= -I_L
        + \text{linseg}(V_M;\ V_{L0},\ V_{L1},\ I_{L1}) \\
   0 &= -V_T I_{\mathrm{r}}
-       + I_{\mathrm{p}}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)V_{\mathrm{r}}
-       + (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{i}} \\
+       + (I_{\mathrm{q}} - I_{\mathrm{q}}^{\mathrm{extra}})V_{\mathrm{i}}
+       + V_{\mathrm{r}}I_{\mathrm{p}}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1) \\
   0 &= -\ell_{\mathrm{p}}
        - R_{\mathrm{p}}^{\max}
        - (M_{\mathrm{p}} - R_{\mathrm{p}}^{\max})\sigma(I_{\mathrm{p}}) \\
   0 &= -u_{\mathrm{p}}
-       + \begin{cases}
-          M_{\mathrm{p}}(1-\sigma(I_{\mathrm{p}}))
-          + R_{\mathrm{p}}^{\max}\sigma(I_{\mathrm{p}})
-            \sigma(I_L - I_{\mathrm{p}})
-            & s_L = 1 \\
-          M_{\mathrm{p}}(1-\sigma(I_{\mathrm{p}}))
-          + R_{\mathrm{p}}^{\max}\sigma(I_{\mathrm{p}})
-            & s_L = 0
-       \end{cases} \\
+       + M_{\mathrm{p}}(1-\sigma(I_{\mathrm{p}}))
+       + R_{\mathrm{p}}^{\max}\sigma(I_{\mathrm{p}})
+         \left(1 - s_L + s_L\sigma(I_L - I_{\mathrm{p}})\right) \\
   0 &= -P_{\mathrm{br}}
-       + \dfrac{S^{\text{base}}}{S^{\text{sys}}}
+       + \dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}}
          \left(V_{\mathrm{r}} I_{\mathrm{r}} + V_{\mathrm{i}} I_{\mathrm{i}}\right) \\
   0 &= -Q_{\mathrm{br}}
-       + \dfrac{S^{\text{base}}}{S^{\text{sys}}}
+       + \dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}}
          \left(V_{\mathrm{i}} I_{\mathrm{r}} - V_{\mathrm{r}} I_{\mathrm{i}}\right)
 \end{aligned}
 ```
@@ -253,8 +187,8 @@ REGCA currents:
 
 ```math
 \begin{aligned}
-  I_{\mathrm{r}}^{\mathrm{inj}} &:= I_{\mathrm{r}}\dfrac{S^{\text{base}}}{S^{\text{sys}}} \\
-  I_{\mathrm{i}}^{\mathrm{inj}} &:= I_{\mathrm{i}}\dfrac{S^{\text{base}}}{S^{\text{sys}}}
+  I_{\mathrm{r}}^{\mathrm{inj}} &:= I_{\mathrm{r}}\dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}} \\
+  I_{\mathrm{i}}^{\mathrm{inj}} &:= I_{\mathrm{i}}\dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}}
 \end{aligned}
 ```
 
@@ -267,71 +201,52 @@ steady-state initial values:
 
 ```math
 \begin{aligned}
-  V_T                    &= \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2} \\
-  V_{M0}                  &= V_T \\
-  I_{L0}                  &= \text{linseg}(V_T;\ V_{L0},\ V_{L1},\ I_{L1}) \\
-  I_\mathrm{p0}           &=
-       \begin{cases}
-         I_\mathrm{p}^\mathrm{cmd}(0) & \text{if the } I_\mathrm{p}^\mathrm{cmd} \text{ port is attached} \\
-         \dfrac{P_0}
-         {V_T\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)}
-         \dfrac{S^{\text{sys}}}{S^{\text{base}}}
-           & \text{otherwise}
-       \end{cases} \\
-  I_\mathrm{q0}           &=
-       \begin{cases}
-         I_\mathrm{q}^\mathrm{cmd}(0) & \text{if the } I_\mathrm{q}^\mathrm{cmd} \text{ port is attached} \\
-         \dfrac{Q_0}{V_T}\dfrac{S^{\text{sys}}}{S^{\text{base}}}
-           & \text{otherwise}
-       \end{cases} \\
-  \ell_\mathrm{p0}         &= -R_\mathrm{p}^{\max}
-       - (M_\mathrm{p} - R_\mathrm{p}^{\max})\sigma(I_\mathrm{p0}) \\
-  u_\mathrm{p0}            &= M_\mathrm{p}(1-\sigma(I_\mathrm{p0}))
-       + R_\mathrm{p}^{\max}\sigma(I_\mathrm{p0})
-         \left(1 - s_L + s_L\sigma(I_{L0} - I_\mathrm{p0})\right) \\
-  I_\mathrm{q0}^\mathrm{extra} &= 0 \\
-  I_\mathrm{i0}           &= \dfrac{
-       \text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)I_{\mathrm{p0}}V_{\mathrm{i}}
-       - I_{\mathrm{q0}}V_{\mathrm{r}}
-     }{V_T} \\
-  I_\mathrm{r0}           &= \dfrac{
-       \text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)I_{\mathrm{p0}}V_{\mathrm{r}}
-       + I_{\mathrm{q0}}V_{\mathrm{i}}
-     }{V_T} \\
-  P_{\mathrm{br},0}       &= \dfrac{S^{\text{base}}}{S^{\text{sys}}}
-                              \left(V_{\mathrm{r}} I_{\mathrm{r0}} + V_{\mathrm{i}} I_{\mathrm{i0}}\right) \\
-  Q_{\mathrm{br},0}       &= \dfrac{S^{\text{base}}}{S^{\text{sys}}}
-                              \left(V_{\mathrm{i}} I_{\mathrm{r0}} - V_{\mathrm{r}} I_{\mathrm{i0}}\right)
+  V_T                         &= \sqrt{V_{\mathrm{r}}^2 + V_{\mathrm{i}}^2} \\
+  V_{M,0}                      &= V_T \\
+  I_{L,0}                      &= \text{linseg}(V_T;\ V_{L0},\ V_{L1},\ I_{L1}) \\
+  I_{\mathrm{p},0}             &= V_T^{-1}P_0
+                                  \dfrac{S^{\mathrm{sys}}}{S^{\mathrm{base}}}
+                                  \left[\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)\right]^{-1} \\
+  I_{\mathrm{q},0}             &= V_T^{-1}Q_0\dfrac{S^{\mathrm{sys}}}{S^{\mathrm{base}}} \\
+  \ell_{\mathrm{p},0}          &= -R_{\mathrm{p}}^{\max}
+       - (M_{\mathrm{p}} - R_{\mathrm{p}}^{\max})\sigma(I_{\mathrm{p},0}) \\
+  u_{\mathrm{p},0}             &= M_{\mathrm{p}}(1-\sigma(I_{\mathrm{p},0}))
+       + R_{\mathrm{p}}^{\max}\sigma(I_{\mathrm{p},0})
+         \left(1 - s_L + s_L\sigma(I_{L,0} - I_{\mathrm{p},0})\right) \\
+  I_{\mathrm{q},0}^{\mathrm{extra}} &= 0 \\
+  I_{\mathrm{i},0}             &= V_T^{-1}\left[
+       -I_{\mathrm{q},0}V_{\mathrm{r}}
+       + V_{\mathrm{i}}I_{\mathrm{p},0}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)
+     \right] \\
+  I_{\mathrm{r},0}             &= V_T^{-1}\left[
+       I_{\mathrm{q},0}V_{\mathrm{i}}
+       + V_{\mathrm{r}}I_{\mathrm{p},0}\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)
+     \right] \\
+  P_{\mathrm{br},0}            &= \dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}}
+                                  \left(V_{\mathrm{r}} I_{\mathrm{r},0} + V_{\mathrm{i}} I_{\mathrm{i},0}\right) \\
+  Q_{\mathrm{br},0}            &= \dfrac{S^{\mathrm{base}}}{S^{\mathrm{sys}}}
+                                  \left(V_{\mathrm{i}} I_{\mathrm{r},0} - V_{\mathrm{r}} I_{\mathrm{i},0}\right)
 \end{aligned}
 ```
 
-For normal power-flow starts, $V_T > V_{A1}$, so
-$\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1) = 1$ and the
-$I_{\mathrm{p0}}$ formula is well defined.
-When a command port is omitted, GridKit stores the resolved initial value as
-the constant command used during residual evaluation.
-
-Initialization should verify:
-- $V_T < V_{\mathrm{hv}}^{\max}$. If $V_T \ge V_{\mathrm{hv}}^{\max}$,
-  $I_{\mathrm{q0}}^{\mathrm{extra}} = 0$ may not satisfy the HVRCM algebraic
-  condition, and a nonzero value should be solved or the initialization rejected.
-- $\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1) > 0$ when
-  the `ipcmd` port is omitted and $P_0 \ne 0$. If the LVACM gain is zero,
-  no finite $I_{\mathrm{p0}}$ can reproduce nonzero initial active power.
-
-All internal derivatives initialize to zero.
+REGCA writes the resolved initial commands to attached `ipcmd` and `iqcmd`
+ports. Initialization rejects nonpositive $V_T$, terminal voltage at or above
+$V_{\mathrm{hv}}^{\max}$, and nonzero $P_0$ with zero LVACM gain. All internal
+derivatives initialize to zero.
 
 ## Model Outputs
 
-Real and imaginary injected currents, $I_{\mathrm{r}}$ and
-$I_{\mathrm{i}}$, are converter-base algebraic variables. Optional
-`ibranchr`, `ibranchi`, `pbranch`, and `qbranch` ports export REGCA-owned
-algebraic measurement states for downstream controllers such as REPCA. The
-`pbranch` and `qbranch` signal ports export system-base power outputs:
-```math
-\begin{aligned}
-  P &= V_{\mathrm{r}} I_{\mathrm{r}}^{\mathrm{inj}} + V_{\mathrm{i}} I_{\mathrm{i}}^{\mathrm{inj}} \\
-  Q &= V_{\mathrm{i}} I_{\mathrm{r}}^{\mathrm{inj}} - V_{\mathrm{r}} I_{\mathrm{i}}^{\mathrm{inj}}
-\end{aligned}
-```
-Power outputs are positive leaving the converter and entering the bus.
+Output          | Units    | Description                          | Note
+----------------|----------|--------------------------------------|------
+`ir`            | [p.u.]   | Real current injection               | Converter base; exported through `ibranchr` when assigned
+`ii`            | [p.u.]   | Imaginary current injection          | Converter base; exported through `ibranchi` when assigned
+`p`             | [p.u.]   | Active-power output                  | System base; exported through `pbranch` when assigned
+`q`             | [p.u.]   | Reactive-power output                | System base; exported through `qbranch` when assigned
+`vt`            | [p.u.]   | Terminal voltage magnitude           |
+`vm`            | [p.u.]   | Filtered terminal voltage            |
+`ip`            | [p.u.]   | Active-current state                 | Converter base
+`iq`            | [p.u.]   | Reactive-current state               | Converter base
+`iqextra`       | [p.u.]   | HVRCM extra reactive current         | Converter base
+`il`            | [p.u.]   | LVPL upper-limit current curve       |
+`lp`            | [p.u./s] | Active-current lower rate bound      |
+`up`            | [p.u./s] | Active-current upper rate bound      |
