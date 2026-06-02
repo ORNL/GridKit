@@ -105,9 +105,9 @@ namespace GridKit
         Xdp_ = std::get<RealT>(data.parameters.at(DataT::Parameters::Xdp));
       }
 
-      if (data.parameters.contains(DataT::Parameters::mva_base))
+      if (data.parameters.contains(DataT::Parameters::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(DataT::Parameters::mva_base));
+        mva_base_ = std::get<RealT>(data.parameters.at(DataT::Parameters::mva));
       }
 
       if (data.ports.contains(DataT::Ports::bus))

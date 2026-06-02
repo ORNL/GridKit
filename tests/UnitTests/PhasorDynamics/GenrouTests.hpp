@@ -147,8 +147,8 @@ namespace GridKit
         using Parameter = typename GenrouDataT::Parameters;
         using Variable  = typename GenrouDataT::MonitorableVariables;
 
-        auto data                            = makeGenrouData();
-        data.parameters[Parameter::mva_base] = RealT{50.0};
+        auto data                       = makeGenrouData();
+        data.parameters[Parameter::mva] = RealT{50.0};
         data.monitored_variables.insert(Variable::ir);
         data.monitored_variables.insert(Variable::p);
 

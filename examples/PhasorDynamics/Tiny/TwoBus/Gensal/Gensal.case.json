@@ -62,7 +62,7 @@
                 "Xl": 0.15,
                 "S10": 0.0,
                 "S12": 0.0,
-                "mva_base": 100.0
+                "mva": 100.0
             },
             "mon": ["delta", "speed", "Eqp", "psidp", "psiqpp"]
         },
