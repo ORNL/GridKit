@@ -4,12 +4,20 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <GridKit/Model/PhasorDynamics/BusBaseImpl.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename ScalarT, typename IdxT>
+    BusBase<ScalarT, IdxT>::~BusBase() = default;
+
+    template <typename ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* BusBase<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
+    }
 
     /*!
      * @brief Constructor for an infinite (slack) bus.
@@ -55,11 +63,21 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     BusInfinite<ScalarT, IdxT>::BusInfinite(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data),
-        Vr_(data.Vr0),
+      : Vr_(data.Vr0),
         Vi_(data.Vi0)
     {
-      size_ = 0;
+      bus_id_        = data.bus_id;
+      size_          = 0;
+      monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
+      using Variable = typename DataT::MonitorableVariables;
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
     }
 
     template <class ScalarT, typename IdxT>

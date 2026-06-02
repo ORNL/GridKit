@@ -4,12 +4,20 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusData.hpp>
-#include <GridKit/Model/PhasorDynamics/BusBaseImpl.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
+    template <typename ScalarT, typename IdxT>
+    BusBase<ScalarT, IdxT>::~BusBase() = default;
+
+    template <typename ScalarT, typename IdxT>
+    const Model::VariableMonitorBase* BusBase<ScalarT, IdxT>::getMonitor() const
+    {
+      return monitor_.get();
+    }
 
     /*!
      * @brief Constructor for a phasor dynamics bus.
@@ -56,14 +64,21 @@ namespace GridKit
      */
     template <class ScalarT, typename IdxT>
     Bus<ScalarT, IdxT>::Bus(const DataT& data)
-      : BusBase<ScalarT, IdxT>(data),
-        Vr0_(data.Vr0),
+      : Vr0_(data.Vr0),
         Vi0_(data.Vi0)
     {
-      // std::cout << "Create Bus..." << std::endl;
-      // std::cout << "Number of equations is " << size_ << std::endl;
-
-      size_ = 2;
+      bus_id_        = data.bus_id;
+      size_          = 2;
+      monitor_       = std::make_unique<MonitorT>("Bus_" + data.name, data.monitored_variables);
+      using Variable = typename DataT::MonitorableVariables;
+      monitor_->set(Variable::Vr, [this]
+                    { return Vr(); });
+      monitor_->set(Variable::Vi, [this]
+                    { return Vi(); });
+      monitor_->set(Variable::Vm, [this]
+                    { return std::sqrt(Vr() * Vr() + Vi() * Vi()); });
+      monitor_->set(Variable::Va, [this]
+                    { return std::atan2(Vi(), Vr()); });
     }
 
     template <class ScalarT, typename IdxT>

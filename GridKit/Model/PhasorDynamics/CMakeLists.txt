@@ -10,12 +10,10 @@ gridkit_add_library(
   phasor_dynamics_core
   SOURCES SystemModelData.cpp
   HEADERS BusBase.hpp
-          BusBaseImpl.hpp
           Component.hpp
           ComponentData.hpp
           ComponentLibrary.hpp
           ComponentSignals.hpp
-          GridElement.hpp
           SystemModel.hpp
           SystemModelData.hpp
   LINK_LIBRARIES
