@@ -14,7 +14,6 @@ gridkit_add_library(
           ComponentData.hpp
           ComponentLibrary.hpp
           ComponentSignals.hpp
-          GridElement.hpp
           SystemModel.hpp
           SystemModelData.hpp
   LINK_LIBRARIES
