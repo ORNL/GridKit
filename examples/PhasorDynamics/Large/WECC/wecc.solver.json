@@ -1,5 +1,5 @@
 {
-    "system_model_file": "wecc.json",
+    "system_model_file": "wecc.case.json",
     "dt": 0.00416666666666,
     "tmax": 20.0,
     "events": [
