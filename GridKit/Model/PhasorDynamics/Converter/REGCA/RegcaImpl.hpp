@@ -25,15 +25,15 @@ namespace GridKit
     {
       using Log = ::GridKit::Utilities::Logger;
 
-      template <class ScalarT, typename IdxT>
-      Regca<ScalarT, IdxT>::Regca(bus_type* bus)
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::Regca(BusT* bus)
         : bus_(bus)
       {
         size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
       }
 
-      template <class ScalarT, typename IdxT>
-      Regca<ScalarT, IdxT>::Regca(bus_type* bus, const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
@@ -42,13 +42,13 @@ namespace GridKit
         size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
       }
 
-      template <class ScalarT, typename IdxT>
-      Regca<ScalarT, IdxT>::~Regca()
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::~Regca()
       {
       }
 
-      template <class ScalarT, typename IdxT>
-      void Regca<ScalarT, IdxT>::setDerivedParameters()
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::setDerivedParameters()
       {
         Mp_          = static_cast<RealT>(100.0) * Rpmax_;
         use_lvpl_    = ZERO<RealT>;
@@ -63,29 +63,32 @@ namespace GridKit
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
       }
 
-      template <class ScalarT, typename IdxT>
-      ScalarT Regca<ScalarT, IdxT>::activeCurrentLowerRateBound(ScalarT ip) const
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::activeCurrentLowerRateBound(
+          scalar_type ip) const
       {
         return -Rpmax_ - (Mp_ - Rpmax_) * Math::sigmoid(ip);
       }
 
-      template <class ScalarT, typename IdxT>
-      ScalarT Regca<ScalarT, IdxT>::activeCurrentUpperRateBound(ScalarT ip, ScalarT il) const
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::activeCurrentUpperRateBound(
+          scalar_type ip,
+          scalar_type il) const
       {
         const ScalarT sigma_ip = Math::sigmoid(ip);
         return Mp_ * (ONE<RealT> - sigma_ip)
                + Rpmax_ * sigma_ip * (bypass_lvpl_ + use_lvpl_ * Math::sigmoid(il - ip));
       }
 
-      template <class ScalarT, typename IdxT>
-      void Regca<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Params = typename model_data_type::Parameters;
-        using Ports  = typename model_data_type::Ports;
+        using Params = typename ModelDataT::Parameters;
+        using Ports  = typename ModelDataT::Ports;
 
         parameter_error_count_ = 0;
 
-        auto loadRequiredReal = [&](auto key, RealT& target, const char* name)
+        auto load_required_real = [&](auto key, RealT& target, const char* name)
         {
           if (!data.parameters.contains(key))
           {
@@ -110,30 +113,7 @@ namespace GridKit
           }
         };
 
-        auto loadOptionalReal = [&](auto key, RealT& target, const char* name)
-        {
-          if (!data.parameters.contains(key))
-          {
-            return;
-          }
-
-          const auto& value = data.parameters.at(key);
-          if (const auto* real_value = std::get_if<RealT>(&value))
-          {
-            target = *real_value;
-          }
-          else if (const auto* index_value = std::get_if<IdxT>(&value))
-          {
-            target = static_cast<RealT>(*index_value);
-          }
-          else
-          {
-            Log::error() << "Regca: parameter '" << name << "' must be numeric\n";
-            ++parameter_error_count_;
-          }
-        };
-
-        auto loadRequiredSwitch = [&](auto key, bool& target, const char* name)
+        auto load_required_switch = [&](auto key, bool& target, const char* name)
         {
           if (!data.parameters.contains(key))
           {
@@ -159,21 +139,21 @@ namespace GridKit
           }
         };
 
-        loadOptionalReal(Params::P0, P0_, "P0");
-        loadOptionalReal(Params::Q0, Q0_, "Q0");
-        loadRequiredReal(Params::mva, mva_base_, "mva");
-        loadRequiredReal(Params::Tg, Tg_, "Tg");
-        loadRequiredReal(Params::TM, TM_, "TM");
-        loadRequiredReal(Params::Rqmax, Rqmax_, "Rqmax");
-        loadRequiredReal(Params::Rqmin, Rqmin_, "Rqmin");
-        loadRequiredReal(Params::Rpmax, Rpmax_, "Rpmax");
-        loadRequiredSwitch(Params::sL, sL_, "sL");
-        loadRequiredReal(Params::IL1, IL1_, "IL1");
-        loadRequiredReal(Params::VL0, VL0_, "VL0");
-        loadRequiredReal(Params::VL1, VL1_, "VL1");
-        loadRequiredReal(Params::VA0, VA0_, "VA0");
-        loadRequiredReal(Params::VA1, VA1_, "VA1");
-        loadRequiredReal(Params::Vhvmax, Vhvmax_, "Vhvmax");
+        load_required_real(Params::P0, P0_, "P0");
+        load_required_real(Params::Q0, Q0_, "Q0");
+        load_required_real(Params::mva, mva_base_, "mva");
+        load_required_real(Params::Tg, Tg_, "Tg");
+        load_required_real(Params::TM, TM_, "TM");
+        load_required_real(Params::Rqmax, Rqmax_, "Rqmax");
+        load_required_real(Params::Rqmin, Rqmin_, "Rqmin");
+        load_required_real(Params::Rpmax, Rpmax_, "Rpmax");
+        load_required_switch(Params::sL, sL_, "sL");
+        load_required_real(Params::IL1, IL1_, "IL1");
+        load_required_real(Params::VL0, VL0_, "VL0");
+        load_required_real(Params::VL1, VL1_, "VL1");
+        load_required_real(Params::VA0, VA0_, "VA0");
+        load_required_real(Params::VA1, VA1_, "VA1");
+        load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
 
         if (data.ports.contains(Ports::bus))
         {
@@ -183,16 +163,16 @@ namespace GridKit
         setDerivedParameters();
       }
 
-      template <class ScalarT, typename IdxT>
-      const Model::VariableMonitorBase* Regca<ScalarT, IdxT>::getMonitor() const
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Regca<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();
       }
 
-      template <class ScalarT, typename IdxT>
-      void Regca<ScalarT, IdxT>::initializeMonitor()
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::initializeMonitor()
       {
-        using Variable = typename model_data_type::MonitorableVariables;
+        using Variable = typename ModelDataT::MonitorableVariables;
         auto index     = [](RegcaInternalVariables variable)
         {
           return static_cast<size_t>(variable);
@@ -224,15 +204,15 @@ namespace GridKit
                       { return y_[index(RegcaInternalVariables::UP)]; });
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
         gridkit_component_id_ = component_id;
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::allocate()
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::allocate()
       {
         size_     = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
         auto size = static_cast<size_t>(size_);
@@ -288,8 +268,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::verify() const
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::verify() const
       {
         int ret = static_cast<int>(parameter_error_count_);
 
@@ -339,8 +319,8 @@ namespace GridKit
         return ret;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::initialize()
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::initialize()
       {
         if (bus_ == nullptr)
         {
@@ -371,67 +351,62 @@ namespace GridKit
         const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
         const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
 
-        const ScalarT vr  = Vr();
-        const ScalarT vi  = Vi();
-        const ScalarT vt2 = vr * vr + vi * vi;
-        const ScalarT vt  = std::sqrt(vt2);
+        const ScalarT vr = Vr();
+        const ScalarT vi = Vi();
+        const ScalarT vt = std::sqrt(vr * vr + vi * vi);
 
         if (vt <= ZERO<RealT>)
         {
           Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
           return 1;
         }
-
         if (vt >= Vhvmax_)
         {
-          Log::error() << "Regca: terminal voltage magnitude must be less than Vhvmax at initialization\n";
+          Log::error()
+              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
           return 1;
         }
 
+        // REGCA owns the network terminal and establishes the initial
+        // converter operating point from the power-flow injection. Controller
+        // command ports may not have been initialized yet, so initialization
+        // resolves the commands from P0/Q0 and publishes them to attached
+        // ports below. P0/Q0 are given on the system base; toComponentBase
+        // converts them to the converter base the internal states use.
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        ScalarT       ipcmd0{ZERO<RealT>};
-        ScalarT       iqcmd0{ZERO<RealT>};
 
-        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        if (P0_ != ZERO<RealT> && (vt <= VA0_ || lvacm <= ZERO<RealT>) )
         {
-          ipcmd0 = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
+          Log::error() << "Regca: LVACM gain is zero with nonzero initial active power\n";
+          return 1;
         }
-        else if (P0_ != ZERO<RealT>)
-        {
-          if (vt <= VA0_ || lvacm <= ZERO<RealT>)
-          {
-            Log::error() << "Regca: LVACM gain is zero with nonzero initial active power\n";
-            return 1;
-          }
 
+        ScalarT ipcmd0{ZERO<RealT>};
+        if (P0_ != ZERO<RealT>)
+        {
           ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
         }
-
-        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
-        {
-          iqcmd0 = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
-        }
-        else if (Q0_ != ZERO<RealT>)
-        {
-          iqcmd0 = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
-        }
+        const ScalarT iqcmd0 = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
 
         const ScalarT iqextra0{ZERO<RealT>};
         const ScalarT qnet0 = iqcmd0 - iqextra0;
 
         y_[VM]      = vt;
-        y_[IQ]      = iqcmd0;
-        y_[IP]      = ipcmd0;
         y_[VT]      = vt;
-        y_[II]      = (lvacm * y_[IP] * vi - qnet0 * vr) / vt;
+        y_[IP]      = ipcmd0;
+        y_[IQ]      = iqcmd0;
         y_[IQEXTRA] = iqextra0;
         y_[IL]      = Math::linseg(vt, VL0_, VL1_, IL1_);
-        y_[IR]      = (lvacm * y_[IP] * vr + qnet0 * vi) / vt;
+        y_[IR]      = (qnet0 * vi + lvacm * ipcmd0 * vr) / vt;
+        y_[II]      = (-qnet0 * vr + lvacm * ipcmd0 * vi) / vt;
         y_[LP]      = activeCurrentLowerRateBound(y_[IP]);
         y_[UP]      = activeCurrentUpperRateBound(y_[IP], y_[IL]);
         y_[PBR]     = toSystemBase(vr * y_[IR] + vi * y_[II]);
         y_[QBR]     = toSystemBase(vi * y_[IR] - vr * y_[II]);
 
+        // Retain the resolved commands as the constant source used during
+        // residual evaluation when no controller drives the command ports, and
+        // select the reactive-current rate-limit branch from the command sign.
         ipcmd_set_    = ipcmd0;
         iqcmd_set_    = iqcmd0;
         iq_use_upper_ = ZERO<RealT>;
@@ -442,12 +417,24 @@ namespace GridKit
           iq_use_lower_ = ZERO<RealT>;
         }
 
+        // Seed attached command nodes with the steady-state values. Controller
+        // initialization can use these signal values, and unattached ports fall
+        // back to the constants stored above.
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd0);
+        }
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IQCMD>(iqcmd0);
+        }
+
         std::fill(yp_.begin(), yp_.end(), ZERO<RealT>);
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::tagDifferentiable()
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::tagDifferentiable()
       {
         std::fill(tag_.begin(), tag_.end(), false);
         tag_[static_cast<size_t>(RegcaInternalVariables::VM)] = true;
@@ -456,8 +443,9 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Regca<ScalarT, IdxT>::evaluateInternalResidual(
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int
+      Regca<scalar_type, index_type>::evaluateInternalResidual(
           ScalarT* y,
           ScalarT* yp,
           ScalarT* wb,
@@ -503,26 +491,27 @@ namespace GridKit
         const ScalarT ipcmd = ws[IPCMD];
         const ScalarT iqcmd = ws[IQCMD];
 
-        const ScalarT fq = (iqcmd - iq) / Tg_;
-        const ScalarT fp = (ipcmd - ip) / Tg_;
+        const ScalarT iq_error = iqcmd - iq;
+        const ScalarT ip_error = ipcmd - ip;
 
-        const ScalarT iq_rate =
-            iq_use_upper_ * (fq - Math::ramp(fq - Rqmax_))
-            + iq_use_lower_ * (fq + Math::ramp(Rqmin_ - fq));
+        const ScalarT iq_step =
+            iq_use_upper_ * (iq_error - Math::ramp(iq_error - Tg_ * Rqmax_))
+            + iq_use_lower_ * (iq_error + Math::ramp(Tg_ * Rqmin_ - iq_error));
 
-        const ScalarT ip_rate = lp + Math::ramp(fp - lp) - Math::ramp(fp - up);
+        const ScalarT ip_step =
+            Tg_ * lp + Math::ramp(ip_error - Tg_ * lp) - Math::ramp(ip_error - Tg_ * up);
 
-        f[VM]               = -vm_dot + (vt - vm) / TM_;
-        f[IQ]               = -iq_dot + iq_rate;
-        f[IP]               = -ip_dot + ip_rate;
+        f[VM]               = -TM_ * vm_dot - vm + vt;
+        f[IQ]               = -Tg_ * iq_dot + iq_step;
+        f[IP]               = -Tg_ * ip_dot + ip_step;
         const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet  = iq - iqextra;
 
         f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[II]      = -vt * ii + lvacm * ip * vi - qnet * vr;
-        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - (Vhvmax_ - vt));
+        f[II]      = -vt * ii - qnet * vr + lvacm * ip * vi;
+        f[IQEXTRA] = -iqextra + Math::ramp(vt - Vhvmax_);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
-        f[IR]      = -vt * ir + lvacm * ip * vr + qnet * vi;
+        f[IR]      = -vt * ir + qnet * vi + lvacm * ip * vr;
         f[LP]      = -lp + activeCurrentLowerRateBound(ip);
         f[UP]      = -up + activeCurrentUpperRateBound(ip, il);
         f[PBR]     = -pbr + toSystemBase(vr * ir + vi * ii);
@@ -531,8 +520,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Regca<ScalarT, IdxT>::evaluateBusResidual(
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
           ScalarT*                  y,
           [[maybe_unused]] ScalarT* yp,
           [[maybe_unused]] ScalarT* wb,
@@ -546,8 +535,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::evaluateResidual()
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::evaluateResidual()
       {
         const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
         const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);

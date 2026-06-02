@@ -63,9 +63,9 @@ namespace GridKit
         up       ///< Active-current upper rate bound
       };
 
-      template <typename RealT, typename IdxT>
-      struct RegcaData : public ComponentData<RealT,
-                                              IdxT,
+      template <typename real_type, typename index_type>
+      struct RegcaData : public ComponentData<real_type,
+                                              index_type,
                                               RegcaParameters,
                                               RegcaPorts,
                                               RegcaMonitorableVariables>

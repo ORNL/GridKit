@@ -14,8 +14,8 @@ namespace GridKit
   {
     namespace Converter
     {
-      template <class ScalarT, typename IdxT>
-      int Regca<ScalarT, IdxT>::evaluateJacobian()
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for Regca..." << std::endl;
         Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
