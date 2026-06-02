@@ -190,6 +190,12 @@ namespace GridKit
           raw_component.get_to(stabilizer);
           sm.stabilizer.push_back(stabilizer);
         }
+        else if (kind == "ForcedOscillation")
+        {
+          typename SystemModelData<RealT, IdxT>::ForcedOscillationDataT forced_oscillation;
+          raw_component.get_to(forced_oscillation);
+          sm.forced_oscillation.push_back(forced_oscillation);
+        }
         else if (kind == "BusFault")
         {
           typename SystemModelData<RealT, IdxT>::BusFaultDataT bus_fault;

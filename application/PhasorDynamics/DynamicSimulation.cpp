@@ -1,3 +1,5 @@
+#include <cmath>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 
@@ -16,12 +18,8 @@ using scalar_type = double;
 using real_type   = double;
 using index_type  = size_t;
 
-int main(int argc, const char* argv[])
+TestStatus runEventStudy(StudyData& study)
 {
-  // Study file
-  checkCommandLine(argc, "DynamicSimulation");
-  auto study = parseStudyData(argv[1]);
-
   // Instantiate system
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
@@ -76,6 +74,64 @@ int main(int argc, const char* argv[])
 
   // Report run time
   std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  return status;
+}
+
+TestStatus runForcedOscillationStudy(StudyData& study)
+{
+  auto model_data = applyInjections(study.base_model_data, study.forced_oscillations);
+
+  // Instantiate system
+  SystemModel<scalar_type, index_type> sys(model_data);
+  sys.allocate();
+
+  // Set up simulation
+  Ida<scalar_type, index_type> ida(&sys);
+  ida.configureSimulation();
+  if (study.max_step.has_value())
+  {
+    ida.setMaxStep(*study.max_step);
+  }
+
+  // Start timer
+  real_type start = static_cast<real_type>(clock());
+
+  // Initialize simulation once and run directly to final time
+  real_type final_time = study.tmax;
+  ida.initializeSimulation(0.0, false);
+  int nout = static_cast<int>(std::round(final_time / study.dt));
+  ida.runSimulation(final_time, nout);
+
+  real_type stop = static_cast<real_type>(clock());
+
+  // Stop the variable monitor
+  sys.stopMonitor();
+
+  // Generate aggregate errors comparing variable output to reference solution
+  TestStatus status = checkErrors(study);
+
+  // Report run time
+  std::cout << "\n\nComplete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+
+  return status;
+}
+
+int main(int argc, const char* argv[])
+{
+  // Study file
+  checkCommandLine(argc, "DynamicSimulation");
+  auto study = parseStudyData(argv[1]);
+
+  TestStatus status = true;
+  if (study.isForcedOscillationStudy())
+  {
+    status = runForcedOscillationStudy(study);
+  }
+  else
+  {
+    status = runEventStudy(study);
+  }
 
   return status.get();
 }

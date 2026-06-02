@@ -143,6 +143,28 @@ target_link_libraries(
   GridKit::phasor_dynamics_signal
   GridKit::testing)
 
+add_executable(test_phasor_forced_oscillation runForcedOscillationTests.cpp)
+target_link_libraries(
+  test_phasor_forced_oscillation
+  GridKit::definitions
+  GridKit::phasor_dynamics_components
+  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::testing)
+
+add_executable(test_phasor_forced_oscillation_injections runForcedOscillationInjectionTests.cpp)
+target_link_libraries(
+  test_phasor_forced_oscillation_injections
+  GridKit::definitions
+  GridKit::phasor_dynamics_components
+  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::solvers_dyn
+  GridKit::testing)
+target_include_directories(
+  test_phasor_forced_oscillation_injections
+  PRIVATE ${CMAKE_SOURCE_DIR}/application/PhasorDynamics
+          ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+          ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+
 add_executable(test_phasor_gen_classical runGenClassicalTests.cpp)
 target_link_libraries(
   test_phasor_gen_classical
@@ -184,6 +206,9 @@ add_test(NAME PhasorDynamicsConverterRegcaTest COMMAND test_phasor_converter_reg
 add_test(NAME PhasorDynamicsConverterRepcaTest COMMAND test_phasor_converter_repca)
 add_test(NAME PhasorDynamicsConverterReecbTest COMMAND test_phasor_converter_reecb)
 add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_ieeest)
+add_test(NAME PhasorDynamicsForcedOscillationTest COMMAND test_phasor_forced_oscillation)
+add_test(NAME PhasorDynamicsForcedOscillationInjectionTest
+         COMMAND test_phasor_forced_oscillation_injections)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
 add_test(NAME PhasorDynamicsLoadZIPTest COMMAND test_phasor_loadzip)
@@ -210,6 +235,8 @@ install(
           test_phasor_converter_repca
           test_phasor_converter_reecb
           test_phasor_stabilizer_ieeest
+          test_phasor_forced_oscillation
+          test_phasor_forced_oscillation_injections
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_system_single_component

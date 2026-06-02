@@ -1,0 +1,22 @@
+{
+    "system_model_file": "TwoBusTgov1.json",
+    "dt": 0.00416666666666,
+    "tmax": 20.0,
+    "output_file": "TwoBusTgov1_fo.csv",
+    "forced_oscillations": [
+        {
+            "id": "fo_pmech",
+            "target": "Genrou:DV1.pmech",
+            "mode": "add",
+            "params": {
+                "A": 0.02,
+                "f": 0.7,
+                "Ton": 2.0,
+                "Toff": 15.0,
+                "Tr": 0.5,
+                "Tf": 0.5
+            },
+            "mon": ["in", "force", "out", "active"]
+        }
+    ]
+}

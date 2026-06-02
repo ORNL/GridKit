@@ -83,6 +83,7 @@ namespace GridKit
         using namespace Exciter;
         using namespace Stabilizer;
         using namespace Converter;
+        using namespace SignalOperator;
 
         // Set system model tolerances
         rel_tol_         = 1e-7;
@@ -150,6 +151,31 @@ namespace GridKit
           }
 
           addComponent(adapter);
+        }
+
+        // Add forced oscillation signal operators
+        for (const auto& forceddata : data.forced_oscillation)
+        {
+          using DataT = typename SystemModelData<RealT, IdxT>::ForcedOscillationDataT;
+
+          auto* forced = new ForcedOscillation<ScalarT, IdxT>(forceddata);
+
+          if (forceddata.ports.contains(DataT::Ports::output))
+          {
+            IdxT output = forceddata.ports.at(DataT::Ports::output);
+            forced->getSignals().template assignSignalNode<ForcedOscillationInternalVariables::OUT>(
+                getSignal(output));
+          }
+
+          if (forceddata.ports.contains(DataT::Ports::input))
+          {
+            IdxT input = forceddata.ports.at(DataT::Ports::input);
+            forced->getSignals().template attachSignalNode<ForcedOscillationExternalVariables::IN>(
+                getSignal(input));
+          }
+
+          addComponent(forced);
+          forced_oscillation_components_.push_back(forced);
         }
 
         // Add REGCA converters before REECB so REGCA initializes the current commands first.
@@ -862,6 +888,7 @@ namespace GridKit
         for (const auto& component : components_)
         {
           component->initialize();
+          initializeForcedOscillationInputs();
         }
 
         for (const auto& component : components_)
@@ -1201,12 +1228,13 @@ namespace GridKit
       {
         time_  = t;
         alpha_ = a;
+
+        updateVariables();
+
         for (const auto& component : components_)
         {
           component->updateTime(t, a);
         }
-
-        updateVariables();
       }
 
       /**
@@ -1332,9 +1360,18 @@ namespace GridKit
       }
 
     private:
-      std::vector<bus_type*>       buses_;
-      std::vector<signal_type*>    signals_;
-      std::vector<component_type*> components_;
+      void initializeForcedOscillationInputs()
+      {
+        for (auto* forced : forced_oscillation_components_)
+        {
+          forced->initializeInputFromOutput();
+        }
+      }
+
+      std::vector<bus_type*>                                         buses_;
+      std::vector<signal_type*>                                      signals_;
+      std::vector<component_type*>                                   components_;
+      std::vector<SignalOperator::ForcedOscillation<ScalarT, IdxT>*> forced_oscillation_components_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id

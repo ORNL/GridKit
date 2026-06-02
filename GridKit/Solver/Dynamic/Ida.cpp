@@ -217,6 +217,20 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Set the IDA maximum internal step size.
+     *
+     * @tparam ScalarT
+     * @tparam IdxT
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::setMaxStep(RealT max_step)
+    {
+      int retval = IDASetMaxStep(solver_, max_step);
+      checkOutput(retval, "IDASetMaxStep");
+      return retval;
+    }
+
+    /**
      * @brief Get default initial condition
      *
      * @tparam ScalarT
