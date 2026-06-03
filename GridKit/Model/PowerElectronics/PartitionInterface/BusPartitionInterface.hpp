@@ -23,6 +23,10 @@ namespace GridKit
     using PartitionInterface<ScalarT, IdxT>::external_data_y_;
     using PartitionInterface<ScalarT, IdxT>::external_data_yp_;
     using PartitionInterface<ScalarT, IdxT>::interface_partition_externals_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
+    using PartitionInterface<ScalarT, IdxT>::bus_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_j_;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -46,7 +50,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT id);
+    BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT bus_i, IdxT bus_j, IdxT id);
     virtual ~BusPartitionInterface();
 
     int allocate();
@@ -62,9 +66,6 @@ namespace GridKit
     int evaluateAdjointIntegrand();
 
   private:
-    size_t bus_port_i_;
-    size_t bus_port_j_;
-
     CircuitComponent<ScalarT, IdxT>& component_;
   };
 } // namespace GridKit

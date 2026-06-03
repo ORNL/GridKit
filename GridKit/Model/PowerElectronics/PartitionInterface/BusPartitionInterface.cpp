@@ -25,7 +25,7 @@ namespace GridKit
    * @param id Unique component identifier.
    */
   template <class ScalarT, typename IdxT>
-  BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT id)
+  BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT bus_i, IdxT bus_j, IdxT id)
     : component_(component)
   {
     size_           = 2;
@@ -33,6 +33,9 @@ namespace GridKit
     n_extern_       = 2;
     extern_indices_ = {0, 1};
     idc_            = id;
+
+    bus_i_ = bus_i;
+    bus_j_ = bus_j;
   }
 
   template <class ScalarT, typename IdxT>
@@ -57,17 +60,14 @@ namespace GridKit
 
     component_.allocate();
 
-    auto bus_i = this->getNodeConnection(0);
-    auto bus_j = this->getNodeConnection(1);
-
     size_t counter = 0;
     for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
     {
-      if (bus_i == component_.getNodeConnection(static_cast<IdxT>(i)))
+      if (bus_i_ == component_.getNodeConnection(static_cast<IdxT>(i)))
       {
         bus_port_i_ = i;
       }
-      else if (bus_j == component_.getNodeConnection(static_cast<IdxT>(i)))
+      else if (bus_j_ == component_.getNodeConnection(static_cast<IdxT>(i)))
       {
         bus_port_j_ = i;
       }
@@ -77,6 +77,9 @@ namespace GridKit
         counter++;
       }
     }
+
+    this->setExternalConnectionNodes(0, bus_i_);
+    this->setExternalConnectionNodes(1, bus_j_);
 
     return 0;
   }

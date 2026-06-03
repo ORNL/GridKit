@@ -69,6 +69,11 @@ namespace GridKit
     std::vector<RealT> external_data_y_;
     std::vector<RealT> external_data_yp_;
     std::vector<IdxT>  interface_partition_externals_;
+
+    size_t bus_port_i_;
+    size_t bus_port_j_;
+    IdxT   bus_i_;
+    IdxT   bus_j_;
   };
 
 } // namespace GridKit
