@@ -27,6 +27,10 @@ namespace GridKit
     using PartitionInterface<ScalarT, IdxT>::external_data_y_;
     using PartitionInterface<ScalarT, IdxT>::external_data_yp_;
     using PartitionInterface<ScalarT, IdxT>::interface_partition_externals_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
+    using PartitionInterface<ScalarT, IdxT>::bus_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_j_;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -66,10 +70,5 @@ namespace GridKit
 
   private:
     CircuitComponent<ScalarT, IdxT>* component_;
-
-    size_t bus_port_i_;
-    size_t bus_port_j_;
-    IdxT   bus_i_;
-    IdxT   bus_j_;
   };
 } // namespace GridKit

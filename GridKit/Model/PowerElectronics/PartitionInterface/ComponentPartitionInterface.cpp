@@ -21,9 +21,7 @@ namespace GridKit
 
   template <class ScalarT, typename IdxT>
   ComponentPartitionInterface<ScalarT, IdxT>::ComponentPartitionInterface(CircuitComponent<ScalarT, IdxT>* component, IdxT bus_i, IdxT bus_j, IdxT id)
-    : component_(component),
-      bus_i_(bus_i),
-      bus_j_(bus_j)
+    : component_(component)
   {
     // internals [id, iq]
     // externals [\omegaref, vbd_out, vbq_out]
@@ -32,6 +30,9 @@ namespace GridKit
     n_extern_       = component_->getExternSize();
     extern_indices_ = component_->getExternIndices();
     idc_            = id;
+
+    bus_i_ = bus_i;
+    bus_j_ = bus_j;
   }
 
   template <class ScalarT, typename IdxT>
