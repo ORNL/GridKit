@@ -5,7 +5,7 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a MicrogridLine class.
+   * @brief Declaration of a Hires Bus Component.
    *
    */
   template <class ScalarT, typename IdxT>
@@ -70,8 +70,8 @@ namespace GridKit
 
     int evaluateResidual()
     {
-      f_[0] = -y_[0];
-      f_[1] = -y_[1];
+      f_[0] = yp_[0] + y_[0];
+      f_[1] = yp_[1] + y_[1];
 
       return 0;
     }

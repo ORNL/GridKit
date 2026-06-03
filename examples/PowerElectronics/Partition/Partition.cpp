@@ -11,9 +11,9 @@
 
 #include "HiresBus.hpp"
 #include "HiresComponent1.hpp"
-#include "HiresComponent2.hpp"
+#include "HiresComponent3.hpp"
 
-std::vector<double> hires(std::vector<double> y);
+std::vector<double> hires(const std::vector<double>& y, const std::vector<double>& yp);
 
 int main(int /* argc */, char const** /* argv */)
 {
@@ -28,7 +28,7 @@ int main(int /* argc */, char const** /* argv */)
 
   GridKit::HiresComponent1<double, size_t>* comp1 = new GridKit::HiresComponent1<double, size_t>(1);
   GridKit::HiresBus<double, size_t>*        bus1  = new GridKit::HiresBus<double, size_t>(2);
-  GridKit::HiresComponent2<double, size_t>* comp2 = new GridKit::HiresComponent2<double, size_t>(3);
+  GridKit::HiresComponent3<double, size_t>* comp3 = new GridKit::HiresComponent3<double, size_t>(3);
 
   comp1->setExternalConnectionNodes(0, 0);
   comp1->setExternalConnectionNodes(1, 1);
@@ -39,18 +39,15 @@ int main(int /* argc */, char const** /* argv */)
   bus1->setExternalConnectionNodes(0, 3);
   bus1->setExternalConnectionNodes(1, 4);
 
-  comp2->setExternalConnectionNodes(0, 5);
-  comp2->setExternalConnectionNodes(1, 6);
-  comp2->setExternalConnectionNodes(2, 7);
-  comp2->setExternalConnectionNodes(3, 3);
-  comp2->setExternalConnectionNodes(4, 4);
+  comp3->setExternalConnectionNodes(0, 5);
+  comp3->setExternalConnectionNodes(1, 6);
+  comp3->setExternalConnectionNodes(2, 7);
+  comp3->setExternalConnectionNodes(3, 3);
+  comp3->setExternalConnectionNodes(4, 4);
 
-  GridKit::HiresComponent2<double, size_t>              comp2copy(*comp2);
-  GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp2copy, 10);
-  GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp2, 3, 4, 9);
-
-  busInterface->setExternalConnectionNodes(0, 3);
-  busInterface->setExternalConnectionNodes(1, 4);
+  GridKit::HiresComponent3<double, size_t>              comp2copy(*comp3);
+  GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp2copy, 3, 4, 4);
+  GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp3, 3, 4, 5);
 
   partition1->addComponent(comp1);
   partition1->addComponent(bus1);
@@ -64,7 +61,10 @@ int main(int /* argc */, char const** /* argv */)
   partition2->allocate(sys_size);
 
   busInterface->setExternalDataY({6, 7, 8});
+  busInterface->setExternalDataYP({6, 7, 8});
+
   compInterface->setExternalDataY({4, 5});
+  compInterface->setExternalDataYP({4, 5});
 
   for (size_t i = 0; i < sys_size; i++)
   {
@@ -79,7 +79,7 @@ int main(int /* argc */, char const** /* argv */)
   partition1->evaluateResidual();
   partition2->evaluateResidual();
 
-  auto ref = hires({1, 2, 3, 4, 5, 6, 7, 8});
+  auto ref = hires({1, 2, 3, 4, 5, 6, 7, 8}, {1, 2, 3, 4, 5, 6, 7, 8});
 
   std::cout << "------------- Partition 1 -----------" << std::endl;
   for (size_t i = 0; i < sys_size; i++)
@@ -97,18 +97,18 @@ int main(int /* argc */, char const** /* argv */)
   delete partition2;
 }
 
-std::vector<double> hires(std::vector<double> y)
+std::vector<double> hires(const std::vector<double>& y, const std::vector<double>& yp)
 {
   std::vector<double> f(8);
 
-  f[0] = -1.71 * y[0] + 0.43 * y[1] + 8.32 * y[2] + 0.0007;
-  f[1] = 1.71 * y[0] - 8.75 * y[1];
-  f[2] = -10.03 * y[2] + 0.43 * y[3] + 0.035 * y[4];
-  f[3] = 8.32 * y[1] + 1.71 * y[2] - 1.12 * y[3];
-  f[4] = -1.745 * y[4] + 0.43 * y[5] + 0.43 * y[6];
-  f[5] = -280 * y[5] * y[7] + 0.69 * y[3] + 1.71 * y[4] - 0.43 * y[5] + 0.69 * y[6];
-  f[6] = 280 * y[5] * y[7] - 1.81 * y[6];
-  f[7] = -280 * y[5] * y[7] + 1.81 * y[6];
+  f[0] = yp[0] + 1.71 * y[0] - 0.43 * y[1] - 8.32 * y[2] - 0.0007;
+  f[1] = yp[1] - 1.71 * y[0] + 8.75 * y[1];
+  f[2] = yp[2] + 10.03 * y[2] - 0.43 * y[3] - 0.035 * y[4];
+  f[3] = yp[3] - 8.32 * y[1] - 1.71 * y[2] + 1.12 * y[3];
+  f[4] = yp[4] + 1.745 * y[4] - 0.43 * y[5] - 0.43 * y[6];
+  f[5] = yp[5] + 280 * y[5] * y[7] - 0.69 * y[3] - 1.71 * y[4] + 0.43 * y[5] - 0.69 * y[6];
+  f[6] = yp[6] - 280 * y[5] * y[7] + 1.81 * y[6];
+  f[7] = yp[7] + 280 * y[5] * y[7] - 1.81 * y[6];
 
   return f;
 }

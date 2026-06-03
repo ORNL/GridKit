@@ -7,11 +7,11 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a HiresComponent1 class.
+   * @brief Declaration of a Hires Component 3 class.
    *
    */
   template <class ScalarT, typename IdxT>
-  class HiresComponent2 : public CircuitComponent<ScalarT, IdxT>
+  class HiresComponent3 : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
@@ -38,7 +38,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    HiresComponent2(IdxT id)
+    HiresComponent3(IdxT id)
     {
       size_           = 5;
       n_intern_       = 3;
@@ -47,7 +47,7 @@ namespace GridKit
       idc_            = id;
     }
 
-    ~HiresComponent2()
+    ~HiresComponent3()
     {
     }
 
@@ -72,11 +72,11 @@ namespace GridKit
 
     int evaluateResidual()
     {
-      f_[0] = -280 * y_[0] * y_[2] + 0.69 * y_[3] + 1.71 * y_[4] - 0.43 * y_[0] + 0.69 * y_[1];
-      f_[1] = 280 * y_[0] * y_[2] - 1.81 * y_[1];
-      f_[2] = -280 * y_[0] * y_[2] + 1.81 * y_[1];
-      f_[3] = -0.02 * y_[3];
-      f_[4] = -0.045 * y_[4] + 0.43 * y_[0] + 0.43 * y_[1];
+      f_[0] = yp_[0] + 280 * y_[0] * y_[2] - 0.69 * y_[3] - 1.71 * y_[4] + 0.43 * y_[0] - 0.69 * y_[1];
+      f_[1] = yp_[1] - 280 * y_[0] * y_[2] + 1.81 * y_[1];
+      f_[2] = yp_[2] + 280 * y_[0] * y_[2] - 1.81 * y_[1];
+      f_[3] = 0.02 * y_[3];
+      f_[4] = 0.045 * y_[4] - 0.43 * y_[0] - 0.43 * y_[1];
 
       return 0;
     }
