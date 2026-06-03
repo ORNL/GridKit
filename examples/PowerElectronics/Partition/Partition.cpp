@@ -45,8 +45,8 @@ int main(int /* argc */, char const** /* argv */)
   comp3->setExternalConnectionNodes(3, 3);
   comp3->setExternalConnectionNodes(4, 4);
 
-  GridKit::HiresComponent3<double, size_t>              comp2copy(*comp3);
-  GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp2copy, 3, 4, 4);
+  GridKit::HiresComponent3<double, size_t>              comp3copy(*comp3);
+  GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp3copy, 3, 4, 4);
   GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp3, 3, 4, 5);
 
   partition1->addComponent(comp1);
