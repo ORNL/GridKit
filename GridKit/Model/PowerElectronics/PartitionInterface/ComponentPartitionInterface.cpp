@@ -11,9 +11,8 @@ namespace GridKit
 {
 
   /*!
-   * @brief Constructor for a constant MicrogridLoad model
+   * @brief Constructor for the ComponentPartitionInterface
    *
-   * Calls default ModelEvaluatorImpl constructor.
    *
    *
    *
@@ -23,8 +22,6 @@ namespace GridKit
   ComponentPartitionInterface<ScalarT, IdxT>::ComponentPartitionInterface(CircuitComponent<ScalarT, IdxT>* component, IdxT bus_i, IdxT bus_j, IdxT id)
     : component_(component)
   {
-    // internals [id, iq]
-    // externals [\omegaref, vbd_out, vbq_out]
     size_           = component_->size();
     n_intern_       = component_->getInternalSize();
     n_extern_       = component_->getExternSize();
@@ -41,7 +38,7 @@ namespace GridKit
   }
 
   /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
+   * @brief allocate method.
    */
   template <class ScalarT, typename IdxT>
   int ComponentPartitionInterface<ScalarT, IdxT>::allocate()
@@ -85,7 +82,7 @@ namespace GridKit
   }
 
   /**
-   * Initialization of the grid model
+   * Initialization 
    */
   template <class ScalarT, typename IdxT>
   int ComponentPartitionInterface<ScalarT, IdxT>::initialize()
@@ -94,7 +91,7 @@ namespace GridKit
   }
 
   /*
-   * \brief Identify differential variables
+   *
    */
   template <class ScalarT, typename IdxT>
   int ComponentPartitionInterface<ScalarT, IdxT>::tagDifferentiable()
@@ -103,7 +100,7 @@ namespace GridKit
   }
 
   /**
-   * @brief Eval Micro Load
+   * @brief 
    */
   template <class ScalarT, typename IdxT>
   int ComponentPartitionInterface<ScalarT, IdxT>::evaluateResidual()
