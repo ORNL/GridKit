@@ -5,7 +5,6 @@
 #include <cstddef>
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
-
 #include "GridKit/Model/PowerElectronics/PartitionInterface/PartitionInterface.hpp"
 
 namespace GridKit

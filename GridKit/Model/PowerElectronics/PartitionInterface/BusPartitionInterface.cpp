@@ -44,7 +44,7 @@ namespace GridKit
   }
 
   /*!
-   * @brief allocate method computes sparsity pattern of the Jacobian.
+   * @brief allocate method
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::allocate()
