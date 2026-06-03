@@ -7,7 +7,7 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a HiresComponent1 class.
+   * @brief Declaration of a Hires Component 1 class.
    *
    */
   template <class ScalarT, typename IdxT>

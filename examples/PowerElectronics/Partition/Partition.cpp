@@ -11,7 +11,7 @@
 
 #include "HiresBus.hpp"
 #include "HiresComponent1.hpp"
-#include "HiresComponent2.hpp"
+#include "HiresComponent3.hpp"
 
 std::vector<double> hires(const std::vector<double>& y, const std::vector<double>& yp);
 
@@ -28,7 +28,7 @@ int main(int /* argc */, char const** /* argv */)
 
   GridKit::HiresComponent1<double, size_t>* comp1 = new GridKit::HiresComponent1<double, size_t>(1);
   GridKit::HiresBus<double, size_t>*        bus1  = new GridKit::HiresBus<double, size_t>(2);
-  GridKit::HiresComponent2<double, size_t>* comp2 = new GridKit::HiresComponent2<double, size_t>(3);
+  GridKit::HiresComponent3<double, size_t>* comp3 = new GridKit::HiresComponent3<double, size_t>(3);
 
   comp1->setExternalConnectionNodes(0, 0);
   comp1->setExternalConnectionNodes(1, 1);
@@ -39,15 +39,15 @@ int main(int /* argc */, char const** /* argv */)
   bus1->setExternalConnectionNodes(0, 3);
   bus1->setExternalConnectionNodes(1, 4);
 
-  comp2->setExternalConnectionNodes(0, 5);
-  comp2->setExternalConnectionNodes(1, 6);
-  comp2->setExternalConnectionNodes(2, 7);
-  comp2->setExternalConnectionNodes(3, 3);
-  comp2->setExternalConnectionNodes(4, 4);
+  comp3->setExternalConnectionNodes(0, 5);
+  comp3->setExternalConnectionNodes(1, 6);
+  comp3->setExternalConnectionNodes(2, 7);
+  comp3->setExternalConnectionNodes(3, 3);
+  comp3->setExternalConnectionNodes(4, 4);
 
-  GridKit::HiresComponent2<double, size_t>              comp2copy(*comp2);
+  GridKit::HiresComponent3<double, size_t>              comp2copy(*comp3);
   GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp2copy, 3, 4, 4);
-  GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp2, 3, 4, 5);
+  GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp3, 3, 4, 5);
 
   partition1->addComponent(comp1);
   partition1->addComponent(bus1);

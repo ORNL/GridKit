@@ -5,7 +5,7 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a MicrogridLine class.
+   * @brief Declaration of a Hires Bus Component.
    *
    */
   template <class ScalarT, typename IdxT>

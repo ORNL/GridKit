@@ -7,11 +7,11 @@
 namespace GridKit
 {
   /*!
-   * @brief Declaration of a HiresComponent1 class.
+   * @brief Declaration of a Hires Component 3 class.
    *
    */
   template <class ScalarT, typename IdxT>
-  class HiresComponent2 : public CircuitComponent<ScalarT, IdxT>
+  class HiresComponent3 : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
@@ -38,7 +38,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    HiresComponent2(IdxT id)
+    HiresComponent3(IdxT id)
     {
       size_           = 5;
       n_intern_       = 3;
@@ -47,7 +47,7 @@ namespace GridKit
       idc_            = id;
     }
 
-    ~HiresComponent2()
+    ~HiresComponent3()
     {
     }
 
