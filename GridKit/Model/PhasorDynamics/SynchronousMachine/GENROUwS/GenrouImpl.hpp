@@ -260,9 +260,9 @@ namespace GridKit
         S12_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::S12));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::mva_base))
+      if (data.parameters.contains(model_data_type::Parameters::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::mva_base));
+        mva_base_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::mva));
       }
 
       if (data.ports.contains(model_data_type::Ports::bus))

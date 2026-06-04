@@ -189,8 +189,8 @@ namespace GridKit
         using Parameter = typename GensalDataT::Parameters;
         using Variable  = typename GensalDataT::MonitorableVariables;
 
-        auto data                            = makeGensalData();
-        data.parameters[Parameter::mva_base] = RealT{50.0};
+        auto data                       = makeGensalData();
+        data.parameters[Parameter::mva] = RealT{50.0};
         data.monitored_variables.insert(Variable::ir);
         data.monitored_variables.insert(Variable::p);
 
