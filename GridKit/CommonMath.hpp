@@ -10,12 +10,15 @@ namespace GridKit
 {
   namespace Math
   {
+    template <typename RealT>
+    inline constexpr RealT MU = 240.0;
+
     /**
      * @brief Scaled sigmoid activation function
      *
      * @note The sigmoid constant (mu) value is chosen to balance accuracy
      * and finite derivatives. Large values more closely approximate a step
-     * function, but lead to inf or NaN derivatives.
+     * function, but can make the transition numerically stiff.
      *
      * @tparam ScalarT - scalar data type
      *
@@ -25,9 +28,8 @@ namespace GridKit
     template <class ScalarT>
     __attribute__((always_inline)) inline ScalarT sigmoid(const ScalarT x)
     {
-      using RealT               = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      static constexpr RealT MU = 240.0;
-      return ONE<RealT> / (ONE<RealT> + std::exp(-MU * x));
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      return HALF<RealT> * (ONE<RealT> + std::tanh(HALF<RealT> * MU<RealT> * x));
     }
 
     /**
@@ -44,12 +46,11 @@ namespace GridKit
     template <class ScalarT>
     __attribute__((always_inline)) inline ScalarT ramp(const ScalarT x)
     {
-      using RealT               = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      static constexpr RealT MU = 240.0;
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
-      ScalarT z = MU * x;
-      ScalarT a = std::abs(z);
-      return (HALF<RealT> * (z + a) + std::log1p(std::exp(-a))) / MU;
+      RealT   mu = MU<RealT>;
+      ScalarT a  = std::abs(mu * x);
+      return HALF<RealT> * (x + a / mu) + std::log1p(std::exp(-a)) / mu;
     }
 
     /**
@@ -237,7 +238,7 @@ namespace GridKit
     __attribute__((always_inline)) inline ScalarT dsigmoid(const ScalarT x)
     {
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      return FOUR<RealT> * sigmoid(x) * (ONE<RealT> - sigmoid(x));
+      return MU<RealT> * sigmoid(x) * (ONE<RealT> - sigmoid(x));
     }
 
     /**

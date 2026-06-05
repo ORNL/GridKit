@@ -32,8 +32,8 @@ q(x) &= x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\sigma(x) &= \dfrac{1}{1+e^{-\mu x}} \\
-\rho(x) &= \dfrac{(\mu x+\lvert\mu x\rvert)/2+\log(1+e^{-\lvert\mu x\rvert})}{\mu} \\
+\sigma(x) &= \dfrac{1}{2}\left(1+\tanh\left(\dfrac{\mu x}{2}\right)\right) \\
+\rho(x) &= \dfrac{x+\lvert x\rvert}{2}+\dfrac{\ln(1+e^{-\mu\lvert x\rvert})}{\mu} \\
 q(x) &= x^2\,\sigma(x)
 \end{aligned}
 ```
