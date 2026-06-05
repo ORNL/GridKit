@@ -262,15 +262,15 @@ namespace GridKit
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
 
-        tag_[0] = true;  // y0 - vts  - Sensed term volt
-        tag_[1] = true;  // y1 - vr   - Voltage reg
-        tag_[2] = true;  // y2 - efdp - Efd pre mult
-        tag_[3] = true;  // y3 - vfx  - Exciter feedback
-        tag_[4] = false; // y4 - vtr  - Term Volt Err
-        tag_[5] = false; // y5 - vf   - Feedback volt
-        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false; // y7 - efd  - Efd
-        tag_[8] = false; // y8 - ksat - Saturation
+        tag_[0] = (Tr_ != 0.0); // y0 - vts  - Sensed term volt
+        tag_[1] = true;         // y1 - vr   - Voltage reg
+        tag_[2] = true;         // y2 - efdp - Efd pre mult
+        tag_[3] = true;         // y3 - vfx  - Exciter feedback
+        tag_[4] = false;        // y4 - vtr  - Term Volt Err
+        tag_[5] = false;        // y5 - vf   - Feedback volt
+        tag_[6] = false;        // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false;        // y7 - efd  - Efd
+        tag_[8] = false;        // y8 - ksat - Saturation
 
         return 0;
       }
@@ -332,20 +332,20 @@ namespace GridKit
         ScalarT omega     = ws[0];
         ScalarT vs_signal = ws[1];
 
-        // The 'pre-limit' derivative of Vr.
-        ScalarT func            = (-vr + Ka_ * vtr) / Ta_;
-        ScalarT func_normalized = func / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
+        // The 'pre-limit' target of Vr.
+        ScalarT func            = -vr + Ka_ * vtr;
+        ScalarT func_normalized = (func / Ta_) / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
         ScalarT vr_ind          = Math::indicator(vr, func_normalized, Vrmin_, Vrmax_);
 
         // Internal Differential Equations
-        f[0] = -vts_dot + (Ec - vts) / Tr_;
-        f[1] = -vr_dot + vr_ind * func;
-        f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
-        f[3] = -vfx_dot + vf / Tf_;
+        f[0] = -Tr_ * vts_dot + Ec - vts;
+        f[1] = -Ta_ * vr_dot + vr_ind * func;
+        f[2] = -Te_ * efdp_dot + vr - ve - Ke_ * efdp;
+        f[3] = -Tf_ * vfx_dot + vf;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
-        f[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
+        f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
         f[6] = -ve + ksat * efdp;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
 

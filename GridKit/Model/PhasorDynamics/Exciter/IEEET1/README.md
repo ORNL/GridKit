@@ -73,7 +73,7 @@ Generally, this system has two solutions. The non-extraneous solution is as foll
 
 Symbol    | Units  | Description                       | Note
 ----------|--------|-----------------------------------|-------
-$V_{ts}$  | [p.u.] | Sensed terminal voltage           |
+$V_{ts}$  | [p.u.] | Sensed terminal voltage           | Algebraic when $T_R=0$
 $V_R$     | [p.u.] | Voltage regulator                 |
 $E_{fd}'$ | [p.u.] | Field-current pre-speed multiplier|
 $V_{fx}$  | [p.u.] | Exciter feedback internal state   |
@@ -113,55 +113,41 @@ $V_S$           | [p.u.] | Input from stabilizer controller               |
 
 ### Differential Equations
 
-The IEEET1 differential equations, as derived from the model diagram. Define the pre-limit derivative of $V_R$
+The IEEET1 differential equations, as derived from the model diagram.
 
-```math
-f = \dfrac{1}{T_A}\left[-V_R + K_A V_{tr}\right]
-```
-
-so that $\dot V_R$ is the anti-windup limited derivative.
 ```math
 \begin{aligned}
-   \dot V_{ts}   &= \dfrac{1}{T_R}(E_C-V_{ts}) \\
-   \dot V_R      &= \text{antiwindup}
-      \left(V_R, f;\ V_R^{\min}, V_R^{\max}\right) \\
-   \dot E_{fd}'  &= \dfrac{1}{T_E}(V_R-V_E-K_E E_{fd}') \\
-   \dot V_{fx}   &= \dfrac{1}{T_F}V_f \\
+   0 &= -T_R \dot V_{ts} + E_C - V_{ts} \\
+   0 &= -T_A \dot V_R
+      + \text{indicator}
+        \left(
+          V_R,
+          \dfrac{-V_R + K_A V_{tr}}{500T_A};
+          V_R^{\min},
+          V_R^{\max}
+        \right)
+        \left(-V_R + K_A V_{tr}\right) \\
+   0 &= -T_E \dot E_{fd}' + V_R - V_E - K_E E_{fd}' \\
+   0 &= -T_F \dot V_{fx} + V_f
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
+CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) indicator.
 
 ### Algebraic Equations
 
 The algebraic equations of the exciter.
 ```math
 \begin{aligned}
-   V_{tr} &= V_\text{ref} +V_{UEL} + V_{OEL} + V_S - V_f- V_{ts}\\
-    V_f &= \dfrac{E_{fd}' K_F}{T_F} - V_{fx}\\
-    V_E &= k_\text{sat}\cdot E_{fd}' \\
-    E_{fd}&= \begin{cases}
-        (1+\omega)E_{fd}'           &  \text{if } I_\text{spdlm}=1\\
-         E_{fd}' &  \text{else} \\
-   \end{cases}\\
-    k_\text{sat}&= \begin{cases}
-        S_B(E_{fd}' -S_A)^2        &  \text{if } E_{fd}' >S_A\\
-        0  &  \text{else } \\
-   \end{cases} \\
+   0 &= -V_{ts} + V_\text{ref} + V_{UEL} + V_{OEL} + V_S - V_{tr} - V_f \\
+   0 &= -T_F(V_f + V_{fx}) + K_F E_{fd}' \\
+   0 &= -V_E + k_\text{sat} E_{fd}' \\
+   0 &= -E_{fd} + (1 + \omega I_\text{spdlm})E_{fd}' \\
+   0 &= -k_\text{sat} + S_B\, q(E_{fd}' - S_A)
 \end{aligned}
 ```
-#### Smooth Piecewise Approximation (Algebraic)
 
-For the algebraic piecewise functions (non-flags), this implementation is straightforward when the approximation above is used.
 Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
-```math
-\begin{aligned}
-    E_{fd}
-    &=(1 + \omega I_\text{spdlm})E_{fd}' \\
-    k_\text{sat}
-    &=S_B\, q(E_{fd}' -S_A)
-\end{aligned}
-```
 
 
 ## Initialization
@@ -184,8 +170,10 @@ The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, a
 ```
 
 All internal derivatives initialize to zero.
+
 ## Model Outputs
 
-The field voltage, $E_{fd}$, is an internal model variable.
-
-The magnetic saturation coefficient $k_\text{sat}$ is calculated from $E_{fd}$ using the smooth piecewise version above.
+Output  | Units  | Description                       | Note
+--------|--------|-----------------------------------|------
+`efd`   | [p.u.] | Field winding voltage             |
+`ksat`  | [p.u.] | Magnetic saturation coefficient   | $S_B\,q(E_{fd}'-S_A)$

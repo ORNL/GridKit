@@ -74,6 +74,36 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome zeroTrIsAlgebraic()
+      {
+        TestStatus success = true;
+
+        auto data                                                      = makeTestData();
+        data.parameters[PhasorDynamics::Exciter::Ieeet1Parameters::Tr] = 0.0;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+
+        bus.allocate();
+        exciter.allocate();
+
+        bus.initialize();
+        exciter.initialize();
+        exciter.tagDifferentiable();
+
+        success *= (!exciter.tag()[0]);
+
+        exciter.yp()[0] = 123.0;
+        exciter.evaluateResidual();
+        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(0.0));
+
+        exciter.y()[0] = 4.0;
+        exciter.evaluateResidual();
+        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(1.0));
+
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       /**
        * @brief Checks Jacobian evaluation.
@@ -239,7 +269,7 @@ namespace GridKit
         data.disambiguation_string = "ieeet1_test";
         data.monitored_variables.insert(PhasorDynamics::Exciter::Ieeet1MonitorableVariables::efd);
 
-        data.parameters[Params::Tr]      = 0.001;
+        data.parameters[Params::Tr]      = 0.0;
         data.parameters[Params::Ka]      = 50.0;
         data.parameters[Params::Ta]      = 0.04;
         data.parameters[Params::Ke]      = -0.06;
