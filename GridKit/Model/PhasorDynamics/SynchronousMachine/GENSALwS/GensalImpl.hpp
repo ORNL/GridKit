@@ -314,10 +314,10 @@ namespace GridKit
       y_[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
                + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      pmech_set_ = Te;
+      pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GensalExternalVariables::PM>())
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::PM>(Te);
+        signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat;
@@ -408,7 +408,7 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = ws[0];
+      ScalarT pmech = toMachineBase(ws[0]);
       ScalarT efd   = ws[1];
 
       /* 5 Gensal differential equations */
