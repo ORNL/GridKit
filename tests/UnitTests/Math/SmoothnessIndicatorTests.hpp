@@ -183,7 +183,7 @@ namespace GridKit
 
         const ScalarT tol         = scalar(kSmoothTolerance);
         const ScalarT roundoff    = scalar(kRoundoffTolerance);
-        const ScalarT tau         = scalar(1.0 / 240.0);
+        const ScalarT tau         = scalar(1.0 / Math::MU<RealT>);
         const ScalarT at_zero     = tau * std::log(scalar(2.0));
         const ScalarT far_above   = scalar(4.0);
         const ScalarT far_below   = scalar(-4.0);
@@ -251,7 +251,7 @@ namespace GridKit
                     < scalar(kRoundoffTolerance));
 
         const ScalarT point = scalar(0.25);
-        const ScalarT bias  = std::log(scalar(2.0)) / scalar(240.0);
+        const ScalarT bias  = std::log(scalar(2.0)) / scalar(Math::MU<RealT>);
 
         success *= (std::abs(Math::max(point, point) - (point + bias))
                     < scalar(kRoundoffTolerance));
