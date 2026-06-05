@@ -122,8 +122,7 @@ namespace GridKit
       using namespace memory;
       if (d_data_ || h_data_)
       {
-        out::error() << "Trying to set vector data, but the data already exists!\n";
-        out::error() << "Ignoring setData function call ...\n";
+        out::error() << "Vector::setData - data already exists, ignoring call\n";
         return 1;
       }
 
@@ -246,16 +245,14 @@ namespace GridKit
       case memory::HOST:
         if (h_data_ == nullptr)
         {
-          out::error() << "Vector::copyFromExternal - destination memory space"
-                       << " on host not allocated\n";
+          out::error() << "Vector::copyFromExternal - host destination not allocated\n";
           return 1;
         }
         break;
       case memory::DEVICE:
         if (d_data_ == nullptr)
         {
-          out::error() << "Vector::copyFromExternal - destination memory space"
-                       << " on device not allocated\n";
+          out::error() << "Vector::copyFromExternal - device destination not allocated\n";
           return 1;
         }
         break;
@@ -327,16 +324,14 @@ namespace GridKit
       case HOST:
         if (cpu_updated_[0] == false)
         {
-          out::error() << "Vector::getData - requesting data from host"
-                       << " but host data is stale. Returning nullptr ...\n";
+          out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return h_data_;
       case DEVICE:
         if (gpu_updated_[0] == false)
         {
-          out::error() << "Vector::getData - requesting data from device"
-                       << " but device data is stale. Returning nullptr ...\n";
+          out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return d_data_;
@@ -364,16 +359,14 @@ namespace GridKit
       case HOST:
         if (cpu_updated_[0] == false)
         {
-          out::error() << "Trying to get data on the host, but host data is out of date!\n"
-                       << "Use syncData function to sync host data with the device data!\n";
+          out::error() << "Vector::getData - host data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return h_data_;
       case DEVICE:
         if (gpu_updated_[0] == false)
         {
-          out::error() << "Trying to get data on the device, but device data is out of date!\n"
-                       << "Use syncData function to sync device data with the host data!\n";
+          out::error() << "Vector::getData - device data is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return d_data_;
@@ -405,8 +398,7 @@ namespace GridKit
 
       if (k_ <= j)
       {
-        out::error() << "Trying to get data for vector " << j << " in multivector"
-                     << " but there are only " << k_ << " vectors!\n";
+        out::error() << "Vector::getData - vector index " << j << " out of range, multivector has only " << k_ << " vectors\n";
         return nullptr;
       }
 
@@ -415,18 +407,14 @@ namespace GridKit
       case HOST:
         if (cpu_updated_[j] == false)
         {
-          out::error() << "Trying to get data for vector " << j << " on the host, "
-                       << "but host data is out of date!\n"
-                       << "Use syncData function to sync host data with the device data!\n";
+          out::error() << "Vector::getData - host data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &h_data_[j * n_size_];
       case DEVICE:
         if (gpu_updated_[j] == false)
         {
-          out::error() << "Trying to get data for vector " << j << " on the device, "
-                       << "but device data is out of date!\n"
-                       << "Use syncData function to sync device data with the host data!\n";
+          out::error() << "Vector::getData - device data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &d_data_[j * n_size_];
@@ -455,8 +443,7 @@ namespace GridKit
 
       if (k_ <= j)
       {
-        out::error() << "Trying to get data for vector " << j << " in multivector"
-                     << " but there are only " << k_ << " vectors!\n";
+        out::error() << "Vector::getData - vector index " << j << " out of range, multivector has only " << k_ << " vectors\n";
         return nullptr;
       }
 
@@ -465,18 +452,14 @@ namespace GridKit
       case HOST:
         if (cpu_updated_[j] == false)
         {
-          out::error() << "Trying to get data for vector " << j << " on the host, "
-                       << "but host data is out of date!\n"
-                       << "Use syncData function to sync host data with the device data!\n";
+          out::error() << "Vector::getData - host data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &h_data_[j * n_size_];
       case DEVICE:
         if (gpu_updated_[j] == false)
         {
-          out::error() << "Trying to get data for vector " << j << " on the device, "
-                       << "but device data is out of date!\n"
-                       << "Use syncData function to sync device data with the host data!\n";
+          out::error() << "Vector::getData - device data for vector " << j << " is stale. Perhaps you need to call syncData?\n";
           return nullptr;
         }
         return &d_data_[j * n_size_];
@@ -513,16 +496,14 @@ namespace GridKit
       {
         if (gpu_updated_[i] != all_gpu_updated)
         {
-          out::error() << "Trying to sync all multivector data on the device,"
-                       << " but individual vectors were updated differently.\n"
-                       << "Use syncData function for individual vectors instead!\n";
+          out::error() << "Vector::syncData - inconsistent update state across device columns.\n"
+                       << "Use syncData(j, memspace) for individual vectors\n";
           return 1;
         }
         if (cpu_updated_[i] != all_cpu_updated)
         {
-          out::error() << "Trying to sync all multivector data on the host,"
-                       << " but individual vectors were updated differently.\n"
-                       << "Use syncData function for individual vectors instead!\n";
+          out::error() << "Vector::syncData - inconsistent update state across host columns.\n"
+                       << "Use syncData(j, memspace) for individual vectors\n";
           return 1;
         }
       }
@@ -532,12 +513,12 @@ namespace GridKit
       case DEVICE: // cpu -> gpu
         if (gpu_updated_[0])
         {
-          out::error() << "Trying to sync device, but device already up to date!\n";
+          out::error() << "Vector::syncData - device already up to date\n";
           return 1;
         }
         if (!cpu_updated_[0])
         {
-          out::error() << "Trying to sync device with host, but host is out of date!\n";
+          out::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
           return 1;
         }
         if (d_data_ == nullptr)
@@ -551,12 +532,12 @@ namespace GridKit
       case HOST: // gpu -> cpu
         if (cpu_updated_[0])
         {
-          out::error() << "Trying to sync host, but host already up to date!\n";
+          out::error() << "Vector::syncData - host already up to date\n";
           return 1;
         }
         if (!gpu_updated_[0])
         {
-          out::error() << "Trying to sync host with device, but device is out of date!\n";
+          out::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
           return 1;
         }
         if (h_data_ == nullptr)
@@ -598,12 +579,12 @@ namespace GridKit
       case DEVICE: // cpu->gpu
         if (gpu_updated_[j])
         {
-          out::error() << "Trying to sync device, but device already up to date!\n";
+          out::error() << "Vector::syncData - device already up to date\n";
           return 1;
         }
         if (!cpu_updated_[j])
         {
-          out::error() << "Trying to sync device with host, but host is out of date!\n";
+          out::error() << "Vector::syncData - host data is stale, cannot sync to device\n";
           return 1;
         }
         if (d_data_ == nullptr)
@@ -617,12 +598,12 @@ namespace GridKit
       case HOST: // cuda->cpu
         if (cpu_updated_[j])
         {
-          out::error() << "Trying to sync host, but host already up to date!\n";
+          out::error() << "Vector::syncData - host already up to date\n";
           return 1;
         }
         if (!gpu_updated_[j])
         {
-          out::error() << "Trying to sync host with device, but device is out of date!\n";
+          out::error() << "Vector::syncData - device data is stale, cannot sync to host\n";
           return 1;
         }
         if (h_data_ == nullptr)
@@ -853,9 +834,8 @@ namespace GridKit
 
       if (new_n_size > n_capacity_)
       {
-        out::error() << "Trying to resize vector to " << new_n_size
-                     << " elements but memory allocated only for " << n_capacity_
-                     << " elements.\n";
+        out::error() << "Vector::resize - requested size " << new_n_size
+                     << " exceeds capacity " << n_capacity_ << "\n";
         return 1;
       }
       else
@@ -889,18 +869,19 @@ namespace GridKit
       using namespace memory;
       if (i >= k_)
       {
-        out::error() << "Trying to copy data for vector " << i << " in multivector but there are only " << k_ << " vectors!\n";
+        out::error() << "Vector::copyToExternal - vector index " << i
+                     << " out of range, multivector has only " << k_ << " vectors\n";
         return 1;
       }
       if (dest == nullptr)
       {
-        out::error() << "Trying to copy data for vector " << i << " in multivector but the destination pointer is not allocated!\n";
+        out::error() << "Vector::copyToExternal - destination pointer for vector " << i << " is null\n";
         return 1;
       }
       ScalarT* data = getData(i, memspaceSrc);
       if (data == nullptr)
       {
-        out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not allocated in the source memory space!\n";
+        out::error() << "Vector::copyToExternal - source data for vector " << i << " is null or stale\n";
         return 1;
       }
       switch (memspaceSrc)
@@ -955,13 +936,13 @@ namespace GridKit
       // Check that the source data is not null and up to date
       if (data == nullptr)
       {
-        out::error() << "Trying to copy data for multivector but the data is not allocated in the source memory space!\n";
+        out::error() << "Vector::copyToExternal - source data is null or stale\n";
         return 1;
       }
       // Check that the destination memory space is allocated
       if (dest == nullptr)
       {
-        out::error() << "Trying to copy data for multivector but the destination pointer is not allocated!\n";
+        out::error() << "Vector::copyToExternal - destination pointer is null\n";
         return 1;
       }
       switch (memspaceSrc)
@@ -969,7 +950,7 @@ namespace GridKit
       case HOST:
         if (!cpu_updated_[0])
         {
-          out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
+          out::error() << "Vector::copyToExternal - source data is stale\n";
           return 1;
         }
         switch (memspaceDst)
@@ -985,7 +966,7 @@ namespace GridKit
       case DEVICE:
         if (!gpu_updated_[0])
         {
-          out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
+          out::error() << "Vector::copyToExternal - source data is stale\n";
           return 1;
         }
         switch (memspaceDst)
