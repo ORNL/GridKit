@@ -187,12 +187,12 @@ namespace GridKit
         // memspace -> memspace
         Vector<ScalarT, IdxT> y(N);
         y.allocate(memspace_);
-        y.copyFromExternal(&x, memspace_, memspace_);
+        y.copyFromExternal(x, memspace_, memspace_);
 
         // memspace -> host
         Vector<ScalarT, IdxT> z(N);
         z.allocate(memory::HOST);
-        z.copyFromExternal(&y, memspace_, memory::HOST);
+        z.copyFromExternal(y, memspace_, memory::HOST);
 
         const ScalarT* z_data = z.getData(memory::HOST);
 

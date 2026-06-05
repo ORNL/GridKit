@@ -219,9 +219,9 @@ namespace GridKit
      * @pre   size of _v_ is equal or larger than the current vector size.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(Vector* source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    int Vector<ScalarT, IdxT>::copyFromExternal(const Vector& source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
-      ScalarT* source_data = source->getData(memspaceSrc);
+      const ScalarT* source_data = source.getData(memspaceSrc);
       return copyFromExternal(source_data, memspaceSrc, memspaceDst);
     }
 
@@ -234,7 +234,7 @@ namespace GridKit
      * @param[in] memspaceSrc - Memory space of the data source (HOST or DEVICE)
      * @param[in] memspaceDst - Memory space the data will be copied to (HOST or DEVICE)
      *
-     * @return 0 if successful, -1 otherwise.
+     * @return 0 if successful, 1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT*      source,
@@ -277,7 +277,7 @@ namespace GridKit
           setDeviceUpdated(true);
           break;
         default:
-          return -1;
+          return 1;
         }
         break;
       case memory::DEVICE:
@@ -538,6 +538,7 @@ namespace GridKit
         if (!cpu_updated_[0])
         {
           out::error() << "Trying to sync device with host, but host is out of date!\n";
+          return 1;
         }
         if (d_data_ == nullptr)
         {
@@ -557,6 +558,7 @@ namespace GridKit
         if (!gpu_updated_[0])
         {
           out::error() << "Trying to sync host with device, but device is out of date!\n";
+          return 1;
         }
         if (h_data_ == nullptr)
         {
@@ -662,14 +664,7 @@ namespace GridKit
         mem_.deleteOnHost(h_data_);
         mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
         owns_cpu_data_ = true;
-        if (gpu_updated_[0])
-        {
-          cpu_updated_[0] = false;
-        }
-        else
-        {
-          cpu_updated_[0] = true;
-        }
+        setHostUpdated(false);
         break;
       case DEVICE:
         if (!owns_gpu_data_)
@@ -680,14 +675,7 @@ namespace GridKit
         mem_.deleteOnDevice(d_data_);
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
-        if (cpu_updated_[0])
-        {
-          gpu_updated_[0] = false;
-        }
-        else
-        {
-          gpu_updated_[0] = true;
-        }
+        setDeviceUpdated(false);
         break;
       }
       return 0;
@@ -857,7 +845,7 @@ namespace GridKit
      *
      * @param[in] new_n_size - New vector length
      *
-     * @return 0 if successful, -1 otherwise.
+     * @return 0 if successful, 1 otherwise.
      *
      * @pre `new_n_size` <= `n_capacity_`
      */
@@ -892,7 +880,7 @@ namespace GridKit
      * @param[in] memspaceInSrc   - Memory space (HOST or DEVICE) of the data to be copied
      * @param[in] memspaceOutDst  - Memory space (HOST or DEVICE) to which data is copied
      *
-     * @return 0 if successful, -1 otherwise.
+     * @return 0 if successful, 1 otherwise.
      *
      * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
      * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (length of a single vector in the multivector).
@@ -903,60 +891,56 @@ namespace GridKit
     int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
       using namespace memory;
-      ScalarT* data = getData(i, memspaceSrc);
-      // Check that the source data is not null and up to date
-      if (data == nullptr)
+      if (i >= k_)
       {
-        out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not allocated in the source memory space!\n";
-        return -1;
+        out::error() << "Trying to copy data for vector " << i << " in multivector but there are only " << k_ << " vectors!\n";
+        return 1;
       }
-      // Check that the destination memory space is allocated
       if (dest == nullptr)
       {
         out::error() << "Trying to copy data for vector " << i << " in multivector but the destination pointer is not allocated!\n";
-        return -1;
+        return 1;
       }
-      if (i > this->k_)
+      ScalarT* data = getData(i, memspaceSrc);
+      if (data == nullptr)
       {
-        return -1;
+        out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not allocated in the source memory space!\n";
+        return 1;
       }
-      else
+      switch (memspaceSrc)
       {
-        switch (memspaceSrc)
+      case HOST:
+        if (!cpu_updated_[i])
+        {
+          out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
+          return 1;
+        }
+        switch (memspaceDst)
         {
         case HOST:
-          if (!cpu_updated_[i])
-          {
-            out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
-            return -1;
-          }
-          switch (memspaceDst)
-          {
-          case HOST:
-            mem_.copyArrayHostToHost(dest, data, n_size_);
-            break;
-          case DEVICE:
-            mem_.copyArrayHostToDevice(dest, data, n_size_);
-            break;
-          }
+          mem_.copyArrayHostToHost(dest, data, n_size_);
           break;
         case DEVICE:
-          if (!gpu_updated_[i])
-          {
-            out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
-            return -1;
-          }
-          switch (memspaceDst)
-          {
-          case HOST:
-            mem_.copyArrayDeviceToHost(dest, data, n_size_);
-            break;
-          case DEVICE:
-            mem_.copyArrayDeviceToDevice(dest, data, n_size_);
-            break;
-          }
+          mem_.copyArrayHostToDevice(dest, data, n_size_);
           break;
         }
+        break;
+      case DEVICE:
+        if (!gpu_updated_[i])
+        {
+          out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
+          return 1;
+        }
+        switch (memspaceDst)
+        {
+        case HOST:
+          mem_.copyArrayDeviceToHost(dest, data, n_size_);
+          break;
+        case DEVICE:
+          mem_.copyArrayDeviceToDevice(dest, data, n_size_);
+          break;
+        }
+        break;
       }
       return 0;
     }
@@ -971,7 +955,7 @@ namespace GridKit
      * @param[in] memspaceSrc   - Memory space (HOST or DEVICE) of the data to be copied
      * @param[in] memspaceDst  - Memory space (HOST or DEVICE) to which data is copied
      *
-     * @return 0 if successful, -1 otherwise.
+     * @return 0 if successful, 1 otherwise.
      *
      * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ * _k_ (total length of all vectors in the multivector).
      * @pre _dest_ is allocated in memspaceOutDst memory space.
@@ -986,13 +970,13 @@ namespace GridKit
       if (data == nullptr)
       {
         out::error() << "Trying to copy data for multivector but the data is not allocated in the source memory space!\n";
-        return -1;
+        return 1;
       }
       // Check that the destination memory space is allocated
       if (dest == nullptr)
       {
         out::error() << "Trying to copy data for multivector but the destination pointer is not allocated!\n";
-        return -1;
+        return 1;
       }
       switch (memspaceSrc)
       {
@@ -1000,7 +984,7 @@ namespace GridKit
         if (!cpu_updated_[0])
         {
           out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
-          return -1;
+          return 1;
         }
         switch (memspaceDst)
         {
@@ -1016,7 +1000,7 @@ namespace GridKit
         if (!gpu_updated_[0])
         {
           out::error() << "Trying to copy data for multivector but the data is not up to date in the source memory space!\n";
-          return -1;
+          return 1;
         }
         switch (memspaceDst)
         {

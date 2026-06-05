@@ -44,7 +44,7 @@ namespace GridKit
       int copyFromExternal(const ScalarT*      source,
                            memory::MemorySpace memspaceIn,
                            memory::MemorySpace memspaceOut);
-      int copyFromExternal(Vector*             source,
+      int copyFromExternal(const Vector&       source,
                            memory::MemorySpace memspaceIn,
                            memory::MemorySpace memspaceOut);
 
