@@ -496,6 +496,38 @@ namespace GridKit
           addComponent(gov);
         }
 
+        // Add HYGOV governors
+        for (const auto& govdata : data.hygov)
+        {
+          auto* gov = new Hygov<ScalarT, IdxT>(govdata);
+
+          if (govdata.ports.contains(HygovData<ScalarT, IdxT>::Ports::speed))
+          {
+            IdxT speed = govdata.ports.at(HygovData<ScalarT, IdxT>::Ports::speed);
+            gov->getSignals().template attachSignalNode<HygovExternalVariables::OMEGA>(getSignal(speed));
+          }
+
+          if (govdata.ports.contains(HygovData<ScalarT, IdxT>::Ports::pmech))
+          {
+            IdxT pmech = govdata.ports.at(HygovData<ScalarT, IdxT>::Ports::pmech);
+            gov->getSignals().template assignSignalNode<HygovInternalVariables::PMECH>(getSignal(pmech));
+          }
+
+          if (govdata.ports.contains(HygovData<ScalarT, IdxT>::Ports::pref))
+          {
+            IdxT pref = govdata.ports.at(HygovData<ScalarT, IdxT>::Ports::pref);
+            gov->getSignals().template attachSignalNode<HygovExternalVariables::PREF>(getSignal(pref));
+          }
+
+          if (govdata.ports.contains(HygovData<ScalarT, IdxT>::Ports::paux))
+          {
+            IdxT paux = govdata.ports.at(HygovData<ScalarT, IdxT>::Ports::paux);
+            gov->getSignals().template attachSignalNode<HygovExternalVariables::PAUX>(getSignal(paux));
+          }
+
+          addComponent(gov);
+        }
+
         // Add GASTPTI governors
         for (const auto& govdata : data.gastpti)
         {
