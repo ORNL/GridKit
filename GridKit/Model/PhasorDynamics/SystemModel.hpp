@@ -354,6 +354,33 @@ namespace GridKit
           addComponent(gov);
         }
 
+        // Add GASTPTI governors
+        for (const auto& govdata : data.gastpti)
+        {
+          auto* gov = new GastPti<ScalarT, IdxT>(govdata);
+
+          if (govdata.ports.contains(GastPtiData<ScalarT, IdxT>::Ports::speed))
+          {
+            IdxT speed = govdata.ports.at(GastPtiData<ScalarT, IdxT>::Ports::speed);
+            gov->getSignals().template attachSignalNode<GastPtiExternalVariables::OMEGA>(getSignal(speed));
+          }
+
+          if (govdata.ports.contains(GastPtiData<ScalarT, IdxT>::Ports::pmech))
+          {
+            IdxT pmech = govdata.ports.at(GastPtiData<ScalarT, IdxT>::Ports::pmech);
+            gov->getSignals().template assignSignalNode<GastPtiInternalVariables::PMECH>(getSignal(pmech));
+          }
+
+          if (govdata.ports.contains(GastPtiData<ScalarT, IdxT>::Ports::pref))
+          {
+            IdxT pref = govdata.ports.at(GastPtiData<ScalarT, IdxT>::Ports::pref);
+            gov->getSignals().template attachSignalNode<GastPtiExternalVariables::PREF>(
+                getSignal(pref));
+          }
+
+          addComponent(gov);
+        }
+
         for (const auto& excitedata : data.exciter)
         {
           IdxT bus_index = 0;
