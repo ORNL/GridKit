@@ -76,7 +76,7 @@ namespace GridKit
     }
 
     /**
-     * @brief get the number of elements in a single vector.
+     * @brief Get the number of elements in a single vector.
      *
      * For vectors with changing sizes, set the vector capacity to
      * the maximum expected size.
@@ -211,11 +211,11 @@ namespace GridKit
     /**
      * @brief Copy data from another vector.
      *
-     * @param[in] v           - Vector, which data will be copied
-     * @param[in] memspaceSrc  - Memory space of the data source (HOST or DEVICE)
-     * @param[in] memspaceDst - Memory space the data will be copied to (HOST or DEVICE)
+     * @param[in] source      - Vector whose data will be copied
+     * @param[in] memspaceSrc - Memory space of the data source (HOST or DEVICE)
+     * @param[in] memspaceDst - Memory space to copy data to (HOST or DEVICE)
      *
-     * @pre   size of _v_ is equal or larger than the current vector size.
+     * @pre Size of _source_ is greater than or equal to the current vector size.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::copyFromExternal(const Vector& source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
@@ -225,13 +225,14 @@ namespace GridKit
     }
 
     /**
-     * @brief Copy vector data from input array.
+     * @brief Copy vector data from an input array.
      *
-     * This function allocates (if necessary) and copies the data.
+     * Destination memory must be pre-allocated via allocate() before calling
+     * this function.
      *
-     * @param[in] data        - Data that is to be copied
-     * @param[in] memspaceSrc - Memory space of the data source (HOST or DEVICE)
-     * @param[in] memspaceDst - Memory space the data will be copied to (HOST or DEVICE)
+     * @param[in] source      - Array to copy from
+     * @param[in] memspaceSrc - Memory space of the source array (HOST or DEVICE)
+     * @param[in] memspaceDst - Memory space to copy data to (HOST or DEVICE)
      *
      * @return 0 if successful, 1 otherwise.
      */
@@ -376,19 +377,18 @@ namespace GridKit
     }
 
     /**
-     * @brief get a pointer to HOST or DEVICE data of a particular vector in a multivector.
+     * @brief Get a pointer to HOST or DEVICE data of a vector in a multivector.
      *
      * @param[in] j         - Index of a vector in multivector
      * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
      *
-     * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
+     * @return Pointer to the _j_th vector data (HOST or DEVICE).
      *
-     * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
+     * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      *
      * @note This function gives you access to the pointer, not to a copy.
      * If you change the values using the pointer, the vector values will
-     * change too. Make sure to use setDataUpdated function to set the update
-     * flags correctly after changing the values.
+     * change too. Call setDataUpdated() to update the staleness flags.
      */
     template <typename ScalarT, typename IdxT>
     ScalarT* Vector<ScalarT, IdxT>::getData(IdxT j, memory::MemorySpace memspace)
@@ -424,16 +424,14 @@ namespace GridKit
     }
 
     /**
-     * @brief get a const pointer to HOST or DEVICE data of a particular
-     * vector in a multivector.
+     * @brief Get a const pointer to HOST or DEVICE data of a vector in a multivector.
      *
      * @param[in] j         - Index of a vector in multivector
      * @param[in] memspace  - Memory space of the pointer (HOST or DEVICE)
      *
-     * @return pointer to the _i_th vector data (HOST or DEVICE) within a multivector.
+     * @return Const pointer to the _j_th vector data (HOST or DEVICE).
      *
-     * @pre `j` < `k_` i.e, `j` is smaller than the total number of vectors in multivector.
-     *
+     * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
     template <typename ScalarT, typename IdxT>
     const ScalarT* Vector<ScalarT, IdxT>::getData(IdxT j, memory::MemorySpace memspace) const
@@ -595,7 +593,7 @@ namespace GridKit
         mem_.copyArrayHostToDevice(&d_data_[j * n_size_], &h_data_[j * n_size_], n_size_);
         gpu_updated_[j] = true;
         break;
-      case HOST: // cuda->cpu
+      case HOST: // gpu -> cpu
         if (cpu_updated_[j])
         {
           out::error() << "Vector::syncData - host already up to date\n";
@@ -635,7 +633,8 @@ namespace GridKit
       case HOST:
         if (!owns_cpu_data_)
         {
-          out::error() << "Vector::allocate - cannot allocate host data, vector does not own it\n";
+          out::error() << "Vector::allocate - cannot reallocate host data,"
+                       << " vector does not own it\n";
           return 1;
         }
         mem_.deleteOnHost(h_data_);
@@ -646,7 +645,8 @@ namespace GridKit
       case DEVICE:
         if (!owns_gpu_data_)
         {
-          out::error() << "Vector::allocate - cannot allocate device data, vector does not own it\n";
+          out::error() << "Vector::allocate - cannot reallocate device data,"
+                       << " vector does not own it\n";
           return 1;
         }
         mem_.deleteOnDevice(d_data_);
@@ -659,9 +659,11 @@ namespace GridKit
     }
 
     /**
-     * @brief set vector data to zero. In case of multivectors, entire multivector is set to zero.
+     * @brief Set vector data to zero.
      *
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * In case of multivectors, the entire multivector is set to zero.
+     *
+     * @param[in] memspace - Memory space of the data to be zeroed (HOST or DEVICE)
      *
      */
     template <typename ScalarT, typename IdxT>
@@ -697,10 +699,10 @@ namespace GridKit
     /**
      * @brief set the data of a single vector in a multivector to zero.
      *
-     * @param[in] i          - Index of a vector in a multivector
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * @param[in] j        - Index of a vector in the multivector
+     * @param[in] memspace - Memory space of the data to be zeroed (HOST or DEVICE)
      *
-     * @pre   _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
+     * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::setToZero(IdxT j, memory::MemorySpace memspace)
@@ -738,8 +740,8 @@ namespace GridKit
      *
      * In case of multivectors, entire multivector is set to the constant.
      *
-     * @param[in] C          - Constant (real number)
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * @param[in] C        - Constant value to set
+     * @param[in] memspace - Memory space of the data to be set (HOST or DEVICE)
      *
      */
     template <typename ScalarT, typename IdxT>
@@ -775,11 +777,11 @@ namespace GridKit
     /**
      * @brief set the data of a single vector in a multivector to a given constant.
      *
-     * @param[in] j          - Index of a vector in a multivector
-     * @param[in] C          - Constant (real number)
-     * @param[in] memspace   - Memory space of the data to be set to 0 (HOST or DEVICE)
+     * @param[in] j        - Index of a vector in the multivector
+     * @param[in] C        - Constant value to set
+     * @param[in] memspace - Memory space of the data to be set (HOST or DEVICE)
      *
-     * @pre   _j_ < _k_ i.e,, _j_ is smaller than the total number of vectors in multivector.
+     * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::setToConst(IdxT j, ScalarT C, memory::MemorySpace memspace)
@@ -846,22 +848,20 @@ namespace GridKit
     }
 
     /**
-     * @brief copy HOST or DEVICE data of a specified vector in a multivector to _dest_.
+     * @brief Copy HOST or DEVICE data of a single vector in a multivector to _dest_.
      *
-     * This function allows to copy data between different memory spaces in one call.
-     * For example, you can copy data of vector _i_ from HOST to DEVICE, or from DEVICE to HOST.
+     * Supports cross-space copies, e.g. vector _i_ from HOST to DEVICE.
      *
-     * @param[out] dest      - Pointer to the memory to which data is copied
-     * @param[in] i          - Index of a vector in a multivector
-     * @param[in] memspaceInSrc   - Memory space (HOST or DEVICE) of the data to be copied
-     * @param[in] memspaceOutDst  - Memory space (HOST or DEVICE) to which data is copied
+     * @param[out] dest        - Destination array
+     * @param[in]  i           - Index of a vector in the multivector
+     * @param[in]  memspaceSrc - Memory space of the source data (HOST or DEVICE)
+     * @param[in]  memspaceDst - Memory space of the destination (HOST or DEVICE)
      *
      * @return 0 if successful, 1 otherwise.
      *
-     * @pre _i_ < _k_ i.e,, _i_ is smaller than the total number of vectors in multivector.
-     * @pre _dest_ is allocated, and the size of _dest_ is at least _n_ (length of a single vector in the multivector).
-     * @pre _dest_ is allocated in memspaceOutDst memory space.
-     * @post All elements of the vector _i_ are copied to the array _dest_.
+     * @pre `i` < `k_`, i.e., `i` is smaller than the number of vectors.
+     * @pre _dest_ is allocated with at least _n_ elements in _memspaceDst_.
+     * @post All elements of vector _i_ are copied to _dest_.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
