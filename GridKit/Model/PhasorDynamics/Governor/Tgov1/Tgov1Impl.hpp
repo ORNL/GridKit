@@ -32,8 +32,10 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Tgov1<scalar_type, index_type>::Tgov1()
+        : Trate_(100.0)
       {
         size_ = 3;
+        setDerivedParams();
       }
 
       /**
@@ -44,7 +46,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Tgov1<scalar_type, index_type>::Tgov1(SignalT* pmech, SignalT* omega)
-        : R_(0.05),
+        : Trate_(100.0),
+          R_(0.05),
           Pvmin_(0),
           Pvmax_(1),
           T1_(HALF<RealT>),
@@ -57,6 +60,7 @@ namespace GridKit
 
         // 3 internal variables
         size_ = 3;
+        setDerivedParams();
       }
 
       /**
@@ -69,6 +73,7 @@ namespace GridKit
       {
         initializeParameters(data);
         size_ = 3;
+        setDerivedParams();
       }
 
       /**
@@ -82,6 +87,11 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
+        if (data.parameters.contains(ModelDataT::Parameters::Trate))
+        {
+          Trate_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Trate));
+        }
+
         if (data.parameters.contains(ModelDataT::Parameters::R))
         {
           R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
@@ -116,6 +126,24 @@ namespace GridKit
         {
           Dt_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Dt));
         }
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Tgov1<scalar_type, index_type>::setDerivedParams()
+      {
+        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
+      }
+
+      template <typename scalar_type, typename index_type>
+      scalar_type Tgov1<scalar_type, index_type>::toComponentBase(scalar_type value) const
+      {
+        return value * va_system_base_ / va_component_base_;
+      }
+
+      template <typename scalar_type, typename index_type>
+      scalar_type Tgov1<scalar_type, index_type>::toSystemBase(scalar_type value) const
+      {
+        return value / toComponentBase(static_cast<scalar_type>(ONE<RealT>));
       }
 
       /**
@@ -199,7 +227,7 @@ namespace GridKit
         // Initial mechanical = initial electric torque
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          p0 = y_[2]; ///<- generator needs to be initialized first
+          p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
@@ -208,7 +236,7 @@ namespace GridKit
         // Internal States
         y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
         y_[1] = p0;               // y1 - Pv  (Valve Position)
-        y_[2] = p0;               // y2 - Pm  (Mech Power)
+        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power)
 
         // D.V. Derivative
         yp_[0] = 0.0; // Ptx
@@ -256,15 +284,15 @@ namespace GridKit
         // Set signal variable aliases
         ScalarT omega = ws[0];
 
-        // The 'pre-limit' derivative of Pv
-        ScalarT func = (-pv + (pref_ - omega) / R_) / T1_;
+        // The 'pre-limit' target of Pv
+        ScalarT func = -pv + (pref_ - omega) / R_;
 
         // Internal Differential Equations
-        f[0] = -ptx_dot + pv - (ptx + T2_ * pv) / T3_;
-        f[1] = -pv_dot + Math::antiwindup(pv, func, Pvmin_, Pvmax_);
+        f[0] = -T3_ * ptx_dot - ptx + (T3_ - T2_) * pv;
+        f[1] = -T1_ * pv_dot + Math::antiwindup(pv, func, Pvmin_, Pvmax_);
 
         // Internal Algebraic Equations
-        f[2] = -pmech + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
+        f[2] = -toComponentBase(pmech) + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         return 0;
       }

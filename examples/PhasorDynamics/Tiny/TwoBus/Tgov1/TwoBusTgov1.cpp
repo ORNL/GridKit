@@ -101,12 +101,14 @@ int main()
   data.genrou[0].parameters[GenrouParameters::Xl]    = 0.15;
   data.genrou[0].parameters[GenrouParameters::S10]   = 0.;
   data.genrou[0].parameters[GenrouParameters::S12]   = 0.;
+  data.genrou[0].parameters[GenrouParameters::mva]   = 100.0;
 
   // Set governor data (Default PW values)
   data.gov.resize(1);
 
   data.gov[0].ports[Tgov1Ports::speed]           = 0;
   data.gov[0].ports[Tgov1Ports::pmech]           = 1;
+  data.gov[0].parameters[Tgov1Parameters::Trate] = 100.0;
   data.gov[0].parameters[Tgov1Parameters::R]     = 0.05;
   data.gov[0].parameters[Tgov1Parameters::Pvmin] = 0.0;
   data.gov[0].parameters[Tgov1Parameters::Pvmax] = 1.0;

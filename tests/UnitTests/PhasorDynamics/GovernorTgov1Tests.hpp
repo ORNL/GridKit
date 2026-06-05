@@ -103,7 +103,7 @@ namespace GridKit
 
         // Test answer keys
         const std::vector<ScalarT> res_answer = {0.0,
-                                                 -2.0,
+                                                 -1.0,
                                                  -0.2};
 
         bus.allocate();
@@ -283,9 +283,6 @@ namespace GridKit
         {
           success *= (GridKit::Testing::isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], tol));
         }
-
-        success.expectFailure(); // TODO: Resolve mismatch from sigmoid approximation
-
         return success.report(__func__);
       }
 

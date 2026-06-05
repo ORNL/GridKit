@@ -73,6 +73,7 @@ namespace GridKit
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
+        using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::residual_indices_;
 
@@ -113,6 +114,7 @@ namespace GridKit
 
       private:
         // Input parameters
+        RealT Trate_{0};
         RealT R_{0};
         RealT Pvmin_{0};
         RealT Pvmax_{0};
@@ -121,6 +123,9 @@ namespace GridKit
         RealT T3_{0};
         RealT Dt_{0};
 
+        // Derived parameters
+        RealT va_component_base_{0};
+
         // Input States (which can be parameters)
         ScalarT pref_{0};
 
@@ -128,7 +133,10 @@ namespace GridKit
         ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
 
         // Parameter initialization function
-        void initializeParameters(const ModelDataT& data);
+        void    initializeParameters(const ModelDataT& data);
+        void    setDerivedParams();
+        ScalarT toComponentBase(ScalarT value) const;
+        ScalarT toSystemBase(ScalarT value) const;
 
         /* Local copies of signal variables */
         std::vector<ScalarT> ws_;
