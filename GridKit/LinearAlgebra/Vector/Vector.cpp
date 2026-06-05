@@ -542,9 +542,8 @@ namespace GridKit
         }
         if (d_data_ == nullptr)
         {
-          // allocate first
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::syncData - device data not allocated\n";
+          return 1;
         }
         mem_.copyArrayHostToDevice(d_data_, h_data_, n_size_ * k_);
         setDeviceUpdated(true);
@@ -562,9 +561,8 @@ namespace GridKit
         }
         if (h_data_ == nullptr)
         {
-          // allocate first
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::syncData - host data not allocated\n";
+          return 1;
         }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
         setHostUpdated(true);
@@ -610,9 +608,8 @@ namespace GridKit
         }
         if (d_data_ == nullptr)
         {
-          // allocate first
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::syncData - device data not allocated\n";
+          return 1;
         }
         mem_.copyArrayHostToDevice(&d_data_[j * n_size_], &h_data_[j * n_size_], n_size_);
         gpu_updated_[j] = true;
@@ -630,9 +627,8 @@ namespace GridKit
         }
         if (h_data_ == nullptr)
         {
-          // allocate first
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::syncData - host data not allocated\n";
+          return 1;
         }
         mem_.copyArrayDeviceToHost(&h_data_[j * n_size_], &d_data_[j * n_size_], n_size_);
         cpu_updated_[j] = true;
@@ -696,8 +692,8 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::setToZero - host data not allocated\n";
+          return 1;
         }
         mem_.setZeroArrayOnHost(h_data_, n_capacity_ * k_);
         setHostUpdated(true);
@@ -706,8 +702,8 @@ namespace GridKit
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::setToZero - device data not allocated\n";
+          return 1;
         }
         mem_.setZeroArrayOnDevice(d_data_, n_capacity_ * k_);
         setHostUpdated(false);
@@ -734,8 +730,8 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::setToZero - host data not allocated\n";
+          return 1;
         }
         mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
         cpu_updated_[j] = true;
@@ -744,8 +740,8 @@ namespace GridKit
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::setToZero - device data not allocated\n";
+          return 1;
         }
         // TODO: We should not need to access raw data in this class
         mem_.setZeroArrayOnDevice(&d_data_[j * n_size_], n_size_);
@@ -774,8 +770,8 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::setToConst - host data not allocated\n";
+          return 1;
         }
         mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
         setHostUpdated(true);
@@ -784,8 +780,8 @@ namespace GridKit
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::setToConst - device data not allocated\n";
+          return 1;
         }
         mem_.setArrayToConstOnDevice(d_data_, C, n_size_ * k_);
         setHostUpdated(false);
@@ -813,8 +809,8 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
-          owns_cpu_data_ = true;
+          out::error() << "Vector::setToConst - host data not allocated\n";
+          return 1;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = true;
@@ -823,8 +819,8 @@ namespace GridKit
       case DEVICE:
         if (d_data_ == nullptr)
         {
-          mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-          owns_gpu_data_ = true;
+          out::error() << "Vector::setToConst - device data not allocated\n";
+          return 1;
         }
         mem_.setArrayToConstOnDevice(&d_data_[n_size_ * j], C, n_size_);
         cpu_updated_[j] = false;

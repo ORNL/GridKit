@@ -298,6 +298,9 @@ namespace GridKit
         IdxT number_vectors = 3;
 
         Vector<ScalarT, IdxT> x(vector_size, number_vectors);
+        x.allocate(memspace_);
+        if (memspace_ == memory::DEVICE)
+          x.allocate(memory::HOST);
 
         x.setToZero(memspace_);
         success *= verifyAnswer(x, ZERO);
@@ -344,6 +347,8 @@ namespace GridKit
         IdxT number_vectors = 3;
 
         Vector x(vector_size, number_vectors);
+        x.allocate(memspace_);
+        x.allocate(memory::HOST);
 
         // Set all vectors in x on device to ones
         x.setToConst(ONE, memspace_);
