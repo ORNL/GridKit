@@ -14,11 +14,11 @@ namespace GridKit
     /**
      * @brief Unified interface for `Component` data containers
      *
-     * @tparam RealT Real parameter data type
-     * @tparam IdxT  Integer parameter data type
+     * @tparam real_type  Real parameter data type
+     * @tparam index_type Integer parameter data type
      */
-    template <typename RealT,
-              typename IdxT,
+    template <typename real_type,
+              typename index_type,
               typename Parameters,
               typename Ports,
               typename MonitorableVariables>
@@ -27,6 +27,11 @@ namespace GridKit
                && std::is_enum_v<MonitorableVariables>
     struct ComponentData
     {
+      /// Real value type
+      using RealT = real_type;
+      /// Index type
+      using IdxT  = index_type;
+
       /// Class of device this is for
       std::string device_class;
 

@@ -13,28 +13,30 @@ namespace GridKit
      *
      *
      */
-    template <class ScalarT, typename IdxT>
-    class BusInfinite : public BusBase<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class BusInfinite : public BusBase<scalar_type, index_type>
     {
-      using BusBase<ScalarT, IdxT>::bus_id_;
-      using BusBase<ScalarT, IdxT>::monitor_;
-      using BusBase<ScalarT, IdxT>::size_;
-      using BusBase<ScalarT, IdxT>::y_;
-      using BusBase<ScalarT, IdxT>::yp_;
-      using BusBase<ScalarT, IdxT>::f_;
-      using BusBase<ScalarT, IdxT>::J_;
-      using BusBase<ScalarT, IdxT>::variable_indices_;
-      using BusBase<ScalarT, IdxT>::residual_indices_;
+      using BusBase<scalar_type, index_type>::bus_id_;
+      using BusBase<scalar_type, index_type>::size_;
+      using BusBase<scalar_type, index_type>::y_;
+      using BusBase<scalar_type, index_type>::yp_;
+      using BusBase<scalar_type, index_type>::f_;
+      using BusBase<scalar_type, index_type>::J_;
+      using BusBase<scalar_type, index_type>::variable_indices_;
+      using BusBase<scalar_type, index_type>::residual_indices_;
+      using BusBase<scalar_type, index_type>::monitor_;
 
     public:
-      using RealT    = typename BusBase<ScalarT, IdxT>::RealT;
-      using MonitorT = typename BusBase<ScalarT, IdxT>::MonitorT;
-      using DataT    = BusData<RealT, IdxT>;
-      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename BusBase<ScalarT, IdxT>::RealT;
+      using MonitorT   = typename BusBase<ScalarT, IdxT>::MonitorT;
+      using ModelDataT = BusData<RealT, IdxT>;
+      using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
 
       BusInfinite();
       BusInfinite(ScalarT Vr, ScalarT Vi);
-      BusInfinite(const DataT& data);
+      BusInfinite(const ModelDataT& data);
       virtual ~BusInfinite();
 
       virtual int setBusID(IdxT) override final;

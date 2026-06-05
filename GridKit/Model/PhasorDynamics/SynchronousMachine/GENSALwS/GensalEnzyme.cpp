@@ -15,12 +15,10 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation experimental
      *
-     * @tparam ScalarT - scalar data type
-     * @tparam IdxT    - matrix index data type
      * @return int - error code, 0 = success
      */
-    template <class ScalarT, typename IdxT>
-    int Gensal<ScalarT, IdxT>::evaluateJacobian()
+    template <typename scalar_type, typename index_type>
+    int Gensal<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for Gensal..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;

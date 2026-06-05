@@ -18,16 +18,18 @@ namespace GridKit
     /**
      * @brief Contains modeling data for a Bus
      *
-     * @tparam RealT Real parameter data type
-     * @tparam IdxT  Integer parameter data type
+     * @tparam real_type  Real parameter data type
+     * @tparam index_type Integer parameter data type
      *
      * Integer parameters are of the same type as matrix and vector indices.
      *
      * @todo Decide on naming scheme for model parameters.
      */
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct SignalNodeData
     {
+      using IdxT = index_type;
+
       std::string name;         ///< A name given to this bus
       IdxT        signal_id{0}; ///< The unique ID of the signal node
     };

@@ -18,10 +18,10 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct BranchData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -37,43 +37,45 @@ namespace GridKit
      * direction is into the busses.
      *
      */
-    template <class ScalarT, typename IdxT>
-    class Branch : public Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class Branch : public Component<scalar_type, index_type>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::f_;
+      using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::J_;
+      using Component<scalar_type, index_type>::J_rows_buffer_;
+      using Component<scalar_type, index_type>::J_cols_buffer_;
+      using Component<scalar_type, index_type>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
 
     public:
-      using RealT           = typename Component<ScalarT, IdxT>::RealT;
-      using bus_type        = BusBase<ScalarT, IdxT>;
-      using model_data_type = BranchData<RealT, IdxT>;
-      using MonitorT        = Model::VariableMonitor<Branch, BranchData>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Component<ScalarT, IdxT>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = BranchData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<Branch, BranchData>;
 
-      Branch(bus_type* bus1, bus_type* bus2);
-      Branch(bus_type* bus1,
-             bus_type* bus2,
-             RealT     R,
-             RealT     X,
-             RealT     G,
-             RealT     B,
-             RealT     tap   = 1.0,
-             RealT     phase = 0.0);
-      Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data);
+      Branch(BusT* bus1, BusT* bus2);
+      Branch(BusT* bus1,
+             BusT* bus2,
+             RealT R,
+             RealT X,
+             RealT G,
+             RealT B,
+             RealT tap   = 1.0,
+             RealT phase = 0.0);
+      Branch(BusT* bus1, BusT* bus2, const ModelDataT& data);
       virtual ~Branch();
 
       virtual int setGridKitComponentID(IdxT) override final;
@@ -123,20 +125,22 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     private:
-      void                                              initializeParameters(const model_data_type& data);
-      void                                              initializeMonitor();
-      void                                              setDerivedParams();
-      void                                              terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
-      void                                              terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
-      bool                                              readRealParameter(const model_data_type&               data,
-                                                                          typename model_data_type::Parameters parameter,
-                                                                          RealT&                               target);
+      void initializeParameters(const ModelDataT& data);
+      void initializeMonitor();
+      void setDerivedParams();
+      void terminalCurrent1(ScalarT& Ir, ScalarT& Ii);
+      void terminalCurrent2(ScalarT& Ir, ScalarT& Ii);
+      bool readRealParameter(const ModelDataT&               data,
+                             typename ModelDataT::Parameters parameter,
+                             RealT&                          target);
+
       static __attribute__((always_inline)) inline void addAdmittanceContribution(RealT          G,
                                                                                   RealT          B,
                                                                                   const ScalarT& Vr,
                                                                                   const ScalarT& Vi,
                                                                                   ScalarT&       Ir,
                                                                                   ScalarT&       Ii);
+
       static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(RealT          G,
                                                                                 RealT          B,
                                                                                 const ScalarT* wb,
@@ -189,16 +193,16 @@ namespace GridKit
       __attribute__((always_inline)) inline int evaluateBusResidual22(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
 
     private:
-      bus_type* bus1_;
-      bus_type* bus2_;
-      RealT     R_{0.0};
-      RealT     X_{0.0};
-      RealT     G_{0.0};
-      RealT     B_{0.0};
-      RealT     tap_{1.0};
-      RealT     phase_{0.0};
-      IdxT      bus1_id_{0};
-      IdxT      bus2_id_{0};
+      BusT* bus1_;
+      BusT* bus2_;
+      RealT R_{0.0};
+      RealT X_{0.0};
+      RealT G_{0.0};
+      RealT B_{0.0};
+      RealT tap_{1.0};
+      RealT phase_{0.0};
+      IdxT  bus1_id_{0};
+      IdxT  bus2_id_{0};
 
       RealT g11_{0.0};
       RealT b11_{0.0};

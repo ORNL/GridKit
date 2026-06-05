@@ -49,10 +49,10 @@ namespace GridKit
      * @tparam RealT Real number type (e.g., double)
      * @tparam IdxT  Index type (e.g., size_t)
      */
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct BusToSignalAdapterData
-      : public ComponentData<RealT,
-                             IdxT,
+      : public ComponentData<real_type,
+                             index_type,
                              BusToSignalAdapterParameters,
                              BusToSignalAdapterPorts,
                              BusToSignalAdapterMonitorableVariables>

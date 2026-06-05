@@ -17,10 +17,10 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct GenClassicalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -30,45 +30,47 @@ namespace GridKit
   namespace PhasorDynamics
   {
 
-    template <class ScalarT, typename IdxT>
-    class GenClassical : public Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class GenClassical : public Component<scalar_type, index_type>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::alpha_;
-      using Component<ScalarT, IdxT>::f_;
-      using Component<ScalarT, IdxT>::nnz_;
-      using Component<ScalarT, IdxT>::size_;
-      using Component<ScalarT, IdxT>::tag_;
-      using Component<ScalarT, IdxT>::time_;
-      using Component<ScalarT, IdxT>::y_;
-      using Component<ScalarT, IdxT>::yp_;
-      using Component<ScalarT, IdxT>::wb_;
-      using Component<ScalarT, IdxT>::h_;
-      using Component<ScalarT, IdxT>::J_;
-      using Component<ScalarT, IdxT>::J_rows_buffer_;
-      using Component<ScalarT, IdxT>::J_cols_buffer_;
-      using Component<ScalarT, IdxT>::J_vals_buffer_;
-      using Component<ScalarT, IdxT>::freq_system_base_;
-      using Component<ScalarT, IdxT>::va_system_base_;
-      using Component<ScalarT, IdxT>::variable_indices_;
-      using Component<ScalarT, IdxT>::residual_indices_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::f_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::wb_;
+      using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::J_;
+      using Component<scalar_type, index_type>::J_rows_buffer_;
+      using Component<scalar_type, index_type>::J_cols_buffer_;
+      using Component<scalar_type, index_type>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::freq_system_base_;
+      using Component<scalar_type, index_type>::va_system_base_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
 
     public:
-      using bus_type = BusBase<ScalarT, IdxT>;
-      using RealT    = typename Component<ScalarT, IdxT>::RealT;
-      using DataT    = GenClassicalData<RealT, IdxT>;
-      using MonitorT = Model::VariableMonitor<GenClassical, GenClassicalData>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Component<ScalarT, IdxT>::RealT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using ModelDataT = GenClassicalData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
-      GenClassical(bus_type* bus, int unit_id);
-      GenClassical(bus_type* bus,
-                   int       unit_id,
-                   RealT     p0,
-                   RealT     q0,
-                   RealT     H,
-                   RealT     D,
-                   RealT     Ra,
-                   RealT     Xdp);
-      GenClassical(bus_type* bus, const DataT& data);
+      GenClassical(BusT* bus, int unit_id);
+      GenClassical(BusT* bus,
+                   int   unit_id,
+                   RealT p0,
+                   RealT q0,
+                   RealT H,
+                   RealT D,
+                   RealT Ra,
+                   RealT Xdp);
+      GenClassical(BusT* bus, const ModelDataT& data);
       ~GenClassical();
 
       int setGridKitComponentID(IdxT) override final;
@@ -147,9 +149,9 @@ namespace GridKit
 
     private:
       /* Identification */
-      bus_type* bus_;
-      IdxT      bus_id_{0};
-      int       unit_id_; //< @todo this should be removed
+      BusT* bus_;
+      IdxT  bus_id_{0};
+      int   unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

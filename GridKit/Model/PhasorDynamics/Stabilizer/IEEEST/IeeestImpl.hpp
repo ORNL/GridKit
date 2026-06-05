@@ -23,14 +23,14 @@ namespace GridKit
     {
       using Log = ::GridKit::Utilities::Logger;
 
-      template <class ScalarT, typename IdxT>
-      Ieeest<ScalarT, IdxT>::Ieeest()
+      template <typename scalar_type, typename index_type>
+      Ieeest<scalar_type, index_type>::Ieeest()
       {
         size_ = 12;
       }
 
-      template <class ScalarT, typename IdxT>
-      Ieeest<ScalarT, IdxT>::Ieeest(const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      Ieeest<scalar_type, index_type>::Ieeest(const ModelDataT& data)
         : monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
@@ -38,85 +38,85 @@ namespace GridKit
         size_ = 12;
       }
 
-      template <class ScalarT, typename IdxT>
-      Ieeest<ScalarT, IdxT>::~Ieeest()
+      template <typename scalar_type, typename index_type>
+      Ieeest<scalar_type, index_type>::~Ieeest()
       {
       }
 
-      template <class ScalarT, typename IdxT>
-      void Ieeest<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+      template <typename scalar_type, typename index_type>
+      void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        if (data.parameters.contains(model_data_type::Parameters::A1))
+        if (data.parameters.contains(ModelDataT::Parameters::A1))
         {
-          A1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A1));
+          A1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A1));
         }
-        if (data.parameters.contains(model_data_type::Parameters::A2))
+        if (data.parameters.contains(ModelDataT::Parameters::A2))
         {
-          A2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A2));
+          A2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A2));
         }
-        if (data.parameters.contains(model_data_type::Parameters::A3))
+        if (data.parameters.contains(ModelDataT::Parameters::A3))
         {
-          A3_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A3));
+          A3_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A3));
         }
-        if (data.parameters.contains(model_data_type::Parameters::A4))
+        if (data.parameters.contains(ModelDataT::Parameters::A4))
         {
-          A4_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A4));
+          A4_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A4));
         }
-        if (data.parameters.contains(model_data_type::Parameters::A5))
+        if (data.parameters.contains(ModelDataT::Parameters::A5))
         {
-          A5_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A5));
+          A5_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A5));
         }
-        if (data.parameters.contains(model_data_type::Parameters::A6))
+        if (data.parameters.contains(ModelDataT::Parameters::A6))
         {
-          A6_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::A6));
+          A6_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::A6));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T1))
+        if (data.parameters.contains(ModelDataT::Parameters::T1))
         {
-          T1_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T1));
+          T1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T1));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T2))
+        if (data.parameters.contains(ModelDataT::Parameters::T2))
         {
-          T2_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T2));
+          T2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T2));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T3))
+        if (data.parameters.contains(ModelDataT::Parameters::T3))
         {
-          T3_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T3));
+          T3_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T3));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T4))
+        if (data.parameters.contains(ModelDataT::Parameters::T4))
         {
-          T4_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T4));
+          T4_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T4));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T5))
+        if (data.parameters.contains(ModelDataT::Parameters::T5))
         {
-          T5_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T5));
+          T5_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T5));
         }
-        if (data.parameters.contains(model_data_type::Parameters::T6))
+        if (data.parameters.contains(ModelDataT::Parameters::T6))
         {
-          T6_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::T6));
+          T6_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::T6));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Ks))
+        if (data.parameters.contains(ModelDataT::Parameters::Ks))
         {
-          Ks_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Ks));
+          Ks_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ks));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Lsmin))
+        if (data.parameters.contains(ModelDataT::Parameters::Lsmin))
         {
-          Lsmin_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Lsmin));
+          Lsmin_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Lsmin));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Lsmax))
+        if (data.parameters.contains(ModelDataT::Parameters::Lsmax))
         {
-          Lsmax_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Lsmax));
+          Lsmax_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Lsmax));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Vcl))
+        if (data.parameters.contains(ModelDataT::Parameters::Vcl))
         {
-          Vcl_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vcl));
+          Vcl_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vcl));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Vcu))
+        if (data.parameters.contains(ModelDataT::Parameters::Vcu))
         {
-          Vcu_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Vcu));
+          Vcu_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vcu));
         }
-        if (data.parameters.contains(model_data_type::Parameters::Tdelay))
+        if (data.parameters.contains(ModelDataT::Parameters::Tdelay))
         {
-          Tdelay_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Tdelay));
+          Tdelay_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdelay));
         }
 
         a0_ = 1;
@@ -146,15 +146,15 @@ namespace GridKit
         bypass_T6_block_ = 1.0 - use_T6_block_;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
       {
         gridkit_component_id_ = component_id;
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::allocate()
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::allocate()
       {
         auto size = static_cast<size_t>(size_);
         f_.resize(size);
@@ -184,8 +184,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::verify() const
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::verify() const
       {
         int ret = 0;
 
@@ -212,8 +212,8 @@ namespace GridKit
         return ret;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::initialize()
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::initialize()
       {
         for (IdxT i = 0; i < size_; ++i)
         {
@@ -224,8 +224,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::tagDifferentiable()
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::tagDifferentiable()
       {
         tag_[0]  = true;
         tag_[1]  = true;
@@ -243,8 +243,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      __attribute__((always_inline)) inline int Ieeest<ScalarT, IdxT>::evaluateInternalResidual(
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int Ieeest<scalar_type, index_type>::evaluateInternalResidual(
           ScalarT*                  y,
           ScalarT*                  yp,
           [[maybe_unused]] ScalarT* wb,
@@ -292,8 +292,8 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      int Ieeest<ScalarT, IdxT>::evaluateResidual()
+      template <typename scalar_type, typename index_type>
+      int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
         if (signals_.template isAttached<IeeestExternalVariables::U>())
         {
@@ -306,16 +306,16 @@ namespace GridKit
         return 0;
       }
 
-      template <class ScalarT, typename IdxT>
-      const Model::VariableMonitorBase* Ieeest<ScalarT, IdxT>::getMonitor() const
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Ieeest<scalar_type, index_type>::getMonitor() const
       {
         return monitor_.get();
       }
 
-      template <class ScalarT, typename IdxT>
-      void Ieeest<ScalarT, IdxT>::initializeMonitor()
+      template <typename scalar_type, typename index_type>
+      void Ieeest<scalar_type, index_type>::initializeMonitor()
       {
-        using Variable = typename model_data_type::MonitorableVariables;
+        using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::vss, [this]
                       { return y_[11]; });
       }

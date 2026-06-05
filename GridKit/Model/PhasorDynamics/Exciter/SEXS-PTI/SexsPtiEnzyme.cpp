@@ -14,8 +14,8 @@ namespace GridKit
   {
     namespace Exciter
     {
-      template <class ScalarT, typename IdxT>
-      int SexsPti<ScalarT, IdxT>::evaluateJacobian()
+      template <typename scalar_type, typename index_type>
+      int SexsPti<scalar_type, index_type>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for SexsPti..." << std::endl;
         Log::misc() << "Jacobian evaluation is experimental!" << std::endl;

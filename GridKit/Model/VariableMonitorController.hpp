@@ -18,10 +18,12 @@ namespace GridKit
      * High-level print functions (without parameters) manage printing for all
      * monitors for multiple output sinks.
      */
-    template <typename ScalarT>
+    template <typename scalar_type>
     class VariableMonitorController : public VariableMonitorBase
     {
     public:
+      /// Underlying scalar value type
+      using ScalarT  = scalar_type;
       /// Underlying real value type
       using RealT    = typename GridKit::ScalarTraits<ScalarT>::RealT;
       ///@{
@@ -349,9 +351,11 @@ namespace GridKit
       /**
        * @brief Define sink for a specific output format
        */
-      template <typename FormatT>
+      template <typename format_type>
       struct Sink
       {
+        using FormatT = format_type;
+
         Sink() = delete;
 
         /**

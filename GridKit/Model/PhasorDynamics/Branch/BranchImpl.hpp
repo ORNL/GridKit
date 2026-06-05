@@ -28,8 +28,8 @@ namespace GridKit
      * - Number of equations = 0
      * - Number of internal variables = 0
      */
-    template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
       : bus1_(bus1),
         bus2_(bus2),
         R_(0.0),
@@ -48,8 +48,6 @@ namespace GridKit
     /**
      * @brief Construct a new Branch
      *
-     * @tparam ScalarT - scalar type
-     * @tparam IdxT    - matrix/vector index type
      * @param bus1 - pointer to bus-1
      * @param bus2 - pointer to bus-2
      * @param R - line series resistance
@@ -59,15 +57,15 @@ namespace GridKit
      * @param tap - off-nominal tap magnitude on bus1 side
      * @param phase - phase shift angle in radians
      */
-    template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::Branch(bus_type* bus1,
-                                  bus_type* bus2,
-                                  RealT     R,
-                                  RealT     X,
-                                  RealT     G,
-                                  RealT     B,
-                                  RealT     tap,
-                                  RealT     phase)
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>::Branch(BusT* bus1,
+                                            BusT* bus2,
+                                            RealT R,
+                                            RealT X,
+                                            RealT G,
+                                            RealT B,
+                                            RealT tap,
+                                            RealT phase)
       : bus1_(bus1),
         bus2_(bus2),
         R_(R),
@@ -83,8 +81,8 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, const model_data_type& data)
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, const ModelDataT& data)
       : bus1_(bus1),
         bus2_(bus2),
         monitor_(std::make_unique<MonitorT>(data))
@@ -99,19 +97,17 @@ namespace GridKit
     /**
      * @brief Destroy the Branch
      *
-     * @tparam ScalarT
-     * @tparam IdxT
      */
-    template <class ScalarT, typename IdxT>
-    Branch<ScalarT, IdxT>::~Branch()
+    template <typename scalar_type, typename index_type>
+    Branch<scalar_type, index_type>::~Branch()
     {
     }
 
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -120,8 +116,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::allocate()
     {
       wb_.resize(2);
       h_.resize(2);
@@ -133,8 +129,8 @@ namespace GridKit
      * Initialization of the branch model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::initialize()
     {
       return 0;
     }
@@ -142,14 +138,14 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::tagDifferentiable()
     {
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::verify() const
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::verify() const
     {
       int ret = parameter_error_count_;
 
@@ -177,8 +173,8 @@ namespace GridKit
       return ret;
     }
 
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::addAdmittanceContribution(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
         RealT          G,
         RealT          B,
         const ScalarT& Vr,
@@ -190,8 +186,8 @@ namespace GridKit
       Ii += B * Vr + G * Vi;
     }
 
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline void Branch<ScalarT, IdxT>::evaluateAdmittanceBlock(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
         RealT          G,
         RealT          B,
         const ScalarT* wb,
@@ -208,8 +204,8 @@ namespace GridKit
      * @brief Bus 1 residual contribution from bus 1 variables
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual11(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -224,8 +220,8 @@ namespace GridKit
      * @brief Bus 1 residual contribution from bus 2 variables
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) inline int Branch<ScalarT, IdxT>::evaluateBusResidual12(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -240,8 +236,8 @@ namespace GridKit
      * @brief Bus 2 residual contribution from bus 1 variables
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual21(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -256,8 +252,8 @@ namespace GridKit
      * @brief Bus 2 residual contribution from bus 2 variables
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int Branch<ScalarT, IdxT>::evaluateBusResidual22(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -272,8 +268,8 @@ namespace GridKit
      * @brief Residual contribution of the branch is computed and pushed to the terminal buses.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::evaluateResidual()
     {
       ScalarT ir1{0.0};
       ScalarT ii1{0.0};
@@ -291,8 +287,8 @@ namespace GridKit
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
     {
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
@@ -301,8 +297,8 @@ namespace GridKit
       addAdmittanceContribution(g12_, b12_, Vr2(), Vi2(), Ir, Ii);
     }
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::terminalCurrent2(ScalarT& Ir, ScalarT& Ii)
     {
       Ir = ScalarT{0.0};
       Ii = ScalarT{0.0};
@@ -311,31 +307,31 @@ namespace GridKit
       addAdmittanceContribution(g22_, b22_, Vr2(), Vi2(), Ir, Ii);
     }
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::initializeParameters(const model_data_type& data)
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      readRealParameter(data, model_data_type::Parameters::R, R_);
-      readRealParameter(data, model_data_type::Parameters::X, X_);
-      readRealParameter(data, model_data_type::Parameters::G, G_);
-      readRealParameter(data, model_data_type::Parameters::B, B_);
-      readRealParameter(data, model_data_type::Parameters::tap, tap_);
-      readRealParameter(data, model_data_type::Parameters::phase, phase_);
+      readRealParameter(data, ModelDataT::Parameters::R, R_);
+      readRealParameter(data, ModelDataT::Parameters::X, X_);
+      readRealParameter(data, ModelDataT::Parameters::G, G_);
+      readRealParameter(data, ModelDataT::Parameters::B, B_);
+      readRealParameter(data, ModelDataT::Parameters::tap, tap_);
+      readRealParameter(data, ModelDataT::Parameters::phase, phase_);
 
-      if (data.ports.contains(model_data_type::Ports::bus1))
+      if (data.ports.contains(ModelDataT::Ports::bus1))
       {
-        bus1_id_ = data.ports.at(model_data_type::Ports::bus1);
+        bus1_id_ = data.ports.at(ModelDataT::Ports::bus1);
       }
 
-      if (data.ports.contains(model_data_type::Ports::bus2))
+      if (data.ports.contains(ModelDataT::Ports::bus2))
       {
-        bus2_id_ = data.ports.at(model_data_type::Ports::bus2);
+        bus2_id_ = data.ports.at(ModelDataT::Ports::bus2);
       }
     }
 
-    template <class ScalarT, typename IdxT>
-    bool Branch<ScalarT, IdxT>::readRealParameter(const model_data_type&               data,
-                                                  typename model_data_type::Parameters parameter,
-                                                  RealT&                               target)
+    template <typename scalar_type, typename index_type>
+    bool Branch<scalar_type, index_type>::readRealParameter(const ModelDataT&               data,
+                                                            typename ModelDataT::Parameters parameter,
+                                                            RealT&                          target)
     {
       if (!data.parameters.contains(parameter))
       {
@@ -361,16 +357,16 @@ namespace GridKit
       return false;
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* Branch<ScalarT, IdxT>::getMonitor() const
+    template <typename scalar_type, typename index_type>
+    const Model::VariableMonitorBase* Branch<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
     }
 
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::initializeMonitor()
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::initializeMonitor()
     {
-      using Variable = typename model_data_type::MonitorableVariables;
+      using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir1, [this]
                     {
                       ScalarT Ir;
@@ -437,8 +433,8 @@ namespace GridKit
      * @brief Derived parameters
      *
      */
-    template <class ScalarT, typename IdxT>
-    void Branch<ScalarT, IdxT>::setDerivedParams()
+    template <typename scalar_type, typename index_type>
+    void Branch<scalar_type, index_type>::setDerivedParams()
     {
       g11_ = RealT{0.0};
       b11_ = RealT{0.0};

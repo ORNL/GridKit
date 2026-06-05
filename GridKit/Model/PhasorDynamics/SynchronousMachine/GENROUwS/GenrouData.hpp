@@ -60,14 +60,14 @@ namespace GridKit
     /**
      * @brief Contains modeling data for a Genrou generator model.
      *
-     * @tparam RealT Real parameter data type
-     * @tparam IdxT  Integer parameter data type
+     * @tparam real_type  Real parameter data type
+     * @tparam index_type Integer parameter data type
      *
      * Integer parameters are of the same type as matrix and vector indices.
      */
-    template <typename RealT, typename IdxT>
-    struct GenrouData : public ComponentData<RealT,
-                                             IdxT,
+    template <typename real_type, typename index_type>
+    struct GenrouData : public ComponentData<real_type,
+                                             index_type,
                                              GenrouParameters,
                                              GenrouPorts,
                                              GenrouMonitorableVariables>

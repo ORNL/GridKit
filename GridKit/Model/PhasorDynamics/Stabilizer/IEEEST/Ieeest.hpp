@@ -16,11 +16,11 @@ namespace GridKit
   {
     namespace Stabilizer
     {
-      template <typename RealT, typename IdxT>
+      template <typename real_type, typename index_type>
       struct IeeestData;
     } // namespace Stabilizer
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SignalNode;
 
   } // namespace PhasorDynamics
@@ -57,35 +57,37 @@ namespace GridKit
         MAXIMUM,
       };
 
-      template <class ScalarT, typename IdxT>
-      class Ieeest : public Component<ScalarT, IdxT>
+      template <typename scalar_type, typename index_type>
+      class Ieeest : public Component<scalar_type, index_type>
       {
-        using Component<ScalarT, IdxT>::gridkit_component_id_;
-        using Component<ScalarT, IdxT>::alpha_;
-        using Component<ScalarT, IdxT>::f_;
-        using Component<ScalarT, IdxT>::nnz_;
-        using Component<ScalarT, IdxT>::size_;
-        using Component<ScalarT, IdxT>::tag_;
-        using Component<ScalarT, IdxT>::time_;
-        using Component<ScalarT, IdxT>::y_;
-        using Component<ScalarT, IdxT>::yp_;
-        using Component<ScalarT, IdxT>::wb_;
-        using Component<ScalarT, IdxT>::h_;
-        using Component<ScalarT, IdxT>::J_;
-        using Component<ScalarT, IdxT>::J_rows_buffer_;
-        using Component<ScalarT, IdxT>::J_cols_buffer_;
-        using Component<ScalarT, IdxT>::J_vals_buffer_;
-        using Component<ScalarT, IdxT>::variable_indices_;
-        using Component<ScalarT, IdxT>::residual_indices_;
+        using Component<scalar_type, index_type>::gridkit_component_id_;
+        using Component<scalar_type, index_type>::alpha_;
+        using Component<scalar_type, index_type>::f_;
+        using Component<scalar_type, index_type>::nnz_;
+        using Component<scalar_type, index_type>::size_;
+        using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::time_;
+        using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::yp_;
+        using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::J_;
+        using Component<scalar_type, index_type>::J_rows_buffer_;
+        using Component<scalar_type, index_type>::J_cols_buffer_;
+        using Component<scalar_type, index_type>::J_vals_buffer_;
+        using Component<scalar_type, index_type>::variable_indices_;
+        using Component<scalar_type, index_type>::residual_indices_;
 
       public:
-        using RealT           = typename Component<ScalarT, IdxT>::RealT;
-        using model_data_type = IeeestData<RealT, IdxT>;
-        using signal_type     = SignalNode<ScalarT, IdxT>;
-        using MonitorT        = Model::VariableMonitor<Ieeest, IeeestData>;
+        using ScalarT    = scalar_type;
+        using IdxT       = index_type;
+        using RealT      = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT = IeeestData<RealT, IdxT>;
+        using SignalT    = SignalNode<ScalarT, IdxT>;
+        using MonitorT   = Model::VariableMonitor<Ieeest, IeeestData>;
 
         Ieeest();
-        Ieeest(const model_data_type& data);
+        Ieeest(const ModelDataT& data);
         ~Ieeest();
 
         int setGridKitComponentID(IdxT) override final;
@@ -161,7 +163,7 @@ namespace GridKit
 
         std::unique_ptr<MonitorT> monitor_;
 
-        void initializeParameters(const model_data_type& data);
+        void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
 
         std::vector<ScalarT> ws_;

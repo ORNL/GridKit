@@ -17,12 +17,10 @@ namespace GridKit
      * @warning This implementation assumes bus Jacobians are always evaluated
      * _before_ component model Jacobians.
      *
-     * @tparam ScalarT - data type for Jacobian elements
-     * @tparam IdxT    - data type for matrix indices
      * @return int - error code
      */
-    template <class ScalarT, typename IdxT>
-    int Bus<ScalarT, IdxT>::evaluateJacobian()
+    template <typename scalar_type, typename index_type>
+    int Bus<scalar_type, index_type>::evaluateJacobian()
     {
       Log::misc() << "Evaluate Jacobian for Bus..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;

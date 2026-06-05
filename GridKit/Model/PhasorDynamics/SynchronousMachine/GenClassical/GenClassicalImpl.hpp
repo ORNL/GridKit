@@ -22,8 +22,8 @@ namespace GridKit
     /**
      * @brief Constructor for a classical generator model
      */
-    template <class ScalarT, typename IdxT>
-    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, int unit_id)
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, int unit_id)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -42,15 +42,15 @@ namespace GridKit
     /**
      * @brief Constructor for a classical generator model
      */
-    template <class ScalarT, typename IdxT>
-    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus,
-                                              int       unit_id,
-                                              RealT     p0,
-                                              RealT     q0,
-                                              RealT     H,
-                                              RealT     D,
-                                              RealT     Ra,
-                                              RealT     Xdp)
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
+                                                        int   unit_id,
+                                                        RealT p0,
+                                                        RealT q0,
+                                                        RealT H,
+                                                        RealT D,
+                                                        RealT Ra,
+                                                        RealT Xdp)
       : bus_(bus),
         bus_id_(0),
         unit_id_(unit_id),
@@ -69,50 +69,50 @@ namespace GridKit
     /**
      * @brief Constructor for a classical generator model
      */
-    template <class ScalarT, typename IdxT>
-    GenClassical<ScalarT, IdxT>::GenClassical(bus_type* bus, const DataT& data)
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, const ModelDataT& data)
       : bus_(bus),
         unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(DataT::Parameters::p0))
+      if (data.parameters.contains(ModelDataT::Parameters::p0))
       {
-        p0_ = std::get<RealT>(data.parameters.at(DataT::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::p0));
       }
 
-      if (data.parameters.contains(DataT::Parameters::q0))
+      if (data.parameters.contains(ModelDataT::Parameters::q0))
       {
-        q0_ = std::get<RealT>(data.parameters.at(DataT::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::q0));
       }
 
-      if (data.parameters.contains(DataT::Parameters::H))
+      if (data.parameters.contains(ModelDataT::Parameters::H))
       {
-        H_ = std::get<RealT>(data.parameters.at(DataT::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::H));
       }
 
-      if (data.parameters.contains(DataT::Parameters::D))
+      if (data.parameters.contains(ModelDataT::Parameters::D))
       {
-        D_ = std::get<RealT>(data.parameters.at(DataT::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::D));
       }
 
-      if (data.parameters.contains(DataT::Parameters::Ra))
+      if (data.parameters.contains(ModelDataT::Parameters::Ra))
       {
-        Ra_ = std::get<RealT>(data.parameters.at(DataT::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ra));
       }
 
-      if (data.parameters.contains(DataT::Parameters::Xdp))
+      if (data.parameters.contains(ModelDataT::Parameters::Xdp))
       {
-        Xdp_ = std::get<RealT>(data.parameters.at(DataT::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdp));
       }
 
-      if (data.parameters.contains(DataT::Parameters::mva))
+      if (data.parameters.contains(ModelDataT::Parameters::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(DataT::Parameters::mva));
+        mva_base_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::mva));
       }
 
-      if (data.ports.contains(DataT::Ports::bus))
+      if (data.ports.contains(ModelDataT::Ports::bus))
       {
-        bus_id_ = data.ports.at(DataT::Ports::bus);
+        bus_id_ = data.ports.at(ModelDataT::Ports::bus);
       }
 
       initializeMonitor();
@@ -121,33 +121,33 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    GenClassical<ScalarT, IdxT>::~GenClassical()
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::~GenClassical()
     {
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* GenClassical<ScalarT, IdxT>::getMonitor() const
+    template <typename scalar_type, typename index_type>
+    const Model::VariableMonitorBase* GenClassical<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT GenClassical<ScalarT, IdxT>::toMachineBase(ScalarT value) const
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::ScalarT GenClassical<scalar_type, index_type>::toMachineBase(ScalarT value) const
     {
       return value * va_system_base_ / va_machine_base_;
     }
 
-    template <class ScalarT, typename IdxT>
-    ScalarT GenClassical<ScalarT, IdxT>::toSystemBase(ScalarT value) const
+    template <typename scalar_type, typename index_type>
+    GenClassical<scalar_type, index_type>::ScalarT GenClassical<scalar_type, index_type>::toSystemBase(ScalarT value) const
     {
       return value / toMachineBase(static_cast<ScalarT>(ONE<RealT>));
     }
 
-    template <class ScalarT, typename IdxT>
-    void GenClassical<ScalarT, IdxT>::initializeMonitor()
+    template <typename scalar_type, typename index_type>
+    void GenClassical<scalar_type, index_type>::initializeMonitor()
     {
-      using Variable = typename DataT::MonitorableVariables;
+      using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
                     { return toSystemBase(y_[3]); });
       monitor_->set(Variable::ii, [this]
@@ -165,8 +165,8 @@ namespace GridKit
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -175,8 +175,8 @@ namespace GridKit
     /**
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::allocate()
     {
       // Resize component model data
       auto size = static_cast<size_t>(size_);
@@ -204,8 +204,8 @@ namespace GridKit
     /**
      * Initialization of the generator model
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::initialize()
     {
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
@@ -238,8 +238,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::tagDifferentiable()
     {
       for (IdxT i = 0; i < size_; ++i)
       {
@@ -252,8 +252,8 @@ namespace GridKit
      * @brief Internal residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateInternalResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
@@ -293,8 +293,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int GenClassical<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         [[maybe_unused]] ScalarT* wb,
@@ -312,8 +312,8 @@ namespace GridKit
      * \brief Residual for the generator model.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::evaluateResidual()
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
@@ -327,8 +327,8 @@ namespace GridKit
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    void GenClassical<ScalarT, IdxT>::setDerivedParams()
+    template <typename scalar_type, typename index_type>
+    void GenClassical<scalar_type, index_type>::setDerivedParams()
     {
       G_               = Ra_ / (Ra_ * Ra_ + Xdp_ * Xdp_);
       B_               = -Xdp_ / (Ra_ * Ra_ + Xdp_ * Xdp_);

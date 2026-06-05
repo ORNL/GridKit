@@ -29,31 +29,33 @@ namespace GridKit
      * @todo Address thread safety for the system model methods.
      *
      */
-    template <class ScalarT, typename IdxT>
-    class SystemModel : public PhasorDynamics::Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class SystemModel : public PhasorDynamics::Component<scalar_type, index_type>
     {
-      using bus_type       = PhasorDynamics::BusBase<ScalarT, IdxT>;
-      using signal_type    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
-      using component_type = PhasorDynamics::Component<ScalarT, IdxT>;
-      using RealT          = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrixT     = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-
-      using PhasorDynamics::Component<ScalarT, IdxT>::gridkit_component_id_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::size_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::nnz_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::time_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::alpha_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::y_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::yp_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::tag_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::f_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::J_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::rel_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::abs_tol_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::variable_indices_;
-      using PhasorDynamics::Component<ScalarT, IdxT>::residual_indices_;
+      using PhasorDynamics::Component<scalar_type, index_type>::gridkit_component_id_;
+      using PhasorDynamics::Component<scalar_type, index_type>::size_;
+      using PhasorDynamics::Component<scalar_type, index_type>::nnz_;
+      using PhasorDynamics::Component<scalar_type, index_type>::time_;
+      using PhasorDynamics::Component<scalar_type, index_type>::alpha_;
+      using PhasorDynamics::Component<scalar_type, index_type>::y_;
+      using PhasorDynamics::Component<scalar_type, index_type>::yp_;
+      using PhasorDynamics::Component<scalar_type, index_type>::tag_;
+      using PhasorDynamics::Component<scalar_type, index_type>::f_;
+      using PhasorDynamics::Component<scalar_type, index_type>::J_;
+      using PhasorDynamics::Component<scalar_type, index_type>::rel_tol_;
+      using PhasorDynamics::Component<scalar_type, index_type>::abs_tol_;
+      using PhasorDynamics::Component<scalar_type, index_type>::variable_indices_;
+      using PhasorDynamics::Component<scalar_type, index_type>::residual_indices_;
 
     public:
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using BusT       = PhasorDynamics::BusBase<ScalarT, IdxT>;
+      using SignalT    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
+      using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
+
       /**
        * @brief Constructor for the system model
        */
@@ -955,7 +957,7 @@ namespace GridKit
        * Add bus at the end of the bus array and map bus ID with GridKit's ID for the bus
        *
        */
-      void addBus(bus_type* bus)
+      void addBus(BusT* bus)
       {
         IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
         gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
@@ -968,7 +970,7 @@ namespace GridKit
        * Add signal at the end of the signals array and map signal ID with GridKit's ID for the signal
        *
        */
-      void addSignal(signal_type* signal)
+      void addSignal(SignalT* signal)
       {
         IdxT gridkit_signal_id                      = static_cast<IdxT>(signals_.size());
         gridkit_signal_indices_[signal->signalId()] = gridkit_signal_id;
@@ -983,7 +985,7 @@ namespace GridKit
        */
       void setSystemBase(RealT freq_system_base, RealT va_system_base)
       {
-        component_type::setSystemBase(freq_system_base, va_system_base);
+        ComponentT::setSystemBase(freq_system_base, va_system_base);
 
         for (auto* component : components_)
         {
@@ -1000,7 +1002,7 @@ namespace GridKit
        * component ID to the disambiguation_string
        *
        */
-      void addComponent(component_type* component)
+      void addComponent(ComponentT* component)
       {
         IdxT gridkit_component_id = static_cast<IdxT>(components_.size());
         component->setGridKitComponentID(gridkit_component_id);
@@ -1016,7 +1018,7 @@ namespace GridKit
        * location, so it can easily be accessed.
        *
        */
-      void addFault(component_type* component)
+      void addFault(ComponentT* component)
       {
         IdxT gridkit_component_id                = static_cast<IdxT>(components_.size());
         IdxT gridkit_fault_id                    = static_cast<IdxT>(gridkit_fault_indices_.size());
@@ -1028,7 +1030,7 @@ namespace GridKit
        * @brief Return pointer to a bus
        *
        */
-      bus_type* getBus(IdxT bus_id)
+      BusT* getBus(IdxT bus_id)
       {
         // Should fail if user-provided bus_id is incorrect
         IdxT gridkit_bus_id = gridkit_bus_indices_.at(bus_id);
@@ -1040,7 +1042,7 @@ namespace GridKit
        * @brief Return pointer to a signal
        *
        */
-      signal_type* getSignal(IdxT signal_id)
+      SignalT* getSignal(IdxT signal_id)
       {
         // Should fail if user-provided signal_id is incorrect
         IdxT gridkit_signal_id = gridkit_signal_indices_.at(signal_id);
@@ -1052,7 +1054,7 @@ namespace GridKit
        * @brief Return pointer to a component
        *
        */
-      component_type* getComponent(IdxT gridkit_component_id)
+      ComponentT* getComponent(IdxT gridkit_component_id)
       {
         // gridkit_component_id_ is set by System model and guarantied to be unique
         return components_[gridkit_component_id];
@@ -1072,9 +1074,9 @@ namespace GridKit
       }
 
     private:
-      std::vector<bus_type*>       buses_;
-      std::vector<signal_type*>    signals_;
-      std::vector<component_type*> components_;
+      std::vector<BusT*>       buses_;
+      std::vector<SignalT*>    signals_;
+      std::vector<ComponentT*> components_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id

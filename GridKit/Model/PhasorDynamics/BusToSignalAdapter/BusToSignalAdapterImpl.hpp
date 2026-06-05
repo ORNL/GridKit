@@ -24,23 +24,23 @@ namespace GridKit
      * @param bus   Signal used for voltage
      * @param data  Data object
      */
-    template <typename ScalarT, typename IdxT>
-    BusToSignalAdapter<ScalarT, IdxT>::BusToSignalAdapter(bus_type* bus)
+    template <typename scalar_type, typename index_type>
+    BusToSignalAdapter<scalar_type, index_type>::BusToSignalAdapter(BusT* bus)
       : bus_(bus)
     {
       size_ = 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    BusToSignalAdapter<ScalarT, IdxT>::~BusToSignalAdapter()
+    template <typename scalar_type, typename index_type>
+    BusToSignalAdapter<scalar_type, index_type>::~BusToSignalAdapter()
     {
     }
 
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -49,8 +49,8 @@ namespace GridKit
     /**
      * @brief Allocate memory for model
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::allocate()
     {
       static constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
       static constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
@@ -73,8 +73,8 @@ namespace GridKit
     /**
      * @brief verify method checks that attached signals are also linked
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::verify() const
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::verify() const
     {
       static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
       static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
@@ -105,8 +105,8 @@ namespace GridKit
     /**
      * @brief Initialize the adapter
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::initialize()
     {
       return 0;
     }
@@ -114,8 +114,8 @@ namespace GridKit
     /**
      * @brief No variables to differentiate
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::tagDifferentiable()
     {
       return 0;
     }
@@ -123,8 +123,8 @@ namespace GridKit
     /**
      * @brief Residual evaluation
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::evaluateResidual()
     {
       static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
       static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
@@ -144,8 +144,8 @@ namespace GridKit
     /**
      * @brief Jacobian evaluation
      */
-    template <class ScalarT, typename IdxT>
-    int BusToSignalAdapter<ScalarT, IdxT>::evaluateJacobian()
+    template <typename scalar_type, typename index_type>
+    int BusToSignalAdapter<scalar_type, index_type>::evaluateJacobian()
     {
       return 0;
     }

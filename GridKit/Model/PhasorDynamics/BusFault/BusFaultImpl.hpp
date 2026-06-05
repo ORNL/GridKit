@@ -19,8 +19,8 @@ namespace GridKit
      * - Number of equations = 0
      * - Number of independent variables = 0
      */
-    template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus)
+    template <typename scalar_type, typename index_type>
+    BusFault<scalar_type, index_type>::BusFault(BusT* bus)
       : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
     {
       (void) bus_id_;
@@ -31,8 +31,6 @@ namespace GridKit
     /**
      * @brief Construct a new BusFault
      *
-     * @tparam ScalarT - scalar type
-     * @tparam IdxT    - matrix/vector index type
      * @param bus1 - pointer to bus-1
      * @param bus2 - pointer to bus-2
      * @param R - line series resistance
@@ -40,8 +38,8 @@ namespace GridKit
      * @param G - line shunt conductance
      * @param B - line shunt charging
      */
-    template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, RealT R, RealT X, int status)
+    template <typename scalar_type, typename index_type>
+    BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X, int status)
       : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
     {
       size_ = 0;
@@ -51,37 +49,35 @@ namespace GridKit
     /**
      * @brief Construct a new BusFault
      *
-     * @tparam ScalarT - scalar type
-     * @tparam IdxT    - matrix/vector index type
      * @param bus1 - pointer to bus-1
      * @param bus2 - pointer to bus-2
      */
-    template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::BusFault(bus_type* bus, const DataT& data)
+    template <typename scalar_type, typename index_type>
+    BusFault<scalar_type, index_type>::BusFault(BusT* bus, const ModelDataT& data)
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(DataT::Parameters::R))
+      if (data.parameters.contains(ModelDataT::Parameters::R))
       {
-        R_ = std::get<RealT>(data.parameters.at(DataT::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
       }
 
-      if (data.parameters.contains(DataT::Parameters::X))
+      if (data.parameters.contains(ModelDataT::Parameters::X))
       {
-        X_ = std::get<RealT>(data.parameters.at(DataT::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
       }
 
-      if (data.parameters.contains(DataT::Parameters::state0))
+      if (data.parameters.contains(ModelDataT::Parameters::state0))
       {
-        status_ = std::get<bool>(data.parameters.at(DataT::Parameters::state0));
+        status_ = std::get<bool>(data.parameters.at(ModelDataT::Parameters::state0));
       }
 
-      if (data.ports.contains(DataT::Ports::bus))
+      if (data.ports.contains(ModelDataT::Ports::bus))
       {
-        bus_id_ = data.ports.at(DataT::Ports::bus);
+        bus_id_ = data.ports.at(ModelDataT::Ports::bus);
       }
 
-      using Variable = typename DataT::MonitorableVariables;
+      using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::state, [this]
                     { return status_; });
       monitor_->set(Variable::ir, [this]
@@ -93,16 +89,16 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    BusFault<ScalarT, IdxT>::~BusFault()
+    template <typename scalar_type, typename index_type>
+    BusFault<scalar_type, index_type>::~BusFault()
     {
     }
 
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -111,8 +107,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::allocate()
     {
       // std::cout << "Allocate BusFault..." << std::endl;
 
@@ -126,8 +122,8 @@ namespace GridKit
      * Initialization of the branch model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::initialize()
     {
       return 0;
     }
@@ -135,8 +131,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::tagDifferentiable()
     {
       return 0;
     }
@@ -145,8 +141,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int BusFault<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateBusResidual(
         [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
     {
       ScalarT Vr = wb[0];
@@ -164,8 +160,8 @@ namespace GridKit
      * two terminal buses.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::evaluateResidual()
     {
       if (status_)
       {
@@ -178,8 +174,8 @@ namespace GridKit
       return 0;
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* BusFault<ScalarT, IdxT>::getMonitor() const
+    template <typename scalar_type, typename index_type>
+    const Model::VariableMonitorBase* BusFault<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
     }
@@ -188,8 +184,8 @@ namespace GridKit
      * @brief Derived parameters
      *
      */
-    template <class ScalarT, typename IdxT>
-    void BusFault<ScalarT, IdxT>::setDerivedParams()
+    template <typename scalar_type, typename index_type>
+    void BusFault<scalar_type, index_type>::setDerivedParams()
     {
       B_ = -X_ / (X_ * X_ + R_ * R_);
       G_ = R_ / (X_ * X_ + R_ * R_);

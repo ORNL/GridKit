@@ -383,7 +383,7 @@ namespace GridKit
         const ScalarT Vr2{30.0};
         const ScalarT Vi2{40.0};
 
-        typename PhasorDynamics::Branch<ScalarT, IdxT>::model_data_type data;
+        typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT data;
         data.ports[PhasorDynamics::BranchPorts::bus1]        = 1;
         data.ports[PhasorDynamics::BranchPorts::bus2]        = 2;
         data.parameters[PhasorDynamics::BranchParameters::R] = R;

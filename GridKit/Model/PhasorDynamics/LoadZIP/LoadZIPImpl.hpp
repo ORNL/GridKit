@@ -19,15 +19,15 @@ namespace GridKit
      * - Number of equations = 2
      * - Number of independent variables = 2
      */
-    template <class ScalarT, typename IdxT>
-    LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type* bus)
+    template <typename scalar_type, typename index_type>
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus)
       : bus_(bus)
     {
       size_ = 2;
     }
 
-    template <class ScalarT, typename IdxT>
-    LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP)
+    template <typename scalar_type, typename index_type>
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP)
       : bus_(bus),
         P0_(P0),
         Q0_(Q0),
@@ -39,37 +39,37 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    LoadZIP<ScalarT, IdxT>::LoadZIP(bus_type*              bus,
-                                    const model_data_type& data)
+    template <typename scalar_type, typename index_type>
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT*             bus,
+                                              const ModelDataT& data)
       : bus_(bus)
     {
-      if (data.parameters.contains(model_data_type::Parameters::P0))
+      if (data.parameters.contains(ModelDataT::Parameters::P0))
       {
-        P0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::P0));
+        P0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::P0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::Q0))
+      if (data.parameters.contains(ModelDataT::Parameters::Q0))
       {
-        Q0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::Q0));
+        Q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Q0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::V0))
+      if (data.parameters.contains(ModelDataT::Parameters::V0))
       {
-        V0_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::V0));
+        V0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::V0));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::alphaI))
+      if (data.parameters.contains(ModelDataT::Parameters::alphaI))
       {
-        alphaI_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::alphaI));
+        alphaI_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaI));
       }
 
-      if (data.parameters.contains(model_data_type::Parameters::alphaP))
+      if (data.parameters.contains(ModelDataT::Parameters::alphaP))
       {
-        alphaP_ = std::get<RealT>(data.parameters.at(model_data_type::Parameters::alphaP));
+        alphaP_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaP));
       }
 
-      // using Variable = typename model_data_type::MonitorableVariables;
+      // using Variable = typename ModelDataT::MonitorableVariables;
       // monitor_->set(Variable::p, [this] { return ?; });
       // monitor_->set(Variable::q, [this] { return ?; });
 
@@ -77,8 +77,8 @@ namespace GridKit
       setDerivedParams();
     }
 
-    template <class ScalarT, typename IdxT>
-    LoadZIP<ScalarT, IdxT>::~LoadZIP()
+    template <typename scalar_type, typename index_type>
+    LoadZIP<scalar_type, index_type>::~LoadZIP()
     {
       // std::cout << "Destroy LoadZIP..." << std::endl;
     }
@@ -86,8 +86,8 @@ namespace GridKit
     /**
      * @brief Set the component ID
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::setGridKitComponentID(IdxT component_id)
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -96,8 +96,8 @@ namespace GridKit
     /*!
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::allocate()
     {
       // std::cout << "Allocate Load..." << std::endl;
 
@@ -127,8 +127,8 @@ namespace GridKit
      * Initialization of the load model
      *
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::initialize()
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::initialize()
     {
       ScalarT vr    = Vr();
       ScalarT vi    = Vi();
@@ -150,8 +150,8 @@ namespace GridKit
     /**
      * \brief Identify differential variables.
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::tagDifferentiable()
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::tagDifferentiable()
     {
       tag_[0] = false;
       tag_[1] = false;
@@ -162,8 +162,8 @@ namespace GridKit
      * @brief Bus residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int LoadZIP<ScalarT, IdxT>::evaluateBusResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         [[maybe_unused]] ScalarT* wb,
@@ -181,8 +181,8 @@ namespace GridKit
      * @brief Residual contribution of the load is pushed to the bus.
      *
      */
-    template <class ScalarT, typename IdxT>
-    int LoadZIP<ScalarT, IdxT>::evaluateResidual()
+    template <typename scalar_type, typename index_type>
+    int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
@@ -198,8 +198,8 @@ namespace GridKit
      * @brief Internal residual
      *
      */
-    template <class ScalarT, typename IdxT>
-    __attribute__((always_inline)) int LoadZIP<ScalarT, IdxT>::evaluateInternalResidual(
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -223,14 +223,14 @@ namespace GridKit
      * @brief Derived parameters
      *
      */
-    template <class ScalarT, typename IdxT>
-    void LoadZIP<ScalarT, IdxT>::setDerivedParams()
+    template <typename scalar_type, typename index_type>
+    void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
       return;
     }
 
-    template <class ScalarT, typename IdxT>
-    const Model::VariableMonitorBase* LoadZIP<ScalarT, IdxT>::getMonitor() const
+    template <typename scalar_type, typename index_type>
+    const Model::VariableMonitorBase* LoadZIP<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
     }

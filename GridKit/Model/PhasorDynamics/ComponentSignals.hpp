@@ -31,8 +31,8 @@ namespace GridKit
     /// This is used by adding an instance in a field to your class and
     /// exposing this field to others
     ///
-    /// @tparam ScalarT Scalar value type
-    /// @tparam IdxT Index type
+    /// @tparam scalar_type Scalar value type
+    /// @tparam index_type Index type
     /// @tparam InternalVariables An enumeration satisfying
     ///         `EnumHasMaximumValueAndIsSizeT` enumerating internal variables
     ///         for the component
@@ -43,12 +43,17 @@ namespace GridKit
     ///            integer value of the enum
     /// @invariant ExternalVariables::MAXIMUM is the greatest attainable
     ///            integer value of the enum
-    template <class ScalarT, typename IdxT, typename InternalVariables, typename ExternalVariables>
+    template <typename scalar_type, typename index_type, typename InternalVariables, typename ExternalVariables>
       requires EnumHasMaximumValueAndIsSizeT<InternalVariables>
                && EnumHasMaximumValueAndIsSizeT<ExternalVariables>
     class ComponentSignals
     {
     public:
+      /// Scalar value type
+      using ScalarT = scalar_type;
+      /// Index type
+      using IdxT    = index_type;
+
       /// Attaches a signal node to an external variable on this component
       ///
       /// @tparam variable The external variable to attach the provided

@@ -16,13 +16,13 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     struct BusToSignalAdapterData;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SignalNode;
   } // namespace PhasorDynamics
 } // namespace GridKit
@@ -53,19 +53,21 @@ namespace GridKit
       MAXIMUM,
     };
 
-    template <class ScalarT, typename IdxT>
-    class BusToSignalAdapter : public Component<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class BusToSignalAdapter : public Component<scalar_type, index_type>
     {
-      using Component<ScalarT, IdxT>::gridkit_component_id_;
-      using Component<ScalarT, IdxT>::size_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::size_;
 
     public:
-      using RealT           = typename Component<ScalarT, IdxT>::RealT;
-      using model_data_type = BusToSignalAdapterData<RealT, IdxT>;
-      using signal_type     = SignalNode<ScalarT, IdxT>;
-      using bus_type        = BusBase<ScalarT, IdxT>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT = BusToSignalAdapterData<RealT, IdxT>;
+      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using BusT       = BusBase<ScalarT, IdxT>;
 
-      BusToSignalAdapter(bus_type* bus);
+      BusToSignalAdapter(BusT* bus);
       ~BusToSignalAdapter();
 
       int setGridKitComponentID(IdxT) override final;
@@ -92,9 +94,9 @@ namespace GridKit
       IdxT vi_index_{INVALID_INDEX<IdxT>};
 
       // Signal pointers
-      signal_type* ir_signal_;
-      signal_type* ii_signal_;
-      bus_type*    bus_;
+      SignalT* ir_signal_;
+      SignalT* ii_signal_;
+      BusT*    bus_;
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, BusToSignalAdapterInternalVariables, BusToSignalAdapterExternalVariables> signals_;
