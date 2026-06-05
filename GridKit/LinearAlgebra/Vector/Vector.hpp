@@ -42,39 +42,39 @@ namespace GridKit
       Vector& operator=(Vector&&)      = delete;
 
       int copyFromExternal(const ScalarT*      source,
-                           memory::MemorySpace memspaceIn,
-                           memory::MemorySpace memspaceOut);
+                           memory::MemorySpace memspaceIn  = memory::HOST,
+                           memory::MemorySpace memspaceOut = memory::HOST);
       int copyFromExternal(const Vector&       source,
-                           memory::MemorySpace memspaceIn,
-                           memory::MemorySpace memspaceOut);
+                           memory::MemorySpace memspaceIn  = memory::HOST,
+                           memory::MemorySpace memspaceOut = memory::HOST);
 
-      ScalarT*       getData(memory::MemorySpace memspace);
-      ScalarT*       getData(IdxT i, memory::MemorySpace memspace);
-      const ScalarT* getData(memory::MemorySpace memspace) const;
-      const ScalarT* getData(IdxT i, memory::MemorySpace memspace) const;
+      ScalarT*       getData(memory::MemorySpace memspace = memory::HOST);
+      ScalarT*       getData(IdxT i, memory::MemorySpace memspace = memory::HOST);
+      const ScalarT* getData(memory::MemorySpace memspace = memory::HOST) const;
+      const ScalarT* getData(IdxT i, memory::MemorySpace memspace = memory::HOST) const;
 
       IdxT getCapacity() const;
       IdxT getSize() const;
       IdxT getNumVectors() const;
 
-      int setDataUpdated(memory::MemorySpace memspace);
-      int setDataUpdated(IdxT j, memory::MemorySpace memspace);
-      int setData(ScalarT* data, memory::MemorySpace memspace);
-      int allocate(memory::MemorySpace memspace);
-      int setToZero(memory::MemorySpace memspace);
-      int setToZero(IdxT i, memory::MemorySpace memspace);
-      int setToConst(ScalarT C, memory::MemorySpace memspace);
-      int setToConst(IdxT i, ScalarT C, memory::MemorySpace memspace);
-      int syncData(memory::MemorySpace memspaceOut);
-      int syncData(IdxT j, memory::MemorySpace memspaceOut);
+      int setDataUpdated(memory::MemorySpace memspace = memory::HOST);
+      int setDataUpdated(IdxT j, memory::MemorySpace memspace = memory::HOST);
+      int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
+      int allocate(memory::MemorySpace memspace = memory::HOST);
+      int setToZero(memory::MemorySpace memspace = memory::HOST);
+      int setToZero(IdxT i, memory::MemorySpace memspace = memory::HOST);
+      int setToConst(ScalarT C, memory::MemorySpace memspace = memory::HOST);
+      int setToConst(IdxT i, ScalarT C, memory::MemorySpace memspace = memory::HOST);
+      int syncData(memory::MemorySpace memspaceOut = memory::HOST);
+      int syncData(IdxT j, memory::MemorySpace memspaceOut = memory::HOST);
       int resize(IdxT new_n_current);
       int copyToExternal(ScalarT*            dest,
                          IdxT                i,
-                         memory::MemorySpace memspaceSrc,
-                         memory::MemorySpace memspaceDst);
+                         memory::MemorySpace memspaceSrc = memory::HOST,
+                         memory::MemorySpace memspaceDst = memory::HOST);
       int copyToExternal(ScalarT*            dest,
-                         memory::MemorySpace memspaceSrc,
-                         memory::MemorySpace memspaceDst);
+                         memory::MemorySpace memspaceSrc = memory::HOST,
+                         memory::MemorySpace memspaceDst = memory::HOST);
 
     private:
       void setHostUpdated(bool is_updated);
