@@ -413,7 +413,7 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if ((cpu_updated_[j] == false) && (gpu_updated_[j] == true))
+        if (cpu_updated_[j] == false)
         {
           out::error() << "Trying to get data for vector " << j << " on the host, "
                        << "but host data is out of date!\n"
@@ -422,7 +422,7 @@ namespace GridKit
         }
         return &h_data_[j * n_size_];
       case DEVICE:
-        if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true))
+        if (gpu_updated_[j] == false)
         {
           out::error() << "Trying to get data for vector " << j << " on the device, "
                        << "but device data is out of date!\n"
@@ -906,11 +906,6 @@ namespace GridKit
       switch (memspaceSrc)
       {
       case HOST:
-        if (!cpu_updated_[i])
-        {
-          out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
-          return 1;
-        }
         switch (memspaceDst)
         {
         case HOST:
@@ -922,11 +917,6 @@ namespace GridKit
         }
         break;
       case DEVICE:
-        if (!gpu_updated_[i])
-        {
-          out::error() << "Trying to copy data for vector " << i << " in multivector but the data is not up to date in the source memory space!\n";
-          return 1;
-        }
         switch (memspaceDst)
         {
         case HOST:
