@@ -241,15 +241,35 @@ Always declare type aliases with the `using` keyword rather than `typedef typena
 ```
 
 Types that are used as template parameters should use `snake_case` format, with
-the `_type` suffix to indicate that it is a type.  Types used within class
-implementation code and provided in the public class interface should use
-`UpperCamelT` format, similar to class names, but with a `T` suffix.  For
-consistency, create aliases for template type parameters (*e.g.,* `using ScalarT
-= scalar_type;`) and use the same name everywhere the same type is used.
+the `_type` suffix to indicate that it is a type. Use the keyword `typename`
+rather than `class` for template type parameters.
 
 ```c++
-  template <typename real_type> ...; // Yes
   template <typename RealT>; // No, using format reserved for interface types
+  template <class real_type>; // No, using `class` keyword
+
+  template <typename real_type> ...; // Yes
+```
+Types used within class implementation code and provided in the public class
+interface should use `UpperCamelT` format, similar to class names, but with a
+`T` suffix.  For consistency, create aliases for template type parameters
+(*e.g.,* `using ScalarT = scalar_type;`) and use the same name everywhere the
+same type is used. This applies across multiple classes in which the type has
+the same meaning.
+
+```c++
+  template <typename scalar_type, typename index_type>
+  class ExTemp
+  {
+    // Convention used in all applicable classes for scalar, index, and
+    // primitive floating-point types
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = GridKit::ScalarTraits<ScalarT>::RealT;
+
+    // void foo(scalar_type value); // No, using template type parameter
+    void foo(ScalarT value); // Yes, using interface types in code
+  };
 ```
 
 ### Constants
