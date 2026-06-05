@@ -107,6 +107,9 @@ namespace GridKit
      * @param[in] data     - Pointer to data
      * @param[in] memspace - Memory space (HOST or DEVICE)
      *
+     * @pre Vector data pointers must be null. If the vector data already
+     * exists this function returns error message.
+     *
      * @warning This function DOES NOT ALLOCATE any data, it only assigns the
      * pointer.
      *
@@ -117,27 +120,22 @@ namespace GridKit
     int Vector<ScalarT, IdxT>::setData(ScalarT* data, memory::MemorySpace memspace)
     {
       using namespace memory;
+      if (d_data_ || h_data_)
+      {
+        out::error() << "Trying to set vector data, but the data already exists!\n";
+        out::error() << "Ignoring setData function call ...\n";
+        return 1;
+      }
+
       switch (memspace)
       {
       case HOST:
-        if (owns_cpu_data_ && h_data_)
-        {
-          out::error() << "Trying to set vector host values, but the values already set!\n";
-          out::error() << "Ignoring setData function call ...\n";
-          return 1;
-        }
         h_data_ = data;
         setHostUpdated(true);
         setDeviceUpdated(false);
         owns_cpu_data_ = false;
         break;
       case DEVICE:
-        if (owns_gpu_data_ && d_data_)
-        {
-          out::error() << "Trying to set vector device values, but the values already set!\n";
-          out::error() << "Ignoring setData function call ...\n";
-          return 1;
-        }
         d_data_ = data;
         setHostUpdated(false);
         setDeviceUpdated(true);
@@ -215,16 +213,16 @@ namespace GridKit
      * @brief Copy data from another vector.
      *
      * @param[in] v           - Vector, which data will be copied
-     * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)
-     * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)
+     * @param[in] memspaceSrc  - Memory space of the data source (HOST or DEVICE)
+     * @param[in] memspaceDst - Memory space the data will be copied to (HOST or DEVICE)
      *
      * @pre   size of _v_ is equal or larger than the current vector size.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector<ScalarT, IdxT>::copyFromExternal(Vector* source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
-      ScalarT* source_data = source->getData(memspaceIn);
-      return copyFromExternal(source_data, memspaceIn, memspaceOut);
+      ScalarT* source_data = source->getData(memspaceSrc);
+      return copyFromExternal(source_data, memspaceSrc, memspaceDst);
     }
 
     /**
@@ -233,69 +231,74 @@ namespace GridKit
      * This function allocates (if necessary) and copies the data.
      *
      * @param[in] data        - Data that is to be copied
-     * @param[in] memspaceIn  - Memory space of the incoming data (HOST or DEVICE)
-     * @param[in] memspaceOut - Memory space the data will be copied to (HOST or DEVICE)
+     * @param[in] memspaceSrc - Memory space of the data source (HOST or DEVICE)
+     * @param[in] memspaceDst - Memory space the data will be copied to (HOST or DEVICE)
      *
      * @return 0 if successful, -1 otherwise.
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut)
+    int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT*      source,
+                                                memory::MemorySpace memspaceSrc,
+                                                memory::MemorySpace memspaceDst)
     {
-      int control = -1;
-      if ((memspaceIn == memory::HOST) && (memspaceOut == memory::HOST))
+      switch (memspaceDst)
       {
-        control = 0;
-      }
-      if ((memspaceIn == memory::HOST) && (memspaceOut == memory::DEVICE))
-      {
-        control = 1;
-      }
-      if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::HOST))
-      {
-        control = 2;
-      }
-      if ((memspaceIn == memory::DEVICE) && (memspaceOut == memory::DEVICE))
-      {
-        control = 3;
+      case memory::HOST:
+        if (h_data_ == nullptr)
+        {
+          out::error() << "Vector::copyFromExternal - destination memory space"
+                       << " on host not allocated\n";
+          return 1;
+        }
+        break;
+      case memory::DEVICE:
+        if (d_data_ == nullptr)
+        {
+          out::error() << "Vector::copyFromExternal - destination memory space"
+                       << " on device not allocated\n";
+          return 1;
+        }
+        break;
       }
 
-      if ((memspaceOut == memory::HOST) && (h_data_ == nullptr))
+      switch (memspaceSrc)
       {
-        // allocate first
-        h_data_        = new ScalarT[n_capacity_ * k_];
-        owns_cpu_data_ = true;
-      }
-      if ((memspaceOut == memory::DEVICE) && (d_data_ == nullptr))
-      {
-        // allocate first
-        mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
-        owns_gpu_data_ = true;
-      }
-
-      switch (control)
-      {
-      case 0: // cpu->cpu
-        mem_.copyArrayHostToHost(h_data_, source, n_size_ * k_);
-        setHostUpdated(true);
-        setDeviceUpdated(false);
+      case memory::HOST:
+        switch (memspaceDst)
+        {
+        case memory::HOST:
+          mem_.copyArrayHostToHost(h_data_, source, n_size_ * k_);
+          setHostUpdated(true);
+          setDeviceUpdated(false);
+          break;
+        case memory::DEVICE:
+          mem_.copyArrayHostToDevice(d_data_, source, n_size_ * k_);
+          setHostUpdated(false);
+          setDeviceUpdated(true);
+          break;
+        default:
+          return -1;
+        }
         break;
-      case 2: // gpu->cpu
-        mem_.copyArrayDeviceToHost(h_data_, source, n_size_ * k_);
-        setHostUpdated(true);
-        setDeviceUpdated(false);
-        break;
-      case 1: // cpu->gpu
-        mem_.copyArrayHostToDevice(d_data_, source, n_size_ * k_);
-        setHostUpdated(false);
-        setDeviceUpdated(true);
-        break;
-      case 3: // gpu->gpu
-        mem_.copyArrayDeviceToDevice(d_data_, source, n_size_ * k_);
-        setHostUpdated(false);
-        setDeviceUpdated(true);
+      case memory::DEVICE:
+        switch (memspaceDst)
+        {
+        case memory::HOST:
+          mem_.copyArrayDeviceToHost(h_data_, source, n_size_ * k_);
+          setHostUpdated(true);
+          setDeviceUpdated(false);
+          break;
+        case memory::DEVICE:
+          mem_.copyArrayDeviceToDevice(d_data_, source, n_size_ * k_);
+          setHostUpdated(false);
+          setDeviceUpdated(true);
+          break;
+        default:
+          return 1;
+        }
         break;
       default:
-        return -1;
+        return 1;
       }
       return 0;
     }
@@ -322,15 +325,19 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        if ((cpu_updated_[0] == false) && (gpu_updated_[0] == true))
+        if (cpu_updated_[0] == false)
         {
-          syncData(memspace);
+          out::error() << "Vector::getData - requesting data from host"
+                       << " but host data is stale. Returning nullptr ...\n";
+          return nullptr;
         }
         return h_data_;
       case DEVICE:
-        if ((gpu_updated_[0] == false) && (cpu_updated_[0] == true))
+        if (gpu_updated_[0] == false)
         {
-          syncData(memspace);
+          out::error() << "Vector::getData - requesting data from device"
+                       << " but device data is stale. Returning nullptr ...\n";
+          return nullptr;
         }
         return d_data_;
       default:
@@ -408,13 +415,19 @@ namespace GridKit
       case HOST:
         if ((cpu_updated_[j] == false) && (gpu_updated_[j] == true))
         {
-          syncData(j, memspace);
+          out::error() << "Trying to get data for vector " << j << " on the host, "
+                       << "but host data is out of date!\n"
+                       << "Use syncData function to sync host data with the device data!\n";
+          return nullptr;
         }
         return &h_data_[j * n_size_];
       case DEVICE:
         if ((gpu_updated_[j] == false) && (cpu_updated_[j] == true))
         {
-          syncData(j, memspace);
+          out::error() << "Trying to get data for vector " << j << " on the device, "
+                       << "but device data is out of date!\n"
+                       << "Use syncData function to sync device data with the host data!\n";
+          return nullptr;
         }
         return &d_data_[j * n_size_];
       default:
@@ -478,7 +491,7 @@ namespace GridKit
      * syncData is the only function that can set data on both HOST and DEVICE
      * to the same values.
      *
-     * @param[in] memspaceOut  - Memory space to sync
+     * @param[in] memspaceDst  - Memory space to sync
      *
      * @return 0 if successful, 1 otherwise.
      *
@@ -488,7 +501,7 @@ namespace GridKit
      *
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::syncData(memory::MemorySpace memspaceOut)
+    int Vector<ScalarT, IdxT>::syncData(memory::MemorySpace memspaceDst)
     {
       using namespace memory;
 
@@ -503,7 +516,6 @@ namespace GridKit
           out::error() << "Trying to sync all multivector data on the device,"
                        << " but individual vectors were updated differently.\n"
                        << "Use syncData function for individual vectors instead!\n";
-          assert(false);
           return 1;
         }
         if (cpu_updated_[i] != all_cpu_updated)
@@ -511,18 +523,16 @@ namespace GridKit
           out::error() << "Trying to sync all multivector data on the host,"
                        << " but individual vectors were updated differently.\n"
                        << "Use syncData function for individual vectors instead!\n";
-          assert(false);
           return 1;
         }
       }
 
-      switch (memspaceOut)
+      switch (memspaceDst)
       {
       case DEVICE: // cpu -> gpu
         if (gpu_updated_[0])
         {
           out::error() << "Trying to sync device, but device already up to date!\n";
-          assert(!gpu_updated_[0]);
           return 1;
         }
         if (!cpu_updated_[0])
@@ -542,7 +552,6 @@ namespace GridKit
         if (cpu_updated_[0])
         {
           out::error() << "Trying to sync host, but host already up to date!\n";
-          assert(!cpu_updated_[0]);
           return 1;
         }
         if (!gpu_updated_[0])
@@ -552,7 +561,7 @@ namespace GridKit
         if (h_data_ == nullptr)
         {
           // allocate first
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.copyArrayDeviceToHost(h_data_, d_data_, n_size_ * k_);
@@ -570,7 +579,7 @@ namespace GridKit
      * syncData is the only function that can set data on both HOST and DEVICE
      * to the same values.
      *
-     * @param[in] memspaceOut  - Memory space to sync
+     * @param[in] memspaceDst  - Memory space to sync
      *
      * @return 0 if successful, 1 otherwise.
      *
@@ -580,17 +589,16 @@ namespace GridKit
      *
      */
     template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::syncData(IdxT j, memory::MemorySpace memspaceOut)
+    int Vector<ScalarT, IdxT>::syncData(IdxT j, memory::MemorySpace memspaceDst)
     {
       using namespace memory;
 
-      switch (memspaceOut)
+      switch (memspaceDst)
       {
       case DEVICE: // cpu->gpu
         if (gpu_updated_[j])
         {
           out::error() << "Trying to sync device, but device already up to date!\n";
-          assert(!gpu_updated_[j]);
           return 1;
         }
         if (!cpu_updated_[j])
@@ -611,7 +619,6 @@ namespace GridKit
         if (cpu_updated_[j])
         {
           out::error() << "Trying to sync host, but host already up to date!\n";
-          assert(!cpu_updated_[j]);
           return 1;
         }
         if (!gpu_updated_[j])
@@ -622,7 +629,7 @@ namespace GridKit
         if (h_data_ == nullptr)
         {
           // allocate first
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.copyArrayDeviceToHost(&h_data_[j * n_size_], &d_data_[j * n_size_], n_size_);
@@ -647,8 +654,13 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
-        delete[] h_data_;
-        h_data_        = new ScalarT[n_capacity_ * k_];
+        if (!owns_cpu_data_)
+        {
+          out::error() << "Vector::allocate - cannot allocate host data, vector does not own it\n";
+          return 1;
+        }
+        mem_.deleteOnHost(h_data_);
+        mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
         owns_cpu_data_ = true;
         if (gpu_updated_[0])
         {
@@ -660,6 +672,11 @@ namespace GridKit
         }
         break;
       case DEVICE:
+        if (!owns_gpu_data_)
+        {
+          out::error() << "Vector::allocate - cannot allocate device data, vector does not own it\n";
+          return 1;
+        }
         mem_.deleteOnDevice(d_data_);
         mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
         owns_gpu_data_ = true;
@@ -691,7 +708,7 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.setZeroArrayOnHost(h_data_, n_capacity_ * k_);
@@ -729,7 +746,7 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.setZeroArrayOnHost(&h_data_[j * n_size_], n_size_);
@@ -769,7 +786,7 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.setArrayToConstOnHost(h_data_, C, n_size_ * k_);
@@ -808,7 +825,7 @@ namespace GridKit
       case HOST:
         if (h_data_ == nullptr)
         {
-          h_data_        = new ScalarT[n_capacity_ * k_];
+          mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
           owns_cpu_data_ = true;
         }
         mem_.setArrayToConstOnHost(&h_data_[n_size_ * j], C, n_size_);

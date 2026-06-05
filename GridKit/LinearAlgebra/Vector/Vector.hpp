@@ -31,12 +31,23 @@ namespace GridKit
     class Vector
     {
     public:
+      Vector() = default;
       Vector(IdxT n);
       Vector(IdxT n, IdxT k);
       ~Vector();
 
-      int            copyFromExternal(const ScalarT* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
-      int            copyFromExternal(Vector* source, memory::MemorySpace memspaceIn, memory::MemorySpace memspaceOut);
+      Vector(const Vector&)            = delete;
+      Vector(Vector&&)                 = delete;
+      Vector& operator=(const Vector&) = delete;
+      Vector& operator=(Vector&&)      = delete;
+
+      int copyFromExternal(const ScalarT*      source,
+                           memory::MemorySpace memspaceIn,
+                           memory::MemorySpace memspaceOut);
+      int copyFromExternal(Vector*             source,
+                           memory::MemorySpace memspaceIn,
+                           memory::MemorySpace memspaceOut);
+
       ScalarT*       getData(memory::MemorySpace memspace);
       ScalarT*       getData(IdxT i, memory::MemorySpace memspace);
       const ScalarT* getData(memory::MemorySpace memspace) const;
@@ -57,8 +68,13 @@ namespace GridKit
       int syncData(memory::MemorySpace memspaceOut);
       int syncData(IdxT j, memory::MemorySpace memspaceOut);
       int resize(IdxT new_n_current);
-      int copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
-      int copyToExternal(ScalarT* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst);
+      int copyToExternal(ScalarT*            dest,
+                         IdxT                i,
+                         memory::MemorySpace memspaceSrc,
+                         memory::MemorySpace memspaceDst);
+      int copyToExternal(ScalarT*            dest,
+                         memory::MemorySpace memspaceSrc,
+                         memory::MemorySpace memspaceDst);
 
     private:
       void setHostUpdated(bool is_updated);

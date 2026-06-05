@@ -181,14 +181,17 @@ namespace GridKit
         }
 
         // array -> memspace
+        x.allocate(memspace_);
         x.copyFromExternal(data, memory::HOST, memspace_);
 
         // memspace -> memspace
         Vector<ScalarT, IdxT> y(N);
+        y.allocate(memspace_);
         y.copyFromExternal(&x, memspace_, memspace_);
 
         // memspace -> host
         Vector<ScalarT, IdxT> z(N);
+        z.allocate(memory::HOST);
         z.copyFromExternal(&y, memspace_, memory::HOST);
 
         const ScalarT* z_data = z.getData(memory::HOST);
@@ -238,6 +241,7 @@ namespace GridKit
           data[i] = 0.1 * (ScalarT) i;
         }
 
+        x.allocate(memspace_);
         x.copyFromExternal(data, memory::HOST, memspace_);
 
         // Copy data to an array on current memspace
