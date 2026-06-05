@@ -145,6 +145,7 @@ are specified:
   `Gensal`             | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
   `GenClassical`       | the classical machine model                          | `bus`, `pmech`\*, `speed`\*, `efd`\*  | `p0`, `q0`, `H`, `D`, `Ra`, `Xdp`, `mva` | `ir`, `ii`, `p`, `q`, `delta`, `omega`
   `Regca`              | WECC REGCA renewable generator/converter model       | `bus`, `ipcmd`\*, `iqcmd`\*, `ibranchr`\*, `ibranchi`\*, `pbranch`\*, `qbranch`\* | `P0`, `Q0`, `mva`, `Tg`, `TM`, `Rqmax`, `Rqmin`, `Rpmax`, `sL`, `IL1`, `VL0`, `VL1`, `VA0`, `VA1`, `Vhvmax` | `ir`, `ii`, `p`, `q`, `vt`, `vm`, `ip`, `iq`, `iqextra`, `il`, `lp`, `up`
+  `Reecb`              | the REECB renewable electrical-control model         | `bus`, `pe`\*, `qgen`\*, `qext`\*, `pfaref`\*, `pref`\*, `iqcmd`, `ipcmd` | `mva`, `PfFlag`, `VFlag`, `QFlag`, `Pqflag`, `Trv`, `Tp`, `Vref0`, `Vdip`, `Vup`, `dbd1`, `dbd2`, `kqv`, `Iql1`, `Iqh1`, `Qmax`, `Qmin`, `Kqp`, `Kqi`, `Vmax`, `Vmin`, `Kvp`, `Kvi`, `Tiq`, `Tpord`, `dPmax`, `dPmin`, `Pmax`, `Pmin`, `Imax` | `iqcmd`, `ipcmd`, `vmeas`, `pmeas`, `piq`, `piv`, `qv`, `pord`, `qref`, `sdip`, `iqmax`, `ipmax`, `iqv`, `vqctrl`, `iqbase`
   `Tgov1 `             | the TGOV1 governor model                             | `pmech`, `speed`                 | `R`, `T1`, `T2`, `T3`, `Pvmax`, `Pvmin`, `Dt` | `none`
   `GastPti`            | the GASTPTI gas turbine-governor model               | `pmech`, `speed`\*, `pref`\*   | `R`, `T1`, `T2`, `T3`, `At`, `Kt`, `Vmax`, `Vmin`, `Dturb`, `Trate` | `pmech`, `fuelvalve`, `fuelflow`, `exhausttemp`, `vload`, `vtemp`, `vlv`
   `Ieeet1`             | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
@@ -154,7 +155,8 @@ are specified:
   `BusToSignalAdapter` | signal adapter component for a bus                   | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
 
 Ports marked with \* are optional and, if missing, will be assumed to be
-connected to a constant value. This list is subject to change.
+connected to a constant value.
+This list is subject to change.
 
 For `Branch`, `tap` and `phase` are optional parameters. If omitted, `tap`
 defaults to `1.0` and `phase` defaults to `0.0` radians. Bus `bus1` is the tap

@@ -63,6 +63,7 @@
 - Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
 - Added `REGCA` converter model implementation for PhasorDynamics.
 - Added `GASTPTI` governor model implementation for PhasorDynamics.
+- Added `REECB` converter model implementation for PhasorDynamics.
 
 ## v0.1
 
