@@ -33,13 +33,26 @@ namespace GridKit
       mva,   ///< MVA base of the gensal model
     };
 
-    /// Ports for a Gensal generator model
-    enum class GensalPorts
+    /// Terminals for a Gensal generator model
+    enum class GensalTerminals : size_t
     {
-      bus,   ///< Unique ID of the connecting bus
+      bus, ///< Unique ID of the connecting bus
+      SIZE
+    };
+
+    /// Input ports for a Gensal generator model
+    enum class GensalInputPorts : size_t
+    {
       pmech, ///< Unique ID of the signal providing mechanical power
-      speed, ///< Unique ID of the signal receiving speed deviation
       efd,   ///< Unique ID of the signal providing exciter field voltage
+      SIZE
+    };
+
+    /// Output ports for a Gensal generator model
+    enum class GensalOutputPorts : size_t
+    {
+      speed, ///< Unique ID of the signal receiving speed deviation
+      SIZE
     };
 
     /// Variables able to be monitored for a Gensal generator model
@@ -75,13 +88,17 @@ namespace GridKit
     struct GensalData : public ComponentData<real_type,
                                              index_type,
                                              GensalParameters,
-                                             GensalPorts,
+                                             GensalTerminals,
+                                             GensalInputPorts,
+                                             GensalOutputPorts,
                                              GensalMonitorableVariables>
     {
       GensalData() = default;
 
       using Parameters           = GensalParameters;
-      using Ports                = GensalPorts;
+      using Terminals            = GensalTerminals;
+      using InputPorts           = GensalInputPorts;
+      using OutputPorts          = GensalOutputPorts;
       using MonitorableVariables = GensalMonitorableVariables;
     };
   } // namespace PhasorDynamics

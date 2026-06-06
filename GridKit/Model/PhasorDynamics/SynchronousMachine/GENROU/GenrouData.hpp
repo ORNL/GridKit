@@ -36,13 +36,26 @@ namespace GridKit
       mva,   ///< MVA base of the genrou model
     };
 
-    /// Ports for a Genrou generator model
-    enum class GenrouPorts
+    /// Terminals for a Genrou generator model
+    enum class GenrouTerminals : size_t
     {
-      bus,   ///< Unique ID of the connecting bus
-      pmech, ///< Unique ID of the bus providing the exciter signal
-      speed, ///< Unique ID of the bus providing the governor signal
-      efd,   ///< Unique ID of the bus providing exciter field signal
+      bus, ///< Unique ID of the connecting bus
+      SIZE
+    };
+
+    /// Input ports for a Genrou generator model
+    enum class GenrouInputPorts : size_t
+    {
+      pmech, ///< Unique ID of the signal providing mechanical power
+      efd,   ///< Unique ID of the signal providing exciter field signal
+      SIZE
+    };
+
+    /// Output ports for a Genrou generator model
+    enum class GenrouOutputPorts : size_t
+    {
+      speed, ///< Unique ID of the signal receiving speed deviation
+      SIZE
     };
 
     /// Variables able to be monitored for a Genrou generator model
@@ -69,13 +82,17 @@ namespace GridKit
     struct GenrouData : public ComponentData<real_type,
                                              index_type,
                                              GenrouParameters,
-                                             GenrouPorts,
+                                             GenrouTerminals,
+                                             GenrouInputPorts,
+                                             GenrouOutputPorts,
                                              GenrouMonitorableVariables>
     {
       GenrouData() = default;
 
       using Parameters           = GenrouParameters;
-      using Ports                = GenrouPorts;
+      using Terminals            = GenrouTerminals;
+      using InputPorts           = GenrouInputPorts;
+      using OutputPorts          = GenrouOutputPorts;
       using MonitorableVariables = GenrouMonitorableVariables;
     };
   } // namespace PhasorDynamics

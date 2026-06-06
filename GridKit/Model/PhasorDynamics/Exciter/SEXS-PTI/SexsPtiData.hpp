@@ -25,12 +25,25 @@ namespace GridKit
         Efdmin  ///< Minimum excitation output
       };
 
-      /// Ports for the SEXS-PTI exciter model.
-      enum class SexsPtiPorts
+      /// Terminals for the SEXS-PTI exciter model.
+      enum class SexsPtiTerminals : size_t
       {
         bus, ///< Unique ID of the terminal bus
+        SIZE
+      };
+
+      /// Input ports for the SEXS-PTI exciter model.
+      enum class SexsPtiInputPorts : size_t
+      {
+        vs, ///< Unique ID of the optional stabilizer output signal
+        SIZE
+      };
+
+      /// Output ports for the SEXS-PTI exciter model.
+      enum class SexsPtiOutputPorts : size_t
+      {
         efd, ///< Unique ID of the output efd signal
-        vs   ///< Unique ID of the optional stabilizer output signal
+        SIZE
       };
 
       /// Monitorable variables for the SEXS-PTI exciter model.
@@ -43,13 +56,17 @@ namespace GridKit
       struct SexsPtiData : public ComponentData<real_type,
                                                 index_type,
                                                 SexsPtiParameters,
-                                                SexsPtiPorts,
+                                                SexsPtiTerminals,
+                                                SexsPtiInputPorts,
+                                                SexsPtiOutputPorts,
                                                 SexsPtiMonitorableVariables>
       {
         SexsPtiData() = default;
 
         using Parameters           = SexsPtiParameters;
-        using Ports                = SexsPtiPorts;
+        using Terminals            = SexsPtiTerminals;
+        using InputPorts           = SexsPtiInputPorts;
+        using OutputPorts          = SexsPtiOutputPorts;
         using MonitorableVariables = SexsPtiMonitorableVariables;
       };
 

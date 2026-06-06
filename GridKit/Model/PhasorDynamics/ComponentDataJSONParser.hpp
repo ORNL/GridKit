@@ -1,7 +1,8 @@
 #pragma once
 
 #include <sstream>
-#include <stdexcept>
+#include <string>
+#include <type_traits>
 
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
@@ -20,12 +21,23 @@ namespace GridKit
     template <typename RealT,
               typename IdxT,
               typename Parameters,
-              typename Ports,
+              typename Terminals,
+              typename InputPorts,
+              typename OutputPorts,
               typename MonitorableVariables>
       requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Ports>
+               && std::is_enum_v<Terminals>
+               && std::is_enum_v<InputPorts>
+               && std::is_enum_v<OutputPorts>
                && std::is_enum_v<MonitorableVariables>
-    void from_json(const json& j, ComponentData<RealT, IdxT, Parameters, Ports, MonitorableVariables>& c)
+    void from_json(const json&                          j,
+                   ComponentData<RealT,
+                                 IdxT,
+                                 Parameters,
+                                 Terminals,
+                                 InputPorts,
+                                 OutputPorts,
+                                 MonitorableVariables>& c)
     {
       j.at("class").get_to(c.device_class);
 
@@ -72,19 +84,37 @@ namespace GridKit
         }
       }
 
+      // WARNING --- TEMPORARY --- : the C++ model data is
+      // intentionally split into terminals, input ports, and output ports.
+      // This backward-compatible flat JSON "ports" parsing SHOULD NOT become
+      // the supported design; it only avoids changing every tracked case in
+      // this PR. The JSON schema should be split once the ingress changes are merged
       for (auto& raw_port : j.at("ports").items())
       {
-        auto key = magic_enum::enum_cast<Ports>(raw_port.key());
-        if (key.has_value())
+        auto terminal = magic_enum::enum_cast<Terminals>(raw_port.key());
+        if (terminal.has_value() && terminal.value() != Terminals::SIZE)
         {
-          raw_port.value().get_to(c.ports[key.value()]);
+          raw_port.value().get_to(c.terminals[terminal.value()]);
+          continue;
         }
-        else
+
+        auto input_port = magic_enum::enum_cast<InputPorts>(raw_port.key());
+        if (input_port.has_value() && input_port.value() != InputPorts::SIZE)
         {
-          Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
-                       << "\" has no value." << error_context.str()
-                       << std::endl;
+          raw_port.value().get_to(c.input_ports[input_port.value()]);
+          continue;
         }
+
+        auto output_port = magic_enum::enum_cast<OutputPorts>(raw_port.key());
+        if (output_port.has_value() && output_port.value() != OutputPorts::SIZE)
+        {
+          raw_port.value().get_to(c.output_ports[output_port.value()]);
+          continue;
+        }
+
+        Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
+                     << "\" has no value." << error_context.str()
+                     << std::endl;
       }
 
       if (j.contains("mon"))

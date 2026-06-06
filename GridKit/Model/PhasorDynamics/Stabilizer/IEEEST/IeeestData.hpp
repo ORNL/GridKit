@@ -40,12 +40,29 @@ namespace GridKit
       };
 
       /**
-       * @brief Port keys for IEEEST Stabilizer model.
+       * @brief Terminal keys for IEEEST Stabilizer model.
        */
-      enum class IeeestPorts
+      enum class IeeestTerminals : size_t
       {
-        input,  ///< Unique ID of the stabilizer input signal
+        SIZE
+      };
+
+      /**
+       * @brief Input port keys for IEEEST Stabilizer model.
+       */
+      enum class IeeestInputPorts : size_t
+      {
+        input, ///< Unique ID of the stabilizer input signal
+        SIZE
+      };
+
+      /**
+       * @brief Output port keys for IEEEST Stabilizer model.
+       */
+      enum class IeeestOutputPorts : size_t
+      {
         output, ///< Unique ID of the stabilizer output signal
+        SIZE
       };
 
       /**
@@ -66,13 +83,17 @@ namespace GridKit
       struct IeeestData : public ComponentData<real_type,
                                                index_type,
                                                IeeestParameters,
-                                               IeeestPorts,
+                                               IeeestTerminals,
+                                               IeeestInputPorts,
+                                               IeeestOutputPorts,
                                                IeeestMonitorableVariables>
       {
         IeeestData() = default;
 
         using Parameters           = IeeestParameters;
-        using Ports                = IeeestPorts;
+        using Terminals            = IeeestTerminals;
+        using InputPorts           = IeeestInputPorts;
+        using OutputPorts          = IeeestOutputPorts;
         using MonitorableVariables = IeeestMonitorableVariables;
       };
 

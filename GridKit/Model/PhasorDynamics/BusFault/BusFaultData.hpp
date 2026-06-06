@@ -20,11 +20,24 @@ namespace GridKit
       X,      ///< Short to ground reactance
     };
 
-    /// Ports supported for a bus fault
-    enum class BusFaultPorts
+    /// Terminals supported for a bus fault
+    enum class BusFaultTerminals : size_t
     {
-      bus,            ///< Unique ID of the bus where the fault occurs
+      bus, ///< Unique ID of the bus where the fault occurs
+      SIZE
+    };
+
+    /// Input ports supported for a bus fault
+    enum class BusFaultInputPorts : size_t
+    {
       control_signal, ///< Unique ID of the bus providing a control signal
+      SIZE
+    };
+
+    /// Output ports supported for a bus fault
+    enum class BusFaultOutputPorts : size_t
+    {
+      SIZE
     };
 
     /// Variables able to be monitored for a bus fault
@@ -47,13 +60,17 @@ namespace GridKit
     struct BusFaultData : public ComponentData<real_type,
                                                index_type,
                                                BusFaultParameters,
-                                               BusFaultPorts,
+                                               BusFaultTerminals,
+                                               BusFaultInputPorts,
+                                               BusFaultOutputPorts,
                                                BusFaultMonitorableVariables>
     {
       BusFaultData() = default;
 
       using Parameters           = BusFaultParameters;
-      using Ports                = BusFaultPorts;
+      using Terminals            = BusFaultTerminals;
+      using InputPorts           = BusFaultInputPorts;
+      using OutputPorts          = BusFaultOutputPorts;
       using MonitorableVariables = BusFaultMonitorableVariables;
     };
   } // namespace PhasorDynamics
