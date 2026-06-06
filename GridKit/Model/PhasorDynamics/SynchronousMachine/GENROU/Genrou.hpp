@@ -145,8 +145,8 @@ namespace GridKit
       auto getSignals()
           -> ComponentSignals<ScalarT,
                               IdxT,
-                              GenrouInternalVariables,
-                              GenrouExternalVariables>&
+                              GenrouInputPorts,
+                              GenrouOutputPorts>&
       {
         return signals_;
       }
@@ -211,7 +211,7 @@ namespace GridKit
       IdxT  bus_id_{0};
 
       /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
+      ComponentSignals<ScalarT, IdxT, GenrouInputPorts, GenrouOutputPorts> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

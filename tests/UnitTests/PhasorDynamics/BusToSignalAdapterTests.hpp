@@ -71,16 +71,16 @@ namespace GridKit
         ii_sig.set(&Ii, &ii_index);
 
         using namespace GridKit::PhasorDynamics;
-        constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-        constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-        constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-        constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+        constexpr auto VR = BusToSignalAdapterOutputPorts::vr;
+        constexpr auto VI = BusToSignalAdapterOutputPorts::vi;
+        constexpr auto IR = BusToSignalAdapterInputPorts::ir;
+        constexpr auto II = BusToSignalAdapterInputPorts::ii;
 
         auto adapter = AdapterT(&bus);
-        adapter.getSignals().template assignSignalNode<VREAL>(&vr_sig);
-        adapter.getSignals().template assignSignalNode<VIMAG>(&vi_sig);
-        adapter.getSignals().template attachSignalNode<IREAL>(&ir_sig);
-        adapter.getSignals().template attachSignalNode<IIMAG>(&ii_sig);
+        adapter.getSignals().template assignSignalNode<VR>(&vr_sig);
+        adapter.getSignals().template assignSignalNode<VI>(&vi_sig);
+        adapter.getSignals().template attachSignalNode<IR>(&ir_sig);
+        adapter.getSignals().template attachSignalNode<II>(&ii_sig);
         adapter.allocate();
         success *= (adapter.verify() == 0);
         success *= (vr_sig.read() == Vr);

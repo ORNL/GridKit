@@ -55,8 +55,8 @@ namespace GridKit
           T3_(7.5),
           Dt_(0)
       {
-        signals_.template assignSignalNode<Tgov1InternalVariables::PM>(pmech);
-        signals_.template attachSignalNode<Tgov1ExternalVariables::DELTAOMEGA>(omega);
+        signals_.template assignSignalNode<Tgov1OutputPorts::pmech>(pmech);
+        signals_.template attachSignalNode<Tgov1InputPorts::speed>(omega);
 
         // 3 internal variables
         size_ = 3;
@@ -190,9 +190,9 @@ namespace GridKit
         }
 
         // Set output signals
-        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
+        if (signals_.template isAssigned<Tgov1OutputPorts::pmech>())
         {
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], &(this->getVariableIndex(2)));
+          signals_.template getSignalNode<Tgov1OutputPorts::pmech>()->set(&y_[2], &(this->getVariableIndex(2)));
         }
 
         return 0;
@@ -204,7 +204,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::verify() const
       {
-        static constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
+        static constexpr auto DELTAOMEGA = Tgov1InputPorts::speed;
 
         int ret = 0;
 
@@ -230,7 +230,7 @@ namespace GridKit
         ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
-        if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
+        if (signals_.template isAssigned<Tgov1OutputPorts::pmech>())
         {
           // System base -> governor base for governor initialization.
           p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
@@ -331,10 +331,10 @@ namespace GridKit
       int Tgov1<scalar_type, index_type>::evaluateResidual()
       {
         // Input Variables
-        if (signals_.template isAttached<Tgov1ExternalVariables::DELTAOMEGA>())
+        if (signals_.template isAttached<Tgov1InputPorts::speed>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Tgov1ExternalVariables::DELTAOMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
+          ws_[0]         = signals_.template readExternalVariable<Tgov1InputPorts::speed>();
+          ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1InputPorts::speed>();
         }
 
         evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());

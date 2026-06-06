@@ -107,9 +107,9 @@ namespace GridKit
         }
 
         // Set output signals
-        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
+        if (signals_.template isAssigned<Ieeet1OutputPorts::efd>())
         {
-          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], &(this->getVariableIndex(7)));
+          signals_.template getSignalNode<Ieeet1OutputPorts::efd>()->set(&y_[7], &(this->getVariableIndex(7)));
         }
 
         return 0;
@@ -121,8 +121,8 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::verify() const
       {
-        static constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
-        static constexpr auto VS    = Ieeet1ExternalVariables::VS;
+        static constexpr auto OMEGA = Ieeet1InputPorts::speed;
+        static constexpr auto VS    = Ieeet1InputPorts::vs;
 
         int ret = 0;
 
@@ -173,20 +173,20 @@ namespace GridKit
         // TODO: Build protections in system initialization call to
         // ensure Efd is initialized externally before the exciter initializes
         // other variables.
-        if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
+        if (signals_.template isAssigned<Ieeet1OutputPorts::efd>())
         {
           efd0 = y_[7]; ///<- generator needs to be initialized first
         }
 
         ScalarT omega{0};
         ScalarT vs{0};
-        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
+        if (signals_.template isAttached<Ieeet1InputPorts::speed>())
         {
-          omega = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
+          omega = signals_.template readExternalVariable<Ieeet1InputPorts::speed>();
         }
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        if (signals_.template isAttached<Ieeet1InputPorts::vs>())
         {
-          vs = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
+          vs = signals_.template readExternalVariable<Ieeet1InputPorts::vs>();
         }
 
         // Terminal Voltage
@@ -327,19 +327,19 @@ namespace GridKit
       int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
         // Set input variables.
-        if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
+        if (signals_.template isAttached<Ieeet1InputPorts::speed>())
         {
-          ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::OMEGA>();
+          ws_[0]         = signals_.template readExternalVariable<Ieeet1InputPorts::speed>();
+          ws_indices_[0] = signals_.template readExternalVariableIndex<Ieeet1InputPorts::speed>();
         }
 
         // VS signal (stabilizer output, optional)
         ws_[1]         = 0.0;
         ws_indices_[1] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<Ieeet1ExternalVariables::VS>())
+        if (signals_.template isAttached<Ieeet1InputPorts::vs>())
         {
-          ws_[1]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::VS>();
-          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1ExternalVariables::VS>();
+          ws_[1]         = signals_.template readExternalVariable<Ieeet1InputPorts::vs>();
+          ws_indices_[1] = signals_.template readExternalVariableIndex<Ieeet1InputPorts::vs>();
         }
 
         // Bus voltages

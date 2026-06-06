@@ -8,6 +8,7 @@
 #pragma once
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 
@@ -16,9 +17,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename real_type, typename index_type>
-    struct BusToSignalAdapterData;
-
     template <typename scalar_type, typename index_type>
     class BusBase;
 
@@ -35,8 +33,8 @@ namespace GridKit
      * @brief Internal variables of a `BusToSignalAdapter`
      *
      * @note Technically these are not owned by this component, but they must
-     * be classified as internal so that they can be written to signal nodes
-     * in `ComponentSignals`
+     * remain model variables so the adapter can bind its output ports to bus
+     * voltage storage.
      */
     enum class BusToSignalAdapterInternalVariables : size_t
     {
@@ -83,8 +81,8 @@ namespace GridKit
       auto getSignals()
           -> ComponentSignals<ScalarT,
                               IdxT,
-                              BusToSignalAdapterInternalVariables,
-                              BusToSignalAdapterExternalVariables>&
+                              BusToSignalAdapterInputPorts,
+                              BusToSignalAdapterOutputPorts>&
       {
         return signals_;
       }
@@ -100,7 +98,7 @@ namespace GridKit
       BusT*    bus_;
 
       /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, BusToSignalAdapterInternalVariables, BusToSignalAdapterExternalVariables> signals_;
+      ComponentSignals<ScalarT, IdxT, BusToSignalAdapterInputPorts, BusToSignalAdapterOutputPorts> signals_;
     };
 
   } // namespace PhasorDynamics

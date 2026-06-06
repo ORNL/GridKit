@@ -79,9 +79,9 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        if (signals_.template isAssigned<SexsPtiOutputPorts::efd>())
         {
-          signals_.template getSignalNode<SexsPtiInternalVariables::EFD>()->set(
+          signals_.template getSignalNode<SexsPtiOutputPorts::efd>()->set(
               &y_[1], &(this->getVariableIndex(1)));
         }
 
@@ -124,15 +124,15 @@ namespace GridKit
           ret += 1;
         }
 
-        if (!signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        if (!signals_.template isAssigned<SexsPtiOutputPorts::efd>())
         {
           Log::error() << "SexsPti: required EFD signal is not assigned\n";
           ret += 1;
         }
 
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        if (signals_.template isAttached<SexsPtiInputPorts::vs>())
         {
-          if (!signals_.template isLinked<SexsPtiExternalVariables::VS>())
+          if (!signals_.template isLinked<SexsPtiInputPorts::vs>())
           {
             Log::error() << "SexsPti: VS signal attached with no linked source\n";
             ret += 1;
@@ -146,7 +146,7 @@ namespace GridKit
       int SexsPti<scalar_type, index_type>::initialize()
       {
         ScalarT efd0{0.0};
-        if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        if (signals_.template isAssigned<SexsPtiOutputPorts::efd>())
         {
           efd0 = y_[1];
         }
@@ -231,10 +231,10 @@ namespace GridKit
       {
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        if (signals_.template isAttached<SexsPtiInputPorts::vs>())
         {
-          ws_[0]         = signals_.template readExternalVariable<SexsPtiExternalVariables::VS>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VS>();
+          ws_[0]         = signals_.template readExternalVariable<SexsPtiInputPorts::vs>();
+          ws_indices_[0] = signals_.template readExternalVariableIndex<SexsPtiInputPorts::vs>();
         }
 
         wb_[0] = bus_->Vr();

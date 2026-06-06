@@ -126,8 +126,8 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
-      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
+      signals_.template attachSignalNode<GenrouInputPorts::pmech>(pmech);
+      signals_.template assignSignalNode<GenrouOutputPorts::speed>(omega);
       initializeParameters(data);
       initializeMonitor();
 
@@ -143,9 +143,9 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
-      signals_.template assignSignalNode<GenrouInternalVariables::OMEGA>(omega);
-      signals_.template attachSignalNode<GenrouExternalVariables::EFD>(efd);
+      signals_.template attachSignalNode<GenrouInputPorts::pmech>(pmech);
+      signals_.template assignSignalNode<GenrouOutputPorts::speed>(omega);
+      signals_.template attachSignalNode<GenrouInputPorts::efd>(efd);
       initializeParameters(data);
       initializeMonitor();
 
@@ -351,9 +351,9 @@ namespace GridKit
       }
 
       // Set output signals
-      if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
+      if (signals_.template isAssigned<GenrouOutputPorts::speed>())
       {
-        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
+        signals_.template getSignalNode<GenrouOutputPorts::speed>()->set(&y_[1], &(this->getVariableIndex(1)));
       }
 
       return 0;
@@ -365,8 +365,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::verify() const
     {
-      static constexpr auto PM  = GenrouExternalVariables::PM;
-      static constexpr auto EFD = GenrouExternalVariables::EFD;
+      static constexpr auto PM  = GenrouInputPorts::pmech;
+      static constexpr auto EFD = GenrouInputPorts::efd;
 
       int ret = 0;
 
@@ -491,15 +491,15 @@ namespace GridKit
       ScalarT Te = y_[12];
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
-      if (signals_.template isAttached<GenrouExternalVariables::PM>())
+      if (signals_.template isAttached<GenrouInputPorts::pmech>())
       {
-        signals_.template writeExternalVariable<GenrouExternalVariables::PM>(pmech_set_);
+        signals_.template writeExternalVariable<GenrouInputPorts::pmech>(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + psidpp * ksat;
-      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
+      if (signals_.template isAttached<GenrouInputPorts::efd>())
       {
-        signals_.template writeExternalVariable<GenrouExternalVariables::EFD>(efd_set_);
+        signals_.template writeExternalVariable<GenrouInputPorts::efd>(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -650,18 +650,18 @@ namespace GridKit
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
-      if (signals_.template isAttached<GenrouExternalVariables::PM>())
+      if (signals_.template isAttached<GenrouInputPorts::pmech>())
       {
-        ws_[0]         = signals_.template readExternalVariable<GenrouExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GenrouExternalVariables::PM>();
+        ws_[0]         = signals_.template readExternalVariable<GenrouInputPorts::pmech>();
+        ws_indices_[0] = signals_.template readExternalVariableIndex<GenrouInputPorts::pmech>();
       }
 
       // Exciter Efield
       ws_[1] = efd_set_;
-      if (signals_.template isAttached<GenrouExternalVariables::EFD>())
+      if (signals_.template isAttached<GenrouInputPorts::efd>())
       {
-        ws_[1]         = signals_.template readExternalVariable<GenrouExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GenrouExternalVariables::EFD>();
+        ws_[1]         = signals_.template readExternalVariable<GenrouInputPorts::efd>();
+        ws_indices_[1] = signals_.template readExternalVariableIndex<GenrouInputPorts::efd>();
       }
 
       // Bus voltages

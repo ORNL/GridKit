@@ -177,9 +177,9 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
+        if (signals_.template isAssigned<IeeestOutputPorts::output>())
         {
-          signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
+          signals_.template getSignalNode<IeeestOutputPorts::output>()->set(
               &y_[11], &(this->getVariableIndex(11)));
         }
 
@@ -191,9 +191,9 @@ namespace GridKit
       {
         int ret = 0;
 
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        if (signals_.template isAttached<IeeestInputPorts::input>())
         {
-          if (!signals_.template isLinked<IeeestExternalVariables::U>())
+          if (!signals_.template isLinked<IeeestInputPorts::input>())
           {
             Log::error() << "Ieeest: input signal U attached with no linked source\n";
             ret += 1;
@@ -316,10 +316,10 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        if (signals_.template isAttached<IeeestInputPorts::input>())
         {
-          ws_[0]         = signals_.template readExternalVariable<IeeestExternalVariables::U>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+          ws_[0]         = signals_.template readExternalVariable<IeeestInputPorts::input>();
+          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestInputPorts::input>();
         }
 
         evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());

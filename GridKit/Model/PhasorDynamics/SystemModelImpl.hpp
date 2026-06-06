@@ -76,30 +76,30 @@ namespace GridKit
 
         if (adapterdata.output_ports.contains(BusToSignalAdapterOutputPorts::vr))
         {
-          IdxT           vr    = adapterdata.output_ports.at(BusToSignalAdapterOutputPorts::vr);
-          constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-          adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
+          IdxT vr = adapterdata.output_ports.at(BusToSignalAdapterOutputPorts::vr);
+          adapter->getSignals().template assignSignalNode<BusToSignalAdapterOutputPorts::vr>(
+              getSignal(vr));
         }
 
         if (adapterdata.output_ports.contains(BusToSignalAdapterOutputPorts::vi))
         {
-          IdxT           vi    = adapterdata.output_ports.at(BusToSignalAdapterOutputPorts::vi);
-          constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-          adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
+          IdxT vi = adapterdata.output_ports.at(BusToSignalAdapterOutputPorts::vi);
+          adapter->getSignals().template assignSignalNode<BusToSignalAdapterOutputPorts::vi>(
+              getSignal(vi));
         }
 
         if (adapterdata.input_ports.contains(BusToSignalAdapterInputPorts::ir))
         {
-          IdxT           ir    = adapterdata.input_ports.at(BusToSignalAdapterInputPorts::ir);
-          constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-          adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
+          IdxT ir = adapterdata.input_ports.at(BusToSignalAdapterInputPorts::ir);
+          adapter->getSignals().template attachSignalNode<BusToSignalAdapterInputPorts::ir>(
+              getSignal(ir));
         }
 
         if (adapterdata.input_ports.contains(BusToSignalAdapterInputPorts::ii))
         {
-          IdxT           ii    = adapterdata.input_ports.at(BusToSignalAdapterInputPorts::ii);
-          constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-          adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
+          IdxT ii = adapterdata.input_ports.at(BusToSignalAdapterInputPorts::ii);
+          adapter->getSignals().template attachSignalNode<BusToSignalAdapterInputPorts::ii>(
+              getSignal(ii));
         }
 
         addComponent(adapter);
@@ -167,23 +167,22 @@ namespace GridKit
         /// power in.
         if (gendata.output_ports.contains(GenrouOutputPorts::speed))
         {
-          IdxT           speed = gendata.output_ports.at(GenrouOutputPorts::speed);
-          constexpr auto OMEGA = GenrouInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+          IdxT speed = gendata.output_ports.at(GenrouOutputPorts::speed);
+          gen->getSignals().template assignSignalNode<GenrouOutputPorts::speed>(
+              getSignal(speed));
         }
 
         if (gendata.input_ports.contains(GenrouInputPorts::pmech))
         {
-          IdxT           pmech = gendata.input_ports.at(GenrouInputPorts::pmech);
-          constexpr auto PM    = GenrouExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          IdxT pmech = gendata.input_ports.at(GenrouInputPorts::pmech);
+          gen->getSignals().template attachSignalNode<GenrouInputPorts::pmech>(
+              getSignal(pmech));
         }
 
         if (gendata.input_ports.contains(GenrouInputPorts::efd))
         {
-          IdxT           efd = gendata.input_ports.at(GenrouInputPorts::efd);
-          constexpr auto EFD = GenrouExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          IdxT efd = gendata.input_ports.at(GenrouInputPorts::efd);
+          gen->getSignals().template attachSignalNode<GenrouInputPorts::efd>(getSignal(efd));
         }
 
         addComponent(gen);
@@ -202,23 +201,22 @@ namespace GridKit
 
         if (gendata.output_ports.contains(GensalOutputPorts::speed))
         {
-          IdxT           speed = gendata.output_ports.at(GensalOutputPorts::speed);
-          constexpr auto OMEGA = GensalInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
+          IdxT speed = gendata.output_ports.at(GensalOutputPorts::speed);
+          gen->getSignals().template assignSignalNode<GensalOutputPorts::speed>(
+              getSignal(speed));
         }
 
         if (gendata.input_ports.contains(GensalInputPorts::pmech))
         {
-          IdxT           pmech = gendata.input_ports.at(GensalInputPorts::pmech);
-          constexpr auto PM    = GensalExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          IdxT pmech = gendata.input_ports.at(GensalInputPorts::pmech);
+          gen->getSignals().template attachSignalNode<GensalInputPorts::pmech>(
+              getSignal(pmech));
         }
 
         if (gendata.input_ports.contains(GensalInputPorts::efd))
         {
-          IdxT           efd = gendata.input_ports.at(GensalInputPorts::efd);
-          constexpr auto EFD = GensalExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          IdxT efd = gendata.input_ports.at(GensalInputPorts::efd);
+          gen->getSignals().template attachSignalNode<GensalInputPorts::efd>(getSignal(efd));
         }
 
         addComponent(gen);
@@ -243,16 +241,15 @@ namespace GridKit
 
         if (govdata.input_ports.contains(Tgov1InputPorts::speed))
         {
-          IdxT           speed      = govdata.input_ports.at(Tgov1InputPorts::speed);
-          constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
-          gov->getSignals().template attachSignalNode<DELTAOMEGA>(getSignal(speed));
+          IdxT speed = govdata.input_ports.at(Tgov1InputPorts::speed);
+          gov->getSignals().template attachSignalNode<Tgov1InputPorts::speed>(getSignal(speed));
         }
 
         if (govdata.output_ports.contains(Tgov1OutputPorts::pmech))
         {
-          IdxT           pmech = govdata.output_ports.at(Tgov1OutputPorts::pmech);
-          constexpr auto PM    = Tgov1InternalVariables::PM;
-          gov->getSignals().template assignSignalNode<PM>(getSignal(pmech));
+          IdxT pmech = govdata.output_ports.at(Tgov1OutputPorts::pmech);
+          gov->getSignals().template assignSignalNode<Tgov1OutputPorts::pmech>(
+              getSignal(pmech));
         }
 
         addComponent(gov);
@@ -270,23 +267,22 @@ namespace GridKit
 
         if (excitedata.input_ports.contains(Ieeet1InputPorts::speed))
         {
-          IdxT           speed = excitedata.input_ports.at(Ieeet1InputPorts::speed);
-          constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
-          exciter->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+          IdxT speed = excitedata.input_ports.at(Ieeet1InputPorts::speed);
+          exciter->getSignals().template attachSignalNode<Ieeet1InputPorts::speed>(
+              getSignal(speed));
         }
 
         if (excitedata.output_ports.contains(Ieeet1OutputPorts::efd))
         {
-          IdxT           efd = excitedata.output_ports.at(Ieeet1OutputPorts::efd);
-          constexpr auto EFD = Ieeet1InternalVariables::EFD;
-          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
+          IdxT efd = excitedata.output_ports.at(Ieeet1OutputPorts::efd);
+          exciter->getSignals().template assignSignalNode<Ieeet1OutputPorts::efd>(
+              getSignal(efd));
         }
 
         if (excitedata.input_ports.contains(Ieeet1InputPorts::vs))
         {
-          IdxT           vs = excitedata.input_ports.at(Ieeet1InputPorts::vs);
-          constexpr auto VS = Ieeet1ExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+          IdxT vs = excitedata.input_ports.at(Ieeet1InputPorts::vs);
+          exciter->getSignals().template attachSignalNode<Ieeet1InputPorts::vs>(getSignal(vs));
         }
 
         addComponent(exciter);
@@ -304,16 +300,16 @@ namespace GridKit
 
         if (excitedata.output_ports.contains(SexsPtiOutputPorts::efd))
         {
-          IdxT           efd = excitedata.output_ports.at(SexsPtiOutputPorts::efd);
-          constexpr auto EFD = SexsPtiInternalVariables::EFD;
-          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
+          IdxT efd = excitedata.output_ports.at(SexsPtiOutputPorts::efd);
+          exciter->getSignals().template assignSignalNode<SexsPtiOutputPorts::efd>(
+              getSignal(efd));
         }
 
         if (excitedata.input_ports.contains(SexsPtiInputPorts::vs))
         {
-          IdxT           vs = excitedata.input_ports.at(SexsPtiInputPorts::vs);
-          constexpr auto VS = SexsPtiExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+          IdxT vs = excitedata.input_ports.at(SexsPtiInputPorts::vs);
+          exciter->getSignals().template attachSignalNode<SexsPtiInputPorts::vs>(
+              getSignal(vs));
         }
 
         addComponent(exciter);
@@ -326,16 +322,16 @@ namespace GridKit
 
         if (stabdata.input_ports.contains(IeeestInputPorts::input))
         {
-          IdxT           input = stabdata.input_ports.at(IeeestInputPorts::input);
-          constexpr auto U     = IeeestExternalVariables::U;
-          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
+          IdxT input = stabdata.input_ports.at(IeeestInputPorts::input);
+          stabilizer->getSignals().template attachSignalNode<IeeestInputPorts::input>(
+              getSignal(input));
         }
 
         if (stabdata.output_ports.contains(IeeestOutputPorts::output))
         {
-          IdxT           output = stabdata.output_ports.at(IeeestOutputPorts::output);
-          constexpr auto VSS    = IeeestInternalVariables::VSS;
-          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
+          IdxT output = stabdata.output_ports.at(IeeestOutputPorts::output);
+          stabilizer->getSignals().template assignSignalNode<IeeestOutputPorts::output>(
+              getSignal(output));
         }
 
         addComponent(stabilizer);

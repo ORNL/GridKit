@@ -11,6 +11,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations
@@ -18,12 +19,6 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Exciter
-    {
-      template <typename real_type, typename index_type>
-      struct Ieeet1Data;
-    } // namespace Exciter
-
     template <typename scalar_type, typename index_type>
     class BusBase;
 
@@ -111,8 +106,8 @@ namespace GridKit
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                Ieeet1InternalVariables,
-                                Ieeet1ExternalVariables>&
+                                Ieeet1InputPorts,
+                                Ieeet1OutputPorts>&
         {
           return signals_;
         }
@@ -156,7 +151,7 @@ namespace GridKit
         ScalarT vOEL_{0};
 
         /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
+        ComponentSignals<ScalarT, IdxT, Ieeet1InputPorts, Ieeet1OutputPorts> signals_;
 
         /// Variable monitor
         std::unique_ptr<MonitorT> monitor_;

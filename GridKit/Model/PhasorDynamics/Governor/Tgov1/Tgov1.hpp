@@ -11,18 +11,13 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 
 // Forward declarations
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Governor
-    {
-      template <typename real_type, typename index_type>
-      struct Tgov1Data;
-    } // namespace Governor
-
     template <typename scalar_type, typename index_type>
     class Genrou;
 
@@ -104,8 +99,8 @@ namespace GridKit
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                Tgov1InternalVariables,
-                                Tgov1ExternalVariables>&
+                                Tgov1InputPorts,
+                                Tgov1OutputPorts>&
         {
           return signals_;
         }
@@ -132,7 +127,7 @@ namespace GridKit
         ScalarT pref_{0};
 
         /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
+        ComponentSignals<ScalarT, IdxT, Tgov1InputPorts, Tgov1OutputPorts> signals_;
 
         // Parameter initialization function
         void    initializeParameters(const ModelDataT& data);

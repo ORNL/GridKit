@@ -8,18 +8,13 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Stabilizer
-    {
-      template <typename real_type, typename index_type>
-      struct IeeestData;
-    } // namespace Stabilizer
-
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
@@ -103,8 +98,8 @@ namespace GridKit
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                IeeestInternalVariables,
-                                IeeestExternalVariables>&
+                                IeeestInputPorts,
+                                IeeestOutputPorts>&
         {
           return signals_;
         }
@@ -160,7 +155,7 @@ namespace GridKit
         RealT use_T6_block_{1};
         RealT bypass_T6_block_{0};
 
-        ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
+        ComponentSignals<ScalarT, IdxT, IeeestInputPorts, IeeestOutputPorts> signals_;
 
         std::unique_ptr<MonitorT> monitor_;
 

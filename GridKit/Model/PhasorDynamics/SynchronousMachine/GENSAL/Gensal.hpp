@@ -110,8 +110,8 @@ namespace GridKit
       auto getSignals()
           -> ComponentSignals<ScalarT,
                               IdxT,
-                              GensalInternalVariables,
-                              GensalExternalVariables>&
+                              GensalInputPorts,
+                              GensalOutputPorts>&
       {
         return signals_;
       }
@@ -175,7 +175,7 @@ namespace GridKit
       BusT* bus_;
 
       /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
+      ComponentSignals<ScalarT, IdxT, GensalInputPorts, GensalOutputPorts> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

@@ -8,18 +8,13 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Exciter
-    {
-      template <typename real_type, typename index_type>
-      struct SexsPtiData;
-    } // namespace Exciter
-
     template <typename scalar_type, typename index_type>
     class BusBase;
 
@@ -96,8 +91,8 @@ namespace GridKit
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
-                                SexsPtiInternalVariables,
-                                SexsPtiExternalVariables>&
+                                SexsPtiInputPorts,
+                                SexsPtiOutputPorts>&
         {
           return signals_;
         }
@@ -123,7 +118,7 @@ namespace GridKit
         ScalarT vOEL_{0};
         ScalarT vUEL_{0};
 
-        ComponentSignals<ScalarT, IdxT, SexsPtiInternalVariables, SexsPtiExternalVariables> signals_;
+        ComponentSignals<ScalarT, IdxT, SexsPtiInputPorts, SexsPtiOutputPorts> signals_;
 
         std::unique_ptr<MonitorT> monitor_;
 

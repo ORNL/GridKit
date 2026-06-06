@@ -226,9 +226,9 @@ namespace GridKit
       }
 
       // Set output signals
-      if (signals_.template isAssigned<GensalInternalVariables::OMEGA>())
+      if (signals_.template isAssigned<GensalOutputPorts::speed>())
       {
-        signals_.template getSignalNode<GensalInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
+        signals_.template getSignalNode<GensalOutputPorts::speed>()->set(&y_[1], &(this->getVariableIndex(1)));
       }
 
       return 0;
@@ -240,8 +240,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::verify() const
     {
-      static constexpr auto PM  = GensalExternalVariables::PM;
-      static constexpr auto EFD = GensalExternalVariables::EFD;
+      static constexpr auto PM  = GensalInputPorts::pmech;
+      static constexpr auto EFD = GensalInputPorts::efd;
 
       int ret = 0;
 
@@ -320,15 +320,15 @@ namespace GridKit
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
-      if (signals_.template isAttached<GensalExternalVariables::PM>())
+      if (signals_.template isAttached<GensalInputPorts::pmech>())
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
+        signals_.template writeExternalVariable<GensalInputPorts::pmech>(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat;
-      if (signals_.template isAttached<GensalExternalVariables::EFD>())
+      if (signals_.template isAttached<GensalInputPorts::efd>())
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::EFD>(efd_set_);
+        signals_.template writeExternalVariable<GensalInputPorts::efd>(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -472,18 +472,18 @@ namespace GridKit
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
-      if (signals_.template isAttached<GensalExternalVariables::PM>())
+      if (signals_.template isAttached<GensalInputPorts::pmech>())
       {
-        ws_[0]         = signals_.template readExternalVariable<GensalExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GensalExternalVariables::PM>();
+        ws_[0]         = signals_.template readExternalVariable<GensalInputPorts::pmech>();
+        ws_indices_[0] = signals_.template readExternalVariableIndex<GensalInputPorts::pmech>();
       }
 
       // Exciter Efield
       ws_[1] = efd_set_;
-      if (signals_.template isAttached<GensalExternalVariables::EFD>())
+      if (signals_.template isAttached<GensalInputPorts::efd>())
       {
-        ws_[1]         = signals_.template readExternalVariable<GensalExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GensalExternalVariables::EFD>();
+        ws_[1]         = signals_.template readExternalVariable<GensalInputPorts::efd>();
+        ws_indices_[1] = signals_.template readExternalVariableIndex<GensalInputPorts::efd>();
       }
 
       // Bus voltages

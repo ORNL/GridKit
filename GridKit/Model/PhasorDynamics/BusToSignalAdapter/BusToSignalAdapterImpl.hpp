@@ -52,19 +52,19 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::allocate()
     {
-      static constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-      static constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
+      static constexpr auto VR = BusToSignalAdapterOutputPorts::vr;
+      static constexpr auto VI = BusToSignalAdapterOutputPorts::vi;
 
       // vr_index_ and vi_index_ are both set to INVALID_INDEX. This component
       // simply passes voltage from bus to output signal, so indices are
       // ignored.
-      if (signals_.template isAssigned<VREAL>())
+      if (signals_.template isAssigned<VR>())
       {
-        signals_.template getSignalNode<VREAL>()->set(&bus_->Vr(), &vr_index_);
+        signals_.template getSignalNode<VR>()->set(&bus_->Vr(), &vr_index_);
       }
-      if (signals_.template isAssigned<VIMAG>())
+      if (signals_.template isAssigned<VI>())
       {
-        signals_.template getSignalNode<VIMAG>()->set(&bus_->Vi(), &vi_index_);
+        signals_.template getSignalNode<VI>()->set(&bus_->Vi(), &vi_index_);
       }
 
       return 0;
@@ -76,23 +76,23 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::verify() const
     {
-      static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-      static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+      static constexpr auto IR = BusToSignalAdapterInputPorts::ir;
+      static constexpr auto II = BusToSignalAdapterInputPorts::ii;
 
       int ret = 0;
 
-      if (signals_.template isAttached<IREAL>())
+      if (signals_.template isAttached<IR>())
       {
-        if (!signals_.template isLinked<IREAL>())
+        if (!signals_.template isLinked<IR>())
         {
           Log::error() << "BusToSignalAdapter: Ir signal attached with no linked source\n";
           ret += 1;
         }
       }
 
-      if (signals_.template isAttached<IIMAG>())
+      if (signals_.template isAttached<II>())
       {
-        if (!signals_.template isLinked<IIMAG>())
+        if (!signals_.template isLinked<II>())
         {
           Log::error() << "BusToSignalAdapter: Ii signal attached with no linked source\n";
           ret += 1;
@@ -144,16 +144,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::evaluateResidual()
     {
-      static constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-      static constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
+      static constexpr auto IR = BusToSignalAdapterInputPorts::ir;
+      static constexpr auto II = BusToSignalAdapterInputPorts::ii;
 
-      if (signals_.template isAttached<IREAL>())
+      if (signals_.template isAttached<IR>())
       {
-        bus_->Ir() += signals_.template readExternalVariable<IREAL>();
+        bus_->Ir() += signals_.template readExternalVariable<IR>();
       }
-      if (signals_.template isAttached<IIMAG>())
+      if (signals_.template isAttached<II>())
       {
-        bus_->Ii() += signals_.template readExternalVariable<IIMAG>();
+        bus_->Ii() += signals_.template readExternalVariable<II>();
       }
 
       return 0;
