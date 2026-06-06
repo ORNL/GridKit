@@ -26,6 +26,10 @@ if(GRIDKIT_ENABLE_OPENMP)
   target_link_libraries(ContingencyAnalysis PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
+if(GRIDKIT_ENABLE_THREADS)
+  target_link_libraries(ContingencyAnalysis PUBLIC Threads::Threads)
+endif()
+
 install(
   TARGETS DynamicSimulation
   EXPORT gridkit-targets
