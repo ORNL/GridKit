@@ -58,29 +58,30 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      if (data.parameters.contains(ModelDataT::Parameters::Pnom))
+      using Parameter = typename ModelDataT::Parameters;
+      if (data.parameters.contains(Parameter::Pnom))
       {
-        Pnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Pnom));
+        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Qnom))
+      if (data.parameters.contains(Parameter::Qnom))
       {
-        Qnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Qnom));
+        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Vnom))
+      if (data.parameters.contains(Parameter::Vnom))
       {
-        Vnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vnom));
+        Vnom_ = std::get<RealT>(data.parameters.at(Parameter::Vnom));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::alphaI))
+      if (data.parameters.contains(Parameter::alphaI))
       {
-        alphaI_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaI));
+        alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::alphaP))
+      if (data.parameters.contains(Parameter::alphaP))
       {
-        alphaP_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaP));
+        alphaP_ = std::get<RealT>(data.parameters.at(Parameter::alphaP));
       }
 
       setDerivedParams();

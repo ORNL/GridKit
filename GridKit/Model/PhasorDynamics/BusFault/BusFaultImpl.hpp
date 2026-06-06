@@ -57,24 +57,27 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(ModelDataT::Parameters::R))
+      using Parameter = typename ModelDataT::Parameters;
+      using Terminal  = typename ModelDataT::Terminals;
+
+      if (data.parameters.contains(Parameter::R))
       {
-        R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::X))
+      if (data.parameters.contains(Parameter::X))
       {
-        X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::state0))
+      if (data.parameters.contains(Parameter::state0))
       {
-        status_ = std::get<bool>(data.parameters.at(ModelDataT::Parameters::state0));
+        status_ = std::get<bool>(data.parameters.at(Parameter::state0));
       }
 
-      if (data.ports.contains(ModelDataT::Ports::bus))
+      if (data.terminals.contains(Terminal::bus))
       {
-        bus_id_ = data.ports.at(ModelDataT::Ports::bus);
+        bus_id_ = data.terminals.at(Terminal::bus);
       }
 
       using Variable = typename ModelDataT::MonitorableVariables;

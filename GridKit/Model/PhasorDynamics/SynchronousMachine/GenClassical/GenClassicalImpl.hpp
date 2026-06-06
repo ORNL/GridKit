@@ -71,44 +71,46 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(ModelDataT::Parameters::p0))
+      using Parameter = typename ModelDataT::Parameters;
+      using Terminal  = typename ModelDataT::Terminals;
+      if (data.parameters.contains(Parameter::p0))
       {
-        p0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::q0))
+      if (data.parameters.contains(Parameter::q0))
       {
-        q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::H))
+      if (data.parameters.contains(Parameter::H))
       {
-        H_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::D))
+      if (data.parameters.contains(Parameter::D))
       {
-        D_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Ra))
+      if (data.parameters.contains(Parameter::Ra))
       {
-        Ra_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xdp))
+      if (data.parameters.contains(Parameter::Xdp))
       {
-        Xdp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::mva))
+      if (data.parameters.contains(Parameter::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::mva));
+        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
       }
 
-      if (data.ports.contains(ModelDataT::Ports::bus))
+      if (data.terminals.contains(Terminal::bus))
       {
-        bus_id_ = data.ports.at(ModelDataT::Ports::bus);
+        bus_id_ = data.terminals.at(Terminal::bus);
       }
 
       initializeMonitor();
