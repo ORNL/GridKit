@@ -163,6 +163,9 @@ are specified:
   [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
   [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
 
+For `Branch`, `closed` is an optional JSON boolean, defaulting to `true`.
+Setting it to `false` removes all branch admittance contributions, including shunts.
+
 ## Example File for a 2-Bus System
 
 ```json

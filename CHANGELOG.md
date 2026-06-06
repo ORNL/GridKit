@@ -85,6 +85,7 @@
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.
+- Added `closed` parameter to `Branch` for declaring out-of-service lines in case files.
 
 ## v0.1
 
