@@ -23,6 +23,7 @@ namespace GridKit
       Bmag,  ///< \f$B_{\mathrm{mag}}\f$ Magnetizing shunt susceptance at bus 1, the tapped side [p.u.]
       tap,   ///< \f$\tau\f$ Off-nominal tap magnitude on the bus-1 side [p.u.]
       phase, ///< \f$\theta\f$ Off-nominal phase-shift angle [rad]
+      closed ///< In-service flag (true = closed, default true)
     };
 
     /// Buses for a branch

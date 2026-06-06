@@ -13,6 +13,11 @@ contributions are oriented entering the adjacent buses.
   bus 1; both shunts are added outside the $\mathbf{M}$ transformation.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
+- `closed=false` is static case-import status. It removes the branch admittance
+  contribution but does not insert fake admittance; islanded or underconstrained
+  topology can still make the system singular.
+- Sparse automatic differentiation may materialize zero-valued structural
+  entries for an open branch; the mathematical Jacobian contribution is zero.
 
 ## Model Parameters
 
@@ -26,6 +31,8 @@ $G_\mathrm{mag}$ | [p.u.] | `Gmag`  | Magnetizing shunt conductance at bus 1  | 
 $B_\mathrm{mag}$ | [p.u.] | `Bmag`  | Magnetizing shunt susceptance at bus 1  | 0.0           |
 $\tau$           | [p.u.] | `tap`   | Off-nominal tap magnitude on bus-1 side | 1.0           |
 $\theta$         | [rad]  | `phase` | Phase-shift angle                       | 0.0           |
+
+`closed` is a JSON boolean, defaulting to `true`. The factor $s_{\mathrm{br}}$ is 1 when closed and 0 otherwise.
 
 ### Parameter Validation
 
@@ -100,17 +107,53 @@ The magnetizing and line shunts are added outside the transformation:
 \begin{aligned}
   \mathbf{Y}
     &=
-    \mathbf{M}^{\dagger}
+    s_{\mathrm{br}}\left(\mathbf{M}^{\dagger}
     \mathbf{Y}_0
     \mathbf{M}
     +
     \mathbf{Y}_\mathrm{mag}
     +
-    \mathbf{Y}_\mathrm{sh}
+    \mathbf{Y}_\mathrm{sh}\right)
 \end{aligned}
 ```
 
-For the equations below, write each entry as $Y_{mn}=G_{mn}+jB_{mn}$.
+For each entry $Y_{mn}=G_{mn}+jB_{mn}$, the real-valued contribution from
+terminal $n$ to current at terminal $m$ is:
+
+```math
+\begin{aligned}
+  \begin{bmatrix}
+    I_{rm} \\
+    I_{im}
+  \end{bmatrix}_{n}
+  =
+  \begin{bmatrix}
+    G_{mn} & -B_{mn} \\
+    B_{mn} &  G_{mn}
+  \end{bmatrix}
+  \begin{bmatrix}
+    V_{rn} \\
+    V_{in}
+  \end{bmatrix}
+\end{aligned}
+```
+
+The voltage derivative for the same block is:
+
+```math
+\begin{aligned}
+  \frac{\partial [I_{rm}, I_{im}]^T}
+       {\partial [V_{rn}, V_{in}]}
+  =
+  \begin{bmatrix}
+    G_{mn} & -B_{mn} \\
+    B_{mn} &  G_{mn}
+  \end{bmatrix}
+\end{aligned}
+```
+
+When `closed=false`, $s_{\mathrm{br}}=0$, so $\mathbf{Y}=0$ and every current
+block and voltage derivative block is zero.
 
 ## Model Ports
 
@@ -160,23 +203,18 @@ None.
 
 ### External Equations
 
-The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
-
 ```math
 \begin{aligned}
-  I_{r1} &= G_{11} V_{r1} - B_{11} V_{i1}
+  0 &= -I_{r1} + G_{11} V_{r1} - B_{11} V_{i1}
          + G_{12} V_{r2} - B_{12} V_{i2} \\
-  I_{i1} &= B_{11} V_{r1} + G_{11} V_{i1}
+  0 &= -I_{i1} + B_{11} V_{r1} + G_{11} V_{i1}
          + B_{12} V_{r2} + G_{12} V_{i2} \\
-  I_{r2} &= G_{21} V_{r1} - B_{21} V_{i1}
+  0 &= -I_{r2} + G_{21} V_{r1} - B_{21} V_{i1}
          + G_{22} V_{r2} - B_{22} V_{i2} \\
-  I_{i2} &= B_{21} V_{r1} + G_{21} V_{i1}
+  0 &= -I_{i2} + B_{21} V_{r1} + G_{21} V_{i1}
          + B_{22} V_{r2} + G_{22} V_{i2}
 \end{aligned}
 ```
-
-These current contributions are added to the connected bus residuals with
-positive sign because branch current is oriented entering the bus.
 
 ## Initialization
 
