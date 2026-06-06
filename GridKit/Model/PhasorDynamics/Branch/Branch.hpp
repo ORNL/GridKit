@@ -206,6 +206,8 @@ namespace GridKit
       RealT B_{0.0};
       RealT tap_{1.0};
       RealT phase_{0.0};
+      bool  closed_{true};
+      RealT in_service_factor_{1.0};
       IdxT  bus1_id_{0};
       IdxT  bus2_id_{0};
 

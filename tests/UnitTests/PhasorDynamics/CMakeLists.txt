@@ -34,6 +34,9 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
+if(GRIDKIT_ENABLE_ENZYME)
+  target_compile_definitions(test_phasor_branch PRIVATE GRIDKIT_ENABLE_ENZYME)
+endif()
 
 add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(

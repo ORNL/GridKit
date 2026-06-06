@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <variant>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/PhasorDynamics/Branch/Branch.hpp>
@@ -127,10 +128,11 @@ namespace GridKit
         branch.allocate();
         branch.evaluateResidual();
 
-        success *= isEqual(bus1.Ir(), Ir1);
-        success *= isEqual(bus1.Ii(), Ii1);
-        success *= isEqual(bus2.Ir(), Ir2);
-        success *= isEqual(bus2.Ii(), Ii2);
+        const RealT tol{1.0e-12};
+        success *= isEqual(bus1.Ir(), Ir1, tol);
+        success *= isEqual(bus1.Ii(), Ii1, tol);
+        success *= isEqual(bus2.Ir(), Ir2, tol);
+        success *= isEqual(bus2.Ii(), Ii2, tol);
 
         return success.report(__func__);
       }
@@ -220,11 +222,180 @@ namespace GridKit
         std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
 
+        const RealT tol{1.0e-12};
         for (size_t i = 0; i < residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i], tol));
+        }
+
+        return success.report(__func__);
+      }
+
+      TestOutcome outOfServiceBranch()
+      {
+        // Verifies open branches contribute zero residual and DependencyTracking derivatives.
+        TestStatus success = true;
+
+        RealT R{2.0};
+        RealT X{4.0};
+        RealT G{0.2};
+        RealT B{1.2};
+
+        DependencyTracking::Variable Vr1{10.0};
+        DependencyTracking::Variable Vi1{20.0};
+        DependencyTracking::Variable Vr2{30.0};
+        DependencyTracking::Variable Vi2{40.0};
+
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
+        bus1.allocate();
+        bus1.initialize();
+        bus1.evaluateResidual();
+        bus2.allocate();
+        bus2.initialize();
+        bus2.evaluateResidual();
+        bus1.Vr().setVariableNumber(0);
+        bus1.Vi().setVariableNumber(1);
+        bus2.Vr().setVariableNumber(2);
+        bus2.Vi().setVariableNumber(3);
+
+        PhasorDynamics::BranchData<RealT, IdxT> data;
+        data.parameters[PhasorDynamics::BranchParameters::R]      = R;
+        data.parameters[PhasorDynamics::BranchParameters::X]      = X;
+        data.parameters[PhasorDynamics::BranchParameters::G]      = G;
+        data.parameters[PhasorDynamics::BranchParameters::B]      = B;
+        data.parameters[PhasorDynamics::BranchParameters::closed] = false;
+
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1, &bus2, data);
+        branch.allocate();
+        branch.evaluateResidual();
+
+        const RealT                               zero{0.0};
+        std::vector<DependencyTracking::Variable> residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        for (const auto& res : residuals)
+        {
+          success *= isEqual(res.getValue(), zero);
+          for (const auto& [var_id, coef] : res.getDependencies())
+          {
+            success *= isEqual(coef, zero);
+          }
+        }
+
+        return success.report(__func__);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      TestOutcome outOfServiceEnzymeJacobian()
+      {
+        // Verifies open branches contribute zero values through the Enzyme Jacobian path.
+        TestStatus success = true;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(10.0, 20.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(30.0, 40.0);
+        bus1.allocate();
+        bus1.initialize();
+        bus2.allocate();
+        bus2.initialize();
+
+        bus1.setVariableIndex(0, 0);
+        bus1.setVariableIndex(1, 1);
+        bus1.setResidualIndex(0, 0);
+        bus1.setResidualIndex(1, 1);
+        bus2.setVariableIndex(0, 2);
+        bus2.setVariableIndex(1, 3);
+        bus2.setResidualIndex(0, 2);
+        bus2.setResidualIndex(1, 3);
+
+        PhasorDynamics::BranchData<RealT, IdxT> data;
+        data.parameters[PhasorDynamics::BranchParameters::R]      = RealT{2.0};
+        data.parameters[PhasorDynamics::BranchParameters::X]      = RealT{4.0};
+        data.parameters[PhasorDynamics::BranchParameters::G]      = RealT{0.2};
+        data.parameters[PhasorDynamics::BranchParameters::B]      = RealT{1.2};
+        data.parameters[PhasorDynamics::BranchParameters::closed] = false;
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, data);
+        branch.allocate();
+
+        bus1.evaluateJacobian();
+        bus2.evaluateJacobian();
+        branch.evaluateJacobian();
+
+        const RealT zero{0.0};
+        auto        check_jacobian_values = [&](auto* jacobian)
+        {
+          success *= jacobian != nullptr;
+          if (jacobian == nullptr)
+          {
+            return;
+          }
+
+          auto* values = jacobian->getValues();
+          for (IdxT i = 0; i < jacobian->getNnz(); ++i)
+          {
+            success *= isEqual(values[i], zero);
+          }
+        };
+
+        check_jacobian_values(branch.getCooJacobian());
+        check_jacobian_values(bus1.getCooJacobian());
+        check_jacobian_values(bus2.getCooJacobian());
+
+        return success.report(__func__);
+      }
+#endif
+
+      TestOutcome accessors()
+      {
+        // Verifies tap and phase-shift residual derivatives.
+        TestStatus success = true;
+
+        RealT R{2.0};
+        RealT X{4.0};
+        RealT G{0.2};
+        RealT B{1.2};
+        RealT tap{1.25};
+        RealT phase{0.3};
+
+        DependencyTracking::Variable Vr1{10.0};
+        DependencyTracking::Variable Vi1{20.0};
+        DependencyTracking::Variable Vr2{30.0};
+        DependencyTracking::Variable Vi2{40.0};
+
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
+        bus1.allocate();
+        bus1.initialize();
+        bus1.evaluateResidual();
+        bus2.allocate();
+        bus2.initialize();
+        bus2.evaluateResidual();
+        bus1.Vr().setVariableNumber(0);
+        bus1.Vi().setVariableNumber(1);
+        bus2.Vr().setVariableNumber(2);
+        bus2.Vi().setVariableNumber(3);
+
+        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1,
+                                                                          &bus2,
+                                                                          R,
+                                                                          X,
+                                                                          G,
+                                                                          B,
+                                                                          tap,
+                                                                          phase);
+        branch.allocate();
+        branch.evaluateResidual();
+
+        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
+        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
+
+        const RealT tol{1.0e-12};
+        for (size_t i = 0; i < residuals.size(); ++i)
+        {
+          DependencyTracking::Variable                       res           = residuals[i];
+          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i], tol));
         }
 
         return success.report(__func__);
@@ -277,10 +448,11 @@ namespace GridKit
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
 
-        success *= isEqual(test_bus1.Ir(), ref_bus1.Ir());
-        success *= isEqual(test_bus1.Ii(), ref_bus1.Ii());
-        success *= isEqual(test_bus2.Ir(), ref_bus2.Ir());
-        success *= isEqual(test_bus2.Ii(), ref_bus2.Ii());
+        const RealT tol{1.0e-12};
+        success *= isEqual(test_bus1.Ir(), ref_bus1.Ir(), tol);
+        success *= isEqual(test_bus1.Ii(), ref_bus1.Ii(), tol);
+        success *= isEqual(test_bus2.Ir(), ref_bus2.Ir(), tol);
+        success *= isEqual(test_bus2.Ii(), ref_bus2.Ii(), tol);
 
         return success.report(__func__);
       }
@@ -310,6 +482,30 @@ namespace GridKit
         PhasorDynamics::Branch<ScalarT, IdxT> negative_tap_branch(&bus1, &bus2, 0.0, 0.1, 0.0, 0.0, -1.0, 0.0);
         success *= (negative_tap_branch.verify() != 0);
 
+        typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT real_closed_data;
+        real_closed_data.parameters[PhasorDynamics::BranchParameters::R]       = RealT{0.0};
+        real_closed_data.parameters[PhasorDynamics::BranchParameters::X]       = RealT{0.1};
+        real_closed_data.parameters[PhasorDynamics::BranchParameters::G]       = RealT{0.0};
+        real_closed_data.parameters[PhasorDynamics::BranchParameters::B]       = RealT{0.0};
+        real_closed_data.parameters[PhasorDynamics::BranchParameters::closed]  = RealT{1.1};
+        success                                                               *= throws<std::bad_variant_access>(
+            [&]()
+            {
+              PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, real_closed_data);
+            });
+
+        typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT integer_closed_data;
+        integer_closed_data.parameters[PhasorDynamics::BranchParameters::R]       = RealT{0.0};
+        integer_closed_data.parameters[PhasorDynamics::BranchParameters::X]       = RealT{0.1};
+        integer_closed_data.parameters[PhasorDynamics::BranchParameters::G]       = RealT{0.0};
+        integer_closed_data.parameters[PhasorDynamics::BranchParameters::B]       = RealT{0.0};
+        integer_closed_data.parameters[PhasorDynamics::BranchParameters::closed]  = IdxT{1};
+        success                                                                  *= throws<std::bad_variant_access>(
+            [&]()
+            {
+              PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, integer_closed_data);
+            });
+
         const RealT                           nan = std::numeric_limits<RealT>::quiet_NaN();
         PhasorDynamics::Branch<ScalarT, IdxT> nonfinite_branch(&bus1, &bus2, nan, 0.1, 0.0, 0.0);
         success *= (nonfinite_branch.verify() != 0);
@@ -319,7 +515,7 @@ namespace GridKit
 
       TestOutcome dataConstructorDefaults()
       {
-        // Verifies omitted data parameters use tap and phase defaults.
+        // Verifies omitted data parameters use tap, phase, and closed defaults.
         TestStatus success = true;
 
         const RealT R{2.0};
@@ -368,10 +564,11 @@ namespace GridKit
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
 
-        success *= isEqual(data_bus1.Ir(), ref_bus1.Ir());
-        success *= isEqual(data_bus1.Ii(), ref_bus1.Ii());
-        success *= isEqual(data_bus2.Ir(), ref_bus2.Ir());
-        success *= isEqual(data_bus2.Ii(), ref_bus2.Ii());
+        const RealT tol{1.0e-12};
+        success *= isEqual(data_bus1.Ir(), ref_bus1.Ir(), tol);
+        success *= isEqual(data_bus1.Ii(), ref_bus1.Ii(), tol);
+        success *= isEqual(data_bus2.Ir(), ref_bus2.Ir(), tol);
+        success *= isEqual(data_bus2.Ii(), ref_bus2.Ii(), tol);
 
         return success.report(__func__);
       }

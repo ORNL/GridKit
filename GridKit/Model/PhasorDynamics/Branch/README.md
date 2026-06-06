@@ -10,6 +10,11 @@ Notes:
 - $G$ and $B$ are total branch shunt values split equally between terminals.
 - The branch has no solver-owned variables; it contributes current residuals
   directly to the connected buses.
+- `closed=false` is static case-import status. It removes the branch admittance
+  contribution but does not insert fake admittance; islanded or underconstrained
+  topology can still make the system singular.
+- Sparse automatic differentiation may materialize zero-valued structural
+  entries for an open branch; the mathematical Jacobian contribution is zero.
 
 ## Circuit Diagram
 
@@ -23,14 +28,15 @@ Figure 1: Branch equivalent circuit
 
 ## Model Parameters
 
-Symbol      | Units   | Description                                      | Typical Value | Note
-------------|---------|--------------------------------------------------|---------------|------
-$R$         | [p.u.]  | Branch series resistance                         |               |
-$X$         | [p.u.]  | Branch series reactance                          |               |
-$G$         | [p.u.]  | Total branch shunt conductance                   | 0             |
-$B$         | [p.u.]  | Total branch shunt susceptance                   | 0             |
-$\tau$      | [p.u.]  | Off-nominal tap magnitude on bus-1 side          | 1             | Parameter name: `tap`
-$\theta$    | [rad]   | Phase-shift angle                                | 0             | Parameter name: `phase`
+Symbol                 | Units  | JSON     | Description                             | Typical Value | Note
+-----------------------|--------|----------|-----------------------------------------|---------------|------
+$R$                    | [p.u.] | `R`      | Branch series resistance                |               |
+$X$                    | [p.u.] | `X`      | Branch series reactance                 |               |
+$G$                    | [p.u.] | `G`      | Total branch shunt conductance          | 0             |
+$B$                    | [p.u.] | `B`      | Total branch shunt susceptance          | 0             |
+$\tau$                 | [p.u.] | `tap`    | Off-nominal tap magnitude on bus-1 side | 1             |
+$\theta$               | [rad]  | `phase`  | Phase-shift angle                       | 0             |
+$c_{\mathrm{br}}$      | [-]    | `closed` | Static branch closed status             | `true`        | JSON boolean
 
 ### Parameter Validation
 
@@ -39,6 +45,7 @@ Invalid Branch parameter sets are rejected by the following checks:
 ```math
 \begin{aligned}
   &R, X, G, B, \tau, \theta \in \mathbb{R}\ \text{and finite} \\
+  &c_{\mathrm{br}} \in \{\mathrm{true}, \mathrm{false}\} \\
   &R^2 + X^2 > 0 \\
   &\tau > 0
 \end{aligned}
@@ -46,10 +53,15 @@ Invalid Branch parameter sets are rejected by the following checks:
 
 ### Model Derived Parameters
 
-The series and shunt admittances are:
+The closed-status factor and branch admittances are:
 
 ```math
 \begin{aligned}
+  s_{\mathrm{br}} &=
+    \begin{cases}
+      1, & c_{\mathrm{br}} = \mathrm{true} \\
+      0, & c_{\mathrm{br}} = \mathrm{false}
+    \end{cases} \\
   Y_{\mathrm{br}} &= \dfrac{1}{R + jX} \\
   Y_{\mathrm{sh}} &= G + jB
 \end{aligned}
@@ -86,11 +98,47 @@ The off-nominal transformer transformation uses bus 1 as the tap side:
       \tau^{-1} & 0 \\
       0 & e^{j\theta}
     \end{bmatrix} \\
-  \mathbf{Y} &= \mathbf{M}^{\dagger}\mathbf{Y}_0\mathbf{M}
+  \mathbf{Y} &= s_{\mathrm{br}}\mathbf{M}^{\dagger}\mathbf{Y}_0\mathbf{M}
 \end{aligned}
 ```
 
-For the equations below, write each entry as $Y_{mn}=G_{mn}+jB_{mn}$.
+For each entry $Y_{mn}=G_{mn}+jB_{mn}$, the real-valued contribution from
+terminal $n$ to current at terminal $m$ is:
+
+```math
+\begin{aligned}
+  \begin{bmatrix}
+    I_{rm} \\
+    I_{im}
+  \end{bmatrix}_{n}
+  =
+  \begin{bmatrix}
+    G_{mn} & -B_{mn} \\
+    B_{mn} &  G_{mn}
+  \end{bmatrix}
+  \begin{bmatrix}
+    V_{rn} \\
+    V_{in}
+  \end{bmatrix}
+\end{aligned}
+```
+
+The voltage derivative for the same block is:
+
+```math
+\begin{aligned}
+  \frac{\partial [I_{rm}, I_{im}]^T}
+       {\partial [V_{rn}, V_{in}]}
+  =
+  \begin{bmatrix}
+    G_{mn} & -B_{mn} \\
+    B_{mn} &  G_{mn}
+  \end{bmatrix}
+\end{aligned}
+```
+
+When `closed=false`, $s_{\mathrm{br}}=0$, so $\mathbf{Y}=0$ and every current
+block and voltage derivative block is zero.
 
 ## Model Variables
 
@@ -127,23 +175,18 @@ None.
 
 ### Algebraic Equations
 
-The branch current relation is $0 = -\mathbf{I} + \mathbf{Y}\mathbf{V}$.
-
 ```math
 \begin{aligned}
-  I_{r1} &= G_{11} V_{r1} - B_{11} V_{i1}
+  0 &= -I_{r1} + G_{11} V_{r1} - B_{11} V_{i1}
          + G_{12} V_{r2} - B_{12} V_{i2} \\
-  I_{i1} &= B_{11} V_{r1} + G_{11} V_{i1}
+  0 &= -I_{i1} + B_{11} V_{r1} + G_{11} V_{i1}
          + B_{12} V_{r2} + G_{12} V_{i2} \\
-  I_{r2} &= G_{21} V_{r1} - B_{21} V_{i1}
+  0 &= -I_{r2} + G_{21} V_{r1} - B_{21} V_{i1}
          + G_{22} V_{r2} - B_{22} V_{i2} \\
-  I_{i2} &= B_{21} V_{r1} + G_{21} V_{i1}
+  0 &= -I_{i2} + B_{21} V_{r1} + G_{21} V_{i1}
          + B_{22} V_{r2} + G_{22} V_{i2}
 \end{aligned}
 ```
-
-These current contributions are added to the connected bus residuals with
-positive sign because branch current is oriented entering the bus.
 
 ## Initialization
 

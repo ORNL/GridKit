@@ -21,6 +21,7 @@ namespace GridKit
       B,     ///< Total shunt susceptance
       tap,   ///< Off-nominal tap magnitude on bus1 side
       phase, ///< Phase shift angle in radians
+      closed ///< In-service flag (true = closed, default true)
     };
 
     /// Buses for a branch

@@ -356,6 +356,10 @@ namespace GridKit
       readRealParameter(data, Parameter::B, B_);
       readRealParameter(data, Parameter::tap, tap_);
       readRealParameter(data, Parameter::phase, phase_);
+      if (data.parameters.contains(Parameter::closed))
+      {
+        closed_ = std::get<bool>(data.parameters.at(Parameter::closed));
+      }
 
       if (data.buses.contains(Buses::bus1))
       {
@@ -476,14 +480,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::setDerivedParams()
     {
-      g11_ = RealT{0.0};
-      b11_ = RealT{0.0};
-      g12_ = RealT{0.0};
-      b12_ = RealT{0.0};
-      g21_ = RealT{0.0};
-      b21_ = RealT{0.0};
-      g22_ = RealT{0.0};
-      b22_ = RealT{0.0};
+      g11_               = RealT{0.0};
+      b11_               = RealT{0.0};
+      g12_               = RealT{0.0};
+      b12_               = RealT{0.0};
+      g21_               = RealT{0.0};
+      b21_               = RealT{0.0};
+      g22_               = RealT{0.0};
+      b22_               = RealT{0.0};
+      in_service_factor_ = closed_ ? RealT{1.0} : RealT{0.0};
 
       const RealT denom = R_ * R_ + X_ * X_;
       if (denom == RealT{0.0} || tap_ == RealT{0.0})
@@ -500,17 +505,17 @@ namespace GridKit
       const RealT g_diag = -(g_br + RealT{0.5} * G_);
       const RealT b_diag = -(b_br + RealT{0.5} * B_);
 
-      g11_ = g_diag * inv_tap * inv_tap;
-      b11_ = b_diag * inv_tap * inv_tap;
+      g11_ = in_service_factor_ * g_diag * inv_tap * inv_tap;
+      b11_ = in_service_factor_ * b_diag * inv_tap * inv_tap;
 
-      g12_ = (g_br * cos_ph - b_br * sin_ph) * inv_tap;
-      b12_ = (b_br * cos_ph + g_br * sin_ph) * inv_tap;
+      g12_ = in_service_factor_ * (g_br * cos_ph - b_br * sin_ph) * inv_tap;
+      b12_ = in_service_factor_ * (b_br * cos_ph + g_br * sin_ph) * inv_tap;
 
-      g21_ = (g_br * cos_ph + b_br * sin_ph) * inv_tap;
-      b21_ = (b_br * cos_ph - g_br * sin_ph) * inv_tap;
+      g21_ = in_service_factor_ * (g_br * cos_ph + b_br * sin_ph) * inv_tap;
+      b21_ = in_service_factor_ * (b_br * cos_ph - g_br * sin_ph) * inv_tap;
 
-      g22_ = g_diag;
-      b22_ = b_diag;
+      g22_ = in_service_factor_ * g_diag;
+      b22_ = in_service_factor_ * b_diag;
     }
 
   } // namespace PhasorDynamics

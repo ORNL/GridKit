@@ -59,13 +59,9 @@ namespace GridKit
           {
             c.parameters[key.value()] = raw_parameter.value().template get<bool>();
           }
-          else if (raw_parameter.value().is_number_float())
+          else if (raw_parameter.value().is_number())
           {
             c.parameters[key.value()] = raw_parameter.value().template get<RealT>();
-          }
-          else if (raw_parameter.value().is_number_integer())
-          {
-            c.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
           }
           else
           {

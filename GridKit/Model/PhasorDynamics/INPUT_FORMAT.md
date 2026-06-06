@@ -139,7 +139,7 @@ are specified:
 
   Device class         | Description                                          | Ports                            | Initialization parameters   | Variables available to monitor
   ---------------------|------------------------------------------------------|----------------------------------|---------------------------- | -------------------------
-  `Branch`             | algebraic pi model for a line or off-nominal transformer branch | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`, `tap`, `phase` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
+  `Branch`             | algebraic pi model for a line or off-nominal transformer branch | `bus1`, `bus2`                   | `R`, `X`, `G`, `B`, `tap`, `phase`, `closed` | `ir1`, `ii1`, `im1`, `p1`, `q1`, `ir2`, `ii2`, `im2`, `p2`, `q2`
   `Load`               | a basic static impedence load model                  | `bus`                            | `R`, `X` | `p`, `q`
   `Genrou`             | 6th order machine model                              | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqop`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xqp`, `Xqpp`, `Xl`, `S10`, `S12`, `mva`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`
   `Gensal`             | 5th order salient-pole machine model                 | `bus`, `pmech`\*, `speed`\*, `efd`\*    | `p0`, `q0`, `H`, `D`, `Ra`, `Tdop`, `Tdopp`, `Tqopp`, `Xd`, `Xdp`, `Xdpp`, `Xq`, `Xl`, `S10`, `S12`, `mva`  | `ir`, `ii`, `p`, `q`, `delta`, `omega`, `speed`, `Eqp`, `psidp`, `psiqpp`, `psidpp`, `vd`, `vq`, `te`, `id`, `iq`
@@ -155,9 +155,10 @@ Ports marked with \* are optional and, if missing, will be assumed to be
 connected to a constant value. This list is subject to change.
 
 
-For `Branch`, `tap` and `phase` are optional parameters. If omitted, `tap`
-defaults to `1.0` and `phase` defaults to `0.0` radians. Bus `bus1` is the tap
-side for off-nominal transformer branches.
+For `Branch`, `tap`, `phase`, and `closed` are optional parameters. If omitted,
+`tap` defaults to `1.0`, `phase` defaults to `0.0` radians, and `closed`
+defaults to `true`. `closed` must be a JSON boolean; numeric status values are
+rejected. Bus `bus1` is the tap side for off-nominal transformer branches.
 
 ## Example File for a 2-Bus System
 
