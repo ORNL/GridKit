@@ -14,6 +14,8 @@ The scale $\mu=4\cdot f_{\text{sync}}=240$ is chosen so $\sigma$ behaves like a 
 
 ### $\sigma$ - `sigmoid`
 
+The sigmoid is also known as the logistic function. The equivalent `tanh` form is used for numerical stability because the exponential form can divide by a very large value.
+
 ```math
 \begin{aligned}
 \sigma(x) &= \begin{cases}0 & x\le 0\\ 1 & x>0\end{cases} \\
