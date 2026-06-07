@@ -18,8 +18,13 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 
 ```math
 \begin{aligned}
-\sigma(x) &= \begin{cases}0 & x\le 0\\ 1 & x>0\end{cases} \\
-          &\approx \dfrac{1}{2}\left(1+\tanh\left(\dfrac{\mu x}{2}\right)\right)
+  \sigma(x)
+    &=
+      \begin{cases}
+        0 & x\le 0 \\[0pt]
+        1 & x\gt 0
+      \end{cases} \\[0pt]
+    &\approx \dfrac{1}{2}\left(1+\tanh\left(\dfrac{\mu x}{2}\right)\right)
 \end{aligned}
 ```
 
@@ -27,12 +32,13 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 
 ### $\rho$ - `ramp`
 
-`ramp` is the softplus approximation to the one-sided ramp. We do not use $x\sigma(x)$ directly because it introduces a negative tail for $x < 0$, while softplus stays nonnegative and approaches $\max(x, 0)$ as the smoothing becomes sharp.
+`ramp` is the softplus approximation to the one-sided ramp. We do not use $x\sigma(x)$ directly because it introduces a negative tail for $x \lt 0$, while softplus stays nonnegative and approaches $\max(x, 0)$ as the smoothing becomes sharp.
 
 ```math
 \begin{aligned}
-\rho(x) &= x\,\sigma(x) \\
-        &\approx \dfrac{x+\lvert x\rvert}{2}+\dfrac{\ln\!\left(1+e^{-\mu\lvert x\rvert}\right)}{\mu}
+  \rho(x)
+    &= x\,\sigma(x) \\[0pt]
+    &\approx \dfrac{x+\lvert x\rvert}{2}+\dfrac{\ln\!\left(1+e^{-\mu\lvert x\rvert}\right)}{\mu}
 \end{aligned}
 ```
 
@@ -69,8 +75,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{max}(x,y) &= \begin{cases}x & x>y\\ y & x\le y\end{cases} \\
-                &\approx y+\rho(x-y)
+  \text{max}(x,y)
+    &=
+      \begin{cases}
+        x & x\gt y \\[0pt]
+        y & x\le y
+      \end{cases} \\[0pt]
+    &\approx y+\rho(x-y)
 \end{aligned}
 ```
 
@@ -80,8 +91,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{min}(x,y) &= \begin{cases}x & x<y\\ y & x\ge y\end{cases} \\
-                &\approx x-\rho(x-y)
+  \text{min}(x,y)
+    &=
+      \begin{cases}
+        x & x\lt y \\[0pt]
+        y & x\ge y
+      \end{cases} \\[0pt]
+    &\approx x-\rho(x-y)
 \end{aligned}
 ```
 
@@ -91,8 +107,14 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{clamp}(x;\ell,u) &= \begin{cases}\ell & x<\ell\\ x & \ell\le x\le u\\ u & x>u\end{cases} \\
-                       &\approx \ell+\rho(x-\ell)-\rho(x-u)
+  \text{clamp}(x;\ell,u)
+    &=
+      \begin{cases}
+        \ell & x\lt \ell \\[0pt]
+        x    & \ell\le x\le u \\[0pt]
+        u    & x\gt u
+      \end{cases} \\[0pt]
+    &\approx \ell+\rho(x-\ell)-\rho(x-u)
 \end{aligned}
 ```
 
@@ -102,8 +124,14 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{deadband1}(x;\ell,u) &= \begin{cases}x & x<\ell\\ 0 & \ell\le x\le u\\ x & x>u\end{cases} \\
-                           &\approx x\left[\sigma(\ell-x)+\sigma(x-u)\right]
+  \text{deadband1}(x;\ell,u)
+    &=
+      \begin{cases}
+        x & x\lt \ell \\[0pt]
+        0 & \ell\le x\le u \\[0pt]
+        x & x\gt u
+      \end{cases} \\[0pt]
+    &\approx x\left[\sigma(\ell-x)+\sigma(x-u)\right]
 \end{aligned}
 ```
 
@@ -113,8 +141,14 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{deadband2}(x;\ell,u) &= \begin{cases}x-\ell & x<\ell\\ 0 & \ell\le x\le u\\ x-u & x>u\end{cases} \\
-                           &\approx \rho(x-u)-\rho(\ell-x)
+  \text{deadband2}(x;\ell,u)
+    &=
+      \begin{cases}
+        x-\ell & x\lt \ell \\[0pt]
+        0      & \ell\le x\le u \\[0pt]
+        x-u    & x\gt u
+      \end{cases} \\[0pt]
+    &\approx \rho(x-u)-\rho(\ell-x)
 \end{aligned}
 ```
 
@@ -124,8 +158,14 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{slew}(f;r) &= \begin{cases}-r & f<-r\\ f & -r\le f\le r\\ r & f>r\end{cases} \\
-                 &\approx -r+\rho(f+r)-\rho(f-r)
+  \text{slew}(f;r)
+    &=
+      \begin{cases}
+        -r & f\lt -r \\[0pt]
+        f  & -r\le f\le r \\[0pt]
+        r  & f\gt r
+      \end{cases} \\[0pt]
+    &\approx -r+\rho(f+r)-\rho(f-r)
 \end{aligned}
 ```
 
@@ -135,8 +175,14 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{linseg}(x;a,b,h) &= \begin{cases}0 & x<a\\ \dfrac{h}{b-a}(x-a) & a\le x\le b\\ h & x>b\end{cases} \\
-                       &\approx \dfrac{h}{b-a}\left[\rho(x-a)-\rho(x-b)\right]
+  \text{linseg}(x;a,b,h)
+    &=
+      \begin{cases}
+        0                       & x\lt a \\[0pt]
+        \dfrac{h}{b-a}(x-a)     & a\le x\le b \\[0pt]
+        h                       & x\gt b
+      \end{cases} \\[0pt]
+    &\approx \dfrac{h}{b-a}\left[\rho(x-a)-\rho(x-b)\right]
 \end{aligned}
 ```
 
@@ -146,8 +192,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{above}(x;\ell) &= \begin{cases}0 & x\le \ell\\ 1 & x>\ell\end{cases} \\
-                     &\approx \sigma(x-\ell)
+  \text{above}(x;\ell)
+    &=
+      \begin{cases}
+        0 & x\le \ell \\[0pt]
+        1 & x\gt \ell
+      \end{cases} \\[0pt]
+    &\approx \sigma(x-\ell)
 \end{aligned}
 ```
 
@@ -157,8 +208,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{below}(x;u) &= \begin{cases}1 & x<u\\ 0 & x\ge u\end{cases} \\
-                  &\approx \sigma(u-x)
+  \text{below}(x;u)
+    &=
+      \begin{cases}
+        1 & x\lt u \\[0pt]
+        0 & x\ge u
+      \end{cases} \\[0pt]
+    &\approx \sigma(u-x)
 \end{aligned}
 ```
 
@@ -168,8 +224,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{inside}(x;\ell,u) &= \begin{cases}1 & \ell<x<u\\ 0 & \text{else}\end{cases} \\
-                        &\approx \sigma(x-\ell)+\sigma(u-x)-1
+  \text{inside}(x;\ell,u)
+    &=
+      \begin{cases}
+        1 & \ell\lt x\lt u \\[0pt]
+        0 & \text{else}
+      \end{cases} \\[0pt]
+    &\approx \sigma(x-\ell)+\sigma(u-x)-1
 \end{aligned}
 ```
 
@@ -179,8 +240,13 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{outside}(x;\ell,u) &= \begin{cases}1 & x<\ell\ \lor\ x>u\\ 0 & \text{else}\end{cases} \\
-                         &\approx \sigma(\ell-x)+\sigma(x-u)
+  \text{outside}(x;\ell,u)
+    &=
+      \begin{cases}
+        1 & x\lt \ell\ \lor\ x\gt u \\[0pt]
+        0 & \text{else}
+      \end{cases} \\[0pt]
+    &\approx \sigma(\ell-x)+\sigma(x-u)
 \end{aligned}
 ```
 
@@ -192,10 +258,21 @@ q(x)=x^2\,\sigma(x)
 
 ```math
 \begin{aligned}
-\text{antiwindup}(x,f;\ell,u) &= \begin{cases}f & \ell<x<u\\ f & x\le\ell\ \land\ f>0\\ f & x\ge u\ \land\ f<0\\ 0 & \text{otherwise}\end{cases} \\
-\phi_L &= \text{above}(x;\ell) \\
-\phi_U &= \text{below}(x;u) \\
-\phi(x,f) &= \phi_L\phi_U+(1-\phi_U)\sigma(-f)+(1-\phi_L)\sigma(f) \\
-\text{antiwindup}(x,f;\ell,u) &\approx \phi(x,f)\,f
+  \text{antiwindup}(x,f;\ell,u)
+    &=
+      \begin{cases}
+        f & \ell\lt x\lt u \\[0pt]
+        f & x\le\ell\ \land\ f\gt 0 \\[0pt]
+        f & x\ge u\ \land\ f\lt 0 \\[0pt]
+        0 & \text{otherwise}
+      \end{cases} \\[0pt]
+  \phi_L
+    &= \text{above}(x;\ell) \\[0pt]
+  \phi_U
+    &= \text{below}(x;u) \\[0pt]
+  \phi(x,f)
+    &= \phi_L\phi_U+(1-\phi_U)\sigma(-f)+(1-\phi_L)\sigma(f) \\[0pt]
+  \text{antiwindup}(x,f;\ell,u)
+    &\approx \phi(x,f)\,f
 \end{aligned}
 ```
