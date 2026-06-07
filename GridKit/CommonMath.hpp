@@ -10,6 +10,14 @@ namespace GridKit
 {
   namespace Math
   {
+    /**
+     * @brief Smoothing scale shared by CommonMath primitives
+     *
+     * Used by @ref sigmoid, @ref ramp, and functions composed from them to set
+     * the width of smooth transitions.
+     *
+     * @tparam RealT - real data type
+     */
     template <typename RealT>
     inline constexpr RealT MU = 240.0;
 
@@ -223,22 +231,6 @@ namespace GridKit
     {
       assert(lower < upper);
       return height / (upper - lower) * (ramp(x - lower) - ramp(x - upper));
-    }
-
-    /**
-     * @brief Derivative of the scaled sigmoid activation function
-     *        (i.e., approximation to the delta dirac function)
-     *
-     * @tparam ScalarT - scalar data type
-     *
-     * @param[in] x - expected to be of order 1
-     * @return value of the sigmoid function
-     */
-    template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT dsigmoid(const ScalarT x)
-    {
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      return MU<RealT> * sigmoid(x) * (ONE<RealT> - sigmoid(x));
     }
 
     /**
