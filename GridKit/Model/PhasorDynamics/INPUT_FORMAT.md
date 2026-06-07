@@ -115,6 +115,27 @@ a signal and has the following fields:
 
 All interactions with signals are handled by `devices`, which reference signals via `signal_id`
 
+#### Signal ports and fixed input delay
+
+Signal ports are normally written as the integer `signal_id`:
+
+```json
+"ports": { "input": 1, "output": 2 }
+```
+
+A consuming signal input may instead be written as an object with the source
+signal id and a fixed delay in seconds:
+
+```json
+"ports": {
+  "input": { "signal": 1, "delay": 0.5 },
+  "output": 2
+}
+```
+
+The parser reads `signal` and optional `delay` from this object. Delay is
+metadata on the consuming signal edge; if a source has no special prehistory,
+the initialized sender value is used before enough accepted history exists.
 
 ### Devices
 
@@ -148,6 +169,7 @@ are specified:
   `Ieeet1`             | the IEEET1 exciter model                             | `bus`, `speed`, `efd`, `vs`\*    | `Tr`, `Ka`, `Ta`, `Ke`, `Te`, `Kf`, `Tf`, `Vrmin`, `Vrmax`, `E1`, `E2`, `Se1`, `Se2`, `Ispdlim` | `efd`, `ksat`
   `SexsPti`            | the SEXS-PTI simplified exciter model                | `bus`, `efd`, `vs`\*             | `Ta`, `Tb`, `Te`, `K`, `Efdmax`, `Efdmin` | `efd`
   `Ieeest`      | the IEEEST stabilizer model                          | `input`, `output`                | `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `T1`, `T2`, `T3`, `T4`, `T5`, `T6`, `Ks`, `Lsmin`, `Lsmax`, `Vcl`, `Vcu`, `Tdelay` | `vss`
+  `SampledSignalSource` | exogenous sampled signal source                    | `output`                         | `scale`, `offset` | `out`
   `BusFault`           | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
   `BusToSignalAdapter` | signal adapter component for a bus                   | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
 
@@ -158,6 +180,41 @@ connected to a constant value. This list is subject to change.
 For `Branch`, `tap` and `phase` are optional parameters. If omitted, `tap`
 defaults to `1.0` and `phase` defaults to `0.0` radians. Bus `bus1` is the tap
 side for off-nominal transformer branches.
+
+`SampledSignalSource` uses an additional `source` object. For CSV input, use:
+
+```json
+{
+  "class": "SampledSignalSource",
+  "id": "SRC1",
+  "ports": { "output": 1 },
+  "params": { "scale": 1.0, "offset": 0.0 },
+  "source": {
+    "type": "csv",
+    "file": "forcing.csv",
+    "time_column": "t",
+    "value_column": "u"
+  }
+}
+```
+
+For inline sampled data, use:
+
+```json
+{
+  "class": "SampledSignalSource",
+  "id": "SRC1",
+  "ports": { "output": 1 },
+  "params": { "scale": 1.0, "offset": 0.0 },
+  "source": {
+    "type": "samples",
+    "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]
+  }
+}
+```
+
+Samples are linearly interpolated. Outside the sampled time range, the source
+holds the nearest endpoint.
 
 ## Example File for a 2-Bus System
 

@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/SampledSignalSource/SampledSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
@@ -34,23 +35,24 @@ namespace GridKit
     template <typename real_type = double, typename index_type = size_t>
     struct SystemModelData
     {
-      using RealT                   = real_type;
-      using IdxT                    = index_type;
-      using BranchDataT             = BranchData<RealT, IdxT>;
-      using BusDataT                = BusData<RealT, IdxT>;
-      using BusToSignalAdapterDataT = BusToSignalAdapterData<RealT, IdxT>;
-      using BusFaultDataT           = BusFaultData<RealT, IdxT>;
-      using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
-      using Ieeet1DataT             = Exciter::Ieeet1Data<RealT, IdxT>;
-      using SexsPtiDataT            = Exciter::SexsPtiData<RealT, IdxT>;
-      using IeeestDataT             = Stabilizer::IeeestData<RealT, IdxT>;
-      using GenrouDataT             = GenrouData<RealT, IdxT>;
-      using GensalDataT             = GensalData<RealT, IdxT>;
-      using GenClassicalDataT       = GenClassicalData<RealT, IdxT>;
-      using LoadDataT               = LoadData<RealT, IdxT>;
-      using LoadZIPDataT            = LoadZIPData<RealT, IdxT>;
-      using SignalDataT             = SignalNodeData<RealT, IdxT>;
-      using MonitorSinkSpec         = Model::VariableMonitorBase::SinkSpec;
+      using RealT                    = real_type;
+      using IdxT                     = index_type;
+      using BranchDataT              = BranchData<RealT, IdxT>;
+      using BusDataT                 = BusData<RealT, IdxT>;
+      using BusToSignalAdapterDataT  = BusToSignalAdapterData<RealT, IdxT>;
+      using BusFaultDataT            = BusFaultData<RealT, IdxT>;
+      using Tgov1DataT               = Governor::Tgov1Data<RealT, IdxT>;
+      using Ieeet1DataT              = Exciter::Ieeet1Data<RealT, IdxT>;
+      using SexsPtiDataT             = Exciter::SexsPtiData<RealT, IdxT>;
+      using IeeestDataT              = Stabilizer::IeeestData<RealT, IdxT>;
+      using GenrouDataT              = GenrouData<RealT, IdxT>;
+      using GensalDataT              = GensalData<RealT, IdxT>;
+      using GenClassicalDataT        = GenClassicalData<RealT, IdxT>;
+      using LoadDataT                = LoadData<RealT, IdxT>;
+      using LoadZIPDataT             = LoadZIPData<RealT, IdxT>;
+      using SignalDataT              = SignalNodeData<RealT, IdxT>;
+      using SampledSignalSourceDataT = SignalSource::SampledSignalSourceData<RealT, IdxT>;
+      using MonitorSinkSpec          = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the grid dynamics case format this system model was
       /// parsed from
@@ -89,20 +91,21 @@ namespace GridKit
       /// - Convert string to enum
       /// - Associate component type to its corresponding enum
       /// - Consolidate components to allow writing to them using the enum as the argument
-      std::vector<BusDataT>                bus;          ///< Buses within the model
-      std::vector<BusToSignalAdapterDataT> adapter;      ///< bus-to-signal adapters within the model
-      std::vector<BranchDataT>             branch;       ///< Branches within the model
-      std::vector<BusFaultDataT>           bus_fault;    ///< Bus faults within the model
-      std::vector<GenrouDataT>             genrou;       ///< GENROU instances within the model
-      std::vector<GensalDataT>             gensal;       ///< GENSAL instances within the model
-      std::vector<GenClassicalDataT>       genclassical; ///< Classical generator instances within the model
-      std::vector<LoadDataT>               load;         ///< Loads within the model
-      std::vector<LoadZIPDataT>            loadzip;      ///< Loads within the model
-      std::vector<Tgov1DataT>              gov;          ///< Governors within the model
-      std::vector<Ieeet1DataT>             exciter;      ///< Exciters within the model
-      std::vector<SexsPtiDataT>            sexspti;      ///< SEXS-PTI exciters within the model
-      std::vector<IeeestDataT>             stabilizer;   ///< Stabilizers within the model
-      std::vector<SignalDataT>             signal;       ///< Signal nodes
+      std::vector<BusDataT>                 bus;                   ///< Buses within the model
+      std::vector<BusToSignalAdapterDataT>  adapter;               ///< bus-to-signal adapters within the model
+      std::vector<BranchDataT>              branch;                ///< Branches within the model
+      std::vector<BusFaultDataT>            bus_fault;             ///< Bus faults within the model
+      std::vector<GenrouDataT>              genrou;                ///< GENROU instances within the model
+      std::vector<GensalDataT>              gensal;                ///< GENSAL instances within the model
+      std::vector<GenClassicalDataT>        genclassical;          ///< Classical generator instances within the model
+      std::vector<LoadDataT>                load;                  ///< Loads within the model
+      std::vector<LoadZIPDataT>             loadzip;               ///< Loads within the model
+      std::vector<Tgov1DataT>               gov;                   ///< Governors within the model
+      std::vector<Ieeet1DataT>              exciter;               ///< Exciters within the model
+      std::vector<SexsPtiDataT>             sexspti;               ///< SEXS-PTI exciters within the model
+      std::vector<IeeestDataT>              stabilizer;            ///< Stabilizers within the model
+      std::vector<SampledSignalSourceDataT> sampled_signal_source; ///< Sampled signal sources
+      std::vector<SignalDataT>              signal;                ///< Signal nodes
 
       /// Monitor sink specs
       std::vector<MonitorSinkSpec> monitor_sink;

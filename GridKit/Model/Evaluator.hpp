@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -136,6 +137,21 @@ namespace GridKit
        * @pre `setAbsoluteTolerance` must have been called first.
        */
       virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
+
+      virtual int resetHistory(RealT)
+      {
+        return 0;
+      }
+
+      virtual int stepAccepted(RealT)
+      {
+        return 0;
+      }
+
+      virtual void setMaxStepSize(RealT& hmax) const
+      {
+        hmax = std::numeric_limits<RealT>::infinity();
+      }
 
       virtual std::vector<ScalarT>&       y()       = 0;
       virtual const std::vector<ScalarT>& y() const = 0;

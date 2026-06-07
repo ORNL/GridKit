@@ -8,6 +8,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/SampledSignalSource/SampledSignalSourceDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -100,7 +101,13 @@ namespace GridKit
           raw_component.get_to(adapter);
           sm.adapter.push_back(adapter);
         }
-        if (kind == "Branch")
+        else if (kind == "SampledSignalSource")
+        {
+          typename SystemModelData<RealT, IdxT>::SampledSignalSourceDataT source;
+          raw_component.get_to(source);
+          sm.sampled_signal_source.push_back(source);
+        }
+        else if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;
           raw_component.get_to(branch);

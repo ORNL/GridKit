@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <limits>
 
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusFactory.hpp>
@@ -42,6 +43,7 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
+      using namespace SignalSource;
 
       owns_components_ = true;
 
@@ -61,6 +63,22 @@ namespace GridKit
       {
         SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>(signaldata);
         addSignal(signal);
+      }
+
+      // Add sampled signal sources before consumers so initialized sender
+      // values own delayed-signal prehistory.
+      for (const auto& sourcedata : data.sampled_signal_source)
+      {
+        auto* source = new SampledSignalSource<ScalarT, IdxT>(sourcedata);
+
+        if (sourcedata.ports.contains(SampledSignalSourcePorts::output))
+        {
+          IdxT           output = sourcedata.ports.at(SampledSignalSourcePorts::output);
+          constexpr auto OUT    = SampledSignalSourceInternalVariables::OUT;
+          source->getSignals().template assignSignalNode<OUT>(getSignal(output));
+        }
+
+        addComponent(source);
       }
 
       // Add bus-to-signal adapters
@@ -91,16 +109,14 @@ namespace GridKit
 
         if (adapterdata.ports.contains(AdapterPorts::ir))
         {
-          IdxT           ir    = adapterdata.ports.at(AdapterPorts::ir);
           constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-          adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
+          attachSignalInput<IREAL>(adapter->getSignals(), adapterdata, AdapterPorts::ir);
         }
 
         if (adapterdata.ports.contains(AdapterPorts::ii))
         {
-          IdxT           ii    = adapterdata.ports.at(AdapterPorts::ii);
           constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-          adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
+          attachSignalInput<IIMAG>(adapter->getSignals(), adapterdata, AdapterPorts::ii);
         }
 
         addComponent(adapter);
@@ -175,16 +191,14 @@ namespace GridKit
 
         if (gendata.ports.contains(GenrouPorts::pmech))
         {
-          IdxT           pmech = gendata.ports.at(GenrouPorts::pmech);
           constexpr auto PM    = GenrouExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          attachSignalInput<PM>(gen->getSignals(), gendata, GenrouPorts::pmech);
         }
 
         if (gendata.ports.contains(GenrouPorts::efd))
         {
-          IdxT           efd = gendata.ports.at(GenrouPorts::efd);
           constexpr auto EFD = GenrouExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          attachSignalInput<EFD>(gen->getSignals(), gendata, GenrouPorts::efd);
         }
 
         addComponent(gen);
@@ -210,16 +224,14 @@ namespace GridKit
 
         if (gendata.ports.contains(GensalPorts::pmech))
         {
-          IdxT           pmech = gendata.ports.at(GensalPorts::pmech);
           constexpr auto PM    = GensalExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
+          attachSignalInput<PM>(gen->getSignals(), gendata, GensalPorts::pmech);
         }
 
         if (gendata.ports.contains(GensalPorts::efd))
         {
-          IdxT           efd = gendata.ports.at(GensalPorts::efd);
           constexpr auto EFD = GensalExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
+          attachSignalInput<EFD>(gen->getSignals(), gendata, GensalPorts::efd);
         }
 
         addComponent(gen);
@@ -244,9 +256,8 @@ namespace GridKit
 
         if (govdata.ports.contains(Tgov1Ports::speed))
         {
-          IdxT           speed      = govdata.ports.at(Tgov1Ports::speed);
           constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
-          gov->getSignals().template attachSignalNode<DELTAOMEGA>(getSignal(speed));
+          attachSignalInput<DELTAOMEGA>(gov->getSignals(), govdata, Tgov1Ports::speed);
         }
 
         if (govdata.ports.contains(Tgov1Ports::pmech))
@@ -271,9 +282,8 @@ namespace GridKit
 
         if (excitedata.ports.contains(Ieeet1Ports::speed))
         {
-          IdxT           speed = excitedata.ports.at(Ieeet1Ports::speed);
           constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
-          exciter->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+          attachSignalInput<OMEGA>(exciter->getSignals(), excitedata, Ieeet1Ports::speed);
         }
 
         if (excitedata.ports.contains(Ieeet1Ports::efd))
@@ -285,9 +295,8 @@ namespace GridKit
 
         if (excitedata.ports.contains(Ieeet1Ports::vs))
         {
-          IdxT           vs = excitedata.ports.at(Ieeet1Ports::vs);
           constexpr auto VS = Ieeet1ExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+          attachSignalInput<VS>(exciter->getSignals(), excitedata, Ieeet1Ports::vs);
         }
 
         addComponent(exciter);
@@ -312,9 +321,8 @@ namespace GridKit
 
         if (excitedata.ports.contains(SexsPtiPorts::vs))
         {
-          IdxT           vs = excitedata.ports.at(SexsPtiPorts::vs);
           constexpr auto VS = SexsPtiExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+          attachSignalInput<VS>(exciter->getSignals(), excitedata, SexsPtiPorts::vs);
         }
 
         addComponent(exciter);
@@ -327,9 +335,8 @@ namespace GridKit
 
         if (stabdata.ports.contains(IeeestPorts::input))
         {
-          IdxT           input = stabdata.ports.at(IeeestPorts::input);
           constexpr auto U     = IeeestExternalVariables::U;
-          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
+          attachSignalInput<U>(stabilizer->getSignals(), stabdata, IeeestPorts::input);
         }
 
         if (stabdata.ports.contains(IeeestPorts::output))
@@ -592,6 +599,9 @@ namespace GridKit
         }
       }
 
+      resetHistory(time_);
+      stepAccepted(time_);
+
       return 0;
     }
 
@@ -642,6 +652,44 @@ namespace GridKit
     void SystemModel<scalar_type, index_type>::printMonitoredVariables() const
     {
       monitor_->print();
+    }
+
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::resetHistory(RealT t0)
+    {
+      for (auto* signal : signals_)
+      {
+        signal->resetHistory(t0);
+      }
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::stepAccepted(RealT t)
+    {
+      for (auto* signal : signals_)
+      {
+        signal->stepAccepted(t);
+      }
+      for (auto* component : components_)
+      {
+        component->stepAccepted(t);
+      }
+      return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::setMaxStepSize(RealT& hmax) const
+    {
+      hmax = std::numeric_limits<RealT>::infinity();
+      for (const auto* signal : signals_)
+      {
+        const auto window = signal->historyWindow();
+        if (window > 0.0 && window < hmax)
+        {
+          hmax = window;
+        }
+      }
     }
 
     /**
@@ -962,6 +1010,10 @@ namespace GridKit
     {
       time_  = t;
       alpha_ = a;
+      for (const auto& signal : signals_)
+      {
+        signal->setReadTime(t);
+      }
       for (const auto& component : components_)
       {
         component->updateTime(t, a);
@@ -1016,6 +1068,21 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
+    }
+
+    template <typename scalar_type, typename index_type>
+    template <auto variable, typename SignalsT, typename DataT, typename PortT>
+    void SystemModel<scalar_type, index_type>::attachSignalInput(
+        SignalsT& signals, const DataT& data, PortT port)
+    {
+      const auto signal_id = data.ports.at(port);
+      const auto delay     = data.port_delays.contains(port) ? data.port_delays.at(port) : 0.0;
+      auto*      signal    = getSignal(signal_id);
+      if (delay > 0.0)
+      {
+        signal->requireHistoryWindow(delay);
+      }
+      signals.template attachSignalNode<variable>(signal, delay);
     }
 
     /**

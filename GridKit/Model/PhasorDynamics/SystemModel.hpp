@@ -89,6 +89,9 @@ namespace GridKit
       int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
+      int resetHistory(RealT t0) override;
+      int stepAccepted(RealT t) override;
+      void setMaxStepSize(RealT& hmax) const override;
 
       CsrMatrixT* getCsrJacobian() const override
       {
@@ -111,6 +114,9 @@ namespace GridKit
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
+      template <auto variable, typename SignalsT, typename DataT, typename PortT>
+      void attachSignalInput(SignalsT& signals, const DataT& data, PortT port);
+
       std::vector<BusT*>       buses_;
       std::vector<SignalT*>    signals_;
       std::vector<ComponentT*> components_;

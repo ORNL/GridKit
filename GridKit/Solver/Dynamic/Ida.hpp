@@ -1,9 +1,11 @@
 
 #pragma once
 
+#include <cmath>
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <optional>
 
 #include <nvector/nvector_serial.h>
@@ -234,6 +236,11 @@ namespace AnalysisManager
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
       static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);
+
+      RealT modelMaxStepSize() const;
+      bool  delayedSignalMode() const;
+      int   acceptStep(RealT t);
+      bool  reachedTime(RealT t, RealT target) const;
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);

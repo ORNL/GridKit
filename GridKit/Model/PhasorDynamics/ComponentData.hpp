@@ -41,6 +41,9 @@ namespace GridKit
       /// Mapping of ports to port values
       std::map<Ports, IdxT> ports;
 
+      /// Mapping of signal input ports to fixed input delays.
+      std::map<Ports, RealT> port_delays;
+
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
 

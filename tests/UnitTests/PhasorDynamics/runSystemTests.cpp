@@ -15,6 +15,8 @@ int main()
 #endif
 
   result += test.signalError();
+  result += test.delayedSignalParser();
+  result += test.delayedSignalRejectsNegativeDelay();
 
   return result.summary();
 }

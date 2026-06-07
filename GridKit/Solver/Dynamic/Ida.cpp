@@ -1,8 +1,11 @@
 
 #include "Ida.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <idas/idas.h>
@@ -93,6 +96,13 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetId");
 
       setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_);
+
+      const RealT hmax = modelMaxStepSize();
+      if (std::isfinite(hmax) && hmax > 0.0)
+      {
+        retval = IDASetMaxStep(solver_, hmax);
+        checkOutput(retval, "IDASetMaxStep");
+      }
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -259,10 +269,13 @@ namespace AnalysisManager
 
         retval = IDAGetConsistentIC(solver_, yy_, yp_);
         checkOutput(retval, "IDAGetConsistentIC");
-
-        copyVec(yy_, model_->y());
-        copyVec(yp_, model_->yp());
       }
+
+      copyVec(yy_, model_->y());
+      copyVec(yp_, model_->yp());
+      model_->updateTime(t0, 0.0);
+      model_->resetHistory(t0);
+      model_->stepAccepted(t0);
 
       return retval;
     }
@@ -296,6 +309,36 @@ namespace AnalysisManager
       RealT tret;
       RealT dt   = (tf - t_init_) / static_cast<RealT>(nout);
       RealT tout = t_init_ + dt;
+
+      if (delayedSignalMode())
+      {
+        while (nout > iout)
+        {
+          tout   = (iout == nout - 1) ? tf : t_init_ + static_cast<RealT>(iout + 1) * dt;
+          retval = IDASetStopTime(solver_, tout);
+          checkOutput(retval, "IDASetStopTime");
+
+          do
+          {
+            retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_ONE_STEP);
+            checkOutput(retval, "IDASolve");
+            acceptStep(tret);
+          } while (!reachedTime(tret, tout));
+
+          if (model_->monitoring())
+          {
+            model_->printMonitoredVariables();
+          }
+          if (step_callback.has_value())
+          {
+            (*step_callback)(tret);
+          }
+
+          ++iout;
+        }
+
+        return retval;
+      }
 
       // In loop, call IDASolve, print results, and test for error.
       //  Break out of loop when NOUT preset output times have been reached.
@@ -335,6 +378,7 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(tf, 0.0);
+      model_->stepAccepted(tf);
       // if (model_->monitoring())
       // {
       //   model_->printMonitoredVariables();
@@ -430,6 +474,29 @@ namespace AnalysisManager
 
       RealT dt   = tf / static_cast<RealT>(nout);
       RealT tout = dt;
+
+      if (delayedSignalMode())
+      {
+        for (int i = 0; i < nout; ++i)
+        {
+          tout   = (i == nout - 1) ? tf : static_cast<RealT>(i + 1) * dt;
+          retval = IDASetStopTime(solver_, tout);
+          checkOutput(retval, "IDASetStopTime");
+
+          do
+          {
+            retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_ONE_STEP);
+            checkOutput(retval, "IDASolve");
+            acceptStep(tret);
+          } while (!reachedTime(tret, tout));
+
+          retval = IDAGetQuad(solver_, &tret, q_);
+          checkOutput(retval, "IDAGetQuad");
+        }
+
+        return retval;
+      }
+
       // printOutput(0.0);
       // printSpecial(0.0, yy_);
       for (int i = 0; i < nout; ++i)
@@ -452,6 +519,7 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(tf, 0.0);
+      model_->stepAccepted(tf);
 
       return retval;
     }
@@ -638,6 +706,7 @@ namespace AnalysisManager
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
       model_->updateTime(tf, 0.0);
+      model_->stepAccepted(tf);
 
       return retval;
     }
@@ -904,6 +973,38 @@ namespace AnalysisManager
 
       ScalarT* ydata = N_VGetArrayPointer(y);
       std::copy(x.cbegin(), x.cend(), ydata);
+    }
+
+    template <class ScalarT, typename IdxT>
+    auto Ida<ScalarT, IdxT>::modelMaxStepSize() const -> RealT
+    {
+      RealT hmax = std::numeric_limits<RealT>::infinity();
+      model_->setMaxStepSize(hmax);
+      return hmax;
+    }
+
+    template <class ScalarT, typename IdxT>
+    bool Ida<ScalarT, IdxT>::delayedSignalMode() const
+    {
+      const RealT hmax = modelMaxStepSize();
+      return std::isfinite(hmax) && hmax > 0.0;
+    }
+
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::acceptStep(RealT t)
+    {
+      copyVec(yy_, model_->y());
+      copyVec(yp_, model_->yp());
+      model_->updateTime(t, 0.0);
+      return model_->stepAccepted(t);
+    }
+
+    template <class ScalarT, typename IdxT>
+    bool Ida<ScalarT, IdxT>::reachedTime(RealT t, RealT target) const
+    {
+      const auto scale = std::max<RealT>({1.0, std::abs(t), std::abs(target)});
+      const auto tol   = 100.0 * std::numeric_limits<RealT>::epsilon() * scale;
+      return t >= target - tol;
     }
 
     /**

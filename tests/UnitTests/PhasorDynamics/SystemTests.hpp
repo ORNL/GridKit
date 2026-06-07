@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -172,6 +173,48 @@ namespace GridKit
         return status.report(__func__);
       }
 
+      TestOutcome delayedSignalParser()
+      {
+        TestStatus success = true;
+
+        auto data = parseDelayedSignalCase();
+
+        using SourcePorts = PhasorDynamics::SignalSource::SampledSignalSourcePorts;
+        using IeeestPorts = PhasorDynamics::Stabilizer::IeeestPorts;
+
+        success *= (data.sampled_signal_source.size() == 1);
+        success *= (data.sampled_signal_source[0].ports.at(SourcePorts::output) == 1);
+        success *= (data.stabilizer.size() == 1);
+        success *= (data.stabilizer[0].ports.at(IeeestPorts::input) == 1);
+        success *= isEqual(data.stabilizer[0].port_delays.at(IeeestPorts::input), static_cast<RealT>(0.5));
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+
+        RealT hmax = std::numeric_limits<RealT>::infinity();
+        system.setMaxStepSize(hmax);
+        success *= isEqual(hmax, static_cast<RealT>(0.5));
+
+        return success.report(__func__);
+      }
+
+      TestOutcome delayedSignalRejectsNegativeDelay()
+      {
+        TestStatus success = true;
+
+        success *= throws<std::runtime_error>(
+            [&]()
+            {
+              auto               input = delayedSignalCaseJson("\"input\": {\"signal\": 1, \"delay\": -0.1}",
+                                                 "\"output\": 2");
+              std::istringstream stream(input);
+              PhasorDynamics::parseSystemModelData(stream);
+            });
+
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome jacobian()
       {
@@ -221,6 +264,56 @@ namespace GridKit
       }
 
     private:
+      std::string delayedSignalCaseJson(const std::string& input_port,
+                                        const std::string& output_port) const
+      {
+        std::stringstream json;
+        json << R"({
+          "header": {
+            "format_version": 0,
+            "format_revision": 1,
+            "case_name": "DelayedSignal",
+            "case_description": "None",
+            "case_comments": "None",
+            "freq_base": 60.0,
+            "va_base": 100000000.0
+          },
+          "buses": [],
+          "signals": [
+            {"signal_id": 1, "name": "source"},
+            {"signal_id": 2, "name": "output"}
+          ],
+          "devices": [
+            {
+              "class": "SampledSignalSource",
+              "id": "SRC1",
+              "ports": {"output": 1},
+              "params": {"scale": 1.0, "offset": 0.0},
+              "source": {
+                "type": "samples",
+                "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]
+              }
+            },
+            {
+              "class": "Ieeest",
+              "id": "PSS1",
+              "ports": {)"
+             << input_port << ", " << output_port << R"(},
+              "params": {}
+            }
+          ]
+        })";
+        return json.str();
+      }
+
+      PhasorDynamics::SystemModelData<RealT, IdxT> parseDelayedSignalCase() const
+      {
+        auto               input = delayedSignalCaseJson("\"input\": {\"signal\": 1, \"delay\": 0.5}",
+                                           "\"output\": 2");
+        std::istringstream stream(input);
+        return PhasorDynamics::parseSystemModelData(stream);
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
       {

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
@@ -77,7 +78,44 @@ namespace GridKit
         auto key = magic_enum::enum_cast<Ports>(raw_port.key());
         if (key.has_value())
         {
-          raw_port.value().get_to(c.ports[key.value()]);
+          const auto& port_value = raw_port.value();
+          auto        fail       = [&](const std::string& message)
+          {
+            std::stringstream ss;
+            ss << "\n\t" << message << error_context.str();
+            Log::error() << ss.str() << std::endl;
+            throw std::runtime_error(ss.str());
+          };
+
+          if (port_value.is_object())
+          {
+            if (!port_value.contains("signal"))
+            {
+              fail("Signal port object must define \"signal\".");
+            }
+            port_value.at("signal").get_to(c.ports[key.value()]);
+
+            if (port_value.contains("delay"))
+            {
+              if (!port_value.at("delay").is_number())
+              {
+                fail("Signal port \"delay\" must be numeric.");
+              }
+              const auto delay = port_value.at("delay").template get<RealT>();
+              if (delay < 0.0)
+              {
+                fail("Signal port \"delay\" must be non-negative.");
+              }
+              if (delay > 0.0)
+              {
+                c.port_delays[key.value()] = delay;
+              }
+            }
+          }
+          else
+          {
+            port_value.get_to(c.ports[key.value()]);
+          }
         }
         else
         {

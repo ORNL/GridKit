@@ -53,6 +53,7 @@ namespace GridKit
       using ScalarT = scalar_type;
       /// Index type
       using IdxT    = index_type;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
       /// Attaches a signal node to an external variable on this component
       ///
@@ -63,7 +64,7 @@ namespace GridKit
       /// @post The provided signal node is attached to the indicated
       ///       external variable
       template <ExternalVariables variable>
-      auto attachSignalNode(SignalNode<ScalarT, IdxT>* node)
+      auto attachSignalNode(SignalNode<ScalarT, IdxT>* node, RealT delay = 0.0)
       {
 #ifndef NDEBUG
         if (node == nullptr)
@@ -71,9 +72,13 @@ namespace GridKit
           throw std::logic_error("A null pointer to a signal node has been passed to attachSignalNode");
         }
 #endif
+        if (delay < 0.0)
+        {
+          throw std::logic_error("A negative signal delay has been passed to attachSignalNode");
+        }
 
         static_assert(variable < ExternalVariables::MAXIMUM);
-        external_variable_signals_[static_cast<size_t>(variable)] = node;
+        external_variable_signals_[static_cast<size_t>(variable)] = ExternalSignalConnection{node, delay};
       }
 
       /// Check if a signal node has been attached to an external variable
@@ -103,7 +108,7 @@ namespace GridKit
       auto isLinked() const -> bool
       {
         static_assert(variable < ExternalVariables::MAXIMUM);
-        return external_variable_signals_[static_cast<size_t>(variable)].value()->linked();
+        return external_variable_signals_[static_cast<size_t>(variable)].value().node->linked();
       }
 
       /// Returns a signal node for an internal signal variable to be
@@ -115,6 +120,18 @@ namespace GridKit
       ///      variable
       template <InternalVariables variable>
       auto getSignalNode() -> SignalNode<ScalarT, IdxT>*
+      {
+        static_assert(variable < InternalVariables::MAXIMUM);
+        if (!internal_variable_signals_[static_cast<size_t>(variable)])
+        {
+          throw std::logic_error("A signal node has not been assigned to this internal variable");
+        }
+
+        return *internal_variable_signals_[static_cast<size_t>(variable)];
+      }
+
+      template <InternalVariables variable>
+      auto getSignalNode() const -> const SignalNode<ScalarT, IdxT>*
       {
         static_assert(variable < InternalVariables::MAXIMUM);
         if (!internal_variable_signals_[static_cast<size_t>(variable)])
@@ -139,7 +156,8 @@ namespace GridKit
           throw std::logic_error("A signal node has not been assigned to this external variable");
         }
 
-        return (*external_variable_signals_[static_cast<size_t>(variable)])->read();
+        const auto& connection = external_variable_signals_[static_cast<size_t>(variable)].value();
+        return connection.node->readWithDelay(connection.delay);
       }
 
       /// Returns the global index of the specified external variable
@@ -156,7 +174,8 @@ namespace GridKit
           throw std::logic_error("A signal node has not been assigned to this external variable");
         }
 
-        return (*external_variable_signals_[static_cast<size_t>(variable)])->getVariableIndex();
+        const auto& connection = external_variable_signals_[static_cast<size_t>(variable)].value();
+        return connection.node->variableIndexForDelay(connection.delay);
       }
 
       /// Writes a value to the specified external variable
@@ -179,7 +198,7 @@ namespace GridKit
           throw std::logic_error("A signal node has not been assigned to this external variable");
         }
 
-        (*external_variable_signals_[static_cast<size_t>(variable)])->init(value);
+        external_variable_signals_[static_cast<size_t>(variable)].value().node->init(value);
       }
 
       /// Assigns a signal node to an internal variable on this component
@@ -204,6 +223,12 @@ namespace GridKit
       }
 
     private:
+      struct ExternalSignalConnection
+      {
+        SignalNode<ScalarT, IdxT>* node{nullptr};
+        RealT                      delay{0.0};
+      };
+
       /// Internal variables which may have a signal associated with them for
       /// use elsewhere
       std::array<std::optional<SignalNode<ScalarT, IdxT>*>,
@@ -212,7 +237,7 @@ namespace GridKit
 
       /// External variables which may have a signal associated with them for
       /// use internally
-      std::array<std::optional<SignalNode<ScalarT, IdxT>*>,
+      std::array<std::optional<ExternalSignalConnection>,
                  static_cast<size_t>(ExternalVariables::MAXIMUM)>
           external_variable_signals_{};
     };
