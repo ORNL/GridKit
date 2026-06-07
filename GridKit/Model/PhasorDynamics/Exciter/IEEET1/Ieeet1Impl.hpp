@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
@@ -262,15 +263,17 @@ namespace GridKit
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
 
-        tag_[0] = (Tr_ != 0.0); // y0 - vts  - Sensed term volt
-        tag_[1] = true;         // y1 - vr   - Voltage reg
-        tag_[2] = true;         // y2 - efdp - Efd pre mult
-        tag_[3] = true;         // y3 - vfx  - Exciter feedback
-        tag_[4] = false;        // y4 - vtr  - Term Volt Err
-        tag_[5] = false;        // y5 - vf   - Feedback volt
-        tag_[6] = false;        // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false;        // y7 - efd  - Efd
-        tag_[8] = false;        // y8 - ksat - Saturation
+        static constexpr RealT ZERO_TOL = std::numeric_limits<RealT>::epsilon();
+
+        tag_[0] = (Tr_ > ZERO_TOL); // y0 - vts  - Sensed term volt
+        tag_[1] = true;             // y1 - vr   - Voltage reg
+        tag_[2] = true;             // y2 - efdp - Efd pre mult
+        tag_[3] = true;             // y3 - vfx  - Exciter feedback
+        tag_[4] = false;            // y4 - vtr  - Term Volt Err
+        tag_[5] = false;            // y5 - vf   - Feedback volt
+        tag_[6] = false;            // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false;            // y7 - efd  - Efd
+        tag_[8] = false;            // y8 - ksat - Saturation
 
         return 0;
       }
