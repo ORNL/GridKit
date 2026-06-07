@@ -7,9 +7,6 @@
 #include <vector>
 
 #include <GridKit/LinearAlgebra/MemoryUtils.hpp>
-// #include <resolve/vector/Vector.hpp>
-// #include <resolve/vector/VectorHandler.hpp>
-// #include <resolve/workspace/LinAlgWorkspace.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 

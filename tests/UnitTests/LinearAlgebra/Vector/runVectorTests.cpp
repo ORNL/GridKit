@@ -26,7 +26,7 @@ int main(int, char**)
     result += test.setToConst(50);
   }
 
-#ifdef GRIDKIT_USE_GPU
+#ifdef GRIDKIT_ENABLE_GPU
   {
     GridKit::Testing::VectorTests test(GridKit::memory::DEVICE);
 
