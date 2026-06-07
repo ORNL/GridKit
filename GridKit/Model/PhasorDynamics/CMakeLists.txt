@@ -14,7 +14,6 @@ gridkit_add_library(
           ComponentData.hpp
           ComponentLibrary.hpp
           ComponentSignals.hpp
-          SignalSource/SampledSignalSource/SampledSignalSourceDataJSONParser.hpp
   LINK_LIBRARIES
     INTERFACE
     GridKit::definitions
@@ -43,6 +42,7 @@ add_subdirectory(SynchronousMachine)
 
 add_subdirectory(SignalNode)
 add_subdirectory(SignalSource)
+add_subdirectory(SignalBlock)
 
 add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS

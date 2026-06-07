@@ -1,0 +1,71 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "Signal delay example",
+        "case_description": "A signal-only case demonstrating a transport-delay block",
+        "case_comments": "A quarter-cycle sampled signal source drives a dynamic IEEEST stabilizer input through a 0.25-second Delay block.",
+        "freq_base": 60.0,
+        "va_base": 100e6
+    },
+    "monitors": [
+        {
+            "file_name": "SignalDelay.out.csv",
+            "format": "csv"
+        }
+    ],
+    "buses": [],
+    "signals": [
+        { "signal_id": 1, "name": "Undelayed sampled source" },
+        { "signal_id": 2, "name": "Delayed source" },
+        { "signal_id": 3, "name": "Stabilizer output" }
+    ],
+    "devices": [
+        {
+            "class": "SampledSignalSource",
+            "id": "SRC1",
+            "ports": { "output": 1 },
+            "params": {
+                "scale": 1.0,
+                "offset": 0.0
+            },
+            "source": {
+                "type": "csv",
+                "file": "SignalDelaySource.csv",
+                "time_column": "t",
+                "value_column": "u"
+            },
+            "mon": ["out"]
+        },
+        {
+            "class": "Delay",
+            "id": "DLY1",
+            "ports": { "input": 1, "output": 2 },
+            "params": { "delay": 0.25 },
+            "mon": ["out"]
+        },
+        {
+            "class": "Ieeest",
+            "id": "PSS1",
+            "ports": { "input": 2, "output": 3 },
+            "params": {
+                "A1": 1.013,
+                "A2": 0.013,
+                "A3": 0.0,
+                "A4": 0.0,
+                "A5": 1.013,
+                "A6": 0.013,
+                "T1": 0.06,
+                "T2": 0.05,
+                "T3": 0.06,
+                "T4": 0.05,
+                "T5": 1.65,
+                "T6": 0.0,
+                "Ks": 1.0,
+                "Lsmin": -5.0,
+                "Lsmax": 5.0
+            },
+            "mon": ["vss"]
+        }
+    ]
+}

@@ -26,56 +26,6 @@ namespace GridKit
       using SourceParams = typename SourceData::Parameters;
 
     public:
-      TestOutcome signalHistory()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> node;
-        ScalarT                                   value{1.0};
-        IdxT                                      index{7};
-
-        node.set(&value, &index);
-        node.requireHistoryWindow(1.0);
-        node.resetHistory(0.0);
-
-        node.setReadTime(0.75);
-        success *= isEqual(static_cast<RealT>(node.readWithDelay(1.0)), static_cast<RealT>(1.0));
-        success *= isEqual(static_cast<RealT>(node.readWithDelay(0.0)), static_cast<RealT>(1.0));
-        success *= (node.variableIndexForDelay(0.0) == index);
-        success *= (node.variableIndexForDelay(0.5) == INVALID_INDEX<IdxT>);
-
-        value = 3.0;
-        node.stepAccepted(1.0);
-
-        node.setReadTime(1.0);
-        success *= isEqual(static_cast<RealT>(node.readWithDelay(0.5)), static_cast<RealT>(2.0));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome senderPrehistory()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> node;
-        ScalarT                                   value{1.0};
-        IdxT                                      index{7};
-
-        node.set(&value,
-                 &index,
-                 [](RealT t)
-                 {
-                   return 10.0 + t;
-                 });
-        node.requireHistoryWindow(1.0);
-        node.resetHistory(0.0);
-
-        node.setReadTime(0.75);
-        success *= isEqual(static_cast<RealT>(node.readWithDelay(1.0)), static_cast<RealT>(9.75));
-
-        return success.report(__func__);
-      }
-
       TestOutcome inlineSource()
       {
         TestStatus success = true;
@@ -92,7 +42,6 @@ namespace GridKit
         Source                                    source(data);
         PhasorDynamics::SignalNode<ScalarT, IdxT> output;
 
-        output.requireHistoryWindow(0.1);
         source.getSignals().template assignSignalNode<PhasorDynamics::SignalSource::SampledSignalSourceInternalVariables::OUT>(&output);
         source.allocate();
         success *= (source.verify() == 0);
@@ -100,10 +49,6 @@ namespace GridKit
         source.updateTime(0.05, 0.0);
         success *= isEqual(source.valueAt(0.05), static_cast<RealT>(0.0));
         success *= isEqual(static_cast<RealT>(output.read()), static_cast<RealT>(0.0));
-
-        output.resetHistory(0.0);
-        output.setReadTime(0.05);
-        success *= isEqual(static_cast<RealT>(output.readWithDelay(0.1)), static_cast<RealT>(-1.0));
 
         return success.report(__func__);
       }

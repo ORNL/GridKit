@@ -15,6 +15,7 @@
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalBlock/Delay/DelayData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/SampledSignalSource/SampledSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
@@ -52,6 +53,7 @@ namespace GridKit
       using LoadZIPDataT             = LoadZIPData<RealT, IdxT>;
       using SignalDataT              = SignalNodeData<RealT, IdxT>;
       using SampledSignalSourceDataT = SignalSource::SampledSignalSourceData<RealT, IdxT>;
+      using DelayDataT               = SignalBlock::DelayData<RealT, IdxT>;
       using MonitorSinkSpec          = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the grid dynamics case format this system model was
@@ -105,6 +107,7 @@ namespace GridKit
       std::vector<SexsPtiDataT>             sexspti;               ///< SEXS-PTI exciters within the model
       std::vector<IeeestDataT>              stabilizer;            ///< Stabilizers within the model
       std::vector<SampledSignalSourceDataT> sampled_signal_source; ///< Sampled signal sources
+      std::vector<DelayDataT>               delay;                 ///< Transport-delay signal blocks
       std::vector<SignalDataT>              signal;                ///< Signal nodes
 
       /// Monitor sink specs

@@ -7,7 +7,7 @@
 gridkit_add_library(
   phasor_dynamics_signal
   SOURCES SignalNode.cpp
-  HEADERS SignalNode.hpp SignalNodeData.hpp SignalHistory.hpp)
+  HEADERS SignalNode.hpp SignalNodeData.hpp)
 
 gridkit_add_library(phasor_dynamics_signal_dependency_tracking
                     SOURCES SignalNodeDependencyTracking.cpp)

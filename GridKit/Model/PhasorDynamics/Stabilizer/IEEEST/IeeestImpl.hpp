@@ -222,6 +222,25 @@ namespace GridKit
           yp_[static_cast<size_t>(i)] = 0.0;
         }
 
+        ScalarT u{0.0};
+        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        {
+          u              = signals_.template readExternalVariable<IeeestExternalVariables::U>();
+          ws_[0]         = u;
+          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+        }
+
+        y_[0] = use_notch_ * u;
+        y_[4] = u;
+        y_[5] = u;
+        y_[6] = u;
+        y_[7] = u;
+        y_[8] = u;
+        y_[9] = u;
+
+        y_[10] = bypass_T6_block_ * Ks_ * u;
+        y_[11] = Math::clamp(y_[10], Lsmin_, Lsmax_);
+
         return 0;
       }
 

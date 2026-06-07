@@ -93,6 +93,74 @@ namespace GridKit
       }
 
       /**
+       * @brief Nonzero input with unitary steady-state gain initializes consistently.
+       */
+      TestOutcome nonzeroInitialResidual()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT> u_node;
+        PhasorDynamics::SignalNode<ScalarT, IdxT> vss_node;
+        ScalarT                                   u_value{0.5};
+        IdxT                                      u_index = 12;
+        ScalarT                                   vss_value{0.0};
+        IdxT                                      vss_index = INVALID_INDEX<IdxT>;
+
+        u_node.set(&u_value, &u_index);
+        vss_node.set(&vss_value, &vss_index);
+
+        using Params = PhasorDynamics::Stabilizer::IeeestParameters;
+
+        auto data                      = makeTestData();
+        data.parameters[Params::T6]    = static_cast<RealT>(0.0);
+        data.parameters[Params::Ks]    = static_cast<RealT>(1.0);
+        data.parameters[Params::Lsmin] = static_cast<RealT>(-1.0);
+        data.parameters[Params::Lsmax] = static_cast<RealT>(1.0);
+        PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT> stab(data);
+
+        stab.getSignals().template attachSignalNode<PhasorDynamics::Stabilizer::IeeestExternalVariables::U>(&u_node);
+        stab.getSignals().template assignSignalNode<PhasorDynamics::Stabilizer::IeeestInternalVariables::VSS>(&vss_node);
+
+        stab.allocate();
+        success *= (stab.verify() == 0);
+        stab.initialize();
+        stab.evaluateResidual();
+
+        const auto& y  = stab.y();
+        success       *= isEqual(y[0], u_value, tol_);
+        success       *= isEqual(y[1], static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(y[2], static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(y[3], static_cast<ScalarT>(0.0), tol_);
+        success       *= isEqual(y[4], u_value, tol_);
+        success       *= isEqual(y[5], u_value, tol_);
+        success       *= isEqual(y[6], u_value, tol_);
+        success       *= isEqual(y[7], u_value, tol_);
+        success       *= isEqual(y[8], u_value, tol_);
+        success       *= isEqual(y[9], u_value, tol_);
+        success       *= isEqual(y[10], u_value, tol_);
+        success       *= isEqual(stab.yp()[6], static_cast<ScalarT>(0.0), tol_);
+
+        const auto  loose_tol = static_cast<RealT>(1.0e-4);
+        const auto& f         = stab.getResidual();
+        for (size_t i = 0; i < f.size(); ++i)
+        {
+          auto test_tol = (i == 11) ? loose_tol : tol_;
+          if (!isEqual(f[i], 0.0, test_tol))
+          {
+            std::cout << "Non-zero residual at index " << i << ": " << f[i] << "\n";
+            success = false;
+          }
+        }
+
+        success *= vss_node.linked();
+        success *= (vss_node.getVariableIndex() == 11);
+        success *= isEqual(vss_node.read(), y[11], loose_tol);
+        success *= isEqual(vss_node.read(), u_value, loose_tol);
+
+        return success.report(__func__);
+      }
+
+      /**
        * @brief Residual evaluation against hand-computed answer key.
        *
        * Sets specific y/yp values and verifies residuals match
@@ -227,6 +295,10 @@ namespace GridKit
 
         // --- d/dy': tag derivatives as independent ---
         stab.initialize();
+        for (size_t i = 0; i < stab.size(); ++i)
+        {
+          stab.y()[i] = stab.y()[i].getValue();
+        }
         for (size_t i = 0; i < stab.size(); ++i)
         {
           stab.yp()[i].setVariableNumber(i);

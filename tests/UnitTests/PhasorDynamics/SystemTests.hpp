@@ -2,7 +2,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <sstream>
 #include <string>
 
@@ -30,6 +29,65 @@ namespace GridKit
     {
     private:
       using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+
+      PhasorDynamics::SystemModelData<RealT, IdxT> parseDelayCase() const
+      {
+        std::stringstream json;
+        json << R"({
+          "header": {
+            "format_version": 0, "format_revision": 1,
+            "case_name": "Delay", "case_description": "None", "case_comments": "None",
+            "freq_base": 60.0, "va_base": 100000000.0
+          },
+          "buses": [],
+          "signals": [
+            {"signal_id": 1, "name": "source"},
+            {"signal_id": 2, "name": "delayed"}
+          ],
+          "devices": [
+            {
+              "class": "SampledSignalSource", "id": "SRC1",
+              "ports": {"output": 1}, "params": {"scale": 1.0, "offset": 0.0},
+              "source": {"type": "samples", "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]}
+            },
+            {
+              "class": "Delay", "id": "D1",
+              "ports": {"input": 1, "output": 2}, "params": {"delay": 0.25}
+            }
+          ]
+        })";
+        std::istringstream stream(json.str());
+        return PhasorDynamics::parseSystemModelData(stream);
+      }
+
+      PhasorDynamics::SystemModelData<RealT, IdxT> parseTwoDelayCase() const
+      {
+        std::stringstream json;
+        json << R"({
+          "header": {
+            "format_version": 0, "format_revision": 1,
+            "case_name": "TwoDelay", "case_description": "None", "case_comments": "None",
+            "freq_base": 60.0, "va_base": 100000000.0
+          },
+          "buses": [],
+          "signals": [
+            {"signal_id": 1, "name": "source"},
+            {"signal_id": 2, "name": "long"},
+            {"signal_id": 3, "name": "short"}
+          ],
+          "devices": [
+            {
+              "class": "SampledSignalSource", "id": "SRC1",
+              "ports": {"output": 1}, "params": {"scale": 1.0, "offset": 0.0},
+              "source": {"type": "samples", "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]}
+            },
+            {"class": "Delay", "id": "D_LONG", "ports": {"input": 1, "output": 2}, "params": {"delay": 0.5}},
+            {"class": "Delay", "id": "D_SHORT", "ports": {"input": 1, "output": 3}, "params": {"delay": 0.1}}
+          ]
+        })";
+        std::istringstream stream(json.str());
+        return PhasorDynamics::parseSystemModelData(stream);
+      }
 
     public:
       SystemTests()  = default;
@@ -173,44 +231,42 @@ namespace GridKit
         return status.report(__func__);
       }
 
+      /// A Delay device is parsed into the model and caps the solver step at its
+      /// delay.
       TestOutcome delayedSignalParser()
       {
         TestStatus success = true;
 
-        auto data = parseDelayedSignalCase();
+        auto data = parseDelayCase();
 
-        using SourcePorts = PhasorDynamics::SignalSource::SampledSignalSourcePorts;
-        using IeeestPorts = PhasorDynamics::Stabilizer::IeeestPorts;
-
-        success *= (data.sampled_signal_source.size() == 1);
-        success *= (data.sampled_signal_source[0].ports.at(SourcePorts::output) == 1);
-        success *= (data.stabilizer.size() == 1);
-        success *= (data.stabilizer[0].ports.at(IeeestPorts::input) == 1);
-        success *= isEqual(data.stabilizer[0].port_delays.at(IeeestPorts::input), static_cast<RealT>(0.5));
+        using DelayPorts  = PhasorDynamics::SignalBlock::DelayPorts;
+        success          *= (data.sampled_signal_source.size() == 1);
+        success          *= (data.delay.size() == 1);
+        success          *= (data.delay[0].ports.at(DelayPorts::input) == 1);
+        success          *= (data.delay[0].ports.at(DelayPorts::output) == 2);
 
         PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
         system.allocate();
         system.initialize();
-
-        RealT hmax = std::numeric_limits<RealT>::infinity();
-        system.setMaxStepSize(hmax);
-        success *= isEqual(hmax, static_cast<RealT>(0.5));
+        success *= isEqual(system.maxStepSize(), static_cast<RealT>(0.25));
 
         return success.report(__func__);
       }
 
-      TestOutcome delayedSignalRejectsNegativeDelay()
+      /// When several delays read the same source, the step ceiling is the
+      /// SHORTEST delay (0.1), not the longest. A max-reduction would wrongly
+      /// report 0.5 and let the integrator step past the 0.1 s delay.
+      TestOutcome delayedSignalShortestDelayCap()
       {
         TestStatus success = true;
 
-        success *= throws<std::runtime_error>(
-            [&]()
-            {
-              auto               input = delayedSignalCaseJson("\"input\": {\"signal\": 1, \"delay\": -0.1}",
-                                                 "\"output\": 2");
-              std::istringstream stream(input);
-              PhasorDynamics::parseSystemModelData(stream);
-            });
+        auto data  = parseTwoDelayCase();
+        success   *= (data.delay.size() == 2);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+        success *= isEqual(system.maxStepSize(), static_cast<RealT>(0.1));
 
         return success.report(__func__);
       }
@@ -264,56 +320,6 @@ namespace GridKit
       }
 
     private:
-      std::string delayedSignalCaseJson(const std::string& input_port,
-                                        const std::string& output_port) const
-      {
-        std::stringstream json;
-        json << R"({
-          "header": {
-            "format_version": 0,
-            "format_revision": 1,
-            "case_name": "DelayedSignal",
-            "case_description": "None",
-            "case_comments": "None",
-            "freq_base": 60.0,
-            "va_base": 100000000.0
-          },
-          "buses": [],
-          "signals": [
-            {"signal_id": 1, "name": "source"},
-            {"signal_id": 2, "name": "output"}
-          ],
-          "devices": [
-            {
-              "class": "SampledSignalSource",
-              "id": "SRC1",
-              "ports": {"output": 1},
-              "params": {"scale": 1.0, "offset": 0.0},
-              "source": {
-                "type": "samples",
-                "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]
-              }
-            },
-            {
-              "class": "Ieeest",
-              "id": "PSS1",
-              "ports": {)"
-             << input_port << ", " << output_port << R"(},
-              "params": {}
-            }
-          ]
-        })";
-        return json.str();
-      }
-
-      PhasorDynamics::SystemModelData<RealT, IdxT> parseDelayedSignalCase() const
-      {
-        auto               input = delayedSignalCaseJson("\"input\": {\"signal\": 1, \"delay\": 0.5}",
-                                           "\"output\": 2");
-        std::istringstream stream(input);
-        return PhasorDynamics::parseSystemModelData(stream);
-      }
-
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
           PhasorDynamics::SystemModelData<ScalarT, IdxT> data)
       {

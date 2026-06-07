@@ -111,6 +111,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_signal
   GridKit::testing)
 
+add_executable(test_phasor_delay runDelayTests.cpp)
+target_link_libraries(
+  test_phasor_delay
+  GridKit::definitions
+  GridKit::phasor_dynamics_delay
+  GridKit::phasor_dynamics_signal
+  GridKit::testing)
+
 add_executable(test_phasor_gen_classical runGenClassicalTests.cpp)
 target_link_libraries(
   test_phasor_gen_classical
@@ -148,6 +156,7 @@ add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
 add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_ieeest)
 add_test(NAME PhasorDynamicsSampledSignalSourceTest COMMAND test_phasor_sampled_signal_source)
+add_test(NAME PhasorDynamicsDelayTest COMMAND test_phasor_delay)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
 add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
 add_test(NAME PhasorDynamicsLoadZIPTest COMMAND test_phasor_loadzip)
@@ -170,6 +179,7 @@ install(
           test_phasor_exciter_sexspti
           test_phasor_stabilizer_ieeest
           test_phasor_sampled_signal_source
+          test_phasor_delay
           test_phasor_gen_classical
           test_phasor_system
           test_phasor_system_single_component

@@ -107,6 +107,12 @@ namespace GridKit
           raw_component.get_to(source);
           sm.sampled_signal_source.push_back(source);
         }
+        else if (kind == "Delay")
+        {
+          typename SystemModelData<RealT, IdxT>::DelayDataT delay;
+          raw_component.get_to(delay);
+          sm.delay.push_back(delay);
+        }
         else if (kind == "Branch")
         {
           typename SystemModelData<RealT, IdxT>::BranchDataT branch;

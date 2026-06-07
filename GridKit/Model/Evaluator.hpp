@@ -138,19 +138,24 @@ namespace GridKit
        */
       virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
 
+      /// (Re)seed step-history at the initial condition t0. Models carrying
+      /// history of accepted states (e.g. transport delays) override this.
       virtual int resetHistory(RealT)
       {
         return 0;
       }
 
+      /// Capture converged state after an accepted step at time t.
       virtual int stepAccepted(RealT)
       {
         return 0;
       }
 
-      virtual void setMaxStepSize(RealT& hmax) const
+      /// Largest step the model tolerates; infinite means unconstrained. The
+      /// solver caps its integrator step at this and records history per step.
+      virtual RealT maxStepSize() const
       {
-        hmax = std::numeric_limits<RealT>::infinity();
+        return std::numeric_limits<RealT>::infinity();
       }
 
       virtual std::vector<ScalarT>&       y()       = 0;

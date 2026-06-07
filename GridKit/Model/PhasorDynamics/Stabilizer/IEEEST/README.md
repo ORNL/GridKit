@@ -109,6 +109,6 @@ The output limiter uses GridKit's smooth
 
 ## Initialization
 
-All states and their derivatives initialize to zero. The stabilizer comes
-online at rest and produces signal only in response to deviations in the input
-$u$.
+States and derivatives initialize to the steady state implied by the attached
+input $u$ and the active model blocks. With the washout bypassed and unitary
+gain, $V_{ss}$ starts at the input value, subject to the output limiter.

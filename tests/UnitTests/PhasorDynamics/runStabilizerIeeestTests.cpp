@@ -8,6 +8,7 @@ int main()
 
   result += test.constructor();
   result += test.zeroInitialResidual();
+  result += test.nonzeroInitialResidual();
   result += test.residual();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();

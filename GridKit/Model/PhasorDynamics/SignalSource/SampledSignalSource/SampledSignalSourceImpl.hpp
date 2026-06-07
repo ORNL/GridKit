@@ -88,11 +88,7 @@ namespace GridKit
         {
           signals_.template getSignalNode<SampledSignalSourceInternalVariables::OUT>()->set(
               &value_,
-              &invalid_index_,
-              [this](RealT t)
-              {
-                return valueAt(t);
-              });
+              &invalid_index_);
         }
 
         return 0;

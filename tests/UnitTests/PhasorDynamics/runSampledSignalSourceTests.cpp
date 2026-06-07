@@ -6,8 +6,6 @@ int main()
 
   GridKit::Testing::SampledSignalSourceTests<double, size_t> test;
 
-  result += test.signalHistory();
-  result += test.senderPrehistory();
   result += test.inlineSource();
   result += test.csvSource();
 

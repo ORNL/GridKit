@@ -115,28 +115,6 @@ a signal and has the following fields:
 
 All interactions with signals are handled by `devices`, which reference signals via `signal_id`
 
-#### Signal ports and fixed input delay
-
-Signal ports are normally written as the integer `signal_id`:
-
-```json
-"ports": { "input": 1, "output": 2 }
-```
-
-A consuming signal input may instead be written as an object with the source
-signal id and a fixed delay in seconds:
-
-```json
-"ports": {
-  "input": { "signal": 1, "delay": 0.5 },
-  "output": 2
-}
-```
-
-The parser reads `signal` and optional `delay` from this object. Delay is
-metadata on the consuming signal edge; if a source has no special prehistory,
-the initialized sender value is used before enough accepted history exists.
-
 ### Devices
 
 Contained in the `devices` section is an array of objects, each of which
@@ -170,6 +148,7 @@ are specified:
   `SexsPti`            | the SEXS-PTI simplified exciter model                | `bus`, `efd`, `vs`\*             | `Ta`, `Tb`, `Te`, `K`, `Efdmax`, `Efdmin` | `efd`
   `Ieeest`      | the IEEEST stabilizer model                          | `input`, `output`                | `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `T1`, `T2`, `T3`, `T4`, `T5`, `T6`, `Ks`, `Lsmin`, `Lsmax`, `Vcl`, `Vcu`, `Tdelay` | `vss`
   `SampledSignalSource` | exogenous sampled signal source                    | `output`                         | `scale`, `offset` | `out`
+  `Delay`              | fixed transport delay on a signal                    | `input`, `output`                | `delay`, `prehistory`\* | `out`
   `BusFault`           | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
   `BusToSignalAdapter` | signal adapter component for a bus                   | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
 
@@ -215,6 +194,23 @@ For inline sampled data, use:
 
 Samples are linearly interpolated. Outside the sampled time range, the source
 holds the nearest endpoint.
+
+A `Delay` device emits its input signal shifted by a fixed lag. Chain it between
+a producing signal and its consumer:
+
+```json
+{
+  "class": "Delay",
+  "id": "D1",
+  "ports": { "input": 1, "output": 2 },
+  "params": { "delay": 0.25 }
+}
+```
+
+`delay` is the lag in seconds (required, must be positive). The optional
+`prehistory` parameter sets the output for the first `delay` seconds; if omitted
+it holds the input value at the initial condition. Consumers read the delayed
+signal (here `2`) as an ordinary signal.
 
 ## Example File for a 2-Bus System
 

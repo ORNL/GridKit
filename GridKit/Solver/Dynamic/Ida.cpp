@@ -97,7 +97,7 @@ namespace AnalysisManager
 
       setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_);
 
-      const RealT hmax = modelMaxStepSize();
+      const RealT hmax = model_->maxStepSize();
       if (std::isfinite(hmax) && hmax > 0.0)
       {
         retval = IDASetMaxStep(solver_, hmax);
@@ -310,20 +310,12 @@ namespace AnalysisManager
       RealT dt   = (tf - t_init_) / static_cast<RealT>(nout);
       RealT tout = t_init_ + dt;
 
-      if (delayedSignalMode())
+      if (usesHistory())
       {
         while (nout > iout)
         {
           tout   = (iout == nout - 1) ? tf : t_init_ + static_cast<RealT>(iout + 1) * dt;
-          retval = IDASetStopTime(solver_, tout);
-          checkOutput(retval, "IDASetStopTime");
-
-          do
-          {
-            retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_ONE_STEP);
-            checkOutput(retval, "IDASolve");
-            acceptStep(tret);
-          } while (!reachedTime(tret, tout));
+          retval = advanceToWithHistory(tout, tret);
 
           if (model_->monitoring())
           {
@@ -475,20 +467,12 @@ namespace AnalysisManager
       RealT dt   = tf / static_cast<RealT>(nout);
       RealT tout = dt;
 
-      if (delayedSignalMode())
+      if (usesHistory())
       {
         for (int i = 0; i < nout; ++i)
         {
           tout   = (i == nout - 1) ? tf : static_cast<RealT>(i + 1) * dt;
-          retval = IDASetStopTime(solver_, tout);
-          checkOutput(retval, "IDASetStopTime");
-
-          do
-          {
-            retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_ONE_STEP);
-            checkOutput(retval, "IDASolve");
-            acceptStep(tret);
-          } while (!reachedTime(tret, tout));
+          retval = advanceToWithHistory(tout, tret);
 
           retval = IDAGetQuad(solver_, &tret, q_);
           checkOutput(retval, "IDAGetQuad");
@@ -976,17 +960,9 @@ namespace AnalysisManager
     }
 
     template <class ScalarT, typename IdxT>
-    auto Ida<ScalarT, IdxT>::modelMaxStepSize() const -> RealT
+    bool Ida<ScalarT, IdxT>::usesHistory() const
     {
-      RealT hmax = std::numeric_limits<RealT>::infinity();
-      model_->setMaxStepSize(hmax);
-      return hmax;
-    }
-
-    template <class ScalarT, typename IdxT>
-    bool Ida<ScalarT, IdxT>::delayedSignalMode() const
-    {
-      const RealT hmax = modelMaxStepSize();
+      const RealT hmax = model_->maxStepSize();
       return std::isfinite(hmax) && hmax > 0.0;
     }
 
@@ -995,7 +971,7 @@ namespace AnalysisManager
     {
       copyVec(yy_, model_->y());
       copyVec(yp_, model_->yp());
-      model_->updateTime(t, 0.0);
+      model_->updateTime(t, 0.0); // updateVariables() scatters the accepted state into components
       return model_->stepAccepted(t);
     }
 
@@ -1005,6 +981,22 @@ namespace AnalysisManager
       const auto scale = std::max<RealT>({1.0, std::abs(t), std::abs(target)});
       const auto tol   = 100.0 * std::numeric_limits<RealT>::epsilon() * scale;
       return t >= target - tol;
+    }
+
+    // Drive the integrator to `tout` one accepted step at a time, recording
+    // history after each. Shared by every output loop that must support delays.
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::advanceToWithHistory(RealT tout, RealT& tret)
+    {
+      int retval = IDASetStopTime(solver_, tout);
+      checkOutput(retval, "IDASetStopTime");
+      do
+      {
+        retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_ONE_STEP);
+        checkOutput(retval, "IDASolve");
+        acceptStep(tret);
+      } while (!reachedTime(tret, tout));
+      return retval;
     }
 
     /**
