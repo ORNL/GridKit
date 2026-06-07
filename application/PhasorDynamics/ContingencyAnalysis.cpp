@@ -159,16 +159,16 @@ int main(int argc, const char* argv[])
 
   auto faults   = study_data.model_data.bus_fault;
   auto stat_vec = std::vector<TestStatus>(faults.size(), true);
- 
+
   // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
   // Otherwise, use OpenMP if available
   // Fall back to serial if neither threads or OpenMP are available
 #ifdef GRIDKIT_ENABLE_THREADS
   runStudyAsync(study_data, stat_vec);
 #else
-#ifdef _OPENMP 
+#ifdef _OPENMP
   runStudyOpenMP(study_data, stat_vec);
-#else 
+#else
   runStudySerial(study_data, stat_vec);
 #endif // _OPENMP
 #endif // GRIDKIT_ENABLE_THREADS
