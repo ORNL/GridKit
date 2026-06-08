@@ -1,0 +1,197 @@
+/**
+ * @file Regca.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of the REGCA phasor-dynamics converter model.
+ */
+
+#pragma once
+
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/VariableMonitor.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    template <typename scalar_type, typename index_type>
+    class BusBase;
+
+    template <typename scalar_type, typename index_type>
+    class SignalNode;
+  } // namespace PhasorDynamics
+} // namespace GridKit
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    namespace Converter
+    {
+      /// Internal variables of a `Regca`
+      enum class RegcaInternalVariables : size_t
+      {
+        VM,      ///< Filtered terminal voltage
+        IQ,      ///< Reactive-current state
+        IP,      ///< Active-current state
+        VT,      ///< Terminal voltage magnitude
+        II,      ///< Imaginary injected current
+        IQEXTRA, ///< HVRCM extra reactive current
+        IL,      ///< LVPL upper-limit current curve
+        IR,      ///< Real injected current
+        LP,      ///< Active-current lower rate bound
+        UP,      ///< Active-current upper rate bound
+        PBR,     ///< Active-power output on system base
+        QBR,     ///< Reactive-power output on system base
+        MAXIMUM,
+      };
+
+      /// External variables of a `Regca`
+      enum class RegcaExternalVariables : size_t
+      {
+        IPCMD, ///< Active-current command signal
+        IQCMD, ///< Reactive-current command signal
+        MAXIMUM,
+      };
+
+      template <typename scalar_type, typename index_type>
+      class Regca : public Component<scalar_type, index_type>
+      {
+        using Component<scalar_type, index_type>::gridkit_component_id_;
+        using Component<scalar_type, index_type>::alpha_;
+        using Component<scalar_type, index_type>::f_;
+        using Component<scalar_type, index_type>::h_;
+        using Component<scalar_type, index_type>::J_;
+        using Component<scalar_type, index_type>::J_cols_buffer_;
+        using Component<scalar_type, index_type>::J_rows_buffer_;
+        using Component<scalar_type, index_type>::J_vals_buffer_;
+        using Component<scalar_type, index_type>::nnz_;
+        using Component<scalar_type, index_type>::residual_indices_;
+        using Component<scalar_type, index_type>::size_;
+        using Component<scalar_type, index_type>::tag_;
+        using Component<scalar_type, index_type>::time_;
+        using Component<scalar_type, index_type>::va_system_base_;
+        using Component<scalar_type, index_type>::variable_indices_;
+        using Component<scalar_type, index_type>::wb_;
+        using Component<scalar_type, index_type>::y_;
+        using Component<scalar_type, index_type>::yp_;
+
+      public:
+        using ScalarT    = scalar_type;
+        using IdxT       = index_type;
+        using RealT      = typename Component<ScalarT, IdxT>::RealT;
+        using BusT       = BusBase<ScalarT, IdxT>;
+        using SignalT    = SignalNode<ScalarT, IdxT>;
+        using ModelDataT = RegcaData<RealT, IdxT>;
+        using MonitorT   = Model::VariableMonitor<Regca, RegcaData>;
+
+        Regca(BusT* bus);
+        Regca(BusT* bus, const ModelDataT& data);
+        ~Regca();
+
+        int setGridKitComponentID(IdxT) override final;
+        int allocate() override final;
+        int verify() const override final;
+        int initialize() override final;
+        int tagDifferentiable() override final;
+        int evaluateResidual() override final;
+        int evaluateJacobian() override final;
+
+        auto getSignals()
+            -> ComponentSignals<ScalarT,
+                                IdxT,
+                                RegcaInternalVariables,
+                                RegcaExternalVariables>&
+        {
+          return signals_;
+        }
+
+        const Model::VariableMonitorBase* getMonitor() const override;
+
+        __attribute__((always_inline)) inline int evaluateInternalResidual(
+            ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateBusResidual(
+            ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+
+      private:
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
+
+        ScalarT toComponentBase(ScalarT value) const
+        {
+          return value * va_system_base_ / va_converter_base_;
+        }
+
+        ScalarT toSystemBase(ScalarT value) const
+        {
+          return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
+        }
+
+        ScalarT activeCurrentLowerRateBound(ScalarT ip) const;
+        ScalarT activeCurrentUpperRateBound(ScalarT ip, ScalarT il) const;
+
+        ScalarT& Vr()
+        {
+          return bus_->Vr();
+        }
+
+        ScalarT& Vi()
+        {
+          return bus_->Vi();
+        }
+
+        ScalarT& Ir()
+        {
+          return bus_->Ir();
+        }
+
+        ScalarT& Ii()
+        {
+          return bus_->Ii();
+        }
+
+        BusT* bus_{nullptr};
+
+        RealT P0_{0};
+        RealT Q0_{0};
+        RealT mva_base_{0};
+        RealT Tg_{0};
+        RealT TM_{0};
+        RealT Rqmax_{0};
+        RealT Rqmin_{0};
+        RealT Rpmax_{0};
+        bool  sL_{false};
+        RealT IL1_{0};
+        RealT VL0_{0};
+        RealT VL1_{0};
+        RealT VA0_{0};
+        RealT VA1_{0};
+        RealT Vhvmax_{0};
+        IdxT  bus_id_{0};
+
+        IdxT  parameter_error_count_{0};
+        RealT Mp_{0};
+        RealT va_converter_base_{0};
+        RealT use_lvpl_{0};
+        RealT bypass_lvpl_{1};
+        RealT iq_use_upper_{0};
+        RealT iq_use_lower_{1};
+
+        ScalarT ipcmd_set_{0};
+        ScalarT iqcmd_set_{0};
+
+        ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
+        std::unique_ptr<MonitorT>                                                       monitor_;
+
+        std::vector<ScalarT> ws_;
+        std::vector<IdxT>    ws_indices_;
+      };
+    } // namespace Converter
+  } // namespace PhasorDynamics
+} // namespace GridKit

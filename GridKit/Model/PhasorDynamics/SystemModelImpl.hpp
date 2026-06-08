@@ -46,6 +46,7 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
+      using namespace Converter;
 
       // Set system model tolerances
       rel_tol_         = 1e-7;
@@ -113,6 +114,62 @@ namespace GridKit
         }
 
         addComponent(adapter);
+      }
+
+      // Add REGCA converters
+      for (const auto& regcadata : data.regca)
+      {
+        IdxT bus_index = 0;
+        if (regcadata.ports.contains(RegcaPorts::bus))
+        {
+          bus_index = regcadata.ports.at(RegcaPorts::bus);
+        }
+
+        auto* regca = new Regca<ScalarT, IdxT>(getBus(bus_index), regcadata);
+
+        if (regcadata.ports.contains(RegcaPorts::ipcmd))
+        {
+          IdxT           ipcmd = regcadata.ports.at(RegcaPorts::ipcmd);
+          constexpr auto IPCMD = RegcaExternalVariables::IPCMD;
+          regca->getSignals().template attachSignalNode<IPCMD>(getSignal(ipcmd));
+        }
+
+        if (regcadata.ports.contains(RegcaPorts::iqcmd))
+        {
+          IdxT           iqcmd = regcadata.ports.at(RegcaPorts::iqcmd);
+          constexpr auto IQCMD = RegcaExternalVariables::IQCMD;
+          regca->getSignals().template attachSignalNode<IQCMD>(getSignal(iqcmd));
+        }
+
+        if (regcadata.ports.contains(RegcaPorts::ibranchr))
+        {
+          IdxT           ibranchr = regcadata.ports.at(RegcaPorts::ibranchr);
+          constexpr auto IR       = RegcaInternalVariables::IR;
+          regca->getSignals().template assignSignalNode<IR>(getSignal(ibranchr));
+        }
+
+        if (regcadata.ports.contains(RegcaPorts::ibranchi))
+        {
+          IdxT           ibranchi = regcadata.ports.at(RegcaPorts::ibranchi);
+          constexpr auto II       = RegcaInternalVariables::II;
+          regca->getSignals().template assignSignalNode<II>(getSignal(ibranchi));
+        }
+
+        if (regcadata.ports.contains(RegcaPorts::pbranch))
+        {
+          IdxT           pbranch = regcadata.ports.at(RegcaPorts::pbranch);
+          constexpr auto PBR     = RegcaInternalVariables::PBR;
+          regca->getSignals().template assignSignalNode<PBR>(getSignal(pbranch));
+        }
+
+        if (regcadata.ports.contains(RegcaPorts::qbranch))
+        {
+          IdxT           qbranch = regcadata.ports.at(RegcaPorts::qbranch);
+          constexpr auto QBR     = RegcaInternalVariables::QBR;
+          regca->getSignals().template assignSignalNode<QBR>(getSignal(qbranch));
+        }
+
+        addComponent(regca);
       }
 
       // Add branches
