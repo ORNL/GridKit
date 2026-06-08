@@ -172,6 +172,63 @@ namespace GridKit
         addComponent(regca);
       }
 
+      // Add REECB electrical controllers
+      for (const auto& reecbdata : data.reecb)
+      {
+        IdxT bus_index = 0;
+        if (reecbdata.ports.contains(ReecbPorts::bus))
+        {
+          bus_index = reecbdata.ports.at(ReecbPorts::bus);
+        }
+
+        auto* reecb = new Reecb<ScalarT, IdxT>(getBus(bus_index), reecbdata);
+
+        if (reecbdata.ports.contains(ReecbPorts::pe))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::pe);
+          constexpr auto PE     = ReecbExternalVariables::PE;
+          reecb->getSignals().template attachSignalNode<PE>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::qgen))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::qgen);
+          constexpr auto QGEN   = ReecbExternalVariables::QGEN;
+          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::qext))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::qext);
+          constexpr auto QEXT   = ReecbExternalVariables::QEXT;
+          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::pfaref))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::pfaref);
+          constexpr auto PFAREF = ReecbExternalVariables::PFAREF;
+          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::pref))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::pref);
+          constexpr auto PREF   = ReecbExternalVariables::PREF;
+          reecb->getSignals().template attachSignalNode<PREF>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::iqcmd))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::iqcmd);
+          constexpr auto IQCMD  = ReecbInternalVariables::IQCMD;
+          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(signal));
+        }
+        if (reecbdata.ports.contains(ReecbPorts::ipcmd))
+        {
+          const IdxT     signal = reecbdata.ports.at(ReecbPorts::ipcmd);
+          constexpr auto IPCMD  = ReecbInternalVariables::IPCMD;
+          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(signal));
+        }
+
+        addComponent(reecb);
+      }
+
       // Add branches
       for (const auto& branchdata : data.branch)
       {
