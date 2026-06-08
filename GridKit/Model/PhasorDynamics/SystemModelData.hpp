@@ -13,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
@@ -43,6 +44,7 @@ namespace GridKit
       using BusFaultDataT           = BusFaultData<RealT, IdxT>;
       using RegcaDataT              = Converter::RegcaData<RealT, IdxT>;
       using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
+      using GastPtiDataT            = Governor::GastPtiData<RealT, IdxT>;
       using Ieeet1DataT             = Exciter::Ieeet1Data<RealT, IdxT>;
       using SexsPtiDataT            = Exciter::SexsPtiData<RealT, IdxT>;
       using IeeestDataT             = Stabilizer::IeeestData<RealT, IdxT>;
@@ -102,6 +104,7 @@ namespace GridKit
       std::vector<LoadDataT>               load;         ///< Loads within the model
       std::vector<LoadZIPDataT>            loadzip;      ///< Loads within the model
       std::vector<Tgov1DataT>              gov;          ///< Governors within the model
+      std::vector<GastPtiDataT>            gastpti;      ///< GASTPTI governors within the model
       std::vector<Ieeet1DataT>             exciter;      ///< Exciters within the model
       std::vector<SexsPtiDataT>            sexspti;      ///< SEXS-PTI exciters within the model
       std::vector<IeeestDataT>             stabilizer;   ///< Stabilizers within the model
