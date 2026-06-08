@@ -44,6 +44,15 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      void Ieeest<scalar_type, index_type>::setDerivedParameters()
+      {
+        a1_ = A1_ + A3_;
+        a2_ = A2_ + A4_ + A1_ * A3_;
+        a3_ = A1_ * A4_ + A2_ * A3_;
+        a4_ = A2_ * A4_;
+      }
+
+      template <typename scalar_type, typename index_type>
       void Ieeest<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         if (data.parameters.contains(ModelDataT::Parameters::A1))
@@ -119,31 +128,7 @@ namespace GridKit
           Tdelay_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdelay));
         }
 
-        a0_ = 1;
-        a1_ = A1_ + A3_;
-        a2_ = A2_ + A4_ + A1_ * A3_;
-        a3_ = A1_ * A4_ + A2_ * A3_;
-        a4_ = A2_ * A4_;
-
-        // Precompute masks and safe inverse coefficients so the residual stays branch-free.
-        use_notch_    = static_cast<RealT>(a2_ != 0.0 || a3_ != 0.0 || a4_ != 0.0);
-        bypass_notch_ = 1.0 - use_notch_;
-
-        use_4th_order_ = static_cast<RealT>(a4_ != 0.0);
-        use_3rd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ != 0.0);
-        use_2nd_order_ = static_cast<RealT>(a4_ == 0.0 && a3_ == 0.0 && a2_ != 0.0);
-        safe_inv_a4_   = use_4th_order_ / (a4_ + (1.0 - use_4th_order_));
-        safe_inv_a3_   = use_3rd_order_ / (a3_ + (1.0 - use_3rd_order_));
-        safe_inv_a2_   = use_2nd_order_ / (a2_ + (1.0 - use_2nd_order_));
-
-        use_T2_block_    = static_cast<RealT>(T2_ != 0.0);
-        bypass_T2_block_ = 1.0 - use_T2_block_;
-
-        use_T4_block_    = static_cast<RealT>(T4_ != 0.0);
-        bypass_T4_block_ = 1.0 - use_T4_block_;
-
-        use_T6_block_    = static_cast<RealT>(T6_ != 0.0);
-        bypass_T6_block_ = 1.0 - use_T6_block_;
+        setDerivedParameters();
       }
 
       template <typename scalar_type, typename index_type>
@@ -181,6 +166,8 @@ namespace GridKit
               &y_[11], &(this->getVariableIndex(11)));
         }
 
+        tagDifferentiable();
+
         return 0;
       }
 
@@ -203,7 +190,7 @@ namespace GridKit
           ret += 1;
         }
 
-        if (a4_ == 0 && a3_ == 0 && a2_ == 0 && a1_ != 0)
+        if (a2_ == ZERO<RealT> && a3_ == ZERO<RealT> && a4_ == ZERO<RealT> && a1_ != ZERO<RealT>)
         {
           Log::error() << "Ieeest: a2, a3, and a4 are all zero - no valid notch filter\n";
           ret += 1;
@@ -221,19 +208,53 @@ namespace GridKit
           yp_[static_cast<size_t>(i)] = 0.0;
         }
 
+        ScalarT u{0.0};
+        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        {
+          u              = signals_.template readExternalVariable<IeeestExternalVariables::U>();
+          ws_[0]         = u;
+          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+        }
+
+        const ScalarT zero{0.0};
+        const ScalarT x1 = u;
+        const ScalarT x2 = zero;
+        const ScalarT x3 = zero;
+        const ScalarT x4 = zero;
+        const ScalarT v4 = x1 + A5_ * x2 + A6_ * x3;
+        const ScalarT x5 = v4;
+        const ScalarT v5 = v4;
+        const ScalarT x6 = v5;
+        const ScalarT v6 = v5;
+        const ScalarT x7 = v6;
+        const ScalarT v7 = (T6_ == ZERO<RealT>) ? Ks_ * v6 : zero;
+
+        y_[0]  = x1;
+        y_[1]  = x2;
+        y_[2]  = x3;
+        y_[3]  = x4;
+        y_[4]  = x5;
+        y_[5]  = x6;
+        y_[6]  = x7;
+        y_[7]  = v4;
+        y_[8]  = v5;
+        y_[9]  = v6;
+        y_[10] = v7;
+        y_[11] = Math::clamp(v7, Lsmin_, Lsmax_);
+
         return 0;
       }
 
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0]  = true;
-        tag_[1]  = true;
-        tag_[2]  = true;
-        tag_[3]  = true;
-        tag_[4]  = (T2_ != 0.0);
-        tag_[5]  = (T4_ != 0.0);
-        tag_[6]  = (T6_ != 0.0);
+        tag_[0]  = (a2_ != ZERO<RealT> || a3_ != ZERO<RealT> || a4_ != ZERO<RealT>);
+        tag_[1]  = tag_[0];
+        tag_[2]  = (a3_ != ZERO<RealT> || a4_ != ZERO<RealT>);
+        tag_[3]  = (a4_ != ZERO<RealT>);
+        tag_[4]  = (T2_ != ZERO<RealT>);
+        tag_[5]  = (T4_ != ZERO<RealT>);
+        tag_[6]  = (T6_ != ZERO<RealT>);
         tag_[7]  = false;
         tag_[8]  = false;
         tag_[9]  = false;
@@ -274,19 +295,17 @@ namespace GridKit
 
         ScalarT u = ws[0];
 
-        f[0] = -x1_dot + use_notch_ * x2;
-        f[1] = -x2_dot + (use_4th_order_ + use_3rd_order_) * x3
-               + use_2nd_order_ * (-a0_ * x1 - a1_ * x2 + u) * safe_inv_a2_;
-        f[2] = -x3_dot + use_4th_order_ * x4
-               + use_3rd_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 + u) * safe_inv_a3_;
-        f[3]  = -x4_dot + use_4th_order_ * (-a0_ * x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u) * safe_inv_a4_;
+        f[0]  = -tag_[0] * x1_dot + x2;
+        f[1]  = -tag_[1] * x2_dot + x3;
+        f[2]  = -tag_[2] * x3_dot + x4;
+        f[3]  = -a4_ * x4_dot - x1 - a1_ * x2 - a2_ * x3 - a3_ * x4 + u;
         f[4]  = -T2_ * x5_dot - x5 + v4;
         f[5]  = -T4_ * x6_dot - x6 + v5;
         f[6]  = -T6_ * x7_dot - x7 + v6;
-        f[7]  = -v4 + bypass_notch_ * u + use_notch_ * (x1 + A5_ * x2 + (use_4th_order_ + use_3rd_order_) * A6_ * x3);
-        f[8]  = use_T2_block_ * (-T2_ * (v5 - x5) + T1_ * (v4 - x5)) + bypass_T2_block_ * (v4 - v5);
-        f[9]  = use_T4_block_ * (-T4_ * (v6 - x6) + T3_ * (v5 - x6)) + bypass_T4_block_ * (v5 - v6);
-        f[10] = use_T6_block_ * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7)) + bypass_T6_block_ * (Ks_ * v6 - v7);
+        f[7]  = -v4 + x1 + A5_ * x2 + A6_ * x3;
+        f[8]  = tag_[4] * (-T2_ * (v5 - x5) + T1_ * (v4 - x5)) + (1 - tag_[4]) * (v4 - v5);
+        f[9]  = tag_[5] * (-T4_ * (v6 - x6) + T3_ * (v5 - x6)) + (1 - tag_[5]) * (v5 - v6);
+        f[10] = tag_[6] * (-T6_ * v7 + Ks_ * T5_ * (v6 - x7)) + (1 - tag_[6]) * (Ks_ * v6 - v7);
         f[11] = -vss + Math::clamp(v7, Lsmin_, Lsmax_);
 
         return 0;

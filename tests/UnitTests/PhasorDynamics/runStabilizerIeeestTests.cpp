@@ -6,9 +6,9 @@ int main()
 
   GridKit::Testing::StabilizerIeeestTests<double, size_t> test;
 
-  result += test.constructor();
-  result += test.zeroInitialResidual();
+  result += test.init();
   result += test.residual();
+  result += test.verify();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
