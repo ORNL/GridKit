@@ -17,4 +17,5 @@ There are a few standard Exciter models
 - IEEE DC1 Excitation Model (See [EXDC1](EXDC1/README.md))
 - ESDC2A Excitation Model (See [ESDC2A](ESDC2A/README.md))
 - EXAC1 Excitation Model (See [EXAC1](EXAC1/README.md))
+- IEEE ST4B Excitation Model (See [ESST4B](ESST4B/README.md))
 - Simplified Excitation System Model (See [SEXS-PTI](SEXS-PTI/README.md))
