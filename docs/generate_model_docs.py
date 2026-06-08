@@ -26,12 +26,21 @@ GITHUB_TREE_URL = "https://github.com/ORNL/GridKit/tree/develop"
 GENERAL_OUT_DIR = DOCS_DIR / "generated"
 MODEL_OUT_DIR = DOCS_DIR / "models" / "generated"
 EXAMPLE_OUT_DIR = DOCS_DIR / "examples" / "generated"
+ROOT_INDEX = DOCS_DIR / "index.md"
+ROOT_TOCTREE_ENTRIES = (
+    "generated/install",
+    "applications/index",
+    "models/index",
+    "examples/generated/index",
+    "api",
+    "development/index",
+)
 
 COMMON_MATH = REPO_ROOT / "GridKit" / "CommonMath.md"
 PHASOR_INPUT_FORMAT = MODEL_DIR / "PhasorDynamics" / "INPUT_FORMAT.md"
 
 PROJECT_DOCS = (
-    MarkdownPage(REPO_ROOT / "README.md", GENERAL_OUT_DIR / "root-readme.md", "GridKit"),
+    MarkdownPage(REPO_ROOT / "README.md", ROOT_INDEX, "GridKit"),
     MarkdownPage(REPO_ROOT / "INSTALL.md", GENERAL_OUT_DIR / "install.md", "Installation"),
     MarkdownPage(
         REPO_ROOT / "CONTRIBUTING.md",
@@ -55,8 +64,8 @@ PROJECT_DOCS = (
     ),
     MarkdownPage(
         REPO_ROOT / "application" / "PhasorDynamics" / "README.md",
-        GENERAL_OUT_DIR / "phasor-dynamics-application.md",
-        "Phasor Dynamics Application",
+        GENERAL_OUT_DIR / "application-input-format.md",
+        "Application Input Format",
     ),
 )
 
@@ -155,8 +164,6 @@ def example_index_path_for_dir(directory: Path) -> Path:
 
 
 def example_readme_output_path(path: Path) -> Path:
-    if is_example_container(path):
-        return EXAMPLE_OUT_DIR.joinpath(*example_parts_for_dir(path.parent), "overview.md")
     return example_index_path_for_dir(path.parent)
 
 
@@ -167,8 +174,6 @@ def output_path_for(path: Path) -> Path:
         return MODEL_OUT_DIR / "common-math.md"
     if path == PHASOR_INPUT_FORMAT:
         return MODEL_OUT_DIR / "phasor-dynamics" / "input-format.md"
-    if is_model_container(path):
-        return MODEL_OUT_DIR.joinpath(*model_parts_for_dir(path.parent), "overview.md")
     if is_model_readme(path):
         return MODEL_OUT_DIR.joinpath(*model_parts_for_dir(path.parent), "index.md")
     if is_example_readme(path):
@@ -299,11 +304,43 @@ def rewrite_markdown_links(text: str, source_dir: Path, current_output: Path) ->
 
 
 def rewrite_html_paths(text: str, source_dir: Path, current_output: Path) -> str:
-    def repl(match: re.Match[str]) -> str:
-        prefix, target, suffix = match.groups()
-        return f"{prefix}{rewrite_asset_target(source_dir, target, current_output)}{suffix}"
+    text = re.sub(
+        r"(?im)^\s*<div\b[^>]*\balign=[\"']center[\"'][^>]*>\s*$",
+        "",
+        text,
+    )
+    text = re.sub(r"(?im)^\s*</div>\s*$", "", text)
 
-    return re.sub(r"(<img\b[^>]*\bsrc=[\"'])([^\"']+)([\"'])", repl, text)
+    def html_attr(attrs: str, name: str) -> str | None:
+        match = re.search(rf"\b{name}\s*=\s*([\"'])(.*?)\1", attrs, re.IGNORECASE)
+        return match.group(2) if match else None
+
+    def repl(match: re.Match[str]) -> str:
+        before, target, after = match.groups()
+        attrs = f"{before} {after}"
+        target = rewrite_asset_target(source_dir, target, current_output)
+        options = []
+
+        alt = html_attr(attrs, "alt")
+        if alt:
+            options.append(f":alt: {alt}")
+
+        align = html_attr(attrs, "align")
+        if align in {"left", "center", "right"}:
+            options.append(f":align: {align}")
+
+        option_block = "\n".join(options)
+        if option_block:
+            option_block += "\n"
+
+        return f"\n```{{image}} {target}\n{option_block}```\n"
+
+    return re.sub(
+        r"<img\b([^>]*)\bsrc=[\"']([^\"']+)[\"']([^>]*)>",
+        repl,
+        text,
+        flags=re.IGNORECASE,
+    )
 
 
 def normalize_heading_levels(text: str) -> str:
@@ -380,7 +417,7 @@ def markdown_link(title: str, path: Path, current_output: Path) -> str:
 
 
 def tree_index_entries(source: Path, current_output: Path) -> list[str]:
-    entries = [relpath_from_output(output_path_for(source).with_suffix(""), current_output)]
+    entries = []
     if source == MODEL_DIR / "PhasorDynamics" / "README.md":
         entries.append(
             relpath_from_output(
@@ -399,52 +436,8 @@ def tree_index_entries(source: Path, current_output: Path) -> list[str]:
     return entries
 
 
-def overview_entries_for(source: Path, current_output: Path) -> list[str]:
-    entries = [
-        markdown_link("Overview", output_path_for(source), current_output),
-    ]
-    if source == MODEL_DIR / "PhasorDynamics" / "README.md":
-        entries.append(
-            markdown_link("Input Format", output_path_for(PHASOR_INPUT_FORMAT), current_output)
-        )
-    return entries
-
-
-def model_contents_block(source: Path, current_output: Path) -> str:
-    child_dirs = child_readme_dirs(source.parent)
-    lines = ["## Pages", ""]
-    lines.extend(f"- {entry}" for entry in overview_entries_for(source, current_output))
-
-    if child_dirs:
-        lines.extend(["", "## Sections", ""])
-        for child_dir in child_dirs:
-            child_readme = child_dir / "README.md"
-            child_link = markdown_link(
-                title_for(child_readme),
-                index_path_for(child_readme),
-                current_output,
-            )
-            grandchild_links = [
-                markdown_link(
-                    title_for(grandchild / "README.md"),
-                    index_path_for(grandchild / "README.md"),
-                    current_output,
-                )
-                for grandchild in child_readme_dirs(child_dir)
-            ]
-            if grandchild_links:
-                lines.append(f"- {child_link}: {', '.join(grandchild_links)}")
-            else:
-                lines.append(f"- {child_link}")
-
-    return "\n".join(lines) + "\n"
-
-
 def example_index_entries(directory: Path, current_output: Path) -> list[str]:
     entries: list[str] = []
-    readme = directory / "README.md"
-    if readme in EXAMPLE_READMES and example_child_dirs(directory):
-        entries.append(relpath_from_output(output_path_for(readme).with_suffix(""), current_output))
 
     entries.extend(
         relpath_from_output(example_index_path_for_dir(child).with_suffix(""), current_output)
@@ -494,14 +487,34 @@ def example_contents_block(directory: Path, current_output: Path) -> str:
 
 
 def generated_page_title(source: Path) -> str:
-    title = title_for(source)
-    if is_model_container(source) or is_example_container(source):
-        return "Overview"
-    return title
+    return title_for(source)
+
+
+def generated_page_toctree(source: Path, current_output: Path) -> str:
+    if source == REPO_ROOT / "README.md":
+        return toctree_block(list(ROOT_TOCTREE_ENTRIES), hidden=True, maxdepth=4)
+    if is_model_container(source):
+        entries = tree_index_entries(source, current_output)
+        return f"{toctree_block(entries, hidden=True)}\n" if entries else ""
+    if is_example_container(source):
+        entries = example_index_entries(source.parent, current_output)
+        return f"{toctree_block(entries, hidden=True)}\n" if entries else ""
+    return ""
 
 
 def generate_page(source: Path) -> None:
     out = output_path_for(source)
+    if source == REPO_ROOT / "README.md":
+        out.write_text(
+            "# GridKit\n\n"
+            f"{generated_page_toctree(source, out)}"
+            "```{include} ../README.md\n"
+            ":relative-images:\n"
+            "```\n",
+            encoding="utf-8",
+        )
+        return
+
     source_dir = source.parent
     title = generated_page_title(source)
     body = source.read_text(encoding="utf-8")
@@ -513,23 +526,9 @@ def generate_page(source: Path) -> None:
     rel_source = source.relative_to(REPO_ROOT).as_posix()
     out.write_text(
         f"# {title}\n\n"
+        f"{generated_page_toctree(source, out)}"
         f"_Source: `{rel_source}`_\n\n"
         f"{body.rstrip()}\n",
-        encoding="utf-8",
-    )
-
-
-def generate_model_index_page(source: Path) -> None:
-    if not is_model_container(source):
-        return
-
-    out = index_path_for(source)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    entries = tree_index_entries(source, out)
-    out.write_text(
-        f"# {title_for(source)}\n\n"
-        f"{toctree_block(entries, hidden=True)}\n"
-        f"{model_contents_block(source, out)}",
         encoding="utf-8",
     )
 
@@ -537,7 +536,9 @@ def generate_model_index_page(source: Path) -> None:
 def generate_example_index_page(directory: Path) -> None:
     child_dirs = example_child_dirs(directory)
     readme = directory / "README.md"
-    if not child_dirs and readme in EXAMPLE_READMES:
+    if readme in EXAMPLE_READMES:
+        return
+    if not child_dirs:
         return
 
     out = example_index_path_for_dir(directory)
@@ -564,8 +565,6 @@ def main() -> None:
 
     for source in project_sources + model_sources + example_sources:
         generate_page(source)
-    for source in model_sources:
-        generate_model_index_page(source)
     for directory in sorted(EXAMPLE_DOC_DIRS):
         generate_example_index_page(directory)
 

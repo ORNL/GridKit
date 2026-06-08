@@ -1,21 +1,17 @@
-# GridKit Documentation
+# GridKit
 
 ```{toctree}
 :maxdepth: 4
 :titlesonly:
 :hidden:
 
-generated/root-readme
-project/index
-examples/generated/index
+generated/install
+applications/index
 models/index
+examples/generated/index
 api
+development/index
 ```
-
-## Sections
-
-- [GridKit Overview](generated/root-readme.md)
-- [Project Documentation](project/index.md)
-- [Examples](examples/generated/index.md)
-- [Model Documentation](models/index.md)
-- [API Reference](api.md)
+```{include} ../README.md
+:relative-images:
+```

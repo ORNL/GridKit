@@ -1,4 +1,4 @@
-# Model Documentation
+# Models
 
 ```{toctree}
 :maxdepth: 4

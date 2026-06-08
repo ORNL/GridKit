@@ -8,6 +8,7 @@ build/
 doxygen-docs/
 docs/_build/
 docs/api/generated/
+docs/api/reference/
 docs/examples/generated/
 docs/generated/
 docs/models/generated/
