@@ -57,12 +57,12 @@ namespace GridKit
       using PhasorDynamics::Component<scalar_type, index_type>::residual_indices_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-      using BusT       = PhasorDynamics::BusBase<ScalarT, IdxT>;
-      using SignalT    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
+      using ScalarT     = scalar_type;
+      using IdxT        = index_type;
+      using RealT       = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT  = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using BusT        = PhasorDynamics::BusBase<ScalarT, IdxT>;
+      using SignalT     = PhasorDynamics::SignalNode<ScalarT, IdxT>;
       using ComponentT  = PhasorDynamics::Component<ScalarT, IdxT>;
       using VectorViewT = typename ComponentT::VectorViewT;
       using MonitorT    = Model::VariableMonitorController<ScalarT>;
