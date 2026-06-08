@@ -137,27 +137,10 @@ namespace GridKit
         RealT Vcu_{0};
         RealT Tdelay_{0};
 
-        RealT a0_{1};
         RealT a1_{0};
         RealT a2_{0};
         RealT a3_{0};
         RealT a4_{0};
-
-        // Precomputed masks and safe inverse coefficients for branch-free degenerate paths.
-        RealT use_notch_{0};
-        RealT bypass_notch_{1};
-        RealT use_4th_order_{0};
-        RealT use_3rd_order_{0};
-        RealT use_2nd_order_{0};
-        RealT safe_inv_a4_{0};
-        RealT safe_inv_a3_{0};
-        RealT safe_inv_a2_{0};
-        RealT use_T2_block_{1};
-        RealT bypass_T2_block_{0};
-        RealT use_T4_block_{1};
-        RealT bypass_T4_block_{0};
-        RealT use_T6_block_{1};
-        RealT bypass_T6_block_{0};
 
         ComponentSignals<ScalarT, IdxT, IeeestInternalVariables, IeeestExternalVariables> signals_;
 
@@ -165,6 +148,7 @@ namespace GridKit
 
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
+        void setDerivedParameters();
 
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
