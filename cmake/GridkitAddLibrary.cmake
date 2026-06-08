@@ -25,7 +25,7 @@
 
 macro(gridkit_add_library target)
 
-  set(options "")
+  set(options INTERFACE_TARGET)
   set(oneValueArgs OUTPUT_NAME)
   set(multiValueArgs
       SOURCES
@@ -42,8 +42,26 @@ macro(gridkit_add_library target)
     "${multiValueArgs}"
     ${ARGN})
 
-  # add library with sources
-  add_library(${target} ${gridkit_add_library_SOURCES})
+  if(gridkit_add_library_INTERFACE_TARGET)
+    # add interface library (sources list must be empty)
+    list(LENGTH gridkit_add_library_SOURCES __n_sources)
+    if(NOT
+       __n_sources
+       EQUAL
+       0)
+      message(FATAL_ERROR "Interface library target cannot have sources")
+    endif()
+    add_library(${target} INTERFACE)
+    # add source include directory
+    target_include_directories(${target} INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                                                   $<INSTALL_INTERFACE:include>)
+  else()
+    # add library with sources
+    add_library(${target} ${gridkit_add_library_SOURCES})
+    # add source include directory
+    target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+                                                $<INSTALL_INTERFACE:include>)
+  endif()
 
   # add link libraries
   target_link_options(${target} INTERFACE ${GRIDKIT_LINK_OPTIONS})
@@ -51,15 +69,13 @@ macro(gridkit_add_library target)
     target_link_libraries(${target} ${gridkit_add_library_LINK_LIBRARIES})
   endif()
 
-  # set include dirs
-  target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-                                              $<INSTALL_INTERFACE:include>)
+  # add specified include dirs
   if(gridkit_add_library_INCLUDE_DIRECTORIES)
     target_include_directories(${target} ${gridkit_add_library_INCLUDE_DIRECTORIES})
   endif()
 
   # add compile options
-  target_compile_features(${target} PUBLIC cxx_std_20)
+  target_compile_features(${target} INTERFACE cxx_std_20)
   target_compile_options(${target} INTERFACE ${GRIDKIT_COMPILE_OPTIONS})
   if(gridkit_add_library_COMPILE_OPTIONS)
     target_compile_options(${target} ${gridkit_add_library_COMPILE_OPTIONS})

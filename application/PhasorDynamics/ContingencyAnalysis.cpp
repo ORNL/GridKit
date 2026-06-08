@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
