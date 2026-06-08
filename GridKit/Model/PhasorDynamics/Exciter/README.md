@@ -19,4 +19,5 @@ There are a few standard Exciter models
 - EXAC1 Excitation Model (See [EXAC1](EXAC1/README.md))
 - IEEE ST4B Excitation Model (See [ESST4B](ESST4B/README.md))
 - SCRX Excitation Model (See [SCRX](SCRX/README.md))
+- EXAC2 Excitation Model (See [EXAC2](EXAC2/README.md))
 - Simplified Excitation System Model (See [SEXS-PTI](SEXS-PTI/README.md))
