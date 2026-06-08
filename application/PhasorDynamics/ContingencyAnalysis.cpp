@@ -163,15 +163,13 @@ int main(int argc, const char* argv[])
   // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
   // Otherwise, use OpenMP if available
   // Fall back to serial if neither threads or OpenMP are available
-#ifdef GRIDKIT_ENABLE_THREADS
+#if defined(GRIDKIT_ENABLE_THREADS)
   runStudyAsync(study_data, stat_vec);
-#else
-#ifdef _OPENMP
+#elif defined(_OPENMP)
   runStudyOpenMP(study_data, stat_vec);
 #else
   runStudySerial(study_data, stat_vec);
-#endif // _OPENMP
-#endif // GRIDKIT_ENABLE_THREADS
+#endif
 
   const auto stop = Clock::now();
   const auto dur  = std::chrono::duration<double>(stop - start);
