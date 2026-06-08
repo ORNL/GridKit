@@ -11,4 +11,5 @@ The GridKit converter documentation includes:
 
 - Renewable Energy Generator/Converter Model REGCB (See [REGCB](REGCB/README.md))
 - Renewable Energy Electrical Control Model REECA (See [REECA](REECA/README.md))
+- Renewable Energy Plant Control Model REPCA (See [REPCA](REPCA/README.md))
 - Renewable Energy Electrical Control Model REECB (See [REECB](REECB/README.md))
