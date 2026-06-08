@@ -64,7 +64,8 @@
                 "Xqpp":0.18,
                 "Xl":0.15,
                 "S10":0.0,
-                "S12":0.0
+                "S12":0.0,
+                "mva": 100.0
             },
             "mon": ["delta", "omega"]
         },
@@ -72,7 +73,7 @@
             "class": "Tgov1",
             "ports": {"bus":0, "speed": 0, "pmech":1},
             "id": "DV2",
-            "params": {"R":0.05, "T1":0.5, "T2":2.5, "T3":7.5, "Pvmin":0.0, "Pvmax":1.0, "Dt":0.0}
+            "params": {"Trate": 100.0, "R":0.05, "T1":0.5, "T2":2.5, "T3":7.5, "Pvmin":0.0, "Pvmax":1.0, "Dt":0.0}
         },
         { 
             "class": "BusFault",

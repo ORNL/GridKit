@@ -22,6 +22,7 @@ namespace GridKit
        */
       enum class Tgov1Parameters
       {
+        Trate, ///< Turbine-rating power base
         R,     ///< Droop Constant
         T1,    ///< Valve Time Delay
         T2,    ///< Turbine Numerator Time Constant
