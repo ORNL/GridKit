@@ -16,6 +16,7 @@ int main()
 
   result += test.signalError();
   result += test.delayedSignalParser();
+  result += test.delaySmoothSignalParser();
   result += test.delayedSignalShortestDelayCap();
 
   return result.summary();

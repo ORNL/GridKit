@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalBlock/Delay/Delay.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalBlock/DelaySmooth/DelaySmooth.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/SampledSignalSource/SampledSignalSource.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>

@@ -1,0 +1,6 @@
+{
+    "system_model_file": "SignalDelaySmooth.case.json",
+    "dt": 0.004166666666666667,
+    "tmax": 5.0,
+    "events": []
+}

@@ -149,6 +149,7 @@ are specified:
   `Ieeest`      | the IEEEST stabilizer model                          | `input`, `output`                | `A1`, `A2`, `A3`, `A4`, `A5`, `A6`, `T1`, `T2`, `T3`, `T4`, `T5`, `T6`, `Ks`, `Lsmin`, `Lsmax`, `Vcl`, `Vcu`, `Tdelay` | `vss`
   `SampledSignalSource` | exogenous sampled signal source                    | `output`                         | `scale`, `offset` | `out`
   `Delay`              | fixed transport delay on a signal                    | `input`, `output`                | `delay`, `prehistory`\* | `out`
+  `DelaySmooth`        | smooth lag-chain approximation of a transport delay on a signal | `input`, `output` | `delay`, `dt_min` | `out`
   `BusFault`           | simple impedance-based fault at a bus                | `bus`, `status`\*                | `state0`, `R`, `X` | `state`, `ir`, `ii`
   `BusToSignalAdapter` | signal adapter component for a bus                   | `bus`, `vr`, `vi`, `ir`, `ii`    |                             |
 
@@ -211,6 +212,23 @@ a producing signal and its consumer:
 `prehistory` parameter sets the output for the first `delay` seconds; if omitted
 it holds the input value at the initial condition. Consumers read the delayed
 signal (here `2`) as an ordinary signal.
+
+A `DelaySmooth` device approximates a transport delay by a string of first-order
+lag blocks instead of a history buffer. It owns solver states and imposes no
+maximum step size:
+
+```json
+{
+  "class": "DelaySmooth",
+  "id": "DS1",
+  "ports": { "input": 1, "output": 2 },
+  "params": { "delay": 0.25, "dt_min": 0.03125 }
+}
+```
+
+`delay` is the delay in seconds (required, must be positive). `dt_min` sets the
+block resolution (required, must satisfy `0 < dt_min <= delay`), giving
+`N = floor(delay/dt_min)` blocks each with time constant `T = delay/N`.
 
 ## Example File for a 2-Bus System
 

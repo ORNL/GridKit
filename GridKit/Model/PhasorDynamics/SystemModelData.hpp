@@ -16,6 +16,7 @@
 #include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
 #include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalBlock/Delay/DelayData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalBlock/DelaySmooth/DelaySmoothData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalSource/SampledSignalSource/SampledSignalSourceData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
@@ -54,6 +55,7 @@ namespace GridKit
       using SignalDataT              = SignalNodeData<RealT, IdxT>;
       using SampledSignalSourceDataT = SignalSource::SampledSignalSourceData<RealT, IdxT>;
       using DelayDataT               = SignalBlock::DelayData<RealT, IdxT>;
+      using DelaySmoothDataT         = SignalBlock::DelaySmoothData<RealT, IdxT>;
       using MonitorSinkSpec          = Model::VariableMonitorBase::SinkSpec;
 
       /// The version of the grid dynamics case format this system model was
@@ -108,6 +110,7 @@ namespace GridKit
       std::vector<IeeestDataT>              stabilizer;            ///< Stabilizers within the model
       std::vector<SampledSignalSourceDataT> sampled_signal_source; ///< Sampled signal sources
       std::vector<DelayDataT>               delay;                 ///< Transport-delay signal blocks
+      std::vector<DelaySmoothDataT>         delaysmooth;           ///< Smooth lag-chain delay signal blocks
       std::vector<SignalDataT>              signal;                ///< Signal nodes
 
       /// Monitor sink specs

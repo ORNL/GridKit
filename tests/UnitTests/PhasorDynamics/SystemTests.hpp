@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -53,6 +54,36 @@ namespace GridKit
             {
               "class": "Delay", "id": "D1",
               "ports": {"input": 1, "output": 2}, "params": {"delay": 0.25}
+            }
+          ]
+        })";
+        std::istringstream stream(json.str());
+        return PhasorDynamics::parseSystemModelData(stream);
+      }
+
+      PhasorDynamics::SystemModelData<RealT, IdxT> parseDelaySmoothCase() const
+      {
+        std::stringstream json;
+        json << R"({
+          "header": {
+            "format_version": 0, "format_revision": 1,
+            "case_name": "DelaySmooth", "case_description": "None", "case_comments": "None",
+            "freq_base": 60.0, "va_base": 100000000.0
+          },
+          "buses": [],
+          "signals": [
+            {"signal_id": 1, "name": "source"},
+            {"signal_id": 2, "name": "delayed"}
+          ],
+          "devices": [
+            {
+              "class": "SampledSignalSource", "id": "SRC1",
+              "ports": {"output": 1}, "params": {"scale": 1.0, "offset": 0.0},
+              "source": {"type": "samples", "samples": [[0.0, 0.0], [0.1, 1.0], [0.2, 0.0]]}
+            },
+            {
+              "class": "DelaySmooth", "id": "DS1",
+              "ports": {"input": 1, "output": 2}, "params": {"delay": 0.25, "dt_min": 0.03125}
             }
           ]
         })";
@@ -249,6 +280,29 @@ namespace GridKit
         system.allocate();
         system.initialize();
         success *= isEqual(system.maxStepSize(), static_cast<RealT>(0.25));
+
+        return success.report(__func__);
+      }
+
+      /// A DelaySmooth device is parsed into the model without capping the solver step.
+      TestOutcome delaySmoothSignalParser()
+      {
+        TestStatus success = true;
+
+        auto data = parseDelaySmoothCase();
+
+        using DelaySmoothPorts  = PhasorDynamics::SignalBlock::DelaySmoothPorts;
+        success                *= (data.sampled_signal_source.size() == 1);
+        success                *= (data.delay.empty());
+        success                *= (data.delaysmooth.size() == 1);
+        success                *= (data.delaysmooth[0].ports.at(DelaySmoothPorts::input) == 1);
+        success                *= (data.delaysmooth[0].ports.at(DelaySmoothPorts::output) == 2);
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
+        system.allocate();
+        system.initialize();
+        success *= (system.size() == 8);
+        success *= std::isinf(system.maxStepSize());
 
         return success.report(__func__);
       }

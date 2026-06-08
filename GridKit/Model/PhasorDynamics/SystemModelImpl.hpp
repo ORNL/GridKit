@@ -105,6 +105,28 @@ namespace GridKit
         addComponent(delay);
       }
 
+      // Smooth lag-chain delay blocks read one signal and produce a delayed copy.
+      for (const auto& delaydata : data.delaysmooth)
+      {
+        auto* delay = new DelaySmooth<ScalarT, IdxT>(delaydata);
+
+        if (delaydata.ports.contains(DelaySmoothPorts::input))
+        {
+          IdxT           input = delaydata.ports.at(DelaySmoothPorts::input);
+          constexpr auto IN    = DelaySmoothExternalVariables::IN;
+          delay->getSignals().template attachSignalNode<IN>(getSignal(input));
+        }
+
+        if (delaydata.ports.contains(DelaySmoothPorts::output))
+        {
+          IdxT           output = delaydata.ports.at(DelaySmoothPorts::output);
+          constexpr auto OUT    = DelaySmoothInternalVariables::OUT;
+          delay->getSignals().template assignSignalNode<OUT>(getSignal(output));
+        }
+
+        addComponent(delay);
+      }
+
       // Add bus-to-signal adapters
       for (const auto& adapterdata : data.adapter)
       {
