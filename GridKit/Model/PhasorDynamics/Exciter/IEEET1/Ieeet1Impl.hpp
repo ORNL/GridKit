@@ -315,14 +315,12 @@ namespace GridKit
         ScalarT omega     = ws[0];
         ScalarT vs_signal = ws[1];
 
-        // The 'pre-limit' target of Vr.
-        ScalarT func            = -vr + Ka_ * vtr;
-        ScalarT func_normalized = (func / Ta_) / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
-        ScalarT vr_ind          = Math::indicator(vr, func_normalized, Vrmin_, Vrmax_);
+        // The 'pre-limit' derivative of Vr.
+        ScalarT func = (-vr + Ka_ * vtr) / Ta_;
 
         // Internal Differential Equations
         f[0] = -Tr_ * vts_dot + Ec - vts;
-        f[1] = -Ta_ * vr_dot + vr_ind * func;
+        f[1] = -Ta_ * vr_dot + Ta_ * Math::antiwindup(vr, func, Vrmin_, Vrmax_);
         f[2] = -Te_ * efdp_dot + vr - ve - Ke_ * efdp;
         f[3] = -Tf_ * vfx_dot + vf;
 
