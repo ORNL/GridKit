@@ -4,12 +4,14 @@ Standard IEEE power system stabilizer: 4th-order notch filter, two lead–lag
 blocks, washout, and output limiter.
 
 Notes:
-- $V_{cl}$, $V_{cu}$, and $T_{delay}$ are accepted for input-format
+- $V_{\mathrm{cl}}$, $V_{\mathrm{cu}}$, and $T_{\mathrm{delay}}$ are accepted for input-format
   compatibility but are not modeled.
 - A zero denominator time constant bypasses its corresponding lead–lag or
   washout block.
 
 ## Block Diagram
+
+Standard IEEEST block diagram.
 
 <div align="center">
    <img align="center" src="../../../../../docs/Figures/stabilizer_ieeest_diagram.png">
@@ -19,26 +21,26 @@ Notes:
 
 ## Model Parameters
 
-Symbol       | Units  | JSON     | Description                          | Typical Value | Note
--------------|--------|----------|--------------------------------------|---------------|------
-$A_1$        | [s]    | `A1`     | Notch denominator coefficient        | 1.013         |
-$A_2$        | [s²]   | `A2`     | Notch denominator coefficient        | 0.013         |
-$A_3$        | [s]    | `A3`     | Notch denominator coefficient        | 0.0           |
-$A_4$        | [s²]   | `A4`     | Notch denominator coefficient        | 0.0           |
-$A_5$        | [s]    | `A5`     | Notch numerator coefficient          | 1.013         |
-$A_6$        | [s²]   | `A6`     | Notch numerator coefficient          | 0.113         |
-$T_1$        | [s]    | `T1`     | Lead–lag 1 numerator time constant   | 0.0           |
-$T_2$        | [s]    | `T2`     | Lead–lag 1 denominator time constant | 0.02          |
-$T_3$        | [s]    | `T3`     | Lead–lag 2 numerator time constant   | 0.0           |
-$T_4$        | [s]    | `T4`     | Lead–lag 2 denominator time constant | 0.0           |
-$T_5$        | [s]    | `T5`     | Washout numerator time constant      | 1.65          |
-$T_6$        | [s]    | `T6`     | Washout denominator time constant    | 1.65          |
-$K_s$        | [p.u.] | `Ks`     | Stabilizer gain                      | 3.0           |
-$L_s^{\min}$ | [p.u.] | `Lsmin`  | Minimum stabilizer output limit      | -0.1          |
-$L_s^{\max}$ | [p.u.] | `Lsmax`  | Maximum stabilizer output limit      | 0.1           |
-$V_{cl}$     | [p.u.] | `Vcl`    | Lower input cutout threshold         | 0.0           | Accepted but not modeled
-$V_{cu}$     | [p.u.] | `Vcu`    | Upper input cutout threshold         | 0.0           | Accepted but not modeled
-$T_\text{delay}$  | [s]    | `Tdelay` | Input delay                          | 0.0           | Accepted but not modeled
+Symbol                  | Units    | JSON     | Description                          | Typical Value | Note
+------------------------|----------|----------|--------------------------------------|---------------|------
+$A_1$                   | [sec]    | `A1`     | Notch denominator coefficient        | 1.013         |
+$A_2$                   | [sec²]   | `A2`     | Notch denominator coefficient        | 0.013         |
+$A_3$                   | [sec]    | `A3`     | Notch denominator coefficient        | 0.0           |
+$A_4$                   | [sec²]   | `A4`     | Notch denominator coefficient        | 0.0           |
+$A_5$                   | [sec]    | `A5`     | Notch numerator coefficient          | 1.013         |
+$A_6$                   | [sec²]   | `A6`     | Notch numerator coefficient          | 0.113         |
+$T_1$                   | [sec]    | `T1`     | Lead–lag 1 numerator time constant   | 0.0           |
+$T_2$                   | [sec]    | `T2`     | Lead–lag 1 denominator time constant | 0.02          |
+$T_3$                   | [sec]    | `T3`     | Lead–lag 2 numerator time constant   | 0.0           |
+$T_4$                   | [sec]    | `T4`     | Lead–lag 2 denominator time constant | 0.0           |
+$T_5$                   | [sec]    | `T5`     | Washout numerator time constant      | 1.65          |
+$T_6$                   | [sec]    | `T6`     | Washout denominator time constant    | 1.65          |
+$K_s$                   | [p.u.]   | `Ks`     | Stabilizer gain                      | 3.0           |
+$L_s^{\min}$      | [p.u.]   | `Lsmin`  | Minimum stabilizer output limit      | -0.1          |
+$L_s^{\max}$      | [p.u.]   | `Lsmax`  | Maximum stabilizer output limit      | 0.1           |
+$V_{\mathrm{cl}}$       | [p.u.]   | `Vcl`    | Lower input cutout threshold         | 0.0           | Accepted but not modeled
+$V_{\mathrm{cu}}$       | [p.u.]   | `Vcu`    | Upper input cutout threshold         | 0.0           | Accepted but not modeled
+$T_{\mathrm{delay}}$    | [sec]    | `Tdelay` | Input delay                          | 0.0           | Accepted but not modeled
 
 ### Parameter Validation
 
@@ -87,33 +89,37 @@ The binary DAE selectors choose the active notch-filter order:
 
 #### Differential
 
-Symbol                | Units  | Description
-----------------------|--------|------------
-$x_1, x_2, x_3, x_4$  | [-]    | Notch filter states
-$x_5$                 | [-]    | Lead–lag 1 state
-$x_6$                 | [-]    | Lead–lag 2 state
-$x_7$                 | [-]    | Washout state
+Symbol                | Units  | Description           | Note
+----------------------|--------|-----------------------|------
+$x_1, x_2, x_3, x_4$  | [-]    | Notch filter states   | States 1–4 in Fig. 1
+$x_5$                 | [-]    | Lead–lag 1 state      | State 5 in Fig. 1
+$x_6$                 | [-]    | Lead–lag 2 state      | State 6 in Fig. 1
+$x_7$                 | [-]    | Washout state         | State 7 in Fig. 1
 
 For reduced-order notch filters, unused notch states remain in the fixed
 component state vector and are pinned by algebraic residuals.
 
 #### Algebraic
 
-Symbol     | Units  | Description
------------|--------|------------
-$v_4$      | [p.u.] | Notch filter output
-$v_5$      | [p.u.] | Lead–lag 1 output
-$v_6$      | [p.u.] | Lead–lag 2 output
-$v_7$      | [p.u.] | Unlimited stabilizer signal
-$V_{ss}$   | [p.u.] | Limited stabilizer signal (model output)
+Symbol               | Units  | Description                              | Note
+---------------------|--------|------------------------------------------|------
+$v_4$                | [p.u.] | Notch filter output                      |
+$v_5$                | [p.u.] | Lead–lag 1 output                        |
+$v_6$                | [p.u.] | Lead–lag 2 output                        |
+$v_7$                | [p.u.] | Unlimited stabilizer signal              |
+$V_{\mathrm{ss}}$    | [p.u.] | Limited stabilizer signal (model output) |
 
 ### External Variables
 
+#### Differential
+
+None.
+
 #### Algebraic
 
-Symbol | Units  | Description
--------|--------|------------
-$u$    | [p.u.] | Stabilizer input signal
+Symbol | Units  | Description             | Note
+-------|--------|-------------------------|------
+$u$    | [p.u.] | Stabilizer input signal |
 
 ## Model Equations
 
@@ -151,17 +157,19 @@ v_5 - v_6 & T_4 = 0
 -T_6 v_7 + K_s T_5(v_6 - x_7) & T_6 \ne 0 \\
 K_s v_6 - v_7 & T_6 = 0
 \end{cases} \\
-0 &= -V_{ss} + \text{clamp}(v_7, L_s^{\min}, L_s^{\max})
+0 &= -V_{\mathrm{ss}} + \text{clamp}(v_7, L_s^{\min}, L_s^{\max})
 \end{aligned}
 ```
 
 The output limiter uses GridKit's smooth
-[Clamp](../../../../CommonMath.md#derived-functions).
+[clamp](../../../../CommonMath.md#derived-functions).
 
 ## Initialization
 
-States and derivatives initialize to the steady state implied by the attached
-input $u$:
+Initialization is performed by evaluating the steady-state residuals in
+dependency order. Let subscript $0$ denote initial values and set all internal
+derivatives to zero. States and derivatives initialize to the steady state
+implied by the attached input $u$:
 
 ```math
 \begin{aligned}
@@ -173,7 +181,7 @@ K_su & T_6 = 0 \\
 0 & \text{otherwise}
 \end{cases}
 &
-V_{ss} &= \text{clamp}(v_7, L_s^{\min}, L_s^{\max})
+V_{\mathrm{ss}} &= \text{clamp}(v_7, L_s^{\min}, L_s^{\max})
 \end{aligned}
 ```
 
@@ -182,5 +190,5 @@ All internal derivatives initialize to zero.
 ## Model Outputs
 
 Output | Units  | Description               | Note
--------|--------|---------------------------|-----
+-------|--------|---------------------------|------
 `vss`  | [p.u.] | Limited stabilizer signal | Exported through `output` when assigned
