@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cassert>
+#include <cstddef>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/CommonMath.hpp>
+#include <GridKit/LinearAlgebra/Vector/VectorView.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Utilities/Errors.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -21,8 +24,9 @@ namespace GridKit
     class Component : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+      using RealT       = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using MatrixT     = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+      using VectorViewT = LinearAlgebra::VectorView<ScalarT, IdxT>;
 
       Component() = default;
 
@@ -64,22 +68,22 @@ namespace GridKit
 
       std::vector<ScalarT>& y() override
       {
-        return y_;
+        return y_storage_;
       }
 
       const std::vector<ScalarT>& y() const override
       {
-        return y_;
+        return y_storage_;
       }
 
       std::vector<ScalarT>& yp() override
       {
-        return yp_;
+        return yp_storage_;
       }
 
       const std::vector<ScalarT>& yp() const override
       {
-        return yp_;
+        return yp_storage_;
       }
 
       std::vector<bool>& tag() override
@@ -94,12 +98,37 @@ namespace GridKit
 
       std::vector<ScalarT>& getResidual() override
       {
-        return f_;
+        return f_storage_;
       }
 
       const std::vector<ScalarT>& getResidual() const override
       {
-        return f_;
+        return f_storage_;
+      }
+
+      ScalarT* yData()
+      {
+        return y_.data();
+      }
+
+      const ScalarT* yData() const
+      {
+        return y_.data();
+      }
+
+      void bindStateViews(VectorViewT y, VectorViewT yp, VectorViewT f)
+      {
+        assert(y.size() == yp.size());
+        assert(y.size() == f.size());
+
+        state_views_bound_ = true;
+        y_storage_.clear();
+        yp_storage_.clear();
+        f_storage_.clear();
+
+        y_  = y;
+        yp_ = yp;
+        f_  = f;
       }
 
       MatrixT& getJacobian() override
@@ -144,6 +173,27 @@ namespace GridKit
         return residual_indices_;
       }
 
+    protected:
+      void allocateState(std::size_t size)
+      {
+        if (state_views_bound_)
+        {
+          assert(y_.size() == size);
+          assert(yp_.size() == size);
+          assert(f_.size() == size);
+          return;
+        }
+
+        f_storage_.resize(size);
+        y_storage_.resize(size);
+        yp_storage_.resize(size);
+
+        f_.bind(size == 0 ? nullptr : f_storage_.data(), size);
+        y_.bind(size == 0 ? nullptr : y_storage_.data(), size);
+        yp_.bind(size == 0 ? nullptr : yp_storage_.data(), size);
+      }
+
+    public:
       /// @todo Remove this method. It should be part of DynamicSolver class.
       bool hasJacobian() override
       {
@@ -183,11 +233,17 @@ namespace GridKit
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
+      std::vector<ScalarT> y_storage_;
+      std::vector<ScalarT> yp_storage_;
       std::vector<bool>    tag_;
-      std::vector<ScalarT> f_;
+      std::vector<ScalarT> f_storage_;
       std::vector<ScalarT> g_;
+
+      VectorViewT y_;
+      VectorViewT yp_;
+      VectorViewT f_;
+
+      bool state_views_bound_{false};
 
       MatrixT J_;
       IdxT*   J_rows_buffer_{nullptr};

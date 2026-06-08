@@ -63,8 +63,9 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using BusT       = PhasorDynamics::BusBase<ScalarT, IdxT>;
       using SignalT    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
-      using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitorController<ScalarT>;
+      using ComponentT  = PhasorDynamics::Component<ScalarT, IdxT>;
+      using VectorViewT = typename ComponentT::VectorViewT;
+      using MonitorT    = Model::VariableMonitorController<ScalarT>;
 
       SystemModel();
 
@@ -95,7 +96,6 @@ namespace GridKit
         return csr_jac_;
       }
 
-      void updateVariables();
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);

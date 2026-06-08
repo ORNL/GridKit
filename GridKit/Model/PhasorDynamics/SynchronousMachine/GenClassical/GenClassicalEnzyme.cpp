@@ -60,7 +60,7 @@ namespace GridKit
                                                  (bus_->getVariableIndices()).data(),
                                                  y_.data(),
                                                  yp_.data(),
-                                                 (bus_->y()).data(),
+                                                 bus_->yData(),
                                                  J_rows_buffer_,
                                                  J_cols_buffer_,
                                                  J_vals_buffer_,

@@ -10,6 +10,7 @@ int main()
 
   result += test.constructor();
   result += test.composer();
+  result += test.elementStateAliasesSystemState();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
