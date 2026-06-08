@@ -61,12 +61,3 @@ exclude_patterns = [
     "README.md",
     "superpowers/**",
 ]
-
-
-def rewrite_included_root_readme_links(app, relative_path, parent_docname, source):
-    if Path(str(relative_path)).name == "README.md":
-        source[0] = source[0].replace("](INSTALL.md", "](generated/install.md")
-
-
-def setup(app):
-    app.connect("include-read", rewrite_included_root_readme_links)

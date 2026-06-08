@@ -12,6 +12,6 @@ examples/generated/index
 api
 development/index
 ```
-```{include} ../README.md
-:relative-images:
+```{include} generated/readme.md
+:relative-docs: generated/
 ```

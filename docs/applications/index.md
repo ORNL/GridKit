@@ -1,16 +1,15 @@
 # Applications
 
 ```{toctree}
-:maxdepth: 4
+:maxdepth: 2
 :titlesonly:
 :hidden:
 
-phasor-dynamics/index
+../generated/application-input-format
 ```
 
-## Sections
+## PhasorDynamics
 
-- [PhasorDynamics](phasor-dynamics/index.md)
-- PowerElectronics: none
-- PowerFlow: none
-- EMT: none
+- [Application Input Format](../generated/application-input-format.md)
+- `application/PhasorDynamics/DynamicSimulation.cpp`
+- `application/PhasorDynamics/ContingencyAnalysis.cpp`
