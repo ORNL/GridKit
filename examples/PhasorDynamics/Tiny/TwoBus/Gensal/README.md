@@ -9,8 +9,8 @@ monitored machine states are compared against `GENSAL.ref.csv`.
 
 ## Trajectory Comparison
 
-![GENSAL validation trajectory](GENSAL.png)
+![GENSAL validation trajectory](Gensal_validation.png)
 
 ## Error
 
-![GENSAL validation error](GENSAL_ERROR.png)
+![GENSAL validation error](Gensal_validation_error.png)

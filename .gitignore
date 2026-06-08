@@ -6,4 +6,10 @@
 build/
 *.swp
 doxygen-docs/
+docs/_build/
+docs/api/generated/
+docs/examples/generated/
+docs/generated/
+docs/models/generated/
+docs/xml/
 __pycache__

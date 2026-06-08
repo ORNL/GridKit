@@ -1,0 +1,20 @@
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+  apt_packages:
+    - doxygen
+    - graphviz
+  jobs:
+    pre_build:
+      - python docs/generate_model_docs.py
+      - cd docs && doxygen Doxyfile
+
+sphinx:
+  configuration: docs/conf.py
+
+python:
+  install:
+    - requirements: docs/requirements.txt

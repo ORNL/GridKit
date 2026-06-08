@@ -1,32 +1,39 @@
-# GridKit Documentation Target
+# GridKit Documentation
 
-We use CMake's built-in `FindDoxygen` module to generate a target that will
-use Doxygen to build the project documentation.
+GridKit documentation can be built two ways:
 
-## Building
+1. Read the Docs builds the Sphinx site from `docs/conf.py`.
+2. CMake can build the existing Doxygen HTML target.
 
-The documentation target is excluded from the default set of targets built via
-`make` (or `cmake --build .`). It must be designated explicitly with
+## Read the Docs Build
+
+The Read the Docs proof of concept is configured by `.readthedocs.yaml`.
+Before Sphinx runs, the build generates Markdown wrapper pages and Doxygen XML:
+
 ```sh
-make GridKitDocs
+python docs/generate_model_docs.py
+cd docs && doxygen Doxyfile
 ```
-or
+
+To test the same flow locally:
+
 ```sh
-cmake --build . -t GridKitDocs
+python -m pip install -r docs/requirements.txt
+python docs/generate_model_docs.py
+cd docs && doxygen Doxyfile
+cd ..
+sphinx-build -T -b html docs docs/_build/html
 ```
-The generated files can be found in the build directory under `docs/html/` and
-the main page is `docs/html/index.html`.
 
-If you wish to inspect the Doxyfile itself, it is generated as
-`docs/Doxyfile.GridKitDocs`.
+The generated Sphinx files, Doxygen XML, and HTML output are build artifacts and
+should not be committed.
 
-## Notes
-The reasoning behind taking this approach is as follows:
+## CMake Doxygen Target
 
-1. It is easier to maintain just the few options we need to customize rather
-   than a whole Doxyfile (leave what can be generated out of the repo); if
-   another option is needed, it's easy to look it up.
-2. Since the documentation can be seen as a "product" or "artifact" of the code,
-   it makes sense for it to be a buildable "target"
-3. Generated files should not be placed in the source directory. The binary
-   directory makes sense for this, and the CMake target makes this easy.
+The existing CMake target is still available for standalone Doxygen HTML output:
+
+```sh
+cmake --build build -t GridKitDocs
+```
+
+The generated files are written under the build directory.
