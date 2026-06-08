@@ -129,67 +129,67 @@ namespace GridKit
 
         if (repcadata.ports.contains(RepcaPorts::ibranchr))
         {
-          const IdxT    signal   = repcadata.ports.at(RepcaPorts::ibranchr);
+          const IdxT     signal   = repcadata.ports.at(RepcaPorts::ibranchr);
           constexpr auto IBRANCHR = RepcaExternalVariables::IBRANCHR;
           repca->getSignals().template attachSignalNode<IBRANCHR>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::ibranchi))
         {
-          const IdxT    signal   = repcadata.ports.at(RepcaPorts::ibranchi);
+          const IdxT     signal   = repcadata.ports.at(RepcaPorts::ibranchi);
           constexpr auto IBRANCHI = RepcaExternalVariables::IBRANCHI;
           repca->getSignals().template attachSignalNode<IBRANCHI>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::qbranch))
         {
-          const IdxT    signal  = repcadata.ports.at(RepcaPorts::qbranch);
+          const IdxT     signal  = repcadata.ports.at(RepcaPorts::qbranch);
           constexpr auto QBRANCH = RepcaExternalVariables::QBRANCH;
           repca->getSignals().template attachSignalNode<QBRANCH>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::pbranch))
         {
-          const IdxT    signal  = repcadata.ports.at(RepcaPorts::pbranch);
+          const IdxT     signal  = repcadata.ports.at(RepcaPorts::pbranch);
           constexpr auto PBRANCH = RepcaExternalVariables::PBRANCH;
           repca->getSignals().template attachSignalNode<PBRANCH>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::vref))
         {
-          const IdxT    signal = repcadata.ports.at(RepcaPorts::vref);
+          const IdxT     signal = repcadata.ports.at(RepcaPorts::vref);
           constexpr auto VREF   = RepcaExternalVariables::VREF;
           repca->getSignals().template attachSignalNode<VREF>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::qref))
         {
-          const IdxT    signal = repcadata.ports.at(RepcaPorts::qref);
+          const IdxT     signal = repcadata.ports.at(RepcaPorts::qref);
           constexpr auto QREF   = RepcaExternalVariables::QREF;
           repca->getSignals().template attachSignalNode<QREF>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::pplantref))
         {
-          const IdxT    signal    = repcadata.ports.at(RepcaPorts::pplantref);
+          const IdxT     signal    = repcadata.ports.at(RepcaPorts::pplantref);
           constexpr auto PPLANTREF = RepcaExternalVariables::PPLANTREF;
           repca->getSignals().template attachSignalNode<PPLANTREF>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::freq))
         {
-          const IdxT    signal = repcadata.ports.at(RepcaPorts::freq);
+          const IdxT     signal = repcadata.ports.at(RepcaPorts::freq);
           constexpr auto FREQ   = RepcaExternalVariables::FREQ;
           repca->getSignals().template attachSignalNode<FREQ>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::freqref))
         {
-          const IdxT    signal  = repcadata.ports.at(RepcaPorts::freqref);
+          const IdxT     signal  = repcadata.ports.at(RepcaPorts::freqref);
           constexpr auto FREQREF = RepcaExternalVariables::FREQREF;
           repca->getSignals().template attachSignalNode<FREQREF>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::qext))
         {
-          const IdxT    signal = repcadata.ports.at(RepcaPorts::qext);
+          const IdxT     signal = repcadata.ports.at(RepcaPorts::qext);
           constexpr auto QEXT   = RepcaInternalVariables::QEXT;
           repca->getSignals().template assignSignalNode<QEXT>(getSignal(signal));
         }
         if (repcadata.ports.contains(RepcaPorts::pext))
         {
-          const IdxT    signal = repcadata.ports.at(RepcaPorts::pext);
+          const IdxT     signal = repcadata.ports.at(RepcaPorts::pext);
           constexpr auto PEXT   = RepcaInternalVariables::PEXT;
           repca->getSignals().template assignSignalNode<PEXT>(getSignal(signal));
         }
