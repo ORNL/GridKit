@@ -42,6 +42,9 @@ option(GridKit_ENABLE_UBSAN "Enable the undefined behavior sanitizer" OFF)
 # Enable OpenMP
 option(GridKit_ENABLE_OPENMP "Enable OpenMP" OFF)
 
+# Enable Threads
+option(GridKit_ENABLE_THREADS "Enable THreads" OFF)
+
 # This allows use of "GRIDKIT_*" versions of the above options
 list(
   APPEND
@@ -138,6 +141,10 @@ endif()
 
 if(GRIDKIT_ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)
+endif()
+
+if(GRIDKIT_ENABLE_THREADS)
+  find_package(Threads REQUIRED)
 endif()
 
 # Macro that adds libraries

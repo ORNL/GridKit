@@ -115,6 +115,7 @@ void runStudySerial(const StudyData& study_data, std::vector<TestStatus>& stat_v
   }
 }
 
+#ifdef GRIDKIT_ENABLE_THREADS
 void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
 {
   auto n_faults = study_data.model_data.bus_fault.size();
@@ -133,6 +134,7 @@ void runStudyAsync(const StudyData& study_data, std::vector<TestStatus>& stat_ve
     stat_vec[i] = stat;
   }
 }
+#endif
 
 #ifdef _OPENMP
 void runStudyOpenMP(const StudyData& study_data, std::vector<TestStatus>& stat_vec)
@@ -158,11 +160,15 @@ int main(int argc, const char* argv[])
   auto faults   = study_data.model_data.bus_fault;
   auto stat_vec = std::vector<TestStatus>(faults.size(), true);
 
-  // runStudySerial(study_data, stat_vec);
-#ifdef _OPENMP
+  // Use std::async if threads are available (so far, std::async has out-performed OpenMP)
+  // Otherwise, use OpenMP if available
+  // Fall back to serial if neither threads or OpenMP are available
+#if defined(GRIDKIT_ENABLE_THREADS)
+  runStudyAsync(study_data, stat_vec);
+#elif defined(_OPENMP)
   runStudyOpenMP(study_data, stat_vec);
 #else
-  runStudyAsync(study_data, stat_vec);
+  runStudySerial(study_data, stat_vec);
 #endif
 
   const auto stop = Clock::now();
