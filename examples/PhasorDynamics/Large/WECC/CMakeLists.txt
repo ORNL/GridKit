@@ -1,4 +1,4 @@
-gridkit_example_add_file(wecc.json)
+gridkit_example_add_file(wecc.case.json)
 gridkit_example_add_file(wecc.solver.json)
 
 add_test(
