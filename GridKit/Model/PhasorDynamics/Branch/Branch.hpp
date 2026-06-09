@@ -135,14 +135,14 @@ namespace GridKit
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
 
-      FORCE_INLINE static void addAdmittanceContribution(RealT          G,
+      static FORCE_INLINE void addAdmittanceContribution(RealT          G,
                                                                                   RealT          B,
                                                                                   const ScalarT& Vr,
                                                                                   const ScalarT& Vi,
                                                                                   ScalarT&       Ir,
                                                                                   ScalarT&       Ii);
 
-      FORCE_INLINE static void evaluateAdmittanceBlock(RealT          G,
+      static FORCE_INLINE void evaluateAdmittanceBlock(RealT          G,
                                                                                 RealT          B,
                                                                                 const ScalarT* wb,
                                                                                 ScalarT*       h);
