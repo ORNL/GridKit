@@ -50,8 +50,11 @@ gridkit_add_library(
   phasor_dynamics_systemmodel
   SOURCES SystemModel.cpp SystemModelData.cpp
   HEADERS SystemModel.hpp SystemModelData.hpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
-                 PUBLIC GridKit::phasor_dynamics_components
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::phasor_dynamics_core
+    PUBLIC
+    GridKit::phasor_dynamics_components
   INCLUDE_DIRECTORIES
     PRIVATE
     ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
@@ -62,8 +65,11 @@ gridkit_add_library(
   phasor_dynamics_systemmodel_dependency_tracking
   SOURCES SystemModelDependencyTracking.cpp
   HEADERS SystemModel.hpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
-                 PUBLIC GridKit::phasor_dynamics_components_dependency_tracking)
+  LINK_LIBRARIES
+    PUBLIC
+    GridKit::phasor_dynamics_core
+    PUBLIC
+    GridKit::phasor_dynamics_components_dependency_tracking)
 
 install(TARGETS phasor_dynamics_components phasor_dynamics_components_dependency_tracking
         EXPORT gridkit-targets)
