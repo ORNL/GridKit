@@ -266,13 +266,6 @@ namespace GridKit
        * error cannot be used.
        */
       template <typename scalar_type, typename index_type>
-      int Ieeest<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
-      {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-        return 0;
-      }
-
-      template <typename scalar_type, typename index_type>
       FORCE_INLINE int Ieeest<scalar_type, index_type>::evaluateInternalResidual(
           ScalarT*                  y,
           ScalarT*                  yp,
