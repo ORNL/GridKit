@@ -30,9 +30,4 @@ namespace GridKit
 
   template <typename RealT>
   inline constexpr RealT MINUS_ONE = -1.0;
-  
-#ifdef _MSC_VER
-  template <typename RealT>
-  inline constexpr RealT M_PI = 3.14159265358979323846;
-#endif
 } // namespace GridKit
