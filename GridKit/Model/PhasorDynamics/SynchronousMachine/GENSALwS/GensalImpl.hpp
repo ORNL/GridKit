@@ -351,7 +351,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateInternalResidual(
+    FORCE_INLINE int Gensal<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT* y,
         ScalarT* yp,
         ScalarT* wb,
@@ -422,7 +422,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateBusResidual(
+    FORCE_INLINE int Gensal<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,

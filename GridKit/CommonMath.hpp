@@ -34,7 +34,7 @@ namespace GridKit
      * @return value of the sigmoid function
      */
     template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT sigmoid(const ScalarT x)
+    FORCE_INLINE ScalarT sigmoid(const ScalarT x)
     {
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
       return HALF<RealT> * (ONE<RealT> + std::tanh(HALF<RealT> * MU<RealT> * x));
@@ -52,7 +52,7 @@ namespace GridKit
      * @return value of the smooth ramp function
      */
     template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT ramp(const ScalarT x)
+    FORCE_INLINE ScalarT ramp(const ScalarT x)
     {
       using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
@@ -76,7 +76,7 @@ namespace GridKit
      * @return value of the quadratic ramp
      */
     template <class ScalarT>
-    __attribute__((always_inline)) inline ScalarT qramp(const ScalarT x)
+    FORCE_INLINE ScalarT qramp(const ScalarT x)
     {
       return x * x * sigmoid(x);
     }
@@ -101,7 +101,7 @@ namespace GridKit
      * forcing callers to cast every parameter.
      */
     template <class LeftT, class RightT>
-    __attribute__((always_inline)) inline auto max(
+    FORCE_INLINE auto max(
         const LeftT  x,
         const RightT y)
     {
@@ -128,7 +128,7 @@ namespace GridKit
      * forcing callers to cast every parameter.
      */
     template <class LeftT, class RightT>
-    __attribute__((always_inline)) inline auto min(
+    FORCE_INLINE auto min(
         const LeftT  x,
         const RightT y)
     {
@@ -152,7 +152,7 @@ namespace GridKit
      * @return value of the smooth clamp function
      */
     template <class ScalarT, typename LowerT, typename UpperT>
-    __attribute__((always_inline)) inline auto clamp(
+    FORCE_INLINE auto clamp(
         const ScalarT x,
         const LowerT  lower,
         const UpperT  upper)
@@ -176,7 +176,7 @@ namespace GridKit
      * @return Smooth deadbanded value
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT deadband(
+    FORCE_INLINE ScalarT deadband(
         const ScalarT x,
         const RealT   lower,
         const RealT   upper)
@@ -198,7 +198,7 @@ namespace GridKit
      * @return Slew-rate-limited value of f
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT slew(
+    FORCE_INLINE ScalarT slew(
         const ScalarT f,
         const RealT   rate)
     {
@@ -223,7 +223,7 @@ namespace GridKit
      * @return Smooth linear segment contribution
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT linseg(
+    FORCE_INLINE ScalarT linseg(
         const ScalarT x,
         const RealT   lower,
         const RealT   upper,
@@ -244,7 +244,7 @@ namespace GridKit
      * @return Smooth indicator that x is above limit_min
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT above(
+    FORCE_INLINE ScalarT above(
         const ScalarT x,
         const RealT   limit_min)
     {
@@ -262,7 +262,7 @@ namespace GridKit
      * @return Smooth indicator that x is below limit_max
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT below(
+    FORCE_INLINE ScalarT below(
         const ScalarT x,
         const RealT   limit_max)
     {
@@ -281,7 +281,7 @@ namespace GridKit
      * @return Smooth indicator that x is inside [limit_min, limit_max]
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT inside(
+    FORCE_INLINE ScalarT inside(
         const ScalarT x,
         const RealT   limit_min,
         const RealT   limit_max)
@@ -302,7 +302,7 @@ namespace GridKit
      * @return Smooth indicator that x is outside [limit_min, limit_max]
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT outside(
+    FORCE_INLINE ScalarT outside(
         const ScalarT x,
         const RealT   limit_min,
         const RealT   limit_max)
@@ -325,7 +325,7 @@ namespace GridKit
      *         0 when integration should be blocked.
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT indicator(
+    FORCE_INLINE ScalarT indicator(
         const ScalarT x,
         const ScalarT f,
         const RealT   limit_min,
@@ -359,7 +359,7 @@ namespace GridKit
      * @return Smooth anti-windup limited derivative
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT antiwindup(
+    FORCE_INLINE ScalarT antiwindup(
         const ScalarT x,
         const ScalarT f,
         const RealT   limit_min,

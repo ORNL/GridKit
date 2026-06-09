@@ -279,7 +279,7 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
+      FORCE_INLINE int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
           ScalarT* y,
           ScalarT* yp,
           ScalarT* wb,
