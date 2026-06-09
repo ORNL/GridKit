@@ -201,7 +201,7 @@ namespace GridKit
      * @return Smooth offset deadbanded value
      */
     template <class ScalarT, typename RealT>
-    __attribute__((always_inline)) inline ScalarT deadband2(
+    FORCE_INLINE ScalarT deadband(
         const ScalarT x,
         const RealT   lower,
         const RealT   upper)

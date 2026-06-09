@@ -320,12 +320,12 @@ namespace GridKit
        *
        */
       template <typename scalar_type, typename index_type>
-      __attribute__((always_inline)) inline int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
-          const ScalarT*                  y,
-          const ScalarT*                  yp,
-          [[maybe_unused]] const ScalarT* wb,
-          const ScalarT*                  ws,
-          ScalarT*                        f)
+      FORCE_INLINE int Tgov1<scalar_type, index_type>::evaluateInternalResidual(
+          ScalarT*                  y,
+          ScalarT*                  yp,
+          [[maybe_unused]] ScalarT* wb,
+          ScalarT*                  ws,
+          ScalarT*                  f)
       {
         // Read Internal Variables
         ScalarT ptx   = y[0]; // y0 - Ptx

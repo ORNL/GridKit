@@ -183,22 +183,22 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
-        const RealT   G,
-        const RealT   B,
-        const ScalarT Vr,
-        const ScalarT Vi,
-        ScalarT&      Ir,
-        ScalarT&      Ii)
+    FORCE_INLINE void Branch<scalar_type, index_type>::addAdmittanceContribution(
+        RealT          G,
+        RealT          B,
+        const ScalarT& Vr,
+        const ScalarT& Vi,
+        ScalarT&       Ir,
+        ScalarT&       Ii)
     {
       Ir += G * Vr - B * Vi;
       Ii += B * Vr + G * Vi;
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        const RealT    G,
-        const RealT    B,
+    FORCE_INLINE void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
+        RealT          G,
+        RealT          B,
         const ScalarT* wb,
         ScalarT*       h)
     {
@@ -232,11 +232,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual11(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  h)
     {
       evaluateAdmittanceBlock(g11_, b11_, wb, h);
 
@@ -248,11 +248,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
-        [[maybe_unused]] const ScalarT* y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        h)
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual12(
+        [[maybe_unused]] ScalarT* y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  h)
     {
       evaluateAdmittanceBlock(g12_, b12_, wb, h);
 
