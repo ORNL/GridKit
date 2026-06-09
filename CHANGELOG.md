@@ -66,6 +66,7 @@
 - Added `GASTPTI` governor model implementation for PhasorDynamics.
 - Added `REECB` converter model implementation for PhasorDynamics.
 - Added `REPCA` converter model implementation for PhasorDynamics.
+- Added `HYGOV` governor model implementation for PhasorDynamics.
 
 ## v0.1
 

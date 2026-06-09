@@ -492,6 +492,42 @@ namespace GridKit
         addComponent(gov);
       }
 
+      // Add HYGOV governors
+      for (const auto& govdata : data.hygov)
+      {
+        auto* gov = new Hygov<ScalarT, IdxT>(govdata);
+
+        if (govdata.ports.contains(HygovPorts::speed))
+        {
+          IdxT           speed = govdata.ports.at(HygovPorts::speed);
+          constexpr auto OMEGA = HygovExternalVariables::OMEGA;
+          gov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (govdata.ports.contains(HygovPorts::pmech))
+        {
+          IdxT           pmech = govdata.ports.at(HygovPorts::pmech);
+          constexpr auto PMECH = HygovInternalVariables::PMECH;
+          gov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
+        }
+
+        if (govdata.ports.contains(HygovPorts::pref))
+        {
+          IdxT           pref = govdata.ports.at(HygovPorts::pref);
+          constexpr auto PREF = HygovExternalVariables::PREF;
+          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
+        if (govdata.ports.contains(HygovPorts::paux))
+        {
+          IdxT           paux = govdata.ports.at(HygovPorts::paux);
+          constexpr auto PAUX = HygovExternalVariables::PAUX;
+          gov->getSignals().template attachSignalNode<PAUX>(getSignal(paux));
+        }
+
+        addComponent(gov);
+      }
+
       for (const auto& excitedata : data.exciter)
       {
         IdxT bus_index = 0;
