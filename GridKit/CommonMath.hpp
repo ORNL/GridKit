@@ -6,6 +6,7 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/ScalarTraits.hpp>
+#include <GridKit/Definitions.hpp>
 
 namespace GridKit
 {
