@@ -174,7 +174,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
+    FORCE_INLINE void Branch<scalar_type, index_type>::addAdmittanceContribution(
         RealT          G,
         RealT          B,
         const ScalarT& Vr,
@@ -187,7 +187,7 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
+    FORCE_INLINE void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
         RealT          G,
         RealT          B,
         const ScalarT* wb,
@@ -205,7 +205,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual11(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -221,7 +221,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
+    FORCE_INLINE int Branch<scalar_type, index_type>::evaluateBusResidual12(
         [[maybe_unused]] ScalarT* y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
