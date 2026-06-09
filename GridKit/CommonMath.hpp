@@ -311,7 +311,7 @@ namespace GridKit
         const RealT   limit_max)
     {
       assert(limit_min <= limit_max);
-      return above(x, limit_min) + below(x, limit_max) - ONE<RealT>;
+      return above(x, limit_min) + below(x, limit_max) - ScalarT{1.0};
     }
 
     /**
@@ -359,10 +359,11 @@ namespace GridKit
 
       ScalarT above_min = above(x, limit_min);
       ScalarT below_max = below(x, limit_max);
+      ScalarT one       = ScalarT{1.0};
 
-      return above_min * below_max +                  //
-             (ONE<RealT> - below_max) * sigmoid(-f) + //
-             (ONE<RealT> - above_min) * sigmoid(f);
+      return above_min * below_max +           //
+             (one - below_max) * sigmoid(-f) + //
+             (one - above_min) * sigmoid(f);
     }
 
     /**
