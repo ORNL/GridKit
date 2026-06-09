@@ -242,9 +242,9 @@ namespace GridKit
     void CliArgsImpl::parseArgs(int argc, const char* argv[])
     {
 #if defined(_WIN32)
-      app_name_ = std::filesystem::path(argv[0]).filename().string();
+      app_name_   = std::filesystem::path(argv[0]).filename().string();
 #else
-      app_name_ = std::filesystem::path(argv[0]).filename();
+      app_name_   = std::filesystem::path(argv[0]).filename();
 #endif
       bool status = true;
 
