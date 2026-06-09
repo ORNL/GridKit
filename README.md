@@ -45,6 +45,14 @@ cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ../GridKit
 cmake --build .
 cmake --install .
 ```
+On windows, use:
+```powershell
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/path/to/install -DBUILD_SHARED_LIBS=OFF ../
+cmake --build .
+cmake --install .
+```
 Dependencies are autodetected if installed in standard locations, otherwise
 specify their location explicitly. For example:
 ```bash
