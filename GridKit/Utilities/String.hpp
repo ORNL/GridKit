@@ -12,7 +12,7 @@ namespace GridKit
     /**
      * @brief Convert a string to all uppercase
      */
-    std::string toUpper(std::string str)
+    inline std::string toUpper(std::string str)
     {
       std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
                      { return std::toupper(c); });
