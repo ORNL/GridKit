@@ -2,13 +2,13 @@ gridkit_example_current_install_path(_install_path)
 
 add_executable(ThreeBusBasic ThreeBusBasic.cpp)
 target_link_libraries(
-  ThreeBusBasic GridKit::phasor_dynamics_components GridKit::solvers_dyn)
+  ThreeBusBasic GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn)
 install(TARGETS ThreeBusBasic RUNTIME DESTINATION ${_install_path})
 
 add_executable(ThreeBusBasicJson ThreeBusBasicJson.cpp)
 target_link_libraries(
   ThreeBusBasicJson
-  GridKit::phasor_dynamics_components
+  GridKit::phasor_dynamics_systemmodel
   GridKit::solvers_dyn
   GridKit::utilities_cli_args
   GridKit::testing)

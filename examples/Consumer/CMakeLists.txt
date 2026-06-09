@@ -18,7 +18,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
   list(
     APPEND
     GRIDKIT_CONSUMER_TEST_LINK_LIBRARIES
-    GridKit::phasor_dynamics_components
+    GridKit::phasor_dynamics_systemmodel
     GridKit::solvers_dyn)
 else()
   install(

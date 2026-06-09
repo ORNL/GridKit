@@ -29,30 +29,6 @@ target_link_libraries(
   phasor_dynamics_components_dependency_tracking
   INTERFACE GridKit::phasor_dynamics_core)
 
-gridkit_add_library(
-  phasor_dynamics_systemmodel
-  SOURCES SystemModel.cpp SystemModelData.cpp
-  HEADERS SystemModel.hpp SystemModelData.hpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
-  INCLUDE_DIRECTORIES
-    PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
-    PRIVATE
-    ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
-
-gridkit_add_library(
-  phasor_dynamics_systemmodel_dependency_tracking
-  SOURCES SystemModelDependencyTracking.cpp
-  HEADERS SystemModel.hpp
-  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core)
-
-target_link_libraries(
-  phasor_dynamics_components
-  INTERFACE GridKit::phasor_dynamics_systemmodel)
-target_link_libraries(
-  phasor_dynamics_components_dependency_tracking
-  INTERFACE GridKit::phasor_dynamics_systemmodel_dependency_tracking)
-
 add_subdirectory(Branch)
 add_subdirectory(Bus)
 add_subdirectory(BusFault)
@@ -69,6 +45,25 @@ add_subdirectory(SignalNode)
 add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS
             phasor_dynamics_components_dependency_tracking)
+
+gridkit_add_library(
+  phasor_dynamics_systemmodel
+  SOURCES SystemModel.cpp SystemModelData.cpp
+  HEADERS SystemModel.hpp SystemModelData.hpp
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
+                 PUBLIC GridKit::phasor_dynamics_components
+  INCLUDE_DIRECTORIES
+    PRIVATE
+    ${GRIDKIT_THIRD_PARTY_DIR}/nlohmann-json/include
+    PRIVATE
+    ${GRIDKIT_THIRD_PARTY_DIR}/magic-enum/include)
+
+gridkit_add_library(
+  phasor_dynamics_systemmodel_dependency_tracking
+  SOURCES SystemModelDependencyTracking.cpp
+  HEADERS SystemModel.hpp
+  LINK_LIBRARIES PUBLIC GridKit::phasor_dynamics_core
+                 PUBLIC GridKit::phasor_dynamics_components_dependency_tracking)
 
 install(TARGETS phasor_dynamics_components phasor_dynamics_components_dependency_tracking
         EXPORT gridkit-targets)

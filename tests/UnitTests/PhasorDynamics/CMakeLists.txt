@@ -90,8 +90,8 @@ add_executable(test_phasor_exciter_sexspti runExciterSexsPtiTests.cpp)
 target_link_libraries(
   test_phasor_exciter_sexspti
   GridKit::definitions
-  GridKit::phasor_dynamics_components
-  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
 add_executable(test_phasor_stabilizer_ieeest runStabilizerIeeestTests.cpp)
@@ -117,8 +117,8 @@ add_executable(test_phasor_system runSystemTests.cpp)
 target_link_libraries(
   test_phasor_system
   GridKit::definitions
-  GridKit::phasor_dynamics_components
-  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
                ${CMAKE_CURRENT_BINARY_DIR}/ThreeBusBasicBad.json COPYONLY)
@@ -126,8 +126,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ThreeBusBasicBad.json
 add_executable(test_phasor_system_single_component runSystemSingleComponentTests.cpp)
 target_link_libraries(
   test_phasor_system_single_component
-  GridKit::phasor_dynamics_components
-  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
   GridKit::testing)
 
 add_test(NAME PhasorDynamicsBusTest COMMAND test_phasor_bus)
