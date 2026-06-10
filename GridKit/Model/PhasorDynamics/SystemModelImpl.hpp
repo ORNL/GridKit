@@ -455,6 +455,7 @@ namespace GridKit
       yp_.resize(size_);
       f_.resize(size_);
       tag_.resize(size_);
+      abs_tol_.resize(size_);
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 

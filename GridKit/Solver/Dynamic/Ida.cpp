@@ -84,16 +84,10 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetUserData");
 
       // Tag differential variables
-      const std::vector<bool>& tag = model_->tag();
-      if (static_cast<IdxT>(tag.size()) != model_->size())
-      {
-        std::cerr << "\nModel tag size does not match model size.\n\n";
-        throw SundialsException();
-      }
       tag_ = N_VClone(yy_);
       checkAllocation((void*) tag_, "N_VClone");
       model_->tagDifferentiable();
-      copyVec(tag, tag_);
+      copyVec(model_->tag(), tag_);
 
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
@@ -858,6 +852,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
+      const auto xsize = static_cast<size_t>(N_VGetLength(x));
+      if (xsize != y.size())
+      {
+        std::cerr << "\nN_Vector size (" << xsize << ") does not match std::vector size ("
+                  << y.size() << ").\n\n";
+        throw SundialsException();
+      }
+
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, y.size(), y.begin());
     }
@@ -871,6 +873,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
+      const auto ysize = static_cast<size_t>(N_VGetLength(y));
+      if (x.size() != ysize)
+      {
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
+        throw SundialsException();
+      }
+
       ScalarT* ydata = N_VGetArrayPointer(y);
       std::copy(x.cbegin(), x.cend(), ydata);
     }
@@ -884,6 +894,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
+      const auto ysize = static_cast<size_t>(N_VGetLength(y));
+      if (x.size() != ysize)
+      {
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
+        throw SundialsException();
+      }
+
       ScalarT* ydata = N_VGetArrayPointer(y);
       std::copy(x.cbegin(), x.cend(), ydata);
     }
