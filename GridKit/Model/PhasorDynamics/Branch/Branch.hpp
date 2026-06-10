@@ -136,16 +136,16 @@ namespace GridKit
                              RealT&                          target);
 
       static FORCE_INLINE void addAdmittanceContribution(RealT          G,
-                                                                                  RealT          B,
-                                                                                  const ScalarT& Vr,
-                                                                                  const ScalarT& Vi,
-                                                                                  ScalarT&       Ir,
-                                                                                  ScalarT&       Ii);
+                                                         RealT          B,
+                                                         const ScalarT& Vr,
+                                                         const ScalarT& Vi,
+                                                         ScalarT&       Ir,
+                                                         ScalarT&       Ii);
 
       static FORCE_INLINE void evaluateAdmittanceBlock(RealT          G,
-                                                                                RealT          B,
-                                                                                const ScalarT* wb,
-                                                                                ScalarT*       h);
+                                                       RealT          B,
+                                                       const ScalarT* wb,
+                                                       ScalarT*       h);
 
       ScalarT& Vr1()
       {
