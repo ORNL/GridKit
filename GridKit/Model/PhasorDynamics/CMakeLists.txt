@@ -35,28 +35,22 @@ add_subdirectory(Branch)
 add_subdirectory(Bus)
 add_subdirectory(BusFault)
 add_subdirectory(BusToSignalAdapter)
-add_subdirectory(Converter)
 add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)
-add_subdirectory(SignalNode)
-add_subdirectory(SignalSource)
+add_subdirectory(LoadZIP)
 add_subdirectory(Stabilizer)
 add_subdirectory(SynchronousMachine)
+
+add_subdirectory(SignalNode)
 
 add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS
             phasor_dynamics_components_dependency_tracking)
 
-if(GRIDKIT_ENABLE_ENZYME)
-  set(_system_model_source SystemModelEnzyme.cpp)
-else()
-  set(_system_model_source SystemModel.cpp)
-endif()
-
 gridkit_add_library(
   phasor_dynamics_systemmodel
-  SOURCES ${_system_model_source} SystemModelData.cpp
+  SOURCES SystemModel.cpp SystemModelData.cpp
   HEADERS SystemModel.hpp SystemModelData.hpp
   LINK_LIBRARIES
     PUBLIC
