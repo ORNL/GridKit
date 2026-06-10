@@ -2,12 +2,12 @@ gridkit_example_current_install_path(_install_path)
 
 add_executable(TwoBusBasic TwoBusBasic.cpp)
 target_link_libraries(
-  TwoBusBasic GridKit::phasor_dynamics_components GridKit::solvers_dyn)
+  TwoBusBasic GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn)
 install(TARGETS TwoBusBasic RUNTIME DESTINATION ${_install_path})
 
 add_executable(TwoBusBasicJson TwoBusBasicJson.cpp)
 target_link_libraries(
-  TwoBusBasicJson GridKit::phasor_dynamics_components GridKit::solvers_dyn)
+  TwoBusBasicJson GridKit::phasor_dynamics_systemmodel GridKit::solvers_dyn)
 install(TARGETS TwoBusBasicJson RUNTIME DESTINATION ${_install_path})
 gridkit_example_add_file(TwoBusBasic.case.json)
 
