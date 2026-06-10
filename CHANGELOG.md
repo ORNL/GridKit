@@ -63,19 +63,8 @@
 - Added `BusToSignalAdapter` component for communicating bus voltages and injection currents.
 - Added cmake-format hooks, including in pre-commit.
 - Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
-- Added portable Vector class to GridKit
-- Added support for running IDA with fixed time steps
-- Added `ConstantSignalSource` component as first use case for `BusToSignalAdapter`.
-- Added IDA option to suppress algebraic variables in local error tests.
-- Removed `COO_Matrix` class.
-- Added portable `Vector` class and policy-based memory utilities.
-- Add new `LinearSolver` interface for linear solvers.
-- Added new `Rosenbrock` integrator.
-- Clarified naming conventions for macros.
-- Added `dt_fixed`, `rel_tol`, `abs_tol`, and `max_steps` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
-- Added EMT model and operator documentation.
-- Added `REGCA` converter model implementation for PhasorDynamics.
-- Remove unnecessary data copying while evaluating `PowerElectronics` models, speeding up large simulations by up to 3x
+- Added portable Vector class to GridKit.
+- Added Windows compatibility.
 
 ## v0.1
 
