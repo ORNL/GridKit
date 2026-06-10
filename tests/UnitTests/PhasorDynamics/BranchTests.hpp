@@ -125,11 +125,10 @@ namespace GridKit
         branch.allocate();
         branch.evaluateResidual();
 
-        const RealT tol{1.0e-12};
-        success *= isEqual(bus1.Ir(), Ir1, tol);
-        success *= isEqual(bus1.Ii(), Ii1, tol);
-        success *= isEqual(bus2.Ir(), Ir2, tol);
-        success *= isEqual(bus2.Ii(), Ii2, tol);
+        success *= isEqual(bus1.Ir(), Ir1);
+        success *= isEqual(bus1.Ii(), Ii1);
+        success *= isEqual(bus2.Ir(), Ir2);
+        success *= isEqual(bus2.Ii(), Ii2);
 
         return success.report(__func__);
       }
@@ -219,12 +218,11 @@ namespace GridKit
         std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
         std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
 
-        const RealT tol{1.0e-12};
         for (size_t i = 0; i < residuals.size(); ++i)
         {
           DependencyTracking::Variable                       res           = residuals[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i], tol));
+          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i]));
         }
 
         return success.report(__func__);
@@ -277,11 +275,10 @@ namespace GridKit
         ref_branch.evaluateResidual();
         test_branch.evaluateResidual();
 
-        const RealT tol{1.0e-12};
-        success *= isEqual(test_bus1.Ir(), ref_bus1.Ir(), tol);
-        success *= isEqual(test_bus1.Ii(), ref_bus1.Ii(), tol);
-        success *= isEqual(test_bus2.Ir(), ref_bus2.Ir(), tol);
-        success *= isEqual(test_bus2.Ii(), ref_bus2.Ii(), tol);
+        success *= isEqual(test_bus1.Ir(), ref_bus1.Ir());
+        success *= isEqual(test_bus1.Ii(), ref_bus1.Ii());
+        success *= isEqual(test_bus2.Ir(), ref_bus2.Ir());
+        success *= isEqual(test_bus2.Ii(), ref_bus2.Ii());
 
         return success.report(__func__);
       }
@@ -360,11 +357,10 @@ namespace GridKit
         data_branch.evaluateResidual();
         ref_branch.evaluateResidual();
 
-        const RealT tol{1.0e-12};
-        success *= isEqual(data_bus1.Ir(), ref_bus1.Ir(), tol);
-        success *= isEqual(data_bus1.Ii(), ref_bus1.Ii(), tol);
-        success *= isEqual(data_bus2.Ir(), ref_bus2.Ir(), tol);
-        success *= isEqual(data_bus2.Ii(), ref_bus2.Ii(), tol);
+        success *= isEqual(data_bus1.Ir(), ref_bus1.Ir());
+        success *= isEqual(data_bus1.Ii(), ref_bus1.Ii());
+        success *= isEqual(data_bus2.Ir(), ref_bus2.Ir());
+        success *= isEqual(data_bus2.Ii(), ref_bus2.Ii());
 
         return success.report(__func__);
       }
