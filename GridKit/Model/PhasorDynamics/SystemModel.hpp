@@ -86,6 +86,7 @@ namespace GridKit
       void printMonitoredVariables() const override;
 
       int tagDifferentiable() override;
+      int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
