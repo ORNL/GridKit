@@ -255,9 +255,9 @@ int printMicrogridSystems(index_type N_size)
   AnalysisManager::Sundials::Ida<real_type, index_type> idas(&sys_model);
 
   // setup simulation
-  idas.configureSimulation();
   idas.setTolerance(rel_tol);
   idas.setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
+  idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);
   idas.runSimulation(t_final);

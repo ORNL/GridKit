@@ -44,6 +44,9 @@ int main()
   double t_init  = -1.0;
   double t_final = -1.0;
 
+  // Set solver tolerance
+  const double tol = 1e-6;
+
   std::istringstream input_data(lookup_table);
   GridKit::setLookupTable(gen.getLookupTable(), input_data, t_init, t_final);
 
@@ -51,6 +54,10 @@ int main()
             << "t_init = " << t_init << " to t_final = " << t_final << "\n";
 
   // setup simulation
+  idas.setTolerance(0.1 * tol);
+  idas.setBackwardTolerance(0.1 * tol);
+  idas.setQuadratureTolerance(0.1 * tol);
+  idas.setBackwardQuadratureTolerance(0.1 * tol);
   idas.configureSimulation();
   idas.configureAdjoint();
   idas.getDefaultInitialCondition();
@@ -80,9 +87,6 @@ int main()
 
   // Create an instance of the IpoptApplication
   Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
-
-  // Set solver tolerance
-  const double tol = 1e-5;
 
   // Initialize the IpoptApplication and process the options
   Ipopt::ApplicationReturnStatus status;

@@ -97,8 +97,8 @@ int main(int /* argc */, char const** /* argv */)
   double t_final = 1.0;
 
   // setup simulation
-  idas.configureSimulation();
   idas.setTolerance(rel_tol, abs_tol);
+  idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);
 

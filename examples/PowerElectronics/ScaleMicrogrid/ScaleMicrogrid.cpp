@@ -286,9 +286,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
 
   // setup simulation
-  idas->configureSimulation();
   idas->setTolerance(rel_tol, abs_tol);
   idas->setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
+  idas->configureSimulation();
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);
 

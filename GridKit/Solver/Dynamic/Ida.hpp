@@ -131,12 +131,8 @@ namespace AnalysisManager
       void printSpecial(RealT t, N_Vector x) const;
       void printFinalStats() const;
 
-      void setFixedStep(ScalarT time_step,
-                        ScalarT rel_tol,
-                        ScalarT abs_tol_override = 0);
-      void setBackwardFixedStep(ScalarT time_step,
-                                ScalarT rel_tol,
-                                ScalarT abs_tol_override = 0);
+      void setFixedStep(ScalarT time_step);
+      void setBackwardFixedStep(ScalarT time_step);
       using DynamicSolver<ScalarT, IdxT>::setTolerance;
       void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
       void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
@@ -206,7 +202,6 @@ namespace AnalysisManager
       N_Vector yy_{};      ///< Solution vector
       N_Vector yp_{};      ///< Solution derivatives vector
       N_Vector tag_{};     ///< Tags differential variables
-      N_Vector abs_tol_{}; ///< Absolute tolerance vector
       N_Vector q_{};       ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
@@ -218,6 +213,22 @@ namespace AnalysisManager
 
       int backwardID_{};
 
+      RealT time_step_{};
+      RealT rel_tol_{DEFAULT_REL_TOL};
+      RealT abs_tol_override_{};
+      IdxT max_steps_{};
+
+      RealT backward_time_step_{};
+      RealT backward_rel_tol_{DEFAULT_REL_TOL};
+      RealT backward_abs_tol_override_{};
+      IdxT backward_max_steps_{};
+
+      RealT quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
+      RealT quadrature_abs_tol_override_{};
+
+      RealT backward_quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
+      RealT backward_quadrature_abs_tol_override_{};
+
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
@@ -228,16 +239,16 @@ namespace AnalysisManager
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
 
-      void setFixedStep(void*   mem,
-                        ScalarT time_step,
-                        ScalarT rel_tol,
-                        ScalarT abs_tol_override);
-      void setTolerance(void*   mem,
-                        ScalarT rel_tol,
-                        ScalarT abs_tol_override,
-                        ScalarT abs_tol_fac = 1);
-      void setMaxSteps(void* mem, IdxT max_steps);
-      void setQuadratureTolerance(void*   mem,
+      void setIDAOptions(void* mem,
+                                ScalarT time_step,
+                                ScalarT rel_tol,
+                                ScalarT abs_tol_override,
+                                IdxT max_steps);
+      void setTolerance(void* mem,
+                               ScalarT rel_tol,
+                               ScalarT abs_tol_override,
+                               ScalarT abs_tol_fac = 1);
+      void setQuadratureTolerance(void* mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);
     };

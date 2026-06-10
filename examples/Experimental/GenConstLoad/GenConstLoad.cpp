@@ -45,6 +45,8 @@ int main()
   double t_final = 15.0;
 
   // setup simulation
+  idas->setMaxSteps(1000);
+  idas->setBackwardMaxSteps(1000);
   idas->configureSimulation();
   idas->configureAdjoint();
   idas->getDefaultInitialCondition();

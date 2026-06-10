@@ -312,8 +312,9 @@ namespace GridKit
         Model::NullEvaluator<ScalarT, IdxT> model;
 
         Ida<double, size_t> ida(&model);
+        ida.setFixedStep(1.0 / n_steps);
+        ida.setTolerance(1.0e-6);
         ida.configureSimulation();
-        ida.setFixedStep(1.0 / n_steps, 1e-6);
 
         ida.initializeSimulation(0.0, false);
         ida.runSimulation(1.0);
