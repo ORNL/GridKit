@@ -82,7 +82,7 @@ int main()
   // Configure Ipopt application
   ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
   ipoptApp->Options()->SetNumericValue("tol", tol);
-  ipoptApp->Options()->SetIntegerValue("print_level", 0);
+  ipoptApp->Options()->SetIntegerValue("print_level", 5);
 
   // Create interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
