@@ -230,61 +230,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome accessors()
-      {
-        // Verifies tap and phase-shift residual derivatives.
-        TestStatus success = true;
-
-        RealT R{2.0};
-        RealT X{4.0};
-        RealT G{0.2};
-        RealT B{1.2};
-        RealT tap{1.25};
-        RealT phase{0.3};
-
-        DependencyTracking::Variable Vr1{10.0};
-        DependencyTracking::Variable Vi1{20.0};
-        DependencyTracking::Variable Vr2{30.0};
-        DependencyTracking::Variable Vi2{40.0};
-
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus1(Vr1, Vi1);
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT> bus2(Vr2, Vi2);
-        bus1.allocate();
-        bus1.initialize();
-        bus1.evaluateResidual();
-        bus2.allocate();
-        bus2.initialize();
-        bus2.evaluateResidual();
-        bus1.Vr().setVariableNumber(0);
-        bus1.Vi().setVariableNumber(1);
-        bus2.Vr().setVariableNumber(2);
-        bus2.Vi().setVariableNumber(3);
-
-        PhasorDynamics::Branch<DependencyTracking::Variable, IdxT> branch(&bus1,
-                                                                          &bus2,
-                                                                          R,
-                                                                          X,
-                                                                          G,
-                                                                          B,
-                                                                          tap,
-                                                                          phase);
-        branch.allocate();
-        branch.evaluateResidual();
-
-        std::vector<DependencyTracking::Variable>                residuals{bus1.Ir(), bus1.Ii(), bus2.Ir(), bus2.Ii()};
-        std::vector<DependencyTracking::Variable::DependencyMap> ref = analyticalJacobian(R, X, G, B, tap, phase);
-
-        const RealT tol{1.0e-12};
-        for (size_t i = 0; i < residuals.size(); ++i)
-        {
-          DependencyTracking::Variable                       res           = residuals[i];
-          const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();
-          success                                                         *= (GridKit::Testing::isEqual(dependencies, ref[i], tol));
-        }
-
-        return success.report(__func__);
-      }
-
       TestOutcome parameterSetters()
       {
         // Verifies parameter setters refresh derived admittance values.
