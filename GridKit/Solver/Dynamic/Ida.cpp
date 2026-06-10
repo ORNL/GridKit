@@ -1089,7 +1089,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol,
                                           ScalarT abs_tol_override)
     {
-      rel_tol_ = rel_tol;
+      rel_tol_          = rel_tol;
       abs_tol_override_ = abs_tol_override;
     }
 
@@ -1108,7 +1108,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT rel_tol,
                                                   ScalarT abs_tol_override)
     {
-      backward_rel_tol_ = rel_tol;
+      backward_rel_tol_          = rel_tol;
       backward_abs_tol_override_ = abs_tol_override;
     }
 
@@ -1127,7 +1127,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol,
                                                     ScalarT abs_tol_override)
     {
-      quadrature_rel_tol_ = rel_tol;
+      quadrature_rel_tol_          = rel_tol;
       quadrature_abs_tol_override_ = abs_tol_override;
     }
 
@@ -1146,7 +1146,7 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol,
                                                             ScalarT abs_tol_override)
     {
-      backward_quadrature_rel_tol_ = rel_tol;
+      backward_quadrature_rel_tol_          = rel_tol;
       backward_quadrature_abs_tol_override_ = abs_tol_override;
     }
 
@@ -1194,7 +1194,7 @@ namespace AnalysisManager
                                            ScalarT time_step,
                                            ScalarT rel_tol,
                                            ScalarT abs_tol_override,
-                                           IdxT max_steps)
+                                           IdxT    max_steps)
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1204,30 +1204,33 @@ namespace AnalysisManager
       retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
 
-      if (time_step == 0) {
+      if (time_step == 0)
+      {
         setTolerance(mem, rel_tol, abs_tol_override);
-      } else {
+      }
+      else
+      {
         /* Since the starting procedure is first order, the maximum global order
-        * of convergence is two */
+         * of convergence is two */
         retval = IDASetMaxOrd(mem, 2);
         checkOutput(retval, "IDASetMaxOrd");
 
         /* Enable more nonlinear iterations because a failed nonlinear solve
-        * causes a failed integration with fixed steps */
+         * causes a failed integration with fixed steps */
         static constexpr int FIXED_STEP_NONLIN_ITRS = 16;
-        retval = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
+        retval                                      = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
         checkOutput(retval, "IDASetMaxNonlinIters");
 
         // Set a large tolerance so the error test will never fail
         static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
         setTolerance(mem,
-              FIXED_STEP_TOL_FAC * rel_tol,
-              FIXED_STEP_TOL_FAC * abs_tol_override,
-              FIXED_STEP_TOL_FAC);
+                     FIXED_STEP_TOL_FAC * rel_tol,
+                     FIXED_STEP_TOL_FAC * abs_tol_override,
+                     FIXED_STEP_TOL_FAC);
 
         /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
-        * the large tolerances set above, we need to choose this tolerance to
-        * "undo" the fac scaling. */
+         * the large tolerances set above, we need to choose this tolerance to
+         * "undo" the fac scaling. */
         retval = IDASetNonlinConvCoef(mem, 1 / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoef");
       }

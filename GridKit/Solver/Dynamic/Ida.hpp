@@ -199,10 +199,10 @@ namespace AnalysisManager
       RealT t_final_{};
       int   nout_{}; ///< Number of integration outputs
 
-      N_Vector yy_{};      ///< Solution vector
-      N_Vector yp_{};      ///< Solution derivatives vector
-      N_Vector tag_{};     ///< Tags differential variables
-      N_Vector q_{};       ///< Integrand vector
+      N_Vector yy_{};  ///< Solution vector
+      N_Vector yp_{};  ///< Solution derivatives vector
+      N_Vector tag_{}; ///< Tags differential variables
+      N_Vector q_{};   ///< Integrand vector
 
       N_Vector yy0_{}; ///< Storage for initial values
       N_Vector yp0_{}; ///< Storage for initial derivatives
@@ -216,12 +216,12 @@ namespace AnalysisManager
       RealT time_step_{};
       RealT rel_tol_{DEFAULT_REL_TOL};
       RealT abs_tol_override_{};
-      IdxT max_steps_{};
+      IdxT  max_steps_{};
 
       RealT backward_time_step_{};
       RealT backward_rel_tol_{DEFAULT_REL_TOL};
       RealT backward_abs_tol_override_{};
-      IdxT backward_max_steps_{};
+      IdxT  backward_max_steps_{};
 
       RealT quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
       RealT quadrature_abs_tol_override_{};
@@ -239,16 +239,16 @@ namespace AnalysisManager
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
 
-      void setIDAOptions(void* mem,
-                                ScalarT time_step,
-                                ScalarT rel_tol,
-                                ScalarT abs_tol_override,
-                                IdxT max_steps);
-      void setTolerance(void* mem,
-                               ScalarT rel_tol,
-                               ScalarT abs_tol_override,
-                               ScalarT abs_tol_fac = 1);
-      void setQuadratureTolerance(void* mem,
+      void setIDAOptions(void*   mem,
+                         ScalarT time_step,
+                         ScalarT rel_tol,
+                         ScalarT abs_tol_override,
+                         IdxT    max_steps);
+      void setTolerance(void*   mem,
+                        ScalarT rel_tol,
+                        ScalarT abs_tol_override,
+                        ScalarT abs_tol_fac = 1);
+      void setQuadratureTolerance(void*   mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);
     };
