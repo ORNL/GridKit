@@ -1376,8 +1376,8 @@ namespace AnalysisManager
      */
     template <class ScalarT, typename IdxT>
     N_Vector Ida<ScalarT, IdxT>::createAbsoluteToleranceVector(N_Vector prototype,
-                                                               ScalarT rel_tol,
-                                                               ScalarT abs_tol_fac)
+                                                               ScalarT  rel_tol,
+                                                               ScalarT  abs_tol_fac)
     {
       N_Vector abs_tol_vec = N_VClone(prototype);
       checkAllocation((void*) abs_tol_vec, "N_VClone");
