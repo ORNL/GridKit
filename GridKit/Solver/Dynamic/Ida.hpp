@@ -187,6 +187,8 @@ namespace AnalysisManager
 
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
+      static constexpr ScalarT FIXED_STEP_TOL_FAC = 1e100;
+      static constexpr int     FIXED_STEP_NONLIN_ITRS = 16;
 
       void*           solver_{};
       SUNContext      context_{};
@@ -244,13 +246,25 @@ namespace AnalysisManager
                          ScalarT rel_tol,
                          ScalarT abs_tol_override,
                          IdxT    max_steps);
+      void setIDAOptionsB(ScalarT time_step,
+                          ScalarT rel_tol,
+                          ScalarT abs_tol_override,
+                          IdxT    max_steps);
       void setTolerance(void*   mem,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override,
                         ScalarT abs_tol_fac = 1);
+      void setToleranceB(ScalarT rel_tol,
+                         ScalarT abs_tol_override,
+                         ScalarT abs_tol_fac = 1);
+      N_Vector createAbsoluteToleranceVector(N_Vector prototype,
+                                             ScalarT rel_tol,
+                                             ScalarT abs_tol_fac = 1);
       void setQuadratureTolerance(void*   mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);
+      void setQuadratureToleranceB(ScalarT rel_tol,
+                                   ScalarT abs_tol_override);
     };
 
     /// Simple exception to use within Ida class.
