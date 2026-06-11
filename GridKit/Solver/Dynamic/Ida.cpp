@@ -535,7 +535,7 @@ namespace AnalysisManager
       retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
-      setIDAOptionsB(backward_time_step_, backward_rel_tol_, backward_abs_tol_override_, backward_max_steps_);
+      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_), backward_time_step_, backward_rel_tol_, backward_abs_tol_override_, backward_max_steps_);
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
@@ -564,7 +564,7 @@ namespace AnalysisManager
       retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
       checkOutput(retval, "IDAQuadInitB");
 
-      setQuadratureToleranceB(backward_quadrature_rel_tol_, backward_quadrature_abs_tol_override_);
+      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), backward_quadrature_rel_tol_, backward_quadrature_abs_tol_override_);
 
       // Include quadratures in error control
       retval = IDASetQuadErrConB(solver_, backwardID_, SUNTRUE);
@@ -1235,10 +1235,12 @@ namespace AnalysisManager
 
         /* Enable more nonlinear iterations because a failed nonlinear solve
          * causes a failed integration with fixed steps */
-        retval = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
+        static constexpr int FIXED_STEP_NONLIN_ITRS = 16;
+        retval                                      = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
         checkOutput(retval, "IDASetMaxNonlinIters");
 
         // Set a large tolerance so the error test will never fail
+        static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
         setTolerance(mem,
                      FIXED_STEP_TOL_FAC * rel_tol,
                      FIXED_STEP_TOL_FAC * abs_tol_override,
@@ -1249,47 +1251,6 @@ namespace AnalysisManager
          * "undo" the fac scaling. */
         retval = IDASetNonlinConvCoef(mem, 1 / FIXED_STEP_TOL_FAC);
         checkOutput(retval, "IDASetNonlinConvCoef");
-      }
-    }
-
-    /**
-     * @brief A helper function to set common IDA options for the backward problem
-     *
-     * @param time_step The fixed step size to use
-     * @param rel_tol The relative tolerance to use for the nonlinear solver
-     * @param abs_tol_override If positive, this value will be used as the
-     *        absolute tolerance for the nonlinear solver rather than the
-     *        model's default absolute tolerance
-     * @param max_steps The maximum number of steps
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setIDAOptionsB(ScalarT time_step,
-                                            ScalarT rel_tol,
-                                            ScalarT abs_tol_override,
-                                            IdxT    max_steps)
-    {
-      int retval = 0;
-      retval     = IDASetInitStepB(solver_, backwardID_, time_step);
-      checkOutput(retval, "IDASetInitStepB");
-      retval = IDASetMaxStepB(solver_, backwardID_, time_step);
-      checkOutput(retval, "IDASetMaxStepB");
-      retval = IDASetMaxNumStepsB(solver_, backwardID_, static_cast<long int>(max_steps));
-      checkOutput(retval, "IDASetMaxNumStepsB");
-
-      if (time_step == 0)
-      {
-        setToleranceB(rel_tol, abs_tol_override);
-      }
-      else
-      {
-        retval = IDASetMaxOrdB(solver_, backwardID_, 2);
-        checkOutput(retval, "IDASetMaxOrdB");
-
-        setToleranceB(FIXED_STEP_TOL_FAC * rel_tol,
-                      FIXED_STEP_TOL_FAC * abs_tol_override,
-                      FIXED_STEP_TOL_FAC);
       }
     }
 
@@ -1322,69 +1283,16 @@ namespace AnalysisManager
         return;
       }
 
-      N_Vector abs_tol_vec = createAbsoluteToleranceVector(yy_, rel_tol, abs_tol_fac);
+      N_Vector abs_tol_vec = N_VClone(yy_);
+      checkAllocation((void*) abs_tol_vec, "N_VClone");
+      model_->setAbsoluteTolerance(rel_tol);
+      copyVec(model_->absoluteTolerance(), abs_tol_vec);
+      N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
 
       retval = IDASVtolerances(mem, rel_tol, abs_tol_vec);
       checkOutput(retval, "IDASVtolerances");
 
       N_VDestroy(abs_tol_vec);
-    }
-
-    /**
-     * @brief A helper function to set the backward relative tolerance and
-     *        optionally override the absolute tolerance
-     *
-     * @param rel_tol The relative tolerance to use
-     * @param abs_tol_override If positive, this value will be used as the
-     *        absolute tolerance rather than the model's default absolute
-     *        tolerance
-     * @param abs_tol_fac A factor to apply to the absolute tolerance if not
-     *        overridden
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setToleranceB(ScalarT rel_tol,
-                                           ScalarT abs_tol_override,
-                                           ScalarT abs_tol_fac)
-    {
-      int retval = 0;
-
-      if (abs_tol_override > 0)
-      {
-        retval = IDASStolerancesB(solver_, backwardID_, rel_tol, abs_tol_override);
-        checkOutput(retval, "IDASStolerancesB");
-        return;
-      }
-
-      N_Vector abs_tol_vec = createAbsoluteToleranceVector(yyB_, rel_tol, abs_tol_fac);
-
-      retval = IDASVtolerancesB(solver_, backwardID_, rel_tol, abs_tol_vec);
-      checkOutput(retval, "IDASVtolerancesB");
-
-      N_VDestroy(abs_tol_vec);
-    }
-
-    /**
-     * @brief Create an absolute tolerance vector from the model's defaults
-     *
-     * @param prototype Vector with the target length/context
-     * @param rel_tol The relative tolerance used to update model defaults
-     * @param abs_tol_fac A factor to apply to the model's absolute tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    N_Vector Ida<ScalarT, IdxT>::createAbsoluteToleranceVector(N_Vector prototype,
-                                                               ScalarT  rel_tol,
-                                                               ScalarT  abs_tol_fac)
-    {
-      N_Vector abs_tol_vec = N_VClone(prototype);
-      checkAllocation((void*) abs_tol_vec, "N_VClone");
-      model_->setAbsoluteTolerance(rel_tol);
-      copyVec(model_->absoluteTolerance(), abs_tol_vec);
-      N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
-      return abs_tol_vec;
     }
 
     /**
@@ -1422,40 +1330,6 @@ namespace AnalysisManager
 
       retval = IDAQuadSVtolerances(mem, rel_tol, abs_tol_vec);
       checkOutput(retval, "IDAQuadSVtolerances");
-
-      N_VDestroy(abs_tol_vec);
-    }
-
-    /**
-     * @brief A helper function to set the backward quadrature relative
-     *        tolerance and optionally override the absolute tolerance
-     *
-     * @param rel_tol The relative tolerance to use
-     * @param abs_tol_override If positive, this value will be used as the
-     *        absolute tolerance rather than the model's default absolute
-     *        tolerance
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setQuadratureToleranceB(ScalarT rel_tol,
-                                                     ScalarT abs_tol_override)
-    {
-      int retval = 0;
-
-      if (abs_tol_override > 0)
-      {
-        retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol, abs_tol_override);
-        checkOutput(retval, "IDAQuadSStolerancesB");
-        return;
-      }
-
-      N_Vector abs_tol_vec = N_VClone(qB_);
-      checkAllocation((void*) abs_tol_vec, "N_VClone");
-      N_VConst(rel_tol, abs_tol_vec);
-
-      retval = IDAQuadSVtolerancesB(solver_, backwardID_, rel_tol, abs_tol_vec);
-      checkOutput(retval, "IDAQuadSVtolerancesB");
 
       N_VDestroy(abs_tol_vec);
     }
