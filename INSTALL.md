@@ -27,7 +27,7 @@ MSVC toolchain) are possible but not regularly tested.
 |---|---|---|
 | CMake | >= 3.13 | |
 | C++ compiler | C++20 | Clang or GCC |
-| SUNDIALS | >= 7.4.0 | Optional; disabled by default |
+| SUNDIALS | `develop` branch | Optional; disabled by default |
 | SuiteSparse (KLU) | >= 7.x | Optional; needed for sparse solvers in SUNDIALS |
 | Ipopt | >= 3.14 | Optional; disabled by default |
 | HSL | >= 2015 | Optional; required by Ipopt for efficient linear solvers |
@@ -134,9 +134,10 @@ Dependency root directories:
 
 ### SUNDIALS
 
-GridKit requires SUNDIALS 7.4.0 or newer. For sparse linear algebra support
-(recommended), SUNDIALS must be built with KLU enabled, which requires
-SuiteSparse.
+GridKit requires the SUNDIALS `develop` branch because it includes an adjoint
+memory fix needed by the dynamic optimization examples. For sparse linear
+algebra support (recommended), SUNDIALS must be built with KLU enabled, which
+requires SuiteSparse.
 
 **Install SuiteSparse first** (via the system package manager, or from source):
 
@@ -151,6 +152,8 @@ brew install suite-sparse
 **Build SUNDIALS with KLU:**
 
 ```sh
+git clone https://github.com/LLNL/sundials.git sundials-src
+git -C sundials-src checkout develop
 cmake -B sundials-build -S sundials-src \
   -DCMAKE_INSTALL_PREFIX=/path/to/sundials/install \
   -DENABLE_KLU=ON \
@@ -350,7 +353,7 @@ spack develop --path=$(pwd) gridkit@develop
 spack compiler find
 
 # Add GridKit with desired variants, then build
-spack add gridkit+sundials+ipopt+klu
+spack add gridkit+sundials+ipopt+klu ^sundials@develop
 spack concretize -f
 spack install
 spack env deactivate

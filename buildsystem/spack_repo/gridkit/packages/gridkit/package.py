@@ -30,8 +30,8 @@ class Gridkit(CMakePackage):
 
     depends_on("enzyme", when="+enzyme")
     depends_on("ipopt", when="+ipopt")
-    depends_on("sundials@7:+klu~mpi", when="+sundials+klu")
-    depends_on("sundials@7:~klu~mpi", when="+sundials~klu")
+    depends_on("sundials@develop+klu~mpi", when="+sundials+klu")
+    depends_on("sundials@develop~klu~mpi", when="+sundials~klu")
 
     def cmake_args(self):
         args = []
