@@ -1,0 +1,43 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta}
+
+\begin{document}
+\begin{tikzpicture}[
+    >={Stealth[length=2.4mm]},
+    line/.style   = {semithick},
+    block/.style  = {draw, semithick, fill=white,
+                     minimum height=1cm, minimum width=2.3cm},
+    signal/.style = {circle, fill, inner sep=1.4pt, label distance=3pt},
+    sig/.style    = {font=\small}
+]
+
+% ---- Lag-chain realization ----
+\foreach \k/\x in {1/0, 2/3.5, n/8.8}
+    \node[block] (b\k) at (\x, 0) {$\dfrac{1}{1 + s\tau/n}$};
+\node[inner sep=1pt] (dots) at (6.15, 0) {$\cdots$};
+
+\draw[->, line] (-3.3, 0)  -- (b1.west);
+\draw[->, line] (b1)       -- (b2);
+\draw[->, line] (b2)       -- (dots);
+\draw[->, line] (dots)     -- (bn.west);
+\draw[->, line] (bn.east)  -- (12.1, 0) node[sig, pos=0.65, above] {$u(t-\tau)$};
+
+\node[signal, label={[sig]above:$u(t)$}] at (-2.55, 0) {};
+
+\draw[dashed, semithick, rounded corners=4pt] (-1.8, -1.1) rectangle (10.6, 1.1);
+
+% ---- Limit (detached) ----
+\draw[->, line] (4.4, -1.55) -- (4.4, -2.45)
+    node[sig, midway, right=4pt] {$n \to \infty$};
+
+% ---- Ideal delay ----
+\node[block] (delay) at (4.4, -3.4) {$e^{-s\tau}$};
+\draw[->, line] (1.75, -3.4) -- (delay.west);
+\draw[->, line] (delay.east) -- (7.05, -3.4)
+    node[sig, midway, above] {$u(t-\tau)$};
+
+\node[signal, label={[sig]above:$u(t)$}] at (2.50, -3.4) {};
+
+\end{tikzpicture}
+\end{document}
