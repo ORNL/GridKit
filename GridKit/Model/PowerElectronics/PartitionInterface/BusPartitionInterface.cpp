@@ -1,6 +1,7 @@
 
 #include "BusPartitionInterface.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <vector>
@@ -28,11 +29,15 @@ namespace GridKit
   BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT bus_i, IdxT bus_j, IdxT id)
     : component_(component)
   {
-    size_           = 2;
-    n_intern_       = 0;
-    n_extern_       = 2;
-    extern_indices_ = {0, 1};
-    idc_            = id;
+    size_     = component.size();
+    n_intern_ = 0;
+    n_extern_ = static_cast<size_t>(component.size());
+    idc_      = id;
+
+    for (IdxT i = 0; i < size_; i++)
+    {
+      extern_indices_.insert(i);
+    }
 
     bus_i_ = bus_i;
     bus_j_ = bus_j;
@@ -53,14 +58,10 @@ namespace GridKit
     yp_.resize(static_cast<size_t>(size_));
     f_.resize(static_cast<size_t>(size_));
 
-    size_t interface_extern_size = static_cast<size_t>(component_.size() - size_);
-    interface_partition_externals_.resize(interface_extern_size);
-    external_data_y_.resize(interface_extern_size, 0);
-    external_data_yp_.resize(interface_extern_size, 0);
+    std::fill(f_.begin(), f_.end(), 0);
 
     component_.allocate();
 
-    size_t counter = 0;
     for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
     {
       if (bus_i_ == component_.getNodeConnection(static_cast<IdxT>(i)))
@@ -71,15 +72,9 @@ namespace GridKit
       {
         bus_port_j_ = i;
       }
-      else
-      {
-        interface_partition_externals_[counter] = component_.getNodeConnection(static_cast<IdxT>(i));
-        counter++;
-      }
+      IdxT global_idx = component_.getNodeConnection(static_cast<IdxT>(i));
+      this->setExternalConnectionNodes(static_cast<IdxT>(i), global_idx);
     }
-
-    this->setExternalConnectionNodes(0, bus_i_);
-    this->setExternalConnectionNodes(1, bus_j_);
 
     return 0;
   }
@@ -108,31 +103,15 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateResidual()
   {
-    auto& y  = component_.y();
-    auto& yp = component_.yp();
-
-    y[bus_port_i_] = y_[0];
-    y[bus_port_j_] = y_[1];
-
-    yp[bus_port_i_] = yp_[0];
-    yp[bus_port_j_] = yp_[1];
-
-    size_t counter = 0;
-    for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
-    {
-      if (bus_port_i_ != i && bus_port_j_ != i)
-      {
-        y[i] = external_data_y_[counter];
-        counter++;
-      }
-    }
+    std::copy(y_.begin(), y_.end(), component_.y().begin());
+    std::copy(yp_.begin(), yp_.end(), component_.yp().begin());
 
     component_.evaluateResidual();
 
     auto& f = component_.getResidual();
 
-    f_[0] = f[bus_port_i_];
-    f_[1] = f[bus_port_j_];
+    f_[bus_port_i_] = f[bus_port_i_];
+    f_[bus_port_j_] = f[bus_port_j_];
 
     return 0;
   }
