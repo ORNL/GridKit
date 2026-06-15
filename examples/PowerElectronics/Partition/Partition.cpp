@@ -4,10 +4,10 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <string>
 
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
-#include <GridKit/Model/PowerElectronics/PartitionInterface/ComponentPartitionInterface.hpp>
-#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 
 #include "HiresBus.hpp"
 #include "HiresComponent1.hpp"
@@ -18,79 +18,103 @@ std::vector<double> hires(const std::vector<double>& y, const std::vector<double
 int main(int /* argc */, char const** /* argv */)
 {
 
-  double abs_tol         = 1.0e-5;
-  double rel_tol         = 1.0e-5;
-  size_t max_step_number = 3000;
-  bool   use_jac         = true;
-
-  auto* partition1 = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
-  auto* partition2 = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
+  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>();
+  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>();
 
   GridKit::HiresComponent1<double, size_t>* comp1 = new GridKit::HiresComponent1<double, size_t>(1);
   GridKit::HiresBus<double, size_t>*        bus1  = new GridKit::HiresBus<double, size_t>(2);
   GridKit::HiresComponent3<double, size_t>* comp3 = new GridKit::HiresComponent3<double, size_t>(3);
 
-  comp1->setExternalConnectionNodes(0, 0);
-  comp1->setExternalConnectionNodes(1, 1);
-  comp1->setExternalConnectionNodes(2, 2);
-  comp1->setExternalConnectionNodes(3, 3);
-  comp1->setExternalConnectionNodes(4, 4);
+  comp1->setExternalConnectionNodes(0, 3);
+  comp1->setExternalConnectionNodes(1, 4);
+  comp1->setExternalConnectionNodes(2, 0);
+  comp1->setExternalConnectionNodes(3, 1);
+  comp1->setExternalConnectionNodes(4, 2);
 
   bus1->setExternalConnectionNodes(0, 3);
   bus1->setExternalConnectionNodes(1, 4);
 
-  comp3->setExternalConnectionNodes(0, 5);
-  comp3->setExternalConnectionNodes(1, 6);
-  comp3->setExternalConnectionNodes(2, 7);
-  comp3->setExternalConnectionNodes(3, 3);
-  comp3->setExternalConnectionNodes(4, 4);
+  comp3->setExternalConnectionNodes(0, 3);
+  comp3->setExternalConnectionNodes(1, 4);
+  comp3->setExternalConnectionNodes(2, 5);
+  comp3->setExternalConnectionNodes(3, 6);
+  comp3->setExternalConnectionNodes(4, 7);
 
-  GridKit::HiresComponent3<double, size_t>              comp3copy(*comp3);
-  GridKit::BusPartitionInterface<double, size_t>*       busInterface  = new GridKit::BusPartitionInterface<double, size_t>(comp3copy, 3, 4, 4);
-  GridKit::ComponentPartitionInterface<double, size_t>* compInterface = new GridKit::ComponentPartitionInterface<double, size_t>(comp3, 3, 4, 5);
+  GridKit::HiresComponent3<double, size_t>        comp3copy(*comp3);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface = new GridKit::BusPartitionInterface<double, size_t>(comp3copy, 3, 4, 4);
 
   partition1->addComponent(comp1);
   partition1->addComponent(bus1);
   partition1->addComponent(busInterface);
 
-  partition2->addComponent(compInterface);
+  partition2->addComponent(comp3);
 
-  size_t sys_size = 8;
+  partition1->allocate();
+  partition2->allocate();
 
-  partition1->allocate(sys_size);
-  partition2->allocate(sys_size);
+  std::vector<double> y  = {1, 2, 3, 4, 5, 6, 7, 8};
+  std::vector<double> yp = {1, 2, 3, 4, 5, 6, 7, 8};
 
-  busInterface->setExternalDataY({6, 7, 8});
-  busInterface->setExternalDataYP({6, 7, 8});
-
-  compInterface->setExternalDataY({4, 5});
-  compInterface->setExternalDataYP({4, 5});
-
-  for (size_t i = 0; i < sys_size; i++)
+  // Distribute externals to partition 1
+  for (size_t i = 0; i < partition1->getExternSize(); i++)
   {
-
-    partition1->y()[i]  = static_cast<double>(i) + 1;
-    partition1->yp()[i] = static_cast<double>(i) + 1;
-
-    partition2->y()[i]  = static_cast<double>(i) + 1;
-    partition2->yp()[i] = static_cast<double>(i) + 1;
+    partition1->getExternalDataY()[i]  = y[partition1->getExternalIndices()[i]];
+    partition1->getExternalDataYP()[i] = yp[partition1->getExternalIndices()[i]];
   }
 
+  // Distribute externals to partition 2
+  for (size_t i = 0; i < partition2->getExternSize(); i++)
+  {
+    partition2->getExternalDataY()[i]  = y[partition2->getExternalIndices()[i]];
+    partition2->getExternalDataYP()[i] = yp[partition2->getExternalIndices()[i]];
+  }
+
+  // Distribute internals to partition 1
+  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  {
+    partition1->y()[i]  = static_cast<double>(1 + i);
+    partition1->yp()[i] = static_cast<double>(1 + i);
+  }
+
+  // Distribute internals to partition 2
+  for (size_t i = 0; i < partition2->getInternalSize(); i++)
+  {
+    partition2->y()[i]  = static_cast<double>(6 + i);
+    partition2->yp()[i] = static_cast<double>(6 + i);
+  }
+
+  // Evaluate Residuals for each partition
   partition1->evaluateResidual();
   partition2->evaluateResidual();
 
-  auto ref = hires({1, 2, 3, 4, 5, 6, 7, 8}, {1, 2, 3, 4, 5, 6, 7, 8});
-
-  std::cout << "------------- Partition 1 -----------" << std::endl;
-  for (size_t i = 0; i < sys_size; i++)
+  auto printTitle = [](std::string msg) -> void
   {
-    printf("%-10.5g  ----------  %10.5g\n", partition1->getResidual()[i], ref[i]);
+    std::cout << "\n------------- " << msg << " -----------" << std::endl;
+    printf("%-10s  ----------  %10s\n", "Res Values", "Comp. Index");
+  };
+
+  // Print Residuals from partition 1
+  printTitle("Partition 1");
+  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  {
+    auto com_index = partition1->getNodeConnection(static_cast<size_t>(i));
+    printf("%-10.5g  ----------  %10zu\n", partition1->getResidual()[i], com_index);
   }
 
-  std::cout << "\n------------- Partition 2 -----------" << std::endl;
-  for (size_t i = 0; i < sys_size; i++)
+  // Print Residuals from partition 2
+  printTitle("Partition 2");
+  for (size_t i = 0; i < partition2->getInternalSize(); i++)
   {
-    printf("%-10.5g  ----------  %10.5g\n", partition2->getResidual()[i], ref[i]);
+    auto com_index = partition2->getNodeConnection(static_cast<size_t>(i));
+    printf("%-10.5g  ----------  %10zu\n", partition2->getResidual()[i], com_index);
+  }
+
+  auto ref = hires(y, yp);
+
+  printTitle("Reference Solution");
+  for (size_t i = 0; i < 8; i++)
+  {
+    printf("%-10.5g  ----------  %10zu\n", ref[i], i);
   }
 
   delete partition1;

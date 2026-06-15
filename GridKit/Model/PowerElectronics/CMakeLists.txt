@@ -30,4 +30,6 @@ install(
         SystemModelPowerElectronics.hpp
         NodeBase.hpp
         ExternalConnection.hpp
+        SubsystemModel.hpp
   DESTINATION include/GridKit/Model/PowerElectronics)
+
