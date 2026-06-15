@@ -11,15 +11,18 @@
 #include <sundials/sundials_types.h>
 
 #include <GridKit/Model/PartitionEvaluator.hpp>
+#include <GridKit/Solver/Dynamic/Interpolation.hpp>
 #include <GridKit/Solver/Dynamic/Rosenbrock.hpp>
 
 #include <resolve/Common.hpp>
 #include <resolve/MemoryUtils.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/matrix/Csr.hpp>
+#include <resolve/matrix/MatrixHandler.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspace.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 namespace Integrator
 {
@@ -31,28 +34,41 @@ namespace Integrator
     using RealT              = typename GridKit::ScalarTraits<ScalarT>::RealT;
     using Rosenbrock         = Integrator::Rosenbrock<ScalarT, IdxT>;
     using PartitionEvaluator = GridKit::Model::PartitionEvaluator<ScalarT, IdxT>;
+    using MemorySpace        = ReSolve::memory::MemorySpace;
 
   public:
+    MultiStageCosimulation(std::vector<PartitionEvaluator*> partitions,
+                           size_t                           num_stages     = 2,
+                           size_t                           max_iterations = 2,
+                           MemorySpace                      memspace       = MemorySpace::HOST);
+
     int initializeSimulation(RealT t0);
 
     int runSimulation(RealT tn, IdxT nout, std::optional<std::function<void(RealT)>> step_callback = {});
 
-    int partitionSolve();
+    int partitionStageSolve(int, double, double);
 
-    int timestepper(const std::vector<double>&                 out_times,
-                    std::optional<std::function<void(double)>> out_cb = {});
+    int timestepper(const std::vector<double>&,
+                    std::optional<std::function<void(double)>>);
 
-    int distributeLocal(const State& global_y);
+    int distributeLocal(const State&);
 
-    int distributeCoupling(const State& global_y, int stage);
+    int distributeCoupling(const State&, int);
 
     int allocate();
 
   private:
     /**
+     * @brief
+     *
+     */
+    std::vector<std::unique_ptr<ReSolve::LinAlgWorkspaceCpu>> linear_workspaces_;
+
+    /**
      * @brief initial time
      */
-    RealT  t0_;
+    RealT t0_;
+
     /**
      * @brief Maximum number of iterations per stage
      */
@@ -72,16 +88,39 @@ namespace Integrator
 
     /**
      *
+     * @brief Number of stages used by the method
+     */
+    size_t num_states_;
+
+    /**
+     *
+     * @brief The global state of the system
+     */
+    State y_;
+
+    Rosenbrock::Parameters params_;
+
+    Integrator::AdaptiveStep stepController_;
+
+    /**
+     *
      * @brief Memory space used
      */
     ReSolve::memory::MemorySpace memspace_;
 
     /**
      *
-     * @brief Handles for linear algebra operations
+     * @brief Handles vector operations
      *
      */
     ReSolve::VectorHandler vector_handler_;
+
+    /**
+     *
+     * @brief Handles matrix linear algebra operations
+     *
+     */
+    ReSolve::MatrixHandler matrix_handler_;
 
     /**
      *
@@ -95,28 +134,35 @@ namespace Integrator
      * @brief Contains vectors of initial conditions for every step
      *
      */
-    std::vector<State> x0_local_;
+    std::vector<std::unique_ptr<State>> x0_local_;
 
     /**
      *
      * @brief Vectors of coupling matrices for each partition
      *
      */
-    std::vector<State> coupling_mat_;
-
-    /**
-     *
-     * @brief Vector of stages
-     *
-     */
-    State stages_;
+    std::vector<std::vector<std::unique_ptr<State>>> coupling_mat_;
 
     /**
      *
      * @brief partition solution multi-dimensional vectors
      *
      */
-    State partition_solution_;
+    std::vector<std::unique_ptr<State>> partition_solution_;
+
+    /**
+     *
+     * @brief partition solution multi-dimensional vectors
+     *
+     */
+    std::vector<ReSolve::matrix::Csr> partition_external_csr_;
+
+    /**
+     *
+     * @brief partition solution multi-dimensional vectors
+     *
+     */
+    std::vector<std::unique_ptr<ReSolve::matrix::Csr>> partition_internal_csr_;
 
     /**
      *
