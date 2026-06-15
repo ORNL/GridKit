@@ -1,0 +1,49 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta}
+
+\begin{document}
+\begin{tikzpicture}[
+    >={Stealth[length=2.4mm]},
+    line/.style   = {semithick, rounded corners=6pt},
+    block/.style  = {draw, semithick, fill=white,
+                     minimum height=1cm, minimum width=2.3cm},
+    sum/.style    = {draw, semithick, fill=white, circle, inner sep=2.6pt},
+    signal/.style = {circle, fill, inner sep=1.4pt, label distance=3pt},
+    sig/.style    = {font=\small}
+]
+
+% Modal branches: rational shaping followed by delay
+\foreach \i/\lab/\y in {1/1/1.6, 2/2/0, N/M/-2.3} {
+    \node[block] (H\i) at (-1.85, \y) {$\mathbf{H}^{\text{mps}}_{\lab}(s)$};
+    \node[block] (D\i) at ( 1.85, \y) {$e^{-s\tau_{\lab}}$};
+}
+\node at (-1.85, -1.15) {$\vdots$};
+\node at ( 1.85, -1.15) {$\vdots$};
+
+% Fan-out from a single internal point
+\coordinate (split) at (-4.4, 0);
+\draw[line] (-6.6, 0) -- (split);
+\draw[->, line] (split) -- (H2.west);
+\foreach \b in {H1, HN}
+    \draw[->, line] (split) |- (\b.west);
+
+% Branch series connections
+\foreach \i in {1, 2, N}
+    \draw[->, line] (H\i.east) -- (D\i.west);
+
+% Fan-in to summation
+\node[sum] (S) at (4.4, 0) {$\Sigma$};
+\draw[->, line] (D2.east) -- (S);
+\foreach \b/\a in {D1/north, DN/south}
+    \draw[->, line] (\b.east) -| (S.\a);
+\draw[->, line] (S.east) -- (6.6, 0) node[sig, pos=0.59, above] {$\mathbf{y}$};
+
+% Signal node: u external
+\node[signal, label={[sig]above:$\mathbf{u}$}] at (-5.8, 0) {};
+
+% Model enclosure
+\draw[dashed, semithick, rounded corners=4pt] (-5.0, -3.3) rectangle (5.0, 2.6);
+
+\end{tikzpicture}
+\end{document}
