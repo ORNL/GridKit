@@ -82,11 +82,6 @@ namespace GridKit
 
     int allocate() override
     {
-      // Allocate all components
-      size_     = 0;
-      n_extern_ = 0;
-      n_intern_ = 0;
-
       size_t counter = 0;
 
       // First pass: Map global component indices to local subsystem indices.
@@ -102,7 +97,6 @@ namespace GridKit
           if (index != neg1_)
           {
             internal_map_[index] = counter;
-            n_intern_++;
             counter++;
           }
         }
@@ -119,19 +113,17 @@ namespace GridKit
           counter++;
           internal_map_[index2] = counter;
           counter++;
-          n_intern_ += 2;
         }
       }
 
+      // If this subsystem contains the reference generator, add the rotor motor as an internal
       if (refframe_index_ != neg1_)
       {
         internal_map_[refframe_index_] = counter;
-        n_intern_++;
         counter++;
       }
 
-      // Second pass: Identify variables required by this partition but owned by
-      // another partition.
+      // Second pass: Identify variables required by this partition but owned by another partition.
       for (const auto& component : components_)
       {
         for (IdxT i = 0; i < component->getExternSize(); i++)
@@ -141,14 +133,14 @@ namespace GridKit
           if (internal_map_.count(index) < 1 && external_map_.count(index) < 1 && index != neg1_)
           {
             external_map_[index] = counter;
-
             counter++;
-            n_extern_++;
           }
         }
       }
 
-      size_ = n_intern_ + n_extern_;
+      n_intern_ = internal_map_.size();
+      n_extern_ = external_map_.size();
+      size_     = n_intern_ + n_extern_;
 
       this->mapGlobalToLocal();
 
@@ -275,8 +267,6 @@ namespace GridKit
     /**
      * @brief Creates the system Jacobian representing \alpha dF/dy' + dF/dy
      *
-     * Updates the CSR Jacobian values using the per-component mappings
-     * computed during allocate().
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
