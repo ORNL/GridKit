@@ -28,5 +28,6 @@ install(
     CircuitNode.hpp
     CircuitGraph.hpp
     SystemModelPowerElectronics.hpp
+    SubsystemModel.hpp
   DESTINATION
     include/GridKit/Model/PowerElectronics)
