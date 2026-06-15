@@ -15,7 +15,7 @@ Lumped transmission line models approximate the branch with finite network eleme
 
 ### Distributed Parameter
 
-Distributed transmission line models preserve traveling-wave propagation and delay. GridKit cannot implement these until model internal signal delays are supported.
+Distributed transmission line models preserve propagation and delay.
 
 - `BranchDistributedConstant`
-- `BranchDistributedFrequencyDependent`
+- `BranchDistributedFrequencyDependent` (See [BranchDistributedFrequencyDependent](BranchDistributedFrequencyDependent/README.md))
