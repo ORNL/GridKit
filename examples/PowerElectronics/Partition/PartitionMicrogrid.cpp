@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 
 #define _USE_MATH_DEFINES
@@ -288,8 +289,23 @@ int main()
   partition2->addComponent(l3);
   partition2->addComponent(load2);
 
+  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg1));
+  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg2));
+  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg3));
+  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg4));
+  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l1));
+  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l2));
+  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l3));
+  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus1));
+  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus2));
+  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus3));
+  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus4));
+  sysmodel->addComponent(new GridKit::MicrogridLoad<double, size_t>(*load1));
+  sysmodel->addComponent(new GridKit::MicrogridLoad<double, size_t>(*load2));
+
   partition1->allocate();
   partition2->allocate();
+  sysmodel->allocate(vec_size_total);
 
   std::vector<double> y;
   std::vector<double> yp;
@@ -334,8 +350,8 @@ int main()
 
   auto printTitle = [](std::string msg) -> void
   {
-    std::cout << "\n------------- " << msg << " -----------" << std::endl;
-    printf("%-10s  ----------  %10s\n", "Res Values", "Comp. Index");
+    std::cout << "\n--------------- " << msg << " -------------" << std::endl;
+    printf("%-12s  ----------  %12s\n", "Res Values", "Comp. Index");
   };
 
   // Print Residuals from partition 1
@@ -343,7 +359,7 @@ int main()
   for (size_t i = 0; i < partition1->getInternalSize(); i++)
   {
     auto com_index = partition1->getNodeConnection(static_cast<size_t>(i));
-    printf("%-10.5g  ----------%zu  %10zu\n", partition1->getResidual()[i], i, com_index);
+    printf("%-12.5g  ----------  %7zu\n", partition1->getResidual()[i], com_index);
   }
 
   // Print Residuals from partition 2
@@ -351,38 +367,53 @@ int main()
   for (size_t i = 0; i < partition2->getInternalSize(); i++)
   {
     auto com_index = partition2->getNodeConnection(static_cast<size_t>(i));
-    printf("%-10.5g  ----------%zu  %10zu\n", partition2->getResidual()[i], i, com_index);
+    printf("%-12.5g  ----------  %7zu\n", partition2->getResidual()[i], com_index);
   }
 
-  // sysmodel->addComponent(dg1);
-  // sysmodel->addComponent(dg2);
-  // sysmodel->addComponent(dg3);
-  // sysmodel->addComponent(dg4);
-  // sysmodel->addComponent(l1);
-  // sysmodel->addComponent(l2);
-  // sysmodel->addComponent(l3);
-  // sysmodel->addComponent(bus1);
-  // sysmodel->addComponent(bus2);
-  // sysmodel->addComponent(bus3);
-  // sysmodel->addComponent(bus4);
-  // sysmodel->addComponent(load1);
-  // sysmodel->addComponent(load2);
+  for (size_t i = 0; i < vec_size_total; i++)
+  {
+    sysmodel->y()[i]  = y[i];
+    sysmodel->yp()[i] = yp[i];
+  }
 
-  // sysmodel->allocate(vec_size_total);
+  sysmodel->evaluateResidual();
 
-  // for (size_t i = 0; i < vec_size_total; i++)
-  // {
-  //   sysmodel->y()[i]  = y[i];
-  //   sysmodel->yp()[i] = yp[i];
-  // }
+  printTitle("Reference Solution");
+  for (size_t i = 0; i < vec_size_total; i++)
+  {
+    printf("%-12.5g  ----------  %7zu\n", sysmodel->getResidual()[i], i);
+  }
 
-  // sysmodel->evaluateResidual();
+  std::vector<double> f(vec_size_total, 0.0);
+  std::vector<double> error(vec_size_total, 1.0);
 
-  // printTitle("Reference Solution");
-  // for (size_t i = 0; i < vec_size_total; i++)
-  // {
-  //   printf("%-10.5g  ----------  %10zu\n", sysmodel->getResidual()[i], i);
-  // }
+  // Get internal residuals from partition 1
+  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  {
+    f[partition1->getNodeConnection(i)] = partition1->getResidual()[i];
+  }
+
+  // Get internal residuals from partition 2
+  for (size_t i = 0; i < partition2->getInternalSize(); i++)
+  {
+    f[partition2->getNodeConnection(i)] = partition2->getResidual()[i];
+  }
+
+  for (size_t i = 0; i < vec_size_total; i++)
+  {
+    error[i] = sysmodel->getResidual()[i] - f[i];
+  }
+
+  double max_error = 0;
+  for (size_t i = 0; i < vec_size_total; i++)
+  {
+    if (max_error < std::abs(error[i]))
+    {
+      max_error = std::abs(error[i]);
+    }
+  }
+
+  std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
 
   delete partition1;
   delete partition2;
