@@ -1,0 +1,74 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta}
+
+\begin{document}
+\begin{tikzpicture}[
+    >={Stealth[length=2.4mm]},
+    line/.style   = {semithick, rounded corners=6pt},
+    block/.style  = {draw, semithick, fill=white,
+                     minimum height=1cm, minimum width=2.3cm},
+    sum/.style    = {draw, semithick, fill=white, circle, inner sep=2.6pt},
+    signal/.style = {circle, fill, inner sep=1.4pt, label distance=3pt},
+    sig/.style    = {font=\small},
+    pm/.style     = {font=\scriptsize}
+]
+
+% ================= Terminal k (left column) =================
+\node[sum]   (Sk)  at (-4.4,  2.4) {$\Sigma$};   % KCL at k
+\node[block] (Yck) at (-4.4,  0.0) {$\mathbf{Y}_c(s)$};
+\node[sum]   (sk)  at (-4.4, -2.4) {$\Sigma$};   % wave former at k
+
+\draw[->, line] (-8.4, 0) -- (Yck.west);
+\node[signal, label={[sig]above:$\mathbf{v}_{\text{left}}$}] at (-7.6, 0) {};
+
+\draw[->, line] (Yck.north) -- (Sk);
+\draw[->, line] (Yck.south) -- (sk);
+\draw[->, line] (Sk.west) -- (-8.4, 2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{\text{left}}$};
+
+% i_k tap into wave former (hops over the v_k lead)
+\draw[line]     (-6.0, 2.4) -- (-6.0,  0.14);
+\draw[->, line] (-6.0, -0.14) -- (-6.0, -2.4) -- (sk);
+
+% ================= Terminal m (right column) =================
+\node[sum]   (sm)  at (4.4,  2.4) {$\Sigma$};    % wave former at m
+\node[block] (Ycm) at (4.4,  0.0) {$\mathbf{Y}_c(s)$};
+\node[sum]   (Sm)  at (4.4, -2.4) {$\Sigma$};    % KCL at m
+
+\draw[->, line] (8.4, 0) -- (Ycm.east);
+\node[signal, label={[sig]above:$\mathbf{v}_{\text{right}}$}] at (7.6, 0) {};
+
+\draw[->, line] (Ycm.north) -- (sm);
+\draw[->, line] (Ycm.south) -- (Sm);
+\draw[->, line] (Sm.east) -- (8.4, -2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{\text{right}}$};
+
+% i_m tap into wave former (hops over the v_m lead)
+\draw[line]     (6.0, -2.4) -- (6.0, -0.14);
+\draw[->, line] (6.0,  0.14) -- (6.0, 2.4) -- (sm);
+
+% ================= Propagation channels (straight rows) =================
+% k -> m (lower row, left to right)
+\node[block] (Hlo) at (0, -2.4) {$\mathbf{H}(s)$};
+\draw[->, line] (sk.east)  -- (Hlo.west) node[sig, pos=0.65, above] {reflected};
+\draw[->, line] (Hlo.east) -- (Sm.west) node[sig, pos=0.35, above] {incident};
+
+% m -> k (upper row, right to left)
+\node[block] (Hup) at (0,  2.4) {$\mathbf{H}(s)$};
+\draw[->, line] (sm.west)  -- (Hup.east) node[sig, pos=0.65, above] {reflected};
+\draw[->, line] (Hup.west) -- (Sk.east) node[sig, pos=0.35, above] {incident};
+
+% ================= Summation signs =================
+\node[pm] at (-4.14,  1.90) {$-$};   % Sk: Y_c v_k (admittance subtracts)
+\node[pm] at (-3.68,  2.66) {$+$};   % Sk: incident current (adds)
+\node[pm] at (-4.14, -1.90) {$+$};   % sk: Y_c v_k
+\node[pm] at (-5.12, -2.16) {$-$};   % sk: i_k
+\node[pm] at ( 4.14, -1.90) {$-$};   % Sm: Y_c v_m (admittance subtracts)
+\node[pm] at ( 3.66, -2.14) {$+$};   % Sm: incident current (adds)
+\node[pm] at ( 4.14,  1.90) {$+$};   % sm: Y_c v_m
+\node[pm] at ( 5.12,  2.66) {$-$};   % sm: i_m
+
+% ================= Model enclosure =================
+\draw[dashed, semithick, rounded corners=4pt] (-6.8, -3.6) rectangle (6.8, 3.6);
+
+\end{tikzpicture}
+\end{document}
