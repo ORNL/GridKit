@@ -20,11 +20,11 @@
 \node[sum]   (sk)  at (-4.4, -2.4) {$\Sigma$};   % wave former at k
 
 \draw[->, line] (-8.4, 0) -- (Yck.west);
-\node[signal, label={[sig]above:$\mathbf{v}_{\text{left}}$}] at (-7.6, 0) {};
+\node[signal, label={[sig]above:$\mathbf{v}_{1}$}] at (-7.6, 0) {};
 
 \draw[->, line] (Yck.north) -- (Sk);
 \draw[->, line] (Yck.south) -- (sk);
-\draw[->, line] (Sk.west) -- (-8.4, 2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{\text{left}}$};
+\draw[->, line] (Sk.west) -- (-8.4, 2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{1}$};
 
 % i_k tap into wave former (hops over the v_k lead)
 \draw[line]     (-6.0, 2.4) -- (-6.0,  0.14);
@@ -36,11 +36,11 @@
 \node[sum]   (Sm)  at (4.4, -2.4) {$\Sigma$};    % KCL at m
 
 \draw[->, line] (8.4, 0) -- (Ycm.east);
-\node[signal, label={[sig]above:$\mathbf{v}_{\text{right}}$}] at (7.6, 0) {};
+\node[signal, label={[sig]above:$\mathbf{v}_{2}$}] at (7.6, 0) {};
 
 \draw[->, line] (Ycm.north) -- (sm);
 \draw[->, line] (Ycm.south) -- (Sm);
-\draw[->, line] (Sm.east) -- (8.4, -2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{\text{right}}$};
+\draw[->, line] (Sm.east) -- (8.4, -2.4) node[sig, pos=0.79, above] {$\mathbf{i}^{\text{inj}}_{2}$};
 
 % i_m tap into wave former (hops over the v_m lead)
 \draw[line]     (6.0, -2.4) -- (6.0, -0.14);
