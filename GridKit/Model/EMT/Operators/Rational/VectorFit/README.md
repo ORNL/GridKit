@@ -1,6 +1,6 @@
-# RationalTransfer Model
+# Rational Model
 
-`RationalTransfer` represents a vector-fitted matrix rational approximation with
+`Rational` represents a vector-fitted matrix rational approximation with
 complex poles and residues.
 
 The rational approximation is represented in pole form:
@@ -23,9 +23,9 @@ The time domain representation of this model is:
 ## Block Diagram
 
 <div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/RationalTransfer/diagram.png" width="50%">
+   <img align="center" src="../../../../../../docs/Figures/EMT/Rational/diagram.png" width="50%">
 
-  Figure 1: RationalTransfer convolution model
+  Figure 1: Rational convolution model
 </div>
 
 ## Model Parameters
@@ -34,10 +34,10 @@ For output dimension $N$, input dimension $K$, and pole count $Q$:
 
 Symbol | Units | JSON | Description | Typical Value | Note
 ------ | ----- | ---- | ----------- | ------------- | ----
-$\mathbf{D}$ | [-] | | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{N \times K}$
-$\mathbf{E}$ | [s] | | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
-$\mathbf{p}$ | [1/s] | | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
-$\mathbf{R}$ | [1/s] | | Residues | | $\mathbf{R} \in \mathbb{C}^{N \times K \times Q}$
+$\mathbf{D}$ | [-] | `D` | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{N \times K}$
+$\mathbf{E}$ | [s] | `E` | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
+$\mathbf{p}$ | [1/s] | `poles` | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
+$\mathbf{R}$ | [1/s] | `residues` | Residues | | $\mathbf{R} \in \mathbb{C}^{N \times K \times Q}$
 
 ### Parameter Validation
 
@@ -82,9 +82,7 @@ $\mathbf{x}_{\mathrm{i}}$ | [-] | Imaginary memory states | $\mathbf{x}_{\mathrm
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Rational approximation output state | $\mathbf{y} \in \mathbb{R}^N$
+None.
 
 ### External Variables
 
@@ -97,6 +95,13 @@ $\mathbf{u}$ | [-] | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 #### Algebraic
 
 None.
+
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{u}$ | `input` | Input | [-] | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -112,17 +117,24 @@ For real-valued poles, the imaginary-memory equation is not needed.
      + \mathbf{u} \\
 0 &= -\dot{\mathbf{x}}_{\mathrm{i}}^q
      + \omega_q\mathbf{x}_{\mathrm{r}}^q
-     + a_q\mathbf{x}_{\mathrm{i}}^q \\
-0 &= -\mathbf{y} + \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
-     + \sum_{q=1}^{Q}
-         \mathbf{R}_{\mathrm{r}}^q\mathbf{x}_{\mathrm{r}}^q
-         - \mathbf{R}_{\mathrm{i}}^q\mathbf{x}_{\mathrm{i}}^q
+     + a_q\mathbf{x}_{\mathrm{i}}^q
 \end{aligned}
 ```
 
 ### Algebraic Equations
 
-Rows of the output residual with all-zero rows of $\mathbf{E}$ are algebraic.
+None.
+
+### Port Equations
+
+```math
+\mathbf{y} = \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
+  + \sum_{q=1}^{Q}
+    \left(
+      \mathbf{R}_{\mathrm{r}}^q\mathbf{x}_{\mathrm{r}}^q
+      - \mathbf{R}_{\mathrm{i}}^q\mathbf{x}_{\mathrm{i}}^q
+    \right)
+```
 
 ## Initialization
 
@@ -131,29 +143,17 @@ Memory states initialize to:
 
 ```math
 \begin{aligned}
-\mathbf{x}_{\mathrm{r},0}^q &=
--\frac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}_0
--\frac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}
-  \dot{\mathbf{u}}_0 \\
-\mathbf{x}_{\mathrm{i},0}^q &=
-\frac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}_0
-+\frac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}_0
+\mathbf{x}_{\mathrm{r},0}^q &= -\frac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}_0 - \frac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}_0 \\
+\mathbf{x}_{\mathrm{i},0}^q &= \frac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}_0 + \frac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}_0
 \end{aligned}
 ```
 
-The output state initializes from the output residual:
+The port contribution initializes as:
 
 ```math
-\mathbf{y}_0 = \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0
-  + \sum_{q=1}^{Q}
-    \left(
-      \mathbf{R}_{\mathrm{r}}^q\mathbf{x}_{\mathrm{r},0}^q
-      - \mathbf{R}_{\mathrm{i}}^q\mathbf{x}_{\mathrm{i},0}^q
-    \right)
+\mathbf{y}_0 = \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \sum_{q=1}^{Q}\left(\mathbf{R}_{\mathrm{r}}^q\mathbf{x}_{\mathrm{r},0}^q - \mathbf{R}_{\mathrm{i}}^q\mathbf{x}_{\mathrm{i},0}^q\right)
 ```
 
-## Model Outputs
+## Monitors
 
-Output | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Rational approximation output state | $\mathbf{y} \in \mathbb{R}^N$
+None.

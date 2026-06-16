@@ -17,7 +17,7 @@ $L_c$   | [H]        | Load inductance, phase c    |
 
 ## Model Derived Parameters
 
-``` math
+```math
 \begin{aligned}
   \mathbf{R} &= \operatorname{diag}(R_a, R_b, R_c) \\
   \mathbf{L} &= \operatorname{diag}(L_a, L_b, L_c)
@@ -59,7 +59,7 @@ None.
 
 ### Differential Equations
 
-``` math
+```math
 0 = \mathbf{R}\,\mathbf{i} + \mathbf{L}\dot{\mathbf{i}} + \mathbf{v}
 ```
 
@@ -67,13 +67,10 @@ None.
 
 None.
 
-### Bus Residual Contributions
+### Port Equations
 
-The RL load contributes to the KCL residual at its port bus. The
-expression is accumulated into the owning bus residual.
-
-``` math
-\mathbf{i}^\text{inj} := \mathbf{i}
+```math
+\mathbf{i}^{\mathrm{inj}} = \mathbf{i}
 ```
 
 ## Initialization
@@ -82,7 +79,7 @@ The initialization assumes a balanced three-phase system. Given the power
 flow phasor load current $I = |I| \angle \theta$, the initial load
 current is:
 
-``` math
+```math
 \mathbf{i}(0) = \sqrt{2}\,|I|
 \begin{bmatrix}
   \cos(\theta) \\
@@ -94,11 +91,12 @@ current is:
 The initial derivative is then given by the RL load equation for DAE
 consistency:
 
-``` math
+```math
 \dot{\mathbf{i}}(0) = -\mathbf{L}^{-1}\left(\mathbf{v}(0) + \mathbf{R}\,\mathbf{i}(0)\right)
 ```
 
-## Model Outputs
+## Monitors
 
-Candidate monitorable outputs include the load current components $i_a$, $i_b$,
-and $i_c$ into the bus.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`i` | [A] | Load current | $\mathbf{i} \in \mathbb{R}^3$

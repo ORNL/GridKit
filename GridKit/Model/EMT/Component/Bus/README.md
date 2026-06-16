@@ -45,13 +45,13 @@ the effective shunt admittances depend on connected components and are not
 known at the bus level. The implicit DAE solver operates directly on
 the accumulated KCL residual:
 
-``` math
+```math
 \begin{aligned}
-0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^\text{inj}_e
+0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^{\mathrm{inj}}_e
 \end{aligned}
 ```
 
-where $\mathbf{i}^\text{inj}_e$ is the vector of phase-current injections
+where $\mathbf{i}^{\mathrm{inj}}_e$ is the vector of phase-current injections
 of connected component $e$ into the bus, which are a function of the bus voltage and bus voltage derivative.
 
 ### Algebraic Equations
@@ -63,7 +63,7 @@ None.
 For a balanced three-phase initialization derived from the phasor voltage
 $V = |V| \angle \phi$ and nominal angular frequency $\omega_0 = 2 \pi f_0$,
 
-``` math
+```math
 \mathbf{v}(0) = \sqrt{2}\,|V|
 \begin{bmatrix}
   \cos(\phi) \\
@@ -74,7 +74,7 @@ $V = |V| \angle \phi$ and nominal angular frequency $\omega_0 = 2 \pi f_0$,
 
 and
 
-``` math
+```math
 \dot{\mathbf{v}}(0) = -\sqrt{2}\,|V|\,\omega_0
 \begin{bmatrix}
   \sin(\phi) \\
@@ -83,8 +83,9 @@ and
 \end{bmatrix}
 ```
 
-## Model Outputs
+## Monitors
 
-Phase voltages $v_a$, $v_b$, and $v_c$ are monitorable model outputs.
-
-Phase-voltage derivatives $\dot{v}_a$, $\dot{v}_b$, and $\dot{v}_c$ are also available as monitorable outputs.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`v` | [V] | Bus voltage | $\mathbf{v} \in \mathbb{R}^3$
+`dv` | [V/s] | Bus voltage derivative | $\dot{\mathbf{v}} \in \mathbb{R}^3$
