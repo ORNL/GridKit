@@ -63,13 +63,11 @@ None.
 
 None.
 
-### Bus Residual Contributions
+### Port Equations
 
-The source contributes current to the KCL residual at its port bus.
-The injection vector is accumulated into the owning bus residual. Given source
-angular frequency $\omega_0$, the source waveform is:
+Given source angular frequency $\omega_0$, the source waveform is:
 
-``` math
+```math
 \begin{aligned}
 e_a(t) &= \sqrt{2}\,E_a\cos(\omega_0 t + \phi_a) \\
 e_b(t) &= \sqrt{2}\,E_b\cos(\omega_0 t + \phi_b) \\
@@ -77,10 +75,8 @@ e_c(t) &= \sqrt{2}\,E_c\cos(\omega_0 t + \phi_c)
 \end{aligned}
 ```
 
-The current contribution is positive into the bus:
-
-``` math
-\mathbf{i}^\text{inj} :=
+```math
+\mathbf{i}^{\mathrm{inj}} =
 \begin{bmatrix}
   \dfrac{e_a(t)-v_a}{R_a} \\
   \dfrac{e_b(t)-v_b}{R_b} \\
@@ -92,7 +88,7 @@ The current contribution is positive into the bus:
 
 No internal state is initialized. At $t = 0$, the source waveform is:
 
-``` math
+```math
 \begin{aligned}
 e_a(0) &= \sqrt{2}\,E_a\cos(\phi_a) \\
 e_b(0) &= \sqrt{2}\,E_b\cos(\phi_b) \\
@@ -100,10 +96,8 @@ e_c(0) &= \sqrt{2}\,E_c\cos(\phi_c)
 \end{aligned}
 ```
 
-## Model Outputs
+## Monitors
 
-Candidate monitorable outputs include the source waveform components
-$e_a(t)$, $e_b(t)$, and $e_c(t)$.
-
-The port current injection expression is documented above as
-$\mathbf{i}^\text{inj}$.
+Monitor | Units | Description | Note
+------- | ----- | ----------- | ----
+`e` | [V] | Source waveform | $\mathbf{e} \in \mathbb{R}^3$

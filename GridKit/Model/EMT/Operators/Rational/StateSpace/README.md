@@ -4,7 +4,7 @@
 complex poles and factorized residues.
 
 Notes:
-- This cannot be used in general to repalce `RationalTransfer`, as that model can support full-rank residuals, while this only supports rank-1 residuals.
+- This cannot be used in general to replace `Rational`, as that model can support full-rank residuals, while this only supports rank-1 residuals.
 - The benefit of this model is reduced number of internal states.
 
 The rational approximation is represented in state-space form:
@@ -37,11 +37,11 @@ For output dimension $N$, input dimension $K$, and pole count $Q$:
 
 Symbol | Units | JSON | Description | Typical Value | Note
 ------ | ----- | ---- | ----------- | ------------- | ----
-$\mathbf{D}$ | [-] | | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{N \times K}$
-$\mathbf{E}$ | [s] | | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
-$\mathbf{p}$ | [1/s] | | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
-$\mathbf{C}$ | [-] | | Output matrix | | $\mathbf{C} \in \mathbb{C}^{N \times Q}$
-$\mathbf{B}$ | [1/s] | | Input matrix | | $\mathbf{B} \in \mathbb{C}^{K \times Q}$
+$\mathbf{D}$ | [-] | `D` | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{N \times K}$
+$\mathbf{E}$ | [s] | `E` | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
+$\mathbf{p}$ | [1/s] | `poles` | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
+$\mathbf{C}$ | [-] | `C` | Output matrix | | $\mathbf{C} \in \mathbb{C}^{N \times Q}$
+$\mathbf{B}$ | [1/s] | `B` | Input matrix | | $\mathbf{B} \in \mathbb{C}^{K \times Q}$
 
 ### Parameter Validation
 
@@ -91,9 +91,7 @@ $\mathbf{x}_{\mathrm{i}}$ | [-] | Imaginary memory states | $\mathbf{x}_{\mathrm
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Rational approximation output state | $\mathbf{y} \in \mathbb{R}^N$
+None.
 
 ### External Variables
 
@@ -106,6 +104,13 @@ $\mathbf{u}$ | [-] | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 #### Algebraic
 
 None.
+
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{u}$ | `input` | Input | [-] | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -122,16 +127,21 @@ For real-valued poles, the imaginary-memory equation is not needed.
 0 &= -\dot{\mathbf{x}}_{\mathrm{i}}
      + \boldsymbol{\Omega}\mathbf{x}_{\mathrm{r}}
      + \mathbf{A}\mathbf{x}_{\mathrm{i}}
-     + \mathbf{B}_{\mathrm{i}}^T\mathbf{u} \\
-0 &= -\mathbf{y} + \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
-     + \mathbf{C}_{\mathrm{r}}\mathbf{x}_{\mathrm{r}}
-     - \mathbf{C}_{\mathrm{i}}\mathbf{x}_{\mathrm{i}}
+     + \mathbf{B}_{\mathrm{i}}^T\mathbf{u}
 \end{aligned}
 ```
 
 ### Algebraic Equations
 
-Rows of the output residual with all-zero rows of $\mathbf{E}$ are algebraic.
+None.
+
+### Port Equations
+
+```math
+\mathbf{y} = \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
+  + \mathbf{C}_{\mathrm{r}}\mathbf{x}_{\mathrm{r}}
+  - \mathbf{C}_{\mathrm{i}}\mathbf{x}_{\mathrm{i}}
+```
 
 ## Initialization
 
@@ -139,24 +149,19 @@ For an affine initial input trajectory, let subscript $0$ denote initial values.
 The complex pole-memory state initializes to:
 
 ```math
-\mathbf{x}_0 =
--\mathbf{P}^{-1}\mathbf{B}^T\mathbf{u}_0
--\mathbf{P}^{-2}\mathbf{B}^T\dot{\mathbf{u}}_0
+\mathbf{x}_0 = -\mathbf{P}^{-1}\mathbf{B}^T\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}^T\dot{\mathbf{u}}_0
 ```
 
-The real-valued state vectors and output initialize to:
+The real-valued state vectors and port contribution initialize to:
 
 ```math
 \begin{aligned}
 \mathbf{x}_{\mathrm{r},0} &= \operatorname{Re}(\mathbf{x}_0) \\
 \mathbf{x}_{\mathrm{i},0} &= \operatorname{Im}(\mathbf{x}_0) \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0
-  + \operatorname{Re}(\mathbf{C}\mathbf{x}_0)
+\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \operatorname{Re}(\mathbf{C}\mathbf{x}_0)
 \end{aligned}
 ```
 
-## Model Outputs
+## Monitors
 
-Output | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Rational approximation output state | $\mathbf{y} \in \mathbb{R}^N$
+None.
