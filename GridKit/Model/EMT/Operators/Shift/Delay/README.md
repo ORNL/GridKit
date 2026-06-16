@@ -43,7 +43,7 @@ $\Delta t_{\min}$ | [s]   | `dt_min` | Block resolution     | --            | Re
 ### Model Derived Parameters
 
 ```math
-n = \operatorname{floor}\left(\dfrac{\tau}{\Delta t_{\min}}\right)
+n = \text{floor}\left(\dfrac{\tau}{\Delta t_{\min}}\right)
 ```
 
 ## Model Variables
