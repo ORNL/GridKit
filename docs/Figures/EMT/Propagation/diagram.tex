@@ -13,10 +13,10 @@
     sig/.style    = {font=\small}
 ]
 
-% Modal branches: rational shaping followed by delay
+% Modal branches: delay followed by rational shaping
 \foreach \i/\lab/\y in {1/1/1.6, 2/2/0, N/M/-2.3} {
-    \node[block] (H\i) at (-1.85, \y) {$\mathbf{H}^{\text{mps}}_{\lab}(s)$};
-    \node[block] (D\i) at ( 1.85, \y) {$e^{-s\tau_{\lab}}$};
+    \node[block] (D\i) at (-1.85, \y) {$e^{-s\tau_{\lab}}$};
+    \node[block] (H\i) at ( 1.85, \y) {$\mathbf{H}^{\text{mps}}_{\lab}(s)$};
 }
 \node at (-1.85, -1.15) {$\vdots$};
 \node at ( 1.85, -1.15) {$\vdots$};
@@ -24,18 +24,18 @@
 % Fan-out from a single internal point
 \coordinate (split) at (-4.4, 0);
 \draw[line] (-6.6, 0) -- (split);
-\draw[->, line] (split) -- (H2.west);
-\foreach \b in {H1, HN}
+\draw[->, line] (split) -- (D2.west);
+\foreach \b in {D1, DN}
     \draw[->, line] (split) |- (\b.west);
 
 % Line series connections
 \foreach \i in {1, 2, N}
-    \draw[->, line] (H\i.east) -- (D\i.west);
+    \draw[->, line] (D\i.east) -- (H\i.west);
 
 % Fan-in to summation
 \node[sum] (S) at (4.4, 0) {$\Sigma$};
-\draw[->, line] (D2.east) -- (S);
-\foreach \b/\a in {D1/north, DN/south}
+\draw[->, line] (H2.east) -- (S);
+\foreach \b/\a in {H1/north, HN/south}
     \draw[->, line] (\b.east) -| (S.\a);
 \draw[->, line] (S.east) -- (6.6, 0) node[sig, pos=0.59, above] {$\mathbf{y}$};
 
