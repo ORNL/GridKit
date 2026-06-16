@@ -9,7 +9,7 @@ docs_dir = Path(__file__).parent.resolve()
 
 extensions = ["breathe", "exhale", "myst_parser"]
 
-breathe_projects = {"GridKit": str(docs_dir.parent / "build/docs/doxygen/xml")}
+breathe_projects = {"GridKit": str(docs_dir / "xml")}
 breathe_default_project = "GridKit"
 
 

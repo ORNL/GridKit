@@ -8,7 +8,7 @@ build:
     - doxygen
   jobs:
     pre_build:
-      - rm -rf build/docs/doxygen && cd docs && doxygen Doxyfile
+      - rm -rf docs/xml && cd docs && doxygen Doxyfile
 
 sphinx:
   configuration: docs/conf.py

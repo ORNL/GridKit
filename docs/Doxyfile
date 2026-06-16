@@ -1,5 +1,5 @@
 PROJECT_NAME = "GridKit"
-OUTPUT_DIRECTORY = ../build/docs/doxygen
+OUTPUT_DIRECTORY = .
 
 INPUT = ../GridKit
 RECURSIVE = YES

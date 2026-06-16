@@ -8,4 +8,5 @@ build/
 doxygen-docs/
 docs/_build/
 docs/api/reference/
+docs/xml/
 __pycache__
