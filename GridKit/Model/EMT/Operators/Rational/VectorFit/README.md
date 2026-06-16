@@ -58,10 +58,10 @@ pole-indexed residues and memory states.
 
 ```math
 \begin{aligned}
-\mathbf{a} &= \operatorname{Re}(\mathbf{p}) \\
-\boldsymbol{\omega} &= \operatorname{Im}(\mathbf{p}) \\
-\mathbf{R}_{\mathrm{r}}^q &= \operatorname{Re}(\mathbf{R}^q) \\
-\mathbf{R}_{\mathrm{i}}^q &= \operatorname{Im}(\mathbf{R}^q)
+\mathbf{a} &= \text{Re}(\mathbf{p}) \\
+\boldsymbol{\omega} &= \text{Im}(\mathbf{p}) \\
+\mathbf{R}_{\mathrm{r}}^q &= \text{Re}(\mathbf{R}^q) \\
+\mathbf{R}_{\mathrm{i}}^q &= \text{Im}(\mathbf{R}^q)
 \end{aligned}
 ```
 
