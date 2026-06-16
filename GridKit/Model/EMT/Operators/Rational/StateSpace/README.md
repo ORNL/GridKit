@@ -62,15 +62,15 @@ correspond to poles.
 
 ```math
 \begin{aligned}
-\mathbf{P} &= \operatorname{diag}(p_1,\dots,p_Q) \\
-\mathbf{a} &= \operatorname{Re}(\mathbf{p}) \\
-\boldsymbol{\omega} &= \operatorname{Im}(\mathbf{p}) \\
-\mathbf{A} &= \operatorname{diag}(a_1,\dots,a_Q) \\
-\boldsymbol{\Omega} &= \operatorname{diag}(\omega_1,\dots,\omega_Q) \\
-\mathbf{C}_{\mathrm{r}} &= \operatorname{Re}(\mathbf{C}) \\
-\mathbf{C}_{\mathrm{i}} &= \operatorname{Im}(\mathbf{C}) \\
-\mathbf{B}_{\mathrm{r}} &= \operatorname{Re}(\mathbf{B}) \\
-\mathbf{B}_{\mathrm{i}} &= \operatorname{Im}(\mathbf{B})
+\mathbf{P} &= \text{diag}(p_1,\dots,p_Q) \\
+\mathbf{a} &= \text{Re}(\mathbf{p}) \\
+\boldsymbol{\omega} &= \text{Im}(\mathbf{p}) \\
+\mathbf{A} &= \text{diag}(a_1,\dots,a_Q) \\
+\boldsymbol{\Omega} &= \text{diag}(\omega_1,\dots,\omega_Q) \\
+\mathbf{C}_{\mathrm{r}} &= \text{Re}(\mathbf{C}) \\
+\mathbf{C}_{\mathrm{i}} &= \text{Im}(\mathbf{C}) \\
+\mathbf{B}_{\mathrm{r}} &= \text{Re}(\mathbf{B}) \\
+\mathbf{B}_{\mathrm{i}} &= \text{Im}(\mathbf{B})
 \end{aligned}
 ```
 
@@ -156,9 +156,9 @@ The real-valued state vectors and port contribution initialize to:
 
 ```math
 \begin{aligned}
-\mathbf{x}_{\mathrm{r},0} &= \operatorname{Re}(\mathbf{x}_0) \\
-\mathbf{x}_{\mathrm{i},0} &= \operatorname{Im}(\mathbf{x}_0) \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \operatorname{Re}(\mathbf{C}\mathbf{x}_0)
+\mathbf{x}_{\mathrm{r},0} &= \text{Re}(\mathbf{x}_0) \\
+\mathbf{x}_{\mathrm{i},0} &= \text{Im}(\mathbf{x}_0) \\
+\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \text{Re}(\mathbf{C}\mathbf{x}_0)
 \end{aligned}
 ```
 
