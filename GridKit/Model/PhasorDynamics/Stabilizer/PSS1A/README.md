@@ -8,14 +8,9 @@
 
 
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PSS1A.JPG">
+![](../../../../../docs/Figures/PSS1A.JPG)
 
-
-  Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
-
-
+Figure 1: Power system stabilizer PSS1A model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 

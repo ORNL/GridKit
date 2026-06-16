@@ -17,11 +17,9 @@ An ideal complex tap is placed on the bus-1 side of the branch equivalent. The
 ordinary transmission-line $\pi$ model is recovered with $\tau = 1$ and
 $\theta = 0$.
 
-<div align="center">
-   <img align="center" src="../../../../docs/Figures/transformer-branch.png">
+![](../../../../docs/Figures/transformer-branch.png)
 
-  Figure 1: Branch equivalent circuit
-</div>
+Figure 1: Branch equivalent circuit
 
 ## Model Parameters
 

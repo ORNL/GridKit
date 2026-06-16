@@ -6,11 +6,9 @@ build:
     python: "3.12"
   apt_packages:
     - doxygen
-    - graphviz
   jobs:
     pre_build:
-      - python docs/generate_model_docs.py
-      - cd docs && doxygen Doxyfile
+      - rm -rf build/docs/doxygen && cd docs && doxygen Doxyfile
 
 sphinx:
   configuration: docs/conf.py

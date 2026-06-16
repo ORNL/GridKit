@@ -9,11 +9,9 @@ the REGCB source standard before implementation.
 
 Standard model diagram for the REGCB converter interface.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics_REGCB_Diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics_REGCB_Diagram.png)
 
-  Figure 1: Generator/Converter REGCB model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Generator/Converter REGCB model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 Detailed REGCB parameters, variables, equations, initialization details, and
 outputs will be added after validation against the REGCB source standard.

@@ -18,11 +18,9 @@ Notes:
 
 Standard model of the SCRX Exciter.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics/SCRX_diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics/SCRX_diagram.png)
 
-  Figure 1: Exciter SCRX model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Exciter SCRX model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -118,7 +116,7 @@ $V_{\mathrm{oel}}$                  | [p.u.] | Over-excitation limiter input    
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations

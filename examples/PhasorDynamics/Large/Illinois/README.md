@@ -2,11 +2,9 @@
 
   ## One-Line Diagram
 
-  <div align="center">
-     <img align="center" src="illinois.png">
+![](illinois.png)
 
-    Figure 1: Oneline of the ACTIVSg200 Case, from Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg200/) (Updated Oneline WIP)
-  </div>
+Figure 1: Oneline of the ACTIVSg200 Case, from Texas A&M University [Grid Repository](https://electricgrids.engr.tamu.edu/electric-grid-test-cases/activsg200/) (Updated Oneline WIP)
 
   ## Case Description
 
@@ -20,7 +18,7 @@
   [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 40
   [SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 40
   [LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 164
-  [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/) | 120
+  [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 120
 
 
   ## Data Notes

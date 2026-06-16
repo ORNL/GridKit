@@ -2,11 +2,9 @@
 
 ## One-Line Diagram
 
-<div align="center">
-   <img align="center" src="newengland.png">
+![](newengland.png)
 
-  Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Oneline of the New England IEEE 39-bus case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Case Description
 
@@ -21,7 +19,7 @@ Model       | Count
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 10
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
 [LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 19
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/) | 40
+[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 40
 
 
 ## Events
