@@ -1,0 +1,44 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../utils/gridkit.tex}
+
+\begin{document}
+\begin{tikzpicture}[gk]
+
+% =====================================================================
+%  Three-phase + neutral conductor arrangement.  Each conductor attaches
+%  to the tower at coordinate (x_i, H_i) above the earth and carries a
+%  phase label phi_i in {a,b,c,n}.  H_i is the attachment height.
+% =====================================================================
+
+\def\Hp{3.4}     % phase attachment height H_{a,b,c}
+\def\Hn{4.7}     % neutral attachment height H_n
+\def\Ya{4.1}     % crossarm level
+\def\xa{-2.5}\def\xb{0}\def\xc{2.5}
+
+% ---- earth ----------------------------------------------------------
+\gkground{-5.0}{5.2}{0}
+
+% ---- tower: mast, crossarm, shield peak ----------------------------
+\draw[gkSteel, line width=2.3pt] (0,0) -- (0,\Ya);          % main mast
+\draw[gkSteel, line width=2.3pt] (0,\Ya) -- (0,\Hn);        % shield peak
+\draw[gkSteel, line width=2.3pt] (-2.95,\Ya) -- (2.95,\Ya); % crossarm
+
+% ---- insulator strings + phase conductors --------------------------
+\foreach \x in {\xa,\xb,\xc}{\draw[gkSteel, thin] (\x,\Ya) -- (\x,\Hp);}
+\fill[gkconddot] (\xa,\Hp) circle (3.6pt);
+\fill[gkconddot] (\xb,\Hp) circle (3.6pt);
+\fill[gkconddot] (\xc,\Hp) circle (3.6pt);
+\fill[gkconddot] (0,\Hn)  circle (3.6pt);    % neutral at apex
+
+% ---- phase labels phi_i (relevant info) ----------------------------
+\node[gksig, gkConductor, below=3.5pt] at (\xa,\Hp) {$a$};
+\node[gksig, gkConductor, below right=0pt and 3pt] at (\xb,\Hp) {$b$};
+\node[gksig, gkConductor, below=3.5pt] at (\xc,\Hp) {$c$};
+\node[gksig, gkConductor, above right=0pt and 2.5pt] at (0,\Hn) {$n$};
+
+% ---- attachment height H_i above earth -----------------------------
+\draw[gkSteel, thin] (\xc,\Hp) -- (4.0,\Hp);
+\gkdimv{3.8}{0}{\Hp}{$H_i$}
+
+\end{tikzpicture}
+\end{document}

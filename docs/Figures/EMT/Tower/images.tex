@@ -1,0 +1,57 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../utils/gridkit.tex}
+
+\begin{document}
+\begin{tikzpicture}[gk]
+
+% =====================================================================
+%  Method of images for the distance matrices.  Conductors i, j sit at
+%  representative heights h_i, h_j above the earth; their mirror images
+%  i', j' lie at equal depth below it.  The direct distance is D_ij and
+%  the image distance D'_ij; d_ij is the horizontal separation.
+%      D_ij  = sqrt(d_ij^2 + (h_i - h_j)^2)
+%      D'_ij = sqrt(d_ij^2 + (h_i + h_j)^2)
+% =====================================================================
+
+\coordinate (ci)  at (-2.3, 3.0);   % conductor i
+\coordinate (cj)  at ( 2.6, 1.8);   % conductor j
+\coordinate (cim) at (-2.3,-3.0);   % image i'
+\coordinate (cjm) at ( 2.6,-1.8);   % image j'
+
+% ---- earth (mirror plane) ------------------------------------------
+\gkground{-5.0}{5.2}{0}
+\node[gksig, gkSteel] at (-4.55,0.34) {earth};
+
+% mirror-correspondence guides
+\draw[gkguide] (ci) -- (cim);
+\draw[gkguide] (cj) -- (cjm);
+
+% ---- direct distance D_ij and image distance D'_ij -----------------
+\draw[gkSteel, semithick] (ci) -- (cj)
+      node[pos=0.5, above, gkdimlbl]{$D_{ij}$};
+\draw[gkimage] (ci) -- (cjm)
+      node[pos=0.78, gkdimlbl, text=gkImage]{$D'_{ij}$};
+
+% ---- horizontal separation d_ij ------------------------------------
+\draw[gkSteel, thin] (ci) -- (-2.3,3.7);
+\draw[gkSteel, thin] (cj) -- ( 2.6,3.7);
+\gkdimh{-2.3}{2.6}{3.55}{$d_{ij}$}
+
+% ---- representative heights h_i, h_j and mirrored image depths ------
+\draw[gkSteel, thin] (ci)  -- (-3.7, 3.0);
+\draw[gkSteel, thin] (cim) -- (-3.7,-3.0);
+\gkdimv{-3.7}{0}{ 3.0}{$h_i$}
+\gkdimv{-3.7}{0}{-3.0}{$h_i$}
+\draw[gkSteel, thin] (cj)  -- ( 4.3, 1.8);
+\draw[gkSteel, thin] (cjm) -- ( 4.3,-1.8);
+\gkdimv{4.3}{0}{ 1.8}{$h_j$}
+\gkdimv{4.3}{0}{-1.8}{$h_j$}
+
+% ---- conductors and images (top z-order) ---------------------------
+\fill[gkconddot]  (ci)  circle (3.4pt) node[above left =-1pt and 0pt, gkConductor, gksig]{$i$};
+\fill[gkconddot]  (cj)  circle (3.4pt) node[above right=-1pt and 0pt, gkConductor, gksig]{$j$};
+\fill[gkimagedot] (cim) circle (3.4pt) node[below left =-1pt and 0pt, gkImage, gksig]{$i'$};
+\fill[gkimagedot] (cjm) circle (3.4pt) node[below right=-1pt and 0pt, gkImage, gksig]{$j'$};
+
+\end{tikzpicture}
+\end{document}

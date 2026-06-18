@@ -1,0 +1,162 @@
+\documentclass[tikz,border=0pt]{standalone}
+\input{../../utils/gridkit.tex}
+
+% =====================================================================
+%  Path model: an ordered GIS route P_1,...,P_{Np} on the earth sphere.
+%  Each interval P_n -> P_{n+1} contributes the great-circle (haversine)
+%  arc length s_n = R_oplus c_n; the route is a smooth chain of geodesic
+%  segments.  The globe is an offset, cropped, soft-lit sphere.
+%
+%  Orthographic projection; each segment is sampled by spherical linear
+%  interpolation (slerp) of its endpoint unit vectors.
+% =====================================================================
+
+% modern globe palette (cool blue-gray, lit from upper-left)
+\definecolor{gkGlobeLo}{RGB}{237,243,248}   % highlight (near-white)
+\definecolor{gkGlobeHi}{RGB}{151,174,196}   % body / terminator
+\tikzset{gkgrid/.style = {white, line width=0.4pt, opacity=0.5}}
+
+\def\Rs{5.2}     % sphere screen radius (large)
+\def\ox{2.7}     % globe centre x (offset right)
+\def\oy{-1.3}    % globe centre y (offset down)
+\def\vlat{16}    % view latitude  (deg)
+\def\vlon{20}    % view longitude (deg)
+\def\Nseg{20}    % samples per geodesic
+
+\begin{document}
+
+% ---- orthographic view basis (east, north, out) at (vlat,vlon) -----
+\pgfmathsetmacro{\eastx}{-sin(\vlon)}
+\pgfmathsetmacro{\easty}{ cos(\vlon)}
+\pgfmathsetmacro{\eastz}{0}
+\pgfmathsetmacro{\northx}{-sin(\vlat)*cos(\vlon)}
+\pgfmathsetmacro{\northy}{-sin(\vlat)*sin(\vlon)}
+\pgfmathsetmacro{\northz}{ cos(\vlat)}
+\pgfmathsetmacro{\outx}{cos(\vlat)*cos(\vlon)}
+\pgfmathsetmacro{\outy}{cos(\vlat)*sin(\vlon)}
+\pgfmathsetmacro{\outz}{sin(\vlat)}
+
+% project (lat,lon) -> screen (\sx,\sy); \sz>0 means front hemisphere
+\newcommand{\proj}[2]{%
+  \pgfmathsetmacro{\vX}{cos(#1)*cos(#2)}%
+  \pgfmathsetmacro{\vY}{cos(#1)*sin(#2)}%
+  \pgfmathsetmacro{\vZ}{sin(#1)}%
+  \pgfmathsetmacro{\sx}{\Rs*(\vX*\eastx+\vY*\easty+\vZ*\eastz)}%
+  \pgfmathsetmacro{\sy}{\Rs*(\vX*\northx+\vY*\northy+\vZ*\northz)}%
+  \pgfmathsetmacro{\sz}{\vX*\outx+\vY*\outy+\vZ*\outz}%
+}
+\newcommand{\waypoint}[3]{\proj{#2}{#3}\coordinate (#1) at (\sx,\sy);}
+
+% great-circle polyline between (lat1,lon1) and (lat2,lon2)
+\newcommand{\geoseg}[5]{% #1 lat1 #2 lon1 #3 lat2 #4 lon2 #5 style
+  \pgfmathsetmacro{\Ax}{cos(#1)*cos(#2)}%
+  \pgfmathsetmacro{\Ay}{cos(#1)*sin(#2)}%
+  \pgfmathsetmacro{\Az}{sin(#1)}%
+  \pgfmathsetmacro{\Bx}{cos(#3)*cos(#4)}%
+  \pgfmathsetmacro{\By}{cos(#3)*sin(#4)}%
+  \pgfmathsetmacro{\Bz}{sin(#3)}%
+  \pgfmathsetmacro{\dab}{min(1,max(-1,\Ax*\Bx+\Ay*\By+\Az*\Bz))}%
+  \pgfmathsetmacro{\Om}{acos(\dab)}%
+  \foreach \i in {0,...,\Nseg}{%
+    \pgfmathsetmacro{\tt}{\i/\Nseg}%
+    \pgfmathsetmacro{\wa}{sin((1-\tt)*\Om)/sin(\Om)}%
+    \pgfmathsetmacro{\wb}{sin(\tt*\Om)/sin(\Om)}%
+    \pgfmathsetmacro{\vX}{\wa*\Ax+\wb*\Bx}%
+    \pgfmathsetmacro{\vY}{\wa*\Ay+\wb*\By}%
+    \pgfmathsetmacro{\vZ}{\wa*\Az+\wb*\Bz}%
+    \pgfmathsetmacro{\px}{\Rs*(\vX*\eastx+\vY*\easty+\vZ*\eastz)}%
+    \pgfmathsetmacro{\py}{\Rs*(\vX*\northx+\vY*\northy+\vZ*\northz)}%
+    \coordinate (gc\i) at (\px,\py);%
+  }%
+  \draw[#5] (gc0) \foreach \i in {1,...,\Nseg}{ -- (gc\i)};%
+}
+
+% front-hemisphere parallel (lat = #1) and meridian (lon = #1)
+\newcommand{\parallelarc}[1]{%
+  \foreach \lo in {-180,-165,...,165}{%
+    \pgfmathsetmacro{\loB}{\lo+15}%
+    \proj{#1}{\lo}\edef\xa{\sx}\edef\ya{\sy}\edef\za{\sz}%
+    \proj{#1}{\loB}\edef\xb{\sx}\edef\yb{\sy}\edef\zb{\sz}%
+    \ifdim\za pt>0pt\ifdim\zb pt>0pt
+      \draw[gkgrid] (\xa,\ya) -- (\xb,\yb);\fi\fi}}
+\newcommand{\meridianarc}[1]{%
+  \foreach \la in {-75,-60,...,75}{%
+    \pgfmathsetmacro{\laB}{\la+15}%
+    \proj{\la}{#1}\edef\xa{\sx}\edef\ya{\sy}\edef\za{\sz}%
+    \proj{\laB}{#1}\edef\xb{\sx}\edef\yb{\sy}\edef\zb{\sz}%
+    \ifdim\za pt>0pt\ifdim\zb pt>0pt
+      \draw[gkgrid] (\xa,\ya) -- (\xb,\yb);\fi\fi}}
+
+\begin{tikzpicture}[gk]
+
+% fixed figure frame (defines crop + bounding box)
+\useasboundingbox (-4.6,-3.7) rectangle (4.6,3.7);
+
+\begin{scope}
+\clip (-4.6,-3.7) rectangle (4.6,3.7);
+\begin{scope}[shift={(\ox,\oy)}]
+
+  % ---- soft-lit sphere: body + diffuse highlight (upper-left) -------
+  \pgfmathsetmacro{\hlx}{-0.50*\Rs}
+  \pgfmathsetmacro{\hly}{ 0.52*\Rs}
+  \pgfmathsetmacro{\hlr}{ 1.35*\Rs}
+  \begin{scope}
+    \clip (0,0) circle (\Rs);
+    \fill[gkGlobeHi] (0,0) circle (\Rs);
+    \shade[inner color=gkGlobeLo, outer color=gkGlobeHi] (\hlx,\hly) circle (\hlr);
+  \end{scope}
+
+  % ---- graticule (front hemisphere) and crisp limb -----------------
+  \foreach \L in {-60,-30,0,30,60}{\parallelarc{\L}}
+  \foreach \L in {-60,-30,0,30,60,90}{\meridianarc{\L}}
+  \draw[gkGlobeHi!60!black, thin] (0,0) circle (\Rs);
+
+  % ---- smooth GIS route P_1 ... P_8 on the upper-left surface -------
+  \waypoint{P1}{36}{-24}
+  \waypoint{P2}{40}{-19}
+  \waypoint{P3}{42}{-14}
+  \waypoint{P4}{40}{ -9}
+  \waypoint{P5}{36}{ -4}
+  \waypoint{P6}{34}{  1}
+  \waypoint{P7}{37}{  5}
+  \waypoint{P8}{41}{ 10}
+
+  \geoseg{36}{-24}{40}{-19}{gkcond}
+  \geoseg{40}{-19}{42}{-14}{gkcond}
+  \geoseg{42}{-14}{40}{ -9}{gkcond}
+  \geoseg{40}{ -9}{36}{ -4}{gkcond}
+  \geoseg{36}{ -4}{34}{  1}{gkcond}
+  \geoseg{34}{  1}{37}{  5}{gkcond}
+  \geoseg{37}{  5}{41}{ 10}{gkcond}
+
+  \foreach \p in {P1,P2,P3,P4,P5,P6,P7,P8}{%
+    \fill[white] (\p) circle (3.4pt);
+    \fill[gkconddot] (\p) circle (2.6pt);}
+  \node[gksig, gkConductor, below=3pt]  at (P1) {$P_1$};
+  \node[gksig, gkConductor, right=3pt]  at (P8) {$P_{N_p}$};
+
+\end{scope}
+\end{scope}
+
+% ---- title / coordinate note (top-left, off the globe) -------------
+\node[gksig, gkConductor, anchor=north west] at (-4.4,3.5)
+     {$P_n=(\Phi_n,\Lambda_n)$};
+
+% ---- detail callout (lower-left): one segment's arc geometry -------
+\begin{scope}[shift={(-2.55,-1.95)}]
+  \def\ri{1.4}
+  \fill[white] (-1.55,-0.72) rectangle (1.55,2.18);
+  \draw[gkSteel, thin, rounded corners=3pt] (-1.55,-0.72) rectangle (1.55,2.18);
+  \draw[gkSteel, thin] (0,0) -- (110:\ri);
+  \draw[gkSteel, thin] (0,0) -- (70:\ri) node[pos=0.56, right=2pt, gksig, gkSteel]{$R_\oplus$};
+  \draw[gkcond, line width=1.6pt] (70:\ri) arc (70:110:\ri);
+  \node[gksig] at (90:\ri+0.28) {$s_n$};
+  \draw[thin, gkSteel] (70:0.55) arc (70:110:0.55);
+  \node[gksig, gkSteel] at (90:0.88) {$c_n$};
+  \fill[gkconddot] (110:\ri) circle (2.4pt) node[gkConductor, above left=-2pt and -2pt, gksig]{$P_n$};
+  \fill[gkconddot] ( 70:\ri) circle (2.4pt) node[gkConductor, above right=-2pt and -2pt, gksig]{$P_{n+1}$};
+  \fill[gkSteel] (0,0) circle (1.5pt) node[below=1.5pt, gksig]{$O$};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

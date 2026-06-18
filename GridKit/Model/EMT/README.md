@@ -46,6 +46,14 @@ that require additional history document that requirement locally.
 - [Bus](Bus/README.md)
 - [Components](Component/README.md)
 - [Operators](Operators/README.md)
+- [Parameters](Parameters/README.md)
+
+Component models are documented under `Component` because they are EMT models
+connected to buses. Reusable transfer and coordinate tools are documented under
+`Operators`.
+Frequency-domain line-parameter models are documented under `Parameters`
+because they generate sampled per-unit-length data rather than EMT bus
+residuals.
 
 ## References
 
