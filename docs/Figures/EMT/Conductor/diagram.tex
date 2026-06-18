@@ -1,0 +1,42 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../utils/gridkit.tex}
+\usetikzlibrary{patterns}
+
+\begin{document}
+\begin{tikzpicture}[gk]
+
+% =====================================================================
+%  Tubular conductor cross-section: outer radius r_i, hollow bore q_i.
+%  The metal annulus (section-hatched) carries the axial current
+%  (out of page) and has material properties sigma_i, mu_i.
+% =====================================================================
+
+\def\rO{2.5}            % outer radius (screen units)
+\def\rI{1.05}           % inner (bore) radius
+\pgfmathsetmacro{\rM}{(\rO+\rI)/2}   % mid-metal radius
+
+% ---- metal annulus: light tint + section hatch, hollow bore --------
+\fill[gkConductor!12] (0,0) circle (\rO);
+\fill[pattern=north east lines, pattern color=gkConductor!65] (0,0) circle (\rO);
+\fill[white] (0,0) circle (\rI);
+\draw[gkConductor, line width=1.9pt] (0,0) circle (\rO);
+\draw[gkConductor, line width=1.4pt] (0,0) circle (\rI);
+
+% ---- axial current carried in the metal (out of page) -------------
+\foreach \a in {0,90,180,270}{%
+  \fill[white] (\a:\rM) circle (4.2pt);
+  \draw[gkConductor, line width=0.8pt] (\a:\rM) circle (3.3pt);
+  \fill[gkConductor] (\a:\rM) circle (1.0pt);
+}
+
+% ---- geometry: outer radius r_i and inner radius q_i (right angle) --
+\gkradius{0}{0}{35}{\rO}{$r_i$}
+\draw[->, thin, gkSteel] (0,0) -- (125:\rI) node[pos=0.66, gkdimlbl]{$q_i$};
+\fill[gkSteel] (0,0) circle (1.7pt);
+
+% ---- material properties (leader out of the metal) ----------------
+\draw[gkSteel, thin] (235:\rM) -- (-2.65,-2.0)
+      node[left, gksig]{$\sigma_i,\ \mu_i$};
+
+\end{tikzpicture}
+\end{document}

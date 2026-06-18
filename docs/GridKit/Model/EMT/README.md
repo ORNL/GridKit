@@ -8,6 +8,7 @@
 Bus <Bus/README>
 Component <Component/README>
 Operators <Operators/README>
+Parameters <Parameters/README>
 ```
 
 ```{include} ../../../../GridKit/Model/EMT/README.md

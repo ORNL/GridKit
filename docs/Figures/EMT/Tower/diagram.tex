@@ -1,0 +1,36 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../../utils/gridkit.tex}
+
+\begin{document}
+\begin{tikzpicture}[gk]
+
+% --- ground, supports, conductor -------------------------------------
+\gkground{-5.6}{5.6}{-1.1}
+\gkpole{-4}{-1.1}{1.687}
+\gkpole{ 4}{-1.1}{1.687}
+\gkcatenary{-4}{4}{5}
+
+% support-level chord and span-average (representative) level
+\draw[gkguide] (-4,1.687) -- (4,1.687);
+\draw[gkguide] (-4,0.551) -- (4,0.551);
+
+% --- span S (top) ----------------------------------------------------
+\draw[gkSteel, thin] (-4,1.687) -- (-4,2.62);
+\draw[gkSteel, thin] ( 4,1.687) -- ( 4,2.62);
+\gkdimh{-4}{4}{2.46}{$S$}
+
+% --- midspan sag D_i^sag --------------------------------------------
+\gkdimv{0}{1.687}{0}{$D_i^{\mathrm{sag}}$}
+
+% --- attachment height H_i (right) and representative height h_i -----
+\draw[gkSteel, thin] (4,1.687) -- (5.0,1.687);
+\gkdimv{4.8}{-1.1}{1.687}{$H_i$}
+\draw[gkSteel, thin] (-5.0,0.551) -- (-4,0.551);
+\gkdimv{-4.8}{-1.1}{0.551}{$h_i$}
+
+% attachment dots last (top z-order)
+\fill[gkSteel] (-4,1.687) circle (2.4pt);
+\fill[gkSteel] ( 4,1.687) circle (2.4pt);
+
+\end{tikzpicture}
+\end{document}

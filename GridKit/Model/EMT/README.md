@@ -21,3 +21,11 @@ The EMT documentation is organized into:
 - `Bus` (See [Bus](Bus/README.md))
 - `Component` (See [Component](Component/README.md))
 - `Operators` (See [Operators](Operators/README.md))
+- `Parameters` (See [Parameters](Parameters/README.md))
+
+Component models are documented under `Component` because they are EMT models
+connected to buses. Reusable transfer and coordinate tools are documented under
+`Operators`.
+Frequency-domain line-parameter models are documented under `Parameters`
+because they generate sampled per-unit-length data rather than EMT bus
+residuals.

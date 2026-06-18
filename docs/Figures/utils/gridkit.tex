@@ -1,0 +1,108 @@
+%% =====================================================================
+%%  gridkit.tex — shared TikZ utilities for GridKit documentation figures
+%% ---------------------------------------------------------------------
+%%  Usage (from docs/Figures/<Area>/<Name>/diagram.tex):
+%%
+%%      \documentclass[tikz,border=12pt]{standalone}
+%%      \input{../../utils/gridkit.tex}
+%%      \begin{document}
+%%      \begin{tikzpicture}[gk]
+%%          ...
+%%      \end{tikzpicture}
+%%      \end{document}
+%%
+%%  Naming: colors gk<Name>, styles gk<name>, macros \gk<Name>.
+%%  `\documentclass[tikz,...]{standalone}` already loads TikZ; this file
+%%  only adds packages, libraries, colors, styles, and macros.
+%%
+%%  Extending this file:
+%%    * New measurement   -> add a \newcommand{\gk<Name>} in MACROS, keeping
+%%                           the signature {<coords...>}{<label>}.
+%%    * New color / role   -> add one \definecolor/\colorlet in PALETTE and
+%%                           expose it through a gk<name> style.
+%%    * New recurring shape-> add a gk<name>/.style or a macro.
+%%    * Never redefine an existing public name (keep figures back-compatible).
+%% =====================================================================
+
+% ---- Packages & libraries -------------------------------------------
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta, positioning, calc, decorations.pathreplacing}
+
+% ---- Palette --------------------------------------------------------
+\definecolor{gkConductor}{RGB}{20,70,130}   % energized conductor (blue)
+\definecolor{gkSteel}{RGB}{95,95,100}       % steel: poles, ground, dimensions
+\colorlet{gkImage}{gkConductor!45}          % mirror-image conductor (muted)
+\colorlet{gkGuide}{gkSteel!70}              % chords / reference guide lines
+\colorlet{gkEarth}{gkSteel!12}              % earth fill below the ground line
+
+% ---- Picture-wide defaults (activate with [gk]) ---------------------
+\tikzset{
+  gk/.style = { >={Stealth[length=2.4mm]}, line cap=round },
+}
+
+% ---- Named styles ---------------------------------------------------
+\tikzset{
+  % Block-diagram family (matches existing EMT diagrams)
+  gkline/.style    = {semithick, rounded corners=6pt},
+  gkblock/.style   = {draw, semithick, fill=white,
+                      minimum height=1cm, minimum width=2.3cm},
+  gksum/.style     = {draw, semithick, fill=white, circle, inner sep=2.6pt},
+  gksignal/.style  = {circle, fill, inner sep=1.4pt, label distance=3pt},
+  gksig/.style     = {font=\small},
+  % Physical-geometry family
+  gkcond/.style    = {gkConductor, line width=1.7pt},
+  gkconddot/.style = {gkConductor, fill=gkConductor},
+  gkimage/.style   = {gkImage, line width=1.2pt, dashed},
+  gkimagedot/.style= {gkImage, fill=gkImage},
+  gkguide/.style   = {gkGuide, dashed},
+  gkdim/.style     = {<->, thin, gkSteel},
+  gkdimlbl/.style  = {fill=white, inner sep=1.5pt},
+}
+
+% ---- Drawing macros -------------------------------------------------
+% Earth baseline with hatch ticks:  \gkground{xLeft}{xRight}{y}
+\newcommand{\gkground}[3]{%
+  \draw[gkSteel, thick] (#1,#3) -- (#2,#3);%
+  \pgfmathsetmacro{\gkstep}{#1+0.6}%
+  \foreach \gkx in {#1,\gkstep,...,#2}{%
+    \draw[gkSteel, thin] (\gkx,#3) -- (\gkx-0.28,#3-0.32);}%
+}
+% Steel support pole + top attachment dot:  \gkpole{x}{yBottom}{yTop}
+\newcommand{\gkpole}[3]{%
+  \draw[gkSteel, line width=2.2pt] (#1,#2) -- (#1,#3);%
+  \fill[gkSteel] (#1,#3) circle (2.4pt);%
+}
+% Horizontal dimension line:  \gkdimh{x1}{x2}{y}{label}
+\newcommand{\gkdimh}[4]{%
+  \draw[gkdim] (#1,#3) -- (#2,#3) node[midway, gkdimlbl]{#4};%
+}
+% Vertical dimension line:  \gkdimv{x}{y1}{y2}{label}
+\newcommand{\gkdimv}[4]{%
+  \draw[gkdim] (#1,#2) -- (#1,#3) node[midway, right=2.5pt]{#4};%
+}
+% Styled conductor point marker:  \gkdot{coord}  (cartesian or polar, e.g. 78:5)
+\newcommand{\gkdot}[1]{\fill[gkconddot] (#1) circle (3.2pt);}
+% Radial dimension from a centre:  \gkradius{cx}{cy}{angle}{len}{label}
+\newcommand{\gkradius}[5]{%
+  \draw[->, thin, gkSteel] (#1,#2) -- ($ (#1,#2) + (#3:#4) $)
+       node[pos=0.58, gkdimlbl]{#5};%
+}
+% Angle arc between two directions:  \gkangle{cx}{cy}{angA}{angB}{radius}{label}
+\newcommand{\gkangle}[6]{%
+  \draw[thin, gkSteel] ($ (#1,#2) + (#3:#5) $) arc (#3:#4:#5);%
+  \pgfmathsetmacro{\gkmid}{(#3+#4)/2}%
+  \node[gksig] at ($ (#1,#2) + (\gkmid:#5+0.5) $) {#6};%
+}
+% Filled conductor disk:  \gkdisk{x}{y}{r}
+\newcommand{\gkdisk}[3]{\fill[gkConductor] (#1,#2) circle (#3);}
+% Hollow conductor annulus:  \gkannulus{x}{y}{rOuter}{rInner}
+\newcommand{\gkannulus}[4]{%
+  \fill[gkConductor] (#1,#2) circle (#3);%
+  \fill[white] (#1,#2) circle (#4);%
+  \draw[gkConductor, semithick] (#1,#2) circle (#3) (#1,#2) circle (#4);%
+}
+% Catenary sag arc (midspan at y=0):  \gkcatenary{xL}{xR}{a}
+%   plots z = a[cosh(x/a) - 1]; supports sit at z = a[cosh(|x|/a)-1]
+\newcommand{\gkcatenary}[3]{%
+  \draw[gkcond] plot[domain=#1:#2, samples=180] (\x,{#3*(cosh(\x/#3)-1)});%
+}
