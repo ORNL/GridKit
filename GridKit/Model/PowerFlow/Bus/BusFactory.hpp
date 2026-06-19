@@ -9,10 +9,12 @@
 namespace GridKit
 {
 
-  template <typename ScalarT = double, typename IdxT = int>
+  template <typename scalar_type = double, typename index_type = int>
   class BusFactory
   {
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
     using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using BusData = GridKit::PowerFlowData::BusData<RealT, IdxT>;
 

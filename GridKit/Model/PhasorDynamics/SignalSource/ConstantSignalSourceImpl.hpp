@@ -100,7 +100,7 @@ namespace GridKit
       return 0;
     }
 
-    template <class scalar_type, typename index_type>
+    template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;

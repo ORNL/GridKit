@@ -17,8 +17,8 @@ namespace GridKit
      *
      * @param[in] n - Number of elements in the vector
      */
-    template <typename ScalarT, typename IdxT>
-    Vector<ScalarT, IdxT>::Vector(IdxT n)
+    template <typename scalar_type, typename index_type>
+    Vector<scalar_type, index_type>::Vector(IdxT n)
       : n_capacity_(n),
         k_(1),
         n_size_(n),
@@ -35,8 +35,8 @@ namespace GridKit
      * @param[in] n - Number of elements in the vector
      * @param[in] k - Number of vectors in multivector
      */
-    template <typename ScalarT, typename IdxT>
-    Vector<ScalarT, IdxT>::Vector(IdxT n, IdxT k)
+    template <typename scalar_type, typename index_type>
+    Vector<scalar_type, index_type>::Vector(IdxT n, IdxT k)
       : n_capacity_(n),
         k_(k),
         n_size_(n),
@@ -51,8 +51,8 @@ namespace GridKit
      * @brief destructor.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    Vector<ScalarT, IdxT>::~Vector()
+    template <typename scalar_type, typename index_type>
+    Vector<scalar_type, index_type>::~Vector()
     {
       if (owns_cpu_data_ && h_data_)
         mem_.deleteOnHost(h_data_);
@@ -70,8 +70,8 @@ namespace GridKit
      *
      * @return `n_capacity_` the maximum number of elements in the vector.
      */
-    template <typename ScalarT, typename IdxT>
-    IdxT Vector<ScalarT, IdxT>::getCapacity() const
+    template <typename scalar_type, typename index_type>
+    index_type Vector<scalar_type, index_type>::getCapacity() const
     {
       return n_capacity_;
     }
@@ -84,8 +84,8 @@ namespace GridKit
      *
      * @return `n_size_` number of elements currently in the vector.
      */
-    template <typename ScalarT, typename IdxT>
-    IdxT Vector<ScalarT, IdxT>::getSize() const
+    template <typename scalar_type, typename index_type>
+    index_type Vector<scalar_type, index_type>::getSize() const
     {
       return n_size_;
     }
@@ -96,8 +96,8 @@ namespace GridKit
      * @return _k_, number of vectors in the multivector,
      * or 1 if the vector is not a multivector.
      */
-    template <typename ScalarT, typename IdxT>
-    IdxT Vector<ScalarT, IdxT>::getNumVectors() const
+    template <typename scalar_type, typename index_type>
+    index_type Vector<scalar_type, index_type>::getNumVectors() const
     {
       return k_;
     }
@@ -118,8 +118,8 @@ namespace GridKit
      * @warning This is an expert level method. Use only if you know what
      * you are doing.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setData(ScalarT* data, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setData(ScalarT* data, memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -229,8 +229,8 @@ namespace GridKit
      * @warning This is an expert level method. Use only if you know what
      * you are doing.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setDataUpdated(memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setDataUpdated(memory::MemorySpace memspace)
     {
       assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
 
@@ -261,8 +261,8 @@ namespace GridKit
      * @warning This is an expert level method. Use only if you know what
      * you are doing.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setDataUpdated(IdxT j, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setDataUpdated(IdxT j, memory::MemorySpace memspace)
     {
       assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
 
@@ -299,8 +299,8 @@ namespace GridKit
      *
      * @pre Size of _source_ is greater than or equal to the current vector size.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const Vector& source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::copyFromExternal(const Vector& source, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
       const ScalarT* source_data = source.getData(memspaceSrc);
       return copyFromExternal(source_data, memspaceSrc, memspaceDst);
@@ -318,10 +318,10 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyFromExternal(const ScalarT*      source,
-                                                memory::MemorySpace memspaceSrc,
-                                                memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::copyFromExternal(const ScalarT*      source,
+                                                          memory::MemorySpace memspaceSrc,
+                                                          memory::MemorySpace memspaceDst)
     {
       if (source == nullptr)
       {
@@ -402,8 +402,8 @@ namespace GridKit
      * change too. Make sure to use setDataUpdated function to set the update
      * flags correctly after changing the values.
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT* Vector<ScalarT, IdxT>::getData(memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    scalar_type* Vector<scalar_type, index_type>::getData(memory::MemorySpace memspace)
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -437,8 +437,8 @@ namespace GridKit
      * @return pointer to the vector data (HOST or DEVICE). In case of multivectors,
      * vectors are stored column-wise.
      */
-    template <typename ScalarT, typename IdxT>
-    const ScalarT* Vector<ScalarT, IdxT>::getData(memory::MemorySpace memspace) const
+    template <typename scalar_type, typename index_type>
+    const scalar_type* Vector<scalar_type, index_type>::getData(memory::MemorySpace memspace) const
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -478,8 +478,8 @@ namespace GridKit
      * If you change the values using the pointer, the vector values will
      * change too. Call setDataUpdated() to update the staleness flags.
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT* Vector<ScalarT, IdxT>::getData(IdxT j, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    scalar_type* Vector<scalar_type, index_type>::getData(IdxT j, memory::MemorySpace memspace)
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -521,8 +521,8 @@ namespace GridKit
      *
      * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
-    template <typename ScalarT, typename IdxT>
-    const ScalarT* Vector<ScalarT, IdxT>::getData(IdxT j, memory::MemorySpace memspace) const
+    template <typename scalar_type, typename index_type>
+    const scalar_type* Vector<scalar_type, index_type>::getData(IdxT j, memory::MemorySpace memspace) const
     {
       using memory::DEVICE;
       using memory::HOST;
@@ -569,8 +569,8 @@ namespace GridKit
      * vectors in a multivector individually.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::syncData(memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::syncData(memory::MemorySpace memspaceDst)
     {
       using namespace memory;
 
@@ -655,8 +655,8 @@ namespace GridKit
      * vectors in a multivector individually.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::syncData(IdxT j, memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::syncData(IdxT j, memory::MemorySpace memspaceDst)
     {
       using namespace memory;
 
@@ -720,8 +720,8 @@ namespace GridKit
      * @param[in] memspace   - Memory space of the data to be allocated
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::allocate(memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::allocate(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -776,8 +776,8 @@ namespace GridKit
      * @param[in] memspace - Memory space of the data to be zeroed (HOST or DEVICE)
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToZero(memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setToZero(memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -814,8 +814,8 @@ namespace GridKit
      *
      * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToZero(IdxT j, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setToZero(IdxT j, memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -863,8 +863,8 @@ namespace GridKit
      * @param[in] memspace - Memory space of the data to be set (HOST or DEVICE)
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToConst(ScalarT C, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setToConst(ScalarT C, memory::MemorySpace memspace)
     {
       using namespace memory;
       switch (memspace)
@@ -902,8 +902,8 @@ namespace GridKit
      *
      * @pre `j` < `k_`, i.e., `j` is smaller than the number of vectors.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::setToConst(IdxT j, ScalarT C, memory::MemorySpace memspace)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::setToConst(IdxT j, ScalarT C, memory::MemorySpace memspace)
     {
       using namespace memory;
 
@@ -961,8 +961,8 @@ namespace GridKit
      * @return 0 if successful, 1 otherwise.
      *
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::resize(IdxT new_n_size)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::resize(IdxT new_n_size)
     {
       assert(owns_cpu_data_ && owns_gpu_data_
              && "Cannot resize if vector is not owning the data.");
@@ -1030,8 +1030,8 @@ namespace GridKit
      * @pre _dest_ is allocated with at least _n_ elements in _memspaceDst_.
      * @post All elements of vector _i_ are copied to _dest_.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::copyToExternal(ScalarT* dest, IdxT i, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
       using namespace memory;
       if (i >= k_)
@@ -1095,8 +1095,8 @@ namespace GridKit
      * @pre _dest_ is allocated in memspaceOutDst memory space.
      * @post All elements of all vectors in multivector are copied to the array _dest_.
      */
-    template <typename ScalarT, typename IdxT>
-    int Vector<ScalarT, IdxT>::copyToExternal(ScalarT* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
+    template <typename scalar_type, typename index_type>
+    int Vector<scalar_type, index_type>::copyToExternal(ScalarT* dest, memory::MemorySpace memspaceSrc, memory::MemorySpace memspaceDst)
     {
       using namespace memory;
       ScalarT* data = this->getData(memspaceSrc);
@@ -1154,14 +1154,14 @@ namespace GridKit
     // Private methods
     //
 
-    template <typename ScalarT, typename IdxT>
-    void Vector<ScalarT, IdxT>::setHostUpdated(bool is_updated)
+    template <typename scalar_type, typename index_type>
+    void Vector<scalar_type, index_type>::setHostUpdated(bool is_updated)
     {
       std::fill(cpu_updated_, cpu_updated_ + k_, is_updated);
     }
 
-    template <typename ScalarT, typename IdxT>
-    void Vector<ScalarT, IdxT>::setDeviceUpdated(bool is_updated)
+    template <typename scalar_type, typename index_type>
+    void Vector<scalar_type, index_type>::setDeviceUpdated(bool is_updated)
     {
       std::fill(gpu_updated_, gpu_updated_ + k_, is_updated);
     }

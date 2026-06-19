@@ -16,15 +16,12 @@ namespace GridKit
    * @todo create a test case utilizing the component.
    * @todo create a unit test to check correctness of component
    *
-   * @tparam ScalarT - data type for scalar variables in the model
-   * @tparam IdxT - integer index type for the model
-   *
    * @param[in] id - unique identifier for the component
    * @param[in] Lls - stator leakage inductance
    */
 
-  template <class ScalarT, typename IdxT>
-  InductionMotor<ScalarT, IdxT>::InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P)
+  template <typename scalar_type, typename index_type>
+  InductionMotor<scalar_type, index_type>::InductionMotor(IdxT id, RealT Lls, RealT Rs, RealT Llr, RealT Rr, RealT Lms, RealT RJ, RealT P)
     : Lls_(Lls),
       Rs_(Rs),
       Llr_(Llr),
@@ -40,16 +37,16 @@ namespace GridKit
     idc_            = id;
   }
 
-  template <class ScalarT, typename IdxT>
-  InductionMotor<ScalarT, IdxT>::~InductionMotor()
+  template <typename scalar_type, typename index_type>
+  InductionMotor<scalar_type, index_type>::~InductionMotor()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -57,8 +54,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -67,8 +64,8 @@ namespace GridKit
    * @brief Contributes to the resisdual
    *
    */
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -80,8 +77,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateExternalResidual()
   {
     const auto* y  = y_.getData();
     const auto* yp = yp_.getData();
@@ -101,37 +98,35 @@ namespace GridKit
    *
    * @todo need to implement
    *
-   * @tparam ScalarT
-   * @tparam IdxT
    * @return int
    */
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateJacobian()
   {
 
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int InductionMotor<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int InductionMotor<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

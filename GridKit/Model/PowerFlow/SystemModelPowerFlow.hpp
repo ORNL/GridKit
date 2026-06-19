@@ -30,34 +30,36 @@ namespace GridKit
    * @todo Tolerance management needs to be reconsidered.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class SystemSteadyStateModel : public ModelEvaluatorImpl<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class SystemSteadyStateModel : public ModelEvaluatorImpl<scalar_type, index_type>
   {
-    using bus_type       = BaseBus<ScalarT, IdxT>;
-    using component_type = ModelEvaluatorImpl<ScalarT, IdxT>;
-    using RealT          = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-
-    using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::size_opt_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::size_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::size_quad_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::size_opt_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::nnz_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::time_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::alpha_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::y_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::yp_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::yB_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::ypB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::tag_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::f_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::fB_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::g_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::gB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::abs_tol_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::param_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::param_up_;
+    // using ModelEvaluatorImpl<scalar_type, index_type>::param_lo_;
 
   public:
+    using ScalarT    = scalar_type;
+    using IdxT       = index_type;
+    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusT       = BaseBus<ScalarT, IdxT>;
+    using ComponentT = ModelEvaluatorImpl<ScalarT, IdxT>;
+
     /**
      * @brief Constructor for the system model
      */
@@ -402,17 +404,17 @@ namespace GridKit
     {
     }
 
-    void addBus(bus_type* bus)
+    void addBus(BusT* bus)
     {
       buses_.push_back(bus);
     }
 
-    void addComponent(component_type* component)
+    void addComponent(ComponentT* component)
     {
       components_.push_back(component);
     }
 
-    bus_type* getBus(IdxT busid)
+    BusT* getBus(IdxT busid)
     {
       // Need to implement mapping of bus IDs to buses in the system model
       assert((buses_[busid - 1])->BusID() == busid);
@@ -420,8 +422,8 @@ namespace GridKit
     }
 
   private:
-    std::vector<bus_type*>       buses_;
-    std::vector<component_type*> components_;
+    std::vector<BusT*>       buses_;
+    std::vector<ComponentT*> components_;
 
   }; // class SystemSteadyStateModel
 

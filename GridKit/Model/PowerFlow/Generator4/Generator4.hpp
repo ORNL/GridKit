@@ -5,7 +5,7 @@
 
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class BaseBus;
 }
 
@@ -15,32 +15,34 @@ namespace GridKit
    * @brief Implementation of a fourth order generator model.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class Generator4 : public ModelEvaluatorImpl<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class Generator4 : public ModelEvaluatorImpl<scalar_type, index_type>
   {
-    using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
-
-    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using bus_type = BaseBus<ScalarT, IdxT>;
+    using ModelEvaluatorImpl<scalar_type, index_type>::size_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::nnz_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::time_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::alpha_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::y_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::yp_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::tag_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::abs_tol_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::f_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::g_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::yB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::ypB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::fB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::gB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::param_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::param_up_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::param_lo_;
 
   public:
-    Generator4(BaseBus<ScalarT, IdxT>* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusT    = BaseBus<ScalarT, IdxT>;
+
+    Generator4(BusT* bus, ScalarT P0 = 1.0, ScalarT Q0 = 0.0);
     virtual ~Generator4();
 
     int allocate();
@@ -196,7 +198,7 @@ namespace GridKit
     ScalarT P0_;
     ScalarT Q0_;
 
-    bus_type* bus_;
+    BusT* bus_;
   };
 
 } // namespace GridKit

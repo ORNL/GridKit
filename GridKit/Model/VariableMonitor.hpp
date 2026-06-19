@@ -28,12 +28,12 @@ namespace GridKit
 
     namespace VariableMonitorDetail
     {
-      template <typename RealT>
-      std::string formatReal(RealT value)
+      template <typename real_type>
+      std::string formatReal(real_type value)
       {
-        std::array<char, 128> buffer{};
-        constexpr auto        precision = std::numeric_limits<RealT>::digits10 + 1;
+        constexpr auto precision = std::numeric_limits<real_type>::digits10 + 1;
 
+        std::array<char, 128> buffer{};
         auto [ptr, ec] = std::to_chars(buffer.data(),
                                        buffer.data() + buffer.size(),
                                        value,

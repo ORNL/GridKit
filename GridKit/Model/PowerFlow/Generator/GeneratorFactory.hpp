@@ -10,10 +10,12 @@
 namespace GridKit
 {
 
-  template <typename ScalarT = double, typename IdxT = int>
+  template <typename scalar_type = double, typename index_type = int>
   class GeneratorFactory
   {
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
     using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
     using GenData = GridKit::PowerFlowData::GenData<RealT, IdxT>;
 

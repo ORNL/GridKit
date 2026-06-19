@@ -12,11 +12,13 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class ResolveSystemSolver : public LinearSolver<ScalarT, IdxT>
     {
     public:
-      using RealT = LinearSolver<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = LinearSolver<ScalarT, IdxT>::RealT;
 
       ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace = GridKit::memory::HOST);
 

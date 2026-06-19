@@ -11,10 +11,13 @@ namespace GridKit
   namespace LinearAlgebra
   {
 
-    template <typename RealT, typename IdxT>
+    template <typename real_type, typename index_type>
     class CsrMatrix
     {
     public:
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       CsrMatrix();
 
       CsrMatrix(IdxT n, IdxT m, IdxT nnz);

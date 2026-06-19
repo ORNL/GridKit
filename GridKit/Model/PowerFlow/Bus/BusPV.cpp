@@ -16,8 +16,8 @@ namespace GridKit
    * - Number of quadratures = 0
    * - Number of optimization parameters = 0
    */
-  template <class ScalarT, typename IdxT>
-  BusPV<ScalarT, IdxT>::BusPV()
+  template <typename scalar_type, typename index_type>
+  BusPV<scalar_type, index_type>::BusPV()
     : BaseBus<ScalarT, IdxT>(0), V_(0.0), theta0_(0.0)
   {
     // std::cout << "Create BusPV..." << std::endl;
@@ -35,8 +35,8 @@ namespace GridKit
    * - Number of quadratures = 0
    * - Number of optimization parameters = 0
    */
-  template <class ScalarT, typename IdxT>
-  BusPV<ScalarT, IdxT>::BusPV(ScalarT V, ScalarT theta0)
+  template <typename scalar_type, typename index_type>
+  BusPV<scalar_type, index_type>::BusPV(ScalarT V, ScalarT theta0)
     : BaseBus<ScalarT, IdxT>(0), V_(V), theta0_(theta0)
   {
     // std::cout << "Create BusPV..." << std::endl;
@@ -45,8 +45,8 @@ namespace GridKit
     size_ = 1;
   }
 
-  template <class ScalarT, typename IdxT>
-  BusPV<ScalarT, IdxT>::BusPV(BusData& data)
+  template <typename scalar_type, typename index_type>
+  BusPV<scalar_type, index_type>::BusPV(BusData& data)
     : BaseBus<ScalarT, IdxT>(data.bus_i), V_(data.Vm), theta0_(data.Va)
   {
     // std::cout << "Create BusPV ..." << std::endl;
@@ -55,8 +55,8 @@ namespace GridKit
     size_ = 1;
   }
 
-  template <class ScalarT, typename IdxT>
-  BusPV<ScalarT, IdxT>::~BusPV()
+  template <typename scalar_type, typename index_type>
+  BusPV<scalar_type, index_type>::~BusPV()
   {
     // std::cout << "Destroy Gen2..." << std::endl;
   }
@@ -64,8 +64,8 @@ namespace GridKit
   /*!
    * @brief allocate method resizes local solution and residual vectors.
    */
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::allocate()
   {
     // std::cout << "Allocate PV bus ..." << std::endl;
     this->allocateVectors(size_);
@@ -78,8 +78,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::tagDifferentiable()
   {
     tag_[0] = false;
     return 0;
@@ -90,15 +90,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
   {
     abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
@@ -107,8 +105,8 @@ namespace GridKit
   /*!
    * @brief initialize method sets bus variables to stored initial values.
    */
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::initialize()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
     theta()  = theta0_;
@@ -128,8 +126,8 @@ namespace GridKit
    * _before_ component model residuals.
    *
    */
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::evaluateResidual()
   {
     // std::cout << "Evaluating residual of a PV bus ...\n";
     P() = 0.0; // <-- Residual P
@@ -143,8 +141,8 @@ namespace GridKit
   /*!
    * @brief initialize method sets bus variables to stored initial values.
    */
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::initializeAdjoint()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
     auto* yB  = yB_.getData();
@@ -158,8 +156,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int BusPV<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int BusPV<scalar_type, index_type>::evaluateAdjointResidual()
   {
     auto* fB = fB_.getData();
     fB[0]    = 0.0;

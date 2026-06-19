@@ -16,8 +16,8 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
 
-  template <class ScalarT, typename IdxT>
-  GeneratorPQ<ScalarT, IdxT>::GeneratorPQ(bus_type* bus, GenData& data)
+  template <typename scalar_type, typename index_type>
+  GeneratorPQ<scalar_type, index_type>::GeneratorPQ(BusT* bus, GenData& data)
     : P_(data.Pg),
       Q_(data.Qg),
       bus_(bus)
@@ -26,16 +26,16 @@ namespace GridKit
     size_ = 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  GeneratorPQ<ScalarT, IdxT>::~GeneratorPQ()
+  template <typename scalar_type, typename index_type>
+  GeneratorPQ<scalar_type, index_type>::~GeneratorPQ()
   {
   }
 
   /*!
    * @brief allocate method computes sparsity pattern of the Jacobian.
    */
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::allocate()
   {
     return 0;
   }
@@ -43,8 +43,8 @@ namespace GridKit
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -52,8 +52,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -63,8 +63,8 @@ namespace GridKit
    *
    * Must be connected to a PQ bus.
    */
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::evaluateResidual()
   {
     // std::cout << "Evaluating load residual ...\n";
     bus_->P() += P_;
@@ -76,32 +76,32 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::evaluateJacobian()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int GeneratorPQ<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int GeneratorPQ<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

@@ -20,8 +20,8 @@ namespace GridKit
    * - Number of optimization parameters = 0
    */
 
-  template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2)
+  template <typename scalar_type, typename index_type>
+  Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2)
     : R_(0.0),
       X_(0.01),
       G_(0.0),
@@ -34,8 +34,8 @@ namespace GridKit
     size_ = 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2)
+  template <typename scalar_type, typename index_type>
+  Branch<scalar_type, index_type>::Branch(RealT R, RealT X, RealT G, RealT B, BusT* bus1, BusT* bus2)
     : R_(R),
       X_(X),
       G_(G),
@@ -47,8 +47,8 @@ namespace GridKit
   {
   }
 
-  template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
+  template <typename scalar_type, typename index_type>
+  Branch<scalar_type, index_type>::Branch(BusT* bus1, BusT* bus2, BranchData& data)
     : R_(data.r),
       X_(data.x),
       G_(0.0),
@@ -61,8 +61,8 @@ namespace GridKit
     size_ = 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  Branch<ScalarT, IdxT>::~Branch()
+  template <typename scalar_type, typename index_type>
+  Branch<scalar_type, index_type>::~Branch()
   {
     // std::cout << "Destroy Branch..." << std::endl;
   }
@@ -70,8 +70,8 @@ namespace GridKit
   /*!
    * @brief allocate method computes sparsity pattern of the Jacobian.
    */
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::allocate()
   {
     // std::cout << "Allocate Branch..." << std::endl;
     return 0;
@@ -81,8 +81,8 @@ namespace GridKit
    * Initialization of the branch model
    *
    */
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -90,8 +90,8 @@ namespace GridKit
   /**
    * \brief Identify differential variables.
    */
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -101,15 +101,13 @@ namespace GridKit
    *
    * @param rel_tol The relative tolerance which can be used to pick the
    *        absolute tolerance.
-   * @tparam ScalarT Scalar data type
-   * @tparam IdxT Index data type
    * @return int 0 if successful, non-zero otherwise.
    *
    * This represents a "noise" level close to zero for which pure relative
    * error cannot be used.
    */
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::setAbsoluteTolerance(RealT)
   {
     return 0;
   }
@@ -120,8 +118,8 @@ namespace GridKit
    *
    * @todo Add and verify conductance to ground (B and G)
    */
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::evaluateResidual()
   {
     // std::cout << "Evaluating branch residual ...\n";
     RealT   b      = -X_ / (R_ * R_ + X_ * X_);
@@ -145,37 +143,37 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::evaluateJacobian()
   {
     std::cout << "Evaluate Jacobian for Branch..." << std::endl;
     std::cout << "Jacobian evaluation not implemented!" << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::evaluateIntegrand()
   {
     // std::cout << "Evaluate Integrand for Branch..." << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::initializeAdjoint()
   {
     // std::cout << "Initialize adjoint for Branch..." << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::evaluateAdjointResidual()
   {
     // std::cout << "Evaluate adjoint residual for Branch..." << std::endl;
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int Branch<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int Branch<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Branch..." << std::endl;
     return 0;

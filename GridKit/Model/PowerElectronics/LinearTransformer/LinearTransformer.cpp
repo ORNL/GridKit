@@ -16,9 +16,6 @@ namespace GridKit
    * @todo Not tested in any model yet. Should be
    * @todo Has not been tested for correctness
    *
-   * @tparam ScalarT - floating point type for the model
-   * @tparam IdxT - integer index type for the model
-   *
    * @param[in] id - unique identifier for the component
    * @param[in] L0 - inductance 0
    * @param[in] L1 - inductance 1
@@ -27,8 +24,8 @@ namespace GridKit
    * @param[in] M - mutual inductance
    */
 
-  template <class ScalarT, typename IdxT>
-  LinearTransformer<ScalarT, IdxT>::LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M)
+  template <typename scalar_type, typename index_type>
+  LinearTransformer<scalar_type, index_type>::LinearTransformer(IdxT id, RealT L0, RealT L1, RealT R0, RealT R1, RealT M)
     : L0_(L0),
       L1_(L1),
       R0_(R0),
@@ -42,16 +39,16 @@ namespace GridKit
     idc_            = id;
   }
 
-  template <class ScalarT, typename IdxT>
-  LinearTransformer<ScalarT, IdxT>::~LinearTransformer()
+  template <typename scalar_type, typename index_type>
+  LinearTransformer<scalar_type, index_type>::~LinearTransformer()
   {
   }
 
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::initialize()
   {
     return 0;
   }
@@ -59,8 +56,8 @@ namespace GridKit
   /*
    * \brief Identify differential variables
    */
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::tagDifferentiable()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::tagDifferentiable()
   {
     return 0;
   }
@@ -68,8 +65,8 @@ namespace GridKit
   /**
    * @brief Computes the component resisdual
    */
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateInternalResidual()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateInternalResidual()
   {
     const auto* y = y_.getData();
 
@@ -78,8 +75,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateExternalResidual()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateExternalResidual()
   {
     auto* f = f_.getData();
 
@@ -89,32 +86,32 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateJacobian()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateIntegrand()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateIntegrand()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::initializeAdjoint()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::initializeAdjoint()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateAdjointResidual()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateAdjointResidual()
   {
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int LinearTransformer<ScalarT, IdxT>::evaluateAdjointIntegrand()
+  template <typename scalar_type, typename index_type>
+  int LinearTransformer<scalar_type, index_type>::evaluateAdjointIntegrand()
   {
     return 0;
   }

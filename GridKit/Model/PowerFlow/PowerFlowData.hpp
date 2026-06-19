@@ -20,9 +20,12 @@ namespace GridKit
   namespace PowerFlowData
   {
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct BusData
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT  bus_i;  ///< Bus ID
       IdxT  type;   ///< Bus type: 1 = PQ, 2 = PV, 3 = ref, 4 = isolated
       RealT Gs;     ///< Shunt conductance (MW demanded at V = 1.0 p.u.)
@@ -54,9 +57,12 @@ namespace GridKit
       }
     };
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct LoadData
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT  bus_i; ///< Bus ID
       RealT Pd;    ///< Active power demand [MW]
       RealT Qd;    ///< Reactive power demand [MVAr]
@@ -72,9 +78,12 @@ namespace GridKit
       }
     };
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct GenData
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT  bus;      ///< Bus ID
       RealT Pg;       ///< Active power output [MW]
       RealT Qg;       ///< Reactive power output [MVAr]
@@ -126,9 +135,12 @@ namespace GridKit
       }
     };
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct BranchData
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT  fbus;   ///< "From" bus ID
       IdxT  tbus;   ///< "To" bus ID
       RealT r;      ///< Resistance (p.u.)
@@ -164,9 +176,12 @@ namespace GridKit
       }
     };
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct GenCostData
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       IdxT               kind;
       IdxT               startup;
       IdxT               shutdown;
@@ -187,9 +202,11 @@ namespace GridKit
       }
     };
 
-    template <typename RealT = double, typename IdxT = int>
+    template <typename real_type = double, typename index_type = int>
     struct SystemModelData
     {
+      using RealT        = real_type;
+      using IdxT         = index_type;
       using BusDataT     = BusData<RealT, IdxT>;
       using GenDataT     = GenData<RealT, IdxT>;
       using BranchDataT  = BranchData<RealT, IdxT>;

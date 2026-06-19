@@ -27,10 +27,13 @@ namespace GridKit
      * @author Kasia Swirydowicz <kasia.swirydowicz@pnnl.gov>
      * @author Slaven Peles <peless@ornl.gov>
      */
-    template <typename ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class Vector
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       Vector()
         : Vector(0)
       {

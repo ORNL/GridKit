@@ -26,14 +26,16 @@ namespace GridKit
    * This class provides abstractions for memory management functions for
    * different GPU programming models.
    *
-   * @tparam Policy - Memory management policy (vendor specific)
+   * @tparam policy - Memory management policy (vendor specific)
    *
    * @author Slaven Peles <peless@ornl.gov>
    */
-  template <class Policy>
+  template <typename policy>
   class MemoryUtils
   {
   public:
+    using Policy = policy;
+
     MemoryUtils()  = default;
     ~MemoryUtils() = default;
 

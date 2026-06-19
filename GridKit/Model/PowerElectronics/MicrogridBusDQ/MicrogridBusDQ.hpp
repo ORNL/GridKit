@@ -7,7 +7,7 @@
 
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class BaseBus;
 }
 
@@ -17,37 +17,39 @@ namespace GridKit
    * @brief Declaration of a MicrogridBusDQ class.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class MicrogridBusDQ : public CircuitComponent<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class MicrogridBusDQ : public CircuitComponent<scalar_type, index_type>
   {
-    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
+    using CircuitComponent<scalar_type, index_type>::size_;
+    using CircuitComponent<scalar_type, index_type>::nnz_;
+    using CircuitComponent<scalar_type, index_type>::time_;
+    using CircuitComponent<scalar_type, index_type>::alpha_;
+    using CircuitComponent<scalar_type, index_type>::y_;
+    using CircuitComponent<scalar_type, index_type>::y_int_;
+    using CircuitComponent<scalar_type, index_type>::yp_;
+    using CircuitComponent<scalar_type, index_type>::yp_int_;
+    using CircuitComponent<scalar_type, index_type>::tag_;
+    using CircuitComponent<scalar_type, index_type>::f_;
+    using CircuitComponent<scalar_type, index_type>::f_int_;
+    using CircuitComponent<scalar_type, index_type>::g_;
+    using CircuitComponent<scalar_type, index_type>::abs_tol_;
+    using CircuitComponent<scalar_type, index_type>::yB_;
+    using CircuitComponent<scalar_type, index_type>::ypB_;
+    using CircuitComponent<scalar_type, index_type>::fB_;
+    using CircuitComponent<scalar_type, index_type>::gB_;
+    using CircuitComponent<scalar_type, index_type>::param_;
+    using CircuitComponent<scalar_type, index_type>::idc_;
 
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::g_;
-    using CircuitComponent<ScalarT, IdxT>::yB_;
-    using CircuitComponent<ScalarT, IdxT>::ypB_;
-    using CircuitComponent<ScalarT, IdxT>::fB_;
-    using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::param_;
-    using CircuitComponent<ScalarT, IdxT>::idc_;
-
-    using CircuitComponent<ScalarT, IdxT>::extern_indices_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<scalar_type, index_type>::extern_indices_;
+    using CircuitComponent<scalar_type, index_type>::n_extern_;
+    using CircuitComponent<scalar_type, index_type>::n_intern_;
 
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT   = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
+
     MicrogridBusDQ(IdxT id, RealT RN, NodeT* node1);
     virtual ~MicrogridBusDQ();
 

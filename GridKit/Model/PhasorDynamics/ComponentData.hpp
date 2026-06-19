@@ -19,22 +19,33 @@ namespace GridKit
      */
     template <typename real_type,
               typename index_type,
-              typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
-              typename MonitorableVariables>
-      requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
-               && std::is_enum_v<MonitorableVariables>
+              typename parameters_type,
+              typename buses_type,
+              typename signal_inputs_type,
+              typename signal_outputs_type,
+              typename monitorable_variables_type>
+      requires std::is_enum_v<parameters_type>
+               && std::is_enum_v<buses_type>
+               && std::is_enum_v<signal_inputs_type>
+               && std::is_enum_v<signal_outputs_type>
+               && std::is_enum_v<monitorable_variables_type>
     struct ComponentData
     {
       /// Real value type
       using RealT = real_type;
       /// Index type
       using IdxT  = index_type;
+
+      /// Parameters enum
+      using Parameters           = parameters_type;
+      /// Buses enum
+      using Buses                = buses_type;
+      /// Signal inputs enum
+      using SignalInputs         = signal_inputs_type;
+      /// Signal outputs enum
+      using SignalOutputs        = signal_outputs_type;
+      /// Monitorable variables enum
+      using MonitorableVariables = monitorable_variables_type;
 
       /// Class of device this is for
       std::string device_class;
@@ -54,7 +65,8 @@ namespace GridKit
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
 
-      std::string disambiguation_string; ///< Disambiguation string for this device
+      /// Disambiguation string for this device
+      std::string disambiguation_string;
 
     protected:
       ComponentData() = default;

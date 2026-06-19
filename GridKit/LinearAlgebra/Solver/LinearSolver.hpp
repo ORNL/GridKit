@@ -14,11 +14,13 @@ namespace GridKit
      * @brief An interface for linear solvers to be used in GridKit, such as in \ref Integrator::Rosenbrock.
      *
      */
-    template <class ScalarT, typename IdxT>
+    template <class scalar_type, typename index_type>
     class LinearSolver
     {
     public:
-      using RealT = GridKit::ScalarTraits<ScalarT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = GridKit::ScalarTraits<ScalarT>::RealT;
 
       /**
        * @brief Configure the solver by analyzing the given matrix. The sparsity pattern of the given matrix must be set, and future calls
@@ -27,7 +29,8 @@ namespace GridKit
        * @param matrix The matrix to configure the solver with.
        * @return int An error code, or 0 if none.
        */
-      virtual int configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix)                                       = 0;
+      virtual int configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix) = 0;
+
       /**
        * @brief Setup the solver with matrix data.
        *
@@ -36,7 +39,8 @@ namespace GridKit
        * @pre If `reuse_factors` is true, then `setupSolver` must have been called once before with the same sparsity pattern.
        * @return int An error code, or 0 if none.
        */
-      virtual int setupSolver(bool reuse_factors = false)                                                                       = 0;
+      virtual int setupSolver(bool reuse_factors = false) = 0;
+
       /**
        * @brief Perform a linear solve using the configured matrix.
        *

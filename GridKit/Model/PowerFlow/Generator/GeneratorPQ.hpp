@@ -9,7 +9,7 @@
 
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class BaseBus;
 }
 
@@ -19,30 +19,32 @@ namespace GridKit
    * @brief Implementation of a PV generator.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class GeneratorPQ : public GeneratorBase<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class GeneratorPQ : public GeneratorBase<scalar_type, index_type>
   {
-    using GeneratorBase<ScalarT, IdxT>::size_;
-    using GeneratorBase<ScalarT, IdxT>::nnz_;
-    using GeneratorBase<ScalarT, IdxT>::time_;
-    using GeneratorBase<ScalarT, IdxT>::alpha_;
-    using GeneratorBase<ScalarT, IdxT>::y_;
-    using GeneratorBase<ScalarT, IdxT>::yp_;
-    using GeneratorBase<ScalarT, IdxT>::tag_;
-    using GeneratorBase<ScalarT, IdxT>::f_;
-    using GeneratorBase<ScalarT, IdxT>::g_;
-    using GeneratorBase<ScalarT, IdxT>::yB_;
-    using GeneratorBase<ScalarT, IdxT>::ypB_;
-    using GeneratorBase<ScalarT, IdxT>::fB_;
-    using GeneratorBase<ScalarT, IdxT>::gB_;
-    using GeneratorBase<ScalarT, IdxT>::param_;
-
-    using bus_type = BaseBus<ScalarT, IdxT>;
-    using RealT    = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using GenData  = GridKit::PowerFlowData::GenData<RealT, IdxT>;
+    using GeneratorBase<scalar_type, index_type>::size_;
+    using GeneratorBase<scalar_type, index_type>::nnz_;
+    using GeneratorBase<scalar_type, index_type>::time_;
+    using GeneratorBase<scalar_type, index_type>::alpha_;
+    using GeneratorBase<scalar_type, index_type>::y_;
+    using GeneratorBase<scalar_type, index_type>::yp_;
+    using GeneratorBase<scalar_type, index_type>::tag_;
+    using GeneratorBase<scalar_type, index_type>::f_;
+    using GeneratorBase<scalar_type, index_type>::g_;
+    using GeneratorBase<scalar_type, index_type>::yB_;
+    using GeneratorBase<scalar_type, index_type>::ypB_;
+    using GeneratorBase<scalar_type, index_type>::fB_;
+    using GeneratorBase<scalar_type, index_type>::gB_;
+    using GeneratorBase<scalar_type, index_type>::param_;
 
   public:
-    GeneratorPQ(bus_type* bus, GenData& data);
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+    using RealT   = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusT    = BaseBus<ScalarT, IdxT>;
+    using GenData = GridKit::PowerFlowData::GenData<RealT, IdxT>;
+
+    GeneratorPQ(BusT* bus, GenData& data);
     virtual ~GeneratorPQ();
 
     int allocate();
@@ -78,8 +80,8 @@ namespace GridKit
     }
 
   private:
-    ScalarT   P_;
-    ScalarT   Q_;
-    bus_type* bus_;
+    ScalarT P_;
+    ScalarT Q_;
+    BusT*   bus_;
   };
 } // namespace GridKit

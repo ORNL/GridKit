@@ -6,12 +6,15 @@ namespace GridKit
 {
   namespace PowerElectronics
   {
-    template <typename ScalarT, typename IdxT>
-    class GroundedBus : public NodeBase<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class GroundedBus : public NodeBase<scalar_type, index_type>
     {
-      using NodeBase<ScalarT, IdxT>::y;
+      using NodeBase<scalar_type, index_type>::y;
 
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       GroundedBus(ScalarT voltage)
         : NodeBase<ScalarT, IdxT>(0, 1), voltage_(voltage)
       {

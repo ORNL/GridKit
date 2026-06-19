@@ -98,8 +98,8 @@ namespace GridKit
        * @note This does not designate the variable for printing. It defines how
        * to get the variable if it is printed.
        */
-      template <typename FuncT>
-      void set(VariableEnum v, FuncT f)
+      template <typename func_type>
+      void set(VariableEnum v, func_type f)
       {
         f_[static_cast<size_t>(enum_integer(v))] = ValueFormatter{f};
       }
@@ -109,9 +109,11 @@ namespace GridKit
       /**
        * @brief Functors to handle printing different types
        */
-      template <typename FuncT, typename RetT>
+      template <typename func_type, typename RetT>
       struct ValueFormatterImpl
       {
+        using FuncT = func_type;
+
         FuncT f;
 
         std::string operator()() const
@@ -130,18 +132,18 @@ namespace GridKit
         }
       };
 
-      template <typename FuncT>
+      template <typename func_type>
       using ValueFormatterType =
-          ValueFormatterImpl<FuncT, std::invoke_result_t<FuncT>>;
+          ValueFormatterImpl<func_type, std::invoke_result_t<func_type>>;
 
       class ValueFormatter
       {
       public:
         ValueFormatter() = default;
 
-        template <typename FuncT>
-        ValueFormatter(FuncT f)
-          : impl_{ValueFormatterType<FuncT>{f}}
+        template <typename func_type>
+        ValueFormatter(func_type f)
+          : impl_{ValueFormatterType<func_type>{f}}
         {
         }
 

@@ -22,9 +22,12 @@ namespace GridKit
     /// JSON parser function implementation for the `SystemModelData` type
     ///
     /// See the `README.md` in `GridKit/Model/PhasorDynamics` for more information
-    template <typename RealT = double, typename IdxT = size_t>
-    void from_json(const json& j, SystemModelData<RealT, IdxT>& sm)
+    template <typename real_type = double, typename index_type = size_t>
+    void from_json(const json& j, SystemModelData<real_type, index_type>& sm)
     {
+      using RealT = real_type;
+      using IdxT  = index_type;
+
       auto enum_parse = []<typename EnumT, typename KeyT>(EnumT, KeyT&& key)
       {
         return magic_enum::enum_cast<EnumT>(key, magic_enum::case_insensitive);

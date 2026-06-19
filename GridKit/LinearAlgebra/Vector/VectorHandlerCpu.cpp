@@ -20,8 +20,8 @@ namespace GridKit
      *
      * @return dot product of _x_ and _y_
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT VectorHandlerCpu<ScalarT, IdxT>::dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
+    template <typename scalar_type, typename index_type>
+    scalar_type VectorHandlerCpu<scalar_type, index_type>::dot(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
     {
       const ScalarT* x_data = x->getData(memory::HOST);
       const ScalarT* y_data = y->getData(memory::HOST);
@@ -44,8 +44,8 @@ namespace GridKit
      * @param[in] alpha The constant
      * @param[in,out] x The vector
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::scal(const ScalarT alpha, Vector<ScalarT, IdxT>* x)
     {
       ScalarT* x_data = x->getData(memory::HOST);
 
@@ -63,8 +63,8 @@ namespace GridKit
      *
      * @return infinity norm of _x_
      */
-    template <typename ScalarT, typename IdxT>
-    ScalarT VectorHandlerCpu<ScalarT, IdxT>::amax(Vector<ScalarT, IdxT>* x)
+    template <typename scalar_type, typename index_type>
+    scalar_type VectorHandlerCpu<scalar_type, index_type>::amax(Vector<ScalarT, IdxT>* x)
     {
       const ScalarT* x_data = x->getData(memory::HOST);
 
@@ -88,8 +88,8 @@ namespace GridKit
      * @param[in] x The first vector
      * @param[in,out] y The second vector (result is returned in y)
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::axpy(const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::axpy(const ScalarT alpha, Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y)
     {
       ScalarT* x_data = x->getData(memory::HOST);
       ScalarT* y_data = y->getData(memory::HOST);
@@ -119,14 +119,14 @@ namespace GridKit
      * @pre If transpose = N, size of y must equal k. If transpose = T, size of
      * x must equal k.
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::gemv(char                   transpose,
-                                               IdxT                   k,
-                                               const ScalarT          alpha,
-                                               const ScalarT          beta,
-                                               Vector<ScalarT, IdxT>* V,
-                                               Vector<ScalarT, IdxT>* y,
-                                               Vector<ScalarT, IdxT>* x)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::gemv(char                   transpose,
+                                                         IdxT                   k,
+                                                         const ScalarT          alpha,
+                                                         const ScalarT          beta,
+                                                         Vector<ScalarT, IdxT>* V,
+                                                         Vector<ScalarT, IdxT>* y,
+                                                         Vector<ScalarT, IdxT>* x)
     {
       // x = beta*x + alpha*V*y OR x = beta*x + alpha*V^Ty
       const ScalarT* V_data = V->getData(memory::HOST);
@@ -189,12 +189,12 @@ namespace GridKit
      *
      * @pre _k_ > 0, _size_ > 0, _size_ = x->getSize()
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::axpyMulti(IdxT                   size,
-                                                    Vector<ScalarT, IdxT>* alpha,
-                                                    IdxT                   k,
-                                                    Vector<ScalarT, IdxT>* x,
-                                                    Vector<ScalarT, IdxT>* y)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::axpyMulti(IdxT                   size,
+                                                              Vector<ScalarT, IdxT>* alpha,
+                                                              IdxT                   k,
+                                                              Vector<ScalarT, IdxT>* x,
+                                                              Vector<ScalarT, IdxT>* y)
     {
       ScalarT* alpha_data = alpha->getData(memory::HOST);
       ScalarT* y_data     = y->getData(memory::HOST);
@@ -227,12 +227,12 @@ namespace GridKit
      *
      * @pre _size_ > 0, _k_ > 0, size = x->getSize(), _res_ needs to be allocated
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::dot2Multi(IdxT                   size,
-                                                    Vector<ScalarT, IdxT>* V,
-                                                    IdxT                   k,
-                                                    Vector<ScalarT, IdxT>* x,
-                                                    Vector<ScalarT, IdxT>* res)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::dot2Multi(IdxT                   size,
+                                                              Vector<ScalarT, IdxT>* V,
+                                                              IdxT                   k,
+                                                              Vector<ScalarT, IdxT>* x,
+                                                              Vector<ScalarT, IdxT>* res)
     {
       ScalarT*       res_data = res->getData(memory::HOST);
       const ScalarT* x_data   = x->getData(memory::HOST);
@@ -269,8 +269,8 @@ namespace GridKit
      * @param[in] diag Diagonal vector
      * @param[in,out] vec Vector to be scaled
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
     {
       const ScalarT* diag_data = diag->getData(memory::HOST);
       ScalarT*       vec_data  = vec->getData(memory::HOST);
@@ -290,8 +290,8 @@ namespace GridKit
      * @param[in,out] vec Vector to be scaled
      * @param[in] diag_offset - the index of diag where the diagonal matrix begins
      */
-    template <typename ScalarT, typename IdxT>
-    void VectorHandlerCpu<ScalarT, IdxT>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, IdxT diag_offset)
+    template <typename scalar_type, typename index_type>
+    void VectorHandlerCpu<scalar_type, index_type>::scal(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec, IdxT diag_offset)
     {
       const ScalarT* diag_data = &diag->getData(memory::HOST)[diag_offset];
       ScalarT*       vec_data  = vec->getData(memory::HOST);
@@ -317,8 +317,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
+    template <typename scalar_type, typename index_type>
+    int VectorHandlerCpu<scalar_type, index_type>::diagSolve(Vector<ScalarT, IdxT>* diag, Vector<ScalarT, IdxT>* vec)
     {
       ScalarT* diag_data = diag->getData(memory::HOST);
       ScalarT* vec_data  = vec->getData(memory::HOST);
@@ -345,8 +345,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out)
+    template <typename scalar_type, typename index_type>
+    int VectorHandlerCpu<scalar_type, index_type>::max(Vector<ScalarT, IdxT>* x, Vector<ScalarT, IdxT>* y, Vector<ScalarT, IdxT>* out)
     {
       const ScalarT* x_data   = x->getData(memory::HOST);
       const ScalarT* y_data   = y->getData(memory::HOST);
@@ -369,8 +369,8 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise
      */
-    template <typename ScalarT, typename IdxT>
-    int VectorHandlerCpu<ScalarT, IdxT>::abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out)
+    template <typename scalar_type, typename index_type>
+    int VectorHandlerCpu<scalar_type, index_type>::abs(Vector<ScalarT, IdxT>* in, Vector<ScalarT, IdxT>* out)
     {
       const ScalarT* in_data  = in->getData(memory::HOST);
       ScalarT*       out_data = out->getData(memory::HOST);

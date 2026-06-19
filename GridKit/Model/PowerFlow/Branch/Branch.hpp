@@ -6,12 +6,12 @@
 // Forward declarations.
 namespace GridKit
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class BaseBus;
 
   namespace PowerFlowData
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     struct BranchData;
   }
 } // namespace GridKit
@@ -22,32 +22,34 @@ namespace GridKit
    * @brief Implementation of a pi-model branch between two buses.
    *
    */
-  template <class ScalarT, typename IdxT>
-  class Branch : public ModelEvaluatorImpl<ScalarT, IdxT>
+  template <typename scalar_type, typename index_type>
+  class Branch : public ModelEvaluatorImpl<scalar_type, index_type>
   {
-    using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::nnz_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::time_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::alpha_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::y_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
-
-    using bus_type   = BaseBus<ScalarT, IdxT>;
-    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
-    using BranchData = GridKit::PowerFlowData::BranchData<RealT, IdxT>;
+    using ModelEvaluatorImpl<scalar_type, index_type>::size_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::nnz_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::time_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::alpha_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::y_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::yp_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::tag_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::f_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::g_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::yB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::ypB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::fB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::gB_;
+    using ModelEvaluatorImpl<scalar_type, index_type>::param_;
 
   public:
-    Branch(bus_type* bus1, bus_type* bus2);
-    Branch(RealT R, RealT X, RealT G, RealT B, bus_type* bus1, bus_type* bus2);
-    Branch(bus_type* bus1, bus_type* bus2, BranchData& data);
+    using ScalarT    = scalar_type;
+    using IdxT       = index_type;
+    using RealT      = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using BusT       = BaseBus<ScalarT, IdxT>;
+    using BranchData = GridKit::PowerFlowData::BranchData<RealT, IdxT>;
+
+    Branch(BusT* bus1, BusT* bus2);
+    Branch(RealT R, RealT X, RealT G, RealT B, BusT* bus1, BusT* bus2);
+    Branch(BusT* bus1, BusT* bus2, BranchData& data);
     virtual ~Branch();
 
     int allocate();
@@ -137,7 +139,7 @@ namespace GridKit
     RealT      B_;
     const IdxT fbusID_;
     const IdxT tbusID_;
-    bus_type*  bus1_;
-    bus_type*  bus2_;
+    BusT*      bus1_;
+    BusT*      bus2_;
   };
 } // namespace GridKit

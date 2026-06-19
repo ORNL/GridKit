@@ -17,7 +17,7 @@ namespace GridKit
     /**
      * @brief Component model implementation base class.
      */
-    template <class scalar_type, typename index_type>
+    template <typename scalar_type, typename index_type>
     class Component : public Model::Evaluator<scalar_type, index_type>
     {
     public:

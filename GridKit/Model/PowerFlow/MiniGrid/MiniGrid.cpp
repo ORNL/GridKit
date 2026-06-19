@@ -16,8 +16,8 @@ namespace GridKit
    * Calls default ModelEvaluatorImpl constructor.
    */
 
-  template <class ScalarT, typename IdxT>
-  MiniGrid<ScalarT, IdxT>::MiniGrid()
+  template <typename scalar_type, typename index_type>
+  MiniGrid<scalar_type, index_type>::MiniGrid()
     : ModelEvaluatorImpl<ScalarT, IdxT>(3, 0, 0),
       Pl2_(2.5),
       Ql2_(-0.8),
@@ -33,16 +33,16 @@ namespace GridKit
     // std::cout << "Create a load model with " << size_ << " variables ...\n";
   }
 
-  template <class ScalarT, typename IdxT>
-  MiniGrid<ScalarT, IdxT>::~MiniGrid()
+  template <typename scalar_type, typename index_type>
+  MiniGrid<scalar_type, index_type>::~MiniGrid()
   {
   }
 
   /*!
    * @brief allocate method computes sparsity pattern of the Jacobian.
    */
-  template <class ScalarT, typename IdxT>
-  int MiniGrid<ScalarT, IdxT>::allocate()
+  template <typename scalar_type, typename index_type>
+  int MiniGrid<scalar_type, index_type>::allocate()
   {
     return 0;
   }
@@ -50,8 +50,8 @@ namespace GridKit
   /**
    * Initialization of the grid model
    */
-  template <class ScalarT, typename IdxT>
-  int MiniGrid<ScalarT, IdxT>::initialize()
+  template <typename scalar_type, typename index_type>
+  int MiniGrid<scalar_type, index_type>::initialize()
   {
     th2() = 0.0; // th2
     V2()  = 1.0; // V2
@@ -65,8 +65,8 @@ namespace GridKit
    *
    * Must be connected to a PQ bus.
    */
-  template <class ScalarT, typename IdxT>
-  int MiniGrid<ScalarT, IdxT>::evaluateResidual()
+  template <typename scalar_type, typename index_type>
+  int MiniGrid<scalar_type, index_type>::evaluateResidual()
   {
     auto* f = f_.getData();
     f[0]    = -Pl2_ - V2() * (V1_ * B12_ * sin(th2() - th1_) + V3_ * B23_ * sin(th2() - th3()));
@@ -78,8 +78,8 @@ namespace GridKit
     return 0;
   }
 
-  template <class ScalarT, typename IdxT>
-  int MiniGrid<ScalarT, IdxT>::evaluateJacobian()
+  template <typename scalar_type, typename index_type>
+  int MiniGrid<scalar_type, index_type>::evaluateJacobian()
   {
     return 0;
   }
