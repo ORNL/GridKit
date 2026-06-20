@@ -63,7 +63,7 @@ int main()
     idas.getSavedInitialCondition();
     gen.V() = 0.0;
     idas.initializeSimulation(t_init);
-    idas.runSimulation(t_clear, (t_clear - t_init) / 20.0);
+    idas.runSimulation(t_clear, 20);
     gen.V() = 1.0;
     idas.saveInitialCondition();
   }

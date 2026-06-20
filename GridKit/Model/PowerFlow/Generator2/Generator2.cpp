@@ -50,6 +50,7 @@ namespace GridKit
   int Generator2<ScalarT, IdxT>::allocate()
   {
     tag_.resize(static_cast<size_t>(size_));
+    abs_tol_.resize(static_cast<size_t>(size_));
     return 0;
   }
 
@@ -64,7 +65,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
     return 0;
   }
 

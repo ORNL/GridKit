@@ -144,6 +144,8 @@ jobs:
                 require: ~coinhsl+mumps
               mumps:
                 require: ~mpi~openmp
+              sundials:
+                require: '@develop'
               llvm:
                 externals:
                 - spec: llvm@${{ matrix.llvm }}

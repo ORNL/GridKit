@@ -23,22 +23,20 @@ namespace GridKit
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
-    using Base::abs_tol_;
-    using Base::allocated_;
-    using Base::allocateVectors;
-    using Base::alpha_;
-    using Base::f_ext_;
-    using Base::f_int_;
-    using Base::n_extern_;
-    using Base::n_intern_;
-    using Base::nnz_;
-    using Base::size_;
-    using Base::tag_;
-    using Base::time_;
-    using Base::y_ext_;
-    using Base::y_int_;
-    using Base::yp_ext_;
-    using Base::yp_int_;
+    using CircuitComponent<ScalarT, IdxT>::size_;
+    using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
+    using CircuitComponent<ScalarT, IdxT>::nnz_;
+    using CircuitComponent<ScalarT, IdxT>::time_;
+    using CircuitComponent<ScalarT, IdxT>::alpha_;
+    using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
+    using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
+    using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
 
   public:
     /**
@@ -135,21 +133,12 @@ namespace GridKit
       n_extern_ = 0;
       size_     = n_intern_ + n_extern_;
 
-      // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
-      delete csr_jac_;
-      csr_jac_ = nullptr;
-
-      delete[] map_to_csr_;
-      map_to_csr_ = nullptr;
-
-      if (!allocated_)
-      {
-        allocateVectors(static_cast<IdxT>(size_), true);
-        // Component and node offsets can change when topology is modified.
-        abs_tol_.setToZero(memory::HOST);
-      }
-
+      // Allocate global vectors
+      y_.resize(size_);
+      yp_.resize(size_);
+      f_.resize(size_);
       tag_.resize(size_);
+      abs_tol_.resize(size_);
 
       { // Start node internal indexing after all component internals for proper KLU ordering
         size_t node_internal_idx = component_internal_size;
@@ -312,7 +301,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol) final
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

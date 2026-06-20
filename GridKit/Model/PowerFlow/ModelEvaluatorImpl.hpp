@@ -124,17 +124,17 @@ namespace GridKit
       return tag_;
     }
 
-    VectorT& absoluteTolerance()
+    std::vector<ScalarT>& absoluteTolerance()
     {
       return abs_tol_;
     }
 
-    const VectorT& absoluteTolerance() const
+    const std::vector<ScalarT>& absoluteTolerance() const
     {
       return abs_tol_;
     }
 
-    VectorT& yB()
+    std::vector<ScalarT>& yB()
     {
       return yB_;
     }
@@ -244,12 +244,12 @@ namespace GridKit
     IdxT size_quad_;
     IdxT size_opt_;
 
-    VectorT           y_;
-    VectorT           yp_;
-    std::vector<bool> tag_;
-    VectorT           abs_tol_;
-    VectorT           f_;
-    VectorT           g_;
+    std::vector<ScalarT> y_;
+    std::vector<ScalarT> yp_;
+    std::vector<bool>    tag_;
+    std::vector<ScalarT> abs_tol_;
+    std::vector<ScalarT> f_;
+    std::vector<ScalarT> g_;
 
     VectorT yB_;
     VectorT ypB_;

@@ -72,6 +72,7 @@ namespace GridKit
     // std::cout << "Allocate PQ bus ..." << std::endl;
     this->allocateVectors(size_);
     tag_.resize(static_cast<size_t>(size_));
+    abs_tol_.resize(static_cast<size_t>(size_));
 
     fB_.resize(size_);
     yB_.resize(size_);
@@ -103,7 +104,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
     return 0;
   }
 

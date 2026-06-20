@@ -137,10 +137,10 @@ namespace GridKit
       f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
       connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
-      if (!allocated_)
-      {
-        allocateVectors(size_);
-      }
+      y_.resize(static_cast<size_t>(size_));
+      yp_.resize(static_cast<size_t>(size_));
+      abs_tol_.resize(static_cast<size_t>(size_));
+      f_.resize(static_cast<size_t>(size_));
 
       allocated_ = true;
       return 0;
@@ -303,7 +303,7 @@ namespace GridKit
       return size_opt_;
     }
 
-    VectorT& y() final
+    std::vector<ScalarT>& y() final
     {
       return y_;
     }
@@ -333,17 +333,17 @@ namespace GridKit
       return tag_;
     }
 
-    VectorT& absoluteTolerance() final
+    std::vector<ScalarT>& absoluteTolerance() final
     {
       return abs_tol_;
     }
 
-    const VectorT& absoluteTolerance() const final
+    const std::vector<ScalarT>& absoluteTolerance() const final
     {
       return abs_tol_;
     }
 
-    VectorT& yB() final
+    std::vector<ScalarT>& yB() final
     {
       return yB_;
     }
@@ -512,30 +512,12 @@ namespace GridKit
     /// @brief A pointer to the internal residuals of this component
     ScalarT*       f_int_;
 
-    /**
-     * An array of (input) pointers to state values for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
-     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
-     * and dereferencing the pointer in an internal variable index is undefined behavior.
-     * \see setExternalConnectionNodes()
-     */
-    std::unique_ptr<const ScalarT*[]> y_ext_;
-    /**
-     * An array of (input) pointers to derivative values for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
-     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
-     * and dereferencing the pointer in an internal variable index is undefined behavior.
-     * \see setExternalConnectionNodes()
-     */
-    std::unique_ptr<const ScalarT*[]> yp_ext_;
-    /**
-     * An array of (output) pointers to residuals for external variables.
-     * \note The size of this array is equal to `size_`, allowing you to index it with the index
-     * of the variable in question (i.e. consisten with \ref extern_indices_). Therefore, accessing
-     * and dereferencing the pointer in an internal variable index is undefined behavior.
-     * \see setExternalConnectionNodes()
-     */
-    std::unique_ptr<ScalarT*[]>       f_ext_;
+    std::vector<ScalarT> y_;
+    std::vector<ScalarT> yp_;
+    std::vector<bool>    tag_;
+    std::vector<ScalarT> abs_tol_;
+    std::vector<ScalarT> f_;
+    std::vector<ScalarT> g_;
 
     std::vector<bool> tag_;
     VectorT           abs_tol_;

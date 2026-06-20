@@ -63,8 +63,8 @@
 - Added `BusToSignalAdapter` component for communicating bus voltages and injection currents.
 - Added cmake-format hooks, including in pre-commit.
 - Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
-- Added portable Vector class to GridKit.
-- Added Windows compatibility for MinGW G++, Clang, and MSVC.
+- Added portable Vector class to GridKit
+- Added support for running IDA with fixed time steps
 
 ## v0.1
 

@@ -76,6 +76,7 @@ namespace GridKit
       }
 
       tag_.resize(size);
+      abs_tol_.resize(size);
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -125,7 +126,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -191,11 +192,11 @@ namespace GridKit
     std::map<IdxT, IdxT> variable_indices_;
     std::map<IdxT, IdxT> residual_indices_;
 
-    VectorT           y_;
-    VectorT           yp_;
-    std::vector<bool> tag_;
-    VectorT           abs_tol_;
-    VectorT           f_;
+    std::vector<ScalarT> y_;
+    std::vector<ScalarT> yp_;
+    std::vector<bool>    tag_;
+    std::vector<ScalarT> abs_tol_;
+    std::vector<ScalarT> f_;
 
     VectorT g_{};
     VectorT param_{};
@@ -240,7 +241,7 @@ namespace GridKit
       // No time to update in node models
     }
 
-    VectorT& y() final
+    std::vector<ScalarT>& y() final
     {
       return y_;
     }
@@ -270,17 +271,17 @@ namespace GridKit
       return tag_;
     }
 
-    VectorT& absoluteTolerance() final
+    std::vector<ScalarT>& absoluteTolerance() final
     {
       return abs_tol_;
     }
 
-    const VectorT& absoluteTolerance() const final
+    const std::vector<ScalarT>& absoluteTolerance() const final
     {
       return abs_tol_;
     }
 
-    VectorT& yB() final
+    std::vector<ScalarT>& yB() final
     {
       return yB_;
     }

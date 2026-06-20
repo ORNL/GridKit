@@ -83,7 +83,7 @@ namespace GridKit
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
         tag_.resize(size);
-
+        abs_tol_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -281,17 +281,17 @@ namespace GridKit
        *
        * @param rel_tol The relative tolerance which can be used to pick the
        *        absolute tolerance.
-       * @tparam scalar_type Scalar data type
-       * @tparam index_type Index data type
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
        * @return int 0 if successful, non-zero otherwise.
        *
        * This represents a "noise" level close to zero for which pure relative
        * error cannot be used.
        */
-      template <typename scalar_type, typename index_type>
-      int Ieeet1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+      template <class ScalarT, typename IdxT>
+      int Ieeet1<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 

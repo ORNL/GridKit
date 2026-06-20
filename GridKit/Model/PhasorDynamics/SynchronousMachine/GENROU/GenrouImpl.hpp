@@ -331,11 +331,7 @@ namespace GridKit
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
+      abs_tol_.resize(size);
 
       // Resize bus data
       wb_.resize(2);
@@ -532,17 +528,17 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam scalar_type Scalar data type
-     * @tparam index_type Index data type
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <typename scalar_type, typename index_type>
-    int Genrou<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    template <class ScalarT, typename IdxT>
+    int Genrou<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

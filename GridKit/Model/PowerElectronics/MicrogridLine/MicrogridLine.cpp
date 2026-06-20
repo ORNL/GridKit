@@ -80,7 +80,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
     return 0;
   }
 

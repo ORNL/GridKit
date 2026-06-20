@@ -128,6 +128,23 @@ namespace GridKit
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
+      virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
+      /**
+       * @brief Get the absolute tolerance for each variable in the model
+       *
+       * @return a const reference to the absolute tolerance vector.
+       *
+       * @pre `setAbsoluteTolerance` must have been called first.
+       */
+      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
+
+      /**
+       * @brief Get the absolute tolerance for each variable in the model
+       *
+       * @return a reference to the absolute tolerance vector.
+       *
+       * @pre `setAbsoluteTolerance` must have been called first.
+       */
       virtual VectorT&       absoluteTolerance()       = 0;
       /**
        * @brief Get the absolute tolerance for each variable in the model

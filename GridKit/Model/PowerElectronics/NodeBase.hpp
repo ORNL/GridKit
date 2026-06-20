@@ -51,7 +51,7 @@ namespace GridKit
       {
       }
 
-      VectorT& y() final
+      std::vector<ScalarT>& y() final
       {
         return y_;
       }
@@ -81,7 +81,17 @@ namespace GridKit
         return tag_;
       }
 
-      VectorT& absoluteTolerance() final
+      std::vector<ScalarT>& absoluteTolerance() final
+      {
+        return abs_tol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const final
+      {
+        return abs_tol_;
+      }
+
+      MatrixT& getJacobian() final
       {
         return abs_tol_;
       }
@@ -146,6 +156,7 @@ namespace GridKit
         }
 
         tag_.resize(size);
+        abs_tol_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -177,7 +188,7 @@ namespace GridKit
        */
       int setAbsoluteTolerance(RealT rel_tol) final
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 
@@ -207,8 +218,11 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      std::vector<bool> tag_;
-      VectorT           abs_tol_;
+      std::vector<ScalarT> y_;
+      std::vector<ScalarT> yp_;
+      std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
+      std::vector<ScalarT> f_;
 
       /// @brief A pointer to the internal variables of this component.
       const ScalarT* y_int_;
@@ -216,14 +230,6 @@ namespace GridKit
       const ScalarT* yp_int_;
       /// @brief A pointer to the internal residuals of this component
       ScalarT*       f_int_;
-
-      std::unique_ptr<const ScalarT*[]> y_ext_;
-      std::unique_ptr<const ScalarT*[]> yp_ext_;
-      std::unique_ptr<ScalarT*[]>       f_ext_;
-
-      IdxT*  J_rows_buffer_{nullptr};
-      IdxT*  J_cols_buffer_{nullptr};
-      RealT* J_vals_buffer_{nullptr};
 
       //
       // Adjoint sensitivity members

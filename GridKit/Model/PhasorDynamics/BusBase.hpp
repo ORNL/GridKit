@@ -55,7 +55,7 @@ namespace GridKit
         return nnz_;
       }
 
-      VectorT& y() override
+      std::vector<ScalarT>& y() override
       {
         return y_;
       }
@@ -85,17 +85,17 @@ namespace GridKit
         return tag_;
       }
 
-      VectorT& absoluteTolerance() override
+      std::vector<ScalarT>& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const VectorT& absoluteTolerance() const override
+      const std::vector<ScalarT>& absoluteTolerance() const override
       {
         return abs_tol_;
       }
 
-      VectorT& getResidual() override
+      std::vector<ScalarT>& getResidual() override
       {
         return f_;
       }
@@ -266,17 +266,17 @@ namespace GridKit
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
 
-      VectorT           y_;
-      VectorT           yp_;
-      std::vector<bool> tag_;
-      VectorT           abs_tol_;
-      VectorT           f_;
-      bool              allocated_{false};
-
+      std::vector<ScalarT> y_;
+      std::vector<ScalarT> yp_;
+      std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
+      std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
-      CsrMatrixT* csr_jac_{nullptr};
-      CooMatrixT* coo_jac_{nullptr};
+      MatrixT J_;
+      IdxT*   J_rows_buffer_{nullptr};
+      IdxT*   J_cols_buffer_{nullptr};
+      RealT*  J_vals_buffer_{nullptr};
 
       //
       // Adjoint sensitivity members

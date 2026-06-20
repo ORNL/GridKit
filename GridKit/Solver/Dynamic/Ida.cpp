@@ -96,7 +96,7 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
-      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_);
+      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_);
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -526,12 +526,7 @@ namespace AnalysisManager
       retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
-      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_),
-                    backward_time_step_,
-                    backward_rel_tol_,
-                    backward_abs_tol_override_,
-                    backward_max_steps_,
-                    backward_suppress_alg_);
+      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_), backward_time_step_, backward_rel_tol_, backward_abs_tol_override_, backward_max_steps_);
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
@@ -841,11 +836,10 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
     {
       const auto xsize = static_cast<size_t>(N_VGetLength(x));
-      const auto ysize = static_cast<size_t>(y.getSize());
-      if (xsize != ysize)
+      if (xsize != y.size())
       {
-        GridKit::Utilities::Logger::error() << "N_Vector size (" << xsize << ") does not match vector size ("
-                                            << y.getSize() << ").\n";
+        std::cerr << "\nN_Vector size (" << xsize << ") does not match std::vector size ("
+                  << y.size() << ").\n\n";
         throw SundialsException();
       }
 
@@ -864,17 +858,15 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
-      const auto xsize = static_cast<size_t>(x.getSize());
-      if (xsize != ysize)
+      if (x.size() != ysize)
       {
-        GridKit::Utilities::Logger::error() << "vector size (" << x.getSize() << ") does not match N_Vector size ("
-                                            << ysize << ").\n";
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
         throw SundialsException();
       }
 
-      const auto* xdata = x.getData();
-      auto*       ydata = N_VGetArrayPointer(y);
-      std::copy_n(xdata, xsize, ydata);
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy(x.cbegin(), x.cend(), ydata);
     }
 
     /**
@@ -889,8 +881,8 @@ namespace AnalysisManager
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
       if (x.size() != ysize)
       {
-        GridKit::Utilities::Logger::error() << "std::vector size (" << x.size() << ") does not match N_Vector size ("
-                                            << ysize << ").\n";
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
         throw SundialsException();
       }
 
@@ -1163,35 +1155,6 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Set whether IDA suppresses local error tests on algebraic variables
-     *
-     * @param suppress If true, algebraic variables are excluded from IDA's
-     *        local error test
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setSuppressAlgebraicErrors(bool suppress)
-    {
-      suppress_alg_ = suppress;
-    }
-
-    /**
-     * @brief Set whether IDA suppresses local error tests on algebraic
-     *        variables for the backward simulation
-     *
-     * @param suppress If true, algebraic variables are excluded from IDA's
-     *        local error test
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     */
-    template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
-    {
-      backward_suppress_alg_ = suppress;
-    }
-
-    /**
      * @brief Set the maximum number of steps
      *
      * @param max_steps The maximum number of steps
@@ -1227,8 +1190,6 @@ namespace AnalysisManager
      *        absolute tolerance for the nonlinear solver rather than the
      *        model's default absolute tolerance
      * @param max_steps The maximum number of steps
-     * @param suppress_alg If true, algebraic variables are excluded from IDA's
-     *        local error test
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
@@ -1237,8 +1198,7 @@ namespace AnalysisManager
                                            ScalarT time_step,
                                            ScalarT rel_tol,
                                            ScalarT abs_tol_override,
-                                           IdxT    max_steps,
-                                           bool    suppress_alg)
+                                           IdxT    max_steps)
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1247,8 +1207,6 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxStep");
       retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
-      retval = IDASetSuppressAlg(mem, suppress_alg ? SUNTRUE : SUNFALSE);
-      checkOutput(retval, "IDASetSuppressAlg");
 
       if (time_step == 0)
       {

@@ -42,7 +42,6 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
-      using namespace Converter;
 
       owns_components_ = true;
 
@@ -580,6 +579,7 @@ namespace GridKit
       }
 
       tag_.resize(size_);
+      abs_tol_.resize(size_);
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
@@ -824,17 +824,26 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
+      IdxT offset = 0;
       for (const auto& bus : buses_)
       {
         bus->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+        }
+        offset += bus->size();
       }
 
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          abs_tol_[offset + j] = component->absoluteTolerance()[j];
+        }
+        offset += component->size();
       }
-
-      abs_tol_.setDataUpdated();
 
       return 0;
     }

@@ -39,10 +39,8 @@ namespace GridKit
           allocate();
         }
 
-        auto* y       = y_.getData();
-        auto* yp      = yp_.getData();
-        auto* abs_tol = abs_tol_.getData();
-        auto* f       = f_.getData();
+        tag_     = {false};
+        abs_tol_ = {0};
 
         y[0]       = 0.0;
         yp[0]      = 0.0;
@@ -88,7 +86,7 @@ namespace GridKit
 
       int setAbsoluteTolerance(RealT rel_tol) override
       {
-        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 
@@ -160,17 +158,17 @@ namespace GridKit
         return tag_;
       }
 
-      VectorT& absoluteTolerance() override
+      std::vector<ScalarT>& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const VectorT& absoluteTolerance() const override
+      const std::vector<ScalarT>& absoluteTolerance() const override
       {
         return abs_tol_;
       }
 
-      VectorT& yB() override
+      std::vector<ScalarT>& yB() override
       {
         return yB_;
       }
@@ -271,13 +269,12 @@ namespace GridKit
       }
 
     protected:
-      void allocateVectors(IdxT n)
-      {
-        y_.resize(n);
-        yp_.resize(n);
-        f_.resize(n);
-        abs_tol_.resize(n);
-      }
+      std::vector<ScalarT> y_;
+      std::vector<ScalarT> yp_;
+      std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
+      std::vector<ScalarT> f_;
+      std::vector<ScalarT> g_;
 
       VectorT           y_;
       VectorT           yp_;
@@ -401,60 +398,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome dtMonitorZero()
-      {
-        TestStatus success = true;
-
-        Model::NullEvaluator<ScalarT, IdxT> model;
-
-        Ida<double, size_t> ida(&model);
-        ida.configureSimulation();
-
-        unsigned observed_steps = 0;
-        double   observed_t     = 0.0;
-        auto     output_cb      = [&](double t)
-        {
-          observed_steps++;
-          observed_t = t;
-        };
-
-        ida.initializeSimulation(0.0, false);
-        ida.runSimulation(1.0, 0.0, output_cb);
-
-        success *= (observed_steps == 1);
-        success *= (observed_t == 1.0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome dtMonitorSuppressesEpsilonFinalStep()
-      {
-        TestStatus success = true;
-
-        Model::NullEvaluator<ScalarT, IdxT> model;
-
-        Ida<double, size_t> ida(&model);
-        ida.configureSimulation();
-
-        unsigned observed_steps = 0;
-        double   observed_t     = 0.0;
-        auto     output_cb      = [&](double t)
-        {
-          observed_steps++;
-          observed_t = t;
-        };
-
-        const double tf = std::nextafter(1.0, 2.0);
-
-        ida.initializeSimulation(0.0, false);
-        ida.runSimulation(tf, 0.25, output_cb);
-
-        success *= (observed_steps == 4);
-        success *= (observed_t == tf);
-
-        return success.report(__func__);
-      }
-
       TestOutcome fixedStep()
       {
         const unsigned n_steps = 32;
@@ -472,34 +415,6 @@ namespace GridKit
         auto stats = ida.getStats();
 
         success *= (stats.num_steps_ == n_steps);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome suppressAlgebraicErrors()
-      {
-        TestStatus success = true;
-
-        const auto countSteps = [](bool suppress_alg)
-        {
-          Model::AlgebraicErrorControlEvaluator<ScalarT, IdxT> model;
-
-          Ida<ScalarT, IdxT> ida(&model);
-          ida.setSuppressAlgebraicErrors(suppress_alg);
-          ida.setTolerance(1.0e-6);
-          ida.setMaxSteps(10000);
-          ida.configureSimulation();
-
-          ida.initializeSimulation(0.0, false);
-          ida.runSimulation(1.0);
-
-          return ida.getStats().num_steps_;
-        };
-
-        const auto unsuppressed_steps = countSteps(false);
-        const auto suppressed_steps   = countSteps(true);
-
-        success *= (suppressed_steps < unsuppressed_steps);
 
         return success.report(__func__);
       }
