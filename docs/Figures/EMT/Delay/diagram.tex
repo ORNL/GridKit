@@ -12,32 +12,27 @@
     sig/.style    = {font=\small}
 ]
 
-% ---- Lag-chain realization ----
-\foreach \k/\x in {1/0, 2/3.5, n/8.8}
-    \node[block] (b\k) at (\x, 0) {$\dfrac{1}{1 + s\tau/n}$};
-\node[inner sep=1pt] (dots) at (6.15, 0) {$\cdots$};
+% Lag-block chain: u -> 1/(1+sT) -> ... -> y_{N-1} = y_out
+\foreach \k/\x in {0/0, 1/3.3, n/7.9}
+    \node[block] (b\k) at (\x, 0) {$\dfrac{1}{1 + sT}$};
+\node[inner sep=1pt] (dots) at (5.6, 0) {$\cdots$};
 
-\draw[->, line] (-3.3, 0)  -- (b1.west);
-\draw[->, line] (b1)       -- (b2);
-\draw[->, line] (b2)       -- (dots);
-\draw[->, line] (dots)     -- (bn.west);
-\draw[->, line] (bn.east)  -- (12.1, 0) node[sig, pos=0.65, above] {$u(t-\tau)$};
+% input node (outside box)
+\node[signal, label={[sig]above:$u$}] at (-2.4, 0) {};
+\draw[->, line] (-2.4, 0) -- (b0.west);
 
-\node[signal, label={[sig]above:$u(t)$}] at (-2.55, 0) {};
+% inter-block connections
+\draw[->, line] (b0.east) -- (b1.west);
+\draw[->, line] (b1.east) -- (dots);
+\draw[->, line] (dots)    -- (bn.west);
 
-\draw[dashed, semithick, rounded corners=4pt] (-1.8, -1.1) rectangle (10.6, 1.1);
+% output node (inside box) with port arrow out
+\node[signal, label={[sig]above:$y_{\mathrm{out}}$}] (yout) at (9.7, 0) {};
+\draw[->, line] (bn.east) -- (yout);
+\draw[->, line] (yout) -- (12.1, 0);
 
-% ---- Limit (detached) ----
-\draw[->, line] (4.4, -1.55) -- (4.4, -2.45)
-    node[sig, midway, right=4pt] {$n \to \infty$};
-
-% ---- Ideal delay ----
-\node[block] (delay) at (4.4, -3.4) {$e^{-s\tau}$};
-\draw[->, line] (1.75, -3.4) -- (delay.west);
-\draw[->, line] (delay.east) -- (7.05, -3.4)
-    node[sig, midway, above] {$u(t-\tau)$};
-
-\node[signal, label={[sig]above:$u(t)$}] at (2.50, -3.4) {};
+% model enclosure
+\draw[dashed, semithick, rounded corners=4pt] (-1.55, -1.1) rectangle (10.6, 1.1);
 
 \end{tikzpicture}
 \end{document}
