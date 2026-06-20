@@ -1,49 +1,43 @@
 # Delay Model
 
-`Delay` represents a smooth approximation of a transport delay on a vector input
-signal. The approximation uses a chain of $n$ identical first-order lag stages.
+`Delay` represents a scalar EMT delay operator using a lag-block chain.
+The model maps input signal $u$ to delayed output $y_{\mathrm{out}}$.
 
-The Laplace domain representation is:
-
-```math
-e^{-s\tau}\mathbf{U}(s) =
-\lim_{n \to \infty}\left(\dfrac{1}{1 + s\tau/n}\right)^n \mathbf{U}(s)
-```
-
-The time domain convolutional form is:
-
-```math
-\mathbf{u}(t-\tau) = \delta(t-\tau) * \mathbf{u}(t)
-```
+Note:
+- This is an exact approximation when used with forward-euler.
+- For other integration methods this is a smooth approximation only.
 
 ## Block Diagram
 
 <div align="center">
    <img align="center" src="../../../../../../docs/Figures/EMT/Delay/diagram.png">
 
-  Figure 1: Lag-chain approximation of a pure delay
+  Figure 1: Delay model
 </div>
 
 ## Model Parameters
 
-Symbol            | Units | JSON     | Description          | Typical Value | Note
-------------------|-------|----------|----------------------|---------------|-----
-$\tau$            | [s]   | `delay`  | Delay to approximate | --            | Required, positive
-$\Delta t_{\min}$ | [s]   | `dt_min` | Block resolution     | --            | Required, positive
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$\tau$ | [s] | `tau` | Total delay | Required, positive
+$f_{\max}$ | [Hz] | `fmax` | Highest frequency of interest | Required, positive
 
 ### Parameter Validation
 
 ```math
 \begin{aligned}
 \tau &> 0 \\
-\Delta t_{\min} &> 0
+f_{\max} &> 0
 \end{aligned}
 ```
 
 ### Model Derived Parameters
 
 ```math
-n = \text{floor}\left(\dfrac{\tau}{\Delta t_{\min}}\right)
+\begin{aligned}
+N &= \text{ceil}(f_{\max}\tau) \\
+T &= \dfrac{\tau}{N}
+\end{aligned}
 ```
 
 ## Model Variables
@@ -52,9 +46,9 @@ n = \text{floor}\left(\dfrac{\tau}{\Delta t_{\min}}\right)
 
 #### Differential
 
-Symbol                            | Units | Description                                               | Note
-----------------------------------|-------|-----------------------------------------------------------|-----
-$\mathbf{x}_1,\dots,\mathbf{x}_n$ | [-]   | Lag-block states; $\mathbf{x}_n$ is the delayed signal    | $nK$ states
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{y}$ | [-] | Section differential states | $\mathbf{y}\in\mathbb{R}^N$
 
 #### Algebraic
 
@@ -64,9 +58,9 @@ None.
 
 #### Differential
 
-Symbol       | Units | Description | Note
--------------|-------|-------------|-----
-$\mathbf{u}$ | [-]   | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$u$ | [-] | Input signal | $u\in\mathbb{R}$
 
 #### Algebraic
 
@@ -76,21 +70,17 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | [-] | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in \mathbb{R}^K$
+$u$ | `input` | Input | [-] | Input signal port | $u\in\mathbb{R}$
+$y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{out}} = y_{N-1}$
 
 ## Model Equations
 
 ### Differential Equations
 
-The lag-chain residuals are:
-
 ```math
 \begin{aligned}
-0 &= -\tau\,\dot{\mathbf{x}}_1 + n\,(\mathbf{u} - \mathbf{x}_1) \\
-0 &= -\tau\,\dot{\mathbf{x}}_2 + n\,(\mathbf{x}_1 - \mathbf{x}_2) \\
-&\vdots \\
-0 &= -\tau\,\dot{\mathbf{x}}_n + n\,(\mathbf{x}_{n-1} - \mathbf{x}_n)
+0 &= -T\dot{y}_0 - y_0 + u \\
+0 &= -T\dot{y}_n - y_n + y_{n-1}
 \end{aligned}
 ```
 
@@ -98,28 +88,16 @@ The lag-chain residuals are:
 
 None.
 
-### Port Equations
-
-```math
-\mathbf{y} = \mathbf{x}_n
-```
-
 ## Initialization
 
-For a constant input $\mathbf{u}_0$ at $t_0$, the chain is at rest:
+For an affine initial input trajectory, let subscript $0$ denote initial values:
 
 ```math
 \begin{aligned}
-\mathbf{x}_1(t_0) = \mathbf{x}_2(t_0) = \cdots = \mathbf{x}_n(t_0) &= \mathbf{u}_0 \\
-\dot{\mathbf{x}}_1(t_0) = \dot{\mathbf{x}}_2(t_0) = \cdots = \dot{\mathbf{x}}_n(t_0) &= \mathbf{0}
+y_{n,0} &= u_0 - (n+1)T\dot{u}_0 \\
+\dot{y}_{n,0} &= \dot{u}_0 \\
+y_{\mathrm{out},0} &= u_0 - \tau\dot{u}_0
 \end{aligned}
-```
-
-A steady input therefore passes through unchanged at $t_0$ and downstream
-consumers initialize consistently:
-
-```math
-\mathbf{y}_0 = \mathbf{x}_n(t_0)
 ```
 
 ## Monitors
