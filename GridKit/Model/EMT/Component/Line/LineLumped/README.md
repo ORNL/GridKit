@@ -5,9 +5,9 @@ $\pi$-section equivalent over length $\Delta x$. Series current $\mathbf{i}$
 is directed from terminal 1 to terminal 2.
 
 Notes:
-- Alternatively, $\mathbf{Z}'$ and $\mathbf{Y}'$ may be given directly as
-  `VectorFit` models. Otherwise, they are derived from constant `R`, `L`,
-  `G`, and `C` matrices.
+- $\mathbf{Z}'$ and $\mathbf{Y}'$ may be supplied as per-unit-length
+  `VectorFit` models or derived from constant `Rp`, `Lp`, `Gp`, and `Cp`
+  matrices.
 
 ## Block Diagram
 
@@ -19,15 +19,11 @@ Notes:
 
 ## Model Parameters
 
-Symbol           | Units          | JSON | Description                              | Note
----------------- | -------------- | ---- | ---------------------------------------- | ----
-$\mathbf{R}'$    | [$\Omega$/m]   | `R`  | Series resistance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{L}'$    | [H/m]          | `L`  | Series inductance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{G}'$    | [S/m]          | `G`  | Shunt conductance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{C}'$    | [F/m]          | `C`  | Shunt capacitance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\Delta x$       | [m]            | `dx` | Line segment length                      | $\mathbb{R}$
-$\mathbf{Z}'$    | [$\Omega$/m]   | `Z`  | Series impedance per unit length         | $\mathbb{C}^{N\times N}$, optional `VectorFit` model 
-$\mathbf{Y}'$    | [S/m]          | `Y`  | Shunt admittance per unit length         | $\mathbb{C}^{N\times N}$, optional `VectorFit` model 
+Symbol           | Units        | JSON | Description                        | Note
+---------------- | ------------ | ---- | ---------------------------------- | ----
+$\mathbf{Z}'$    | [$\Omega$/m] | `Zp` | Series impedance per unit length   | $\mathbf{Z}'\in\mathbb{C}^{N \times N}$
+$\mathbf{Y}'$    | [S/m]        | `Yp` | Shunt admittance per unit length   | $\mathbf{Y}'\in\mathbb{C}^{N \times N}$
+$\Delta x$       | [m]          | `dx` | Line segment length                | $\mathbb{R}$
 
 ### Parameter Validation
 
@@ -35,25 +31,31 @@ None.
 
 ### Model Derived Parameters
 
-For the constant `R`, `L`, `G`, and `C` alternative:
+The per-unit-length impedance and admittance models are:
 
 ```math
 \begin{aligned}
-  \mathbf{R} &= \mathbf{R}'\Delta x   & \mathbf{G} &= \dfrac{\mathbf{G}'\Delta x}{2} \\
-  \mathbf{L} &= \mathbf{L}'\Delta x   & \mathbf{C} &= \dfrac{\mathbf{C}'\Delta x}{2}
+  \mathbf{Z}'(s) &= \mathbf{R}' + s\mathbf{L}' + \mathbf{Z}'_{\mathrm{rat}}(s) \\
+  \mathbf{Y}'(s) &= \mathbf{G}' + s\mathbf{C}' + \mathbf{Y}'_{\mathrm{rat}}(s)
 \end{aligned}
 ```
 
-If `Z` and `Y` are not given, they are derived as:
+The segment impedance and shunt admittance operators used by the equations are:
 
 ```math
 \begin{aligned}
-  \mathbf{Z} &= \mathbf{R} + s\mathbf{L} \qquad \text{or} \qquad = \Delta x \mathbf{Z}'\\
-  \mathbf{Y} &= \mathbf{G} + s\mathbf{C} \qquad \text{or} \qquad = \dfrac{\Delta x \mathbf{Y}'}{2}
+  \mathbf{Z} &= \Delta x \mathbf{Z}' \\
+  \mathbf{Y} &= \dfrac{\Delta x \mathbf{Y}'}{2}
 \end{aligned}
 ```
 
-and modeled via `VectorFit`.
+### Submodels
+
+Submodel | Inputs | Parameters | Outputs
+-------- | ------ | ---------- | -------
+[`VectorFit`](../../../Operators/Rational/VectorFit/README.md) series impedance $\mathbf{z}$ | $\mathbf{i}\in\mathbb{R}^N$ | `Zp`, `dx` | $\mathbf{z}*\mathbf{i}$
+[`VectorFit`](../../../Operators/Rational/VectorFit/README.md) shunt admittance $\mathbf{y}_1$ | $\mathbf{v}_1\in\mathbb{R}^N$ | `Yp`, `dx` | $\mathbf{y}_1*\mathbf{v}_1$
+[`VectorFit`](../../../Operators/Rational/VectorFit/README.md) shunt admittance $\mathbf{y}_2$ | $\mathbf{v}_2\in\mathbb{R}^N$ | `Yp`, `dx` | $\mathbf{y}_2*\mathbf{v}_2$
 
 ## Model Variables
 
@@ -106,10 +108,10 @@ None.
 ```math
 \begin{aligned}
 \mathbf{i}^{\mathrm{inj}}_{1} &=
-  - \mathbf{y}*\mathbf{v}_1
+  - \mathbf{y}_1*\mathbf{v}_1
   - \mathbf{i} \\
 \mathbf{i}^{\mathrm{inj}}_{2} &=
-  - \mathbf{y}*\mathbf{v}_2
+  - \mathbf{y}_2*\mathbf{v}_2
   + \mathbf{i}
 \end{aligned}
 ```

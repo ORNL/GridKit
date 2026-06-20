@@ -25,8 +25,16 @@ where
 \end{aligned}
 ```
 
-The fitted factors use the full-residue real-port
-[`VectorFit`](../../Rational/VectorFit/README.md) form.
+The fitted factors are [`VectorFit`](../../Rational/VectorFit/README.md)
+operators.
+
+## Block Diagram
+
+<div align="center">
+   <img align="center" src="../../../../../../docs/Figures/EMT/Propagation/diagram.png" width="90%">
+
+  Figure 1: Propagation model
+</div>
 
 ## Model Parameters
 
@@ -53,13 +61,13 @@ $\mathbf{F}_{\mathrm{out}}$ | [-] | `output` | Output-side fitted factor | `Vect
 
 None.
 
-### Model Submodels
+### Submodels
 
-Submodel | Inputs | Outputs
--------- | ------ | -------
-[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{in}}$ | $\mathbf{u}\in\mathbb{R}^K$ | $\mathbf{w}\in\mathbb{R}^M$
-[`Delay`](../Delay/README.md) $\boldsymbol{\delta}_{\tau}$ | $\mathbf{w}\in\mathbb{R}^M$, $\boldsymbol{\tau}$ | $\mathbf{z}\in\mathbb{R}^M$
-[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{out}}$ | $\mathbf{z}\in\mathbb{R}^M$ | $\mathbf{y}\in\mathbb{R}^K$
+Submodel | Inputs | Parameters | Outputs
+-------- | ------ | ---------- | -------
+[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{in}}$ | $\mathbf{u}\in\mathbb{R}^K$ | `input` | $\mathbf{w}\in\mathbb{R}^M$
+[`Delay`](../Delay/README.md) $\boldsymbol{\delta}_{\tau}$ | $\mathbf{w}\in\mathbb{R}^M$ | `tau`, `fmax` | $\mathbf{z}\in\mathbb{R}^M$
+[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{out}}$ | $\mathbf{z}\in\mathbb{R}^M$ | `output` | $\mathbf{y}\in\mathbb{R}^K$
 
 ## Model Variables
 

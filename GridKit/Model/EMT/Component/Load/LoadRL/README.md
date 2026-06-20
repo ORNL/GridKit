@@ -72,7 +72,7 @@ $\mathbf{i}^{\mathrm{inj}}$ | `i` | Output | [A] | Current injection at load por
 ### Differential Equations
 
 ```math
-0 = \mathbf{R}\,\mathbf{i} + \mathbf{L}\dot{\mathbf{i}} + \mathbf{v}
+0 = \mathbf{R}\mathbf{i} + \mathbf{L}\dot{\mathbf{i}} + \mathbf{v}
 ```
 
 ### Algebraic Equations
@@ -91,7 +91,7 @@ For a balanced three-phase initialization derived from phasor current injection
 $I^{\mathrm{inj}} = |I^{\mathrm{inj}}| \angle \theta$:
 
 ```math
-\mathbf{i}_0 = \sqrt{2}\,|I^{\mathrm{inj}}|
+\mathbf{i}_0 = \sqrt{2}|I^{\mathrm{inj}}|
 \begin{bmatrix}
   \cos(\theta) \\
   \cos(\theta - \tfrac{2\pi}{3}) \\

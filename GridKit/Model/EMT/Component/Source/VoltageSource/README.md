@@ -10,7 +10,7 @@ For phase count $N$:
 
 Symbol                         | Units   | JSON     | Description                       | Note
 -------------------------------|---------|----------|-----------------------------------|-----
-$\mathbf{E}$                   | [V]     | `E`      | Source voltage magnitudes         | RMS, $\mathbf{E}\in\mathbb{R}^N$
+$\mathbf{E}$                   | [V]     | `E`      | Source voltage magnitudes         | $\mathbf{E}\in\mathbb{R}^N$, RMS
 $\boldsymbol{\phi}$            | [rad]   | `phi`    | Source phase offsets              | $\boldsymbol{\phi}\in\mathbb{R}^N$
 $\omega$                       | [rad/s] | `omega`  | Source angular frequency          |
 $\mathbf{g}_{\mathrm{s}}$      | [S]     | `G`      | Terminal conductance              | $\mathbf{g}_{\mathrm{s}}\in\mathbb{R}^N$
@@ -78,7 +78,7 @@ i^{\mathrm{inj}}_n
 =
 g_{\mathrm{s},n}
 \left(
-\sqrt{2}\,E_n\cos\left(\omega t + \phi_n\right) - v_n
+\sqrt{2}E_n\cos\left(\omega t + \phi_n\right) - v_n
 \right)
 ```
 
@@ -91,7 +91,7 @@ i^{\mathrm{inj}}_{n,0}
 =
 g_{\mathrm{s},n}
 \left(
-\sqrt{2}\,E_n\cos\left(\phi_n\right) - v_{n,0}
+\sqrt{2}E_n\cos\left(\phi_n\right) - v_{n,0}
 \right)
 ```
 

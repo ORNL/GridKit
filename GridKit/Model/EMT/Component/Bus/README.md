@@ -73,13 +73,13 @@ $V = |V| \angle \phi$ and nominal angular frequency $\omega_0 = 2 \pi f_0$:
 
 ```math
 \begin{aligned}
-\mathbf{v}(0) = \sqrt{2}\,|V|
+\mathbf{v}(0) = \sqrt{2}|V|
 \begin{bmatrix}
   \cos(\phi) \\
   \cos(\phi - \tfrac{2\pi}{3}) \\
   \cos(\phi + \tfrac{2\pi}{3})
 \end{bmatrix} \\
-\dot{\mathbf{v}}(0) = -\sqrt{2}\,|V|\,\omega_0
+\dot{\mathbf{v}}(0) = -\sqrt{2}|V|\omega_0
 \begin{bmatrix}
   \sin(\phi) \\
   \sin(\phi - \tfrac{2\pi}{3}) \\

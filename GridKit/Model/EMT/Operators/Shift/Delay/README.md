@@ -4,8 +4,8 @@
 The model maps input signal $u$ to delayed output $y_{\mathrm{out}}$.
 
 Note:
-- This is an exact approximation when used with forward-euler.
-- For other integration methods this is a smooth approximation only.
+- This is exact with forward Euler when the integration step satisfies $h=T$.
+- For other integration methods or time steps, this is a smooth approximation only.
 
 ## Block Diagram
 
