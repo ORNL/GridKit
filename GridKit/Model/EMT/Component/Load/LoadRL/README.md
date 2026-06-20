@@ -2,20 +2,29 @@
 
 `LoadRL` represents a three-phase RL load in instantaneous abc coordinates.
 The load owns the three-phase differential current vector $\mathbf{i}$,
-which is directed from the load into the bus.
+which is the current injection from the load into the EMT bus.
 
 ## Model Parameters
 
-Symbol  | Units      | Description                | Note
---------|------------|----------------------------|--------------------------------
-$R_a$   | [$\Omega$] | Load resistance, phase a    |
-$R_b$   | [$\Omega$] | Load resistance, phase b    |
-$R_c$   | [$\Omega$] | Load resistance, phase c    |
-$L_a$   | [H]        | Load inductance, phase a    |
-$L_b$   | [H]        | Load inductance, phase b    |
-$L_c$   | [H]        | Load inductance, phase c    |
+Symbol  | Units      | JSON | Description             | Note
+--------|------------|------|-------------------------|-----
+$R_a$   | [$\Omega$] | `Ra` | Load resistance, phase a |
+$R_b$   | [$\Omega$] | `Rb` | Load resistance, phase b |
+$R_c$   | [$\Omega$] | `Rc` | Load resistance, phase c |
+$L_a$   | [H]        | `La` | Load inductance, phase a |
+$L_b$   | [H]        | `Lb` | Load inductance, phase b |
+$L_c$   | [H]        | `Lc` | Load inductance, phase c |
 
-## Model Derived Parameters
+### Parameter Validation
+
+```math
+\begin{aligned}
+R_a, R_b, R_c &\ge 0 \\
+L_a, L_b, L_c &> 0
+\end{aligned}
+```
+
+### Model Derived Parameters
 
 ```math
 \begin{aligned}
@@ -32,7 +41,7 @@ $L_c$   | [H]        | Load inductance, phase c    |
 
 Symbol              | Units | Description                                    | Note
 --------------------|-------|------------------------------------------------|---------------------------------
-$\mathbf{i}$        | [A]   | Load current vector, directed from load into bus | $\mathbf{i} = [i_a, i_b, i_c]^T \in \mathbb{R}^3$
+$\mathbf{i}$        | [A]   | Current injection from load into EMT bus       | $\mathbf{i} = [i_a, i_b, i_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
@@ -40,20 +49,23 @@ None.
 
 ### External Variables
 
-External variables enter component model equations but are owned by
-other components. The EMT bus at the load port owns the voltage
-variable and provides the equation needed to have a balanced system
-of equations.
+External variables are owned by the EMT bus.
 
 #### Differential
 
 Symbol           | Units | Description                                  | Note
 -----------------|-------|----------------------------------------------|---------------------------------
-$\mathbf{v}$     | [V]   | Port voltage vector, owned by EMT bus        | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
+$\mathbf{v}$     | [V]   | Port voltage vector                         | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
 None.
+
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{i}^{\mathrm{inj}}$ | `i` | Output | [A] | Current injection at load port | $\mathbf{i}^{\mathrm{inj}} \in \mathbb{R}^3$
 
 ## Model Equations
 
@@ -67,7 +79,7 @@ None.
 
 None.
 
-### Port Equations
+### Wiring
 
 ```math
 \mathbf{i}^{\mathrm{inj}} = \mathbf{i}
@@ -75,12 +87,11 @@ None.
 
 ## Initialization
 
-The initialization assumes a balanced three-phase system. Given the power
-flow phasor load current $I = |I| \angle \theta$, the initial load
-current is:
+For a balanced three-phase initialization derived from phasor current injection
+$I^{\mathrm{inj}} = |I^{\mathrm{inj}}| \angle \theta$:
 
 ```math
-\mathbf{i}(0) = \sqrt{2}\,|I|
+\mathbf{i}_0 = \sqrt{2}\,|I^{\mathrm{inj}}|
 \begin{bmatrix}
   \cos(\theta) \\
   \cos(\theta - \tfrac{2\pi}{3}) \\
@@ -88,15 +99,11 @@ current is:
 \end{bmatrix}
 ```
 
-The initial derivative is then given by the RL load equation for DAE
-consistency:
-
-```math
-\dot{\mathbf{i}}(0) = -\mathbf{L}^{-1}\left(\mathbf{v}(0) + \mathbf{R}\,\mathbf{i}(0)\right)
-```
+Only $\mathbf{i}_0$ is initialized. The solver computes
+$\dot{\mathbf{i}}_0$ from the differential residual.
 
 ## Monitors
 
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
-`i` | [A] | Load current | $\mathbf{i} \in \mathbb{R}^3$
+`i` | [A] | Load current injection | $\mathbf{i} \in \mathbb{R}^3$

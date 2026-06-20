@@ -7,7 +7,7 @@ A model README should include:
 1. Model parameters and derived parameters
 2. Internal and external variables
 3. Differential and algebraic equations
-4. Port equations, when applicable
+4. Wiring equations, when applicable
 5. Initialization notes
 6. Monitorable outputs
 
