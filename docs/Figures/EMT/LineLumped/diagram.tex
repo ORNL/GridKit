@@ -1,0 +1,59 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta}
+
+\begin{document}
+\begin{tikzpicture}[
+    >={Stealth[length=2.4mm]},
+    line/.style    = {semithick, rounded corners=6pt},
+    % series element: long axis ALONG the horizontal wire
+    hblock/.style  = {draw, semithick, fill=white,
+                      minimum width=2.8cm, minimum height=1.3cm},
+    % shunt element: same proportion, long axis ALONG the vertical wire
+    vblock/.style  = {draw, semithick, fill=white,
+                      minimum width=1.3cm, minimum height=2.8cm},
+    signal/.style  = {circle, fill, inner sep=1.4pt, label distance=3pt},
+    sig/.style     = {font=\small}
+]
+
+% ================= Series branch Z(s) =================
+\node[hblock] (Z) at (0, 2.1) {$\mathbf{Z}(s)$};
+
+% ================= Shunt branches Y(s) =================
+\node[vblock] (Yk) at (-3.4, -0.2) {$\mathbf{Y}(s)$};
+\node[vblock] (Ym) at ( 3.4, -0.2) {$\mathbf{Y}(s)$};
+
+% ================= Top rail + injection leads (current leaving) =================
+\draw[->, line] (Z.west) -- (-7.0, 2.1);
+\draw[->, line] (Z.east) -- ( 7.0, 2.1);
+
+% shunt taps (T-junctions on the rail)
+\node[signal] (Tk) at (-3.4, 2.1) {};
+\node[signal] (Tm) at ( 3.4, 2.1) {};
+
+% ================= Shunt wiring =================
+\draw[line] (Tk) -- (Yk.north);
+\draw[line] (Tm) -- (Ym.north);
+\draw[line] (Yk.south) -- (-3.4, -2.5);
+\draw[line] (Ym.south) -- ( 3.4, -2.5);
+
+% ================= Ground symbols =================
+\draw[semithick] (-3.75,-2.50) -- (-3.05,-2.50);
+\draw[semithick] (-3.62,-2.65) -- (-3.18,-2.65);
+\draw[semithick] (-3.49,-2.80) -- (-3.31,-2.80);
+
+\draw[semithick] ( 3.05,-2.50) -- ( 3.75,-2.50);
+\draw[semithick] ( 3.18,-2.65) -- ( 3.62,-2.65);
+\draw[semithick] ( 3.31,-2.80) -- ( 3.49,-2.80);
+
+% ================= Terminals + labels =================
+\node[signal, label={[sig]above:$\mathbf{v}_{1}$}] at (-6.2, 2.1) {};
+\node[signal, label={[sig]above:$\mathbf{v}_{2}$}] at ( 6.2, 2.1) {};
+\node[sig] at (-6.35, 1.62) {$\mathbf{i}^{\text{inj}}_{1}$};
+\node[sig] at ( 6.35, 1.62) {$\mathbf{i}^{\text{inj}}_{2}$};
+
+% ================= Model enclosure =================
+\draw[dashed, semithick, rounded corners=4pt] (-5.4, -3.6) rectangle (5.4, 3.6);
+
+\end{tikzpicture}
+\end{document}
