@@ -73,8 +73,8 @@ way to define the nominal pi model.
 
 ### Bergeron Model
 
-The constant parameter case uses constant characteristic impedance
-$\mathbf{Z}_c=\mathbf{Z}_0$ and a lossless transport delay
+The constant parameter case uses constant characteristic admittance
+$\mathbf{y}_c=\mathbf{Y}_0$ and a lossless transport delay
 $\mathbf{H}(s)=e^{-s\tau}$.
 
 ```js
@@ -82,12 +82,12 @@ $\mathbf{H}(s)=e^{-s\tau}$.
   "class": "LineDistributed",
   "params": {
     "conductors": [...],
-    "Zc": ...,
+    "Yc": ...,
     "H": {
       "class": "Delay",
       "params": {
-        "delay": ...,
-        "dt_min": ...
+        "tau": ...,
+        "fmax": ...
       }
     }
   }
@@ -97,7 +97,7 @@ $\mathbf{H}(s)=e^{-s\tau}$.
 ### Universal Line Model
 
 The ULM is the general case where a `VectorFit` model defines the
-characteristic impedance $\mathbf{Z}_c$ and a `Propagation` model defines the
+characteristic admittance $\mathbf{y}_c$ and a `Propagation` model defines the
 current-form propagation function $\mathbf{H}_i$.
 
 ```js
@@ -105,7 +105,7 @@ current-form propagation function $\mathbf{H}_i$.
   "class": "LineDistributed",
   "params": {
     "conductors": [...],
-    "Zc": {
+    "Yc": {
       "class": "VectorFit",
       "params": {
         "D": ...,
@@ -117,11 +117,26 @@ current-form propagation function $\mathbf{H}_i$.
     "H": {
       "class": "Propagation",
       "params": {
+        "input": {
+          "class": "VectorFit",
+          "params": {
+            "D": ...,
+            "E": ...,
+            "poles": [...],
+            "residues": [...]
+          }
+        },
         "tau": [...],
-        "dt_min": ...,
-        "poles": [...],
-        "residues": [...],
-
+        "fmax": ...,
+        "output": {
+          "class": "VectorFit",
+          "params": {
+            "D": ...,
+            "E": ...,
+            "poles": [...],
+            "residues": [...]
+          }
+        }
       }
     }
   }

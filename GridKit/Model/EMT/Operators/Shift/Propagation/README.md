@@ -114,7 +114,7 @@ None.
 
 ## Initialization
 
-Initialization is delegated to the child `VectorFit` and `Delay` models.
+None.
 
 ## Monitors
 

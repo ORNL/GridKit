@@ -7,20 +7,30 @@ connected to the EMT bus through a phase resistance.
 
 ## Model Parameters
 
-Symbol        | Units      | Description                         | Note
---------------|------------|-------------------------------------|--------------------------------
-$E_a$         | [V]        | Source voltage magnitude, phase a   | RMS
-$E_b$         | [V]        | Source voltage magnitude, phase b   | RMS
-$E_c$         | [V]        | Source voltage magnitude, phase c   | RMS
-$\phi_a$      | [rad]      | Source phase offset, phase a        |
-$\phi_b$      | [rad]      | Source phase offset, phase b        |
-$\phi_c$      | [rad]      | Source phase offset, phase c        |
-$\omega_0$    | [rad/s]    | Source angular frequency            |
-$R_a$         | [$\Omega$] | Terminal resistance, phase a        |
-$R_b$         | [$\Omega$] | Terminal resistance, phase b        |
-$R_c$         | [$\Omega$] | Terminal resistance, phase c        |
+Symbol        | Units      | JSON     | Description                         | Note
+--------------|------------|----------|-------------------------------------|-----
+$E_a$         | [V]        | `Ea`     | Source voltage magnitude, phase a   | RMS
+$E_b$         | [V]        | `Eb`     | Source voltage magnitude, phase b   | RMS
+$E_c$         | [V]        | `Ec`     | Source voltage magnitude, phase c   | RMS
+$\phi_a$      | [rad]      | `phia`   | Source phase offset, phase a        |
+$\phi_b$      | [rad]      | `phib`   | Source phase offset, phase b        |
+$\phi_c$      | [rad]      | `phic`   | Source phase offset, phase c        |
+$\omega_0$    | [rad/s]    | `omega0` | Source angular frequency            |
+$R_a$         | [$\Omega$] | `Ra`     | Terminal resistance, phase a        |
+$R_b$         | [$\Omega$] | `Rb`     | Terminal resistance, phase b        |
+$R_c$         | [$\Omega$] | `Rc`     | Terminal resistance, phase c        |
 
-## Model Derived Parameters
+### Parameter Validation
+
+```math
+\begin{aligned}
+E_a, E_b, E_c &\ge 0 \\
+\omega_0 &> 0 \\
+R_a, R_b, R_c &> 0
+\end{aligned}
+```
+
+### Model Derived Parameters
 
 None.
 
@@ -38,20 +48,23 @@ None.
 
 ### External Variables
 
-External variables enter component model equations but are owned by
-other components. The EMT bus at the source port owns the voltage
-variable and provides the equation needed to have a balanced system
-of equations.
+External variables are owned by the EMT bus.
 
 #### Differential
 
 Symbol           | Units | Description                                  | Note
 -----------------|-------|----------------------------------------------|---------------------------------
-$\mathbf{v}$     | [V]   | Port voltage vector, owned by EMT bus        | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
+$\mathbf{v}$     | [V]   | Port voltage vector                         | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
 
 None.
+
+## Model Ports
+
+Symbol | Port | Type | Units | Description | Note
+------ | ---- | ---- | ----- | ----------- | ----
+$\mathbf{i}^{\mathrm{inj}}$ | `i` | Output | [A] | Current injection at source port | $\mathbf{i}^{\mathrm{inj}} \in \mathbb{R}^3$
 
 ## Model Equations
 
@@ -63,7 +76,7 @@ None.
 
 None.
 
-### Port Equations
+### Wiring
 
 Given source angular frequency $\omega_0$, the source waveform is:
 
