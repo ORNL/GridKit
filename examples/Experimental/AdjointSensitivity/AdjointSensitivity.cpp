@@ -59,8 +59,8 @@ int main()
   // create initial condition after a fault
   {
     idas->getSavedInitialCondition();
-    idas->initializeSimulation(t_init);
     gen->V() = 0.0;
+    idas->initializeSimulation(t_init);
     idas->runSimulation(0.1, 20);
     gen->V() = 1.0;
     idas->saveInitialCondition();

@@ -35,12 +35,23 @@ namespace GridKit
       {
       }
 
-      virtual int allocate()          = 0;
-      virtual int initialize()        = 0;
-      virtual int tagDifferentiable() = 0;
-      virtual int evaluateResidual()  = 0;
-      virtual int evaluateJacobian()  = 0;
-      virtual int evaluateIntegrand() = 0;
+      virtual int allocate()                          = 0;
+      virtual int initialize()                        = 0;
+      virtual int tagDifferentiable()                 = 0;
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * @param rel_tol The relative tolerance which can be used to pick the
+       *        absolute tolerance.
+       * @return int 0 if successful, non-zero otherwise.
+       *
+       * This represents a "noise" level close to zero for which pure relative
+       * error cannot be used.
+       */
+      virtual int setAbsoluteTolerance(RealT rel_tol) = 0;
+      virtual int evaluateResidual()                  = 0;
+      virtual int evaluateJacobian()                  = 0;
+      virtual int evaluateIntegrand()                 = 0;
 
       virtual int initializeAdjoint()        = 0;
       virtual int evaluateAdjointResidual()  = 0;
@@ -105,11 +116,26 @@ namespace GridKit
        */
       virtual bool hasJacobian() = 0;
 
-      virtual IdxT sizeQuadrature()                              = 0;
-      virtual IdxT sizeParams()                                  = 0;
-      virtual void updateTime(RealT t, RealT a)                  = 0;
-      virtual void setTolerances(RealT& rtol, RealT& atol) const = 0;
-      virtual void setMaxSteps(IdxT& msa) const                  = 0;
+      virtual IdxT sizeQuadrature()             = 0;
+      virtual IdxT sizeParams()                 = 0;
+      virtual void updateTime(RealT t, RealT a) = 0;
+
+      /**
+       * @brief Get the absolute tolerance for each variable in the model
+       *
+       * @return a reference to the absolute tolerance vector.
+       *
+       * @pre `setAbsoluteTolerance` must have been called first.
+       */
+      virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
+      /**
+       * @brief Get the absolute tolerance for each variable in the model
+       *
+       * @return a const reference to the absolute tolerance vector.
+       *
+       * @pre `setAbsoluteTolerance` must have been called first.
+       */
+      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
 
       virtual std::vector<ScalarT>&       y()       = 0;
       virtual const std::vector<ScalarT>& y() const = 0;

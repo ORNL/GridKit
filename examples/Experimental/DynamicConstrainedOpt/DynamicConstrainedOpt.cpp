@@ -36,6 +36,10 @@ int main()
 
   // Create numerical integrator and configure it for the generator model
   Ida<double, size_t> idas(&model);
+  idas.setTolerance(1e-8, 1e-10);
+  idas.setQuadratureTolerance(1e-8, 1e-10);
+  idas.setBackwardTolerance(1e-8, 1e-10);
+  idas.setBackwardQuadratureTolerance(1e-8, 1e-10);
 
   double t_init  = 0.0;
   double t_final = 20.0;

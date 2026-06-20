@@ -59,7 +59,7 @@ namespace AnalysisManager
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
       int setIntegrationTime(RealT t_init, RealT t_final, int nout);
-      int initializeSimulation(RealT t0, bool findConsistent = false);
+      int initializeSimulation(RealT t0, bool findConsistent = true);
 
       int runSimulation(RealT tf, int nout = 1, std::optional<std::function<void(RealT)>> step_callback = {});
       int deleteSimulation();
@@ -127,9 +127,21 @@ namespace AnalysisManager
         return N_VGetArrayPointer(qB_);
       }
 
-      void printOutput(RealT t);
-      void printSpecial(RealT t, N_Vector x);
-      void printFinalStats();
+      void printOutput(RealT t) const;
+      void printSpecial(RealT t, N_Vector x) const;
+      void printFinalStats() const;
+
+      void setFixedStep(ScalarT time_step);
+      void setBackwardFixedStep(ScalarT time_step);
+      using DynamicSolver<ScalarT, IdxT>::setTolerance;
+      void setTolerance(ScalarT rel_tol, ScalarT abs_tol_override) override;
+      void setBackwardTolerance(ScalarT rel_tol, ScalarT abs_tol_override = 0);
+      void setQuadratureTolerance(ScalarT rel_tol,
+                                  ScalarT abs_tol_override = 0);
+      void setBackwardQuadratureTolerance(ScalarT rel_tol,
+                                          ScalarT abs_tol_override = 0);
+      void setMaxSteps(IdxT maxSteps) override;
+      void setBackwardMaxSteps(IdxT maxSteps);
 
       IdaStats getStats() const;
 
@@ -174,6 +186,8 @@ namespace AnalysisManager
                                   void*    user_data);
 
     private:
+      static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
+
       void*           solver_{};
       SUNContext      context_{};
       SUNMatrix       JacobianMat_{};
@@ -199,6 +213,22 @@ namespace AnalysisManager
 
       int backwardID_{};
 
+      RealT time_step_{};
+      RealT rel_tol_{DEFAULT_REL_TOL};
+      RealT abs_tol_override_{};
+      IdxT  max_steps_{};
+
+      RealT backward_time_step_{};
+      RealT backward_rel_tol_{DEFAULT_REL_TOL};
+      RealT backward_abs_tol_override_{};
+      IdxT  backward_max_steps_{};
+
+      RealT quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
+      RealT quadrature_abs_tol_override_{};
+
+      RealT backward_quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
+      RealT backward_quadrature_abs_tol_override_{};
+
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
@@ -208,6 +238,19 @@ namespace AnalysisManager
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);
       static void checkOutput(int retval, const char* functionName);
+
+      void setIDAOptions(void*   mem,
+                         ScalarT time_step,
+                         ScalarT rel_tol,
+                         ScalarT abs_tol_override,
+                         IdxT    max_steps);
+      void setTolerance(void*   mem,
+                        ScalarT rel_tol,
+                        ScalarT abs_tol_override,
+                        ScalarT abs_tol_fac = 1);
+      void setQuadratureTolerance(void*   mem,
+                                  ScalarT rel_tol,
+                                  ScalarT abs_tol_override);
     };
 
     /// Simple exception to use within Ida class.

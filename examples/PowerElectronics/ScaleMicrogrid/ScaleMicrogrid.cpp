@@ -74,10 +74,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                     abs_tol,
-                                                                     use_jac,
-                                                                     SCALE_MICROGRID_MAX_STEPS);
+  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(use_jac);
 
   const std::vector<real_type>* true_vec = &answer_key_N8;
 
@@ -289,6 +286,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   auto* idas = new AnalysisManager::Sundials::Ida<real_type, index_type>(sys_model);
 
   // setup simulation
+  idas->setTolerance(rel_tol, abs_tol);
+  idas->setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
   idas->configureSimulation();
   idas->getDefaultInitialCondition();
   idas->initializeSimulation(t_init);

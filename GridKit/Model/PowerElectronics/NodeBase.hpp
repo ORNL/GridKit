@@ -49,17 +49,6 @@ namespace GridKit
       {
       }
 
-      void setTolerances(RealT& rtol, RealT& atol) const final
-      {
-        atol = atol_;
-        rtol = rtol_;
-      }
-
-      void setMaxSteps(IdxT& msa) const final
-      {
-        msa = max_steps_;
-      }
-
       std::vector<ScalarT>& y() final
       {
         return y_;
@@ -88,6 +77,16 @@ namespace GridKit
       const std::vector<bool>& tag() const final
       {
         return tag_;
+      }
+
+      std::vector<ScalarT>& absoluteTolerance() final
+      {
+        return abs_tol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const final
+      {
+        return abs_tol_;
       }
 
       MatrixT& getJacobian() final
@@ -147,6 +146,7 @@ namespace GridKit
         y_.resize(size);
         yp_.resize(size);
         tag_.resize(size);
+        abs_tol_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -157,6 +157,24 @@ namespace GridKit
 
       int tagDifferentiable() final
       {
+        return 0;
+      }
+
+      /**
+       * @brief Compute the absolute tolerance for each variable in the model
+       *
+       * @param rel_tol The relative tolerance which can be used to pick the
+       *        absolute tolerance.
+       * @tparam ScalarT Scalar data type
+       * @tparam IdxT Index data type
+       * @return int 0 if successful, non-zero otherwise.
+       *
+       * This represents a "noise" level close to zero for which pure relative
+       * error cannot be used.
+       */
+      int setAbsoluteTolerance(RealT rel_tol) final
+      {
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 
@@ -189,17 +207,13 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
 
       MatrixT J_;
       IdxT*   J_rows_buffer_{nullptr};
       IdxT*   J_cols_buffer_{nullptr};
       RealT*  J_vals_buffer_{nullptr};
-
-      RealT rtol_;
-      RealT atol_;
-
-      IdxT max_steps_;
 
       //
       // Adjoint sensitivity members

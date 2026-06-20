@@ -36,6 +36,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::alpha_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::wb_;
       using Component<scalar_type, index_type>::h_;
@@ -64,6 +65,7 @@ namespace GridKit
       virtual int allocate() override final;
       virtual int initialize() override final;
       virtual int tagDifferentiable() override final;
+      virtual int setAbsoluteTolerance(RealT) override final;
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 

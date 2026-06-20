@@ -47,13 +47,12 @@ namespace GridKit
     // using ModelEvaluatorImpl<ScalarT, IdxT>::yp_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
-    // using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     // using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -65,9 +64,6 @@ namespace GridKit
     SystemSteadyStateModel()
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-      // Set system model tolerances
-      rel_tol_ = 1e-5;
-      abs_tol_ = 1e-5;
     }
 
     /**
@@ -78,9 +74,6 @@ namespace GridKit
     SystemSteadyStateModel(GridKit::PowerFlowData::SystemModelData<ScalarT, IdxT> mp)
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-      rel_tol_ = 1e-5;
-      abs_tol_ = 1e-5;
-
       // add buses
       for (auto busdata : mp.bus)
       {
@@ -157,6 +150,8 @@ namespace GridKit
       // Allocate global vectors
       y_.resize(size_);
       f_.resize(size_);
+      tag_.resize(size_);
+      abs_tol_.resize(size_);
 
       return 0;
     }
@@ -221,6 +216,24 @@ namespace GridKit
      */
     int tagDifferentiable()
     {
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol)
+    {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

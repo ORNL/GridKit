@@ -49,10 +49,9 @@ namespace GridKit
       using PhasorDynamics::Component<scalar_type, index_type>::y_;
       using PhasorDynamics::Component<scalar_type, index_type>::yp_;
       using PhasorDynamics::Component<scalar_type, index_type>::tag_;
+      using PhasorDynamics::Component<scalar_type, index_type>::abs_tol_;
       using PhasorDynamics::Component<scalar_type, index_type>::f_;
       using PhasorDynamics::Component<scalar_type, index_type>::J_;
-      using PhasorDynamics::Component<scalar_type, index_type>::rel_tol_;
-      using PhasorDynamics::Component<scalar_type, index_type>::abs_tol_;
       using PhasorDynamics::Component<scalar_type, index_type>::variable_indices_;
       using PhasorDynamics::Component<scalar_type, index_type>::residual_indices_;
 
@@ -87,6 +86,7 @@ namespace GridKit
       void printMonitoredVariables() const override;
 
       int tagDifferentiable() override;
+      int setAbsoluteTolerance(RealT rel_tol) override;
       int evaluateResidual() override;
       int evaluateJacobian() override;
 

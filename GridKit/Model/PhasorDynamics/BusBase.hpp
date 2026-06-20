@@ -53,17 +53,6 @@ namespace GridKit
         return nnz_;
       }
 
-      void setTolerances(RealT& rtol, RealT& atol) const override
-      {
-        rtol = rel_tol_;
-        atol = abs_tol_;
-      }
-
-      void setMaxSteps(IdxT& msa) const override
-      {
-        msa = max_steps_;
-      }
-
       std::vector<ScalarT>& y() override
       {
         return y_;
@@ -92,6 +81,16 @@ namespace GridKit
       const std::vector<bool>& tag() const override
       {
         return tag_;
+      }
+
+      std::vector<ScalarT>& absoluteTolerance() override
+      {
+        return abs_tol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const override
+      {
+        return abs_tol_;
       }
 
       std::vector<ScalarT>& getResidual() override
@@ -191,6 +190,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
@@ -198,11 +198,6 @@ namespace GridKit
       IdxT*   J_rows_buffer_{nullptr};
       IdxT*   J_cols_buffer_{nullptr};
       RealT*  J_vals_buffer_{nullptr};
-
-      RealT rel_tol_;
-      RealT abs_tol_;
-
-      IdxT max_steps_;
 
       //
       // Adjoint sensitivity members

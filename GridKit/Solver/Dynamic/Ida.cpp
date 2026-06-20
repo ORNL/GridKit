@@ -83,35 +83,16 @@ namespace AnalysisManager
       retval = IDASetUserData(solver_, model_);
       checkOutput(retval, "IDASetUserData");
 
-      // Set tolerances
-      RealT rel_tol;
-      RealT abs_tol;
-
-      model_->setTolerances(rel_tol, abs_tol); ///< \todo Function name should be "getTolerances"!
-      retval = IDASStolerances(solver_, rel_tol, abs_tol);
-      checkOutput(retval, "IDASStolerances");
-
-      IdxT msa;
-      model_->setMaxSteps(msa);
-
-      /// \todo Need to set max number of steps based on user input!
-      retval = IDASetMaxNumSteps(solver_, static_cast<long>(msa));
-      checkOutput(retval, "IDASetMaxNumSteps");
-
       // Tag differential variables
-      std::vector<bool>& tag = model_->tag();
-      if (static_cast<IdxT>(tag.size()) == model_->size())
-      {
-        tag_ = N_VClone(yy_);
-        checkAllocation((void*) tag_, "N_VClone");
-        model_->tagDifferentiable();
-        copyVec(tag, tag_);
+      tag_ = N_VClone(yy_);
+      checkAllocation((void*) tag_, "N_VClone");
+      model_->tagDifferentiable();
+      copyVec(model_->tag(), tag_);
 
-        retval = IDASetId(solver_, tag_);
-        checkOutput(retval, "IDASetId");
-        retval = IDASetSuppressAlg(solver_, SUNTRUE);
-        checkOutput(retval, "IDASetSuppressAlg");
-      }
+      retval = IDASetId(solver_, tag_);
+      checkOutput(retval, "IDASetId");
+
+      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_);
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -403,12 +384,7 @@ namespace AnalysisManager
       checkOutput(retval, "IDAQuadInit");
 
       // Set tolerances and error control for quadratures
-      RealT rel_tol, abs_tol;
-      model_->setTolerances(rel_tol, abs_tol);
-
-      // Set tolerances for quadrature stricter than for integration
-      retval = IDAQuadSStolerances(solver_, rel_tol * 0.1, abs_tol * 0.1);
-      checkOutput(retval, "IDAQuadSStolerances");
+      setQuadratureTolerance(solver_, quadrature_rel_tol_, quadrature_abs_tol_override_);
 
       // Include quadrature in eror checking
       retval = IDASetQuadErrCon(solver_, SUNTRUE);
@@ -544,9 +520,7 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     int Ida<ScalarT, IdxT>::initializeBackwardSimulation(RealT tf)
     {
-      int   retval = 0;
-      RealT rel_tol;
-      RealT abs_tol;
+      int retval = 0;
 
       model_->initializeAdjoint();
 
@@ -561,16 +535,10 @@ namespace AnalysisManager
       retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
-      model_->setTolerances(rel_tol, abs_tol);
-      retval = IDASStolerancesB(solver_, backwardID_, rel_tol, abs_tol);
-      checkOutput(retval, "IDASStolerancesB");
+      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_), backward_time_step_, backward_rel_tol_, backward_abs_tol_override_, backward_max_steps_);
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
-
-      /// \todo Need to set max number of steps based on user input!
-      retval = IDASetMaxNumStepsB(solver_, backwardID_, 2000);
-      checkOutput(retval, "IDASetMaxNumSteps");
 
       // Allocate Jacobian matrix, if not already
       if (JacobianMatB_ == nullptr)
@@ -596,9 +564,7 @@ namespace AnalysisManager
       retval = IDAQuadInitB(solver_, backwardID_, this->adjointIntegrand, qB_);
       checkOutput(retval, "IDAQuadInitB");
 
-      // retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol*1.1, abs_tol*1.1);
-      retval = IDAQuadSStolerancesB(solver_, backwardID_, rel_tol * 0.1, abs_tol * 0.1);
-      checkOutput(retval, "IDAQuadSStolerancesB");
+      setQuadratureTolerance(IDAGetAdjIDABmem(solver_, backwardID_), backward_quadrature_rel_tol_, backward_quadrature_abs_tol_override_);
 
       // Include quadratures in error control
       retval = IDASetQuadErrConB(solver_, backwardID_, SUNTRUE);
@@ -886,6 +852,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
     {
+      const auto xsize = static_cast<size_t>(N_VGetLength(x));
+      if (xsize != y.size())
+      {
+        std::cerr << "\nN_Vector size (" << xsize << ") does not match std::vector size ("
+                  << y.size() << ").\n\n";
+        throw SundialsException();
+      }
+
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, y.size(), y.begin());
     }
@@ -899,6 +873,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
     {
+      const auto ysize = static_cast<size_t>(N_VGetLength(y));
+      if (x.size() != ysize)
+      {
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
+        throw SundialsException();
+      }
+
       ScalarT* ydata = N_VGetArrayPointer(y);
       std::copy(x.cbegin(), x.cend(), ydata);
     }
@@ -912,6 +894,14 @@ namespace AnalysisManager
     template <class ScalarT, typename IdxT>
     void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
+      const auto ysize = static_cast<size_t>(N_VGetLength(y));
+      if (x.size() != ysize)
+      {
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+                  << ysize << ").\n\n";
+        throw SundialsException();
+      }
+
       ScalarT* ydata = N_VGetArrayPointer(y);
       std::copy(x.cbegin(), x.cend(), ydata);
     }
@@ -923,7 +913,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printOutput(RealT t)
+    void Ida<ScalarT, IdxT>::printOutput(RealT t) const
     {
       RealT* yval  = N_VGetArrayPointer(yy_);
       RealT* ypval = N_VGetArrayPointer(yp_);
@@ -947,7 +937,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y)
+    void Ida<ScalarT, IdxT>::printSpecial(RealT t, N_Vector y) const
     {
       RealT* yval = N_VGetArrayPointer(y);
       IdxT   N    = static_cast<IdxT>(N_VGetLength(y));
@@ -967,7 +957,7 @@ namespace AnalysisManager
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::printFinalStats()
+    void Ida<ScalarT, IdxT>::printFinalStats() const
     {
       int retval = IDAPrintAllStats(solver_, stdout, SUN_OUTPUTFORMAT_TABLE);
       checkOutput(retval, "IDAPrintAllStats");
@@ -1073,6 +1063,275 @@ namespace AnalysisManager
         std::cerr << "\nERROR: Function " << functionName << " failed with flag " << retval << "!\n\n";
         throw SundialsException();
       }
+    }
+
+    /**
+     * @brief Set fixed step size and tolerances for the nonlinear solver
+     *
+     * @param time_step The fixed step size to use or 0 for adaptive
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setFixedStep(ScalarT time_step)
+    {
+      time_step_ = time_step;
+    }
+
+    /**
+     * @brief Set fixed step size and tolerances for the nonlinear solver for
+     *        the backward simulation
+     *
+     * @param time_step The fixed step size to use or 0 for adaptive
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardFixedStep(ScalarT time_step)
+    {
+      backward_time_step_ = time_step;
+    }
+
+    /**
+     * @brief Set the relative tolerance and optionally override the absolute
+     *        tolerance
+     *
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTolerance(ScalarT rel_tol,
+                                          ScalarT abs_tol_override)
+    {
+      rel_tol_          = rel_tol;
+      abs_tol_override_ = abs_tol_override;
+    }
+
+    /**
+     * @brief Set the relative tolerance and optionally override the absolute
+     *        tolerance for the backward simulation
+     *
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardTolerance(ScalarT rel_tol,
+                                                  ScalarT abs_tol_override)
+    {
+      backward_rel_tol_          = rel_tol;
+      backward_abs_tol_override_ = abs_tol_override;
+    }
+
+    /**
+     * @brief Set the quadrature relative tolerance and optionally override the
+     *        absolute tolerance
+     *
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(ScalarT rel_tol,
+                                                    ScalarT abs_tol_override)
+    {
+      quadrature_rel_tol_          = rel_tol;
+      quadrature_abs_tol_override_ = abs_tol_override;
+    }
+
+    /**
+     * @brief Set the quadrature relative tolerance and optionally override the
+     *        absolute tolerance for the backward simulation
+     *
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardQuadratureTolerance(ScalarT rel_tol,
+                                                            ScalarT abs_tol_override)
+    {
+      backward_quadrature_rel_tol_          = rel_tol;
+      backward_quadrature_abs_tol_override_ = abs_tol_override;
+    }
+
+    /**
+     * @brief Set the maximum number of steps
+     *
+     * @param max_steps The maximum number of steps
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setMaxSteps(IdxT max_steps)
+    {
+      max_steps_ = max_steps;
+    }
+
+    /**
+     * @brief Set the maximum number of steps for the backward simulation
+     *
+     * @param max_steps The maximum number of steps
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardMaxSteps(IdxT max_steps)
+    {
+      backward_max_steps_ = max_steps;
+    }
+
+    /**
+     * @brief A helper function to set common IDA options
+     *
+     * @param mem The IDA memory (either forward or backward)
+     * @param time_step The fixed step size to use
+     * @param rel_tol The relative tolerance to use for the nonlinear solver
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance for the nonlinear solver rather than the
+     *        model's default absolute tolerance
+     * @param max_steps The maximum number of steps
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setIDAOptions(void*   mem,
+                                           ScalarT time_step,
+                                           ScalarT rel_tol,
+                                           ScalarT abs_tol_override,
+                                           IdxT    max_steps)
+    {
+      int retval = 0;
+      retval     = IDASetMinStep(mem, time_step);
+      checkOutput(retval, "IDASetMinStep");
+      retval = IDASetMaxStep(mem, time_step);
+      checkOutput(retval, "IDASetMaxStep");
+      retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
+      checkOutput(retval, "IDASetMaxNumSteps");
+
+      if (time_step == 0)
+      {
+        setTolerance(mem, rel_tol, abs_tol_override);
+      }
+      else
+      {
+        /* Since the starting procedure is first order, the maximum global order
+         * of convergence is two */
+        retval = IDASetMaxOrd(mem, 2);
+        checkOutput(retval, "IDASetMaxOrd");
+
+        /* Enable more nonlinear iterations because a failed nonlinear solve
+         * causes a failed integration with fixed steps */
+        static constexpr int FIXED_STEP_NONLIN_ITRS = 16;
+        retval                                      = IDASetMaxNonlinIters(mem, FIXED_STEP_NONLIN_ITRS);
+        checkOutput(retval, "IDASetMaxNonlinIters");
+
+        // Set a large tolerance so the error test will never fail
+        static constexpr RealT FIXED_STEP_TOL_FAC = 1e100;
+        setTolerance(mem,
+                     FIXED_STEP_TOL_FAC * rel_tol,
+                     FIXED_STEP_TOL_FAC * abs_tol_override,
+                     FIXED_STEP_TOL_FAC);
+
+        /* We want the nonlinear solver tolerance to be ~rel_tol, but the with
+         * the large tolerances set above, we need to choose this tolerance to
+         * "undo" the fac scaling. */
+        retval = IDASetNonlinConvCoef(mem, 1 / FIXED_STEP_TOL_FAC);
+        checkOutput(retval, "IDASetNonlinConvCoef");
+      }
+    }
+
+    /**
+     * @brief A helper function to set the relative tolerance and optionally
+     *        override the absolute tolerance
+     *
+     * @param mem The IDA memory (either forward or backward)
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @param abs_tol_fac A factor to apply to the absolute tolerance if not
+     *        overridden
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setTolerance(void*   mem,
+                                          ScalarT rel_tol,
+                                          ScalarT abs_tol_override,
+                                          ScalarT abs_tol_fac)
+    {
+      int retval = 0;
+
+      if (abs_tol_override > 0)
+      {
+        retval = IDASStolerances(mem, rel_tol, abs_tol_override);
+        checkOutput(retval, "IDASStolerances");
+        return;
+      }
+
+      N_Vector abs_tol_vec = N_VClone(yy_);
+      checkAllocation((void*) abs_tol_vec, "N_VClone");
+      model_->setAbsoluteTolerance(rel_tol);
+      copyVec(model_->absoluteTolerance(), abs_tol_vec);
+      N_VScale(abs_tol_fac, abs_tol_vec, abs_tol_vec);
+
+      retval = IDASVtolerances(mem, rel_tol, abs_tol_vec);
+      checkOutput(retval, "IDASVtolerances");
+
+      N_VDestroy(abs_tol_vec);
+    }
+
+    /**
+     * @brief A helper function to set the quadrature relative tolerance and
+     *        optionally override the absolute tolerance
+     *
+     * @param mem The IDA memory (either forward or backward)
+     * @param rel_tol The relative tolerance to use
+     * @param abs_tol_override If positive, this value will be used as the
+     *        absolute tolerance rather than the model's default absolute
+     *        tolerance
+     * @param abs_tol_fac A factor to apply to the absolute tolerance if not
+     *        overridden
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setQuadratureTolerance(void*   mem,
+                                                    ScalarT rel_tol,
+                                                    ScalarT abs_tol_override)
+    {
+      int retval = 0;
+
+      if (abs_tol_override > 0)
+      {
+        retval = IDAQuadSStolerances(mem, rel_tol, abs_tol_override);
+        checkOutput(retval, "IDAQuadSStolerances");
+        return;
+      }
+
+      N_Vector abs_tol_vec = N_VClone(yy_);
+      checkAllocation((void*) abs_tol_vec, "N_VClone");
+      model_->setAbsoluteTolerance(rel_tol);
+      copyVec(model_->absoluteTolerance(), abs_tol_vec);
+
+      retval = IDAQuadSVtolerances(mem, rel_tol, abs_tol_vec);
+      checkOutput(retval, "IDAQuadSVtolerances");
+
+      N_VDestroy(abs_tol_vec);
     }
 
     // Compiler will prevent building modules with data type incompatible with sunrealtype

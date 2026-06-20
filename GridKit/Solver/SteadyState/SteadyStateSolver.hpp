@@ -22,6 +22,8 @@ namespace AnalysisManager
       return model_;
     }
 
+    virtual void setTolerance(ScalarT tol) = 0;
+
   protected:
     GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
   };

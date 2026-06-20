@@ -200,6 +200,7 @@ namespace GridKit
       y_.resize(size);
       yp_.resize(size);
       tag_.resize(size);
+      abs_tol_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
@@ -343,6 +344,25 @@ namespace GridKit
       {
         tag_[static_cast<size_t>(i)] = i < 5;
       }
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    template <class ScalarT, typename IdxT>
+    int Gensal<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+    {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 

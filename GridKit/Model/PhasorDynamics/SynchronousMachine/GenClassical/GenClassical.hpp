@@ -39,6 +39,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::nnz_;
       using Component<scalar_type, index_type>::size_;
       using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::abs_tol_;
       using Component<scalar_type, index_type>::time_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
@@ -77,6 +78,7 @@ namespace GridKit
       int allocate() override final;
       int initialize() override final;
       int tagDifferentiable() override final;
+      int setAbsoluteTolerance(RealT) override;
       int evaluateResidual() override final;
 
       int verify() const override final

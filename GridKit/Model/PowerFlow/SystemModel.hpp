@@ -39,12 +39,11 @@ namespace GridKit
     using ModelEvaluatorImpl<ScalarT, IdxT>::yB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::ypB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::tag_;
+    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::f_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::fB_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::g_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::gB_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::rel_tol_;
-    using ModelEvaluatorImpl<ScalarT, IdxT>::abs_tol_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_up_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::param_lo_;
@@ -56,10 +55,6 @@ namespace GridKit
     SystemModel()
       : ModelEvaluatorImpl<ScalarT, IdxT>(0, 0, 0)
     {
-      // Set system model tolerances
-      rel_tol_         = 1e-7;
-      abs_tol_         = 1e-9;
-      this->max_steps_ = 2000;
     }
 
     /**
@@ -113,6 +108,7 @@ namespace GridKit
       f_.resize(size_);
       fB_.resize(size_);
       tag_.resize(size_);
+      abs_tol_.resize(size_);
 
       g_.resize(size_quad_);
       gB_.resize(size_quad_ * size_opt_);
@@ -235,6 +231,45 @@ namespace GridKit
         for (IdxT j = 0; j < component->size(); ++j)
         {
           tag_[offset + j] = component->tag()[j];
+        }
+        offset += component->size();
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol)
+    {
+      // Set initial values for global solution vectors
+      IdxT offset = 0;
+      for (const auto& bus : buses_)
+      {
+        bus->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+        }
+        offset += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        component->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          abs_tol_[offset + j] = component->absoluteTolerance()[j];
         }
         offset += component->size();
       }

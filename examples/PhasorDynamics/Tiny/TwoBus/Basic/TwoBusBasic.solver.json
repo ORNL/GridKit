@@ -7,5 +7,5 @@
         {"time": 1.1, "type": "fault_off", "element_id": 0}
     ],
     "reference_file": "TwoBusBasic.ref.csv",
-    "error_tolerance":  2.01e-4
+    "error_tolerance":  2.03e-4
 }
