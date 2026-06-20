@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <exception>
 #include <functional>
 #include <iostream>
 #include <optional>
@@ -12,6 +11,7 @@
 #include <sunmatrix/sunmatrix_sparse.h> /* access to sparse SUNMatrix           */
 
 #include <GridKit/Definitions.hpp>
+#include <GridKit/Solver/Dynamic/SundialsException.hpp>
 
 #ifdef GRIDKIT_ENABLE_SUNDIALS_SPARSE
 #include <sunlinsol/sunlinsol_klu.h> /* access to KLU linear solver          */
@@ -251,15 +251,6 @@ namespace AnalysisManager
       void setQuadratureTolerance(void*   mem,
                                   ScalarT rel_tol,
                                   ScalarT abs_tol_override);
-    };
-
-    /// Simple exception to use within Ida class.
-    class SundialsException : public std::exception
-    {
-      virtual const char* what() const throw()
-      {
-        return "Method in Ida class failed!\n";
-      }
     };
 
   } // namespace Sundials
