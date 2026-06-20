@@ -85,6 +85,10 @@ $\mathbf{i}^{\mathrm{inj}}_{2}$ | `i2` | Output | [A] | Current injection at ter
 
 ### Algebraic Equations
 
+The propagation operator $\mathbf{h}$ is the current-form propagation matrix:
+it maps reflected conductor current at the far terminal to incident conductor
+current at the near terminal.
+
 ```math
 \begin{aligned}
 0 &= -\mathbf{i}^{\mathrm{inc}}_{1}

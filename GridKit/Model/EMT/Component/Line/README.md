@@ -98,7 +98,7 @@ $\mathbf{H}(s)=e^{-s\tau}$.
 
 The ULM is the general case where a `VectorFit` model defines the
 characteristic impedance $\mathbf{Z}_c$ and a `Propagation` model defines the
-propagation function $\mathbf{H}$.
+current-form propagation function $\mathbf{H}_i$.
 
 ```js
 {
@@ -120,8 +120,8 @@ propagation function $\mathbf{H}$.
         "tau": [...],
         "dt_min": ...,
         "poles": [...],
-        "C": [...],
-        "B": [...]
+        "residues": [...],
+
       }
     }
   }
