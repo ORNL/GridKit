@@ -6,9 +6,17 @@ three-phase current balance at the bus.
 
 ## Model Parameters
 
-None.
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$N$ | [-] | `N` | Number of connected-device ports | Required, positive integer
 
-## Model Derived Parameters
+### Parameter Validation
+
+```math
+N > 0
+```
+
+### Model Derived Parameters
 
 None.
 
@@ -18,8 +26,8 @@ None.
 
 #### Differential
 
-Symbol   | Units | Description        | Note
----------|-------|--------------------|--------------------------------
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
 $\mathbf{v}$ | [V] | Bus voltage vector | $\mathbf{v} = [v_a, v_b, v_c]^T \in \mathbb{R}^3$
 
 #### Algebraic
@@ -36,23 +44,23 @@ None.
 
 None.
 
+## Model Ports
+
+Symbol | Type | Units | Description | Note
+------ | ---- | ----- | ----------- | ----
+$\mathbf{i}^{\mathrm{inj}}_e$ | Input | [A] | Current injection from connected device $e$ | $e=1,\ldots,N$
+
 ## Model Equations
 
 ### Differential Equations
 
-An explicit representation for $\dot{\mathbf{v}}$ is not used because
-the effective shunt admittances depend on connected components and are not
-known at the bus level. The implicit DAE solver operates directly on
-the accumulated KCL residual:
-
 ```math
 \begin{aligned}
-0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^{\mathrm{inj}}_e
+0 &= \sum_{e=1}^{N} \mathbf{i}^{\mathrm{inj}}_e
 \end{aligned}
 ```
 
-where $\mathbf{i}^{\mathrm{inj}}_e$ is the vector of phase-current injections
-of connected component $e$ into the bus, which are a function of the bus voltage and bus voltage derivative.
+Each $\mathbf{i}^{\mathrm{inj}}_e$ may depend on the bus voltage and bus voltage derivative.
 
 ### Algebraic Equations
 
@@ -60,27 +68,24 @@ None.
 
 ## Initialization
 
-For a balanced three-phase initialization derived from the phasor voltage
-$V = |V| \angle \phi$ and nominal angular frequency $\omega_0 = 2 \pi f_0$,
+For a balanced three-phase initialization derived from phasor voltage
+$V = |V| \angle \phi$ and nominal angular frequency $\omega_0 = 2 \pi f_0$:
 
 ```math
+\begin{aligned}
 \mathbf{v}(0) = \sqrt{2}\,|V|
 \begin{bmatrix}
   \cos(\phi) \\
   \cos(\phi - \tfrac{2\pi}{3}) \\
   \cos(\phi + \tfrac{2\pi}{3})
-\end{bmatrix}
-```
-
-and
-
-```math
+\end{bmatrix} \\
 \dot{\mathbf{v}}(0) = -\sqrt{2}\,|V|\,\omega_0
 \begin{bmatrix}
   \sin(\phi) \\
   \sin(\phi - \tfrac{2\pi}{3}) \\
   \sin(\phi + \tfrac{2\pi}{3})
 \end{bmatrix}
+\end{aligned}
 ```
 
 ## Monitors
@@ -88,4 +93,3 @@ and
 Monitor | Units | Description | Note
 ------- | ----- | ----------- | ----
 `v` | [V] | Bus voltage | $\mathbf{v} \in \mathbb{R}^3$
-`dv` | [V/s] | Bus voltage derivative | $\dot{\mathbf{v}} \in \mathbb{R}^3$
