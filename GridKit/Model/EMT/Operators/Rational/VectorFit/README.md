@@ -7,7 +7,7 @@ The rational approximation is represented in pole form:
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
-  + \sum_{q=1}^{Q} \frac{\mathbf{R}^q}{s - p_q}
+  + \sum_{q=1}^{Q} \frac{\mathbf{R}_q}{s - p_q}
 ```
 
 The Laplace domain representation of this model is:

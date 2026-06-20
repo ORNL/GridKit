@@ -28,10 +28,10 @@ The nominal pi model is the constant-parameter lumped case.
 {
   "class": "LineLumped",
   "params": {
-    "R": ...,
-    "L": ...,
-    "G": ...,
-    "C": ...,
+    "Rp": ...,
+    "Lp": ...,
+    "Gp": ...,
+    "Cp": ...,
     "dx": ...
   }
 }
@@ -41,14 +41,16 @@ The nominal pi model is the constant-parameter lumped case.
 
 The frequency-dependent pi model keeps the lumped topology and replaces the
 constant line matrices with rational parameter models.
-Note: using a `VectorFit` model with only $\mathbf{D}$ nonzero is an equivalent
-way to define the nominal pi model.
+Note: using `VectorFit` models for `Zp` and `Yp` with no poles or residues
+is an equivalent way to define the nominal pi model: for `Zp`,
+$\mathbf{D}=\mathbf{R}'$ and $\mathbf{E}=\mathbf{L}'$. For `Yp`,
+$\mathbf{D}=\mathbf{G}'$ and $\mathbf{E}=\mathbf{C}'$.
 
 ```js
 {
   "class": "LineLumped",
   "params": {
-    "Z": {
+    "Zp": {
       "class": "VectorFit",
       "params": {
         "D": ...,
@@ -57,7 +59,7 @@ way to define the nominal pi model.
         "residues": [...]
       }
     },
-    "Y": {
+    "Yp": {
       "class": "VectorFit",
       "params": {
         "D": ...,
@@ -96,9 +98,8 @@ $\mathbf{H}(s)=e^{-s\tau}$.
 
 ### Universal Line Model
 
-The ULM is the general case where a `VectorFit` model defines the
-characteristic admittance $\mathbf{y}_c$ and a `Propagation` model defines the
-current-form propagation function $\mathbf{H}_i$.
+The ULM is the general case with characteristic admittance `Yc` and
+current-form propagation function `H`.
 
 ```js
 {
