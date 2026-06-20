@@ -5,34 +5,37 @@ $\pi$-section equivalent over length $\Delta x$. Series current $\mathbf{i}$
 is directed from terminal 1 to terminal 2.
 
 Notes:
-- Constant `R`, `L`, `G`, and `C` parameters remain the supported interface.
-  Future support for per-unit-length $\mathbf{Z}'$ and $\mathbf{Y}'$ as
-  convolutional models should preserve this case: using only the $\mathbf{D}$
-  and $\mathbf{E}$ terms gives
-  $\mathbf{Z}'=\mathbf{R}'+s\mathbf{L}'$ and
-  $\mathbf{Y}'=\mathbf{G}'+s\mathbf{C}'$.
+- Alternatively, $\mathbf{Z}'$ and $\mathbf{Y}'$ may be given directly as
+  `VectorFit` models. Otherwise, they are derived from constant `R`, `L`,
+  `G`, and `C` matrices.
+
+## Block Diagram
 
 <div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/LineLumped/diagram.svg">
+   <img align="center" src="../../../../../../docs/Figures/EMT/LineLumped/diagram.png">
 
   Figure 1: LineLumped model
 </div>
 
 ## Model Parameters
 
-For phase count $N$:
+Symbol           | Units          | JSON | Description                              | Note
+---------------- | -------------- | ---- | ---------------------------------------- | ----
+$\mathbf{R}'$    | [$\Omega$/m]   | `R`  | Series resistance matrix per unit length | $\mathbb{R}^{N \times N}$
+$\mathbf{L}'$    | [H/m]          | `L`  | Series inductance matrix per unit length | $\mathbb{R}^{N \times N}$
+$\mathbf{G}'$    | [S/m]          | `G`  | Shunt conductance matrix per unit length | $\mathbb{R}^{N \times N}$
+$\mathbf{C}'$    | [F/m]          | `C`  | Shunt capacitance matrix per unit length | $\mathbb{R}^{N \times N}$
+$\Delta x$       | [m]            | `dx` | Line segment length                      | $\mathbb{R}$
+$\mathbf{Z}'$    | [$\Omega$/m]   | `Z`  | Series impedance per unit length         | $\mathbb{C}^{N\times N}$, optional `VectorFit` model 
+$\mathbf{Y}'$    | [S/m]          | `Y`  | Shunt admittance per unit length         | $\mathbb{C}^{N\times N}$, optional `VectorFit` model 
 
-Symbol           | Units          | Description                              | Note
------------------|----------------|------------------------------------------|---------------------------------
-$\mathbf{R}'$    | [$\Omega$/m]   | Series resistance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{L}'$    | [H/m]          | Series inductance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{G}'$    | [S/m]          | Shunt conductance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{C}'$    | [F/m]          | Shunt capacitance matrix per unit length | $\mathbb{R}^{N \times N}$
-$\mathbf{Z}'$    | [$\Omega$/m]   | Series impedance per unit length         | $\mathbb{C}^{N \times N}$; future compatibility: supports passing a convolutional model
-$\mathbf{Y}'$    | [S/m]          | Shunt admittance per unit length         | $\mathbb{C}^{N \times N}$; future compatibility: supports passing a convolutional model
-$\Delta x$       | [m]            | Line segment length                      | $\mathbb{R}$
+### Parameter Validation
 
-## Model Derived Parameters
+None.
+
+### Model Derived Parameters
+
+For the constant `R`, `L`, `G`, and `C` alternative:
 
 ```math
 \begin{aligned}
@@ -40,6 +43,17 @@ $\Delta x$       | [m]            | Line segment length                      | $
   \mathbf{L} &= \mathbf{L}'\Delta x   & \mathbf{C} &= \dfrac{\mathbf{C}'\Delta x}{2}
 \end{aligned}
 ```
+
+If `Z` and `Y` are not given, they are derived as:
+
+```math
+\begin{aligned}
+  \mathbf{Z} &= \mathbf{R} + s\mathbf{L} \qquad \text{or} \qquad = \Delta x \mathbf{Z}'\\
+  \mathbf{Y} &= \mathbf{G} + s\mathbf{C} \qquad \text{or} \qquad = \dfrac{\Delta x \mathbf{Y}'}{2}
+\end{aligned}
+```
+
+and modeled via `VectorFit`.
 
 ## Model Variables
 
@@ -79,38 +93,30 @@ $\mathbf{i}^{\mathrm{inj}}_{2}$ | `i2` | Output | [A] | Current injection at ter
 
 ### Differential Equations
 
-For constant series parameters:
-
 ```math
-0 = \mathbf{R}\,\mathbf{i} + \mathbf{L}\dot{\mathbf{i}} + \mathbf{v}_2 - \mathbf{v}_1
+0 = \mathbf{z}*\mathbf{i}+ \mathbf{v}_2 - \mathbf{v}_1
 ```
 
 ### Algebraic Equations
 
 None.
 
-### Port Equations
+### Wiring
 
 ```math
 \begin{aligned}
 \mathbf{i}^{\mathrm{inj}}_{1} &=
-  - \mathbf{G}\,\mathbf{v}_1
-  - \mathbf{C}\,\dot{\mathbf{v}}_1
+  - \mathbf{y}*\mathbf{v}_1
   - \mathbf{i} \\
 \mathbf{i}^{\mathrm{inj}}_{2} &=
-  - \mathbf{G}\,\mathbf{v}_2
-  - \mathbf{C}\,\dot{\mathbf{v}}_2
+  - \mathbf{y}*\mathbf{v}_2
   + \mathbf{i}
 \end{aligned}
 ```
 
 ## Initialization
 
-Given $\mathbf{i}_0$, the initial derivative follows from the series residual:
-
-```math
-\dot{\mathbf{i}}_0 = \mathbf{L}^{-1}\left(\mathbf{v}_{1,0} - \mathbf{v}_{2,0} - \mathbf{R}\,\mathbf{i}_0\right)
-```
+Since this component is a member of the network, the power flow solution must initialize this model.
 
 ## Monitors
 
