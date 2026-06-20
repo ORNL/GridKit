@@ -11,7 +11,7 @@ The rational approximation is represented in state-space form:
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
-  + \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}^T
+  + \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}
 ```
 The Laplace domain representation of this model is:
 ```math
@@ -41,10 +41,19 @@ $\mathbf{D}$ | [-] | `D` | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{
 $\mathbf{E}$ | [s] | `E` | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
 $\mathbf{p}$ | [1/s] | `poles` | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
 $\mathbf{C}$ | [-] | `C` | Output matrix | | $\mathbf{C} \in \mathbb{C}^{N \times Q}$
-$\mathbf{B}$ | [1/s] | `B` | Input matrix | | $\mathbf{B} \in \mathbb{C}^{K \times Q}$
+$\mathbf{B}$ | [1/s] | `B` | Input matrix | | $\mathbf{B} \in \mathbb{C}^{Q \times K}$
 
 ### Parameter Validation
 
+The fitted matrices must satisfy
+
+```math
+\mathbf{D},\mathbf{E}\in\mathbb{R}^{N\times K},\quad
+\mathbf{C}\in\mathbb{C}^{N\times Q},\quad
+\mathbf{B}\in\mathbb{C}^{Q\times K}.
+```
+
+All entries must be finite. Each pole must be nonzero.
 Complex-valued poles and factors must be ordered as adjacent conjugate pairs. For
 each pair, with $q$ the first index:
 
@@ -80,9 +89,9 @@ correspond to poles.
 
 #### Differential
 
-In the general case, there are $2Q$ scalar internal differential states, grouped
-as $\mathbf{x}_{\mathrm{r}}$ and $\mathbf{x}_{\mathrm{i}}$ vectors.
-Real-valued poles do not need the imaginary state.
+This implementation uses the uniform real layout
+$\mathbf{x}_{\mathrm r},\mathbf{x}_{\mathrm i}\in\mathbb{R}^Q$. For real
+poles, the imaginary row is zero-coupled and initializes to zero.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
@@ -91,7 +100,9 @@ $\mathbf{x}_{\mathrm{i}}$ | [-] | Imaginary memory states | $\mathbf{x}_{\mathrm
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{y}$ | [-] | Output contribution state | $\mathbf{y}\in\mathbb{R}^N$
 
 ### External Variables
 
@@ -100,6 +111,7 @@ None.
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | [-] | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+$\dot{\mathbf{u}}$ | [-/s] | Input derivative vector | $\dot{\mathbf{u}}\in\mathbb{R}^K$
 
 #### Algebraic
 
@@ -116,31 +128,29 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 
 ### Differential Equations
 
-For real-valued poles, the imaginary-memory equation is not needed.
 
 ```math
 \begin{aligned}
 0 &= -\dot{\mathbf{x}}_{\mathrm{r}}
      + \mathbf{A}\mathbf{x}_{\mathrm{r}}
      - \boldsymbol{\Omega}\mathbf{x}_{\mathrm{i}}
-     + \mathbf{B}_{\mathrm{r}}^T\mathbf{u} \\
+     + \mathbf{B}_{\mathrm{r}}\mathbf{u} \\
 0 &= -\dot{\mathbf{x}}_{\mathrm{i}}
      + \boldsymbol{\Omega}\mathbf{x}_{\mathrm{r}}
      + \mathbf{A}\mathbf{x}_{\mathrm{i}}
-     + \mathbf{B}_{\mathrm{i}}^T\mathbf{u}
+     + \mathbf{B}_{\mathrm{i}}\mathbf{u}
 \end{aligned}
 ```
 
 ### Algebraic Equations
 
-None.
-
-### Port Equations
-
 ```math
-\mathbf{y} = \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
-  + \mathbf{C}_{\mathrm{r}}\mathbf{x}_{\mathrm{r}}
-  - \mathbf{C}_{\mathrm{i}}\mathbf{x}_{\mathrm{i}}
+\mathbf{0}
+= -\mathbf{y}
+  + \mathbf{D}\mathbf{u}
+  + \mathbf{E}\dot{\mathbf{u}}
+  + \mathbf{C}_{\mathrm r}\mathbf{x}_{\mathrm r}
+  - \mathbf{C}_{\mathrm i}\mathbf{x}_{\mathrm i}
 ```
 
 ## Initialization
@@ -149,7 +159,7 @@ For an affine initial input trajectory, let subscript $0$ denote initial values.
 The complex pole-memory state initializes to:
 
 ```math
-\mathbf{x}_0 = -\mathbf{P}^{-1}\mathbf{B}^T\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}^T\dot{\mathbf{u}}_0
+\mathbf{x}_0 = -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}}_0
 ```
 
 The real-valued state vectors and port contribution initialize to:
@@ -158,7 +168,19 @@ The real-valued state vectors and port contribution initialize to:
 \begin{aligned}
 \mathbf{x}_{\mathrm{r},0} &= \text{Re}(\mathbf{x}_0) \\
 \mathbf{x}_{\mathrm{i},0} &= \text{Im}(\mathbf{x}_0) \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \text{Re}(\mathbf{C}\mathbf{x}_0)
+\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \text{Re}(\mathbf{C}\mathbf{x}_0) \\
+\dot{\mathbf{x}}_{\mathrm r,0}
+&= \mathbf{A}\mathbf{x}_{\mathrm r,0}
+ - \boldsymbol{\Omega}\mathbf{x}_{\mathrm i,0}
+ + \mathbf{B}_{\mathrm r}\mathbf{u}_0 \\
+\dot{\mathbf{x}}_{\mathrm i,0}
+&= \boldsymbol{\Omega}\mathbf{x}_{\mathrm r,0}
+ + \mathbf{A}\mathbf{x}_{\mathrm i,0}
+ + \mathbf{B}_{\mathrm i}\mathbf{u}_0 \\
+\dot{\mathbf{y}}_0
+&= \mathbf{D}\dot{\mathbf{u}}_0
+ + \mathbf{C}_{\mathrm r}\dot{\mathbf{x}}_{\mathrm r,0}
+ - \mathbf{C}_{\mathrm i}\dot{\mathbf{x}}_{\mathrm i,0}
 \end{aligned}
 ```
 

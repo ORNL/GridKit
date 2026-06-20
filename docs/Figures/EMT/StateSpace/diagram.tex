@@ -18,7 +18,7 @@
 \node[block] (E)  at (0, -1.9) {$s\mathbf{E}$};
 
 % State-space chain: input map -> resolvent state bank -> output map
-\node[block, minimum width=1.5cm] (BT)  at (-2.6, 0) {$\mathbf{B}^{T}$};
+\node[block, minimum width=1.5cm] (BT)  at (-2.6, 0) {$\mathbf{B}$};
 \node[block, minimum width=2.9cm] (res) at ( 0.0, 0) {$\dfrac{\mathbf{I}}{s\mathbf{I} - \mathbf{P}}$};
 \node[block, minimum width=1.5cm] (C)   at ( 2.6, 0) {$\mathbf{C}$};
 
@@ -45,7 +45,6 @@
 
 % Model enclosure
 \draw[dashed, semithick, rounded corners=4pt] (-5.0, -3.0) rectangle (5.7, 3.0);
-\node[sig, above=2pt] at (0.35, 3.0) {$\mathbf{H}(s)$};
 
 \end{tikzpicture}
 \end{document}
