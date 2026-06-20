@@ -4,8 +4,7 @@
 complex poles and factorized residues.
 
 Notes:
-- This cannot be used in general to replace `Rational`, as that model can support full-rank residuals, while this only supports rank-1 residuals.
-- The benefit of this model is reduced number of internal states.
+- This cannot be used in general to replace `VectorFit`, as that model can support full-rank residuals, while this only supports rank-1 residuals.
 
 The rational approximation is represented in state-space form:
 
@@ -35,39 +34,30 @@ The time domain representation of this model is:
 
 For output dimension $N$, input dimension $K$, and pole count $Q$:
 
-Symbol | Units | JSON | Description | Typical Value | Note
------- | ----- | ---- | ----------- | ------------- | ----
-$\mathbf{D}$ | [-] | `D` | Constant coefficient | | $\mathbf{D} \in \mathbb{R}^{N \times K}$
-$\mathbf{E}$ | [s] | `E` | Linear coefficient | | $\mathbf{E} \in \mathbb{R}^{N \times K}$
-$\mathbf{p}$ | [1/s] | `poles` | Poles | | $\mathbf{p} \in \mathbb{C}^Q$
-$\mathbf{C}$ | [-] | `C` | Output matrix | | $\mathbf{C} \in \mathbb{C}^{N \times Q}$
-$\mathbf{B}$ | [1/s] | `B` | Input matrix | | $\mathbf{B} \in \mathbb{C}^{Q \times K}$
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$\mathbf{D}$ | [-] | `D` | Constant coefficient | $\mathbf{D}\in\mathbb{R}^{N\times K}$
+$\mathbf{E}$ | [s] | `E` | Linear coefficient | $\mathbf{E}\in\mathbb{R}^{N\times K}$
+$\mathbf{p}$ | [1/s] | `poles` | Poles | $\mathbf{p}\in\mathbb{C}^Q$
+$\mathbf{C}$ | [-] | `C` | Output matrix | $\mathbf{C}\in\mathbb{C}^{N\times Q}$
+$\mathbf{B}$ | [1/s] | `B` | Input matrix | $\mathbf{B}\in\mathbb{C}^{Q\times K}$
 
 ### Parameter Validation
 
-The fitted matrices must satisfy
-
-```math
-\mathbf{D},\mathbf{E}\in\mathbb{R}^{N\times K},\quad
-\mathbf{C}\in\mathbb{C}^{N\times Q},\quad
-\mathbf{B}\in\mathbb{C}^{Q\times K}.
-```
-
-All entries must be finite. Each pole must be nonzero.
 Complex-valued poles and factors must be ordered as adjacent conjugate pairs. For
 each pair, with $q$ the first index:
 
 ```math
-p_q = (p_{q+1})^*
+\begin{aligned}
+p_q &\ne 0 \\
+p_q &= (p_{q+1})^*
+\end{aligned}
 ```
 
-The corresponding columns of $\mathbf{C}$ and $\mathbf{B}$ must follow the same
-conjugate-pair ordering.
+The corresponding columns of $\mathbf{C}$ and rows of $\mathbf{B}$ must follow
+the same conjugate-pair ordering.
 
 ### Model Derived Parameters
-
-Define the real-valued quantities used below. Entries indexed by $q$
-correspond to poles.
 
 ```math
 \begin{aligned}
@@ -89,20 +79,14 @@ correspond to poles.
 
 #### Differential
 
-This implementation uses the uniform real layout
-$\mathbf{x}_{\mathrm r},\mathbf{x}_{\mathrm i}\in\mathbb{R}^Q$. For real
-poles, the imaginary row is zero-coupled and initializes to zero.
-
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{x}_{\mathrm{r}}$ | [-] | Real memory states | $\mathbf{x}_{\mathrm{r}} \in \mathbb{R}^Q$
-$\mathbf{x}_{\mathrm{i}}$ | [-] | Imaginary memory states | $\mathbf{x}_{\mathrm{i}} \in \mathbb{R}^Q$
+$\mathbf{w}$ | [-] | Real memory states | $\mathbf{w}\in\mathbb{R}^Q$
+$\mathbf{v}$ | [-] | Imaginary memory states | $\mathbf{v}\in\mathbb{R}^Q$
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Output contribution state | $\mathbf{y}\in\mathbb{R}^N$
+None.
 
 ### External Variables
 
@@ -111,7 +95,6 @@ $\mathbf{y}$ | [-] | Output contribution state | $\mathbf{y}\in\mathbb{R}^N$
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{u}$ | [-] | Input vector | $\mathbf{u} \in \mathbb{R}^K$
-$\dot{\mathbf{u}}$ | [-/s] | Input derivative vector | $\dot{\mathbf{u}}\in\mathbb{R}^K$
 
 #### Algebraic
 
@@ -128,59 +111,43 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 
 ### Differential Equations
 
-
 ```math
 \begin{aligned}
-0 &= -\dot{\mathbf{x}}_{\mathrm{r}}
-     + \mathbf{A}\mathbf{x}_{\mathrm{r}}
-     - \boldsymbol{\Omega}\mathbf{x}_{\mathrm{i}}
+0 &= -\dot{\mathbf{w}}
+     + \mathbf{A}\mathbf{w}
+     - \boldsymbol{\Omega}\mathbf{v}
      + \mathbf{B}_{\mathrm{r}}\mathbf{u} \\
-0 &= -\dot{\mathbf{x}}_{\mathrm{i}}
-     + \boldsymbol{\Omega}\mathbf{x}_{\mathrm{r}}
-     + \mathbf{A}\mathbf{x}_{\mathrm{i}}
+0 &= -\dot{\mathbf{v}}
+     + \boldsymbol{\Omega}\mathbf{w}
+     + \mathbf{A}\mathbf{v}
      + \mathbf{B}_{\mathrm{i}}\mathbf{u}
 \end{aligned}
 ```
 
 ### Algebraic Equations
 
+None.
+
+### Wiring
+
 ```math
-\mathbf{0}
-= -\mathbf{y}
-  + \mathbf{D}\mathbf{u}
+\mathbf{y}
+= \mathbf{D}\mathbf{u}
   + \mathbf{E}\dot{\mathbf{u}}
-  + \mathbf{C}_{\mathrm r}\mathbf{x}_{\mathrm r}
-  - \mathbf{C}_{\mathrm i}\mathbf{x}_{\mathrm i}
+  + \mathbf{C}_{\mathrm{r}}\mathbf{w}
+  - \mathbf{C}_{\mathrm{i}}\mathbf{v}
 ```
 
 ## Initialization
 
-For an affine initial input trajectory, let subscript $0$ denote initial values.
-The complex pole-memory state initializes to:
-
-```math
-\mathbf{x}_0 = -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}}_0
-```
-
-The real-valued state vectors and port contribution initialize to:
+For an affine initial input trajectory, let subscript $0$ denote initial values:
 
 ```math
 \begin{aligned}
-\mathbf{x}_{\mathrm{r},0} &= \text{Re}(\mathbf{x}_0) \\
-\mathbf{x}_{\mathrm{i},0} &= \text{Im}(\mathbf{x}_0) \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \text{Re}(\mathbf{C}\mathbf{x}_0) \\
-\dot{\mathbf{x}}_{\mathrm r,0}
-&= \mathbf{A}\mathbf{x}_{\mathrm r,0}
- - \boldsymbol{\Omega}\mathbf{x}_{\mathrm i,0}
- + \mathbf{B}_{\mathrm r}\mathbf{u}_0 \\
-\dot{\mathbf{x}}_{\mathrm i,0}
-&= \boldsymbol{\Omega}\mathbf{x}_{\mathrm r,0}
- + \mathbf{A}\mathbf{x}_{\mathrm i,0}
- + \mathbf{B}_{\mathrm i}\mathbf{u}_0 \\
-\dot{\mathbf{y}}_0
-&= \mathbf{D}\dot{\mathbf{u}}_0
- + \mathbf{C}_{\mathrm r}\dot{\mathbf{x}}_{\mathrm r,0}
- - \mathbf{C}_{\mathrm i}\dot{\mathbf{x}}_{\mathrm i,0}
+\mathbf{x}_0 &= -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}}_0 \\
+\mathbf{w}_0 &= \text{Re}(\mathbf{x}_0) \\
+\mathbf{v}_0 &= \text{Im}(\mathbf{x}_0) \\
+\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \mathbf{C}_{\mathrm{r}}\mathbf{w}_0 - \mathbf{C}_{\mathrm{i}}\mathbf{v}_0
 \end{aligned}
 ```
 
