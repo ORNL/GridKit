@@ -1,7 +1,7 @@
 # LineDistributed Model
 
 `LineDistributed` represents a distributed EMT line with
-characteristic impedance $\mathbf{Z}_c$ and propagation model $\mathbf{H}$.
+characteristic admittance $\mathbf{y}_c$ and propagation model $\mathbf{H}$.
 
 ## Block Diagram
 
@@ -16,7 +16,7 @@ characteristic impedance $\mathbf{Z}_c$ and propagation model $\mathbf{H}$.
 Symbol            | Units       | JSON         | Description                                            | Note
 ----------------- | ----------- | ------------ | ------------------------------------------------------ | ----
 $\mathbf{P}_\phi$ | [-]         | `conductors` | Permutation matrix mapping each conductor to its phase | $\mathbf{P}_\phi \in \mathbb{R}^{N \times K}$
-$\mathbf{z}_c$    | [$\Omega$]  | `Zc`         | Characteristic impedance                              | $\mathbf{z}_c \in \mathbb{R}^{N \times K}$
+$\mathbf{y}_c$    | [S]         | `Yc`         | Characteristic admittance                             | $\mathbf{y}_c \in \mathbb{R}^{K \times N}$
 $\mathbf{h}$      | [-]         | `H`          | Propagation function                                  | $\mathbf{h} \in \mathbb{R}^{K \times K}$
 
 ### Parameter Validation
@@ -34,19 +34,11 @@ $\mathbf{P}_\phi$, respectively.
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}^{\mathrm{sh}}_{1}$ | [A] | Shunt current at terminal `1` | $\mathbf{i}^{\mathrm{sh}}_{1} \in \mathbb{R}^K$
-$\mathbf{i}^{\mathrm{sh}}_{2}$ | [A] | Shunt current at terminal `2` | $\mathbf{i}^{\mathrm{sh}}_{2} \in \mathbb{R}^K$
+None.
 
 #### Algebraic
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{i}^{\mathrm{inc}}_{1}$ | [A] | Incident current at terminal `1` | $\mathbf{i}^{\mathrm{inc}}_{1} \in \mathbb{R}^K$
-$\mathbf{i}^{\mathrm{inc}}_{2}$ | [A] | Incident current at terminal `2` | $\mathbf{i}^{\mathrm{inc}}_{2} \in \mathbb{R}^K$
-$\mathbf{i}^{\mathrm{ref}}_{1}$ | [A] | Reflected current at terminal `1` | $\mathbf{i}^{\mathrm{ref}}_{1} \in \mathbb{R}^K$
-$\mathbf{i}^{\mathrm{ref}}_{2}$ | [A] | Reflected current at terminal `2` | $\mathbf{i}^{\mathrm{ref}}_{2} \in \mathbb{R}^K$
+None.
 
 ### External Variables
 
@@ -74,40 +66,32 @@ $\mathbf{i}^{\mathrm{inj}}_{2}$ | `i2` | Output | [A] | Current injection at ter
 
 ### Differential Equations
 
-```math
-\begin{aligned}
-0 &= -\mathbf{v}_{1}
-     + \mathbf{z}_c*\,\mathbf{i}^{\mathrm{sh}}_{1} \\
-0 &= -\mathbf{v}_{2}
-     + \mathbf{z}_c*\,\mathbf{i}^{\mathrm{sh}}_{2}
-\end{aligned}
-```
+None.
 
 ### Algebraic Equations
 
-The propagation operator $\mathbf{h}$ is the current-form propagation matrix:
-it maps reflected conductor current at the far terminal to incident conductor
-current at the near terminal.
+None.
+
+### Wiring
 
 ```math
 \begin{aligned}
-0 &= -\mathbf{i}^{\mathrm{inc}}_{1}
-     + \mathbf{h}*\,\mathbf{i}^{\mathrm{ref}}_{2} \\
-0 &= -\mathbf{i}^{\mathrm{inc}}_{2}
-     + \mathbf{h}*\,\mathbf{i}^{\mathrm{ref}}_{1} \\
-0 &= -\mathbf{i}^{\mathrm{ref}}_{1}
-     + 2\,\mathbf{i}^{\mathrm{sh}}_{1}
-     - \mathbf{i}^{\mathrm{inc}}_{1} \\
-0 &= -\mathbf{i}^{\mathrm{ref}}_{2}
-     + 2\,\mathbf{i}^{\mathrm{sh}}_{2}
-     - \mathbf{i}^{\mathrm{inc}}_{2}
-\end{aligned}
-```
-
-### Port Equations
-
-```math
-\begin{aligned}
+\mathbf{i}^{\mathrm{sh}}_{1} &=
+  \mathbf{y}_c*\,\mathbf{v}_{1} \\
+\mathbf{i}^{\mathrm{sh}}_{2} &=
+  \mathbf{y}_c*\,\mathbf{v}_{2} \\
+\mathbf{i}^{\mathrm{inc}}_{1} &=
+  \mathbf{h}*\,\left(
+  2\,\mathbf{i}^{\mathrm{sh}}_{2}
+  -
+  \mathbf{i}^{\mathrm{inc}}_{2}
+  \right) \\
+\mathbf{i}^{\mathrm{inc}}_{2} &=
+  \mathbf{h}*\,\left(
+  2\,\mathbf{i}^{\mathrm{sh}}_{1}
+  -
+  \mathbf{i}^{\mathrm{inc}}_{1}
+  \right) \\
 \mathbf{i}^{\mathrm{inj}}_{1} &=
   \mathbf{P}_\phi\left(
   \mathbf{i}^{\mathrm{inc}}_{1}
@@ -126,24 +110,15 @@ current at the near terminal.
 
 ## Initialization
 
-Let subscript $0$ denote initial values. The shunt currents initialize from the
-characteristic-impedance residuals:
+Let subscript $0$ denote initial values. Initial values satisfy the wiring
+equations:
 
 ```math
 \begin{aligned}
-0 &= -\mathbf{v}_{1,0} + \mathbf{z}_c*\,\mathbf{i}^{\mathrm{sh}}_{1,0} \\
-0 &= -\mathbf{v}_{2,0} + \mathbf{z}_c*\,\mathbf{i}^{\mathrm{sh}}_{2,0}
-\end{aligned}
-```
-
-The algebraic currents initialize from the algebraic residuals:
-
-```math
-\begin{aligned}
-0 &= -\mathbf{i}^{\mathrm{inc}}_{1,0} + \mathbf{h}*\,\mathbf{i}^{\mathrm{ref}}_{2,0} \\
-0 &= -\mathbf{i}^{\mathrm{inc}}_{2,0} + \mathbf{h}*\,\mathbf{i}^{\mathrm{ref}}_{1,0} \\
-0 &= -\mathbf{i}^{\mathrm{ref}}_{1,0} + 2\,\mathbf{i}^{\mathrm{sh}}_{1,0} - \mathbf{i}^{\mathrm{inc}}_{1,0} \\
-0 &= -\mathbf{i}^{\mathrm{ref}}_{2,0} + 2\,\mathbf{i}^{\mathrm{sh}}_{2,0} - \mathbf{i}^{\mathrm{inc}}_{2,0}
+\mathbf{i}^{\mathrm{sh}}_{1,0} &= \mathbf{y}_c*\,\mathbf{v}_{1,0} \\
+\mathbf{i}^{\mathrm{sh}}_{2,0} &= \mathbf{y}_c*\,\mathbf{v}_{2,0} \\
+\mathbf{i}^{\mathrm{inc}}_{1,0} &= \mathbf{h}*\,\left(2\,\mathbf{i}^{\mathrm{sh}}_{2,0} - \mathbf{i}^{\mathrm{inc}}_{2,0}\right) \\
+\mathbf{i}^{\mathrm{inc}}_{2,0} &= \mathbf{h}*\,\left(2\,\mathbf{i}^{\mathrm{sh}}_{1,0} - \mathbf{i}^{\mathrm{inc}}_{1,0}\right)
 \end{aligned}
 ```
 
@@ -155,5 +130,3 @@ Monitor | Units | Description | Note
 `i_sh_2` | [A] | Shunt current at terminal `2` | $\mathbf{i}^{\mathrm{sh}}_{2} \in \mathbb{R}^K$
 `i_inc_1` | [A] | Incident current at terminal `1` | $\mathbf{i}^{\mathrm{inc}}_{1} \in \mathbb{R}^K$
 `i_inc_2` | [A] | Incident current at terminal `2` | $\mathbf{i}^{\mathrm{inc}}_{2} \in \mathbb{R}^K$
-`i_ref_1` | [A] | Reflected current at terminal `1` | $\mathbf{i}^{\mathrm{ref}}_{1} \in \mathbb{R}^K$
-`i_ref_2` | [A] | Reflected current at terminal `2` | $\mathbf{i}^{\mathrm{ref}}_{2} \in \mathbb{R}^K$
