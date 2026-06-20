@@ -68,13 +68,9 @@ int printMicrogridSystems(index_type N_size)
   real_type t_final = 1.0;
 
   real_type rel_tol = SCALE_MICROGRID_REL_TOL;
-  real_type abs_tol = SCALE_MICROGRID_ABS_TOL;
 
   // Create circuit model
-  PowerElectronicsModel<real_type, index_type> sys_model(rel_tol,
-                                                         abs_tol,
-                                                         use_jac,
-                                                         SCALE_MICROGRID_MAX_STEPS);
+  PowerElectronicsModel<real_type, index_type> sys_model(use_jac);
 
   // Ensure minimum size requirement
   if (N_size < 1)
@@ -259,6 +255,8 @@ int printMicrogridSystems(index_type N_size)
   AnalysisManager::Sundials::Ida<real_type, index_type> idas(&sys_model);
 
   // setup simulation
+  idas.setTolerance(rel_tol);
+  idas.setMaxSteps(SCALE_MICROGRID_MAX_STEPS);
   idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);

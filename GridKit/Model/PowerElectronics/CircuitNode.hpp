@@ -74,6 +74,7 @@ namespace GridKit
       yp_.resize(size);
       f_.resize(size);
       tag_.resize(size);
+      abs_tol_.resize(size);
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -99,6 +100,24 @@ namespace GridKit
     {
       tag_[0] = false;
 
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol)
+    {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -163,6 +182,7 @@ namespace GridKit
     std::vector<ScalarT> y_;
     std::vector<ScalarT> yp_;
     std::vector<bool>    tag_;
+    std::vector<ScalarT> abs_tol_;
     std::vector<ScalarT> f_;
 
     MatrixT J_;
@@ -179,9 +199,6 @@ namespace GridKit
 
     RealT time_{0};
     RealT alpha_{0};
-
-    RealT rel_tol_{0};
-    RealT abs_tol_{0};
 
     IdxT max_steps_{0};
 
@@ -209,17 +226,6 @@ namespace GridKit
     void updateTime(RealT /* t */, RealT /* a */) final
     {
       // No time to update in node models
-    }
-
-    void setTolerances(RealT& rel_tol, RealT& abs_tol) const final
-    {
-      rel_tol = rel_tol_;
-      abs_tol = abs_tol_;
-    }
-
-    void setMaxSteps(IdxT& msa) const final
-    {
-      msa = max_steps_;
     }
 
     std::vector<ScalarT>& y() final
@@ -250,6 +256,16 @@ namespace GridKit
     const std::vector<bool>& tag() const final
     {
       return tag_;
+    }
+
+    std::vector<ScalarT>& absoluteTolerance() final
+    {
+      return abs_tol_;
+    }
+
+    const std::vector<ScalarT>& absoluteTolerance() const final
+    {
+      return abs_tol_;
     }
 
     std::vector<ScalarT>& yB() final

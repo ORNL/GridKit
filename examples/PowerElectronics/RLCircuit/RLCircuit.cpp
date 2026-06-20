@@ -25,7 +25,7 @@ int main(int /* argc */, char const** /* argv */)
 
   // TODO:setup as named parameters
   // Create circuit model
-  GridKit::PowerElectronicsModel<double, size_t> sysmodel(rel_tol, abs_tol, use_jac);
+  GridKit::PowerElectronicsModel<double, size_t> sysmodel(use_jac);
 
   size_t idoff = 0;
 
@@ -97,6 +97,7 @@ int main(int /* argc */, char const** /* argv */)
   double t_final = 1.0;
 
   // setup simulation
+  idas.setTolerance(rel_tol, abs_tol);
   idas.configureSimulation();
   idas.getDefaultInitialCondition();
   idas.initializeSimulation(t_init);

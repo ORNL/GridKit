@@ -29,7 +29,8 @@ namespace GridKit
         y_  = {0};
         yp_ = {0};
 
-        tag_ = {false};
+        tag_     = {false};
+        abs_tol_ = {0};
 
         f_ = {0};
         g_ = {0};
@@ -61,17 +62,14 @@ namespace GridKit
         return 0;
       }
 
-      void setTolerances([[maybe_unused]] RealT& rel_tol, [[maybe_unused]] RealT& abs_tol) const override
-      {
-      }
-
-      void setMaxSteps(IdxT& msa) const override
-      {
-        msa = 2000;
-      }
-
       int tagDifferentiable() override
       {
+        return 0;
+      }
+
+      int setAbsoluteTolerance(RealT rel_tol) override
+      {
+        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
         return 0;
       }
 
@@ -138,6 +136,16 @@ namespace GridKit
       const std::vector<bool>& tag() const override
       {
         return tag_;
+      }
+
+      std::vector<ScalarT>& absoluteTolerance() override
+      {
+        return abs_tol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const override
+      {
+        return abs_tol_;
       }
 
       std::vector<ScalarT>& yB() override
@@ -249,6 +257,7 @@ namespace GridKit
       std::vector<ScalarT> y_;
       std::vector<ScalarT> yp_;
       std::vector<bool>    tag_;
+      std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
@@ -271,7 +280,7 @@ namespace GridKit
     class IdaTests
     {
     public:
-      TestOutcome test()
+      TestOutcome callback()
       {
         const unsigned n_steps = 100;
         TestStatus     success = true;
@@ -291,6 +300,27 @@ namespace GridKit
         ida.runSimulation(1.0, n_steps, output_cb);
 
         success *= (observed_steps == n_steps);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome fixedStep()
+      {
+        const unsigned n_steps = 32;
+        TestStatus     success = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+
+        Ida<double, size_t> ida(&model);
+        ida.setFixedStep(1.0 / n_steps);
+        ida.setTolerance(1.0e-6);
+        ida.configureSimulation();
+
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(1.0);
+        auto stats = ida.getStats();
+
+        success *= (stats.num_steps_ == n_steps);
 
         return success.report(__func__);
       }

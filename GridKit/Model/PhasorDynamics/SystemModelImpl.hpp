@@ -22,10 +22,6 @@ namespace GridKit
     SystemModel<scalar_type, index_type>::SystemModel()
       : monitor_(std::make_unique<MonitorT>())
     {
-      // Set system model tolerances
-      rel_tol_         = 1e-7;
-      abs_tol_         = 1e-9;
-      this->max_steps_ = 2000;
     }
 
     /**
@@ -46,11 +42,6 @@ namespace GridKit
       using namespace Governor;
       using namespace Exciter;
       using namespace Stabilizer;
-
-      // Set system model tolerances
-      rel_tol_         = 1e-7;
-      abs_tol_         = 1e-9;
-      this->max_steps_ = 2000;
 
       owns_components_ = true;
 
@@ -464,6 +455,7 @@ namespace GridKit
       yp_.resize(size_);
       f_.resize(size_);
       tag_.resize(size_);
+      abs_tol_.resize(size_);
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
@@ -679,6 +671,43 @@ namespace GridKit
         {
           tag_[component->getVariableIndex(j)] = component->tag()[j];
         }
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    template <typename scalar_type, typename index_type>
+    int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    {
+      IdxT offset = 0;
+      for (const auto& bus : buses_)
+      {
+        bus->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+        }
+        offset += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        component->setAbsoluteTolerance(rel_tol);
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          abs_tol_[offset + j] = component->absoluteTolerance()[j];
+        }
+        offset += component->size();
       }
 
       return 0;

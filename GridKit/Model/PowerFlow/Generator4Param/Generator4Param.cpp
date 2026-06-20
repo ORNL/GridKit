@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include "Generator4Param.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -54,6 +55,7 @@ namespace GridKit
   {
     // std::cout << "Allocate Generator4Param..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
+    abs_tol_.resize(static_cast<size_t>(size_));
 
     return 0;
   }
@@ -146,6 +148,13 @@ namespace GridKit
       tag_[static_cast<size_t>(i)] = false;
     }
 
+    return 0;
+  }
+
+  template <class ScalarT, typename IdxT>
+  int Generator4Param<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  {
+    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
     return 0;
   }
 

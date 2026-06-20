@@ -36,6 +36,12 @@ int main()
 
   // Create numerical integrator and configure it for the generator model
   Ida<double, size_t> idas(&model);
+  idas.setTolerance(1e-8, 1e-10);
+  idas.setQuadratureTolerance(1e-8, 1e-10);
+  idas.setBackwardTolerance(1e-8, 1e-10);
+  idas.setBackwardQuadratureTolerance(1e-8, 1e-10);
+  idas.setMaxSteps(5000);
+  idas.setBackwardMaxSteps(5000);
 
   double t_init  = 0.0;
   double t_final = 15.0;
@@ -55,8 +61,8 @@ int main()
   // create initial condition after a fault
   {
     idas.getSavedInitialCondition();
-    idas.initializeSimulation(t_init);
     gen.V() = 0.0;
+    idas.initializeSimulation(t_init);
     idas.runSimulation(t_clear, 20);
     gen.V() = 1.0;
     idas.saveInitialCondition();
@@ -72,6 +78,15 @@ int main()
   // Create an instance of the IpoptApplication
   Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
 
+  // Set solver tolerance
+  const double tol = 1e-4;
+
+  // Configure Ipopt application
+  ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
+  ipoptApp->Options()->SetNumericValue("tol", tol);
+  ipoptApp->Options()->SetIntegerValue("print_level", 0);
+  ipoptApp->Options()->SetIntegerValue("mumps_print_level", 0);
+
   // Initialize the IpoptApplication and process the options
   Ipopt::ApplicationReturnStatus status;
   status = ipoptApp->Initialize();
@@ -80,14 +95,6 @@ int main()
     std::cout << "\n\n*** Initialization failed! ***\n\n";
     return (int) status;
   }
-
-  // Set solver tolerance
-  const double tol = 1e-4;
-
-  // Configure Ipopt application
-  ipoptApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
-  ipoptApp->Options()->SetNumericValue("tol", tol);
-  ipoptApp->Options()->SetIntegerValue("print_level", 0);
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =

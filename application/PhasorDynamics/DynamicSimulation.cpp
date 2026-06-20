@@ -40,7 +40,7 @@ int main(int argc, const char* argv[])
   real_type dt         = study.dt;
   real_type final_time = study.tmax;
   real_type curr_time  = 0.0;
-  ida.initializeSimulation(0.0, false);
+  ida.initializeSimulation(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
     }
 
     // Re-initialize simulation at event time
-    ida.initializeSimulation(event.time, true);
+    ida.initializeSimulation(event.time);
     curr_time = event.time;
   }
 
