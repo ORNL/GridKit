@@ -109,6 +109,46 @@ namespace GridKit
       }
 
       /**
+       * @brief Test non-owning Vector storage over host vector data.
+       *
+       * @param[in] N Number of elements in the vector.
+       * @return TestOutcome indicating success or failure of the test.
+       */
+      TestOutcome externalData(IdxT N)
+      {
+        TestStatus status;
+        status = true;
+
+        Vector<ScalarT, IdxT> x(N);
+        x.allocate(memory::HOST);
+        x.setToConst(ScalarT{}, memory::HOST);
+
+        Vector<ScalarT, IdxT> alias(N);
+        alias.setData(x.data());
+
+        status *= (alias.size() == static_cast<std::size_t>(N));
+        status *= (!alias.empty());
+        status *= (alias.data() == x.data());
+        status *= (alias.size() == static_cast<std::size_t>(N));
+
+        for (IdxT i = 0; i < N; ++i)
+        {
+          alias[static_cast<std::size_t>(i)] = static_cast<ScalarT>(i);
+        }
+
+        const auto& const_alias  = alias;
+        status                  *= (const_alias.size() == alias.size());
+        status                  *= (const_alias.data() == alias.data());
+        for (IdxT i = 0; i < N; ++i)
+        {
+          status *= isEqual(x[static_cast<std::size_t>(i)], static_cast<ScalarT>(i));
+          status *= isEqual(const_alias[static_cast<std::size_t>(i)], static_cast<ScalarT>(i));
+        }
+
+        return status.report(__func__);
+      }
+
+      /**
        * @brief Test setting data in a vector from array.
        *
        * @param[in] N Number of elements in the vector.
@@ -191,7 +231,7 @@ namespace GridKit
         z.allocate(memory::HOST);
         z.copyFromExternal(y, memspace_, memory::HOST);
 
-        const ScalarT* z_data = z.getData(memory::HOST);
+        const ScalarT* z_data = z.data();
 
         if (z_data == nullptr)
         {
@@ -381,11 +421,11 @@ namespace GridKit
         for (IdxT i = 0; i < x.getSize(); ++i)
         {
           // std::cout << x->getData("cpu")[i] << "\n";
-          if (!isEqual(x.getData(memory::HOST)[i], answer))
+          if (!isEqual(x.data()[i], answer))
           {
             std::cout << std::setprecision(16);
             success = false;
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i << "] = " << x.data()[i]
                       << ", expected: " << answer << "\n";
             break;
           }

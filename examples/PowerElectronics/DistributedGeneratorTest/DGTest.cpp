@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -73,9 +74,9 @@ int main(int /* argc */, char const** /* argv */)
   bus.allocate();
   dg.allocate();
 
-  dg.y()           = t2;
-  dg.yp()          = t1;
-  dg.getResidual() = res;
+  std::copy(t2.begin(), t2.end(), dg.y().data());
+  std::copy(t1.begin(), t1.end(), dg.yp().data());
+  std::copy(res.begin(), res.end(), dg.getResidual().data());
   dg.setInternalPointer(&t2[dg.getExternSize()]);
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
   dg.setInternalResidualPointer(&dg.getResidual()[dg.getExternSize()]);

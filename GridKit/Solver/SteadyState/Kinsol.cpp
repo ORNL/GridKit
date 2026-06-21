@@ -139,24 +139,23 @@ namespace AnalysisManager
       copyVec(yy, model->y());
 
       model->evaluateResidual();
-      const std::vector<ScalarT>& f = model->getResidual();
-      copyVec(f, rr);
+      copyVec(model->getResidual(), rr);
 
       return 0;
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
     {
       const ScalarT* xdata = N_VGetArrayPointer(x);
-      std::copy_n(xdata, y.size(), y.begin());
+      std::copy_n(xdata, y.size(), y.data());
     }
 
     template <class ScalarT, typename IdxT>
-    void Kinsol<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
+    void Kinsol<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
     {
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy_n(x.cbegin(), x.size(), ydata);
+      std::copy_n(x.data(), x.size(), ydata);
     }
 
     template <class ScalarT, typename IdxT>

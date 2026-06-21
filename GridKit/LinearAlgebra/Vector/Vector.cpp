@@ -1,6 +1,7 @@
 #include <cassert>
-#include <cstring>
+#include <utility>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -53,12 +54,63 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     Vector<ScalarT, IdxT>::~Vector()
     {
+      release();
+    }
+
+    template <typename ScalarT, typename IdxT>
+    Vector<ScalarT, IdxT>::Vector(Vector&& other) noexcept
+    {
+      *this = std::move(other);
+    }
+
+    template <typename ScalarT, typename IdxT>
+    Vector<ScalarT, IdxT>& Vector<ScalarT, IdxT>::operator=(Vector&& other) noexcept
+    {
+      if (this != &other)
+      {
+        release();
+
+        n_capacity_    = other.n_capacity_;
+        k_             = other.k_;
+        n_size_        = other.n_size_;
+        d_data_        = other.d_data_;
+        h_data_        = other.h_data_;
+        gpu_updated_   = other.gpu_updated_;
+        cpu_updated_   = other.cpu_updated_;
+        owns_gpu_data_ = other.owns_gpu_data_;
+        owns_cpu_data_ = other.owns_cpu_data_;
+        mem_           = std::move(other.mem_);
+
+        other.n_capacity_  = 0;
+        other.k_           = 0;
+        other.n_size_      = 0;
+        other.d_data_      = nullptr;
+        other.h_data_      = nullptr;
+        other.gpu_updated_ = nullptr;
+        other.cpu_updated_ = nullptr;
+      }
+
+      return *this;
+    }
+
+    template <typename ScalarT, typename IdxT>
+    void Vector<ScalarT, IdxT>::release()
+    {
       if (owns_cpu_data_ && h_data_)
+      {
         mem_.deleteOnHost(h_data_);
+      }
       if (owns_gpu_data_ && d_data_)
+      {
         mem_.deleteOnDevice(d_data_);
+      }
       delete[] gpu_updated_;
       delete[] cpu_updated_;
+
+      h_data_      = nullptr;
+      d_data_      = nullptr;
+      gpu_updated_ = nullptr;
+      cpu_updated_ = nullptr;
     }
 
     /**
@@ -1089,9 +1141,12 @@ namespace GridKit
       std::fill(gpu_updated_, gpu_updated_ + k_, is_updated);
     }
 
-    // template class Vector<double, long int>;
+    template class Vector<double, long int>;
     template class Vector<double, size_t>;
     template class Vector<double, int>;
+    template class Vector<DependencyTracking::Variable, long int>;
+    template class Vector<DependencyTracking::Variable, size_t>;
+    template class Vector<DependencyTracking::Variable, int>;
 
   } // namespace LinearAlgebra
 } // namespace GridKit

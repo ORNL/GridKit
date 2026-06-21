@@ -176,26 +176,29 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::allocate()
     {
-      // Resize component model data
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
       auto size = static_cast<size_t>(size_);
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      tag_.resize(size);
-      abs_tol_.resize(size);
+
+      assert(y_.size() == size);
+      assert(yp_.size() == size);
+      assert(f_.size() == size);
+      assert(tag_.size() == size);
+      assert(abs_tol_.size() == size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        variable_indices_[static_cast<std::size_t>(j)] = this->offset_ + j;
+        residual_indices_[static_cast<std::size_t>(j)] = this->offset_ + j;
+      }
 
       // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
-
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
 
       return 0;
     }
@@ -262,7 +265,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
       return 0;
     }
 

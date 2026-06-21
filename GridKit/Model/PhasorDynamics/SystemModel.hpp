@@ -55,6 +55,9 @@ namespace GridKit
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::csr_jac_;
       using Component<scalar_type, index_type>::map_to_csr_;
+      using Component<scalar_type, index_type>::offset_;
+      using Component<scalar_type, index_type>::allocated_;
+      using Component<scalar_type, index_type>::allocateVectors;
 
     public:
       using ScalarT    = scalar_type;
@@ -92,7 +95,11 @@ namespace GridKit
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
-      void updateVariables();
+      CsrMatrixT* getCsrJacobian() const override
+      {
+        return csr_jac_;
+      }
+
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);

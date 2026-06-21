@@ -1,10 +1,11 @@
 #pragma once
 
-#include <vector>
+#include <cassert>
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
+#include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
@@ -12,6 +13,8 @@ namespace GridKit
 {
   namespace Model
   {
+    namespace memory = GridKit::LinearAlgebra::memory;
+
     /*!
      * @brief Abstract class describing a model.
      *
@@ -25,6 +28,7 @@ namespace GridKit
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
+      using VectorT    = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
 
       Evaluator()
       {
@@ -122,55 +126,167 @@ namespace GridKit
       /**
        * @brief Get the absolute tolerance for each variable in the model
        *
-       * @return a reference to the absolute tolerance vector.
+       * @return a view of the absolute tolerance vector.
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
-      virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
+      virtual VectorT& absoluteTolerance()
+      {
+        return abs_tol_;
+      }
+
       /**
        * @brief Get the absolute tolerance for each variable in the model
        *
-       * @return a const reference to the absolute tolerance vector.
+       * @return a const view of the absolute tolerance vector.
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
-      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
+      virtual const VectorT& absoluteTolerance() const
+      {
+        return abs_tol_;
+      }
 
-      virtual std::vector<ScalarT>&       y()       = 0;
-      virtual const std::vector<ScalarT>& y() const = 0;
+      virtual VectorT& y()
+      {
+        return y_;
+      }
 
-      virtual std::vector<ScalarT>&       yp()       = 0;
-      virtual const std::vector<ScalarT>& yp() const = 0;
+      virtual const VectorT& y() const
+      {
+        return y_;
+      }
 
-      virtual std::vector<bool>&       tag()       = 0;
-      virtual const std::vector<bool>& tag() const = 0;
+      virtual VectorT& yp()
+      {
+        return yp_;
+      }
 
-      virtual std::vector<ScalarT>&       yB()       = 0;
-      virtual const std::vector<ScalarT>& yB() const = 0;
+      virtual const VectorT& yp() const
+      {
+        return yp_;
+      }
 
-      virtual std::vector<ScalarT>&       ypB()       = 0;
-      virtual const std::vector<ScalarT>& ypB() const = 0;
+      /**
+       * @brief Get the differential/algebraic tag for each variable.
+       *
+       * Entries are scalar values for direct transfer to solver vectors.
+       */
+      virtual VectorT& tag()
+      {
+        return tag_;
+      }
 
-      virtual std::vector<ScalarT>&       param()       = 0;
-      virtual const std::vector<ScalarT>& param() const = 0;
+      /**
+       * @brief Get the differential/algebraic tag for each variable.
+       */
+      virtual const VectorT& tag() const
+      {
+        return tag_;
+      }
 
-      virtual std::vector<ScalarT>&       param_up()       = 0;
-      virtual const std::vector<ScalarT>& param_up() const = 0;
+      virtual VectorT&       yB()       = 0;
+      virtual const VectorT& yB() const = 0;
 
-      virtual std::vector<ScalarT>&       param_lo()       = 0;
-      virtual const std::vector<ScalarT>& param_lo() const = 0;
+      virtual VectorT&       ypB()       = 0;
+      virtual const VectorT& ypB() const = 0;
 
-      virtual std::vector<ScalarT>&       getResidual()       = 0;
-      virtual const std::vector<ScalarT>& getResidual() const = 0;
+      virtual VectorT&       param()       = 0;
+      virtual const VectorT& param() const = 0;
 
-      virtual std::vector<ScalarT>&       getIntegrand()       = 0;
-      virtual const std::vector<ScalarT>& getIntegrand() const = 0;
+      virtual VectorT&       param_up()       = 0;
+      virtual const VectorT& param_up() const = 0;
 
-      virtual std::vector<ScalarT>&       getAdjointResidual()       = 0;
-      virtual const std::vector<ScalarT>& getAdjointResidual() const = 0;
+      virtual VectorT&       param_lo()       = 0;
+      virtual const VectorT& param_lo() const = 0;
 
-      virtual std::vector<ScalarT>&       getAdjointIntegrand()       = 0;
-      virtual const std::vector<ScalarT>& getAdjointIntegrand() const = 0;
+      virtual VectorT& getResidual()
+      {
+        return f_;
+      }
+
+      virtual const VectorT& getResidual() const
+      {
+        return f_;
+      }
+
+      virtual VectorT&       getIntegrand()       = 0;
+      virtual const VectorT& getIntegrand() const = 0;
+
+      virtual VectorT&       getAdjointResidual()       = 0;
+      virtual const VectorT& getAdjointResidual() const = 0;
+
+      virtual VectorT&       getAdjointIntegrand()       = 0;
+      virtual const VectorT& getAdjointIntegrand() const = 0;
+
+      /**
+       * @brief Bind this evaluator's state and residual vectors.
+       */
+      virtual void bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& tag, VectorT& abs_tol, IdxT offset)
+      {
+        const IdxT n = size();
+        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= y.size());
+        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= yp.size());
+        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= f.size());
+        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= tag.size());
+        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= abs_tol.size());
+
+        y_ = VectorT(n);
+        y_.setData(y.data() + offset);
+
+        yp_ = VectorT(n);
+        yp_.setData(yp.data() + offset);
+
+        f_ = VectorT(n);
+        f_.setData(f.data() + offset);
+
+        tag_ = VectorT(n);
+        tag_.setData(tag.data() + offset);
+
+        abs_tol_ = VectorT(n);
+        abs_tol_.setData(abs_tol.data() + offset);
+
+        offset_    = offset;
+        allocated_ = true;
+      }
+
+    protected:
+      /**
+       * @brief Allocate this evaluator's state and residual vectors.
+       */
+      void allocateVectors(IdxT n)
+      {
+        y_ = VectorT(n);
+        y_.allocate(memory::HOST);
+        y_.setDataUpdated(memory::HOST);
+
+        yp_ = VectorT(n);
+        yp_.allocate(memory::HOST);
+        yp_.setDataUpdated(memory::HOST);
+
+        f_ = VectorT(n);
+        f_.allocate(memory::HOST);
+        f_.setDataUpdated(memory::HOST);
+
+        tag_ = VectorT(n);
+        tag_.allocate(memory::HOST);
+        tag_.setDataUpdated(memory::HOST);
+
+        abs_tol_ = VectorT(n);
+        abs_tol_.allocate(memory::HOST);
+        abs_tol_.setDataUpdated(memory::HOST);
+
+        offset_    = 0;
+        allocated_ = true;
+      }
+
+      VectorT y_;
+      VectorT yp_;
+      VectorT f_;
+      VectorT tag_;
+      VectorT abs_tol_;
+      IdxT    offset_{0};
+      bool    allocated_{false};
     };
 
   } // namespace Model

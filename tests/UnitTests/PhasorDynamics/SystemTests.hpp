@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -11,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -153,6 +156,66 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome elementStateAliasesSystemState()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 2.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus2(3.0, 4.0);
+        system.addBus(&bus1);
+        system.addBus(&bus2);
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2, 0.0, 1.0, 0.0, 0.0);
+        system.addComponent(&branch);
+
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus2, 1.0, 1.0);
+        system.addComponent(&load);
+
+        system.allocate();
+        system.initialize();
+
+        const auto bus2_vr_index = static_cast<std::size_t>(bus2.getVariableIndex(0));
+        const auto bus2_vi_index = static_cast<std::size_t>(bus2.getVariableIndex(1));
+        const auto load_ir_index = static_cast<std::size_t>(load.getVariableIndex(0));
+        const auto load_ii_index = static_cast<std::size_t>(load.getVariableIndex(1));
+
+        system.y()[bus2_vr_index]  = 5.0;
+        system.y()[bus2_vi_index]  = 6.0;
+        success                   *= isEqual(bus2.Vr(), static_cast<ScalarT>(5.0));
+        success                   *= isEqual(bus2.Vi(), static_cast<ScalarT>(6.0));
+
+        bus2.Vr()  = 7.0;
+        bus2.Vi()  = 8.0;
+        success   *= isEqual(system.y()[bus2_vr_index], static_cast<ScalarT>(7.0));
+        success   *= isEqual(system.y()[bus2_vi_index], static_cast<ScalarT>(8.0));
+
+        system.y()[load_ir_index]  = 9.0;
+        system.y()[load_ii_index]  = 10.0;
+        success                   *= isEqual(load.y().data()[0], static_cast<ScalarT>(9.0));
+        success                   *= isEqual(load.y().data()[1], static_cast<ScalarT>(10.0));
+
+        load.y().data()[0]  = 11.0;
+        load.y().data()[1]  = 12.0;
+        success            *= isEqual(system.y()[load_ir_index], static_cast<ScalarT>(11.0));
+        success            *= isEqual(system.y()[load_ii_index], static_cast<ScalarT>(12.0));
+
+        bus2.tag()[0]  = 1.0;
+        success       *= isEqual(system.tag()[bus2_vr_index], static_cast<ScalarT>(1.0));
+
+        system.tag()[bus2_vr_index]  = 0.0;
+        success                     *= isEqual(bus2.tag()[0], static_cast<ScalarT>(0.0));
+
+        load.absoluteTolerance()[0]  = 0.123;
+        success                     *= isEqual(system.absoluteTolerance()[load_ir_index], static_cast<ScalarT>(0.123));
+
+        system.absoluteTolerance()[load_ii_index]  = 0.456;
+        success                                   *= isEqual(load.absoluteTolerance()[1], static_cast<ScalarT>(0.456));
+
+        return success.report(__func__);
+      }
+
       /**
        * @brief Test for exception when signals are incorrectly configured
        */
@@ -168,7 +231,6 @@ namespace GridKit
         status *= throws<std::runtime_error>(
             [&]()
             { sys.allocate(); });
-
         return status.report(__func__);
       }
 
@@ -239,7 +301,7 @@ namespace GridKit
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residual = system.getResidual();
+        auto& residual = system.getResidual();
 
         // Print the dependencies
         for (size_t i = 0; i < residual.size(); ++i)

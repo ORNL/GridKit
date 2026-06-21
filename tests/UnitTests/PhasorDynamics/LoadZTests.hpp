@@ -117,7 +117,7 @@ namespace GridKit
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
 
-        std::vector<DependencyTracking::Variable>                residuals = load.getResidual();
+        auto&                                                    residuals = load.getResidual();
         std::vector<DependencyTracking::Variable::DependencyMap> ref       = analyticalJacobian(R, X);
 
         /// Compare dependencies computed automatically to the ones computed analytically

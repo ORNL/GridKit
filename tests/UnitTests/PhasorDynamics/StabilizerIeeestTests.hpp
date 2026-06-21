@@ -223,7 +223,8 @@ namespace GridKit
         setStatePointDep(stab);
 
         stab.evaluateResidual();
-        std::vector<DepVar> residual_y = stab.getResidual();
+        auto&               residual_y_view = stab.getResidual();
+        std::vector<DepVar> residual_y(residual_y_view.data(), residual_y_view.data() + residual_y_view.size());
 
         // --- d/dy': tag derivatives as independent ---
         stab.initialize();
@@ -236,7 +237,8 @@ namespace GridKit
         setStatePointDep(stab);
 
         stab.evaluateResidual();
-        std::vector<DepVar> residual_yp = stab.getResidual();
+        auto&               residual_yp_view = stab.getResidual();
+        std::vector<DepVar> residual_yp(residual_yp_view.data(), residual_yp_view.data() + residual_yp_view.size());
 
         // Print dependencies for debugging
         for (size_t i = 0; i < residual_y.size(); ++i)

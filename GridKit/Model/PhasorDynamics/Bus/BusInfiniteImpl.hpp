@@ -99,11 +99,26 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local solution and residual vectors.
+     * @brief Allocate bus storage and index maps.
      */
     template <typename scalar_type, typename index_type>
     int BusInfinite<scalar_type, index_type>::allocate()
     {
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
+      auto size = static_cast<std::size_t>(size_);
+
+      assert(y_.size() == size);
+      assert(yp_.size() == size);
+      assert(f_.size() == size);
+      assert(this->tag_.size() == size);
+      assert(this->abs_tol_.size() == size);
+
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
       return 0;
     }
 

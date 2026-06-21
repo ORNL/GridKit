@@ -1,4 +1,6 @@
 #pragma once
+#include <cassert>
+#include <cstddef>
 #include <string>
 
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
@@ -40,10 +42,10 @@ namespace GridKit
       Vector(IdxT n, IdxT k);
       ~Vector();
 
-      Vector(const Vector&)            = delete;
-      Vector(Vector&&)                 = delete;
+      Vector(const Vector&) = delete;
+      Vector(Vector&& other) noexcept;
       Vector& operator=(const Vector&) = delete;
-      Vector& operator=(Vector&&)      = delete;
+      Vector& operator=(Vector&& other) noexcept;
 
       int copyFromExternal(const ScalarT*      source,
                            memory::MemorySpace memspaceIn  = memory::HOST,
@@ -56,6 +58,38 @@ namespace GridKit
       ScalarT*       getData(IdxT i, memory::MemorySpace memspace = memory::HOST);
       const ScalarT* getData(memory::MemorySpace memspace = memory::HOST) const;
       const ScalarT* getData(IdxT i, memory::MemorySpace memspace = memory::HOST) const;
+
+      std::size_t size() const
+      {
+        return static_cast<std::size_t>(getSize());
+      }
+
+      bool empty() const
+      {
+        return size() == 0;
+      }
+
+      ScalarT* data(memory::MemorySpace memspace = memory::HOST)
+      {
+        return getData(memspace);
+      }
+
+      const ScalarT* data(memory::MemorySpace memspace = memory::HOST) const
+      {
+        return getData(memspace);
+      }
+
+      ScalarT& operator[](std::size_t i)
+      {
+        assert(i < size());
+        return data()[i];
+      }
+
+      const ScalarT& operator[](std::size_t i) const
+      {
+        assert(i < size());
+        return data()[i];
+      }
 
       IdxT getCapacity() const;
       IdxT getSize() const;
@@ -81,6 +115,7 @@ namespace GridKit
                          memory::MemorySpace memspaceDst = memory::HOST);
 
     private:
+      void release();
       void setHostUpdated(bool is_updated);
       void setDeviceUpdated(bool is_updated);
 
@@ -97,5 +132,6 @@ namespace GridKit
 
       MemoryManager mem_; ///< Device memory manager object
     };
+
   } // namespace LinearAlgebra
 } // namespace GridKit

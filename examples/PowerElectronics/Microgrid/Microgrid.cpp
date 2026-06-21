@@ -195,7 +195,7 @@ int main(int /* argc */, char const** /* argv */)
   // Optional debuging output
   if (debug_output)
   {
-    std::vector<double>& fres = sysmodel->getResidual();
+    auto& fres = sysmodel->getResidual();
     std::cout << "Verify initial resisdual is zero: {\n";
     for (size_t i = 0; i < fres.size(); i++)
     {
@@ -229,7 +229,7 @@ int main(int /* argc */, char const** /* argv */)
 
   idas->runSimulation(t_final);
 
-  std::vector<double>& yfinial = sysmodel->y();
+  auto& yfinial = sysmodel->y();
 
   // Optional debugging output
   if (debug_output)

@@ -67,16 +67,22 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate PV bus ..." << std::endl;
-    f_.resize(static_cast<size_t>(size_));
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    tag_.resize(static_cast<size_t>(size_));
-    abs_tol_.resize(static_cast<size_t>(size_));
+    using VectorT = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
 
-    fB_.resize(static_cast<size_t>(size_));
-    yB_.resize(static_cast<size_t>(size_));
-    ypB_.resize(static_cast<size_t>(size_));
+    // std::cout << "Allocate PV bus ..." << std::endl;
+    this->allocateVectors(size_);
+
+    fB_ = VectorT(size_);
+    fB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+    fB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+    yB_ = VectorT(size_);
+    yB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+    yB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+    ypB_ = VectorT(size_);
+    ypB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+    ypB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
 
     return 0;
   }
@@ -103,7 +109,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
     return 0;
   }
 

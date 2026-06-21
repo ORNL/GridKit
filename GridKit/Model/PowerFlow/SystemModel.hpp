@@ -27,6 +27,7 @@ namespace GridKit
     using bus_type       = Model::Evaluator<ScalarT, IdxT>;
     using component_type = Model::Evaluator<ScalarT, IdxT>;
     using RealT          = typename ModelEvaluatorImpl<ScalarT, IdxT>::RealT;
+    using VectorT        = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
 
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_;
     using ModelEvaluatorImpl<ScalarT, IdxT>::size_quad_;
@@ -101,21 +102,39 @@ namespace GridKit
       }
 
       // Allocate global vectors
-      y_.resize(size_);
-      yp_.resize(size_);
-      yB_.resize(size_);
-      ypB_.resize(size_);
-      f_.resize(size_);
-      fB_.resize(size_);
-      tag_.resize(size_);
-      abs_tol_.resize(size_);
+      this->allocateVectors(size_);
 
-      g_.resize(size_quad_);
-      gB_.resize(size_quad_ * size_opt_);
+      yB_ = VectorT(size_);
+      yB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      yB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
 
-      param_.resize(size_opt_);
-      param_lo_.resize(size_opt_);
-      param_up_.resize(size_opt_);
+      ypB_ = VectorT(size_);
+      ypB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      ypB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      fB_ = VectorT(size_);
+      fB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      fB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      g_ = VectorT(size_quad_);
+      g_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      g_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      gB_ = VectorT(size_quad_ * size_opt_);
+      gB_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      gB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      param_ = VectorT(size_opt_);
+      param_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      param_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      param_lo_ = VectorT(size_opt_);
+      param_lo_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      param_lo_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+
+      param_up_ = VectorT(size_opt_);
+      param_up_.allocate(GridKit::LinearAlgebra::memory::HOST);
+      param_up_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
 
       assert(size_quad_ == 1 or size_quad_ == 0);
 

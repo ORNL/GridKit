@@ -79,9 +79,10 @@ int main(int /* argc */, char const** /* argv */)
   sysmodel.evaluateResidual();
 
   std::cout << "Verify initial resisdual is zero: {";
-  for (double i : sysmodel.getResidual())
+  auto& residual = sysmodel.getResidual();
+  for (std::size_t i = 0; i < residual.size(); ++i)
   {
-    std::cout << i << ", ";
+    std::cout << residual.data()[i] << ", ";
   }
   std::cout << "}\n";
 
@@ -104,7 +105,7 @@ int main(int /* argc */, char const** /* argv */)
 
   idas.runSimulation(t_final);
 
-  std::vector<double>& yfinial = sysmodel.y();
+  auto& yfinial = sysmodel.y();
 
   std::cout << "Final vector y\n";
   for (size_t i = 0; i < yfinial.size(); i++)

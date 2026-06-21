@@ -20,6 +20,8 @@ gridkit_add_library(
     INTERFACE
     GridKit::utilities_logger
     INTERFACE
+    GridKit::dense_vector
+    INTERFACE
     GridKit::sparse_matrix)
 
 target_link_libraries(

@@ -99,10 +99,10 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        const std::vector<ScalarT>& f = gen.getResidual();
-        for (const auto& f_val : f)
+        const auto& f = gen.getResidual();
+        for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f_val, 0.0, tol_))
+          if (!isEqual(f.data()[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -139,10 +139,10 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        const std::vector<ScalarT>& f = gen.getResidual();
-        for (const auto& f_val : f)
+        const auto& f = gen.getResidual();
+        for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f_val, 0.0, tol_))
+          if (!isEqual(f.data()[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -307,7 +307,7 @@ namespace GridKit
         gen.yp()[4] = 0.9;             // psiqpp_dot
 
         gen.evaluateResidual();
-        std::vector<ScalarT>& residual = gen.getResidual();
+        auto& residual = gen.getResidual();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
@@ -370,7 +370,8 @@ namespace GridKit
 
         bus.evaluateResidual();
         gen.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residual_y = gen.getResidual();
+        auto&                                     residual_y_view = gen.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.data(), residual_y_view.data() + residual_y_view.size());
 
         bus.initialize();
         gen.initialize();
@@ -382,7 +383,8 @@ namespace GridKit
 
         bus.evaluateResidual();
         gen.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residual_yp = gen.getResidual();
+        auto&                                     residual_yp_view = gen.getResidual();
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.data(), residual_yp_view.data() + residual_yp_view.size());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

@@ -113,26 +113,31 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::allocate()
     {
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
       // std::cout << "Allocate BusFault..." << std::endl;
+      auto size = static_cast<std::size_t>(size_);
 
-      auto size = static_cast<size_t>(size_); // avoid compiler warnings
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      abs_tol_.resize(size);
-      tag_.resize(size);
-      variable_indices_.resize(size);
-      residual_indices_.resize(size);
+      assert(y_.size() == size);
+      assert(yp_.size() == size);
+      assert(this->f_.size() == size);
+      assert(tag_.size() == size);
+      assert(this->abs_tol_.size() == size);
+
+      this->variable_indices_.resize(size);
+      this->residual_indices_.resize(size);
 
       // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
 
-      // Default variable and residual index mapping to local index
+      // Default variable and residual index mapping to global indices
       for (IdxT j = 0; j < size_; ++j)
       {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
+        this->setVariableIndex(j, this->offset_ + j);
+        this->setResidualIndex(j, this->offset_ + j);
       }
 
       return 0;
@@ -193,7 +198,7 @@ namespace GridKit
     template <class scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
