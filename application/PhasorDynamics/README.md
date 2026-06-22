@@ -12,7 +12,7 @@
   `reference_file`    | A string containing the name of the case
   `error_tolerance`   | A string containing the name of the case
 
-[^1]: See system model [case format](../../Model/PhasorDynamics/INPUT_FORMAT.md)
+[^1]: See system model [case format](../../GridKit/Model/PhasorDynamics/INPUT_FORMAT.md)
 
 ## Events
 

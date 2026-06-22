@@ -15,16 +15,11 @@ numerical integrator requests residual evaluation.
 Current entering the bus has positive and current exiting the bus negative
 sign.
 
-<div align="center">
-   <img align="center" src="../../../../docs/Figures/bus_variables.jpg">
-   
-  Figure 1: Needs to be changed to represent current balance instead of power
-  balance.
-</div>
+![](../../../../docs/Figures/bus_variables.jpg)
 
+Figure 1: Needs to be changed to represent current balance instead of power
 
-
-
+balance.
 **Other Parameters**
 Buses are uniquely defined by their ID (number or name). Besides, each bus
 should have associated Nominal Voltage value.

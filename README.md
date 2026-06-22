@@ -9,6 +9,9 @@ framework could be used in other areas without major modifications.
 GridKit™ supports adding multiple families of models to provide different
 representations of power grids and possibly other complex engineered systems.
 
+- Documentation is hosted on [ReadTheDocs](https://gridkit.readthedocs.io/en/latest/)
+- Source code is hosted on [GitHub](https://github.com/ORNL/GridKit)
+
 ## Installation Guide
 
 GridKit™ has been built and tested on Linux and Mac platforms. It should

@@ -5,11 +5,9 @@ blocks, washout, and output limiter.
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/stabilizer_ieeest_diagram.png">
+![](../../../../../docs/Figures/stabilizer_ieeest_diagram.png)
 
-  Figure 1: Stabilizer IEEEST model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Stabilizer IEEEST model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 

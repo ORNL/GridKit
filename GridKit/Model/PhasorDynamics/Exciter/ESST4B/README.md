@@ -18,11 +18,9 @@ Notes:
 
 Standard model of the ESST4B Exciter.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics/ESST4B_diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics/ESST4B_diagram.png)
 
-  Figure 1: Exciter ESST4B model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Exciter ESST4B model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -151,7 +149,7 @@ $I_{\mathrm{fd}}$                   | [p.u.] | Machine field current            
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations

@@ -19,11 +19,9 @@ Notes:
 
 Standard model of the GGOV1 Governor.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics/GGOV1_diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics/GGOV1_diagram.png)
 
-  Figure 1: Governor GGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Governor GGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -176,7 +174,7 @@ $\omega$                         | [p.u.]   | Machine speed deviation           
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations

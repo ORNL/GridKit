@@ -11,11 +11,9 @@ Notes:
 
 Standard REECA block diagram.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics_REECA_Diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics_REECA_Diagram.png)
 
-  Figure 1: REECA block diagram. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: REECA block diagram. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -251,7 +249,7 @@ The state-equation residuals use compact limiter notation where applicable. The 
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) target and smooth approximation.
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
 
 ### Algebraic Equations
 

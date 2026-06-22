@@ -16,11 +16,9 @@ Notes:
 
 Standard model of the EXAC2 Exciter.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics/EXAC2_diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics/EXAC2_diagram.png)
 
-  Figure 1: Exciter EXAC2 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Exciter EXAC2 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -150,7 +148,7 @@ $\omega$                            | [p.u.] | Machine speed deviation          
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations

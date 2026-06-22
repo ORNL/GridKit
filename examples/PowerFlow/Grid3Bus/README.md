@@ -9,12 +9,9 @@ The mathematical model of the power flow problem is formulated as a set of nonli
 
 The model and its parameters are described in Figure 1:
 
-<div align="center">
-   <img align="center" src="../../../docs/Figures/example1.jpg">
-   
-   
-  Figure 1: A simple 3-bus grid example.
-</div>
+![](../../../docs/Figures/example1.jpg)
+
+Figure 1: A simple 3-bus grid example.
 
 Problem variables are voltage magnitudes and phases; they are stored in bus objects. Branch and load models do not have any internal variables. Contributions to residual vector for the model are computed in individual component model objects. Residual values are sumed up and stored in buses.  
 
@@ -34,7 +31,7 @@ Q_2 & = & -Q_{L1} &~~~\mathrm{(load ~2)} \\
 \end{array}
 ``` 
 
-**Bus 3**: PV bus, stores variable $`\theta_3`$ and residual $`P_3`$. Voltage is set to $`|V_3| \equiv 1.1`$p.u.. Generator $`P_{G3} = 2`$p.u. is attached to it. From the equations for [branch](../../../src/Model/PowerFlow/Branch/README.md) and [generator](../../../src/Model/PowerFlow/Gen/README.md) components, we assemble Bus 3 residual as:
+**Bus 3**: PV bus, stores variable $`\theta_3`$ and residual $`P_3`$. Voltage is set to $`|V_3| \equiv 1.1`$p.u.. Generator $`P_{G3} = 2`$p.u. is attached to it. From the equations for [branch](../../../GridKit/Model/PowerFlow/Branch/README.md) and [generator](../../../GridKit/Model/PowerFlow/README.md) components, we assemble Bus 3 residual as:
 ```math
 \begin{array}{rcll}
 P_3 & = &P_{G3} &~~~\mathrm{(generator ~3)} \\

@@ -2,11 +2,9 @@
 
 ## One-Line Diagram
 
-<div align="center">
-   <img align="center" src="hawaii.png">
+![](hawaii.png)
 
-  Figure 1: Oneline of the synthetic Hawaii case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/) (WIP Updated Oneline)
-</div>
+Figure 1: Oneline of the synthetic Hawaii case, courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/) (WIP Updated Oneline)
 
 ## Case Description
 
@@ -21,7 +19,7 @@ Model       | Count
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 39
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 14
 [LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 28
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/) | 131
+[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 131
 
 ## Data Notes
 
