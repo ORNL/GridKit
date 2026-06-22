@@ -2,11 +2,9 @@
 
 ## One-Line Diagram
 
-<div align="center">
-   <img align="center" src="wecc.jpg">
+![](wecc.jpg)
 
-  Figure 1: Oneline of the WECC case of [National Laboratory of the Rockies](https://www.nlr.gov/grid/test-case-repository)
-</div>
+Figure 1: Oneline of the WECC case of [National Laboratory of the Rockies](https://www.nlr.gov/grid/test-case-repository)
 
 ## Case Description
 
@@ -23,7 +21,7 @@ Model | Count
 [SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 103
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
 [LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 146
-[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/) | 319
+[SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 319
 
 ## Data Notes
 

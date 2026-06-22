@@ -1,6 +1,6 @@
 # CommonMath
 
-Smooth, autodiff-friendly replacements for piecewise functions used across GridKit component models. See [CommonMath.hpp](CommonMath.hpp) for implementation details.
+Smooth, autodiff-friendly replacements for piecewise functions used across GridKit component models. See `CommonMath.hpp` for implementation details.
 
 ## Primitives
 
@@ -28,7 +28,7 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/sigmoid.svg" width="250"></div>
+![](../docs/Figures/CommonMath/sigmoid.svg)
 
 ### $\rho$ - `ramp`
 
@@ -42,7 +42,7 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/ramp.svg" width="250"></div>
+![](../docs/Figures/CommonMath/ramp.svg)
 
 ### $q$ - `qramp`
 
@@ -52,7 +52,7 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 q(x)=x^2\,\sigma(x)
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/qramp.svg" width="250"></div>
+![](../docs/Figures/CommonMath/qramp.svg)
 
 ## Derived Functions
 
@@ -85,7 +85,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/max.svg" width="250"></div>
+![](../docs/Figures/CommonMath/max.svg)
 
 ### `min`
 
@@ -101,7 +101,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/min.svg" width="250"></div>
+![](../docs/Figures/CommonMath/min.svg)
 
 ### `clamp`
 
@@ -118,7 +118,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/clamp.svg" width="250"></div>
+![](../docs/Figures/CommonMath/clamp.svg)
 
 ### `deadband1`
 
@@ -135,7 +135,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/deadband1.svg" width="250"></div>
+![](../docs/Figures/CommonMath/deadband1.svg)
 
 ### `deadband2`
 
@@ -152,7 +152,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/deadband2.svg" width="250"></div>
+![](../docs/Figures/CommonMath/deadband2.svg)
 
 ### `slew`
 
@@ -169,7 +169,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/slew.svg" width="250"></div>
+![](../docs/Figures/CommonMath/slew.svg)
 
 ### `linseg`
 
@@ -186,7 +186,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/linseg.svg" width="250"></div>
+![](../docs/Figures/CommonMath/linseg.svg)
 
 ### `above`
 
@@ -202,7 +202,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/above.svg" width="250"></div>
+![](../docs/Figures/CommonMath/above.svg)
 
 ### `below`
 
@@ -218,7 +218,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/below.svg" width="250"></div>
+![](../docs/Figures/CommonMath/below.svg)
 
 ### `inside`
 
@@ -234,7 +234,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/inside.svg" width="250"></div>
+![](../docs/Figures/CommonMath/inside.svg)
 
 ### `outside`
 
@@ -250,7 +250,7 @@ q(x)=x^2\,\sigma(x)
 \end{aligned}
 ```
 
-<div align="center"><img src="../docs/Figures/CommonMath/outside.svg" width="250"></div>
+![](../docs/Figures/CommonMath/outside.svg)
 
 ### `antiwindup`
 

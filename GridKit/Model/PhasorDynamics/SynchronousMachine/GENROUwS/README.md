@@ -9,12 +9,10 @@ Notes:
 - Same relative amount of saturation occurs on both $d$ and $q$ axis
 
 ## Block Diagram
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/GENROU.JPG">
-   
-  Figure 2: GENROU. Figure courtesy of 
-  [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+![](../../../../../docs/Figures/GENROU.JPG)
+
+Figure 2: GENROU. Figure courtesy of
+[PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 

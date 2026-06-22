@@ -4,6 +4,7 @@
 
 - Added 3, 10, 37, and 39 bus test cases.
 - Updated documentation.
+- Added support for Read the Docs
 - Added JSON parsing.
 - Automatic differentiation with enzyme (w.r.t. internal and external variables).
 - Added PR and issue templates.

@@ -4,11 +4,9 @@
 
 Standard model of the stream turbine
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/TGOV1.JPG">
-   
-  Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+![](../../../../../docs/Figures/TGOV1.JPG)
+
+Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -83,7 +81,7 @@ The algebraic equation dictating the mechnical power output.
 \end{aligned}
 ```
 
-In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
 
 ## Initialization
 At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_m$ which is equal to the electric torque.

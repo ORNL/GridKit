@@ -7,11 +7,9 @@ Series current $\mathbf{i}$ is directed from bus 1 to bus 2. Bus residual
 current injections are positive into buses. All electrical parameter matrices
 are $3 \times 3$ and capture self and mutual coupling between phases.
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/lumped_constant_diagram.svg">
+![](../../../../../../docs/Figures/EMT/lumped_constant_diagram.svg)
 
-  Figure 1: Lumped constant EMT branch model
-</div>
+Figure 1: Lumped constant EMT branch model
 
 ## Model Parameters
 

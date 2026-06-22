@@ -9,12 +9,9 @@ Notes:
 - The current implementation uses its `Bus` reference as a proxy for $E_C$.
 - This direct coupling affects numerical conditioning; production models typically use a decoupling reactance for the exciter-current path that forms $E_C$.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png">
+![](../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png)
 
-
-  Figure 1: Exciter IEEET1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Exciter IEEET1 model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -133,7 +130,7 @@ so that $\dot V_R$ is the anti-windup limited derivative.
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) target and smooth approximation.
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
 
 ### Algebraic Equations
 

@@ -1,0 +1,5 @@
+sphinx
+breathe
+exhale
+myst-parser
+sphinx-rtd-theme

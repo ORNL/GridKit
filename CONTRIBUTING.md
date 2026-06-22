@@ -107,11 +107,11 @@ required.
 
 Doxygen supports Markdown markup and it should be used to make documentation
 more clear. For example,
-```c++
+```text
  * @return The size of `a`
 ```
 is clearer than
-```c++
+```text
  * @return The size of a
 ```
 when read in plain text and in formatted documentation.

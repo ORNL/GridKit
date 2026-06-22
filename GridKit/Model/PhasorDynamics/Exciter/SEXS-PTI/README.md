@@ -4,11 +4,9 @@
 
 Simplified excitation system model.
 
-<div align="center">
-   <img align="center" src="../../../../../docs/Figures/SEXS_PTI_DIAGRAM.png">
+![](../../../../../docs/Figures/SEXS_PTI_DIAGRAM.png)
 
-  Figure 1: Exciter SEXS-PTI model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
-</div>
+Figure 1: Exciter SEXS-PTI model. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
 
 ## Model Parameters
 
@@ -84,7 +82,7 @@ so that $\dot E_{fd}$ can be written in piecewise form compactly.
 \end{aligned}
 ```
 
-In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#anti-windup-indicator) for its definition, behavior, and design rationale.
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
 
 ### Algebraic Equations
 
