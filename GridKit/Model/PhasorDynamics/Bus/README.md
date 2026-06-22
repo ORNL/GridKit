@@ -17,14 +17,9 @@ negative sign.
 
 ![](../../../../docs/Figures/bus_variables.jpg)
 
-Figure 1: Bus-variable diagram. This should be updated to represent current
-balance instead of power balance.
+Figure 1: Needs to be changed to represent current balance instead of power
 
-## Model Parameters
-
-Buses are uniquely identified by their numeric bus ID. Each bus has an
-associated nominal voltage.
-
-Symbol              | Units | JSON | Description
---------------------|-------|------|------------
-$V_\mathrm{base}$   | [kV]  | `kv` | Nominal bus voltage
+balance.
+**Other Parameters**
+Buses are uniquely defined by their ID (number or name). Besides, each bus
+should have associated Nominal Voltage value.

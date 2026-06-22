@@ -3,19 +3,9 @@ OUTPUT_DIRECTORY = .
 
 INPUT = ../GridKit
 RECURSIVE = YES
-FILE_PATTERNS = *.hpp *.tpp
-EXCLUDE_PATTERNS = *.md \
-                   *.cpp \
-                   */Model/PhasorDynamics/*Impl.hpp \
-                   */Model/VariableMonitorImpl.hpp \
-                   */Utilities/CliArgs/CliArgsImpl.hpp \
-                   */AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp
+EXCLUDE_PATTERNS = *.md
 FULL_PATH_NAMES = YES
 STRIP_FROM_PATH = ..
-
-MACRO_EXPANSION = YES
-EXPAND_ONLY_PREDEF = YES
-PREDEFINED = "__attribute__(x)="
 
 GENERATE_HTML = NO
 GENERATE_LATEX = NO
@@ -24,5 +14,4 @@ XML_OUTPUT = xml
 XML_PROGRAMLISTING = NO
 
 EXTRACT_ALL = YES
-WARN_AS_ERROR = FAIL_ON_WARNINGS
 QUIET = YES

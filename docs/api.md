@@ -8,7 +8,6 @@
 GridKit Core <api/reference/namespace_GridKit>
 Solvers <api/reference/namespace_AnalysisManager>
 Phasor Dynamics <api/reference/namespace_GridKit__PhasorDynamics>
-Concepts <api/concepts>
 Power Electronics <api/reference/namespace_GridKit__PowerElectronics>
 Power Flow Data <api/reference/namespace_GridKit__PowerFlowData>
 Linear Algebra <api/reference/namespace_GridKit__LinearAlgebra>

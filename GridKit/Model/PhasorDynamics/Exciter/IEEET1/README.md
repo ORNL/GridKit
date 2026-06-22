@@ -142,20 +142,7 @@ E_C &:= \sqrt{V_r^2 + V_i^2}
 \end{aligned}
 ```
 
-The IEEET1 differential equations, as derived from the model diagram, are:
-
-```math
-\begin{aligned}
-   0 &= -\dot V_{ts} + \dfrac{1}{T_R}\left(E_C - V_{ts}\right) \\
-   0 &= -\dot V_R
-      + \text{antiwindup}
-        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
-   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E E_{fd}'\right) \\
-   0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
-\end{aligned}
-```
-
-CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#antiwindup) target and approximation.
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
 
 ### Algebraic Equations
 

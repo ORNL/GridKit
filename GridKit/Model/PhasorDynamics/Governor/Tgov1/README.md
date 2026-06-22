@@ -84,6 +84,8 @@ The algebraic equation dictating the mechnical power output.
 \end{aligned}
 ```
 
+In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
+
 ## Initialization
 At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of the initial mechanical power converted to the TGOV1 component base.
 ```math
