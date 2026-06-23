@@ -30,7 +30,7 @@ operators.
 
 ## Block Diagram
 
-<img src="../../../../../../docs/Figures/EMT/Propagation/diagram.png" alt="Propagation model diagram" width="90%">
+![](../../../../../../docs/Figures/EMT/Propagation/diagram.png)
 
 Figure 1: Propagation model
 

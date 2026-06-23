@@ -5,7 +5,7 @@ admittance $\mathbf{y}_c$ and propagation model $\mathbf{h}$.
 
 ## Block Diagram
 
-<img src="../../../../../../docs/Figures/EMT/LineDistributed/diagram.png" alt="LineDistributed model diagram">
+![](../../../../../../docs/Figures/EMT/LineDistributed/diagram.png)
 
 Figure 1: LineDistributed model
 

@@ -11,7 +11,7 @@ Notes:
 
 ## Block Diagram
 
-<img src="../../../../../../docs/Figures/EMT/LineLumped/diagram.png" alt="LineLumped model diagram">
+![](../../../../../../docs/Figures/EMT/LineLumped/diagram.png)
 
 Figure 1: LineLumped model
 

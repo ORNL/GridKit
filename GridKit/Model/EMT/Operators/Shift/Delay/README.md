@@ -9,7 +9,7 @@ Note:
 
 ## Block Diagram
 
-<img src="../../../../../../docs/Figures/EMT/Delay/diagram.png" alt="Delay model diagram">
+![](../../../../../../docs/Figures/EMT/Delay/diagram.png)
 
 Figure 1: Delay model
 
