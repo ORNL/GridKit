@@ -30,11 +30,9 @@ operators.
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Propagation/diagram.png" width="90%">
+<img src="../../../../../../docs/Figures/EMT/Propagation/diagram.png" alt="Propagation model diagram" width="90%">
 
-  Figure 1: Propagation model
-</div>
+Figure 1: Propagation model
 
 ## Model Parameters
 

@@ -24,11 +24,9 @@ The time domain representation of this model is:
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/StateSpace/diagram.png" width="90%">
+<img src="../../../../../../docs/Figures/EMT/StateSpace/diagram.png" alt="StateSpace rational approximation model diagram" width="90%">
 
-  Figure 1: StateSpace rational approximation model
-</div>
+Figure 1: StateSpace rational approximation model
 
 ## Model Parameters
 

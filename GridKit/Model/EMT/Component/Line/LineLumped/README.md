@@ -11,11 +11,9 @@ Notes:
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/LineLumped/diagram.png">
+<img src="../../../../../../docs/Figures/EMT/LineLumped/diagram.png" alt="LineLumped model diagram">
 
-  Figure 1: LineLumped model
-</div>
+Figure 1: LineLumped model
 
 ## Model Parameters
 

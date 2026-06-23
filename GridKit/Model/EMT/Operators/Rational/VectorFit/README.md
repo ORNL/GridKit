@@ -22,11 +22,9 @@ The time domain representation of this model is:
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/VecFit/diagram.png" width="70%">
+<img src="../../../../../../docs/Figures/EMT/VecFit/diagram.png" alt="VectorFit model diagram" width="70%">
 
-  Figure 1: VectorFit model
-</div>
+Figure 1: VectorFit model
 
 ## Model Parameters
 

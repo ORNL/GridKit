@@ -9,11 +9,9 @@ Note:
 
 ## Block Diagram
 
-<div align="center">
-   <img align="center" src="../../../../../../docs/Figures/EMT/Delay/diagram.png">
+<img src="../../../../../../docs/Figures/EMT/Delay/diagram.png" alt="Delay model diagram">
 
-  Figure 1: Delay model
-</div>
+Figure 1: Delay model
 
 ## Model Parameters
 
