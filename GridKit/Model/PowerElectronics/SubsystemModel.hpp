@@ -3,16 +3,15 @@
 #pragma once
 
 #include <cassert>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
-#include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/ScalarTraits.hpp>
-
-#include "GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp"
 
 namespace GridKit
 {
@@ -23,20 +22,23 @@ namespace GridKit
     using MatrixT        = typename CircuitComponent<ScalarT, IdxT>::MatrixT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
-    using node_type      = CircuitNode<ScalarT, IdxT>;
+    using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
+    using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::rel_tol_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
+    using CircuitComponent<ScalarT, IdxT>::extern_indices_;
 
   public:
     /**
@@ -44,7 +46,8 @@ namespace GridKit
      *
      * @post System model parameters set as default
      */
-    SubsystemModel(IdxT refframe_index = neg1_)
+
+    SubsystemModel(bool root = true)
     {
       // Set system model parameters as default
       rel_tol_         = 1e-4;
@@ -52,7 +55,7 @@ namespace GridKit
       this->max_steps_ = 2000;
       // By default don't use the jacobian
       use_jac_         = false;
-      refframe_index_  = refframe_index;
+      root_            = root;
     }
 
     virtual ~SubsystemModel()
@@ -82,89 +85,59 @@ namespace GridKit
 
     int allocate() override
     {
-      size_t counter = 0;
 
-      // First pass: Map global component indices to local subsystem indices.
-      for (const auto& component : components_)
-      {
-        component->allocate();
+      this->createGlobalToInternalMap();
 
-        for (IdxT i = component->getExternSize(); i < component->size(); i++)
-        {
-
-          IdxT index = component->getNodeConnection(i);
-
-          if (index != neg1_)
-          {
-            internal_map_[index] = counter;
-            counter++;
-          }
-        }
-
-        // TODO : To be removed once MicrogridBusDQ owns its internals
-        auto* comp = dynamic_cast<GridKit::MicrogridBusDQ<double, size_t>*>(component);
-
-        if (comp != nullptr)
-        {
-          IdxT index1 = component->getNodeConnection(0);
-          IdxT index2 = component->getNodeConnection(1);
-
-          internal_map_[index1] = counter;
-          counter++;
-          internal_map_[index2] = counter;
-          counter++;
-        }
-      }
-
-      // If this subsystem contains the reference generator, add the rotor motor as an internal
-      if (refframe_index_ != neg1_)
-      {
-        internal_map_[refframe_index_] = counter;
-        counter++;
-      }
-
-      // Second pass: Identify variables required by this partition but owned by another partition.
-      for (const auto& component : components_)
-      {
-        for (IdxT i = 0; i < component->getExternSize(); i++)
-        {
-          IdxT index = component->getNodeConnection(i);
-
-          if (internal_map_.count(index) < 1 && external_map_.count(index) < 1 && index != neg1_)
-          {
-            external_map_[index] = counter;
-            counter++;
-          }
-        }
-      }
+      this->mapGlobalToLocal();
 
       n_intern_ = internal_map_.size();
       n_extern_ = external_map_.size();
       size_     = n_intern_ + n_extern_;
 
-      this->mapGlobalToLocal();
+      CircuitComponent<ScalarT, IdxT>::allocate();
 
-      // Allocate subsystem vectors.
       y_.resize(n_intern_);
       yp_.resize(n_intern_);
       f_.resize(n_intern_);
 
-      // Allocate vectors associated with external coupling variables.
+      // Allocate subsystem vectors.
       y_ext_.resize(n_extern_);
       yp_ext_.resize(n_extern_);
       f_ext_.resize(n_extern_);
       external_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
-      for (const auto& [global_idx, local_idx] : internal_map_)
+      for (const auto [global_idx, local_idx] : internal_map_)
       {
         this->setExternalConnectionNodes(local_idx, global_idx);
       }
 
       // Store the global indices of all external coupling variables.
-      for (const auto& [global_idx, local_idx] : external_map_)
+      for (const auto [global_idx, local_idx] : external_map_)
       {
         external_indices_[local_idx - n_intern_] = global_idx;
+        extern_indices_.insert(local_idx);
+        this->setExternalConnectionNodes(local_idx, global_idx);
+      }
+
+      {
+        size_t component_internal_idx = 0;
+        for (component_type* comp : components_)
+        {
+
+          comp->setInternalPointer(&y_[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
+          comp->setInternalResidualPointer(&f_[component_internal_idx]);
+
+          const auto& external_indices = comp->getExternIndices();
+          for (size_t i = 0; i < comp->size(); i++)
+          {
+            if (!external_indices.contains(i))
+            {
+              component_internal_idx++;
+            }
+          }
+        }
       }
 
       return 0;
@@ -196,13 +169,13 @@ namespace GridKit
      */
     int distributeVectors()
     {
-      for (const auto& component : components_)
+      for (component_type* component : components_)
       {
-        IdxT                  size = component->size();
-        std::vector<ScalarT>& y    = component->y();
-        std::vector<ScalarT>& yp   = component->yp();
+        std::vector<ScalarT>&   y         = component->y();
+        std::vector<ScalarT>&   yp        = component->yp();
+        const std::set<size_t>& externals = component->getExternIndices();
 
-        for (IdxT j = 0; j < size; ++j)
+        for (size_t j : externals)
         {
           if (component->getNodeConnection(j) == neg1_)
           {
@@ -234,9 +207,9 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int evaluateResidual() final
+    int evaluateInternalResidual() final
     {
-      for (IdxT i = 0; i < this->f_.size(); i++)
+      for (IdxT i = 0; i < this->getInternalSize(); i++)
       {
         f_[i] = 0.0;
       }
@@ -244,14 +217,24 @@ namespace GridKit
       this->distributeVectors();
 
       // Update system residual vector
-      for (const auto& component : components_)
-      {
-        // TODO:check return type
-        component->evaluateResidual();
 
-        IdxT                        size     = component->size();
-        const std::vector<ScalarT>& residual = component->getResidual();
-        for (IdxT j = 0; j < size; ++j)
+      // Evaluate component internal residuals - this is embarassingly parallel
+      for (component_type* component : components_)
+      {
+        if (int err_code = component->evaluateInternalResidual())
+          return err_code;
+      }
+
+      for (component_type* component : components_)
+      {
+
+        if (int err_code = component->evaluateExternalResidual())
+          return err_code;
+
+        const std::vector<ScalarT>& residual  = component->getResidual();
+        const std::set<size_t>&     externals = component->getExternIndices();
+
+        for (size_t j : externals)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_ && component->getNodeConnection(j) < this->getInternalSize())
@@ -261,6 +244,14 @@ namespace GridKit
         }
       }
 
+      return 0;
+    }
+
+    /**
+     * @todo implement this for nested systems
+     */
+    int evaluateExternalResidual() final
+    {
       return 0;
     }
 
@@ -349,7 +340,7 @@ namespace GridKit
      */
     void printJacobianMatrixMarket(std::string filename, std::string title)
     {
-      jac_.printMatrixMarket(filename, title);
+      // jac_.printMatrixMarket(filename, title);
     }
 
     CsrMatrixT* getCsrJacobian() const override
@@ -374,7 +365,7 @@ namespace GridKit
 
     int mapGlobalToLocal()
     {
-      for (const auto& component : components_)
+      for (auto* component : components_)
       {
 
         for (IdxT i = 0; i < component->size(); i++)
@@ -396,12 +387,101 @@ namespace GridKit
         }
       }
 
+      for (auto* node : nodes_)
+      {
+
+        for (IdxT i = 0; i < node->size(); i++)
+        {
+          IdxT index = node->getNodeConnection(i);
+
+          if (index == neg1_)
+          {
+            continue;
+          }
+          else if (internal_map_.count(index) > 0)
+          {
+            node->setExternalConnectionNodes(i, internal_map_.at(index));
+          }
+          else
+          {
+            node->setExternalConnectionNodes(i, external_map_.at(index));
+          }
+        }
+      }
+
       return 0;
     }
 
     int mapLocalToGlobal()
     {
       return 0;
+    }
+
+    void createGlobalToInternalMap()
+    {
+
+      std::vector<IdxT> global_indices;
+
+      // First pass: Map global component indices to local subsystem indices.
+      for (component_type* comp : components_)
+      {
+        for (IdxT i = 0; i < comp->size(); i++)
+        {
+          IdxT index = comp->getNodeConnection(i);
+
+          auto extern_indices = comp->getExternIndices();
+
+          if (index != neg1_ && !extern_indices.contains(i))
+          {
+            global_indices.push_back(index);
+          }
+        }
+      }
+
+      for (node_type* node : nodes_)
+      {
+
+        for (IdxT i = 0; i < node->size(); i++)
+        {
+          IdxT index = node->getNodeConnection(i);
+
+          if (index != neg1_)
+          {
+            global_indices.push_back(index);
+          }
+        }
+      }
+
+      std::sort(global_indices.begin(), global_indices.end());
+
+      for (IdxT i = 0; i < global_indices.size(); i++)
+      {
+        internal_map_[global_indices[i]] = i;
+      }
+
+      size_t counter = global_indices.size();
+      for (component_type* comp : components_)
+      {
+        auto extern_indices = comp->getExternIndices();
+        for (IdxT j = 0; j < comp->size(); j++)
+        {
+          if (!extern_indices.contains(j))
+          {
+            continue;
+          }
+          IdxT index = comp->getNodeConnection(j);
+
+          if (internal_map_.count(index) < 1 && external_map_.count(index) < 1 && index != neg1_)
+          {
+            external_map_[index] = counter++;
+          }
+        }
+      }
+    }
+
+    std::vector<IdxT>& getExternalIndices()
+    {
+      return external_indices_;
     }
 
     std::vector<RealT>& getExternalDataY()
@@ -414,22 +494,32 @@ namespace GridKit
       return yp_ext_;
     }
 
-    std::vector<IdxT>& getExternalIndices()
+    void addNode(node_type* node)
     {
-      return external_indices_;
+      nodes_.push_back(node);
+    }
+
+    void toString()
+    {
+      for (auto* comp : components_)
+      {
+        std::cout << ", " << std::to_string(comp->getIDcomponent());
+      }
+      std::cout << std::endl;
     }
 
   private:
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
     std::vector<component_type*>   components_;
+    std::vector<node_type*>        nodes_;
     std::unordered_map<IdxT, IdxT> internal_map_;
     std::unordered_map<IdxT, IdxT> external_map_;
     std::vector<IdxT>              external_indices_;
-    std::vector<RealT>             y_ext_;
-    std::vector<RealT>             yp_ext_;
-    std::vector<RealT>             f_ext_;
-    IdxT                           refframe_index_{neg1_};
+    bool                           root_;
+    std::vector<ScalarT>           y_ext_;
+    std::vector<ScalarT>           yp_ext_;
+    std::vector<ScalarT>           f_ext_;
 
     IdxT*       map_to_csr_{nullptr};
     CsrMatrixT* csr_jac_{nullptr};
