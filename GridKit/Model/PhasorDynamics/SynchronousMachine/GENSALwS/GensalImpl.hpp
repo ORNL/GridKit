@@ -128,12 +128,14 @@ namespace GridKit
       return monitor_.get();
     }
 
+    // System base -> machine base when reading system values.
     template <typename scalar_type, typename index_type>
     scalar_type Gensal<scalar_type, index_type>::toMachineBase(ScalarT value) const
     {
       return value * va_system_base_ / va_machine_base_;
     }
 
+    // Machine base -> system base for network and signal output.
     template <typename scalar_type, typename index_type>
     scalar_type Gensal<scalar_type, index_type>::toSystemBase(ScalarT value) const
     {
@@ -144,6 +146,7 @@ namespace GridKit
     void Gensal<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
+      // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
                     { return toSystemBase(y_[12]); });
       monitor_->set(Variable::ii, [this]
@@ -314,10 +317,11 @@ namespace GridKit
       y_[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
                + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      pmech_set_ = Te;
+      // Convert Te to system base for governor PM signal.
+      pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GensalExternalVariables::PM>())
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::PM>(Te);
+        signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat;
@@ -408,7 +412,7 @@ namespace GridKit
       ScalarT vi = wb[1];
 
       // Set signal variable aliases
-      ScalarT pmech = ws[0];
+      ScalarT pmech = toMachineBase(ws[0]);
       ScalarT efd   = ws[1];
 
       /* 5 Gensal differential equations */
@@ -453,6 +457,7 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
+      // Convert current injection to system base for the network.
       h[0] = toSystemBase(inr - vr * G_ + vi * B_);
       h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 

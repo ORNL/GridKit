@@ -71,6 +71,7 @@
             "ports": {"bus": 1, "speed": 0, "pmech": 1},
             "id": "tgov1_1_1",
             "params": {
+                "Trate": 100.0,
                 "R": 0.05,
                 "T1": 0.5,
                 "T2": 2.5,
