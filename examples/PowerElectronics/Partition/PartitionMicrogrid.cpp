@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdio>
 
+#include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
+#include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
 #include <GridKit/Model/PowerElectronics/DistributedGenerator/DistributedGenerator.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridBusDQ/MicrogridBusDQ.hpp>
 #include <GridKit/Model/PowerElectronics/MicrogridLine/MicrogridLine.hpp>
@@ -12,6 +15,8 @@
 #include <GridKit/Model/PowerElectronics/PartitionInterface/BusPartitionInterface.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 #include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
+#include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
+#include <GridKit/Solver/Dynamic/Ida.hpp>
 
 int main()
 {
@@ -22,6 +27,7 @@ int main()
   size_t max_step_number = 3000;
   bool   use_jac         = true;
 
+  // Create model
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
 
   // Modeled after the problem in the paper
@@ -80,273 +86,173 @@ int main()
   double rload2 = 2.0;
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
-  // indexing sets
-  size_t Nsize              = 2;
-  //							DGs	+		- refframe	   Lines +				Loads
-  size_t vec_size_internals = 13 * (2 * Nsize) - 1 + (2 + 4 * (Nsize - 1)) + 2 * Nsize;
-  //							\omegaref + BusDQ
-  size_t vec_size_externals = 1 + 2 * (2 * Nsize);
-  size_t dqbus1             = vec_size_internals + 1;
-  size_t dqbus2             = vec_size_internals + 3;
-  size_t dqbus3             = vec_size_internals + 5;
-  size_t dqbus4             = vec_size_internals + 7;
+  using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  SignalNode dg_signal;
 
-  size_t vec_size_total = vec_size_internals + vec_size_externals;
+  sysmodel->addNode(&dg_signal);
 
-  size_t indexv = 0;
+  using Bus = GridKit::PowerElectronics::MicrogridBus<double, size_t>;
+  Bus bus1;
+  Bus bus2;
+  Bus bus3;
+  Bus bus4;
+
+  sysmodel->addNode(&bus1);
+  sysmodel->addNode(&bus2);
+  sysmodel->addNode(&bus3);
+  sysmodel->addNode(&bus4);
 
   // dg 1
-  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(0, parms1, true);
-  // ref motor
-  dg1->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg1->setExternalConnectionNodes(1, dqbus1);
-  dg1->setExternalConnectionNodes(2, dqbus1 + 1);
-  //"grounding" of the difference
-  dg1->setExternalConnectionNodes(3, static_cast<size_t>(-1));
-  // internal connections
-  for (size_t i = 0; i < 12; i++)
-  {
-
-    dg1->setExternalConnectionNodes(4 + i, indexv + i);
-  }
-  indexv += 12;
+  GridKit::DistributedGenerator<double, size_t>* dg1 = new GridKit::DistributedGenerator<double, size_t>(
+      0, parms1, true, &dg_signal, &bus1);
+  sysmodel->addComponent(dg1);
 
   // dg 2
-  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(1, parms1, false);
-  // ref motor
-  dg2->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg2->setExternalConnectionNodes(1, dqbus2);
-  dg2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg2 = new GridKit::DistributedGenerator<double, size_t>(
+      1, parms1, false, &dg_signal, &bus2);
+  sysmodel->addComponent(dg2);
 
   // dg 3
-  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(2, parms2, false);
-  // ref motor
-  dg3->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg3->setExternalConnectionNodes(1, dqbus3);
-  dg3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg3->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg3 = new GridKit::DistributedGenerator<double, size_t>(
+      2, parms2, false, &dg_signal, &bus3);
+  sysmodel->addComponent(dg3);
 
   // dg 4
-  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(3, parms2, false);
-  // ref motor
-  dg4->setExternalConnectionNodes(0, vec_size_internals);
-  // outputs
-  dg4->setExternalConnectionNodes(1, dqbus4);
-  dg4->setExternalConnectionNodes(2, dqbus4 + 1);
-
-  // internal connections
-  for (size_t i = 0; i < 13; i++)
-  {
-
-    dg4->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 13;
+  GridKit::DistributedGenerator<double, size_t>* dg4 = new GridKit::DistributedGenerator<double, size_t>(
+      3, parms2, false, &dg_signal, &bus4);
+  sysmodel->addComponent(dg4);
 
   // Lines
 
   // line 1
-  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(4, rline1, Lline1);
-  // ref motor
-  l1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l1->setExternalConnectionNodes(1, dqbus1);
-  l1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // output connections
-  l1->setExternalConnectionNodes(3, dqbus2);
-  l1->setExternalConnectionNodes(4, dqbus2 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l1->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l1 = new GridKit::MicrogridLine<double, size_t>(
+      4, rline1, Lline1, &dg_signal, &bus1, &bus2);
+  sysmodel->addComponent(l1);
 
   // line 2
-  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(5, rline2, Lline2);
-  // ref motor
-  l2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l2->setExternalConnectionNodes(1, dqbus2);
-  l2->setExternalConnectionNodes(2, dqbus2 + 1);
-  // output connections
-  l2->setExternalConnectionNodes(3, dqbus3);
-  l2->setExternalConnectionNodes(4, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l2->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l2 = new GridKit::MicrogridLine<double, size_t>(
+      5, rline2, Lline2, &dg_signal, &bus2, &bus3);
+  sysmodel->addComponent(l2);
 
   // line 3
-  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(6, rline3, Lline3);
-  // ref motor
-  l3->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  l3->setExternalConnectionNodes(1, dqbus3);
-  l3->setExternalConnectionNodes(2, dqbus3 + 1);
-  // output connections
-  l3->setExternalConnectionNodes(3, dqbus4);
-  l3->setExternalConnectionNodes(4, dqbus4 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    l3->setExternalConnectionNodes(5 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLine<double, size_t>* l3 = new GridKit::MicrogridLine<double, size_t>(
+      6, rline3, Lline3, &dg_signal, &bus3, &bus4);
+  sysmodel->addComponent(l3);
 
   //  loads
 
   // load 1
-  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1);
-  // ref motor
-  load1->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load1->setExternalConnectionNodes(1, dqbus1);
-  load1->setExternalConnectionNodes(2, dqbus1 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load1->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLoad<double, size_t>* load1 = new GridKit::MicrogridLoad<double, size_t>(7, rload1, Lload1, &dg_signal, &bus1);
+  sysmodel->addComponent(load1);
 
   // load 2
-  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2);
-  // ref motor
-  load2->setExternalConnectionNodes(0, vec_size_internals);
-  // input connections
-  load2->setExternalConnectionNodes(1, dqbus3);
-  load2->setExternalConnectionNodes(2, dqbus3 + 1);
-  // internal connections
-  for (size_t i = 0; i < 2; i++)
-  {
-
-    load2->setExternalConnectionNodes(3 + i, indexv + i);
-  }
-  indexv += 2;
+  GridKit::MicrogridLoad<double, size_t>* load2 = new GridKit::MicrogridLoad<double, size_t>(8, rload2, Lload2, &dg_signal, &bus3);
+  sysmodel->addComponent(load2);
 
   // Virtual PQ Buses
-  GridKit::MicrogridBusDQ<double, size_t>* bus1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_1 = new GridKit::MicrogridBusDQ<double, size_t>(9, RN, &bus1);
+  sysmodel->addComponent(bus_para_1);
 
-  bus1->setExternalConnectionNodes(0, dqbus1);
-  bus1->setExternalConnectionNodes(1, dqbus1 + 1);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN, &bus2);
+  sysmodel->addComponent(bus_para_2);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus2 = new GridKit::MicrogridBusDQ<double, size_t>(10, RN);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN, &bus3);
+  sysmodel->addComponent(bus_para_3);
 
-  bus2->setExternalConnectionNodes(0, dqbus2);
-  bus2->setExternalConnectionNodes(1, dqbus2 + 1);
+  GridKit::MicrogridBusDQ<double, size_t>* bus_para_4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN, &bus4);
+  sysmodel->addComponent(bus_para_4);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus3 = new GridKit::MicrogridBusDQ<double, size_t>(11, RN);
+  sysmodel->allocate();
 
-  bus3->setExternalConnectionNodes(0, dqbus3);
-  bus3->setExternalConnectionNodes(1, dqbus3 + 1);
+  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>(false);
+  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>(false);
+  GridKit::SubsystemModel<double, size_t>* partition3 = new GridKit::SubsystemModel<double, size_t>(false);
+  GridKit::SubsystemModel<double, size_t>* partition4 = new GridKit::SubsystemModel<double, size_t>(false);
 
-  GridKit::MicrogridBusDQ<double, size_t>* bus4 = new GridKit::MicrogridBusDQ<double, size_t>(12, RN);
+  GridKit::MicrogridLine<double, size_t>          l1copy(*l1);
+  GridKit::MicrogridLine<double, size_t>          l2copy(*l2);
+  GridKit::MicrogridLine<double, size_t>          l3copy(*l3);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus1, l1copy, 14);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface2 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 15);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface3 = new GridKit::BusPartitionInterface<double, size_t>(bus3, l3copy, 16);
 
-  bus4->setExternalConnectionNodes(0, dqbus4);
-  bus4->setExternalConnectionNodes(1, dqbus4 + 1);
+  busInterface1->allocate();
+  busInterface2->allocate();
+  busInterface3->allocate();
 
-  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>(vec_size_internals);
-  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>();
-
-  GridKit::MicrogridLine<double, size_t>          comp3copy(*l2);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface = new GridKit::BusPartitionInterface<double, size_t>(comp3copy, dqbus2, dqbus2 + 1, 14);
-
+  partition1->addNode(&dg_signal);
   partition1->addComponent(dg1);
-  partition1->addComponent(dg2);
-  partition1->addComponent(l1);
-  partition1->addComponent(bus1);
-  partition1->addComponent(bus2);
+  partition1->addComponent(bus_para_1);
+  partition1->addNode(&bus1);
   partition1->addComponent(load1);
-  partition1->addComponent(busInterface);
+  partition1->addComponent(busInterface1);
 
-  partition2->addComponent(dg3);
-  partition2->addComponent(dg4);
-  partition2->addComponent(l2);
-  partition2->addComponent(bus3);
-  partition2->addComponent(bus4);
-  partition2->addComponent(l3);
-  partition2->addComponent(load2);
+  partition2->addComponent(dg2);
+  partition2->addComponent(l1);
+  partition2->addComponent(busInterface2);
+  partition2->addComponent(bus_para_2);
+  partition2->addNode(&bus2);
 
-  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg1));
-  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg2));
-  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg3));
-  sysmodel->addComponent(new GridKit::DistributedGenerator<double, size_t>(*dg4));
-  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l1));
-  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l2));
-  sysmodel->addComponent(new GridKit::MicrogridLine<double, size_t>(*l3));
-  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus1));
-  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus2));
-  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus3));
-  sysmodel->addComponent(new GridKit::MicrogridBusDQ<double, size_t>(*bus4));
-  sysmodel->addComponent(new GridKit::MicrogridLoad<double, size_t>(*load1));
-  sysmodel->addComponent(new GridKit::MicrogridLoad<double, size_t>(*load2));
+  partition3->addComponent(dg3);
+  partition3->addComponent(l2);
+  partition3->addComponent(busInterface3);
+  partition3->addComponent(load2);
+  partition3->addComponent(bus_para_3);
+  partition3->addNode(&bus3);
 
-  partition1->allocate();
-  partition2->allocate();
-  sysmodel->allocate(vec_size_total);
+  partition4->addComponent(dg4);
+  partition4->addComponent(l3);
+  partition4->addComponent(bus_para_4);
+  partition4->addNode(&bus4);
 
   std::vector<double> y;
   std::vector<double> yp;
 
-  for (size_t i = 0; i < vec_size_total; i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
     y.push_back(static_cast<double>(i + 1));
     yp.push_back(static_cast<double>(i + 1));
   }
 
+  for (size_t i = 0; i < sysmodel->size(); i++)
+  {
+    sysmodel->y()[i]  = y[i];
+    sysmodel->yp()[i] = yp[i];
+  }
+
+  sysmodel->evaluateResidual();
+  std::vector<double> f_sysmodel = sysmodel->getResidual();
+
+  partition1->allocate();
+  partition2->allocate();
+  partition3->allocate();
+  partition4->allocate();
+
+  std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2, partition3, partition4};
+
   // Distribute externals to partition 1
-  for (size_t i = 0; i < partition1->getExternSize(); i++)
+  for (auto* partition : partitions)
   {
-    partition1->getExternalDataY()[i]  = y[partition1->getExternalIndices()[i]];
-    partition1->getExternalDataYP()[i] = yp[partition1->getExternalIndices()[i]];
+    for (size_t i = 0; i < partition->getExternSize(); i++)
+    {
+      partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
+      partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
+    }
   }
 
-  // Distribute externals to partition 2
-  for (size_t i = 0; i < partition2->getExternSize(); i++)
+  for (auto* partition : partitions)
   {
-    partition2->getExternalDataY()[i]  = y[partition2->getExternalIndices()[i]];
-    partition2->getExternalDataYP()[i] = yp[partition2->getExternalIndices()[i]];
+    for (size_t i = 0; i < partition->getInternalSize(); i++)
+    {
+      partition->y()[i]  = y[partition->getNodeConnection(i)];
+      partition->yp()[i] = yp[partition->getNodeConnection(i)];
+    }
   }
 
-  // Distribute internals to partition 1
-  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  for (auto* partition : partitions)
   {
-    partition1->y()[i]  = y[partition1->getNodeConnection(i)];
-    partition1->yp()[i] = yp[partition1->getNodeConnection(i)];
+    partition->evaluateResidual();
   }
-
-  // Distribute internals to partition 2
-  for (size_t i = 0; i < partition2->getInternalSize(); i++)
-  {
-    partition2->y()[i]  = y[partition2->getNodeConnection(i)];
-    partition2->yp()[i] = yp[partition2->getNodeConnection(i)];
-  }
-
-  // Evaluate Residuals for each partition
-  partition1->evaluateResidual();
-  partition2->evaluateResidual();
 
   auto printTitle = [](std::string msg) -> void
   {
@@ -355,57 +261,42 @@ int main()
   };
 
   // Print Residuals from partition 1
-  printTitle("Partition 1");
-  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  int counter = 1;
+  for (auto* partition : partitions)
   {
-    auto com_index = partition1->getNodeConnection(static_cast<size_t>(i));
-    printf("%-12.5g  ----------  %7zu\n", partition1->getResidual()[i], com_index);
+    printTitle("Partition " + std::to_string(counter++));
+    for (size_t i = 0; i < partition->getInternalSize(); i++)
+    {
+      auto com_index = partition->getNodeConnection(static_cast<size_t>(i));
+      printf("%-12.5g  ----------  %7zu\n", partition->getResidual()[i], com_index);
+    }
   }
-
-  // Print Residuals from partition 2
-  printTitle("Partition 2");
-  for (size_t i = 0; i < partition2->getInternalSize(); i++)
-  {
-    auto com_index = partition2->getNodeConnection(static_cast<size_t>(i));
-    printf("%-12.5g  ----------  %7zu\n", partition2->getResidual()[i], com_index);
-  }
-
-  for (size_t i = 0; i < vec_size_total; i++)
-  {
-    sysmodel->y()[i]  = y[i];
-    sysmodel->yp()[i] = yp[i];
-  }
-
-  sysmodel->evaluateResidual();
 
   printTitle("Reference Solution");
-  for (size_t i = 0; i < vec_size_total; i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
     printf("%-12.5g  ----------  %7zu\n", sysmodel->getResidual()[i], i);
   }
 
-  std::vector<double> f(vec_size_total, 0.0);
-  std::vector<double> error(vec_size_total, 1.0);
+  std::vector<double> f(sysmodel->size(), 0.0);
+  std::vector<double> error(sysmodel->size(), 1.0);
 
   // Get internal residuals from partition 1
-  for (size_t i = 0; i < partition1->getInternalSize(); i++)
+  for (auto* partition : partitions)
   {
-    f[partition1->getNodeConnection(i)] = partition1->getResidual()[i];
+    for (size_t i = 0; i < partition->getInternalSize(); i++)
+    {
+      f[partition->getNodeConnection(i)] = partition->getResidual()[i];
+    }
   }
 
-  // Get internal residuals from partition 2
-  for (size_t i = 0; i < partition2->getInternalSize(); i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
-    f[partition2->getNodeConnection(i)] = partition2->getResidual()[i];
-  }
-
-  for (size_t i = 0; i < vec_size_total; i++)
-  {
-    error[i] = sysmodel->getResidual()[i] - f[i];
+    error[i] = f_sysmodel[i] - f[i];
   }
 
   double max_error = 0;
-  for (size_t i = 0; i < vec_size_total; i++)
+  for (size_t i = 0; i < sysmodel->size(); i++)
   {
     if (max_error < std::abs(error[i]))
     {
@@ -415,8 +306,6 @@ int main()
 
   std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
 
-  delete partition1;
-  delete partition2;
   delete sysmodel;
 
   return 0;
