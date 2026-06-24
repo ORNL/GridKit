@@ -60,12 +60,6 @@ namespace GridKit
 
     virtual ~SubsystemModel()
     {
-      for (auto comp : this->components_)
-      {
-        delete comp;
-      }
-      delete csr_jac_;
-      delete[] map_to_csr_;
     }
 
     bool hasJacobian() final
@@ -92,7 +86,7 @@ namespace GridKit
 
       n_intern_ = internal_map_.size();
       n_extern_ = external_map_.size();
-      size_     = n_intern_ + n_extern_;
+      size_     = n_intern_;
 
       CircuitComponent<ScalarT, IdxT>::allocate();
 
@@ -116,8 +110,6 @@ namespace GridKit
       for (const auto [global_idx, local_idx] : external_map_)
       {
         external_indices_[local_idx - n_intern_] = global_idx;
-        extern_indices_.insert(local_idx);
-        this->setExternalConnectionNodes(local_idx, global_idx);
       }
 
       {
@@ -420,8 +412,7 @@ namespace GridKit
     void createGlobalToInternalMap()
     {
 
-      std::vector<IdxT> global_indices;
-
+      size_t component_internal_idx = 0;
       // First pass: Map global component indices to local subsystem indices.
       for (component_type* comp : components_)
       {
@@ -433,7 +424,7 @@ namespace GridKit
 
           if (index != neg1_ && !extern_indices.contains(i))
           {
-            global_indices.push_back(index);
+            internal_map_[index] = component_internal_idx++;
           }
         }
       }
@@ -447,19 +438,11 @@ namespace GridKit
 
           if (index != neg1_)
           {
-            global_indices.push_back(index);
+            internal_map_[index] = component_internal_idx++;
           }
         }
       }
 
-      std::sort(global_indices.begin(), global_indices.end());
-
-      for (IdxT i = 0; i < global_indices.size(); i++)
-      {
-        internal_map_[global_indices[i]] = i;
-      }
-
-      size_t counter = global_indices.size();
       for (component_type* comp : components_)
       {
         auto extern_indices = comp->getExternIndices();
@@ -473,7 +456,7 @@ namespace GridKit
 
           if (internal_map_.count(index) < 1 && external_map_.count(index) < 1 && index != neg1_)
           {
-            external_map_[index] = counter++;
+            external_map_[index] = component_internal_idx++;
           }
         }
       }
@@ -484,12 +467,12 @@ namespace GridKit
       return external_indices_;
     }
 
-    std::vector<RealT>& getExternalDataY()
+    std::vector<ScalarT>& getExternalDataY()
     {
       return y_ext_;
     }
 
-    std::vector<RealT>& getExternalDataYP()
+    std::vector<ScalarT>& getExternalDataYP()
     {
       return yp_ext_;
     }

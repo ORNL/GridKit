@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <vector>
-
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
@@ -36,44 +33,9 @@ namespace GridKit
 
     ~PartitionInterface() = default;
 
-    int setExternalDataY(const std::vector<RealT>& data)
-    {
-      std::copy(data.begin(), data.end(), external_data_y_.begin());
-
-      return 0;
-    }
-
-    int setExternalDataYP(const std::vector<RealT>& data)
-    {
-      std::copy(data.begin(), data.end(), external_data_yp_.begin());
-
-      return 0;
-    }
-
-    std::vector<RealT>& getExternalDataY()
-    {
-      return external_data_y_;
-    }
-
-    std::vector<RealT>& getExternalDataYP()
-    {
-      return external_data_yp_;
-    }
-
-    std::vector<IdxT>& getPartitionExternalIndices()
-    {
-      return interface_partition_externals_;
-    }
-
   protected:
-    std::vector<RealT> external_data_y_;
-    std::vector<RealT> external_data_yp_;
-    std::vector<IdxT>  interface_partition_externals_;
-
     size_t bus_port_i_;
     size_t bus_port_j_;
-    IdxT   bus_i_;
-    IdxT   bus_j_;
   };
 
 } // namespace GridKit

@@ -1,6 +1,10 @@
+#include <omp.h>
+
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -20,6 +24,26 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+/******************************************************************************
+ * Partitioned Residual Evaluation
+ *
+ * Construct subsystem models by partitioning the original microgrid into
+ * independent groups of components. Each subsystem is allocated and receives
+ * the appropriate subset of the global state vectors (y and yp), consisting
+ * of:
+ *
+ *   - External variables (coupling variables from neighboring partitions)
+ *   - Internal variables (states owned by the partition)
+ *
+ * After distributing the state information, each partition independently
+ * evaluates its residual. The local residuals are then scattered back into
+ * the global residual vector to reconstruct the monolithic residual.
+ *
+ * Finally, the reconstructed residual is compared against the reference
+ * monolithic evaluation to verify the correctness of the partitioning
+ * implementation.
+ ******************************************************************************/
+
 using index_type = size_t;
 using real_type  = double;
 
@@ -34,7 +58,7 @@ int printMicrogridSystems(index_type N_size);
  */
 int main(int argc, char const* argv[])
 {
-  // Default value
+  // Number of IBRs
   index_type N_size = 2;
 
   // Parse command line arguments if provided
@@ -71,14 +95,15 @@ int printMicrogridSystems(index_type N_size)
 
   bool use_jac = true;
 
-  real_type rel_tol = 1e-5;
-  real_type abs_tol = 1e-5;
+  real_type  rel_tol   = 1e-5;
+  real_type  abs_tol   = 1e-5;
+  index_type max_steps = 2000;
 
   // Create circuit model
-  auto* sys_model = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                     abs_tol,
-                                                                     use_jac,
-                                                                     2000);
+  auto* sys_model_control = new PowerElectronicsModel<real_type, index_type>(rel_tol,
+                                                                             abs_tol,
+                                                                             use_jac,
+                                                                             max_steps);
 
   // Ensure minimum size requirement
   if (N_size < 1)
@@ -164,26 +189,29 @@ int printMicrogridSystems(index_type N_size)
     Lload_list[0] = Lload1;
   }
 
-  using SignalNode = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
-  using Bus        = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
-  using BusDQ      = MicrogridBusDQ<real_type, index_type>;
-  using Generator  = DistributedGenerator<real_type, index_type>;
-  using Line       = MicrogridLine<real_type, index_type>;
-  using Load       = MicrogridLoad<real_type, index_type>;
+  using SignalNode         = GridKit::PowerElectronics::SignalNode<real_type, index_type>;
+  using Bus                = GridKit::PowerElectronics::MicrogridBus<real_type, index_type>;
+  using BusDQ              = MicrogridBusDQ<real_type, index_type>;
+  using Generator          = DistributedGenerator<real_type, index_type>;
+  using Line               = MicrogridLine<real_type, index_type>;
+  using Load               = MicrogridLoad<real_type, index_type>;
+  using PartitionInterface = BusPartitionInterface<real_type, index_type>;
 
-  std::vector<Bus*>       buses(num_ibrs, nullptr);
-  std::vector<BusDQ*>     busesDQ(num_ibrs, nullptr);
-  std::vector<Generator*> generators(num_ibrs, nullptr);
-  std::vector<Line*>      lines(num_ibrs, nullptr);
-  std::vector<Load*>      loads(num_ibrs, nullptr);
+  std::vector<Bus*>                buses(num_ibrs, nullptr);
+  std::vector<BusDQ*>              busesDQ(num_ibrs, nullptr);
+  std::vector<Generator*>          generators(num_ibrs, nullptr);
+  std::vector<Line*>               lines(num_ibrs, nullptr);
+  std::vector<Load*>               loads(num_ibrs, nullptr);
+  std::vector<PartitionInterface*> partitionInterface;
+  std::vector<Line*>               linesCopies;
 
   SignalNode dg_signal;
-  sys_model->addNode(&dg_signal);
+  sys_model_control->addNode(&dg_signal);
 
   for (size_t i = 0; i < 2 * N_size; i++)
   {
     buses[i] = new Bus();
-    sys_model->addNode(buses[i]);
+    sys_model_control->addNode(buses[i]);
   }
 
   // Create the reference DG
@@ -192,7 +220,7 @@ int printMicrogridSystems(index_type N_size)
                                                                  true,
                                                                  &dg_signal,
                                                                  buses[0]);
-  sys_model->addComponent(dg_ref);
+  sys_model_control->addComponent(dg_ref);
 
   generators[0] = dg_ref;
 
@@ -209,7 +237,7 @@ int printMicrogridSystems(index_type N_size)
                                                                buses[i]);
 
     generators[i] = dg;
-    sys_model->addComponent(dg);
+    sys_model_control->addComponent(dg);
   }
 
   // Load all the Line components
@@ -223,7 +251,7 @@ int printMicrogridSystems(index_type N_size)
                                                                 buses[i],
                                                                 buses[i + 1]);
     lines[i + 1]     = line_model;
-    sys_model->addComponent(line_model);
+    sys_model_control->addComponent(line_model);
   }
 
   //  Load all the Load components
@@ -235,7 +263,7 @@ int printMicrogridSystems(index_type N_size)
                                                                 &dg_signal,
                                                                 buses[2 * i]);
     loads[2 * i]     = load_model;
-    sys_model->addComponent(load_model);
+    sys_model_control->addComponent(load_model);
   }
 
   // Add all the microgrid Virtual DQ Buses
@@ -244,84 +272,96 @@ int printMicrogridSystems(index_type N_size)
     auto* virDQbus_model = new MicrogridBusDQ<real_type, index_type>(model_id++, RN, buses[i]);
 
     busesDQ[i] = virDQbus_model;
-    sys_model->addComponent(virDQbus_model);
+    sys_model_control->addComponent(virDQbus_model);
   }
 
-  sys_model->allocate();
+  // sys_model_control->addNode(&dg_signal);
+  // for (index_type i = 0; i < num_ibrs; ++i)
+  // {
+  //   sys_model_control->addComponent(generators[i]);
+  //   sys_model_control->addComponent(busesDQ[i]);
 
-  std::vector<double> y;
-  std::vector<double> yp;
+  //   if (loads[i] != nullptr)
+  //   {
+  //     sys_model_control->addComponent(loads[i]);
+  //   }
 
-  for (size_t i = 0; i < sys_model->size(); i++)
+  //   if (lines[i] != nullptr)
+  //   {
+  //     sys_model_control->addComponent(lines[i]);
+  //   }
+  //   sys_model_control->addNode(buses[i]);
+  // }
+
+  sys_model_control->allocate();
+
+  std::vector<real_type> y;
+  std::vector<real_type> yp;
+
+  for (size_t i = 0; i < sys_model_control->size(); i++)
   {
-    y.push_back(static_cast<double>(i + 1));
-    yp.push_back(static_cast<double>(i + 1));
+    y.push_back(static_cast<real_type>(i + 1 + ((277 * i) % 100)));
+    yp.push_back(static_cast<real_type>(i + 1 + ((288 * i) % 100)));
   }
 
-  for (size_t i = 0; i < sys_model->size(); i++)
+  auto start = std::chrono::high_resolution_clock::now();
+  for (size_t i = 0; i < sys_model_control->size(); i++)
   {
-    sys_model->y()[i]  = y[i];
-    sys_model->yp()[i] = yp[i];
+    sys_model_control->y()[i]  = y[i];
+    sys_model_control->yp()[i] = yp[i];
   }
 
-  sys_model->evaluateResidual();
-  std::vector<double> f_sysmodel = sys_model->getResidual();
+  sys_model_control->evaluateResidual();
+
+  auto end     = std::chrono::high_resolution_clock::now();
+  auto elapsed = std::chrono::duration<real_type>(end - start);
+  std::cout << "Monolithic Evaluation Time: " << elapsed.count() << " s\n";
+
+  auto& f_sysmodel_control = sys_model_control->getResidual();
 
   std::vector<SubsystemModel<real_type, index_type>*> subsystems(num_partitions);
 
-  // Partition the system
-  index_type q     = (num_ibrs) / num_partitions;
-  index_type r     = (num_ibrs) % num_partitions;
-  index_type index = 0;
-  for (index_type j = 0; j < num_partitions; j++)
-  {
-    auto* partition = new SubsystemModel<real_type, index_type>(false);
+  assert(num_ibrs % num_partitions == 0);
+  index_type partition_size = num_ibrs / num_partitions;
+  index_type index          = 0;
 
-    // add Reference rotor to the first partition
+  for (index_type j = 0; j < num_partitions; ++j)
+  {
+    auto* partition = new SubsystemModel<real_type, index_type>();
     if (j == 0)
     {
       partition->addNode(&dg_signal);
     }
 
-    std::cout << "Partition " << j << std::endl;
-
-    index_type part_size = q + (j < r ? 1 : 0);
-    index_type end       = std::min(index + part_size, num_ibrs);
-
-    // Add all components belonging to this partition
-    for (; index < end; ++index)
+    // Add components to belong to the same
+    for (index_type i = 0; i < partition_size; ++i)
     {
       partition->addComponent(generators[index]);
-      std::cout << "Comp Gen" << index << std::endl;
       partition->addComponent(busesDQ[index]);
-      std::cout << "Comp BDQ" << index << std::endl;
 
       if (loads[index] != nullptr)
       {
         partition->addComponent(loads[index]);
-        std::cout << "Comp Load" << index << std::endl;
       }
 
       if (lines[index] != nullptr)
       {
         partition->addComponent(lines[index]);
-        std::cout << "Comp Line" << index << std::endl;
       }
 
-      std::cout << "Comp Bus " << index << std::endl;
-
       partition->addNode(buses[index]);
+
+      index++;
     }
 
-    // Add partition interface at a partition point
+    // Add the partition interface to the left partition
     if (index < num_ibrs)
     {
-      auto* linecopy = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
+      auto* linecopy     = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
+      auto* busInterface = new GridKit::BusPartitionInterface<real_type, index_type>(*buses[index - 1], *linecopy, model_id++);
 
-      auto* busInterface = new GridKit::BusPartitionInterface<double, size_t>(*buses[index - 1], *linecopy, model_id++);
-      busInterface->allocate();
-
-      std::cout << "Interface " << "(" << index - 1 << ", " << index << ")" << std::endl;
+      partitionInterface.push_back(busInterface);
+      linesCopies.push_back(linecopy);
 
       partition->addComponent(busInterface);
     }
@@ -329,56 +369,67 @@ int printMicrogridSystems(index_type N_size)
     subsystems[j] = partition;
   }
 
+  std::vector<real_type> f(sys_model_control->size(), 1.0);
+  std::vector<real_type> error(sys_model_control->size(), 1.0);
+
+  for (auto* partinterface : partitionInterface)
+  {
+    partinterface->allocate();
+  }
+
   for (auto* partition : subsystems)
   {
-    partition->toString();
     partition->allocate();
   }
 
-  // Distribute externals to partition 1
+  start = std::chrono::high_resolution_clock::now();
+
+  auto sys_max_threads = omp_get_max_threads();
+// Distribute externals to partition 1
+#pragma omp parallel for schedule(guided) num_threads(sys_max_threads)
   for (auto* partition : subsystems)
   {
+    // Distribute external variables
     for (size_t i = 0; i < partition->getExternSize(); i++)
     {
       partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
       partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
     }
-  }
 
-  for (auto* partition : subsystems)
-  {
+    // Distribute internal variables
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
       partition->y()[i]  = y[partition->getNodeConnection(i)];
       partition->yp()[i] = yp[partition->getNodeConnection(i)];
     }
-  }
 
-  for (auto* partition : subsystems)
-  {
+    // Evaluate residual of this partition
     partition->evaluateResidual();
-  }
 
-  std::vector<double> f(sys_model->size(), 0.0);
-  std::vector<double> error(sys_model->size(), 1.0);
-
-  // Get internal residuals from partition 1
-  for (auto* partition : subsystems)
-  {
+    // Reconstruct the monolithic residual from the partition residuals
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
       f[partition->getNodeConnection(i)] = partition->getResidual()[i];
     }
   }
 
-  for (size_t i = 0; i < sys_model->size(); i++)
+  end     = std::chrono::high_resolution_clock::now();
+  elapsed = std::chrono::duration<real_type>(end - start);
+  std::cout << "Partition Evaluation Time: " << elapsed.count() << " s\n";
+
+  for (size_t i = 0; i < sys_model_control->size(); i++)
   {
-    error[i] = f_sysmodel[i] - f[i];
-    std::cout << i << " " << error[i] << " ---------- " << i << std::endl;
+    error[i] = abs(f[i] - f_sysmodel_control[i]) / (f_sysmodel_control[i] + 1);
+
+    std::cout << std::format("{:<8d} {:>15.15e}  ----------  {:>15.15e}  {:>15.5e}\n",
+                             i,
+                             error[i],
+                             f[i],
+                             f_sysmodel_control[i]);
   }
 
-  double max_error = 0;
-  for (size_t i = 0; i < sys_model->size(); i++)
+  real_type max_error = 0;
+  for (size_t i = 0; i < sys_model_control->size(); i++)
   {
     if (max_error < std::abs(error[i]))
     {
@@ -386,7 +437,97 @@ int printMicrogridSystems(index_type N_size)
     }
   }
 
-  std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
+  std::cout << "\nMax Rel. Error between Reference and Partition Evaluation: " << max_error
+            << std::endl
+            << std::endl;
+
+  // real_type max_abs_error = 0.0;
+  // real_type max_rel_error = 0.0;
+  // size_t    max_idx       = 0;
+
+  // for (size_t i = 0; i < sys_model_control->size(); ++i)
+  // {
+  //   real_type abs_err = std::abs(f[i] - f_sysmodel_control[i]);
+
+  //   real_type scale = std::max({real_type(1.0),
+  //                               std::abs(f[i]),
+  //                               std::abs(f_sysmodel_control[i])});
+
+  //   real_type rel_err = abs_err / scale;
+
+  //   if (rel_err > max_rel_error)
+  //   {
+  //     max_rel_error = rel_err;
+  //     max_abs_error = abs_err;
+  //     max_idx       = i;
+  //   }
+  // }
+
+  // std::cout << "Max index     : " << max_idx << '\n';
+  // std::cout << "Partition f   : " << std::format("{:.17e}", f[max_idx]) << '\n';
+  // std::cout << "Monolithic f  : " << std::format("{:.17e}", f_sysmodel_control[max_idx]) << '\n';
+  // std::cout << "Abs error     : " << std::format("{:.17e}", max_abs_error) << '\n';
+  // std::cout << "Rel error     : " << std::format("{:.17e}", max_rel_error) << '\n';
+
+  for (auto* linescpy : linesCopies)
+  {
+    delete linescpy;
+  }
+
+  for (auto* partition : subsystems)
+  {
+    delete partition;
+  }
+  delete sys_model_control;
 
   return 0;
 }
+
+// Partition the system
+// index_type q     = (num_ibrs) / num_partitions;
+// index_type r     = (num_ibrs) % num_partitions;
+// index_type index = 0;
+// for (index_type j = 0; j < num_partitions; j++)
+// {
+//   auto* partition = new SubsystemModel<real_type, index_type>(false);
+
+//   // add Reference rotor to the first partition
+//   if (j == 0)
+//   {
+//     partition->addNode(&dg_signal);
+//   }
+
+//   index_type part_size = q + (j < r ? 1 : 0);
+//   index_type end       = std::min(index + part_size, num_ibrs);
+
+//   // Add all components belonging to this partition
+//   for (; index < end; ++index)
+//   {
+//     partition->addComponent(generators[index]);
+//     partition->addComponent(busesDQ[index]);
+
+//     if (loads[index] != nullptr)
+//     {
+//       partition->addComponent(loads[index]);
+//     }
+
+//     if (lines[index] != nullptr)
+//     {
+//       partition->addComponent(lines[index]);
+//     }
+
+//     partition->addNode(buses[index]);
+//   }
+
+//   // Add partition interface at a partition point
+//   if (index < num_ibrs)
+//   {
+//     auto* linecopy = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
+
+//     auto* busInterface = new GridKit::BusPartitionInterface<real_type, size_t>(*buses[index - 1], *linecopy, model_id++);
+//     busInterface->allocate();
+//     partition->addComponent(busInterface);
+//   }
+
+//   subsystems[j] = partition;
+// }

@@ -2,9 +2,9 @@
 #include "BusPartitionInterface.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <vector>
 
 namespace GridKit
 {
@@ -26,21 +26,19 @@ namespace GridKit
    * @param id Unique component identifier.
    */
   template <class ScalarT, typename IdxT>
-  BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(CircuitComponent<ScalarT, IdxT>& component, IdxT bus_i, IdxT bus_j, IdxT id)
-    : component_(component)
+  BusPartitionInterface<ScalarT, IdxT>::BusPartitionInterface(node_type& bus, component_type& component, IdxT id)
+    : component_(component),
+      bus_(bus)
   {
-    size_     = component.size();
+    size_     = component_.size();
     n_intern_ = 0;
-    n_extern_ = static_cast<size_t>(component.size());
+    n_extern_ = static_cast<size_t>(component_.size());
     idc_      = id;
 
     for (IdxT i = 0; i < size_; i++)
     {
       extern_indices_.insert(i);
     }
-
-    bus_i_ = bus_i;
-    bus_j_ = bus_j;
   }
 
   template <class ScalarT, typename IdxT>
@@ -54,27 +52,50 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::allocate()
   {
+
+    CircuitComponent<ScalarT, IdxT>::allocate();
+
     y_.resize(static_cast<size_t>(size_));
     yp_.resize(static_cast<size_t>(size_));
     f_.resize(static_cast<size_t>(size_));
 
     std::fill(f_.begin(), f_.end(), 0);
+    bool port_i_set = false;
+    bool port_j_set = false;
 
-    component_.allocate();
-
-    for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
+    for (size_t i = 0; i < static_cast<size_t>(size_); i++)
     {
-      if (bus_i_ == component_.getNodeConnection(static_cast<IdxT>(i)))
+      if (bus_.getNodeConnection(0) == component_.getNodeConnection(static_cast<IdxT>(i)))
       {
         bus_port_i_ = i;
+        port_i_set  = true;
       }
-      else if (bus_j_ == component_.getNodeConnection(static_cast<IdxT>(i)))
+      else if (bus_.getNodeConnection(1) == component_.getNodeConnection(static_cast<IdxT>(i)))
       {
         bus_port_j_ = i;
+        port_j_set  = true;
       }
       IdxT global_idx = component_.getNodeConnection(static_cast<IdxT>(i));
       this->setExternalConnectionNodes(static_cast<IdxT>(i), global_idx);
     }
+
+    if (!port_i_set || !port_j_set)
+    {
+      std::cerr << "ERROR: Invalid partition interface detected. "
+                << "Bus(ID=" << bus_.busID()
+                << "), Component(ID=" << component_.getIDcomponent()
+                << "). Please verify connection-node mappings and internal/external index assignments."
+                << std::endl;
+      assert(false);
+    }
+
+    y_ptr  = new ScalarT[component_.getInternalSize()];
+    yp_ptr = new ScalarT[component_.getInternalSize()];
+    f_ptr  = new ScalarT[component_.getInternalSize()];
+
+    component_.setInternalPointer(y_ptr);
+    component_.setInternalDerivativePointer(yp_ptr);
+    component_.setInternalResidualPointer(f_ptr);
 
     return 0;
   }
@@ -101,18 +122,46 @@ namespace GridKit
    * @brief Eval Micro Load
    */
   template <class ScalarT, typename IdxT>
-  int BusPartitionInterface<ScalarT, IdxT>::evaluateResidual()
+  int BusPartitionInterface<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    std::copy(y_.begin(), y_.end(), component_.y().begin());
-    std::copy(yp_.begin(), yp_.end(), component_.yp().begin());
+    return 0;
+  }
 
-    component_.evaluateResidual();
+  /**
+   * @brief Eval Micro Load
+   */
+  template <class ScalarT, typename IdxT>
+  int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
+  {
 
-    auto& f = component_.getResidual();
+    size_t counter_int    = 0;
+    size_t counter_ext    = 0;
+    auto   extern_indices = component_.getExternIndices();
 
+    for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
+    {
+      if (extern_indices.contains(static_cast<IdxT>(i)))
+      {
+        component_.y()[counter_ext]  = y_[i];
+        component_.yp()[counter_ext] = yp_[i];
+        counter_ext++;
+      }
+      else
+      {
+        y_ptr[counter_int]  = y_[i];
+        yp_ptr[counter_int] = yp_[i];
+        counter_int++;
+      }
+    }
+
+    component_.evaluateExternalResidual();
+
+    auto f = component_.getResidual();
+
+    // TODO: This assumes that external variables are ordered after all internal
+    // variables in the local indexing. To make this more robust, we need to get rid of this assumption.
     f_[bus_port_i_] = f[bus_port_i_];
     f_[bus_port_j_] = f[bus_port_j_];
-
     return 0;
   }
 
@@ -126,8 +175,6 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateJacobian()
   {
-    jac_.zeroMatrix();
-
     return 0;
   }
 

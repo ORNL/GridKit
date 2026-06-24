@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -26,6 +29,7 @@ int main()
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
+  bool   debug_output    = true;
 
   // Create model
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
@@ -164,46 +168,35 @@ int main()
 
   sysmodel->allocate();
 
-  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>(false);
-  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>(false);
-  GridKit::SubsystemModel<double, size_t>* partition3 = new GridKit::SubsystemModel<double, size_t>(false);
-  GridKit::SubsystemModel<double, size_t>* partition4 = new GridKit::SubsystemModel<double, size_t>(false);
+  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>();
+  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>();
 
-  GridKit::MicrogridLine<double, size_t>          l1copy(*l1);
   GridKit::MicrogridLine<double, size_t>          l2copy(*l2);
-  GridKit::MicrogridLine<double, size_t>          l3copy(*l3);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus1, l1copy, 14);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface2 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 15);
-  GridKit::BusPartitionInterface<double, size_t>* busInterface3 = new GridKit::BusPartitionInterface<double, size_t>(bus3, l3copy, 16);
+  GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 14);
 
   busInterface1->allocate();
-  busInterface2->allocate();
-  busInterface3->allocate();
 
   partition1->addNode(&dg_signal);
   partition1->addComponent(dg1);
-  partition1->addComponent(bus_para_1);
-  partition1->addNode(&bus1);
+  partition1->addComponent(dg2);
+  partition1->addComponent(l1);
   partition1->addComponent(load1);
   partition1->addComponent(busInterface1);
+  partition1->addComponent(bus_para_1);
+  partition1->addComponent(bus_para_2);
+  partition1->addNode(&bus1);
+  partition1->addNode(&bus2);
 
-  partition2->addComponent(dg2);
-  partition2->addComponent(l1);
-  partition2->addComponent(busInterface2);
-  partition2->addComponent(bus_para_2);
-  partition2->addNode(&bus2);
+  partition2->addComponent(dg3);
+  partition2->addComponent(dg4);
+  partition2->addComponent(l2);
+  partition2->addComponent(l3);
 
-  partition3->addComponent(dg3);
-  partition3->addComponent(l2);
-  partition3->addComponent(busInterface3);
-  partition3->addComponent(load2);
-  partition3->addComponent(bus_para_3);
-  partition3->addNode(&bus3);
-
-  partition4->addComponent(dg4);
-  partition4->addComponent(l3);
-  partition4->addComponent(bus_para_4);
-  partition4->addNode(&bus4);
+  partition2->addComponent(load2);
+  partition2->addComponent(bus_para_4);
+  partition2->addComponent(bus_para_3);
+  partition2->addNode(&bus3);
+  partition2->addNode(&bus4);
 
   std::vector<double> y;
   std::vector<double> yp;
@@ -225,10 +218,8 @@ int main()
 
   partition1->allocate();
   partition2->allocate();
-  partition3->allocate();
-  partition4->allocate();
 
-  std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2, partition3, partition4};
+  std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2};
 
   // Distribute externals to partition 1
   for (auto* partition : partitions)
@@ -293,6 +284,7 @@ int main()
   for (size_t i = 0; i < sysmodel->size(); i++)
   {
     error[i] = f_sysmodel[i] - f[i];
+    std::cout << error[i] << std::endl;
   }
 
   double max_error = 0;
