@@ -9,13 +9,13 @@
 
 #include <cmath>
 #include <iostream>
-#include <limits>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
 #define _USE_MATH_DEFINES
@@ -262,10 +262,10 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
+        using Testing::isEqual;
 
-        static constexpr RealT ZERO_TOL = std::numeric_limits<RealT>::epsilon();
-
-        tag_[0] = (Tr_ > ZERO_TOL); // y0 - vts  - Sensed term volt
+        // T_R = 0 makes the sensed terminal voltage relation algebraic.
+        tag_[0] = (!isEqual(Tr_, ZERO<RealT>)); // y0 - vts  - Sensed term volt
         tag_[1] = true;             // y1 - vr   - Voltage reg
         tag_[2] = true;             // y2 - efdp - Efd pre mult
         tag_[3] = true;             // y3 - vfx  - Exciter feedback
