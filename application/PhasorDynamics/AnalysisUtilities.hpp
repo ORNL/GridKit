@@ -161,8 +161,11 @@ namespace GridKit
 
       if (model_output_file.empty())
       {
-        // Add study output file to model if one did not already exist
-        data.model_data.monitor_sink.emplace_back(csv, data.output_file);
+        if (!data.output_file.empty())
+        {
+          // Add study output file to model if one did not already exist
+          data.model_data.monitor_sink.emplace_back(csv, data.output_file);
+        }
       }
       else
       {
