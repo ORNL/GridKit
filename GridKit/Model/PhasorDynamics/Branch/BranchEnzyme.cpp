@@ -23,83 +23,79 @@ namespace GridKit
       Log::misc() << "Evaluate Jacobian for Branch..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
-      J_.zeroMatrix();
       if (J_rows_buffer_ == nullptr)
       {
-        J_rows_buffer_ = new IdxT[4];
-        J_cols_buffer_ = new IdxT[4];
-        J_vals_buffer_ = new RealT[4];
+        auto bus1_size   = static_cast<size_t>(bus1_->size());
+        auto bus2_size   = static_cast<size_t>(bus2_->size());
+        auto buffer_size = (bus1_size + bus2_size) * (bus1_size + bus2_size);
+        J_rows_buffer_   = new IdxT[buffer_size];
+        J_cols_buffer_   = new IdxT[buffer_size];
+        J_vals_buffer_   = new RealT[buffer_size];
       }
+
+      nnz_ = 0;
 
       // Bus 1 diagonal Jacobian block owned by the bus
       GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual11,
-                                     ScalarT,
-                                     IdxT>::eval(this,
-                                                 static_cast<size_t>(bus1_->size()),
-                                                 static_cast<size_t>((bus1_->y()).size()),
-                                                 (bus1_->getResidualIndices()).data(),
-                                                 (bus1_->getVariableIndices()).data(),
-                                                 y_.data(),
-                                                 yp_.data(),
-                                                 (bus1_->y()).data(),
-                                                 J_rows_buffer_,
-                                                 J_cols_buffer_,
-                                                 J_vals_buffer_,
-                                                 bus1_->getJacobian());
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual11>::eval(this,
+                                                                                                    static_cast<size_t>(bus1_->size()),
+                                                                                                    static_cast<size_t>((bus1_->y()).size()),
+                                                                                                    (bus1_->getResidualIndices()).data(),
+                                                                                                    (bus1_->getVariableIndices()).data(),
+                                                                                                    y_.data(),
+                                                                                                    yp_.data(),
+                                                                                                    (bus1_->y()).data(),
+                                                                                                    J_rows_buffer_,
+                                                                                                    J_cols_buffer_,
+                                                                                                    J_vals_buffer_,
+                                                                                                    nnz_);
 
       // Bus 2 diagonal Jacobian block owned by the bus
       GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual22,
-                                     ScalarT,
-                                     IdxT>::eval(this,
-                                                 static_cast<size_t>(bus2_->size()),
-                                                 static_cast<size_t>((bus2_->y()).size()),
-                                                 (bus2_->getResidualIndices()).data(),
-                                                 (bus2_->getVariableIndices()).data(),
-                                                 y_.data(),
-                                                 yp_.data(),
-                                                 (bus2_->y()).data(),
-                                                 J_rows_buffer_,
-                                                 J_cols_buffer_,
-                                                 J_vals_buffer_,
-                                                 bus2_->getJacobian());
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual22>::eval(this,
+                                                                                                    static_cast<size_t>(bus2_->size()),
+                                                                                                    static_cast<size_t>((bus2_->y()).size()),
+                                                                                                    (bus2_->getResidualIndices()).data(),
+                                                                                                    (bus2_->getVariableIndices()).data(),
+                                                                                                    y_.data(),
+                                                                                                    yp_.data(),
+                                                                                                    (bus2_->y()).data(),
+                                                                                                    J_rows_buffer_,
+                                                                                                    J_cols_buffer_,
+                                                                                                    J_vals_buffer_,
+                                                                                                    nnz_);
 
       // Off-diagonal Jacobian block (Bus2 variables) owned by the branch
       GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual12,
-                                     ScalarT,
-                                     IdxT>::eval(this,
-                                                 static_cast<size_t>(bus1_->size()),
-                                                 static_cast<size_t>((bus2_->y()).size()),
-                                                 (bus1_->getResidualIndices()).data(),
-                                                 (bus2_->getVariableIndices()).data(),
-                                                 y_.data(),
-                                                 yp_.data(),
-                                                 (bus2_->y()).data(),
-                                                 J_rows_buffer_,
-                                                 J_cols_buffer_,
-                                                 J_vals_buffer_,
-                                                 J_,
-                                                 true);
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual12>::eval(this,
+                                                                                                    static_cast<size_t>(bus1_->size()),
+                                                                                                    static_cast<size_t>((bus2_->y()).size()),
+                                                                                                    (bus1_->getResidualIndices()).data(),
+                                                                                                    (bus2_->getVariableIndices()).data(),
+                                                                                                    y_.data(),
+                                                                                                    yp_.data(),
+                                                                                                    (bus2_->y()).data(),
+                                                                                                    J_rows_buffer_,
+                                                                                                    J_cols_buffer_,
+                                                                                                    J_vals_buffer_,
+                                                                                                    nnz_);
 
       // Off-diagonal Jacobian block (Bus1 variables) owned by the branch
       GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Branch<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual21,
-                                     ScalarT,
-                                     IdxT>::eval(this,
-                                                 static_cast<size_t>(bus2_->size()),
-                                                 static_cast<size_t>((bus1_->y()).size()),
-                                                 (bus2_->getResidualIndices()).data(),
-                                                 (bus1_->getVariableIndices()).data(),
-                                                 y_.data(),
-                                                 yp_.data(),
-                                                 (bus1_->y()).data(),
-                                                 J_rows_buffer_,
-                                                 J_cols_buffer_,
-                                                 J_vals_buffer_,
-                                                 J_,
-                                                 true);
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual21>::eval(this,
+                                                                                                    static_cast<size_t>(bus2_->size()),
+                                                                                                    static_cast<size_t>((bus1_->y()).size()),
+                                                                                                    (bus2_->getResidualIndices()).data(),
+                                                                                                    (bus1_->getVariableIndices()).data(),
+                                                                                                    y_.data(),
+                                                                                                    yp_.data(),
+                                                                                                    (bus1_->y()).data(),
+                                                                                                    J_rows_buffer_,
+                                                                                                    J_cols_buffer_,
+                                                                                                    J_vals_buffer_,
+                                                                                                    nnz_);
+
+      this->constructCoo();
 
       return 0;
     }

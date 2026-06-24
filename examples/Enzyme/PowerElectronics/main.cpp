@@ -17,7 +17,6 @@
  */
 
 using DenseMatrix  = GridKit::LinearAlgebra::DenseMatrix<double, size_t>;
-using SparseMatrix = GridKit::LinearAlgebra::COO_Matrix<double, size_t>;
 using DG           = GridKit::DistributedGenerator<double, size_t>;
 using DGParameters = GridKit::DistributedGeneratorParameters<double, size_t>;
 
@@ -222,8 +221,8 @@ int main()
   }
   if (verbose)
   {
-    jac_autodiff.printMatrix("Autodiff Jacobian");
-    jac_ref_dense.printMatrix("Reference Jacobian");
+    jac_autodiff.print("Autodiff Jacobian");
+    jac_ref_dense.print("Reference Jacobian");
   }
   std::cout << "Status: " << fail << "\n";
 

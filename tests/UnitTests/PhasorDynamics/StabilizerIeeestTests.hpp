@@ -11,7 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -307,12 +307,12 @@ namespace GridKit
 
         stab.evaluateResidual();
         stab.evaluateJacobian();
+        stab.constructCsr();
+        auto model_jacobian = stab.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Ieeest Jacobian\n";
+        model_jacobian->print();
 
-        auto model_jacobian = stab.getJacobian();
-        model_jacobian.deduplicate();
-        model_jacobian.printMatrix("IEEEST Jacobian");
-
-        return GridKit::Testing::MapFromCOO(model_jacobian);
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
 

@@ -1,5 +1,5 @@
 /**
- * @file DfDy.hpp
+ * @file DfDyp.hpp
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
@@ -17,13 +17,13 @@ namespace GridKit
     namespace Sparse
     {
       /**
-       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian, df/dy
+       * @brief Enzyme automatic differentiation Jacobian evaluator: Internal Jacobian, alpha*df/dyp
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
        */
       template <typename ModelT, MemberFunctions function>
-      struct DfDy
+      struct DfDyp
       {
         using ScalarT = typename ModelT::ScalarT;
         using IdxT    = typename ModelT::IdxT;
@@ -38,6 +38,7 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
+         * @param[in] alpha - Time derivative jacobian coefficient
          * @param[out] nnz - Number of nonzeros
          */
         static void eval(ModelT*     model,
@@ -48,6 +49,7 @@ namespace GridKit
                          ScalarT*    y,
                          ScalarT*    yp,
                          ScalarT*    wb,
+                         RealT       alpha,
                          IdxT*       rows,
                          IdxT*       cols,
                          RealT*      vals,
@@ -65,7 +67,7 @@ namespace GridKit
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,
-                                                             1.0, // value scaling
+                                                             alpha, // value scaling
                                                              res_indices,
                                                              var_indices,
                                                              rows,
@@ -81,11 +83,11 @@ namespace GridKit
               __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
                                      enzyme_const,
                                      model,
-                                     enzyme_dup,
-                                     y,
-                                     output,
                                      enzyme_const,
+                                     y,
+                                     enzyme_dup,
                                      yp,
+                                     output,
                                      enzyme_const,
                                      wb,
                                      enzyme_dupnoneed,
@@ -105,6 +107,7 @@ namespace GridKit
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
          * @param[in] ws - Signal variables
+         * @param[in] alpha - Time derivative jacobian coefficient
          * @param[out] nnz - Number of nonzeros
          */
         static void eval(ModelT*     model,
@@ -116,6 +119,7 @@ namespace GridKit
                          ScalarT*    yp,
                          ScalarT*    wb,
                          ScalarT*    ws,
+                         RealT       alpha,
                          IdxT*       rows,
                          IdxT*       cols,
                          RealT*      vals,
@@ -133,7 +137,7 @@ namespace GridKit
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,
-                                                             1.0, // value scaling
+                                                             alpha, // value scaling
                                                              res_indices,
                                                              var_indices,
                                                              rows,
@@ -149,11 +153,11 @@ namespace GridKit
               __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
                                      enzyme_const,
                                      model,
-                                     enzyme_dup,
-                                     y,
-                                     output,
                                      enzyme_const,
+                                     y,
+                                     enzyme_dup,
                                      yp,
+                                     output,
                                      enzyme_const,
                                      wb,
                                      enzyme_const,

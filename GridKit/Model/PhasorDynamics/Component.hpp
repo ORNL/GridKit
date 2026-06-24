@@ -17,12 +17,15 @@ namespace GridKit
     /**
      * @brief Component model implementation base class.
      */
-    template <class ScalarT, typename IdxT>
-    class Component : public Model::Evaluator<ScalarT, IdxT>
+    template <class scalar_type, typename index_type>
+    class Component : public Model::Evaluator<scalar_type, index_type>
     {
     public:
-      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
 
       Component() = default;
 
@@ -36,6 +39,24 @@ namespace GridKit
           J_rows_buffer_ = nullptr;
           J_cols_buffer_ = nullptr;
           J_vals_buffer_ = nullptr;
+        }
+
+        if (coo_jac_ != nullptr)
+        {
+          delete coo_jac_;
+          coo_jac_ = nullptr;
+        }
+
+        if (csr_jac_ != nullptr)
+        {
+          delete csr_jac_;
+          csr_jac_ = nullptr;
+        }
+
+        if (map_to_csr_ != nullptr)
+        {
+          delete[] map_to_csr_;
+          map_to_csr_ = nullptr;
         }
       }
 
@@ -101,16 +122,6 @@ namespace GridKit
         return f_;
       }
 
-      MatrixT& getJacobian() override
-      {
-        return J_;
-      }
-
-      const MatrixT& getJacobian() const override
-      {
-        return J_;
-      }
-
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
@@ -141,6 +152,16 @@ namespace GridKit
       const std::vector<IdxT>& getResidualIndices() const
       {
         return residual_indices_;
+      }
+
+      CsrMatrixT* getCsrJacobian() const override
+      {
+        return csr_jac_;
+      }
+
+      CooMatrixT* getCooJacobian() const
+      {
+        return coo_jac_;
       }
 
       /// @todo Remove this method. It should be part of DynamicSolver class.
@@ -174,7 +195,56 @@ namespace GridKit
         return gridkit_component_id_;
       }
 
+      int constructCsr()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          constructCoo();
+        }
+
+        if (csr_jac_ == nullptr)
+        {
+          IdxT* row_ptrs = coo_jac_->getCsrRowData();
+
+          nnz_ = coo_jac_->getNnz();
+
+          IdxT*  cols = new IdxT[static_cast<size_t>(nnz_)];
+          RealT* vals = new RealT[static_cast<size_t>(nnz_)];
+
+          std::copy(coo_jac_->getColData(), coo_jac_->getColData() + nnz_, cols);
+          std::copy(coo_jac_->getValues(), coo_jac_->getValues() + nnz_, vals);
+
+          csr_jac_ = new CsrMatrixT(coo_jac_->getNumRows(), coo_jac_->getNumColumns(), nnz_, &row_ptrs, &cols, &vals);
+        }
+
+        return 0;
+      }
+
     protected:
+      int constructCoo()
+      {
+        if (coo_jac_ == nullptr)
+        {
+          IdxT num_rows = 0;
+          IdxT num_cols = 0;
+          for (IdxT i = 0; i < nnz_; ++i)
+          {
+            if (J_rows_buffer_[i] + 1 > num_rows)
+            {
+              num_rows = J_rows_buffer_[i] + 1;
+            }
+            if (J_cols_buffer_[i] + 1 > num_cols)
+            {
+              num_cols = J_cols_buffer_[i] + 1;
+            }
+          }
+          coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
+          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, LinearAlgebra::memory::HOST);
+        }
+
+        return 0;
+      }
+
       IdxT              size_{0};
       IdxT              nnz_{0};
       /// Global (system-level) variable indices
@@ -189,10 +259,12 @@ namespace GridKit
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
-      MatrixT J_;
-      IdxT*   J_rows_buffer_{nullptr};
-      IdxT*   J_cols_buffer_{nullptr};
-      RealT*  J_vals_buffer_{nullptr};
+      IdxT*       J_rows_buffer_{nullptr};
+      IdxT*       J_cols_buffer_{nullptr};
+      RealT*      J_vals_buffer_{nullptr};
+      IdxT*       map_to_csr_{nullptr};
+      CsrMatrixT* csr_jac_{nullptr};
+      CooMatrixT* coo_jac_{nullptr};
 
       //
       // Adjoint sensitivity members

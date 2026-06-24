@@ -123,8 +123,8 @@ int main()
   }
   if (verbose)
   {
-    dsq.printMatrix("Autodiff Jacobian");
-    dsq_ref.printMatrix("Reference Jacobian");
+    dsq.print("Autodiff Jacobian");
+    dsq_ref.print("Reference Jacobian");
   }
   std::cout << "Status: " << fail << "\n";
   return fail;

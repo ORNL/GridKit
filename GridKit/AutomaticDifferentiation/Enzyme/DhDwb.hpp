@@ -9,8 +9,6 @@
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/ModelWrappers.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-#include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
 {
@@ -23,14 +21,13 @@ namespace GridKit
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
-       * @tparam ScalarT - scalar data type
-       * @tparam IdxT - matrix index data type
        */
-      template <typename ModelT, MemberFunctions function, class ScalarT, typename IdxT>
+      template <typename ModelT, MemberFunctions function>
       struct DhDwb
       {
-        using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
-        using MatrixT = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>;
+        using ScalarT = typename ModelT::ScalarT;
+        using IdxT    = typename ModelT::IdxT;
+        using RealT   = typename ModelT::RealT;
 
         /**
          * @param[in] model - Pointer to the model to be differentiated
@@ -41,8 +38,7 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
-         * @param[in,out] jac - Jacobian
-         * @param[in] flag - To append values or deduplicate right away (bus-owned values)
+         * @param[out] nnz - Number of nonzeros
          */
         static void eval(ModelT*     model,
                          size_t      n_res,
@@ -55,13 +51,11 @@ namespace GridKit
                          IdxT*       rows,
                          IdxT*       cols,
                          RealT*      vals,
-                         MatrixT&    jac,
-                         const bool  flag = false)
+                         IdxT&       nnz)
         {
           if (n_res > 0 && n_var > 0)
           {
             std::vector<ScalarT> elementary_v(n_var);
-            IdxT                 nnz = 0;
             for (size_t var_i = 0; var_i < n_var; ++var_i)
             {
               // Sparse storage. @see LowerSparseStorage.hpp
@@ -71,6 +65,7 @@ namespace GridKit
               ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, IdxT>,
                                                              (void*) sparse_store<ScalarT, IdxT>,
                                                              var_i,
+                                                             1.0, // value scaling
                                                              res_indices,
                                                              var_indices,
                                                              rows,
@@ -82,8 +77,8 @@ namespace GridKit
               std::ranges::fill(elementary_v, 0.0);
               elementary_v[var_i] = 1.0;
 
-              // Core automatic differentiaation intrinsic that will be replaced by a derivative
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function, ScalarT>::eval,
+              // Core automatic differentiation intrinsic that will be replaced by a derivative
+              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
                                      enzyme_const,
                                      model,
                                      enzyme_const,
@@ -96,16 +91,6 @@ namespace GridKit
                                      enzyme_dupnoneed,
                                      elementary_v.data(),
                                      d_output);
-            }
-
-            // Store result
-            if (flag)
-            {
-              jac.setValues(1.0, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
-            }
-            else
-            {
-              jac.axpy(1.0, rows, cols, vals, nnz); //< @todo: Update once sparse storage format changes
             }
           }
         }

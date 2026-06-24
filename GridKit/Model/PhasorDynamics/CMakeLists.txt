@@ -36,10 +36,9 @@ add_subdirectory(BusToSignalAdapter)
 add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)
+add_subdirectory(SignalNode)
 add_subdirectory(Stabilizer)
 add_subdirectory(SynchronousMachine)
-
-add_subdirectory(SignalNode)
 
 add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components)
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS

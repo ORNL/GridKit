@@ -12,7 +12,7 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Testing/Tokenizer.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -384,6 +384,17 @@ namespace GridKit
         gen.evaluateResidual();
         std::vector<DependencyTracking::Variable> residual_yp = gen.getResidual();
 
+        // Print the dependencies
+        for (size_t i = 0; i < residual_y.size(); ++i)
+        {
+          std::cout << i << "th residual, y: ";
+          (residual_y[i]).print(std::cout);
+          std::cout << "\n";
+          std::cout << i << "th residual, yp: ";
+          (residual_yp[i]).print(std::cout);
+          std::cout << "\n";
+        }
+
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
@@ -448,10 +459,12 @@ namespace GridKit
 
         bus.evaluateJacobian();
         gen.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& model_jacobian = gen.getJacobian();
-        model_jacobian.deduplicate();
+        gen.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = gen.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Gensal Jacobian\n";
+        model_jacobian->print();
 
-        return GridKit::Testing::MapFromCOO(model_jacobian);
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
     }; // class GensalTests

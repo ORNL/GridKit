@@ -11,11 +11,11 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Jacobian evaluation experimental. This sets values to 0, for other
-     * components to add their contributions.
+     * @brief Jacobian evaluation experimental.
      *
-     * @warning This implementation assumes bus Jacobians are always evaluated
-     * _before_ component model Jacobians.
+     * This sets values to 0, and these remain unchanged. It is needed to get
+     * the indices into the list of entries that will later be deduplicated.
+     * Contributions to bus Jacobians from other components are stored in those components.
      *
      * @return int - error code
      */
@@ -27,10 +27,6 @@ namespace GridKit
 
       if (J_rows_buffer_ == nullptr)
       {
-        J_.zeroMatrix();
-
-        // Reserve space for a dense matrix of size_*size_.
-        // Enyme will compute the appropriate nnz from sparsification.
         J_rows_buffer_ = new IdxT[4];
         J_cols_buffer_ = new IdxT[4];
         J_vals_buffer_ = new RealT[4];
@@ -47,11 +43,9 @@ namespace GridKit
         J_vals_buffer_[1] = 0.0;
         J_vals_buffer_[2] = 0.0;
         J_vals_buffer_[3] = 0.0;
-        J_.setValues(1.0, J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, 4); //< @todo: Update once sparse storage format changes
-      }
-      else
-      {
-        J_.zeroValuedMatrix();
+
+        nnz_ = 4;
+        this->constructCoo();
       }
       return 0;
     }

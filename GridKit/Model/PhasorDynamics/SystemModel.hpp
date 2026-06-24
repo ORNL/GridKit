@@ -39,30 +39,32 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    class SystemModel : public PhasorDynamics::Component<scalar_type, index_type>
+    class SystemModel : public Component<scalar_type, index_type>
     {
-      using PhasorDynamics::Component<scalar_type, index_type>::gridkit_component_id_;
-      using PhasorDynamics::Component<scalar_type, index_type>::size_;
-      using PhasorDynamics::Component<scalar_type, index_type>::nnz_;
-      using PhasorDynamics::Component<scalar_type, index_type>::time_;
-      using PhasorDynamics::Component<scalar_type, index_type>::alpha_;
-      using PhasorDynamics::Component<scalar_type, index_type>::y_;
-      using PhasorDynamics::Component<scalar_type, index_type>::yp_;
-      using PhasorDynamics::Component<scalar_type, index_type>::tag_;
-      using PhasorDynamics::Component<scalar_type, index_type>::abs_tol_;
-      using PhasorDynamics::Component<scalar_type, index_type>::f_;
-      using PhasorDynamics::Component<scalar_type, index_type>::J_;
-      using PhasorDynamics::Component<scalar_type, index_type>::variable_indices_;
-      using PhasorDynamics::Component<scalar_type, index_type>::residual_indices_;
+      using Component<scalar_type, index_type>::gridkit_component_id_;
+      using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::nnz_;
+      using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::y_;
+      using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::abs_tol_;
+      using Component<scalar_type, index_type>::f_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
+      using Component<scalar_type, index_type>::csr_jac_;
+      using Component<scalar_type, index_type>::map_to_csr_;
 
     public:
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-      using BusT       = PhasorDynamics::BusBase<ScalarT, IdxT>;
-      using SignalT    = PhasorDynamics::SignalNode<ScalarT, IdxT>;
-      using ComponentT = PhasorDynamics::Component<ScalarT, IdxT>;
+      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using BusT       = BusBase<ScalarT, IdxT>;
+      using SignalT    = SignalNode<ScalarT, IdxT>;
+      using ComponentT = Component<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitorController<ScalarT>;
 
       SystemModel();
@@ -90,11 +92,6 @@ namespace GridKit
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
-      CsrMatrixT* getCsrJacobian() const override
-      {
-        return csr_jac_;
-      }
-
       void updateVariables();
       void updateTime(RealT t, RealT a) override;
 
@@ -120,9 +117,6 @@ namespace GridKit
       std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
 
       bool owns_components_{false};
-
-      IdxT*       map_to_csr_{nullptr};
-      CsrMatrixT* csr_jac_{nullptr};
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;

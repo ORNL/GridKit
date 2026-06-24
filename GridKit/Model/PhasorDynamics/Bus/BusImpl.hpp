@@ -83,6 +83,21 @@ namespace GridKit
     Bus<scalar_type, index_type>::~Bus()
     {
       // std::cout << "Destroy PQ bus ..." << std::endl;
+      if (J_rows_buffer_ != nullptr)
+      {
+        delete[] J_rows_buffer_;
+        delete[] J_cols_buffer_;
+        delete[] J_vals_buffer_;
+        J_rows_buffer_ = nullptr;
+        J_cols_buffer_ = nullptr;
+        J_vals_buffer_ = nullptr;
+      }
+
+      if (coo_jac_ != nullptr)
+      {
+        delete coo_jac_;
+        coo_jac_ = nullptr;
+      }
     }
 
     /*!

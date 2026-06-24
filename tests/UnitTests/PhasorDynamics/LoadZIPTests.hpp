@@ -13,7 +13,7 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -265,11 +265,12 @@ namespace GridKit
 
         bus.evaluateJacobian();
         load.evaluateJacobian();
+        load.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: LoadZIP Jacobian\n";
+        model_jacobian->print();
 
-        auto& model_jacobian = load.getJacobian();
-        model_jacobian.deduplicate();
-
-        return GridKit::Testing::MapFromCOO(model_jacobian);
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
 

@@ -81,6 +81,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     BusInfinite<scalar_type, index_type>::~BusInfinite()
     {
+      if (coo_jac_ != nullptr)
+      {
+        delete coo_jac_;
+        coo_jac_ = nullptr;
+      }
     }
 
     /**
@@ -166,6 +171,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusInfinite<scalar_type, index_type>::evaluateJacobian()
     {
+      if (coo_jac_ == nullptr)
+      {
+        nnz_     = 0;
+        coo_jac_ = new CooMatrixT(0, 0, 0);
+      }
       return 0;
     }
 

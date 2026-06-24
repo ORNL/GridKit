@@ -85,7 +85,6 @@ namespace GridKit
         success *= system->initialize() == 0;
         success *= system->evaluateResidual() == 0;
         success *= system->evaluateJacobian() == 0;
-        success *= system->size() == 0;
         success *= system->size() == fault.size();
 
         delete system;

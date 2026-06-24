@@ -13,7 +13,7 @@ int main()
   result += test.jacobian();
   result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME
-  result += test.enzyme_jacobian();
+  result += test.enzymeJacobian();
 #endif
 
   return result.summary();
