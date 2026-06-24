@@ -301,25 +301,6 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
-      y[0]  = delta;
-      y[1]  = omega;
-      y[2]  = Eqp;
-      y[3]  = psidp;
-      y[4]  = psiqpp;
-      y[5]  = psidpp;
-      y[6]  = ksat;
-      y[7]  = vd;
-      y[8]  = vq;
-      y[9]  = Te;
-      y[10] = id;
-      y[11] = iq;
-      y[12] = ir;
-      y[13] = ii;
-      y[14] = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-      y[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GensalExternalVariables::PM>())
@@ -464,8 +445,8 @@ namespace GridKit
       ScalarT ii = y[13];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
+      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 
       return 0;
     }

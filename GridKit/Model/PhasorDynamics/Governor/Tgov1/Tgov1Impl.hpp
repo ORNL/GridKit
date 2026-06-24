@@ -84,9 +84,12 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Tgov1<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
-        using Parameter = typename ModelDataT::Parameters;
+        if (data.parameters.contains(ModelDataT::Parameters::Trate))
+        {
+          Trate_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Trate));
+        }
 
-        if (data.parameters.contains(Parameter::Trate))
+        if (data.parameters.contains(ModelDataT::Parameters::R))
         {
           Trate_ = std::get<RealT>(data.parameters.at(Parameter::Trate));
         }
@@ -125,6 +128,26 @@ namespace GridKit
         {
           Dt_ = std::get<RealT>(data.parameters.at(Parameter::Dt));
         }
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Tgov1<scalar_type, index_type>::setDerivedParams()
+      {
+        va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
+      }
+
+      // System base -> component base when reading signals.
+      template <typename scalar_type, typename index_type>
+      scalar_type Tgov1<scalar_type, index_type>::toComponentBase(scalar_type value) const
+      {
+        return value * va_system_base_ / va_component_base_;
+      }
+
+      // Governor base -> system base for signals output.
+      template <typename scalar_type, typename index_type>
+      scalar_type Tgov1<scalar_type, index_type>::toSystemBase(scalar_type value) const
+      {
+        return value / toComponentBase(static_cast<scalar_type>(ONE<RealT>));
       }
 
       template <typename scalar_type, typename index_type>
@@ -236,16 +259,16 @@ namespace GridKit
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           // System base -> governor base for governor initialization.
-          p0 = toComponentBase(y[2]); ///<- generator needs to be initialized first
+          p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
 
         // Internal States
-        y[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
-        y[1] = p0;               // y1 - Pv  (Valve Position)
-        y[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
+        y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
+        y_[1] = p0;               // y1 - Pv  (Valve Position)
+        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
 
         // D.V. Derivative
         yp[0] = 0.0; // Ptx

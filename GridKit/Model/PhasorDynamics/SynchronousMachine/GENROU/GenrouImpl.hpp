@@ -485,7 +485,7 @@ namespace GridKit
       y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      ScalarT Te = y[12];
+      ScalarT Te = y_[12];
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
@@ -637,8 +637,8 @@ namespace GridKit
       ScalarT ii = y[16];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(ir);
-      h[1] = toSystemBase(ii);
+      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
+      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 
       return 0;
     }

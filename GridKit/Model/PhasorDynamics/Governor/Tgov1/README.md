@@ -72,7 +72,7 @@ The TGOV1 differential equations, as derived from the model diagram.
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup)
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
 target and smooth approximation.
 
 ### Algebraic Equations
@@ -83,8 +83,6 @@ The algebraic equation dictating the mechnical power output.
         + \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
 \end{aligned}
 ```
-
-In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
 
 ## Initialization
 At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of the initial mechanical power converted to the TGOV1 component base.
