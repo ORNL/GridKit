@@ -12,6 +12,7 @@ Figure 1: Governor TGOV1 model. Figure courtesy of [PowerWorld](https://www.powe
 
 Symbol      | Units  | Description                       | Typical Value | Note
 ------------|--------|-----------------------------------|---------------| ------
+$T_{\mathrm{rate}}$ | [MW] | Turbine rating                    | 100.0 |
 $R$         | [p.u.] | Droop Constant                    | 0.05 |
 $T_1$       | [sec]  | Valve Time Delay                  | 0.5  |
 $T_2$       | [sec]  | Turbine Numerator Time Constant   | 2.5  |
@@ -50,53 +51,60 @@ $P_{ref}$       | [p.u.] | Reference Power                   | Either a constant
 
 ## Model Equations
 
-### Differential Equations
-The TGOV1 differential equations, as derived from the model diagram. Define the pre-limit derivative of $P_v$
-
+For readability, define:
 ```math
-f = \dfrac{1}{T_1}\left[-P_v + \dfrac{1}{R}(P_{ref} - \omega)\right]
+f = -P_v + \dfrac{1}{R}(P_{ref} - \omega)
 ```
 
-so that $\dot P_v$ can be written in piecewise form compactly.
+### Differential Equations
+The TGOV1 differential equations, as derived from the model diagram.
+
 ```math
 \begin{aligned}
-   \dot P_{tx}   &= P_v - \dfrac{1}{T_3}(P_{tx}+T_2P_v) \\
-   \dot P_v      &=
-   \begin{cases}
-      f
-         &  \text{if } (P_v^{\min} < P_v < P_v^{\max}) & \lor \\
-         &  \quad (P_v \leq P_v^{\min} \land f>0)       & \lor \\
-         &  \quad(P_v \geq P_v^{\max} \land f<0)            \\
-      0  
-         &  \text{else}
-   \end{cases}
+   0 &= -T_3 \dot P_{tx} - P_{tx} + (T_3 - T_2)P_v \\
+   0 &= -T_1 \dot P_v
+        + \text{antiwindup}(
+            P_v,
+            f,
+            P_v^{\min},
+            P_v^{\max}
+          )
 \end{aligned}
 ```
+
+CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+target and smooth approximation.
 
 ### Algebraic Equations
 The algebraic equation dictating the mechnical power output.
 ```math
 \begin{aligned}
-   P_m &= \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
+   0 &= -\dfrac{S_{\mathrm{sys}}}{T_{\mathrm{rate}}} P_m
+        + \dfrac{1}{T_3}(P_{tx}+T_2P_v) - D_t \omega \\
 \end{aligned}
 ```
 
-In simulation the piecewise form above is replaced with a smooth approximation where $\phi$ is GridKit's smooth anti-windup indicator. See [CommonMath: Anti-Windup Indicator](../../../../CommonMath.md#antiwindup) for its definition, behavior, and design rationale.
-
 ## Initialization
-At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of $P_m$ which is equal to the electric torque.
+At steady state we assume that $P_v$ is at or within its limits. This implies the initial conditions are a function of the initial mechanical power converted to the TGOV1 component base.
 ```math
 \begin{aligned}
-   P_{tx}  &= (T_3-T_2) P_m\\
-   P_v     &= P_m\\
-   \dot P_{tx} &=0\\
-   \dot P_v    &=0\\
+   P^{\mathrm{tgov1}}_{m,0}
+      &= \dfrac{S_{\mathrm{sys}}}{T_{\mathrm{rate}}}P_{m,0} \\
+   P_{tx,0}
+      &= (T_3 - T_2)P^{\mathrm{tgov1}}_{m,0} \\
+   P_{v,0}
+      &= P^{\mathrm{tgov1}}_{m,0} \\
+   \dot P_{tx,0}
+      &= 0 \\
+   \dot P_{v,0}
+      &= 0
 \end{aligned}
 ```
 
 And if the reference power is a constant parameter, we can determine the value by solving the steady state equations.
 ```math
 \begin{aligned}
-   P_{ref}  &= R P_m\\
+   P_{ref,0}
+      &= R P^{\mathrm{tgov1}}_{m,0}
 \end{aligned}
 ```
