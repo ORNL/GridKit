@@ -266,14 +266,14 @@ namespace GridKit
 
         // T_R = 0 makes the sensed terminal voltage relation algebraic.
         tag_[0] = (!isEqual(Tr_, ZERO<RealT>)); // y0 - vts  - Sensed term volt
-        tag_[1] = true;             // y1 - vr   - Voltage reg
-        tag_[2] = true;             // y2 - efdp - Efd pre mult
-        tag_[3] = true;             // y3 - vfx  - Exciter feedback
-        tag_[4] = false;            // y4 - vtr  - Term Volt Err
-        tag_[5] = false;            // y5 - vf   - Feedback volt
-        tag_[6] = false;            // y6 - ve   - Excit. Cntrl Volt
-        tag_[7] = false;            // y7 - efd  - Efd
-        tag_[8] = false;            // y8 - ksat - Saturation
+        tag_[1] = true;                         // y1 - vr   - Voltage reg
+        tag_[2] = true;                         // y2 - efdp - Efd pre mult
+        tag_[3] = true;                         // y3 - vfx  - Exciter feedback
+        tag_[4] = false;                        // y4 - vtr  - Term Volt Err
+        tag_[5] = false;                        // y5 - vf   - Feedback volt
+        tag_[6] = false;                        // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false;                        // y7 - efd  - Efd
+        tag_[8] = false;                        // y8 - ksat - Saturation
 
         return 0;
       }
