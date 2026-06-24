@@ -277,12 +277,14 @@ namespace GridKit
       return monitor_.get();
     }
 
+    // System base -> machine base when reading system values.
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::ScalarT Genrou<scalar_type, index_type>::toMachineBase(ScalarT value) const
     {
       return value * va_system_base_ / va_machine_base_;
     }
 
+    // Machine base -> system base for network and signal output.
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::ScalarT Genrou<scalar_type, index_type>::toSystemBase(ScalarT value) const
     {
@@ -293,6 +295,7 @@ namespace GridKit
     void Genrou<scalar_type, index_type>::initializeMonitor()
     {
       using Variable = typename ModelDataT::MonitorableVariables;
+      // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
                     { return toSystemBase(y_[15]); });
       monitor_->set(Variable::ii, [this]
@@ -491,6 +494,7 @@ namespace GridKit
                + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
       ScalarT Te = y_[12];
+      // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
       {
@@ -637,6 +641,7 @@ namespace GridKit
       ScalarT vr  = wb[0];
       ScalarT vi  = wb[1];
 
+      // Convert current injection to system base for the network.
       h[0] = toSystemBase(inr - vr * G_ + vi * B_);
       h[1] = toSystemBase(ini - vr * B_ - vi * G_);
 

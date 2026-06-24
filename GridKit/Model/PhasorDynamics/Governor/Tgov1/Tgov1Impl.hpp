@@ -134,12 +134,14 @@ namespace GridKit
         va_component_base_ = Trate_ * static_cast<RealT>(1.0e6);
       }
 
+      // System base -> component base when reading signals.
       template <typename scalar_type, typename index_type>
       scalar_type Tgov1<scalar_type, index_type>::toComponentBase(scalar_type value) const
       {
         return value * va_system_base_ / va_component_base_;
       }
 
+      // Governor base -> system base for signals output.
       template <typename scalar_type, typename index_type>
       scalar_type Tgov1<scalar_type, index_type>::toSystemBase(scalar_type value) const
       {
@@ -228,6 +230,7 @@ namespace GridKit
         // Initial mechanical = initial electric torque
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
+          // System base -> governor base for governor initialization.
           p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
         }
 
@@ -237,7 +240,7 @@ namespace GridKit
         // Internal States
         y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
         y_[1] = p0;               // y1 - Pv  (Valve Position)
-        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power)
+        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
 
         // D.V. Derivative
         yp_[0] = 0.0; // Ptx
@@ -312,6 +315,7 @@ namespace GridKit
         f[1] = -T1_ * pv_dot + Math::antiwindup(pv, func, Pvmin_, Pvmax_);
 
         // Internal Algebraic Equations
+        // Convert pmech to component base from its system base value
         f[2] = -toComponentBase(pmech) + (ptx + T2_ * pv) / T3_ - (Dt_ * omega);
 
         return 0;
