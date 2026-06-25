@@ -2,7 +2,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -14,7 +14,7 @@ namespace GridKit
     class BusBase;
 
     template <typename real_type, typename index_type>
-    struct LoadData;
+    struct LoadZData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -27,7 +27,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    class Load : public Component<scalar_type, index_type>
+    class LoadZ : public Component<scalar_type, index_type>
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::size_;
@@ -53,13 +53,13 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = LoadData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Load, LoadData>;
+      using ModelDataT = LoadZData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<LoadZ, LoadZData>;
 
-      Load(BusT* bus);
-      Load(BusT* bus, RealT R, RealT X);
-      Load(BusT* bus, const ModelDataT& data);
-      virtual ~Load();
+      LoadZ(BusT* bus);
+      LoadZ(BusT* bus, RealT R, RealT X);
+      LoadZ(BusT* bus, const ModelDataT& data);
+      virtual ~LoadZ();
 
       virtual int setGridKitComponentID(IdxT) override final;
       virtual int allocate() override final;
@@ -78,15 +78,17 @@ namespace GridKit
       void setR(RealT R)
       {
         R_ = R;
+        setDerivedParams();
       }
 
       void setX(RealT X)
       {
-        // std::cout << "Setting X ...\n";
         X_ = X;
+        setDerivedParams();
       }
 
     private:
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()

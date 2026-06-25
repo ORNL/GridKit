@@ -96,7 +96,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 2
             },

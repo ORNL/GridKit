@@ -412,7 +412,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 7
             },
@@ -423,7 +423,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 8
             },

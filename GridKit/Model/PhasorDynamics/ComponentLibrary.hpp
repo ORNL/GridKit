@@ -8,8 +8,8 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
-#include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>

@@ -127,7 +127,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus);
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus);
         system->addComponent(&load);
 
         success *= system->allocate() == 0;
@@ -148,7 +148,7 @@ namespace GridKit
 
         PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
 
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
         system->addBus(&bus);
 
         PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus);

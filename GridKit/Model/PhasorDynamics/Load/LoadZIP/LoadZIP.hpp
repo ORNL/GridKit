@@ -2,7 +2,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -57,7 +57,7 @@ namespace GridKit
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
       LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP);
+      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
       ~LoadZIP();
 
@@ -75,32 +75,39 @@ namespace GridKit
       }
 
     public:
-      void setP0(RealT P0)
+      void setPnom(RealT Pnom)
       {
-        P0_ = P0;
+        Pnom_ = Pnom;
+        setDerivedParams();
       }
 
-      void setQ0(RealT Q0)
+      void setQnom(RealT Qnom)
       {
-        Q0_ = Q0;
+        Qnom_ = Qnom;
+        setDerivedParams();
       }
 
-      void setV0(RealT V0)
+      void setVnom(RealT Vnom)
       {
-        V0_ = V0;
+        Vnom_ = Vnom;
+        setDerivedParams();
       }
 
-      void setalphaI(RealT alphaI)
+      void setAlphaI(RealT alphaI)
       {
         alphaI_ = alphaI;
+        setDerivedParams();
       }
 
-      void setalphaP(RealT alphaP)
+      void setAlphaP(RealT alphaP)
       {
         alphaP_ = alphaP;
+        setDerivedParams();
       }
 
     private:
+      void initializeParameters(const ModelDataT& data);
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -131,11 +138,14 @@ namespace GridKit
 
     private:
       BusT* bus_{nullptr};
-      RealT P0_{0};
-      RealT Q0_{0};
-      RealT V0_{1.0};
+      RealT Pnom_{0};
+      RealT Qnom_{0};
+      RealT Vnom_{1.0};
       RealT alphaI_{0};
       RealT alphaP_{0};
+      RealT G_{0};
+      RealT B_{0};
+      RealT alphaZ_{1.0};
 
       std::unique_ptr<MonitorT> monitor_;
     };

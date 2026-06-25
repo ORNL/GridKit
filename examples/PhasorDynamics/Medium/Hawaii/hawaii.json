@@ -2252,7 +2252,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 2
             },
@@ -2263,7 +2263,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 3
             },
@@ -2274,7 +2274,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 4
             },
@@ -2285,7 +2285,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 6
             },
@@ -2296,7 +2296,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 7
             },
@@ -2307,7 +2307,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 8
             },
@@ -2318,7 +2318,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 10
             },
@@ -2329,7 +2329,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 11
             },
@@ -2340,7 +2340,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 12
             },
@@ -2351,7 +2351,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 13
             },
@@ -2362,7 +2362,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 15
             },
@@ -2373,7 +2373,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 16
             },
@@ -2384,7 +2384,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 17
             },
@@ -2395,7 +2395,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 18
             },
@@ -2406,7 +2406,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 19
             },
@@ -2417,7 +2417,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 20
             },
@@ -2428,7 +2428,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 21
             },
@@ -2439,7 +2439,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 23
             },
@@ -2450,7 +2450,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 24
             },
@@ -2461,7 +2461,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 26
             },
@@ -2472,7 +2472,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 27
             },
@@ -2483,7 +2483,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 28
             },
@@ -2494,7 +2494,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 29
             },
@@ -2505,7 +2505,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 30
             },
@@ -2516,7 +2516,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 31
             },
@@ -2527,7 +2527,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 32
             },
@@ -2538,7 +2538,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 33
             },
@@ -2549,7 +2549,7 @@
             }
         },
         {
-            "class": "Load",
+            "class": "LoadZ",
             "ports": {
                 "bus": 16
             },

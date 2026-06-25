@@ -156,12 +156,12 @@ int main()
   data.genclassical[1].parameters[GenClassicalParameters::Xdp] = 0.2;
 
   // Set load data
-  data.load.resize(1);
+  data.loadz.resize(1);
 
   // Load on bus 2
-  data.load[0].ports[LoadPorts::bus]         = 2;
-  data.load[0].parameters[LoadParameters::R] = 0.4447197839297772;
-  data.load[0].parameters[LoadParameters::X] = 0.20330047265361242;
+  data.loadz[0].ports[LoadZPorts::bus]         = 2;
+  data.loadz[0].parameters[LoadZParameters::R] = 0.4447197839297772;
+  data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
   // Set fault data
   data.bus_fault.resize(1);

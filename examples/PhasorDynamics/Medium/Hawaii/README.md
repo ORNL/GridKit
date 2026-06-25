@@ -18,7 +18,7 @@ Model       | Count
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 39
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 39
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 14
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 28
+[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 28
 [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 131
 
 ## Data Notes
@@ -55,7 +55,7 @@ The following examples needs to be constructed with this case. Currently the onl
 
 ### Statics
 
-GridKit models Switched Shunts as [Load](../../../../GridKit/Model/PhasorDynamics/Load/README.md) with constant impedance,but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
+GridKit models Switched Shunts as [LoadZ](../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md) with constant impedance,but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
 
 - Transformers
 - Switched Shunts
