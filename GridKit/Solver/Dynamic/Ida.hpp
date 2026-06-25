@@ -140,6 +140,8 @@ namespace AnalysisManager
                                   ScalarT abs_tol_override = 0);
       void setBackwardQuadratureTolerance(ScalarT rel_tol,
                                           ScalarT abs_tol_override = 0);
+      void setSuppressAlgebraicErrors(bool suppress);
+      void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
 
@@ -217,11 +219,13 @@ namespace AnalysisManager
       RealT rel_tol_{DEFAULT_REL_TOL};
       RealT abs_tol_override_{};
       IdxT  max_steps_{};
+      bool  suppress_alg_{false};
 
       RealT backward_time_step_{};
       RealT backward_rel_tol_{DEFAULT_REL_TOL};
       RealT backward_abs_tol_override_{};
       IdxT  backward_max_steps_{};
+      bool  backward_suppress_alg_{false};
 
       RealT quadrature_rel_tol_{0.1 * DEFAULT_REL_TOL};
       RealT quadrature_abs_tol_override_{};
@@ -243,7 +247,8 @@ namespace AnalysisManager
                          ScalarT time_step,
                          ScalarT rel_tol,
                          ScalarT abs_tol_override,
-                         IdxT    max_steps);
+                         IdxT    max_steps,
+                         bool    suppress_alg);
       void setTolerance(void*   mem,
                         ScalarT rel_tol,
                         ScalarT abs_tol_override,
