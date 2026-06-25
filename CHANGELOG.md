@@ -64,6 +64,7 @@
 - Added off-nominal tap ratio and phase shift support to the PhasorDynamics `Branch` model.
 - Added portable Vector class to GridKit
 - Added support for running IDA with fixed time steps
+- Added IDA option to suppress algebraic variables in local error tests.
 
 ## v0.1
 
