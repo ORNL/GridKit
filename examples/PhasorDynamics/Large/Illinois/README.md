@@ -17,7 +17,7 @@ Figure 1: Oneline of the ACTIVSg200 Case, from Texas A&M University [Grid Reposi
   [GENROU](../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/README.md) | 40
   [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 40
   [SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 40
-  [LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 164
+  [LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 164
   [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 120
 
 

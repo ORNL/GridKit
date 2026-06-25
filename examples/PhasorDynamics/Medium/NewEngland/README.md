@@ -18,7 +18,7 @@ Model       | Count
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 10
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 10
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 19
+[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 19
 [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 40
 
 
@@ -43,6 +43,6 @@ The following examples needs to be constructed with this case. Currently the onl
 
 ### Statics
 
-GridKit models Switched Shunts as [Load](../../../../GridKit/Model/PhasorDynamics/Load/README.md) with constant impedance,but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
+GridKit models Switched Shunts as [LoadZ](../../../../GridKit/Model/PhasorDynamics/Load/LoadZ/README.md) with constant impedance,but this erases information and our ability to statically re-initialze the model if initalizing at a different operating point.
 
 - Transformers (LTC and Tap Ratios $\neq 1$)

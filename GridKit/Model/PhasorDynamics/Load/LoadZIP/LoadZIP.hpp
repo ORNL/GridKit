@@ -2,7 +2,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -14,7 +14,7 @@ namespace GridKit
     class BusBase;
 
     template <typename real_type, typename index_type>
-    struct LoadData;
+    struct LoadZIPData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -23,11 +23,11 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /*!
-     * @brief Implementation of a constant load.
+     * @brief Implementation of a ZIP load.
      *
      */
     template <typename scalar_type, typename index_type>
-    class Load : public Component<scalar_type, index_type>
+    class LoadZIP : public Component<scalar_type, index_type>
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::size_;
@@ -53,40 +53,61 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = LoadData<RealT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Load, LoadData>;
+      using ModelDataT = LoadZIPData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
-      Load(BusT* bus);
-      Load(BusT* bus, RealT R, RealT X);
-      Load(BusT* bus, const ModelDataT& data);
-      virtual ~Load();
+      LoadZIP(BusT* bus);
+      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP);
+      LoadZIP(BusT* bus, const ModelDataT& data);
+      ~LoadZIP();
 
-      virtual int setGridKitComponentID(IdxT) override final;
-      virtual int allocate() override final;
-      virtual int initialize() override final;
-      virtual int tagDifferentiable() override final;
-      virtual int setAbsoluteTolerance(RealT) override final;
-      virtual int evaluateResidual() override final;
-      virtual int evaluateJacobian() override final;
+      int setGridKitComponentID(IdxT) override final;
+      int allocate() override final;
+      int initialize() override final;
+      int tagDifferentiable() override final;
+      int setAbsoluteTolerance(RealT rel_tol) override final;
+      int evaluateResidual() override final;
+      int evaluateJacobian() override final;
 
-      virtual int verify() const override final
+      int verify() const override final
       {
         return 0;
       }
 
     public:
-      void setR(RealT R)
+      void setPnom(RealT Pnom)
       {
-        R_ = R;
+        Pnom_ = Pnom;
+        setDerivedParams();
       }
 
-      void setX(RealT X)
+      void setQnom(RealT Qnom)
       {
-        // std::cout << "Setting X ...\n";
-        X_ = X;
+        Qnom_ = Qnom;
+        setDerivedParams();
+      }
+
+      void setVnom(RealT Vnom)
+      {
+        Vnom_ = Vnom;
+        setDerivedParams();
+      }
+
+      void setAlphaI(RealT alphaI)
+      {
+        alphaI_ = alphaI;
+        setDerivedParams();
+      }
+
+      void setAlphaP(RealT alphaP)
+      {
+        alphaP_ = alphaP;
+        setDerivedParams();
       }
 
     private:
+      void initializeParameters(const ModelDataT& data);
+      void initializeMonitor();
       void setDerivedParams();
 
       ScalarT& Vr()
@@ -117,12 +138,14 @@ namespace GridKit
 
     private:
       BusT* bus_{nullptr};
-      RealT R_{0.1};
-      RealT X_{0.01};
-
-      /* Derivied parameters */
-      RealT b_;
-      RealT g_;
+      RealT Pnom_{0};
+      RealT Qnom_{0};
+      RealT Vnom_{1.0};
+      RealT alphaI_{0};
+      RealT alphaP_{0};
+      RealT G_{0};
+      RealT B_{0};
+      RealT alphaZ_{1.0};
 
       std::unique_ptr<MonitorT> monitor_;
     };

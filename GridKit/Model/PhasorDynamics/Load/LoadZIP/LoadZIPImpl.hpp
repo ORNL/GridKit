@@ -1,11 +1,10 @@
 #pragma once
 
 #include <cmath>
-#include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIP.hpp>
-#include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -24,14 +23,15 @@ namespace GridKit
       : bus_(bus)
     {
       size_ = 2;
+      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT P0, RealT Q0, RealT V0, RealT alphaI, RealT alphaP)
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
       : bus_(bus),
-        P0_(P0),
-        Q0_(Q0),
-        V0_(V0),
+        Pnom_(Pnom),
+        Qnom_(Qnom),
+        Vnom_(Vnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
     {
@@ -42,21 +42,35 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     LoadZIP<scalar_type, index_type>::LoadZIP(BusT*             bus,
                                               const ModelDataT& data)
-      : bus_(bus)
+      : bus_(bus),
+        monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(ModelDataT::Parameters::P0))
+      initializeParameters(data);
+      initializeMonitor();
+      size_ = 2;
+    }
+
+    template <typename scalar_type, typename index_type>
+    LoadZIP<scalar_type, index_type>::~LoadZIP()
+    {
+    }
+
+    template <typename scalar_type, typename index_type>
+    void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+    {
+      if (data.parameters.contains(ModelDataT::Parameters::Pnom))
       {
-        P0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::P0));
+        Pnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Pnom));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Q0))
+      if (data.parameters.contains(ModelDataT::Parameters::Qnom))
       {
-        Q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Q0));
+        Qnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Qnom));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::V0))
+      if (data.parameters.contains(ModelDataT::Parameters::Vnom))
       {
-        V0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::V0));
+        Vnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vnom));
       }
 
       if (data.parameters.contains(ModelDataT::Parameters::alphaI))
@@ -69,18 +83,7 @@ namespace GridKit
         alphaP_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaP));
       }
 
-      // using Variable = typename ModelDataT::MonitorableVariables;
-      // monitor_->set(Variable::p, [this] { return ?; });
-      // monitor_->set(Variable::q, [this] { return ?; });
-
-      size_ = 2;
       setDerivedParams();
-    }
-
-    template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::~LoadZIP()
-    {
-      // std::cout << "Destroy LoadZIP..." << std::endl;
     }
 
     /**
@@ -99,8 +102,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::allocate()
     {
-      // std::cout << "Allocate Load..." << std::endl;
-
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
       f_.resize(size);
       y_.resize(size);
@@ -131,17 +132,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::initialize()
     {
-      ScalarT vr    = Vr();
-      ScalarT vi    = Vi();
-      ScalarT Vm2   = vr * vr + vi * vi;
-      ScalarT Vm    = std::sqrt(Vm2);
-      ScalarT ifrac = (ONE<RealT> - alphaI_ - alphaP_) / (V0_ * V0_)
-                      + alphaI_ / (V0_ * Vm)
-                      + alphaP_ / Vm2;
-      ScalarT ir = -(P0_ * vr + Q0_ * vi) * ifrac;
-      ScalarT ii = -(P0_ * vi - Q0_ * vr) * ifrac;
-      y_[0]      = ir;
-      y_[1]      = ii;
+      const ScalarT vr = Vr();
+      const ScalarT vi = Vi();
+
+      const RealT   Vnom2 = Vnom_ * Vnom_;
+      const ScalarT V2    = vr * vr + vi * vi;
+      const ScalarT V     = std::sqrt(V2);
+      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+
+      y_[0] = -(G_ * vr + B_ * vi) * zip;
+      y_[1] = -(G_ * vi - B_ * vr) * zip;
 
       yp_[0] = 0.0;
       yp_[1] = 0.0;
@@ -189,10 +189,10 @@ namespace GridKit
         [[maybe_unused]] ScalarT* wb,
         ScalarT*                  h)
     {
-      ScalarT Ir = y[0];
-      ScalarT Ii = y[1];
-      h[0]       = Ir;
-      h[1]       = Ii;
+      const ScalarT Ir = y[0];
+      const ScalarT Ii = y[1];
+      h[0]             = Ir;
+      h[1]             = Ii;
 
       return 0;
     }
@@ -225,17 +225,18 @@ namespace GridKit
         ScalarT*                  wb,
         ScalarT*                  f)
     {
-      ScalarT Vr    = wb[0];
-      ScalarT Vi    = wb[1];
-      ScalarT Ir    = y[0];
-      ScalarT Ii    = y[1];
-      ScalarT Vm2   = Vr * Vr + Vi * Vi;
-      ScalarT Vm    = std::sqrt(Vm2);
-      ScalarT ifrac = (ONE<RealT> - alphaI_ - alphaP_) / (V0_ * V0_)
-                      + alphaI_ / (V0_ * Vm)
-                      + alphaP_ / Vm2;
-      f[0] = Ir + (P0_ * Vr + Q0_ * Vi) * ifrac;
-      f[1] = Ii + (P0_ * Vi - Q0_ * Vr) * ifrac;
+      const ScalarT Vr    = wb[0];
+      const ScalarT Vi    = wb[1];
+      const ScalarT Ir    = y[0];
+      const ScalarT Ii    = y[1];
+      const RealT   Vnom2 = Vnom_ * Vnom_;
+      const ScalarT V2    = Vr * Vr + Vi * Vi;
+      const ScalarT V     = std::sqrt(V2);
+      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
+
+      f[0] = Ir + (G_ * Vr + B_ * Vi) * zip;
+      f[1] = Ii + (G_ * Vi - B_ * Vr) * zip;
+
       return 0;
     }
 
@@ -246,13 +247,34 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::setDerivedParams()
     {
-      return;
+      const RealT Vnom2 = Vnom_ * Vnom_;
+
+      G_      = Pnom_ / Vnom2;
+      B_      = Qnom_ / Vnom2;
+      alphaZ_ = ONE<RealT> - alphaI_ - alphaP_;
     }
 
     template <typename scalar_type, typename index_type>
     const Model::VariableMonitorBase* LoadZIP<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void LoadZIP<scalar_type, index_type>::initializeMonitor()
+    {
+      using Variable = typename ModelDataT::MonitorableVariables;
+
+      monitor_->set(Variable::ir, [this]
+                    { return y_[0]; });
+      monitor_->set(Variable::ii, [this]
+                    { return y_[1]; });
+      monitor_->set(Variable::im, [this]
+                    { return std::sqrt(y_[0] * y_[0] + y_[1] * y_[1]); });
+      monitor_->set(Variable::p, [this]
+                    { return Vr() * y_[0] + Vi() * y_[1]; });
+      monitor_->set(Variable::q, [this]
+                    { return Vi() * y_[0] - Vr() * y_[1]; });
     }
 
   } // namespace PhasorDynamics

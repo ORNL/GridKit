@@ -9,7 +9,9 @@ int main()
   GridKit::Testing::LoadZIPTests<double, size_t> test;
 
   result += test.constructor();
+  result += test.initialization();
   result += test.residual();
+  result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

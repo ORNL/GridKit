@@ -1,5 +1,5 @@
 /**
- * @file LoadData.hpp
+ * @file LoadZData.hpp
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Modeling data for loads
  *
@@ -13,20 +13,20 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /// Initial parameters for a load
-    enum class LoadParameters
+    enum class LoadZParameters
     {
       R, ///< Load resistance
       X, ///< Load reactance
     };
 
     /// Ports for a load
-    enum class LoadPorts
+    enum class LoadZPorts
     {
       bus, ///< Unique ID of the bus to which the load is connected
     };
 
     /// Variables able to be monitored for a load
-    enum class LoadMonitorableVariables
+    enum class LoadZMonitorableVariables
     {
       p,
       q
@@ -41,17 +41,17 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct LoadData : public ComponentData<real_type,
-                                           index_type,
-                                           LoadParameters,
-                                           LoadPorts,
-                                           LoadMonitorableVariables>
+    struct LoadZData : public ComponentData<real_type,
+                                            index_type,
+                                            LoadZParameters,
+                                            LoadZPorts,
+                                            LoadZMonitorableVariables>
     {
-      LoadData() = default;
+      LoadZData() = default;
 
-      using Parameters           = LoadParameters;
-      using Ports                = LoadPorts;
-      using MonitorableVariables = LoadMonitorableVariables;
+      using Parameters           = LoadZParameters;
+      using Ports                = LoadZPorts;
+      using MonitorableVariables = LoadZMonitorableVariables;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

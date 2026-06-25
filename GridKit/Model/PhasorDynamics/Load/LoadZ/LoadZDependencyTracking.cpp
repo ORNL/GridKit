@@ -1,5 +1,5 @@
 
-#include "LoadImpl.hpp"
+#include "LoadZImpl.hpp"
 
 namespace GridKit
 {
@@ -11,17 +11,17 @@ namespace GridKit
      * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateJacobian()
+    int LoadZ<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for Load..." << std::endl;
+      Log::misc() << "Evaluate Jacobian for LoadZ..." << std::endl;
       Log::misc() << "Jacobian evaluation is not implemented!" << std::endl;
 
       return 0;
     }
 
     // Available template instantiations
-    template class Load<DependencyTracking::Variable, long int>;
-    template class Load<DependencyTracking::Variable, size_t>;
+    template class LoadZ<DependencyTracking::Variable, long int>;
+    template class LoadZ<DependencyTracking::Variable, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

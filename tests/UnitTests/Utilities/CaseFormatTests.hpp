@@ -92,7 +92,7 @@ namespace GridKit
         success *= result.bus_fault.size() == 1;
         success *= result.genrou.size() == 1;
         success *= result.gensal.size() == 1;
-        success *= result.load.size() == 0;
+        success *= result.loadz.size() == 0;
 
         success *= result.bus[0].bus_id == 1;
         success *= result.bus[0].bus_type == BusType::DEFAULT;
@@ -216,7 +216,7 @@ namespace GridKit
         success *= result.bus_fault.size() == 1;
         success *= result.genrou.size() == 1;
         success *= result.gov.size() == 1;
-        success *= result.load.size() == 0;
+        success *= result.loadz.size() == 0;
         success *= result.exciter.size() == 1;
         success *= result.sexspti.size() == 1;
 

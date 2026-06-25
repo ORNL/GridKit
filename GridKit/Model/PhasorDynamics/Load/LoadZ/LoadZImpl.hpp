@@ -5,8 +5,8 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 
 namespace GridKit
@@ -14,23 +14,24 @@ namespace GridKit
   namespace PhasorDynamics
   {
     /**
-     * @brief Constructor for a pi-model load
+     * @brief Constructor for a constant-impedance load
      *
      * System sizes:
      * - Number of equations = 2
      * - Number of independent variables = 2
      */
     template <typename scalar_type, typename index_type>
-    Load<scalar_type, index_type>::Load(BusT* bus)
+    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus)
       : bus_(bus)
     {
       size_ = 2;
+      setDerivedParams();
     }
 
     template <typename scalar_type, typename index_type>
-    Load<scalar_type, index_type>::Load(BusT* bus,
-                                        RealT R,
-                                        RealT X)
+    LoadZ<scalar_type, index_type>::LoadZ(BusT* bus,
+                                          RealT R,
+                                          RealT X)
       : bus_(bus),
         R_(R),
         X_(X)
@@ -40,9 +41,10 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    Load<scalar_type, index_type>::Load(BusT*             bus,
-                                        const ModelDataT& data)
-      : bus_(bus)
+    LoadZ<scalar_type, index_type>::LoadZ(BusT*             bus,
+                                          const ModelDataT& data)
+      : bus_(bus),
+        monitor_(std::make_unique<MonitorT>(data))
     {
       if (data.parameters.contains(ModelDataT::Parameters::R))
       {
@@ -54,25 +56,21 @@ namespace GridKit
         X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
       }
 
-      // using Variable = typename ModelDataT::MonitorableVariables;
-      // monitor_->set(Variable::p, [this] { return ?; });
-      // monitor_->set(Variable::q, [this] { return ?; });
-
       size_ = 2;
       setDerivedParams();
+      initializeMonitor();
     }
 
     template <typename scalar_type, typename index_type>
-    Load<scalar_type, index_type>::~Load()
+    LoadZ<scalar_type, index_type>::~LoadZ()
     {
-      // std::cout << "Destroy Load..." << std::endl;
     }
 
     /**
      * @brief Set the component ID
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+    int LoadZ<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
       gridkit_component_id_ = component_id;
       return 0;
@@ -82,10 +80,8 @@ namespace GridKit
      * @brief allocate method computes sparsity pattern of the Jacobian.
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::allocate()
+    int LoadZ<scalar_type, index_type>::allocate()
     {
-      // std::cout << "Allocate Load..." << std::endl;
-
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
       f_.resize(size);
       y_.resize(size);
@@ -114,7 +110,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::initialize()
+    int LoadZ<scalar_type, index_type>::initialize()
     {
       ScalarT vr = Vr();
       ScalarT vi = Vi();
@@ -134,7 +130,7 @@ namespace GridKit
      * \brief Identify differential variables.
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::tagDifferentiable()
+    int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
       tag_[0] = false;
       tag_[1] = false;
@@ -155,7 +151,7 @@ namespace GridKit
      * error cannot be used.
      */
     template <class ScalarT, typename IdxT>
-    int Load<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+    int LoadZ<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
       std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
@@ -166,7 +162,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int Load<scalar_type, index_type>::evaluateBusResidual(
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         [[maybe_unused]] ScalarT* wb,
@@ -185,7 +181,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int Load<scalar_type, index_type>::evaluateInternalResidual(
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
         ScalarT*                  y,
         [[maybe_unused]] ScalarT* yp,
         ScalarT*                  wb,
@@ -206,7 +202,7 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateResidual()
+    int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
       wb_[0] = Vr();
       wb_[1] = Vi();
@@ -223,16 +219,27 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    void Load<scalar_type, index_type>::setDerivedParams()
+    void LoadZ<scalar_type, index_type>::setDerivedParams()
     {
       b_ = -X_ / (R_ * R_ + X_ * X_);
       g_ = R_ / (R_ * R_ + X_ * X_);
     }
 
     template <typename scalar_type, typename index_type>
-    const Model::VariableMonitorBase* Load<scalar_type, index_type>::getMonitor() const
+    const Model::VariableMonitorBase* LoadZ<scalar_type, index_type>::getMonitor() const
     {
       return monitor_.get();
+    }
+
+    template <typename scalar_type, typename index_type>
+    void LoadZ<scalar_type, index_type>::initializeMonitor()
+    {
+      using Variable = typename ModelDataT::MonitorableVariables;
+
+      monitor_->set(Variable::p, [this]
+                    { return Vr() * y_[0] + Vi() * y_[1]; });
+      monitor_->set(Variable::q, [this]
+                    { return Vi() * y_[0] - Vr() * y_[1]; });
     }
 
   } // namespace PhasorDynamics
