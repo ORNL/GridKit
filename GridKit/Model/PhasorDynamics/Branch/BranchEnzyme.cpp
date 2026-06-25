@@ -25,6 +25,9 @@ namespace GridKit
 
       if (J_rows_buffer_ == nullptr)
       {
+        // Reserve space for the dense blocks.
+        // The size of the buffer is the sum of maximum capacities of the blocks.
+        // Enyme will compute the appropriate nnz from sparsification.
         auto bus1_size   = static_cast<size_t>(bus1_->size());
         auto bus2_size   = static_cast<size_t>(bus2_->size());
         auto buffer_size = (bus1_size + bus2_size) * (bus1_size + bus2_size);
