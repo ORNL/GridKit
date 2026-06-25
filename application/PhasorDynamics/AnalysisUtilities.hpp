@@ -258,7 +258,7 @@ namespace GridKit
         }
 
         // Check against specified tolerance
-        status *= errorSet->total_error.max < study_data.error_tol;
+        status *= errorSet->total_error.max_value < study_data.error_tol;
 
         if (print_results)
         {

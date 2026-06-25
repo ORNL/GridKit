@@ -21,31 +21,45 @@ namespace GridKit
      */
     struct TemporalNormAggregate
     {
+      /// Name of variable
       std::string label;
-      double      max{0.0};
-      double      max_time{0.0};
+      /// L-inf norm
+      double      max_value{0.0};
+      /// Time at which max value occurred
+      double      max_value_time{0.0};
+      /// L2 norm
       double      L2{0.0};
 
-      void push(double err, double time)
+      /**
+       * @brief Add a new value for the variable to be aggregated
+       */
+      void push(double val, double time)
       {
-        if (err > max)
+        if (val > max_value)
         {
-          max      = err;
-          max_time = time;
+          max_value      = val;
+          max_value_time = time;
         }
-        L2 += err * err;
+        L2 += val * val;
       }
 
+      /**
+       * @brief Finalize the calculation(s)
+       */
       void wrap()
       {
         L2 = std::sqrt(L2);
       }
 
+      /**
+       * @brief Scale by a reference value (only if the current value is above
+       * the given threshold (used internally for relative errors)
+       */
       void scale(const TemporalNormAggregate& ref, double threshold)
       {
-        if (ref.max > threshold)
+        if (ref.max_value > threshold)
         {
-          max /= ref.max;
+          max_value /= ref.max_value;
         }
         if (ref.L2 > threshold)
         {
@@ -53,12 +67,15 @@ namespace GridKit
         }
       }
 
+      /**
+       * @brief Pretty-print label and values to output stream
+       */
       std::ostream& display(
           std::ostream& os = std::cout, const std::string& indent = "  ") const
       {
         os << indent << label << ":\n"
            << indent << indent << "max     : "
-           << std::format("{:.6e} (at time {:.3e})", max, max_time)
+           << std::format("{:.6e} (at time {:.3e})", max_value, max_value_time)
            << '\n'
            << indent << indent << "L2-norm : "
            << std::format("{:.6e}", L2) << '\n';
@@ -66,11 +83,23 @@ namespace GridKit
       }
     };
 
+    /**
+     * @brief A set of aggregate norms (represented with TemporalNormAggregate)
+     * for the error in each variable plus one for the total (combined) error
+     *
+     * @note The "total_error" aggregate is based on the L-infinity norm of the
+     * local error of variables at a given time step.
+     */
     struct ErrorSet
     {
+      /// Aggregate of the combined error value at each time step
       TemporalNormAggregate              total_error{"Total"};
+      /// Aggregate error for each variable
       std::vector<TemporalNormAggregate> var_errors{};
 
+      /**
+       * @brief Construct with variable labels
+       */
       template <typename C>
       explicit ErrorSet(const C& labels)
         : var_errors(std::size(labels))
@@ -85,6 +114,9 @@ namespace GridKit
       {
       }
 
+      /**
+       * @brief Finalize the calculations
+       */
       virtual void wrap()
       {
         for (auto& agg : var_errors)
@@ -94,8 +126,15 @@ namespace GridKit
         total_error.wrap();
       }
 
+      /**
+       * @brief Take the error between the two output parameters for each
+       * variable and add to the aggregate
+       */
       virtual void push(const OutputAtTime&, const OutputAtTime&) = 0;
 
+      /**
+       * @brief Pretty-print the set of errors for each variable and total
+       */
       std::ostream& display(std::ostream& os = std::cout) const
       {
         std::string indent{"  "};
@@ -118,13 +157,6 @@ namespace GridKit
     struct RelativeError;
     struct AbsoluteError;
 
-    /**
-     * @brief A set of TemporalNormAggregate for the error in each variable plus
-     * a TemporalNormAggregate representing total (combined) error
-     *
-     * @note The "total_error" aggregate is based on the L-infinity norm of the local
-     * error of variables at a given time step.
-     */
     template <typename error_type = RelativeError>
     struct ErrorSetImpl;
 
