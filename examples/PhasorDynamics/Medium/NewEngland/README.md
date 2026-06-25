@@ -18,7 +18,7 @@ Model       | Count
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md)        | 10
 [IEEET1](../../../../GridKit/Model/PhasorDynamics/Exciter/IEEET1/README.md)  | 10
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 19
+[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 19
 [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 40
 
 

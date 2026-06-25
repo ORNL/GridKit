@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -45,15 +46,14 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::R))
+      if (data.parameters.contains(ModelDataT::Parameters::R))
       {
-        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
+        R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
       }
 
-      if (data.parameters.contains(Parameter::X))
+      if (data.parameters.contains(ModelDataT::Parameters::X))
       {
-        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
+        X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
       }
 
       size_ = 2;
@@ -82,17 +82,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::allocate()
     {
-      if (!allocated_)
-      {
-        this->allocateVectors(size_);
-      }
-
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
-
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      abs_tol_.resize(size);
       tag_.resize(size);
-
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+
+      // Resize coupling data
+      wb_.resize(2);
+      h_.resize(2);
 
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
@@ -101,11 +102,6 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
-
-      allocated_ = true;
       return 0;
     }
 
@@ -121,16 +117,11 @@ namespace GridKit
       ScalarT ir = -(g_ * vr - b_ * vi);
       ScalarT ii = -(b_ * vr + g_ * vi);
 
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
+      y_[0] = ir;
+      y_[1] = ii;
 
-      y[0]  = ir;
-      y[1]  = ii;
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
 
       return 0;
     }
@@ -152,17 +143,17 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam scalar_type Scalar data type
-     * @tparam index_type Index data type
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <typename scalar_type, typename index_type>
-    int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    template <class ScalarT, typename IdxT>
+    int LoadZ<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -171,16 +162,16 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int LoadZ<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        [[maybe_unused]] ScalarT* wb,
+        ScalarT*                  h)
     {
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      h[0]             = Ir;
-      h[1]             = Ii;
+      ScalarT Ir = y[0];
+      ScalarT Ii = y[1];
+      h[0]       = Ir;
+      h[1]       = Ii;
 
       return 0;
     }
@@ -190,18 +181,18 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        f)
+    __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  f)
     {
-      const ScalarT Vr = wb[0];
-      const ScalarT Vi = wb[1];
-      const ScalarT Ir = y[0];
-      const ScalarT Ii = y[1];
-      f[0]             = Ir + g_ * Vr - b_ * Vi;
-      f[1]             = Ii + b_ * Vr + g_ * Vi;
+      ScalarT Vr = wb[0];
+      ScalarT Vi = wb[1];
+      ScalarT Ir = y[0];
+      ScalarT Ii = y[1];
+      f[0]       = Ir + g_ * Vr - b_ * Vi;
+      f[1]       = Ii + b_ * Vr + g_ * Vi;
 
       return 0;
     }
@@ -213,20 +204,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0]         = Vr();
-      wb_[1]         = Vi();
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      evaluateInternalResidual(y, yp, wb_.data(), f);
-      evaluateBusResidual(y, yp, wb_.data(), h_.data());
+      wb_[0] = Vr();
+      wb_[1] = Vi();
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
-      f_.setDataUpdated();
 
       return 0;
     }
@@ -254,9 +237,9 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    { return Vr() * y_[0] + Vi() * y_[1]; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    { return Vi() * y_[0] - Vr() * y_[1]; });
     }
 
   } // namespace PhasorDynamics

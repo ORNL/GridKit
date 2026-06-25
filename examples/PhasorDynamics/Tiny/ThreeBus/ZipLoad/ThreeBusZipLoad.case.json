@@ -1,47 +1,55 @@
 {
     "header": {
-        "format_version": 0.2,
-        "format_revision": 0,
-        "case_name": "ThreeBusExample_ZipLoad",
+        "format_version": 0.1,
+        "format_revision": 1,
+        "case_name": "ThreeBusExample_Classical",
         "case_description": "None",
-        "case_comments": "None"
-    },
-    "params": {
+        "case_comments": "None",
         "freq_base": 60.0,
         "va_base": 100000000.0
     },
     "buses": [
         {
             "number": 0,
-            "class": "BusInfinite",
+            "class": "infinite_bus",
             "name": "1",
             "init": {
                 "Vr": 1.06,
                 "Vi": 0.0
             },
-            "params": {"kv": 138.0}
+            "v_base": 138000.0,
+            "mon": [
+                "Vr",
+                "Vi"
+            ]
         },
         {
             "number": 1,
-            "class": "Bus",
+            "class": "bus",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
                 "Vi": -0.009675621941024773
             },
-            "params": {"kv": 138.0},
-            "mon": ["Vm"]
+            "v_base": 138000.0,
+            "mon": [
+                "Vr",
+                "Vi"
+            ]
         },
         {
             "number": 2,
-            "class": "Bus",
+            "class": "bus",
             "name": "3",
             "init": {
                 "Vr": 0.9610827543495831,
                 "Vi": -0.13122476630506485
             },
-            "params": {"kv": 138.0},
-            "mon": ["Vm"]
+            "v_base": 138000.0,
+            "mon": [
+                "Vr",
+                "Vi"
+            ]
         }
     ],
     "devices": [
@@ -96,6 +104,7 @@
             "params": {
                 "Pnom": 1.75,
                 "Qnom": 0.8,
+                "Vnom": 0.97,
                 "alphaI": 0.1,
                 "alphaP": 0.1
             }
@@ -126,7 +135,10 @@
                 "Ra": 0.0,
                 "Xdp": 0.17
             },
-            "mon": ["speed"]
+            "mon": [
+                "delta",
+                "omega"
+            ]
         },
         {
             "class": "GenClassical",
@@ -142,7 +154,10 @@
                 "Ra": 0.0,
                 "Xdp": 0.2
             },
-            "mon": ["speed"]
+            "mon": [
+                "delta",
+                "omega"
+            ]
         }
     ]
 }

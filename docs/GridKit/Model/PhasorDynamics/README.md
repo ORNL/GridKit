@@ -14,7 +14,6 @@ Converter <Converter/README>
 Exciter <Exciter/README>
 Governor <Governor/README>
 Load <Load/README>
-LoadZIP <LoadZIP/README>
 SignalNode <SignalNode/README>
 Stabilizer <Stabilizer/README>
 SynchronousMachine <SynchronousMachine/README>

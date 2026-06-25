@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIP.hpp>
 #include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
@@ -25,10 +27,11 @@ namespace GridKit
     }
 
     template <typename scalar_type, typename index_type>
-    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP)
+    LoadZIP<scalar_type, index_type>::LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP)
       : bus_(bus),
         Pnom_(Pnom),
         Qnom_(Qnom),
+        Vnom_(Vnom),
         alphaI_(alphaI),
         alphaP_(alphaP)
     {
@@ -55,25 +58,29 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void LoadZIP<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      using Parameter = typename ModelDataT::Parameters;
-      if (data.parameters.contains(Parameter::Pnom))
+      if (data.parameters.contains(ModelDataT::Parameters::Pnom))
       {
-        Pnom_ = std::get<RealT>(data.parameters.at(Parameter::Pnom));
+        Pnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Pnom));
       }
 
-      if (data.parameters.contains(Parameter::Qnom))
+      if (data.parameters.contains(ModelDataT::Parameters::Qnom))
       {
-        Qnom_ = std::get<RealT>(data.parameters.at(Parameter::Qnom));
+        Qnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Qnom));
       }
 
-      if (data.parameters.contains(Parameter::alphaI))
+      if (data.parameters.contains(ModelDataT::Parameters::Vnom))
       {
-        alphaI_ = std::get<RealT>(data.parameters.at(Parameter::alphaI));
+        Vnom_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vnom));
       }
 
-      if (data.parameters.contains(Parameter::alphaP))
+      if (data.parameters.contains(ModelDataT::Parameters::alphaI))
       {
-        alphaP_ = std::get<RealT>(data.parameters.at(Parameter::alphaP));
+        alphaI_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaI));
+      }
+
+      if (data.parameters.contains(ModelDataT::Parameters::alphaP))
+      {
+        alphaP_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::alphaP));
       }
 
       setDerivedParams();
@@ -95,17 +102,18 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::allocate()
     {
-      if (!allocated_)
-      {
-        this->allocateVectors(size_);
-      }
-
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
-
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
       tag_.resize(size);
-
+      abs_tol_.resize(size);
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+
+      // Resize coupling data
+      wb_.resize(2);
+      h_.resize(2);
 
       // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
@@ -114,11 +122,6 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
-
-      allocated_ = true;
       return 0;
     }
 
@@ -132,28 +135,16 @@ namespace GridKit
       const ScalarT vr = Vr();
       const ScalarT vi = Vi();
 
-      // The nominal dispatch, initialized bus voltage, and ZIP anchor are one
-      // initial condition, so derive them together on every reset. Anchoring
-      // at the initialized voltage makes the dispatch exact there for any
-      // load fractions.
-      const RealT vm0 = static_cast<RealT>(std::sqrt(vr * vr + vi * vi));
-      if (!(vm0 > RealT{0}) || !std::isfinite(vm0))
-      {
-        return 1;
-      }
-      Vnom_ = vm0;
-      setDerivedParams();
+      const RealT   Vnom2 = Vnom_ * Vnom_;
+      const ScalarT V2    = vr * vr + vi * vi;
+      const ScalarT V     = std::sqrt(V2);
+      const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
 
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
+      y_[0] = -(G_ * vr + B_ * vi) * zip;
+      y_[1] = -(G_ * vi - B_ * vr) * zip;
 
-      // The ZIP factor is one at the anchor voltage
-      y[0]  = -G_ * vr - B_ * vi;
-      y[1]  = -G_ * vi + B_ * vr;
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
       return 0;
     }
 
@@ -173,17 +164,17 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam scalar_type Scalar data type
-     * @tparam index_type Index data type
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <typename scalar_type, typename index_type>
-    int LoadZIP<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+    template <class ScalarT, typename IdxT>
+    int LoadZIP<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -192,11 +183,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateBusResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        [[maybe_unused]] const ScalarT* wb,
-        ScalarT*                        h)
+    FORCE_INLINE int LoadZIP<scalar_type, index_type>::evaluateBusResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        [[maybe_unused]] ScalarT* wb,
+        ScalarT*                  h)
     {
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
@@ -213,20 +204,12 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0]         = Vr();
-      wb_[1]         = Vi();
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-      auto*       f  = f_.getData();
-      evaluateInternalResidual(y, yp, wb_.data(), f);
-      evaluateBusResidual(y, yp, wb_.data(), h_.data());
+      wb_[0] = Vr();
+      wb_[1] = Vi();
+      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
-      f_.setDataUpdated();
 
       return 0;
     }
@@ -236,11 +219,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateInternalResidual(
-        const ScalarT*                  y,
-        [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
-        ScalarT*                        f)
+    FORCE_INLINE int LoadZIP<scalar_type, index_type>::evaluateInternalResidual(
+        ScalarT*                  y,
+        [[maybe_unused]] ScalarT* yp,
+        ScalarT*                  wb,
+        ScalarT*                  f)
     {
       const ScalarT Vr    = wb[0];
       const ScalarT Vi    = wb[1];
@@ -283,15 +266,15 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
+                    { return y_[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
+                    { return y_[1]; });
       monitor_->set(Variable::im, [this]
-                    { return std::sqrt(y_.getData()[0] * y_.getData()[0] + y_.getData()[1] * y_.getData()[1]); });
+                    { return std::sqrt(y_[0] * y_[0] + y_[1] * y_[1]); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_.getData()[0] + Vi() * y_.getData()[1]; });
+                    { return Vr() * y_[0] + Vi() * y_[1]; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_.getData()[0] - Vr() * y_.getData()[1]; });
+                    { return Vi() * y_[0] - Vr() * y_[1]; });
     }
 
   } // namespace PhasorDynamics

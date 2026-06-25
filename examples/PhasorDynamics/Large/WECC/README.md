@@ -20,7 +20,7 @@ Model | Count
 [TGOV1](../../../../GridKit/Model/PhasorDynamics/Governor/Tgov1/README.md) | 103
 [SEXS-PTI](../../../../GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/README.md) | 103
 [IEEEST](../../../../GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/README.md)  | 10
-[LoadZIP](../../../../GridKit/Model/PhasorDynamics/LoadZIP/README.md) | 146
+[LoadZIP](../../../../GridKit/Model/PhasorDynamics/Load/LoadZIP/README.md) | 146
 [SignalNode](../../../../GridKit/Model/PhasorDynamics/SignalNode/README.md) | 319
 
 ## Data Notes

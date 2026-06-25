@@ -10,7 +10,6 @@ int main()
 
   result += test.constructor();
   result += test.initialization();
-  result += test.dispatchAtInitializedVoltage();
   result += test.residual();
   result += test.monitor();
 #ifdef GRIDKIT_ENABLE_ENZYME

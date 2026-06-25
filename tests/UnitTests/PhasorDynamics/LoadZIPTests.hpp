@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -58,7 +60,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.5, 0.2, 0.4);
 
         bus.allocate();
         load.allocate();
@@ -66,57 +68,10 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
-        const auto* y   = load.y().getData();
-        const auto* yp  = load.yp().getData();
-        success        *= isEqual(y[0], static_cast<ScalarT>(-3.2), tol_);
-        success        *= isEqual(y[1], static_cast<ScalarT>(-2.6), tol_);
-        success        *= isEqual(yp[0], static_cast<ScalarT>(0.0), tol_);
-        success        *= isEqual(yp[1], static_cast<ScalarT>(0.0), tol_);
-
-        return success.report(__func__);
-      }
-
-      /// The ZIP anchor is the bus voltage sampled at initialization, so the
-      /// load consumes exactly Pnom and Qnom at every initialized voltage.
-      TestOutcome dispatchAtInitializedVoltage()
-      {
-        TestStatus success = true;
-
-        const RealT Pnom{2.0};
-        const RealT Qnom{0.5};
-
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.2, 0.9);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, Pnom, Qnom, 0.2, 0.4);
-
-        bus.allocate();
-        load.allocate();
-
-        bus.initialize();
-        success *= load.initialize() == 0;
-
-        const auto* y  = load.y().getData();
-        ScalarT     p  = bus.Vr() * y[0] + bus.Vi() * y[1];
-        ScalarT     q  = bus.Vi() * y[0] - bus.Vr() * y[1];
-        success       *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
-        success       *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
-
-        // Reinitializing at a different voltage anchors the same dispatch
-        // there.
-        bus.Vr() = 0.6;
-        bus.Vi() = 0.8;
-        bus.y().setDataUpdated();
-        success *= load.initialize() == 0;
-
-        p        = bus.Vr() * y[0] + bus.Vi() * y[1];
-        q        = bus.Vi() * y[0] - bus.Vr() * y[1];
-        success *= isEqual(p, static_cast<ScalarT>(-Pnom), tol_);
-        success *= isEqual(q, static_cast<ScalarT>(-Qnom), tol_);
-
-        // A zero initialization voltage has no anchor and must fail.
-        bus.Vr() = 0.0;
-        bus.Vi() = 0.0;
-        bus.y().setDataUpdated();
-        success *= load.initialize() != 0;
+        success *= isEqual(load.y()[0], static_cast<ScalarT>(-3.2), tol_);
+        success *= isEqual(load.y()[1], static_cast<ScalarT>(-2.6), tol_);
+        success *= isEqual(load.yp()[0], static_cast<ScalarT>(0.0), tol_);
+        success *= isEqual(load.yp()[1], static_cast<ScalarT>(0.0), tol_);
 
         return success.report(__func__);
       }
@@ -126,7 +81,7 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(0.3, 0.4);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.2, 0.4);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT>     load(&bus, 2.0, 0.5, 0.5, 0.2, 0.4);
 
         bus.allocate();
         load.allocate();
@@ -136,16 +91,14 @@ namespace GridKit
 
         bus.Vr() = 0.9;
         bus.Vi() = 1.2;
-        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual();
 
-        const auto* f  = load.getResidual().getData();
-        success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
-        success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        success *= isEqual(load.getResidual()[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
+        success *= isEqual(load.getResidual()[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
+        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
+        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
 
         return success.report(__func__);
       }
@@ -197,11 +150,12 @@ namespace GridKit
 
         const RealT Pnom{2.0};
         const RealT Qnom{0.5};
+        const RealT Vnom{0.5};
         const RealT alphaI{4.0};
         const RealT alphaP{2.0};
 
-        auto dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, alphaI, alphaP);
-        auto enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, alphaI, alphaP);
+        auto dependency_tracking_jacobian = DependencyTrackingJacobian(Pnom, Qnom, Vnom, alphaI, alphaP);
+        auto enzyme_jacobian              = EnzymeJacobian(Pnom, Qnom, Vnom, alphaI, alphaP);
 
         for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
         {
@@ -213,13 +167,13 @@ namespace GridKit
 
     private:
       std::vector<DependencyTracking::Variable::DependencyMap> DependencyTrackingJacobian(
-          const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+          const RealT Pnom, const RealT Qnom, const RealT Vnom, const RealT alphaI, const RealT alphaP)
       {
         DependencyTracking::Variable Vr{0.3};
         DependencyTracking::Variable Vi{0.4};
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<DependencyTracking::Variable, IdxT> load(&bus, Pnom, Qnom, Vnom, alphaI, alphaP);
 
         bus.allocate();
         load.allocate();
@@ -230,21 +184,19 @@ namespace GridKit
         auto* load_y = load.y().getData();
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load_y[i].setVariableNumber(i);
+          load.y()[i].setVariableNumber(i);
         }
         load.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + load.size());
+          bus.y()[i].setVariableNumber(i + load.size());
         }
         bus.y().setDataUpdated();
 
         bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_y_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
+        load.evaluateResidual();
+        auto residual_y = load.getResidual();
 
         bus.initialize();
         load.initialize();
@@ -252,15 +204,13 @@ namespace GridKit
         auto* load_yp = load.yp().getData();
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load_yp[i].setVariableNumber(i);
+          load.yp()[i].setVariableNumber(i);
         }
         load.yp().setDataUpdated();
 
         bus.evaluateResidual();
-        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
-                                 ///< the dependencies
-        auto&                                     residual_yp_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
+        load.evaluateResidual();
+        auto residual_yp = load.getResidual();
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
@@ -294,13 +244,13 @@ namespace GridKit
       }
 
       std::vector<DependencyTracking::Variable::DependencyMap> EnzymeJacobian(
-          const RealT Pnom, const RealT Qnom, const RealT alphaI, const RealT alphaP)
+          const RealT Pnom, const RealT Qnom, const RealT Vnom, const RealT alphaI, const RealT alphaP)
       {
         ScalarT Vr{0.3};
         ScalarT Vi{0.4};
 
         PhasorDynamics::Bus<ScalarT, IdxT>     bus(Vr, Vi);
-        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, alphaI, alphaP);
+        PhasorDynamics::LoadZIP<ScalarT, IdxT> load(&bus, Pnom, Qnom, Vnom, alphaI, alphaP);
 
         bus.allocate();
         load.allocate();
@@ -321,10 +271,9 @@ namespace GridKit
 
         bus.evaluateJacobian();
         load.evaluateJacobian();
-        load.constructCsr();
-        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
-        std::cout << "Sparse Csr Matrix: LoadZIP Jacobian\n";
-        model_jacobian->print();
+
+        auto& model_jacobian = load.getJacobian();
+        model_jacobian.deduplicate();
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }
@@ -344,6 +293,7 @@ namespace GridKit
 
         data.parameters[Params::Pnom]   = static_cast<RealT>(2.0);
         data.parameters[Params::Qnom]   = static_cast<RealT>(0.5);
+        data.parameters[Params::Vnom]   = static_cast<RealT>(0.5);
         data.parameters[Params::alphaI] = static_cast<RealT>(0.2);
         data.parameters[Params::alphaP] = static_cast<RealT>(0.4);
 

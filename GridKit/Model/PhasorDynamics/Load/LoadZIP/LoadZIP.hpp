@@ -57,7 +57,7 @@ namespace GridKit
       using MonitorT   = Model::VariableMonitor<LoadZIP, LoadZIPData>;
 
       LoadZIP(BusT* bus);
-      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT alphaI, RealT alphaP);
+      LoadZIP(BusT* bus, RealT Pnom, RealT Qnom, RealT Vnom, RealT alphaI, RealT alphaP);
       LoadZIP(BusT* bus, const ModelDataT& data);
       ~LoadZIP();
 
@@ -84,6 +84,12 @@ namespace GridKit
       void setQnom(RealT Qnom)
       {
         Qnom_ = Qnom;
+        setDerivedParams();
+      }
+
+      void setVnom(RealT Vnom)
+      {
+        Vnom_ = Vnom;
         setDerivedParams();
       }
 
@@ -134,7 +140,6 @@ namespace GridKit
       BusT* bus_{nullptr};
       RealT Pnom_{0};
       RealT Qnom_{0};
-      /// ZIP anchor voltage, derived from the bus voltage at initialization
       RealT Vnom_{1.0};
       RealT alphaI_{0};
       RealT alphaP_{0};

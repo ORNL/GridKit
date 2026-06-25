@@ -186,9 +186,9 @@ namespace GridKit
       for (const auto& loaddata : data.loadz)
       {
         IdxT bus_index = 0;
-        if (loaddata.buses.contains(LoadZBuses::bus))
+        if (loaddata.ports.contains(LoadZPorts::bus))
         {
-          bus_index = loaddata.buses.at(LoadZBuses::bus);
+          bus_index = loaddata.ports.at(LoadZPorts::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
         addComponent(load);
