@@ -16,8 +16,7 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
     ModelEvaluatorImpl()
       : size_(0),
@@ -38,7 +37,6 @@ namespace GridKit
         ypB_(static_cast<size_t>(size_)),
         fB_(static_cast<size_t>(size_)),
         gB_(static_cast<size_t>(size_opt_)),
-        jac_(MatrixT()),
         param_(static_cast<size_t>(size_opt_)),
         param_up_(static_cast<size_t>(size_opt_)),
         param_lo_(static_cast<size_t>(size_opt_))
@@ -182,16 +180,6 @@ namespace GridKit
       return f_;
     }
 
-    MatrixT& getJacobian()
-    {
-      return jac_;
-    }
-
-    const MatrixT& getJacobian() const
-    {
-      return jac_;
-    }
-
     std::vector<ScalarT>& getIntegrand()
     {
       return g_;
@@ -245,8 +233,6 @@ namespace GridKit
     std::vector<ScalarT> ypB_;
     std::vector<ScalarT> fB_;
     std::vector<ScalarT> gB_;
-
-    MatrixT jac_;
 
     std::vector<ScalarT> param_;
     std::vector<ScalarT> param_up_;

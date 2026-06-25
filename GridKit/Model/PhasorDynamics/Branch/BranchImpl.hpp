@@ -175,12 +175,12 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::addAdmittanceContribution(
-        RealT          G,
-        RealT          B,
-        const ScalarT& Vr,
-        const ScalarT& Vi,
-        ScalarT&       Ir,
-        ScalarT&       Ii)
+        const RealT   G,
+        const RealT   B,
+        const ScalarT Vr,
+        const ScalarT Vi,
+        ScalarT&      Ir,
+        ScalarT&      Ii)
     {
       Ir += G * Vr - B * Vi;
       Ii += B * Vr + G * Vi;
@@ -188,8 +188,8 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline void Branch<scalar_type, index_type>::evaluateAdmittanceBlock(
-        RealT          G,
-        RealT          B,
+        const RealT    G,
+        const RealT    B,
         const ScalarT* wb,
         ScalarT*       h)
     {
@@ -205,15 +205,15 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
+     * @tparam scalar_type Scalar data type
+     * @tparam index_type Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class ScalarT, typename IdxT>
-    int Branch<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+    template <typename scalar_type, typename index_type>
+    int Branch<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }
@@ -224,10 +224,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual11(
-        [[maybe_unused]] ScalarT* y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  h)
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        h)
     {
       evaluateAdmittanceBlock(g11_, b11_, wb, h);
 
@@ -240,10 +240,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline int Branch<scalar_type, index_type>::evaluateBusResidual12(
-        [[maybe_unused]] ScalarT* y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  h)
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        h)
     {
       evaluateAdmittanceBlock(g12_, b12_, wb, h);
 
@@ -256,10 +256,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual21(
-        [[maybe_unused]] ScalarT* y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  h)
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        h)
     {
       evaluateAdmittanceBlock(g21_, b21_, wb, h);
 
@@ -272,10 +272,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int Branch<scalar_type, index_type>::evaluateBusResidual22(
-        [[maybe_unused]] ScalarT* y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  h)
+        [[maybe_unused]] const ScalarT* y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        h)
     {
       evaluateAdmittanceBlock(g22_, b22_, wb, h);
 

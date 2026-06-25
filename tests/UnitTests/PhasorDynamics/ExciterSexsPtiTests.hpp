@@ -5,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -13,7 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -436,11 +437,12 @@ namespace GridKit
 
         bus.evaluateJacobian();
         exciter.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& model_jacobian = exciter.getJacobian();
-        model_jacobian.deduplicate();
-        model_jacobian.printMatrix("Model Jacobian");
+        exciter.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = exciter.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: SexsPti Jacobian\n";
+        model_jacobian->print();
 
-        return GridKit::Testing::MapFromCOO(model_jacobian);
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
 

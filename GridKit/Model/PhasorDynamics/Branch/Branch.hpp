@@ -51,7 +51,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::wb_;
       using Component<scalar_type, index_type>::h_;
-      using Component<scalar_type, index_type>::J_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -135,15 +134,15 @@ namespace GridKit
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
 
-      static __attribute__((always_inline)) inline void addAdmittanceContribution(RealT          G,
-                                                                                  RealT          B,
-                                                                                  const ScalarT& Vr,
-                                                                                  const ScalarT& Vi,
-                                                                                  ScalarT&       Ir,
-                                                                                  ScalarT&       Ii);
+      static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
+                                                                                  const RealT   B,
+                                                                                  const ScalarT Vr,
+                                                                                  const ScalarT Vi,
+                                                                                  ScalarT&      Ir,
+                                                                                  ScalarT&      Ii);
 
-      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(RealT          G,
-                                                                                RealT          B,
+      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
+                                                                                const RealT    B,
                                                                                 const ScalarT* wb,
                                                                                 ScalarT*       h);
 
@@ -188,10 +187,14 @@ namespace GridKit
       }
 
     public:
-      __attribute__((always_inline)) inline int evaluateBusResidual11(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual12(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual21(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      __attribute__((always_inline)) inline int evaluateBusResidual22(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual11(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual12(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual21(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual22(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus1_;

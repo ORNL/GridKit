@@ -81,6 +81,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     BusInfinite<scalar_type, index_type>::~BusInfinite()
     {
+      if (coo_jac_ != nullptr)
+      {
+        delete coo_jac_;
+        coo_jac_ = nullptr;
+      }
     }
 
     /**
@@ -116,15 +121,15 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
+     * @tparam scalar_type Scalar data type
+     * @tparam index_type Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+    template <typename scalar_type, typename index_type>
+    int BusInfinite<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }
@@ -166,6 +171,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusInfinite<scalar_type, index_type>::evaluateJacobian()
     {
+      if (coo_jac_ == nullptr)
+      {
+        nnz_     = 0;
+        coo_jac_ = new CooMatrixT(0, 0, 0);
+      }
       return 0;
     }
 

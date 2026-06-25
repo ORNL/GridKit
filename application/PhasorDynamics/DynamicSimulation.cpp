@@ -29,6 +29,7 @@ int main(int argc, const char* argv[])
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
+  ida.setTolerance(1e-7, 1e-9);
   ida.configureSimulation();
 
   // Start timer

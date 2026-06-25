@@ -6,10 +6,10 @@
 #include <limits>
 #include <vector>
 
-#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
-
 /**
  * @brief Class to provide dense matrices.
+ *
+ * @deprecated This class is deprecated. Use Vector(n, k) instead.
  *
  * This is intended for small matrices that store model Jacobians to be subsequently copied
  * into large sparse matrices.
@@ -22,12 +22,10 @@ namespace GridKit
     class DenseMatrix
     {
     private:
-      IdxT                    rows_size_;
-      IdxT                    columns_size_;
-      std::vector<RealT>      values_;
-      COO_Matrix<RealT, IdxT> values_COO_;
-      bool                    values_changed_ = false;
-      bool                    sparsified_     = false;
+      IdxT               rows_size_;
+      IdxT               columns_size_;
+      std::vector<RealT> values_;
+      bool               values_changed_ = false;
 
     public:
       // Constructors and destructors
@@ -35,16 +33,13 @@ namespace GridKit
       ~DenseMatrix();
 
       // Getters and setters
-      RealT                    getValue(const IdxT i, const IdxT j) const;
-      void                     setValue(const IdxT i, const IdxT j, const RealT value);
-      void                     setValues(COO_Matrix<RealT, IdxT> values_COO);
-      void                     setValues(size_t nnz, const IdxT* rows_coo, const IdxT* cols_coo, const RealT* vals_coo);
-      std::vector<RealT>*      getValues();
-      COO_Matrix<RealT, IdxT>* getValuesCOO();
+      RealT               getValue(const IdxT i, const IdxT j) const;
+      void                setValue(const IdxT i, const IdxT j, const RealT value);
+      void                setValues(size_t nnz, const IdxT* rows_coo, const IdxT* cols_coo, const RealT* vals_coo);
+      std::vector<RealT>* getValues();
 
       // Utilities
-      void toCOO();
-      void printMatrix(std::string name = "");
+      void print(std::string name = "");
 
       // Purposefully not defining BLAS operations. This class should not be used
       // for compute.
@@ -53,7 +48,7 @@ namespace GridKit
     /**
      * @brief DenseMatrix constructor
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - rows_size
@@ -63,15 +58,14 @@ namespace GridKit
     DenseMatrix<RealT, IdxT>::DenseMatrix(const IdxT rows_size, const IdxT columns_size)
       : rows_size_(rows_size),
         columns_size_(columns_size),
-        values_(rows_size * columns_size, 0),
-        values_COO_(rows_size, columns_size)
+        values_(rows_size * columns_size, 0)
     {
     }
 
     /**
      * @brief DenseMatrix single value getter
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - i row index
@@ -81,15 +75,15 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline RealT DenseMatrix<RealT, IdxT>::getValue(const IdxT i, const IdxT j) const
     {
-      assert(i < this->columns_size_);
-      assert(j < this->rows_size_);
-      return this->values_[j * rows_size_ + i];
+      assert(i < columns_size_);
+      assert(j < rows_size_);
+      return values_[j * rows_size_ + i];
     }
 
     /**
      * @brief DenseMatrix single value setter
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] IdxT - i row index
@@ -99,29 +93,10 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline void DenseMatrix<RealT, IdxT>::setValue(const IdxT i, const IdxT j, const RealT value)
     {
-      assert(i < this->columns_size_);
-      assert(j < this->rows_size_);
-      this->values_[j * rows_size_ + i] = value;
-      values_changed_                   = true;
-    }
-
-    /**
-     * @brief DenseMatrix value setter from COO
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     *
-     * @param[in] COO_Matrix<RealT, IdxT> - values_COO
-     */
-    template <typename RealT, typename IdxT>
-    inline void DenseMatrix<RealT, IdxT>::setValues(COO_Matrix<RealT, IdxT> values_COO)
-    {
-      std::tuple<std::vector<IdxT>&, std::vector<IdxT>&, std::vector<RealT>&> entries = values_COO.getEntries();
-      const auto [rcord, ccord, vals]                                                 = entries;
-      for (IdxT idx = 0; idx < values_COO.nnz(); ++idx)
-      {
-        this->setValue(rcord[idx], ccord[idx], vals[idx]);
-      }
+      assert(i < columns_size_);
+      assert(j < rows_size_);
+      values_[j * rows_size_ + i] = value;
+      values_changed_             = true;
     }
 
     /**
@@ -137,14 +112,14 @@ namespace GridKit
     {
       for (size_t idx = 0; idx < nnz; ++idx)
       {
-        this->setValue(rows_coo[idx], cols_coo[idx], vals_coo[idx]);
+        setValue(rows_coo[idx], cols_coo[idx], vals_coo[idx]);
       }
     }
 
     /**
      * @brief DenseMatrix getter for all values stored as a vector
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      *
      * @return Address of the vector containing matrix values
@@ -152,79 +127,26 @@ namespace GridKit
     template <typename RealT, typename IdxT>
     inline std::vector<RealT>* DenseMatrix<RealT, IdxT>::getValues()
     {
-      return &(this->values_);
-    }
-
-    /**
-     * @brief DenseMatrix getter for all values stored as a COO sparse matrix
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     *
-     * @return Address of the COO matrix containing the sparsified matrix values
-     */
-    template <typename RealT, typename IdxT>
-    inline COO_Matrix<RealT, IdxT>* DenseMatrix<RealT, IdxT>::getValuesCOO()
-    {
-      if (!sparsified_ || values_changed_)
-      {
-        this->toCOO();
-      }
-      return &(this->values_COO_);
-    }
-
-    /**
-     * @brief Dense matrix conversion to COO form
-     *
-     * @tparam RealT - Real type for Jacobian entries
-     * @tparam IdxT - Integer data type for matrix indices
-     */
-    template <typename RealT, typename IdxT>
-    inline void DenseMatrix<RealT, IdxT>::toCOO()
-    {
-      if (!sparsified_ || values_changed_)
-      {
-        IdxT               nnz = 0;
-        std::vector<IdxT>  rcord;
-        std::vector<IdxT>  ccord;
-        std::vector<RealT> vals;
-        for (IdxT j = 0; j < this->columns_size_; ++j)
-        {
-          for (IdxT i = 0; i < this->rows_size_; ++i)
-          {
-            RealT value = this->values_[j * rows_size_ + i];
-            if (std::abs(value) > std::numeric_limits<double>::epsilon())
-            {
-              nnz++;
-              rcord.push_back(i);
-              ccord.push_back(j);
-              vals.push_back(value);
-            }
-          }
-        }
-        values_COO_.setValues(rcord, ccord, vals);
-        sparsified_     = true;
-        values_changed_ = false;
-      }
+      return &(values_);
     }
 
     /**
      * @brief Print matrix
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      *
      * @param[in] name to identify the specific matrix printed
      */
     template <typename RealT, typename IdxT>
-    inline void DenseMatrix<RealT, IdxT>::printMatrix(std::string name)
+    inline void DenseMatrix<RealT, IdxT>::print(std::string name)
     {
       std::cout << "Dense matrix: " << name << "\n";
-      for (IdxT i = 0; i < this->rows_size_; ++i)
+      for (IdxT i = 0; i < rows_size_; ++i)
       {
-        for (IdxT j = 0; j < this->columns_size_; ++j)
+        for (IdxT j = 0; j < columns_size_; ++j)
         {
-          std::cout << this->values_[j * rows_size_ + i] << " ";
+          std::cout << values_[j * rows_size_ + i] << " ";
         }
         std::cout << "\n";
       }
@@ -233,7 +155,7 @@ namespace GridKit
     /**
      * @brief DenseMatrix destructor
      *
-     * @tparam RealT - Real type for Jacobian entries
+     * @tparam RealT - Real type for matrix values
      * @tparam IdxT - Integer data type for matrix indices
      */
     template <typename RealT, typename IdxT>

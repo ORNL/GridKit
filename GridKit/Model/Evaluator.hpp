@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <GridKit/Constants.hpp>
-#include <GridKit/LinearAlgebra/SparseMatrix/COO_Matrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
@@ -24,8 +23,8 @@ namespace GridKit
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
-      using MatrixT    = GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>; //\todo Use CsrMatrix
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
+      using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
 
       Evaluator()
       {
@@ -163,9 +162,6 @@ namespace GridKit
 
       virtual std::vector<ScalarT>&       getResidual()       = 0;
       virtual const std::vector<ScalarT>& getResidual() const = 0;
-
-      virtual MatrixT&       getJacobian()       = 0;
-      virtual const MatrixT& getJacobian() const = 0;
 
       virtual std::vector<ScalarT>&       getIntegrand()       = 0;
       virtual const std::vector<ScalarT>& getIntegrand() const = 0;

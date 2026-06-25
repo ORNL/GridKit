@@ -27,12 +27,13 @@ namespace GridKit
     class BusBase : public Model::Evaluator<scalar_type, index_type>
     {
     public:
-      using ScalarT  = scalar_type;
-      using IdxT     = index_type;
-      using RealT    = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using MatrixT  = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
-      using BusTypeT = typename BusData<RealT, IdxT>::BusType;
-      using MonitorT = Model::VariableMonitor<BusBase, BusData>;
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
+      using MonitorT   = Model::VariableMonitor<BusBase, BusData>;
 
       BusBase() = default;
 
@@ -103,16 +104,6 @@ namespace GridKit
         return f_;
       }
 
-      MatrixT& getJacobian() override
-      {
-        return J_;
-      }
-
-      const MatrixT& getJacobian() const override
-      {
-        return J_;
-      }
-
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
@@ -151,9 +142,19 @@ namespace GridKit
         return BusTypeT::DEFAULT;
       }
 
+      CsrMatrixT* getCsrJacobian() const override
+      {
+        return csr_jac_;
+      }
+
+      CooMatrixT* getCooJacobian() const
+      {
+        return coo_jac_;
+      }
+
       bool hasJacobian() override
       {
-        return false;
+        return true;
       }
 
       void updateTime(RealT /* t */, RealT /* a */) override
@@ -194,10 +195,8 @@ namespace GridKit
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
-      MatrixT J_;
-      IdxT*   J_rows_buffer_{nullptr};
-      IdxT*   J_cols_buffer_{nullptr};
-      RealT*  J_vals_buffer_{nullptr};
+      CsrMatrixT* csr_jac_{nullptr};
+      CooMatrixT* coo_jac_{nullptr};
 
       //
       // Adjoint sensitivity members

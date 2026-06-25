@@ -210,14 +210,9 @@ namespace GridKit
         return f_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() override
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* getCsrJacobian() const override
       {
-        return jac_;
-      }
-
-      const GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT>& getJacobian() const override
-      {
-        return jac_;
+        return csr_jac_;
       }
 
       std::vector<ScalarT>& getIntegrand() override
@@ -268,7 +263,7 @@ namespace GridKit
       std::vector<ScalarT> fB_;
       std::vector<ScalarT> gB_;
 
-      GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> jac_;
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
       std::vector<ScalarT> param_;
       std::vector<ScalarT> param_up_;
