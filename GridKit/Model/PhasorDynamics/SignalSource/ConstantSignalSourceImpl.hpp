@@ -9,12 +9,18 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
+    /**
+     * @brief Default construct with zero value
+     */
     template <typename scalar_type, typename index_type>
     ConstantSignalSource<scalar_type, index_type>::ConstantSignalSource()
     {
       size_ = 0;
     }
 
+    /**
+     * @brief Construct with values from input data
+     */
     template <typename scalar_type, typename index_type>
     ConstantSignalSource<scalar_type, index_type>::ConstantSignalSource(const ModelDataT& data)
     {
@@ -27,6 +33,9 @@ namespace GridKit
     {
     }
 
+    /**
+     * @brief Set value from input data
+     */
     template <typename scalar_type, typename index_type>
     void ConstantSignalSource<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
@@ -41,6 +50,9 @@ namespace GridKit
       }
     }
 
+    /**
+     * @brief Set the component ID
+     */
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
     {
@@ -48,6 +60,9 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Link up assigned signal nodes
+     */
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::allocate()
     {
@@ -80,6 +95,12 @@ namespace GridKit
 
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::tagDifferentiable()
+    {
+      return 0;
+    }
+
+    template <class scalar_type, typename index_type>
+    int ConstantSignalSource<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }

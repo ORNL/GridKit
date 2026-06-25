@@ -98,8 +98,8 @@ namespace GridKit
       std::vector<GenrouDataT>             genrou;          ///< GENROU instances within the model
       std::vector<GensalDataT>             gensal;          ///< GENSAL instances within the model
       std::vector<GenClassicalDataT>       genclassical;    ///< Classical generator instances within the model
-      std::vector<LoadZDataT>              loadz;        ///< LoadZ instances within the model
-      std::vector<LoadZIPDataT>            loadzip;      ///< LoadZIP instances within the model
+      std::vector<LoadZDataT>              loadz;           ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT>            loadzip;         ///< LoadZIP instances within the model
       std::vector<Tgov1DataT>              gov;             ///< Governors within the model
       std::vector<Ieeet1DataT>             exciter;         ///< Exciters within the model
       std::vector<SexsPtiDataT>            sexspti;         ///< SEXS-PTI exciters within the model
