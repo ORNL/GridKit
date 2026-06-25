@@ -112,11 +112,11 @@ int main(int argc, const char* argv[])
     auto errorSet = GridKit::Testing::compareCSV(out_file, ref_file);
 
     // Print the errors
-    errorSet.display();
+    errorSet->display();
 
     auto error_allowed = args["tolerance"].as<real_type>();
 
-    status *= errorSet.total.max_error < error_allowed;
+    status *= errorSet->total_error.max_value < error_allowed;
 
     status.report();
   }
