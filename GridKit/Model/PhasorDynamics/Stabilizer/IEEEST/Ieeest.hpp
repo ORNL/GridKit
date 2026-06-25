@@ -112,10 +112,10 @@ namespace GridKit
         const Model::VariableMonitorBase* getMonitor() const override;
 
         __attribute__((always_inline)) inline int evaluateInternalResidual(
-            ScalarT*,
-            ScalarT*,
-            [[maybe_unused]] ScalarT*,
-            ScalarT*,
+            const ScalarT*,
+            const ScalarT*,
+            const ScalarT*,
+            const ScalarT*,
             ScalarT*);
 
       private:

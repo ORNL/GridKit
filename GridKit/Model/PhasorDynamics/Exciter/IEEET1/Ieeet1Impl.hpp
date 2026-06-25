@@ -300,11 +300,11 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Ieeet1<scalar_type, index_type>::evaluateInternalResidual(
-          ScalarT* y,
-          ScalarT* yp,
-          ScalarT* wb,
-          ScalarT* ws,
-          ScalarT* f)
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f)
       {
         // Read E comp (terminal voltage, unless compensation impedance)
         ScalarT vreal = wb[0];

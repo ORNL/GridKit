@@ -111,7 +111,8 @@ namespace GridKit
         }
 
       public:
-        __attribute__((always_inline)) inline int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateInternalResidual(
+            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         // Input parameters

@@ -553,11 +553,11 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateInternalResidual(
-        ScalarT* y,
-        ScalarT* yp,
-        ScalarT* wb,
-        ScalarT* ws,
-        ScalarT* f)
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        const ScalarT* ws,
+        ScalarT*       f)
     {
       /* Read variables */
       ScalarT delta  = y[0];
@@ -631,10 +631,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateBusResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  h)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        h)
     {
       ScalarT inr = y[17];
       ScalarT ini = y[18];

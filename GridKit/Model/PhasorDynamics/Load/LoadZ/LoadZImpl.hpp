@@ -163,15 +163,15 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateBusResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        [[maybe_unused]] ScalarT* wb,
-        ScalarT*                  h)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
-      ScalarT Ir = y[0];
-      ScalarT Ii = y[1];
-      h[0]       = Ir;
-      h[1]       = Ii;
+      const ScalarT Ir = y[0];
+      const ScalarT Ii = y[1];
+      h[0]             = Ir;
+      h[1]             = Ii;
 
       return 0;
     }
@@ -182,17 +182,17 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZ<scalar_type, index_type>::evaluateInternalResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  f)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        f)
     {
-      ScalarT Vr = wb[0];
-      ScalarT Vi = wb[1];
-      ScalarT Ir = y[0];
-      ScalarT Ii = y[1];
-      f[0]       = Ir + g_ * Vr - b_ * Vi;
-      f[1]       = Ii + b_ * Vr + g_ * Vi;
+      const ScalarT Vr = wb[0];
+      const ScalarT Vi = wb[1];
+      const ScalarT Ir = y[0];
+      const ScalarT Ii = y[1];
+      f[0]             = Ir + g_ * Vr - b_ * Vi;
+      f[1]             = Ii + b_ * Vr + g_ * Vi;
 
       return 0;
     }

@@ -274,10 +274,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
-        ScalarT* y,
-        ScalarT* yp,
-        ScalarT* wb,
-        ScalarT* f)
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        ScalarT*       f)
     {
       // Set variable aliases for better readability.
       const ScalarT delta = y[0];
@@ -315,10 +315,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateBusResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        [[maybe_unused]] ScalarT* wb,
-        ScalarT*                  h)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];

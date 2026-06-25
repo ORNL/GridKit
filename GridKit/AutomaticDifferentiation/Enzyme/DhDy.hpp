@@ -38,20 +38,23 @@ namespace GridKit
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
+         * @param[out] rows - Row indices
+         * @param[out] cols - Column indices
+         * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
          */
-        static void eval(ModelT*     model,
-                         size_t      n_res,
-                         size_t      n_var,
-                         const IdxT* res_indices,
-                         const IdxT* var_indices,
-                         ScalarT*    y,
-                         ScalarT*    yp,
-                         ScalarT*    wb,
-                         IdxT*       rows,
-                         IdxT*       cols,
-                         RealT*      vals,
-                         IdxT&       nnz)
+        static void eval(ModelT*        model,
+                         const size_t   n_res,
+                         const size_t   n_var,
+                         const IdxT*    res_indices,
+                         const IdxT*    var_indices,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         IdxT*          rows,
+                         IdxT*          cols,
+                         RealT*         vals,
+                         IdxT&          nnz)
         {
           if (n_res > 0 && n_var > 0)
           {

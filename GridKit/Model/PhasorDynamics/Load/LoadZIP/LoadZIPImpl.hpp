@@ -184,10 +184,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateBusResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        [[maybe_unused]] ScalarT* wb,
-        ScalarT*                  h)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
@@ -220,10 +220,10 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     __attribute__((always_inline)) int LoadZIP<scalar_type, index_type>::evaluateInternalResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        ScalarT*                  wb,
-        ScalarT*                  f)
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        f)
     {
       const ScalarT Vr    = wb[0];
       const ScalarT Vi    = wb[1];

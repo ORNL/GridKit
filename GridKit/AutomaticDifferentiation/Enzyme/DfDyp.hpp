@@ -39,6 +39,9 @@ namespace GridKit
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
          * @param[in] alpha - Time derivative jacobian coefficient
+         * @param[out] rows - Row indices
+         * @param[out] cols - Column indices
+         * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
          */
         static void eval(ModelT*     model,
@@ -108,6 +111,9 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[in] ws - Signal variables
          * @param[in] alpha - Time derivative jacobian coefficient
+         * @param[out] rows - Row indices
+         * @param[out] cols - Column indices
+         * @param[out] vals - Values
          * @param[out] nnz - Number of nonzeros
          */
         static void eval(ModelT*     model,
