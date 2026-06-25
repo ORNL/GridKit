@@ -107,13 +107,13 @@ namespace GridKit
           IdxT num_cols = 0;
           for (IdxT i = 0; i < nnz_; ++i)
           {
-            if (J_rows_buffer_[i] > num_rows)
+            if (J_rows_buffer_[i] + 1 > num_rows)
             {
-              num_rows = J_rows_buffer_[i];
+              num_rows = J_rows_buffer_[i] + 1;
             }
-            if (J_cols_buffer_[i] > num_cols)
+            if (J_cols_buffer_[i] + 1 > num_cols)
             {
-              num_cols = J_cols_buffer_[i];
+              num_cols = J_cols_buffer_[i] + 1;
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
