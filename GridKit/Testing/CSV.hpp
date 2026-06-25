@@ -20,7 +20,11 @@ namespace GridKit
      *
      * @note This assumes a "time" variable is always in the first column.
      */
-    ErrorSet compareCSV(const std::string& f_a, const std::string& f_b);
+    std::unique_ptr<ErrorSet> compareCSV(
+        const std::string& test_file,
+        const std::string& reference_file,
+        ErrorType          error_type    = ErrorType::RELATIVE,
+        double             abs_threshold = DEFAULT_ABS_ERROR_THRESHOLD);
 
   } // namespace Testing
 } // namespace GridKit

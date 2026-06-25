@@ -35,50 +35,54 @@ namespace GridKit
       return ifs;
     }
 
-    ErrorSet compareCSV(const std::string& f_a, const std::string& f_b)
+    std::unique_ptr<ErrorSet> compareCSV(const std::string& f_test,
+                                         const std::string& f_ref,
+                                         ErrorType          error_type,
+                                         double             abs_threshold)
     {
       // Open files and read labels
-      auto ifs_a = checkOpenFile(f_a);
-      auto ifs_b = checkOpenFile(f_b);
+      auto ifs_test = checkOpenFile(f_test);
+      auto ifs_ref  = checkOpenFile(f_ref);
 
-      std::string line_a;
-      std::getline(ifs_a, line_a);
-      auto labels_a = Tokenizer<>(line_a, ',')();
+      std::string line_test;
+      std::getline(ifs_test, line_test);
+      auto labels_a = Tokenizer<>(line_test, ',')();
 
-      std::string line_b;
-      std::getline(ifs_b, line_b);
-      auto labels_b = Tokenizer<>(line_b, ',')();
+      std::string line_ref;
+      std::getline(ifs_ref, line_ref);
+      auto labels_b = Tokenizer<>(line_ref, ',')();
 
       if (labels_a.size() != labels_b.size())
       {
-        Log::error() << "Files \"" << f_a << "\" and \"" << f_b
+        Log::error() << "Files \"" << f_test << "\" and \"" << f_ref
                      << "\" have different number of variables." << std::endl;
       }
 
       // Create error set
-      auto err = ErrorSet(std::span{next(begin(labels_a)), end(labels_a)});
+      auto var_labels = std::span{next(begin(labels_a)), end(labels_a)};
+      auto err        = makeErrorSet(error_type, var_labels, abs_threshold);
 
-      while (ifs_a && ifs_b)
+      while (ifs_test && ifs_ref)
       {
-        std::getline(ifs_a, line_a);
-        std::getline(ifs_b, line_b);
-        if (!(ifs_a && ifs_b))
+        std::getline(ifs_test, line_test);
+        std::getline(ifs_ref, line_ref);
+        if (!(ifs_test && ifs_ref))
         {
-          if (ifs_a || ifs_b)
+          if (ifs_test || ifs_ref)
           {
-            Log::error() << "Files \"" << f_a << "\" and \"" << f_b
+            Log::error() << "Files \"" << f_test << "\" and \"" << f_ref
                          << "\" have different lengths." << std::endl;
           }
           break;
         }
 
-        OutputAtTime d_a(Tokenizer<double>(line_b, ',')());
-        OutputAtTime d_b(Tokenizer<double>(line_a, ',')());
+        OutputAtTime d_test(Tokenizer<double>(line_test, ',')());
+        OutputAtTime d_ref(Tokenizer<double>(line_ref, ',')());
 
-        err.push(d_a - d_b);
+        err->push(d_test, d_ref);
       }
 
-      err.wrap();
+      err->wrap();
 
       return err;
     }
