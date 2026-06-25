@@ -10,6 +10,7 @@ int main()
 
   result += test.callback();
   result += test.fixedStep();
+  result += test.suppressAlgebraicErrors();
 
   return result.summary();
 }

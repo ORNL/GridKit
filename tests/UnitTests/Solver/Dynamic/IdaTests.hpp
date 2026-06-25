@@ -366,6 +366,46 @@ namespace GridKit
     private:
       RealT t_{};
     };
+
+    template <class ScalarT, typename IdxT>
+    class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
+    {
+    public:
+      using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
+
+      int initialize() override
+      {
+        this->y_       = {0, 0};
+        this->yp_      = {0, 0};
+        this->tag_     = {true, false};
+        this->abs_tol_ = {0, 0};
+        this->f_       = {0, 0};
+        this->g_       = {0};
+        t_             = 0;
+        return 0;
+      }
+
+      IdxT size() override
+      {
+        return 2;
+      }
+
+      int evaluateResidual() override
+      {
+        static constexpr RealT OMEGA = 100.0;
+        this->f_[0]                  = this->yp_[0];
+        this->f_[1]                  = this->y_[1] - std::sin(OMEGA * t_);
+        return 0;
+      }
+
+      void updateTime(RealT t, [[maybe_unused]] RealT a) override
+      {
+        t_ = t;
+      }
+
+    private:
+      RealT t_{};
+    };
   } // namespace Model
 
   namespace Testing
@@ -415,6 +455,34 @@ namespace GridKit
         auto stats = ida.getStats();
 
         success *= (stats.num_steps_ == n_steps);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome suppressAlgebraicErrors()
+      {
+        TestStatus success = true;
+
+        const auto countSteps = [](bool suppress_alg)
+        {
+          Model::AlgebraicErrorControlEvaluator<ScalarT, IdxT> model;
+
+          Ida<ScalarT, IdxT> ida(&model);
+          ida.setSuppressAlgebraicErrors(suppress_alg);
+          ida.setTolerance(1.0e-6);
+          ida.setMaxSteps(10000);
+          ida.configureSimulation();
+
+          ida.initializeSimulation(0.0, false);
+          ida.runSimulation(1.0);
+
+          return ida.getStats().num_steps_;
+        };
+
+        const auto unsuppressed_steps = countSteps(false);
+        const auto suppressed_steps   = countSteps(true);
+
+        success *= (suppressed_steps < unsuppressed_steps);
 
         return success.report(__func__);
       }
