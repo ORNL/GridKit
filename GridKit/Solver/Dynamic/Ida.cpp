@@ -92,7 +92,7 @@ namespace AnalysisManager
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
 
-      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_);
+      setIDAOptions(solver_, time_step_, rel_tol_, abs_tol_override_, max_steps_, suppress_alg_);
 
       // Set up linear solver
       return this->configureLinearSolver();
@@ -535,7 +535,12 @@ namespace AnalysisManager
       retval = IDAInitB(solver_, backwardID_, this->adjointResidual, tf, yyB_, ypB_);
       checkOutput(retval, "IDAInitB");
 
-      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_), backward_time_step_, backward_rel_tol_, backward_abs_tol_override_, backward_max_steps_);
+      setIDAOptions(IDAGetAdjIDABmem(solver_, backwardID_),
+                    backward_time_step_,
+                    backward_rel_tol_,
+                    backward_abs_tol_override_,
+                    backward_max_steps_,
+                    backward_suppress_alg_);
 
       retval = IDASetUserDataB(solver_, backwardID_, model_);
       checkOutput(retval, "IDASetUserDataB");
@@ -1169,6 +1174,35 @@ namespace AnalysisManager
     }
 
     /**
+     * @brief Set whether IDA suppresses local error tests on algebraic variables
+     *
+     * @param suppress If true, algebraic variables are excluded from IDA's
+     *        local error test
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setSuppressAlgebraicErrors(bool suppress)
+    {
+      suppress_alg_ = suppress;
+    }
+
+    /**
+     * @brief Set whether IDA suppresses local error tests on algebraic
+     *        variables for the backward simulation
+     *
+     * @param suppress If true, algebraic variables are excluded from IDA's
+     *        local error test
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setBackwardSuppressAlgebraicErrors(bool suppress)
+    {
+      backward_suppress_alg_ = suppress;
+    }
+
+    /**
      * @brief Set the maximum number of steps
      *
      * @param max_steps The maximum number of steps
@@ -1204,6 +1238,8 @@ namespace AnalysisManager
      *        absolute tolerance for the nonlinear solver rather than the
      *        model's default absolute tolerance
      * @param max_steps The maximum number of steps
+     * @param suppress_alg If true, algebraic variables are excluded from IDA's
+     *        local error test
      * @tparam ScalarT Scalar data type
      * @tparam IdxT Index data type
      */
@@ -1212,7 +1248,8 @@ namespace AnalysisManager
                                            ScalarT time_step,
                                            ScalarT rel_tol,
                                            ScalarT abs_tol_override,
-                                           IdxT    max_steps)
+                                           IdxT    max_steps,
+                                           bool    suppress_alg)
     {
       int retval = 0;
       retval     = IDASetMinStep(mem, time_step);
@@ -1221,6 +1258,8 @@ namespace AnalysisManager
       checkOutput(retval, "IDASetMaxStep");
       retval = IDASetMaxNumSteps(mem, static_cast<long int>(max_steps));
       checkOutput(retval, "IDASetMaxNumSteps");
+      retval = IDASetSuppressAlg(mem, suppress_alg ? SUNTRUE : SUNFALSE);
+      checkOutput(retval, "IDASetSuppressAlg");
 
       if (time_step == 0)
       {
