@@ -2,12 +2,14 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/Load.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/MapFromCOO.hpp>
@@ -17,13 +19,14 @@ namespace GridKit
   namespace Testing
   {
     template <class ScalarT, typename IdxT>
-    class LoadTests
+    class LoadZTests
     {
     public:
       using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using DataT = PhasorDynamics::LoadZData<RealT, IdxT>;
 
-      LoadTests()  = default;
-      ~LoadTests() = default;
+      LoadZTests()  = default;
+      ~LoadZTests() = default;
 
       TestOutcome constructor()
       {
@@ -32,7 +35,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* load =
-            new PhasorDynamics::Load<ScalarT, IdxT>(bus);
+            new PhasorDynamics::LoadZ<ScalarT, IdxT>(bus);
 
         success *= (load != nullptr);
 
@@ -40,6 +43,12 @@ namespace GridKit
         {
           delete load;
         }
+
+        auto                                      data = makeData();
+        PhasorDynamics::LoadZ<ScalarT, IdxT>      monitored_load(bus, data);
+        PhasorDynamics::Component<ScalarT, IdxT>& monitored_component  = monitored_load;
+        success                                                       *= (monitored_component.getMonitor() != nullptr);
+
         delete bus;
 
         return success.report(__func__);
@@ -59,7 +68,7 @@ namespace GridKit
         const ScalarT Ii{0.0};  ///< Solution imaginary current
 
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(Vr, Vi);
-        PhasorDynamics::Load<ScalarT, IdxT>        load(&bus, R, X);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, R, X);
 
         bus.allocate();
         load.allocate();
@@ -86,8 +95,8 @@ namespace GridKit
         DependencyTracking::Variable Vr{10.0}; ///< Bus real voltage
         DependencyTracking::Variable Vi{20.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>  bus(Vr, Vi);
-        PhasorDynamics::Load<DependencyTracking::Variable, IdxT> load(&bus, R, X);
+        PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>   bus(Vr, Vi);
+        PhasorDynamics::LoadZ<DependencyTracking::Variable, IdxT> load(&bus, R, X);
 
         bus.allocate();
         load.allocate();
@@ -122,6 +131,43 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome monitor()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(10.0, 20.0);
+        auto                                       data = makeData();
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus, data);
+
+        bus.allocate();
+        load.allocate();
+
+        bus.initialize();
+        load.initialize();
+
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> controller(time);
+        PhasorDynamics::Component<ScalarT, IdxT>& component = load;
+        controller.addMonitor(component.getMonitor());
+
+        std::stringstream os;
+        controller.addSink({Model::VariableMonitorFormat::CSV}, os);
+        controller.print();
+
+        auto values = Tokenizer<RealT>(os.str(), ',')();
+        if (values.size() == 3)
+        {
+          success *= isEqual(values[1], static_cast<RealT>(-50.0), tol_);
+          success *= isEqual(values[2], static_cast<RealT>(-100.0), tol_);
+        }
+        else
+        {
+          success = false;
+        }
+
+        return success.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome enzyme_jacobian()
       {
@@ -133,8 +179,8 @@ namespace GridKit
         ScalarT Vr{10.0}; ///< Bus real voltage
         ScalarT Vi{20.0}; ///< Bus imaginary voltage
 
-        PhasorDynamics::Bus<ScalarT, IdxT>  bus(Vr, Vi);
-        PhasorDynamics::Load<ScalarT, IdxT> load(&bus, R, X);
+        PhasorDynamics::Bus<ScalarT, IdxT>   bus(Vr, Vi);
+        PhasorDynamics::LoadZ<ScalarT, IdxT> load(&bus, R, X);
 
         bus.allocate();
         load.allocate();
@@ -167,6 +213,26 @@ namespace GridKit
 #endif
 
     private:
+      static constexpr RealT tol_ = 1.0e-10;
+
+      auto makeData() -> DataT
+      {
+        using Params   = PhasorDynamics::LoadZParameters;
+        using Variable = PhasorDynamics::LoadZMonitorableVariables;
+
+        DataT data;
+        data.device_class          = "LoadZ";
+        data.disambiguation_string = "loadz_test";
+
+        data.parameters[Params::R] = static_cast<RealT>(2.0);
+        data.parameters[Params::X] = static_cast<RealT>(4.0);
+
+        data.monitored_variables.insert(Variable::p);
+        data.monitored_variables.insert(Variable::q);
+
+        return data;
+      }
+
       std::vector<DependencyTracking::Variable::DependencyMap> analyticalJacobian(const RealT R,
                                                                                   const RealT X)
       {

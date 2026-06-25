@@ -25,12 +25,12 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
-add_executable(test_phasor_load runLoadTests.cpp)
+add_executable(test_phasor_loadz runLoadZTests.cpp)
 target_link_libraries(
-  test_phasor_load
+  test_phasor_loadz
   GridKit::definitions
-  GridKit::phasor_dynamics_load
-  GridKit::phasor_dynamics_load_dependency_tracking
+  GridKit::phasor_dynamics_loadz
+  GridKit::phasor_dynamics_loadz_dependency_tracking
   GridKit::phasor_dynamics_bus
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
@@ -140,7 +140,7 @@ add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
 add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsStabilizerIeeestTest COMMAND test_phasor_stabilizer_ieeest)
 add_test(NAME PhasorDynamicsGenClassicalTest COMMAND test_phasor_gen_classical)
-add_test(NAME PhasorDynamicsLoadTest COMMAND test_phasor_load)
+add_test(NAME PhasorDynamicsLoadZTest COMMAND test_phasor_loadz)
 add_test(NAME PhasorDynamicsLoadZIPTest COMMAND test_phasor_loadzip)
 add_test(
   NAME PhasorDynamicsSystemTest
@@ -152,7 +152,7 @@ install(
   TARGETS test_phasor_bus
           test_phasor_bustosignaladapter
           test_phasor_branch
-          test_phasor_load
+          test_phasor_loadz
           test_phasor_loadzip
           test_phasor_genrou
           test_phasor_governor_tgov1

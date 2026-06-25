@@ -128,14 +128,14 @@ namespace GridKit
 
       // Add loads
       /// @todo Add loads to JSON parser
-      for (const auto& loaddata : data.load)
+      for (const auto& loaddata : data.loadz)
       {
         IdxT bus_index = 0;
-        if (loaddata.ports.contains(LoadPorts::bus))
+        if (loaddata.ports.contains(LoadZPorts::bus))
         {
-          bus_index = loaddata.ports.at(LoadPorts::bus);
+          bus_index = loaddata.ports.at(LoadZPorts::bus);
         }
-        auto* load = new Load<ScalarT, IdxT>(getBus(bus_index), loaddata);
+        auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
         addComponent(load);
       }
 

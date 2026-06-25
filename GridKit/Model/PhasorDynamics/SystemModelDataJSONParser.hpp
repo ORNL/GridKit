@@ -124,11 +124,11 @@ namespace GridKit
           raw_component.get_to(gen_classical);
           sm.genclassical.push_back(gen_classical);
         }
-        else if (kind == "Load")
+        else if (kind == "LoadZ")
         {
-          typename SystemModelData<RealT, IdxT>::LoadDataT load;
-          raw_component.get_to(load);
-          sm.load.push_back(load);
+          typename SystemModelData<RealT, IdxT>::LoadZDataT loadz;
+          raw_component.get_to(loadz);
+          sm.loadz.push_back(loadz);
         }
         else if (kind == "LoadZIP")
         {

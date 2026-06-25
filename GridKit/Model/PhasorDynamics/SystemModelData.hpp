@@ -13,8 +13,8 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/LoadData.hpp>
-#include <GridKit/Model/PhasorDynamics/LoadZIP/LoadZIPData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZData.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZIP/LoadZIPData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeData.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
@@ -47,7 +47,7 @@ namespace GridKit
       using GenrouDataT             = GenrouData<RealT, IdxT>;
       using GensalDataT             = GensalData<RealT, IdxT>;
       using GenClassicalDataT       = GenClassicalData<RealT, IdxT>;
-      using LoadDataT               = LoadData<RealT, IdxT>;
+      using LoadZDataT              = LoadZData<RealT, IdxT>;
       using LoadZIPDataT            = LoadZIPData<RealT, IdxT>;
       using SignalDataT             = SignalNodeData<RealT, IdxT>;
       using MonitorSinkSpec         = Model::VariableMonitorBase::SinkSpec;
@@ -96,8 +96,8 @@ namespace GridKit
       std::vector<GenrouDataT>             genrou;       ///< GENROU instances within the model
       std::vector<GensalDataT>             gensal;       ///< GENSAL instances within the model
       std::vector<GenClassicalDataT>       genclassical; ///< Classical generator instances within the model
-      std::vector<LoadDataT>               load;         ///< Loads within the model
-      std::vector<LoadZIPDataT>            loadzip;      ///< Loads within the model
+      std::vector<LoadZDataT>              loadz;        ///< LoadZ instances within the model
+      std::vector<LoadZIPDataT>            loadzip;      ///< LoadZIP instances within the model
       std::vector<Tgov1DataT>              gov;          ///< Governors within the model
       std::vector<Ieeet1DataT>             exciter;      ///< Exciters within the model
       std::vector<SexsPtiDataT>            sexspti;      ///< SEXS-PTI exciters within the model

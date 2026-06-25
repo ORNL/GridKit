@@ -1,12 +1,12 @@
 /**
- * @file LoadEnzyme.cpp
+ * @file LoadZEnzyme.cpp
  * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
-#include "LoadImpl.hpp"
+#include "LoadZImpl.hpp"
 
 namespace GridKit
 {
@@ -18,9 +18,9 @@ namespace GridKit
      * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
-    int Load<scalar_type, index_type>::evaluateJacobian()
+    int LoadZ<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for Load..." << std::endl;
+      Log::misc() << "Evaluate Jacobian for LoadZ..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
       J_.zeroMatrix();
@@ -33,7 +33,7 @@ namespace GridKit
 
       // DfDy call without alpha_ to indicate that df/dy' is null
       // @todo: deduce from a compile-time differential tag
-      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                     ScalarT,
                                     IdxT>::eval(this,
@@ -49,7 +49,7 @@ namespace GridKit
                                                 J_vals_buffer_,
                                                 J_);
 
-      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual,
                                      ScalarT,
                                      IdxT>::eval(this,
@@ -65,7 +65,7 @@ namespace GridKit
                                                  J_vals_buffer_,
                                                  J_);
 
-      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::Load<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual,
                                     ScalarT,
                                     IdxT>::eval(this,
@@ -85,8 +85,8 @@ namespace GridKit
     }
 
     // Available template instantiations
-    template class Load<double, long int>;
-    template class Load<double, size_t>;
+    template class LoadZ<double, long int>;
+    template class LoadZ<double, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

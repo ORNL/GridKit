@@ -7,14 +7,14 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /// Initial parameters for a loadZIP
+    /// Parameters for a loadZIP
     enum class LoadZIPParameters
     {
-      P0,     ///< Load nominal real power
-      Q0,     ///< Load nominal reactive power
-      V0,     ///< Load nominal reactive power
-      alphaI, ///< Fraction of load to be represented as constant current
-      alphaP, ///< Fraction of load to be represented as constant power
+      Pnom,   ///< Nominal real power
+      Qnom,   ///< Nominal reactive power
+      Vnom,   ///< Nominal voltage magnitude
+      alphaI, ///< Fraction of load represented as constant current
+      alphaP, ///< Fraction of load represented as constant power
     };
 
     /// Ports for a loadZIP
@@ -26,11 +26,11 @@ namespace GridKit
     /// Variables able to be monitored for a loadZIP
     enum class LoadZIPMonitorableVariables
     {
-      Ir,
-      Ii,
-      Im,
-      P,
-      Q
+      ir,
+      ii,
+      im,
+      p,
+      q
     };
 
     /**
