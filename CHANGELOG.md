@@ -14,6 +14,7 @@
 - Added the ability to print matrices to matrix market files for later analysis.
 - Added input format specifications.
 - Improved IDA interface.
+- Added IDA option to suppress algebraic variables in local error tests.
 - SUNDIALS interface updates.
 - Refactored and reorganized examples.
 - Updated variable names and function signatures to follow conventions.
