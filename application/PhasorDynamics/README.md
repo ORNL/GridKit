@@ -5,12 +5,8 @@
    Name               | Value
  ---------------------|-------------------------------------------------------
   `system_model_file` | Path to the system model file[^1]
-  `dt_monitor`        | Monitor output time interval for recorded simulation results (default: 0, no intermediate monitoring)
+  `dt`                | A floating-point value for time step size
   `tmax`              | A floating-point value for max time
-  `rel_tol`           | Relative solver tolerance (default: 1.0e-7)
-  `abs_tol`           | Absolute solver tolerance override (default: 1.0e-9)
-  `dt_fixed`          | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
-  `max_steps`         | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `events`            | An array of event groups (see [Events](#events) below)
   `output_file`       | Path to output (CSV) file (optional)
   `reference_file`    | A string containing the name of the case (optional)
