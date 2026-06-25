@@ -24,18 +24,22 @@ namespace GridKit
     class BusFault : public Component<scalar_type, index_type>
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
-      using Component<scalar_type, index_type>::alpha_;
-      using Component<scalar_type, index_type>::nnz_;
       using Component<scalar_type, index_type>::size_;
-      using Component<scalar_type, index_type>::tag_;
+      using Component<scalar_type, index_type>::nnz_;
       using Component<scalar_type, index_type>::time_;
+      using Component<scalar_type, index_type>::alpha_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
+      using Component<scalar_type, index_type>::abs_tol_;
+      using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::wb_;
       using Component<scalar_type, index_type>::h_;
+      using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
+      using Component<scalar_type, index_type>::variable_indices_;
+      using Component<scalar_type, index_type>::residual_indices_;
 
     public:
       using ScalarT    = scalar_type;
@@ -111,7 +115,10 @@ namespace GridKit
       }
 
     public:
-      FORCE_INLINE int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus_;

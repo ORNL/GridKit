@@ -13,5 +13,5 @@ install(
   FILES Colors.hpp
         Errors.hpp
         FileIO.hpp
-        MapFromCOO.hpp
+        MapFromCsr.hpp
   DESTINATION include/GridKit/Utilities)

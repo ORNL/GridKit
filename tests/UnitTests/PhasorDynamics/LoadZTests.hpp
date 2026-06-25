@@ -12,7 +12,7 @@
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -169,7 +169,7 @@ namespace GridKit
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      TestOutcome enzyme_jacobian()
+      TestOutcome enzymeJacobian()
       {
         TestStatus success = true;
 
@@ -196,13 +196,14 @@ namespace GridKit
 
         bus.evaluateJacobian();
         load.evaluateJacobian();
-
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = load.getJacobian();
-        model_jacobian.printMatrix("Model Jacobian");
+        load.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Load Jacobian\n";
+        model_jacobian->print();
 
         /// Compare model Jacobian wih dependencies computed analytically
         std::vector<DependencyTracking::Variable::DependencyMap> ref                = analyticalJacobian(R, X);
-        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCOO(model_jacobian);
+        std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
           success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));

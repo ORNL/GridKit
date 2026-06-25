@@ -19,7 +19,6 @@ namespace GridKit
   {
   public:
     using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using MatrixT    = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
     using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
 
     CircuitComponent() = default;
@@ -358,16 +357,6 @@ namespace GridKit
     const std::vector<ScalarT>& getResidual() const final
     {
       return f_;
-    }
-
-    MatrixT& getJacobian() final
-    {
-      throw "Not Implemented";
-    }
-
-    const MatrixT& getJacobian() const final
-    {
-      throw "Not Implemented";
     }
 
     std::vector<ScalarT>& getIntegrand() final

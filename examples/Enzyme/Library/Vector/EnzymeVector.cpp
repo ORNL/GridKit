@@ -77,8 +77,8 @@ int main()
   }
   if (verbose)
   {
-    jac.printMatrix("Autodiff Jacobian");
-    jac_ref.printMatrix("Reference Jacobian");
+    jac.print("Autodiff Jacobian");
+    jac_ref.print("Reference Jacobian");
   }
   std::cout << "Status: " << fail << "\n";
 

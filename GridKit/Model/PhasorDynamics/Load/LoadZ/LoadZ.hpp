@@ -41,7 +41,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::wb_;
       using Component<scalar_type, index_type>::h_;
       using Component<scalar_type, index_type>::f_;
-      using Component<scalar_type, index_type>::J_;
       using Component<scalar_type, index_type>::J_rows_buffer_;
       using Component<scalar_type, index_type>::J_cols_buffer_;
       using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -114,8 +113,10 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     public:
-      FORCE_INLINE int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      FORCE_INLINE int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus_{nullptr};

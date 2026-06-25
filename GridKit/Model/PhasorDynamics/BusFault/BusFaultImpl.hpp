@@ -24,7 +24,7 @@ namespace GridKit
       : bus_(bus), R_(0), X_(0.01), status_(0), bus_id_(0)
     {
       (void) bus_id_;
-      size_ = 0;
+      size_ = 2;
       setDerivedParams();
     }
 
@@ -42,7 +42,7 @@ namespace GridKit
     BusFault<scalar_type, index_type>::BusFault(BusT* bus, RealT R, RealT X, int status)
       : bus_(bus), R_(R), X_(X), status_(status), bus_id_(0)
     {
-      size_ = 0;
+      size_ = 2;
       setDerivedParams();
     }
 
@@ -81,11 +81,11 @@ namespace GridKit
       monitor_->set(Variable::state, [this]
                     { return status_; });
       monitor_->set(Variable::ir, [this]
-                    { return Ir(); });
+                    { return y_[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return Ii(); });
+                    { return y_[1]; });
 
-      size_ = 0;
+      size_ = 2;
       setDerivedParams();
     }
 
@@ -112,8 +112,25 @@ namespace GridKit
     {
       // std::cout << "Allocate BusFault..." << std::endl;
 
+      auto size = static_cast<size_t>(size_); // avoid compiler warnings
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      abs_tol_.resize(size);
+      tag_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
+      // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
+
+      // Default variable and residual index mapping to local index
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
 
       return 0;
     }
@@ -125,6 +142,24 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::initialize()
     {
+      if (status_)
+      {
+        ScalarT vr = Vr();
+        ScalarT vi = Vi();
+        ScalarT ir = -(vr * G_ - vi * B_);
+        ScalarT ii = -(vr * B_ + vi * G_);
+        y_[0]      = ir;
+        y_[1]      = ii;
+      }
+      else
+      {
+        y_[0] = 0.0;
+        y_[1] = 0.0;
+      }
+
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
+
       return 0;
     }
 
@@ -134,6 +169,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::tagDifferentiable()
     {
+      tag_[0] = false;
+      tag_[1] = false;
+
       return 0;
     }
 
@@ -142,16 +180,17 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
+     * @tparam scalar_type Scalar data type
+     * @tparam index_type Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+    template <class scalar_type, typename index_type>
+    int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -160,15 +199,37 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int BusFault<scalar_type, index_type>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
+    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateBusResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
-      ScalarT Vr = wb[0];
-      ScalarT Vi = wb[1];
-      ScalarT Ir = -Vr * G_ + Vi * B_;
-      ScalarT Ii = -Vr * B_ - Vi * G_;
-      h[0]       = Ir;
-      h[1]       = Ii;
+      const ScalarT Ir = y[0];
+      const ScalarT Ii = y[1];
+      h[0]             = Ir;
+      h[1]             = Ii;
+
+      return 0;
+    }
+
+    /**
+     * @brief Internal residual
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        const ScalarT*                  wb,
+        ScalarT*                        f)
+    {
+      const ScalarT Vr = wb[0];
+      const ScalarT Vi = wb[1];
+      const ScalarT Ir = y[0];
+      const ScalarT Ii = y[1];
+      f[0]             = Ir + Vr * G_ - Vi * B_;
+      f[1]             = Ii + Vr * B_ + Vi * G_;
 
       return 0;
     }
@@ -185,10 +246,18 @@ namespace GridKit
       {
         wb_[0] = Vr();
         wb_[1] = Vi();
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
         evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
         Ir() += h_[0];
         Ii() += h_[1];
       }
+      else
+      {
+        wb_[0] = 0.0;
+        wb_[1] = 0.0;
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+      }
+
       return 0;
     }
 

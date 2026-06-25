@@ -14,7 +14,7 @@
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/MapFromCOO.hpp>
+#include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
@@ -413,11 +413,12 @@ namespace GridKit
         gov.evaluateResidual();
 
         gov.evaluateJacobian();
-        GridKit::LinearAlgebra::COO_Matrix<ScalarT, IdxT> model_jacobian = gov.getJacobian();
-        model_jacobian.deduplicate();
-        model_jacobian.printMatrix("Model Jacobian");
+        gov.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = gov.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: Tgov1 Jacobian\n";
+        model_jacobian->print();
 
-        return GridKit::Testing::MapFromCOO(model_jacobian);
+        return GridKit::Testing::MapFromCsr(model_jacobian);
       }
 #endif
     }; // class GovernorTgov1Tests

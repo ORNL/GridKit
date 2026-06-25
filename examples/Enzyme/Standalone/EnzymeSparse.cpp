@@ -84,6 +84,7 @@ __attribute__((noinline)) SparseMatrix* jac_f(size_t N, ScalarT* input)
     ScalarT* d_output = __enzyme_todense<ScalarT*>((void*) sparse_load<ScalarT, size_t>,
                                                    (void*) sparse_store<ScalarT, size_t>,
                                                    i,
+                                                   1.0,
                                                    index_maps,
                                                    index_maps,
                                                    rows_buffer,

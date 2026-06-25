@@ -12,8 +12,7 @@ namespace GridKit
     class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using MatrixT = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
+      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       NodeBase(size_t n_intern, size_t n_extern)
         : n_intern_(n_intern), n_extern_(n_extern)
@@ -87,16 +86,6 @@ namespace GridKit
       const std::vector<ScalarT>& absoluteTolerance() const final
       {
         return abs_tol_;
-      }
-
-      MatrixT& getJacobian() final
-      {
-        return J_;
-      }
-
-      const MatrixT& getJacobian() const final
-      {
-        return J_;
       }
 
       int setBusID(IdxT bus_id)
@@ -210,10 +199,9 @@ namespace GridKit
       std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
 
-      MatrixT J_;
-      IdxT*   J_rows_buffer_{nullptr};
-      IdxT*   J_cols_buffer_{nullptr};
-      RealT*  J_vals_buffer_{nullptr};
+      IdxT*  J_rows_buffer_{nullptr};
+      IdxT*  J_cols_buffer_{nullptr};
+      RealT* J_vals_buffer_{nullptr};
 
       //
       // Adjoint sensitivity members

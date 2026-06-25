@@ -18,18 +18,20 @@ namespace GridKit
     {
       using BusBase<scalar_type, index_type>::bus_id_;
       using BusBase<scalar_type, index_type>::size_;
+      using BusBase<scalar_type, index_type>::nnz_;
       using BusBase<scalar_type, index_type>::y_;
       using BusBase<scalar_type, index_type>::yp_;
       using BusBase<scalar_type, index_type>::f_;
-      using BusBase<scalar_type, index_type>::J_;
       using BusBase<scalar_type, index_type>::variable_indices_;
       using BusBase<scalar_type, index_type>::residual_indices_;
+      using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::monitor_;
 
     public:
       using ScalarT    = scalar_type;
       using IdxT       = index_type;
       using RealT      = typename BusBase<ScalarT, IdxT>::RealT;
+      using CooMatrixT = typename BusBase<ScalarT, IdxT>::CooMatrixT;
       using MonitorT   = typename BusBase<ScalarT, IdxT>::MonitorT;
       using ModelDataT = BusData<RealT, IdxT>;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;

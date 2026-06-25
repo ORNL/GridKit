@@ -38,6 +38,7 @@ namespace GridKit
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
        * @param[in] val - value to be stored
+       * @param[in] scaling - scaling factor for values
        * @param[in] res_indices - Global residual indices
        * @param[in] var_indices - Global variable indices
        * @param[in,out] rows - buffer where row will be stored
@@ -49,6 +50,7 @@ namespace GridKit
           size_t        row,
           size_t        col,
           float         val,
+          float         scaling,
           const size_t* row_indices,
           const size_t* col_indices,
           size_t*       rows,
@@ -62,7 +64,7 @@ namespace GridKit
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
-          vals[static_cast<size_t>(nnz)] = val;
+          vals[static_cast<size_t>(nnz)] = scaling * val;
           nnz++;
         }
       }
@@ -75,6 +77,7 @@ namespace GridKit
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
        * @param[in] val - value to be stored
+       * @param[in] scaling - scaling factor for values
        * @param[in] res_indices - Global residual indices
        * @param[in] var_indices - Global variable indices
        * @param[in,out] rows - buffer where row will be stored
@@ -86,6 +89,7 @@ namespace GridKit
           long int        row,
           long int        col,
           float           val,
+          float           scaling,
           const long int* row_indices,
           const long int* col_indices,
           long int*       rows,
@@ -99,7 +103,7 @@ namespace GridKit
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
-          vals[static_cast<size_t>(nnz)] = val;
+          vals[static_cast<size_t>(nnz)] = scaling * val;
           nnz++;
         }
       }
@@ -112,6 +116,7 @@ namespace GridKit
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
        * @param[in] val - value to be stored
+       * @param[in] scaling - scaling factor for values
        * @param[in] res_indices - Global residual indices
        * @param[in] var_indices - Global variable indices
        * @param[in,out] rows - buffer where row will be stored
@@ -123,6 +128,7 @@ namespace GridKit
           size_t        row,
           size_t        col,
           double        val,
+          double        scaling,
           const size_t* row_indices,
           const size_t* col_indices,
           size_t*       rows,
@@ -136,7 +142,7 @@ namespace GridKit
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
-          vals[static_cast<size_t>(nnz)] = val;
+          vals[static_cast<size_t>(nnz)] = scaling * val;
           nnz++;
         }
       }
@@ -149,6 +155,7 @@ namespace GridKit
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
        * @param[in] val - value to be stored
+       * @param[in] scaling - scaling factor for values
        * @param[in] res_indices - Global residual indices
        * @param[in] var_indices - Global variable indices
        * @param[in,out] rows - buffer where row will be stored
@@ -160,6 +167,7 @@ namespace GridKit
           long int        row,
           long int        col,
           double          val,
+          double          scaling,
           const long int* row_indices,
           const long int* col_indices,
           long int*       rows,
@@ -173,7 +181,7 @@ namespace GridKit
         {
           rows[static_cast<size_t>(nnz)] = row_mapped;
           cols[static_cast<size_t>(nnz)] = col_mapped;
-          vals[static_cast<size_t>(nnz)] = val;
+          vals[static_cast<size_t>(nnz)] = scaling * val;
           nnz++;
         }
       }
@@ -189,6 +197,7 @@ namespace GridKit
        * @param[in] val - value to be stored
        * @param[in] row - row to be stored
        * @param[in] col - column to be stored
+       * @param[in] scaling - scaling factor for values
        * @param[in] res_indices - Global residual indices
        * @param[in] var_indices - Global variable indices
        * @param[in,out] rows - buffer where row will be stored
@@ -201,6 +210,7 @@ namespace GridKit
           ScalarT     val,
           IdxT        row,
           IdxT        col,
+          ScalarT     scaling,
           const IdxT* row_indices,
           const IdxT* col_indices,
           IdxT*       rows,
@@ -217,16 +227,16 @@ namespace GridKit
         if constexpr (std::is_same<IdxT, size_t>::value)
         {
           if constexpr (std::is_same<IdxT, float>::value)
-            inner_store_float_size_t(row, col, val, row_indices, col_indices, rows, cols, vals, nnz);
+            inner_store_float_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
-            inner_store_double_size_t(row, col, val, row_indices, col_indices, rows, cols, vals, nnz);
+            inner_store_double_size_t(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
         }
         else if constexpr (std::is_same<IdxT, long int>::value)
         {
           if constexpr (std::is_same<IdxT, double>::value)
-            inner_store_float_long_int(row, col, val, row_indices, col_indices, rows, cols, vals, nnz);
+            inner_store_float_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
           else
-            inner_store_double_long_int(row, col, val, row_indices, col_indices, rows, cols, vals, nnz);
+            inner_store_double_long_int(row, col, val, scaling, row_indices, col_indices, rows, cols, vals, nnz);
         }
         else
         {

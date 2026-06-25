@@ -65,7 +65,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::y_;
         using Component<scalar_type, index_type>::yp_;
         using Component<scalar_type, index_type>::wb_;
-        using Component<scalar_type, index_type>::J_;
         using Component<scalar_type, index_type>::J_rows_buffer_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
         using Component<scalar_type, index_type>::J_vals_buffer_;
@@ -105,8 +104,8 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        FORCE_INLINE int evaluateInternalResidual(
-            ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateInternalResidual(
+            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         BusT* bus_{nullptr};

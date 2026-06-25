@@ -34,10 +34,9 @@ namespace GridKit
        *
        * @tparam ModelT - model type
        * @tparam MemberFunctions - member function parameter key
-       * @tparam ScalarT - scalar data type
        *
        */
-      template <typename ModelT, MemberFunctions function, typename ScalarT>
+      template <typename ModelT, MemberFunctions function>
       struct ModelWrapper
       {
       };
@@ -46,9 +45,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for InternalResidual
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::InternalResidual, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::InternalResidual>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -56,7 +57,11 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] f - Internal residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* f)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       f)
         {
           model->evaluateInternalResidual(y, yp, wb, f);
         }
@@ -66,9 +71,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for InternalResidualWithSignal
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::InternalResidualWithSignal, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::InternalResidualWithSignal>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -77,7 +84,12 @@ namespace GridKit
          * @param[in] ws - Signal variables
          * @param[out] f - Internal residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* ws, ScalarT* f)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         const ScalarT* ws,
+                         ScalarT*       f)
         {
           model->evaluateInternalResidual(y, yp, wb, ws, f);
         }
@@ -87,9 +99,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for BusResidual
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::BusResidual>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -97,7 +111,11 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       h)
         {
           model->evaluateBusResidual(y, yp, wb, h);
         }
@@ -107,9 +125,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for BusResidual11 (branch member function)
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual11, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::BusResidual11>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -117,7 +137,11 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       h)
         {
           model->evaluateBusResidual11(y, yp, wb, h);
         }
@@ -127,9 +151,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for BusResidual12 (branch member function)
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual12, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::BusResidual12>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -137,7 +163,11 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       h)
         {
           model->evaluateBusResidual12(y, yp, wb, h);
         }
@@ -147,18 +177,24 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for BusResidual21 (branch member function)
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual21, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::BusResidual21>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
-              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function, ScalarT>::eval,
+              __enzyme_fwddiff<void>((void*) ModelWrapper<ModelT, function>::eval,
          * @param[in] y - Internal variables
          * @param[in] yp - Internal variable derivatives
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       h)
         {
           model->evaluateBusResidual21(y, yp, wb, h);
         }
@@ -168,9 +204,11 @@ namespace GridKit
        * @brief Residual wrapper partial template specialization for BusResidual22 (branch member function)
        *
        */
-      template <typename ModelT, typename ScalarT>
-      struct ModelWrapper<ModelT, MemberFunctions::BusResidual22, ScalarT>
+      template <typename ModelT>
+      struct ModelWrapper<ModelT, MemberFunctions::BusResidual22>
       {
+        using ScalarT = typename ModelT::ScalarT;
+
         /**
          * @param[in] model - Pointer to the model to be differentiated
          * @param[in] y - Internal variables
@@ -178,7 +216,11 @@ namespace GridKit
          * @param[in] wb - Bus variables
          * @param[out] h - Bus residual
          */
-        static void eval(ModelT* model, ScalarT* y, ScalarT* yp, ScalarT* wb, ScalarT* h)
+        static void eval(ModelT*        model,
+                         const ScalarT* y,
+                         const ScalarT* yp,
+                         const ScalarT* wb,
+                         ScalarT*       h)
         {
           model->evaluateBusResidual22(y, yp, wb, h);
         }
