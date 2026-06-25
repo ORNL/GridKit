@@ -6,6 +6,7 @@
 :class: gk-index
 
 Input Format <INPUT_FORMAT>
+PowerFlow <POWER_FLOW>
 Branch <Branch/README>
 Bus <Bus/README>
 BusFault <BusFault/README>
