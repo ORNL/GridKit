@@ -66,6 +66,7 @@
 - Added portable Vector class to GridKit
 - Added support for running IDA with fixed time steps
 - Added IDA option to suppress algebraic variables in local error tests.
+- Removed `COO_Matrix` class.
 
 ## v0.1
 

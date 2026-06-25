@@ -26,7 +26,6 @@ namespace GridKit
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
-      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       Component() = default;
 
@@ -121,71 +120,6 @@ namespace GridKit
       const VectorT& getResidual() const override
       {
         return f_;
-      }
-
-      /**
-       * @brief Bind this component's state and residual vectors to the slice
-       * [offset, offset + size()) of the system vectors.
-       *
-       * After binding, the component reads and writes system storage directly
-       * and allocate() will not allocate local vector data. Rebinding is
-       * allowed and refreshes the aliases, e.g. after system storage is
-       * reallocated when the topology changes.
-       *
-       * Only HOST data is bound because PhasorDynamics currently evaluates
-       * models on the CPU. Supporting DEVICE data would also require sharing
-       * the matching DEVICE pointer and keeping the HOST and DEVICE copies in
-       * sync. This bind operation does neither, so DEVICE access is unsupported.
-       *
-       * @param[in] y       - System state vector
-       * @param[in] yp      - System state derivative vector
-       * @param[in] f       - System residual vector
-       * @param[in] abs_tol - System absolute tolerance vector
-       * @param[in] offset  - Position of this component's slice in the system vectors
-       *
-       * @pre System vectors hold current HOST data of at least offset + size()
-       * elements. This component's vectors are unallocated or already bound.
-       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system storage.
-       *
-       * @return 0 if successful, non-zero otherwise.
-       */
-      int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
-      {
-        if (y.getSize() < offset + size_
-            || yp.getSize() < offset + size_
-            || f.getSize() < offset + size_
-            || abs_tol.getSize() < offset + size_)
-        {
-          Log::error() << "Component::bind - system vectors are smaller than "
-                       << "offset + size = " << offset + size_ << "\n";
-          return 1;
-        }
-
-        auto* y_data       = y.getData(memory::HOST);
-        auto* yp_data      = yp.getData(memory::HOST);
-        auto* f_data       = f.getData(memory::HOST);
-        auto* abs_tol_data = abs_tol.getData(memory::HOST);
-
-        if (y_data == nullptr || yp_data == nullptr
-            || f_data == nullptr || abs_tol_data == nullptr)
-        {
-          Log::error() << "Component::bind - system vector data is null or stale\n";
-          return 1;
-        }
-
-        const int y_status       = y_.setData(y_data + offset, size_, memory::HOST);
-        const int yp_status      = yp_.setData(yp_data + offset, size_, memory::HOST);
-        const int f_status       = f_.setData(f_data + offset, size_, memory::HOST);
-        const int abs_tol_status = abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
-
-        if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
-        {
-          Log::error() << "Component::bind - failed to bind vectors to system storage\n";
-          return 1;
-        }
-
-        allocated_ = true;
-        return 0;
       }
 
       int setVariableIndex(IdxT local_index, IdxT global_index)
@@ -287,18 +221,6 @@ namespace GridKit
       }
 
     protected:
-      /**
-       * @brief Allocate this component's state and residual vectors.
-       */
-      void allocateVectors(IdxT n)
-      {
-
-        y_.resize(n);
-        yp_.resize(n);
-        f_.resize(n);
-        abs_tol_.resize(n);
-      }
-
       int constructCoo()
       {
         if (coo_jac_ == nullptr)
@@ -317,7 +239,7 @@ namespace GridKit
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
+          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, LinearAlgebra::memory::HOST);
         }
 
         return 0;
@@ -337,10 +259,12 @@ namespace GridKit
       std::vector<ScalarT> f_;
       std::vector<ScalarT> g_;
 
-      MatrixT J_;
-      IdxT*   J_rows_buffer_{nullptr};
-      IdxT*   J_cols_buffer_{nullptr};
-      RealT*  J_vals_buffer_{nullptr};
+      IdxT*       J_rows_buffer_{nullptr};
+      IdxT*       J_cols_buffer_{nullptr};
+      RealT*      J_vals_buffer_{nullptr};
+      IdxT*       map_to_csr_{nullptr};
+      CsrMatrixT* csr_jac_{nullptr};
+      CooMatrixT* coo_jac_{nullptr};
 
       //
       // Adjoint sensitivity members

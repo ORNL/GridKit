@@ -12,7 +12,6 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit

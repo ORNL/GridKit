@@ -271,9 +271,10 @@ namespace GridKit
 
         bus.evaluateJacobian();
         load.evaluateJacobian();
-
-        auto& model_jacobian = load.getJacobian();
-        model_jacobian.deduplicate();
+        load.constructCsr();
+        GridKit::LinearAlgebra::CsrMatrix<ScalarT, IdxT>* model_jacobian = load.getCsrJacobian();
+        std::cout << "Sparse Csr Matrix: LoadZIP Jacobian\n";
+        model_jacobian->print();
 
         return GridKit::Testing::MapFromCsr(model_jacobian);
       }

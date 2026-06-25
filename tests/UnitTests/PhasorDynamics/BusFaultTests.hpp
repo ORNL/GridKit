@@ -64,16 +64,14 @@ namespace GridKit
         fault.allocate();
         fault.initialize();
         fault.evaluateResidual();
-        auto&       res      = fault.getResidual();
-        const auto* res_data = res.getData();
-        const auto* yp       = fault.yp().getData();
+        std::vector<ScalarT> res = fault.getResidual();
 
-        for (size_t i = 0; i < res.getSize(); ++i)
+        for (size_t i = 0; i < res.size(); ++i)
         {
-          if (!isEqual(res_data[i], 0.0))
+          if (!isEqual(res[i], 0.0))
           {
             std::cout << "Incorrect result: "
-                      << yp[i] << " != 0\n";
+                      << fault.yp()[i] << " != 0\n";
             success = false;
             break;
           }
@@ -125,45 +123,33 @@ namespace GridKit
         bus.initialize();
         fault.initialize();
 
-        auto* fault_y = fault.y().getData();
         for (size_t i = 0; i < fault.size(); ++i)
         {
-          fault_y[i].setVariableNumber(i); ///< fault independent variables
+          fault.y()[i].setVariableNumber(i); ///< fault independent variables
         }
-        fault.y().setDataUpdated();
-        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus_y[i].setVariableNumber(i + fault.size()); // Bus independent variables
+          bus.y()[i].setVariableNumber(i + fault.size()); // Bus independent variables
         }
-        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         fault.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                   ///< the dependencies
-        auto&                                     residual_y_view = fault.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(
-            residual_y_view.getData(),
-            residual_y_view.getData() + residual_y_view.getSize());
+        std::vector<DependencyTracking::Variable> residual_y = fault.getResidual();
 
         // Get d/dy'
         bus.initialize();
         fault.initialize();
 
-        auto* fault_yp = fault.yp().getData();
         for (size_t i = 0; i < fault.size(); ++i)
         {
-          fault_yp[i].setVariableNumber(i); ///< fault independent variables
+          fault.yp()[i].setVariableNumber(i); ///< fault independent variables
         }
-        fault.yp().setDataUpdated();
 
         bus.evaluateResidual();
         fault.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                   ///< the dependencies
-        auto&                                     residual_yp_view = fault.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(
-            residual_yp_view.getData(),
-            residual_yp_view.getData() + residual_yp_view.getSize());
+        std::vector<DependencyTracking::Variable> residual_yp = fault.getResidual();
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

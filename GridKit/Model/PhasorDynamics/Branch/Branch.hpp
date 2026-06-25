@@ -135,17 +135,17 @@ namespace GridKit
                              typename ModelDataT::Parameters parameter,
                              RealT&                          target);
 
-      FORCE_INLINE static void addAdmittanceContribution(RealT          G,
-                                                         RealT          B,
-                                                         const ScalarT& Vr,
-                                                         const ScalarT& Vi,
-                                                         ScalarT&       Ir,
-                                                         ScalarT&       Ii);
+      static __attribute__((always_inline)) inline void addAdmittanceContribution(const RealT   G,
+                                                                                  const RealT   B,
+                                                                                  const ScalarT Vr,
+                                                                                  const ScalarT Vi,
+                                                                                  ScalarT&      Ir,
+                                                                                  ScalarT&      Ii);
 
-      FORCE_INLINE static void evaluateAdmittanceBlock(RealT          G,
-                                                       RealT          B,
-                                                       const ScalarT* wb,
-                                                       ScalarT*       h);
+      static __attribute__((always_inline)) inline void evaluateAdmittanceBlock(const RealT    G,
+                                                                                const RealT    B,
+                                                                                const ScalarT* wb,
+                                                                                ScalarT*       h);
 
       ScalarT& Vr1()
       {
@@ -188,10 +188,14 @@ namespace GridKit
       }
 
     public:
-      FORCE_INLINE int evaluateBusResidual11(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      FORCE_INLINE int evaluateBusResidual12(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      FORCE_INLINE int evaluateBusResidual21(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
-      FORCE_INLINE int evaluateBusResidual22(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual11(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual12(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual21(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual22(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus1_;

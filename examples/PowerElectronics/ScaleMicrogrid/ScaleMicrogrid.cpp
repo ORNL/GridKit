@@ -266,8 +266,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   sys_model->initialize();
   sys_model->evaluateResidual();
-  auto&       fres      = sys_model->getResidual();
-  const auto* fres_data = fres.getData();
+  std::vector<real_type>& fres = sys_model->getResidual();
   if (debug_output)
   {
     std::cout << "Verify initial resisdual is zero: {\n";

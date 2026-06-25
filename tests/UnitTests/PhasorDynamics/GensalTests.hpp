@@ -415,6 +415,17 @@ namespace GridKit
           std::cout << "\n";
         }
 
+        // Print the dependencies
+        for (size_t i = 0; i < residual_y.size(); ++i)
+        {
+          std::cout << i << "th residual, y: ";
+          (residual_y[i]).print(std::cout);
+          std::cout << "\n";
+          std::cout << i << "th residual, yp: ";
+          (residual_yp[i]).print(std::cout);
+          std::cout << "\n";
+        }
+
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {

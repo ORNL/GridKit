@@ -40,7 +40,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::J_vals_buffer_;
       using Component<scalar_type, index_type>::variable_indices_;
       using Component<scalar_type, index_type>::residual_indices_;
-      using Component<scalar_type, index_type>::allocated_;
 
     public:
       using ScalarT    = scalar_type;
@@ -116,7 +115,10 @@ namespace GridKit
       }
 
     public:
-      FORCE_INLINE int evaluateBusResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateBusResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
+      __attribute__((always_inline)) inline int evaluateInternalResidual(
+          const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
     private:
       BusT* bus_;

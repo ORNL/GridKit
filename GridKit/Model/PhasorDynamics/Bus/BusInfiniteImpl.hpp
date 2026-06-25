@@ -130,15 +130,15 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
+     * @tparam scalar_type Scalar data type
+     * @tparam index_type Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class ScalarT, typename IdxT>
-    int BusInfinite<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
+    template <typename scalar_type, typename index_type>
+    int BusInfinite<scalar_type, index_type>::setAbsoluteTolerance(RealT)
     {
       return 0;
     }

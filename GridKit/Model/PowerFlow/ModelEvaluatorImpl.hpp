@@ -16,8 +16,7 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
     ModelEvaluatorImpl()
       : size_(0),
@@ -30,18 +29,17 @@ namespace GridKit
       : size_(size),
         size_quad_(size_quad),
         size_opt_(size_opt),
-        y_(size_),
-        yp_(size_),
-        abs_tol_(size_),
-        f_(size_),
-        g_(size_quad_),
-        yB_(size_),
-        ypB_(size_),
-        fB_(size_),
-        gB_(size_opt_),
-        param_(size_opt_),
-        param_up_(size_opt_),
-        param_lo_(size_opt_)
+        y_(static_cast<size_t>(size_)),
+        yp_(static_cast<size_t>(size_)),
+        f_(static_cast<size_t>(size_)),
+        g_(static_cast<size_t>(size_quad_)),
+        yB_(static_cast<size_t>(size_)),
+        ypB_(static_cast<size_t>(size_)),
+        fB_(static_cast<size_t>(size_)),
+        gB_(static_cast<size_t>(size_opt_)),
+        param_(static_cast<size_t>(size_opt_)),
+        param_up_(static_cast<size_t>(size_opt_)),
+        param_lo_(static_cast<size_t>(size_opt_))
     {
       y_.resize(size_);
       yp_.resize(size_);
@@ -194,7 +192,7 @@ namespace GridKit
       return f_;
     }
 
-    VectorT& getIntegrand()
+    std::vector<ScalarT>& getIntegrand()
     {
       return g_;
     }
@@ -256,9 +254,9 @@ namespace GridKit
     VectorT fB_;
     VectorT gB_;
 
-    VectorT param_;
-    VectorT param_up_;
-    VectorT param_lo_;
+    std::vector<ScalarT> param_;
+    std::vector<ScalarT> param_up_;
+    std::vector<ScalarT> param_lo_;
 
     RealT time_;
     RealT alpha_;

@@ -261,15 +261,15 @@ namespace GridKit
      *
      * @param rel_tol The relative tolerance which can be used to pick the
      *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
+     * @tparam scalar_type Scalar data type
+     * @tparam index_type Index data type
      * @return int 0 if successful, non-zero otherwise.
      *
      * This represents a "noise" level close to zero for which pure relative
      * error cannot be used.
      */
-    template <class ScalarT, typename IdxT>
-    int GenClassical<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+    template <typename scalar_type, typename index_type>
+    int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
       std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
@@ -280,11 +280,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
-        ScalarT* y,
-        ScalarT* yp,
-        ScalarT* wb,
-        ScalarT* f)
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateInternalResidual(
+        const ScalarT* y,
+        const ScalarT* yp,
+        const ScalarT* wb,
+        ScalarT*       f)
     {
       // Set variable aliases for better readability.
       const ScalarT delta = y[0];
@@ -323,11 +323,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int GenClassical<scalar_type, index_type>::evaluateBusResidual(
-        ScalarT*                  y,
-        [[maybe_unused]] ScalarT* yp,
-        [[maybe_unused]] ScalarT* wb,
-        ScalarT*                  h)
+    __attribute__((always_inline)) int GenClassical<scalar_type, index_type>::evaluateBusResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
       const ScalarT ir = y[3];
       const ScalarT ii = y[4];

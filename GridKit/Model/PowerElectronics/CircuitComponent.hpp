@@ -403,7 +403,7 @@ namespace GridKit
       return f_;
     }
 
-    VectorT& getIntegrand() final
+    std::vector<ScalarT>& getIntegrand() final
     {
       return g_;
     }

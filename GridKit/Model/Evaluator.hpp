@@ -26,7 +26,6 @@ namespace GridKit
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
-      using VectorT    = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
 
       Evaluator()
       {
@@ -182,11 +181,8 @@ namespace GridKit
       virtual VectorT&       getResidual()       = 0;
       virtual const VectorT& getResidual() const = 0;
 
-      virtual VectorT&       getIntegrand()       = 0;
-      virtual const VectorT& getIntegrand() const = 0;
-
-      virtual VectorT&       getAdjointResidual()       = 0;
-      virtual const VectorT& getAdjointResidual() const = 0;
+      virtual std::vector<ScalarT>&       getIntegrand()       = 0;
+      virtual const std::vector<ScalarT>& getIntegrand() const = 0;
 
       virtual VectorT&       getAdjointIntegrand()       = 0;
       virtual const VectorT& getAdjointIntegrand() const = 0;

@@ -233,7 +233,7 @@ namespace GridKit
         return csr_jac_;
       }
 
-      VectorT& getIntegrand() override
+      std::vector<ScalarT>& getIntegrand() override
       {
         return g_;
       }
@@ -283,10 +283,7 @@ namespace GridKit
       VectorT           f_;
       VectorT           g_;
 
-      VectorT yB_;
-      VectorT ypB_;
-      VectorT fB_;
-      VectorT gB_;
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 

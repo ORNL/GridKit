@@ -120,7 +120,8 @@ namespace GridKit
 
         const Model::VariableMonitorBase* getMonitor() const override;
 
-        FORCE_INLINE int evaluateInternalResidual(ScalarT*, ScalarT*, ScalarT*, ScalarT*, ScalarT*);
+        __attribute__((always_inline)) inline int evaluateInternalResidual(
+            const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);

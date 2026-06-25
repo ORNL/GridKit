@@ -14,8 +14,7 @@ namespace GridKit
     class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
       NodeBase(size_t n_intern, size_t n_extern)
         : n_intern_(n_intern), n_extern_(n_extern)
@@ -87,16 +86,6 @@ namespace GridKit
       }
 
       const std::vector<ScalarT>& absoluteTolerance() const final
-      {
-        return abs_tol_;
-      }
-
-      MatrixT& getJacobian() final
-      {
-        return abs_tol_;
-      }
-
-      const VectorT& absoluteTolerance() const final
       {
         return abs_tol_;
       }
@@ -224,12 +213,9 @@ namespace GridKit
       std::vector<ScalarT> abs_tol_;
       std::vector<ScalarT> f_;
 
-      /// @brief A pointer to the internal variables of this component.
-      const ScalarT* y_int_;
-      /// @brief A pointer to the internal derivatives of this component.
-      const ScalarT* yp_int_;
-      /// @brief A pointer to the internal residuals of this component
-      ScalarT*       f_int_;
+      IdxT*  J_rows_buffer_{nullptr};
+      IdxT*  J_cols_buffer_{nullptr};
+      RealT* J_vals_buffer_{nullptr};
 
       //
       // Adjoint sensitivity members

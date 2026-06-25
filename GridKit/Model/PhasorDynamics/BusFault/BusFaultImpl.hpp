@@ -83,9 +83,9 @@ namespace GridKit
       monitor_->set(Variable::state, [this]
                     { return status_; });
       monitor_->set(Variable::ir, [this]
-                    { return y_.getData()[0]; });
+                    { return y_[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return y_.getData()[1]; });
+                    { return y_[1]; });
 
       size_ = 2;
       setDerivedParams();
@@ -119,8 +119,12 @@ namespace GridKit
       // std::cout << "Allocate BusFault..." << std::endl;
       auto size = static_cast<std::size_t>(size_);
 
+      auto size = static_cast<size_t>(size_); // avoid compiler warnings
+      f_.resize(size);
+      y_.resize(size);
+      yp_.resize(size);
+      abs_tol_.resize(size);
       tag_.resize(size);
-
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
@@ -135,7 +139,6 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      allocated_ = true;
       return 0;
     }
 
@@ -146,29 +149,23 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::initialize()
     {
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-
       if (status_)
       {
         ScalarT vr = Vr();
         ScalarT vi = Vi();
         ScalarT ir = -(vr * G_ - vi * B_);
         ScalarT ii = -(vr * B_ + vi * G_);
-        y[0]       = ir;
-        y[1]       = ii;
+        y_[0]      = ir;
+        y_[1]      = ii;
       }
       else
       {
-        y[0] = 0.0;
-        y[1] = 0.0;
+        y_[0] = 0.0;
+        y_[1] = 0.0;
       }
 
-      yp[0] = 0.0;
-      yp[1] = 0.0;
-
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
+      yp_[0] = 0.0;
+      yp_[1] = 0.0;
 
       return 0;
     }
@@ -200,25 +197,7 @@ namespace GridKit
     template <class scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
-    }
-
-    /**
-     * @brief Compute the absolute tolerance for each variable in the model
-     *
-     * @param rel_tol The relative tolerance which can be used to pick the
-     *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     * @return int 0 if successful, non-zero otherwise.
-     *
-     * This represents a "noise" level close to zero for which pure relative
-     * error cannot be used.
-     */
-    template <class ScalarT, typename IdxT>
-    int BusFault<ScalarT, IdxT>::setAbsoluteTolerance(RealT)
-    {
+      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
       return 0;
     }
 
@@ -227,8 +206,11 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    FORCE_INLINE int BusFault<scalar_type, index_type>::evaluateBusResidual(
-        [[maybe_unused]] ScalarT* y, [[maybe_unused]] ScalarT* yp, ScalarT* wb, ScalarT* h)
+    __attribute__((always_inline)) int BusFault<scalar_type, index_type>::evaluateBusResidual(
+        const ScalarT*                  y,
+        [[maybe_unused]] const ScalarT* yp,
+        [[maybe_unused]] const ScalarT* wb,
+        ScalarT*                        h)
     {
       const ScalarT Ir = y[0];
       const ScalarT Ii = y[1];
@@ -269,13 +251,10 @@ namespace GridKit
     {
       if (status_)
       {
-        wb_[0]         = Vr();
-        wb_[1]         = Vi();
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), f);
-        evaluateBusResidual(y, yp, wb_.data(), h_.data());
+        wb_[0] = Vr();
+        wb_[1] = Vi();
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+        evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
         Ir() += h_[0];
         Ii() += h_[1];
         if (bus_->size() > 0)
@@ -285,15 +264,10 @@ namespace GridKit
       }
       else
       {
-        wb_[0]         = 0.0;
-        wb_[1]         = 0.0;
-        const auto* y  = y_.getData();
-        const auto* yp = yp_.getData();
-        auto*       f  = f_.getData();
-        evaluateInternalResidual(y, yp, wb_.data(), f);
+        wb_[0] = 0.0;
+        wb_[1] = 0.0;
+        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
       }
-
-      f_.setDataUpdated();
 
       return 0;
     }

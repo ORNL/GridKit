@@ -10,7 +10,6 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
-#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit

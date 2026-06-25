@@ -15,8 +15,7 @@ namespace GridKit
   template <typename ScalarT, typename IdxT>
   class CircuitNode : public Model::Evaluator<ScalarT, IdxT>
   {
-    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
 
   public:
     CircuitNode()
@@ -198,15 +197,15 @@ namespace GridKit
     std::vector<ScalarT> abs_tol_;
     std::vector<ScalarT> f_;
 
-    VectorT g_{};
-    VectorT param_{};
-    VectorT param_up_{};
-    VectorT param_lo_{};
+    std::vector<ScalarT> g_{};
+    std::vector<ScalarT> param_{};
+    std::vector<ScalarT> param_up_{};
+    std::vector<ScalarT> param_lo_{};
 
-    VectorT yB_{};
-    VectorT ypB_{};
-    VectorT fB_{};
-    VectorT gB_{};
+    std::vector<ScalarT> yB_{};
+    std::vector<ScalarT> ypB_{};
+    std::vector<ScalarT> fB_{};
+    std::vector<ScalarT> gB_{};
 
     RealT time_{0};
     RealT alpha_{0};
@@ -341,7 +340,7 @@ namespace GridKit
       return f_;
     }
 
-    VectorT& getIntegrand() final
+    std::vector<ScalarT>& getIntegrand() final
     {
       return g_;
     }
