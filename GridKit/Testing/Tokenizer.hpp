@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/Utilities/String.hpp>
+
 namespace GridKit
 {
   namespace Testing
@@ -22,7 +24,14 @@ namespace GridKit
         std::istringstream iss(in);
         for (std::string item; std::getline(iss, item, delimiter);)
         {
-          std::istringstream(item) >> tokens_.emplace_back();
+          if constexpr (std::is_same_v<T, std::string>)
+          {
+            tokens_.push_back(GridKit::Utilities::strip(item));
+          }
+          else
+          {
+            tokens_.push_back(GridKit::Utilities::parse<T>(item));
+          }
         }
       }
 

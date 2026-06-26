@@ -3,3 +3,4 @@ if(NOT BUILD_TESTING)
 endif()
 
 add_subdirectory(UnitTests)
+add_subdirectory(IntegrationTests)
