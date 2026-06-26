@@ -8,7 +8,7 @@ int main()
 
   result += test.constructor();
   result += test.zeroInitialResidual();
-  result += test.zeroTrIsAlgebraic();
+  result += test.zeroTrUsesMinimum();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

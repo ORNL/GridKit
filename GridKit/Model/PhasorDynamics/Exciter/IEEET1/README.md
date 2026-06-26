@@ -5,9 +5,7 @@
 Standard model of the IEEET1 Exciter.
 
 Notes:
-- $E_C$ should be an external signal from the generator or machine, not computed through an exciter-owned `Bus` reference.
-- The current implementation uses its `Bus` reference as a proxy for $E_C$.
-- This direct coupling affects numerical conditioning; production models typically use a decoupling reactance for the exciter-current path that forms $E_C$.
+- The voltage-sensing input currently uses the positive bus-voltage magnitude $\sqrt{V_r^2 + V_i^2}$; a separate compensation-impedance path is not modeled here.
 
 ![](../../../../../docs/Figures/PhasorDynamics_IEEET1_Diagram.png)
 
@@ -31,7 +29,7 @@ $E_1$       | [p.u.] | Saturation Parameter                 | 2.8     |
 $E_2$       | [p.u.] | Saturation Parameter                 | 3.73    |
 $S_1$       | [p.u.] | Saturation Parameter                 | 0.04    |
 $S_2$       | [p.u.] | Saturation Parameter                 | 0.33    |
-$I_\text{spdlm}$ | [binary] | Speed limit flag indicator       | 0       |
+$I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 
 ### Model Derived Parameters
 
@@ -71,12 +69,12 @@ Generally, this system has two solutions. The non-extraneous solution is as foll
 
 #### Differential
 
-Symbol    | Units  | Description                       | Note
-----------|--------|-----------------------------------|-------
-$V_{ts}$  | [p.u.] | Sensed terminal voltage           | Algebraic when $T_R=0$
-$V_R$     | [p.u.] | Voltage regulator                 |
-$E_{fd}'$ | [p.u.] | Field-current pre-speed multiplier|
-$V_{fx}$  | [p.u.] | Exciter feedback internal state   |
+Symbol    | Units  | Description                        | Note
+----------|--------|------------------------------------|-------
+$V_{ts}$  | [p.u.] | Sensed terminal voltage            |
+$V_R$     | [p.u.] | Voltage regulator                  |
+$E_{fd}'$ | [p.u.] | Field-current pre-speed multiplier |
+$V_{fx}$  | [p.u.] | Exciter feedback internal state    |
 
 
 #### Algebraic
@@ -92,47 +90,44 @@ $k_\text{sat}$  | [p.u.] | Saturation variable               |
 
 ### External Variables
 
-#### Differential
 Symbol          | Units  | Description                       | Note
 ----------------|--------|-----------------------------------|-------
-$\omega$  | [p.u.] | Machine Speed Deviation                   | Read from a Machine Model
-
-#### Algebraic
-
-
-Symbol          | Units  | Description                       | Note
-----------------|--------|-----------------------------------|-------
-$E_C$           | [p.u.] | Compensated machine terminal voltage magnitude |
+$V_r$           | [p.u.] | Real bus voltage component                     |
+$V_i$           | [p.u.] | Imaginary bus voltage component                |
 $V_\text{ref}$  | [p.u.] | Reference terminal voltage                     |
-$V_{UEL}$       | [p.u.] | Input from under excitation limiter            |
-$V_{OEL}$       | [p.u.] | Input from over excitation limiter             |
-$V_S$           | [p.u.] | Input from stabilizer controller               |
+$V_{UEL}$       | [p.u.] | Input from under excitation limiter            | Constant zero until modeled
+$V_{OEL}$       | [p.u.] | Input from over excitation limiter             | Constant zero until modeled
+$V_S$           | [p.u.] | Input from stabilizer controller               | Optional, defaults to zero
+$\omega$        | [p.u.] | Machine speed deviation                        | Optional, defaults to zero
 
 
 ## Model Equations
 
 ### Differential Equations
 
-The IEEET1 differential equations, as derived from the model diagram.
+For readability, define the pre-limit derivative of $V_R$ and voltage-sensing input:
 
 ```math
 \begin{aligned}
-   0 &= -T_R \dot V_{ts} + E_C - V_{ts} \\
-   0 &= -T_A \dot V_R
-      + \text{indicator}
-        \left(
-          V_R,
-          \dfrac{-V_R + K_A V_{tr}}{500T_A};
-          V_R^{\min},
-          V_R^{\max}
-        \right)
-        \left(-V_R + K_A V_{tr}\right) \\
-   0 &= -T_E \dot E_{fd}' + V_R - V_E - K_E E_{fd}' \\
-   0 &= -T_F \dot V_{fx} + V_f
+f_R &:= \dfrac{1}{T_A}\left(-V_R + K_A V_{tr}\right) \\
+E_C &:= \sqrt{V_r^2 + V_i^2}
 \end{aligned}
 ```
 
-CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) indicator.
+The IEEET1 differential equations, as derived from the model diagram, are:
+
+```math
+\begin{aligned}
+   0 &= -\dot V_{ts} + \dfrac{1}{T_R}\left(E_C - V_{ts}\right) \\
+   0 &= -\dot V_R
+      + \text{antiwindup}
+        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
+   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E E_{fd}'\right) \\
+   0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
+\end{aligned}
+```
+
+CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) target and approximation.
 
 ### Algebraic Equations
 
@@ -142,7 +137,7 @@ The algebraic equations of the exciter.
    0 &= -V_{ts} + V_\text{ref} + V_{UEL} + V_{OEL} + V_S - V_{tr} - V_f \\
    0 &= -T_F(V_f + V_{fx}) + K_F E_{fd}' \\
    0 &= -V_E + k_\text{sat} E_{fd}' \\
-   0 &= -E_{fd} + (1 + \omega I_\text{spdlm})E_{fd}' \\
+   0 &= -E_{fd} + (1 + \omega I_{\mathrm{spdlim}})E_{fd}' \\
    0 &= -k_\text{sat} + S_B\, q(E_{fd}' - S_A)
 \end{aligned}
 ```
@@ -152,28 +147,28 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 
 ## Initialization
 
-The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and solves the steady-state algebraic chain so all residuals vanish with $\dot y = 0$. There is no compensation impedance, so $E_C$ is taken as the terminal voltage magnitude. Saturation and the speed-limit flag are included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation with the current auxiliary inputs.
+The implementation first applies $T_R \leftarrow \max(T_R, 10^{-3})$. The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and solves the steady-state algebraic chain so all residuals vanish with $\dot y = 0$. The sensed terminal voltage initializes from the positive bus-voltage magnitude. Saturation and the speed-limit flag are included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation with the current input values.
 
 ```math
 \begin{aligned}
-   E_C      &= \sqrt{V_r^2 + V_i^2} \\
-   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_\text{spdlm}\,\omega} \\
+   E_{C,0}  &:= \sqrt{V_r^2 + V_i^2} \\
+   E_{fd}'  &= \dfrac{E_{fd,0}}{1 + I_{\mathrm{spdlim}}\,\omega} \\
    k_\text{sat}  &= S_B\, q(E_{fd}' - S_A) \\
    V_E      &= k_\text{sat}\, E_{fd}' \\
    V_R      &= K_E\, E_{fd}' + V_E \\
    V_{tr}   &= \dfrac{V_R}{K_A} \\
    V_{fx}   &= \dfrac{K_F}{T_F}\, E_{fd}' \\
-   V_{ts}   &= E_C \\
+   V_{ts}   &= E_{C,0} \\
    V_f      &= 0 \\
-   V_\text{ref}  &= E_C + V_{tr} - V_{UEL} - V_{OEL} - V_S
+   V_\text{ref}  &= E_{C,0} + V_{tr} - V_{UEL} - V_{OEL} - V_S
 \end{aligned}
 ```
 
 All internal derivatives initialize to zero.
 
-## Model Outputs
+## Monitorable Variables
 
-Output  | Units  | Description                       | Note
---------|--------|-----------------------------------|------
-`efd`   | [p.u.] | Field winding voltage             |
-`ksat`  | [p.u.] | Magnetic saturation coefficient   | $S_B\,q(E_{fd}'-S_A)$
+Variable | Units  | Description                       | Note
+---------|--------|-----------------------------------|------
+`efd`    | [p.u.] | Field winding voltage             |
+`ksat`   | [p.u.] | Magnetic saturation coefficient   | $S_B\,q(E_{fd}'-S_A)$

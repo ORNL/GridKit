@@ -94,10 +94,6 @@ namespace GridKit
         using MonitorT   = Model::VariableMonitor<Ieeet1, Ieeet1Data>;
 
         Ieeet1(BusT* bus);
-        Ieeet1(SignalT*          efd_signal,
-               SignalT*          speed_signal,
-               BusT*             bus,
-               const ModelDataT& data);
         Ieeet1(BusT*             bus,
                const ModelDataT& data);
         ~Ieeet1();
@@ -127,10 +123,10 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
+        static constexpr RealT TR_MINIMUM = 1.0e-3;
+
         // Signal pointers
-        SignalT* efd_signal_;
-        SignalT* speed_signal_;
-        BusT*    bus_;
+        BusT* bus_;
 
         // Model Input parameters
         RealT Tr_;      ///< Time constant for voltage sensing
@@ -149,7 +145,7 @@ namespace GridKit
         RealT Ispdlim_; ///< Speed limit flag indicator
 
         // Model Derived parameters
-        // TODO -> Need to be solved for in instantiation!
+        // Saturation coefficients derived from E1, E2, Se1, and Se2.
         RealT SA_{0};
         RealT SB_{0};
 
@@ -158,8 +154,6 @@ namespace GridKit
         ScalarT vref_{0}; // (Setpoint voltage, can be different from terminal voltage)
         ScalarT vUEL_{0};
         ScalarT vOEL_{0};
-        ScalarT vS_{0};
-        ScalarT Ec_{0}; // "Compensated" terminal measurment, currently unused
 
         /// Component signal extension
         ComponentSignals<ScalarT, IdxT, Ieeet1InternalVariables, Ieeet1ExternalVariables> signals_;
