@@ -1,0 +1,165 @@
+{
+    "header": {
+        "format_version": 0,
+        "format_revision": 1,
+        "case_name": "ThreeBusConstantSource",
+        "case_description": "3-bus test case with constant signal sources",
+        "case_comments": "None",
+        "freq_base": 60.0,
+        "va_base": 100e6
+    },
+    "buses": [
+        {
+            "number": 1,
+            "class": "infinite_bus",
+            "name": "1",
+            "init": {
+                "Vr": 1.06,
+                "Vi": 0.0
+            },
+            "v_base": 138000.0,
+            "mon": [
+                "Vm"
+            ]
+        },
+        {
+            "number": 2,
+            "class": "bus",
+            "name": "2",
+            "init": {
+                "Vr": 1.0599558398065716,
+                "Vi": -0.009675621941024773
+            },
+            "v_base": 138000.0,
+            "mon": [
+                "Vm"
+            ]
+        },
+        {
+            "number": 3,
+            "class": "bus",
+            "name": "3",
+            "init": {
+                "Vr": 0.9610827543495831,
+                "Vi": -0.13122476630506485
+            },
+            "v_base": 138000.0,
+            "mon": [
+                "Vm"
+            ]
+        }
+    ],
+    "signals": [
+        { "signal_id": 1, "name": "ir1"},
+        { "signal_id": 2, "name": "ir2"}
+    ],
+    "devices": [
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 2
+            },
+            "id": "BR_0_1",
+            "params": {
+                "R": 0.05,
+                "X": 0.21,
+                "G": 0.0,
+                "B": 0.1
+            }
+        },
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 1,
+                "bus2": 3
+            },
+            "id": "BR_0_2",
+            "params": {
+                "R": 0.06,
+                "X": 0.15,
+                "G": 0.0,
+                "B": 0.12
+            }
+        },
+        {
+            "class": "Branch",
+            "ports": {
+                "bus1": 2,
+                "bus2": 3
+            },
+            "id": "BR_1_2",
+            "params": {
+                "R": 0.08,
+                "X": 0.27,
+                "G": 0.0,
+                "B": 0.45
+            }
+        },
+        {
+            "class": "Load",
+            "ports": {
+                "bus": 3
+            },
+            "id": "load_2_0",
+            "params": {
+                "R": 0.4447197839297772,
+                "X": 0.20330047265361242
+            }
+        },
+        {
+            "class": "BusFault",
+            "ports": {
+                "bus": 3
+            },
+            "id": "bus_fault_2",
+            "params": {
+                "R": 0.0,
+                "X": 1e-5,
+                "state0": false
+            }
+        },
+        {
+            "class": "Genrou",
+            "ports": {
+                "bus": 2
+            },
+            "id": "genrou_2_1",
+            "params": {
+                "p0": 0.5,
+                "q0": -0.07588,
+                "H": 2.7,
+                "D": 0.0,
+                "Ra": 0.0,
+                "Tdop": 7.0,
+                "Tdopp": 0.04,
+                "Tqopp": 0.05,
+                "Tqop": 0.75,
+                "Xd": 1.9,
+                "Xdp": 0.17,
+                "Xdpp": 0.15,
+                "Xq": 0.4,
+                "Xqp": 0.35,
+                "Xqpp": 0.15,
+                "Xl": 0.14999,
+                "S10": 0.0,
+                "S12": 0.0
+            },
+            "mon": [
+                "speed"
+            ]
+        },
+        {
+            "class": "BusToSignalAdapter",
+            "ports": {"bus":1, "ir":1, "ii":2},
+            "id": "adapt3",
+            "params": []
+        },
+        {
+            "class": "ConstantSignalSource",
+            "ports": {"sr":1, "si":2},
+            "id": "const_source_1",
+            "params": []
+        }
+    ]
+}
