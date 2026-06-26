@@ -36,7 +36,7 @@ namespace GridKit
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
       using MonitorT   = Model::VariableMonitor<BusBase, BusData>;
-      using VectorT  = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       BusBase() = default;
 

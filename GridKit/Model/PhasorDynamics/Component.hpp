@@ -28,7 +28,7 @@ namespace GridKit
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
-      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       Component() = default;
 
