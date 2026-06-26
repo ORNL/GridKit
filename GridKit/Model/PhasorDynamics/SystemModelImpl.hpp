@@ -450,16 +450,16 @@ namespace GridKit
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
 
-        using SignalOutputs = ConstantSignalSourceSignalOutputs;
-        if (srcdata.signal_outputs.contains(SignalOutputs::sr))
+        using Ports = ConstantSignalSourcePorts;
+        if (srcdata.ports.contains(Ports::sr))
         {
-          IdxT           sr    = srcdata.signal_outputs.at(SignalOutputs::sr);
+          IdxT           sr    = srcdata.ports.at(Ports::sr);
           constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
           source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
         }
-        if (srcdata.signal_outputs.contains(SignalOutputs::si))
+        if (srcdata.ports.contains(Ports::si))
         {
-          IdxT           si    = srcdata.signal_outputs.at(SignalOutputs::si);
+          IdxT           si    = srcdata.ports.at(Ports::si);
           constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
           source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
         }

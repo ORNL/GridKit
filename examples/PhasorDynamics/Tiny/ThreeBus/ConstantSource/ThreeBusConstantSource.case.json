@@ -1,51 +1,49 @@
 {
     "header": {
-        "format_version": 0.2,
-        "format_revision": 0,
+        "format_version": 0,
+        "format_revision": 1,
         "case_name": "ThreeBusConstantSource",
         "case_description": "3-bus test case with constant signal sources",
-        "case_comments": "None"
-    },
-    "params": {
+        "case_comments": "None",
         "freq_base": 60.0,
-        "va_base": 100000000.0
+        "va_base": 100e6
     },
     "buses": [
         {
             "number": 1,
-            "class": "BusInfinite",
+            "class": "infinite_bus",
             "name": "1",
             "init": {
                 "Vr": 1.06,
                 "Vi": 0.0
             },
-            "params": {"kv": 138.0},
+            "v_base": 138000.0,
             "mon": [
                 "Vm"
             ]
         },
         {
             "number": 2,
-            "class": "Bus",
+            "class": "bus",
             "name": "2",
             "init": {
                 "Vr": 1.0599558398065716,
                 "Vi": -0.009675621941024773
             },
-            "params": {"kv": 138.0},
+            "v_base": 138000.0,
             "mon": [
                 "Vm"
             ]
         },
         {
             "number": 3,
-            "class": "Bus",
+            "class": "bus",
             "name": "3",
             "init": {
                 "Vr": 0.9610827543495831,
                 "Vi": -0.13122476630506485
             },
-            "params": {"kv": 138.0},
+            "v_base": 138000.0,
             "mon": [
                 "Vm"
             ]
@@ -99,7 +97,7 @@
             }
         },
         {
-            "class": "LoadZ",
+            "class": "Load",
             "ports": {
                 "bus": 3
             },
@@ -155,13 +153,13 @@
             "class": "BusToSignalAdapter",
             "ports": {"bus":1, "ir":1, "ii":2},
             "id": "adapt3",
-            "params": {}
+            "params": []
         },
         {
             "class": "ConstantSignalSource",
             "ports": {"sr":1, "si":2},
             "id": "const_source_1",
-            "params": {}
+            "params": []
         }
     ]
 }

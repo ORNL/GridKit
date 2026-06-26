@@ -39,6 +39,7 @@ add_subdirectory(Exciter)
 add_subdirectory(Governor)
 add_subdirectory(Load)
 add_subdirectory(SignalNode)
+add_subdirectory(SignalSource)
 add_subdirectory(Stabilizer)
 add_subdirectory(SynchronousMachine)
 

@@ -78,7 +78,6 @@ namespace GridKit
         signals_.template getSignalNode<SIMAG>()->set(&s_imag_, &si_index_);
       }
 
-      allocated_ = true;
       return 0;
     }
 
