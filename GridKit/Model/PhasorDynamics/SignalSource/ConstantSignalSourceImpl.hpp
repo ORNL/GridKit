@@ -66,8 +66,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int ConstantSignalSource<scalar_type, index_type>::allocate()
     {
-      static constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
-      static constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
+      static constexpr auto SREAL = ConstantSignalSourceOutputPorts::sr;
+      static constexpr auto SIMAG = ConstantSignalSourceOutputPorts::si;
 
       if (signals_.template isAssigned<SREAL>())
       {

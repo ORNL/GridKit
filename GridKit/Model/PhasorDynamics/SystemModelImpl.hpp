@@ -345,15 +345,13 @@ namespace GridKit
         using OutputPorts = ConstantSignalSourceOutputPorts;
         if (srcdata.output_ports.contains(OutputPorts::sr))
         {
-          IdxT           sr    = srcdata.output_ports.at(OutputPorts::sr);
-          constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
-          source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
+          IdxT sr = srcdata.output_ports.at(OutputPorts::sr);
+          source->getSignals().template assignSignalNode<OutputPorts::sr>(getSignal(sr));
         }
         if (srcdata.output_ports.contains(OutputPorts::si))
         {
-          IdxT           si    = srcdata.output_ports.at(OutputPorts::si);
-          constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
-          source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
+          IdxT si = srcdata.output_ports.at(OutputPorts::si);
+          source->getSignals().template assignSignalNode<OutputPorts::si>(getSignal(si));
         }
 
         addComponent(source);

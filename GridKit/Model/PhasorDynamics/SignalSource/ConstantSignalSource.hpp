@@ -2,6 +2,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalSource/ConstantSignalSourceData.hpp>
 
 namespace GridKit
 {
@@ -10,20 +11,6 @@ namespace GridKit
     // Forward declaration
     template <typename real_type, typename index_type>
     struct ConstantSignalSourceData;
-
-    /// Internal variables for ConstantSignalSource
-    enum class ConstantSignalSourceInternalVariables : size_t
-    {
-      SREAL,
-      SIMAG,
-      MAXIMUM,
-    };
-
-    /// No external variables for ConstantSignalSource
-    enum class ConstantSignalSourceExternalVariables : size_t
-    {
-      MAXIMUM,
-    };
 
     /**
      * @brief Constant signal source component
@@ -60,8 +47,8 @@ namespace GridKit
       auto getSignals()
           -> ComponentSignals<ScalarT,
                               IdxT,
-                              ConstantSignalSourceInternalVariables,
-                              ConstantSignalSourceExternalVariables>&
+                              ConstantSignalSourceInputPorts,
+                              ConstantSignalSourceOutputPorts>&
       {
         return signals_;
       }
@@ -77,7 +64,7 @@ namespace GridKit
       IdxT si_index_{INVALID_INDEX<IdxT>};
 
       /// Component signals
-      ComponentSignals<ScalarT, IdxT, ConstantSignalSourceInternalVariables, ConstantSignalSourceExternalVariables> signals_;
+      ComponentSignals<ScalarT, IdxT, ConstantSignalSourceInputPorts, ConstantSignalSourceOutputPorts> signals_;
 
       // Parameter initialization function
       void initializeParameters(const ModelDataT& data);
