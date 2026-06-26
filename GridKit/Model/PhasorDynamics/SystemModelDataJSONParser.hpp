@@ -160,6 +160,12 @@ namespace GridKit
           raw_component.get_to(stabilizer);
           sm.stabilizer.push_back(stabilizer);
         }
+        else if (kind == "ConstantSignalSource")
+        {
+          typename SystemModelData<RealT, IdxT>::ConstantSourceT source;
+          raw_component.get_to(source);
+          sm.constant_source.push_back(source);
+        }
         else if (kind == "BusFault")
         {
           typename SystemModelData<RealT, IdxT>::BusFaultDataT bus_fault;

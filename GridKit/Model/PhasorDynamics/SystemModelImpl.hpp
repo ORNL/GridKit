@@ -342,6 +342,28 @@ namespace GridKit
         addComponent(stabilizer);
       }
 
+      // Add constant signal sources
+      for (const auto& srcdata : data.constant_source)
+      {
+        auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
+
+        using Ports = ConstantSignalSourcePorts;
+        if (srcdata.ports.contains(Ports::sr))
+        {
+          IdxT           sr    = srcdata.ports.at(Ports::sr);
+          constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
+          source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
+        }
+        if (srcdata.ports.contains(Ports::si))
+        {
+          IdxT           si    = srcdata.ports.at(Ports::si);
+          constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
+          source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
+        }
+
+        addComponent(source);
+      }
+
       // Add faults
       for (const auto& faultdata : data.bus_fault)
       {
