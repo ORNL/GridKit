@@ -235,7 +235,6 @@ namespace GridKit
           }
         }
       }
-
       return 0;
     }
 
@@ -332,7 +331,6 @@ namespace GridKit
      */
     void printJacobianMatrixMarket(std::string filename, std::string title)
     {
-      // jac_.printMatrixMarket(filename, title);
     }
 
     CsrMatrixT* getCsrJacobian() const override
