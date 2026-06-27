@@ -4,10 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <filesystem>
 #include <format>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -66,7 +63,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions);
  * @param[in] argv can contain the N value (argv[1])
  * @return int
  */
-int main(int argc, char const* argv[])
+int main()
 {
   index_type N_size = 5000;
 
@@ -79,14 +76,13 @@ int main(int argc, char const* argv[])
 
   std::cout << std::string(76, '-') << "\n";
 
-  for (index_type p : {10, 100, 1000, 2000})
+  for (index_type p : {10, 48, 100, 500, 1000, 2000, 5000})
   {
-    if ((2 * N_size) % p != 0) // assert(num_ibrs % num_partitions == 0)
-      continue;
+    assert(p <= 2 * N_size);
 
     RunResult r = printMicrogridSystems(N_size, p);
 
-    std::cout << std::format("{:<16d}{:>14.3f} s{:>16.3f} s{:>11.2f}x{:>14.3e}\n",
+    std::cout << std::format("{:<16d}{:>14.4f} s{:>16.4f} s{:>11.2f}x{:>14.3e}\n",
                              r.num_partitions,
                              r.partition_time,
                              r.monolithic_time,
@@ -344,20 +340,25 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   std::vector<SubsystemModel<real_type, index_type>*> subsystems(num_partitions);
 
-  assert(num_ibrs % num_partitions == 0);
-  index_type partition_size = num_ibrs / num_partitions;
-  index_type index          = 0;
-
-  for (index_type j = 0; j < num_partitions; ++j)
+  // Partition the system
+  index_type q     = (num_ibrs) / num_partitions;
+  index_type r     = (num_ibrs) % num_partitions;
+  index_type index = 0;
+  for (index_type j = 0; j < num_partitions; j++)
   {
-    auto* partition = new SubsystemModel<real_type, index_type>();
+    auto* partition = new SubsystemModel<real_type, index_type>(false);
+
+    // add Reference rotor to the first partition
     if (j == 0)
     {
       partition->addNode(&dg_signal);
     }
 
-    // Add components to belong to the same
-    for (index_type i = 0; i < partition_size; ++i)
+    index_type part_size = q + (j < r ? 1 : 0);
+    index_type end       = std::min(index + part_size, num_ibrs);
+
+    // Add all components belonging to this partition
+    for (; index < end; ++index)
     {
       partition->addComponent(generators[index]);
       partition->addComponent(busesDQ[index]);
@@ -373,10 +374,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
       }
 
       partition->addNode(buses[index]);
-
-      index++;
     }
-
     // Add the partition interface to the left partition
     if (index < num_ibrs)
     {
@@ -413,9 +411,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   start_time = std::chrono::high_resolution_clock::now();
 
-  auto sys_max_threads = omp_get_max_threads();
 // Distribute externals to partition 1
-#pragma omp parallel for schedule(guided) num_threads(sys_max_threads)
+#pragma omp parallel for schedule(guided)
   for (auto* partition : subsystems)
   {
     // Distribute external variables
@@ -481,52 +478,3 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   return result;
 }
-
-// Partition the system
-// index_type q     = (num_ibrs) / num_partitions;
-// index_type r     = (num_ibrs) % num_partitions;
-// index_type index = 0;
-// for (index_type j = 0; j < num_partitions; j++)
-// {
-//   auto* partition = new SubsystemModel<real_type, index_type>(false);
-
-//   // add Reference rotor to the first partition
-//   if (j == 0)
-//   {
-//     partition->addNode(&dg_signal);
-//   }
-
-//   index_type part_size = q + (j < r ? 1 : 0);
-//   index_type end       = std::min(index + part_size, num_ibrs);
-
-//   // Add all components belonging to this partition
-//   for (; index < end; ++index)
-//   {
-//     partition->addComponent(generators[index]);
-//     partition->addComponent(busesDQ[index]);
-
-//     if (loads[index] != nullptr)
-//     {
-//       partition->addComponent(loads[index]);
-//     }
-
-//     if (lines[index] != nullptr)
-//     {
-//       partition->addComponent(lines[index]);
-//     }
-
-//     partition->addNode(buses[index]);
-//   }
-
-//   // Add partition interface at a partition point
-//   if (index < num_ibrs)
-//   {
-//     auto* linecopy = new GridKit::MicrogridLine<real_type, index_type>(*lines[index]);
-
-//     auto* busInterface = new GridKit::BusPartitionInterface<real_type, size_t>(*buses[index - 1], *linecopy, model_id++);
-//     busInterface->allocate();
-//     partition->addComponent(busInterface);
-//   }
-
-//   subsystems[j] = partition;
-// }
