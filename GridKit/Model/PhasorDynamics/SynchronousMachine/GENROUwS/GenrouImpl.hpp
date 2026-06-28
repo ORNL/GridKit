@@ -28,10 +28,9 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, IdxT unit_id)
+    Genrou<scalar_type, index_type>::Genrou(BusT* bus)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -61,7 +60,6 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus,
-                                            IdxT  unit_id,
                                             RealT p0,
                                             RealT q0,
                                             RealT H,
@@ -82,7 +80,6 @@ namespace GridKit
                                             RealT S12)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -113,7 +110,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
@@ -129,7 +125,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
@@ -147,7 +142,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, SignalT* efd, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);

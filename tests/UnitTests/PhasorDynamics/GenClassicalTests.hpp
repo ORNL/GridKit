@@ -65,7 +65,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus, 1);
+            new PhasorDynamics::GenClassical<ScalarT, IdxT>(bus);
 
         success *= (machine != nullptr);
 
@@ -106,7 +106,7 @@ namespace GridKit
                                                  -6.0};
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
 
@@ -224,7 +224,7 @@ namespace GridKit
         };
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
         gen.allocate();
@@ -271,7 +271,7 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Xdp);
         bus.allocate();
         bus.initialize();
         gen.allocate();
@@ -330,7 +330,7 @@ namespace GridKit
         DependencyTracking::Variable Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<DependencyTracking::Variable, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
 
         bus.allocate();
         gen.allocate();
@@ -424,7 +424,7 @@ namespace GridKit
         ScalarT Vi1{1.0}; ///< Bus-1 imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>          bus(Vr1, Vi1);
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1, 1.0, 1.0, H, D, Ra, Xdp);
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 1.0, 1.0, H, D, Ra, Xdp);
 
         bus.allocate();
         gen.allocate();

@@ -98,7 +98,7 @@ namespace GridKit
       using SignalT    = SignalNode<ScalarT, IdxT>;
       using MonitorT   = Model::VariableMonitor<Genrou, GenrouData>;
 
-      Genrou(BusT* bus, IdxT unit_id);
+      Genrou(BusT* bus);
       Genrou(BusT*             bus,
              SignalT*          omega,
              SignalT*          pmech,
@@ -110,7 +110,6 @@ namespace GridKit
              const ModelDataT& data);
       Genrou(BusT* bus, const ModelDataT& data);
       Genrou(BusT* bus,
-             IdxT  unit_id,
              RealT p0,
              RealT q0,
              RealT H,
@@ -215,7 +214,6 @@ namespace GridKit
       /* Identification */
       BusT* bus_;
       IdxT  bus_id_{0};
-      IdxT  unit_id_; //< @todo this should be removed
 
       /// Component signal extension
       ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
