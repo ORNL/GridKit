@@ -679,23 +679,6 @@ namespace GridKit
       return 0;
     }
 
-    /**
-     * @brief Access generator relative speed
-     *
-     * @return int - error code, 0 = success
-     */
-    template <typename scalar_type, typename index_type>
-    scalar_type Genrou<scalar_type, index_type>::getSpeed()
-    {
-      return y_[1];
-    }
-
-    template <typename scalar_type, typename index_type>
-    scalar_type Genrou<scalar_type, index_type>::getTorque()
-    {
-      return y_[12];
-    }
-
     template <typename scalar_type, typename index_type>
     void Genrou<scalar_type, index_type>::setDerivedParams()
     {

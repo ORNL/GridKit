@@ -141,11 +141,6 @@ namespace GridKit
       // Still to be implemented
       int evaluateJacobian() override final;
 
-      // Temporary access functions for governor
-      // Should be abstracted
-      ScalarT getSpeed();
-      ScalarT getTorque();
-
       /// Get the `ComponentSignals` from this `Genrou`
       auto getSignals()
           -> ComponentSignals<ScalarT,
