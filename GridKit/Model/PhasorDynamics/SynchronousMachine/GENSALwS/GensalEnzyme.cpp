@@ -31,7 +31,7 @@ namespace GridKit
         auto size        = static_cast<size_t>(size_);
         auto bus_size    = static_cast<size_t>(bus_->size());
         auto signal_size = static_cast<size_t>(ws_.size());
-        auto buffer_size = 2 * size * size + size * signal_size + bus_size * bus_size + 2 * size * bus_size;
+        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size;
         J_rows_buffer_   = new IdxT[buffer_size];
         J_cols_buffer_   = new IdxT[buffer_size];
         J_vals_buffer_   = new RealT[buffer_size];
@@ -99,20 +99,6 @@ namespace GridKit
                                                                                                                  J_cols_buffer_,
                                                                                                                  J_vals_buffer_,
                                                                                                                  nnz_);
-
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
-                                                                                                  static_cast<size_t>(bus_->size()),
-                                                                                                  static_cast<size_t>(bus_->size()),
-                                                                                                  (bus_->getResidualIndices()).data(),
-                                                                                                  (bus_->getVariableIndices()).data(),
-                                                                                                  y_.data(),
-                                                                                                  yp_.data(),
-                                                                                                  (bus_->y()).data(),
-                                                                                                  J_rows_buffer_,
-                                                                                                  J_cols_buffer_,
-                                                                                                  J_vals_buffer_,
-                                                                                                  nnz_);
 
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,

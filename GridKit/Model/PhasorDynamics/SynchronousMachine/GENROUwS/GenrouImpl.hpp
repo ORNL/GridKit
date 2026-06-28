@@ -626,17 +626,15 @@ namespace GridKit
     __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
+        [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      ScalarT inr = y[17];
-      ScalarT ini = y[18];
-      ScalarT vr  = wb[0];
-      ScalarT vi  = wb[1];
+      ScalarT ir = y[15];
+      ScalarT ii = y[16];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
-      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
+      h[0] = toSystemBase(ir);
+      h[1] = toSystemBase(ii);
 
       return 0;
     }
