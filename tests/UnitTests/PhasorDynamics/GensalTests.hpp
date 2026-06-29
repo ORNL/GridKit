@@ -7,7 +7,7 @@
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/Gensal.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>

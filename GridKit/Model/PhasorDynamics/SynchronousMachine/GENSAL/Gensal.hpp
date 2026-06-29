@@ -1,8 +1,7 @@
 /**
- * @file Genrou.cpp
- * @author Adam Birchfield (abirchfield@tamu.edu)
- * @author Slaven Peles (peless@ornl.gov)
- * @brief Declaration of a GENROU generator model.
+ * @file Gensal.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Declaration of a GENSAL generator model.
  *
  */
 
@@ -10,7 +9,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -21,11 +20,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class BusBase;
 
-    template <typename scalar_type, typename index_type>
-    class SignalNode;
-
     template <typename real_type, typename index_type>
-    struct GenrouData;
+    struct GensalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -33,41 +29,40 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /// Internal variables of a `Genrou`
-    enum class GenrouInternalVariables : size_t
+    /// Internal variables of a `Gensal`
+    enum class GensalInternalVariables : size_t
     {
-      DELTA,  ///< $\delta$
-      OMEGA,  ///< $\omega$
-      PSIPD,  ///< $\psi'_d$
-      PSIPQ,  ///< $\psi'_q$
-      EPD,    ///< $E'_d$
-      EPQ,    ///< $E'_q$
-      VD,     ///< $V_d$
-      VQ,     ///< $V_q$
-      ID,     ///< $I_d$
-      IQ,     ///< $I_q$
-      IR,     ///< $I_r$
-      II,     ///< $I_i$
-      PSIPPQ, ///< $\psi''_q$
-      PSIPPD, ///< $\psi''_d$
-      PSIPP,  ///< $\psi''$
-      TE,     ///< $T_e$
-      KSAT,   ///< $k_{sat}$
+      DELTA,  ///< rotor angle
+      OMEGA,  ///< speed deviation
+      EPQ,    ///< q-axis transient voltage
+      PSIPD,  ///< d-axis transient flux
+      PSIPPQ, ///< q-axis subtransient flux
+      PSIPPD, ///< d-axis subtransient flux
+      KSAT,   ///< saturation signal
+      VD,     ///< d-axis terminal voltage
+      VQ,     ///< q-axis terminal voltage
+      TE,     ///< electrical torque
+      ID,     ///< d-axis current
+      IQ,     ///< q-axis current
+      IR,     ///< network real current
+      II,     ///< network imaginary current
+      INR,    ///< Norton source real current
+      INI,    ///< Norton source imaginary current
       MAXIMUM,
     };
 
-    /// External variables of a `Genrou`
-    enum class GenrouExternalVariables : size_t
+    /// External variables of a `Gensal`
+    enum class GensalExternalVariables : size_t
     {
-      VR,  ///< $V_r$
-      VI,  ///< $V_i$
-      PM,  ///< $P_m$
-      EFD, ///< $E_{fd}$
+      VR,  ///< network real voltage
+      VI,  ///< network imaginary voltage
+      PM,  ///< mechanical power
+      EFD, ///< field voltage
       MAXIMUM,
     };
 
     template <typename scalar_type, typename index_type>
-    class Genrou : public Component<scalar_type, index_type>
+    class Gensal : public Component<scalar_type, index_type>
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::alpha_;
@@ -94,59 +89,29 @@ namespace GridKit
       using IdxT       = index_type;
       using RealT      = typename Component<ScalarT, IdxT>::RealT;
       using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = GenrouData<RealT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Genrou, GenrouData>;
+      using ModelDataT = GensalData<RealT, IdxT>;
+      using MonitorT   = Model::VariableMonitor<Gensal, GensalData>;
 
-      Genrou(BusT* bus);
-      Genrou(BusT*             bus,
-             SignalT*          omega,
-             SignalT*          pmech,
-             const ModelDataT& data);
-      Genrou(BusT*             bus,
-             SignalT*          omega,
-             SignalT*          pmech,
-             SignalT*          efd,
-             const ModelDataT& data);
-      Genrou(BusT* bus, const ModelDataT& data);
-      Genrou(BusT* bus,
-             RealT p0,
-             RealT q0,
-             RealT H,
-             RealT D,
-             RealT Ra,
-             RealT Tdop,
-             RealT Tdopp,
-             RealT Tqopp,
-             RealT Tqop,
-             RealT Xd,
-             RealT Xdp,
-             RealT Xdpp,
-             RealT Xq,
-             RealT Xqp,
-             RealT Xqpp,
-             RealT Xl,
-             RealT S10,
-             RealT S12);
-      ~Genrou();
+      Gensal(BusT* bus, const ModelDataT& data);
+      ~Gensal();
 
       int setGridKitComponentID(IdxT) override final;
       int allocate() override final;
       int verify() const override final;
       int initialize() override final;
       int tagDifferentiable() override final;
-      int setAbsoluteTolerance(RealT) override final;
+      int setAbsoluteTolerance(RealT rel_tol) override final;
       int evaluateResidual() override final;
 
       // Still to be implemented
       int evaluateJacobian() override final;
 
-      /// Get the `ComponentSignals` from this `Genrou`
+      /// Get the `ComponentSignals` from this `Gensal`
       auto getSignals()
           -> ComponentSignals<ScalarT,
                               IdxT,
-                              GenrouInternalVariables,
-                              GenrouExternalVariables>&
+                              GensalInternalVariables,
+                              GensalExternalVariables>&
       {
         return signals_;
       }
@@ -208,35 +173,31 @@ namespace GridKit
     private:
       /* Identification */
       BusT* bus_;
-      IdxT  bus_id_{0};
 
       /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
+      ComponentSignals<ScalarT, IdxT, GensalInternalVariables, GensalExternalVariables> signals_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};
       RealT q0_{0.0};
 
       /* Input parameters */
-      RealT H_{0.0};
+      RealT H_{3.0};
       RealT D_{0.0};
       RealT Ra_{0.0};
-      RealT Tdop_{0.0};
-      RealT Tdopp_{0.0};
-      RealT Tqopp_{0.0};
-      RealT Tqop_{0.0};
-      RealT Xd_{0.0};
-      RealT Xdp_{0.0};
-      RealT Xdpp_{0.0};
-      RealT Xq_{0.0};
-      RealT Xqp_{0.0};
-      RealT Xqpp_{0.0};
-      RealT Xl_{0.0};
+      RealT Tdop_{7.0};
+      RealT Tdopp_{0.04};
+      RealT Tqopp_{0.05};
+      RealT Xd_{2.1};
+      RealT Xdp_{0.2};
+      RealT Xdpp_{0.18};
+      RealT Xq_{0.5};
+      RealT Xl_{0.15};
       RealT S10_{0.0};
       RealT S12_{0.0};
       RealT mva_base_{100.0};
 
-      /* Derivied parameters */
+      /* Derived parameters */
       RealT SA_;
       RealT SB_;
       RealT Xd1_;
@@ -244,12 +205,7 @@ namespace GridKit
       RealT Xd3_;
       RealT Xd4_;
       RealT Xd5_;
-      RealT Xq1_;
       RealT Xq2_;
-      RealT Xq3_;
-      RealT Xq4_;
-      RealT Xq5_;
-      RealT Xqd_;
       RealT G_;
       RealT B_;
       RealT va_machine_base_;

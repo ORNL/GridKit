@@ -6,7 +6,7 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>

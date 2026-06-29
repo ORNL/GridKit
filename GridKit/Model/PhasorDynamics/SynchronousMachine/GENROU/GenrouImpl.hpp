@@ -6,8 +6,8 @@
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 

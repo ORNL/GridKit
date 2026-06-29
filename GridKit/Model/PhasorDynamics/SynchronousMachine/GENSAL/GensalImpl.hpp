@@ -5,8 +5,8 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/Gensal.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
