@@ -6,7 +6,7 @@
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
 #include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
@@ -68,7 +68,7 @@ namespace GridKit
         auto* bus = new PhasorDynamics::Bus<ScalarT, IdxT>(1.0, 0.0);
 
         PhasorDynamics::Component<ScalarT, IdxT>* machine =
-            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus, 1);
+            new PhasorDynamics::Genrou<ScalarT, IdxT>(bus);
 
         success *= (machine != nullptr);
 
@@ -96,7 +96,6 @@ namespace GridKit
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(1.0, 0.0);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
                                                   1,
                                                   0.05013,
                                                   3,
@@ -216,7 +215,7 @@ namespace GridKit
         ScalarT Vi1{0};   ///< Bus imaginary voltage
 
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 1, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, p0, q0, H, D, Ra, Tdop, Tdopp, Tqopp, Tqop, Xd, Xdp, Xdpp, Xq, Xqp, Xqpp, Xl, S10, S12);
 
         // Answer key is available only in double precision.
         // Therefore, only double precision tests are done at this time.
@@ -337,7 +336,6 @@ namespace GridKit
         PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Genrou<DependencyTracking::Variable, IdxT> gen(&bus,
                                                                        1,
-                                                                       1,
                                                                        0.05013,
                                                                        3,
                                                                        0,
@@ -447,7 +445,6 @@ namespace GridKit
         ScalarT                               Vi1{0.0}; ///< Bus imaginary voltage
         PhasorDynamics::Bus<ScalarT, IdxT>    bus(Vr1, Vi1);
         PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus,
-                                                  1,
                                                   1,
                                                   0.05013,
                                                   3,

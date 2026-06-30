@@ -1,12 +1,12 @@
 /**
- * @file GensalEnzyme.cpp
- * @author Luke Lowery (lukel@tamu.edu)
+ * @file GenrouEnzyme.cpp
+ * @author Nicholson Koukpaizan (koukpaizannk@ornl.gov)
  *
  */
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
 
-#include "GensalImpl.hpp"
+#include "GenrouImpl.hpp"
 
 namespace GridKit
 {
@@ -18,9 +18,9 @@ namespace GridKit
      * @return int - error code, 0 = success
      */
     template <typename scalar_type, typename index_type>
-    int Gensal<scalar_type, index_type>::evaluateJacobian()
+    int Genrou<scalar_type, index_type>::evaluateJacobian()
     {
-      Log::misc() << "Evaluate Jacobian for Gensal..." << std::endl;
+      Log::misc() << "Evaluate Jacobian for Genrou..." << std::endl;
       Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
 
       if (J_rows_buffer_ == nullptr)
@@ -31,7 +31,7 @@ namespace GridKit
         auto size        = static_cast<size_t>(size_);
         auto bus_size    = static_cast<size_t>(bus_->size());
         auto signal_size = static_cast<size_t>(ws_.size());
-        auto buffer_size = 2 * size * size + size * signal_size + bus_size * bus_size + 2 * size * bus_size;
+        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size;
         J_rows_buffer_   = new IdxT[buffer_size];
         J_cols_buffer_   = new IdxT[buffer_size];
         J_vals_buffer_   = new RealT[buffer_size];
@@ -39,7 +39,7 @@ namespace GridKit
 
       nnz_ = 0;
 
-      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
                                                                                                                 f_.size(),
                                                                                                                 y_.size(),
@@ -54,7 +54,7 @@ namespace GridKit
                                                                                                                 J_vals_buffer_,
                                                                                                                 nnz_);
 
-      GridKit::Enzyme::Sparse::DfDyp<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDyp<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
                                                                                                                  f_.size(),
                                                                                                                  y_.size(),
@@ -70,7 +70,7 @@ namespace GridKit
                                                                                                                  J_vals_buffer_,
                                                                                                                  nnz_);
 
-      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
                                                                                                                  f_.size(),
                                                                                                                  static_cast<size_t>(bus_->size()),
@@ -85,7 +85,7 @@ namespace GridKit
                                                                                                                  J_vals_buffer_,
                                                                                                                  nnz_);
 
-      GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
                                                                                                                  f_.size(),
                                                                                                                  ws_.size(),
@@ -100,21 +100,7 @@ namespace GridKit
                                                                                                                  J_vals_buffer_,
                                                                                                                  nnz_);
 
-      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
-                                                                                                  static_cast<size_t>(bus_->size()),
-                                                                                                  static_cast<size_t>(bus_->size()),
-                                                                                                  (bus_->getResidualIndices()).data(),
-                                                                                                  (bus_->getVariableIndices()).data(),
-                                                                                                  y_.data(),
-                                                                                                  yp_.data(),
-                                                                                                  (bus_->y()).data(),
-                                                                                                  J_rows_buffer_,
-                                                                                                  J_cols_buffer_,
-                                                                                                  J_vals_buffer_,
-                                                                                                  nnz_);
-
-      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::Gensal<ScalarT, IdxT>,
+      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
                                                                                                  static_cast<size_t>(bus_->size()),
                                                                                                  y_.size(),
@@ -134,8 +120,8 @@ namespace GridKit
     }
 
     // Available template instantiations
-    template class Gensal<double, long int>;
-    template class Gensal<double, size_t>;
+    template class Genrou<double, long int>;
+    template class Genrou<double, size_t>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

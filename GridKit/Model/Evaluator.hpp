@@ -100,7 +100,7 @@ namespace GridKit
       /**
        * @brief Return a pointer to the CSR Jacobian
        *
-       * @todo Remove this and use CsrMatirx for jac_
+       * @todo Remove this and use CsrMatrix for jac_
        */
       virtual CsrMatrixT* getCsrJacobian() const
       {

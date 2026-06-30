@@ -14,8 +14,8 @@ The following conventions are used for the d-q reference frame.
 ## Types
 
 - Classical Generator (See [GenClassical](GenClassical/README.md))
-- Round Rotor (See [GENROU](GENROUwS/README.md))
-- Salient Rotor/Pole (See [GENSAL](GENSALwS/README.md))
+- Round Rotor (See [GENROU](GENROU/README.md))
+- Salient Rotor/Pole (See [GENSAL](GENSAL/README.md))
 - GENPWS
 - GENTPF
 - GENTPJ

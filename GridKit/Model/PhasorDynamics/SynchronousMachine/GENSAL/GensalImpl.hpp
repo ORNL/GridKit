@@ -5,8 +5,8 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/Gensal.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -449,17 +449,15 @@ namespace GridKit
     __attribute__((always_inline)) inline int Gensal<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
+        [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      ScalarT inr = y[14];
-      ScalarT ini = y[15];
-      ScalarT vr  = wb[0];
-      ScalarT vi  = wb[1];
+      ScalarT ir = y[12];
+      ScalarT ii = y[13];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
-      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
+      h[0] = toSystemBase(ir);
+      h[1] = toSystemBase(ii);
 
       return 0;
     }
@@ -500,23 +498,6 @@ namespace GridKit
       Ii() += h_[1];
 
       return 0;
-    }
-
-    /**
-     * @brief Access generator relative speed
-     *
-     * @return int - error code, 0 = success
-     */
-    template <typename scalar_type, typename index_type>
-    scalar_type Gensal<scalar_type, index_type>::getSpeed()
-    {
-      return y_[1];
-    }
-
-    template <typename scalar_type, typename index_type>
-    scalar_type Gensal<scalar_type, index_type>::getTorque()
-    {
-      return y_[9];
     }
 
     template <typename scalar_type, typename index_type>

@@ -4,6 +4,6 @@
 #    - Slaven Peles <peless@ornl.gov>
 # ]]
 
-add_subdirectory(GENROUwS)
-add_subdirectory(GENSALwS)
+add_subdirectory(GENROU)
+add_subdirectory(GENSAL)
 add_subdirectory(GenClassical)

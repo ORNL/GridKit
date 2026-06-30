@@ -61,9 +61,8 @@ namespace GridKit
       using ModelDataT = GenClassicalData<RealT, IdxT>;
       using MonitorT   = Model::VariableMonitor<GenClassical, GenClassicalData>;
 
-      GenClassical(BusT* bus, int unit_id);
+      GenClassical(BusT* bus);
       GenClassical(BusT* bus,
-                   int   unit_id,
                    RealT p0,
                    RealT q0,
                    RealT H,
@@ -154,7 +153,6 @@ namespace GridKit
       /* Identification */
       BusT* bus_;
       IdxT  bus_id_{0};
-      int   unit_id_; //< @todo this should be removed
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

@@ -88,9 +88,6 @@ namespace GridKit
       }
 
       /// Gets all components
-      /// @todo So far handling only branches, Genrous, and bus faults
-      /// For 2-bus Tgov1, for example, we need to add support for Tgov1
-      /// governor and support for signal nodes.
       for (auto& raw_component : j.at("devices"))
       {
         auto kind = raw_component.at("class").get<std::string>();
