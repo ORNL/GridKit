@@ -124,7 +124,7 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static constexpr RealT TR_MINIMUM = 1.0e-3;
 
         // Signal pointers
         BusT* bus_;

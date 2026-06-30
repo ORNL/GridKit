@@ -31,31 +31,6 @@ $S_1$       | [p.u.] | Saturation Parameter                 | 0.04    |
 $S_2$       | [p.u.] | Saturation Parameter                 | 0.33    |
 $I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 
-### Parameter Validation
-
-Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
-
-```math
-\begin{aligned}
-  T &\leftarrow \max\!\left(T, \epsilon_T\right)
-    \quad T \in \{T_R, T_A, T_E, T_F\} \\
-  K_A
-    &> 0 \\
-  V_R^{\min}
-    &\le V_R^{\max} \\
-  I_{\mathrm{spdlim}}
-    &\in \{0,1\} \\
-  \left(S_1, S_2\right)
-    &=(0,0)
-      \quad\text{or}\quad
-      \begin{gathered}
-        E_1, E_2, S_1, S_2 > 0 \\
-        E_1 \ne E_2 \\
-        S_1 \ne S_2
-      \end{gathered}
-\end{aligned}
-```
-
 ### Model Derived Parameters
 
 When saturation is disabled, $S_A=0$ and $S_B=0$. Otherwise,
@@ -142,7 +117,20 @@ E_C &:= \sqrt{V_r^2 + V_i^2}
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#antiwindup) target and smooth approximation.
+The IEEET1 differential equations, as derived from the model diagram, are:
+
+```math
+\begin{aligned}
+   0 &= -\dot V_{ts} + \dfrac{1}{T_R}\left(E_C - V_{ts}\right) \\
+   0 &= -\dot V_R
+      + \text{antiwindup}
+        \left(V_R, f_R; V_R^{\min}, V_R^{\max}\right) \\
+   0 &= -\dot E_{fd}' + \dfrac{1}{T_E}\left(V_R - V_E - K_E E_{fd}'\right) \\
+   0 &= -\dot V_{fx} + \dfrac{1}{T_F}\left(V_f\right)
+\end{aligned}
+```
+
+CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) target and approximation.
 
 ### Algebraic Equations
 
@@ -162,15 +150,7 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 
 ## Initialization
 
-The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
-$T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
-The machine initializes $E_{fd}$ first. IEEET1
-reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and
-solves the steady-state algebraic chain so all residuals vanish with
-$\dot y = 0$. The sensed terminal voltage initializes from the positive
-bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
-flag is included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation
-with the current input values.
+The implementation first applies $T_R \leftarrow \max(T_R, 10^{-3})$. The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and solves the steady-state algebraic chain so all residuals vanish with $\dot y = 0$. The sensed terminal voltage initializes from the positive bus-voltage magnitude. Saturation and the speed-limit flag are included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation with the current input values.
 
 ```math
 \begin{aligned}

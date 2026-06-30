@@ -31,6 +31,7 @@ namespace GridKit
       Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
         : Ieeet1(bus, ModelDataT{})
       {
+        size_ = 9;
       }
 
       /**
@@ -182,7 +183,7 @@ namespace GridKit
        * F(y, yp=0, t=0) = 0 exactly for every residual equation.
        *
        * Inputs:
-       *   - EFD assigned by the generator.
+       *   - EFD assigned by the generator (read from y_[7]).
        *   - Bus voltage, used to form the sensed terminal voltage magnitude.
        *   - Attached external signals (omega, V_S)
        *
@@ -398,11 +399,16 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        if (data.parameters.contains(Parameter::Tr))
+        Tr_ = TR_MINIMUM;
+        if (data.parameters.contains(ModelDataT::Parameters::Tr))
         {
           Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
         }
-        if (data.parameters.contains(Parameter::Ka))
+        if (Tr_ < TR_MINIMUM)
+        {
+          Tr_ = TR_MINIMUM;
+        }
+        if (data.parameters.contains(ModelDataT::Parameters::Ka))
         {
           Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
         }
@@ -495,7 +501,7 @@ namespace GridKit
       {
         using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return y_.getData()[7]; });
+                      { return y_[7]; });
         monitor_->set(Variable::ksat, [this]
                       { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
       }
