@@ -5,10 +5,9 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
-#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1.hpp> // <- TODO: Temporary, to be removed.
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/Genrou.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROUwS/GenrouData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/Genrou.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -28,10 +27,9 @@ namespace GridKit
      * - Number of optimization parameters = 0
      */
     template <typename scalar_type, typename index_type>
-    Genrou<scalar_type, index_type>::Genrou(BusT* bus, IdxT unit_id)
+    Genrou<scalar_type, index_type>::Genrou(BusT* bus)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(0.),
         q0_(0.),
         H_(3.),
@@ -61,7 +59,6 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus,
-                                            IdxT  unit_id,
                                             RealT p0,
                                             RealT q0,
                                             RealT H,
@@ -82,7 +79,6 @@ namespace GridKit
                                             RealT S12)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -113,7 +109,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
@@ -129,7 +124,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
@@ -147,7 +141,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Genrou<scalar_type, index_type>::Genrou(BusT* bus, SignalT* omega, SignalT* pmech, SignalT* efd, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       signals_.template attachSignalNode<GenrouExternalVariables::PM>(pmech);
@@ -633,17 +626,15 @@ namespace GridKit
     __attribute__((always_inline)) inline int Genrou<scalar_type, index_type>::evaluateBusResidual(
         const ScalarT*                  y,
         [[maybe_unused]] const ScalarT* yp,
-        const ScalarT*                  wb,
+        [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      ScalarT inr = y[17];
-      ScalarT ini = y[18];
-      ScalarT vr  = wb[0];
-      ScalarT vi  = wb[1];
+      ScalarT ir = y[15];
+      ScalarT ii = y[16];
 
       // Convert current injection to system base for the network.
-      h[0] = toSystemBase(inr - vr * G_ + vi * B_);
-      h[1] = toSystemBase(ini - vr * B_ - vi * G_);
+      h[0] = toSystemBase(ir);
+      h[1] = toSystemBase(ii);
 
       return 0;
     }
@@ -684,23 +675,6 @@ namespace GridKit
       Ii() += h_[1];
 
       return 0;
-    }
-
-    /**
-     * @brief Access generator relative speed
-     *
-     * @return int - error code, 0 = success
-     */
-    template <typename scalar_type, typename index_type>
-    scalar_type Genrou<scalar_type, index_type>::getSpeed()
-    {
-      return y_[1];
-    }
-
-    template <typename scalar_type, typename index_type>
-    scalar_type Genrou<scalar_type, index_type>::getTorque()
-    {
-      return y_[12];
     }
 
     template <typename scalar_type, typename index_type>

@@ -9,7 +9,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
-#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/GensalData.hpp>
+#include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
 // Forward declarations.
@@ -105,11 +105,6 @@ namespace GridKit
 
       // Still to be implemented
       int evaluateJacobian() override final;
-
-      // Temporary access functions for governor
-      // Should be abstracted
-      ScalarT getSpeed();
-      ScalarT getTorque();
 
       /// Get the `ComponentSignals` from this `Gensal`
       auto getSignals()

@@ -174,7 +174,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus, 0); ///< is unit_id really necessary?
+        PhasorDynamics::Genrou<ScalarT, IdxT> gen(&bus);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;
@@ -198,7 +198,7 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> bus;
         system->addBus(&bus);
 
-        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus, 0); ///< is unit_id really necessary?
+        PhasorDynamics::GenClassical<ScalarT, IdxT> gen(&bus);
         system->addComponent(&gen);
 
         success *= system->allocate() == 0;

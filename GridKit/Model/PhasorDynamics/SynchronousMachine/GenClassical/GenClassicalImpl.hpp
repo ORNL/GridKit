@@ -23,10 +23,9 @@ namespace GridKit
      * @brief Constructor for a classical generator model
      */
     template <typename scalar_type, typename index_type>
-    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, int unit_id)
+    GenClassical<scalar_type, index_type>::GenClassical(BusT* bus)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(0.0),
         q0_(0.0),
         H_(3.0),
@@ -44,7 +43,6 @@ namespace GridKit
      */
     template <typename scalar_type, typename index_type>
     GenClassical<scalar_type, index_type>::GenClassical(BusT* bus,
-                                                        int   unit_id,
                                                         RealT p0,
                                                         RealT q0,
                                                         RealT H,
@@ -53,7 +51,6 @@ namespace GridKit
                                                         RealT Xdp)
       : bus_(bus),
         bus_id_(0),
-        unit_id_(unit_id),
         p0_(p0),
         q0_(q0),
         H_(H),
@@ -72,7 +69,6 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     GenClassical<scalar_type, index_type>::GenClassical(BusT* bus, const ModelDataT& data)
       : bus_(bus),
-        unit_id_(1),
         monitor_(std::make_unique<MonitorT>(data))
     {
       if (data.parameters.contains(ModelDataT::Parameters::p0))
