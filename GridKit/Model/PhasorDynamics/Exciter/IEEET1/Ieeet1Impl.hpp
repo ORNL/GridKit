@@ -13,11 +13,8 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
-#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
-
-#define _USE_MATH_DEFINES
 
 namespace GridKit
 {
@@ -34,34 +31,6 @@ namespace GridKit
       Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
         : bus_(bus)
       {
-        size_ = 9;
-      }
-
-      /**
-       * @brief  Constructor for IEEET1 Exciter
-       *
-       * @param data  Data object to store parameters
-       * @param bus   Signal used for terminal reference vmag
-       * @param speed Signal used for machine relative speed
-       * @param efd   Signal used for E field
-       */
-      template <typename scalar_type, typename index_type>
-      Ieeet1<scalar_type, index_type>::Ieeet1(SignalT*          efd_signal,
-                                              SignalT*          speed_signal,
-                                              BusT*             bus,
-                                              const ModelDataT& data)
-        : efd_signal_(efd_signal),
-          speed_signal_(speed_signal),
-          bus_(bus),
-          monitor_(std::make_unique<MonitorT>(data))
-      {
-
-        // Parse data struct into model
-        this->initModelParams(data);
-
-        initializeMonitor();
-
-        // 9 Internal Variables
         size_ = 9;
       }
 
@@ -186,7 +155,7 @@ namespace GridKit
        *
        * Inputs:
        *   - EFD assigned by the generator (read from y_[7]).
-       *   - Bus voltage, used to form the sensed terminal voltage Ec.
+       *   - Bus voltage, used to form the sensed terminal voltage magnitude.
        *   - Attached external signals (omega, V_S)
        *
        * Saturation is included via ksat computed from efdp and SA, SB.
@@ -261,7 +230,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
-
         tag_[0] = true;  // y0 - vts  - Sensed term volt
         tag_[1] = true;  // y1 - vr   - Voltage reg
         tag_[2] = true;  // y2 - efdp - Efd pre mult
@@ -306,7 +274,7 @@ namespace GridKit
           const ScalarT* ws,
           ScalarT*       f)
       {
-        // Read E comp (terminal voltage, unless compensation impedance)
+        // Read bus voltage components
         ScalarT vreal = wb[0];
         ScalarT vimag = wb[1];
         ScalarT Ec    = std::sqrt(vreal * vreal + vimag * vimag);
@@ -333,22 +301,19 @@ namespace GridKit
         ScalarT vs_signal = ws[1];
 
         // The 'pre-limit' derivative of Vr.
-        ScalarT func            = (-vr + Ka_ * vtr) / Ta_;
-        ScalarT func_normalized = func / static_cast<RealT>(500.0); // TODO This is arbitrary, need more general conditioning method that is fast
-        ScalarT vr_ind          = Math::indicator(vr, func_normalized, Vrmin_, Vrmax_);
+        ScalarT func = (-vr + Ka_ * vtr) / Ta_;
 
         // Internal Differential Equations
         f[0] = -vts_dot + (Ec - vts) / Tr_;
-        f[1] = -vr_dot + vr_ind * func;
+        f[1] = -vr_dot + Math::antiwindup(vr, func, Vrmin_, Vrmax_);
         f[2] = -efdp_dot + (vr - ve - Ke_ * efdp) / Te_;
         f[3] = -vfx_dot + vf / Tf_;
 
         // Internal Algebraic Equations
         f[4] = -vts + vref_ + vUEL_ + vOEL_ + vs_signal - vtr - vf;
-        f[5] = -vf + (efdp * Kf_) / Tf_ - vfx;
+        f[5] = -Tf_ * (vf + vfx) + Kf_ * efdp;
         f[6] = -ve + ksat * efdp;
         f[7] = -efd + efdp + omega * efdp * Ispdlim_;
-
         f[8] = -ksat + SB_ * Math::qramp(efdp - SA_);
 
         return 0;
@@ -361,15 +326,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::evaluateResidual()
       {
-        // Set Input Variables
-        // Meta PR Note: This seems to be very slow,
-        // but I see how read/write ownership may require this
-        //
-        // I believe implementing the equivalent to signal->read()
-        // at the system level would address this, by routing
-        // external signals into a generic inputs_ vector
-        // at the same time as the internal state values y_
-        // are recieved from IDA.
+        // Set input variables.
         if (signals_.template isAttached<Ieeet1ExternalVariables::OMEGA>())
         {
           ws_[0]         = signals_.template readExternalVariable<Ieeet1ExternalVariables::OMEGA>();
@@ -402,9 +359,14 @@ namespace GridKit
       void Ieeet1<scalar_type, index_type>::initModelParams(const ModelDataT& data)
       {
 
+        Tr_ = TR_MINIMUM;
         if (data.parameters.contains(ModelDataT::Parameters::Tr))
         {
           Tr_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tr));
+        }
+        if (Tr_ < TR_MINIMUM)
+        {
+          Tr_ = TR_MINIMUM;
         }
         if (data.parameters.contains(ModelDataT::Parameters::Ka))
         {
@@ -478,7 +440,7 @@ namespace GridKit
       {
         using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return efd_signal_->read(); });
+                      { return y_[7]; });
         monitor_->set(Variable::ksat, [this]
                       { return SB_ * Math::qramp(y_[2] - SA_); });
       }
