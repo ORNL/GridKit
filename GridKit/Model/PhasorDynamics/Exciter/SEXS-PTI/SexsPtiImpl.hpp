@@ -217,12 +217,10 @@ namespace GridKit
         ScalarT Ec = std::sqrt(wb[0] * wb[0] + wb[1] * wb[1]);
         ScalarT vs = ws[0];
 
-        ScalarT func            = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
-        ScalarT func_normalized = func / static_cast<RealT>(100.0); // TODO arbitrary conditioning; see IEEET1
-        ScalarT efd_ind         = Math::indicator(efd, func_normalized, Efdmin_, Efdmax_);
+        ScalarT func = (-efd + (K_ / Tb_) * (-vr + Ta_ * vtr)) / Te_;
 
         f[0] = -vr_dot + (-vr + Ta_ * vtr) / Tb_ - vtr;
-        f[1] = -efd_dot + efd_ind * func;
+        f[1] = -efd_dot + Math::antiwindup(efd, func, Efdmin_, Efdmax_);
         f[2] = -vtr - Ec + vref_ + vs + vOEL_ + vUEL_;
 
         return 0;
