@@ -247,13 +247,22 @@ namespace GridKit
 
       int initialize() override
       {
-        this->y_       = {0, 0};
-        this->yp_      = {0, 0};
-        this->tag_     = {true, false};
-        this->abs_tol_ = {0, 0};
-        this->f_       = {0, 0};
-        this->g_       = {0};
-        t_             = 0;
+        if (!this->allocated_)
+        {
+          this->allocate();
+        }
+
+        this->y_[0]       = 0.0;
+        this->y_[1]       = 0.0;
+        this->yp_[0]      = 0.0;
+        this->yp_[1]      = 0.0;
+        this->tag_[0]     = 1.0;
+        this->tag_[1]     = 0.0;
+        this->abs_tol_[0] = 0.0;
+        this->abs_tol_[1] = 0.0;
+        this->f_[0]       = 0.0;
+        this->f_[1]       = 0.0;
+        t_                = 0.0;
         return 0;
       }
 
