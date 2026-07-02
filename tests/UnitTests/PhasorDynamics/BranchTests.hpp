@@ -325,13 +325,17 @@ namespace GridKit
         const ScalarT Vr2{30.0};
         const ScalarT Vi2{40.0};
 
-        typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT data;
-        data.ports[PhasorDynamics::BranchPorts::bus1]        = 1;
-        data.ports[PhasorDynamics::BranchPorts::bus2]        = 2;
-        data.parameters[PhasorDynamics::BranchParameters::R] = R;
-        data.parameters[PhasorDynamics::BranchParameters::X] = X;
-        data.parameters[PhasorDynamics::BranchParameters::G] = G;
-        data.parameters[PhasorDynamics::BranchParameters::B] = B;
+        using Data      = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
+        using Parameter = typename Data::Parameters;
+        using Buses     = typename Data::Buses;
+
+        Data data;
+        data.buses[Buses::bus1]       = 1;
+        data.buses[Buses::bus2]       = 2;
+        data.parameters[Parameter::R] = R;
+        data.parameters[Parameter::X] = X;
+        data.parameters[Parameter::G] = G;
+        data.parameters[Parameter::B] = B;
 
         PhasorDynamics::Bus<ScalarT, IdxT> data_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> data_bus2(Vr2, Vi2);

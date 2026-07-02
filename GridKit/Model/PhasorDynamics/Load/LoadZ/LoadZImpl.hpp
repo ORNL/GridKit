@@ -46,14 +46,15 @@ namespace GridKit
       : bus_(bus),
         monitor_(std::make_unique<MonitorT>(data))
     {
-      if (data.parameters.contains(ModelDataT::Parameters::R))
+      using Parameter = typename ModelDataT::Parameters;
+      if (data.parameters.contains(Parameter::R))
       {
-        R_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::R));
+        R_ = std::get<RealT>(data.parameters.at(Parameter::R));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::X))
+      if (data.parameters.contains(Parameter::X))
       {
-        X_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::X));
+        X_ = std::get<RealT>(data.parameters.at(Parameter::X));
       }
 
       size_ = 2;

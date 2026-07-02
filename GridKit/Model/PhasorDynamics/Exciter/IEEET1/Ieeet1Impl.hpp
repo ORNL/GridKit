@@ -358,67 +358,68 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Ieeet1<scalar_type, index_type>::initModelParams(const ModelDataT& data)
       {
+        using Parameter = typename ModelDataT::Parameters;
 
         Tr_ = TR_MINIMUM;
-        if (data.parameters.contains(ModelDataT::Parameters::Tr))
+        if (data.parameters.contains(Parameter::Tr))
         {
-          Tr_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tr));
+          Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
         }
         if (Tr_ < TR_MINIMUM)
         {
           Tr_ = TR_MINIMUM;
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Ka))
+        if (data.parameters.contains(Parameter::Ka))
         {
-          Ka_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ka));
+          Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Ta))
+        if (data.parameters.contains(Parameter::Ta))
         {
-          Ta_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ta));
+          Ta_ = std::get<RealT>(data.parameters.at(Parameter::Ta));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Ke))
+        if (data.parameters.contains(Parameter::Ke))
         {
-          Ke_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ke));
+          Ke_ = std::get<RealT>(data.parameters.at(Parameter::Ke));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Te))
+        if (data.parameters.contains(Parameter::Te))
         {
-          Te_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Te));
+          Te_ = std::get<RealT>(data.parameters.at(Parameter::Te));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Kf))
+        if (data.parameters.contains(Parameter::Kf))
         {
-          Kf_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Kf));
+          Kf_ = std::get<RealT>(data.parameters.at(Parameter::Kf));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Tf))
+        if (data.parameters.contains(Parameter::Tf))
         {
-          Tf_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tf));
+          Tf_ = std::get<RealT>(data.parameters.at(Parameter::Tf));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Vrmin))
+        if (data.parameters.contains(Parameter::Vrmin))
         {
-          Vrmin_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vrmin));
+          Vrmin_ = std::get<RealT>(data.parameters.at(Parameter::Vrmin));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Vrmax))
+        if (data.parameters.contains(Parameter::Vrmax))
         {
-          Vrmax_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Vrmax));
+          Vrmax_ = std::get<RealT>(data.parameters.at(Parameter::Vrmax));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::E1))
+        if (data.parameters.contains(Parameter::E1))
         {
-          E1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::E1));
+          E1_ = std::get<RealT>(data.parameters.at(Parameter::E1));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::E2))
+        if (data.parameters.contains(Parameter::E2))
         {
-          E2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::E2));
+          E2_ = std::get<RealT>(data.parameters.at(Parameter::E2));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Se1))
+        if (data.parameters.contains(Parameter::Se1))
         {
-          Se1_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Se1));
+          Se1_ = std::get<RealT>(data.parameters.at(Parameter::Se1));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Se2))
+        if (data.parameters.contains(Parameter::Se2))
         {
-          Se2_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Se2));
+          Se2_ = std::get<RealT>(data.parameters.at(Parameter::Se2));
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Ispdlim))
+        if (data.parameters.contains(Parameter::Ispdlim))
         {
-          Ispdlim_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ispdlim));
+          Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
         }
 
         // Derived Parameters

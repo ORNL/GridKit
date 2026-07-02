@@ -21,8 +21,8 @@ namespace GridKit
 {
   namespace Testing
   {
+    using GridKit::PhasorDynamics::BranchBuses;
     using GridKit::PhasorDynamics::BranchParameters;
-    using GridKit::PhasorDynamics::BranchPorts;
 
     template <class ScalarT, typename IdxT>
     class SystemTests
@@ -75,8 +75,8 @@ namespace GridKit
         data.branch.resize(1);
 
         // Branch 0-1
-        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
         data.branch[0].parameters[BranchParameters::R] = 2.0;
         data.branch[0].parameters[BranchParameters::X] = 4.0;
         data.branch[0].parameters[BranchParameters::G] = 0.2;
@@ -198,8 +198,8 @@ namespace GridKit
         data.branch.resize(1);
 
         // Branch 0-1
-        data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-        data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
         data.branch[0].parameters[BranchParameters::R] = 2.0;
         data.branch[0].parameters[BranchParameters::X] = 4.0;
         data.branch[0].parameters[BranchParameters::G] = 0.2;

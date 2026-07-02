@@ -41,84 +41,85 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Gensal<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      if (data.parameters.contains(ModelDataT::Parameters::p0))
+      using Parameter = typename ModelDataT::Parameters;
+      if (data.parameters.contains(Parameter::p0))
       {
-        p0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::p0));
+        p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::q0))
+      if (data.parameters.contains(Parameter::q0))
       {
-        q0_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::q0));
+        q0_ = std::get<RealT>(data.parameters.at(Parameter::q0));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::H))
+      if (data.parameters.contains(Parameter::H))
       {
-        H_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::H));
+        H_ = std::get<RealT>(data.parameters.at(Parameter::H));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::D))
+      if (data.parameters.contains(Parameter::D))
       {
-        D_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::D));
+        D_ = std::get<RealT>(data.parameters.at(Parameter::D));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Ra))
+      if (data.parameters.contains(Parameter::Ra))
       {
-        Ra_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Ra));
+        Ra_ = std::get<RealT>(data.parameters.at(Parameter::Ra));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Tdop))
+      if (data.parameters.contains(Parameter::Tdop))
       {
-        Tdop_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdop));
+        Tdop_ = std::get<RealT>(data.parameters.at(Parameter::Tdop));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Tdopp))
+      if (data.parameters.contains(Parameter::Tdopp))
       {
-        Tdopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tdopp));
+        Tdopp_ = std::get<RealT>(data.parameters.at(Parameter::Tdopp));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Tqopp))
+      if (data.parameters.contains(Parameter::Tqopp))
       {
-        Tqopp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Tqopp));
+        Tqopp_ = std::get<RealT>(data.parameters.at(Parameter::Tqopp));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xd))
+      if (data.parameters.contains(Parameter::Xd))
       {
-        Xd_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xd));
+        Xd_ = std::get<RealT>(data.parameters.at(Parameter::Xd));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xdp))
+      if (data.parameters.contains(Parameter::Xdp))
       {
-        Xdp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdp));
+        Xdp_ = std::get<RealT>(data.parameters.at(Parameter::Xdp));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xdpp))
+      if (data.parameters.contains(Parameter::Xdpp))
       {
-        Xdpp_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xdpp));
+        Xdpp_ = std::get<RealT>(data.parameters.at(Parameter::Xdpp));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xq))
+      if (data.parameters.contains(Parameter::Xq))
       {
-        Xq_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xq));
+        Xq_ = std::get<RealT>(data.parameters.at(Parameter::Xq));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::Xl))
+      if (data.parameters.contains(Parameter::Xl))
       {
-        Xl_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::Xl));
+        Xl_ = std::get<RealT>(data.parameters.at(Parameter::Xl));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::S10))
+      if (data.parameters.contains(Parameter::S10))
       {
-        S10_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S10));
+        S10_ = std::get<RealT>(data.parameters.at(Parameter::S10));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::S12))
+      if (data.parameters.contains(Parameter::S12))
       {
-        S12_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::S12));
+        S12_ = std::get<RealT>(data.parameters.at(Parameter::S12));
       }
 
-      if (data.parameters.contains(ModelDataT::Parameters::mva))
+      if (data.parameters.contains(Parameter::mva))
       {
-        mva_base_ = std::get<RealT>(data.parameters.at(ModelDataT::Parameters::mva));
+        mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
       }
     }
 

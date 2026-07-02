@@ -29,12 +29,12 @@ namespace GridKit
       static GenrouDataT makeGenrouData()
       {
         using Parameter = typename GenrouDataT::Parameters;
-        using Port      = typename GenrouDataT::Ports;
+        using Buses     = typename GenrouDataT::Buses;
 
         GenrouDataT data;
         data.device_class                 = "Genrou";
         data.disambiguation_string        = "1";
-        data.ports[Port::bus]             = 1;
+        data.buses[Buses::bus]            = 1;
         data.parameters[Parameter::p0]    = RealT{1.0};
         data.parameters[Parameter::q0]    = RealT{0.05013};
         data.parameters[Parameter::H]     = RealT{3.0};

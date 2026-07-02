@@ -33,13 +33,35 @@ namespace GridKit
       };
 
       /**
-       * @brief Placeholder enum for TGOV1 ports.
+       * @brief Temporary TGOV1 bus keys.
+       *
+       * NOTE: The TGOV1 bus key is accepted only so existing flat JSON
+       * cases continue to parse without case-file churn. TGOV1 does not use
+       * this bus key, and it should be removed when the JSON port format
+       * is updated.
        */
-      enum class Tgov1Ports
+      enum class Tgov1Buses : size_t
       {
         bus,
+        SIZE,
+      };
+
+      /**
+       * @brief TGOV1 signal inputs.
+       */
+      enum class Tgov1SignalInputs : size_t
+      {
         speed,
+        SIZE,
+      };
+
+      /**
+       * @brief TGOV1 signal outputs.
+       */
+      enum class Tgov1SignalOutputs : size_t
+      {
         pmech,
+        SIZE,
       };
 
       /**
@@ -60,13 +82,17 @@ namespace GridKit
       struct Tgov1Data : public ComponentData<real_type,
                                               index_type,
                                               Tgov1Parameters,
-                                              Tgov1Ports,
+                                              Tgov1Buses,
+                                              Tgov1SignalInputs,
+                                              Tgov1SignalOutputs,
                                               Tgov1MonitorableVariables>
       {
         Tgov1Data() = default;
 
         using Parameters           = Tgov1Parameters;
-        using Ports                = Tgov1Ports;
+        using Buses                = Tgov1Buses;
+        using SignalInputs         = Tgov1SignalInputs;
+        using SignalOutputs        = Tgov1SignalOutputs;
         using MonitorableVariables = Tgov1MonitorableVariables;
       };
 

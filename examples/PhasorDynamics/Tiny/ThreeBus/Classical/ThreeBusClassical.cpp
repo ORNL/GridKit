@@ -111,24 +111,24 @@ int main()
   data.branch.resize(3);
 
   // Branch 0-1
-  data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-  data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+  data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+  data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
   data.branch[0].parameters[BranchParameters::R] = 0.05;
   data.branch[0].parameters[BranchParameters::X] = 0.21;
   data.branch[0].parameters[BranchParameters::G] = 0.0;
   data.branch[0].parameters[BranchParameters::B] = 0.1;
 
   // Branch 0-2
-  data.branch[1].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-  data.branch[1].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
+  data.branch[1].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+  data.branch[1].buses[BranchBuses::bus2]        = data.bus[2].bus_id;
   data.branch[1].parameters[BranchParameters::R] = 0.06;
   data.branch[1].parameters[BranchParameters::X] = 0.15;
   data.branch[1].parameters[BranchParameters::G] = 0.0;
   data.branch[1].parameters[BranchParameters::B] = 0.12;
 
   // Branch 1-2
-  data.branch[2].ports[BranchPorts::bus1]        = data.bus[1].bus_id;
-  data.branch[2].ports[BranchPorts::bus2]        = data.bus[2].bus_id;
+  data.branch[2].buses[BranchBuses::bus1]        = data.bus[1].bus_id;
+  data.branch[2].buses[BranchBuses::bus2]        = data.bus[2].bus_id;
   data.branch[2].parameters[BranchParameters::R] = 0.08;
   data.branch[2].parameters[BranchParameters::X] = 0.27;
   data.branch[2].parameters[BranchParameters::G] = 0.0;
@@ -138,7 +138,7 @@ int main()
   data.genclassical.resize(2);
 
   // Generator on bus 1
-  data.genclassical[0].ports[GenClassicalPorts::bus]           = data.bus[1].bus_id;
+  data.genclassical[0].buses[GenClassicalBuses::bus]           = data.bus[1].bus_id;
   data.genclassical[0].parameters[GenClassicalParameters::p0]  = 0.5;
   data.genclassical[0].parameters[GenClassicalParameters::q0]  = -0.07588;
   data.genclassical[0].parameters[GenClassicalParameters::H]   = 2.7;
@@ -147,7 +147,7 @@ int main()
   data.genclassical[0].parameters[GenClassicalParameters::Xdp] = 0.17;
 
   // Generator on bus 2
-  data.genclassical[1].ports[GenClassicalPorts::bus]           = data.bus[2].bus_id;
+  data.genclassical[1].buses[GenClassicalBuses::bus]           = data.bus[2].bus_id;
   data.genclassical[1].parameters[GenClassicalParameters::p0]  = 0.25;
   data.genclassical[1].parameters[GenClassicalParameters::q0]  = 0.26587;
   data.genclassical[1].parameters[GenClassicalParameters::H]   = 1.6;
@@ -159,14 +159,14 @@ int main()
   data.loadz.resize(1);
 
   // Load on bus 2
-  data.loadz[0].ports[LoadZPorts::bus]         = 2;
+  data.loadz[0].buses[LoadZBuses::bus]         = 2;
   data.loadz[0].parameters[LoadZParameters::R] = 0.4447197839297772;
   data.loadz[0].parameters[LoadZParameters::X] = 0.20330047265361242;
 
   // Set fault data
   data.bus_fault.resize(1);
 
-  data.bus_fault[0].ports[BusFaultPorts::bus]              = 2;
+  data.bus_fault[0].buses[BusFaultBuses::bus]              = 2;
   data.bus_fault[0].parameters[BusFaultParameters::R]      = 0.0;
   data.bus_fault[0].parameters[BusFaultParameters::X]      = 1e-5;
   data.bus_fault[0].parameters[BusFaultParameters::state0] = false;

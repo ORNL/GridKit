@@ -24,15 +24,32 @@ namespace GridKit
     };
 
     /**
-     * @brief BusToSignalAdapter ports
+     * @brief BusToSignalAdapter buses
      */
-    enum class BusToSignalAdapterPorts
+    enum class BusToSignalAdapterBuses : size_t
     {
       bus,
-      vr,
-      vi,
+      SIZE
+    };
+
+    /**
+     * @brief BusToSignalAdapter signal inputs
+     */
+    enum class BusToSignalAdapterSignalInputs : size_t
+    {
       ir,
       ii,
+      SIZE
+    };
+
+    /**
+     * @brief BusToSignalAdapter signal outputs
+     */
+    enum class BusToSignalAdapterSignalOutputs : size_t
+    {
+      vr,
+      vi,
+      SIZE
     };
 
     /**
@@ -54,13 +71,17 @@ namespace GridKit
       : public ComponentData<real_type,
                              index_type,
                              BusToSignalAdapterParameters,
-                             BusToSignalAdapterPorts,
+                             BusToSignalAdapterBuses,
+                             BusToSignalAdapterSignalInputs,
+                             BusToSignalAdapterSignalOutputs,
                              BusToSignalAdapterMonitorableVariables>
     {
       BusToSignalAdapterData() = default;
 
       using Parameters           = BusToSignalAdapterParameters;
-      using Ports                = BusToSignalAdapterPorts;
+      using Buses                = BusToSignalAdapterBuses;
+      using SignalInputs         = BusToSignalAdapterSignalInputs;
+      using SignalOutputs        = BusToSignalAdapterSignalOutputs;
       using MonitorableVariables = BusToSignalAdapterMonitorableVariables;
     };
 
