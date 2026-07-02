@@ -6,6 +6,10 @@
 
 #include <ostream>
 #include <string>
+#include <type_traits>
+#include <vector>
+
+#include <GridKit/Model/VariableMonitorArrowOutput.hpp>
 
 namespace GridKit
 {
@@ -33,6 +37,7 @@ namespace GridKit
       using Csv      = VariableMonitorBase::Csv;
       using Json     = VariableMonitorBase::Json;
       using Yaml     = VariableMonitorBase::Yaml;
+      using Arrow    = VariableMonitorBase::Arrow;
       ///@}
 
       /// Default to empty monitor
@@ -148,7 +153,18 @@ namespace GridKit
         for (auto&& sink : sinks_)
         {
           std::visit([this](auto&& sink)
-                     { this->printFullHeader(*sink.os, sink.format); },
+                     {
+              using T = std::remove_cvref_t<decltype(sink)>;
+              if constexpr (std::is_same_v<T, VariableMonitorArrowOutput>)
+              {
+                std::vector<std::string> names;
+                this->appendHeader(names, Arrow{});
+                sink.beginTable(names);
+              }
+              else
+              {
+                this->printFullHeader(*sink.os, sink.format);
+              } },
                      sink);
         }
       }
@@ -174,11 +190,20 @@ namespace GridKit
         {
           std::visit([this](auto&& sink)
                      {
-              this->printFull(*sink.os, sink.format);
               using T = std::remove_cvref_t<decltype(sink)>;
-              if constexpr (std::is_same_v<T, Sink<Json>>)
+              if constexpr (std::is_same_v<T, VariableMonitorArrowOutput>)
               {
-                sink.format.after_first = true;
+                values_buffer_.clear();
+                this->append(values_buffer_, Arrow{});
+                sink.appendRow(values_buffer_);
+              }
+              else
+              {
+                this->printFull(*sink.os, sink.format);
+                if constexpr (std::is_same_v<T, Sink<Json>>)
+                {
+                  sink.format.after_first = true;
+                }
               } },
                      sink);
         }
@@ -202,8 +227,14 @@ namespace GridKit
       {
         for (auto&& sink : sinks_)
         {
+          // Arrow outputs finalize in stop() instead
           std::visit([this](auto&& sink)
-                     { this->printFullFooter(*sink.os, sink.format); },
+                     {
+              using T = std::remove_cvref_t<decltype(sink)>;
+              if constexpr (!std::is_same_v<T, VariableMonitorArrowOutput>)
+              {
+                this->printFullFooter(*sink.os, sink.format);
+              } },
                      sink);
         }
       }
@@ -238,6 +269,20 @@ namespace GridKit
         for (auto* mon : monitors_)
         {
           mon->appendHeader(out, yaml);
+        }
+      }
+
+      void appendHeader(std::vector<std::string>& names, Arrow arrow) const override
+      {
+        names.push_back("t");
+        for (auto&& var : variables_)
+        {
+          names.push_back(var.label);
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->appendHeader(names, arrow);
         }
       }
 
@@ -318,6 +363,20 @@ namespace GridKit
         }
 
         out += os.str();
+      }
+
+      void append(std::vector<double>& values, Arrow arrow) const override
+      {
+        values.push_back(static_cast<double>(*time_));
+        for (auto&& var : variables_)
+        {
+          values.push_back(static_cast<double>(*var.value));
+        }
+
+        for (auto* mon : monitors_)
+        {
+          mon->append(values, arrow);
+        }
       }
 
       void appendFooter(std::string& out, Csv csv) const override
@@ -419,7 +478,7 @@ namespace GridKit
       Sink(ArgT&&, FormatT) -> Sink<FormatT>;
 
       /// Variant type for all possible sink types
-      using SinkVariant = std::variant<Sink<Csv>, Sink<Json>, Sink<Yaml>>;
+      using SinkVariant = std::variant<Sink<Csv>, Sink<Json>, Sink<Yaml>, VariableMonitorArrowOutput>;
 
       /**
        * @brief Factory function mapping format enum value to sink type
@@ -438,6 +497,18 @@ namespace GridKit
         case Format::YAML:
           return Sink(std::forward<T>(arg), Yaml{});
           break;
+        case Format::ARROW:
+        case Format::ARROW_STREAM:
+          if constexpr (std::is_constructible_v<std::string, T&&>)
+          {
+            return VariableMonitorArrowOutput(std::forward<T>(arg), spec.format == Format::ARROW_STREAM);
+          }
+          else
+          {
+            throw std::runtime_error(
+                "Arrow monitor output requires a file name "
+                "(a FIFO path may be used for streaming); stdout is not supported");
+          }
         }
         throw std::runtime_error("Invalid monitor output format");
       }
@@ -489,6 +560,9 @@ namespace GridKit
 
       /// Reused output buffer
       mutable std::string buffer_;
+
+      /// Reused row values buffer for Arrow output
+      mutable std::vector<double> values_buffer_;
     };
   } // namespace Model
 } // namespace GridKit

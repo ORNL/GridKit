@@ -36,6 +36,9 @@ option(GridKit_ENABLE_ENZYME "Enable automatic differentiation with Enzyme" OFF)
 # ReSolve support is disabled by default
 option(GridKit_ENABLE_RESOLVE "Enable ReSolve support" OFF)
 
+# Apache Arrow support is disabled by default
+option(GridKit_ENABLE_ARROW "Enable Apache Arrow IPC output for variable monitors" OFF)
+
 # Enable the address sanitizer
 option(GridKit_ENABLE_ASAN "Enable the address sanitizer" OFF)
 
@@ -59,6 +62,7 @@ list(
   SUNDIALS
   ENZYME
   RESOLVE
+  ARROW
   ASAN
   UBSAN
   OPENMP
@@ -151,6 +155,25 @@ endif()
 
 if(GRIDKIT_ENABLE_ENZYME)
   include(FindEnzyme)
+endif()
+
+if(GRIDKIT_ENABLE_ARROW)
+  find_package(
+    Arrow
+    REQUIRED
+    CONFIG
+    PATHS
+    ${Arrow_DIR}
+    ${Arrow_DIR}/lib/cmake/Arrow)
+  if(TARGET Arrow::arrow_shared)
+    set(GRIDKIT_ARROW_TARGET Arrow::arrow_shared)
+  elseif(TARGET Arrow::arrow_static)
+    set(GRIDKIT_ARROW_TARGET Arrow::arrow_static)
+  else()
+    message(
+      FATAL_ERROR "Arrow found but neither Arrow::arrow_shared nor Arrow::arrow_static exists")
+  endif()
+  message(STATUS "Apache Arrow ${Arrow_VERSION} found: linking ${GRIDKIT_ARROW_TARGET}")
 endif()
 
 if(GRIDKIT_ENABLE_OPENMP)

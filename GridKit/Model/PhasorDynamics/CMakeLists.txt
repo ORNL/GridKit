@@ -22,7 +22,9 @@ gridkit_add_library(
     INTERFACE
     GridKit::dense_vector
     INTERFACE
-    GridKit::sparse_matrix)
+    GridKit::sparse_matrix
+    INTERFACE
+    GridKit::model_variable_monitor)
 
 target_link_libraries(
   phasor_dynamics_components

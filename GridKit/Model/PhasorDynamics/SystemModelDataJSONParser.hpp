@@ -5,6 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentDataJSONParser.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeDataJSONParser.hpp>
@@ -66,6 +67,24 @@ namespace GridKit
           auto delim     = raw_mon.value("delim", std::string(","));
           if (format.has_value())
           {
+            auto is_arrow = format.value() == MonitorFormat::ARROW
+                            || format.value() == MonitorFormat::ARROW_STREAM;
+#ifndef GRIDKIT_ENABLE_ARROW
+            if (is_arrow)
+            {
+              Log::error() << "\n\tMonitor format \"" << fmt_str << "\" requires GridKit"
+                           << "\n\tbuilt with GridKit_ENABLE_ARROW=ON; skipping this output."
+                           << std::endl;
+              continue;
+            }
+#endif
+            if (is_arrow && file_name.empty())
+            {
+              Log::error() << "\n\tMonitor format \"" << fmt_str << "\" requires a \"file_name\"."
+                           << "\n\tSee the \"monitors\" list in your JSON file."
+                           << std::endl;
+              continue;
+            }
             sm.monitor_sink.emplace_back(format.value(), file_name, delim);
           }
           else
