@@ -12,10 +12,21 @@ namespace GridKit
       Si
     };
 
-    enum class ConstantSignalSourcePorts
+    enum class ConstantSignalSourceTerminals : size_t
+    {
+      SIZE
+    };
+
+    enum class ConstantSignalSourceInputPorts : size_t
+    {
+      SIZE
+    };
+
+    enum class ConstantSignalSourceOutputPorts : size_t
     {
       sr,
-      si
+      si,
+      SIZE
     };
 
     enum class ConstantSignalSourceMonitorableVariables
@@ -27,13 +38,17 @@ namespace GridKit
     struct ConstantSignalSourceData : public ComponentData<real_type,
                                                            index_type,
                                                            ConstantSignalSourceParameters,
-                                                           ConstantSignalSourcePorts,
+                                                           ConstantSignalSourceTerminals,
+                                                           ConstantSignalSourceInputPorts,
+                                                           ConstantSignalSourceOutputPorts,
                                                            ConstantSignalSourceMonitorableVariables>
     {
       ConstantSignalSourceData() = default;
 
       using Parameters           = ConstantSignalSourceParameters;
-      using Ports                = ConstantSignalSourcePorts;
+      using Terminals            = ConstantSignalSourceTerminals;
+      using InputPorts           = ConstantSignalSourceInputPorts;
+      using OutputPorts          = ConstantSignalSourceOutputPorts;
       using MonitorableVariables = ConstantSignalSourceMonitorableVariables;
     };
 

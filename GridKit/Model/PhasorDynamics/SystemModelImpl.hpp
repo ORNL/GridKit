@@ -346,16 +346,16 @@ namespace GridKit
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
 
-        using Ports = ConstantSignalSourcePorts;
-        if (srcdata.ports.contains(Ports::sr))
+        using OutputPorts = ConstantSignalSourceOutputPorts;
+        if (srcdata.output_ports.contains(OutputPorts::sr))
         {
-          IdxT           sr    = srcdata.ports.at(Ports::sr);
+          IdxT           sr    = srcdata.output_ports.at(OutputPorts::sr);
           constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
           source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
         }
-        if (srcdata.ports.contains(Ports::si))
+        if (srcdata.output_ports.contains(OutputPorts::si))
         {
-          IdxT           si    = srcdata.ports.at(Ports::si);
+          IdxT           si    = srcdata.output_ports.at(OutputPorts::si);
           constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
           source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
         }
