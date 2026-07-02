@@ -328,21 +328,24 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
-      readRealParameter(data, ModelDataT::Parameters::R, R_);
-      readRealParameter(data, ModelDataT::Parameters::X, X_);
-      readRealParameter(data, ModelDataT::Parameters::G, G_);
-      readRealParameter(data, ModelDataT::Parameters::B, B_);
-      readRealParameter(data, ModelDataT::Parameters::tap, tap_);
-      readRealParameter(data, ModelDataT::Parameters::phase, phase_);
+      using Parameter = typename ModelDataT::Parameters;
+      using Buses     = typename ModelDataT::Buses;
 
-      if (data.ports.contains(ModelDataT::Ports::bus1))
+      readRealParameter(data, Parameter::R, R_);
+      readRealParameter(data, Parameter::X, X_);
+      readRealParameter(data, Parameter::G, G_);
+      readRealParameter(data, Parameter::B, B_);
+      readRealParameter(data, Parameter::tap, tap_);
+      readRealParameter(data, Parameter::phase, phase_);
+
+      if (data.buses.contains(Buses::bus1))
       {
-        bus1_id_ = data.ports.at(ModelDataT::Ports::bus1);
+        bus1_id_ = data.buses.at(Buses::bus1);
       }
 
-      if (data.ports.contains(ModelDataT::Ports::bus2))
+      if (data.buses.contains(Buses::bus2))
       {
-        bus2_id_ = data.ports.at(ModelDataT::Ports::bus2);
+        bus2_id_ = data.buses.at(Buses::bus2);
       }
     }
 

@@ -20,10 +20,14 @@ namespace GridKit
     template <typename real_type,
               typename index_type,
               typename Parameters,
-              typename Ports,
+              typename Buses,
+              typename SignalInputs,
+              typename SignalOutputs,
               typename MonitorableVariables>
       requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Ports>
+               && std::is_enum_v<Buses>
+               && std::is_enum_v<SignalInputs>
+               && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
     struct ComponentData
     {
@@ -38,8 +42,14 @@ namespace GridKit
       /// Mapping of parameters to parameter values
       std::map<Parameters, std::variant<bool, RealT, IdxT>> parameters;
 
-      /// Mapping of ports to port values
-      std::map<Ports, IdxT> ports;
+      /// Mapping of terminal attachments to bus identifiers
+      std::map<Buses, IdxT> buses;
+
+      /// Mapping of signal inputs to signal identifiers
+      std::map<SignalInputs, IdxT> signal_inputs;
+
+      /// Mapping of signal outputs to signal identifiers
+      std::map<SignalOutputs, IdxT> signal_outputs;
 
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;

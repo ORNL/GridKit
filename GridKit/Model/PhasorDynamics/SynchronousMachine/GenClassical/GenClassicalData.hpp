@@ -24,17 +24,30 @@ namespace GridKit
       mva  ///< MVA Base of the generator
     };
 
-    /// Ports supported for a classical generator model
+    /// Buses supported for a classical generator model
+    enum class GenClassicalBuses : size_t
+    {
+      bus, ///< Unique ID of the connecting bus
+      SIZE
+    };
+
+    /// Signal inputs supported for a classical generator model
     ///
-    /// @warning GenClassical signal support is incomplete. These legacy port
+    /// @warning GenClassical signal support is incomplete. These legacy signal
     /// names are not wired by SystemModel today; the intended refactor is to
     /// align this model with Genrou/Gensal by supporting `pmech`, `speed`, and
-    /// `efd` ports through ComponentSignals.
-    enum class GenClassicalPorts
+    /// `efd` signals through ComponentSignals.
+    enum class GenClassicalSignalInputs : size_t
     {
-      bus,             ///< Unique ID of the connecting bus
       exciter_signal,  ///< Unique ID of the bus providing the exciter signal
       governor_signal, ///< Unique ID of the bus providing the governor signal
+      SIZE
+    };
+
+    /// Signal outputs supported for a classical generator model
+    enum class GenClassicalSignalOutputs : size_t
+    {
+      SIZE
     };
 
     /// Variables able to be monitored for a classical generator model
@@ -62,13 +75,17 @@ namespace GridKit
     struct GenClassicalData : public ComponentData<real_type,
                                                    index_type,
                                                    GenClassicalParameters,
-                                                   GenClassicalPorts,
+                                                   GenClassicalBuses,
+                                                   GenClassicalSignalInputs,
+                                                   GenClassicalSignalOutputs,
                                                    GenClassicalMonitorableVariables>
     {
       GenClassicalData() = default;
 
       using Parameters           = GenClassicalParameters;
-      using Ports                = GenClassicalPorts;
+      using Buses                = GenClassicalBuses;
+      using SignalInputs         = GenClassicalSignalInputs;
+      using SignalOutputs        = GenClassicalSignalOutputs;
       using MonitorableVariables = GenClassicalMonitorableVariables;
     };
   } // namespace PhasorDynamics

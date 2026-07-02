@@ -63,9 +63,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using BusType          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
-        using GenrouParameters = PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
-        using GenrouPorts      = PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
+        using BusType     = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
+        using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
+        using Parameter   = typename GenrouDataT::Parameters;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -74,26 +75,26 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.ports[GenrouPorts::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[GenrouParameters::p0]    = 1.;
-        gendata.parameters[GenrouParameters::q0]    = 0.05013;
-        gendata.parameters[GenrouParameters::H]     = 3.;
-        gendata.parameters[GenrouParameters::D]     = 0.;
-        gendata.parameters[GenrouParameters::Ra]    = 0.;
-        gendata.parameters[GenrouParameters::Tdop]  = 7.;
-        gendata.parameters[GenrouParameters::Tdopp] = .04;
-        gendata.parameters[GenrouParameters::Tqopp] = .05;
-        gendata.parameters[GenrouParameters::Tqop]  = .75;
-        gendata.parameters[GenrouParameters::Xd]    = 2.1;
-        gendata.parameters[GenrouParameters::Xdp]   = 0.2;
-        gendata.parameters[GenrouParameters::Xdpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xq]    = 0.5;
-        gendata.parameters[GenrouParameters::Xqp]   = 0.5;
-        gendata.parameters[GenrouParameters::Xqpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xl]    = 0.15;
-        gendata.parameters[GenrouParameters::S10]   = 0.;
-        gendata.parameters[GenrouParameters::S12]   = 0.;
+        gendata.parameters[Parameter::p0]    = 1.;
+        gendata.parameters[Parameter::q0]    = 0.05013;
+        gendata.parameters[Parameter::H]     = 3.;
+        gendata.parameters[Parameter::D]     = 0.;
+        gendata.parameters[Parameter::Ra]    = 0.;
+        gendata.parameters[Parameter::Tdop]  = 7.;
+        gendata.parameters[Parameter::Tdopp] = .04;
+        gendata.parameters[Parameter::Tqopp] = .05;
+        gendata.parameters[Parameter::Tqop]  = .75;
+        gendata.parameters[Parameter::Xd]    = 2.1;
+        gendata.parameters[Parameter::Xdp]   = 0.2;
+        gendata.parameters[Parameter::Xdpp]  = 0.18;
+        gendata.parameters[Parameter::Xq]    = 0.5;
+        gendata.parameters[Parameter::Xqp]   = 0.5;
+        gendata.parameters[Parameter::Xqpp]  = 0.18;
+        gendata.parameters[Parameter::Xl]    = 0.15;
+        gendata.parameters[Parameter::S10]   = 0.;
+        gendata.parameters[Parameter::S12]   = 0.;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
@@ -159,9 +160,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using BusType          = typename PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
-        using GenrouParameters = typename PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
-        using GenrouPorts      = typename PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
+        using BusType     = typename PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
+        using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
+        using Parameter   = typename GenrouDataT::Parameters;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -170,26 +172,26 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.ports[GenrouPorts::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[GenrouParameters::p0]    = 1.;
-        gendata.parameters[GenrouParameters::q0]    = 0.05013;
-        gendata.parameters[GenrouParameters::H]     = 3.;
-        gendata.parameters[GenrouParameters::D]     = 0.;
-        gendata.parameters[GenrouParameters::Ra]    = 0.;
-        gendata.parameters[GenrouParameters::Tdop]  = 7.;
-        gendata.parameters[GenrouParameters::Tdopp] = .04;
-        gendata.parameters[GenrouParameters::Tqopp] = .05;
-        gendata.parameters[GenrouParameters::Tqop]  = .75;
-        gendata.parameters[GenrouParameters::Xd]    = 2.1;
-        gendata.parameters[GenrouParameters::Xdp]   = 0.2;
-        gendata.parameters[GenrouParameters::Xdpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xq]    = 0.5;
-        gendata.parameters[GenrouParameters::Xqp]   = 0.5;
-        gendata.parameters[GenrouParameters::Xqpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xl]    = 0.15;
-        gendata.parameters[GenrouParameters::S10]   = 0.;
-        gendata.parameters[GenrouParameters::S12]   = 0.;
+        gendata.parameters[Parameter::p0]    = 1.;
+        gendata.parameters[Parameter::q0]    = 0.05013;
+        gendata.parameters[Parameter::H]     = 3.;
+        gendata.parameters[Parameter::D]     = 0.;
+        gendata.parameters[Parameter::Ra]    = 0.;
+        gendata.parameters[Parameter::Tdop]  = 7.;
+        gendata.parameters[Parameter::Tdopp] = .04;
+        gendata.parameters[Parameter::Tqopp] = .05;
+        gendata.parameters[Parameter::Tqop]  = .75;
+        gendata.parameters[Parameter::Xd]    = 2.1;
+        gendata.parameters[Parameter::Xdp]   = 0.2;
+        gendata.parameters[Parameter::Xdpp]  = 0.18;
+        gendata.parameters[Parameter::Xq]    = 0.5;
+        gendata.parameters[Parameter::Xqp]   = 0.5;
+        gendata.parameters[Parameter::Xqpp]  = 0.18;
+        gendata.parameters[Parameter::Xl]    = 0.15;
+        gendata.parameters[Parameter::S10]   = 0.;
+        gendata.parameters[Parameter::S12]   = 0.;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(busdata);
         PhasorDynamics::SignalNode<ScalarT, IdxT>      pmech;
@@ -239,9 +241,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        using BusType          = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
-        using GenrouParameters = PhasorDynamics::GenrouData<ScalarT, IdxT>::Parameters;
-        using GenrouPorts      = PhasorDynamics::GenrouData<ScalarT, IdxT>::Ports;
+        using BusType     = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
+        using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
+        using Parameter   = typename GenrouDataT::Parameters;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -250,26 +253,26 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.ports[GenrouPorts::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
-        gendata.parameters[GenrouParameters::p0]    = 1.;
-        gendata.parameters[GenrouParameters::q0]    = 0.05013;
-        gendata.parameters[GenrouParameters::H]     = 3.;
-        gendata.parameters[GenrouParameters::D]     = 0.;
-        gendata.parameters[GenrouParameters::Ra]    = 0.;
-        gendata.parameters[GenrouParameters::Tdop]  = 7.;
-        gendata.parameters[GenrouParameters::Tdopp] = .04;
-        gendata.parameters[GenrouParameters::Tqopp] = .05;
-        gendata.parameters[GenrouParameters::Tqop]  = .75;
-        gendata.parameters[GenrouParameters::Xd]    = 2.1;
-        gendata.parameters[GenrouParameters::Xdp]   = 0.2;
-        gendata.parameters[GenrouParameters::Xdpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xq]    = 0.5;
-        gendata.parameters[GenrouParameters::Xqp]   = 0.5;
-        gendata.parameters[GenrouParameters::Xqpp]  = 0.18;
-        gendata.parameters[GenrouParameters::Xl]    = 0.15;
-        gendata.parameters[GenrouParameters::S10]   = 0.;
-        gendata.parameters[GenrouParameters::S12]   = 0.;
+        gendata.parameters[Parameter::p0]    = 1.;
+        gendata.parameters[Parameter::q0]    = 0.05013;
+        gendata.parameters[Parameter::H]     = 3.;
+        gendata.parameters[Parameter::D]     = 0.;
+        gendata.parameters[Parameter::Ra]    = 0.;
+        gendata.parameters[Parameter::Tdop]  = 7.;
+        gendata.parameters[Parameter::Tdopp] = .04;
+        gendata.parameters[Parameter::Tqopp] = .05;
+        gendata.parameters[Parameter::Tqop]  = .75;
+        gendata.parameters[Parameter::Xd]    = 2.1;
+        gendata.parameters[Parameter::Xdp]   = 0.2;
+        gendata.parameters[Parameter::Xdpp]  = 0.18;
+        gendata.parameters[Parameter::Xq]    = 0.5;
+        gendata.parameters[Parameter::Xqp]   = 0.5;
+        gendata.parameters[Parameter::Xqpp]  = 0.18;
+        gendata.parameters[Parameter::Xl]    = 0.15;
+        gendata.parameters[Parameter::S10]   = 0.;
+        gendata.parameters[Parameter::S12]   = 0.;
 
         /// Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(busdata, gendata);

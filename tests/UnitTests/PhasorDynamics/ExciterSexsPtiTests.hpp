@@ -189,17 +189,20 @@ namespace GridKit
 
       TestOutcome parameterValidation()
       {
+        using Data      = PhasorDynamics::Exciter::SexsPtiData<RealT, IdxT>;
+        using Parameter = typename Data::Parameters;
+
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         auto missing = makeTestData();
-        missing.parameters.erase(PhasorDynamics::Exciter::SexsPtiParameters::K);
+        missing.parameters.erase(Parameter::K);
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> missing_model(&bus, missing);
         success *= (missing_model.verify() > 0);
 
-        auto invalid                                                       = makeTestData();
-        invalid.parameters[PhasorDynamics::Exciter::SexsPtiParameters::Tb] = 0.0;
+        auto invalid                      = makeTestData();
+        invalid.parameters[Parameter::Tb] = 0.0;
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> invalid_model(&bus, invalid);
         success *= (invalid_model.verify() > 0);
 
@@ -210,6 +213,9 @@ namespace GridKit
       {
         using namespace PhasorDynamics;
         using namespace PhasorDynamics::Exciter;
+        using Data         = SexsPtiData<RealT, IdxT>;
+        using SignalOutput = typename Data::SignalOutputs;
+        using Buses        = typename Data::Buses;
 
         TestStatus success = true;
 
@@ -224,9 +230,9 @@ namespace GridKit
         data.signal[0].signal_id = 3;
         data.signal[0].name      = "EFD";
 
-        auto exciter                     = makeTestData();
-        exciter.ports[SexsPtiPorts::bus] = 1;
-        exciter.ports[SexsPtiPorts::efd] = 3;
+        auto exciter                              = makeTestData();
+        exciter.buses[Buses::bus]                 = 1;
+        exciter.signal_outputs[SignalOutput::efd] = 3;
         data.sexspti.push_back(exciter);
 
         SystemModel<ScalarT, IdxT> system(data);
@@ -236,7 +242,7 @@ namespace GridKit
         success *= (system.size() == 5);
 
         auto missing_efd = data;
-        missing_efd.sexspti[0].ports.erase(SexsPtiPorts::efd);
+        missing_efd.sexspti[0].signal_outputs.erase(SignalOutput::efd);
         SystemModel<ScalarT, IdxT> missing_efd_system(missing_efd);
         success *= (missing_efd_system.verify() > 0);
 
@@ -247,6 +253,10 @@ namespace GridKit
       {
         using namespace PhasorDynamics;
         using namespace PhasorDynamics::Exciter;
+        using Data         = SexsPtiData<RealT, IdxT>;
+        using SignalInput  = typename Data::SignalInputs;
+        using SignalOutput = typename Data::SignalOutputs;
+        using Buses        = typename Data::Buses;
 
         TestStatus success = true;
 
@@ -263,17 +273,17 @@ namespace GridKit
         data.signal[1].signal_id = 20;
         data.signal[1].name      = "consumer_efd";
 
-        auto consumer                     = makeTestData();
-        consumer.disambiguation_string    = "consumer";
-        consumer.ports[SexsPtiPorts::bus] = 1;
-        consumer.ports[SexsPtiPorts::efd] = 20;
-        consumer.ports[SexsPtiPorts::vs]  = 10;
+        auto consumer                              = makeTestData();
+        consumer.disambiguation_string             = "consumer";
+        consumer.buses[Buses::bus]                 = 1;
+        consumer.signal_outputs[SignalOutput::efd] = 20;
+        consumer.signal_inputs[SignalInput::vs]    = 10;
         data.sexspti.push_back(consumer);
 
-        auto source                     = makeTestData();
-        source.disambiguation_string    = "source";
-        source.ports[SexsPtiPorts::bus] = 1;
-        source.ports[SexsPtiPorts::efd] = 10;
+        auto source                              = makeTestData();
+        source.disambiguation_string             = "source";
+        source.buses[Buses::bus]                 = 1;
+        source.signal_outputs[SignalOutput::efd] = 10;
         data.sexspti.push_back(source);
 
         SystemModel<ScalarT, IdxT> system(data);
