@@ -38,12 +38,12 @@ namespace GridKit
       static GenClassicalDataT makeGenClassicalData()
       {
         using Parameter = typename GenClassicalDataT::Parameters;
-        using Terminal  = typename GenClassicalDataT::Terminals;
+        using Buses     = typename GenClassicalDataT::Buses;
 
         GenClassicalDataT data;
         data.device_class               = "GenClassical";
         data.disambiguation_string      = "1";
-        data.terminals[Terminal::bus]   = 1;
+        data.buses[Buses::bus]          = 1;
         data.parameters[Parameter::p0]  = RealT{1.0};
         data.parameters[Parameter::q0]  = RealT{0.0};
         data.parameters[Parameter::H]   = RealT{0.5};

@@ -33,23 +33,23 @@ namespace GridKit
       mva,   ///< MVA base of the gensal model
     };
 
-    /// Terminals for a Gensal generator model
-    enum class GensalTerminals : size_t
+    /// Buses for a Gensal generator model
+    enum class GensalBuses : size_t
     {
       bus, ///< Unique ID of the connecting bus
       SIZE
     };
 
-    /// Input ports for a Gensal generator model
-    enum class GensalInputPorts : size_t
+    /// Signal inputs for a Gensal generator model
+    enum class GensalSignalInputs : size_t
     {
       pmech, ///< Unique ID of the signal providing mechanical power
       efd,   ///< Unique ID of the signal providing exciter field voltage
       SIZE
     };
 
-    /// Output ports for a Gensal generator model
-    enum class GensalOutputPorts : size_t
+    /// Signal outputs for a Gensal generator model
+    enum class GensalSignalOutputs : size_t
     {
       speed, ///< Unique ID of the signal receiving speed deviation
       SIZE
@@ -88,17 +88,17 @@ namespace GridKit
     struct GensalData : public ComponentData<real_type,
                                              index_type,
                                              GensalParameters,
-                                             GensalTerminals,
-                                             GensalInputPorts,
-                                             GensalOutputPorts,
+                                             GensalBuses,
+                                             GensalSignalInputs,
+                                             GensalSignalOutputs,
                                              GensalMonitorableVariables>
     {
       GensalData() = default;
 
       using Parameters           = GensalParameters;
-      using Terminals            = GensalTerminals;
-      using InputPorts           = GensalInputPorts;
-      using OutputPorts          = GensalOutputPorts;
+      using Buses                = GensalBuses;
+      using SignalInputs         = GensalSignalInputs;
+      using SignalOutputs        = GensalSignalOutputs;
       using MonitorableVariables = GensalMonitorableVariables;
     };
   } // namespace PhasorDynamics

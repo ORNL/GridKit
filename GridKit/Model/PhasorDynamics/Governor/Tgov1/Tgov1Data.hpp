@@ -33,32 +33,32 @@ namespace GridKit
       };
 
       /**
-       * @brief Temporary TGOV1 terminal keys.
+       * @brief Temporary TGOV1 bus keys.
        *
-       * NOTE: The TGOV1 bus terminal is accepted only so existing flat JSON
+       * NOTE: The TGOV1 bus key is accepted only so existing flat JSON
        * cases continue to parse without case-file churn. TGOV1 does not use
-       * this bus terminal, and it should be removed when the JSON port format
+       * this bus key, and it should be removed when the JSON port format
        * is updated.
        */
-      enum class Tgov1Terminals : size_t
+      enum class Tgov1Buses : size_t
       {
         bus,
         SIZE,
       };
 
       /**
-       * @brief TGOV1 input ports.
+       * @brief TGOV1 signal inputs.
        */
-      enum class Tgov1InputPorts : size_t
+      enum class Tgov1SignalInputs : size_t
       {
         speed,
         SIZE,
       };
 
       /**
-       * @brief TGOV1 output ports.
+       * @brief TGOV1 signal outputs.
        */
-      enum class Tgov1OutputPorts : size_t
+      enum class Tgov1SignalOutputs : size_t
       {
         pmech,
         SIZE,
@@ -82,17 +82,17 @@ namespace GridKit
       struct Tgov1Data : public ComponentData<real_type,
                                               index_type,
                                               Tgov1Parameters,
-                                              Tgov1Terminals,
-                                              Tgov1InputPorts,
-                                              Tgov1OutputPorts,
+                                              Tgov1Buses,
+                                              Tgov1SignalInputs,
+                                              Tgov1SignalOutputs,
                                               Tgov1MonitorableVariables>
       {
         Tgov1Data() = default;
 
         using Parameters           = Tgov1Parameters;
-        using Terminals            = Tgov1Terminals;
-        using InputPorts           = Tgov1InputPorts;
-        using OutputPorts          = Tgov1OutputPorts;
+        using Buses                = Tgov1Buses;
+        using SignalInputs         = Tgov1SignalInputs;
+        using SignalOutputs        = Tgov1SignalOutputs;
         using MonitorableVariables = Tgov1MonitorableVariables;
       };
 

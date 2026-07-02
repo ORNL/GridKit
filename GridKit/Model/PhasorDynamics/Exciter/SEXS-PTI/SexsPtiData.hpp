@@ -25,22 +25,22 @@ namespace GridKit
         Efdmin  ///< Minimum excitation output
       };
 
-      /// Terminals for the SEXS-PTI exciter model.
-      enum class SexsPtiTerminals : size_t
+      /// Buses for the SEXS-PTI exciter model.
+      enum class SexsPtiBuses : size_t
       {
         bus, ///< Unique ID of the terminal bus
         SIZE
       };
 
-      /// Input ports for the SEXS-PTI exciter model.
-      enum class SexsPtiInputPorts : size_t
+      /// Signal inputs for the SEXS-PTI exciter model.
+      enum class SexsPtiSignalInputs : size_t
       {
         vs, ///< Unique ID of the optional stabilizer output signal
         SIZE
       };
 
-      /// Output ports for the SEXS-PTI exciter model.
-      enum class SexsPtiOutputPorts : size_t
+      /// Signal outputs for the SEXS-PTI exciter model.
+      enum class SexsPtiSignalOutputs : size_t
       {
         efd, ///< Unique ID of the output efd signal
         SIZE
@@ -56,17 +56,17 @@ namespace GridKit
       struct SexsPtiData : public ComponentData<real_type,
                                                 index_type,
                                                 SexsPtiParameters,
-                                                SexsPtiTerminals,
-                                                SexsPtiInputPorts,
-                                                SexsPtiOutputPorts,
+                                                SexsPtiBuses,
+                                                SexsPtiSignalInputs,
+                                                SexsPtiSignalOutputs,
                                                 SexsPtiMonitorableVariables>
       {
         SexsPtiData() = default;
 
         using Parameters           = SexsPtiParameters;
-        using Terminals            = SexsPtiTerminals;
-        using InputPorts           = SexsPtiInputPorts;
-        using OutputPorts          = SexsPtiOutputPorts;
+        using Buses                = SexsPtiBuses;
+        using SignalInputs         = SexsPtiSignalInputs;
+        using SignalOutputs        = SexsPtiSignalOutputs;
         using MonitorableVariables = SexsPtiMonitorableVariables;
       };
 

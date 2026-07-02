@@ -23,22 +23,22 @@ namespace GridKit
       phase, ///< Phase shift angle in radians
     };
 
-    /// Terminals for a branch
-    enum class BranchTerminals : size_t
+    /// Buses for a branch
+    enum class BranchBuses : size_t
     {
       bus1, ///< Unique ID of bus 1
       bus2, ///< Unique ID of bus 2
       SIZE
     };
 
-    /// Input ports supported for a branch
-    enum class BranchInputPorts : size_t
+    /// Signal inputs supported for a branch
+    enum class BranchSignalInputs : size_t
     {
       SIZE
     };
 
-    /// Output ports supported for a branch
-    enum class BranchOutputPorts : size_t
+    /// Signal outputs supported for a branch
+    enum class BranchSignalOutputs : size_t
     {
       SIZE
     };
@@ -70,17 +70,17 @@ namespace GridKit
     struct BranchData : public ComponentData<real_type,
                                              index_type,
                                              BranchParameters,
-                                             BranchTerminals,
-                                             BranchInputPorts,
-                                             BranchOutputPorts,
+                                             BranchBuses,
+                                             BranchSignalInputs,
+                                             BranchSignalOutputs,
                                              BranchMonitorableVariables>
     {
       BranchData() = default;
 
       using Parameters           = BranchParameters;
-      using Terminals            = BranchTerminals;
-      using InputPorts           = BranchInputPorts;
-      using OutputPorts          = BranchOutputPorts;
+      using Buses                = BranchBuses;
+      using SignalInputs         = BranchSignalInputs;
+      using SignalOutputs        = BranchSignalOutputs;
       using MonitorableVariables = BranchMonitorableVariables;
     };
   } // namespace PhasorDynamics

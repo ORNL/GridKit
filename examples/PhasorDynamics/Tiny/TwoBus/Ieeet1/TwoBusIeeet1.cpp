@@ -65,12 +65,12 @@ int main()
   // Set branch data
   data.branch.resize(1);
 
-  data.branch[0].terminals[BranchTerminals::bus1] = data.bus[0].bus_id;
-  data.branch[0].terminals[BranchTerminals::bus2] = data.bus[1].bus_id;
-  data.branch[0].parameters[BranchParameters::R]  = 0.0;
-  data.branch[0].parameters[BranchParameters::X]  = 0.1;
-  data.branch[0].parameters[BranchParameters::G]  = 0.0;
-  data.branch[0].parameters[BranchParameters::B]  = 0.0;
+  data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+  data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
+  data.branch[0].parameters[BranchParameters::R] = 0.0;
+  data.branch[0].parameters[BranchParameters::X] = 0.1;
+  data.branch[0].parameters[BranchParameters::G] = 0.0;
+  data.branch[0].parameters[BranchParameters::B] = 0.0;
 
   // Add faults
   data.bus_fault.resize(1);
@@ -82,48 +82,48 @@ int main()
   // Set generator data
   data.genrou.resize(1);
 
-  data.genrou[0].output_ports[GenrouOutputPorts::speed] = 0;
-  data.genrou[0].input_ports[GenrouInputPorts::pmech]   = 1;
-  data.genrou[0].input_ports[GenrouInputPorts::efd]     = 2;
-  data.genrou[0].parameters[GenrouParameters::p0]       = 1.;
-  data.genrou[0].parameters[GenrouParameters::q0]       = 0.05013;
-  data.genrou[0].parameters[GenrouParameters::H]        = 3.;
-  data.genrou[0].parameters[GenrouParameters::D]        = 0.;
-  data.genrou[0].parameters[GenrouParameters::Ra]       = 0.;
-  data.genrou[0].parameters[GenrouParameters::Tdop]     = 7.;
-  data.genrou[0].parameters[GenrouParameters::Tdopp]    = .04;
-  data.genrou[0].parameters[GenrouParameters::Tqopp]    = .05;
-  data.genrou[0].parameters[GenrouParameters::Tqop]     = .75;
-  data.genrou[0].parameters[GenrouParameters::Xd]       = 2.1;
-  data.genrou[0].parameters[GenrouParameters::Xdp]      = 0.2;
-  data.genrou[0].parameters[GenrouParameters::Xdpp]     = 0.18;
-  data.genrou[0].parameters[GenrouParameters::Xq]       = 0.5;
-  data.genrou[0].parameters[GenrouParameters::Xqp]      = 0.5;
-  data.genrou[0].parameters[GenrouParameters::Xqpp]     = 0.18;
-  data.genrou[0].parameters[GenrouParameters::Xl]       = 0.15;
-  data.genrou[0].parameters[GenrouParameters::S10]      = 0.;
-  data.genrou[0].parameters[GenrouParameters::S12]      = 0.;
-  data.genrou[0].parameters[GenrouParameters::mva]      = 100.0;
+  data.genrou[0].signal_outputs[GenrouSignalOutputs::speed] = 0;
+  data.genrou[0].signal_inputs[GenrouSignalInputs::pmech]   = 1;
+  data.genrou[0].signal_inputs[GenrouSignalInputs::efd]     = 2;
+  data.genrou[0].parameters[GenrouParameters::p0]           = 1.;
+  data.genrou[0].parameters[GenrouParameters::q0]           = 0.05013;
+  data.genrou[0].parameters[GenrouParameters::H]            = 3.;
+  data.genrou[0].parameters[GenrouParameters::D]            = 0.;
+  data.genrou[0].parameters[GenrouParameters::Ra]           = 0.;
+  data.genrou[0].parameters[GenrouParameters::Tdop]         = 7.;
+  data.genrou[0].parameters[GenrouParameters::Tdopp]        = .04;
+  data.genrou[0].parameters[GenrouParameters::Tqopp]        = .05;
+  data.genrou[0].parameters[GenrouParameters::Tqop]         = .75;
+  data.genrou[0].parameters[GenrouParameters::Xd]           = 2.1;
+  data.genrou[0].parameters[GenrouParameters::Xdp]          = 0.2;
+  data.genrou[0].parameters[GenrouParameters::Xdpp]         = 0.18;
+  data.genrou[0].parameters[GenrouParameters::Xq]           = 0.5;
+  data.genrou[0].parameters[GenrouParameters::Xqp]          = 0.5;
+  data.genrou[0].parameters[GenrouParameters::Xqpp]         = 0.18;
+  data.genrou[0].parameters[GenrouParameters::Xl]           = 0.15;
+  data.genrou[0].parameters[GenrouParameters::S10]          = 0.;
+  data.genrou[0].parameters[GenrouParameters::S12]          = 0.;
+  data.genrou[0].parameters[GenrouParameters::mva]          = 100.0;
 
   // Governor
   data.gov.resize(1);
 
-  data.gov[0].input_ports[Tgov1InputPorts::speed]   = 0;
-  data.gov[0].output_ports[Tgov1OutputPorts::pmech] = 1;
-  data.gov[0].parameters[Tgov1Parameters::Trate]    = 100.0;
-  data.gov[0].parameters[Tgov1Parameters::R]        = 0.05;
-  data.gov[0].parameters[Tgov1Parameters::Pvmin]    = 0.0;
-  data.gov[0].parameters[Tgov1Parameters::Pvmax]    = 1.0;
-  data.gov[0].parameters[Tgov1Parameters::T1]       = 0.5;
-  data.gov[0].parameters[Tgov1Parameters::T2]       = 2.5;
-  data.gov[0].parameters[Tgov1Parameters::T3]       = 7.5;
-  data.gov[0].parameters[Tgov1Parameters::Dt]       = 0.0;
+  data.gov[0].signal_inputs[Tgov1SignalInputs::speed]   = 0;
+  data.gov[0].signal_outputs[Tgov1SignalOutputs::pmech] = 1;
+  data.gov[0].parameters[Tgov1Parameters::Trate]        = 100.0;
+  data.gov[0].parameters[Tgov1Parameters::R]            = 0.05;
+  data.gov[0].parameters[Tgov1Parameters::Pvmin]        = 0.0;
+  data.gov[0].parameters[Tgov1Parameters::Pvmax]        = 1.0;
+  data.gov[0].parameters[Tgov1Parameters::T1]           = 0.5;
+  data.gov[0].parameters[Tgov1Parameters::T2]           = 2.5;
+  data.gov[0].parameters[Tgov1Parameters::T3]           = 7.5;
+  data.gov[0].parameters[Tgov1Parameters::Dt]           = 0.0;
 
   // Exciter
   data.exciter.resize(1);
 
-  data.exciter[0].ports[Ieeet1Ports::speed]                      = 0;
-  data.exciter[0].ports[Ieeet1Ports::efd]                        = 2;
+  data.exciter[0].signal_inputs[Ieeet1SignalInputs::speed]       = 0;
+  data.exciter[0].signal_outputs[Ieeet1SignalOutputs::efd]       = 2;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]      = 0.0;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ka]      = 50.;
   data.exciter[0].parameters[Exciter::Ieeet1Parameters::Ta]      = 0.04;

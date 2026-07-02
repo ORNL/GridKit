@@ -329,7 +329,7 @@ namespace GridKit
     void Branch<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      using Terminal  = typename ModelDataT::Terminals;
+      using Buses     = typename ModelDataT::Buses;
 
       readRealParameter(data, Parameter::R, R_);
       readRealParameter(data, Parameter::X, X_);
@@ -338,14 +338,14 @@ namespace GridKit
       readRealParameter(data, Parameter::tap, tap_);
       readRealParameter(data, Parameter::phase, phase_);
 
-      if (data.terminals.contains(Terminal::bus1))
+      if (data.buses.contains(Buses::bus1))
       {
-        bus1_id_ = data.terminals.at(Terminal::bus1);
+        bus1_id_ = data.buses.at(Buses::bus1);
       }
 
-      if (data.terminals.contains(Terminal::bus2))
+      if (data.buses.contains(Buses::bus2))
       {
-        bus2_id_ = data.terminals.at(Terminal::bus2);
+        bus2_id_ = data.buses.at(Buses::bus2);
       }
     }
 

@@ -30,12 +30,12 @@ namespace GridKit
       static GensalDataT makeGensalData()
       {
         using Parameter = typename GensalDataT::Parameters;
-        using Terminal  = typename GensalDataT::Terminals;
+        using Buses     = typename GensalDataT::Buses;
 
         GensalDataT data;
         data.device_class                 = "Gensal";
         data.disambiguation_string        = "1";
-        data.terminals[Terminal::bus]     = 1;
+        data.buses[Buses::bus]            = 1;
         data.parameters[Parameter::p0]    = RealT{1.0};
         data.parameters[Parameter::q0]    = RealT{0.05013};
         data.parameters[Parameter::H]     = RealT{3.0};

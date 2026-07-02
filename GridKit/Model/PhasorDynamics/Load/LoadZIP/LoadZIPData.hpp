@@ -17,21 +17,21 @@ namespace GridKit
       alphaP, ///< Fraction of load represented as constant power
     };
 
-    /// Terminals for a loadZIP
-    enum class LoadZIPTerminals : size_t
+    /// Buses for a loadZIP
+    enum class LoadZIPBuses : size_t
     {
       bus, ///< Unique ID of the bus to which the loadZIP is connected
       SIZE
     };
 
-    /// Input ports supported for a loadZIP
-    enum class LoadZIPInputPorts : size_t
+    /// Signal inputs supported for a loadZIP
+    enum class LoadZIPSignalInputs : size_t
     {
       SIZE
     };
 
-    /// Output ports supported for a loadZIP
-    enum class LoadZIPOutputPorts : size_t
+    /// Signal outputs supported for a loadZIP
+    enum class LoadZIPSignalOutputs : size_t
     {
       SIZE
     };
@@ -58,17 +58,17 @@ namespace GridKit
     struct LoadZIPData : public ComponentData<real_type,
                                               index_type,
                                               LoadZIPParameters,
-                                              LoadZIPTerminals,
-                                              LoadZIPInputPorts,
-                                              LoadZIPOutputPorts,
+                                              LoadZIPBuses,
+                                              LoadZIPSignalInputs,
+                                              LoadZIPSignalOutputs,
                                               LoadZIPMonitorableVariables>
     {
       LoadZIPData() = default;
 
       using Parameters           = LoadZIPParameters;
-      using Terminals            = LoadZIPTerminals;
-      using InputPorts           = LoadZIPInputPorts;
-      using OutputPorts          = LoadZIPOutputPorts;
+      using Buses                = LoadZIPBuses;
+      using SignalInputs         = LoadZIPSignalInputs;
+      using SignalOutputs        = LoadZIPSignalOutputs;
       using MonitorableVariables = LoadZIPMonitorableVariables;
     };
   } // namespace PhasorDynamics

@@ -21,22 +21,22 @@ namespace GridKit
     template <typename RealT,
               typename IdxT,
               typename Parameters,
-              typename Terminals,
-              typename InputPorts,
-              typename OutputPorts,
+              typename Buses,
+              typename SignalInputs,
+              typename SignalOutputs,
               typename MonitorableVariables>
       requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Terminals>
-               && std::is_enum_v<InputPorts>
-               && std::is_enum_v<OutputPorts>
+               && std::is_enum_v<Buses>
+               && std::is_enum_v<SignalInputs>
+               && std::is_enum_v<SignalOutputs>
                && std::is_enum_v<MonitorableVariables>
     void from_json(const json&                          j,
                    ComponentData<RealT,
                                  IdxT,
                                  Parameters,
-                                 Terminals,
-                                 InputPorts,
-                                 OutputPorts,
+                                 Buses,
+                                 SignalInputs,
+                                 SignalOutputs,
                                  MonitorableVariables>& c)
     {
       j.at("class").get_to(c.device_class);
@@ -85,30 +85,30 @@ namespace GridKit
       }
 
       // WARNING --- TEMPORARY --- : the C++ model data is
-      // intentionally split into terminals, input ports, and output ports.
+      // intentionally split into buses, signal inputs, and signal outputs.
       // This backward-compatible flat JSON "ports" parsing SHOULD NOT become
       // the supported design; it only avoids changing every tracked case in
       // this PR. The JSON schema should be split once the ingress changes are merged
       for (auto& raw_port : j.at("ports").items())
       {
-        auto terminal = magic_enum::enum_cast<Terminals>(raw_port.key());
-        if (terminal.has_value() && terminal.value() != Terminals::SIZE)
+        auto bus = magic_enum::enum_cast<Buses>(raw_port.key());
+        if (bus.has_value() && bus.value() != Buses::SIZE)
         {
-          raw_port.value().get_to(c.terminals[terminal.value()]);
+          raw_port.value().get_to(c.buses[bus.value()]);
           continue;
         }
 
-        auto input_port = magic_enum::enum_cast<InputPorts>(raw_port.key());
-        if (input_port.has_value() && input_port.value() != InputPorts::SIZE)
+        auto signal_input = magic_enum::enum_cast<SignalInputs>(raw_port.key());
+        if (signal_input.has_value() && signal_input.value() != SignalInputs::SIZE)
         {
-          raw_port.value().get_to(c.input_ports[input_port.value()]);
+          raw_port.value().get_to(c.signal_inputs[signal_input.value()]);
           continue;
         }
 
-        auto output_port = magic_enum::enum_cast<OutputPorts>(raw_port.key());
-        if (output_port.has_value() && output_port.value() != OutputPorts::SIZE)
+        auto signal_output = magic_enum::enum_cast<SignalOutputs>(raw_port.key());
+        if (signal_output.has_value() && signal_output.value() != SignalOutputs::SIZE)
         {
-          raw_port.value().get_to(c.output_ports[output_port.value()]);
+          raw_port.value().get_to(c.signal_outputs[signal_output.value()]);
           continue;
         }
 

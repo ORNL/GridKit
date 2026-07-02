@@ -164,7 +164,7 @@ namespace GridKit
     void Genrou<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
     {
       using Parameter = typename ModelDataT::Parameters;
-      using Terminal  = typename ModelDataT::Terminals;
+      using Buses     = typename ModelDataT::Buses;
       if (data.parameters.contains(Parameter::p0))
       {
         p0_ = std::get<RealT>(data.parameters.at(Parameter::p0));
@@ -260,9 +260,9 @@ namespace GridKit
         mva_base_ = std::get<RealT>(data.parameters.at(Parameter::mva));
       }
 
-      if (data.terminals.contains(Terminal::bus))
+      if (data.buses.contains(Buses::bus))
       {
-        bus_id_ = data.terminals.at(Terminal::bus);
+        bus_id_ = data.buses.at(Buses::bus);
       }
     }
 

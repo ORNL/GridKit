@@ -327,15 +327,15 @@ namespace GridKit
 
         using Data      = typename PhasorDynamics::Branch<ScalarT, IdxT>::ModelDataT;
         using Parameter = typename Data::Parameters;
-        using Terminal  = typename Data::Terminals;
+        using Buses     = typename Data::Buses;
 
         Data data;
-        data.terminals[Terminal::bus1] = 1;
-        data.terminals[Terminal::bus2] = 2;
-        data.parameters[Parameter::R]  = R;
-        data.parameters[Parameter::X]  = X;
-        data.parameters[Parameter::G]  = G;
-        data.parameters[Parameter::B]  = B;
+        data.buses[Buses::bus1]       = 1;
+        data.buses[Buses::bus2]       = 2;
+        data.parameters[Parameter::R] = R;
+        data.parameters[Parameter::X] = X;
+        data.parameters[Parameter::G] = G;
+        data.parameters[Parameter::B] = B;
 
         PhasorDynamics::Bus<ScalarT, IdxT> data_bus1(Vr1, Vi1);
         PhasorDynamics::Bus<ScalarT, IdxT> data_bus2(Vr2, Vi2);

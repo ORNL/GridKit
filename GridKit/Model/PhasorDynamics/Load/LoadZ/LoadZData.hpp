@@ -19,21 +19,21 @@ namespace GridKit
       X, ///< Load reactance
     };
 
-    /// Terminals for a load
-    enum class LoadZTerminals : size_t
+    /// Buses for a load
+    enum class LoadZBuses : size_t
     {
       bus, ///< Unique ID of the bus to which the load is connected
       SIZE
     };
 
-    /// Input ports supported for a load
-    enum class LoadZInputPorts : size_t
+    /// Signal inputs supported for a load
+    enum class LoadZSignalInputs : size_t
     {
       SIZE
     };
 
-    /// Output ports supported for a load
-    enum class LoadZOutputPorts : size_t
+    /// Signal outputs supported for a load
+    enum class LoadZSignalOutputs : size_t
     {
       SIZE
     };
@@ -57,17 +57,17 @@ namespace GridKit
     struct LoadZData : public ComponentData<real_type,
                                             index_type,
                                             LoadZParameters,
-                                            LoadZTerminals,
-                                            LoadZInputPorts,
-                                            LoadZOutputPorts,
+                                            LoadZBuses,
+                                            LoadZSignalInputs,
+                                            LoadZSignalOutputs,
                                             LoadZMonitorableVariables>
     {
       LoadZData() = default;
 
       using Parameters           = LoadZParameters;
-      using Terminals            = LoadZTerminals;
-      using InputPorts           = LoadZInputPorts;
-      using OutputPorts          = LoadZOutputPorts;
+      using Buses                = LoadZBuses;
+      using SignalInputs         = LoadZSignalInputs;
+      using SignalOutputs        = LoadZSignalOutputs;
       using MonitorableVariables = LoadZMonitorableVariables;
     };
   } // namespace PhasorDynamics

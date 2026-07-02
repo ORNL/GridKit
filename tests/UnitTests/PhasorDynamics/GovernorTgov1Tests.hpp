@@ -66,7 +66,7 @@ namespace GridKit
         using BusType     = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
         using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
         using Parameter   = typename GenrouDataT::Parameters;
-        using Terminal    = typename GenrouDataT::Terminals;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -75,7 +75,7 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.terminals[Terminal::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
         gendata.parameters[Parameter::p0]    = 1.;
         gendata.parameters[Parameter::q0]    = 0.05013;
@@ -163,7 +163,7 @@ namespace GridKit
         using BusType     = typename PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
         using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
         using Parameter   = typename GenrouDataT::Parameters;
-        using Terminal    = typename GenrouDataT::Terminals;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -172,7 +172,7 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.terminals[Terminal::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
         gendata.parameters[Parameter::p0]    = 1.;
         gendata.parameters[Parameter::q0]    = 0.05013;
@@ -244,7 +244,7 @@ namespace GridKit
         using BusType     = PhasorDynamics::BusData<ScalarT, IdxT>::BusType;
         using GenrouDataT = PhasorDynamics::GenrouData<ScalarT, IdxT>;
         using Parameter   = typename GenrouDataT::Parameters;
-        using Terminal    = typename GenrouDataT::Terminals;
+        using Buses       = typename GenrouDataT::Buses;
 
         PhasorDynamics::BusData<ScalarT, IdxT> busdata;
         busdata.bus_id   = 0;
@@ -253,7 +253,7 @@ namespace GridKit
         busdata.Vi0      = 0.0;
 
         PhasorDynamics::GenrouData<ScalarT, IdxT> gendata;
-        gendata.terminals[Terminal::bus] = 0;
+        gendata.buses[Buses::bus] = 0;
 
         gendata.parameters[Parameter::p0]    = 1.;
         gendata.parameters[Parameter::q0]    = 0.05013;

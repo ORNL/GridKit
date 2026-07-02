@@ -40,26 +40,26 @@ namespace GridKit
       };
 
       /**
-       * @brief Terminal keys for IEEEST Stabilizer model.
+       * @brief Bus keys for IEEEST Stabilizer model.
        */
-      enum class IeeestTerminals : size_t
+      enum class IeeestBuses : size_t
       {
         SIZE
       };
 
       /**
-       * @brief Input port keys for IEEEST Stabilizer model.
+       * @brief Signal input keys for IEEEST Stabilizer model.
        */
-      enum class IeeestInputPorts : size_t
+      enum class IeeestSignalInputs : size_t
       {
         input, ///< Unique ID of the stabilizer input signal
         SIZE
       };
 
       /**
-       * @brief Output port keys for IEEEST Stabilizer model.
+       * @brief Signal output keys for IEEEST Stabilizer model.
        */
-      enum class IeeestOutputPorts : size_t
+      enum class IeeestSignalOutputs : size_t
       {
         output, ///< Unique ID of the stabilizer output signal
         SIZE
@@ -83,17 +83,17 @@ namespace GridKit
       struct IeeestData : public ComponentData<real_type,
                                                index_type,
                                                IeeestParameters,
-                                               IeeestTerminals,
-                                               IeeestInputPorts,
-                                               IeeestOutputPorts,
+                                               IeeestBuses,
+                                               IeeestSignalInputs,
+                                               IeeestSignalOutputs,
                                                IeeestMonitorableVariables>
       {
         IeeestData() = default;
 
         using Parameters           = IeeestParameters;
-        using Terminals            = IeeestTerminals;
-        using InputPorts           = IeeestInputPorts;
-        using OutputPorts          = IeeestOutputPorts;
+        using Buses                = IeeestBuses;
+        using SignalInputs         = IeeestSignalInputs;
+        using SignalOutputs        = IeeestSignalOutputs;
         using MonitorableVariables = IeeestMonitorableVariables;
       };
 

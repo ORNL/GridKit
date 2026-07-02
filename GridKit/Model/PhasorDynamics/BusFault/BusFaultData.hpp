@@ -20,22 +20,22 @@ namespace GridKit
       X,      ///< Short to ground reactance
     };
 
-    /// Terminals supported for a bus fault
-    enum class BusFaultTerminals : size_t
+    /// Buses supported for a bus fault
+    enum class BusFaultBuses : size_t
     {
       bus, ///< Unique ID of the bus where the fault occurs
       SIZE
     };
 
-    /// Input ports supported for a bus fault
-    enum class BusFaultInputPorts : size_t
+    /// Signal inputs supported for a bus fault
+    enum class BusFaultSignalInputs : size_t
     {
       control_signal, ///< Unique ID of the bus providing a control signal
       SIZE
     };
 
-    /// Output ports supported for a bus fault
-    enum class BusFaultOutputPorts : size_t
+    /// Signal outputs supported for a bus fault
+    enum class BusFaultSignalOutputs : size_t
     {
       SIZE
     };
@@ -60,17 +60,17 @@ namespace GridKit
     struct BusFaultData : public ComponentData<real_type,
                                                index_type,
                                                BusFaultParameters,
-                                               BusFaultTerminals,
-                                               BusFaultInputPorts,
-                                               BusFaultOutputPorts,
+                                               BusFaultBuses,
+                                               BusFaultSignalInputs,
+                                               BusFaultSignalOutputs,
                                                BusFaultMonitorableVariables>
     {
       BusFaultData() = default;
 
       using Parameters           = BusFaultParameters;
-      using Terminals            = BusFaultTerminals;
-      using InputPorts           = BusFaultInputPorts;
-      using OutputPorts          = BusFaultOutputPorts;
+      using Buses                = BusFaultBuses;
+      using SignalInputs         = BusFaultSignalInputs;
+      using SignalOutputs        = BusFaultSignalOutputs;
       using MonitorableVariables = BusFaultMonitorableVariables;
     };
   } // namespace PhasorDynamics

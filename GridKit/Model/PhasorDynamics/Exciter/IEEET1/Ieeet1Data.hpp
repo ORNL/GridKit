@@ -34,23 +34,23 @@ namespace GridKit
         Ispdlim ///< Speed limit flag indicator
       };
 
-      /// Terminals for a IEEET1 Exciter model
-      enum class Ieeet1Terminals : size_t
+      /// Buses for a IEEET1 Exciter model
+      enum class Ieeet1Buses : size_t
       {
         bus, ///< Unique ID of the terminal bus
         SIZE
       };
 
-      /// Input ports for a IEEET1 Exciter model
-      enum class Ieeet1InputPorts : size_t
+      /// Signal inputs for a IEEET1 Exciter model
+      enum class Ieeet1SignalInputs : size_t
       {
         speed, ///< Unique ID of the generator speed signal
         vs,    ///< Unique ID of the stabilizer output signal (optional)
         SIZE
       };
 
-      /// Output ports for a IEEET1 Exciter model
-      enum class Ieeet1OutputPorts : size_t
+      /// Signal outputs for a IEEET1 Exciter model
+      enum class Ieeet1SignalOutputs : size_t
       {
         efd, ///< Unique ID of the output efd signal
         SIZE
@@ -75,17 +75,17 @@ namespace GridKit
       struct Ieeet1Data : public ComponentData<real_type,
                                                index_type,
                                                Ieeet1Parameters,
-                                               Ieeet1Terminals,
-                                               Ieeet1InputPorts,
-                                               Ieeet1OutputPorts,
+                                               Ieeet1Buses,
+                                               Ieeet1SignalInputs,
+                                               Ieeet1SignalOutputs,
                                                Ieeet1MonitorableVariables>
       {
         Ieeet1Data() = default;
 
         using Parameters           = Ieeet1Parameters;
-        using Terminals            = Ieeet1Terminals;
-        using InputPorts           = Ieeet1InputPorts;
-        using OutputPorts          = Ieeet1OutputPorts;
+        using Buses                = Ieeet1Buses;
+        using SignalInputs         = Ieeet1SignalInputs;
+        using SignalOutputs        = Ieeet1SignalOutputs;
         using MonitorableVariables = Ieeet1MonitorableVariables;
       };
     } // namespace Exciter

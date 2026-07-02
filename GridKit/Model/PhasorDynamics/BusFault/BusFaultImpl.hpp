@@ -58,7 +58,7 @@ namespace GridKit
         monitor_(std::make_unique<MonitorT>(data))
     {
       using Parameter = typename ModelDataT::Parameters;
-      using Terminal  = typename ModelDataT::Terminals;
+      using Buses     = typename ModelDataT::Buses;
 
       if (data.parameters.contains(Parameter::R))
       {
@@ -75,9 +75,9 @@ namespace GridKit
         status_ = std::get<bool>(data.parameters.at(Parameter::state0));
       }
 
-      if (data.terminals.contains(Terminal::bus))
+      if (data.buses.contains(Buses::bus))
       {
-        bus_id_ = data.terminals.at(Terminal::bus);
+        bus_id_ = data.buses.at(Buses::bus);
       }
 
       using Variable = typename ModelDataT::MonitorableVariables;

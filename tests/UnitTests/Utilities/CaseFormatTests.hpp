@@ -116,8 +116,8 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
-        success *= result.branch[0].terminals[BranchTerminals::bus1] == 1;
-        success *= result.branch[0].terminals[BranchTerminals::bus2] == 2;
+        success *= result.branch[0].buses[BranchBuses::bus1] == 1;
+        success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "1";
         success *= result.branch[0].monitored_variables.empty();
 
@@ -139,7 +139,7 @@ namespace GridKit
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl]) == 0.15;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
-        success *= result.genrou[0].terminals[GenrouTerminals::bus] == 1;
+        success *= result.genrou[0].buses[GenrouBuses::bus] == 1;
         success *= result.genrou[0].disambiguation_string == "1";
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
@@ -148,7 +148,7 @@ namespace GridKit
         success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::q0]) == 0.05013;
         success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xd]) == 2.1;
         success *= std::get<RealT>(result.gensal[0].parameters[GensalParameters::Xq]) == 0.5;
-        success *= result.gensal[0].terminals[GensalTerminals::bus] == 1;
+        success *= result.gensal[0].buses[GensalBuses::bus] == 1;
         success *= result.gensal[0].disambiguation_string == "2";
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::delta);
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::omega);
@@ -156,7 +156,7 @@ namespace GridKit
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
         success *= !std::get<bool>(result.bus_fault[0].parameters[BusFaultParameters::state0]);
-        success *= result.bus_fault[0].terminals[BusFaultTerminals::bus] == 1;
+        success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();
 
@@ -249,8 +249,8 @@ namespace GridKit
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::B]) == 0.0;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::tap]) == 1.05;
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::phase]) == 0.1;
-        success *= result.branch[0].terminals[BranchTerminals::bus1] == 1;
-        success *= result.branch[0].terminals[BranchTerminals::bus2] == 2;
+        success *= result.branch[0].buses[BranchBuses::bus1] == 1;
+        success *= result.branch[0].buses[BranchBuses::bus2] == 2;
         success *= result.branch[0].disambiguation_string == "BR1";
         success *= result.branch[0].monitored_variables.empty();
 
@@ -272,10 +272,10 @@ namespace GridKit
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::Xl]) == 0.15;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S10]) == 0.0;
         success *= std::get<RealT>(result.genrou[0].parameters[GenrouParameters::S12]) == 0.0;
-        success *= result.genrou[0].terminals[GenrouTerminals::bus] == 1;
-        success *= result.genrou[0].output_ports[GenrouOutputPorts::speed] == 1;
-        success *= result.genrou[0].input_ports[GenrouInputPorts::pmech] == 2;
-        success *= result.genrou[0].input_ports[GenrouInputPorts::efd] == 3;
+        success *= result.genrou[0].buses[GenrouBuses::bus] == 1;
+        success *= result.genrou[0].signal_outputs[GenrouSignalOutputs::speed] == 1;
+        success *= result.genrou[0].signal_inputs[GenrouSignalInputs::pmech] == 2;
+        success *= result.genrou[0].signal_inputs[GenrouSignalInputs::efd] == 3;
         success *= result.genrou[0].disambiguation_string == "DV1";
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::delta);
         success *= result.genrou[0].monitored_variables.contains(GenrouMonitorableVariables::omega);
@@ -287,9 +287,9 @@ namespace GridKit
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmax]) == 0;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmin]) == 1;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Dt]) == 0;
-        success *= result.gov[0].terminals[Governor::Tgov1Terminals::bus] == 1;
-        success *= result.gov[0].input_ports[Governor::Tgov1InputPorts::speed] == 1;
-        success *= result.gov[0].output_ports[Governor::Tgov1OutputPorts::pmech] == 2;
+        success *= result.gov[0].buses[Governor::Tgov1Buses::bus] == 1;
+        success *= result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::speed] == 1;
+        success *= result.gov[0].signal_outputs[Governor::Tgov1SignalOutputs::pmech] == 2;
         success *= result.gov[0].disambiguation_string == "DV2";
 
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Tr]) == 0.0;
@@ -306,9 +306,9 @@ namespace GridKit
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se1]) == 0.04;
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Se2]) == 0.33;
         success *= std::get<RealT>(result.exciter[0].parameters[Exciter::Ieeet1Parameters::Ispdlim]) == 0.0;
-        success *= result.exciter[0].terminals[Exciter::Ieeet1Terminals::bus] == 1;
-        success *= result.exciter[0].input_ports[Exciter::Ieeet1InputPorts::speed] == 1;
-        success *= result.exciter[0].output_ports[Exciter::Ieeet1OutputPorts::efd] == 3;
+        success *= result.exciter[0].buses[Exciter::Ieeet1Buses::bus] == 1;
+        success *= result.exciter[0].signal_inputs[Exciter::Ieeet1SignalInputs::speed] == 1;
+        success *= result.exciter[0].signal_outputs[Exciter::Ieeet1SignalOutputs::efd] == 3;
         success *= result.exciter[0].disambiguation_string == "DV3";
 
         success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Ta]) == 0.1;
@@ -317,14 +317,14 @@ namespace GridKit
         success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::K]) == 10.0;
         success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmax]) == 5.0;
         success *= std::get<RealT>(result.sexspti[0].parameters[Exciter::SexsPtiParameters::Efdmin]) == -5.0;
-        success *= result.sexspti[0].terminals[Exciter::SexsPtiTerminals::bus] == 1;
-        success *= result.sexspti[0].output_ports[Exciter::SexsPtiOutputPorts::efd] == 3;
+        success *= result.sexspti[0].buses[Exciter::SexsPtiBuses::bus] == 1;
+        success *= result.sexspti[0].signal_outputs[Exciter::SexsPtiSignalOutputs::efd] == 3;
         success *= result.sexspti[0].disambiguation_string == "DV4";
 
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::R]) == 0.0;
         success *= std::get<RealT>(result.bus_fault[0].parameters[BusFaultParameters::X]) == 1e-3;
         success *= !std::get<bool>(result.bus_fault[0].parameters[BusFaultParameters::state0]);
-        success *= result.bus_fault[0].terminals[BusFaultTerminals::bus] == 1;
+        success *= result.bus_fault[0].buses[BusFaultBuses::bus] == 1;
         success *= result.bus_fault[0].disambiguation_string == "1";
         success *= result.bus_fault[0].monitored_variables.empty();
 

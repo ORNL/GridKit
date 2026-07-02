@@ -21,8 +21,8 @@ namespace GridKit
 {
   namespace Testing
   {
+    using GridKit::PhasorDynamics::BranchBuses;
     using GridKit::PhasorDynamics::BranchParameters;
-    using GridKit::PhasorDynamics::BranchTerminals;
 
     template <class ScalarT, typename IdxT>
     class SystemTests
@@ -75,12 +75,12 @@ namespace GridKit
         data.branch.resize(1);
 
         // Branch 0-1
-        data.branch[0].terminals[BranchTerminals::bus1] = data.bus[0].bus_id;
-        data.branch[0].terminals[BranchTerminals::bus2] = data.bus[1].bus_id;
-        data.branch[0].parameters[BranchParameters::R]  = 2.0;
-        data.branch[0].parameters[BranchParameters::X]  = 4.0;
-        data.branch[0].parameters[BranchParameters::G]  = 0.2;
-        data.branch[0].parameters[BranchParameters::B]  = 1.2;
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
 
         // Create an empty system model
         system = new PhasorDynamics::SystemModel<ScalarT, IdxT>(data);
@@ -198,12 +198,12 @@ namespace GridKit
         data.branch.resize(1);
 
         // Branch 0-1
-        data.branch[0].terminals[BranchTerminals::bus1] = data.bus[0].bus_id;
-        data.branch[0].terminals[BranchTerminals::bus2] = data.bus[1].bus_id;
-        data.branch[0].parameters[BranchParameters::R]  = 2.0;
-        data.branch[0].parameters[BranchParameters::X]  = 4.0;
-        data.branch[0].parameters[BranchParameters::G]  = 0.2;
-        data.branch[0].parameters[BranchParameters::B]  = 1.2;
+        data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+        data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
+        data.branch[0].parameters[BranchParameters::R] = 2.0;
+        data.branch[0].parameters[BranchParameters::X] = 4.0;
+        data.branch[0].parameters[BranchParameters::G] = 0.2;
+        data.branch[0].parameters[BranchParameters::B] = 1.2;
 
         // Jacobian via DependencyTracking
         std::vector<DependencyTracking::Variable::DependencyMap> dependency_tracking_jacobian = DependencyTrackingJacobian(data);

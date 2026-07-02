@@ -24,18 +24,18 @@ namespace GridKit
     };
 
     /**
-     * @brief BusToSignalAdapter terminals
+     * @brief BusToSignalAdapter buses
      */
-    enum class BusToSignalAdapterTerminals : size_t
+    enum class BusToSignalAdapterBuses : size_t
     {
       bus,
       SIZE
     };
 
     /**
-     * @brief BusToSignalAdapter input ports
+     * @brief BusToSignalAdapter signal inputs
      */
-    enum class BusToSignalAdapterInputPorts : size_t
+    enum class BusToSignalAdapterSignalInputs : size_t
     {
       ir,
       ii,
@@ -43,9 +43,9 @@ namespace GridKit
     };
 
     /**
-     * @brief BusToSignalAdapter output ports
+     * @brief BusToSignalAdapter signal outputs
      */
-    enum class BusToSignalAdapterOutputPorts : size_t
+    enum class BusToSignalAdapterSignalOutputs : size_t
     {
       vr,
       vi,
@@ -71,17 +71,17 @@ namespace GridKit
       : public ComponentData<real_type,
                              index_type,
                              BusToSignalAdapterParameters,
-                             BusToSignalAdapterTerminals,
-                             BusToSignalAdapterInputPorts,
-                             BusToSignalAdapterOutputPorts,
+                             BusToSignalAdapterBuses,
+                             BusToSignalAdapterSignalInputs,
+                             BusToSignalAdapterSignalOutputs,
                              BusToSignalAdapterMonitorableVariables>
     {
       BusToSignalAdapterData() = default;
 
       using Parameters           = BusToSignalAdapterParameters;
-      using Terminals            = BusToSignalAdapterTerminals;
-      using InputPorts           = BusToSignalAdapterInputPorts;
-      using OutputPorts          = BusToSignalAdapterOutputPorts;
+      using Buses                = BusToSignalAdapterBuses;
+      using SignalInputs         = BusToSignalAdapterSignalInputs;
+      using SignalOutputs        = BusToSignalAdapterSignalOutputs;
       using MonitorableVariables = BusToSignalAdapterMonitorableVariables;
     };
 
