@@ -33,10 +33,16 @@ namespace GridKit
       };
 
       /**
-       * @brief Placeholder enum for TGOV1 bus keys.
+       * @brief Temporary TGOV1 bus keys.
+       *
+       * NOTE: The TGOV1 bus key is accepted only so existing flat JSON
+       * cases continue to parse without case-file churn. TGOV1 does not use
+       * this bus key, and it should be removed when the JSON port format
+       * is updated.
        */
       enum class Tgov1Buses : size_t
       {
+        bus,
         SIZE,
       };
 

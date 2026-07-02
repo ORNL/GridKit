@@ -318,6 +318,7 @@ namespace GridKit
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmax]) == 0;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Pvmin]) == 1;
         success *= std::get<RealT>(result.gov[0].parameters[Governor::Tgov1Parameters::Dt]) == 0;
+        success *= result.gov[0].buses[Governor::Tgov1Buses::bus] == 1;
         success *= result.gov[0].signal_inputs[Governor::Tgov1SignalInputs::speed] == 1;
         success *= result.gov[0].signal_outputs[Governor::Tgov1SignalOutputs::pmech] == 2;
         success *= result.gov[0].disambiguation_string == "DV2";

@@ -28,8 +28,6 @@ namespace GridKit
     using GridKit::PhasorDynamics::BranchBuses;
     using GridKit::PhasorDynamics::BranchParameters;
 
-    using Log = ::GridKit::Utilities::Logger;
-
     template <class ScalarT, typename IdxT>
     class SystemTests
     {

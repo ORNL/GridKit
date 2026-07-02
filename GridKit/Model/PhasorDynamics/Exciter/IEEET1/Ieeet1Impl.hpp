@@ -400,7 +400,7 @@ namespace GridKit
         using Parameter = typename ModelDataT::Parameters;
 
         Tr_ = TR_MINIMUM;
-        if (data.parameters.contains(ModelDataT::Parameters::Tr))
+        if (data.parameters.contains(Parameter::Tr))
         {
           Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
         }
@@ -408,7 +408,7 @@ namespace GridKit
         {
           Tr_ = TR_MINIMUM;
         }
-        if (data.parameters.contains(ModelDataT::Parameters::Ka))
+        if (data.parameters.contains(Parameter::Ka))
         {
           Ka_ = std::get<RealT>(data.parameters.at(Parameter::Ka));
         }

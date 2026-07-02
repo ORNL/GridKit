@@ -54,8 +54,8 @@ int main()
   // Set branch data
   data.branch.resize(1);
 
-  data.branch[0].ports[BranchPorts::bus1]        = data.bus[0].bus_id;
-  data.branch[0].ports[BranchPorts::bus2]        = data.bus[1].bus_id;
+  data.branch[0].buses[BranchBuses::bus1]        = data.bus[0].bus_id;
+  data.branch[0].buses[BranchBuses::bus2]        = data.bus[1].bus_id;
   data.branch[0].parameters[BranchParameters::R] = 0.0;
   data.branch[0].parameters[BranchParameters::X] = 0.1;
   data.branch[0].parameters[BranchParameters::G] = 0.0;

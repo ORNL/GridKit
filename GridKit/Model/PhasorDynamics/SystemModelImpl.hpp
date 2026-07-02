@@ -186,9 +186,9 @@ namespace GridKit
       for (const auto& loaddata : data.loadz)
       {
         IdxT bus_index = 0;
-        if (loaddata.ports.contains(LoadZPorts::bus))
+        if (loaddata.buses.contains(LoadZBuses::bus))
         {
-          bus_index = loaddata.ports.at(LoadZPorts::bus);
+          bus_index = loaddata.buses.at(LoadZBuses::bus);
         }
         auto* load = new LoadZ<ScalarT, IdxT>(getBus(bus_index), loaddata);
         addComponent(load);
@@ -450,16 +450,16 @@ namespace GridKit
       {
         auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
 
-        using Ports = ConstantSignalSourcePorts;
-        if (srcdata.ports.contains(Ports::sr))
+        using SignalOutputs = ConstantSignalSourceSignalOutputs;
+        if (srcdata.signal_outputs.contains(SignalOutputs::sr))
         {
-          IdxT           sr    = srcdata.ports.at(Ports::sr);
+          IdxT           sr    = srcdata.signal_outputs.at(SignalOutputs::sr);
           constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
           source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
         }
-        if (srcdata.ports.contains(Ports::si))
+        if (srcdata.signal_outputs.contains(SignalOutputs::si))
         {
-          IdxT           si    = srcdata.ports.at(Ports::si);
+          IdxT           si    = srcdata.signal_outputs.at(SignalOutputs::si);
           constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
           source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
         }
