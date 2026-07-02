@@ -69,8 +69,8 @@ an output for monitored variables (those listed in the `mon` field of a
 
   Name               | Description
   -------------------|------------------------------------------------------
-  `file_name`        | Optional string indicating output file name. If omitted, `stdout` is used.
-  `format`           | One of { "CSV", "JSON", "YAML" } (case-insensitive)
+  `file_name`        | Optional string indicating output file name. If omitted, `stdout` is used. Required for the Arrow formats; the name may refer to a FIFO to stream record batches to a live consumer.
+  `format`           | One of { "CSV", "JSON", "YAML", "ARROW", "ARROW_STREAM" } (case-insensitive). "ARROW" writes the Apache Arrow IPC file format (Feather v2) and "ARROW_STREAM" the Arrow IPC stream format; both require GridKit built with `GridKit_ENABLE_ARROW=ON` and store every monitored variable as a float64 column.
   `delim`            | Optional string specifying delimiter to use for CSV output (default is `","`).
 
 __NOTE__: If `monitors` entry is omitted entirely, you will get the default CSV
