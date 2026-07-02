@@ -58,9 +58,11 @@ namespace GridKit
      */
     enum class VariableMonitorFormat
     {
-      CSV,  ///< CSV format
-      JSON, ///< JSON format
-      YAML  ///< YAML format
+      CSV,         ///< CSV format
+      JSON,        ///< JSON format
+      YAML,        ///< YAML format
+      ARROW,       ///< Apache Arrow IPC file format (Feather v2)
+      ARROW_STREAM ///< Apache Arrow IPC stream format
     };
 
     /**
@@ -91,6 +93,11 @@ namespace GridKit
 
       /// Type used for dispatch
       struct Yaml
+      {
+      };
+
+      /// Type used for dispatch (Arrow IPC output; carries no state)
+      struct Arrow
       {
       };
 
@@ -134,6 +141,12 @@ namespace GridKit
       {
       }
 
+      /**
+       * @brief Collect column names for Arrow output (one per monitored
+       * variable)
+       */
+      virtual void appendHeader(std::vector<std::string>&, Arrow) const = 0;
+
       ///@}
 
       ///@{
@@ -143,6 +156,12 @@ namespace GridKit
       virtual void append(std::string&, Csv) const  = 0;
       virtual void append(std::string&, Json) const = 0;
       virtual void append(std::string&, Yaml) const = 0;
+
+      /**
+       * @brief Collect current values for Arrow output; order matches the
+       * column names
+       */
+      virtual void append(std::vector<double>&, Arrow) const = 0;
 
       ///@}
 
