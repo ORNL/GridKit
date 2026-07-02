@@ -84,6 +84,7 @@
 - Added IDA option to choose the consistent initial condition calculation type.
 - Implemented `tagDifferentiable()` for `PowerElectronics` models.
 - Fixed the `TenGenGenrou` example to output the correct omega values.
+- Added Apache Arrow IPC monitor output formats (`arrow` for the Feather v2 file format, `arrow_stream` for live streaming), behind the optional `GridKit_ENABLE_ARROW` build flag.
 
 ## v0.1
 
