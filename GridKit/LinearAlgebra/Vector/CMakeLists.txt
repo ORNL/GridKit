@@ -1,4 +1,3 @@
-
 gridkit_add_library(
   dense_vector
   SOURCES Vector.cpp
