@@ -892,7 +892,7 @@ namespace GridKit
      * @param[in] new_n_size - New vector length
      *
      * @return 0 if successful, 1 otherwise.
-     * 
+     *
      * @todo Decide if we need to preserve data when resizing.
      */
     template <typename ScalarT, typename IdxT>

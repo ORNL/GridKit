@@ -378,22 +378,22 @@ namespace std
     return res;                                                                                    \
   }
 
-#define IMPL_FUN_2(FUN, DER1, DER2)                                                                         \
-  inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x,          \
-                                                   const GridKit::DependencyTracking::Variable& y)          \
-  {                                                                                                         \
-    double                                val  = FUN(x(), y());                                             \
-    double                                der1 = DER1(x(), y());                                            \
-    double                                der2 = DER2(x(), y());                                            \
-    GridKit::DependencyTracking::Variable res1(x);   /* copy derivatives of x*/                             \
-    GridKit::DependencyTracking::Variable res2(y);   /* copy derivatives of y*/                             \
-    res1.setValue(val);                              /* set function value f(x, y) */                       \
-    res2.setValue(val);                              /* set function value f(x, y) */                       \
-    res1.scaleDependencies(der1);                    /* compute derivatives of f(x, y) with respect to x */ \
-    res2.scaleDependencies(der2);                    /* compute derivatives of f(x, y) with respect to y */ \
-    GridKit::DependencyTracking::Variable res(std::move(res1)); /* relocate derivatives w.r.t. x into return */ \
-    res.addDependencies(res2);                       /* add derivatives with respect to y to return */      \
-    return res;                                                                                             \
+#define IMPL_FUN_2(FUN, DER1, DER2)                                                                                    \
+  inline GridKit::DependencyTracking::Variable FUN(const GridKit::DependencyTracking::Variable& x,                     \
+                                                   const GridKit::DependencyTracking::Variable& y)                     \
+  {                                                                                                                    \
+    double                                val  = FUN(x(), y());                                                        \
+    double                                der1 = DER1(x(), y());                                                       \
+    double                                der2 = DER2(x(), y());                                                       \
+    GridKit::DependencyTracking::Variable res1(x);              /* copy derivatives of x*/                             \
+    GridKit::DependencyTracking::Variable res2(y);              /* copy derivatives of y*/                             \
+    res1.setValue(val);                                         /* set function value f(x, y) */                       \
+    res2.setValue(val);                                         /* set function value f(x, y) */                       \
+    res1.scaleDependencies(der1);                               /* compute derivatives of f(x, y) with respect to x */ \
+    res2.scaleDependencies(der2);                               /* compute derivatives of f(x, y) with respect to y */ \
+    GridKit::DependencyTracking::Variable res(std::move(res1)); /* relocate derivatives w.r.t. x into return */        \
+    res.addDependencies(res2);                                  /* add derivatives with respect to y to return */      \
+    return res;                                                                                                        \
   }
 
   IMPL_FUN_1(sin, GridKit::DependencyTracking::sin_derivative)

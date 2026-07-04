@@ -6,8 +6,8 @@
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
-#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 /**

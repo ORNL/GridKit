@@ -229,7 +229,7 @@ namespace GridKit
       void setVariableNumber(size_t variable_number)
       {
         dependencies_.clear();
-        variable_number_                  = variable_number;
+        variable_number_                = variable_number;
         dependencies_[variable_number_] = 1.0;
       }
 
@@ -306,7 +306,7 @@ namespace GridKit
       bool   is_fixed_;        ///< Constant parameter flag.
 
       mutable DependencyMap dependencies_;
-      static const size_t    INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
+      static const size_t   INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
     };
 
     //------------------------------------
