@@ -147,7 +147,7 @@ namespace GridKit
 // implicitly instantiated on demand for whatever <I, T> a caller needs) in
 // every translation unit that uses MemoryUtils, instead of relying on a
 // hand-maintained list of explicit instantiations for one backend.
-#include <GridKit/LinearAlgebra/MemoryUtils.tpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.tpp>
 
 #ifdef GridKit_ENABLE_GPU
 
@@ -165,7 +165,7 @@ using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Hip>;
 #else
 
 // If no GPU support is present, set device memory manager to a dummy object.
-#include <GridKit/LinearAlgebra/cpu/CpuMemory.hpp>
+#include <GridKit/MemoryUtilities/cpu/CpuMemory.hpp>
 using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Cpu>;
 
 #endif

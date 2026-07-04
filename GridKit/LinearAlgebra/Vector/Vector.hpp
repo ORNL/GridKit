@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 
 namespace GridKit
 {

@@ -13,8 +13,8 @@
 
 #include <iostream>
 
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
-#include <GridKit/LinearAlgebra/cpu/CpuMemory.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
+#include <GridKit/MemoryUtilities/cpu/CpuMemory.hpp>
 
 namespace GridKit
 {

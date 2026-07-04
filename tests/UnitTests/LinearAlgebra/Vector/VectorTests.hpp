@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 

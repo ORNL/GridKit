@@ -4,7 +4,7 @@
 #include <cstring>
 #include <iostream>
 
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 
 namespace GridKit
 {
