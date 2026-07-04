@@ -107,8 +107,9 @@ namespace GridKit
      * @param[in] data     - Pointer to data
      * @param[in] memspace - Memory space (HOST or DEVICE)
      *
-     * @pre Vector data pointers must be null. If the vector data already
-     * exists this function returns error message.
+     * @pre The vector's data pointer for the given `memspace` must be null.
+     * If data for that memspace already exists this function returns an
+     * error message; the other memspace's pointer is unaffected.
      *
      * @warning This function DOES NOT ALLOCATE any data, it only assigns the
      * pointer.
@@ -120,21 +121,26 @@ namespace GridKit
     int Vector<ScalarT, IdxT>::setData(ScalarT* data, memory::MemorySpace memspace)
     {
       using namespace memory;
-      if (d_data_ || h_data_)
-      {
-        out::error() << "Vector::setData - data already exists, ignoring call\n";
-        return 1;
-      }
 
       switch (memspace)
       {
       case HOST:
+        if (h_data_)
+        {
+          out::error() << "Vector::setData - host data already exists, ignoring call\n";
+          return 1;
+        }
         h_data_ = data;
         setHostUpdated(true);
         setDeviceUpdated(false);
         owns_cpu_data_ = false;
         break;
       case DEVICE:
+        if (d_data_)
+        {
+          out::error() << "Vector::setData - device data already exists, ignoring call\n";
+          return 1;
+        }
         d_data_ = data;
         setHostUpdated(false);
         setDeviceUpdated(true);
@@ -194,6 +200,15 @@ namespace GridKit
       assert(cpu_updated_ && gpu_updated_ && "Update flags not allocated");
 
       using namespace memory;
+
+      if (k_ <= j)
+      {
+        out::error() << "Vector::setDataUpdated - vector index " << j
+                     << " out of range, multivector has only " << k_
+                     << " vectors\n";
+        return 1;
+      }
+
       switch (memspace)
       {
       case HOST:
@@ -241,6 +256,12 @@ namespace GridKit
                                                 memory::MemorySpace memspaceSrc,
                                                 memory::MemorySpace memspaceDst)
     {
+      if (source == nullptr)
+      {
+        out::error() << "Vector::copyFromExternal - source data is null or stale\n";
+        return 1;
+      }
+
       switch (memspaceDst)
       {
       case memory::HOST:
@@ -572,6 +593,14 @@ namespace GridKit
     {
       using namespace memory;
 
+      if (k_ <= j)
+      {
+        out::error() << "Vector::syncData - vector index " << j
+                     << " out of range, multivector has only " << k_
+                     << " vectors\n";
+        return 1;
+      }
+
       switch (memspaceDst)
       {
       case DEVICE: // cpu->gpu
@@ -631,6 +660,7 @@ namespace GridKit
       switch (memspace)
       {
       case HOST:
+      {
         if (!owns_cpu_data_)
         {
           out::error() << "Vector::allocate - cannot reallocate host data,"
@@ -638,11 +668,18 @@ namespace GridKit
           return 1;
         }
         mem_.deleteOnHost(h_data_);
-        mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
+        int rc = mem_.allocateArrayOnHost(&h_data_, n_capacity_ * k_);
+        if (rc != 0)
+        {
+          out::error() << "Vector::allocate - failed to allocate host data\n";
+          return 1;
+        }
         owns_cpu_data_ = true;
         setHostUpdated(false);
         break;
+      }
       case DEVICE:
+      {
         if (!owns_gpu_data_)
         {
           out::error() << "Vector::allocate - cannot reallocate device data,"
@@ -650,10 +687,16 @@ namespace GridKit
           return 1;
         }
         mem_.deleteOnDevice(d_data_);
-        mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
+        int rc = mem_.allocateArrayOnDevice(&d_data_, n_capacity_ * k_);
+        if (rc != 0)
+        {
+          out::error() << "Vector::allocate - failed to allocate device data\n";
+          return 1;
+        }
         owns_gpu_data_ = true;
         setDeviceUpdated(false);
         break;
+      }
       }
       return 0;
     }
@@ -708,6 +751,15 @@ namespace GridKit
     int Vector<ScalarT, IdxT>::setToZero(IdxT j, memory::MemorySpace memspace)
     {
       using namespace memory;
+
+      if (k_ <= j)
+      {
+        out::error() << "Vector::setToZero - vector index " << j
+                     << " out of range, multivector has only " << k_
+                     << " vectors\n";
+        return 1;
+      }
+
       switch (memspace)
       {
       case HOST:
@@ -787,6 +839,15 @@ namespace GridKit
     int Vector<ScalarT, IdxT>::setToConst(IdxT j, ScalarT C, memory::MemorySpace memspace)
     {
       using namespace memory;
+
+      if (k_ <= j)
+      {
+        out::error() << "Vector::setToConst - vector index " << j
+                     << " out of range, multivector has only " << k_
+                     << " vectors\n";
+        return 1;
+      }
+
       switch (memspace)
       {
       case HOST:
@@ -817,16 +878,22 @@ namespace GridKit
      * @brief Resize vector to `new_n_size`.
      *
      * Use for vectors and multivectors that change size throughout computation.
+     * If `new_n_size` is within the current capacity, this simply adjusts
+     * `n_size_`. If `new_n_size` exceeds the current capacity, the vector
+     * reallocates - in whichever memory spaces (HOST and/or DEVICE) are
+     * currently allocated - to a buffer sized for `new_n_size`, copies over
+     * the existing per-column data, and adopts `new_n_size` as the new
+     * capacity. Data beyond the previous size is left uninitialized, same
+     * as freshly allocated data.
      *
-     * @note Vector needs to have capacity set to maximum expected size.
      * @warning This method is not to be used in vectors who do not own their
      * data.
      *
      * @param[in] new_n_size - New vector length
      *
      * @return 0 if successful, 1 otherwise.
-     *
-     * @pre `new_n_size` <= `n_capacity_`
+     * 
+     * @todo Decide if we need to preserve data when resizing.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::resize(IdxT new_n_size)
@@ -834,17 +901,40 @@ namespace GridKit
       assert(owns_cpu_data_ && owns_gpu_data_
              && "Cannot resize if vector is not owning the data.");
 
-      if (new_n_size > n_capacity_)
-      {
-        out::error() << "Vector::resize - requested size " << new_n_size
-                     << " exceeds capacity " << n_capacity_ << "\n";
-        return 1;
-      }
-      else
+      if (new_n_size <= n_capacity_)
       {
         n_size_ = new_n_size;
         return 0;
       }
+
+      // Grow beyond current capacity: reallocate and copy over existing
+      // per-column data. Columns are stored on n_size_-element strides, so
+      // the old stride must be captured before n_size_/n_capacity_ change.
+      const IdxT old_n_size = n_size_;
+
+      if (h_data_ != nullptr)
+      {
+        ScalarT* new_data = nullptr;
+        mem_.allocateArrayOnHost(&new_data, new_n_size * k_);
+        for (IdxT j = 0; j < k_; ++j)
+          mem_.copyArrayHostToHost(&new_data[j * new_n_size], &h_data_[j * old_n_size], old_n_size);
+        mem_.deleteOnHost(h_data_);
+        h_data_ = new_data;
+      }
+
+      if (d_data_ != nullptr)
+      {
+        ScalarT* new_data = nullptr;
+        mem_.allocateArrayOnDevice(&new_data, new_n_size * k_);
+        for (IdxT j = 0; j < k_; ++j)
+          mem_.copyArrayDeviceToDevice(&new_data[j * new_n_size], &d_data_[j * old_n_size], old_n_size);
+        mem_.deleteOnDevice(d_data_);
+        d_data_ = new_data;
+      }
+
+      n_capacity_ = new_n_size;
+      n_size_     = new_n_size;
+      return 0;
     }
 
     /**

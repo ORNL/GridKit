@@ -31,7 +31,7 @@ namespace GridKit
     class Vector
     {
     public:
-      Vector() = default;
+      Vector() : Vector(0) {}
       Vector(IdxT n);
       Vector(IdxT n, IdxT k);
       ~Vector();

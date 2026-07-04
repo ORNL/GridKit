@@ -72,7 +72,7 @@ namespace GridKit
     }
 
     template <typename T>
-    int deleteOnHost(T* v)
+    int deleteOnHost(T*& v)
     {
       delete[] v;
       v = nullptr;
