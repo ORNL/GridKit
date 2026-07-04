@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <type_traits>
 
 namespace GridKit
 {
@@ -79,19 +80,53 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Copy an array from HOST to HOST.
+     *
+     * Trivially copyable types (plain scalars, etc.) are copied with a
+     * byte-wise memcpy. Types that are not trivially copyable (e.g. a type
+     * owning a heap-allocated data structure) would have that structure
+     * corrupted by a byte-wise copy, so those are copied element-by-element
+     * using the type's own copy assignment instead.
+     */
     template <typename I, typename T>
     int copyArrayHostToHost(T* dst, const T* src, I n)
     {
-      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-      memcpy(dst, src, arraysize);
+      if constexpr (std::is_trivially_copyable_v<T>)
+      {
+        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+        memcpy(dst, src, arraysize);
+      }
+      else
+      {
+        for (I i = 0; i < n; ++i)
+          dst[i] = src[i];
+      }
       return 0;
     }
 
+    /**
+     * @brief Set an array on HOST to zero.
+     *
+     * Trivially copyable types are zeroed with a byte-wise memset. Types
+     * that are not trivially copyable would have their internal state
+     * corrupted by a byte-wise zeroing, so those are reset to a
+     * value-initialized (default-constructed) state element-by-element
+     * instead.
+     */
     template <typename I, typename T>
     int setZeroArrayOnHost(T* v, I n)
     {
-      std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-      memset(v, 0, arraysize);
+      if constexpr (std::is_trivially_copyable_v<T>)
+      {
+        std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
+        memset(v, 0, arraysize);
+      }
+      else
+      {
+        for (I i = 0; i < n; ++i)
+          v[i] = T{};
+      }
       return 0;
     }
 
