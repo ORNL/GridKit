@@ -1,3 +1,5 @@
+add_subdirectory(cpu)
+
 add_subdirectory(SparseMatrix)
 add_subdirectory(DenseMatrix)
 add_subdirectory(Vector)
