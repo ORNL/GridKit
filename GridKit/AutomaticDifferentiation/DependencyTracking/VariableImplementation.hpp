@@ -13,8 +13,7 @@ namespace GridKit
     */
     const Variable::DependencyMap& Variable::getDependencies() const
     {
-      assert(dependencies_ != 0);
-      return *dependencies_;
+      return dependencies_;
     }
 
     /**
@@ -35,8 +34,8 @@ namespace GridKit
     */
     void Variable::addDependencies(const Variable& v)
     {
-      for (auto& p : *(v.dependencies_))
-        (*dependencies_)[p.first] = p.second;
+      for (auto& p : v.dependencies_)
+        dependencies_[p.first] = p.second;
     }
 
     /**
@@ -44,8 +43,8 @@ namespace GridKit
     */
     void Variable::scaleDependencies(double c)
     {
-      for (auto& p : *dependencies_)
-        (*dependencies_)[p.first] *= c;
+      for (auto& p : dependencies_)
+        p.second *= c;
     }
 
     /**
@@ -67,10 +66,10 @@ namespace GridKit
         return;
       }
 
-      if (dependencies_ != NULL && !dependencies_->empty())
+      if (!dependencies_.empty())
       {
         os << " dependencies: [ ";
-        for (auto& p : *dependencies_)
+        for (auto& p : dependencies_)
           os << "(" << p.first << ", " << p.second << ") ";
         os << "]";
       }
@@ -97,8 +96,8 @@ namespace GridKit
     Variable& Variable::operator+=(const Variable& rhs)
     {
       // compute partial derivatives of *this
-      for (auto& p : *(rhs.dependencies_))
-        (*dependencies_)[p.first] += (p.second);
+      for (auto& p : rhs.dependencies_)
+        dependencies_[p.first] += (p.second);
 
       // compute value of *this
       value_ += rhs.value_;
@@ -124,8 +123,8 @@ namespace GridKit
     Variable& Variable::operator-=(const Variable& rhs)
     {
       // compute partial derivatives of *this
-      for (auto& p : *(rhs.dependencies_))
-        (*dependencies_)[p.first] -= (p.second);
+      for (auto& p : rhs.dependencies_)
+        dependencies_[p.first] -= (p.second);
 
       // compute value of *this
       value_ -= rhs.value_;
@@ -159,8 +158,8 @@ namespace GridKit
       scaleDependencies(rhs.value_);
 
       // compute partial derivatives of rhs and add them to *this
-      for (auto& p : *(rhs.dependencies_))
-        (*dependencies_)[p.first] += (p.second * value_);
+      for (auto& p : rhs.dependencies_)
+        dependencies_[p.first] += (p.second * value_);
 
       // compute value of this
       value_ *= rhs.value_;
@@ -195,8 +194,8 @@ namespace GridKit
 
       // derivation by parts of @a *this
       scaleDependencies(inverseRhs);
-      for (auto& p : *(rhs.dependencies_))
-        (*dependencies_)[p.first] -= (p.second * value_ * inverseRhsSq);
+      for (auto& p : rhs.dependencies_)
+        dependencies_[p.first] -= (p.second * value_ * inverseRhsSq);
 
       // compute value of this
       value_ *= inverseRhs;

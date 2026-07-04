@@ -13,73 +13,97 @@ namespace GridKit
     //------------------------------------
 
     // unary -
-    const Variable operator-(const Variable& v)
+    Variable operator-(const Variable& v)
     {
       return -1.0 * v;
     }
 
     // +
-    const Variable operator+(const Variable& lhs, const Variable& rhs)
+    Variable operator+(const Variable& lhs, const Variable& rhs)
     {
-      return Variable(lhs) += rhs;
+      Variable result(lhs);
+      result += rhs;
+      return result;
     }
 
-    const Variable operator+(const Variable& lhs, const double& rhs)
+    Variable operator+(const Variable& lhs, const double& rhs)
     {
-      return Variable(lhs) += rhs;
+      Variable result(lhs);
+      result += rhs;
+      return result;
     }
 
-    const Variable operator+(const double& lhs, const Variable& rhs)
+    Variable operator+(const double& lhs, const Variable& rhs)
     {
-      return Variable(rhs) += lhs;
+      Variable result(rhs);
+      result += lhs;
+      return result;
     }
 
     // -
-    const Variable operator-(const Variable& lhs, const Variable& rhs)
+    Variable operator-(const Variable& lhs, const Variable& rhs)
     {
-      return Variable(lhs) -= rhs;
+      Variable result(lhs);
+      result -= rhs;
+      return result;
     }
 
-    const Variable operator-(const Variable& lhs, const double& rhs)
+    Variable operator-(const Variable& lhs, const double& rhs)
     {
-      return Variable(lhs) -= rhs;
+      Variable result(lhs);
+      result -= rhs;
+      return result;
     }
 
-    const Variable operator-(const double& lhs, const Variable& rhs)
+    Variable operator-(const double& lhs, const Variable& rhs)
     {
-      return Variable(lhs) -= rhs;
+      Variable result(lhs);
+      result -= rhs;
+      return result;
     }
 
     // *
-    const Variable operator*(const Variable& lhs, const Variable& rhs)
+    Variable operator*(const Variable& lhs, const Variable& rhs)
     {
-      return Variable(lhs) *= rhs;
+      Variable result(lhs);
+      result *= rhs;
+      return result;
     }
 
-    const Variable operator*(const Variable& lhs, const double& rhs)
+    Variable operator*(const Variable& lhs, const double& rhs)
     {
-      return Variable(lhs) *= rhs;
+      Variable result(lhs);
+      result *= rhs;
+      return result;
     }
 
-    const Variable operator*(const double& lhs, const Variable& rhs)
+    Variable operator*(const double& lhs, const Variable& rhs)
     {
-      return Variable(lhs) *= rhs;
+      Variable result(lhs);
+      result *= rhs;
+      return result;
     }
 
     // /
-    const Variable operator/(const Variable& lhs, const Variable& rhs)
+    Variable operator/(const Variable& lhs, const Variable& rhs)
     {
-      return Variable(lhs) /= rhs;
+      Variable result(lhs);
+      result /= rhs;
+      return result;
     }
 
-    const Variable operator/(const Variable& lhs, const double& rhs)
+    Variable operator/(const Variable& lhs, const double& rhs)
     {
-      return Variable(lhs) /= rhs;
+      Variable result(lhs);
+      result /= rhs;
+      return result;
     }
 
-    const Variable operator/(const double& lhs, const Variable& rhs)
+    Variable operator/(const double& lhs, const Variable& rhs)
     {
-      return Variable(lhs) /= rhs;
+      Variable result(lhs);
+      result /= rhs;
+      return result;
     }
 
     // ==
@@ -367,7 +391,7 @@ namespace std
     res2.setValue(val);                              /* set function value f(x, y) */                       \
     res1.scaleDependencies(der1);                    /* compute derivatives of f(x, y) with respect to x */ \
     res2.scaleDependencies(der2);                    /* compute derivatives of f(x, y) with respect to y */ \
-    GridKit::DependencyTracking::Variable res(res1); /* add derivatives with respect to x to return */      \
+    GridKit::DependencyTracking::Variable res(std::move(res1)); /* relocate derivatives w.r.t. x into return */ \
     res.addDependencies(res2);                       /* add derivatives with respect to y to return */      \
     return res;                                                                                             \
   }
