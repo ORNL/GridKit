@@ -68,8 +68,11 @@ namespace GridKit
   private:
     component_type& component_;
     node_type&      bus_;
-    ScalarT*        y_ptr;
-    ScalarT*        yp_ptr;
-    ScalarT*        f_ptr;
+
+    std::unique_ptr<ScalarT[]> y_ptr;
+    std::unique_ptr<ScalarT[]> yp_ptr;
+    std::unique_ptr<ScalarT[]> f_ptr;
+
+    std::vector<IdxT> jac_map_;
   };
 } // namespace GridKit

@@ -39,6 +39,28 @@ namespace GridKit
     {
       extern_indices_.insert(i);
     }
+
+
+    const IdxT* cooRow = component_->jacobianCooRows();
+    const IdxT* cooCol = component_->jacobianCooCols();
+
+    const IdxT bus_i = bus.getNodeConnection(0);
+    const IdxT bus_j = bus.getNodeConnection(1);
+
+    for (IdxT k = 0; k < component_->nnz(); ++k)
+    {
+      const IdxT row_node = component.getNodeConnection(cooRow[k]);
+      const IdxT col_node = component.getNodeConnection(cooCol[k]);
+
+      const bool row_is_bus = (row_node == bus_i || row_node == bus_j);
+      const bool col_is_bus = (col_node == bus_i || col_node == bus_j);
+
+      if (row_is_bus && col_is_bus)
+      {
+        ++nnz_;
+        jac_map_.push_back(i);
+      }
+    }
   }
 
   template <class ScalarT, typename IdxT>
@@ -89,13 +111,16 @@ namespace GridKit
       assert(false);
     }
 
-    y_ptr  = new ScalarT[component_.getInternalSize()];
-    yp_ptr = new ScalarT[component_.getInternalSize()];
-    f_ptr  = new ScalarT[component_.getInternalSize()];
+    
+    const auto n = component_.getInternalSize();
 
-    component_.setInternalPointer(y_ptr);
-    component_.setInternalDerivativePointer(yp_ptr);
-    component_.setInternalResidualPointer(f_ptr);
+    y_ptr  = std::make_unique<ScalarT[]>(n);
+    yp_ptr = std::make_unique<ScalarT[]>(n);
+    f_ptr  = std::make_unique<ScalarT[]>(n);
+
+    component_.setInternalPointer(y_ptr.get());
+    component_.setInternalDerivativePointer(yp_ptr.get());
+    component_.setInternalResidualPointer(f_ptr.get());
 
     return 0;
   }
@@ -134,24 +159,26 @@ namespace GridKit
   int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
   {
 
-    size_t counter_int    = 0;
-    size_t counter_ext    = 0;
-    auto   extern_indices = component_.getExternIndices();
+    size_t internal = 0;
+    size_t external = 0;
 
-    for (size_t i = 0; i < static_cast<size_t>(component_.size()); i++)
+    const auto& extern_indices = component_.getExternIndices();
+
+    for (IdxT i = 0; i < component_.size(); ++i)
     {
-      if (extern_indices.contains(static_cast<IdxT>(i)))
+      const bool is_external = extern_indices.contains(i);
+
+      if (is_external)
       {
-        component_.y()[counter_ext]  = y_[i];
-        component_.yp()[counter_ext] = yp_[i];
-        counter_ext++;
+        component_.y()[external]  = y_[i];
+        component_.yp()[external] = yp_[i];
+        ++external;
+        continue;
       }
-      else
-      {
-        y_ptr[counter_int]  = y_[i];
-        yp_ptr[counter_int] = yp_[i];
-        counter_int++;
-      }
+
+      y_ptr[internal]  = y_[i];
+      yp_ptr[internal] = yp_[i];
+      ++internal;
     }
 
     component_.evaluateExternalResidual();
@@ -175,6 +202,28 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateJacobian()
   {
+    this->zeroJacMatrix();
+
+    component_->evaluateJacobian();
+
+    const IdxT*  cooRow   = component_->jacobianCooRows();
+    const IdxT*  cooCol   = component_->jacobianCooCols();
+    const RealT* cooVals  = component_->jacobianCooValues();
+
+    std::vector<IdxT> r = {};
+    std::vector<IdxT> c = {};
+    std::vector<RealT> v = {};
+
+
+    for(const auto& index: jac_map_)
+    {
+      r.push_back(cooRow[index]);
+      c.push_back(cooCol[index]);
+      v.push_back(cooVals[index]);
+    }
+
+    this->setJacValues(r, c, v);
+
     return 0;
   }
 
