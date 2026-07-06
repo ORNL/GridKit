@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <iostream>
 #include <type_traits>
 
@@ -95,7 +96,7 @@ namespace GridKit
       if constexpr (std::is_trivially_copyable_v<T>)
       {
         std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        memcpy(dst, src, arraysize);
+        std::memcpy(dst, src, arraysize);
       }
       else
       {
@@ -120,7 +121,7 @@ namespace GridKit
       if constexpr (std::is_trivially_copyable_v<T>)
       {
         std::size_t arraysize = static_cast<std::size_t>(n) * sizeof(T);
-        memset(v, 0, arraysize);
+        std::memset(v, 0, arraysize);
       }
       else
       {

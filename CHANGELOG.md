@@ -67,6 +67,7 @@
 - Added `ConstantSignalSource` component as first use case for `BusToSignalAdapter`.
 - Added IDA option to suppress algebraic variables in local error tests.
 - Removed `COO_Matrix` class.
+- Added portable `Vector` class and policy-based memory utilities.
 
 ## v0.1
 
