@@ -41,16 +41,16 @@ namespace GridKit
     }
 
 
-    const IdxT* cooRow = component_->jacobianCooRows();
-    const IdxT* cooCol = component_->jacobianCooCols();
+    const IdxT* cooRow = component_.jacobianCooRows();
+    const IdxT* cooCol = component_.jacobianCooCols();
 
     const IdxT bus_i = bus.getNodeConnection(0);
     const IdxT bus_j = bus.getNodeConnection(1);
 
-    for (IdxT k = 0; k < component_->nnz(); ++k)
+    for (IdxT k = 0; k < component_.nnz(); ++k)
     {
-      const IdxT row_node = component.getNodeConnection(cooRow[k]);
-      const IdxT col_node = component.getNodeConnection(cooCol[k]);
+      const IdxT row_node = component_.getNodeConnection(cooRow[k]);
+      const IdxT col_node = component_.getNodeConnection(cooCol[k]);
 
       const bool row_is_bus = (row_node == bus_i || row_node == bus_j);
       const bool col_is_bus = (col_node == bus_i || col_node == bus_j);
@@ -58,7 +58,7 @@ namespace GridKit
       if (row_is_bus && col_is_bus)
       {
         ++nnz_;
-        jac_map_.push_back(i);
+        jac_map_.push_back(k);
       }
     }
   }
@@ -204,11 +204,11 @@ namespace GridKit
   {
     this->zeroJacMatrix();
 
-    component_->evaluateJacobian();
+    component_.evaluateJacobian();
 
-    const IdxT*  cooRow   = component_->jacobianCooRows();
-    const IdxT*  cooCol   = component_->jacobianCooCols();
-    const RealT* cooVals  = component_->jacobianCooValues();
+    const IdxT*  cooRows   = component_.jacobianCooRows();
+    const IdxT*  cooCols   = component_.jacobianCooCols();
+    const RealT* cooVals  = component_.jacobianCooValues();
 
     std::vector<IdxT> r = {};
     std::vector<IdxT> c = {};
@@ -217,8 +217,8 @@ namespace GridKit
 
     for(const auto& index: jac_map_)
     {
-      r.push_back(cooRow[index]);
-      c.push_back(cooCol[index]);
+      r.push_back(cooRows[index]);
+      c.push_back(cooCols[index]);
       v.push_back(cooVals[index]);
     }
 

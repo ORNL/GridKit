@@ -4,10 +4,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-<<<<<<< HEAD
-#include <format>
-    =======
->>>>>>> 5723ffb9 (Benchmark Setup for Parallel Function Evaluation)
 #include <iostream>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
@@ -23,28 +19,28 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-    /******************************************************************************
-     * Partitioned Residual Evaluation
-     *
-     * Construct subsystem models by partitioning the original microgrid into
-     * independent groups of components. Each subsystem is allocated and receives
-     * the appropriate subset of the global state vectors (y and yp), consisting
-     * of:
-     *
-     *   - External variables (coupling variables from neighboring partitions)
-     *   - Internal variables (states owned by the partition)
-     *
-     * After distributing the state information, each partition independently
-     * evaluates its residual. The local residuals are then scattered back into
-     * the global residual vector to reconstruct the monolithic residual.
-     *
-     * Finally, the reconstructed residual is compared against the reference
-     * monolithic evaluation to verify the correctness of the partitioning
-     * implementation.
-     ******************************************************************************/
+/******************************************************************************
+ * Partitioned Residual Evaluation
+ *
+ * Construct subsystem models by partitioning the original microgrid into
+ * independent groups of components. Each subsystem is allocated and receives
+ * the appropriate subset of the global state vectors (y and yp), consisting
+ * of:
+ *
+ *   - External variables (coupling variables from neighboring partitions)
+ *   - Internal variables (states owned by the partition)
+ *
+ * After distributing the state information, each partition independently
+ * evaluates its residual. The local residuals are then scattered back into
+ * the global residual vector to reconstruct the monolithic residual.
+ *
+ * Finally, the reconstructed residual is compared against the reference
+ * monolithic evaluation to verify the correctness of the partitioning
+ * implementation.
+ ******************************************************************************/
 
-    using index_type = size_t;
-using real_type      = double;
+using index_type = size_t;
+using real_type  = double;
 
 struct RunResult
 {

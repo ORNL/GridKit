@@ -21,6 +21,7 @@ namespace GridKit
 
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
+    using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
