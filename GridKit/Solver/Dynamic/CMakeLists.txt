@@ -43,17 +43,18 @@ else()
       GridKit::sparse_matrix)
 endif()
 
-if (GRIDKIT_ENABLE_RESOLVE)
-  gridkit_add_library(rosenbrock
-    SOURCES
-      Rosenbrock.cpp
-      RosenbrockTableaus.cpp
-    HEADERS
-      ${_install_headers}
+if(GRIDKIT_ENABLE_RESOLVE)
+  gridkit_add_library(
+    rosenbrock
+    SOURCES Rosenbrock.cpp RosenbrockTableaus.cpp
+    HEADERS ${_install_headers}
     LINK_LIBRARIES
-      PUBLIC ReSolve::ReSolve
-      PUBLIC GridKit::definitions
-      PUBLIC GridKit::utilities_logger
-      PUBLIC GridKit::sparse_matrix
-    )
+      PUBLIC
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::definitions
+      PUBLIC
+      GridKit::utilities_logger
+      PUBLIC
+      GridKit::sparse_matrix)
 endif()

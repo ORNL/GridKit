@@ -630,7 +630,8 @@ namespace Integrator
     } params_;
 
   public:
-    AdaptiveStep(const Parameters& params) : params_(params)
+    AdaptiveStep(const Parameters& params)
+      : params_(params)
     {
     }
 
@@ -724,7 +725,8 @@ namespace Integrator
       double rtol;
     } params_;
 
-    InfNorm(Parameters&& params) : params_(std::move(params))
+    InfNorm(Parameters&& params)
+      : params_(std::move(params))
     {
     }
 

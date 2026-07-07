@@ -152,9 +152,16 @@ if(GRIDKIT_ENABLE_THREADS)
 endif()
 
 if(GRIDKIT_ENABLE_RESOLVE)
-  find_package(ReSolve CONFIG 
-    PATHS ${ReSolve_DIR} ${ReSolve_DIR}/share/resolve/cmake
-    ENV LD_LIBRARY_PATH ENV DYLD_LIBRARY_PATH
+  find_package(
+    ReSolve
+    CONFIG
+    PATHS
+    ${ReSolve_DIR}
+    ${ReSolve_DIR}/share/resolve/cmake
+    ENV
+    LD_LIBRARY_PATH
+    ENV
+    DYLD_LIBRARY_PATH
     REQUIRED)
 endif()
 
