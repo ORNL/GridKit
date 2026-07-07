@@ -112,7 +112,7 @@ namespace GridKit
         external_indices_[local_idx - n_intern_] = global_idx;
       }
 
-      {
+      
         size_t component_internal_idx = 0;
         for (component_type* comp : components_)
         {
@@ -121,16 +121,96 @@ namespace GridKit
           comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
           comp->setInternalResidualPointer(&f_[component_internal_idx]);
 
-          const auto& external_indices = comp->getExternIndices();
-          for (size_t i = 0; i < comp->size(); i++)
-          {
-            if (!external_indices.contains(i))
-            {
-              component_internal_idx++;
-            }
-          }
+          component_internal_idx += comp->getInternalSize();
         }
-      }
+      
+
+      // // Evaluate component Jacobians to get sparsity
+      // distributeVectors();
+      // for (component_type* component : components_)
+      // {
+      //   component->evaluateJacobian();
+      // }
+
+      // // Count the number of non-zeros
+      // IdxT nnz_dup = 0;
+      // for (const component_type* component : components_)
+      // {
+      //   const IdxT* r   = component->jacobianCooRows();
+      //   const IdxT* c   = component->jacobianCooCols();
+      //   IdxT        nnz = component->nnz();
+
+      //   for (IdxT i = 0; i < nnz; ++i)
+      //   {
+      //     if(component->getNodeConnection(r[i])>= this->getInternalSize() && component->getNodeConnection(c[i])>= this->getInternalSize())
+      //     {
+      //       continue;
+      //     }
+      //     if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+      //     {
+      //       ++nnz_dup;
+      //     }
+      //   }
+      // }
+
+      // // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+      // IdxT*  rows_dup = new IdxT[nnz_dup];
+      // IdxT*  cols_dup = new IdxT[nnz_dup];
+      // RealT* vals_dup = new RealT[nnz_dup];
+
+      // IdxT counter = 0;
+      // for (const auto& component : components_)
+      // {
+      //   const IdxT*  r   = component->jacobianCooRows();
+      //   const IdxT*  c   = component->jacobianCooCols();
+      //   const RealT* v   = component->jacobianCooValues();
+      //   IdxT         nnz = component->nnz();
+
+      //   for (IdxT i = 0; i < nnz; ++i)
+      //   {
+      //     if(component->getNodeConnection(r[i])>= this->getInternalSize() && component->getNodeConnection(c[i])>= this->getInternalSize())
+      //     {
+      //       continue;
+      //     }
+
+      //     if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+      //     {
+      //       rows_dup[counter] = component->getNodeConnection(r[i]);
+      //       cols_dup[counter] = component->getNodeConnection(c[i]);
+      //       vals_dup[counter] = v[i];
+      //       counter++;
+      //     }
+      //   }
+      // }
+
+      // // Build the system COO Jacobian
+      // LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+
+      // // Populate CSR data with sort and deduplicate
+      // IdxT* row_ptrs = jac.getCsrRowData();
+
+      // // Deduplicated nnz
+      // nnz_ = jac.getNnz();
+
+      // // Allocate cols/vals with deduplicated nnz
+      // IdxT*  cols = new IdxT[nnz_];
+      // RealT* vals = new RealT[nnz_];
+
+      // std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+      // std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+
+      // // Create the CSR Jacobian
+      // csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+
+      // const IdxT* map_to_sorted = jac.getMapToSorted();
+      // const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+
+      // // Build a mappping from original COO index to CSR index
+      // map_to_csr_ = new IdxT[nnz_dup];
+      // for (IdxT i = 0; i < nnz_dup; ++i)
+      // {
+      //   map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+      // }
 
       return 0;
     }
@@ -254,6 +334,45 @@ namespace GridKit
      */
     int evaluateJacobian() final
     {
+
+      distributeVectors();
+
+      // Zero out values
+      RealT* vals = csr_jac_->getValues();
+      for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
+      {
+        vals[i] = 0.0;
+      }
+
+      // Update CSR values from component Jacobians
+      IdxT counter = 0;
+      for (const auto& component : components_)
+      {
+        component->evaluateJacobian();
+
+        const IdxT*  r   = component->jacobianCooRows();
+        const IdxT*  c   = component->jacobianCooCols();
+        const RealT* v   = component->jacobianCooValues();
+        IdxT         nnz = component->nnz();
+
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+
+          if(component->getNodeConnection(r[i]) >= this->getInternalSize() && component->getNodeConnection(c[i]) >= this->getInternalSize())
+          {
+            continue;
+          }
+
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
+          {
+            vals[map_to_csr_[counter]] += v[i];
+            ++counter;
+          }
+        }
+      }
+
+      jac_call_count_++;
+
       return 0;
     }
 
@@ -343,14 +462,9 @@ namespace GridKit
       components_.push_back(component);
     }
 
-    std::unordered_map<IdxT, IdxT>& getInternalMap()
+    void addNode(node_type* node)
     {
-      return internal_map_;
-    }
-
-    std::unordered_map<IdxT, IdxT>& getExternalMap()
-    {
-      return external_map_;
+      nodes_.push_back(node);
     }
 
     int mapGlobalToLocal()
@@ -399,11 +513,6 @@ namespace GridKit
         }
       }
 
-      return 0;
-    }
-
-    int mapLocalToGlobal()
-    {
       return 0;
     }
 
@@ -475,18 +584,9 @@ namespace GridKit
       return yp_ext_;
     }
 
-    void addNode(node_type* node)
+    std::vector<ScalarT>& getExternalDataF()
     {
-      nodes_.push_back(node);
-    }
-
-    void toString()
-    {
-      for (auto* comp : components_)
-      {
-        std::cout << ", " << std::to_string(comp->getIDcomponent());
-      }
-      std::cout << std::endl;
+      return f_ext_;
     }
 
   private:
