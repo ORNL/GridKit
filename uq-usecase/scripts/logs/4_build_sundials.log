@@ -1,0 +1,1935 @@
+=== Building SUNDIALS (develop branch) ===
+Cloning into 'sundials-src'...
+Updating files:  36% (1348/3710)Updating files:  37% (1373/3710)Updating files:  38% (1410/3710)Updating files:  39% (1447/3710)Updating files:  40% (1484/3710)Updating files:  41% (1522/3710)Updating files:  42% (1559/3710)Updating files:  43% (1596/3710)Updating files:  44% (1633/3710)Updating files:  45% (1670/3710)Updating files:  46% (1707/3710)Updating files:  47% (1744/3710)Updating files:  48% (1781/3710)Updating files:  49% (1818/3710)Updating files:  50% (1855/3710)Updating files:  51% (1893/3710)Updating files:  52% (1930/3710)Updating files:  53% (1967/3710)Updating files:  54% (2004/3710)Updating files:  55% (2041/3710)Updating files:  56% (2078/3710)Updating files:  57% (2115/3710)Updating files:  58% (2152/3710)Updating files:  59% (2189/3710)Updating files:  60% (2226/3710)Updating files:  61% (2264/3710)Updating files:  62% (2301/3710)Updating files:  63% (2338/3710)Updating files:  64% (2375/3710)Updating files:  65% (2412/3710)Updating files:  66% (2449/3710)Updating files:  67% (2486/3710)Updating files:  68% (2523/3710)Updating files:  69% (2560/3710)Updating files:  70% (2597/3710)Updating files:  71% (2635/3710)Updating files:  72% (2672/3710)Updating files:  73% (2709/3710)Updating files:  74% (2746/3710)Updating files:  75% (2783/3710)Updating files:  76% (2820/3710)Updating files:  77% (2857/3710)Updating files:  78% (2894/3710)Updating files:  79% (2931/3710)Updating files:  80% (2968/3710)Updating files:  81% (3006/3710)Updating files:  82% (3043/3710)Updating files:  83% (3080/3710)Updating files:  84% (3117/3710)Updating files:  85% (3154/3710)Updating files:  85% (3178/3710)Updating files:  86% (3191/3710)Updating files:  87% (3228/3710)Updating files:  88% (3265/3710)Updating files:  89% (3302/3710)Updating files:  90% (3339/3710)Updating files:  91% (3377/3710)Updating files:  92% (3414/3710)Updating files:  93% (3451/3710)Updating files:  94% (3488/3710)Updating files:  95% (3525/3710)Updating files:  96% (3562/3710)Updating files:  97% (3599/3710)Updating files:  98% (3636/3710)Updating files:  99% (3673/3710)Updating files: 100% (3710/3710)Updating files: 100% (3710/3710), done.
+-- The C compiler identification is Clang 16.0.6
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- SUNDIALS_GIT_VERSION: 04983f94e6e9
+-- Building SUNDIALS in 'Release' mode.
+CMake Warning at cmake/macros/SundialsOption.cmake:129 (message):
+  The option ENABLE_OPENMP is deprecated.  Use SUNDIALS_ENABLE_OPENMP
+  instead.
+Call Stack (most recent call first):
+  cmake/SundialsTPLOptions.cmake:37 (sundials_option)
+  CMakeLists.txt:180 (include)
+
+
+CMake Warning at cmake/macros/SundialsOption.cmake:129 (message):
+  The option ENABLE_KLU is deprecated.  Use SUNDIALS_ENABLE_KLU instead.
+Call Stack (most recent call first):
+  cmake/SundialsTPLOptions.cmake:287 (sundials_option)
+  CMakeLists.txt:180 (include)
+
+
+CMake Warning at cmake/macros/SundialsOption.cmake:129 (message):
+  The option EXAMPLES_ENABLE_C is deprecated.  Use SUNDIALS_ENABLE_C_EXAMPLES
+  instead.
+Call Stack (most recent call first):
+  cmake/SundialsExampleOptions.cmake:24 (sundials_option)
+  CMakeLists.txt:186 (include)
+
+
+CMake Warning at cmake/macros/SundialsOption.cmake:129 (message):
+  The option EXAMPLES_ENABLE_CXX is deprecated.  Use
+  SUNDIALS_ENABLE_CXX_EXAMPLES instead.
+Call Stack (most recent call first):
+  cmake/SundialsExampleOptions.cmake:43 (sundials_option)
+  CMakeLists.txt:186 (include)
+
+
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of int64_t
+-- Check size of int64_t - done
+-- Using int64_t for indices
+-- C standard set to 99
+-- C extensions set to ON
+-- Performing Test SUNDIALS_C_COMPILER_HAS_BUILTIN_EXPECT
+-- Performing Test SUNDIALS_C_COMPILER_HAS_BUILTIN_EXPECT - Success
+-- Performing Test SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_ASSUME
+-- Performing Test SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_ASSUME - Failed
+-- Performing Test SUNDIALS_C_COMPILER_HAS_BUILTIN_ASSUME
+-- Performing Test SUNDIALS_C_COMPILER_HAS_BUILTIN_ASSUME - Success
+-- Performing Test SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_UNUSED
+-- Performing Test SUNDIALS_C_COMPILER_HAS_ATTRIBUTE_UNUSED - Success
+-- Looking for POSIX timers... found
+-- Performing Test COMPILER_HAS_DEPRECATED_MSG
+-- Performing Test COMPILER_HAS_DEPRECATED_MSG - Success
+-- Appending C RELEASE flags
+-- Found OpenMP_C: -fopenmp=libomp (found version "5.0")
+-- Found OpenMP: TRUE (found version "5.0")
+-- Found KLU: /nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libklu.so
+-- KLU_LIBRARIES:   /nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libklu.so;/nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libamd.so;/nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libcolamd.so;/nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libbtf.so;/nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64/libsuitesparseconfig.so
+-- KLU_INCLUDE_DIR: /nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/include/suitesparse
+-- Testing KLU
+-- Check size of SuiteSparse_long
+-- Check size of SuiteSparse_long - done
+-- Size of SuiteSparse_long is 8
+-- Testing KLU - success
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR - Success
+-- Added NVECTOR_SERIAL module
+-- Added NVECTOR_MANYVECTOR module
+-- Added NVECTOR_OPENMP module
+-- Added SUNMATRIX_BAND module
+-- Added SUNMATRIX_DENSE module
+-- Added SUNMATRIX_SPARSE module
+-- Added SUNLINSOL_BAND module
+-- Added SUNLINSOL_DENSE module
+-- Added SUNLINSOL_PCG module
+-- Added SUNLINSOL_SPBCGS module
+-- Added SUNLINSOL_SPFGMR module
+-- Added SUNLINSOL_SPGMR module
+-- Added SUNLINSOL_SPTFQMR module
+-- Added SUNLINSOL_KLU module
+-- Added SUNNONLINSOL_NEWTON module
+-- Added SUNNONLINSOL_FIXEDPOINT module
+-- Added SUNNONLINSOL_AUTO module
+-- Added SUNDOMEIGEST_POWER module
+-- Added ARKODE module
+-- Added CVODE module
+-- Added CVODES module
+-- Added IDA module
+-- Added IDAS module
+-- Added KINSOL module
+-- Configuring done (8.6s)
+-- Generating done (0.9s)
+-- Build files have been written to: /nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build
+[  0%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundatanode/sundatanode_inmem.c.o
+[  1%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_adaptcontroller.c.o
+[  2%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_adjointcheckpointscheme.c.o
+[  2%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_adjointstepper.c.o
+[  3%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_band.c.o
+[  4%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_cli.c.o
+[  4%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_context.c.o
+[  5%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_dense.c.o
+[  6%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_direct.c.o
+[  6%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_datanode.c.o
+[  7%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_errors.c.o
+[  7%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_domeigestimator.c.o
+[  9%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_futils.c.o
+[  9%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_iterative.c.o
+[ 10%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_hashmap.c.o
+[ 11%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_linearsolver.c.o
+[ 12%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_math.c.o
+[ 12%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_nonlinearsolver.c.o
+[ 12%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_nvector.c.o
+[ 12%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_logger.c.o
+[ 13%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_matrix.c.o
+[ 16%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_profiler.c.o
+[ 16%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_nvector_senswrapper.c.o
+[ 16%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_memory.c.o
+[ 16%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_stepper.c.o
+[ 16%] Building C object src/sundials/CMakeFiles/sundials_core_obj_shared.dir/sundials_version.c.o
+[ 16%] Built target sundials_core_obj_shared
+[ 17%] Linking C shared library libsundials_core.so
+[ 17%] Built target sundials_core_shared
+[ 17%] Built target fake_sundials_nvecserial_obj_shared
+[ 17%] Built target fake_sundials_nvecmanyvector_obj_shared
+[ 17%] Built target fake_sundials_nvecopenmp_obj_shared
+[ 17%] Built target fake_sundials_sunmatrixband_obj_shared
+[ 17%] Built target fake_sundials_sunmatrixdense_obj_shared
+[ 17%] Built target fake_sundials_sunmatrixsparse_obj_shared
+[ 17%] Built target fake_sundials_sunlinsolspbcgs_obj_shared
+[ 17%] Built target fake_sundials_sunlinsolpcg_obj_shared
+[ 17%] Built target fake_sundials_sunlinsolspgmr_obj_shared
+[ 17%] Built target fake_sundials_sunnonlinsolnewton_obj_shared
+[ 17%] Built target fake_sundials_sunnonlinsolfixedpoint_obj_shared
+[ 17%] Built target fake_sundials_sunlinsolspfgmr_obj_shared
+[ 17%] Built target fake_sundials_sunadaptcontrollersoderlind_obj_shared
+[ 17%] Built target fake_sundials_sunlinsolsptfqmr_obj_shared
+[ 17%] Built target fake_sundials_sunadaptcontrollermrihtol_obj_shared
+[ 17%] Built target fake_sundials_adjointcheckpointscheme_fixed_obj_shared
+[ 17%] Built target fake_sundials_sundomeigestpower_obj_shared
+[ 17%] Built target fake_sundials_cvode_obj_shared
+[ 17%] Built target fake_sundials_cvodes_obj_shared
+[ 17%] Built target fake_sundials_sunmemsys_obj_shared
+[ 17%] Built target fake_sundials_sunadaptcontrollerimexgus_obj_shared
+[ 17%] Built target fake_sundials_arkode_obj_shared
+[ 17%] Built target fake_sundials_ida_obj_shared
+[ 17%] Built target fake_sundials_kinsol_obj_shared
+[ 17%] Built target fake_sundials_idas_obj_shared
+[ 17%] Building C object src/nvector/serial/CMakeFiles/sundials_nvecserial_obj_shared.dir/nvector_serial.c.o
+[ 18%] Building C object src/sunmatrix/band/CMakeFiles/sundials_sunmatrixband_obj_shared.dir/sunmatrix_band.c.o
+[ 18%] Building C object src/sunmatrix/sparse/CMakeFiles/sundials_sunmatrixsparse_obj_shared.dir/sunmatrix_sparse.c.o
+[ 19%] Building C object src/nvector/manyvector/CMakeFiles/sundials_nvecmanyvector_obj_shared.dir/nvector_manyvector.c.o
+[ 21%] Building C object src/sunlinsol/spbcgs/CMakeFiles/sundials_sunlinsolspbcgs_obj_shared.dir/sunlinsol_spbcgs.c.o
+[ 21%] Building C object src/nvector/openmp/CMakeFiles/sundials_nvecopenmp_obj_shared.dir/nvector_openmp.c.o
+[ 22%] Building C object src/sunmatrix/dense/CMakeFiles/sundials_sunmatrixdense_obj_shared.dir/sunmatrix_dense.c.o
+[ 22%] Building C object src/sunlinsol/pcg/CMakeFiles/sundials_sunlinsolpcg_obj_shared.dir/sunlinsol_pcg.c.o
+[ 22%] Building C object src/sunlinsol/spgmr/CMakeFiles/sundials_sunlinsolspgmr_obj_shared.dir/sunlinsol_spgmr.c.o
+[ 25%] Building C object src/sunnonlinsol/fixedpoint/CMakeFiles/sundials_sunnonlinsolfixedpoint_obj_shared.dir/sunnonlinsol_fixedpoint.c.o
+[ 25%] Building C object src/sunnonlinsol/newton/CMakeFiles/sundials_sunnonlinsolnewton_obj_shared.dir/sunnonlinsol_newton.c.o
+[ 25%] Building C object src/sunlinsol/spfgmr/CMakeFiles/sundials_sunlinsolspfgmr_obj_shared.dir/sunlinsol_spfgmr.c.o
+[ 26%] Building C object src/sunadaptcontroller/soderlind/CMakeFiles/sundials_sunadaptcontrollersoderlind_obj_shared.dir/sunadaptcontroller_soderlind.c.o
+[ 27%] Building C object src/sunlinsol/sptfqmr/CMakeFiles/sundials_sunlinsolsptfqmr_obj_shared.dir/sunlinsol_sptfqmr.c.o
+[ 28%] Building C object src/sundomeigest/power/CMakeFiles/sundials_sundomeigestpower_obj_shared.dir/sundomeigest_power.c.o
+[ 28%] Building C object src/sunadaptcontroller/mrihtol/CMakeFiles/sundials_sunadaptcontrollermrihtol_obj_shared.dir/sunadaptcontroller_mrihtol.c.o
+[ 28%] Building C object src/sunadjointcheckpointscheme/fixed/CMakeFiles/sundials_adjointcheckpointscheme_fixed_obj_shared.dir/sunadjointcheckpointscheme_fixed.c.o
+[ 28%] Building C object src/sunadaptcontroller/imexgus/CMakeFiles/sundials_sunadaptcontrollerimexgus_obj_shared.dir/sunadaptcontroller_imexgus.c.o
+[ 29%] Building C object src/sunmemory/system/CMakeFiles/sundials_sunmemsys_obj_shared.dir/sundials_system_memory.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/nvector/serial/nvector_serial.c:100:31: warning: 'N_VSpace_Serial' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  v->ops->nvspace           = N_VSpace_Serial;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/nvector/nvector_serial.h:120:1: note: 'N_VSpace_Serial' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunmatrix/sparse/sunmatrix_sparse.c:96:38: warning: 'SUNMatSpace_Sparse' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  A->ops->space                    = SUNMatSpace_Sparse;
+                                     ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunmatrix/sunmatrix_sparse.h:190:1: note: 'SUNMatSpace_Sparse' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/nvector/manyvector/nvector_manyvector.c:332:27: warning: 'N_VSpace_ManyVector' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  v->ops->nvspace       = N_VSpace_ManyVector;
+                          ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/nvector/nvector_manyvector.h:108:1: note: 'N_VSpace_ManyVector' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunmatrix/band/sunmatrix_band.c:92:38: warning: 'SUNMatSpace_Band' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  A->ops->space                    = SUNMatSpace_Band;
+                                     ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunmatrix/sunmatrix_band.h:130:1: note: 'SUNMatSpace_Band' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/nvector/openmp/nvector_openmp.c:120:31: warning: 'N_VSpace_OpenMP' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  v->ops->nvspace           = N_VSpace_OpenMP;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/nvector/nvector_openmp.h:129:1: note: 'N_VSpace_OpenMP' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/pcg/sunlinsol_pcg.c:103:31: warning: 'SUNLinSolSpace_PCG' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space             = SUNLinSolSpace_PCG;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_pcg.h:127:1: note: 'SUNLinSolSpace_PCG' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunmatrix/dense/sunmatrix_dense.c:76:38: warning: 'SUNMatSpace_Dense' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  A->ops->space                    = SUNMatSpace_Dense;
+                                     ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunmatrix/sunmatrix_dense.h:108:1: note: 'SUNMatSpace_Dense' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/spbcgs/sunlinsol_spbcgs.c:112:31: warning: 'SUNLinSolSpace_SPBCGS' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space             = SUNLinSolSpace_SPBCGS;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_spbcgs.h:109:1: note: 'SUNLinSolSpace_SPBCGS' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/spgmr/sunlinsol_spgmr.c:111:31: warning: 'SUNLinSolSpace_SPGMR' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space             = SUNLinSolSpace_SPGMR;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_spgmr.h:118:1: note: 'SUNLinSolSpace_SPGMR' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/spfgmr/sunlinsol_spfgmr.c:113:31: warning: 'SUNLinSolSpace_SPFGMR' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space             = SUNLinSolSpace_SPFGMR;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_spfgmr.h:119:1: note: 'SUNLinSolSpace_SPFGMR' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunadaptcontroller/soderlind/sunadaptcontroller_soderlind.c:113:26: warning: 'SUNAdaptController_Space_Soderlind' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  C->ops->space        = SUNAdaptController_Space_Soderlind;
+                         ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunadaptcontroller/sunadaptcontroller_soderlind.h:94:1: note: 'SUNAdaptController_Space_Soderlind' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/sptfqmr/sunlinsol_sptfqmr.c:110:31: warning: 'SUNLinSolSpace_SPTFQMR' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space             = SUNLinSolSpace_SPTFQMR;
+                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_sptfqmr.h:111:1: note: 'SUNLinSolSpace_SPTFQMR' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunadaptcontroller/mrihtol/sunadaptcontroller_mrihtol.c:107:29: warning: /nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunadaptcontroller/imexgus/sunadaptcontroller_imexgus.c'SUNAdaptController_Space_MRIHTol' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+:100:26: warning: 'SUNAdaptController_Space_ImExGus' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  C->ops->space           = SUNAdaptController_Space_MRIHTol;
+                            ^
+  C->ops->space        = SUNAdaptController_Space_ImExGus;
+                         ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunadaptcontroller/sunadaptcontroller_mrihtol.h:96:1: note: 'SUNAdaptController_Space_MRIHTol' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunadaptcontroller/sunadaptcontroller_imexgus.h:87:1: note: 'SUNAdaptController_Space_ImExGus' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg):
+38                                                              ^:
+63:/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h :note: 34expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG':
+56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+1 warning generated.
+[ 29%] Built target sundials_sunlinsolpcg_obj_shared
+[ 29%] Built target sundials_sunnonlinsolnewton_obj_shared
+[ 29%] Built target sundials_sunmatrixdense_obj_shared
+[ 29%] Built target sundials_sunadaptcontrollerimexgus_obj_shared
+[ 29%] Built target sundials_sunmemsys_obj_shared
+[ 29%] Built target sundials_sunadaptcontrollersoderlind_obj_shared
+[ 30%] Linking C shared library libsundials_sunnonlinsolnewton.so
+[ 31%] Linking C shared library libsundials_sunlinsolpcg.so
+[ 31%] Built target sundials_adjointcheckpointscheme_fixed_obj_shared
+[ 31%] Built target sundials_sunlinsolspbcgs_obj_shared
+[ 31%] Built target sundials_sunlinsolspgmr_obj_shared
+[ 31%] Built target sundials_sunadaptcontrollermrihtol_obj_shared
+[ 31%] Built target sundials_sunnonlinsolfixedpoint_obj_shared
+[ 31%] Built target sundials_sundomeigestpower_obj_shared
+[ 31%] Built target sundials_sunmatrixband_obj_shared
+[ 31%] Built target sundials_sunlinsolspfgmr_obj_shared
+[ 31%] Built target sundials_sunmatrixsparse_obj_shared
+[ 31%] Built target sundials_sunlinsolsptfqmr_obj_shared
+[ 31%] Built target sundials_nvecmanyvector_obj_shared
+[ 32%] Linking C shared library libsundials_sunmatrixdense.so
+[ 32%] Built target sundials_nvecserial_obj_shared
+[ 32%] Linking C shared library libsundials_sunlinsolspbcgs.so
+[ 33%] Linking C shared library libsundials_sunlinsolspgmr.so
+[ 33%] Linking C shared library libsundials_sunnonlinsolfixedpoint.so
+[ 33%] Built target sundials_nvecopenmp_obj_shared
+[ 34%] Linking C shared library libsundials_sundomeigestpower.so
+[ 34%] Linking C shared library libsundials_sunmatrixband.so
+[ 36%] Linking C shared library libsundials_sunmatrixsparse.so
+[ 36%] Linking C shared library libsundials_sunlinsolspfgmr.so
+[ 36%] Linking C shared library libsundials_sunlinsolsptfqmr.so
+[ 36%] Linking C shared library libsundials_nvecmanyvector.so
+[ 37%] Linking C shared library libsundials_nvecserial.so
+[ 38%] Linking C shared library libsundials_nvecopenmp.so
+[ 38%] Built target sundials_sunlinsolpcg_shared
+[ 38%] Built target sundials_sunnonlinsolnewton_shared
+[ 38%] Built target sundials_sunmatrixdense_shared
+[ 38%] Built target fake_sundials_sunlinsoldense_obj_shared
+[ 39%] Building C object src/sunlinsol/dense/CMakeFiles/sundials_sunlinsoldense_obj_shared.dir/sunlinsol_dense.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/dense/sunlinsol_dense.c:82:24: warning: 'SUNLinSolSpace_Dense' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space      = SUNLinSolSpace_Dense;
+                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_dense.h:84:1: note: 'SUNLinSolSpace_Dense' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+1 warning generated.
+[ 39%] Built target sundials_sunlinsolspbcgs_shared
+[ 39%] Built target sundials_sunlinsolspgmr_shared
+[ 39%] Built target sundials_sunnonlinsolfixedpoint_shared
+[ 39%] Built target sundials_sundomeigestpower_shared
+[ 39%] Built target sundials_sunmatrixband_shared
+[ 39%] Built target sundials_sunmatrixsparse_shared
+[ 39%] Built target sundials_sunlinsoldense_obj_shared
+[ 39%] Built target sundials_nvecserial_shared
+[ 39%] Built target sundials_sunlinsolsptfqmr_shared
+[ 39%] Built target sundials_sunlinsolspfgmr_shared
+[ 39%] Built target sundials_nvecmanyvector_shared
+[ 39%] Built target sundials_nvecopenmp_shared
+[ 39%] Built target fake_sundials_sunnonlinsolauto_obj_shared
+[ 39%] Built target fake_sundials_sunlinsolband_obj_shared
+[ 39%] Built target fake_sundials_sunlinsolklu_obj_shared
+[ 40%] Linking C shared library libsundials_sunlinsoldense.so
+[ 41%] Building C object src/sunnonlinsol/auto/CMakeFiles/sundials_sunnonlinsolauto_obj_shared.dir/sunnonlinsol_auto.c.o
+[ 41%] Building C object src/sunlinsol/band/CMakeFiles/sundials_sunlinsolband_obj_shared.dir/sunlinsol_band.c.o
+[ 41%] Building C object src/sunlinsol/klu/CMakeFiles/sundials_sunlinsolklu_obj_shared.dir/sunlinsol_klu.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/band/sunlinsol_band.c:86:24: warning: 'SUNLinSolSpace_Band' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space      = SUNLinSolSpace_Band;
+                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_band.h:79:1: note: 'SUNLinSolSpace_Band' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+1 warning generated.
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/sunlinsol/klu/sunlinsol_klu.c:107:24: warning: 'SUNLinSolSpace_KLU' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  S->ops->space      = SUNLinSolSpace_KLU;
+                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sunlinsol/sunlinsol_klu.h:141:1: note: 'SUNLinSolSpace_KLU' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+1 warning generated.
+[ 41%] Built target sundials_sunlinsolband_obj_shared
+[ 41%] Built target sundials_sunlinsoldense_shared
+[ 41%] Built target sundials_sunnonlinsolauto_obj_shared
+[ 41%] Built target sundials_sunlinsolklu_obj_shared
+[ 41%] Linking C shared library libsundials_sunlinsolband.so
+[ 42%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida.c.o
+[ 42%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_bbdpre.c.o
+[ 43%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_cli.c.o
+[ 44%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_ic.c.o
+[ 44%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_io.c.o
+[ 45%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_ls.c.o
+[ 46%] Building C object src/ida/CMakeFiles/sundials_ida_obj_shared.dir/ida_nls.c.o
+[ 47%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_bbdpre.c.o
+[ 47%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_aa.c.o
+[ 49%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas.c.o
+[ 49%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idaa.c.o
+[ 50%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_io.c.o
+[ 50%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_cli.c.o
+[ 50%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_cli.c.o
+[ 51%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_ls.c.o
+[ 51%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_ic.c.o
+[ 54%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol.c.o
+[ 55%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_bbdpre.c.o
+[ 55%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idaa_io.c.o
+[ 55%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_io.c.o
+[ 57%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_nls_sim.c.o
+[ 57%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_nls.c.o
+[ 57%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_nls_stg.c.o
+[ 57%] Building C object src/idas/CMakeFiles/sundials_idas_obj_shared.dir/idas_ls.c.o
+[ 57%] Building C object src/kinsol/CMakeFiles/sundials_kinsol_obj_shared.dir/kinsol_orth.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/ida/ida.c:442:36: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (yy0->ops->nvspace != NULL) { N_VSpace(yy0, &lrw1, &liw1); }
+                                   ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/ida/ida_bbdpre.c:266:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(IDA_mem->ida_tempv1, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/ida/ida_bbdpre.c:272:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/ida/ida_bbdpre.c:278:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->PP, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/ida/ida_bbdpre.c:284:12: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+4 warnings generated.
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol_bbdpre.c:254:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(kin_mem->kin_vtemp1, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol_bbdpre.c:260:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->zlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol_bbdpre.c:266:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol_bbdpre.c:272:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->PP, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol_bbdpre.c:278:12: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/kinsol/kinsol.c:377:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(tmpl, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+[ 57%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodea_io.c.o
+[ 58%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas.c:635:36: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+[ 60%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_bandpre.c.o
+[ 60%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_arkstep_io.c.o
+  if (yy0->ops->nvspace != NULL) { N_VSpace(yy0, &lrw1, &liw1); }
+                                   ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+[ 60%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_bandpre.c.o
+[ 64%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_cli.c.o
+[ 62%] Linking C shared library libsundials_sunnonlinsolauto.so
+[ 64%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_arkstep_nls.c.o
+[ 64%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_bandpre.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas.c:1064:3: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  N_VSpace(yQ0, &lrw1Q, &liw1Q);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+[ 66%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_arkstep.c.o
+[ 66%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_diag.c.o
+[ 66%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_cli.c.o
+[ 67%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_diag.c.o
+[ 67%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_ls.c.o
+[ 67%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_bbdpre.c.o
+[ 68%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_nls.c.o
+[ 69%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_butcher_erk.c.o
+[ 68%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_butcher_dirk.c.o
+[ 69%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_io.c.o
+[ 70%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_nls_sim.c.o
+[ 70%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_nls_stg1.c.o
+[ 72%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_nls_stg.c.o
+[ 72%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_nls.c.o
+[ 70%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_adapt.c.o
+[ 73%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_proj.c.o
+[ 74%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_resize.c.o
+[ 74%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_resize.c.o
+5 warnings generated.
+[ 74%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_forcingstep.c.o
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas_bbdpre.c:280:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(IDA_mem->ida_tempv1, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas_bbdpre.c:286:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas_bbdpre.c:292:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->PP, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/idas/idas_bbdpre.c:298:12: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+[ 76%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_bbdpre.c.o
+[ 76%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_erkstep.c.o
+[ 78%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_io.c.o
+[ 79%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_lsrkstep.c.o
+[ 79%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_ls.c.o
+[ 79%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_interp.c.o
+[ 79%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_butcher.c.o
+[ 81%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_relaxation.c.o
+[ 81%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_sunstepper.c.o
+[ 82%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_mristep.c.o
+[ 82%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_sprk.c.o
+[ 83%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_mristep_nls.c.o
+[ 83%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_mristep_io.c.o
+[ 84%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_mri_tables.c.o
+[ 84%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_sprkstep.c.o
+[ 85%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode.c.o
+[ 85%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode.c.o
+[ 85%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_erkstep_io.c.o
+[ 88%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_cli.c.o
+[ 88%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_sprkstep_io.c.o
+[ 88%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_splittingstep_coefficients.c.o
+[ 90%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodes_io.c.o
+[ 90%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_ls.c.o
+[ 91%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_bbdpre.c.o
+[ 91%] Building C object src/cvodes/CMakeFiles/sundials_cvodes_obj_shared.dir/cvodea.c.o
+[ 91%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_mristep_controller.c.o
+[ 93%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_lsrkstep_io.c.o
+[ 93%] Building C object src/cvode/CMakeFiles/sundials_cvode_obj_shared.dir/cvode_proj.c.o
+[ 90%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_splittingstep.c.o
+[ 94%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_root.c.o
+[ 95%] Building C object src/arkode/CMakeFiles/sundials_arkode_obj_shared.dir/arkode_user_controller.c.o
+1 warning generated.
+4 warnings generated.
+1 warning generated.
+[ 95%] Built target sundials_sunlinsolband_shared
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes.c:745:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes.c:1193:3: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  N_VSpace(yQ0, &lrw1Q, &liw1Q);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+[ 96%] Linking C shared library libsundials_sunlinsolklu.so
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_cli.c:99:28: warning: 'CVodeSetMonitorFrequency' is deprecated [-Wdeprecated-declarations]
+     {"monitor_frequency", CVodeSetMonitorFrequency},
+                           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/cvodes/cvodes.h:216:1: note: 'CVodeSetMonitorFrequency' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_export.h:29:54: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT'
+#  define SUNDIALS_DEPRECATED_EXPORT SUNDIALS_EXPORT SUNDIALS_DEPRECATED
+                                                     ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_export.h:25:47: note: expanded from macro 'SUNDIALS_DEPRECATED'
+#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:214:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:220:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:321:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:325:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:364:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:370:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:779:5: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:787:5: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:830:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep_io.c:836:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep.c:377:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep.c:513:7: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+      ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+      ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep.c:521:7: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+      ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+      ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_bbdpre.c:275:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(cv_mem->cv_tempv, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_bbdpre.c:281:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_bbdpre.c:287:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->savedJ, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_bbdpre.c:293:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->savedP, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvodes/cvodes_bbdpre.c:299:12: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep.c:2650:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Be, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_arkstep.c:2654:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->Bi, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_cli.c:95:28: warning: 'CVodeSetMonitorFrequency' is deprecated [-Wdeprecated-declarations]
+     {"monitor_frequency", CVodeSetMonitorFrequency},
+                           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/cvode/cvode.h:147:1: note: 'CVodeSetMonitorFrequency' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_export.h:29:54: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT'
+#  define SUNDIALS_DEPRECATED_EXPORT SUNDIALS_EXPORT SUNDIALS_DEPRECATED
+                                                     ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_export.h:25:47: note: expanded from macro 'SUNDIALS_DEPRECATED'
+#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_bbdpre.c:249:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(ark_mem->tempv1, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_bbdpre.c:255:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_bbdpre.c:261:14: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNMatSpace(pdata->savedJ, &lrw, &liw);
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_bbdpre.c:267:14: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNMatSpace(pdata->savedP, &lrw, &liw);
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_bbdpre.c:273:14: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep_io.c:66:3: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  MRIStepCoupling_Space(step_mem->MRIC, &Tliw, &Tlrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep_io.c:85:3: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  MRIStepCoupling_Space(step_mem->MRIC, &Tliw, &Tlrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode.c:145:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:75:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_bbdpre.c:263:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+    N_VSpace(cv_mem->cv_tempv, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:95:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_bbdpre.c:269:5: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    N_VSpace(pdata->rlocal, &lrw1, &liw1);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_bbdpre.c:275:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->savedJ, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_bbdpre.c:281:12: warning: 'SUNMatSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNMatSpace(pdata->savedP, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_matrix.h:161:1: note: 'SUNMatSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode_bbdpre.c:287:12: warning: 'SUNLinSolSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    flag = SUNLinSolSpace(pdata->LS, &lrw, &liw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_linearsolver.h:219:1: note: 'SUNLinSolSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3533:14: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNAdaptController_Space(ark_mem->hadapt_mem->hcontroller, &lenrw,
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3567:12: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  retval = SUNAdaptController_Space(C, &lenrw, &leniw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3669:14: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNAdaptController_Space(ark_mem->hadapt_mem->hcontroller, &lenrw,
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3830:12: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  retval = SUNAdaptController_Space(C, &lenrw, &leniw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3872:14: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    retval = SUNAdaptController_Space(ark_mem->hadapt_mem->hcontroller, &lenrw,
+             ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_io.c:3915:12: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  retval = SUNAdaptController_Space(C, &lenrw, &leniw);
+           ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep.c:250:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep.c:293:7: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+      ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+      ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/cvode/cvode.c:429:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_sprkstep.c:263:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep_controller.c:140:10: warning: 'SUNAdaptController_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep.c:1326:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+  return SUNAdaptController_Space(MRICONTROL_C(C), lenrw, leniw);
+         ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_adaptcontroller.h:197:1: note: 'SUNAdaptController_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep.c:416:35: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep_io.c:393:5: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note:     MRIStepCoupling_Space(step_mem->MRIC, &Cleniw, &Clenrw);expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^SUNDIALS_DEPRECATED_EXPORT_MSG(
+
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: /nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.hnote: :expanded from macro 'SUNDIALS_DEPRECATED_MSG'38
+:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep_io.c:487:3: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  MRIStepCoupling_Space(step_mem->MRIC, &Tliw, &Tlrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep.c:594:7: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+      MRIStepCoupling_Space(step_mem->MRIC, &Cliw, &Clrw);
+      ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:133:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:151:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:331:5: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_erkstep_io.c:369:3: warning: 'ARKodeButcherTable_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  ARKodeButcherTable_Space(step_mem->B, &Bliw, &Blrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_butcher.h:58:1: note: 'ARKodeButcherTable_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode.c:1818:37: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+    if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+                                    ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep.c:3404:3: warning: 'MRIStepCoupling_Space' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  MRIStepCoupling_Space(step_mem->MRIC, &Cliw, &Clrw);
+  ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/arkode/arkode_mristep.h:183:1: note: 'MRIStepCoupling_Space' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/src/arkode/arkode_mristep.c:4929:29: warning: 'N_VSpace' is deprecated: Work space functions will be removed in version 8.0.0 [-Wdeprecated-declarations]
+  if (tmpl->ops->nvspace) { N_VSpace(tmpl, &lrw1, &liw1); }
+                            ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/include/sundials/sundials_nvector.h:228:1: note: 'N_VSpace' has been explicitly marked deprecated here
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:38:63: note: expanded from macro 'SUNDIALS_DEPRECATED_EXPORT_MSG'
+#  define SUNDIALS_DEPRECATED_EXPORT_MSG(msg) SUNDIALS_EXPORT SUNDIALS_DEPRECATED_MSG(msg)
+                                                              ^
+/nopt/nrel/apps/cpu_stack/software/gridkit/src/sundials-src/build/include/sundials/sundials_config.h:34:56: note: expanded from macro 'SUNDIALS_DEPRECATED_MSG'
+#  define SUNDIALS_DEPRECATED_MSG(msg) __attribute__ ((__deprecated__(msg)))
+                                                       ^
+1 warning generated.
+1 warning generated.
+1 warning generated.
+10 warnings generated.
+6 warnings generated.
+1 warning generated.
+4 warnings generated.
+5 warnings generated.
+2 warnings generated.
+5 warnings generated.
+5 warnings generated.
+6 warnings generated.
+3 warnings generated.
+2 warnings generated.
+5 warnings generated.
+4 warnings generated.
+1 warning generated.
+2 warnings generated.
+[ 96%] Built target sundials_ida_obj_shared
+[ 96%] Linking C shared library libsundials_ida.so
+[ 96%] Built target sundials_kinsol_obj_shared
+[ 97%] Linking C shared library libsundials_kinsol.so
+[ 97%] Built target sundials_sunnonlinsolauto_shared
+[ 97%] Built target sundials_sunlinsolklu_shared
+[ 97%] Built target sundials_idas_obj_shared
+[ 98%] Linking C shared library libsundials_idas.so
+[ 98%] Built target sundials_cvode_obj_shared
+[ 98%] Built target sundials_cvodes_obj_shared
+[ 99%] Linking C shared library libsundials_cvode.so
+[ 99%] Linking C shared library libsundials_cvodes.so
+[ 99%] Built target sundials_arkode_obj_shared
+[ 99%] Built target sundials_ida_shared
+[100%] Linking C shared library libsundials_arkode.so
+[100%] Built target sundials_kinsol_shared
+[100%] Built target sundials_idas_shared
+[100%] Built target sundials_cvode_shared
+[100%] Built target sundials_cvodes_shared
+[100%] Built target sundials_arkode_shared
+[ 16%] Built target sundials_core_obj_shared
+[ 17%] Built target sundials_core_shared
+[ 17%] Built target fake_sundials_nvecserial_obj_shared
+[ 17%] Built target sundials_nvecserial_obj_shared
+[ 18%] Built target sundials_nvecserial_shared
+[ 18%] Built target fake_sundials_nvecmanyvector_obj_shared
+[ 19%] Built target sundials_nvecmanyvector_obj_shared
+[ 19%] Built target sundials_nvecmanyvector_shared
+[ 19%] Built target fake_sundials_nvecopenmp_obj_shared
+[ 20%] Built target sundials_nvecopenmp_obj_shared
+[ 21%] Built target sundials_nvecopenmp_shared
+[ 21%] Built target fake_sundials_sunmatrixband_obj_shared
+[ 22%] Built target sundials_sunmatrixband_obj_shared
+[ 22%] Built target sundials_sunmatrixband_shared
+[ 22%] Built target fake_sundials_sunmatrixdense_obj_shared
+[ 23%] Built target sundials_sunmatrixdense_obj_shared
+[ 24%] Built target sundials_sunmatrixdense_shared
+[ 24%] Built target fake_sundials_sunmatrixsparse_obj_shared
+[ 24%] Built target sundials_sunmatrixsparse_obj_shared
+[ 25%] Built target sundials_sunmatrixsparse_shared
+[ 25%] Built target fake_sundials_sunlinsolband_obj_shared
+[ 26%] Built target sundials_sunlinsolband_obj_shared
+[ 26%] Built target sundials_sunlinsolband_shared
+[ 26%] Built target fake_sundials_sunlinsoldense_obj_shared
+[ 27%] Built target sundials_sunlinsoldense_obj_shared
+[ 28%] Built target sundials_sunlinsoldense_shared
+[ 28%] Built target fake_sundials_sunlinsolpcg_obj_shared
+[ 28%] Built target sundials_sunlinsolpcg_obj_shared
+[ 29%] Built target sundials_sunlinsolpcg_shared
+[ 29%] Built target fake_sundials_sunlinsolspbcgs_obj_shared
+[ 30%] Built target sundials_sunlinsolspbcgs_obj_shared
+[ 30%] Built target sundials_sunlinsolspbcgs_shared
+[ 30%] Built target fake_sundials_sunlinsolspfgmr_obj_shared
+[ 31%] Built target sundials_sunlinsolspfgmr_obj_shared
+[ 32%] Built target sundials_sunlinsolspfgmr_shared
+[ 32%] Built target fake_sundials_sunlinsolspgmr_obj_shared
+[ 32%] Built target sundials_sunlinsolspgmr_obj_shared
+[ 33%] Built target sundials_sunlinsolspgmr_shared
+[ 33%] Built target fake_sundials_sunlinsolsptfqmr_obj_shared
+[ 34%] Built target sundials_sunlinsolsptfqmr_obj_shared
+[ 34%] Built target sundials_sunlinsolsptfqmr_shared
+[ 34%] Built target fake_sundials_sunlinsolklu_obj_shared
+[ 34%] Built target sundials_sunlinsolklu_obj_shared
+[ 35%] Built target sundials_sunlinsolklu_shared
+[ 35%] Built target fake_sundials_sunnonlinsolnewton_obj_shared
+[ 36%] Built target sundials_sunnonlinsolnewton_obj_shared
+[ 37%] Built target sundials_sunnonlinsolnewton_shared
+[ 37%] Built target fake_sundials_sunnonlinsolfixedpoint_obj_shared
+[ 38%] Built target sundials_sunnonlinsolfixedpoint_obj_shared
+[ 38%] Built target sundials_sunnonlinsolfixedpoint_shared
+[ 38%] Built target fake_sundials_sunnonlinsolauto_obj_shared
+[ 38%] Built target sundials_sunnonlinsolauto_obj_shared
+[ 39%] Built target sundials_sunnonlinsolauto_shared
+[ 39%] Built target fake_sundials_sunmemsys_obj_shared
+[ 40%] Built target sundials_sunmemsys_obj_shared
+[ 40%] Built target fake_sundials_sunadaptcontrollerimexgus_obj_shared
+[ 40%] Built target sundials_sunadaptcontrollerimexgus_obj_shared
+[ 40%] Built target fake_sundials_sunadaptcontrollersoderlind_obj_shared
+[ 41%] Built target sundials_sunadaptcontrollersoderlind_obj_shared
+[ 41%] Built target fake_sundials_sunadaptcontrollermrihtol_obj_shared
+[ 42%] Built target sundials_sunadaptcontrollermrihtol_obj_shared
+[ 42%] Built target fake_sundials_adjointcheckpointscheme_fixed_obj_shared
+[ 42%] Built target sundials_adjointcheckpointscheme_fixed_obj_shared
+[ 42%] Built target fake_sundials_sundomeigestpower_obj_shared
+[ 42%] Built target sundials_sundomeigestpower_obj_shared
+[ 43%] Built target sundials_sundomeigestpower_shared
+[ 43%] Built target fake_sundials_arkode_obj_shared
+[ 64%] Built target sundials_arkode_obj_shared
+[ 65%] Built target sundials_arkode_shared
+[ 65%] Built target fake_sundials_cvode_obj_shared
+[ 71%] Built target sundials_cvode_obj_shared
+[ 72%] Built target sundials_cvode_shared
+[ 72%] Built target fake_sundials_cvodes_obj_shared
+[ 82%] Built target sundials_cvodes_obj_shared
+[ 82%] Built target sundials_cvodes_shared
+[ 82%] Built target fake_sundials_ida_obj_shared
+[ 87%] Built target sundials_ida_obj_shared
+[ 87%] Built target sundials_ida_shared
+[ 87%] Built target fake_sundials_idas_obj_shared
+[ 94%] Built target sundials_idas_obj_shared
+[ 95%] Built target sundials_idas_shared
+[ 95%] Built target fake_sundials_kinsol_obj_shared
+[ 99%] Built target sundials_kinsol_obj_shared
+[100%] Built target sundials_kinsol_shared
+Install the project...
+-- Install configuration: "Release"
+
+Install shared components
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_core.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_core.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_core.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_core.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adaptcontroller.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adaptcontroller.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adjointcheckpointscheme.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adjointcheckpointscheme.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adjointstepper.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_adjointstepper.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_band.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_base.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_classview.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_context.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_context.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_convertibleto.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_core.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_core.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_dense.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_direct.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_domeigestimator.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_domeigestimator.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_errors.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_futils.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_iterative.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_linearsolver.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_linearsolver.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_logger.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_logger.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_math.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_matrix.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_matrix.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_memory.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_memory.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_mpi_types.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_nonlinearsolver.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_nonlinearsolver.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_nvector.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_nvector.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_profiler.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_profiler.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_stepper.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_stepper.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_types_deprecated.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_types.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_version.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/priv/sundials_context_impl.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/priv/sundials_errors_impl.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/priv/sundials_logger_macros.h
+
+Install NVECTOR_SERIAL
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecserial.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecserial.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecserial.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecserial.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/nvector/nvector_serial.h
+
+Install NVECTOR_MANYVECTOR
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecmanyvector.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecmanyvector.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecmanyvector.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecmanyvector.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/nvector/nvector_manyvector.h
+
+Install NVECTOR_OPENMP
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecopenmp.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecopenmp.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecopenmp.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_nvecopenmp.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/nvector/nvector_openmp.h
+
+Install SUNMATRIX_BAND
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixband.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixband.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixband.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixband.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunmatrix/sunmatrix_band.h
+
+Install SUNMATRIX_DENSE
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixdense.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixdense.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixdense.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixdense.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunmatrix/sunmatrix_dense.h
+
+Install SUNMATRIX_SPARSE
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixsparse.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixsparse.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixsparse.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunmatrixsparse.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunmatrix/sunmatrix_sparse.h
+
+Install SUNLINSOL_BAND
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolband.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolband.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolband.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolband.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_band.h
+
+Install SUNLINSOL_DENSE
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsoldense.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsoldense.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsoldense.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsoldense.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_dense.h
+
+Install SUNLINSOL_PCG
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolpcg.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolpcg.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolpcg.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolpcg.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_pcg.h
+
+Install SUNLINSOL_SPBCGS
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspbcgs.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspbcgs.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspbcgs.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspbcgs.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_spbcgs.h
+
+Install SUNLINSOL_SPFGMR
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspfgmr.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspfgmr.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspfgmr.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspfgmr.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_spfgmr.h
+
+Install SUNLINSOL_SPGMR
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspgmr.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspgmr.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspgmr.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolspgmr.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_spgmr.h
+
+Install SUNLINSOL_SPTFQMR
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolsptfqmr.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolsptfqmr.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolsptfqmr.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolsptfqmr.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_sptfqmr.h
+
+Install SUNLINSOL_KLU
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolklu.so.5.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolklu.so.5
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolklu.so.5.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64:/nopt/nrel/apps/cpu_stack/software/gridkit/suitesparse/7.8.2/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunlinsolklu.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunlinsol/sunlinsol_klu.h
+
+Install SUNNONLINSOL_NEWTON
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolnewton.so.4.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolnewton.so.4
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolnewton.so.4.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolnewton.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunnonlinsol/sunnonlinsol_newton.h
+
+Install SUNNONLINSOL_FIXEDPOINT
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolfixedpoint.so.4.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolfixedpoint.so.4
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolfixedpoint.so.4.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolfixedpoint.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunnonlinsol/sunnonlinsol_fixedpoint.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolauto.so.4.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolauto.so.4
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolauto.so.4.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sunnonlinsolauto.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunnonlinsol/sunnonlinsol_auto.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunmemory/sunmemory_system.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadaptcontroller/sunadaptcontroller_imexgus.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadaptcontroller/sunadaptcontroller_soderlind.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadaptcontroller/sunadaptcontroller_mrihtol.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadjointcheckpointscheme/sundials_adjointstepper.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadjointcheckpointscheme/sundials_adjointcheckpointscheme.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sunadjointcheckpointscheme/sunadjointcheckpointscheme_fixed.h
+
+Install SUNDOMEIGEST_POWER
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sundomeigestpower.so.1.3.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sundomeigestpower.so.1
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sundomeigestpower.so.1.3.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_sundomeigestpower.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundomeigest/sundomeigest_power.h
+
+Install ARKODE
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_arkode.so.6.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_arkode.so.6
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_arkode.so.6.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_arkode.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_arkstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_arkstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_arkstep_deprecated.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_bandpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_butcher.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_butcher_dirk.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_butcher_erk.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_erkstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_erkstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_erkstep_deprecated.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_forcingstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_forcingstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_ls.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_lsrkstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_lsrkstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_mristep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_mristep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_mristep_deprecated.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_splittingstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_splittingstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_sprk.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_sprkstep.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_sprkstep.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/arkode/arkode_sprkstep_deprecated.h
+
+Install CVODE
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvode.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvode.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvode.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvode.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode_bandpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode_diag.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode_ls.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvode/cvode_proj.h
+
+Install CVODES
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvodes.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvodes.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvodes.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_cvodes.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes_bandpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes_diag.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes_ls.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/cvodes/cvodes_proj.h
+
+Install IDA
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_ida.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_ida.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_ida.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_ida.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/ida/ida.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/ida/ida.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/ida/ida_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/ida/ida_ls.h
+
+Install IDAS
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_idas.so.6.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_idas.so.6
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_idas.so.6.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_idas.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/idas/idas.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/idas/idas.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/idas/idas_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/idas/idas_ls.h
+
+Install KINSOL
+
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_kinsol.so.7.8.0
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_kinsol.so.7
+-- Set non-toolchain portion of runtime path of "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_kinsol.so.7.8.0" to "/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64"
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/libsundials_kinsol.so
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/kinsol/kinsol.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/kinsol/kinsol.hpp
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/kinsol/kinsol_bbdpre.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/kinsol/kinsol_ls.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_export.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/sundials_config.h
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/LICENSE
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/include/sundials/NOTICE
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/cmake/sundials/SUNDIALSTargets.cmake
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/cmake/sundials/SUNDIALSTargets-release.cmake
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/cmake/sundials/SUNDIALSConfig.cmake
+-- Installing: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/cmake/sundials/SUNDIALSConfigVersion.cmake
+
+SUNDIALS installed to: /nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop
+CMake config location:
+/nopt/nrel/apps/cpu_stack/software/gridkit/sundials/develop/lib64/cmake/sundials/SUNDIALSConfig.cmake
+Build completed: Tue Jul  7 15:40:16 MDT 2026

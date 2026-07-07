@@ -1,0 +1,152 @@
+Internal ctest changing into directory: /home/isatkaus/gridkit/build
+Test project /home/isatkaus/gridkit/build
+      Start  1: DenseMatrixTest
+ 1/73 Test  #1: DenseMatrixTest ...........................   Passed    0.01 sec
+      Start  2: test_parse_gen_row
+ 2/73 Test  #2: test_parse_gen_row ........................   Passed    0.01 sec
+      Start  3: test_parse_bus_row
+ 3/73 Test  #3: test_parse_bus_row ........................   Passed    0.01 sec
+      Start  4: test_parse_branch_row
+ 4/73 Test  #4: test_parse_branch_row .....................   Passed    0.01 sec
+      Start  5: test_parse_gencost_row
+ 5/73 Test  #5: test_parse_gencost_row ....................   Passed    0.01 sec
+      Start  6: test_parse_matpower
+ 6/73 Test  #6: test_parse_matpower .......................   Passed    0.01 sec
+      Start  7: Grid3Bus
+ 7/73 Test  #7: Grid3Bus ..................................   Passed    0.02 sec
+      Start  8: DistributedGeneratorTest
+ 8/73 Test  #8: DistributedGeneratorTest ..................   Passed    0.01 sec
+      Start  9: RLCircuit
+ 9/73 Test  #9: RLCircuit .................................   Passed    0.02 sec
+      Start 10: Microgrid
+10/73 Test #10: Microgrid .................................   Passed    0.03 sec
+      Start 11: ScaleMicrogrid
+11/73 Test #11: ScaleMicrogrid ............................   Passed    0.08 sec
+      Start 12: AdjointSens
+12/73 Test #12: AdjointSens ...............................   Passed    0.02 sec
+      Start 13: DynamicConOpt
+13/73 Test #13: DynamicConOpt .............................   Passed    0.39 sec
+      Start 14: GenConstLoad
+14/73 Test #14: GenConstLoad ..............................   Passed    0.31 sec
+      Start 15: GenInfiniteBus
+15/73 Test #15: GenInfiniteBus ............................   Passed    0.35 sec
+      Start 16: ParameterEst
+16/73 Test #16: ParameterEst ..............................   Passed    0.14 sec
+      Start 17: TwoBusBasic
+17/73 Test #17: TwoBusBasic ...............................   Passed    0.06 sec
+      Start 18: TwoBusBasicJson
+18/73 Test #18: TwoBusBasicJson ...........................   Passed    0.02 sec
+      Start 19: TwoBusBasicJson_no_arg
+19/73 Test #19: TwoBusBasicJson_no_arg ....................   Passed    0.04 sec
+      Start 20: TwoBusBasic_pdsim
+20/73 Test #20: TwoBusBasic_pdsim .........................   Passed    0.05 sec
+      Start 21: TwoBusTgov1
+21/73 Test #21: TwoBusTgov1 ...............................   Passed    0.01 sec
+      Start 22: TwoBusTgov1Json
+22/73 Test #22: TwoBusTgov1Json ...........................   Passed    0.01 sec
+      Start 23: TwoBusTgov1Json_no_arg
+23/73 Test #23: TwoBusTgov1Json_no_arg ....................   Passed    0.01 sec
+      Start 24: TwoBusIeeet1
+24/73 Test #24: TwoBusIeeet1 ..............................   Passed    0.02 sec
+      Start 25: TwoBusIeeet1Json
+25/73 Test #25: TwoBusIeeet1Json ..........................   Passed    0.02 sec
+      Start 26: TwoBusIeeet1Json_no_arg
+26/73 Test #26: TwoBusIeeet1Json_no_arg ...................   Passed    0.01 sec
+      Start 27: TwoBusGensal
+27/73 Test #27: TwoBusGensal ..............................   Passed    0.05 sec
+      Start 28: ThreeBusBasic
+28/73 Test #28: ThreeBusBasic .............................   Passed    0.02 sec
+      Start 29: ThreeBusBasicJson
+29/73 Test #29: ThreeBusBasicJson .........................   Passed    0.05 sec
+      Start 30: ThreeBusBasic_pdsim
+30/73 Test #30: ThreeBusBasic_pdsim .......................   Passed    0.05 sec
+      Start 31: ThreeBusClassical
+31/73 Test #31: ThreeBusClassical .........................   Passed    0.02 sec
+      Start 32: ThreeBusClassicalJson
+32/73 Test #32: ThreeBusClassicalJson .....................   Passed    0.04 sec
+      Start 33: ThreeBusClassicalJson_no_arg
+33/73 Test #33: ThreeBusClassicalJson_no_arg ..............   Passed    0.04 sec
+      Start 34: ThreeBusConstantSource_pdsim
+34/73 Test #34: ThreeBusConstantSource_pdsim ..............   Passed    0.02 sec
+      Start 35: TenGenClassical
+35/73 Test #35: TenGenClassical ...........................   Passed    0.03 sec
+      Start 36: TenGenGenrou
+36/73 Test #36: TenGenGenrou ..............................   Passed    0.03 sec
+      Start 37: hawaii_pdsim
+37/73 Test #37: hawaii_pdsim ..............................   Passed    0.24 sec
+      Start 38: newengland_pdsim
+38/73 Test #38: newengland_pdsim ..........................   Passed    0.27 sec
+      Start 39: newengland_ca
+39/73 Test #39: newengland_ca .............................   Passed   10.68 sec
+      Start 40: texas_pdsim
+40/73 Test #40: texas_pdsim ...............................   Passed    7.42 sec
+      Start 41: wecc_pdsim
+41/73 Test #41: wecc_pdsim ................................   Passed    0.83 sec
+      Start 42: illinois_pdsim
+42/73 Test #42: illinois_pdsim ............................   Passed    0.44 sec
+      Start 43: EnzymeStandaloneScalarCheck
+43/73 Test #43: EnzymeStandaloneScalarCheck ...............   Passed    0.01 sec
+      Start 44: EnzymeStandaloneVectorCheck
+44/73 Test #44: EnzymeStandaloneVectorCheck ...............   Passed    0.00 sec
+      Start 45: EnzymeStandaloneSparseCheck
+45/73 Test #45: EnzymeStandaloneSparseCheck ...............   Passed    0.01 sec
+      Start 46: EnzymeLibScalarCheck
+46/73 Test #46: EnzymeLibScalarCheck ......................   Passed    0.01 sec
+      Start 47: EnzymeLibVectorCheck
+47/73 Test #47: EnzymeLibVectorCheck ......................   Passed    0.01 sec
+      Start 48: EnzymePowerElectronicsCheck
+48/73 Test #48: EnzymePowerElectronicsCheck ...............   Passed    0.01 sec
+      Start 49: DependencyTrackingTest
+49/73 Test #49: DependencyTrackingTest ....................   Passed    0.01 sec
+      Start 50: SparseCsrTest
+50/73 Test #50: SparseCsrTest .............................   Passed    0.01 sec
+      Start 51: SparseCooTest
+51/73 Test #51: SparseCooTest .............................   Passed    0.00 sec
+      Start 52: VectorTest
+52/73 Test #52: VectorTest ................................   Passed    0.01 sec
+      Start 53: MathSmoothnessIndicatorTest
+53/73 Test #53: MathSmoothnessIndicatorTest ...............   Passed    0.01 sec
+      Start 54: PhasorDynamicsBusTest
+54/73 Test #54: PhasorDynamicsBusTest .....................   Passed    0.01 sec
+      Start 55: PhasorDynamicsBusFaultTest
+55/73 Test #55: PhasorDynamicsBusFaultTest ................   Passed    0.01 sec
+      Start 56: PhasorDynamicsBusToSignalAdapterTest
+56/73 Test #56: PhasorDynamicsBusToSignalAdapterTest ......   Passed    0.01 sec
+      Start 57: PhasorDynamicsBranchTest
+57/73 Test #57: PhasorDynamicsBranchTest ..................   Passed    0.01 sec
+      Start 58: PhasorDynamicsGenrouTest
+58/73 Test #58: PhasorDynamicsGenrouTest ..................   Passed    0.01 sec
+      Start 59: PhasorDynamicsGovernorTgov1Test
+59/73 Test #59: PhasorDynamicsGovernorTgov1Test ...........   Passed    0.01 sec
+      Start 60: PhasorDynamicsExciterIeeet1Test
+60/73 Test #60: PhasorDynamicsExciterIeeet1Test ...........   Passed    0.02 sec
+      Start 61: PhasorDynamicsGensalTest
+61/73 Test #61: PhasorDynamicsGensalTest ..................   Passed    0.01 sec
+      Start 62: PhasorDynamicsExciterSexsPtiTest
+62/73 Test #62: PhasorDynamicsExciterSexsPtiTest ..........   Passed    0.01 sec
+      Start 63: PhasorDynamicsStabilizerIeeestTest
+63/73 Test #63: PhasorDynamicsStabilizerIeeestTest ........   Passed    0.01 sec
+      Start 64: PhasorDynamicsGenClassicalTest
+64/73 Test #64: PhasorDynamicsGenClassicalTest ............   Passed    0.01 sec
+      Start 65: PhasorDynamicsLoadZTest
+65/73 Test #65: PhasorDynamicsLoadZTest ...................   Passed    0.01 sec
+      Start 66: PhasorDynamicsLoadZIPTest
+66/73 Test #66: PhasorDynamicsLoadZIPTest .................   Passed    0.01 sec
+      Start 67: PhasorDynamicsSystemTest
+67/73 Test #67: PhasorDynamicsSystemTest ..................   Passed    0.01 sec
+      Start 68: PhasorDynamicsSystemSingleComponentTest
+68/73 Test #68: PhasorDynamicsSystemSingleComponentTest ...   Passed    0.01 sec
+      Start 69: PowerElectronicsNodeTest
+69/73 Test #69: PowerElectronicsNodeTest ..................   Passed    0.01 sec
+      Start 70: IDATest
+70/73 Test #70: IDATest ...................................   Passed    0.01 sec
+      Start 71: UtilitiesCaseFormatTest
+71/73 Test #71: UtilitiesCaseFormatTest ...................   Passed    0.01 sec
+      Start 72: UtilitiesLoggerTest
+72/73 Test #72: UtilitiesLoggerTest .......................   Passed    0.00 sec
+      Start 73: UtilitiesCliArgsTest
+73/73 Test #73: UtilitiesCliArgsTest ......................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 73
+
+Total Test time (real) =  22.22 sec
