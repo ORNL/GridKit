@@ -1,0 +1,3333 @@
+=== Building IPOPT 3.14.14 + MUMPS ===
+fatal: destination path 'ThirdParty-Mumps' already exists and is not an empty directory.
+ 
+Running script for downloading the source code for MUMPS
+ 
+Downloading the source code from coin-or-tools.github.io...
+--2026-07-07 16:03:37--  http://coin-or-tools.github.io/ThirdParty-Mumps/MUMPS_5.9.0.tar.gz
+Resolving coin-or-tools.github.io (coin-or-tools.github.io)... 185.199.110.153, 185.199.109.153, 185.199.111.153, ...
+Connecting to coin-or-tools.github.io (coin-or-tools.github.io)|185.199.110.153|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4976904 (4.7M) [application/gzip]
+Saving to: ‘MUMPS_5.9.0.tar.gz’
+
+     0K .......... .......... .......... .......... ..........  1%  810K 6s
+    50K .......... .......... .......... .......... ..........  2% 5.05M 3s
+   100K .......... .......... .......... .......... ..........  3% 1.48M 3s
+   150K .......... .......... .......... .......... ..........  4%  417K 5s
+   200K .......... .......... .......... .......... ..........  5%  684K 5s
+   250K .......... .......... .......... .......... ..........  6%  661K 6s
+   300K .......... .......... .......... .......... ..........  7%  485K 6s
+   350K .......... .......... .......... .......... ..........  8%  466K 7s
+   400K .......... .......... .......... .......... ..........  9%  510K 7s
+   450K .......... .......... .......... .......... .......... 10%  551K 7s
+   500K .......... .......... .......... .......... .......... 11%  621K 7s
+   550K .......... .......... .......... .......... .......... 12%  569K 7s
+   600K .......... .......... .......... .......... .......... 13%  373K 7s
+   650K .......... .......... .......... .......... .......... 14%  372K 7s
+   700K .......... .......... .......... .......... .......... 15%  306K 8s
+   750K .......... .......... .......... .......... .......... 16%  428K 8s
+   800K .......... .......... .......... .......... .......... 17%  381K 8s
+   850K .......... .......... .......... .......... .......... 18%  427K 8s
+   900K .......... .......... .......... .......... .......... 19%  519K 8s
+   950K .......... .......... .......... .......... .......... 20%  611K 7s
+  1000K .......... .......... .......... .......... .......... 21%  670K 7s
+  1050K .......... .......... .......... .......... .......... 22%  733K 7s
+  1100K .......... .......... .......... .......... .......... 23%  736K 7s
+  1150K .......... .......... .......... .......... .......... 24%  919K 7s
+  1200K .......... .......... .......... .......... .......... 25%  919K 6s
+  1250K .......... .......... .......... .......... .......... 26%  955K 6s
+  1300K .......... .......... .......... .......... .......... 27%  995K 6s
+  1350K .......... .......... .......... .......... .......... 28% 1.03M 6s
+  1400K .......... .......... .......... .......... .......... 29%  832K 6s
+  1450K .......... .......... .......... .......... .......... 30%  777K 6s
+  1500K .......... .......... .......... .......... .......... 31%  721K 6s
+  1550K .......... .......... .......... .......... .......... 32%  442K 5s
+  1600K .......... .......... .......... .......... .......... 33%  415K 5s
+  1650K .......... .......... .......... .......... .......... 34%  228K 6s
+  1700K .......... .......... .......... .......... .......... 36%  172K 6s
+  1750K .......... .......... .......... .......... .......... 37%  365K 6s
+  1800K .......... .......... .......... .......... .......... 38%  526K 6s
+  1850K .......... .......... .......... .......... .......... 39%  724K 6s
+  1900K .......... .......... .......... .......... .......... 40%  827K 5s
+  1950K .......... .......... .......... .......... .......... 41%  859K 5s
+  2000K .......... .......... .......... .......... .......... 42%  849K 5s
+  2050K .......... .......... .......... .......... .......... 43%  594K 5s
+  2100K .......... .......... .......... .......... .......... 44%  631K 5s
+  2150K .......... .......... .......... .......... .......... 45%  644K 5s
+  2200K .......... .......... .......... .......... .......... 46%  653K 5s
+  2250K .......... .......... .......... .......... .......... 47%  629K 5s
+  2300K .......... .......... .......... .......... .......... 48%  321K 5s
+  2350K .......... .......... .......... .......... .......... 49%  296K 5s
+  2400K .......... .......... .......... .......... .......... 50%  286K 5s
+  2450K .......... .......... .......... .......... .......... 51%  397K 5s
+  2500K .......... .......... .......... .......... .......... 52%  474K 4s
+  2550K .......... .......... .......... .......... .......... 53%  596K 4s
+  2600K .......... .......... .......... .......... .......... 54%  666K 4s
+  2650K .......... .......... .......... .......... .......... 55%  852K 4s
+  2700K .......... .......... .......... .......... .......... 56%  914K 4s
+  2750K .......... .......... .......... .......... .......... 57%  894K 4s
+  2800K .......... .......... .......... .......... .......... 58% 1.03M 4s
+  2850K .......... .......... .......... .......... .......... 59%  979K 4s
+  2900K .......... .......... .......... .......... .......... 60%  655K 4s
+  2950K .......... .......... .......... .......... .......... 61%  620K 3s
+  3000K .......... .......... .......... .......... .......... 62%  481K 3s
+  3050K .......... .......... .......... .......... .......... 63%  429K 3s
+  3100K .......... .......... .......... .......... .......... 64%  331K 3s
+  3150K .......... .......... .......... .......... .......... 65%  376K 3s
+  3200K .......... .......... .......... .......... .......... 66%  453K 3s
+  3250K .......... .......... .......... .......... .......... 67%  529K 3s
+  3300K .......... .......... .......... .......... .......... 68%  570K 3s
+  3350K .......... .......... .......... .......... .......... 69%  458K 3s
+  3400K .......... .......... .......... .......... .......... 70%  562K 3s
+  3450K .......... .......... .......... .......... .......... 72%  597K 3s
+  3500K .......... .......... .......... .......... .......... 73%  700K 2s
+  3550K .......... .......... .......... .......... .......... 74%  626K 2s
+  3600K .......... .......... .......... .......... .......... 75%  659K 2s
+  3650K .......... .......... .......... .......... .......... 76%  601K 2s
+  3700K .......... .......... .......... .......... .......... 77%  698K 2s
+  3750K .......... .......... .......... .......... .......... 78%  689K 2s
+  3800K .......... .......... .......... .......... .......... 79%  540K 2s
+  3850K .......... .......... .......... .......... .......... 80%  530K 2s
+  3900K .......... .......... .......... .......... .......... 81%  473K 2s
+  3950K .......... .......... .......... .......... .......... 82%  714K 2s
+  4000K .......... .......... .......... .......... .......... 83%  360K 2s
+  4050K .......... .......... .......... .......... .......... 84%  398K 1s
+  4100K .......... .......... .......... .......... .......... 85%  562K 1s
+  4150K .......... .......... .......... .......... .......... 86%  564K 1s
+  4200K .......... .......... .......... .......... .......... 87%  456K 1s
+  4250K .......... .......... .......... .......... .......... 88%  549K 1s
+  4300K .......... .......... .......... .......... .......... 89%  599K 1s
+  4350K .......... .......... .......... .......... .......... 90%  673K 1s
+  4400K .......... .......... .......... .......... .......... 91%  726K 1s
+  4450K .......... .......... .......... .......... .......... 92%  809K 1s
+  4500K .......... .......... .......... .......... .......... 93%  899K 1s
+  4550K .......... .......... .......... .......... .......... 94%  960K 0s
+  4600K .......... .......... .......... .......... .......... 95%  946K 0s
+  4650K .......... .......... .......... .......... .......... 96% 1.15M 0s
+  4700K .......... .......... .......... .......... .......... 97%  969K 0s
+  4750K .......... .......... .......... .......... .......... 98%  796K 0s
+  4800K .......... .......... .......... .......... .......... 99% 1017K 0s
+  4850K ..........                                            100%  436K=8.7s
+
+2026-07-07 16:03:46 (557 KB/s) - ‘MUMPS_5.9.0.tar.gz’ saved [4976904/4976904]
+
+Download finished.
+Uncompressing the tarball...
+Unpacking the source code...
+Deleting the tar file...
+ 
+Done downloading the source code for MUMPS.
+ 
+Apply a patch to improve MPI compatibility.
+ 
+patching file MUMPS/libseq/mpic.c
+patching file MUMPS/src/mumps_metis64.h
+patching file MUMPS/src/mumps_metis.h
+patching file MUMPS/src/mumps_scotch.h
+ 
+Apply a patch to gate USE OMP_LIB on the !$ Fortran-OpenMP sentinel.
+ 
+patching file MUMPS/src/cfac_b.F
+patching file MUMPS/src/cfac_compact_factors_m.F
+patching file MUMPS/src/cfac_par_m.F
+patching file MUMPS/src/csol_omp_m.F
+patching file MUMPS/src/dfac_b.F
+patching file MUMPS/src/dfac_compact_factors_m.F
+patching file MUMPS/src/dfac_par_m.F
+patching file MUMPS/src/dsol_omp_m.F
+patching file MUMPS/src/sfac_b.F
+patching file MUMPS/src/sfac_compact_factors_m.F
+patching file MUMPS/src/sfac_par_m.F
+patching file MUMPS/src/ssol_omp_m.F
+patching file MUMPS/src/zfac_b.F
+patching file MUMPS/src/zfac_compact_factors_m.F
+patching file MUMPS/src/zfac_par_m.F
+patching file MUMPS/src/zsol_omp_m.F
+ 
+Apply a patch to not try to inline and export some functions at the same time.
+ 
+patching file MUMPS/src/mumps_flytes.c
+patching file MUMPS/src/mumps_flytes.h
+ 
+Verify that there are no error message in the output above.
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking whether make supports nested variables... yes
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether sleep supports fractional seconds... yes
+checking filesystem timestamp resolution... 2
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking xargs -n works... yes
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking whether make supports the include directive... yes (GNU style)
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang accepts -g... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang option to enable C11 features... none needed
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang understands -c and -o together... yes
+checking dependency style of /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang... gcc3
+checking whether the compiler supports GNU Fortran... yes
+checking whether gfortran accepts -g... yes
+checking whether gfortran understands -c and -o together... yes
+checking how to print strings... printf
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang... /opt/rh/gcc-toolset-12/root/usr/bin/ld
+checking if the linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B
+checking the name lister (/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 57600000
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /opt/rh/gcc-toolset-12/root/usr/bin/ld option to reload object files... -r
+checking for file... file
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ranlib... ranlib
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking command to parse /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B output from /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for mt... no
+checking if : is a manifest tool... no
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking the archiver (ar) interface... ar
+checking for objdir... .libs
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -fno-rtti -fno-exceptions... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang option to produce PIC... -fPIC -DPIC
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang PIC flag -fPIC -DPIC works... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang static flag -static works... no
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -c -o file.o... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -c -o file.o... (cached) yes
+checking whether the /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking for gfortran option to produce PIC... -fPIC
+checking if gfortran PIC flag -fPIC works... yes
+checking if gfortran static flag -static works... no
+checking if gfortran supports -c -o file.o... yes
+checking if gfortran supports -c -o file.o... (cached) yes
+checking whether the gfortran linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+configure: libtool version info: -version-number 3:0:13
+checking how to get verbose linking output from gfortran... -v
+checking for Fortran libraries of gfortran...  -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0 -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0/../../.. -lgfortran -lm -lquadmath
+checking for dummy main to link with Fortran libraries... none
+checking for Fortran name-mangling scheme... lower case, underscore, no extra underscore
+checking for pthread.h... yes
+checking for pthread_create in -lpthread... yes
+checking for pkgconf... pkgconf
+checking pkgconf is at least version 0.16.0... yes: 1.4.2
+configure: pkgconf path is "/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig:/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64/pkgconfig:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/curl-8.7.1-4i4mpgzu35lnnqjpaxjgrsly3g6ngqmu/lib/pkgconfig:/opt/cray/libfabric/1.15.2.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.2.2/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.30/pkg-config"
+checking for LAPACK... yes: generic module (lapack.pc blas.pc)
+checking for function dgemmt_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function dgemmt in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function DGEMMT_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function DGEMMT in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function dgemmt__ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function dgemmt_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function DGEMMT__ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function DGEMMT_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for library containing cos... -lm
+checking for library Metis with combined link and compile check... no (header compile, link with header)
+configure: Compiler flags were "". Use --with-metis-cflags to overwrite. Check config.log for details of failed compile attempt.
+configure: Linker flags are "-lmetis -lm ". Use --with-metis-lflags to overwrite. Check config.log for details of failed link attempt.
+configure: additional C preprocessor flags: -DAdd_
+configure: additional Fortran preprocessor flags:  -std=legacy
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating coinmumps.pc
+config.status: creating config.h
+config.status: config.h is unchanged
+config.status: creating mumps_compat.h
+config.status: mumps_compat.h is unchanged
+config.status: creating mumps_int_def.h
+config.status: mumps_int_def.h is unchanged
+config.status: executing depfiles commands
+config.status: executing libtool commands
+configure: Configuration of ThirdPartyMumps successful
+make  all-am
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+  PPF77    MUMPS/src/ana_blk_m.lo
+  PPF77    MUMPS/src/double_linked_list.lo
+  PPF77    MUMPS/src/ana_orderings_wrappers_m.lo
+  PPF77    MUMPS/src/omp_tps_common_m.lo
+  PPF77    MUMPS/src/front_data_mgt_m.lo
+  PPF77    MUMPS/src/fac_future_niv2_mod.lo
+  PPF77    MUMPS/src/lr_common.lo
+  PPF77    MUMPS/src/mumps_comm_buffer_common.lo
+  PPF77    MUMPS/src/mumps_intr_types_common.lo
+  PPF77    MUMPS/src/mumps_l0_omp_m.lo
+  PPF77    MUMPS/src/mumps_memory_mod.lo
+  PPF77    MUMPS/src/mumps_mpitoomp_m.lo
+  PPF77    MUMPS/src/mumps_ooc_common.lo
+  PPF77    MUMPS/src/mumps_pivnul_mod.lo
+  PPF77    MUMPS/src/sol_ds_common_m.lo
+  PPF77    MUMPS/src/sol_omp_common_m.lo
+  PPF77    MUMPS/src/tools_common_m.lo
+  CC       MUMPS/src/mumps_sol_omp_memory_manager.lo
+  F77      MUMPS/libseq/mpi.lo
+  CC       MUMPS/libseq/mpic.lo
+  CC       MUMPS/libseq/elapse.lo
+  PPF77    MUMPS/src/dmumps_struc_def.lo
+  PPF77    MUMPS/src/dlr_type.lo
+  PPF77    MUMPS/src/dstatic_ptr_m.lo
+  PPF77    MUMPS/src/domp_tps_m.lo
+  PPF77    MUMPS/src/dfac_sispointers_m.lo
+  PPF77    MUMPS/src/dmumps_mpi3_mod.lo
+MUMPS/src/mumps_memory_mod.F:33:24:
+
+   32 |       CALL MUMPS_SIZE_C(I (1), I (2), ISIZE)
+      |                        2
+   33 |       CALL MUMPS_SIZE_C(S (1), S (2), SSIZE)
+      |                        1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(4)/INTEGER(4)).
+MUMPS/src/mumps_memory_mod.F:33:31:
+
+   32 |       CALL MUMPS_SIZE_C(I (1), I (2), ISIZE)
+      |                               2
+   33 |       CALL MUMPS_SIZE_C(S (1), S (2), SSIZE)
+      |                               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(4)/INTEGER(4)).
+MUMPS/src/mumps_comm_buffer_common.F:1184:23:
+
+ 1175 |         CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
+      |                       2
+......
+ 1184 |         CALL MPI_PACK( LIST_SLAVES, NSLAVES, MPI_INTEGER,
+      |                       1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/mumps_comm_buffer_common.F:1187:23:
+
+ 1175 |         CALL MPI_PACK( WHAT, 1, MPI_INTEGER,
+      |                       2
+......
+ 1187 |         CALL MPI_PACK( FLOPS_INCREMENT, NSLAVES,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+  PPF77    MUMPS/src/fac_asm_build_sort_index_m.lo
+  PPF77    MUMPS/src/fac_asm_build_sort_index_ELT_m.lo
+MUMPS/libseq/mpi.f:673:72:
+
+  673 |       CALL MUMPS_COPY_LOGICAL( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to LOGICAL(4)
+MUMPS/libseq/mpi.f:673:72:
+
+  673 |       CALL MUMPS_COPY_LOGICAL( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to LOGICAL(4)
+MUMPS/libseq/mpi.f:675:72:
+
+  675 |       CALL MUMPS_COPY_REAL( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to REAL(4)
+MUMPS/libseq/mpi.f:675:72:
+
+  675 |       CALL MUMPS_COPY_REAL( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to REAL(4)
+MUMPS/libseq/mpi.f:678:72:
+
+  678 |       CALL MUMPS_COPY_DOUBLE_PRECISION( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to REAL(8)
+MUMPS/libseq/mpi.f:678:72:
+
+  678 |       CALL MUMPS_COPY_DOUBLE_PRECISION( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to REAL(8)
+MUMPS/libseq/mpi.f:680:72:
+
+  680 |       CALL MUMPS_COPY_COMPLEX( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to COMPLEX(4)
+MUMPS/libseq/mpi.f:680:72:
+
+  680 |       CALL MUMPS_COPY_COMPLEX( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to COMPLEX(4)
+MUMPS/libseq/mpi.f:682:72:
+
+  682 |       CALL MUMPS_COPY_DOUBLE_COMPLEX( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to COMPLEX(8)
+MUMPS/libseq/mpi.f:682:72:
+
+  682 |       CALL MUMPS_COPY_DOUBLE_COMPLEX( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to COMPLEX(8)
+MUMPS/libseq/mpi.f:684:72:
+
+  684 |       CALL MUMPS_COPY_2DOUBLE_PRECISION( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to REAL(8)
+MUMPS/libseq/mpi.f:684:72:
+
+  684 |       CALL MUMPS_COPY_2DOUBLE_PRECISION( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to REAL(8)
+MUMPS/libseq/mpi.f:688:72:
+
+  688 |       CALL MUMPS_COPY_INTEGER8( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 's' at (1); passed INTEGER(4) to INTEGER(8)
+MUMPS/libseq/mpi.f:688:72:
+
+  688 |       CALL MUMPS_COPY_INTEGER8( SENDBUF, RECVBUF, CNT, SS, RS )
+      |                                                                        1
+Warning: Type mismatch in argument 'r' at (1); passed INTEGER(4) to INTEGER(8)
+  PPF77    MUMPS/src/dmumps_intr_types.lo
+  PPF77    MUMPS/src/dmumps_ooc_buffer.lo
+  PPF77    MUMPS/src/dmumps_config_file.lo
+  PPF77    MUMPS/src/dmumps_save_restore_files.lo
+  PPF77    MUMPS/src/ana_omp_m.lo
+  PPF77    MUMPS/src/fac_descband_data_m.lo
+  PPF77    MUMPS/src/fac_maprow_data_m.lo
+  PPF77    MUMPS/src/dmumps_lr_data_m.lo
+  PPF77    MUMPS/src/lr_stats.lo
+  PPF77    MUMPS/src/mumps_static_mapping.lo
+  PPF77    MUMPS/src/dana_aux_par.lo
+MUMPS/src/dmumps_config_file.F:144:27:
+
+  144 |             CALL MPI_BCAST(PARAM,15,MPI_CHARACTER,0,id%COMM,IERR)
+      |                           1
+......
+  225 |          CALL MPI_BCAST(IERR,1,MPI_INTEGER,0,id%COMM,IERR_MPI)
+      |                        2   
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (CHARACTER(15)/INTEGER(4)).
+MUMPS/src/ana_omp_m.F:785:42:
+
+  785 |         CALL MUMPS_QUICK_SORT_PHYS_L0( N, STEP(1), PHYS_L0_OMP(1),
+      |                                          1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/ana_omp_m.F:785:51:
+
+  785 |         CALL MUMPS_QUICK_SORT_PHYS_L0( N, STEP(1), PHYS_L0_OMP(1),
+      |                                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'intlist' at (1)
+MUMPS/src/ana_omp_m.F:833:43:
+
+  833 |         CALL MUMPS_QUICK_SORT_IPOOL_PO( N, STEP(1),
+      |                                           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/ana_omp_m.F:834:18:
+
+  834 |      &            IPOOL_A_L0_OMP(1), LEAF, 1, LEAF )
+      |                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'intlist' at (1)
+  PPF77    MUMPS/src/dsol_omp_m.lo
+  PPF77    MUMPS/src/dfac_sol_l0omp_m.lo
+MUMPS/src/dana_aux_par.F:2852:24:
+
+ 2852 |       CALL MPI_ALLTOALL(SNDCNT(1), 1, MPI_INTEGER8, RCVCNT(1), 1,
+      |                        1
+......
+ 3167 |          CALL MPI_ALLTOALL(SNDCNT(1), 1, MPI_INTEGER, RCVCNT(1), 1,
+      |                           2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_aux_par.F:2852:52:
+
+ 2852 |       CALL MPI_ALLTOALL(SNDCNT(1), 1, MPI_INTEGER8, RCVCNT(1), 1,
+      |                                                    1
+......
+ 3167 |          CALL MPI_ALLTOALL(SNDCNT(1), 1, MPI_INTEGER, RCVCNT(1), 1,
+      |                                                      2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_aux_par.F:1828:22:
+
+ 1828 |       CALL MPI_GATHER(MYNCLIQUES, 1, MPI_INTEGER, NCLIQUES(1), 1,
+      |                      1
+......
+ 3041 |       CALL MPI_GATHER(TIDX, 1, MPI_INTEGER8, RCVCNT(1), 1,
+      |                      2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_aux_par.F:1828:50:
+
+ 1828 |       CALL MPI_GATHER(MYNCLIQUES, 1, MPI_INTEGER, NCLIQUES(1), 1,
+      |                                                  1
+......
+ 3041 |       CALL MPI_GATHER(TIDX, 1, MPI_INTEGER8, RCVCNT(1), 1,
+      |                                             2     
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_aux_par.F:1978:27:
+
+ 1975 |             CALL MPI_IRECV(BUF_PE2(1), ord%LAST(PROC+2)-
+      |                           2
+......
+ 1978 |             CALL MPI_IRECV(BUF_NV2(1), ord%LAST(PROC+2)-
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_aux_par.F:2039:23:
+
+ 2039 |          CALL MPI_SEND(IPE(1), ord%LAST(MYID+1)-ord%FIRST(MYID+1)+1,
+      |                       1
+......
+ 3082 |             CALL MPI_SEND(TSENDI(TIDX-I+1), I,
+      |                          2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/mumps_static_mapping.F:4639:24:
+
+ 4627 |          call MPI_BCAST(lenrcv,1,MPI_INTEGER,i,
+      |                        2
+......
+ 4639 |          call MPI_BCAST(namercv,lenrcv,MPI_INTEGER,i,
+      |                        1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/mumps_static_mapping.F:3929:23:
+
+ 3929 |      &                 cv_frere(1), cv_nodetype(1),
+      |                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/mumps_static_mapping.F:3929:36:
+
+ 3929 |      &                 cv_frere(1), cv_nodetype(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nodetype' at (1)
+MUMPS/src/mumps_static_mapping.F:3930:23:
+
+ 3930 |      &                 cv_par2_nodes(1), cv_procnode(1), cv_cand(1,1),
+      |                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'par2_nodes' at (1)
+MUMPS/src/mumps_static_mapping.F:3930:41:
+
+ 3930 |      &                 cv_par2_nodes(1), cv_procnode(1), cv_cand(1,1),
+      |                                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'procnode' at (1)
+MUMPS/src/mumps_static_mapping.F:3930:57:
+
+ 3930 |      &                 cv_par2_nodes(1), cv_procnode(1), cv_cand(1,1),
+      |                                                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'cand' at (1)
+MUMPS/src/mumps_static_mapping.F:3877:11:
+
+ 3877 |      &     cv_keep(1), cv_frere(1), cv_nfsiz(1), istat)
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep' at (1)
+MUMPS/src/mumps_static_mapping.F:3877:23:
+
+ 3877 |      &     cv_keep(1), cv_frere(1), cv_nfsiz(1), istat)
+      |                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/mumps_static_mapping.F:3877:36:
+
+ 3877 |      &     cv_keep(1), cv_frere(1), cv_nfsiz(1), istat)
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nd' at (1)
+MUMPS/src/mumps_static_mapping.F:1222:41:
+
+ 1222 |      &     k1, lnpivsplit, npivsplit, n, cv_frere(1),
+      |                                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/mumps_static_mapping.F:1223:11:
+
+ 1223 |      &     cv_keep(1),
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep' at (1)
+MUMPS/src/mumps_static_mapping.F:1224:11:
+
+ 1224 |      &     cv_fils(1), cv_BLKON, cv_SIZEOFBLOCKS(1),
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/mumps_static_mapping.F:1224:33:
+
+ 1224 |      &     cv_fils(1), cv_BLKON, cv_SIZEOFBLOCKS(1),
+      |                                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'sizeofblocks' at (1)
+MUMPS/src/mumps_static_mapping.F:1297:37:
+
+ 1297 |      &        lnpivsplit, npivsplit, cv_keep(1), n, cv_fils(1),
+      |                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep' at (1)
+MUMPS/src/mumps_static_mapping.F:1297:52:
+
+ 1297 |      &        lnpivsplit, npivsplit, cv_keep(1), n, cv_fils(1),
+      |                                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/mumps_static_mapping.F:1298:14:
+
+ 1298 |      &        cv_frere(1),
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/mumps_static_mapping.F:1299:14:
+
+ 1299 |      &        cv_nfsiz(1), cv_ne(1), cv_info(5),
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nfsiz' at (1)
+MUMPS/src/mumps_static_mapping.F:1299:27:
+
+ 1299 |      &        cv_nfsiz(1), cv_ne(1), cv_info(5),
+      |                           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ne' at (1)
+MUMPS/src/mumps_static_mapping.F:1300:25:
+
+ 1300 |      &        cv_nsteps, cv_nodetype(1), ierr
+      |                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nodetype' at (1)
+  PPF77    MUMPS/src/mumps_load.lo
+  PPF77    MUMPS/src/dmumps_ooc.lo
+MUMPS/src/mumps_load.F:1273:11:
+
+ 1269 |      &     WHAT, 1, MPI_INTEGER,
+      |           2
+......
+ 1273 |      &     LOAD_RECEIVED, 1,
+      |           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+  PPF77    MUMPS/src/dlr_core.lo
+  PPF77    MUMPS/src/dmumps_sol_es.lo
+MUMPS/src/dmumps_sol_es.F:631:26:
+
+  631 |       CALL MPI_ALLREDUCE (idNloc_8, SUM_idNloc_8, 1,
+      |                          1
+......
+  679 |      &         MPI_IN_PLACE,
+      |               2           
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dmumps_sol_es.F:631:36:
+
+  631 |       CALL MPI_ALLREDUCE (idNloc_8, SUM_idNloc_8, 1,
+      |                                    1
+......
+  681 |      &         Pruned_Sons, NSTEPS,
+      |               2                     
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dlr_core.F:2286:72:
+
+ 2286 |      &             PREC, 1)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:2286:72:
+
+ 2286 |      &             PREC, 1)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2240:72:
+
+ 2240 |      &             PREC, 1)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:2240:72:
+
+ 2240 |      &             PREC, 1)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2172:39:
+
+ 2172 |               CALL DMUMPS_LRMIXED_CAST(LRB%Q_STOC(PREC)%val(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2174:72:
+
+ 2174 |      &               PREC, PREC_FAC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2175:39:
+
+ 2175 |               CALL DMUMPS_LRMIXED_CAST(LRB%R_STOC(PREC)%val(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2177:72:
+
+ 2177 |      &               PREC, PREC_FAC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2188:41:
+
+ 2188 |                 CALL DMUMPS_LRMIXED_CAST(LRB%Q_STOC(PREC)%val(1),
+      |                                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2190:72:
+
+ 2190 |      &                 PREC, PREC_FAC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2090:72:
+
+ 2090 |      &          PREC_FAC, PREC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2089:16:
+
+ 2089 |      &          LRB%Q_STOC(PREC)%val(1), M, Kprec, M, M,
+      |                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'b' at (1)
+MUMPS/src/dlr_core.F:2093:72:
+
+ 2093 |      &          PREC_FAC, PREC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2092:16:
+
+ 2092 |      &          LRB%R_STOC(PREC)%val(1), Kprec, N, K, Kprec,
+      |                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'b' at (1)
+MUMPS/src/dlr_core.F:2137:72:
+
+ 2137 |      &     LRB%Q_stoc(PREC)%VAL(1),       M, N, M, M, PREC_FAC, PREC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:2137:11:
+
+ 2137 |      &     LRB%Q_stoc(PREC)%VAL(1),       M, N, M, M, PREC_FAC, PREC)
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'b' at (1)
+MUMPS/src/dlr_core.F:1075:47:
+
+ 1075 |               CALL DMUMPS_TRUNCATED_RRQR(M, N, ACC_LRB%Q(1,1),
+      |                                               1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2841:45:
+
+ 2841 |                     CALL DMUMPS_LRMIXED_CAST(LRB%Q_STOC(PSTOC)%VAL(1),
+      |                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2842:22:
+
+ 2842 |      &                LRB%Q_CALC(PCALC,PCALC)%VAL(1+OFFSET_Q_CALC),
+      |                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'b' at (1)
+MUMPS/src/dlr_core.F:2844:45:
+
+ 2844 |                     CALL DMUMPS_LRMIXED_CAST(LRB%R_STOC(PSTOC)%VAL(1),
+      |                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:2845:22:
+
+ 2845 |      &                LRB%R_CALC(PCALC,PCALC)%VAL(1+OFFSET_R_CALC),
+      |                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'b' at (1)
+MUMPS/src/dlr_core.F:3115:40:
+
+ 3115 |                CALL DMUMPS_LRMIXED_PLUS(QRB(last_prec_calc)%VAL(1),
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'x' at (1)
+MUMPS/src/dlr_core.F:3116:72:
+
+ 3116 |      &             Cptr(1), MorN, NCOLS, MorN, LD_C, last_prec_stoc, 1)
+      |                                                                        1
+Warning: Type mismatch in argument 'y' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3133:40:
+
+ 3133 |                CALL DMUMPS_LRMIXED_CAST(QRB(last_prec_calc)%VAL(1),
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3135:72:
+
+ 3135 |      &           LD_C, LD_C, last_prec_stoc, pcalc_stoc)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3148:39:
+
+ 3148 |               CALL DMUMPS_LRMIXED_CAST(LRB%R_STOC(PSTOC)%VAL(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3151:72:
+
+ 3151 |      &          PSTOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3157:72:
+
+ 3157 |      &          RB, KPREC_STOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3157:72:
+
+ 3157 |      &          RB, KPREC_STOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3166:39:
+
+ 3166 |               CALL DMUMPS_LRMIXED_CAST(LRB%Q_STOC(PSTOC)%VAL(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3168:72:
+
+ 3168 |      &       M, KPREC_STOC, M, M, PSTOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3174:72:
+
+ 3174 |      &          Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3174:72:
+
+ 3174 |      &          Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'c' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3184:39:
+
+ 3184 |               CALL DMUMPS_LRMIXED_CAST(LRB%Q_STOC(PSTOC)%VAL(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3186:72:
+
+ 3186 |      &      M, KPREC_STOC, M, M, PSTOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3191:72:
+
+ 3191 |      &          0.0D0, RB, KPREC_STOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3191:72:
+
+ 3191 |      &          0.0D0, RB, KPREC_STOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3200:39:
+
+ 3200 |               CALL DMUMPS_LRMIXED_CAST(LRB%R_STOC(PSTOC)%VAL(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3203:72:
+
+ 3203 |      &       PSTOC, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3208:72:
+
+ 3208 |      &          GAMMA, Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3208:72:
+
+ 3208 |      &          GAMMA, Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'c' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3216:36:
+
+ 3216 |            CALL DMUMPS_LRMIXED_PLUS(QRB(last_prec_calc)%VAL(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'x' at (1)
+MUMPS/src/dlr_core.F:3218:72:
+
+ 3218 |      &         CALC2STOC(1))
+      |                                                                        1
+Warning: Type mismatch in argument 'y' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3291:12:
+
+ 3291 |      &      FRB%Q_stoc(PREC)%VAL(1),
+      |            1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dlr_core.F:3294:72:
+
+ 3294 |      &      PREC, pcalc_stoc)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3319:72:
+
+ 3319 |      &      GAMMA, Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'a' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3319:72:
+
+ 3319 |      &      GAMMA, Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'b' at (1); passed INTEGER(1) to INTEGER(4)
+MUMPS/src/dlr_core.F:3319:72:
+
+ 3319 |      &      GAMMA, Cptr(1), LD_C, PCALC_STOC)
+      |                                                                        1
+Warning: Type mismatch in argument 'c' at (1); passed REAL(8) to INTEGER(4)
+MUMPS/src/dlr_core.F:3322:72:
+
+ 3322 |      &         Cptr(1), C, M, N, LD_C, LDC, pcalc_stoc, CALC2STOC(1))
+      |                                                                        1
+Warning: Type mismatch in argument 'x' at (1); passed REAL(8) to INTEGER(4)
+  PPF77    MUMPS/src/dmumps_save_restore.lo
+MUMPS/src/dmumps_save_restore.F:98:22:
+
+   98 |       CALL MPI_BCAST( ICNTL34, 1, MPI_INTEGER, MASTER, id%COMM, ierr )
+      |                      1
+......
+  992 |          CALL MPI_BCAST( hash, 23, MPI_CHARACTER, 0, id%COMM, ierr )
+      |                         2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/CHARACTER(*)).
+  PPF77    MUMPS/src/dfac_mem_dynamic.lo
+  PPF77    MUMPS/src/dfac_front_aux.lo
+  PPF77    MUMPS/src/ana_AMDMF.lo
+  PPF77    MUMPS/src/ana_blk.lo
+  PPF77    MUMPS/src/ana_orderings.lo
+  PPF77    MUMPS/src/ana_set_ordering.lo
+  PPF77    MUMPS/src/bcast_errors.lo
+  PPF77    MUMPS/src/estim_flops.lo
+  CC       MUMPS/src/mumps_addr.lo
+  CC       MUMPS/src/mumps_common.lo
+  CC       MUMPS/src/mumps_config_file_C.lo
+  CC       MUMPS/src/mumps_flytes.lo
+  CC       MUMPS/src/mumps_io_basic.lo
+  CC       MUMPS/src/mumps_io.lo
+  CC       MUMPS/src/mumps_io_err.lo
+  CC       MUMPS/src/mumps_io_thread.lo
+  CC       MUMPS/src/mumps_metis64.lo
+  CC       MUMPS/src/mumps_metis.lo
+  CC       MUMPS/src/mumps_metis_int.lo
+  CC       MUMPS/src/mumps_numa.lo
+  CC       MUMPS/src/mumps_pord.lo
+  PPF77    MUMPS/src/mumps_print_defined.lo
+  CC       MUMPS/src/mumps_save_restore_C.lo
+  CC       MUMPS/src/mumps_scotch64.lo
+  CC       MUMPS/src/mumps_scotch.lo
+  CC       MUMPS/src/mumps_scotch_int.lo
+  CC       MUMPS/src/mumps_thread_affinity.lo
+  CC       MUMPS/src/mumps_register_thread.lo
+  CC       MUMPS/src/mumps_thread.lo
+  PPF77    MUMPS/src/mumps_type2_blocking.lo
+  PPF77    MUMPS/src/mumps_version.lo
+  PPF77    MUMPS/src/sol_common.lo
+  PPF77    MUMPS/src/tools_common.lo
+  PPF77    MUMPS/src/dana_aux.lo
+  PPF77    MUMPS/src/dfac_compact_factors_m.lo
+MUMPS/src/tools_common.F:2647:72:
+
+ 2647 |      &                           SIZE2, IN_OUT_TAB48(IBEG24))
+      |                                                                        1
+Warning: Type mismatch in argument 'intab8' at (1); passed REAL(4) to REAL(8)
+MUMPS/src/tools_common.F:2597:72:
+
+ 2597 |      &                           SIZE2, IN_OUT_TAB48(IBEG28))
+      |                                                                        1
+Warning: Type mismatch in argument 'outtab8' at (1); passed REAL(4) to REAL(8)
+MUMPS/src/tools_common.F:1528:72:
+
+ 1528 |      &                           SIZE2, IN_OUT_TAB48(IBEG24))
+      |                                                                        1
+Warning: Type mismatch in argument 'intab8' at (1); passed INTEGER(4) to INTEGER(8)
+MUMPS/src/tools_common.F:1474:72:
+
+ 1474 |      &                           SIZE2, IN_OUT_TAB48(IBEG28))
+      |                                                                        1
+Warning: Type mismatch in argument 'outtab8' at (1); passed INTEGER(4) to INTEGER(8)
+MUMPS/src/tools_common.F:693:23:
+
+  687 |       CALL MPI_REDUCE( INFO, INFOG(1), 1, MPI_INTEGER,
+      |                       2
+......
+  693 |       CALL MPI_REDUCE( TEMP1, TEMP2, 1, MPI_2INTEGER,
+      |                       1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/tools_common.F:1100:22:
+
+  687 |       CALL MPI_REDUCE( INFO, INFOG(1), 1, MPI_INTEGER,
+      |                       2
+......
+ 1100 |       CALL MPI_REDUCE(DIN, DOUT, 1, MPI_DOUBLE_PRECISION,
+      |                      1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/tools_common.F:1100:27:
+
+  687 |       CALL MPI_REDUCE( INFO, INFOG(1), 1, MPI_INTEGER,
+      |                             2
+......
+ 1100 |       CALL MPI_REDUCE(DIN, DOUT, 1, MPI_DOUBLE_PRECISION,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/tools_common.F:1114:25:
+
+  165 |         CALL MPI_ALLREDUCE( KEEP(412), MINPROCSPERNODE, 1, MPI_INTEGER,
+      |                            2
+......
+ 1114 |       CALL MPI_ALLREDUCE(DIN, DOUT, 1, MPI_DOUBLE_PRECISION,
+      |                         1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/tools_common.F:1114:30:
+
+  165 |         CALL MPI_ALLREDUCE( KEEP(412), MINPROCSPERNODE, 1, MPI_INTEGER,
+      |                                       2
+......
+ 1114 |       CALL MPI_ALLREDUCE(DIN, DOUT, 1, MPI_DOUBLE_PRECISION,
+      |                              1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/tools_common.F:1406:24:
+
+  176 |         CALL MPI_BCAST( MYNODEID, 1, MPI_INTEGER,
+      |                        2
+......
+ 1406 |          call MPI_BCAST(MyNAME_TAB_RCV,MyNAME_length_RCV,MPI_CHARACTER,
+      |                        1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (CHARACTER(1)/INTEGER(4)).
+MUMPS/src/ana_blk.F:2403:25:
+
+  943 |       CALL MPI_ALLREDUCE(LUMAT%NZL, NZ_locMAX8, 1, MPI_INTEGER8,
+      |                         2
+......
+ 2403 |       CALL MPI_ALLREDUCE(NBLK_ARRAY_IN(0), NBLK_ARRAY_OUT(0), NPROCS,
+      |                         1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/ana_blk.F:2403:43:
+
+  943 |       CALL MPI_ALLREDUCE(LUMAT%NZL, NZ_locMAX8, 1, MPI_INTEGER8,
+      |                                    2       
+......
+ 2403 |       CALL MPI_ALLREDUCE(NBLK_ARRAY_IN(0), NBLK_ARRAY_OUT(0), NPROCS,
+      |                                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/ana_blk.F:1292:25:
+
+ 1292 |      &          ,OPTION, MAPCOL_PTR(1), SIZE_MAPCOL
+      |                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:1302:11:
+
+ 1302 |      &     MAPCOL_PTR(1), SIZE_MAPCOL,
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:1361:14:
+
+ 1361 |      &        MAPCOL_PTR(1), SIZE_MAPCOL,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:1500:25:
+
+ 1500 |      &          ,OPTION, MAPCOL_PTR(1), SIZE_MAPCOL
+      |                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:1519:11:
+
+ 1519 |      &     MAPCOL_PTR(1), SIZE_MAPCOL,
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:1626:14:
+
+ 1626 |      &        MAPCOL_PTR(1), SIZE_MAPCOL,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'mapcol' at (1)
+MUMPS/src/ana_blk.F:2164:26:
+
+ 1886 |             CALL MPI_RECV( BUFRECI(1), NBRECORDS * 2 + 1,
+      |                           2
+......
+ 2164 |            CALL MPI_RECV( GCOMP%IPE(J), NBNONEMPTY_PI,
+      |                          1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/ana_blk.F:2175:25:
+
+ 2170 |         CALL MPI_SEND( NG_LOCAL_GDIST, 1, MPI_INTEGER, MASTER,
+      |                       2  
+......
+ 2175 |           CALL MPI_SEND( IQ(1), NG_LOCAL_GDIST,
+      |                         1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_aux.F:1685:14:
+
+ 1685 |      &        PERM(1),IPQ8(1))
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'flag' at (1)
+MUMPS/src/dana_aux.F:1688:14:
+
+ 1688 |      &        PERM(1))
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'flag' at (1)
+MUMPS/src/dana_aux.F:1698:18:
+
+ 1698 |      &     NUMNZ, PERM(1), LIW, IW(IPIW), LDW, S2(LS2+1),
+      |                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm' at (1)
+MUMPS/src/dana_aux.F:304:37:
+
+  304 |           CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'irn' at (1)
+MUMPS/src/dana_aux.F:304:45:
+
+  304 |           CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'icn' at (1)
+MUMPS/src/dana_aux.F:304:53:
+
+  304 |           CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dana_aux.F:305:14:
+
+  305 |      &        IPE(1), PTRAR(1,2),
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipe' at (1)
+MUMPS/src/dana_aux.F:434:30:
+
+  434 |      &                 (N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'irn' at (1)
+MUMPS/src/dana_aux.F:434:38:
+
+  434 |      &                 (N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'icn' at (1)
+MUMPS/src/dana_aux.F:434:46:
+
+  434 |      &                 (N,NZ8,IRN(1), ICN(1), IW(1), LIW8,
+      |                                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dana_aux.F:435:24:
+
+  435 |      &                  IPE(1), PTRAR(1,2),
+      |                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipe' at (1)
+MUMPS/src/dana_aux.F:955:42:
+
+  955 |                CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1),ICN(1),IW(1),LIW8,
+      |                                          1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'irn' at (1)
+MUMPS/src/dana_aux.F:955:49:
+
+  955 |                CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1),ICN(1),IW(1),LIW8,
+      |                                                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'icn' at (1)
+MUMPS/src/dana_aux.F:955:56:
+
+  955 |                CALL DMUMPS_ANA_GNEW(N,NZ8,IRN(1),ICN(1),IW(1),LIW8,
+      |                                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dana_aux.F:956:20:
+
+  956 |      &              IPE(1), PTRAR(1,2),
+      |                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipe' at (1)
+MUMPS/src/dana_aux.F:1032:38:
+
+ 1032 |             CALL DMUMPS_ANA_J(N, NZ8, IRN(1), ICN(1), IKEEP1(1), IW(1),
+      |                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'irn' at (1)
+MUMPS/src/dana_aux.F:1032:46:
+
+ 1032 |             CALL DMUMPS_ANA_J(N, NZ8, IRN(1), ICN(1), IKEEP1(1), IW(1),
+      |                                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'icn' at (1)
+MUMPS/src/dana_aux.F:1032:54:
+
+ 1032 |             CALL DMUMPS_ANA_J(N, NZ8, IRN(1), ICN(1), IKEEP1(1), IW(1),
+      |                                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm' at (1)
+MUMPS/src/dana_aux.F:1032:65:
+
+ 1032 |             CALL DMUMPS_ANA_J(N, NZ8, IRN(1), ICN(1), IKEEP1(1), IW(1),
+      |                                                                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dana_aux.F:1033:23:
+
+ 1033 |      &           LIW8, IPE(1),
+      |                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipe' at (1)
+MUMPS/src/dana_aux.F:1041:33:
+
+ 1041 |             CALL DMUMPS_ANA_K(N, IPE(1), IW(1), LIW8, IWFR8, IKEEP1(1),
+      |                                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipe' at (1)
+MUMPS/src/dana_aux.F:1041:41:
+
+ 1041 |             CALL DMUMPS_ANA_K(N, IPE(1), IW(1), LIW8, IWFR8, IKEEP1(1),
+      |                                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dana_aux.F:1041:61:
+
+ 1041 |             CALL DMUMPS_ANA_K(N, IPE(1), IW(1), LIW8, IWFR8, IKEEP1(1),
+      |                                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ips' at (1)
+MUMPS/src/dana_aux.F:1042:20:
+
+ 1042 |      &              IKEEP2(1), IWL1,
+      |                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipv' at (1)
+MUMPS/src/dana_aux.F:1061:29:
+
+ 1061 |      &     (N, PARENT, IWL1, IKEEP1(1), IKEEP2(1), IKEEP3(1),
+      |                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ips' at (1)
+MUMPS/src/dana_aux.F:1061:40:
+
+ 1061 |      &     (N, PARENT, IWL1, IKEEP1(1), IKEEP2(1), IKEEP3(1),
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ne' at (1)
+MUMPS/src/dana_aux.F:1061:51:
+
+ 1061 |      &     (N, PARENT, IWL1, IKEEP1(1), IKEEP2(1), IKEEP3(1),
+      |                                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'na' at (1)
+MUMPS/src/dana_aux.F:1062:11:
+
+ 1062 |      &     NFSIZ(1), PTRAR, INFO(6), FILS(1), FRERE(1),
+      |           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nfsiz' at (1)
+MUMPS/src/dana_aux.F:1062:37:
+
+ 1062 |      &     NFSIZ(1), PTRAR, INFO(6), FILS(1), FRERE(1),
+      |                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_aux.F:1062:46:
+
+ 1062 |      &     NFSIZ(1), PTRAR, INFO(6), FILS(1), FRERE(1),
+      |                                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_aux.F:1064:50:
+
+ 1064 |      &     KEEP(20),KEEP(38),PTRAR(1,2),KEEP(104),IW(1),KEEP(50),
+      |                                                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'cumul' at (1)
+MUMPS/src/dana_aux.F:1066:31:
+
+ 1066 |      &     SIZEOFBLOCKS_AVAIL, SIZEOFBLOCKS_PTR(1), LSIZEOFBLOCKS_PTR
+      |                               1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'sizeofblocks' at (1)
+MUMPS/src/dana_aux.F:1093:24:
+
+ 1093 |       CALL DMUMPS_ANA_M(IKEEP2(1),
+      |                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ne' at (1)
+MUMPS/src/dana_aux.F:1126:35:
+
+ 1126 |            CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_aux.F:1126:45:
+
+ 1126 |            CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_aux.F:1126:54:
+
+ 1126 |            CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nfsiz' at (1)
+MUMPS/src/dana_aux.F:1127:15:
+
+ 1127 |      &         SIZEOFBLOCKS_PTR(1), LSIZEOFBLOCKS_PTR, INFO(6),
+      |               1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'sizeofblocks' at (1)
+MUMPS/src/dana_aux.F:1188:34:
+
+ 1188 |           CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_aux.F:1188:44:
+
+ 1188 |           CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                            1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_aux.F:1188:53:
+
+ 1188 |           CALL DMUMPS_CUTNODES(N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nfsiz' at (1)
+MUMPS/src/dana_aux.F:1189:20:
+
+ 1189 |      &              SIZEOFBLOCKS_PTR(1), LSIZEOFBLOCKS_PTR, INFO(6),
+      |                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'sizeofblocks' at (1)
+MUMPS/src/dana_aux.F:1200:21:
+
+ 1200 |      &            N, FRERE(1), FILS(1), NFSIZ(1),
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_aux.F:1200:31:
+
+ 1200 |      &            N, FRERE(1), FILS(1), NFSIZ(1),
+      |                               1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_aux.F:1200:40:
+
+ 1200 |      &            N, FRERE(1), FILS(1), NFSIZ(1),
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nfsiz' at (1)
+MUMPS/src/dana_aux.F:1202:18:
+
+ 1202 |      &            SIZEOFBLOCKS_PTR(1), LSIZEOFBLOCKS_PTR, INFO(6))
+      |                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'sizeofblocks' at (1)
+  PPF77    MUMPS/src/dana_lr.lo
+  PPF77    MUMPS/src/dfac_lr.lo
+  PPF77    MUMPS/src/dmumps_comm_buffer.lo
+  PPF77    MUMPS/src/dsol_lr.lo
+MUMPS/src/dana_lr.F:1712:31:
+
+ 1701 |                 CALL MPI_RECV( NBNODES_LOC, 1, MPI_INTEGER,
+      |                               2
+......
+ 1712 |                 CALL MPI_RECV( WORKH, SIZE_SENT, MPI_INTEGER,
+      |                               1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dana_lr.F:1780:31:
+
+ 1773 |               CALL MPI_SEND( NBNODES_LOC, 1, MPI_INTEGER, MASTER,
+      |                             2  
+......
+ 1780 |                 CALL MPI_SEND( WORKH, SIZE_SENT, MPI_INTEGER, MASTER,
+      |                               1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dfac_lr.F:545:22:
+
+  545 |      &                TEMP_BLOCK , NELIM , BLR_L(I)%Q(1,1) , ML ,
+      |                      1
+......
+ 2312 |      &            BLR_PANEL(IP-CURRENT_BLR)%R(1,1) , K,
+      |                  2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-2)
+MUMPS/src/dfac_lr.F:432:20:
+
+  432 |      &              TEMP_BLOCK , NELIM , BLR_L(I)%Q(1,1) , ML ,
+      |                    1
+......
+ 2312 |      &            BLR_PANEL(IP-CURRENT_BLR)%R(1,1) , K,
+      |                  2  
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-2)
+MUMPS/src/dfac_lr.F:353:39:
+
+  353 |      &              LRB%Q(1,1), LRB%M, TEMP_BLOCK, LRB%K,
+      |                                       1
+......
+ 2313 |      &            BLR_PANEL(IP-CURRENT_BLR)%Q(1,1) , M,
+      |                  2                     
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-2)
+MUMPS/src/dsol_lr.F:1976:37:
+
+ 1976 |             CALL DMUMPS_LRMIXED_CAST(WCB(POSBLOCK),
+      |                                     1
+......
+ 2612 |      &                  stoc_ptr(m*costs_prec(prec)*
+      |                        2             
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(1)).
+MUMPS/src/dsol_lr.F:1977:16:
+
+ 1977 |      &          PT_RHS(PREC,I)%val(1), M,
+      |                1
+......
+ 2614 |      &                  Q_ptr(1,1), M, Krem,
+      |                        2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/REAL(8)).
+MUMPS/src/dsol_lr.F:2166:15:
+
+ 2166 |      &         DIAG(1), size(DIAG), DIAGSIZ_DYN, NELIM_PANEL, LIELL,
+      |               1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'diag' at (1)
+MUMPS/src/dsol_lr.F:1346:36:
+
+ 1346 |      &            K34, K451, KEEP8, PT_RHS, PT_RB(1), PT_QRB,
+      |                                    1
+......
+ 2811 |      &            K34, K451, KEEP8, ptPT_RHS(1), PT_RB(1), PT_QRB,
+      |                                    2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1355:36:
+
+ 1355 |      &            K34, K451, KEEP8, PT_RHS, PT_RB(1), PT_QRB,
+      |                                    1
+......
+ 2811 |      &            K34, K451, KEEP8, ptPT_RHS(1), PT_RB(1), PT_QRB,
+      |                                    2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1364:36:
+
+ 1364 |      &            K34, K451, KEEP8, PT_RHS, PT_RB(1), PT_QRB,
+      |                                    1
+......
+ 2811 |      &            K34, K451, KEEP8, ptPT_RHS(1), PT_RB(1), PT_QRB,
+      |                                    2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1379:22:
+
+ 1379 |      &                PT_RHS, TEMP_QRB, thread_workspaces, WSMAX)
+      |                      1
+......
+ 2843 |      &                PT_RHS(1,I), TEMP_QRB, thread_workspaces, WSMAX)
+      |                      2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1388:22:
+
+ 1388 |      &                PT_RHS, TEMP_QRB, thread_workspaces, WSMAX)
+      |                      1
+......
+ 2843 |      &                PT_RHS(1,I), TEMP_QRB, thread_workspaces, WSMAX)
+      |                      2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1394:22:
+
+ 1394 |      &                PT_RHS, TEMP_QRB, thread_workspaces, WSMAX)
+      |                      1
+......
+ 2843 |      &                PT_RHS(1,I), TEMP_QRB, thread_workspaces, WSMAX)
+      |                      2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1403:22:
+
+ 1403 |      &                PT_RHS, TEMP_QRB, thread_workspaces, WSMAX)
+      |                      1
+......
+ 2843 |      &                PT_RHS(1,I), TEMP_QRB, thread_workspaces, WSMAX)
+      |                      2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_lr.F:1412:22:
+
+ 1412 |      &                PT_RHS, TEMP_QRB, thread_workspaces, WSMAX)
+      |                      1
+......
+ 2843 |      &                PT_RHS(1,I), TEMP_QRB, thread_workspaces, WSMAX)
+      |                      2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:2797:27:
+
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2      
+......
+ 2797 |             CALL MPI_PACK( BLR(I)%Q(1,1), BLR(I)%M*BLR(I)%K,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dmumps_comm_buffer.F:2721:27:
+
+ 2645 |      &               ISLR_INT, 1, MPI_INTEGER, COMM, IERR_MPI )
+      |                     2      
+......
+ 2721 |      &                     LRB%Q(1,1), M*K, MPI_DOUBLE_PRECISION,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dmumps_comm_buffer.F:1510:29:
+
+ 1510 |               CALL MPI_PACK( BEGS_BLR_COL, SIZE_BEGS_BLR_COL,
+      |                             1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2        
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:1523:28:
+
+ 1523 |              CALL MPI_PACK( IPIV, NPIV, MPI_INTEGER,
+      |                            1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2       
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:557:27:
+
+  557 |             CALL MPI_PACK( SLAVES, NSLAVES, MPI_INTEGER,
+      |                           1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2      
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:561:25:
+
+  561 |           CALL MPI_PACK( IROW, NROW, MPI_INTEGER,
+      |                         1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:564:25:
+
+  564 |           CALL MPI_PACK( ICOL, NCOL, MPI_INTEGER,
+      |                         1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:392:25:
+
+  392 |           CALL MPI_PACK( IW, LONG, MPI_INTEGER,
+      |                         1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:205:25:
+
+  205 |           CALL MPI_PACK( IWROW, LCONT, MPI_INTEGER,
+      |                         1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_comm_buffer.F:208:25:
+
+  208 |           CALL MPI_PACK( IWCOL, LCONT, MPI_INTEGER,
+      |                         1
+......
+ 2761 |       CALL MPI_PACK( NBLRB_PACKET, 1, MPI_INTEGER,
+      |                     2    
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+  PPF77    MUMPS/src/dfac_asm_master_ELT_m.lo
+  PPF77    MUMPS/src/dfac_asm_master_m.lo
+MUMPS/src/dfac_asm_master_ELT_m.F:751:16:
+
+  743 |      &         IW, LIW, LRLU, LRLUS, IPTRLU,
+      |               2 
+......
+  751 |      &          MUMPS_TPS_ARR(ITHREAD)%IW(1),
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dfac_asm_master_m.F:893:16:
+
+  885 |      &         IW, LIW, LRLU, LRLUS, IPTRLU,
+      |               2 
+......
+  893 |      &          MUMPS_TPS_ARR(ITHREAD)%IW(1),
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+  PPF77    MUMPS/src/dfac_front_LDLT_type1.lo
+  PPF77    MUMPS/src/dfac_front_LU_type1.lo
+  PPF77    MUMPS/src/dfac_front_type2_aux.lo
+  PPF77    MUMPS/src/dfac_front_LU_type2.lo
+  PPF77    MUMPS/src/dfac_front_LDLT_type2.lo
+  PPF77    MUMPS/src/dfac_omp_m.lo
+MUMPS/src/dfac_omp_m.F:392:52:
+
+  392 |      &  TYPE, TYPEF, MUMPS_TPS_ARR(THREAD_ID_P)%LA, MUMPS_TPS_ARR(THREAD
+      |                                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dfac_omp_m.F:393:54:
+
+  393 |      &  _ID_P)%IW(1), MUMPS_TPS_ARR(THREAD_ID_P)%LIW, DMUMPS_TPS_ARR(
+      |                                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dfac_omp_m.F:406:36:
+
+  406 |      &  NBFIN, root, roota, OPASSW, MUMPS_TPS_ARR(THREAD_ID_P)%ITLOC(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'itloc' at (1)
+  PPF77    MUMPS/src/dfac_par_m.lo
+MUMPS/src/dfac_par_m.F:357:35:
+
+  252 |                CALL DMUMPS_MCAST2( NBROOT, 1, MPI_INTEGER,
+      |                                   2
+......
+  357 |                 CALL DMUMPS_MCAST2(DUMMY, 1, MPI_INTEGER, MYID_NODES,
+      |                                   1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+  PPF77    MUMPS/src/dana_aux_ELT.lo
+  PPF77    MUMPS/src/dana_dist_m.lo
+  PPF77    MUMPS/src/dana_driver.lo
+  PPF77    MUMPS/src/dana_LDLT_preprocess.lo
+  PPF77    MUMPS/src/dana_mtrans.lo
+  PPF77    MUMPS/src/dana_reordertree.lo
+  PPF77    MUMPS/src/darrowheads.lo
+  PPF77    MUMPS/src/dbcast_int.lo
+  PPF77    MUMPS/src/dend_driver.lo
+  PPF77    MUMPS/src/dfac_asm_ELT.lo
+  PPF77    MUMPS/src/dfac_asm.lo
+  PPF77    MUMPS/src/dfac_b.lo
+  PPF77    MUMPS/src/dfac_diag.lo
+  PPF77    MUMPS/src/dfac_determinant.lo
+  PPF77    MUMPS/src/dfac_distrib_distentry.lo
+  PPF77    MUMPS/src/dfac_distrib_ELT.lo
+  PPF77    MUMPS/src/dfac_dist_arrowheads_omp.lo
+  PPF77    MUMPS/src/dfac_driver.lo
+  PPF77    MUMPS/src/dfac_lastrtnelind.lo
+  PPF77    MUMPS/src/dfac_mem_alloc_cb.lo
+  PPF77    MUMPS/src/dfac_mem_compress_cb.lo
+  PPF77    MUMPS/src/dfac_mem_free_block_cb.lo
+  PPF77    MUMPS/src/dfac_mem_stack_aux.lo
+  PPF77    MUMPS/src/dfac_mem_stack.lo
+  PPF77    MUMPS/src/dfac_process_band.lo
+  PPF77    MUMPS/src/dfac_process_bf.lo
+  PPF77    MUMPS/src/dfac_process_blfac_slave.lo
+  PPF77    MUMPS/src/dfac_process_blocfacto.lo
+  PPF77    MUMPS/src/dfac_process_blocfacto_LDLT.lo
+  PPF77    MUMPS/src/dfac_process_contrib_type1.lo
+  PPF77    MUMPS/src/dfac_process_contrib_type2.lo
+  PPF77    MUMPS/src/dfac_process_contrib_type3.lo
+  PPF77    MUMPS/src/dfac_process_end_facto_slave.lo
+  PPF77    MUMPS/src/dfac_process_maprow.lo
+  PPF77    MUMPS/src/dfac_process_master2.lo
+  PPF77    MUMPS/src/dfac_process_message.lo
+  PPF77    MUMPS/src/dfac_process_root2slave.lo
+  PPF77    MUMPS/src/dfac_process_root2son.lo
+  PPF77    MUMPS/src/dfac_process_rtnelind.lo
+  PPF77    MUMPS/src/dfac_root_parallel.lo
+  PPF77    MUMPS/src/dfac_scalings.lo
+  PPF77    MUMPS/src/dfac_scalings_simScaleAbs.lo
+  PPF77    MUMPS/src/dfac_scalings_simScale_util.lo
+  PPF77    MUMPS/src/dfac_sol_pool.lo
+  PPF77    MUMPS/src/dfac_type3_symmetrize.lo
+  PPF77    MUMPS/src/dini_defaults.lo
+  PPF77    MUMPS/src/dini_driver.lo
+  PPF77    MUMPS/src/dmumps_driver.lo
+  PPF77    MUMPS/src/dmumps_f77.lo
+  CC       MUMPS/src/dmumps_gpu.lo
+  PPF77    MUMPS/src/dmumps_iXamax.lo
+  PPF77    MUMPS/src/dooc_panel_piv.lo
+  PPF77    MUMPS/src/drank_revealing.lo
+  PPF77    MUMPS/src/dsol_aux.lo
+  PPF77    MUMPS/src/dsol_bwd_aux.lo
+  PPF77    MUMPS/src/dsol_bwd.lo
+  PPF77    MUMPS/src/dsol_c.lo
+  PPF77    MUMPS/src/dsol_distrhs.lo
+  PPF77    MUMPS/src/dsol_distsol.lo
+  PPF77    MUMPS/src/dsol_driver.lo
+  PPF77    MUMPS/src/dsol_fwd_aux.lo
+  PPF77    MUMPS/src/dsol_fwd.lo
+  PPF77    MUMPS/src/dsol_matvec.lo
+  PPF77    MUMPS/src/dsol_root_parallel.lo
+  PPF77    MUMPS/src/dtools.lo
+  PPF77    MUMPS/src/dtype3_root.lo
+MUMPS/src/darrowheads.F:1095:32:
+
+ 1095 |         CALL DMUMPS_SET_TO_ZERO(roota%SCHUR_POINTER(1),
+      |                                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/darrowheads.F:774:27:
+
+  770 |           CALL MPI_SEND(BUFI(1,ISLAVE),TAILLE_SENDI,
+      |                        2   
+......
+  774 |             CALL MPI_SEND( BUFR(1,ISLAVE), TAILLE_SENDR,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/darrowheads.F:70:35:
+
+   70 |      &           id%NSLAVES, id%N, id%PROCNODE_STEPS(1),
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'procnode' at (1)
+MUMPS/src/darrowheads.F:71:17:
+
+   71 |      &           id%STEP(1), id%FILS(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/darrowheads.F:71:29:
+
+   71 |      &           id%STEP(1), id%FILS(1),
+      |                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/darrowheads.F:72:17:
+
+   72 |      &           id%ISTEP_TO_INIV2(1), id%I_AM_CAND(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'istep_to_iniv2' at (1)
+MUMPS/src/darrowheads.F:72:39:
+
+   72 |      &           id%ISTEP_TO_INIV2(1), id%I_AM_CAND(1),
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'i_am_cand' at (1)
+MUMPS/src/darrowheads.F:73:17:
+
+   73 |      &           KEEP(1),KEEP8(1), ICNTL(1), id,
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep' at (1)
+MUMPS/src/darrowheads.F:73:25:
+
+   73 |      &           KEEP(1),KEEP8(1), ICNTL(1), id,
+      |                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep8' at (1)
+MUMPS/src/darrowheads.F:73:35:
+
+   73 |      &           KEEP(1),KEEP8(1), ICNTL(1), id,
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'icntl' at (1)
+MUMPS/src/darrowheads.F:377:27:
+
+   44 |          CALL MUMPS_PROPINFO( ICNTL(1), INFO(1), id%COMM, id%MYID )
+      |                              2
+......
+  377 |       CALL MUMPS_PROPINFO( ICNTL, INFO, COMM, MYID )
+      |                           1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/darrowheads.F:377:34:
+
+   44 |          CALL MUMPS_PROPINFO( ICNTL(1), INFO(1), id%COMM, id%MYID )
+      |                                        2
+......
+  377 |       CALL MUMPS_PROPINFO( ICNTL, INFO, COMM, MYID )
+      |                                  1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/darrowheads.F:920:27:
+
+   44 |          CALL MUMPS_PROPINFO( ICNTL(1), INFO(1), id%COMM, id%MYID )
+      |                              2
+......
+  920 |       CALL MUMPS_PROPINFO( ICNTL, INFO, COMM, MYID )
+      |                           1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/darrowheads.F:920:34:
+
+   44 |          CALL MUMPS_PROPINFO( ICNTL(1), INFO(1), id%COMM, id%MYID )
+      |                                        2
+......
+  920 |       CALL MUMPS_PROPINFO( ICNTL, INFO, COMM, MYID )
+      |                                  1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/darrowheads.F:964:23:
+
+  954 |         CALL MPI_RECV( BUFI(1), 2*NBRECORDS+1,
+      |                       2
+......
+  964 |         CALL MPI_RECV( BUFR(1), NBRECORDS, MPI_DOUBLE_PRECISION,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_asm_ELT.F:62:18:
+
+   62 |      &    IOLDPS, A_PTR(POSELT), LA_PTR, 1_8, KEEP, KEEP8, ITLOC, FILS,
+      |                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dana_dist_m.F:188:36:
+
+  188 |      &           id%LPOOL_B_L0_OMP, id%IPOOL_B_L0_OMP(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipool_b_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:190:17:
+
+  190 |      &           id%VIRT_L0_OMP(1), id%VIRT_L0_OMP_MAPPING(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'virt_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:190:36:
+
+  190 |      &           id%VIRT_L0_OMP(1), id%VIRT_L0_OMP_MAPPING(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'virt_l0_omp_mapping' at (1)
+MUMPS/src/dana_dist_m.F:191:35:
+
+  191 |      &           id%L_PHYS_L0_OMP, id%PHYS_L0_OMP(1), id%PERM_L0_OMP(1),
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'phys_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:191:54:
+
+  191 |      &           id%L_PHYS_L0_OMP, id%PHYS_L0_OMP(1), id%PERM_L0_OMP(1),
+      |                                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:192:17:
+
+  192 |      &           id%PTR_LEAFS_L0_OMP(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ptr_leafs_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:193:35:
+
+  193 |      &           id%KEEP(1), id%N, id%NE_STEPS(1), id%STEP(1),
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ne' at (1)
+MUMPS/src/dana_dist_m.F:193:51:
+
+  193 |      &           id%KEEP(1), id%N, id%NE_STEPS(1), id%STEP(1),
+      |                                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/dana_dist_m.F:194:17:
+
+  194 |      &           id%FRERE_STEPS(1), id%FILS(1), id%DAD_STEPS(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_dist_m.F:194:36:
+
+  194 |      &           id%FRERE_STEPS(1), id%FILS(1), id%DAD_STEPS(1),
+      |                                    1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_dist_m.F:194:48:
+
+  194 |      &           id%FRERE_STEPS(1), id%FILS(1), id%DAD_STEPS(1),
+      |                                                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'dad' at (1)
+MUMPS/src/dana_dist_m.F:195:17:
+
+  195 |      &           id%ND_STEPS(1),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nd' at (1)
+MUMPS/src/dana_dist_m.F:196:32:
+
+  196 |      &           locMYID_NODES, id%PROCNODE_STEPS(1),
+      |                                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'procnode' at (1)
+MUMPS/src/dana_dist_m.F:197:17:
+
+  197 |      &           id%I4_L0_OMP(1,1), NBSTATS_I4,
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'i4_l0' at (1)
+MUMPS/src/dana_dist_m.F:198:17:
+
+  198 |      &           id%I8_L0_OMP(1,1), NBSTATS_I8, KEEP(400),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'i8_l0' at (1)
+MUMPS/src/dana_dist_m.F:273:21:
+
+  273 |      &               id%STEP(1), id%DAD_STEPS(1),id%ICNTL,LP,LPOK,
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/dana_dist_m.F:273:33:
+
+  273 |      &               id%STEP(1), id%DAD_STEPS(1),id%ICNTL,LP,LPOK,
+      |                                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'dad' at (1)
+MUMPS/src/dana_dist_m.F:275:21:
+
+  275 |      &               id%PHYS_L0_OMP(1), id%L_PHYS_L0_OMP,
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'phys_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:276:21:
+
+  276 |      &               id%IPOOL_A_L0_OMP(1), LIPOOL_local,
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipool_a_l0_omp' at (1)
+MUMPS/src/dana_dist_m.F:340:55:
+
+  340 |            CALL DMUMPS_ANA_DISTM( locMYID_NODES, id%N, id%STEP(1),
+      |                                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'step' at (1)
+MUMPS/src/dana_dist_m.F:341:7:
+
+  341 |      & id%FRERE_STEPS(1), id%FILS(1), IPOOLPTR(1), LIPOOL, NE_STEPSPTR
+      |       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'frere' at (1)
+MUMPS/src/dana_dist_m.F:341:26:
+
+  341 |      & id%FRERE_STEPS(1), id%FILS(1), IPOOLPTR(1), LIPOOL, NE_STEPSPTR
+      |                          1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'fils' at (1)
+MUMPS/src/dana_dist_m.F:341:38:
+
+  341 |      & id%FRERE_STEPS(1), id%FILS(1), IPOOLPTR(1), LIPOOL, NE_STEPSPTR
+      |                                      1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ipool' at (1)
+MUMPS/src/dana_dist_m.F:341:59:
+
+  341 |      & id%FRERE_STEPS(1), id%FILS(1), IPOOLPTR(1), LIPOOL, NE_STEPSPTR
+      |                                                           1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'ne' at (1)
+MUMPS/src/dana_dist_m.F:342:12:
+
+  342 |      & (1), id%DAD_STEPS(1), id%ND_STEPS(1), id%PROCNODE_STEPS(1),
+      |            1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'dad' at (1)
+MUMPS/src/dana_dist_m.F:342:29:
+
+  342 |      & (1), id%DAD_STEPS(1), id%ND_STEPS(1), id%PROCNODE_STEPS(1),
+      |                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'nd' at (1)
+MUMPS/src/dana_dist_m.F:342:45:
+
+  342 |      & (1), id%DAD_STEPS(1), id%ND_STEPS(1), id%PROCNODE_STEPS(1),
+      |                                             1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'procnode' at (1)
+MUMPS/src/dana_dist_m.F:352:28:
+
+  352 |      & RINFO(1),id%CNTL(1), KEEP(1), KEEP8(1), LOCAL_M, LOCAL_N,
+      |                            1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep' at (1)
+MUMPS/src/dana_dist_m.F:352:37:
+
+  352 |      & RINFO(1),id%CNTL(1), KEEP(1), KEEP8(1), LOCAL_M, LOCAL_N,
+      |                                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'keep8' at (1)
+MUMPS/src/dana_dist_m.F:354:48:
+
+  354 |      & SBUF_REC_LR, id%COST_SUBTREES, KEEP(28), locI_AM_CAND(1),
+      |                                                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'i_am_cand' at (1)
+MUMPS/src/dana_dist_m.F:355:24:
+
+  355 |      & max(KEEP(56),1), id%ISTEP_TO_INIV2(1), id%CANDIDATES(1,1),
+      |                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'istep_to_iniv2' at (1)
+MUMPS/src/dana_dist_m.F:355:46:
+
+  355 |      & max(KEEP(56),1), id%ISTEP_TO_INIV2(1), id%CANDIDATES(1,1),
+      |                                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'candidates' at (1)
+MUMPS/src/dana_dist_m.F:656:26:
+
+  656 |       CALL MPI_ALLREDUCE( RINFO(1), RINFOG(1), 1,
+      |                          1
+......
+ 3244 |       CALL MPI_ALLREDUCE(L_PHYS_L0_OMP, Itemp, 1,
+      |                         2 
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dana_dist_m.F:656:36:
+
+  656 |       CALL MPI_ALLREDUCE( RINFO(1), RINFOG(1), 1,
+      |                                    1
+......
+ 3244 |       CALL MPI_ALLREDUCE(L_PHYS_L0_OMP, Itemp, 1,
+      |                                        2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dana_dist_m.F:764:23:
+
+  680 |       CALL MPI_REDUCE( KEEP8(11), SUM_KEEP811_THIS_NODE, 1,
+      |                       2
+......
+  764 |       CALL MPI_REDUCE( INFO(15), SUM_INFO15_THIS_NODE, 1, MPI_INTEGER,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_dist_m.F:764:33:
+
+  680 |       CALL MPI_REDUCE( KEEP8(11), SUM_KEEP811_THIS_NODE, 1,
+      |                                  2
+......
+  764 |       CALL MPI_REDUCE( INFO(15), SUM_INFO15_THIS_NODE, 1, MPI_INTEGER,
+      |                                 1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dfac_asm.F:175:25:
+
+  175 |      &           IOLDPS, A_PTR(POSELT), LA_PTR, 1_8, KEEP, KEEP8,
+      |                         1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dfac_b.F:419:30:
+
+  419 |       CALL DMUMPS_FAC_PAR_I(N,S_IS_POINTERS%IW(1),LIW_ARG_FAC_PAR,
+      |                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'iw' at (1)
+MUMPS/src/dfac_b.F:420:7:
+
+  420 |      & S_IS_POINTERS%A(1),LA_ARG_FAC_PAR,IW1(NSTK), NFSIZ,FILS,STEP,
+      |       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'a' at (1)
+MUMPS/src/dfac_distrib_distentry.F:369:29:
+
+  366 |               CALL MPI_RECV( BUFRECI(1), NBRECORDS * 2 + 1,
+      |                             2
+......
+  369 |               CALL MPI_RECV( BUFRECR(1), NBRECORDS,
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_distrib_ELT.F:472:26:
+
+  463 |            CALL MPI_SEND( BUFI(2, I), NBRECI, MPI_INTEGER,
+      |                          2
+......
+  472 |            CALL MPI_SEND( BUFR(2, I), NBRECR, MPI_DOUBLE_PRECISION,
+      |                          1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_distrib_distentry.F:700:28:
+
+  696 |             CALL MPI_ISEND( BUFI(1, IACT(ISLAVE), ISLAVE ),
+      |                            2
+......
+  700 |             CALL MPI_ISEND( BUFR(1, IACT(ISLAVE), ISLAVE ),
+      |                            1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_distrib_ELT.F:181:21:
+
+  181 |      &               id%ELTVAR( IELTPTR8 ), id%A_ELT( RELTPTR8 ),
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'eltvar' at (1)
+MUMPS/src/dfac_distrib_ELT.F:181:44:
+
+  181 |      &               id%ELTVAR( IELTPTR8 ), id%A_ELT( RELTPTR8 ),
+      |                                            1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'eltval' at (1)
+MUMPS/src/dfac_distrib_ELT.F:183:21:
+
+  183 |      &               id%ROWSCA(1), id%COLSCA(1), KEEP(50) )
+      |                     1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'rowsca' at (1)
+MUMPS/src/dfac_distrib_ELT.F:183:35:
+
+  183 |      &               id%ROWSCA(1), id%COLSCA(1), KEEP(50) )
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'colsca' at (1)
+MUMPS/src/dfac_distrib_ELT.F:202:17:
+
+  202 |      &           id%ELTVAR(IELTPTR8),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'elnodes' at (1)
+MUMPS/src/dfac_distrib_ELT.F:203:17:
+
+  203 |      &           id%A_ELT (RELTPTR8),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'elval' at (1)
+MUMPS/src/dfac_distrib_ELT.F:210:17:
+
+  210 |      &           id%ELTVAR(IELTPTR8),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'elnodes' at (1)
+MUMPS/src/dfac_distrib_ELT.F:242:17:
+
+  242 |      &           id%ELTVAR(IELTPTR8),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'elnodes' at (1)
+MUMPS/src/dfac_distrib_ELT.F:243:17:
+
+  243 |      &           id%A_ELT (RELTPTR8),
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'elval' at (1)
+MUMPS/src/dfac_distrib_ELT.F:267:31:
+
+  260 |                CALL MPI_RECV( ELTVAR_LOC( RECV_IELTPTR8 ), MSGLEN,
+      |                              2 
+......
+  267 |                 CALL MPI_RECV( ELTVAL_LOC( RECV_RELTPTR8 ), MSGLEN,
+      |                               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_dist_arrowheads_omp.F:543:32:
+
+  538 |                 CALL MPI_ISEND( BUFSENDI(1, IACT_P, ISLAVE ),
+      |                                2
+......
+  543 |                 CALL MPI_ISEND( BUFSENDR(1, IACT_P, ISLAVE ),
+      |                                1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_dist_arrowheads_omp.F:605:29:
+
+  602 |             CALL MPI_IRECV ( BUFRECVI(1,ISLAVE), NBRECORDS * 2 + 1,
+      |                             2
+......
+  605 |             CALL MPI_IRECV ( BUFRECVR(1,ISLAVE), NBRECORDS,
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dana_driver.F:5317:27:
+
+ 5229 |          CALL MPI_SEND( NZ_loc8, 1, MPI_INTEGER8, MASTER,
+      |                        2   
+......
+ 5317 |             CALL MPI_SEND( id%IRN_loc(I8), SIZE_SENT,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_driver.F:524:30:
+
+  524 |           CALL MPI_ALLREDUCE( id%KEEP8(29), id%KEEP8(28), 1,
+      |                              1
+......
+ 5562 |          CALL MPI_ALLREDUCE(DO_WRITE, DO_WRITE_CHECK, 1,
+      |                            2  
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_driver.F:524:44:
+
+  524 |           CALL MPI_ALLREDUCE( id%KEEP8(29), id%KEEP8(28), 1,
+      |                                            1
+......
+ 5562 |          CALL MPI_ALLREDUCE(DO_WRITE, DO_WRITE_CHECK, 1,
+      |                                      2      
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_driver.F:534:28:
+
+  429 |       CALL MPI_BCAST( KEEP(60), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
+      |                      2      
+......
+  534 |             CALL MPI_BCAST( id%KEEP8(28), 1, MPI_INTEGER8, MASTER,
+      |                            1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dana_driver.F:917:28:
+
+  429 |       CALL MPI_BCAST( KEEP(60), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
+      |                      2      
+......
+  917 |             CALL MPI_BCAST( SIZEOFBLOCKS, NBLK, MPI_INTEGER, MASTER,
+      |                            1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dana_driver.F:1100:18:
+
+  876 |      &            INFO, ICNTL, MEMCNT
+      |                  2
+......
+ 1100 |      &            INFO(1), ICNTL(1), MEMCNT)
+      |                  1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dana_driver.F:1100:27:
+
+  876 |      &            INFO, ICNTL, MEMCNT
+      |                        2   
+......
+ 1100 |      &            INFO(1), ICNTL(1), MEMCNT)
+      |                           1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dana_driver.F:1116:18:
+
+  876 |      &            INFO, ICNTL, MEMCNT
+      |                  2
+......
+ 1116 |      &            INFO(1), ICNTL(1), MEMCNT)
+      |                  1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dana_driver.F:1116:27:
+
+  876 |      &            INFO, ICNTL, MEMCNT
+      |                        2   
+......
+ 1116 |      &            INFO(1), ICNTL(1), MEMCNT)
+      |                           1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dana_driver.F:1307:28:
+
+  429 |       CALL MPI_BCAST( KEEP(60), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
+      |                      2      
+......
+ 1307 |             CALL MPI_BCAST( SIZEOFBLOCKS, NBLK, MPI_INTEGER, MASTER,
+      |                            1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dana_driver.F:2061:31:
+
+ 2061 |                 CALL MPI_RECV (FILS_TMP(1), NBLK, MPI_INTEGER,
+      |                               1
+......
+ 5208 |             CALL MPI_RECV( MATPTR( I+1 ), 1,
+      |                           2    
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dana_driver.F:2823:26:
+
+  429 |       CALL MPI_BCAST( KEEP(60), 1, MPI_INTEGER, MASTER, id%COMM, IERR )
+      |                      2    
+......
+ 2823 |           CALL MPI_BCAST( SIZEOFBLOCKS, NBLK, MPI_INTEGER, MASTER,
+      |                          1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dana_driver.F:3824:14:
+
+ 3824 |      &        id%CANDIDATES(1,1), id%I_AM_CAND(1) )
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'candidates' at (1)
+MUMPS/src/dana_driver.F:3824:34:
+
+ 3824 |      &        id%CANDIDATES(1,1), id%I_AM_CAND(1) )
+      |                                  1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'i_am_cand' at (1)
+MUMPS/src/dfac_process_contrib_type1.F:113:15:
+
+   59 |      &                FINODE, 1, MPI_INTEGER,
+      |                      2
+......
+  113 |      &         SON_A(IPOS_NODE + ISHIFT_PACKET),
+      |               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_band.F:358:46:
+
+  358 |         CALL DMUMPS_PROCESS_DESC_BANDE( MYID, DESCBAND_STRUC%BUFR(1),
+      |                                              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'bufr' at (1)
+MUMPS/src/dfac_process_master2.F:152:14:
+
+   70 |      &          IFATH, 1, MPI_INTEGER
+      |                2
+......
+  152 |      &        SON_A( 1_8 +
+      |              1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_contrib_type3.F:190:25:
+
+   79 |      &                   ISON, 1, MPI_INTEGER, COMM, IERR )
+      |                         2
+......
+  190 |      &                   A( IPTRLU + 1_8 ), int(LREQA),
+      |                         1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_blfac_slave.F:212:23:
+
+  145 |       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
+      |                                                    2
+......
+  212 |      &                 A(POSBLOCFACTO), NPIV*NCOLU,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_contrib_type2.F:370:15:
+
+  125 |       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
+      |                                                    2
+......
+  370 |      &         A(POSCONTRIB),
+      |               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dini_defaults.F:51:24:
+
+   50 |       CALL MUMPS_SIZE_C(I(1),I(2),SIZE_INT)
+      |                        2
+   51 |       CALL MUMPS_SIZE_C(R(1),R(2),SIZE_REAL_OR_DOUBLE)
+      |                        1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dini_defaults.F:51:29:
+
+   50 |       CALL MUMPS_SIZE_C(I(1),I(2),SIZE_INT)
+      |                             2
+   51 |       CALL MUMPS_SIZE_C(R(1),R(2),SIZE_REAL_OR_DOUBLE)
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/drank_revealing.F:602:40:
+
+  602 |                   CALL DMUMPS_UXVSBP(NN,root%IPIV(1),RHS(1,I),WK)
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm' at (1)
+MUMPS/src/drank_revealing.F:606:39:
+
+  606 |                  CALL DMUMPS_UXVSFP(NN,root%IPIV(1),RHS(1,I),WK)
+      |                                       1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm' at (1)
+MUMPS/src/drank_revealing.F:648:40:
+
+  648 |                   CALL DMUMPS_UXVSBP(NN,root%IPIV(1),RHS(1,I),WK)
+      |                                        1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'perm' at (1)
+MUMPS/src/dmumps_f77.F:207:25:
+
+  206 |       CALL MUMPS_ADDR_C( ICNTL(50), mumps_par%KEEP8(83) )
+      |                         2
+  207 |       CALL MUMPS_ADDR_C( RINFO(3), mumps_par%KEEP8(84) )
+      |                         1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_distrhs.F:507:26:
+
+  504 |           CALL MPI_ISEND( IRHS_loc_sorted(NEXTROWTOSEND(IPROC_ARG+1)),
+      |                          2
+......
+  507 |           CALL MPI_ISEND( BUFR(1,IBUF), NBRECORDS*NRHS_COL,
+      |                          1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_distrhs.F:221:24:
+
+  218 |           CALL MPI_RECV(BUFRECI(1), NBRECORDS, MPI_INTEGER,
+      |                        2
+......
+  221 |           CALL MPI_RECV(BUFRECR(1), NBRECORDS*NRHS_COL,
+      |                        1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_driver.F:6287:17:
+
+ 6281 |      &           idintr%root%NB_SINGULAR_VALUES,
+      |                 2
+......
+ 6287 |      &           idintr%roota%SINGULAR_VALUES(1),
+      |                 1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_driver.F:6308:27:
+
+ 6294 |             CALL MPI_RECV( id%NB_SINGULAR_VALUES,
+      |                           2
+......
+ 6308 |             CALL MPI_RECV( id%SINGULAR_VALUES(1),
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_driver.F:447:24:
+
+  447 |       CALL MPI_REDUCE ( id%KEEP8(24), id%KEEP8(124), 1, MPI_INTEGER8,
+      |                        1
+......
+ 5781 |       CALL MPI_REDUCE( LOC_VAL, AVG_VAL, 1, MPI_DOUBLE_PRECISION,
+      |                       2 
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/REAL(8)).
+MUMPS/src/dfac_driver.F:447:38:
+
+  447 |       CALL MPI_REDUCE ( id%KEEP8(24), id%KEEP8(124), 1, MPI_INTEGER8,
+      |                                      1
+......
+ 5781 |       CALL MPI_REDUCE( LOC_VAL, AVG_VAL, 1, MPI_DOUBLE_PRECISION,
+      |                                2      
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/REAL(8)).
+MUMPS/src/dfac_driver.F:518:22:
+
+  518 |       CALL MPI_BCAST( ICNTL49_LOC, 1, MPI_INTEGER,
+      |                      1
+......
+ 5903 |       CALL MPI_BCAST(ROWSCA(1), id%N, MPI_DOUBLE_PRECISION,
+      |                     2 
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/REAL(8)).
+MUMPS/src/dfac_driver.F:2663:29:
+
+  939 |       CALL MPI_ALLREDUCE( ITMP, JTMP, 1, MPI_INTEGER,
+      |                          2   
+......
+ 2663 |           CALL MPI_ALLREDUCE(id%KEEP8(29), NZ_locMAX8, 1,
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dfac_driver.F:2663:43:
+
+  939 |       CALL MPI_ALLREDUCE( ITMP, JTMP, 1, MPI_INTEGER,
+      |                                2           
+......
+ 2663 |           CALL MPI_ALLREDUCE(id%KEEP8(29), NZ_locMAX8, 1,
+      |                                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dfac_process_blocfacto.F:1189:27:
+
+ 1167 |      &                 ISLR_INT, 1, MPI_INTEGER, COMM, IERR )
+      |                       2    
+......
+ 1189 |      &                     BLR_U(I)%Q(1,1), M*K, MPI_DOUBLE_PRECISION,
+      |                           1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_blocfacto.F:241:23:
+
+  241 |      &                 BEGS_BLR_COL, SIZE_BEGS_BLR_COL,
+      |                       1
+......
+ 1167 |      &                 ISLR_INT, 1, MPI_INTEGER, COMM, IERR )
+      |                       2
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dfac_process_blocfacto.F:289:35:
+
+  289 |      &                             BLR_U(1), NB_BLR_U,
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'blr_u' at (1)
+MUMPS/src/dfac_process_blocfacto.F:291:35:
+
+  291 |      &                             BEGS_BLR_U(1),
+      |                                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'begs_blr_u' at (1)
+MUMPS/src/dfac_scalings_simScale_util.F:946:24:
+
+  901 |          CALL MPI_IRECV(ISNDRCVJA(OFFS), ITMP, MPI_INTEGER,IPID-1,
+      |                        2
+......
+  946 |          CALL MPI_IRECV(ISNDRCVA(OFFS), SZ,
+      |                        1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_scalings_simScale_util.F:960:23:
+
+  908 |          CALL MPI_SEND(OSNDRCVJA(OFFS), ITMP, MPI_INTEGER, IPID-1,
+      |                       2
+......
+  960 |          CALL MPI_SEND(OSNDRCVA(OFFS), SZ, MPI_DOUBLE_PRECISION, PID-1,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dfac_process_blocfacto_LDLT.F:252:23:
+
+  193 |       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
+      |                                                    2
+......
+  252 |      &                 BEGS_BLR_COL, SIZE_BEGS_BLR_COL,
+      |                       1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dfac_process_blocfacto_LDLT.F:324:23:
+
+  193 |       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
+      |                                                    2
+......
+  324 |      &                 DYN_PIVINFO, NPIV,
+      |                       1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dfac_process_blocfacto_LDLT.F:333:22:
+
+  193 |       CALL MPI_UNPACK( BUFR, LBUFR_BYTES, POSITION, INODE, 1,
+      |                                                    2
+......
+  333 |      &                DYN_BLOCFACTO, int(LA_BLOCFACTO),
+      |                      1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_aux.F:805:26:
+
+  803 |             CALL MPI_SEND(N_LOCAL_LIST, 1,
+      |                          2
+  804 |      &           MPI_INTEGER, MASTER, TAG_SIZE, id%COMM,IERR)
+  805 |             CALL MPI_SEND(LOCAL_LIST, N_LOCAL_LIST,
+      |                          1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_aux.F:848:26:
+
+  828 |             CALL MPI_RECV(TMP, 1, MPI_INTEGER, MPI_ANY_SOURCE,
+      |                          2
+......
+  848 |             CALL MPI_RECV(LOCAL_LIST, NSTEPS, MPI_INTEGER,
+      |                          1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dtype3_root.F:1280:16:
+
+ 1280 |      &          roota%SCHUR_POINTER(1), root%SCHUR_LLD,
+      |                1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'valroot' at (1)
+MUMPS/src/dtype3_root.F:1296:17:
+
+ 1296 |      &           roota%SCHUR_POINTER(1), root%SCHUR_LLD,
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'valroot' at (1)
+MUMPS/src/dtype3_root.F:469:14:
+
+  469 |      &        roota%SCHUR_POINTER(1),
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'val_root' at (1)
+MUMPS/src/dtype3_root.F:475:19:
+
+  475 |      &        LDA, SONA_PTR( POSSONA_PTR + SHIFT_VAL_SON ),
+      |                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'val_son' at (1)
+MUMPS/src/dtype3_root.F:481:14:
+
+  481 |      &        root%RG2L(1), TRANSPOSE_ASM,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'rg2l' at (1)
+MUMPS/src/dtype3_root.F:483:14:
+
+  483 |      &        roota%RHS_ROOT(1,1), root%RHS_NLOC,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'rhs_root' at (1)
+MUMPS/src/dtype3_root.F:504:19:
+
+  504 |      &        LDA, SONA_PTR( POSSONA_PTR + SHIFT_VAL_SON ),
+      |                   1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'val_son' at (1)
+MUMPS/src/dtype3_root.F:510:14:
+
+  510 |      &        root%RG2L(1), TRANSPOSE_ASM,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'rg2l' at (1)
+MUMPS/src/dtype3_root.F:512:14:
+
+  512 |      &        roota%RHS_ROOT(1,1), root%RHS_NLOC,
+      |              1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'rhs_root' at (1)
+MUMPS/src/dsol_fwd_aux.F:124:22:
+
+   87 |      &        FINODE, 1, MPI_INTEGER, COMM, IERR )
+      |              2        
+......
+  124 |      &                WCB( PLEFTWCB ),
+      |                      1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dmumps_driver.F:2434:27:
+
+ 2421 |         CALL MPI_ALLREDUCE(WARNING_COUNT, INFOG(2), 1,MPI_INTEGER,
+      |                           2
+......
+ 2434 |         CALL MPI_ALLREDUCE(TMP1,TMP,1,MPI_2INTEGER,
+      |                           1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dmumps_driver.F:761:29:
+
+  760 |           CALL MUMPS_ADDR_C( id%ICNTL(50), id%KEEP8(83) )
+      |                             2
+  761 |           CALL MUMPS_ADDR_C( id%RINFO (3), id%KEEP8(84) )
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dmumps_driver.F:2299:22:
+
+ 2299 |       CALL MPI_BCAST( id%RINFOG(1), 40, MPI_DOUBLE_PRECISION, MASTER,
+      |                      1
+......
+ 2438 |         CALL MPI_BCAST( INFOG(1), 1, MPI_INTEGER, ROOT, COMM, IERR )
+      |                        2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dmumps_driver.F:2326:28:
+
+ 2326 |          call MPI_ALLREDUCE(id%KEEP8(55),id%KEEP8(57),1,
+      |                            1
+......
+ 2421 |         CALL MPI_ALLREDUCE(WARNING_COUNT, INFOG(2), 1,MPI_INTEGER,
+      |                           2 
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dmumps_driver.F:2326:41:
+
+ 2326 |          call MPI_ALLREDUCE(id%KEEP8(55),id%KEEP8(57),1,
+      |                                         1
+......
+ 2421 |         CALL MPI_ALLREDUCE(WARNING_COUNT, INFOG(2), 1,MPI_INTEGER,
+      |                                          2
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(8)/INTEGER(4)).
+MUMPS/src/dsol_bwd_aux.F:1228:17:
+
+ 1191 |      &        INODE, 1, MPI_INTEGER,
+      |              2   
+......
+ 1228 |      &           W(POSWCB + 1), LONG,
+      |                 1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dtools.F:294:17:
+
+  294 |      &           SON_A(IACHK), SIZFR_SON_A, MonBloc,
+      |                 1
+Warning: Element of assumed-shape or pointer array passed to array dummy argument 'afac' at (1)
+MUMPS/src/dsol_c.F:1482:19:
+
+ 1479 |      &                   NPIV, 1, MPI_INTEGER, COMM, IERR)
+      |                         2
+......
+ 1482 |      &             IROWlist, NPIV, MPI_INTEGER, COMM, IERR)
+      |                   1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_c.F:1490:23:
+
+ 1479 |      &                   NPIV, 1, MPI_INTEGER, COMM, IERR)
+      |                         2
+......
+ 1490 |      &                 CWORK, NPIV, MPI_DOUBLE_PRECISION,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_c.F:1615:24:
+
+ 1615 |           CALL MPI_PACK(RHSINTR(IPOSINRHSINTR,J), NPIV,
+      |                        1
+......
+ 1628 |          CALL MPI_PACK(FIN, 1, MPI_INTEGER, BUFFER,
+      |                       2 
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_c.F:2230:29:
+
+ 1630 |          CALL MPI_SEND(BUFFER, POS_BUF, MPI_PACKED, MASTER,
+      |                       2      
+......
+ 2230 |               CALL MPI_SEND( BUF_RHS_2,
+      |                             1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_c.F:2361:34:
+
+ 1474 |         CALL MPI_RECV( BUFFER, SIZE_BUF_BYTES, MPI_PACKED,
+      |                       2           
+......
+ 2361 |                     CALL MPI_RECV(BUF_RHS_2, BUF_EFFSIZE*NRHS,
+      |                                  1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_driver.F:1591:26:
+
+  627 |       CALL MPI_BCAST( id%KEEP(221), 1, MPI_INTEGER, MASTER, id%COMM,
+      |                      2    
+......
+ 1591 |           CALL MPI_BCAST( WORKSPACE_MINIMAL_PREFERRED, 1,
+      |                          1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (LOGICAL(4)/INTEGER(4)).
+MUMPS/src/dsol_driver.F:2061:23:
+
+ 1663 |       CALL MPI_REDUCE ( ITMP8, SUM_ITMP8, 1, MPI_INTEGER8,
+      |                        2
+......
+ 2061 |       CALL MPI_REDUCE( MAT_ALLOC_LOC, MAT_ALLOC, 1,
+      |                       1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dsol_driver.F:2061:38:
+
+ 1663 |       CALL MPI_REDUCE ( ITMP8, SUM_ITMP8, 1, MPI_INTEGER8,
+      |                               2       
+......
+ 2061 |       CALL MPI_REDUCE( MAT_ALLOC_LOC, MAT_ALLOC, 1,
+      |                                      1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (INTEGER(4)/INTEGER(8)).
+MUMPS/src/dsol_driver.F:4602:16:
+
+ 4579 |      &          C_DUMMY, 1, 1,
+      |                2
+......
+ 4602 |      &          id%RHSINTR(IBEG_RHSINTR), id%LD_RHSINTR, NBRHS_EFF,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:4603:16:
+
+ 4580 |      &          IDUMMY, 0,
+      |                2
+......
+ 4603 |      &          id%GLOB2LOC_RHS(1), NB_FS_RHSINTR_F,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:4605:16:
+
+ 4581 |      &          JDUMMY, id%KEEP(1), id%KEEP8(1), id%PROCNODE_STEPS(1),
+      |                2
+......
+ 4605 |      &          id%PTLUST_S(1), id%KEEP(1), id%KEEP8(1),
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:4607:16:
+
+ 4582 |      &          IDUMMY, 1,
+      |                2
+......
+ 4607 |      &          IS(1), LIW_PASSED,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5001:31:
+
+ 2907 |              CALL MPI_SEND(LD_REDRHS,1,MPI_INTEGER,
+      |                           2    
+......
+ 5001 |                  CALL MPI_SEND(id%REDRHS(KDEC),
+      |                               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_driver.F:5019:31:
+
+ 2911 |              CALL MPI_RECV(LD_REDRHS,1,MPI_INTEGER,
+      |                           2    
+......
+ 5019 |                  CALL MPI_RECV(PTR_RHS_ROOT(II),
+      |                               1
+Warning: Type mismatch between actual argument at (1) and actual argument at (2) (REAL(8)/INTEGER(4)).
+MUMPS/src/dsol_driver.F:5376:16:
+
+ 5326 |      &              JDUMMY, id%KEEP(1), id%KEEP8(1),
+      |                    2
+......
+ 5376 |      &          id%PTLUST_S(1), id%KEEP(1), id%KEEP8(1),
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5377:38:
+
+ 5327 |      &              id%PROCNODE_STEPS(1), IDUMMY, 1,
+      |                                          2
+......
+ 5377 |      &          id%PROCNODE_STEPS(1), IS(1), LIW_PASSED,
+      |                                      1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5385:16:
+
+ 5335 |      &              C_DUMMY, 1 , 1, IDUMMY, 1,
+      |                    2
+......
+ 5385 |      &          id%RHSINTR(IBEG_RHSINTR), id%LD_RHSINTR, NBRHS_EFF,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5386:16:
+
+ 5335 |      &              C_DUMMY, 1 , 1, IDUMMY, 1,
+      |                                    2
+......
+ 5386 |      &          id%GLOB2LOC_SOL(1), id%N,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5392:16:
+
+ 5342 |      &              C_DUMMY, 1, 1,
+      |                    2
+......
+ 5392 |      &          id%RHSINTR(IBEG_RHSINTR), id%LD_RHSINTR, NBRHS_EFF,
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:5404:16:
+
+ 5355 |      &              IDUMMY, 1, 0
+      |                    2
+......
+ 5404 |      &          id%GLOB2LOC_SOL(1), id%N, NB_FS_RHSINTR_TOT
+      |                1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7025:12:
+
+ 4579 |      &          C_DUMMY, 1, 1,
+      |                2
+......
+ 7025 |      &      id%RHSINTR(IBEG_RHSINTR), id%LD_RHSINTR, 1,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7026:12:
+
+ 4580 |      &          IDUMMY, 0,
+      |                2
+......
+ 7026 |      &      PTR_POSINRHSINTR_FWD(1), NB_FS_RHSINTR_F,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7028:12:
+
+ 4581 |      &          JDUMMY, id%KEEP(1), id%KEEP8(1), id%PROCNODE_STEPS(1),
+      |                2
+......
+ 7028 |      &      id%PTLUST_S(1), id%KEEP(1), id%KEEP8(1),
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7030:12:
+
+ 4582 |      &          IDUMMY, 1,
+      |                2
+......
+ 7030 |      &      IS(1), LIW_PASSED,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7068:14:
+
+ 5097 |      &NZ_THIS_BLOCK_ARG, NBCOL_INBLOC_ARG, JBEG_RHS, Step2node_ARG(1),
+      |                                                     2
+......
+ 7068 |      & 1,1,1, IDUMMY, 1, JDUMMY, KDUMMY, 1, LDUMMY, 1, MDUMMY, 1,1,
+      |              1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_driver.F:7068:25:
+
+ 5098 |      &LStep2node_ARG, IRHS_SPARSE_COPY_ARG(1), IRHS_PTR_COPY_ARG(1),
+      |                      2   
+......
+ 7068 |      & 1,1,1, IDUMMY, 1, JDUMMY, KDUMMY, 1, LDUMMY, 1, MDUMMY, 1,1,
+      |                         1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_driver.F:7068:33:
+
+ 5098 |      &LStep2node_ARG, IRHS_SPARSE_COPY_ARG(1), IRHS_PTR_COPY_ARG(1),
+      |                                               2
+......
+ 7068 |      & 1,1,1, IDUMMY, 1, JDUMMY, KDUMMY, 1, LDUMMY, 1, MDUMMY, 1,1,
+      |                                 1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_driver.F:7190:20:
+
+ 5325 |      &              MTYPE, id%RHS(1), LD_RHS, id%NRHS, JBEG_RHS,
+      |                           2
+......
+ 7190 |      &      SOLVET, C_Y, id%N, NBRHS_EFF, 1,
+      |                    1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_driver.F:7208:20:
+
+ 5325 |      &              MTYPE, id%RHS(1), LD_RHS, id%NRHS, JBEG_RHS,
+      |                           2
+......
+ 7208 |      &      SOLVET, C_Y, id%N, NBRHS_EFF, 1,
+      |                    1
+Warning: Rank mismatch between actual argument at (1) and actual argument at (2) (scalar and rank-1)
+MUMPS/src/dsol_driver.F:7209:12:
+
+ 5326 |      &              JDUMMY, id%KEEP(1), id%KEEP8(1),
+      |                    2
+......
+ 7209 |      &      id%PTLUST_S(1), id%KEEP(1),id%KEEP8(1),
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7211:12:
+
+ 5327 |      &              id%PROCNODE_STEPS(1), IDUMMY, 1,
+      |                                          2
+......
+ 7211 |      &      IS(1), LIW_PASSED,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7219:12:
+
+ 5335 |      &              C_DUMMY, 1 , 1, IDUMMY, 1,
+      |                    2
+......
+ 7219 |      &      id%RHSINTR(IBEG_RHSINTR), id%LD_RHSINTR, NBRHS_EFF,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+MUMPS/src/dsol_driver.F:7220:12:
+
+ 5335 |      &              C_DUMMY, 1 , 1, IDUMMY, 1,
+      |                                    2
+......
+ 7220 |      &      PTR_POSINRHSINTR_BWD(1), id%N,
+      |            1
+Warning: Element of assumed-shape or pointer array as actual argument at (1) cannot correspond to actual argument at (2)
+  F77LD    libcoinmumps.la
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+make  install-am
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+ /bin/sh ./libtool   --mode=install /usr/bin/install -c   libcoinmumps.la '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+libtool: install: /usr/bin/install -c .libs/libcoinmumps.so.3.0.13 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.so.3.0.13
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libcoinmumps.so.3.0.13 libcoinmumps.so.3 || { rm -f libcoinmumps.so.3 && ln -s libcoinmumps.so.3.0.13 libcoinmumps.so.3; }; })
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libcoinmumps.so.3.0.13 libcoinmumps.so || { rm -f libcoinmumps.so && ln -s libcoinmumps.so.3.0.13 libcoinmumps.so; }; })
+libtool: install: /usr/bin/install -c .libs/libcoinmumps.lai /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.la
+libtool: finish: PATH="/nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/cmake-3.29.2-6n4msmc4aewj7wyi6b5g644vjrqyqgot/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/curl-8.7.1-4i4mpgzu35lnnqjpaxjgrsly3g6ngqmu/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin:/home/isatkaus/install/spack/bin:/opt/cray/pe/mpich/8.1.28/ofi/gnu/10.3/bin:/opt/cray/pe/mpich/8.1.28/bin:/opt/cray/libfabric/1.15.2.0/bin:/opt/cray/pe/craype/2.7.30/bin:/opt/rh/gcc-toolset-12/root/usr/bin:/opt/clmgr/sbin:/opt/clmgr/bin:/opt/sgi/sbin:/opt/sgi/bin:/nopt/xalt/current/bin:/nopt/nrel/utils/bin:/nopt/slurm/current/bin:/home/isatkaus/.local/bin:/home/isatkaus/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/c3/bin:/sbin:/bin:/opt/cray/pe/bin:/sbin" ldconfig -n /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the '-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the 'LD_RUN_PATH' environment variable
+     during linking
+   - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig'
+ /usr/bin/install -c -m 644 coinmumps.pc '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig'
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or/mumps'
+ /usr/bin/install -c -m 644 MUMPS/include/mumps_c_types.h MUMPS/libseq/mumps_mpi.h mumps_compat.h mumps_int_def.h MUMPS/include/dmumps_c.h '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or/mumps'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/ThirdParty-Mumps'
+--2026-07-07 16:04:20--  https://github.com/coin-or/Ipopt/archive/refs/tags/releases/3.14.14.tar.gz
+Resolving github.com (github.com)... 140.82.112.3
+Connecting to github.com (github.com)|140.82.112.3|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://codeload.github.com/coin-or/Ipopt/tar.gz/refs/tags/releases/3.14.14 [following]
+--2026-07-07 16:04:21--  https://codeload.github.com/coin-or/Ipopt/tar.gz/refs/tags/releases/3.14.14
+Resolving codeload.github.com (codeload.github.com)... 140.82.112.9
+Connecting to codeload.github.com (codeload.github.com)|140.82.112.9|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [application/x-gzip]
+Saving to: ‘3.14.14.tar.gz.1’
+
+     0K .......... .......... .......... .......... ..........  690K
+    50K .......... .......... .......... .......... .......... 1.33M
+   100K .......... .......... .......... .......... ..........  197M
+   150K .......... .......... .......... .......... .......... 1.34M
+   200K .......... .......... .......... .......... ..........  193M
+   250K .......... .......... .......... .......... .......... 1.35M
+   300K .......... .......... .......... .......... ..........  198M
+   350K .......... .......... .......... .......... ..........  219M
+   400K .......... .......... .......... .......... ..........  213M
+   450K .......... .......... .......... .......... ..........  206M
+   500K .......... .......... .......... .......... ..........  256M
+   550K .......... .......... .......... .......... .......... 1.38M
+   600K .......... .......... .......... .......... ..........  394M
+   650K .......... .......... .......... .......... ..........  366M
+   700K .......... .......... .......... .......... ..........  356M
+   750K .......... .......... .......... .......... ..........  374M
+   800K .......... .......... .......... .......... ..........  358M
+   850K .......... .......... .......... .......... ..........  388M
+   900K .......... .......... .......... .......... ..........  406M
+   950K .......... .......... .......... .......... ..........  379M
+  1000K .......... .......... .......... .......... ..........  390M
+  1050K .......... .......... .......... .......... ..........  383M
+  1100K .......... .......... .......... .......... ..........  380M
+  1150K .......... .......... .......... .......... .......... 1.38M
+  1200K .......... .......... .......... .......... ..........  383M
+  1250K .......... .......... .......... .......... ..........  351M
+  1300K .......... .......... .......... .......... ..........  382M
+  1350K .......... .......... .......... .......... ..........  364M
+  1400K .......... .......... .......... .......... ..........  392M
+  1450K .......... .......... .......... .......... ..........  381M
+  1500K .......... .......... .......... .......... ..........  373M
+  1550K .......... .......... .......... .......... ..........  403M
+  1600K .......... .......... .......... .......... ..........  400M
+  1650K .......... .......... .......... .......... ..........  406M
+  1700K .......... .......... .......... .......... ..........  401M
+  1750K .......... .......... .......... .......... ..........  360M
+  1800K .......... ..                                           369M=0.3s
+
+2026-07-07 16:04:21 (6.88 MB/s) - ‘3.14.14.tar.gz.1’ saved [1856236]
+
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking whether make supports the include directive... yes (GNU style)
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang accepts -g... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang option to enable C11 features... none needed
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang understands -c and -o together... yes
+checking dependency style of /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang... gcc3
+checking whether the compiler supports GNU C++... yes
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ accepts -g... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ option to enable C++11 features... none needed
+checking dependency style of /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++... gcc3
+checking whether /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ understands -c and -o together... yes
+checking whether the compiler supports GNU Fortran 77... yes
+checking whether /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran accepts -g... yes
+checking how to get verbose linking output from /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran... -v
+checking for Fortran 77 libraries of /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran...  -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0 -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/lib/gcc/x86_64-pc-linux-gnu/13.1.0/../../.. -lgfortran -lm -lquadmath
+checking for dummy main to link with Fortran 77 libraries... none
+checking for Fortran 77 name-mangling scheme... lower case, underscore, no extra underscore
+checking whether /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran understands -c and -o together... yes
+checking how to print strings... printf
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang... /opt/rh/gcc-toolset-12/root/usr/bin/ld
+checking if the linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B
+checking the name lister (/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 57600000
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /opt/rh/gcc-toolset-12/root/usr/bin/ld option to reload object files... -r
+checking for file... file
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin/nm -B output from /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for mt... no
+checking if : is a manifest tool... no
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking the archiver (ar) interface... ar
+checking for objdir... .libs
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -fno-rtti -fno-exceptions... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang option to produce PIC... -fPIC -DPIC
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang PIC flag -fPIC -DPIC works... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang static flag -static works... no
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -c -o file.o... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang supports -c -o file.o... (cached) yes
+checking whether the /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking how to run the C++ preprocessor... /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ -E
+checking for ld used by /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++... /opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64
+checking if the linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) is GNU ld... yes
+checking whether the /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ option to produce PIC... -fPIC -DPIC
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ PIC flag -fPIC -DPIC works... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ static flag -static works... no
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ supports -c -o file.o... yes
+checking if /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ supports -c -o file.o... (cached) yes
+checking whether the /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking for /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran option to produce PIC... -fPIC
+checking if /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran PIC flag -fPIC works... yes
+checking if /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran static flag -static works... no
+checking if /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran supports -c -o file.o... yes
+checking if /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran supports -c -o file.o... (cached) yes
+checking whether the /nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin/gfortran linker (/opt/rh/gcc-toolset-12/root/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+configure: libtool version info: -version-number 3:14:14
+configure: Assuming that CXXLIBS is -lstdc++ -lm.
+configure: configuring doxygen documentation options
+checking for doxygen... no
+checking for latex... no
+checking for dot... YES
+checking for library containing cos... -lm
+checking for pkgconf... pkgconf
+checking pkgconf is at least version 0.16.0... yes: 1.4.2
+configure: pkgconf path is "/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig:/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64/pkgconfig:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/curl-8.7.1-4i4mpgzu35lnnqjpaxjgrsly3g6ngqmu/lib/pkgconfig:/opt/cray/libfabric/1.15.2.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.2.2/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.30/pkg-config"
+checking for LAPACK... yes: generic module (lapack.pc blas.pc)
+checking for package ASL... no
+checking for package Mumps... yes
+checking for MPI_Initialized... no
+checking for package HSL... no
+checking for function pardiso_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function pardiso in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function PARDISO_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function PARDISO in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function pardiso__ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function pardiso_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function PARDISO__ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for function PARDISO_ in -L/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -llapack -lblas   ... no
+checking for library Spral with combined link and compile check... skipping (default)
+checking size of int *... 8
+checking for cmath... yes
+checking for cfloat... yes
+checking for cieeefp... no
+checking for ieeefp.h... no
+checking for /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ options needed to detect all undeclared functions... none needed
+checking for std::isfinite... yes
+checking whether va_copy is declared... yes
+checking for vsnprintf... yes
+checking whether drand48 is declared... yes
+checking whether rand is declared... yes
+checking for std::srand... yes
+checking whether feenableexcept is declared... yes
+checking for gcj... no
+checking for guavac... no
+checking for jikes... no
+checking for javac... javac
+checking if javac works... yes
+checking if javac supports -h... yes
+checking for javac... /usr/bin/javac
+checking symlink for /usr/bin/javac... /etc/alternatives/javac
+checking symlink for /etc/alternatives/javac... /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.362.b09-2.el8_7.x86_64/bin/javac
+checking jni headers... /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.362.b09-2.el8_7.x86_64/include
+checking for jar... jar
+checking for kaffe... no
+checking for java... java
+checking for javadoc... javadoc
+checking whether the linear solver loader should be used... yes
+checking for dlopen in -ldl... yes
+checking for windows.h... no
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/ipopt.pc
+config.status: creating src/Makefile
+config.status: creating src/Apps/AmplSolver/Makefile
+config.status: creating src/Apps/AmplSolver/ipoptamplinterface.pc
+config.status: creating test/Makefile
+config.status: creating test/run_unitTests
+config.status: creating doc/Doxyfile
+config.status: creating examples/Cpp_example/Makefile
+config.status: creating examples/recursive_nlp/Makefile
+config.status: creating examples/hs071_cpp/Makefile
+config.status: creating examples/hs071_c/Makefile
+config.status: creating examples/ScalableProblems/Makefile
+config.status: creating tutorial/CodingExercise/C/1-skeleton/Makefile
+config.status: creating tutorial/CodingExercise/C/2-mistake/Makefile
+config.status: creating tutorial/CodingExercise/C/3-solution/Makefile
+config.status: creating tutorial/CodingExercise/Cpp/1-skeleton/Makefile
+config.status: creating tutorial/CodingExercise/Cpp/2-mistake/Makefile
+config.status: creating tutorial/CodingExercise/Cpp/3-solution/Makefile
+config.status: creating tutorial/CodingExercise/Matlab/1-skeleton/startup.m
+config.status: creating tutorial/CodingExercise/Matlab/2-mistake/startup.m
+config.status: creating tutorial/CodingExercise/Matlab/3-solution/startup.m
+config.status: creating examples/hs071_f/Makefile
+config.status: creating examples/hs071_f/hs071_f.f
+config.status: creating tutorial/CodingExercise/Fortran/1-skeleton/TutorialFortran.f
+config.status: creating tutorial/CodingExercise/Fortran/2-mistake/TutorialFortran.f
+config.status: creating tutorial/CodingExercise/Fortran/3-solution/TutorialFortran.f
+config.status: creating tutorial/CodingExercise/Fortran/1-skeleton/Makefile
+config.status: creating tutorial/CodingExercise/Fortran/2-mistake/Makefile
+config.status: creating tutorial/CodingExercise/Fortran/3-solution/Makefile
+config.status: creating examples/hs071_java/Makefile
+config.status: creating examples/ScalableProblems_java/Makefile
+config.status: creating contrib/sIPOPT/Makefile
+config.status: creating contrib/sIPOPT/src/Makefile
+config.status: creating contrib/sIPOPT/AmplSolver/Makefile
+config.status: creating contrib/sIPOPT/examples/parametric_cpp/Makefile
+config.status: creating contrib/sIPOPT/examples/parametric_dsdp_cpp/Makefile
+config.status: creating contrib/sIPOPT/examples/redhess_cpp/Makefile
+config.status: creating contrib/RInterface/src/Makevars
+config.status: creating src/Common/config.h
+config.status: creating src/Common/config_ipopt.h
+config.status: linking ../examples/hs071_cpp/hs071_main.cpp to test/hs071_main.cpp
+config.status: linking ../examples/hs071_cpp/hs071_nlp.cpp to test/hs071_nlp.cpp
+config.status: linking ../examples/hs071_cpp/hs071_nlp.hpp to test/hs071_nlp.hpp
+config.status: linking ../examples/hs071_c/hs071_c.c to test/hs071_c.c
+config.status: linking ../contrib/sIPOPT/examples/parametric_cpp/parametric_driver.cpp to test/parametric_driver.cpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_cpp/parametricTNLP.cpp to test/parametricTNLP.cpp
+config.status: linking ../contrib/sIPOPT/examples/redhess_cpp/MySensTNLP.cpp to test/MySensTNLP.cpp
+config.status: linking ../contrib/sIPOPT/examples/redhess_cpp/redhess_cpp.cpp to test/redhess_cpp.cpp
+config.status: linking ../contrib/RInterface/DESCRIPTION to contrib/RInterface/DESCRIPTION
+config.status: linking ../contrib/RInterface/NAMESPACE to contrib/RInterface/NAMESPACE
+config.status: linking ../contrib/RInterface/inst/CITATION to contrib/RInterface/inst/CITATION
+config.status: linking ../contrib/RInterface/inst/doc/ipoptr.Rnw to contrib/RInterface/inst/doc/ipoptr.Rnw
+config.status: linking ../contrib/RInterface/inst/doc/ipoptr.pdf to contrib/RInterface/inst/doc/ipoptr.pdf
+config.status: linking ../contrib/RInterface/inst/doc/reflist.bib to contrib/RInterface/inst/doc/reflist.bib
+config.status: linking ../contrib/RInterface/man/ipoptr-package.Rd to contrib/RInterface/man/ipoptr-package.Rd
+config.status: linking ../contrib/RInterface/man/ipoptr.Rd to contrib/RInterface/man/ipoptr.Rd
+config.status: linking ../contrib/RInterface/man/is.ipoptr.Rd to contrib/RInterface/man/is.ipoptr.Rd
+config.status: linking ../contrib/RInterface/man/make.sparse.Rd to contrib/RInterface/man/make.sparse.Rd
+config.status: linking ../contrib/RInterface/man/plot.sparseness.Rd to contrib/RInterface/man/plot.sparseness.Rd
+config.status: linking ../contrib/RInterface/man/print.ipoptr.Rd to contrib/RInterface/man/print.ipoptr.Rd
+config.status: linking ../contrib/RInterface/man/print.sparseness.Rd to contrib/RInterface/man/print.sparseness.Rd
+config.status: linking ../contrib/RInterface/R/get.option.types.R to contrib/RInterface/R/get.option.types.R
+config.status: linking ../contrib/RInterface/R/ipoptr.R to contrib/RInterface/R/ipoptr.R
+config.status: linking ../contrib/RInterface/R/is.ipoptr.R to contrib/RInterface/R/is.ipoptr.R
+config.status: linking ../contrib/RInterface/R/make.sparse.R to contrib/RInterface/R/make.sparse.R
+config.status: linking ../contrib/RInterface/R/plot.sparseness.R to contrib/RInterface/R/plot.sparseness.R
+config.status: linking ../contrib/RInterface/R/print.ipoptr.R to contrib/RInterface/R/print.ipoptr.R
+config.status: linking ../contrib/RInterface/R/print.sparseness.R to contrib/RInterface/R/print.sparseness.R
+config.status: linking ../contrib/RInterface/tests/approx_banana.R to contrib/RInterface/tests/approx_banana.R
+config.status: linking ../contrib/RInterface/tests/banana.R to contrib/RInterface/tests/banana.R
+config.status: linking ../contrib/RInterface/tests/hs071_nlp.R to contrib/RInterface/tests/hs071_nlp.R
+config.status: linking ../contrib/RInterface/tests/lasso.R to contrib/RInterface/tests/lasso.R
+config.status: linking ../contrib/RInterface/tests/mynlp.R to contrib/RInterface/tests/mynlp.R
+config.status: linking ../contrib/RInterface/tests/parameters.R to contrib/RInterface/tests/parameters.R
+config.status: linking ../contrib/RInterface/tests/sparseness.R to contrib/RInterface/tests/sparseness.R
+config.status: linking ../contrib/RInterface/src/ipoptr.cpp to contrib/RInterface/src/ipoptr.cpp
+config.status: linking ../contrib/RInterface/src/IpoptRJournal.cpp to contrib/RInterface/src/IpoptRJournal.cpp
+config.status: linking ../contrib/RInterface/src/IpoptRNLP.cpp to contrib/RInterface/src/IpoptRNLP.cpp
+config.status: linking ../examples/Cpp_example/cpp_example.cpp to examples/Cpp_example/cpp_example.cpp
+config.status: linking ../examples/Cpp_example/MyNLP.cpp to examples/Cpp_example/MyNLP.cpp
+config.status: linking ../examples/Cpp_example/MyNLP.hpp to examples/Cpp_example/MyNLP.hpp
+config.status: linking ../examples/hs071_cpp/hs071_main.cpp to examples/hs071_cpp/hs071_main.cpp
+config.status: linking ../examples/hs071_cpp/hs071_nlp.cpp to examples/hs071_cpp/hs071_nlp.cpp
+config.status: linking ../examples/hs071_cpp/hs071_nlp.hpp to examples/hs071_cpp/hs071_nlp.hpp
+config.status: linking ../examples/hs071_c/hs071_c.c to examples/hs071_c/hs071_c.c
+config.status: linking ../examples/hs071_java/HS071.java to examples/hs071_java/HS071.java
+config.status: linking ../tutorial/AmplExperiments/hs71.mod to tutorial/AmplExperiments/hs71.mod
+config.status: linking ../tutorial/AmplExperiments/infeasible.mod to tutorial/AmplExperiments/infeasible.mod
+config.status: linking ../tutorial/AmplExperiments/MoreAmplModels.txt to tutorial/AmplExperiments/MoreAmplModels.txt
+config.status: linking ../tutorial/AmplExperiments/car1.run to tutorial/AmplExperiments/car1.run
+config.status: linking ../tutorial/AmplExperiments/car1.gp to tutorial/AmplExperiments/car1.gp
+config.status: linking ../tutorial/Modeling/bad1.mod to tutorial/Modeling/bad1.mod
+config.status: linking ../tutorial/Modeling/bad1-fix1.mod to tutorial/Modeling/bad1-fix1.mod
+config.status: linking ../tutorial/Modeling/bad1-fix2.mod to tutorial/Modeling/bad1-fix2.mod
+config.status: linking ../tutorial/CodingExercise/exercise_example.mod to tutorial/CodingExercise/exercise_example.mod
+config.status: linking ../tutorial/CodingExercise/C/1-skeleton/TutorialC.c to tutorial/CodingExercise/C/1-skeleton/TutorialC.c
+config.status: linking ../tutorial/CodingExercise/C/2-mistake/TutorialC.c to tutorial/CodingExercise/C/2-mistake/TutorialC.c
+config.status: linking ../tutorial/CodingExercise/C/3-solution/TutorialC.c to tutorial/CodingExercise/C/3-solution/TutorialC.c
+config.status: linking ../tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_main.cpp to tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_main.cpp
+config.status: linking ../tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_nlp.hpp to tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_nlp.hpp
+config.status: linking ../tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_nlp.cpp to tutorial/CodingExercise/Cpp/1-skeleton/TutorialCpp_nlp.cpp
+config.status: linking ../tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_main.cpp to tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_main.cpp
+config.status: linking ../tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_nlp.hpp to tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_nlp.hpp
+config.status: linking ../tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_nlp.cpp to tutorial/CodingExercise/Cpp/2-mistake/TutorialCpp_nlp.cpp
+config.status: linking ../tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_main.cpp to tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_main.cpp
+config.status: linking ../tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_nlp.hpp to tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_nlp.hpp
+config.status: linking ../tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_nlp.cpp to tutorial/CodingExercise/Cpp/3-solution/TutorialCpp_nlp.cpp
+config.status: linking ../tutorial/CodingExercise/Matlab/1-skeleton/TutorialMatlab.m to tutorial/CodingExercise/Matlab/1-skeleton/TutorialMatlab.m
+config.status: linking ../tutorial/CodingExercise/Matlab/2-mistake/TutorialMatlab.m to tutorial/CodingExercise/Matlab/2-mistake/TutorialMatlab.m
+config.status: linking ../tutorial/CodingExercise/Matlab/3-solution/TutorialMatlab.m to tutorial/CodingExercise/Matlab/3-solution/TutorialMatlab.m
+config.status: linking ../contrib/sIPOPT/examples/parametric_cpp/parametric_driver.cpp to contrib/sIPOPT/examples/parametric_cpp/parametric_driver.cpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_cpp/parametricTNLP.cpp to contrib/sIPOPT/examples/parametric_cpp/parametricTNLP.cpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_cpp/parametricTNLP.hpp to contrib/sIPOPT/examples/parametric_cpp/parametricTNLP.hpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_dsdp_cpp/parametric_dsdp_driver.cpp to contrib/sIPOPT/examples/parametric_dsdp_cpp/parametric_dsdp_driver.cpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_dsdp_cpp/parametricTNLP.cpp to contrib/sIPOPT/examples/parametric_dsdp_cpp/parametricTNLP.cpp
+config.status: linking ../contrib/sIPOPT/examples/parametric_dsdp_cpp/parametricTNLP.hpp to contrib/sIPOPT/examples/parametric_dsdp_cpp/parametricTNLP.hpp
+config.status: linking ../contrib/sIPOPT/examples/redhess_cpp/MySensTNLP.cpp to contrib/sIPOPT/examples/redhess_cpp/MySensTNLP.cpp
+config.status: linking ../contrib/sIPOPT/examples/redhess_cpp/MySensTNLP.hpp to contrib/sIPOPT/examples/redhess_cpp/MySensTNLP.hpp
+config.status: linking ../contrib/sIPOPT/examples/redhess_cpp/redhess_cpp.cpp to contrib/sIPOPT/examples/redhess_cpp/redhess_cpp.cpp
+config.status: executing depfiles commands
+config.status: executing libtool commands
+configure: Configuration of Ipopt successful
+Making all in src
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+javac ../../src/Interfaces/Ipopt.java -d /nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src -h /nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src
+make  all-recursive
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[3]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+jar cf org.coinor.ipopt.jar org/coinor/Ipopt.class
+  CXX      Common/IpDebug.lo
+  CXX      Common/IpJournalist.lo
+  CXX      Common/IpObserver.lo
+  CXX      Common/IpOptionsList.lo
+  CXX      Common/IpRegOptions.lo
+  CXX      Common/IpTaggedObject.lo
+  CXX      Common/IpUtils.lo
+  CXX      Common/IpLibraryLoader.lo
+  CXX      LinAlg/IpBlas.lo
+  CXX      LinAlg/IpCompoundMatrix.lo
+  CXX      LinAlg/IpCompoundSymMatrix.lo
+  CXX      LinAlg/IpCompoundVector.lo
+  CXX      LinAlg/IpDenseGenMatrix.lo
+  CXX      LinAlg/IpDenseSymMatrix.lo
+  CXX      LinAlg/IpDenseVector.lo
+  CXX      LinAlg/IpDiagMatrix.lo
+  CXX      LinAlg/IpExpandedMultiVectorMatrix.lo
+  CXX      LinAlg/IpExpansionMatrix.lo
+  CXX      LinAlg/IpIdentityMatrix.lo
+  CXX      LinAlg/IpLapack.lo
+  CXX      LinAlg/IpLowRankUpdateSymMatrix.lo
+  CXX      LinAlg/IpMatrix.lo
+  CXX      LinAlg/IpMultiVectorMatrix.lo
+  CXX      LinAlg/IpScaledMatrix.lo
+  CXX      LinAlg/IpSumMatrix.lo
+  CXX      LinAlg/IpSumSymMatrix.lo
+  CXX      LinAlg/IpSymScaledMatrix.lo
+  CXX      LinAlg/IpTransposeMatrix.lo
+  CXX      LinAlg/IpVector.lo
+  CXX      LinAlg/IpZeroMatrix.lo
+  CXX      LinAlg/IpZeroSymMatrix.lo
+  CXX      LinAlg/TMatrices/IpGenTMatrix.lo
+  CXX      LinAlg/TMatrices/IpSymTMatrix.lo
+  CXX      LinAlg/TMatrices/IpTripletHelper.lo
+  CXX      Algorithm/IpAdaptiveMuUpdate.lo
+  CXX      Algorithm/IpAlgBuilder.lo
+  CXX      Algorithm/IpAlgorithmRegOp.lo
+  CXX      Algorithm/IpAugRestoSystemSolver.lo
+  CXX      Algorithm/IpBacktrackingLineSearch.lo
+  CXX      Algorithm/IpDefaultIterateInitializer.lo
+  CXX      Algorithm/IpExactHessianUpdater.lo
+  CXX      Algorithm/IpFilter.lo
+  CXX      Algorithm/IpEquilibrationScaling.lo
+  CXX      Algorithm/IpFilterLSAcceptor.lo
+  CXX      Algorithm/IpGenAugSystemSolver.lo
+  CXX      Algorithm/IpGradientScaling.lo
+  CXX      Algorithm/IpIpoptAlg.lo
+  CXX      Algorithm/IpIpoptCalculatedQuantities.lo
+  CXX      Algorithm/IpIpoptData.lo
+  CXX      Algorithm/IpIteratesVector.lo
+  CXX      Algorithm/IpLeastSquareMults.lo
+  CXX      Algorithm/IpLoqoMuOracle.lo
+  CXX      Algorithm/IpLimMemQuasiNewtonUpdater.lo
+  CXX      Algorithm/IpLowRankAugSystemSolver.lo
+  CXX      Algorithm/IpMonotoneMuUpdate.lo
+  CXX      Algorithm/IpNLPBoundsRemover.lo
+  CXX      Algorithm/IpLowRankSSAugSystemSolver.lo
+  CXX      Algorithm/IpNLPScaling.lo
+  CXX      Algorithm/IpOptErrorConvCheck.lo
+  CXX      Algorithm/IpPDPerturbationHandler.lo
+  CXX      Algorithm/IpOrigIpoptNLP.lo
+  CXX      Algorithm/IpOrigIterationOutput.lo
+  CXX      Algorithm/IpPDFullSpaceSolver.lo
+  CXX      Algorithm/IpPenaltyLSAcceptor.lo
+  CXX      Algorithm/IpProbingMuOracle.lo
+  CXX      Algorithm/IpPDSearchDirCalc.lo
+  CXX      Algorithm/IpQualityFunctionMuOracle.lo
+  CXX      Algorithm/IpRestoConvCheck.lo
+  CXX      Algorithm/IpRestoIterateInitializer.lo
+  CXX      Algorithm/IpRestoRestoPhase.lo
+  CXX      Algorithm/IpRestoIpoptNLP.lo
+  CXX      Algorithm/IpRestoPenaltyConvCheck.lo
+  CXX      Algorithm/IpStdAugSystemSolver.lo
+  CXX      Algorithm/IpTimingStatistics.lo
+  CXX      Algorithm/IpUserScaling.lo
+  CXX      Algorithm/IpRestoIterationOutput.lo
+  CXX      Algorithm/IpRestoFilterConvCheck.lo
+  CXX      Algorithm/IpWarmStartIterateInitializer.lo
+  CXX      Algorithm/LinearSolvers/IpLinearSolversRegOp.lo
+  CC       Algorithm/LinearSolvers/IpLinearSolvers.lo
+  CXX      Algorithm/LinearSolvers/IpSlackBasedTSymScalingMethod.lo
+  CXX      Algorithm/LinearSolvers/IpTSymDependencyDetector.lo
+  CXX      Algorithm/LinearSolvers/IpTripletToCSRConverter.lo
+  CXX      Algorithm/IpRestoMinC_1Nrm.lo
+  CXX      Algorithm/LinearSolvers/IpTSymLinearSolver.lo
+  CXX      contrib/CGPenalty/IpCGPenaltyCq.lo
+  CXX      contrib/CGPenalty/IpCGPenaltyData.lo
+  CXX      contrib/CGPenalty/IpCGPenaltyLSAcceptor.lo
+  CXX      contrib/CGPenalty/IpCGPenaltyRegOp.lo
+  CXX      contrib/CGPenalty/IpCGPerturbationHandler.lo
+  CXX      contrib/CGPenalty/IpCGSearchDirCalc.lo
+  CXX      contrib/CGPenalty/IpPiecewisePenalty.lo
+  CXX      Interfaces/IpIpoptApplication.lo
+  CXX      Interfaces/IpInterfacesRegOp.lo
+  CXX      Interfaces/IpSolveStatistics.lo
+  CXX      Interfaces/IpStdCInterface.lo
+  CXX      Interfaces/IpStdInterfaceTNLP.lo
+  CC       Interfaces/IpStdFInterface.lo
+  CXX      Interfaces/IpTNLP.lo
+  CXX      Interfaces/IpTNLPAdapter.lo
+  CXX      Algorithm/LinearSolvers/IpMc19TSymScalingMethod.lo
+  CXX      Algorithm/LinearSolvers/IpMa27TSolverInterface.lo
+  CXX      Interfaces/IpTNLPReducer.lo
+  CXX      Algorithm/LinearSolvers/IpMa57TSolverInterface.lo
+  CXX      Algorithm/LinearSolvers/IpMa77SolverInterface.lo
+  CXX      Algorithm/LinearSolvers/IpMa86SolverInterface.lo
+  CXX      Algorithm/LinearSolvers/IpMa97SolverInterface.lo
+  CXX      Algorithm/LinearSolvers/IpPardisoSolverInterface.lo
+  CXX      Algorithm/LinearSolvers/IpMumpsSolverInterface.lo
+  CXX      Interfaces/IpStdJInterface.lo
+  CXXLD    libipopt.la
+make[3]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+Making all in contrib/sIPOPT
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+Making all in src
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+  CXX      SensAlgorithm.lo
+  CXX      SensRegOp.lo
+  CXX      SensDenseGenSchurDriver.lo
+  CXX      SensIndexPCalculator.lo
+  CXX      SensIndexSchurData.lo
+  CXX      SensMetadataMeasurement.lo
+  CXX      SensApplication.lo
+  CXX      SensUtils.lo
+  CXX      SensReducedHessianCalculator.lo
+  CXX      SensBuilder.lo
+  CXX      SensSimpleBacksolver.lo
+  CXX      SensStdStepCalc.lo
+  CXXLD    libsipopt.la
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[2]: Nothing to be done for 'all-am'.
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+make[1]: Nothing to be done for 'all-am'.
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+Making install in src
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make  install-recursive
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[3]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[4]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+/bin/sh /nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/install-sh -c -m 644 Common/config_ipopt.h /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or/IpoptConfig.h
+/usr/bin/mkdir -p "/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/share/java"
+/bin/sh ../libtool   --mode=install /usr/bin/install -c  org.coinor.ipopt.jar "/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/share/java"
+libtool: install: /usr/bin/install -c org.coinor.ipopt.jar /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/share/java/org.coinor.ipopt.jar
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+ /bin/sh ../libtool   --mode=install /usr/bin/install -c   libipopt.la '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+libtool: install: /usr/bin/install -c .libs/libipopt.so.3.14.14 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.so.3.14.14
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libipopt.so.3.14.14 libipopt.so.3 || { rm -f libipopt.so.3 && ln -s libipopt.so.3.14.14 libipopt.so.3; }; })
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libipopt.so.3.14.14 libipopt.so || { rm -f libipopt.so && ln -s libipopt.so.3.14.14 libipopt.so; }; })
+libtool: install: /usr/bin/install -c .libs/libipopt.lai /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.la
+libtool: finish: PATH="/nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/cmake-3.29.2-6n4msmc4aewj7wyi6b5g644vjrqyqgot/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/curl-8.7.1-4i4mpgzu35lnnqjpaxjgrsly3g6ngqmu/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin:/home/isatkaus/install/spack/bin:/opt/cray/pe/mpich/8.1.28/ofi/gnu/10.3/bin:/opt/cray/pe/mpich/8.1.28/bin:/opt/cray/libfabric/1.15.2.0/bin:/opt/cray/pe/craype/2.7.30/bin:/opt/rh/gcc-toolset-12/root/usr/bin:/opt/clmgr/sbin:/opt/clmgr/bin:/opt/sgi/sbin:/opt/sgi/bin:/nopt/xalt/current/bin:/nopt/nrel/utils/bin:/nopt/slurm/current/bin:/home/isatkaus/.local/bin:/home/isatkaus/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/c3/bin:/sbin:/bin:/opt/cray/pe/bin:/sbin" ldconfig -n /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the '-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the 'LD_RUN_PATH' environment variable
+     during linking
+   - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or'
+ /usr/bin/install -c -m 644 ../../src/Common/IpCachedResults.hpp ../../src/Common/IpDebug.hpp ../../src/Common/IpException.hpp ../../src/Common/IpJournalist.hpp ../../src/Common/IpLibraryLoader.hpp ../../src/Common/IpObserver.hpp ../../src/Common/IpOptionsList.hpp ../../src/Common/IpReferenced.hpp ../../src/Common/IpRegOptions.hpp ../../src/Common/IpSmartPtr.hpp ../../src/Common/IpTaggedObject.hpp ../../src/Common/IpTimedTask.hpp ../../src/Common/IpTypes.hpp ../../src/Common/IpTypes.h ../../src/Common/IpUtils.hpp ../../src/LinAlg/IpBlas.hpp ../../src/LinAlg/IpCompoundMatrix.hpp ../../src/LinAlg/IpCompoundSymMatrix.hpp ../../src/LinAlg/IpCompoundVector.hpp ../../src/LinAlg/IpDenseVector.hpp ../../src/LinAlg/IpDiagMatrix.hpp ../../src/LinAlg/IpExpansionMatrix.hpp ../../src/LinAlg/IpIdentityMatrix.hpp ../../src/LinAlg/IpLapack.hpp ../../src/LinAlg/IpMatrix.hpp ../../src/LinAlg/IpScaledMatrix.hpp ../../src/LinAlg/IpSumSymMatrix.hpp ../../src/LinAlg/IpSymMatrix.hpp ../../src/LinAlg/IpSymScaledMatrix.hpp ../../src/LinAlg/IpVector.hpp ../../src/LinAlg/IpZeroSymMatrix.hpp ../../src/LinAlg/TMatrices/IpGenTMatrix.hpp ../../src/LinAlg/TMatrices/IpSymTMatrix.hpp ../../src/LinAlg/TMatrices/IpTripletHelper.hpp ../../src/Algorithm/IpAlgBuilder.hpp ../../src/Algorithm/IpAlgStrategy.hpp ../../src/Algorithm/IpAugSystemSolver.hpp ../../src/Algorithm/IpConvCheck.hpp ../../src/Algorithm/IpEqMultCalculator.hpp ../../src/Algorithm/IpHessianUpdater.hpp '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or'
+ /usr/bin/install -c -m 644 ../../src/Algorithm/IpIpoptAlg.hpp ../../src/Algorithm/IpIpoptCalculatedQuantities.hpp ../../src/Algorithm/IpIpoptData.hpp ../../src/Algorithm/IpIpoptNLP.hpp ../../src/Algorithm/IpIterateInitializer.hpp ../../src/Algorithm/IpIteratesVector.hpp ../../src/Algorithm/IpIterationOutput.hpp ../../src/Algorithm/IpOrigIpoptNLP.hpp ../../src/Algorithm/IpLineSearch.hpp ../../src/Algorithm/IpMuUpdate.hpp ../../src/Algorithm/IpNLPScaling.hpp ../../src/Algorithm/IpPDSystemSolver.hpp ../../src/Algorithm/IpSearchDirCalculator.hpp ../../src/Algorithm/IpStdAugSystemSolver.hpp ../../src/Algorithm/IpTimingStatistics.hpp ../../src/Algorithm/LinearSolvers/IpLinearSolvers.h ../../src/Algorithm/LinearSolvers/IpSlackBasedTSymScalingMethod.hpp ../../src/Algorithm/LinearSolvers/IpSparseSymLinearSolverInterface.hpp ../../src/Algorithm/LinearSolvers/IpSymLinearSolver.hpp ../../src/Algorithm/LinearSolvers/IpTripletToCSRConverter.hpp ../../src/Algorithm/LinearSolvers/IpTSymLinearSolver.hpp ../../src/Algorithm/LinearSolvers/IpTSymScalingMethod.hpp ../../src/Interfaces/IpAlgTypes.hpp ../../src/Interfaces/IpIpoptApplication.hpp ../../src/Interfaces/IpNLP.hpp ../../src/Interfaces/IpReturnCodes.h ../../src/Interfaces/IpReturnCodes.hpp ../../src/Interfaces/IpReturnCodes_inc.h ../../src/Interfaces/IpReturnCodes.inc ../../src/Interfaces/IpSolveStatistics.hpp ../../src/Interfaces/IpStdCInterface.h ../../src/Interfaces/IpTNLP.hpp ../../src/Interfaces/IpTNLPAdapter.hpp ../../src/Interfaces/IpTNLPReducer.hpp '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or'
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig'
+ /usr/bin/install -c -m 644 ipopt.pc '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/pkgconfig'
+make[4]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[3]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/src'
+Making install in contrib/sIPOPT
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+Making install in src
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+make[3]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+ /bin/sh ../../../libtool   --mode=install /usr/bin/install -c   libsipopt.la '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib'
+libtool: warning: relinking 'libsipopt.la'
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src; /bin/sh "/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/libtool"  --silent --tag CXX --mode=relink /nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin/clang++ --gcc-toolchain=/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am -version-number 3:14:14 -no-undefined -Wl,-rpath,/nopt/nrel/apps/cpu_stack/libraries-gcc/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/netlib-lapack-3.11.0-abk4uhd5cyrfnhh67bcdhyt6fulibezx/lib64 -o libsipopt.la -rpath /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib SensAlgorithm.lo SensRegOp.lo SensDenseGenSchurDriver.lo SensIndexPCalculator.lo SensIndexSchurData.lo SensMetadataMeasurement.lo SensApplication.lo SensUtils.lo SensReducedHessianCalculator.lo SensBuilder.lo SensSimpleBacksolver.lo SensStdStepCalc.lo ../../../src/libipopt.la )
+libtool: install: /usr/bin/install -c .libs/libsipopt.so.3.14.14T /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libsipopt.so.3.14.14
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libsipopt.so.3.14.14 libsipopt.so.3 || { rm -f libsipopt.so.3 && ln -s libsipopt.so.3.14.14 libsipopt.so.3; }; })
+libtool: install: (cd /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib && { ln -s -f libsipopt.so.3.14.14 libsipopt.so || { rm -f libsipopt.so && ln -s libsipopt.so.3.14.14 libsipopt.so; }; })
+libtool: install: /usr/bin/install -c .libs/libsipopt.lai /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libsipopt.la
+libtool: finish: PATH="/nopt/nrel/apps/cpu_stack/software/gridkit/llvm/16.0.6/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/cmake-3.29.2-6n4msmc4aewj7wyi6b5g644vjrqyqgot/bin:/nopt/nrel/apps/cpu_stack/utilities/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/curl-8.7.1-4i4mpgzu35lnnqjpaxjgrsly3g6ngqmu/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/gcc-13.1.0-bmut2ysomhthj6y7oyc73c3cmxye57am/bin:/nopt/nrel/apps/cpu_stack/compilers/06-24/linux-rhel8-sapphirerapids/gcc-12.3.0/binutils-2.41-453zfqlwuuxu54ixelenvz6pfqucznyn/bin:/home/isatkaus/install/spack/bin:/opt/cray/pe/mpich/8.1.28/ofi/gnu/10.3/bin:/opt/cray/pe/mpich/8.1.28/bin:/opt/cray/libfabric/1.15.2.0/bin:/opt/cray/pe/craype/2.7.30/bin:/opt/rh/gcc-toolset-12/root/usr/bin:/opt/clmgr/sbin:/opt/clmgr/bin:/opt/sgi/sbin:/opt/sgi/bin:/nopt/xalt/current/bin:/nopt/nrel/utils/bin:/nopt/slurm/current/bin:/home/isatkaus/.local/bin:/home/isatkaus/bin:/usr/share/Modules/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/c3/bin:/sbin:/bin:/opt/cray/pe/bin:/sbin" ldconfig -n /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the '-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the 'LD_RUN_PATH' environment variable
+     during linking
+   - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or'
+ /usr/bin/install -c -m 644 ../../../../contrib/sIPOPT/src/SensAlgorithm.hpp ../../../../contrib/sIPOPT/src/SensApplication.hpp ../../../../contrib/sIPOPT/src/SensBacksolver.hpp ../../../../contrib/sIPOPT/src/SensMeasurement.hpp ../../../../contrib/sIPOPT/src/SensPCalculator.hpp ../../../../contrib/sIPOPT/src/SensRegOp.hpp ../../../../contrib/sIPOPT/src/SensSchurData.hpp ../../../../contrib/sIPOPT/src/SensSchurDriver.hpp ../../../../contrib/sIPOPT/src/SensSimpleBacksolver.hpp ../../../../contrib/sIPOPT/src/SensStepCalc.hpp ../../../../contrib/sIPOPT/src/SensUtils.hpp '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/include/coin-or'
+make[3]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT/src'
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[3]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[3]: Nothing to be done for 'install-exec-am'.
+make[3]: Nothing to be done for 'install-data-am'.
+make[3]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build/contrib/sIPOPT'
+make[1]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+make[2]: Entering directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+make[2]: Nothing to be done for 'install-exec-am'.
+ /usr/bin/mkdir -p '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/share/doc/ipopt'
+ /usr/bin/install -c -m 644 ../README.md ../AUTHORS ../LICENSE ../ChangeLog.md '/nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/share/doc/ipopt'
+make[2]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+make[1]: Leaving directory '/nopt/nrel/apps/cpu_stack/software/gridkit/src/Ipopt-releases-3.14.14/build'
+
+IPOPT installed to: /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14
+Verify:
+-rwxr-xr-x 1 isatkaus hpcapps    1606 Jul  7 16:05 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.la
+lrwxrwxrwx 1 isatkaus hpcapps      19 Jul  7 16:05 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.so -> libipopt.so.3.14.14
+lrwxrwxrwx 1 isatkaus hpcapps      19 Jul  7 16:05 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.so.3 -> libipopt.so.3.14.14
+-rwxr-xr-x 1 isatkaus hpcapps 4389208 Jul  7 16:05 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libipopt.so.3.14.14
+-rwxr-xr-x 1 isatkaus hpcapps    1862 Jul  7 16:04 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.la
+lrwxrwxrwx 1 isatkaus hpcapps      22 Jul  7 16:04 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.so -> libcoinmumps.so.3.0.13
+lrwxrwxrwx 1 isatkaus hpcapps      22 Jul  7 16:04 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.so.3 -> libcoinmumps.so.3.0.13
+-rwxr-xr-x 1 isatkaus hpcapps 3095832 Jul  7 16:04 /nopt/nrel/apps/cpu_stack/software/gridkit/ipopt/3.14.14/lib/libcoinmumps.so.3.0.13
+Build completed: Tue Jul  7 16:05:08 MDT 2026

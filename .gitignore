@@ -10,3 +10,8 @@ docs/_build/
 docs/api/reference/
 docs/xml/
 __pycache__
+**/.ipynb_checkpoints/
+uq-usecase/**/*.csv
+uq-usecase/**/*.h5
+uq-usecase/mkdocs/
+uq-usecase/mkdocs-site/
