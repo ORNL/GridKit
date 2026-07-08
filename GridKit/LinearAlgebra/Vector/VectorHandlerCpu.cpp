@@ -306,6 +306,9 @@ namespace GridKit
 
     /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
+     *  This is equivalent to solving a system with the original matrix, 
+     *  with the vector as the right hand side (typically used in this context).
+     *
      *
      * @param[in]  diag   - diagonal matrix stored in a vector object
      * @param[in,out] vec - vector to be divided
