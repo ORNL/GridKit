@@ -147,17 +147,29 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_[3]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(y[3]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_[4]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(y[4]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_[3] + Vi() * y_[4]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(Vr() * y[3] + Vi() * y[4]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_[3] - Vr() * y_[4]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(Vi() * y[3] - Vr() * y[4]); });
       monitor_->set(Variable::delta, [this]
-                    { return y_[0]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[0]; });
       monitor_->set(Variable::omega, [this]
-                    { return y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[1]; });
     }
 
     /**
@@ -223,16 +235,19 @@ namespace GridKit
       ScalarT Ep    = std::sqrt(Er * Er + Ei * Ei);
       ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
 
-      y_[0]      = delta;
-      y_[1]      = omega;
-      y_[2]      = Te;
-      y_[3]      = ir;
-      y_[4]      = ii;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]       = delta;
+      y[1]       = omega;
+      y[2]       = Te;
+      y[3]       = ir;
+      y[4]       = ii;
       pmech_set_ = Te;
       ep_set_    = Ep;
 
       for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
-        yp_[i] = 0.0;
+        yp[i] = 0.0;
 
       return 0;
     }
@@ -243,9 +258,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::tagDifferentiable()
     {
+      auto* tag = tag_.getData();
+
       for (IdxT i = 0; i < size_; ++i)
       {
-        tag_[static_cast<size_t>(i)] = i < 2;
+        tag[static_cast<size_t>(i)] = i < 2;
       }
       return 0;
     }
@@ -265,7 +282,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -339,8 +356,11 @@ namespace GridKit
       wb_[0] = Vr();
       wb_[1] = Vi();
 
-      evaluateInternalResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), f_.getData(memory::HOST));
-      evaluateBusResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), h_.data());
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      auto* f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
 
       Ir() += h_[0];
       Ii() += h_[1];

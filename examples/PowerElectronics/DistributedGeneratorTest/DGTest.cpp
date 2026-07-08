@@ -74,12 +74,13 @@ int main(int /* argc */, char const** /* argv */)
   bus.allocate();
   dg.allocate();
 
-  std::copy(t2.begin(), t2.end(), dg.y().getData(GridKit::memory::HOST));
-  std::copy(t1.begin(), t1.end(), dg.yp().getData(GridKit::memory::HOST));
-  std::copy(res.begin(), res.end(), dg.getResidual().getData(GridKit::memory::HOST));
+  std::copy(t2.begin(), t2.end(), dg.y().getData());
+  std::copy(t1.begin(), t1.end(), dg.yp().getData());
+  std::copy(res.begin(), res.end(), dg.getResidual().getData());
+  auto* dg_res = dg.getResidual().getData();
   dg.setInternalPointer(&t2[dg.getExternSize()]);
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
-  dg.setInternalResidualPointer(&dg.getResidual()[dg.getExternSize()]);
+  dg.setInternalResidualPointer(&dg_res[dg.getExternSize()]);
 
   dg.evaluateResidual();
 
@@ -104,7 +105,7 @@ int main(int /* argc */, char const** /* argv */)
   double error_allowed = 10 * std::numeric_limits<double>::epsilon();
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - dg.getResidual()[i]) / std::abs(1.0 + true_vec[i]);
+    double error = std::abs(true_vec[i] - dg_res[i]) / std::abs(1.0 + true_vec[i]);
     if (error > error_allowed)
     {
       std::cout << "Model error for equation " << i << " is: " << error << "\n";

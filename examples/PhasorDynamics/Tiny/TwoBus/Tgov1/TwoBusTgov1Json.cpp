@@ -117,7 +117,7 @@ int main(int argc, const char* argv[])
   // push it into output, which is updated outside the callback.
   auto output_cb = [&](real_type t)
   {
-    auto& y_val = sys.y();
+    auto* y_val = sys.y().getData();
 
     output.push_back(OutputData{t,
                                 static_cast<real_type>(y_val[0]),

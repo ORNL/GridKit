@@ -70,22 +70,28 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int InductionMotor<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    f_int_[0] = (1.0 / 3.0) * (2.0 * y_[0] - y_[1] - y_[2]) - Rs_ * y_int_[0] - (Lls_ + Lms_) * yp_int_[0] - Lms_ * yp_int_[1];
-    f_int_[1] = (1.0 / std::sqrt(3.0)) * (-y_[1] + y_[2]) - Rs_ * y_int_[1] - (Lls_ + Lms_) * yp_int_[1] - Lms_ * yp_int_[0];
-    f_int_[2] = (y_[0] + y_[1] + y_[2]) / 3.0 - Rs_ * y_int_[2] - Lls_ * yp_int_[7];
-    f_int_[3] = Rr_ * y_int_[3] + (Llr_ + Lms_) * yp_int_[8] + Lms_ * yp_int_[0] - (P_ / 2.0) * y_[3] * ((Llr_ + Lms_) * y_int_[4] + Lms_ * y_int_[1]);
-    f_int_[4] = Rr_ * y_int_[4] + (Llr_ + Lms_) * yp_int_[9] + Lms_ * yp_int_[1] + (P_ / 2.0) * y_[3] * ((Llr_ + Lms_) * y_int_[3] + Lms_ * y_int_[0]);
+    auto* y = y_.getData();
+
+    f_int_[0] = (1.0 / 3.0) * (2.0 * y[0] - y[1] - y[2]) - Rs_ * y_int_[0] - (Lls_ + Lms_) * yp_int_[0] - Lms_ * yp_int_[1];
+    f_int_[1] = (1.0 / std::sqrt(3.0)) * (-y[1] + y[2]) - Rs_ * y_int_[1] - (Lls_ + Lms_) * yp_int_[1] - Lms_ * yp_int_[0];
+    f_int_[2] = (y[0] + y[1] + y[2]) / 3.0 - Rs_ * y_int_[2] - Lls_ * yp_int_[7];
+    f_int_[3] = Rr_ * y_int_[3] + (Llr_ + Lms_) * yp_int_[8] + Lms_ * yp_int_[0] - (P_ / 2.0) * y[3] * ((Llr_ + Lms_) * y_int_[4] + Lms_ * y_int_[1]);
+    f_int_[4] = Rr_ * y_int_[4] + (Llr_ + Lms_) * yp_int_[9] + Lms_ * yp_int_[1] + (P_ / 2.0) * y[3] * ((Llr_ + Lms_) * y_int_[3] + Lms_ * y_int_[0]);
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int InductionMotor<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    f_[0] = y_int_[0] + y_int_[2];
-    f_[1] = (-1.0 / 2.0) * y_int_[0] - (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];
-    f_[2] = (-1.0 / 2.0) * y_int_[0] + (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];
-    f_[3] = RJ_ * yp_[3] - (3.0 / 4.0) * P_ * Lms_ * (y_[5] * y_int_[4] - y_int_[1] * y_int_[3]);
-    f_[4] = yp_[4] - y_[3];
+    auto* y  = y_.getData();
+    auto* yp = yp_.getData();
+    auto* f  = f_.getData();
+
+    f[0] = y_int_[0] + y_int_[2];
+    f[1] = (-1.0 / 2.0) * y_int_[0] - (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];
+    f[2] = (-1.0 / 2.0) * y_int_[0] + (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];
+    f[3] = RJ_ * yp[3] - (3.0 / 4.0) * P_ * Lms_ * (y[5] * y_int_[4] - y_int_[1] * y_int_[3]);
+    f[4] = yp[4] - y[3];
     return 0;
   }
 

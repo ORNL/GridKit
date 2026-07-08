@@ -55,30 +55,38 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::tagDifferentiable()
   {
-    tag_[0] = true;
-    tag_[1] = true;
+    auto* tag = tag_.getData();
+
+    tag[0] = true;
+    tag[1] = true;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::initialize()
   {
-    // Set optimization parameter value and bounds
-    param_[0]    = Pm_;
-    param_up_[0] = 1.5;
-    param_lo_[0] = 0.5;
+    auto* y        = y_.getData();
+    auto* yp       = yp_.getData();
+    auto* param    = param_.getData();
+    auto* param_up = param_up_.getData();
+    auto* param_lo = param_lo_.getData();
 
-    y_[0]  = asin((Pm_ * Xdp_) / (Eqp_ * V())) + theta(); // <~ asin(Pm/Pmax)
-    y_[1]  = omega_s_;
-    yp_[0] = 0.0;
-    yp_[1] = 0.0;
+    // Set optimization parameter value and bounds
+    param[0]    = Pm_;
+    param_up[0] = 1.5;
+    param_lo[0] = 0.5;
+
+    y[0]  = asin((Pm_ * Xdp_) / (Eqp_ * V())) + theta(); // <~ asin(Pm/Pmax)
+    y[1]  = omega_s_;
+    yp[0] = 0.0;
+    yp[1] = 0.0;
 
     return 0;
   }
@@ -86,8 +94,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateResidual()
   {
-    f_[0] = -yp_[0] + omega_b_ * (y_[1] - omega_s_);
-    f_[1] = -yp_[1] + omega_s_ / (2.0 * H_) * (param_[0] - Eqp_ / Xdp_ * V() * sin(y_[0] - theta()) - D_ * (y_[1] - omega_s_));
+    auto* y     = y_.getData();
+    auto* yp    = yp_.getData();
+    auto* f     = f_.getData();
+    auto* param = param_.getData();
+
+    f[0] = -yp[0] + omega_b_ * (y[1] - omega_s_);
+    f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
     return 0;
   }
 
@@ -102,17 +115,24 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateIntegrand()
   {
-    g_[0] = frequencyPenalty(y_[1]);
+    auto* y = y_.getData();
+    auto* g = g_.getData();
+
+    g[0] = frequencyPenalty(y[1]);
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::initializeAdjoint()
   {
-    yB_[0]  = 0.0;
-    yB_[1]  = 0.0;
-    ypB_[0] = 0.0;
-    ypB_[1] = frequencyPenaltyDer(y_[1]);
+    auto* y   = y_.getData();
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+
+    yB[0]  = 0.0;
+    yB[1]  = 0.0;
+    ypB[0] = 0.0;
+    ypB[1] = frequencyPenaltyDer(y[1]);
 
     return 0;
   }
@@ -120,8 +140,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    fB_[0] = -ypB_[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y_[0] - theta()) * yB_[1];
-    fB_[1] = -ypB_[1] + omega_s_ / (2.0 * H_) * D_ * yB_[1] - omega_b_ * yB_[0] + frequencyPenaltyDer(y_[1]);
+    auto* y   = y_.getData();
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+    auto* fB  = fB_.getData();
+
+    fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y[0] - theta()) * yB[1];
+    fB[1] = -ypB[1] + omega_s_ / (2.0 * H_) * D_ * yB[1] - omega_b_ * yB[0] + frequencyPenaltyDer(y[1]);
     return 0;
   }
 
@@ -137,7 +162,10 @@ namespace GridKit
   int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
-    gB_[0] = -omega_s_ / (2.0 * H_) * yB_[1];
+    auto* yB = yB_.getData();
+    auto* gB = gB_.getData();
+
+    gB[0] = -omega_s_ / (2.0 * H_) * yB[1];
     return 0;
   }
 

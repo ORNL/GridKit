@@ -145,8 +145,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
+      tag[1] = false;
       return 0;
     }
 
@@ -165,7 +167,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -176,10 +178,13 @@ namespace GridKit
     int Bus<scalar_type, index_type>::initialize()
     {
       // std::cout << "Initialize Bus..." << std::endl;
-      y_[0]  = Vr0_;
-      y_[1]  = Vi0_;
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = Vr0_;
+      y[1]  = Vi0_;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
 
       return 0;
     }
@@ -195,8 +200,10 @@ namespace GridKit
     int Bus<scalar_type, index_type>::evaluateResidual()
     {
       // std::cout << "Evaluating residual of a PQ bus ...\n";
-      f_[0] = 0.0;
-      f_[1] = 0.0;
+      auto* f = f_.getData();
+
+      f[0] = 0.0;
+      f[1] = 0.0;
       return 0;
     }
   } // namespace PhasorDynamics

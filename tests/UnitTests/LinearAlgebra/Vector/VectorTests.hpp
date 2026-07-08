@@ -191,7 +191,7 @@ namespace GridKit
         z.allocate(memory::HOST);
         z.copyFromExternal(y, memspace_, memory::HOST);
 
-        const ScalarT* z_data = z.getData(memory::HOST);
+        const ScalarT* z_data = z.getData();
 
         if (z_data == nullptr)
         {
@@ -378,14 +378,15 @@ namespace GridKit
           x.syncData(memory::HOST);
         }
 
+        auto* x_data = x.getData();
         for (IdxT i = 0; i < x.getSize(); ++i)
         {
           // std::cout << x->getData("cpu")[i] << "\n";
-          if (!isEqual(x.getData(memory::HOST)[i], answer))
+          if (!isEqual(x_data[i], answer))
           {
             std::cout << std::setprecision(16);
             success = false;
-            std::cout << "Solution vector element x[" << i << "] = " << x.getData(memory::HOST)[i]
+            std::cout << "Solution vector element x[" << i << "] = " << x_data[i]
                       << ", expected: " << answer << "\n";
             break;
           }

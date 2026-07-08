@@ -47,11 +47,17 @@ namespace GridKit
           allocate();
         }
 
-        y_[0]       = 0.0;
-        yp_[0]      = 0.0;
-        tag_[0]     = 0.0;
-        abs_tol_[0] = 0.0;
-        f_[0]       = 0.0;
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* tag     = tag_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
+
+        y[0]       = 0.0;
+        yp[0]      = 0.0;
+        tag[0]     = 0.0;
+        abs_tol[0] = 0.0;
+        f[0]       = 0.0;
         return 0;
       }
 
@@ -87,13 +93,15 @@ namespace GridKit
 
       int setAbsoluteTolerance(RealT rel_tol) override
       {
-        std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
         return 0;
       }
 
       int evaluateResidual() override
       {
-        f_[0] = y_[0];
+        auto*       f = f_.getData();
+        const auto* y = y_.getData();
+        f[0]          = y[0];
         return 0;
       }
 
@@ -252,17 +260,23 @@ namespace GridKit
           this->allocate();
         }
 
-        this->y_[0]       = 0.0;
-        this->y_[1]       = 0.0;
-        this->yp_[0]      = 0.0;
-        this->yp_[1]      = 0.0;
-        this->tag_[0]     = 1.0;
-        this->tag_[1]     = 0.0;
-        this->abs_tol_[0] = 0.0;
-        this->abs_tol_[1] = 0.0;
-        this->f_[0]       = 0.0;
-        this->f_[1]       = 0.0;
-        t_                = 0.0;
+        auto* y       = this->y_.getData();
+        auto* yp      = this->yp_.getData();
+        auto* tag     = this->tag_.getData();
+        auto* abs_tol = this->abs_tol_.getData();
+        auto* f       = this->f_.getData();
+
+        y[0]       = 0.0;
+        y[1]       = 0.0;
+        yp[0]      = 0.0;
+        yp[1]      = 0.0;
+        tag[0]     = 1.0;
+        tag[1]     = 0.0;
+        abs_tol[0] = 0.0;
+        abs_tol[1] = 0.0;
+        f[0]       = 0.0;
+        f[1]       = 0.0;
+        t_         = 0.0;
         return 0;
       }
 
@@ -274,8 +288,12 @@ namespace GridKit
       int evaluateResidual() override
       {
         static constexpr RealT OMEGA = 100.0;
-        this->f_[0]                  = this->yp_[0];
-        this->f_[1]                  = this->y_[1] - std::sin(OMEGA * t_);
+        auto*                  f     = this->f_.getData();
+        const auto*            y     = this->y_.getData();
+        const auto*            yp    = this->yp_.getData();
+
+        f[0] = yp[0];
+        f[1] = y[1] - std::sin(OMEGA * t_);
         return 0;
       }
 

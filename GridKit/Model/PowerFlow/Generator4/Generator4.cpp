@@ -99,31 +99,38 @@ namespace GridKit
     const ScalarT Ed = V() * sin(theta() - delta) + Rs_ * Id + Xqp_ * Iq;
     const ScalarT Eq = V() * cos(theta() - delta) + Rs_ * Iq - Xdp_ * Id;
 
-    y_[0]  = delta;
-    y_[1]  = omega_s_;
-    y_[2]  = Ed;
-    y_[3]  = Eq;
-    y_[4]  = Id;
-    y_[5]  = Iq;
-    yp_[0] = 0.0;
-    yp_[1] = 0.0;
-    yp_[2] = 0.0;
-    yp_[3] = 0.0;
-    yp_[4] = 0.0;
-    yp_[5] = 0.0;
+    auto* y  = y_.getData();
+    auto* yp = yp_.getData();
+
+    y[0]  = delta;
+    y[1]  = omega_s_;
+    y[2]  = Ed;
+    y[3]  = Eq;
+    y[4]  = Id;
+    y[5]  = Iq;
+    yp[0] = 0.0;
+    yp[1] = 0.0;
+    yp[2] = 0.0;
+    yp[3] = 0.0;
+    yp[4] = 0.0;
+    yp[5] = 0.0;
 
     // Set control parameter values here.
     Ef_ = Eq - (Xd_ - Xdp_) * Id;                      // <~ set to steady state value
     Pm_ = Ed * Id + Eq * Iq + (Xdp_ - Xqp_) * Id * Iq; // <~ set to steady state value
 
     // Initialize optimization parameters
-    param_[0]    = Pm_;
-    param_up_[0] = 1.5;
-    param_lo_[0] = 0.0;
+    auto* param    = param_.getData();
+    auto* param_up = param_up_.getData();
+    auto* param_lo = param_lo_.getData();
 
-    param_[1]    = Ef_;
-    param_up_[1] = 1.7;
-    param_lo_[1] = 0.0;
+    param[0]    = Pm_;
+    param_up[0] = 1.5;
+    param_lo[0] = 0.0;
+
+    param[1]    = Ef_;
+    param_up[1] = 1.7;
+    param_lo[1] = 0.0;
 
     return 0;
   }
@@ -134,14 +141,16 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4<ScalarT, IdxT>::tagDifferentiable()
   {
-    tag_[0] = true;
-    tag_[1] = true;
-    tag_[2] = true;
-    tag_[3] = true;
+    auto* tag = tag_.getData();
+
+    tag[0] = true;
+    tag[1] = true;
+    tag[2] = true;
+    tag[3] = true;
 
     for (IdxT i = 4; i < size_; ++i)
     {
-      tag_[static_cast<size_t>(i)] = false;
+      tag[static_cast<size_t>(i)] = false;
     }
 
     return 0;
@@ -162,7 +171,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
     return 0;
   }
 
@@ -198,12 +207,14 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateResidual()
   {
     // std::cout << "Evaluate residual for Generator4..." << std::endl;
-    f_[0] = dotDelta() - omega_b_ * (omega() - omega_s_);
-    f_[1] = (2.0 * H_) / omega_s_ * dotOmega() - Pm() + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
-    f_[2] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
-    f_[3] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef();
-    f_[4] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
-    f_[5] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
+    auto* f = f_.getData();
+
+    f[0] = dotDelta() - omega_b_ * (omega() - omega_s_);
+    f[1] = (2.0 * H_) / omega_s_ * dotOmega() - Pm() + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
+    f[2] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
+    f[3] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef();
+    f[4] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
+    f[5] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
 
     // Compute active and reactive load provided by the infinite bus.
     P() += Pg();
@@ -224,7 +235,10 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateIntegrand()
   {
     // std::cout << "Evaluate Integrand for Generator4..." << std::endl;
-    g_[0] = frequencyPenalty(y_[1]);
+    auto* y = y_.getData();
+    auto* g = g_.getData();
+
+    g[0] = frequencyPenalty(y[1]);
     return 0;
   }
 
@@ -232,12 +246,16 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::initializeAdjoint()
   {
     // std::cout << "Initialize adjoint for Generator4..." << std::endl;
+    auto* y   = y_.getData();
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+
     for (IdxT i = 0; i < size_; ++i)
     {
-      yB_[static_cast<size_t>(i)]  = 0.0;
-      ypB_[static_cast<size_t>(i)] = 0.0;
+      yB[static_cast<size_t>(i)]  = 0.0;
+      ypB[static_cast<size_t>(i)] = 0.0;
     }
-    ypB_[1] = frequencyPenaltyDer(y_[1]);
+    ypB[1] = frequencyPenaltyDer(y[1]);
 
     return 0;
   }
@@ -263,13 +281,17 @@ namespace GridKit
     ScalarT sinPhi = sin(delta() - theta());
     ScalarT cosPhi = cos(delta() - theta());
 
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+    auto* fB  = fB_.getData();
+
     // Generator adjoint
-    fB_[0] = ypB_[0] - yB_[4] * V() * cosPhi + yB_[5] * V() * sinPhi;
-    fB_[1] = 2.0 * H_ / omega_s_ * ypB_[1] + yB_[0] * omega_b_ - yB_[1] * D_ + frequencyPenaltyDer(omega());
-    fB_[2] = Tq0p_ * ypB_[2] - yB_[1] * Id() - yB_[2] + yB_[4];
-    fB_[3] = Td0p_ * ypB_[3] - yB_[1] * Iq() - yB_[3] + yB_[5];
-    fB_[4] = -yB_[1] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB_[3] * (Xd_ - Xdp_) - yB_[4] * Rs_ - yB_[5] * Xdp_;
-    fB_[5] = -yB_[1] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB_[2] * (Xq_ - Xqp_) + yB_[4] * Xqp_ - yB_[5] * Rs_;
+    fB[0] = ypB[0] - yB[4] * V() * cosPhi + yB[5] * V() * sinPhi;
+    fB[1] = 2.0 * H_ / omega_s_ * ypB[1] + yB[0] * omega_b_ - yB[1] * D_ + frequencyPenaltyDer(omega());
+    fB[2] = Tq0p_ * ypB[2] - yB[1] * Id() - yB[2] + yB[4];
+    fB[3] = Td0p_ * ypB[3] - yB[1] * Iq() - yB[3] + yB[5];
+    fB[4] = -yB[1] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB[3] * (Xd_ - Xdp_) - yB[4] * Rs_ - yB[5] * Xdp_;
+    fB[5] = -yB[1] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB[2] * (Xq_ - Xqp_) + yB[4] * Xqp_ - yB[5] * Rs_;
 
     return 0;
   }
@@ -286,8 +308,11 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Generator4..." << std::endl;
-    gB_[0] = yB_[1];
-    gB_[1] = yB_[3];
+    auto* yB = yB_.getData();
+    auto* gB = gB_.getData();
+
+    gB[0] = yB[1];
+    gB[1] = yB[3];
 
     return 0;
   }
@@ -305,7 +330,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4<ScalarT, IdxT>::Pg()
   {
-    return y_[5] * V() * cos(theta() - y_[0]) + y_[4] * V() * sin(theta() - y_[0]);
+    auto* y = y_.getData();
+    return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
   }
 
   /**
@@ -316,7 +342,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4<ScalarT, IdxT>::Qg()
   {
-    return y_[5] * V() * sin(theta() - y_[0]) - y_[4] * V() * cos(theta() - y_[0]);
+    auto* y = y_.getData();
+    return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
   }
 
   /**

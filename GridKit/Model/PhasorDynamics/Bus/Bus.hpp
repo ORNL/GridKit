@@ -60,42 +60,42 @@ namespace GridKit
 
       virtual ScalarT& Vr() override final
       {
-        return y_[0];
+        return y_.getData()[0];
       }
 
       virtual const ScalarT& Vr() const override final
       {
-        return y_[0];
+        return y_.getData()[0];
       }
 
       virtual ScalarT& Vi() override final
       {
-        return y_[1];
+        return y_.getData()[1];
       }
 
       virtual const ScalarT& Vi() const override final
       {
-        return y_[1];
+        return y_.getData()[1];
       }
 
       virtual ScalarT& Ir() override final
       {
-        return f_[0];
+        return f_.getData()[0];
       }
 
       virtual const ScalarT& Ir() const override final
       {
-        return f_[0];
+        return f_.getData()[0];
       }
 
       virtual ScalarT& Ii() override final
       {
-        return f_[1];
+        return f_.getData()[1];
       }
 
       virtual const ScalarT& Ii() const override final
       {
-        return f_[1];
+        return f_.getData()[1];
       }
 
     protected:

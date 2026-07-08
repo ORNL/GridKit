@@ -99,10 +99,11 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        const auto& f = gen.getResidual();
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
         for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f.getData(memory::HOST)[i], 0.0, tol_))
+          if (!isEqual(f_data[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -139,10 +140,11 @@ namespace GridKit
         gen.initialize();
         gen.evaluateResidual();
 
-        const auto& f = gen.getResidual();
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
         for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f.getData(memory::HOST)[i], 0.0, tol_))
+          if (!isEqual(f_data[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -169,12 +171,15 @@ namespace GridKit
         gen.setSystemBase(50.0, 100.0e6);
         gen.allocate();
 
-        gen.y()[1]  = 1.0;
-        gen.yp()[0] = TWO<RealT> * M_PI * 50.0;
+        auto* y  = gen.y().getData();
+        auto* yp = gen.yp().getData();
+        y[1]     = 1.0;
+        yp[0]    = TWO<RealT> * M_PI * 50.0;
 
         gen.evaluateResidual();
 
-        success *= isEqual(gen.getResidual()[0], 0.0, tol_);
+        const auto* f  = gen.getResidual().getData();
+        success       *= isEqual(f[0], 0.0, tol_);
 
         return success.report(__func__);
       }
@@ -283,38 +288,42 @@ namespace GridKit
 
         gen.allocate();
 
-        gen.y()[0]  = M_PI;  // delta
-        gen.y()[1]  = 1.0;   // omega
-        gen.y()[2]  = 2.0;   // Eqp
-        gen.y()[3]  = 0.5;   // psidp
-        gen.y()[4]  = -0.75; // psiqpp
-        gen.y()[5]  = 1.0;   // psidpp
-        gen.y()[6]  = 0.2;   // ksat
-        gen.y()[7]  = 0.4;   // vd
-        gen.y()[8]  = 0.6;   // vq
-        gen.y()[9]  = 1.5;   // telec
-        gen.y()[10] = 0.25;  // id
-        gen.y()[11] = -0.5;  // iq
-        gen.y()[12] = 0.75;  // ir
-        gen.y()[13] = -0.25; // ii
-        gen.y()[14] = 0.1;   // inr
-        gen.y()[15] = -0.2;  // ini
+        auto* y  = gen.y().getData();
+        auto* yp = gen.yp().getData();
 
-        gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
-        gen.yp()[1] = -1.0;            // omega_dot
-        gen.yp()[2] = 0.3;             // Eqp_dot
-        gen.yp()[3] = -0.7;            // psidp_dot
-        gen.yp()[4] = 0.9;             // psiqpp_dot
+        y[0]  = M_PI;  // delta
+        y[1]  = 1.0;   // omega
+        y[2]  = 2.0;   // Eqp
+        y[3]  = 0.5;   // psidp
+        y[4]  = -0.75; // psiqpp
+        y[5]  = 1.0;   // psidpp
+        y[6]  = 0.2;   // ksat
+        y[7]  = 0.4;   // vd
+        y[8]  = 0.6;   // vq
+        y[9]  = 1.5;   // telec
+        y[10] = 0.25;  // id
+        y[11] = -0.5;  // iq
+        y[12] = 0.75;  // ir
+        y[13] = -0.25; // ii
+        y[14] = 0.1;   // inr
+        y[15] = -0.2;  // ini
+
+        yp[0] = 2 * M_PI * 60.0; // delta_dot
+        yp[1] = -1.0;            // omega_dot
+        yp[2] = 0.3;             // Eqp_dot
+        yp[3] = -0.7;            // psidp_dot
+        yp[4] = 0.9;             // psiqpp_dot
 
         gen.evaluateResidual();
-        auto& residual = gen.getResidual();
+        auto& residual      = gen.getResidual();
+        auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          if (!isEqual(residual[i], res_answer[i], tol_))
+          if (!isEqual(residual_data[i], res_answer[i], tol_))
           {
             std::cout << "Incorrect result for residual " << i << ": "
-                      << residual[i] << " != " << res_answer[i] << "\n";
+                      << residual_data[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
           }
@@ -359,32 +368,35 @@ namespace GridKit
         bus.initialize();
         gen.initialize();
 
+        auto* gen_y = gen.y().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen.y()[i].setVariableNumber(i);
+          gen_y[i].setVariableNumber(i);
         }
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + gen.size());
+          bus_y[i].setVariableNumber(i + gen.size());
         }
 
         bus.evaluateResidual();
         gen.evaluateResidual();
         auto&                                     residual_y_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(memory::HOST), residual_y_view.getData(memory::HOST) + residual_y_view.size());
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.size());
 
         bus.initialize();
         gen.initialize();
 
+        auto* gen_yp = gen.yp().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen.yp()[i].setVariableNumber(i);
+          gen_yp[i].setVariableNumber(i);
         }
 
         bus.evaluateResidual();
         gen.evaluateResidual();
         auto&                                     residual_yp_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(memory::HOST), residual_yp_view.getData(memory::HOST) + residual_yp_view.size());
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.size());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

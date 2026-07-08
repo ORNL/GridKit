@@ -181,37 +181,43 @@ namespace GridKit
         const auto load_ir_index = static_cast<std::size_t>(load.getVariableIndex(0));
         const auto load_ii_index = static_cast<std::size_t>(load.getVariableIndex(1));
 
-        system.y()[bus2_vr_index]  = 5.0;
-        system.y()[bus2_vi_index]  = 6.0;
-        success                   *= isEqual(bus2.Vr(), static_cast<ScalarT>(5.0));
-        success                   *= isEqual(bus2.Vi(), static_cast<ScalarT>(6.0));
+        auto* system_y           = system.y().getData();
+        auto* load_y             = load.y().getData();
+        system_y[bus2_vr_index]  = 5.0;
+        system_y[bus2_vi_index]  = 6.0;
+        success                 *= isEqual(bus2.Vr(), static_cast<ScalarT>(5.0));
+        success                 *= isEqual(bus2.Vi(), static_cast<ScalarT>(6.0));
 
         bus2.Vr()  = 7.0;
         bus2.Vi()  = 8.0;
-        success   *= isEqual(system.y()[bus2_vr_index], static_cast<ScalarT>(7.0));
-        success   *= isEqual(system.y()[bus2_vi_index], static_cast<ScalarT>(8.0));
+        success   *= isEqual(system_y[bus2_vr_index], static_cast<ScalarT>(7.0));
+        success   *= isEqual(system_y[bus2_vi_index], static_cast<ScalarT>(8.0));
 
-        system.y()[load_ir_index]  = 9.0;
-        system.y()[load_ii_index]  = 10.0;
-        success                   *= isEqual(load.y().getData(memory::HOST)[0], static_cast<ScalarT>(9.0));
-        success                   *= isEqual(load.y().getData(memory::HOST)[1], static_cast<ScalarT>(10.0));
+        system_y[load_ir_index]  = 9.0;
+        system_y[load_ii_index]  = 10.0;
+        success                 *= isEqual(load_y[0], static_cast<ScalarT>(9.0));
+        success                 *= isEqual(load_y[1], static_cast<ScalarT>(10.0));
 
-        load.y().getData(memory::HOST)[0]  = 11.0;
-        load.y().getData(memory::HOST)[1]  = 12.0;
-        success                           *= isEqual(system.y()[load_ir_index], static_cast<ScalarT>(11.0));
-        success                           *= isEqual(system.y()[load_ii_index], static_cast<ScalarT>(12.0));
+        load_y[0]  = 11.0;
+        load_y[1]  = 12.0;
+        success   *= isEqual(system_y[load_ir_index], static_cast<ScalarT>(11.0));
+        success   *= isEqual(system_y[load_ii_index], static_cast<ScalarT>(12.0));
 
-        bus2.tag()[0]  = 1.0;
-        success       *= isEqual(system.tag()[bus2_vr_index], static_cast<ScalarT>(1.0));
+        auto* bus2_tag    = bus2.tag().getData();
+        auto* system_tag  = system.tag().getData();
+        bus2_tag[0]       = 1.0;
+        success          *= isEqual(system_tag[bus2_vr_index], static_cast<ScalarT>(1.0));
 
-        system.tag()[bus2_vr_index]  = 0.0;
-        success                     *= isEqual(bus2.tag()[0], static_cast<ScalarT>(0.0));
+        system_tag[bus2_vr_index]  = 0.0;
+        success                   *= isEqual(bus2_tag[0], static_cast<ScalarT>(0.0));
 
-        load.absoluteTolerance()[0]  = 0.123;
-        success                     *= isEqual(system.absoluteTolerance()[load_ir_index], static_cast<ScalarT>(0.123));
+        auto* load_abs_tol    = load.absoluteTolerance().getData();
+        auto* system_abs_tol  = system.absoluteTolerance().getData();
+        load_abs_tol[0]       = 0.123;
+        success              *= isEqual(system_abs_tol[load_ir_index], static_cast<ScalarT>(0.123));
 
-        system.absoluteTolerance()[load_ii_index]  = 0.456;
-        success                                   *= isEqual(load.absoluteTolerance()[1], static_cast<ScalarT>(0.456));
+        system_abs_tol[load_ii_index]  = 0.456;
+        success                       *= isEqual(load_abs_tol[1], static_cast<ScalarT>(0.456));
 
         return success.report(__func__);
       }
@@ -294,20 +300,22 @@ namespace GridKit
         system.initialize();
 
         // Set independent variables
+        auto* y = system.y().getData();
         for (size_t i = 0; i < system.size(); ++i)
         {
-          system.y()[i].setVariableNumber(i);
+          y[i].setVariableNumber(i);
         }
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        auto& residual = system.getResidual();
+        auto& residual      = system.getResidual();
+        auto* residual_data = residual.getData();
 
         // Print the dependencies
         for (size_t i = 0; i < residual.size(); ++i)
         {
           std::cout << i << "th residual: ";
-          (residual[i]).print(std::cout);
+          residual_data[i].print(std::cout);
           std::cout << "\n";
         }
 
@@ -315,7 +323,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.size());
         for (IdxT i = 0; i < residual.size(); ++i)
         {
-          dependencies[i] = (residual[i]).getDependencies();
+          dependencies[i] = residual_data[i].getDependencies();
         }
 
         return dependencies;

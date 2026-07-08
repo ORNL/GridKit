@@ -58,22 +58,22 @@ namespace GridKit
 
     virtual ScalarT& theta()
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     virtual const ScalarT& theta() const
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     virtual ScalarT& P()
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     virtual const ScalarT& P() const
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     virtual ScalarT& Q()

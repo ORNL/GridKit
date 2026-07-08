@@ -147,11 +147,13 @@ namespace GridKit
       const ScalarT V     = std::sqrt(V2);
       const ScalarT zip   = alphaZ_ + alphaI_ * Vnom_ / V + alphaP_ * Vnom2 / V2;
 
-      y_[0] = -(G_ * vr + B_ * vi) * zip;
-      y_[1] = -(G_ * vi - B_ * vr) * zip;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
 
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      y[0]  = -(G_ * vr + B_ * vi) * zip;
+      y[1]  = -(G_ * vi - B_ * vr) * zip;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
       return 0;
     }
 
@@ -161,8 +163,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
+      tag[1] = false;
       return 0;
     }
 
@@ -181,7 +185,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -211,10 +215,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0] = Vr();
-      wb_[1] = Vi();
-      evaluateInternalResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), f_.getData(memory::HOST));
-      evaluateBusResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), h_.data());
+      wb_[0]   = Vr();
+      wb_[1]   = Vi();
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      auto* f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
 
@@ -273,15 +280,25 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::ir, [this]
-                    { return y_[0]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[1]; });
       monitor_->set(Variable::im, [this]
-                    { return std::sqrt(y_[0] * y_[0] + y_[1] * y_[1]); });
+                    {
+                      auto* y = y_.getData();
+                      return std::sqrt(y[0] * y[0] + y[1] * y[1]); });
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_[0] + Vi() * y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return Vr() * y[0] + Vi() * y[1]; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_[0] - Vr() * y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return Vi() * y[0] - Vr() * y[1]; });
     }
 
   } // namespace PhasorDynamics

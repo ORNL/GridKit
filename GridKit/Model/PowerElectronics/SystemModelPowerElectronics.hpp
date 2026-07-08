@@ -50,9 +50,10 @@ namespace GridKit
 
     // Write the vector elements
     outFile << std::scientific << std::setprecision(16);
+    auto* vec_data = vec.getData();
     for (std::size_t i = 0; i < vec.size(); ++i)
     {
-      outFile << vec.getData(memory::HOST)[i] << std::endl;
+      outFile << vec_data[i] << std::endl;
     }
 
     outFile.close();
@@ -204,14 +205,17 @@ namespace GridKit
         // The offset for each component's internal variables in the system vector.
         // They start at 0, and are stacked on top of each other.
         size_t component_internal_idx = 0;
+        auto*  y                      = y_.getData();
+        auto*  yp                     = yp_.getData();
+        auto*  f                      = f_.getData();
         for (component_type* comp : components_)
         {
           comp->allocate();
 
           // Update component internal pointers to their correct offsets
-          comp->setInternalPointer(&y_[component_internal_idx]);
-          comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
-          comp->setInternalResidualPointer(&f_[component_internal_idx]);
+          comp->setInternalPointer(&y[component_internal_idx]);
+          comp->setInternalDerivativePointer(&yp[component_internal_idx]);
+          comp->setInternalResidualPointer(&f[component_internal_idx]);
 
           const auto& external_indices = comp->getExternIndices();
           for (size_t i = 0; i < comp->size(); i++)
@@ -332,18 +336,21 @@ namespace GridKit
      */
     int distributeVectors()
     {
+      auto* y_system  = y_.getData();
+      auto* yp_system = yp_.getData();
+
       for (component_type* component : components_)
       {
-        auto&                   y         = component->y();
-        auto&                   yp        = component->yp();
+        auto*                   y         = component->y().getData();
+        auto*                   yp        = component->yp().getData();
         const std::set<size_t>& externals = component->getExternIndices();
 
         for (size_t j : externals)
         {
           if (component->getNodeConnection(j) != neg1_)
           {
-            y[j]  = y_[component->getNodeConnection(j)];
-            yp[j] = yp_[component->getNodeConnection(j)];
+            y[j]  = y_system[component->getNodeConnection(j)];
+            yp[j] = yp_system[component->getNodeConnection(j)];
           }
           else
           {
@@ -357,7 +364,7 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
-      std::fill(tag_.getData(memory::HOST), tag_.getData(memory::HOST) + tag_.size(), ScalarT{0.0});
+      std::fill(tag_.getData(), tag_.getData() + tag_.size(), ScalarT{0.0});
       return 0;
     }
 
@@ -375,7 +382,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol) final
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -386,9 +393,11 @@ namespace GridKit
      */
     int evaluateInternalResidual() final
     {
+      auto* f = f_.getData();
+
       for (IdxT i = 0; i < this->f_.size(); i++)
       {
-        f_[i] = 0.0;
+        f[i] = 0.0;
       }
 
       this->distributeVectors();
@@ -407,7 +416,7 @@ namespace GridKit
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
 
-        auto&                   residual  = component->getResidual();
+        auto*                   residual  = component->getResidual().getData();
         const std::set<size_t>& externals = component->getExternIndices();
 
         for (size_t j : externals)
@@ -415,7 +424,7 @@ namespace GridKit
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_)
           {
-            f_[component->getNodeConnection(j)] += residual[j];
+            f[component->getNodeConnection(j)] += residual[j];
           }
         }
       }

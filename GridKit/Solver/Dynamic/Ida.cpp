@@ -862,7 +862,7 @@ namespace AnalysisManager
       }
 
       const ScalarT* xdata = N_VGetArrayPointer(x);
-      std::copy_n(xdata, y.size(), y.getData(GridKit::memory::HOST));
+      std::copy_n(xdata, y.size(), y.getData());
     }
 
     /**
@@ -883,7 +883,7 @@ namespace AnalysisManager
       }
 
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy_n(x.getData(GridKit::memory::HOST), x.size(), ydata);
+      std::copy_n(x.getData(), x.size(), ydata);
     }
 
     /**

@@ -233,19 +233,19 @@ namespace GridKit
         assert(offset + n <= abs_tol.getSize());
 
         y_.resize(n);
-        y_.setData(y.getData(memory::HOST) + offset);
+        y_.setData(y.getData() + offset);
 
         yp_.resize(n);
-        yp_.setData(yp.getData(memory::HOST) + offset);
+        yp_.setData(yp.getData() + offset);
 
         f_.resize(n);
-        f_.setData(f.getData(memory::HOST) + offset);
+        f_.setData(f.getData() + offset);
 
         tag_.resize(n);
-        tag_.setData(tag.getData(memory::HOST) + offset);
+        tag_.setData(tag.getData() + offset);
 
         abs_tol_.resize(n);
-        abs_tol_.setData(abs_tol.getData(memory::HOST) + offset);
+        abs_tol_.setData(abs_tol.getData() + offset);
 
         offset_    = offset;
         allocated_ = true;

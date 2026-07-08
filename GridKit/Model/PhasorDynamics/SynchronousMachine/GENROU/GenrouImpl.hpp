@@ -292,19 +292,33 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_[15]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(y[15]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_[16]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(y[16]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_[15] + Vi() * y_[16]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(Vr() * y[15] + Vi() * y[16]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_[15] - Vr() * y_[16]); });
+                    {
+                      auto* y = y_.getData();
+                      return toSystemBase(Vi() * y[15] - Vr() * y[16]); });
       monitor_->set(Variable::delta, [this]
-                    { return y_[0]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[0]; });
       monitor_->set(Variable::omega, [this]
-                    { return y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[1]; });
       monitor_->set(Variable::speed, [this]
-                    { return 1.0 + y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return 1.0 + y[1]; });
     }
 
     /**
@@ -356,7 +370,8 @@ namespace GridKit
       // Set output signals
       if (signals_.template isAssigned<GenrouInternalVariables::OMEGA>())
       {
-        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
+        auto* y = y_.getData();
+        signals_.template getSignalNode<GenrouInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
       }
 
       return 0;
@@ -467,31 +482,33 @@ namespace GridKit
 
       // Assign from converged values using flux-linkage forms
       ScalarT omega(0.0);
+      auto*   y  = y_.getData();
+      auto*   yp = yp_.getData();
 
-      y_[0] = delta;
-      y_[1] = omega;
-      y_[2] = Eqp;
-      y_[3] = psidp;
-      y_[4] = psiqp;
-      y_[5] = Edp;
-      y_[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
-      y_[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
-      y_[8] = psipp     = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
+      y[0] = delta;
+      y[1] = omega;
+      y[2] = Eqp;
+      y[3] = psidp;
+      y[4] = psiqp;
+      y[5] = Edp;
+      y[6] = psiqpp = -psiqp * Xq4_ - Edp * Xq5_;
+      y[7] = psidpp = psidp * Xd4_ + Eqp * Xd5_;
+      y[8] = psipp      = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       ScalarT psipp_sat = psipp - SA_;
-      y_[9] = ksat = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
-      y_[10] = vd = -psiqpp * (ONE<RealT> + omega);
-      y_[11] = vq = psidpp * (ONE<RealT> + omega);
-      y_[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
-      y_[13]      = id;
-      y_[14]      = iq;
-      y_[15]      = ir;
-      y_[16]      = ii;
-      y_[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-      y_[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y[9] = ksat = (psipp_sat > ZERO<RealT>) ? SB_ * psipp_sat * psipp_sat : ScalarT{ZERO<RealT>};
+      y[10] = vd = -psiqpp * (ONE<RealT> + omega);
+      y[11] = vq = psidpp * (ONE<RealT> + omega);
+      y[12]      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      y[13]      = id;
+      y[14]      = iq;
+      y[15]      = ir;
+      y[16]      = ii;
+      y[17]      = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      ScalarT Te = y_[12];
+      ScalarT Te = y[12];
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
@@ -507,7 +524,7 @@ namespace GridKit
 
       for (IdxT i = 0; i < size_; ++i)
       {
-        yp_[static_cast<size_t>(i)] = 0.0;
+        yp[static_cast<size_t>(i)] = 0.0;
       }
 
       return 0;
@@ -519,9 +536,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::tagDifferentiable()
     {
+      auto* tag = tag_.getData();
+
       for (IdxT i = 0; i < size_; ++i)
       {
-        tag_[static_cast<size_t>(i)] = i < 6;
+        tag[static_cast<size_t>(i)] = i < 6;
       }
       return 0;
     }
@@ -541,7 +560,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -672,8 +691,11 @@ namespace GridKit
       wb_[1] = Vi();
 
       // Residual evaluation
-      evaluateInternalResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), ws_.data(), f_.getData(memory::HOST));
-      evaluateBusResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), h_.data());
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      auto* f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
 
       // Genrou contribution to bus algebraic equations
       Ir() += h_[0];

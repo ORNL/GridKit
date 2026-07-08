@@ -88,7 +88,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::tagDifferentiable()
   {
-    tag_[0] = false;
+    auto* tag = tag_.getData();
+    tag[0]    = false;
     return 0;
   }
 
@@ -107,7 +108,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
     return 0;
   }
 
@@ -118,8 +119,9 @@ namespace GridKit
   int BusPV<ScalarT, IdxT>::initialize()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
-    theta() = theta0_;
-    yp_[0]  = 0.0;
+    theta()  = theta0_;
+    auto* yp = yp_.getData();
+    yp[0]    = 0.0;
 
     return 0;
   }
@@ -148,8 +150,10 @@ namespace GridKit
   int BusPV<ScalarT, IdxT>::initializeAdjoint()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
-    yB_[0]  = 0.0;
-    ypB_[0] = 0.0;
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+    yB[0]     = 0.0;
+    ypB[0]    = 0.0;
 
     return 0;
   }
@@ -157,7 +161,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    fB_[0] = 0.0;
+    auto* fB = fB_.getData();
+    fB[0]    = 0.0;
 
     return 0;
   }

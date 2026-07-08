@@ -189,8 +189,8 @@ int main()
 
   for (size_t i = 0; i < dg->getExternSize(); i++)
   {
-    y[i]   = dg->y()[i];
-    res[i] = dg->getResidual()[i];
+    y[i]   = dg->y().getData()[i];
+    res[i] = dg->getResidual().getData()[i];
   }
 
   DenseMatrix jac_ref_dense(dg->size(), dg->size());

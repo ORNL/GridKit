@@ -154,8 +154,13 @@ namespace GridKit
     int initialize()
     {
       // Set initial values for global solution vectors
-      IdxT varOffset = 0;
-      IdxT optOffset = 0;
+      IdxT  varOffset = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* param     = param_.getData();
+      auto* param_lo  = param_lo_.getData();
+      auto* param_up  = param_up_.getData();
 
       for (const auto& bus : buses_)
       {
@@ -164,18 +169,24 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
+        auto* bus_y        = bus->y().getData();
+        auto* bus_yp       = bus->yp().getData();
+        auto* bus_param    = bus->param().getData();
+        auto* bus_param_lo = bus->param_lo().getData();
+        auto* bus_param_up = bus->param_up().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          y_[varOffset + j]  = bus->y()[j];
-          yp_[varOffset + j] = bus->yp()[j];
+          y[varOffset + j]  = bus_y[j];
+          yp[varOffset + j] = bus_yp[j];
         }
         varOffset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          param_[optOffset + j]    = bus->param()[j];
-          param_lo_[optOffset + j] = bus->param_lo()[j];
-          param_up_[optOffset + j] = bus->param_up()[j];
+          param[optOffset + j]    = bus_param[j];
+          param_lo[optOffset + j] = bus_param_lo[j];
+          param_up[optOffset + j] = bus_param_up[j];
         }
         optOffset += bus->sizeParams();
       }
@@ -188,18 +199,24 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
+        auto* component_y        = component->y().getData();
+        auto* component_yp       = component->yp().getData();
+        auto* component_param    = component->param().getData();
+        auto* component_param_lo = component->param_lo().getData();
+        auto* component_param_up = component->param_up().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          y_[varOffset + j]  = component->y()[j];
-          yp_[varOffset + j] = component->yp()[j];
+          y[varOffset + j]  = component_y[j];
+          yp[varOffset + j] = component_yp[j];
         }
         varOffset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          param_[optOffset + j]    = component->param()[j];
-          param_lo_[optOffset + j] = component->param_lo()[j];
-          param_up_[optOffset + j] = component->param_up()[j];
+          param[optOffset + j]    = component_param[j];
+          param_lo[optOffset + j] = component_param_lo[j];
+          param_up[optOffset + j] = component_param_up[j];
         }
         optOffset += component->sizeParams();
       }
@@ -217,13 +234,17 @@ namespace GridKit
     int tagDifferentiable()
     {
       // Set initial values for global solution vectors
-      IdxT offset = 0;
+      IdxT  offset = 0;
+      auto* tag    = tag_.getData();
+
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
+        auto* bus_tag = bus->tag().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          tag_[offset + j] = bus->tag()[j];
+          tag[offset + j] = bus_tag[j];
         }
         offset += bus->size();
       }
@@ -231,9 +252,11 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
+        auto* component_tag = component->tag().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          tag_[offset + j] = component->tag()[j];
+          tag[offset + j] = component_tag[j];
         }
         offset += component->size();
       }
@@ -256,13 +279,17 @@ namespace GridKit
     int setAbsoluteTolerance(RealT rel_tol)
     {
       // Set initial values for global solution vectors
-      IdxT offset = 0;
+      IdxT  offset  = 0;
+      auto* abs_tol = abs_tol_.getData();
+
       for (const auto& bus : buses_)
       {
         bus->setAbsoluteTolerance(rel_tol);
+        auto* bus_abs_tol = bus->absoluteTolerance().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+          abs_tol[offset + j] = bus_abs_tol[j];
         }
         offset += bus->size();
       }
@@ -270,9 +297,11 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
+        auto* component_abs_tol = component->absoluteTolerance().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          abs_tol_[offset + j] = component->absoluteTolerance()[j];
+          abs_tol[offset + j] = component_abs_tol[j];
         }
         offset += component->size();
       }
@@ -301,20 +330,29 @@ namespace GridKit
     int evaluateResidual()
     {
       // Update variables
-      IdxT varOffset = 0;
-      IdxT optOffset = 0;
+      IdxT  varOffset = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* param     = param_.getData();
+      auto* f         = f_.getData();
+
       for (const auto& bus : buses_)
       {
+        auto* bus_y     = bus->y().getData();
+        auto* bus_yp    = bus->yp().getData();
+        auto* bus_param = bus->param().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]  = y_[varOffset + j];
-          bus->yp()[j] = yp_[varOffset + j];
+          bus_y[j]  = y[varOffset + j];
+          bus_yp[j] = yp[varOffset + j];
         }
         varOffset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          bus->param()[j] = param_[optOffset + j];
+          bus_param[j] = param[optOffset + j];
         }
         optOffset += bus->sizeParams();
 
@@ -323,16 +361,20 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
+        auto* component_y     = component->y().getData();
+        auto* component_yp    = component->yp().getData();
+        auto* component_param = component->param().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]  = y_[varOffset + j];
-          component->yp()[j] = yp_[varOffset + j];
+          component_y[j]  = y[varOffset + j];
+          component_yp[j] = yp[varOffset + j];
         }
         varOffset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          component->param()[j] = param_[optOffset + j];
+          component_param[j] = param[optOffset + j];
         }
         optOffset += component->sizeParams();
 
@@ -343,18 +385,22 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
+        auto* bus_f = bus->getResidual().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          f_[resOffset + j] = bus->getResidual()[j];
+          f[resOffset + j] = bus_f[j];
         }
         resOffset += bus->size();
       }
 
       for (const auto& component : components_)
       {
+        auto* component_f = component->getResidual().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          f_[resOffset + j] = component->getResidual()[j];
+          f[resOffset + j] = component_f[j];
         }
         resOffset += component->size();
       }
@@ -381,20 +427,29 @@ namespace GridKit
     int evaluateIntegrand()
     {
       // Update variables
-      IdxT varOffset = 0;
-      IdxT optOffset = 0;
+      IdxT  varOffset = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* param     = param_.getData();
+      auto* g         = g_.getData();
+
       for (const auto& bus : buses_)
       {
+        auto* bus_y     = bus->y().getData();
+        auto* bus_yp    = bus->yp().getData();
+        auto* bus_param = bus->param().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]  = y_[varOffset + j];
-          bus->yp()[j] = yp_[varOffset + j];
+          bus_y[j]  = y[varOffset + j];
+          bus_yp[j] = yp[varOffset + j];
         }
         varOffset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          bus->param()[j] = param_[optOffset + j];
+          bus_param[j] = param[optOffset + j];
         }
         optOffset += bus->sizeParams();
 
@@ -403,16 +458,20 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
+        auto* component_y     = component->y().getData();
+        auto* component_yp    = component->yp().getData();
+        auto* component_param = component->param().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]  = y_[varOffset + j];
-          component->yp()[j] = yp_[varOffset + j];
+          component_y[j]  = y[varOffset + j];
+          component_yp[j] = yp[varOffset + j];
         }
         varOffset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          component->param()[j] = param_[optOffset + j];
+          component_param[j] = param[optOffset + j];
         }
         optOffset += component->sizeParams();
 
@@ -423,18 +482,22 @@ namespace GridKit
       IdxT intOffset = 0;
       for (const auto& bus : buses_)
       {
+        auto* bus_g = bus->getIntegrand().getData();
+
         for (IdxT j = 0; j < bus->sizeQuadrature(); ++j)
         {
-          g_[intOffset + j] = bus->getIntegrand()[j];
+          g[intOffset + j] = bus_g[j];
         }
         intOffset += bus->sizeQuadrature();
       }
 
       for (const auto& component : components_)
       {
+        auto* component_g = component->getIntegrand().getData();
+
         for (IdxT j = 0; j < component->sizeQuadrature(); ++j)
         {
-          g_[intOffset + j] = component->getIntegrand()[j];
+          g[intOffset + j] = component_g[j];
         }
         intOffset += component->sizeQuadrature();
       }
@@ -450,22 +513,31 @@ namespace GridKit
      */
     int initializeAdjoint()
     {
-      IdxT offset    = 0;
-      IdxT optOffset = 0;
+      IdxT  offset    = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* yB        = yB_.getData();
+      auto* ypB       = ypB_.getData();
+      auto* param     = param_.getData();
 
       // Update bus variables and optimization parameters
       for (const auto& bus : buses_)
       {
+        auto* bus_y     = bus->y().getData();
+        auto* bus_yp    = bus->yp().getData();
+        auto* bus_param = bus->param().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]  = y_[offset + j];
-          bus->yp()[j] = yp_[offset + j];
+          bus_y[j]  = y[offset + j];
+          bus_yp[j] = yp[offset + j];
         }
         offset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          bus->param()[j] = param_[optOffset + j];
+          bus_param[j] = param[optOffset + j];
         }
         optOffset += bus->sizeParams();
       }
@@ -473,16 +545,20 @@ namespace GridKit
       // Update component variables and optimization parameters
       for (const auto& component : components_)
       {
+        auto* component_y     = component->y().getData();
+        auto* component_yp    = component->yp().getData();
+        auto* component_param = component->param().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]  = y_[offset + j];
-          component->yp()[j] = yp_[offset + j];
+          component_y[j]  = y[offset + j];
+          component_yp[j] = yp[offset + j];
         }
         offset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          component->param()[j] = param_[optOffset + j];
+          component_param[j] = param[optOffset + j];
         }
         optOffset += component->sizeParams();
       }
@@ -494,11 +570,13 @@ namespace GridKit
       for (const auto& bus : buses_)
       {
         bus->initializeAdjoint();
+        auto* bus_yB  = bus->yB().getData();
+        auto* bus_ypB = bus->ypB().getData();
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          yB_[offset + j]  = bus->yB()[j];
-          ypB_[offset + j] = bus->ypB()[j];
+          yB[offset + j]  = bus_yB[j];
+          ypB[offset + j] = bus_ypB[j];
         }
         offset += bus->size();
       }
@@ -507,11 +585,13 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->initializeAdjoint();
+        auto* component_yB  = component->yB().getData();
+        auto* component_ypB = component->ypB().getData();
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          yB_[offset + j]  = component->yB()[j];
-          ypB_[offset + j] = component->ypB()[j];
+          yB[offset + j]  = component_yB[j];
+          ypB[offset + j] = component_ypB[j];
         }
         offset += component->size();
       }
@@ -528,42 +608,60 @@ namespace GridKit
      */
     int evaluateAdjointResidual()
     {
-      IdxT varOffset = 0;
-      IdxT optOffset = 0;
+      IdxT  varOffset = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* yB        = yB_.getData();
+      auto* ypB       = ypB_.getData();
+      auto* param     = param_.getData();
+      auto* fB        = fB_.getData();
 
       // Update variables in component models
       for (const auto& bus : buses_)
       {
+        auto* bus_y     = bus->y().getData();
+        auto* bus_yp    = bus->yp().getData();
+        auto* bus_yB    = bus->yB().getData();
+        auto* bus_ypB   = bus->ypB().getData();
+        auto* bus_param = bus->param().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]   = y_[varOffset + j];
-          bus->yp()[j]  = yp_[varOffset + j];
-          bus->yB()[j]  = yB_[varOffset + j];
-          bus->ypB()[j] = ypB_[varOffset + j];
+          bus_y[j]   = y[varOffset + j];
+          bus_yp[j]  = yp[varOffset + j];
+          bus_yB[j]  = yB[varOffset + j];
+          bus_ypB[j] = ypB[varOffset + j];
         }
         varOffset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          bus->param()[j] = param_[optOffset + j];
+          bus_param[j] = param[optOffset + j];
         }
         optOffset += bus->sizeParams();
       }
 
       for (const auto& component : components_)
       {
+        auto* component_y     = component->y().getData();
+        auto* component_yp    = component->yp().getData();
+        auto* component_yB    = component->yB().getData();
+        auto* component_ypB   = component->ypB().getData();
+        auto* component_param = component->param().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]   = y_[varOffset + j];
-          component->yp()[j]  = yp_[varOffset + j];
-          component->yB()[j]  = yB_[varOffset + j];
-          component->ypB()[j] = ypB_[varOffset + j];
+          component_y[j]   = y[varOffset + j];
+          component_yp[j]  = yp[varOffset + j];
+          component_yB[j]  = yB[varOffset + j];
+          component_ypB[j] = ypB[varOffset + j];
         }
         varOffset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          component->param()[j] = param_[optOffset + j];
+          component_param[j] = param[optOffset + j];
         }
         optOffset += component->sizeParams();
       }
@@ -582,18 +680,22 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
+        auto* bus_fB = bus->getAdjointResidual().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          fB_[resOffset + j] = bus->getAdjointResidual()[j];
+          fB[resOffset + j] = bus_fB[j];
         }
         resOffset += bus->size();
       }
 
       for (const auto& component : components_)
       {
+        auto* component_fB = component->getAdjointResidual().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          fB_[resOffset + j] = component->getAdjointResidual()[j];
+          fB[resOffset + j] = component_fB[j];
         }
         resOffset += component->size();
       }
@@ -613,40 +715,59 @@ namespace GridKit
     int evaluateAdjointIntegrand()
     {
       // First, update variables
-      IdxT varOffset = 0;
-      IdxT optOffset = 0;
+      IdxT  varOffset = 0;
+      IdxT  optOffset = 0;
+      auto* y         = y_.getData();
+      auto* yp        = yp_.getData();
+      auto* yB        = yB_.getData();
+      auto* ypB       = ypB_.getData();
+      auto* param     = param_.getData();
+      auto* gB        = gB_.getData();
+
       for (const auto& bus : buses_)
       {
+        auto* bus_y     = bus->y().getData();
+        auto* bus_yp    = bus->yp().getData();
+        auto* bus_yB    = bus->yB().getData();
+        auto* bus_ypB   = bus->ypB().getData();
+        auto* bus_param = bus->param().getData();
+
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]   = y_[varOffset + j];
-          bus->yp()[j]  = yp_[varOffset + j];
-          bus->yB()[j]  = yB_[varOffset + j];
-          bus->ypB()[j] = ypB_[varOffset + j];
+          bus_y[j]   = y[varOffset + j];
+          bus_yp[j]  = yp[varOffset + j];
+          bus_yB[j]  = yB[varOffset + j];
+          bus_ypB[j] = ypB[varOffset + j];
         }
         varOffset += bus->size();
 
         for (IdxT j = 0; j < bus->sizeParams(); ++j)
         {
-          bus->param()[j] = param_[optOffset + j];
+          bus_param[j] = param[optOffset + j];
         }
         optOffset += bus->sizeParams();
       }
 
       for (const auto& component : components_)
       {
+        auto* component_y     = component->y().getData();
+        auto* component_yp    = component->yp().getData();
+        auto* component_yB    = component->yB().getData();
+        auto* component_ypB   = component->ypB().getData();
+        auto* component_param = component->param().getData();
+
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]   = y_[varOffset + j];
-          component->yp()[j]  = yp_[varOffset + j];
-          component->yB()[j]  = yB_[varOffset + j];
-          component->ypB()[j] = ypB_[varOffset + j];
+          component_y[j]   = y[varOffset + j];
+          component_yp[j]  = yp[varOffset + j];
+          component_yB[j]  = yB[varOffset + j];
+          component_ypB[j] = ypB[varOffset + j];
         }
         varOffset += component->size();
 
         for (IdxT j = 0; j < component->sizeParams(); ++j)
         {
-          component->param()[j] = param_[optOffset + j];
+          component_param[j] = param[optOffset + j];
         }
         optOffset += component->sizeParams();
       }
@@ -657,9 +778,11 @@ namespace GridKit
         if (component->sizeQuadrature() == 1)
         {
           component->evaluateAdjointIntegrand();
+          auto* component_gB = component->getAdjointIntegrand().getData();
+
           for (IdxT j = 0; j < size_opt_; ++j)
           {
-            gB_[j] = component->getAdjointIntegrand()[j];
+            gB[j] = component_gB[j];
           }
           break;
         }

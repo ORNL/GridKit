@@ -1,5 +1,4 @@
 #pragma once
-#include <cassert>
 #include <cstddef>
 #include <string>
 
@@ -62,18 +61,6 @@ namespace GridKit
       std::size_t size() const
       {
         return static_cast<std::size_t>(getSize());
-      }
-
-      ScalarT& operator[](std::size_t i)
-      {
-        assert(i < size());
-        return getData(memory::HOST)[i];
-      }
-
-      const ScalarT& operator[](std::size_t i) const
-      {
-        assert(i < size());
-        return getData(memory::HOST)[i];
       }
 
       IdxT getCapacity() const;

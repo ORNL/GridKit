@@ -62,18 +62,21 @@ int main(int /* argc */, char const** /* argv */)
 
   std::cout << sysmodel.y().size() << std::endl;
 
+  auto* y  = sysmodel.y().getData();
+  auto* yp = sysmodel.yp().getData();
+
   // Grounding for IDA. If no grounding then circuit is \mu > 1
   // v_0 (grounded)
   // Create initial points
-  sysmodel.y()[0] = 0.0;   // i_L
-  sysmodel.y()[1] = 0.0;   // i_s
-  sysmodel.y()[2] = vinit; // v_1
-  sysmodel.y()[3] = vinit; // v_2
+  y[0] = 0.0;   // i_L
+  y[1] = 0.0;   // i_s
+  y[2] = vinit; // v_1
+  y[3] = vinit; // v_2
 
-  sysmodel.yp()[0] = -vinit / linit; // i'_s
-  sysmodel.yp()[1] = -vinit / linit; // i'_L
-  sysmodel.yp()[2] = 0.0;            // v'_1
-  sysmodel.yp()[3] = 0.0;            // v'_2
+  yp[0] = -vinit / linit; // i'_s
+  yp[1] = -vinit / linit; // i'_L
+  yp[2] = 0.0;            // v'_1
+  yp[3] = 0.0;            // v'_2
 
   sysmodel.initialize();
   sysmodel.evaluateResidual();
@@ -82,7 +85,7 @@ int main(int /* argc */, char const** /* argv */)
   auto& residual = sysmodel.getResidual();
   for (std::size_t i = 0; i < residual.size(); ++i)
   {
-    std::cout << residual.getData(GridKit::memory::HOST)[i] << ", ";
+    std::cout << residual.getData()[i] << ", ";
   }
   std::cout << "}\n";
 
@@ -105,12 +108,13 @@ int main(int /* argc */, char const** /* argv */)
 
   idas.runSimulation(t_final);
 
-  auto& yfinial = sysmodel.y();
+  auto& yfinial      = sysmodel.y();
+  auto* yfinial_data = yfinial.getData();
 
   std::cout << "Final vector y\n";
   for (size_t i = 0; i < yfinial.size(); i++)
   {
-    std::cout << yfinial[i] << "\n";
+    std::cout << yfinial_data[i] << "\n";
   }
 
   std::vector<double> yexact(4);
@@ -124,7 +128,7 @@ int main(int /* argc */, char const** /* argv */)
   std::cout << "Element-wise relative error at t=" << t_final << "\n";
   for (size_t i = 0; i < yfinial.size(); i++)
   {
-    std::cout << abs((yfinial[i] - yexact[i]) / yexact[i]) << "\n";
+    std::cout << abs((yfinial_data[i] - yexact[i]) / yexact[i]) << "\n";
   }
 
   std::cerr << idas.getStats().report() << '\n';

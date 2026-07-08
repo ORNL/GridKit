@@ -64,14 +64,16 @@ namespace GridKit
         fault.allocate();
         fault.initialize();
         fault.evaluateResidual();
-        auto& res = fault.getResidual();
+        auto& res      = fault.getResidual();
+        auto* res_data = res.getData();
+        auto* yp       = fault.yp().getData();
 
         for (size_t i = 0; i < res.size(); ++i)
         {
-          if (!isEqual(res[i], 0.0))
+          if (!isEqual(res_data[i], 0.0))
           {
             std::cout << "Incorrect result: "
-                      << fault.yp()[i] << " != 0\n";
+                      << yp[i] << " != 0\n";
             success = false;
             break;
           }
@@ -123,13 +125,15 @@ namespace GridKit
         bus.initialize();
         fault.initialize();
 
+        auto* fault_y = fault.y().getData();
         for (size_t i = 0; i < fault.size(); ++i)
         {
-          fault.y()[i].setVariableNumber(i); ///< fault independent variables
+          fault_y[i].setVariableNumber(i); ///< fault independent variables
         }
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + fault.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i + fault.size()); // Bus independent variables
         }
 
         bus.evaluateResidual();
@@ -137,16 +141,17 @@ namespace GridKit
                                   ///< the dependencies
         auto&                                     residual_y_view = fault.getResidual();
         std::vector<DependencyTracking::Variable> residual_y(
-            residual_y_view.getData(memory::HOST),
-            residual_y_view.getData(memory::HOST) + residual_y_view.size());
+            residual_y_view.getData(),
+            residual_y_view.getData() + residual_y_view.size());
 
         // Get d/dy'
         bus.initialize();
         fault.initialize();
 
+        auto* fault_yp = fault.yp().getData();
         for (size_t i = 0; i < fault.size(); ++i)
         {
-          fault.yp()[i].setVariableNumber(i); ///< fault independent variables
+          fault_yp[i].setVariableNumber(i); ///< fault independent variables
         }
 
         bus.evaluateResidual();
@@ -154,8 +159,8 @@ namespace GridKit
                                   ///< the dependencies
         auto&                                     residual_yp_view = fault.getResidual();
         std::vector<DependencyTracking::Variable> residual_yp(
-            residual_yp_view.getData(memory::HOST),
-            residual_yp_view.getData(memory::HOST) + residual_yp_view.size());
+            residual_yp_view.getData(),
+            residual_yp_view.getData() + residual_yp_view.size());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

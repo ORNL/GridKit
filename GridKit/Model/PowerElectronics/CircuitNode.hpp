@@ -54,23 +54,23 @@ namespace GridKit
     // Voltage accessor
     ScalarT& V()
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     const ScalarT& V() const
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     // KCL residual accessor
     ScalarT& I()
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     const ScalarT& I() const
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     // Allocate storage for a single-node voltage and KCL residual
@@ -92,8 +92,11 @@ namespace GridKit
      */
     int initialize()
     {
-      y_[0]  = V0_;
-      yp_[0] = 0.0;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = V0_;
+      yp[0] = 0.0;
 
       return 0;
     }
@@ -103,7 +106,9 @@ namespace GridKit
      */
     int tagDifferentiable()
     {
-      tag_[0] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
 
       return 0;
     }
@@ -122,7 +127,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -135,7 +140,9 @@ namespace GridKit
      */
     int evaluateResidual()
     {
-      f_[0] = 0.0;
+      auto* f = f_.getData();
+
+      f[0] = 0.0;
 
       return 0;
     }
