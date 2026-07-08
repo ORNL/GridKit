@@ -1,5 +1,4 @@
 #include <cassert>
-#include <utility>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
@@ -53,48 +52,6 @@ namespace GridKit
      */
     template <typename ScalarT, typename IdxT>
     Vector<ScalarT, IdxT>::~Vector()
-    {
-      release();
-    }
-
-    template <typename ScalarT, typename IdxT>
-    Vector<ScalarT, IdxT>::Vector(Vector&& other) noexcept
-    {
-      *this = std::move(other);
-    }
-
-    template <typename ScalarT, typename IdxT>
-    Vector<ScalarT, IdxT>& Vector<ScalarT, IdxT>::operator=(Vector&& other) noexcept
-    {
-      if (this != &other)
-      {
-        release();
-
-        n_capacity_    = other.n_capacity_;
-        k_             = other.k_;
-        n_size_        = other.n_size_;
-        d_data_        = other.d_data_;
-        h_data_        = other.h_data_;
-        gpu_updated_   = other.gpu_updated_;
-        cpu_updated_   = other.cpu_updated_;
-        owns_gpu_data_ = other.owns_gpu_data_;
-        owns_cpu_data_ = other.owns_cpu_data_;
-        mem_           = std::move(other.mem_);
-
-        other.n_capacity_  = 0;
-        other.k_           = 0;
-        other.n_size_      = 0;
-        other.d_data_      = nullptr;
-        other.h_data_      = nullptr;
-        other.gpu_updated_ = nullptr;
-        other.cpu_updated_ = nullptr;
-      }
-
-      return *this;
-    }
-
-    template <typename ScalarT, typename IdxT>
-    void Vector<ScalarT, IdxT>::release()
     {
       if (owns_cpu_data_ && h_data_)
       {

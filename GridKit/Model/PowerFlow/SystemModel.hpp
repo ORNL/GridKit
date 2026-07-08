@@ -104,37 +104,21 @@ namespace GridKit
       // Allocate global vectors
       this->allocateVectors(size_);
 
-      yB_ = VectorT(size_);
-      yB_.allocate(GridKit::memory::HOST);
-      yB_.setDataUpdated(GridKit::memory::HOST);
+      auto allocate_host_vector = [](VectorT& vector, IdxT n)
+      {
+        vector.resize(n);
+        vector.allocate(GridKit::memory::HOST);
+        vector.setDataUpdated(GridKit::memory::HOST);
+      };
 
-      ypB_ = VectorT(size_);
-      ypB_.allocate(GridKit::memory::HOST);
-      ypB_.setDataUpdated(GridKit::memory::HOST);
-
-      fB_ = VectorT(size_);
-      fB_.allocate(GridKit::memory::HOST);
-      fB_.setDataUpdated(GridKit::memory::HOST);
-
-      g_ = VectorT(size_quad_);
-      g_.allocate(GridKit::memory::HOST);
-      g_.setDataUpdated(GridKit::memory::HOST);
-
-      gB_ = VectorT(size_quad_ * size_opt_);
-      gB_.allocate(GridKit::memory::HOST);
-      gB_.setDataUpdated(GridKit::memory::HOST);
-
-      param_ = VectorT(size_opt_);
-      param_.allocate(GridKit::memory::HOST);
-      param_.setDataUpdated(GridKit::memory::HOST);
-
-      param_lo_ = VectorT(size_opt_);
-      param_lo_.allocate(GridKit::memory::HOST);
-      param_lo_.setDataUpdated(GridKit::memory::HOST);
-
-      param_up_ = VectorT(size_opt_);
-      param_up_.allocate(GridKit::memory::HOST);
-      param_up_.setDataUpdated(GridKit::memory::HOST);
+      allocate_host_vector(yB_, size_);
+      allocate_host_vector(ypB_, size_);
+      allocate_host_vector(fB_, size_);
+      allocate_host_vector(g_, size_quad_);
+      allocate_host_vector(gB_, size_quad_ * size_opt_);
+      allocate_host_vector(param_, size_opt_);
+      allocate_host_vector(param_lo_, size_opt_);
+      allocate_host_vector(param_up_, size_opt_);
 
       assert(size_quad_ == 1 or size_quad_ == 0);
 

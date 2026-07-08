@@ -69,22 +69,20 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::allocate()
   {
-    using VectorT = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
+    using VectorT             = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
+    auto allocate_host_vector = [](VectorT& vector, IdxT n)
+    {
+      vector.resize(n);
+      vector.allocate(GridKit::memory::HOST);
+      vector.setDataUpdated(GridKit::memory::HOST);
+    };
 
     // std::cout << "Allocate PQ bus ..." << std::endl;
     this->allocateVectors(size_);
 
-    fB_ = VectorT(size_);
-    fB_.allocate(GridKit::memory::HOST);
-    fB_.setDataUpdated(GridKit::memory::HOST);
-
-    yB_ = VectorT(size_);
-    yB_.allocate(GridKit::memory::HOST);
-    yB_.setDataUpdated(GridKit::memory::HOST);
-
-    ypB_ = VectorT(size_);
-    ypB_.allocate(GridKit::memory::HOST);
-    ypB_.setDataUpdated(GridKit::memory::HOST);
+    allocate_host_vector(fB_, size_);
+    allocate_host_vector(yB_, size_);
+    allocate_host_vector(ypB_, size_);
 
     return 0;
   }

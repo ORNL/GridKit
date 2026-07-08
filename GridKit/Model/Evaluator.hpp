@@ -126,7 +126,7 @@ namespace GridKit
       /**
        * @brief Get the absolute tolerance for each variable in the model
        *
-       * @return a view of the absolute tolerance vector.
+       * @return the absolute tolerance vector.
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
@@ -138,7 +138,7 @@ namespace GridKit
       /**
        * @brief Get the absolute tolerance for each variable in the model
        *
-       * @return a const view of the absolute tolerance vector.
+       * @return the absolute tolerance vector.
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
@@ -225,26 +225,27 @@ namespace GridKit
       virtual void bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& tag, VectorT& abs_tol, IdxT offset)
       {
         const IdxT n = size();
-        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= y.size());
-        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= yp.size());
-        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= f.size());
-        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= tag.size());
-        assert(static_cast<std::size_t>(offset) + static_cast<std::size_t>(n) <= abs_tol.size());
+        assert(!allocated_);
+        assert(offset + n <= y.getSize());
+        assert(offset + n <= yp.getSize());
+        assert(offset + n <= f.getSize());
+        assert(offset + n <= tag.getSize());
+        assert(offset + n <= abs_tol.getSize());
 
-        y_ = VectorT(n);
-        y_.setData(y.data() + offset);
+        y_.resize(n);
+        y_.setData(y.getData(memory::HOST) + offset);
 
-        yp_ = VectorT(n);
-        yp_.setData(yp.data() + offset);
+        yp_.resize(n);
+        yp_.setData(yp.getData(memory::HOST) + offset);
 
-        f_ = VectorT(n);
-        f_.setData(f.data() + offset);
+        f_.resize(n);
+        f_.setData(f.getData(memory::HOST) + offset);
 
-        tag_ = VectorT(n);
-        tag_.setData(tag.data() + offset);
+        tag_.resize(n);
+        tag_.setData(tag.getData(memory::HOST) + offset);
 
-        abs_tol_ = VectorT(n);
-        abs_tol_.setData(abs_tol.data() + offset);
+        abs_tol_.resize(n);
+        abs_tol_.setData(abs_tol.getData(memory::HOST) + offset);
 
         offset_    = offset;
         allocated_ = true;
@@ -256,25 +257,25 @@ namespace GridKit
        */
       void allocateVectors(IdxT n)
       {
-        y_ = VectorT(n);
+        y_.resize(n);
         y_.allocate(memory::HOST);
-        y_.setDataUpdated(memory::HOST);
+        y_.setToZero(memory::HOST);
 
-        yp_ = VectorT(n);
+        yp_.resize(n);
         yp_.allocate(memory::HOST);
-        yp_.setDataUpdated(memory::HOST);
+        yp_.setToZero(memory::HOST);
 
-        f_ = VectorT(n);
+        f_.resize(n);
         f_.allocate(memory::HOST);
-        f_.setDataUpdated(memory::HOST);
+        f_.setToZero(memory::HOST);
 
-        tag_ = VectorT(n);
+        tag_.resize(n);
         tag_.allocate(memory::HOST);
-        tag_.setDataUpdated(memory::HOST);
+        tag_.setToZero(memory::HOST);
 
-        abs_tol_ = VectorT(n);
+        abs_tol_.resize(n);
         abs_tol_.allocate(memory::HOST);
-        abs_tol_.setDataUpdated(memory::HOST);
+        abs_tol_.setToZero(memory::HOST);
 
         offset_    = 0;
         allocated_ = true;

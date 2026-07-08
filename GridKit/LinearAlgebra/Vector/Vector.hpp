@@ -42,10 +42,10 @@ namespace GridKit
       Vector(IdxT n, IdxT k);
       ~Vector();
 
-      Vector(const Vector&) = delete;
-      Vector(Vector&& other) noexcept;
+      Vector(const Vector&)            = delete;
+      Vector(Vector&&)                 = delete;
       Vector& operator=(const Vector&) = delete;
-      Vector& operator=(Vector&& other) noexcept;
+      Vector& operator=(Vector&&)      = delete;
 
       int copyFromExternal(const ScalarT*      source,
                            memory::MemorySpace memspaceIn  = memory::HOST,
@@ -62,11 +62,6 @@ namespace GridKit
       std::size_t size() const
       {
         return static_cast<std::size_t>(getSize());
-      }
-
-      bool empty() const
-      {
-        return size() == 0;
       }
 
       ScalarT* data(memory::MemorySpace memspace = memory::HOST)
@@ -115,7 +110,6 @@ namespace GridKit
                          memory::MemorySpace memspaceDst = memory::HOST);
 
     private:
-      void release();
       void setHostUpdated(bool is_updated);
       void setDeviceUpdated(bool is_updated);
 
