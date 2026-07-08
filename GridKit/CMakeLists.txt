@@ -11,6 +11,9 @@ install(TARGETS definitions EXPORT gridkit-targets)
 # General Utilities and File IO
 add_subdirectory(Utilities)
 
+# Memory management utilities
+add_subdirectory(MemoryUtilities)
+
 # Create component models
 add_subdirectory(Model)
 
