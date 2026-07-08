@@ -181,11 +181,14 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y = bus->y().getData();
-
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->y().getSize() > 0)
         {
-          y[varOffset + j] = bus_y[j];
+          auto* bus_y = bus->y().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            y[varOffset + j] = bus_y[j];
+          }
         }
         varOffset += bus->size();
       }
@@ -198,11 +201,14 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y = component->y().getData();
-
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->y().getSize() > 0)
         {
-          y[varOffset + j] = component_y[j];
+          auto* component_y = component->y().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            y[varOffset + j] = component_y[j];
+          }
         }
         varOffset += component->size();
       }
@@ -266,11 +272,14 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y = bus->y().getData();
-
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->y().getSize() > 0)
         {
-          bus_y[j] = y[varOffset + j];
+          auto* bus_y = bus->y().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus_y[j] = y[varOffset + j];
+          }
         }
         varOffset += bus->size();
         bus->evaluateResidual();
@@ -278,11 +287,14 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y = component->y().getData();
-
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->y().getSize() > 0)
         {
-          component_y[j] = y[varOffset + j];
+          auto* component_y = component->y().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component_y[j] = y[varOffset + j];
+          }
         }
         varOffset += component->size();
         component->evaluateResidual();
@@ -292,22 +304,28 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
-        auto* bus_f = bus->getResidual().getData();
-
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->getResidual().getSize() > 0)
         {
-          f[resOffset + j] = bus_f[j];
+          auto* bus_f = bus->getResidual().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            f[resOffset + j] = bus_f[j];
+          }
         }
         resOffset += bus->size();
       }
 
       for (const auto& component : components_)
       {
-        auto* component_f = component->getResidual().getData();
-
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->getResidual().getSize() > 0)
         {
-          f[resOffset + j] = component_f[j];
+          auto* component_f = component->getResidual().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            f[resOffset + j] = component_f[j];
+          }
         }
         resOffset += component->size();
       }

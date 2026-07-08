@@ -169,11 +169,11 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y        = bus->y().getData();
-        auto* bus_yp       = bus->yp().getData();
-        auto* bus_param    = bus->param().getData();
-        auto* bus_param_lo = bus->param_lo().getData();
-        auto* bus_param_up = bus->param_up().getData();
+        auto* bus_y        = dataOrNull(bus->y());
+        auto* bus_yp       = dataOrNull(bus->yp());
+        auto* bus_param    = dataOrNull(bus->param());
+        auto* bus_param_lo = dataOrNull(bus->param_lo());
+        auto* bus_param_up = dataOrNull(bus->param_up());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -199,11 +199,11 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y        = component->y().getData();
-        auto* component_yp       = component->yp().getData();
-        auto* component_param    = component->param().getData();
-        auto* component_param_lo = component->param_lo().getData();
-        auto* component_param_up = component->param_up().getData();
+        auto* component_y        = dataOrNull(component->y());
+        auto* component_yp       = dataOrNull(component->yp());
+        auto* component_param    = dataOrNull(component->param());
+        auto* component_param_lo = dataOrNull(component->param_lo());
+        auto* component_param_up = dataOrNull(component->param_up());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -240,7 +240,7 @@ namespace GridKit
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
-        auto* bus_tag = bus->tag().getData();
+        auto* bus_tag = dataOrNull(bus->tag());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -252,7 +252,7 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
-        auto* component_tag = component->tag().getData();
+        auto* component_tag = dataOrNull(component->tag());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -285,7 +285,7 @@ namespace GridKit
       for (const auto& bus : buses_)
       {
         bus->setAbsoluteTolerance(rel_tol);
-        auto* bus_abs_tol = bus->absoluteTolerance().getData();
+        auto* bus_abs_tol = dataOrNull(bus->absoluteTolerance());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -297,7 +297,7 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
-        auto* component_abs_tol = component->absoluteTolerance().getData();
+        auto* component_abs_tol = dataOrNull(component->absoluteTolerance());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -339,9 +339,9 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y     = bus->y().getData();
-        auto* bus_yp    = bus->yp().getData();
-        auto* bus_param = bus->param().getData();
+        auto* bus_y     = dataOrNull(bus->y());
+        auto* bus_yp    = dataOrNull(bus->yp());
+        auto* bus_param = dataOrNull(bus->param());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -361,9 +361,9 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y     = component->y().getData();
-        auto* component_yp    = component->yp().getData();
-        auto* component_param = component->param().getData();
+        auto* component_y     = dataOrNull(component->y());
+        auto* component_yp    = dataOrNull(component->yp());
+        auto* component_param = dataOrNull(component->param());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -385,7 +385,7 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
-        auto* bus_f = bus->getResidual().getData();
+        auto* bus_f = dataOrNull(bus->getResidual());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -396,7 +396,7 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_f = component->getResidual().getData();
+        auto* component_f = dataOrNull(component->getResidual());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -436,9 +436,9 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y     = bus->y().getData();
-        auto* bus_yp    = bus->yp().getData();
-        auto* bus_param = bus->param().getData();
+        auto* bus_y     = dataOrNull(bus->y());
+        auto* bus_yp    = dataOrNull(bus->yp());
+        auto* bus_param = dataOrNull(bus->param());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -458,9 +458,9 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y     = component->y().getData();
-        auto* component_yp    = component->yp().getData();
-        auto* component_param = component->param().getData();
+        auto* component_y     = dataOrNull(component->y());
+        auto* component_yp    = dataOrNull(component->yp());
+        auto* component_param = dataOrNull(component->param());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -482,7 +482,7 @@ namespace GridKit
       IdxT intOffset = 0;
       for (const auto& bus : buses_)
       {
-        auto* bus_g = bus->getIntegrand().getData();
+        auto* bus_g = dataOrNull(bus->getIntegrand());
 
         for (IdxT j = 0; j < bus->sizeQuadrature(); ++j)
         {
@@ -493,7 +493,7 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_g = component->getIntegrand().getData();
+        auto* component_g = dataOrNull(component->getIntegrand());
 
         for (IdxT j = 0; j < component->sizeQuadrature(); ++j)
         {
@@ -524,9 +524,9 @@ namespace GridKit
       // Update bus variables and optimization parameters
       for (const auto& bus : buses_)
       {
-        auto* bus_y     = bus->y().getData();
-        auto* bus_yp    = bus->yp().getData();
-        auto* bus_param = bus->param().getData();
+        auto* bus_y     = dataOrNull(bus->y());
+        auto* bus_yp    = dataOrNull(bus->yp());
+        auto* bus_param = dataOrNull(bus->param());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -545,9 +545,9 @@ namespace GridKit
       // Update component variables and optimization parameters
       for (const auto& component : components_)
       {
-        auto* component_y     = component->y().getData();
-        auto* component_yp    = component->yp().getData();
-        auto* component_param = component->param().getData();
+        auto* component_y     = dataOrNull(component->y());
+        auto* component_yp    = dataOrNull(component->yp());
+        auto* component_param = dataOrNull(component->param());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -570,8 +570,8 @@ namespace GridKit
       for (const auto& bus : buses_)
       {
         bus->initializeAdjoint();
-        auto* bus_yB  = bus->yB().getData();
-        auto* bus_ypB = bus->ypB().getData();
+        auto* bus_yB  = dataOrNull(bus->yB());
+        auto* bus_ypB = dataOrNull(bus->ypB());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -585,8 +585,8 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->initializeAdjoint();
-        auto* component_yB  = component->yB().getData();
-        auto* component_ypB = component->ypB().getData();
+        auto* component_yB  = dataOrNull(component->yB());
+        auto* component_ypB = dataOrNull(component->ypB());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -620,11 +620,11 @@ namespace GridKit
       // Update variables in component models
       for (const auto& bus : buses_)
       {
-        auto* bus_y     = bus->y().getData();
-        auto* bus_yp    = bus->yp().getData();
-        auto* bus_yB    = bus->yB().getData();
-        auto* bus_ypB   = bus->ypB().getData();
-        auto* bus_param = bus->param().getData();
+        auto* bus_y     = dataOrNull(bus->y());
+        auto* bus_yp    = dataOrNull(bus->yp());
+        auto* bus_yB    = dataOrNull(bus->yB());
+        auto* bus_ypB   = dataOrNull(bus->ypB());
+        auto* bus_param = dataOrNull(bus->param());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -644,11 +644,11 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y     = component->y().getData();
-        auto* component_yp    = component->yp().getData();
-        auto* component_yB    = component->yB().getData();
-        auto* component_ypB   = component->ypB().getData();
-        auto* component_param = component->param().getData();
+        auto* component_y     = dataOrNull(component->y());
+        auto* component_yp    = dataOrNull(component->yp());
+        auto* component_yB    = dataOrNull(component->yB());
+        auto* component_ypB   = dataOrNull(component->ypB());
+        auto* component_param = dataOrNull(component->param());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -680,7 +680,7 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
-        auto* bus_fB = bus->getAdjointResidual().getData();
+        auto* bus_fB = dataOrNull(bus->getAdjointResidual());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -691,7 +691,7 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_fB = component->getAdjointResidual().getData();
+        auto* component_fB = dataOrNull(component->getAdjointResidual());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -726,11 +726,11 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        auto* bus_y     = bus->y().getData();
-        auto* bus_yp    = bus->yp().getData();
-        auto* bus_yB    = bus->yB().getData();
-        auto* bus_ypB   = bus->ypB().getData();
-        auto* bus_param = bus->param().getData();
+        auto* bus_y     = dataOrNull(bus->y());
+        auto* bus_yp    = dataOrNull(bus->yp());
+        auto* bus_yB    = dataOrNull(bus->yB());
+        auto* bus_ypB   = dataOrNull(bus->ypB());
+        auto* bus_param = dataOrNull(bus->param());
 
         for (IdxT j = 0; j < bus->size(); ++j)
         {
@@ -750,11 +750,11 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        auto* component_y     = component->y().getData();
-        auto* component_yp    = component->yp().getData();
-        auto* component_yB    = component->yB().getData();
-        auto* component_ypB   = component->ypB().getData();
-        auto* component_param = component->param().getData();
+        auto* component_y     = dataOrNull(component->y());
+        auto* component_yp    = dataOrNull(component->yp());
+        auto* component_yB    = dataOrNull(component->yB());
+        auto* component_ypB   = dataOrNull(component->ypB());
+        auto* component_param = dataOrNull(component->param());
 
         for (IdxT j = 0; j < component->size(); ++j)
         {
@@ -778,7 +778,7 @@ namespace GridKit
         if (component->sizeQuadrature() == 1)
         {
           component->evaluateAdjointIntegrand();
-          auto* component_gB = component->getAdjointIntegrand().getData();
+          auto* component_gB = dataOrNull(component->getAdjointIntegrand());
 
           for (IdxT j = 0; j < size_opt_; ++j)
           {
@@ -809,6 +809,11 @@ namespace GridKit
     }
 
   private:
+    static ScalarT* dataOrNull(VectorT& vector)
+    {
+      return vector.getSize() == 0 ? nullptr : vector.getData();
+    }
+
     std::vector<bus_type*>       buses_;
     std::vector<component_type*> components_;
 
