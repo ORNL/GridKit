@@ -73,16 +73,16 @@ namespace GridKit
     this->allocateVectors(size_);
 
     fB_ = VectorT(size_);
-    fB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-    fB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+    fB_.allocate(GridKit::memory::HOST);
+    fB_.setDataUpdated(GridKit::memory::HOST);
 
     yB_ = VectorT(size_);
-    yB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-    yB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+    yB_.allocate(GridKit::memory::HOST);
+    yB_.setDataUpdated(GridKit::memory::HOST);
 
     ypB_ = VectorT(size_);
-    ypB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-    ypB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+    ypB_.allocate(GridKit::memory::HOST);
+    ypB_.setDataUpdated(GridKit::memory::HOST);
 
     return 0;
   }

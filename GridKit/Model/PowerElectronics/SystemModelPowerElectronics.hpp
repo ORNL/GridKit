@@ -357,6 +357,7 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
+      std::fill(tag_.data(), tag_.data() + tag_.size(), ScalarT{0.0});
       return 0;
     }
 

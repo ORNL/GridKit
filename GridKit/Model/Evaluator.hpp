@@ -13,7 +13,7 @@ namespace GridKit
 {
   namespace Model
   {
-    namespace memory = GridKit::LinearAlgebra::memory;
+    namespace memory = GridKit::memory;
 
     /*!
      * @brief Abstract class describing a model.

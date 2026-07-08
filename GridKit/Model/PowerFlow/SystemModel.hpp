@@ -105,36 +105,36 @@ namespace GridKit
       this->allocateVectors(size_);
 
       yB_ = VectorT(size_);
-      yB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      yB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      yB_.allocate(GridKit::memory::HOST);
+      yB_.setDataUpdated(GridKit::memory::HOST);
 
       ypB_ = VectorT(size_);
-      ypB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      ypB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      ypB_.allocate(GridKit::memory::HOST);
+      ypB_.setDataUpdated(GridKit::memory::HOST);
 
       fB_ = VectorT(size_);
-      fB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      fB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      fB_.allocate(GridKit::memory::HOST);
+      fB_.setDataUpdated(GridKit::memory::HOST);
 
       g_ = VectorT(size_quad_);
-      g_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      g_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      g_.allocate(GridKit::memory::HOST);
+      g_.setDataUpdated(GridKit::memory::HOST);
 
       gB_ = VectorT(size_quad_ * size_opt_);
-      gB_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      gB_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      gB_.allocate(GridKit::memory::HOST);
+      gB_.setDataUpdated(GridKit::memory::HOST);
 
       param_ = VectorT(size_opt_);
-      param_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      param_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      param_.allocate(GridKit::memory::HOST);
+      param_.setDataUpdated(GridKit::memory::HOST);
 
       param_lo_ = VectorT(size_opt_);
-      param_lo_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      param_lo_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      param_lo_.allocate(GridKit::memory::HOST);
+      param_lo_.setDataUpdated(GridKit::memory::HOST);
 
       param_up_ = VectorT(size_opt_);
-      param_up_.allocate(GridKit::LinearAlgebra::memory::HOST);
-      param_up_.setDataUpdated(GridKit::LinearAlgebra::memory::HOST);
+      param_up_.allocate(GridKit::memory::HOST);
+      param_up_.setDataUpdated(GridKit::memory::HOST);
 
       assert(size_quad_ == 1 or size_quad_ == 0);
 
