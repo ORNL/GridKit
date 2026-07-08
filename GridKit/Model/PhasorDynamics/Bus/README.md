@@ -2,9 +2,9 @@
 
 A bus is a point of interconnection of electrical devices. The bus component
 model also plays a key role in coupling system components. Each bus $k$ owns
-two variables, real and imaginary voltage $V_{rk}$ and $V_{ik}$,
-respectively. The bus also owns current-balance residual equations for real
-and imaginary currents entering the bus, $I_{rk}$ and $I_{ik}$,
+two variables: real voltage and imaginary voltage, denoted as $V_{rk}$ and
+$V_{ik}$, respectively. The bus also owns current-balance residual equations for
+real and imaginary currents entering the bus, denoted as $I_{rk}$ and $I_{ik}$,
 respectively. While the bus model owns current residuals, it _does not compute_
 them. Instead, each component connected to the bus adds its contribution to the
 residual. The bus initializes the residual to zero each time the numerical
