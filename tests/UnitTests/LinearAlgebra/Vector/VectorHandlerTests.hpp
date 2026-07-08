@@ -481,7 +481,7 @@ namespace GridKit
       VectorHandler<ScalarT, IdxT>& handler_;
       memory::MemorySpace           memspace_{memory::HOST};
 
-      // we can verify through norm but that would defeat the purpose of testing vector handler ...
+      // We could verify through norm but that would defeat the purpose of testing vector handler.
       bool verifyAnswer(Vector<ScalarT, IdxT>& x, ScalarT answer)
       {
         bool success = true;
