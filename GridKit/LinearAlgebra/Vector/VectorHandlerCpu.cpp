@@ -101,7 +101,7 @@ namespace GridKit
     }
 
     /**
-     * @brief gemv computes matrix-vector product where both matrix and vectors are dense.
+     * @brief gemv computes matrix-vector product where the matrix and vectors are dense.
      *        i.e., x = beta*x + alpha*V*y
      *
      * @param[in] transpose - transposed = 'T' or not 'N'
