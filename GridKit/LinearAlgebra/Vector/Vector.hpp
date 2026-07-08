@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 
 namespace GridKit
 {
@@ -31,7 +31,11 @@ namespace GridKit
     class Vector
     {
     public:
-      Vector() = default;
+      Vector()
+        : Vector(0)
+      {
+      }
+
       Vector(IdxT n);
       Vector(IdxT n, IdxT k);
       ~Vector();

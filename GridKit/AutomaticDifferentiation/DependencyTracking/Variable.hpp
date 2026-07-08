@@ -12,6 +12,7 @@
 #include <limits>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <GridKit/Constants.hpp>
@@ -38,8 +39,7 @@ namespace GridKit
       Variable()
         : value_(0.0),
           variable_number_(INVALID_VAR_NUMBER),
-          is_fixed_(false),
-          dependencies_(new DependencyMap)
+          is_fixed_(false)
       {
       }
 
@@ -49,8 +49,7 @@ namespace GridKit
       explicit Variable(double value)
         : value_(value),
           variable_number_(INVALID_VAR_NUMBER),
-          is_fixed_(false),
-          dependencies_(new DependencyMap)
+          is_fixed_(false)
       {
       }
 
@@ -62,10 +61,9 @@ namespace GridKit
       Variable(double value, size_t variable_number)
         : value_(value),
           variable_number_(variable_number),
-          is_fixed_(false),
-          dependencies_(new DependencyMap)
+          is_fixed_(false)
       {
-        (*dependencies_)[variable_number_] = 1.0;
+        dependencies_[variable_number_] = 1.0;
       }
 
       /**
@@ -75,17 +73,32 @@ namespace GridKit
         : value_(v.value_),
           variable_number_(INVALID_VAR_NUMBER),
           is_fixed_(false),
-          dependencies_(new DependencyMap(*v.dependencies_))
+          dependencies_(v.dependencies_)
       {
       }
 
       /**
-          @brief Destructor deletes the dependency map.
+          @brief Move constructor.
+
+          Unlike the copy constructor, this relocates @a v rather than
+          creating a new, detached temporary from it, so (unlike copy)
+          it carries over `variable_number_`/`is_fixed_` as-is instead
+          of resetting them. The dependency map is relocated via
+          `std::map`'s own move constructor (O(1)) instead of being
+          deep-copied.
       */
-      ~Variable()
+      Variable(Variable&& v) noexcept
+        : value_(v.value_),
+          variable_number_(v.variable_number_),
+          is_fixed_(v.is_fixed_),
+          dependencies_(std::move(v.dependencies_))
       {
-        delete dependencies_;
       }
+
+      /**
+          @brief Destructor.
+      */
+      ~Variable() = default;
 
       /**
           @brief Assignment operator. Assigning double value to
@@ -96,7 +109,7 @@ namespace GridKit
       {
         value_ = rhs;
 
-        dependencies_->clear();
+        dependencies_.clear();
         return *this;
       }
 
@@ -120,8 +133,34 @@ namespace GridKit
         setFixed(rhs.is_fixed());
 
         // set dependencies from rhs
-        dependencies_->clear(); // clear map just in case
-        addDependencies(rhs);   // use only dependencies from the rhs
+        dependencies_.clear(); // clear map just in case
+        addDependencies(rhs);  // use only dependencies from the rhs
+
+        return *this;
+      }
+
+      /**
+          @brief Move assignment operator.
+
+          Same contract as the copy assignment operator (value and
+          dependencies come from rhs, variable ID of *this is left
+          unchanged), but relocates rhs's dependency map via
+          `std::map`'s own move assignment instead of deep-copying its
+          entries.
+      */
+      Variable& operator=(Variable&& rhs) noexcept
+      {
+        if (this == &rhs) // self-assignment
+          return *this;
+
+        // set value from rhs
+        value_ = rhs.value_;
+
+        // if rhs is a constant so is *this
+        setFixed(rhs.is_fixed());
+
+        // relocate dependencies from rhs instead of copying them
+        dependencies_ = std::move(rhs.dependencies_);
 
         return *this;
       }
@@ -170,7 +209,7 @@ namespace GridKit
       */
       double der(size_t i) const
       {
-        return (*dependencies_)[i];
+        return dependencies_[i];
       }
 
       /**
@@ -189,9 +228,9 @@ namespace GridKit
       */
       void setVariableNumber(size_t variable_number)
       {
-        dependencies_->clear();
-        variable_number_                   = variable_number;
-        (*dependencies_)[variable_number_] = 1.0;
+        dependencies_.clear();
+        variable_number_                = variable_number;
+        dependencies_[variable_number_] = 1.0;
       }
 
       /**
@@ -266,8 +305,8 @@ namespace GridKit
       size_t variable_number_; ///< Independent variable ID
       bool   is_fixed_;        ///< Constant parameter flag.
 
-      mutable DependencyMap* dependencies_;
-      static const size_t    INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
+      mutable DependencyMap dependencies_;
+      static const size_t   INVALID_VAR_NUMBER = INVALID_INDEX<size_t>;
     };
 
     //------------------------------------
@@ -275,27 +314,27 @@ namespace GridKit
     //------------------------------------
 
     // unary -
-    inline const Variable operator-(const Variable& v);
+    inline Variable operator-(const Variable& v);
 
     // +
-    inline const Variable operator+(const Variable& lhs, const Variable& rhs);
-    inline const Variable operator+(const Variable& lhs, const double& rhs);
-    inline const Variable operator+(const double& lhs, const Variable& rhs);
+    inline Variable operator+(const Variable& lhs, const Variable& rhs);
+    inline Variable operator+(const Variable& lhs, const double& rhs);
+    inline Variable operator+(const double& lhs, const Variable& rhs);
 
     // -
-    inline const Variable operator-(const Variable& lhs, const Variable& rhs);
-    inline const Variable operator-(const Variable& lhs, const double& rhs);
-    inline const Variable operator-(const double& lhs, const Variable& rhs);
+    inline Variable operator-(const Variable& lhs, const Variable& rhs);
+    inline Variable operator-(const Variable& lhs, const double& rhs);
+    inline Variable operator-(const double& lhs, const Variable& rhs);
 
     // *
-    inline const Variable operator*(const Variable& lhs, const Variable& rhs);
-    inline const Variable operator*(const Variable& lhs, const double& rhs);
-    inline const Variable operator*(const double& lhs, const Variable& rhs);
+    inline Variable operator*(const Variable& lhs, const Variable& rhs);
+    inline Variable operator*(const Variable& lhs, const double& rhs);
+    inline Variable operator*(const double& lhs, const Variable& rhs);
 
     // /
-    inline const Variable operator/(const Variable& lhs, const Variable& rhs);
-    inline const Variable operator/(const Variable& lhs, const double& rhs);
-    inline const Variable operator/(const double& lhs, const Variable& rhs);
+    inline Variable operator/(const Variable& lhs, const Variable& rhs);
+    inline Variable operator/(const Variable& lhs, const double& rhs);
+    inline Variable operator/(const double& lhs, const Variable& rhs);
 
     // ==
     inline bool operator==(const Variable& lhs, const Variable& rhs);
