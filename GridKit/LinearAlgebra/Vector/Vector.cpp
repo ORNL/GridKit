@@ -1095,7 +1095,6 @@ namespace GridKit
     template class Vector<double, int>;
     template class Vector<DependencyTracking::Variable, long int>;
     template class Vector<DependencyTracking::Variable, size_t>;
-    template class Vector<DependencyTracking::Variable, int>;
 
   } // namespace LinearAlgebra
 } // namespace GridKit

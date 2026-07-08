@@ -97,6 +97,5 @@ namespace GridKit
 
       MemoryManager mem_; ///< Device memory manager object
     };
-
   } // namespace LinearAlgebra
 } // namespace GridKit
