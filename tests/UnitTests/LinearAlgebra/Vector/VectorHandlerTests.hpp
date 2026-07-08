@@ -222,7 +222,7 @@ namespace GridKit
       }
 
       /**
-       * @brief Test dense matrix-vector product (gemv), both transposed and not.
+       * @brief Test dense matrix-vector product (gemv), transposed and not.
        */
       TestOutcome gemv(IdxT N, IdxT K)
       {
