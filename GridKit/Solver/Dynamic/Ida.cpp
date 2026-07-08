@@ -854,15 +854,16 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
     {
       const auto xsize = static_cast<size_t>(N_VGetLength(x));
-      if (xsize != y.size())
+      const auto ysize = static_cast<size_t>(y.getSize());
+      if (xsize != ysize)
       {
         std::cerr << "\nN_Vector size (" << xsize << ") does not match vector size ("
-                  << y.size() << ").\n\n";
+                  << y.getSize() << ").\n\n";
         throw SundialsException();
       }
 
       const ScalarT* xdata = N_VGetArrayPointer(x);
-      std::copy_n(xdata, y.size(), y.getData());
+      std::copy_n(xdata, ysize, y.getData());
     }
 
     /**
@@ -875,15 +876,16 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
-      if (x.size() != ysize)
+      const auto xsize = static_cast<size_t>(x.getSize());
+      if (xsize != ysize)
       {
-        std::cerr << "\nvector size (" << x.size() << ") does not match N_Vector size ("
+        std::cerr << "\nvector size (" << x.getSize() << ") does not match N_Vector size ("
                   << ysize << ").\n\n";
         throw SundialsException();
       }
 
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy_n(x.getData(), x.size(), ydata);
+      std::copy_n(x.getData(), xsize, ydata);
     }
 
     /**

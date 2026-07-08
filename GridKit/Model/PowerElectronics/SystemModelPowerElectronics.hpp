@@ -46,12 +46,12 @@ namespace GridKit
     }
 
     // Write the vector size
-    outFile << vec.size() << std::endl;
+    outFile << vec.getSize() << std::endl;
 
     // Write the vector elements
     outFile << std::scientific << std::setprecision(16);
     auto* vec_data = vec.getData();
-    for (std::size_t i = 0; i < vec.size(); ++i)
+    for (std::size_t i = 0; i < vec.getSize(); ++i)
     {
       outFile << vec_data[i] << std::endl;
     }
@@ -364,7 +364,7 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
-      std::fill(tag_.getData(), tag_.getData() + tag_.size(), ScalarT{0.0});
+      std::fill(tag_.getData(), tag_.getData() + tag_.getSize(), ScalarT{0.0});
       return 0;
     }
 
@@ -382,7 +382,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol) final
     {
-      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 
@@ -395,7 +395,7 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      for (IdxT i = 0; i < this->f_.size(); i++)
+      for (IdxT i = 0; i < this->f_.getSize(); i++)
       {
         f[i] = 0.0;
       }

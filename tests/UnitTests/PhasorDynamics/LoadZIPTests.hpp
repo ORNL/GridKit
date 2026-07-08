@@ -199,7 +199,7 @@ namespace GridKit
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
         auto&                                     residual_y_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.size());
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         bus.initialize();
         load.initialize();
@@ -214,7 +214,7 @@ namespace GridKit
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                  ///< the dependencies
         auto&                                     residual_yp_view = load.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.size());
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)

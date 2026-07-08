@@ -76,7 +76,7 @@ namespace GridKit
         auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
         const auto& f      = stab.getResidual();
         auto*       f_data = f.getData();
-        for (size_t i = 0; i < f.size(); ++i)
+        for (size_t i = 0; i < f.getSize(); ++i)
         {
           if (!isEqual(f_data[i], 0.0, tol))
           {
@@ -227,7 +227,7 @@ namespace GridKit
 
         stab.evaluateResidual();
         auto&               residual_y_view = stab.getResidual();
-        std::vector<DepVar> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.size());
+        std::vector<DepVar> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // --- d/dy': tag derivatives as independent ---
         stab.initialize();
@@ -242,7 +242,7 @@ namespace GridKit
 
         stab.evaluateResidual();
         auto&               residual_yp_view = stab.getResidual();
-        std::vector<DepVar> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.size());
+        std::vector<DepVar> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print dependencies for debugging
         for (size_t i = 0; i < residual_y.size(); ++i)

@@ -128,7 +128,7 @@ namespace GridKit
 
         const auto& f      = gen.getResidual();
         const auto* f_data = f.getData();
-        for (std::size_t i = 0; i < f.size(); ++i)
+        for (std::size_t i = 0; i < f.getSize(); ++i)
         {
           if (!isEqual(f_data[i], 0.0, tol))
             success = false;
@@ -381,7 +381,7 @@ namespace GridKit
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies
         auto&                                     residual_y_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.size());
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
@@ -397,7 +397,7 @@ namespace GridKit
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies
         auto&                                     residual_yp_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.size());
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

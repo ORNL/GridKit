@@ -60,7 +60,7 @@ int main(int /* argc */, char const** /* argv */)
 
   sysmodel.allocate();
 
-  std::cout << sysmodel.y().size() << std::endl;
+  std::cout << sysmodel.y().getSize() << std::endl;
 
   auto* y  = sysmodel.y().getData();
   auto* yp = sysmodel.yp().getData();
@@ -83,7 +83,7 @@ int main(int /* argc */, char const** /* argv */)
 
   std::cout << "Verify initial resisdual is zero: {";
   auto& residual = sysmodel.getResidual();
-  for (std::size_t i = 0; i < residual.size(); ++i)
+  for (std::size_t i = 0; i < residual.getSize(); ++i)
   {
     std::cout << residual.getData()[i] << ", ";
   }
@@ -112,7 +112,7 @@ int main(int /* argc */, char const** /* argv */)
   auto* yfinial_data = yfinial.getData();
 
   std::cout << "Final vector y\n";
-  for (size_t i = 0; i < yfinial.size(); i++)
+  for (size_t i = 0; i < yfinial.getSize(); i++)
   {
     std::cout << yfinial_data[i] << "\n";
   }
@@ -126,7 +126,7 @@ int main(int /* argc */, char const** /* argv */)
   yexact[3] = vinit + rinit * yexact[0];
 
   std::cout << "Element-wise relative error at t=" << t_final << "\n";
-  for (size_t i = 0; i < yfinial.size(); i++)
+  for (size_t i = 0; i < yfinial.getSize(); i++)
   {
     std::cout << abs((yfinial_data[i] - yexact[i]) / yexact[i]) << "\n";
   }

@@ -65,7 +65,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
     return 0;
   }
 

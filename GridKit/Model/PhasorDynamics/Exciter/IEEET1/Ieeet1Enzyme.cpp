@@ -43,8 +43,8 @@ namespace GridKit
 
         GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                       GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                  f_.size(),
-                                                                                                                  y_.size(),
+                                                                                                                  static_cast<size_t>(f_.getSize()),
+                                                                                                                  static_cast<size_t>(y_.getSize()),
                                                                                                                   (this->getResidualIndices()).data(),
                                                                                                                   (this->getVariableIndices()).data(),
                                                                                                                   y_.getData(),
@@ -58,8 +58,8 @@ namespace GridKit
 
         GridKit::Enzyme::Sparse::DfDyp<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                   f_.size(),
-                                                                                                                   y_.size(),
+                                                                                                                   static_cast<size_t>(f_.getSize()),
+                                                                                                                   static_cast<size_t>(y_.getSize()),
                                                                                                                    (this->getResidualIndices()).data(),
                                                                                                                    (this->getVariableIndices()).data(),
                                                                                                                    y_.getData(),
@@ -74,7 +74,7 @@ namespace GridKit
 
         GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                   f_.size(),
+                                                                                                                   static_cast<size_t>(f_.getSize()),
                                                                                                                    static_cast<size_t>(bus_->size()),
                                                                                                                    (this->getResidualIndices()).data(),
                                                                                                                    (bus_->getVariableIndices()).data(),
@@ -89,7 +89,7 @@ namespace GridKit
 
         GridKit::Enzyme::Sparse::DfDws<GridKit::PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT>,
                                        GridKit::Enzyme::Sparse::MemberFunctions::InternalResidualWithSignal>::eval(this,
-                                                                                                                   f_.size(),
+                                                                                                                   static_cast<size_t>(f_.getSize()),
                                                                                                                    ws_.size(),
                                                                                                                    (this->getResidualIndices()).data(),
                                                                                                                    ws_indices_.data(),

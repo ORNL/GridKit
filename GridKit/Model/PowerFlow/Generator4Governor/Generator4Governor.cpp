@@ -158,7 +158,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::tagDifferentiable()
   {
-    // std::cout << "size of tag vector is " << tag_.size() << "\n";
+    // std::cout << "size of tag vector is " << tag_.getSize() << "\n";
     auto* tag = tag_.getData();
 
     tag[static_cast<size_t>(offsetGen_ + 0)] = true;
@@ -178,7 +178,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
     return 0;
   }
 

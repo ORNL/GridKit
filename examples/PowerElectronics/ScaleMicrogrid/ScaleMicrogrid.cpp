@@ -235,7 +235,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   if (debug_output)
   {
-    std::cout << sys_model->y().size() << std::endl;
+    std::cout << sys_model->y().getSize() << std::endl;
   }
 
   auto* y  = sys_model->y().getData();
@@ -266,7 +266,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   if (debug_output)
   {
     std::cout << "Verify initial resisdual is zero: {\n";
-    for (index_type i = 0; i < fres.size(); i++)
+    for (index_type i = 0; i < fres.getSize(); i++)
     {
       std::cout << i << " : " << fres_data[i] << "\n";
     }
@@ -300,7 +300,7 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   if (debug_output)
   {
     std::cout << "Final Vector y\n";
-    for (index_type i = 0; i < yfinal.size(); i++)
+    for (index_type i = 0; i < yfinal.getSize(); i++)
     {
       std::cout << i << " : " << yfinal_data[i] << "\n";
     }

@@ -91,11 +91,11 @@ namespace GridKit
 
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
-      assert(y_.size() == size);
-      assert(yp_.size() == size);
-      assert(f_.size() == size);
-      assert(tag_.size() == size);
-      assert(abs_tol_.size() == size);
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(f_.getSize() == size);
+      assert(tag_.getSize() == size);
+      assert(abs_tol_.getSize() == size);
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
@@ -164,7 +164,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 

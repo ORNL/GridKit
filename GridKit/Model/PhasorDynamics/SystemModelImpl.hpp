@@ -452,11 +452,11 @@ namespace GridKit
         allocateVectors(size_);
       }
 
-      assert(y_.size() == size);
-      assert(yp_.size() == size);
-      assert(f_.size() == size);
-      assert(tag_.size() == size);
-      assert(abs_tol_.size() == size);
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(f_.getSize() == size);
+      assert(tag_.getSize() == size);
+      assert(abs_tol_.getSize() == size);
 
       IdxT child_offset = 0;
       for (const auto& bus : buses_)

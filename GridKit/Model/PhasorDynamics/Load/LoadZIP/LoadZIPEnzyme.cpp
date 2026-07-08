@@ -35,8 +35,8 @@ namespace GridKit
 
       GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
-                                                                                                      f_.size(),
-                                                                                                      y_.size(),
+                                                                                                      static_cast<size_t>(f_.getSize()),
+                                                                                                      static_cast<size_t>(y_.getSize()),
                                                                                                       (this->getResidualIndices()).data(),
                                                                                                       (this->getVariableIndices()).data(),
                                                                                                       y_.getData(),
@@ -49,7 +49,7 @@ namespace GridKit
 
       GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                      GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
-                                                                                                       f_.size(),
+                                                                                                       static_cast<size_t>(f_.getSize()),
                                                                                                        static_cast<size_t>(bus_->size()),
                                                                                                        (this->getResidualIndices()).data(),
                                                                                                        (bus_->getVariableIndices()).data(),
@@ -64,7 +64,7 @@ namespace GridKit
       GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZIP<ScalarT, IdxT>,
                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
                                                                                                  static_cast<size_t>(bus_->size()),
-                                                                                                 y_.size(),
+                                                                                                 static_cast<size_t>(y_.getSize()),
                                                                                                  (bus_->getResidualIndices()).data(),
                                                                                                  (this->getVariableIndices()).data(),
                                                                                                  y_.getData(),

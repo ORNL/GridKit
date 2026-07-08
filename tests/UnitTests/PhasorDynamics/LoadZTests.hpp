@@ -124,7 +124,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> ref           = analyticalJacobian(R, X);
 
         /// Compare dependencies computed automatically to the ones computed analytically
-        for (size_t i = 0; i < residuals.size(); ++i)
+        for (size_t i = 0; i < residuals.getSize(); ++i)
         {
           DependencyTracking::Variable                       res           = residual_data[i];
           const DependencyTracking::Variable::DependencyMap& dependencies  = res.getDependencies();

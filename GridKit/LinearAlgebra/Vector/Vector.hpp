@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>
 #include <string>
 
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
@@ -57,11 +56,6 @@ namespace GridKit
       ScalarT*       getData(IdxT i, memory::MemorySpace memspace = memory::HOST);
       const ScalarT* getData(memory::MemorySpace memspace = memory::HOST) const;
       const ScalarT* getData(IdxT i, memory::MemorySpace memspace = memory::HOST) const;
-
-      std::size_t size() const
-      {
-        return static_cast<std::size_t>(getSize());
-      }
 
       IdxT getCapacity() const;
       IdxT getSize() const;

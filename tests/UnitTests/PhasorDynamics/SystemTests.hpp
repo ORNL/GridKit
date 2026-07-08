@@ -312,7 +312,7 @@ namespace GridKit
         auto* residual_data = residual.getData();
 
         // Print the dependencies
-        for (size_t i = 0; i < residual.size(); ++i)
+        for (size_t i = 0; i < residual.getSize(); ++i)
         {
           std::cout << i << "th residual: ";
           residual_data[i].print(std::cout);
@@ -320,8 +320,8 @@ namespace GridKit
         }
 
         // Extract the dependencies
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.size());
-        for (IdxT i = 0; i < residual.size(); ++i)
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
+        for (IdxT i = 0; i < residual.getSize(); ++i)
         {
           dependencies[i] = residual_data[i].getDependencies();
         }

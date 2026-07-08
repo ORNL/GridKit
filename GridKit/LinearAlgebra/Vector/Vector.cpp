@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstring>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
@@ -54,20 +55,11 @@ namespace GridKit
     Vector<ScalarT, IdxT>::~Vector()
     {
       if (owns_cpu_data_ && h_data_)
-      {
         mem_.deleteOnHost(h_data_);
-      }
       if (owns_gpu_data_ && d_data_)
-      {
         mem_.deleteOnDevice(d_data_);
-      }
       delete[] gpu_updated_;
       delete[] cpu_updated_;
-
-      h_data_      = nullptr;
-      d_data_      = nullptr;
-      gpu_updated_ = nullptr;
-      cpu_updated_ = nullptr;
     }
 
     /**

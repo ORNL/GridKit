@@ -162,7 +162,7 @@ int main(int /* argc */, char const** /* argv */)
 
   sysmodel->allocate();
 
-  std::cout << sysmodel->y().size() << std::endl;
+  std::cout << sysmodel->y().getSize() << std::endl;
 
   auto* y  = sysmodel->y().getData();
   auto* yp = sysmodel->yp().getData();
@@ -201,7 +201,7 @@ int main(int /* argc */, char const** /* argv */)
     auto& fres      = sysmodel->getResidual();
     auto* fres_data = fres.getData();
     std::cout << "Verify initial resisdual is zero: {\n";
-    for (size_t i = 0; i < fres.size(); i++)
+    for (size_t i = 0; i < fres.getSize(); i++)
     {
       std::cout << i << " :" << fres_data[i] << "\n";
     }
@@ -240,7 +240,7 @@ int main(int /* argc */, char const** /* argv */)
   if (debug_output)
   {
     std::cout << "Final vector y\n";
-    for (size_t i = 0; i < yfinial.size(); i++)
+    for (size_t i = 0; i < yfinial.getSize(); i++)
     {
       std::cout << yfinial_data[i] << "\n";
     }
