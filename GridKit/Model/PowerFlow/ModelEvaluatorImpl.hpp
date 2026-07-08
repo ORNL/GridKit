@@ -50,29 +50,29 @@ namespace GridKit
     {
       allocateVectors(size_);
 
-      g_.allocate(GridKit::memory::HOST);
-      g_.setDataUpdated(GridKit::memory::HOST);
+      g_.allocate(memory::HOST);
+      g_.setDataUpdated(memory::HOST);
 
-      yB_.allocate(GridKit::memory::HOST);
-      yB_.setDataUpdated(GridKit::memory::HOST);
+      yB_.allocate(memory::HOST);
+      yB_.setDataUpdated(memory::HOST);
 
-      ypB_.allocate(GridKit::memory::HOST);
-      ypB_.setDataUpdated(GridKit::memory::HOST);
+      ypB_.allocate(memory::HOST);
+      ypB_.setDataUpdated(memory::HOST);
 
-      fB_.allocate(GridKit::memory::HOST);
-      fB_.setDataUpdated(GridKit::memory::HOST);
+      fB_.allocate(memory::HOST);
+      fB_.setDataUpdated(memory::HOST);
 
-      gB_.allocate(GridKit::memory::HOST);
-      gB_.setDataUpdated(GridKit::memory::HOST);
+      gB_.allocate(memory::HOST);
+      gB_.setDataUpdated(memory::HOST);
 
-      param_.allocate(GridKit::memory::HOST);
-      param_.setDataUpdated(GridKit::memory::HOST);
+      param_.allocate(memory::HOST);
+      param_.setDataUpdated(memory::HOST);
 
-      param_up_.allocate(GridKit::memory::HOST);
-      param_up_.setDataUpdated(GridKit::memory::HOST);
+      param_up_.allocate(memory::HOST);
+      param_up_.setDataUpdated(memory::HOST);
 
-      param_lo_.allocate(GridKit::memory::HOST);
-      param_lo_.setDataUpdated(GridKit::memory::HOST);
+      param_lo_.allocate(memory::HOST);
+      param_lo_.setDataUpdated(memory::HOST);
     }
 
     virtual IdxT size()

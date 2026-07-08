@@ -73,8 +73,8 @@ namespace GridKit
     auto allocate_host_vector = [](VectorT& vector, IdxT n)
     {
       vector.resize(n);
-      vector.allocate(GridKit::memory::HOST);
-      vector.setDataUpdated(GridKit::memory::HOST);
+      vector.allocate(memory::HOST);
+      vector.setDataUpdated(memory::HOST);
     };
 
     // std::cout << "Allocate PQ bus ..." << std::endl;
@@ -110,7 +110,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
+    std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
     return 0;
   }
 

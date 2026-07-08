@@ -82,7 +82,7 @@ int main(int /* argc */, char const** /* argv */)
   auto& residual = sysmodel.getResidual();
   for (std::size_t i = 0; i < residual.size(); ++i)
   {
-    std::cout << residual.data()[i] << ", ";
+    std::cout << residual.getData(GridKit::memory::HOST)[i] << ", ";
   }
   std::cout << "}\n";
 

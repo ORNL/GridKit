@@ -193,13 +193,13 @@ namespace GridKit
 
         system.y()[load_ir_index]  = 9.0;
         system.y()[load_ii_index]  = 10.0;
-        success                   *= isEqual(load.y().data()[0], static_cast<ScalarT>(9.0));
-        success                   *= isEqual(load.y().data()[1], static_cast<ScalarT>(10.0));
+        success                   *= isEqual(load.y().getData(memory::HOST)[0], static_cast<ScalarT>(9.0));
+        success                   *= isEqual(load.y().getData(memory::HOST)[1], static_cast<ScalarT>(10.0));
 
-        load.y().data()[0]  = 11.0;
-        load.y().data()[1]  = 12.0;
-        success            *= isEqual(system.y()[load_ir_index], static_cast<ScalarT>(11.0));
-        success            *= isEqual(system.y()[load_ii_index], static_cast<ScalarT>(12.0));
+        load.y().getData(memory::HOST)[0]  = 11.0;
+        load.y().getData(memory::HOST)[1]  = 12.0;
+        success                           *= isEqual(system.y()[load_ir_index], static_cast<ScalarT>(11.0));
+        success                           *= isEqual(system.y()[load_ii_index], static_cast<ScalarT>(12.0));
 
         bus2.tag()[0]  = 1.0;
         success       *= isEqual(system.tag()[bus2_vr_index], static_cast<ScalarT>(1.0));

@@ -265,7 +265,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
+      std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
       return 0;
     }
 
@@ -339,8 +339,8 @@ namespace GridKit
       wb_[0] = Vr();
       wb_[1] = Vi();
 
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
-      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
+      evaluateInternalResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), f_.getData(memory::HOST));
+      evaluateBusResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), h_.data());
 
       Ir() += h_[0];
       Ii() += h_[1];

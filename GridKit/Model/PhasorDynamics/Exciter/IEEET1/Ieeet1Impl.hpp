@@ -261,7 +261,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
+        std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
         return 0;
       }
 
@@ -350,7 +350,7 @@ namespace GridKit
         wb_[1] = bus_->Vi();
 
         // Residual evaluation
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        evaluateInternalResidual(y_.getData(memory::HOST), yp_.getData(memory::HOST), wb_.data(), ws_.data(), f_.getData(memory::HOST));
 
         return 0;
       }

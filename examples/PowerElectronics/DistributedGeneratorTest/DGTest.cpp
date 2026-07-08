@@ -74,9 +74,9 @@ int main(int /* argc */, char const** /* argv */)
   bus.allocate();
   dg.allocate();
 
-  std::copy(t2.begin(), t2.end(), dg.y().data());
-  std::copy(t1.begin(), t1.end(), dg.yp().data());
-  std::copy(res.begin(), res.end(), dg.getResidual().data());
+  std::copy(t2.begin(), t2.end(), dg.y().getData(GridKit::memory::HOST));
+  std::copy(t1.begin(), t1.end(), dg.yp().getData(GridKit::memory::HOST));
+  std::copy(res.begin(), res.end(), dg.getResidual().getData(GridKit::memory::HOST));
   dg.setInternalPointer(&t2[dg.getExternSize()]);
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
   dg.setInternalResidualPointer(&dg.getResidual()[dg.getExternSize()]);

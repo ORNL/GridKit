@@ -107,8 +107,8 @@ namespace GridKit
       auto allocate_host_vector = [](VectorT& vector, IdxT n)
       {
         vector.resize(n);
-        vector.allocate(GridKit::memory::HOST);
-        vector.setDataUpdated(GridKit::memory::HOST);
+        vector.allocate(memory::HOST);
+        vector.setDataUpdated(memory::HOST);
       };
 
       allocate_host_vector(yB_, size_);

@@ -102,7 +102,7 @@ namespace GridKit
         const auto& f = gen.getResidual();
         for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f.data()[i], 0.0, tol_))
+          if (!isEqual(f.getData(memory::HOST)[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -142,7 +142,7 @@ namespace GridKit
         const auto& f = gen.getResidual();
         for (std::size_t i = 0; i < f.size(); ++i)
         {
-          if (!isEqual(f.data()[i], 0.0, tol_))
+          if (!isEqual(f.getData(memory::HOST)[i], 0.0, tol_))
           {
             success = false;
             break;
@@ -371,7 +371,7 @@ namespace GridKit
         bus.evaluateResidual();
         gen.evaluateResidual();
         auto&                                     residual_y_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.data(), residual_y_view.data() + residual_y_view.size());
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(memory::HOST), residual_y_view.getData(memory::HOST) + residual_y_view.size());
 
         bus.initialize();
         gen.initialize();
@@ -384,7 +384,7 @@ namespace GridKit
         bus.evaluateResidual();
         gen.evaluateResidual();
         auto&                                     residual_yp_view = gen.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.data(), residual_yp_view.data() + residual_yp_view.size());
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(memory::HOST), residual_yp_view.getData(memory::HOST) + residual_yp_view.size());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

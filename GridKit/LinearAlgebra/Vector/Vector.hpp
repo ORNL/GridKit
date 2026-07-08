@@ -64,26 +64,16 @@ namespace GridKit
         return static_cast<std::size_t>(getSize());
       }
 
-      ScalarT* data(memory::MemorySpace memspace = memory::HOST)
-      {
-        return getData(memspace);
-      }
-
-      const ScalarT* data(memory::MemorySpace memspace = memory::HOST) const
-      {
-        return getData(memspace);
-      }
-
       ScalarT& operator[](std::size_t i)
       {
         assert(i < size());
-        return data()[i];
+        return getData(memory::HOST)[i];
       }
 
       const ScalarT& operator[](std::size_t i) const
       {
         assert(i < size());
-        return data()[i];
+        return getData(memory::HOST)[i];
       }
 
       IdxT getCapacity() const;

@@ -171,7 +171,7 @@ namespace GridKit
        */
       int setAbsoluteTolerance(RealT rel_tol) final
       {
-        std::fill(abs_tol_.data(), abs_tol_.data() + abs_tol_.size(), rel_tol);
+        std::fill(abs_tol_.getData(memory::HOST), abs_tol_.getData(memory::HOST) + abs_tol_.size(), rel_tol);
         return 0;
       }
 
