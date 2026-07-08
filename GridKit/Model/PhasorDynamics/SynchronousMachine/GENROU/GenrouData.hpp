@@ -44,6 +44,10 @@ namespace GridKit
     };
 
     /// Signal inputs for a Genrou generator model
+    ///
+    /// @todo Genrou (and likely other components) would need to name multiple
+    /// signal inlets and outlets. For now we have only speed out and
+    /// mechanical power in.
     enum class GenrouSignalInputs : size_t
     {
       pmech, ///< Unique ID of the signal providing mechanical power
@@ -79,21 +83,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct GenrouData : public ComponentData<real_type,
-                                             index_type,
-                                             GenrouParameters,
-                                             GenrouBuses,
-                                             GenrouSignalInputs,
-                                             GenrouSignalOutputs,
-                                             GenrouMonitorableVariables>
-    {
-      GenrouData() = default;
-
-      using Parameters           = GenrouParameters;
-      using Buses                = GenrouBuses;
-      using SignalInputs         = GenrouSignalInputs;
-      using SignalOutputs        = GenrouSignalOutputs;
-      using MonitorableVariables = GenrouMonitorableVariables;
-    };
+    using GenrouData =
+        ComponentData<real_type,
+                      index_type,
+                      GenrouParameters,
+                      GenrouBuses,
+                      GenrouSignalInputs,
+                      GenrouSignalOutputs,
+                      GenrouMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

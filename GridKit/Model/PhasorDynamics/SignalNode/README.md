@@ -2,7 +2,7 @@
 
 Signal nodes provide scalar connection points between phasor-dynamics
 components. Components attach external inputs to signal nodes and assign
-internal outputs to signal nodes through `ComponentSignals`.
+internal outputs to signal nodes through `IOPorts`.
 
 A linked signal node stores a pointer to the component variable that owns the
 signal value, so other connected components can read or initialize that value

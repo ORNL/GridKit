@@ -10,25 +10,22 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/Governor/Tgov1/Tgov1Data.hpp>
+#include <GridKit/Model/PhasorDynamics/IOPorts.hpp>
 
 // Forward declarations
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    namespace Governor
-    {
-      template <typename real_type, typename index_type>
-      struct Tgov1Data;
-    } // namespace Governor
-
     template <typename scalar_type, typename index_type>
     class Genrou;
 
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
+    template <typename signal_node_type>
+    class SignalNodeSet;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -78,15 +75,17 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
 
       public:
-        using ScalarT    = scalar_type;
-        using IdxT       = index_type;
-        using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using ModelDataT = Tgov1Data<RealT, IdxT>;
-        using SignalT    = SignalNode<ScalarT, IdxT>;
+        using ScalarT        = scalar_type;
+        using IdxT           = index_type;
+        using RealT          = typename Component<ScalarT, IdxT>::RealT;
+        using ModelDataT     = Tgov1Data<RealT, IdxT>;
+        using SignalNodeT    = SignalNode<ScalarT, IdxT>;
+        using SignalNodeSetT = SignalNodeSet<SignalNodeT>;
+        using IOPortsT       = IOPorts<ScalarT, ModelDataT>;
 
         Tgov1();
-        Tgov1(SignalT*, SignalT*);
-        Tgov1(const ModelDataT&);
+        Tgov1(SignalNodeT*, SignalNodeT*);
+        Tgov1(const ModelDataT&, SignalNodeSetT&);
         ~Tgov1() = default;
 
         int setGridKitComponentID(IdxT) override final;
@@ -99,16 +98,6 @@ namespace GridKit
 
         // Still to be implemented
         int evaluateJacobian() override final;
-
-        /// Get the `ComponentSignals` from this `Tgov1`
-        auto getSignals()
-            -> ComponentSignals<ScalarT,
-                                IdxT,
-                                Tgov1InternalVariables,
-                                Tgov1ExternalVariables>&
-        {
-          return signals_;
-        }
 
       public:
         __attribute__((always_inline)) inline int evaluateInternalResidual(
@@ -131,8 +120,8 @@ namespace GridKit
         // Input States (which can be parameters)
         ScalarT pref_{0};
 
-        /// Component signal extension
-        ComponentSignals<ScalarT, IdxT, Tgov1InternalVariables, Tgov1ExternalVariables> signals_;
+        // Component ports
+        IOPortsT ports_;
 
         // Parameter initialization function
         void    initializeParameters(const ModelDataT& data);

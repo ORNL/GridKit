@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 
 namespace GridKit
 {
@@ -57,15 +58,15 @@ namespace GridKit
       using Component<scalar_type, index_type>::map_to_csr_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-      using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
-      using ComponentT = Component<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitorController<ScalarT>;
+      using ScalarT     = scalar_type;
+      using IdxT        = index_type;
+      using RealT       = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using CsrMatrixT  = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
+      using CooMatrixT  = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using BusT        = BusBase<ScalarT, IdxT>;
+      using SignalNodeT = SignalNode<ScalarT, IdxT>;
+      using ComponentT  = Component<ScalarT, IdxT>;
+      using MonitorT    = Model::VariableMonitorController<ScalarT>;
 
       SystemModel();
 
@@ -96,25 +97,23 @@ namespace GridKit
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);
-      void addSignal(SignalT* signal);
       void addComponent(ComponentT* component);
       void addFault(ComponentT* component);
 
       void setSystemBase(RealT freq_system_base, RealT va_system_base);
 
       BusT*                    getBus(IdxT bus_id);
-      SignalT*                 getSignal(IdxT signal_id);
+      SignalNodeT*             getSignalNode(IdxT signal_id);
       ComponentT*              getComponent(IdxT gridkit_component_id);
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
-      std::vector<BusT*>       buses_;
-      std::vector<SignalT*>    signals_;
-      std::vector<ComponentT*> components_;
+      std::vector<BusT*>         buses_;
+      SignalNodeSet<SignalNodeT> signal_nodes_;
+      std::vector<ComponentT*>   components_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
-      std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id
-      std::map<IdxT, IdxT> gridkit_fault_indices_;  ///< Map between fault_id and component_id
+      std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
+      std::map<IdxT, IdxT> gridkit_fault_indices_; ///< Map between fault_id and component_id
 
       bool owns_components_{false};
 

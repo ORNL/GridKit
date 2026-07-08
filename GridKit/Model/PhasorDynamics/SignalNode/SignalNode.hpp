@@ -19,6 +19,17 @@ namespace GridKit
     /*!
      * @brief SignalNode model implementation base class.
      *
+     * A signal node conceptually carries a signal (scalar value) from an
+     * output port of one component to an input port of another component (or
+     * multiple components).
+     *
+     * (Component):[OutputPort] -> {SignalNode} -> [InputPort]:(Component)
+     *
+     * A SignalNode can be "connected" to a Port. When that port is an
+     * OutputPort, the SignalNode is considered `assigned()` since it can be
+     * connected to only one OutputPort. The SignalNode is considered `linked()`
+     * when the actual signal (scalar variable) has been made available.
+     *
      */
     template <typename scalar_type, typename index_type>
     class SignalNode
@@ -33,34 +44,20 @@ namespace GridKit
 
       virtual ~SignalNode() = default;
 
-      void    set(ScalarT* signal_in, IdxT* global_index);
-      bool    linked() const;
-      ScalarT read() const;
-      void    init(ScalarT signal_in);
-
-      const IdxT signalId() const
-      {
-        return signal_id_;
-      }
-
-      IdxT getVariableIndex() const
-      {
-        return *variable_index_;
-      }
-
-      virtual const IdxT busID() const
-      {
-        return bus_id_;
-      }
+      IdxT    signalId() const noexcept;
+      void    setAssigned() noexcept;
+      bool    assigned() const noexcept;
+      void    link(ScalarT* signal_in, IdxT* global_index) noexcept;
+      bool    linked() const noexcept;
+      ScalarT read() const noexcept;
+      IdxT    getVariableIndex() const noexcept;
+      void    init(ScalarT signal_in) noexcept;
 
     private:
       ScalarT* signal_{nullptr};
       IdxT     signal_id_{0};
-
-    protected:
-      const IdxT bus_id_{INVALID_INDEX<IdxT>};
-
-      IdxT* variable_index_{nullptr};
+      IdxT*    variable_index_{nullptr};
+      bool     assigned_{false};
     };
 
   } // namespace PhasorDynamics

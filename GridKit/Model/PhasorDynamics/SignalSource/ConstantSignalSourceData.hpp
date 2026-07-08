@@ -35,22 +35,14 @@ namespace GridKit
     };
 
     template <typename real_type, typename index_type>
-    struct ConstantSignalSourceData : public ComponentData<real_type,
-                                                           index_type,
-                                                           ConstantSignalSourceParameters,
-                                                           ConstantSignalSourceBuses,
-                                                           ConstantSignalSourceSignalInputs,
-                                                           ConstantSignalSourceSignalOutputs,
-                                                           ConstantSignalSourceMonitorableVariables>
-    {
-      ConstantSignalSourceData() = default;
-
-      using Parameters           = ConstantSignalSourceParameters;
-      using Buses                = ConstantSignalSourceBuses;
-      using SignalInputs         = ConstantSignalSourceSignalInputs;
-      using SignalOutputs        = ConstantSignalSourceSignalOutputs;
-      using MonitorableVariables = ConstantSignalSourceMonitorableVariables;
-    };
+    using ConstantSignalSourceData =
+        ComponentData<real_type,
+                      index_type,
+                      ConstantSignalSourceParameters,
+                      ConstantSignalSourceBuses,
+                      ConstantSignalSourceSignalInputs,
+                      ConstantSignalSourceSignalOutputs,
+                      ConstantSignalSourceMonitorableVariables>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

@@ -8,7 +8,6 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GenClassical/GenClassicalData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
@@ -19,9 +18,6 @@ namespace GridKit
   {
     template <typename scalar_type, typename index_type>
     class BusBase;
-
-    template <typename real_type, typename index_type>
-    struct GenClassicalData;
   } // namespace PhasorDynamics
 } // namespace GridKit
 

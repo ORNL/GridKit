@@ -36,7 +36,7 @@ namespace GridKit
     /// @warning GenClassical signal support is incomplete. These legacy signal
     /// names are not wired by SystemModel today; the intended refactor is to
     /// align this model with Genrou/Gensal by supporting `pmech`, `speed`, and
-    /// `efd` signals through ComponentSignals.
+    /// `efd` signals.
     enum class GenClassicalSignalInputs : size_t
     {
       exciter_signal,  ///< Unique ID of the bus providing the exciter signal
@@ -72,21 +72,13 @@ namespace GridKit
      * @todo Decide on naming scheme for model parameters.
      */
     template <typename real_type, typename index_type>
-    struct GenClassicalData : public ComponentData<real_type,
-                                                   index_type,
-                                                   GenClassicalParameters,
-                                                   GenClassicalBuses,
-                                                   GenClassicalSignalInputs,
-                                                   GenClassicalSignalOutputs,
-                                                   GenClassicalMonitorableVariables>
-    {
-      GenClassicalData() = default;
-
-      using Parameters           = GenClassicalParameters;
-      using Buses                = GenClassicalBuses;
-      using SignalInputs         = GenClassicalSignalInputs;
-      using SignalOutputs        = GenClassicalSignalOutputs;
-      using MonitorableVariables = GenClassicalMonitorableVariables;
-    };
+    using GenClassicalData =
+        ComponentData<real_type,
+                      index_type,
+                      GenClassicalParameters,
+                      GenClassicalBuses,
+                      GenClassicalSignalInputs,
+                      GenClassicalSignalOutputs,
+                      GenClassicalMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

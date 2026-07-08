@@ -5,6 +5,9 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
+#include <GridKit/Model/PhasorDynamics/ComponentData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/Gensal.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/GensalData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -22,6 +25,23 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     Gensal<scalar_type, index_type>::Gensal(BusT* bus, const ModelDataT& data)
       : bus_(bus),
+        monitor_(std::make_unique<MonitorT>(data))
+    {
+      initializeParameters(data);
+      initializeMonitor();
+
+      size_ = 16;
+      setDerivedParams();
+    }
+
+    /**
+     * @brief Constructor for a GENSAL generator model with saturation
+     */
+    template <typename scalar_type, typename index_type>
+    Gensal<scalar_type, index_type>::Gensal(
+        BusT* bus, const ModelDataT& data, SignalNodeSetT& signal_nodes)
+      : bus_(bus),
+        ports_(data, signal_nodes),
         monitor_(std::make_unique<MonitorT>(data))
     {
       initializeParameters(data);
@@ -226,9 +246,9 @@ namespace GridKit
       }
 
       // Set output signals
-      if (signals_.template isAssigned<GensalInternalVariables::OMEGA>())
+      if (auto speed_port = ports_.out[GensalSignalOutputs::speed])
       {
-        signals_.template getSignalNode<GensalInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
+        speed_port.link(&y_[1], &(this->getVariableIndex(1)));
       }
 
       return 0;
@@ -240,27 +260,20 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::verify() const
     {
-      static constexpr auto PM  = GensalExternalVariables::PM;
-      static constexpr auto EFD = GensalExternalVariables::EFD;
-
       int ret = 0;
 
-      if (signals_.template isAttached<PM>())
+      auto pmech_port = ports_.in[GensalSignalInputs::pmech];
+      if (pmech_port.connected() && !pmech_port.linked())
       {
-        if (!signals_.template isLinked<PM>())
-        {
-          Log::error() << "Gensal: pmech signal attached with no linked governor\n";
-          ret += 1;
-        }
+        Log::error() << "Gensal: pmech signal attached with no linked governor\n";
+        ret += 1;
       }
 
-      if (signals_.template isAttached<EFD>())
+      auto efd_port = ports_.in[GensalSignalInputs::efd];
+      if (efd_port.connected() && !efd_port.linked())
       {
-        if (!signals_.template isLinked<EFD>())
-        {
-          Log::error() << "Gensal: efd signal attached with no linked exciter\n";
-          ret += 1;
-        }
+        Log::error() << "Gensal: efd signal attached with no linked exciter\n";
+        ret += 1;
       }
 
       return ret;
@@ -320,15 +333,15 @@ namespace GridKit
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
-      if (signals_.template isAttached<GensalExternalVariables::PM>())
+      if (auto pmech_port = ports_.in[GensalSignalInputs::pmech])
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::PM>(pmech_set_);
+        pmech_port.writeValue(pmech_set_);
       }
 
       efd_set_ = Eqp + Xd1_ * (id + Xd3_ * (Eqp - psidp - Xd2_ * id)) + ksat;
-      if (signals_.template isAttached<GensalExternalVariables::EFD>())
+      if (auto efd_port = ports_.in[GensalSignalInputs::efd])
       {
-        signals_.template writeExternalVariable<GensalExternalVariables::EFD>(efd_set_);
+        efd_port.writeValue(efd_set_);
       }
 
       for (IdxT i = 0; i < size_; ++i)
@@ -472,18 +485,18 @@ namespace GridKit
     {
       // Mechanical Power
       ws_[0] = pmech_set_;
-      if (signals_.template isAttached<GensalExternalVariables::PM>())
+      if (auto pmech_port = ports_.in[GensalSignalInputs::pmech])
       {
-        ws_[0]         = signals_.template readExternalVariable<GensalExternalVariables::PM>();
-        ws_indices_[0] = signals_.template readExternalVariableIndex<GensalExternalVariables::PM>();
+        ws_[0]         = pmech_port.readSignal();
+        ws_indices_[0] = pmech_port.signalVariableIndex();
       }
 
       // Exciter Efield
       ws_[1] = efd_set_;
-      if (signals_.template isAttached<GensalExternalVariables::EFD>())
+      if (auto efd_port = ports_.in[GensalSignalInputs::efd])
       {
-        ws_[1]         = signals_.template readExternalVariable<GensalExternalVariables::EFD>();
-        ws_indices_[1] = signals_.template readExternalVariableIndex<GensalExternalVariables::EFD>();
+        ws_[1]         = efd_port.readSignal();
+        ws_indices_[1] = efd_port.signalVariableIndex();
       }
 
       // Bus voltages

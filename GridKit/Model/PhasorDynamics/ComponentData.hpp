@@ -19,22 +19,28 @@ namespace GridKit
      */
     template <typename real_type,
               typename index_type,
-              typename Parameters,
-              typename Buses,
-              typename SignalInputs,
-              typename SignalOutputs,
-              typename MonitorableVariables>
-      requires std::is_enum_v<Parameters>
-               && std::is_enum_v<Buses>
-               && std::is_enum_v<SignalInputs>
-               && std::is_enum_v<SignalOutputs>
-               && std::is_enum_v<MonitorableVariables>
+              typename parameters_enum,
+              typename buses_enum,
+              typename signal_inputs_enum,
+              typename signal_outputs_enum,
+              typename monitorable_variables_enum>
+      requires std::is_enum_v<parameters_enum>
+               && std::is_enum_v<buses_enum>
+               && std::is_enum_v<signal_inputs_enum>
+               && std::is_enum_v<signal_outputs_enum>
+               && std::is_enum_v<monitorable_variables_enum>
     struct ComponentData
     {
       /// Real value type
       using RealT = real_type;
       /// Index type
       using IdxT  = index_type;
+
+      using Parameters           = parameters_enum;
+      using Buses                = buses_enum;
+      using SignalInputs         = signal_inputs_enum;
+      using SignalOutputs        = signal_outputs_enum;
+      using MonitorableVariables = monitorable_variables_enum;
 
       /// Class of device this is for
       std::string device_class;
@@ -54,10 +60,8 @@ namespace GridKit
       /// Set of variables being monitored
       std::set<MonitorableVariables> monitored_variables;
 
-      std::string disambiguation_string; ///< Disambiguation string for this device
-
-    protected:
-      ComponentData() = default;
+      /// Disambiguation string for this device
+      std::string disambiguation_string;
     };
   } // namespace PhasorDynamics
 } // namespace GridKit

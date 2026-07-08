@@ -57,21 +57,13 @@ namespace GridKit
      * Integer parameters are of the same type as matrix and vector indices.
      */
     template <typename real_type, typename index_type>
-    struct BusFaultData : public ComponentData<real_type,
-                                               index_type,
-                                               BusFaultParameters,
-                                               BusFaultBuses,
-                                               BusFaultSignalInputs,
-                                               BusFaultSignalOutputs,
-                                               BusFaultMonitorableVariables>
-    {
-      BusFaultData() = default;
-
-      using Parameters           = BusFaultParameters;
-      using Buses                = BusFaultBuses;
-      using SignalInputs         = BusFaultSignalInputs;
-      using SignalOutputs        = BusFaultSignalOutputs;
-      using MonitorableVariables = BusFaultMonitorableVariables;
-    };
+    using BusFaultData =
+        ComponentData<real_type,
+                      index_type,
+                      BusFaultParameters,
+                      BusFaultBuses,
+                      BusFaultSignalInputs,
+                      BusFaultSignalOutputs,
+                      BusFaultMonitorableVariables>;
   } // namespace PhasorDynamics
 } // namespace GridKit

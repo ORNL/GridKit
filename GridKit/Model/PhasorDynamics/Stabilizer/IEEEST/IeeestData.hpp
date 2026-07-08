@@ -80,22 +80,14 @@ namespace GridKit
        * @tparam index_type Integer parameter data type
        */
       template <typename real_type, typename index_type>
-      struct IeeestData : public ComponentData<real_type,
-                                               index_type,
-                                               IeeestParameters,
-                                               IeeestBuses,
-                                               IeeestSignalInputs,
-                                               IeeestSignalOutputs,
-                                               IeeestMonitorableVariables>
-      {
-        IeeestData() = default;
-
-        using Parameters           = IeeestParameters;
-        using Buses                = IeeestBuses;
-        using SignalInputs         = IeeestSignalInputs;
-        using SignalOutputs        = IeeestSignalOutputs;
-        using MonitorableVariables = IeeestMonitorableVariables;
-      };
+      using IeeestData =
+          ComponentData<real_type,
+                        index_type,
+                        IeeestParameters,
+                        IeeestBuses,
+                        IeeestSignalInputs,
+                        IeeestSignalOutputs,
+                        IeeestMonitorableVariables>;
 
     } // namespace Stabilizer
   } // namespace PhasorDynamics

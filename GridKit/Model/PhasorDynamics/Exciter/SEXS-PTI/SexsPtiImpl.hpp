@@ -13,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -32,9 +33,22 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
-      SexsPti<scalar_type, index_type>::SexsPti(BusT*             bus,
-                                                const ModelDataT& data)
+      SexsPti<scalar_type, index_type>::SexsPti(BusT* bus, const ModelDataT& data)
         : bus_(bus),
+          monitor_(std::make_unique<MonitorT>(data))
+      {
+        initModelParams(data);
+        initializeMonitor();
+        size_ = 3;
+      }
+
+      template <typename scalar_type, typename index_type>
+      SexsPti<scalar_type, index_type>::SexsPti(
+          BusT*             bus,
+          const ModelDataT& data,
+          SignalNodeSetT&   signal_nodes)
+        : bus_(bus),
+          ports_(data, signal_nodes),
           monitor_(std::make_unique<MonitorT>(data))
       {
         initModelParams(data);
@@ -79,10 +93,9 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        if (auto efd_port = ports_.out[SexsPtiSignalOutputs::efd])
         {
-          signals_.template getSignalNode<SexsPtiInternalVariables::EFD>()->set(
-              &y_[1], &(this->getVariableIndex(1)));
+          efd_port.link(&y_[1], &(this->getVariableIndex(1)));
         }
 
         return 0;
@@ -124,19 +137,18 @@ namespace GridKit
           ret += 1;
         }
 
-        if (!signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        auto efd_port = ports_.out[SexsPtiSignalOutputs::efd];
+        if (!efd_port.connected() || !efd_port.linked())
         {
           Log::error() << "SexsPti: required EFD signal is not assigned\n";
           ret += 1;
         }
 
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        auto vs_port = ports_.in[SexsPtiSignalInputs::vs];
+        if (vs_port.connected() && !vs_port.linked())
         {
-          if (!signals_.template isLinked<SexsPtiExternalVariables::VS>())
-          {
-            Log::error() << "SexsPti: VS signal attached with no linked source\n";
-            ret += 1;
-          }
+          Log::error() << "SexsPti: VS signal attached with no linked source\n";
+          ret += 1;
         }
 
         return ret;
@@ -146,7 +158,7 @@ namespace GridKit
       int SexsPti<scalar_type, index_type>::initialize()
       {
         ScalarT efd0{0.0};
-        if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
+        if (ports_.out[SexsPtiSignalOutputs::efd])
         {
           efd0 = y_[1];
         }
@@ -231,10 +243,10 @@ namespace GridKit
       {
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
-        if (signals_.template isAttached<SexsPtiExternalVariables::VS>())
+        if (auto vs_port = ports_.in[SexsPtiSignalInputs::vs])
         {
-          ws_[0]         = signals_.template readExternalVariable<SexsPtiExternalVariables::VS>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<SexsPtiExternalVariables::VS>();
+          ws_[0]         = vs_port.readSignal();
+          ws_indices_[0] = vs_port.signalVariableIndex();
         }
 
         wb_[0] = bus_->Vr();

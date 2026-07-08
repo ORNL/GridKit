@@ -79,22 +79,14 @@ namespace GridKit
        * @tparam index_type Index type (e.g., size_t)
        */
       template <typename real_type, typename index_type>
-      struct Tgov1Data : public ComponentData<real_type,
-                                              index_type,
-                                              Tgov1Parameters,
-                                              Tgov1Buses,
-                                              Tgov1SignalInputs,
-                                              Tgov1SignalOutputs,
-                                              Tgov1MonitorableVariables>
-      {
-        Tgov1Data() = default;
-
-        using Parameters           = Tgov1Parameters;
-        using Buses                = Tgov1Buses;
-        using SignalInputs         = Tgov1SignalInputs;
-        using SignalOutputs        = Tgov1SignalOutputs;
-        using MonitorableVariables = Tgov1MonitorableVariables;
-      };
+      using Tgov1Data =
+          ComponentData<real_type,
+                        index_type,
+                        Tgov1Parameters,
+                        Tgov1Buses,
+                        Tgov1SignalInputs,
+                        Tgov1SignalOutputs,
+                        Tgov1MonitorableVariables>;
 
     } // namespace Governor
   } // namespace PhasorDynamics

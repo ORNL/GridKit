@@ -9,7 +9,7 @@
 #pragma once
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/IOPorts.hpp>
 #include <GridKit/Model/PhasorDynamics/SynchronousMachine/GENROU/GenrouData.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 
@@ -24,8 +24,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     class SignalNode;
 
-    template <typename real_type, typename index_type>
-    struct GenrouData;
+    template <typename signal_node_type>
+    class SignalNodeSet;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -90,25 +90,31 @@ namespace GridKit
       using Component<scalar_type, index_type>::residual_indices_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using BusT       = BusBase<ScalarT, IdxT>;
-      using ModelDataT = GenrouData<RealT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
-      using MonitorT   = Model::VariableMonitor<Genrou, GenrouData>;
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using BusT           = BusBase<ScalarT, IdxT>;
+      using ModelDataT     = GenrouData<RealT, IdxT>;
+      using SignalNodeT    = SignalNode<ScalarT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<SignalNodeT>;
+      using IOPortsT       = IOPorts<ScalarT, ModelDataT>;
+      using MonitorT       = Model::VariableMonitor<Genrou, GenrouData>;
 
       Genrou(BusT* bus);
       Genrou(BusT*             bus,
-             SignalT*          omega,
-             SignalT*          pmech,
+             SignalNodeT*      omega,
+             SignalNodeT*      pmech,
              const ModelDataT& data);
       Genrou(BusT*             bus,
-             SignalT*          omega,
-             SignalT*          pmech,
-             SignalT*          efd,
+             SignalNodeT*      omega,
+             SignalNodeT*      pmech,
+             SignalNodeT*      efd,
              const ModelDataT& data);
-      Genrou(BusT* bus, const ModelDataT& data);
+      Genrou(BusT*             bus,
+             const ModelDataT& data);
+      Genrou(BusT*             bus,
+             const ModelDataT& data,
+             SignalNodeSetT&   signal_nodes);
       Genrou(BusT* bus,
              RealT p0,
              RealT q0,
@@ -140,16 +146,6 @@ namespace GridKit
 
       // Still to be implemented
       int evaluateJacobian() override final;
-
-      /// Get the `ComponentSignals` from this `Genrou`
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              GenrouInternalVariables,
-                              GenrouExternalVariables>&
-      {
-        return signals_;
-      }
 
       const Model::VariableMonitorBase* getMonitor() const override;
 
@@ -210,8 +206,8 @@ namespace GridKit
       BusT* bus_;
       IdxT  bus_id_{0};
 
-      /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, GenrouInternalVariables, GenrouExternalVariables> signals_;
+      /* Component ports */
+      IOPortsT ports_;
 
       /* Initial terminal conditions */
       RealT p0_{0.0};

@@ -67,23 +67,14 @@ namespace GridKit
      * @tparam IdxT  Index type (e.g., size_t)
      */
     template <typename real_type, typename index_type>
-    struct BusToSignalAdapterData
-      : public ComponentData<real_type,
-                             index_type,
-                             BusToSignalAdapterParameters,
-                             BusToSignalAdapterBuses,
-                             BusToSignalAdapterSignalInputs,
-                             BusToSignalAdapterSignalOutputs,
-                             BusToSignalAdapterMonitorableVariables>
-    {
-      BusToSignalAdapterData() = default;
-
-      using Parameters           = BusToSignalAdapterParameters;
-      using Buses                = BusToSignalAdapterBuses;
-      using SignalInputs         = BusToSignalAdapterSignalInputs;
-      using SignalOutputs        = BusToSignalAdapterSignalOutputs;
-      using MonitorableVariables = BusToSignalAdapterMonitorableVariables;
-    };
+    using BusToSignalAdapterData =
+        ComponentData<real_type,
+                      index_type,
+                      BusToSignalAdapterParameters,
+                      BusToSignalAdapterBuses,
+                      BusToSignalAdapterSignalInputs,
+                      BusToSignalAdapterSignalOutputs,
+                      BusToSignalAdapterMonitorableVariables>;
 
   } // namespace PhasorDynamics
 } // namespace GridKit

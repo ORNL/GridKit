@@ -55,12 +55,10 @@ namespace GridKit
         addBus(bus);
       }
 
-      /// @todo Signal data needs to be populated by the parser.
-      /// See TODOs in SystemModelDataJSONParser
+      // Add signal nodes
       for (const auto& signaldata : data.signal)
       {
-        SignalNode<ScalarT, IdxT>* signal = new SignalNode<ScalarT, IdxT>(signaldata);
-        addSignal(signal);
+        signal_nodes_.add(signaldata);
       }
 
       // Add bus-to-signal adapters
@@ -72,36 +70,9 @@ namespace GridKit
           bus_index = adapterdata.buses.at(BusToSignalAdapterBuses::bus);
         }
 
-        auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index));
-
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vr))
-        {
-          IdxT           vr    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vr);
-          constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
-          adapter->getSignals().template assignSignalNode<VREAL>(getSignal(vr));
-        }
-
-        if (adapterdata.signal_outputs.contains(BusToSignalAdapterSignalOutputs::vi))
-        {
-          IdxT           vi    = adapterdata.signal_outputs.at(BusToSignalAdapterSignalOutputs::vi);
-          constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
-          adapter->getSignals().template assignSignalNode<VIMAG>(getSignal(vi));
-        }
-
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ir))
-        {
-          IdxT           ir    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ir);
-          constexpr auto IREAL = BusToSignalAdapterExternalVariables::IREAL;
-          adapter->getSignals().template attachSignalNode<IREAL>(getSignal(ir));
-        }
-
-        if (adapterdata.signal_inputs.contains(BusToSignalAdapterSignalInputs::ii))
-        {
-          IdxT           ii    = adapterdata.signal_inputs.at(BusToSignalAdapterSignalInputs::ii);
-          constexpr auto IIMAG = BusToSignalAdapterExternalVariables::IIMAG;
-          adapter->getSignals().template attachSignalNode<IIMAG>(getSignal(ii));
-        }
-
+        auto* adapter = new BusToSignalAdapter<ScalarT, IdxT>(getBus(bus_index),
+                                                              adapterdata,
+                                                              signal_nodes_);
         addComponent(adapter);
       }
 
@@ -120,8 +91,9 @@ namespace GridKit
           bus2_index = branchdata.buses.at(BranchBuses::bus2);
         }
 
-        auto* branch = new Branch<ScalarT, IdxT>(
-            getBus(bus1_index), getBus(bus2_index), branchdata);
+        auto* branch = new Branch<ScalarT, IdxT>(getBus(bus1_index),
+                                                 getBus(bus2_index),
+                                                 branchdata);
         addComponent(branch);
       }
 
@@ -147,7 +119,8 @@ namespace GridKit
         {
           bus_index = loadzipdata.buses.at(LoadZIPBuses::bus);
         }
-        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index), loadzipdata);
+        auto* loadzip = new LoadZIP<ScalarT, IdxT>(getBus(bus_index),
+                                                   loadzipdata);
         addComponent(loadzip);
       }
 
@@ -159,33 +132,9 @@ namespace GridKit
         {
           bus_index = gendata.buses.at(GenrouBuses::bus);
         }
-
-        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index), gendata);
-
-        /// @todo Genrou (and likely other components) would need to name multiple
-        /// signal inlets and outlets. For now we have only speed out and mechanical
-        /// power in.
-        if (gendata.signal_outputs.contains(GenrouSignalOutputs::speed))
-        {
-          IdxT           speed = gendata.signal_outputs.at(GenrouSignalOutputs::speed);
-          constexpr auto OMEGA = GenrouInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
-        }
-
-        if (gendata.signal_inputs.contains(GenrouSignalInputs::pmech))
-        {
-          IdxT           pmech = gendata.signal_inputs.at(GenrouSignalInputs::pmech);
-          constexpr auto PM    = GenrouExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
-        }
-
-        if (gendata.signal_inputs.contains(GenrouSignalInputs::efd))
-        {
-          IdxT           efd = gendata.signal_inputs.at(GenrouSignalInputs::efd);
-          constexpr auto EFD = GenrouExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
-        }
-
+        auto* gen = new Genrou<ScalarT, IdxT>(getBus(bus_index),
+                                              gendata,
+                                              signal_nodes_);
         addComponent(gen);
       }
 
@@ -198,29 +147,9 @@ namespace GridKit
           bus_index = gendata.buses.at(GensalBuses::bus);
         }
 
-        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index), gendata);
-
-        if (gendata.signal_outputs.contains(GensalSignalOutputs::speed))
-        {
-          IdxT           speed = gendata.signal_outputs.at(GensalSignalOutputs::speed);
-          constexpr auto OMEGA = GensalInternalVariables::OMEGA;
-          gen->getSignals().template assignSignalNode<OMEGA>(getSignal(speed));
-        }
-
-        if (gendata.signal_inputs.contains(GensalSignalInputs::pmech))
-        {
-          IdxT           pmech = gendata.signal_inputs.at(GensalSignalInputs::pmech);
-          constexpr auto PM    = GensalExternalVariables::PM;
-          gen->getSignals().template attachSignalNode<PM>(getSignal(pmech));
-        }
-
-        if (gendata.signal_inputs.contains(GensalSignalInputs::efd))
-        {
-          IdxT           efd = gendata.signal_inputs.at(GensalSignalInputs::efd);
-          constexpr auto EFD = GensalExternalVariables::EFD;
-          gen->getSignals().template attachSignalNode<EFD>(getSignal(efd));
-        }
-
+        auto* gen = new Gensal<ScalarT, IdxT>(getBus(bus_index),
+                                              gendata,
+                                              signal_nodes_);
         addComponent(gen);
       }
 
@@ -239,22 +168,7 @@ namespace GridKit
       // Add Tgov1 governors
       for (const auto& govdata : data.gov)
       {
-        auto* gov = new Tgov1<ScalarT, IdxT>(govdata);
-
-        if (govdata.signal_inputs.contains(Tgov1SignalInputs::speed))
-        {
-          IdxT           speed      = govdata.signal_inputs.at(Tgov1SignalInputs::speed);
-          constexpr auto DELTAOMEGA = Tgov1ExternalVariables::DELTAOMEGA;
-          gov->getSignals().template attachSignalNode<DELTAOMEGA>(getSignal(speed));
-        }
-
-        if (govdata.signal_outputs.contains(Tgov1SignalOutputs::pmech))
-        {
-          IdxT           pmech = govdata.signal_outputs.at(Tgov1SignalOutputs::pmech);
-          constexpr auto PM    = Tgov1InternalVariables::PM;
-          gov->getSignals().template assignSignalNode<PM>(getSignal(pmech));
-        }
-
+        auto* gov = new Tgov1<ScalarT, IdxT>(govdata, signal_nodes_);
         addComponent(gov);
       }
 
@@ -266,29 +180,9 @@ namespace GridKit
           bus_index = excitedata.buses.at(Ieeet1Buses::bus);
         }
 
-        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index), excitedata);
-
-        if (excitedata.signal_inputs.contains(Ieeet1SignalInputs::speed))
-        {
-          IdxT           speed = excitedata.signal_inputs.at(Ieeet1SignalInputs::speed);
-          constexpr auto OMEGA = Ieeet1ExternalVariables::OMEGA;
-          exciter->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
-        }
-
-        if (excitedata.signal_outputs.contains(Ieeet1SignalOutputs::efd))
-        {
-          IdxT           efd = excitedata.signal_outputs.at(Ieeet1SignalOutputs::efd);
-          constexpr auto EFD = Ieeet1InternalVariables::EFD;
-          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
-        }
-
-        if (excitedata.signal_inputs.contains(Ieeet1SignalInputs::vs))
-        {
-          IdxT           vs = excitedata.signal_inputs.at(Ieeet1SignalInputs::vs);
-          constexpr auto VS = Ieeet1ExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
-        }
-
+        auto* exciter = new Ieeet1<ScalarT, IdxT>(getBus(bus_index),
+                                                  excitedata,
+                                                  signal_nodes_);
         addComponent(exciter);
       }
 
@@ -300,66 +194,24 @@ namespace GridKit
           bus_index = excitedata.buses.at(SexsPtiBuses::bus);
         }
 
-        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index), excitedata);
-
-        if (excitedata.signal_outputs.contains(SexsPtiSignalOutputs::efd))
-        {
-          IdxT           efd = excitedata.signal_outputs.at(SexsPtiSignalOutputs::efd);
-          constexpr auto EFD = SexsPtiInternalVariables::EFD;
-          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
-        }
-
-        if (excitedata.signal_inputs.contains(SexsPtiSignalInputs::vs))
-        {
-          IdxT           vs = excitedata.signal_inputs.at(SexsPtiSignalInputs::vs);
-          constexpr auto VS = SexsPtiExternalVariables::VS;
-          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
-        }
-
+        auto* exciter = new SexsPti<ScalarT, IdxT>(getBus(bus_index),
+                                                   excitedata,
+                                                   signal_nodes_);
         addComponent(exciter);
       }
 
       // Add IEEEST stabilizers
       for (const auto& stabdata : data.stabilizer)
       {
-        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata);
-
-        if (stabdata.signal_inputs.contains(IeeestSignalInputs::input))
-        {
-          IdxT           input = stabdata.signal_inputs.at(IeeestSignalInputs::input);
-          constexpr auto U     = IeeestExternalVariables::U;
-          stabilizer->getSignals().template attachSignalNode<U>(getSignal(input));
-        }
-
-        if (stabdata.signal_outputs.contains(IeeestSignalOutputs::output))
-        {
-          IdxT           output = stabdata.signal_outputs.at(IeeestSignalOutputs::output);
-          constexpr auto VSS    = IeeestInternalVariables::VSS;
-          stabilizer->getSignals().template assignSignalNode<VSS>(getSignal(output));
-        }
-
+        auto* stabilizer = new Ieeest<ScalarT, IdxT>(stabdata, signal_nodes_);
         addComponent(stabilizer);
       }
 
       // Add constant signal sources
       for (const auto& srcdata : data.constant_source)
       {
-        auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata);
-
-        using SignalOutputs = ConstantSignalSourceSignalOutputs;
-        if (srcdata.signal_outputs.contains(SignalOutputs::sr))
-        {
-          IdxT           sr    = srcdata.signal_outputs.at(SignalOutputs::sr);
-          constexpr auto SREAL = ConstantSignalSourceInternalVariables::SREAL;
-          source->getSignals().template assignSignalNode<SREAL>(getSignal(sr));
-        }
-        if (srcdata.signal_outputs.contains(SignalOutputs::si))
-        {
-          IdxT           si    = srcdata.signal_outputs.at(SignalOutputs::si);
-          constexpr auto SIMAG = ConstantSignalSourceInternalVariables::SIMAG;
-          source->getSignals().template assignSignalNode<SIMAG>(getSignal(si));
-        }
-
+        auto* source = new ConstantSignalSource<ScalarT, IdxT>(srcdata,
+                                                               signal_nodes_);
         addComponent(source);
       }
 
@@ -400,11 +252,6 @@ namespace GridKit
         for (auto bus : buses_)
         {
           delete bus;
-        }
-
-        for (auto signal : signals_)
-        {
-          delete signal;
         }
       }
     }
@@ -1033,21 +880,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Add signal
-     *
-     * Add signal at the end of the signals array and map signal ID with
-     * GridKit's ID for the signal
-     *
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::addSignal(SignalT* signal)
-    {
-      IdxT gridkit_signal_id                      = static_cast<IdxT>(signals_.size());
-      gridkit_signal_indices_[signal->signalId()] = gridkit_signal_id;
-      signals_.push_back(signal);
-    }
-
-    /**
      * @brief Add component
      *
      * Add component at the end of the components array and set GridKit's component ID
@@ -1119,13 +951,10 @@ namespace GridKit
      *
      */
     template <typename scalar_type, typename index_type>
-    SystemModel<scalar_type, index_type>::SignalT*
-    SystemModel<scalar_type, index_type>::getSignal(IdxT signal_id)
+    SystemModel<scalar_type, index_type>::SignalNodeT*
+    SystemModel<scalar_type, index_type>::getSignalNode(IdxT signal_id)
     {
-      // Should fail if user-provided signal_id is incorrect
-      IdxT gridkit_signal_id = gridkit_signal_indices_.at(signal_id);
-      assert((signals_[gridkit_signal_id])->signalId() == signal_id);
-      return signals_[gridkit_signal_id];
+      return signal_nodes_[signal_id];
     }
 
     /**

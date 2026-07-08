@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/Ieeest.hpp>
 #include <GridKit/Model/PhasorDynamics/Stabilizer/IEEEST/IeeestData.hpp>
 #include <GridKit/Model/VariableMonitorImpl.hpp>
@@ -32,6 +33,17 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       Ieeest<scalar_type, index_type>::Ieeest(const ModelDataT& data)
         : monitor_(std::make_unique<MonitorT>(data))
+      {
+        initializeParameters(data);
+        initializeMonitor();
+        size_ = 12;
+      }
+
+      template <typename scalar_type, typename index_type>
+      Ieeest<scalar_type, index_type>::Ieeest(
+          const ModelDataT& data, SignalNodeSetT& signal_nodes)
+        : ports_(data, signal_nodes),
+          monitor_(std::make_unique<MonitorT>(data))
       {
         initializeParameters(data);
         initializeMonitor();
@@ -177,10 +189,9 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
-        if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
+        if (auto output_port = ports_.out[IeeestSignalOutputs::output])
         {
-          signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
-              &y_[11], &(this->getVariableIndex(11)));
+          output_port.link(&y_[11], &(this->getVariableIndex(11)));
         }
 
         return 0;
@@ -191,17 +202,15 @@ namespace GridKit
       {
         int ret = 0;
 
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
-        {
-          if (!signals_.template isLinked<IeeestExternalVariables::U>())
-          {
-            Log::error() << "Ieeest: input signal U attached with no linked source\n";
-            ret += 1;
-          }
-        }
-        else
+        auto input_port = ports_.in[IeeestSignalInputs::input];
+        if (!input_port.connected())
         {
           Log::error() << "Ieeest: required input signal U is not attached\n";
+          ret += 1;
+        }
+        if (input_port.connected() && !input_port.linked())
+        {
+          Log::error() << "Ieeest: input signal U attached with no linked source\n";
           ret += 1;
         }
 
@@ -316,10 +325,10 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::evaluateResidual()
       {
-        if (signals_.template isAttached<IeeestExternalVariables::U>())
+        if (auto input_port = ports_.in[IeeestSignalInputs::input])
         {
-          ws_[0]         = signals_.template readExternalVariable<IeeestExternalVariables::U>();
-          ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
+          ws_[0]         = input_port.readSignal();
+          ws_indices_[0] = input_port.signalVariableIndex();
         }
 
         evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());

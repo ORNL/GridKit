@@ -13,7 +13,7 @@ gridkit_add_library(
           Component.hpp
           ComponentData.hpp
           ComponentLibrary.hpp
-          ComponentSignals.hpp
+          IOPorts.hpp
   LINK_LIBRARIES
     INTERFACE
     GridKit::definitions

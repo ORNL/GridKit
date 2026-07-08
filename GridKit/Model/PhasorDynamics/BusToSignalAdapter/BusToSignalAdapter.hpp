@@ -8,22 +8,23 @@
 #pragma once
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
+#include <GridKit/Model/PhasorDynamics/IOPorts.hpp>
 
 // Forward declarations
 namespace GridKit
 {
   namespace PhasorDynamics
   {
-    template <typename real_type, typename index_type>
-    struct BusToSignalAdapterData;
-
     template <typename scalar_type, typename index_type>
     class BusBase;
 
     template <typename scalar_type, typename index_type>
     class SignalNode;
+
+    template <typename signal_node_type>
+    class SignalNodeSet;
   } // namespace PhasorDynamics
 } // namespace GridKit
 
@@ -31,25 +32,15 @@ namespace GridKit
 {
   namespace PhasorDynamics
   {
-    /**
-     * @brief Internal variables of a `BusToSignalAdapter`
-     *
-     * @note Technically these are not owned by this component, but they must
-     * be classified as internal so that they can be written to signal nodes
-     * in `ComponentSignals`
-     */
+    /// Internal variables of a `BusToSignalAdapter`
     enum class BusToSignalAdapterInternalVariables : size_t
     {
-      VREAL,
-      VIMAG,
       MAXIMUM,
     };
 
     /// External variables of a `BusToSignalAdapter`
     enum class BusToSignalAdapterExternalVariables : size_t
     {
-      IREAL,
-      IIMAG,
       MAXIMUM,
     };
 
@@ -60,14 +51,19 @@ namespace GridKit
       using Component<scalar_type, index_type>::size_;
 
     public:
-      using ScalarT    = scalar_type;
-      using IdxT       = index_type;
-      using RealT      = typename Component<ScalarT, IdxT>::RealT;
-      using ModelDataT = BusToSignalAdapterData<RealT, IdxT>;
-      using SignalT    = SignalNode<ScalarT, IdxT>;
-      using BusT       = BusBase<ScalarT, IdxT>;
+      using ScalarT        = scalar_type;
+      using IdxT           = index_type;
+      using RealT          = typename Component<ScalarT, IdxT>::RealT;
+      using ModelDataT     = BusToSignalAdapterData<RealT, IdxT>;
+      using BusT           = BusBase<ScalarT, IdxT>;
+      using SignalNodeT    = SignalNode<ScalarT, IdxT>;
+      using SignalNodeSetT = SignalNodeSet<SignalNodeT>;
+      using IOPortsT       = IOPorts<ScalarT, ModelDataT>;
 
       BusToSignalAdapter(BusT* bus);
+      BusToSignalAdapter(BusT*             bus,
+                         const ModelDataT& data,
+                         SignalNodeSetT&   signal_nodes);
       ~BusToSignalAdapter();
 
       int setGridKitComponentID(IdxT) override final;
@@ -79,14 +75,9 @@ namespace GridKit
       int evaluateResidual() override final;
       int evaluateJacobian() override final;
 
-      /// Get the `ComponentSignals` from this `BusToSignalAdapter`
-      auto getSignals()
-          -> ComponentSignals<ScalarT,
-                              IdxT,
-                              BusToSignalAdapterInternalVariables,
-                              BusToSignalAdapterExternalVariables>&
+      IOPortsT& getPorts()
       {
-        return signals_;
+        return ports_;
       }
 
     private:
@@ -94,13 +85,11 @@ namespace GridKit
       IdxT vr_index_{INVALID_INDEX<IdxT>};
       IdxT vi_index_{INVALID_INDEX<IdxT>};
 
-      // Signal pointers
-      SignalT* ir_signal_;
-      SignalT* ii_signal_;
-      BusT*    bus_;
+      // Bus pointer
+      BusT* bus_;
 
-      /// Component signal extension
-      ComponentSignals<ScalarT, IdxT, BusToSignalAdapterInternalVariables, BusToSignalAdapterExternalVariables> signals_;
+      // Component ports
+      IOPortsT ports_;
     };
 
   } // namespace PhasorDynamics

@@ -53,22 +53,14 @@ namespace GridKit
       };
 
       template <typename real_type, typename index_type>
-      struct SexsPtiData : public ComponentData<real_type,
-                                                index_type,
-                                                SexsPtiParameters,
-                                                SexsPtiBuses,
-                                                SexsPtiSignalInputs,
-                                                SexsPtiSignalOutputs,
-                                                SexsPtiMonitorableVariables>
-      {
-        SexsPtiData() = default;
-
-        using Parameters           = SexsPtiParameters;
-        using Buses                = SexsPtiBuses;
-        using SignalInputs         = SexsPtiSignalInputs;
-        using SignalOutputs        = SexsPtiSignalOutputs;
-        using MonitorableVariables = SexsPtiMonitorableVariables;
-      };
+      using SexsPtiData =
+          ComponentData<real_type,
+                        index_type,
+                        SexsPtiParameters,
+                        SexsPtiBuses,
+                        SexsPtiSignalInputs,
+                        SexsPtiSignalOutputs,
+                        SexsPtiMonitorableVariables>;
 
     } // namespace Exciter
   } // namespace PhasorDynamics
