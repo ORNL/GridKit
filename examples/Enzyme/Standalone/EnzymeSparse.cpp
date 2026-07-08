@@ -6,8 +6,8 @@
 
 #include <GridKit/AutomaticDifferentiation/Enzyme/EnzymeDefinitions.hpp>
 #include <GridKit/AutomaticDifferentiation/Enzyme/LowerSparseStorage.hpp>
-#include <GridKit/LinearAlgebra/MemoryUtils.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
 /**
@@ -123,14 +123,14 @@ __attribute__((noinline)) SparseMatrix* jac_f(size_t N, ScalarT* input)
 void check(SparseMatrix* matrix_1, SparseMatrix* matrix_2, int& fail)
 {
   size_t  nnz_1  = matrix_1->getNnz();
-  size_t* rows_1 = matrix_1->getRowData(GridKit::LinearAlgebra::memory::HOST);
-  size_t* cols_1 = matrix_1->getColData(GridKit::LinearAlgebra::memory::HOST);
-  double* vals_1 = matrix_1->getValues(GridKit::LinearAlgebra::memory::HOST);
+  size_t* rows_1 = matrix_1->getRowData(GridKit::memory::HOST);
+  size_t* cols_1 = matrix_1->getColData(GridKit::memory::HOST);
+  double* vals_1 = matrix_1->getValues(GridKit::memory::HOST);
 
   size_t  nnz_2  = matrix_2->getNnz();
-  size_t* rows_2 = matrix_2->getRowData(GridKit::LinearAlgebra::memory::HOST);
-  size_t* cols_2 = matrix_2->getColData(GridKit::LinearAlgebra::memory::HOST);
-  double* vals_2 = matrix_2->getValues(GridKit::LinearAlgebra::memory::HOST);
+  size_t* rows_2 = matrix_2->getRowData(GridKit::memory::HOST);
+  size_t* cols_2 = matrix_2->getColData(GridKit::memory::HOST);
+  double* vals_2 = matrix_2->getValues(GridKit::memory::HOST);
 
   if (nnz_1 != nnz_2)
     fail++;

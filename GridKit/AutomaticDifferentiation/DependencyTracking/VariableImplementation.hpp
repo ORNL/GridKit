@@ -68,7 +68,7 @@ namespace GridKit
 
       if (!dependencies_.empty())
       {
-        os << ", dependencies: [ ";
+        os << " dependencies: [ ";
         for (auto& p : dependencies_)
           os << "(" << p.first << ", " << p.second << ") ";
         os << "]";

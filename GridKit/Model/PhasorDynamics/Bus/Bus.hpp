@@ -118,7 +118,7 @@ namespace GridKit
             }
           }
           coo_jac_ = new CooMatrixT(num_rows, num_cols, nnz_);
-          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, LinearAlgebra::memory::HOST);
+          coo_jac_->setDataPointers(J_rows_buffer_, J_cols_buffer_, J_vals_buffer_, memory::HOST);
         }
 
         return 0;
