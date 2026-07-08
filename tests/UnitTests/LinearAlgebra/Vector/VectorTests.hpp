@@ -221,7 +221,7 @@ namespace GridKit
        * @brief Test copying data from vector to an array.
        *
        * This creates a vector, copies data to it, and then copies the data to an array
-       * in the current memory space. Finally, it uses the MemoryHandler to copy the data
+       * in the current memory space. Finally, it uses the MemoryManager to copy the data
        * to HOST for verification.
        *
        * @param[in] N Number of elements in the vector.
@@ -366,7 +366,7 @@ namespace GridKit
 
     private:
       memory::MemorySpace memspace_{memory::HOST};
-      MemoryHandler       mh_;
+      MemoryManager       mh_;
 
       /// Check if vector elements are set to the same number
       bool verifyAnswer(Vector<ScalarT, IdxT>& x, ScalarT answer)

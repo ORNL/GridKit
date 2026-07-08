@@ -392,7 +392,7 @@ namespace GridKit
 
     private:
       memory::MemorySpace memspace_;
-      MemoryHandler       mem_;
+      MemoryManager       mem_;
     }; // class SparseTests
   } // namespace Testing
 } // namespace GridKit
