@@ -306,7 +306,7 @@ namespace GridKit
 
     /**
      * @brief Multiplies vector by an inverse of a diagonal matrix.
-     *  This is equivalent to solving a system with the original matrix, 
+     *  This is equivalent to solving a system with the original matrix,
      *  with the vector as the right hand side (typically used in this context).
      *
      *

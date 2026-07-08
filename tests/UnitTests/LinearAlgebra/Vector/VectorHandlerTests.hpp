@@ -305,7 +305,7 @@ namespace GridKit
 
       /**
        * @brief Test elementwise division of two vectors.
-       * 
+       *
        * Mathematically, this is equivalent to multiplying inverse of a
        * diagonal matrix to a vector.
        */
