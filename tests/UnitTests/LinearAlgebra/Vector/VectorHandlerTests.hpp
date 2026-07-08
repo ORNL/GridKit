@@ -304,7 +304,10 @@ namespace GridKit
       }
 
       /**
-       * @brief Test dividing a vector by a diagonal matrix.
+       * @brief Test elementwise division of two vectors.
+       * 
+       * Mathematically, this is equivalent to multiplying inverse of a
+       * diagonal matrix to a vector.
        */
       TestOutcome diagSolve(IdxT N)
       {
