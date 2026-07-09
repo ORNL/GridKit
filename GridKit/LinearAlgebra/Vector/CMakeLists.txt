@@ -1,7 +1,7 @@
 gridkit_add_library(
   dense_vector
-  SOURCES Vector.cpp
-  HEADERS Vector.hpp
+  SOURCES Vector.cpp VectorHandler.cpp VectorHandlerCpu.cpp
+  HEADERS Vector.hpp VectorHandler.hpp VectorHandlerCpu.hpp
   LINK_LIBRARIES GridKit::utilities_logger GridKit::cpu_backend)
 
 # # If no GPU is enabled link to dummy device backend

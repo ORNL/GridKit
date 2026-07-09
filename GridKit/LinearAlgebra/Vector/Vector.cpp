@@ -39,8 +39,8 @@ namespace GridKit
       : n_capacity_(n),
         k_(k),
         n_size_(n),
-        gpu_updated_(new bool[k]),
-        cpu_updated_(new bool[k])
+        gpu_updated_(new bool[static_cast<std::size_t>(k)]),
+        cpu_updated_(new bool[static_cast<std::size_t>(k)])
     {
       setHostUpdated(false);
       setDeviceUpdated(false);
@@ -1091,7 +1091,7 @@ namespace GridKit
 
     // template class Vector<double, long int>;
     template class Vector<double, size_t>;
-    // template class Vector<double, int>;
+    template class Vector<double, int>;
 
   } // namespace LinearAlgebra
 } // namespace GridKit

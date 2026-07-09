@@ -102,7 +102,7 @@ namespace GridKit
       bool owns_gpu_sparsity_pattern_{false}; ///< for row/col data
       bool owns_gpu_values_{false};           ///< for nonzero values
 
-      MemoryHandler mem_; ///< Device memory manager object
+      MemoryManager mem_; ///< Device memory manager object
     };
   } // namespace LinearAlgebra
 } // namespace GridKit
