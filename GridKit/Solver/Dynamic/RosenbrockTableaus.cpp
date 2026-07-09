@@ -39,9 +39,8 @@ namespace Integrator
   }
 
   /**
-   * @brief
+   * @brief A 5th order Rosenbrock method suitable for solving parabolic PDEs. Created in \cite{shortauthor}.
    *
-   * @todo Add paper citation.
    *
    */
   template <class ScalarT, typename IdxT>
