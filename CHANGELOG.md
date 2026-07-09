@@ -69,6 +69,7 @@
 - Removed `COO_Matrix` class.
 - Added portable `Vector` class and policy-based memory utilities.
 - Add new `LinearSolver` interface for linear solvers.
+- Added new `Rosenbrock` integrator.
 
 ## v0.1
 
