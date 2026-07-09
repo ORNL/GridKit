@@ -57,8 +57,8 @@ namespace GridKit
                    }
                ],
                "buses": [
-                   { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
-                   { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
+                   { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+                   { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
                ],
                "devices": [
                    { "class": "Branch", "ports": {"bus1":1, "bus2":2}, "id": "1", "params": {"R":0.0, "X":0.1, "G":0.0, "B":0.0, "tap":1.05, "phase":0.1} },
@@ -99,7 +99,7 @@ namespace GridKit
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
-        success *= result.bus[0].v_base == 115e3;
+        success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
@@ -107,7 +107,7 @@ namespace GridKit
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
-        success *= result.bus[1].v_base == 115e3;
+        success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
         success *= std::get<RealT>(result.branch[0].parameters[BranchParameters::R]) == 0.0;
@@ -181,8 +181,8 @@ namespace GridKit
                    "va_base": 100e6
                },
                "buses": [
-                   { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
-                   { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
+                   { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+                   { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
                ],
                "signals": [
                    { "signal_id": 1, "name": "Machine Speed Deviation"},
@@ -225,7 +225,7 @@ namespace GridKit
         success *= result.bus[0].name == "Bus 1";
         success *= result.bus[0].Vr0 == 0.994988;
         success *= result.bus[0].Vi0 == 0.099997;
-        success *= result.bus[0].v_base == 115e3;
+        success *= std::get<RealT>(result.bus[0].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vr);
         success *= result.bus[0].monitored_variables.contains(BusData::MonitorableVariables::Vi);
         success *= result.bus[1].bus_id == 2;
@@ -233,7 +233,7 @@ namespace GridKit
         success *= result.bus[1].name == "Bus 2";
         success *= result.bus[1].Vr0 == 1.0;
         success *= result.bus[1].Vi0 == 0.0;
-        success *= result.bus[1].v_base == 115e3;
+        success *= std::get<RealT>(result.bus[1].parameters[BusData::Parameters::kv]) == 115.0;
         success *= result.bus[1].monitored_variables.empty();
 
         success *= result.signal[0].signal_id == 1;

@@ -6,10 +6,12 @@
  */
 #pragma once
 
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
 #include <type_traits>
+#include <variant>
 
 namespace GridKit
 {
@@ -22,6 +24,12 @@ namespace GridKit
       Vi,
       Vm,
       Va
+    };
+
+    /// Parameters for a bus
+    enum class BusParameters
+    {
+      kv, ///< Voltage base [kV]
     };
 
     /**
@@ -40,6 +48,9 @@ namespace GridKit
       using RealT = real_type;
       using IdxT  = index_type;
 
+      using Parameters     = BusParameters;
+      using ParameterValue = std::variant<bool, RealT, IdxT>;
+
       std::string name; ///< A name given to this bus
 
       RealT Vr0{1.0}; ///< Initial value for the real bus voltage
@@ -57,7 +68,7 @@ namespace GridKit
 
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for
 
-      RealT v_base{1.0}; ///< Voltage base in volts
+      std::map<Parameters, ParameterValue> parameters; ///< Mapping of parameters to parameter values
 
       // TODO: Bus-level freq_base and va_base are parsed but not applied.
       // Prefer removing them as bus parameters in a future cleanup.
