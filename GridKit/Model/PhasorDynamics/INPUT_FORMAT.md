@@ -85,7 +85,7 @@ a bus and has the following fields:
   `class`            | A string indicating the class of node. See the table below for more information
   `name`             | Optional string containing the name of the node. This may be empty or non-unique
   `init`             | Optional object mapping string variable names to floating point values, specifying default voltages or signal values. The available initialization variables are dependent upon the node class. Any variables missing will be given default values, which are specified beneath the table below. If this object is missing, all variables will be given default values. See the table below for more information
-  `v_base`           | Optional floating point value giving the voltage base in volts (V).
+  `params`           | Object mapping bus parameter names to values. Supported parameter: `kv`, the bus voltage base in kV.
   `mon`              | Optional field, which is an array specifying variables to monitor the value of in an output channel. Available variables include all the initialization variables, along with others as determined by the node class. See the table below for more information
   `extension`        | Optional field containing an object with implementation-defined keys
 
@@ -173,8 +173,8 @@ side for off-nominal transformer branches.
        "va_base": 100e6
    },
    "buses": [
-       { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "v_base": 115e3, "mon": ["Vr", "Vi"] },
-       { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "v_base": 115e3 }
+       { "number": 1, "class": "bus", "name": "Bus 1", "init": {"Vr":0.994988, "Vi":0.099997}, "params": {"kv": 115.0}, "mon": ["Vr", "Vi"] },
+       { "number": 2, "class": "infinite_bus", "name": "Bus 2", "init": {"Vr":1.0, "Vi":0.0}, "params": {"kv": 115.0} }
    ],
    "signals": [
        { "signal_id": 1, "name": "Machine Speed Deviation"},

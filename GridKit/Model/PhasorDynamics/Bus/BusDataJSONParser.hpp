@@ -67,7 +67,42 @@ namespace GridKit
                      << error_context.str() << std::endl;
       }
 
-      j.at("v_base").get_to(bd.v_base);
+      using Parameters = typename BusData<RealT, IdxT>::Parameters;
+      for (auto& raw_parameter : j.at("params").items())
+      {
+        auto key = magic_enum::enum_cast<Parameters>(raw_parameter.key());
+        if (key.has_value())
+        {
+          // NOTE: this is necessary because it doesn't seem like nlohmann/json
+          //       handles std::variant out of the box
+          if (raw_parameter.value().is_boolean())
+          {
+            bd.parameters[key.value()] = raw_parameter.value().template get<bool>();
+          }
+          else if (raw_parameter.value().is_number_float())
+          {
+            bd.parameters[key.value()] = raw_parameter.value().template get<RealT>();
+          }
+          else if (raw_parameter.value().is_number_integer())
+          {
+            bd.parameters[key.value()] = raw_parameter.value().template get<IdxT>();
+          }
+          else
+          {
+            Log::error() << "\n\tInvalid bus parameter value type: "
+                         << "\"" << raw_parameter.key() << "\": "
+                         << raw_parameter.value()
+                         << " (typed as \"" << raw_parameter.value().type_name()
+                         << "\")." << error_context.str() << std::endl;
+          }
+        }
+        else
+        {
+          Log::error() << "\n\tBus parameter \"" << raw_parameter.key()
+                       << "\" has no value." << error_context.str()
+                       << std::endl;
+        }
+      }
 
       if (j.contains("freq_base"))
       {
