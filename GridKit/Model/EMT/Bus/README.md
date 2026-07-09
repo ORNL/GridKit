@@ -4,6 +4,10 @@
 bus voltages are differential variables, and the model equations enforce
 current balance at the bus.
 
+> [!NOTE]
+> The initial end-to-end implementation will support three-phase systems only
+> to establish a proof of concept. The formulation below remains $N$-phase.
+
 ## Block Diagram
 
 None.
@@ -12,18 +16,12 @@ None.
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$M$ | [-] | `M` | Number of connected-device ports | Required, positive integer
 $N$ | [-] | `N` | Number of phases | Required, positive integer
-$\mathbf{v}_0$ | [V] | `v0` | Initial bus voltage vector | $\mathbf{v}_0 \in \mathbb{R}^N$
 
 ### Parameter Validation
 
 ```math
-\begin{aligned}
-M &> 0 \\
-N &> 0 \\
-\mathbf{v}_0 &\in \mathbb{R}^N
-\end{aligned}
+N > 0
 ```
 
 ### Derived Parameters
@@ -39,6 +37,8 @@ None.
 None.
 
 ## Model Variables
+
+$\mathcal{E}$ is the set of devices connected to the bus.
 
 ### Internal Variables
 
@@ -64,9 +64,9 @@ None.
 
 ## Model Ports
 
-Symbol | Port | Type | Units | Description | Note
------- | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}^{\mathrm{inj}}_m$ | `i` | Input | [A] | Current injection from connected device $m$ | $m=1,\ldots,M$, $\mathbf{i}^{\mathrm{inj}}_m \in \mathbb{R}^N$
+Symbol | Type | Units | Description | Note
+------ | ---- | ----- | ----------- | ----
+$\mathbf{i}^{\mathrm{inj}}_e$ | Input | [A] | Current injection from connected device $e$ | $e \in \mathcal{E}$, $\mathbf{i}^{\mathrm{inj}}_e \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -74,11 +74,12 @@ $\mathbf{i}^{\mathrm{inj}}_m$ | `i` | Input | [A] | Current injection from conne
 
 ```math
 \begin{aligned}
-0 &= \sum_{m=1}^{M} \mathbf{i}^{\mathrm{inj}}_m
+0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^{\mathrm{inj}}_e
 \end{aligned}
 ```
 
-Each $\mathbf{i}^{\mathrm{inj}}_m$ may depend on the bus voltage and bus voltage derivative.
+Each $\mathbf{i}^{\mathrm{inj}}_e$ may depend on the bus voltage and its time
+derivative.
 
 ### Algebraic Equations
 
@@ -94,21 +95,30 @@ None.
 
 ```math
 \begin{aligned}
-\mathbf{i}^{\mathrm{inj}}_m
-  &\leftarrow \text{connected-device current starts},
-     \quad m\in\{1,\ldots,M\}
+\mathbf{i}^{\mathrm{inj}}_e
+  &\leftarrow \text{initialized connected-device output},
+     \quad e \in \mathcal{E}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-Initialization assigns the parameterized bus-voltage start:
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$\mathbf{v}_0$ | [V] | `init.v0` | Initial bus-voltage vector | $\mathbf{v}_0 \in \mathbb{R}^N$
 
 ```math
-\mathbf{v} \leftarrow \text{parameterized bus-voltage start}
+\begin{aligned}
+\mathbf{v} &\leftarrow \mathbf{v}_0 \\
+\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t} &\leftarrow \mathbf{0}
+  \quad \text{(provisional)}
+\end{aligned}
 ```
 
-The differential residual determines the initial bus-voltage derivative.
+The assembled network residuals determine a consistent initial bus-voltage
+derivative, replacing the provisional seed during the system-level
+consistent-initial-condition calculation. This requires a nonsingular assembled
+current-injection derivative block.
 
 ### Output Initialization
 
