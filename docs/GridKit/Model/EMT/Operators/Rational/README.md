@@ -1,4 +1,4 @@
-# Rational
+# Rational Operators
 
 ```{toctree}
 :maxdepth: 4

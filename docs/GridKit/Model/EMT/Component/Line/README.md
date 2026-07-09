@@ -1,4 +1,4 @@
-# Line
+# Line Models
 
 ```{toctree}
 :maxdepth: 4

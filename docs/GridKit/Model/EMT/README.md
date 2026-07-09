@@ -1,4 +1,4 @@
-# EMT
+# Electromagnetic Transients (EMT)
 
 ```{toctree}
 :maxdepth: 4

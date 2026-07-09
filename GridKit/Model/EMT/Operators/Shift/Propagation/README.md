@@ -41,9 +41,9 @@ Figure 1: Propagation model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$K$ | [-] | `K` | Number of conductors | Required, positive integer
+$K$ | [-] | `K` | Signal dimension | Required, positive integer
 $\boldsymbol{\tau}$ | [s] | `tau` | Modal propagation delays | $\boldsymbol{\tau} \in \mathbb{R}^M$
-$f_{\max}$ | [Hz] | `fmax` | Modal lag-chain section rate | Required, positive. Not a bandwidth guarantee
+$f_{\max}$ | [Hz] | `fmax` | Modal lag-chain section rate | Required, positive
 
 ### Parameter Validation
 
@@ -62,34 +62,27 @@ f_{\max} &> 0
 ```math
 \begin{aligned}
 M &= \mathrm{dim}\left(\boldsymbol{\tau}\right) \\
-J_m &= \mathrm{ceil}(f_{\max}\tau_m),\quad m \in \{1,\ldots,M\} \\
-Q_{\mathbf{h}} &=
-  Q_{\mathbf{h}_{\mathrm{in}}}
-  + \sum_{m = 1}^{M}J_m
-  + Q_{\mathbf{h}_{\mathrm{out}}}
+J_m &= \left\lceil f_{\max}\tau_m \right\rceil,
+  \quad m \in \{1,\ldots,M\}
 \end{aligned}
 ```
-
-$Q_{\mathbf{h}}$ is the aggregate submodel order, with one scalar `Delay`
-instance for each mode.
 
 ## Submodels
 
 Submodel | Type | Order | Inputs | JSON | Outputs
 -------- | ---- | ----- | ------ | ---- | -------
-Input factor $f^{\mathbf{h}_{\mathrm{in}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{in}}}$ | $\mathbf{u} \in \mathbb{R}^K$ | `input` | $\mathbf{w} \in \mathbb{R}^M$
-Modal delay $\delta_{\tau_m}$, $m \in \{1,\ldots,M\}$ | [`Delay`](../Delay/README.md) | $J_m$ | $w_m \in \mathbb{R}$ | `tau[m]`, `fmax` | $z_m \in \mathbb{R}$
-Output factor $f^{\mathbf{h}_{\mathrm{out}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{out}}}$ | $\mathbf{z} \in \mathbb{R}^M$ | `output` | $\mathbf{y} \in \mathbb{R}^K$
+Input factor $f^{\mathbf{h}_{\mathrm{in}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{in}}}$ | $\mathbb{R}^K$ $[u]$ | `input` | $\mathbb{R}^M$ $[u]$
+Modal delay $\delta_{\tau_m}$, $m \in \{1,\ldots,M\}$ | [`Delay`](../Delay/README.md) | $J_m$ | $\mathbb{R}$ $[u]$ | `tau[m]`, `fmax` | $\mathbb{R}$ $[u]$
+Output factor $f^{\mathbf{h}_{\mathrm{out}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{out}}}$ | $\mathbb{R}^M$ $[u]$ | `output` | $\mathbb{R}^K$ $[u]$
 
 ### Submodel Validation
 
 ```math
-\begin{aligned}
-f^{\mathbf{h}_{\mathrm{in}}} &: \mathbb{R}^K \rightarrow \mathbb{R}^M \\
-\delta_{\tau_m} &: \mathbb{R} \rightarrow \mathbb{R},\quad m \in \{1,\ldots,M\} \\
-f^{\mathbf{h}_{\mathrm{out}}} &: \mathbb{R}^M \rightarrow \mathbb{R}^K
-\end{aligned}
+\mathbf{E}^{\mathbf{h}_{\mathrm{in}}} = \mathbf{0}_{M \times K}
 ```
+
+The zero linear coefficient makes the input factor compatible with the
+algebraic input $\mathbf{u}$.
 
 ## Model Variables
 
@@ -106,26 +99,26 @@ $\mathbf{z}$ | $[u]$ | Modal delayed signals | $\mathbf{z} \in \mathbb{R}^M$
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
 $\mathbf{w}$ | $[u]$ | Input-factor outputs | $\mathbf{w} \in \mathbb{R}^M$
-$\mathbf{y}$ | $[u]$ | Output-factor contribution | $\mathbf{y} \in \mathbb{R}^K$
+$\mathbf{y}$ | $[u]$ | Output vector | $\mathbf{y} \in \mathbb{R}^K$
 
 ### External Variables
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+None.
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[u]$ | Output contribution port | $\mathbf{y} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | $[u]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^K$
 
 ## Model Equations
 
@@ -142,8 +135,6 @@ None.
 ```math
 \begin{aligned}
 \mathbf{w} &= f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u}) \\
-z_m &= \delta_{\tau_m}(w_m),
-     \quad m \in \{1,\ldots,M\} \\
 \mathbf{z} &= \boldsymbol{\delta}_{\tau}(\mathbf{w}) \\
 \mathbf{y} &= f^{\mathbf{h}_{\mathrm{out}}}(\mathbf{z})
 \end{aligned}
@@ -151,30 +142,43 @@ z_m &= \delta_{\tau_m}(w_m),
 
 ## Initialization
 
+Initialization assumes an affine input with zero second derivative.
+
 ### Input Initialization
 
 ```math
 \begin{aligned}
 \mathbf{u},\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  &\leftarrow \text{affine input trajectory start}
+  &\leftarrow \text{input value and derivative}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-Each submodel is initialized from the value and derivative of its input
-trajectory. The input factor is initialized first, followed by the $M$ scalar
-delays:
-
 ```math
 \begin{aligned}
-\mathbf{w},\dfrac{\mathrm{d}\mathbf{w}}{\mathrm{d}t}
-  &\leftarrow \text{initialized input-factor output trajectory} \\
-z_m,\dfrac{\mathrm{d}z_m}{\mathrm{d}t}
-  &\leftarrow \text{initialized modal-delay output trajectory},
+\mathbf{w}
+  &\leftarrow f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u}) \\
+\dfrac{\mathrm{d}\mathbf{w}}{\mathrm{d}t}
+  &\leftarrow
+  \dfrac{\mathrm{d}}{\mathrm{d}t}
+  \left[f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u})\right] \\
+z_m
+  &\leftarrow
+  w_m - \tau_m\dfrac{\mathrm{d}w_m}{\mathrm{d}t},
+     \quad m \in \{1,\ldots,M\} \\
+\dfrac{\mathrm{d}z_m}{\mathrm{d}t}
+  &\leftarrow \dfrac{\mathrm{d}w_m}{\mathrm{d}t},
      \quad m \in \{1,\ldots,M\} \\
 \mathbf{z}
-  &\leftarrow \left[z_1,\ldots,z_M\right]^{\mathsf T}
+  &\leftarrow \left[z_1,\ldots,z_M\right]^{\mathsf T} \\
+\dfrac{\mathrm{d}\mathbf{z}}{\mathrm{d}t}
+  &\leftarrow
+  \left[
+    \dfrac{\mathrm{d}z_1}{\mathrm{d}t},
+    \ldots,
+    \dfrac{\mathrm{d}z_M}{\mathrm{d}t}
+  \right]^{\mathsf T}
 \end{aligned}
 ```
 
@@ -185,12 +189,11 @@ z_m,\dfrac{\mathrm{d}z_m}{\mathrm{d}t}
 \mathbf{y}
   &\leftarrow f^{\mathbf{h}_{\mathrm{out}}}(\mathbf{z}) \\
 \dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
-  &\leftarrow \text{initialized output-factor derivative}
+  &\leftarrow
+  \dfrac{\mathrm{d}}{\mathrm{d}t}
+  \left[f^{\mathbf{h}_{\mathrm{out}}}(\mathbf{z})\right]
 \end{aligned}
 ```
-
-The output factor uses $\mathbf{z}$ and
-$\mathrm{d}\mathbf{z}/\mathrm{d}t$ as its initialized input trajectory.
 
 ## Monitors
 

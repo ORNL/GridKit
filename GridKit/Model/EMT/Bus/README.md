@@ -1,12 +1,14 @@
 # Bus Model
 
-`Bus` represents an $N$-phase bus in instantaneous phase coordinates. The
-bus voltages are differential variables, and the model equations enforce
-current balance at the bus.
+`Bus` represents an $N$-phase bus in instantaneous phase coordinates. The bus
+voltage is differential, and the model equations enforce current balance.
+$\mathcal{E}$ denotes the set of connected devices.
 
 > [!NOTE]
-> The initial end-to-end implementation will support three-phase systems only
-> to establish a proof of concept. The formulation below remains $N$-phase.
+> A template parameter will select whether $\mathbf{v}$ is a differential or
+> algebraic vector. This page documents the nondegenerate differential
+> formulation. Initial end-to-end support is three-phase, although the
+> formulation remains $N$-phase.
 
 ## Block Diagram
 
@@ -37,8 +39,6 @@ None.
 None.
 
 ## Model Variables
-
-$\mathcal{E}$ is the set of devices connected to the bus.
 
 ### Internal Variables
 
@@ -73,13 +73,8 @@ $\mathbf{i}^{\mathrm{inj}}_e$ | Input | [A] | Current injection from connected d
 ### Differential Equations
 
 ```math
-\begin{aligned}
-0 &= \sum_{e \in \mathcal{E}} \mathbf{i}^{\mathrm{inj}}_e
-\end{aligned}
+0 = \sum_{e \in \mathcal{E}} \mathbf{i}^{\mathrm{inj}}_e
 ```
-
-Each $\mathbf{i}^{\mathrm{inj}}_e$ may depend on the bus voltage and its time
-derivative.
 
 ### Algebraic Equations
 
@@ -96,7 +91,7 @@ None.
 ```math
 \begin{aligned}
 \mathbf{i}^{\mathrm{inj}}_e
-  &\leftarrow \text{initialized connected-device output},
+  &\leftarrow \text{connected-device current},
      \quad e \in \mathcal{E}
 \end{aligned}
 ```
@@ -105,20 +100,11 @@ None.
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\mathbf{v}_0$ | [V] | `init.v0` | Initial bus-voltage vector | $\mathbf{v}_0 \in \mathbb{R}^N$
+$\mathbf{v}_0$ | [V] | `init.v0` | Initial bus-voltage vector | Required, $\mathbf{v}_0 \in \mathbb{R}^N$
 
 ```math
-\begin{aligned}
-\mathbf{v} &\leftarrow \mathbf{v}_0 \\
-\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t} &\leftarrow \mathbf{0}
-  \quad \text{(provisional)}
-\end{aligned}
+\mathbf{v} \leftarrow \mathbf{v}_0
 ```
-
-The assembled network residuals determine a consistent initial bus-voltage
-derivative, replacing the provisional seed during the system-level
-consistent-initial-condition calculation. This requires a nonsingular assembled
-current-injection derivative block.
 
 ### Output Initialization
 

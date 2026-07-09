@@ -5,8 +5,9 @@ $\Delta x$. Series current $\mathbf{i}$ is directed from terminal 1 to terminal
 2.
 
 > [!NOTE]
-> The initial end-to-end implementation will support three-phase systems only
-> to establish a proof of concept. The formulation below remains $N$-phase.
+> A template parameter will select whether $\mathbf{i}$ is a differential or
+> algebraic vector. This page documents the nondegenerate differential
+> formulation.
 
 ## Block Diagram
 
@@ -23,7 +24,7 @@ Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $N$ | [-] | `N` | Number of phases | Required, positive integer
 $K$ | [-] | `K` | Number of conductors | Required, positive integer
-$\mathbf{P}_\phi$ | [-] | `conductors` | Conductor-to-phase assignment matrix | $\mathbf{P}_\phi \in \{0,1\}^{N \times K}$
+$\mathbf{c}$ | [-] | `conductors` | Conductor phase-index list | $\mathbf{c} \in \{1,\ldots,N\}^{K}$
 $\Delta x$ | [m] | `dx` | Line segment length | Required, positive
 
 ### Parameter Validation
@@ -32,27 +33,30 @@ $\Delta x$ | [m] | `dx` | Line segment length | Required, positive
 \begin{aligned}
 N &> 0 \\
 K &> 0 \\
-\mathbf{P}_\phi &\in \{0,1\}^{N \times K} \\
-\sum_{n = 1}^{N}P_{\phi,nk} &= 1,
-  \quad k \in \{1,\ldots,K\} \\
+\mathbf{c} &\in \{1,\ldots,N\}^{K} \\
+\{c_k \mid k \in \{1,\ldots,K\}\} &= \{1,\ldots,N\} \\
 \Delta x &> 0
 \end{aligned}
 ```
 
 ### Derived Parameters
 
-None.
+```math
+P_{\phi,nk} =
+\begin{cases}
+1, & n = c_k \\
+0, & n \ne c_k
+\end{cases},
+\quad n \in \{1,\ldots,N\},\quad k \in \{1,\ldots,K\}
+```
 
 ## Submodels
 
-The line instantiates one series-impedance model and two terminal
-shunt-admittance models from the configured `VectorFit` specifications.
-
 Submodel | Type | Order | Inputs | JSON | Outputs
 -------- | ---- | ----- | ------ | ---- | -------
-Per-unit-length series impedance $f^{\mathbf{z}}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{z}}$ | $\mathbf{i} \in \mathbb{R}^K$ | `Zp` | $f^{\mathbf{z}}(\mathbf{i}) \in \mathbb{R}^K$
-Per-unit-length terminal-1 shunt admittance $f^{\mathbf{y}}_{1}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbf{P}_\phi^{\mathsf T}\mathbf{v}_{1} \in \mathbb{R}^K$ | `Yp` | $f^{\mathbf{y}}_{1}(\mathbf{P}_\phi^{\mathsf T}\mathbf{v}_{1}) \in \mathbb{R}^K$
-Per-unit-length terminal-2 shunt admittance $f^{\mathbf{y}}_{2}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbf{P}_\phi^{\mathsf T}\mathbf{v}_{2} \in \mathbb{R}^K$ | `Yp` | $f^{\mathbf{y}}_{2}(\mathbf{P}_\phi^{\mathsf T}\mathbf{v}_{2}) \in \mathbb{R}^K$
+Per-unit-length series impedance $f^{\mathbf{z}}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{z}}$ | $\mathbb{R}^K$ [A] | `Zp` | $\mathbb{R}^K$ [V/m]
+Per-unit-length terminal-1 shunt admittance $f^{\mathbf{y}}_{1}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbb{R}^K$ [V] | `Yp` | $\mathbb{R}^K$ [A/m]
+Per-unit-length terminal-2 shunt admittance $f^{\mathbf{y}}_{2}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbb{R}^K$ [V] | `Yp` | $\mathbb{R}^K$ [A/m]
 
 For the pole-free RLGC specialization, the `VectorFit` coefficients map to
 the per-unit-length matrices as
@@ -69,18 +73,8 @@ the per-unit-length matrices as
 ### Submodel Validation
 
 ```math
-\begin{aligned}
-f^{\mathbf{z}} &: \mathbb{R}^K \rightarrow \mathbb{R}^K \\
-f^{\mathbf{y}}_{j} &: \mathbb{R}^K \rightarrow \mathbb{R}^K,
-  \quad j \in \{1,2\} \\
-\mathbf{E}^{\mathbf{z}} &\in \mathbb{R}^{K \times K} \\
-\mathrm{rank}\left(\mathbf{E}^{\mathbf{z}}\right) &= K
-\end{aligned}
+\mathrm{rank}\left(\mathbf{E}^{\mathbf{z}}\right) = K
 ```
-
-$\mathbf{E}^{\mathbf{z}}$ is the `E` matrix of the series-impedance
-`VectorFit` submodel. Its full rank ensures that $\mathbf{i}$ is differential.
-Static or singular fits require a corresponding algebraic-current formulation.
 
 ## Model Variables
 
@@ -90,7 +84,7 @@ Static or singular fits require a corresponding algebraic-current formulation.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{i}$ | [A] | Series current, directed terminal `1` to terminal `2` | $\mathbf{i} \in \mathbb{R}^K$
+$\mathbf{i}$ | [A] | Series current, directed from terminal 1 to terminal 2 | $\mathbf{i} \in \mathbb{R}^K$
 
 #### Algebraic
 
@@ -102,8 +96,8 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{v}_{1}$ | [V] | Terminal `1` voltage owned by EMT bus | $\mathbf{v}_{1} \in \mathbb{R}^N$
-$\mathbf{v}_{2}$ | [V] | Terminal `2` voltage owned by EMT bus | $\mathbf{v}_{2} \in \mathbb{R}^N$
+$\mathbf{v}_{1}$ | [V] | Terminal 1 voltage owned by EMT bus | $\mathbf{v}_{1} \in \mathbb{R}^N$
+$\mathbf{v}_{2}$ | [V] | Terminal 2 voltage owned by EMT bus | $\mathbf{v}_{2} \in \mathbb{R}^N$
 
 #### Algebraic
 
@@ -113,8 +107,8 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{i}^{\mathrm{inj}}_{1}$ | `i1` | Output | [A] | Current injection at terminal `1` | $\mathbf{i}^{\mathrm{inj}}_{1} \in \mathbb{R}^N$
-$\mathbf{i}^{\mathrm{inj}}_{2}$ | `i2` | Output | [A] | Current injection at terminal `2` | $\mathbf{i}^{\mathrm{inj}}_{2} \in \mathbb{R}^N$
+$\mathbf{i}^{\mathrm{inj}}_{1}$ | `i1` | Output | [A] | Current injection at terminal 1 | $\mathbf{i}^{\mathrm{inj}}_{1} \in \mathbb{R}^N$
+$\mathbf{i}^{\mathrm{inj}}_{2}$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathbf{i}^{\mathrm{inj}}_{2} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -157,43 +151,18 @@ None.
 \mathbf{v}_{1},\mathbf{v}_{2},
 \dfrac{\mathrm{d}\mathbf{v}_{1}}{\mathrm{d}t},
 \dfrac{\mathrm{d}\mathbf{v}_{2}}{\mathrm{d}t}
-  &\leftarrow \text{provisional terminal-bus voltage trajectories}
+  &\leftarrow \text{terminal-bus values and derivatives}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-The series current and its provisional derivative define the
-series-impedance input trajectory. The initialized terminal-bus trajectories
-define the two shunt-admittance input trajectories:
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}_0$ | [A] | Initial series-current vector | Required, $\mathbf{i}_0 \in \mathbb{R}^K$
 
 ```math
-\begin{aligned}
-\mathbf{i}
-  &\leftarrow \text{line-current start} \\
-\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-  &\leftarrow \mathbf{0} \\
-\left(\mathbf{i},\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}\right)
-  &\leftarrow \text{series-impedance input trajectory} \\
-\left(
-  \mathbf{P}_\phi^{\mathsf T}\mathbf{v}_{j},
-  \mathbf{P}_\phi^{\mathsf T}
-    \dfrac{\mathrm{d}\mathbf{v}_{j}}{\mathrm{d}t}
-\right)
-  &\leftarrow \text{terminal-$j$ shunt-admittance input trajectory},
-    \quad j \in \{1,2\}
-\end{aligned}
-```
-
-The child states and outputs are initialized from those trajectories. The
-assembled line and network residuals then replace the provisional derivative
-and determine consistent operator outputs while satisfying
-
-```math
-\Delta x f^{\mathbf{z}}(\mathbf{i})
-  + \mathbf{P}_\phi^{\mathsf T}
-    \left(\mathbf{v}_{2} - \mathbf{v}_{1}\right)
-  \leftarrow \mathbf{0}
+\mathbf{i} \leftarrow \mathbf{i}_0
 ```
 
 ### Output Initialization

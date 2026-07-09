@@ -1,11 +1,7 @@
 # Component Models
 
-This directory contains EMT component model notes for devices connected to EMT
+This directory documents EMT component models for devices connected to EMT
 buses.
-
-A model README should include `Block Diagram`, `Model Parameters`, `Submodels`,
-`Model Variables`, `Model Ports`, `Model Equations`, `Initialization`, and
-`Monitors` sections.
 
 ## Directories
 

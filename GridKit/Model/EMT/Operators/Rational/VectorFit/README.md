@@ -1,26 +1,17 @@
 # VectorFit Model
 
 `VectorFit` represents a vector-fitted matrix rational approximation with real
-or complex poles and residues.
-
-The rational approximation is represented in pole form:
+or complex poles and general residue matrices:
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
-  + \sum_{q = 1}^{Q} \frac{\mathbf{R}_q}{s - p_q}
+  + \sum_{q \in \{1,\ldots,Q\}} \dfrac{\mathbf{R}_q}{s - p_q}
 ```
 
-The Laplace domain representation of this model is:
-
-```math
-\mathbf{Y}(s) = \mathbf{H}(s)\mathbf{U}(s)
-```
-
-The time domain operator form is:
-
-```math
-\mathbf{y}(t) = f^{\mathbf{h}}(\mathbf{u})(t)
-```
+> [!NOTE]
+> A template parameter will select whether the input $\mathbf{u}$ is a
+> differential or algebraic vector. This page documents differential input;
+> algebraic input requires $\mathbf{E} = \mathbf{0}$.
 
 ## Block Diagram
 
@@ -42,32 +33,20 @@ $\mathbf{R}$ | $[y]/(\mathrm{s}[u])$ | `residues` | Residues | $\mathbf{R} \in \
 
 ### Parameter Validation
 
-The dimensions and pole count satisfy
+The input and output dimensions are positive, and the pole count is
+nonnegative. Poles are nonzero, real poles have real residues, and nonreal poles
+and residues are stored as adjacent conjugate pairs, with $q$ the first index of
+each pair.
 
 ```math
 \begin{aligned}
 N &> 0 \\
 K &> 0 \\
-Q &\ge 0
-\end{aligned}
-```
-
-Every pole must be nonzero. Real poles have real residues:
-
-```math
-\begin{aligned}
+Q &\ge 0 \\
 p_q &\ne 0,
   \quad q \in \{1,\ldots,Q\} \\
 p_q \in \mathbb{R}
-  &\Longrightarrow \mathbf{R}_q \in \mathbb{R}^{N \times K}
-\end{aligned}
-```
-
-Complex-valued poles and residues are ordered as adjacent conjugate pairs. For
-each pair, with $q$ the first index:
-
-```math
-\begin{aligned}
+  &\Longrightarrow \mathbf{R}_q \in \mathbb{R}^{N \times K} \\
 p_{q+1} &= p_q^{\ast} \\
 \mathbf{R}_{q+1} &= \mathbf{R}_q^{\ast}
 \end{aligned}
@@ -107,7 +86,7 @@ $\mathbf{v}_q$ | $\mathrm{s}[u]$ | Imaginary memory states | $\mathbf{v}_q \in \
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{y}$ | $[y]$ | Output contribution | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{y}$ | $[y]$ | Output vector | $\mathbf{y} \in \mathbb{R}^N$
 
 ### External Variables
 
@@ -126,7 +105,7 @@ None.
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[y]$ | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -152,7 +131,7 @@ $\mathbf{y}$ | `out` | Output | $[y]$ | Output contribution port | $\mathbf{y} \
 0 &= -\mathbf{y}
      + \mathbf{D}\mathbf{u}
      + \mathbf{E}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-     + \sum_{q = 1}^{Q}
+     + \sum_{q \in \{1,\ldots,Q\}}
        \left(
          \mathbf{A}_q\mathbf{w}_q
          - \mathbf{B}_q\mathbf{v}_q
@@ -166,31 +145,30 @@ None.
 
 ## Initialization
 
+Initialization assumes an affine input with zero second derivative.
+
 ### Input Initialization
 
 ```math
 \begin{aligned}
 \mathbf{u},\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  &\leftarrow \text{affine input trajectory start}
+  &\leftarrow \text{input value and derivative}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-The memory states use the zero-transient particular trajectory for the affine
-input:
-
 ```math
 \begin{aligned}
 \mathbf{w}_{q}
   &\leftarrow
-  -\frac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}
-  - \frac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}
+  -\dfrac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}
+  - \dfrac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}
     \dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t} \\
 \mathbf{v}_{q}
   &\leftarrow
-  \frac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}
-  + \frac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}
+  \dfrac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}
+  + \dfrac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}
     \dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t},
     \quad q \in \{1,\ldots,Q\} \\
 \dfrac{\mathrm{d}\mathbf{w}_q}{\mathrm{d}t}
@@ -204,9 +182,6 @@ input:
 ```
 
 ### Output Initialization
-
-The affine input has zero second derivative, so the initialized output
-trajectory is
 
 ```math
 \begin{aligned}

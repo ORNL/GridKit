@@ -1,4 +1,4 @@
-# Operators
+# Operator Models
 
 ```{toctree}
 :maxdepth: 4

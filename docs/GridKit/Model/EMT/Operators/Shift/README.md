@@ -1,4 +1,4 @@
-# Shift
+# Shift Operators
 
 ```{toctree}
 :maxdepth: 4

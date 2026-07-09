@@ -1,6 +1,6 @@
 # Load Models
 
-Load models consume bus voltages and inject currents into EMT buses.
+Load models use EMT bus voltages to determine current injections.
 
 ## Types
 

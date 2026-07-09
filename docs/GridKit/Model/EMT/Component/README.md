@@ -1,4 +1,4 @@
-# Component
+# Component Models
 
 ```{toctree}
 :maxdepth: 4

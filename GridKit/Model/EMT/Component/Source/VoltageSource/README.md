@@ -3,10 +3,6 @@
 `VoltageSource` represents an $N$-phase sinusoidal EMT voltage source connected
 to the EMT bus through terminal admittance.
 
-> [!NOTE]
-> The initial end-to-end implementation will support three-phase systems only
-> to establish a proof of concept. The formulation below remains $N$-phase.
-
 ## Block Diagram
 
 None.
@@ -37,17 +33,13 @@ None.
 
 ## Submodels
 
-Submodel | Type | Order | Inputs | Parameters | Outputs
--------- | ---- | ----- | ------ | ---------- | -------
-Terminal admittance $f^{\mathbf{y}}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbf{v} - \mathbf{e} \in \mathbb{R}^N$ | `Y` | $f^{\mathbf{y}}(\mathbf{v} - \mathbf{e}) \in \mathbb{R}^N$
+Submodel | Type | Order | Inputs | JSON | Outputs
+-------- | ---- | ----- | ------ | ---- | -------
+Terminal admittance $f^{\mathbf{y}}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbb{R}^N$ [V] | `Y` | $\mathbb{R}^N$ [A]
 
 ### Submodel Validation
 
-```math
-\begin{aligned}
-f^{\mathbf{y}} &: \mathbb{R}^N \rightarrow \mathbb{R}^N
-\end{aligned}
-```
+None.
 
 ## Model Variables
 
@@ -65,8 +57,6 @@ $\mathbf{e}$ | [V] | Source voltage vector | $\mathbf{e} \in \mathbb{R}^N$
 $\mathbf{i}$ | [A] | Current injection from source into EMT bus | $\mathbf{i} \in \mathbb{R}^N$
 
 ### External Variables
-
-External variables are owned by the EMT bus.
 
 #### Differential
 
@@ -113,35 +103,28 @@ None.
 ```math
 \begin{aligned}
 \mathbf{v},\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
-  &\leftarrow \text{provisional bus-voltage trajectory}
+  &\leftarrow \text{bus voltage and derivative}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-At the initial simulation time, the analytic source trajectory is initialized
-first:
+At initial time $t_0$, the terminal-admittance submodel uses
+$\mathbf{v} - \mathbf{e}$ and its time derivative as its input.
 
 ```math
 \begin{aligned}
 e_n
   &\leftarrow
-  \sqrt{2}E_n\cos\left(\phi_n\right),
+  \sqrt{2}E_n\cos\left(\omega t_0 + \phi_n\right),
   \quad n \in \{1,\ldots,N\} \\
 \dfrac{\mathrm{d}e_n}{\mathrm{d}t}
   &\leftarrow
-  -\sqrt{2}\omega E_n\sin\left(\phi_n\right),
-  \quad n \in \{1,\ldots,N\}
+  -\sqrt{2}\omega E_n\sin\left(\omega t_0 + \phi_n\right),
+  \quad n \in \{1,\ldots,N\} \\
+\mathbf{i}
+  &\leftarrow -f^{\mathbf{y}}(\mathbf{v} - \mathbf{e})
 \end{aligned}
-```
-
-The terminal-admittance submodel is then initialized with input value
-$\mathbf{v} - \mathbf{e}$ and input derivative
-$\mathrm{d}\mathbf{v}/\mathrm{d}t - \mathrm{d}\mathbf{e}/\mathrm{d}t$. Its
-initialized output determines the algebraic source current:
-
-```math
-\mathbf{i} \leftarrow -f^{\mathbf{y}}(\mathbf{v} - \mathbf{e})
 ```
 
 ### Output Initialization

@@ -1,37 +1,29 @@
 # StateSpace Model
 
-`StateSpace` represents a vector-fitted matrix rational approximation with real
-or complex poles and factorized residues.
-
-> [!NOTE]
-> Each pole contribution has residue
-> $\mathbf{R}_q = \mathbf{C}_{:,q}\mathbf{B}_{q,:}$, whose rank is at most one.
-> `StateSpace` therefore cannot replace `VectorFit` when full-rank residues are
-> required.
-
-The rational approximation is represented in state-space form:
+`StateSpace` represents a vector-fitted matrix rational approximation with
+real or complex poles and factorized residue terms:
 
 ```math
 \mathbf{H}(s) \approx \mathbf{D} + s\mathbf{E}
   + \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}
 ```
-The Laplace domain representation of this model is:
 
-```math
-\mathbf{Y}(s) = \mathbf{H}(s)\mathbf{U}(s)
-```
+> [!NOTE]
+> A template parameter will select whether the input $\mathbf{u}$ is a
+> differential or algebraic vector. This page documents differential input;
+> algebraic input requires $\mathbf{E} = \mathbf{0}$.
 
-The time domain operator form is:
-
-```math
-\mathbf{y}(t) = f^{\mathbf{h}}(\mathbf{u})(t)
-```
+> [!NOTE]
+> Each factorized term has residue
+> $\mathbf{R}_q = \mathbf{C}_{:,q}\mathbf{B}_{q,:}$, so
+> $\mathrm{rank}\left(\mathbf{R}_q\right) \le 1$. Terms with the same
+> pole may be repeated; their residues sum and can have higher rank.
 
 ## Block Diagram
 
 ![StateSpace rational-operator block diagram](../../../../../../docs/Figures/EMT/StateSpace/diagram.png)
 
-Figure 1: StateSpace rational approximation model
+Figure 1: StateSpace model
 
 ## Model Parameters
 
@@ -48,34 +40,22 @@ $\mathbf{B}$ | [1/s] | `B` | Input matrix | $\mathbf{B} \in \mathbb{C}^{Q \times
 
 ### Parameter Validation
 
-The dimensions and pole count satisfy
+The input and output dimensions are positive, and the pole count is
+nonnegative. Poles are nonzero, real poles have real factors, and nonreal poles
+and factors are stored as adjacent conjugate pairs, with $q$ the first index of
+each pair.
 
 ```math
 \begin{aligned}
 N &> 0 \\
 K &> 0 \\
-Q &> 0
-\end{aligned}
-```
-
-Every pole must be nonzero. Real poles have real factor rows and columns:
-
-```math
-\begin{aligned}
+Q &\ge 0 \\
 p_q &\ne 0,
   \quad q \in \{1,\ldots,Q\} \\
 p_q \in \mathbb{R}
   &\Longrightarrow
   \mathbf{C}_{:,q} \in \mathbb{R}^{N},
-  \quad \mathbf{B}_{q,:} \in \mathbb{R}^{K}
-\end{aligned}
-```
-
-Complex-valued poles and factors are ordered as adjacent conjugate pairs. For
-each pair, with $q$ the first index:
-
-```math
-\begin{aligned}
+  \quad \mathbf{B}_{q,:} \in \mathbb{R}^{K} \\
 p_{q+1} &= p_q^{\ast} \\
 \mathbf{C}_{:,q+1} &= \mathbf{C}_{:,q}^{\ast} \\
 \mathbf{B}_{q+1,:} &= \mathbf{B}_{q,:}^{\ast}
@@ -121,7 +101,7 @@ $\mathbf{v}$ | $[u]$ | Imaginary memory states | $\mathbf{v} \in \mathbb{R}^Q$
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{y}$ | $[y]$ | Output contribution | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{y}$ | $[y]$ | Output vector | $\mathbf{y} \in \mathbb{R}^N$
 
 ### External Variables
 
@@ -140,7 +120,7 @@ None.
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | $[y]$ | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{y}$ | `out` | Output | $[y]$ | Output vector port | $\mathbf{y} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -177,20 +157,20 @@ None.
 
 ## Initialization
 
+Initialization assumes an affine input with zero second derivative.
+
 ### Input Initialization
 
 ```math
 \begin{aligned}
 \mathbf{u},\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  &\leftarrow \text{affine input trajectory start}
+  &\leftarrow \text{input value and derivative}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-Using complex memory variable $\mathbf{x}$ with real part $\mathbf{w}$ and
-imaginary part $\mathbf{v}$, the memory states use the zero-transient particular
-trajectory for the affine input:
+When poles are present, let $\mathbf{x}$ be the complex memory vector:
 
 ```math
 \begin{aligned}
@@ -217,9 +197,6 @@ trajectory for the affine input:
 ```
 
 ### Output Initialization
-
-The affine input has zero second derivative, so the initialized output
-trajectory is
 
 ```math
 \begin{aligned}
