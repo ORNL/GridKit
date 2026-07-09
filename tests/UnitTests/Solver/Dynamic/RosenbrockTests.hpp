@@ -12,6 +12,7 @@
 #include "GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp"
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
+#include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
 
 namespace GridKit
 {
@@ -92,13 +93,19 @@ namespace GridKit
         return 0;
       }
 
-      void setTolerances([[maybe_unused]] RealT& rel_tol, [[maybe_unused]] RealT& abs_tol) const override
+      int setAbsoluteTolerance([[maybe_unused]] RealT rel_tol) override
       {
+        return 0;
       }
 
-      void setMaxSteps(IdxT& msa) const override
+      std::vector<ScalarT>& absoluteTolerance() override
       {
-        msa = 2000;
+        return abs_tol_;
+      }
+
+      const std::vector<ScalarT>& absoluteTolerance() const override
+      {
+        return abs_tol_;
       }
 
       int tagDifferentiable() override
@@ -256,16 +263,6 @@ namespace GridKit
         return f_;
       }
 
-      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() override
-      {
-        return jac_;
-      }
-
-      const GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>& getJacobian() const override
-      {
-        return jac_;
-      }
-
       std::vector<ScalarT>& getIntegrand() override
       {
         return g_;
@@ -318,7 +315,8 @@ namespace GridKit
       std::vector<ScalarT> fB_;
       std::vector<ScalarT> gB_;
 
-      GridKit::LinearAlgebra::COO_Matrix<RealT, IdxT>                 jac_;
+      std::vector<ScalarT> abs_tol_;
+
       std::unique_ptr<GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>> csr_jac_;
 
       RealT alpha_;
@@ -347,9 +345,9 @@ namespace GridKit
         model.allocate();
         model.initialize();
 
-        ReSolve::LinAlgWorkspaceCpu linear_workspace;
-        ReSolve::SystemSolver       lin_solver(&linear_workspace, "klu", "klu", "klu");
-        ReSolve::VectorHandler      vec_handler;
+        ReSolve::LinAlgWorkspaceCpu                          linear_workspace;
+        ReSolve::SystemSolver                                lin_solver(&linear_workspace, "klu", "klu", "klu");
+        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT> vec_handler;
 
         lin_solver.initialize();
 

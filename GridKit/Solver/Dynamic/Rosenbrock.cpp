@@ -6,6 +6,8 @@
 
 #include <sundials/sundials_types.h>
 
+#include <GridKit/MemoryUtilities/ResolveMemoryUtils.hpp>
+
 /**
  * @brief A small helper macro to "bubble" errors. The Rosenbrock implementations call many
  * fallible model and linear algebra functions, and often the only thing that can be
@@ -225,12 +227,12 @@ namespace Integrator
    * @param memspace The memory space that linear algebra operations should be performed in.
    */
   template <class ScalarT, typename IdxT>
-  Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                 tab,
-                                        GridKit::Model::Evaluator<ScalarT, IdxT>* model,
-                                        ReSolve::SystemSolver&                    lin_solver,
-                                        ReSolve::VectorHandler&                   vector_handler,
-                                        const ErrorNorm*                          err_norm,
-                                        ReSolve::memory::MemorySpace              memspace)
+  Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                             tab,
+                                        GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
+                                        ReSolve::SystemSolver&                                lin_solver,
+                                        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
+                                        const ErrorNorm<ScalarT, IdxT>*                       err_norm,
+                                        GridKit::memory::MemorySpace                          memspace)
     : tab_(std::move(tab)),
       model_(model),
       lin_solver_(lin_solver),
@@ -266,6 +268,9 @@ namespace Integrator
     workspace_.dFdt_            = std::make_unique<State>(size);
     workspace_.mass_            = std::make_unique<State>(size);
 
+    resolve_rhs_ = std::make_unique<ReSolve::vector::Vector>(size);
+    resolve_lhs_ = std::make_unique<ReSolve::vector::Vector>(size);
+
     BUBBLE_FAIL(y_prev_->allocate(memspace_));
     BUBBLE_FAIL(y_cur_->allocate(memspace_));
     BUBBLE_FAIL(y_new_->allocate(memspace_));
@@ -292,6 +297,7 @@ namespace Integrator
     {
       workspace_.stages_[i] = std::make_unique<State>(size);
       BUBBLE_FAIL(workspace_.stages_[i]->allocate(memspace_));
+      workspace_.stages_[i]->setToZero(memspace_);
     }
 
     if (tab_.order > 2)
@@ -339,7 +345,7 @@ namespace Integrator
         model_jacobian->getRowData(),
         model_jacobian->getColData(),
         model_jacobian->getValues(),
-        memspace_));
+        GridKit::memory::memorySpaceAsResolve(memspace_)));
     BUBBLE_FAIL(lin_solver_.setMatrix(workspace_.jacobian_.get()));
     BUBBLE_FAIL(lin_solver_.analyze());
     BUBBLE_FAIL(lin_solver_.preconditionerSetup());
@@ -562,7 +568,7 @@ namespace Integrator
         else
         {
           // TODO: Put code for alternative interpolation (Abdou) here
-          BUBBLE_FAIL(y_interp_->copyFromExternal(y_prev_.get(), memspace_, memspace_));
+          BUBBLE_FAIL(y_interp_->copyFromExternal(*y_prev_, memspace_, memspace_));
           vector_handler_.scal(1 - theta, y_interp_.get(), memspace_);
           vector_handler_.axpy(theta, y_cur_.get(), y_interp_.get(), memspace_);
         }
@@ -578,7 +584,7 @@ namespace Integrator
       }
       else
       {
-        BUBBLE_FAIL(y_interp_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
+        BUBBLE_FAIL(y_interp_->copyFromExternal(*y_cur_, memspace_, memspace_));
         break;
       }
     }
@@ -664,7 +670,7 @@ namespace Integrator
           model_jacobian->getRowData(),
           model_jacobian->getColData(),
           model_jacobian->getValues(),
-          memspace_));
+          GridKit::memory::memorySpaceAsResolve(memspace_)));
 
       // We must factorize first (slower) and then can re-factorize (faster) on later steps
       [[likely]]
@@ -702,7 +708,9 @@ namespace Integrator
 
       stats_.f_evals++;
     }
-    BUBBLE_FAIL(lin_solver_.solve(workspace_.RHS_first_stage_.get(), workspace_.stages_[0].get()));
+    resolve_rhs_->setData(workspace_.RHS_first_stage_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
+    resolve_lhs_->setData(workspace_.stages_[0]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
+    BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
     stats_.decomp_solves++;
 
     // Rest of stages
@@ -717,7 +725,7 @@ namespace Integrator
       }
       else
       {
-        BUBBLE_FAIL(workspace_.asum_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
+        BUBBLE_FAIL(workspace_.asum_->copyFromExternal(*y_cur_, memspace_, memspace_));
 
         for (size_t j = 0; j < i; j++)
         {
@@ -748,7 +756,9 @@ namespace Integrator
       vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);
       vector_handler_.axpy(-1, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
 
-      BUBBLE_FAIL(lin_solver_.solve(workspace_.RHS_.get(), workspace_.stages_[i].get()));
+      resolve_rhs_->setData(workspace_.RHS_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
+      resolve_lhs_->setData(workspace_.stages_[i]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
+      BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
       stats_.f_evals++;
       stats_.decomp_solves++;
     }
@@ -763,7 +773,7 @@ namespace Integrator
     }
     else
     {
-      BUBBLE_FAIL(y_new_->copyFromExternal(y_cur_.get(), memspace_, memspace_));
+      BUBBLE_FAIL(y_new_->copyFromExternal(*y_cur_, memspace_, memspace_));
 
       for (size_t j = 0; j < tab_.num_stages; j++)
       {
@@ -798,7 +808,7 @@ namespace Integrator
    * @return A reference to the estimated error.
    */
   template <class ScalarT, typename IdxT>
-  State& Rosenbrock<ScalarT, IdxT>::error_estimate() const
+  Rosenbrock<ScalarT, IdxT>::State& Rosenbrock<ScalarT, IdxT>::error_estimate() const
   {
     // Test to see if the tableau allows us to use a stage as the error estimate,
     // avoiding extra computation.
@@ -811,7 +821,7 @@ namespace Integrator
     else
     {
       // TODO: could make this function return recoverable errors by using std::variant
-      int err_code = workspace_.err_est_->copyFromExternal(workspace_.stages_[0].get(), memspace_, memspace_);
+      int err_code = workspace_.err_est_->copyFromExternal(*workspace_.stages_[0], memspace_, memspace_);
 
       if (err_code)
       {
@@ -898,7 +908,7 @@ namespace Integrator
   {
     if (tab_.order > 2)
     {
-      BUBBLE_FAIL(y_interp_->copyFromExternal(dense_coeff_[tab_.order - 3].get(), memspace_, memspace_));
+      BUBBLE_FAIL(y_interp_->copyFromExternal(*dense_coeff_[tab_.order - 3], memspace_, memspace_));
 
       for (size_t i = 1; i < static_cast<size_t>(tab_.order - 2); i++)
       {
@@ -967,7 +977,8 @@ namespace Integrator
    * @param memspace The memory space to be used for performing linear lagebra operations.
    * @see `Rosenbrock::error_estimate()`
    */
-  double InfNorm::errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const
+  template <class ScalarT, typename IdxT>
+  double InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const
   {
     if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
     {

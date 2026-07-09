@@ -52,6 +52,8 @@ if(GRIDKIT_ENABLE_RESOLVE)
       PUBLIC
       ReSolve::ReSolve
       PUBLIC
+      GridKit::dense_vector
+      PUBLIC
       GridKit::definitions
       PUBLIC
       GridKit::utilities_logger

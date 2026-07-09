@@ -8,19 +8,18 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/LinearAlgebra/Vector/Vector.hpp>
+#include <GridKit/LinearAlgebra/Vector/VectorHandler.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 
 #include <resolve/Common.hpp>
-#include <resolve/MemoryUtils.hpp>
 #include <resolve/SystemSolver.hpp>
 #include <resolve/matrix/Csr.hpp>
 #include <resolve/vector/Vector.hpp>
-#include <resolve/vector/VectorHandler.hpp>
-#include <resolve/workspace/LinAlgWorkspace.hpp>
 
 namespace Integrator
 {
-  using State = ReSolve::vector::Vector;
 
   /**
    * @brief Define control flow for `StepController`s to be able to control the step size of a `Rosenbrock` integrator.
@@ -71,8 +70,11 @@ namespace Integrator
    * @brief Interface for error norms. Used to calculate the `err` parameter in `StepController::nextStep` based on a residual state error vector.
    *
    */
+  template <class ScalarT, typename IdxT>
   class ErrorNorm
   {
+    using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+
   public:
     /**
      * @brief Calculate an error to be used by a step controller. Typically, an error > 1 indicates an error which does not meet tolerances, while
@@ -87,7 +89,7 @@ namespace Integrator
      *
      * @todo Allow this method to fail, since it will likely involve linear algebra calls.
      */
-    virtual double errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const = 0;
+    virtual double errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const = 0;
   };
 
   /**
@@ -101,6 +103,7 @@ namespace Integrator
   class Rosenbrock
   {
     using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+    using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
 
   public:
     /**
@@ -404,22 +407,22 @@ namespace Integrator
      * @brief The tableau of Rosenbrock coefficients currently being used by the integrator.
      *
      */
-    Tableau                                   tab_;
+    Tableau                                               tab_;
     /**
      * @brief The model being simulated.
      *
      */
-    GridKit::Model::Evaluator<ScalarT, IdxT>* model_;
+    GridKit::Model::Evaluator<ScalarT, IdxT>*             model_;
     /**
      * @brief The linear solver to be used during integration in \link time_step() \endlink.
      *
      */
-    ReSolve::SystemSolver&                    lin_solver_;
+    ReSolve::SystemSolver&                                lin_solver_;
     /**
      * @brief The vector handler to be used for vector operations by the integrator.
      *
      */
-    ReSolve::VectorHandler&                   vector_handler_;
+    GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler_;
     /**
      * @brief The `ErrorNorm` to be used by the `StepController` in \link integrate() \endlink.
      *
@@ -427,12 +430,12 @@ namespace Integrator
      *
      * @todo Should be removed from the `Rosenbrock` class. Whether or not this is needed is dependent on the `StepController`, so it should be stored there.
      */
-    const ErrorNorm*                          err_norm_;
+    const ErrorNorm<ScalarT, IdxT>*                       err_norm_;
     /**
      * @brief The memory space where linear algebra operations hsould be done in.
      *
      */
-    ReSolve::memory::MemorySpace              memspace_;
+    GridKit::memory::MemorySpace                          memspace_;
 
     /**
      * @brief The current simulation time.
@@ -461,6 +464,9 @@ namespace Integrator
      */
     std::unique_ptr<State> y_interp_;
 
+    std::unique_ptr<ReSolve::vector::Vector> resolve_rhs_;
+    std::unique_ptr<ReSolve::vector::Vector> resolve_lhs_;
+
     /**
      * @brief Configured parameters for the integrator.
      *
@@ -474,12 +480,12 @@ namespace Integrator
     Stats stats_;
 
   public:
-    Rosenbrock(Tableau&&                                 tab,
-               GridKit::Model::Evaluator<ScalarT, IdxT>* model,
-               ReSolve::SystemSolver&                    lin_solver,
-               ReSolve::VectorHandler&                   vector_handler,
-               const ErrorNorm*                          err_norm,
-               ReSolve::memory::MemorySpace              memspace = ReSolve::memory::HOST);
+    Rosenbrock(Tableau&&                                             tab,
+               GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
+               ReSolve::SystemSolver&                                lin_solver,
+               GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
+               const ErrorNorm<ScalarT, IdxT>*                       err_norm,
+               GridKit::memory::MemorySpace                          memspace = GridKit::memory::HOST);
 
     [[nodiscard("May fail. Check error code.")]]
     int allocate();
@@ -678,8 +684,11 @@ namespace Integrator
    *        to meet tolerance.
    *
    */
-  class InfNorm : public ErrorNorm
+  template <class ScalarT, typename IdxT>
+  class InfNorm : public ErrorNorm<ScalarT, IdxT>
   {
+    using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+
     /**
      * @brief A workspace for the linear algebra operations required to calculate the norm.
      *
@@ -730,6 +739,6 @@ namespace Integrator
     {
     }
 
-    double errorNorm(State& err, State& y, State& yprev, ReSolve::VectorHandler& handler, ReSolve::memory::MemorySpace memspace) const final;
+    double errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const final;
   };
 } // namespace Integrator
