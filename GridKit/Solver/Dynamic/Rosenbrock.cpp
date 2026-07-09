@@ -493,6 +493,8 @@ namespace Integrator
           stats_.min_step_ = std::min(stats_.min_step_, step_size_);
           stats_.max_step_ = std::max(stats_.max_step_, step_size_);
 
+          // Shift y_new_ -> y_cur_ -> y_prev_
+          // Then y_new_ is free to be replaced (contains old y_prev_)
           std::swap(y_prev_, y_cur_);
           std::swap(y_cur_, y_new_);
         }
