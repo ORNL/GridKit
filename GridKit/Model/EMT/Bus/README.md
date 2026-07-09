@@ -4,6 +4,10 @@
 bus voltages are differential variables, and the model equations enforce
 current balance at the bus.
 
+## Block Diagram
+
+None.
+
 ## Model Parameters
 
 Symbol | Units | JSON | Description | Note
@@ -23,6 +27,10 @@ N &> 0 \\
 ```
 
 ### Model Derived Parameters
+
+None.
+
+### Submodels
 
 None.
 
@@ -72,6 +80,10 @@ Each $\mathbf{i}^{\mathrm{inj}}_m$ may depend on the bus voltage and bus voltage
 
 None.
 
+### Wiring
+
+None.
+
 ## Initialization
 
 The initial bus voltage is given by the parameter vector $\mathbf{v}_0$:
@@ -80,8 +92,8 @@ The initial bus voltage is given by the parameter vector $\mathbf{v}_0$:
 \mathbf{v}(0)=\mathbf{v}_0
 ```
 
-Only $\mathbf{v}(0)$ is initialized. The solver computes
-$\dot{\mathbf{v}}(0)$ from the differential residual.
+Only $\mathbf{v}(0)$ is initialized. The solver computes the initial
+bus-voltage derivative from the differential residual.
 
 ## Monitors
 

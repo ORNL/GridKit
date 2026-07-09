@@ -5,6 +5,7 @@
 :titlesonly:
 :hidden:
 
+Bus <Bus/README>
 Component <Component/README>
 Operators <Operators/README>
 ```
