@@ -100,7 +100,7 @@ namespace Integrator
    *
    * @param other The other statistics to add to this one.
    *
-   * @todo Right now, the step numbers for \ref rejections and \ref skip_lu_steps are impossible to tell apart from the different simulations.
+   * @todo Right now, the step numbers for \ref rejections_ and \ref skip_lu_steps_ are impossible to tell apart from the different simulations.
    */
   template <class ScalarT, typename IdxT>
   typename Rosenbrock<ScalarT, IdxT>::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
@@ -217,7 +217,7 @@ namespace Integrator
    *
    * @param tab The tableau to be used for this integrator. Since tableaus contain `std::unique_ptr`, it must be moved into the integrator.
    * @param model The model to be simulated. Despite taking a pointer, this must be a valid pointer to an `Evaluator`.
-   * Must have \ref Evaluator::tag() set, and must be in Hessenberg form (\f(F(\dot y, y) = \dot y - f(y)\f)).
+   * Must have \ref GridKit::Model::Evaluator::tag() set, and must be in Hessenberg form (\f(F(\dot y, y) = \dot y - f(y)\f)).
    * @param lin_solver The linear solver to be used when constructing stages during simulation. The reference must remain valid for as long
    * as the Rosenbrock integrator lives.
    * @param vector_handler The vector handler to be used when simulating. The reference must remain valid for as long as the Rosenbrock
@@ -321,7 +321,7 @@ namespace Integrator
    *
    * - Sets the simulation time to `t0` and copies the initial condition from \ref model_.
    * - Analyzes \ref model_ Jacobian sparsity and runs the preconditioner
-   * - Generates the mass matrix from \ref Evaluator::tag(). If the tag is not properly set, then initialization will fail.
+   * - Generates the mass matrix from \ref GridKit::Model::Evaluator::tag(). If the tag is not properly set, then initialization will fail.
    * - Resets \ref stats_.
    *
    * @note This method can fail.
