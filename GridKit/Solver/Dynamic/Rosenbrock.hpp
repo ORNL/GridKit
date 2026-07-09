@@ -464,7 +464,17 @@ namespace Integrator
      */
     std::unique_ptr<State> y_interp_;
 
+    /**
+     * @brief Re::Solve vector used for the right hand side of a linear solve. No allocation is done -
+     * the vector simply has its data pointer updated to point at the correct GridKit vector before the
+     * solve operation is called.
+     *
+     */
     std::unique_ptr<ReSolve::vector::Vector> resolve_rhs_;
+    /**
+     * @brief Re::Solve vector used for the left hand side of a linear solve. \see resolve_rhs_
+     *
+     */
     std::unique_ptr<ReSolve::vector::Vector> resolve_lhs_;
 
     /**
