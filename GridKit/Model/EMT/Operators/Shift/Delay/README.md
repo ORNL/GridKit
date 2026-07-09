@@ -1,15 +1,19 @@
 # Delay Model
 
-`Delay` represents a scalar EMT delay operator using a lag-block chain.
-The model maps input signal $u$ to delayed output $y_{\mathrm{out}}$.
+For input units $[u]$, `Delay` represents a scalar EMT delay operator using a
+lag-block chain.
+The model maps input signal $u$ to delayed output $y_{\mathrm{out}}$ and
+preserves the input signal units.
 
-Note:
-- This is exact with forward Euler when the integration step satisfies $\Delta t=T$.
-- For other integration methods or time steps, this is a smooth approximation only.
+> [!WARNING]
+> The lag chain is an exact sampled $J$-step delay under forward Euler only
+> when the integration step satisfies $h = T$. Otherwise it is a smooth
+> approximation. The `fmax` parameter controls section density and does not
+> guarantee delay accuracy over a signal bandwidth.
 
 ## Block Diagram
 
-![](../../../../../../docs/Figures/EMT/Delay/diagram.png)
+![Delay operator block diagram](../../../../../../docs/Figures/EMT/Delay/diagram.png)
 
 Figure 1: Delay model
 
@@ -18,7 +22,7 @@ Figure 1: Delay model
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
 $\tau$ | [s] | `tau` | Total delay | Required, positive
-$f_{\max}$ | [Hz] | `fmax` | Highest frequency of interest | Required, positive
+$f_{\max}$ | [Hz] | `fmax` | Lag-chain section rate | Required, positive. Not a bandwidth guarantee
 
 ### Parameter Validation
 
@@ -34,7 +38,7 @@ f_{\max} &> 0
 ```math
 \begin{aligned}
 J &= \mathrm{ceil}(f_{\max}\tau) \\
-T &= \dfrac{\tau}{J}
+T &= \dfrac{\tau}{J} 
 \end{aligned}
 ```
 
@@ -54,7 +58,7 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Section differential states | $\mathbf{y}\in\mathbb{R}^J$
+$\mathbf{y}$ | $[u]$ | Section differential states | $\mathbf{y} \in \mathbb{R}^J$
 
 #### Algebraic
 
@@ -66,7 +70,7 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$u$ | [-] | Input signal | $u\in\mathbb{R}$
+$u$ | $[u]$ | Input signal | $u \in \mathbb{R}$
 
 #### Algebraic
 
@@ -76,8 +80,8 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$u$ | `input` | Input | [-] | Input signal port | $u\in\mathbb{R}$
-$y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{out}} = y_{J-1}$
+$u$ | `input` | Input | $[u]$ | Input signal port | $u \in \mathbb{R}$
+$y_{\mathrm{out}}$ | `out` | Output | $[u]$ | Delayed output port | Final section state
 
 ## Model Equations
 
@@ -85,9 +89,9 @@ $y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{ou
 
 ```math
 \begin{aligned}
-0 &= -T\dot{y}_0 - y_0 + u \\
-0 &= -T\dot{y}_n - y_n + y_{n-1},
-     \quad n\in\{1,\ldots,J-1\}
+0 &= -T\dfrac{\mathrm{d}y_0}{\mathrm{d}t} - y_0 + u \\
+0 &= -T\dfrac{\mathrm{d}y_n}{\mathrm{d}t} - y_n + y_{n-1},
+     \quad n \in \{1,\ldots,J-1\}
 \end{aligned}
 ```
 
@@ -97,7 +101,9 @@ None.
 
 ### Wiring
 
-None.
+```math
+y_{\mathrm{out}} = y_{J-1}
+```
 
 ## Initialization
 
@@ -105,33 +111,38 @@ None.
 
 ```math
 \begin{aligned}
-u,\dot{u}
+u,\dfrac{\mathrm{d}u}{\mathrm{d}t}
   &\leftarrow \text{affine input trajectory start}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-Initialization is performed by evaluating the affine-input residuals in
-dependency order:
+The section states use the zero-transient particular trajectory for the affine
+input:
 
 ```math
 \begin{aligned}
 y_n
   &\leftarrow
-  u - (n+1)T\dot{u},
-     \quad n\in\{0,\ldots,J-1\} \\
-\dot{y}_n
+  u - (n+1)T\dfrac{\mathrm{d}u}{\mathrm{d}t},
+     \quad n \in \{0,\ldots,J-1\} \\
+\dfrac{\mathrm{d}y_n}{\mathrm{d}t}
   &\leftarrow
-  \dot{u},
-     \quad n\in\{0,\ldots,J-1\}
+  \dfrac{\mathrm{d}u}{\mathrm{d}t},
+     \quad n \in \{0,\ldots,J-1\}
 \end{aligned}
 ```
 
 ### Output Initialization
 
 ```math
-y_{\mathrm{out}} \leftarrow u - \tau\dot{u}
+\begin{aligned}
+y_{\mathrm{out}}
+  &\leftarrow u - \tau\dfrac{\mathrm{d}u}{\mathrm{d}t} \\
+\dfrac{\mathrm{d}y_{\mathrm{out}}}{\mathrm{d}t}
+  &\leftarrow \dfrac{\mathrm{d}u}{\mathrm{d}t}
+\end{aligned}
 ```
 
 ## Monitors

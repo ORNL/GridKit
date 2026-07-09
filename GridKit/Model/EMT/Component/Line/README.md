@@ -1,4 +1,4 @@
-# Line Model
+# Line Models
 
 EMT line models represent $N$-phase network connections between buses in
 instantaneous phase coordinates.
@@ -12,44 +12,35 @@ Distributed transmission line models preserve propagation and delay.
 The formulation allows this model to be used for either constant or
 frequency-dependent line parameters.
 
-- `LineLumped` (See [documentation](LineLumped/README.md))
-- `LineDistributed` (See [documentation](LineDistributed/README.md))
+- `LineLumped` (See [LineLumped](LineLumped/README.md))
+- `LineDistributed` (See [LineDistributed](LineDistributed/README.md))
 
-## Examples
+## Proposed Model Specifications
 
-The snippets below show model composition only. Final `.case.json` syntax may
-change when the EMT line models are implemented.
+The snippets below define the proposed model-composition shape. They are not
+yet parser-supported `.case.json` entries. Fields under `params` belong to the
+named model, while `submodels` contains child-model specifications. A named
+`Yp`, `Yc`, or `H` specification is reused when the detailed model requires
+separate terminal or directional instances.
 
-### Nominal Pi Model
+### LineLumped
 
-The nominal pi model is the constant-parameter lumped case.
+`LineLumped` owns `N`, `K`, `conductors`, and `dx`. Its `Zp` and `Yp`
+specifications configure the series-impedance and shunt-admittance `VectorFit`
+submodels. The nominal pi specialization uses empty `poles` and `residues`.
+The frequency-dependent specialization supplies fitted poles and residues.
+The `D` and `E` coefficients remain owned by the submodels in both cases.
 
 ```js
 {
   "class": "LineLumped",
   "params": {
-    "Rp": ...,
-    "Lp": ...,
-    "Gp": ...,
-    "Cp": ...,
+    "N": ...,
+    "K": ...,
+    "conductors": [...],
     "dx": ...
-  }
-}
-```
-
-### Frequency-Dependent Pi Model
-
-The frequency-dependent pi model keeps the lumped topology and replaces the
-constant line matrices with rational parameter models.
-Note: using `VectorFit` models for `Zp` and `Yp` with no poles or residues
-is an equivalent way to define the nominal pi model: for `Zp`,
-$\mathbf{D}=\mathbf{R}'$ and $\mathbf{E}=\mathbf{L}'$. For `Yp`,
-$\mathbf{D}=\mathbf{G}'$ and $\mathbf{E}=\mathbf{C}'$.
-
-```js
-{
-  "class": "LineLumped",
-  "params": {
+  },
+  "submodels": {
     "Zp": {
       "class": "VectorFit",
       "params": {
@@ -67,46 +58,34 @@ $\mathbf{D}=\mathbf{G}'$ and $\mathbf{E}=\mathbf{C}'$.
         "poles": [...],
         "residues": [...]
       }
-    },
-    "dx": ...
-  }
-}
-```
-
-### Bergeron Model
-
-The constant parameter case uses constant characteristic admittance
-$f^{\mathbf{y}_c}=\mathbf{Y}_0$ and a lossless transport delay
-$f^{\mathbf{h}}(s)=e^{-s\tau}$.
-
-```js
-{
-  "class": "LineDistributed",
-  "params": {
-    "conductors": [...],
-    "Yc": ...,
-    "H": {
-      "class": "Delay",
-      "params": {
-        "tau": ...,
-        "fmax": ...
-      }
     }
   }
 }
 ```
 
-### Universal Line Model
+### LineDistributed
 
-The ULM is the general case with characteristic admittance `Yc` and
-current-form propagation function `H`. In equations these operators are written
-as $f^{\mathbf{y}_c}(\cdot)$ and $f^{\mathbf{h}}(\cdot)$.
+`LineDistributed` owns `N`, `K`, and `conductors`. Its `Yc` specification
+configures the characteristic-admittance `VectorFit`, while `H` configures the
+`Propagation` model. `Propagation` owns `K`, `tau`, and `fmax`, and its `input`
+and `output` specifications configure its two `VectorFit` factors.
+
+The Bergeron specialization uses pole-free `Yc`, `input`, and `output` models
+with zero `E` matrices. The `Yc` `D` matrix provides the constant
+characteristic admittance, while the `input` and `output` `D` matrices provide
+the constant delay-free modal factors. The `tau` values exclusively supply the
+modal delays. The universal line model supplies fitted poles and residues for
+`Yc`, `input`, and `output`.
 
 ```js
 {
   "class": "LineDistributed",
   "params": {
-    "conductors": [...],
+    "N": ...,
+    "K": ...,
+    "conductors": [...]
+  },
+  "submodels": {
     "Yc": {
       "class": "VectorFit",
       "params": {
@@ -119,6 +98,11 @@ as $f^{\mathbf{y}_c}(\cdot)$ and $f^{\mathbf{h}}(\cdot)$.
     "H": {
       "class": "Propagation",
       "params": {
+        "K": ...,
+        "tau": [...],
+        "fmax": ...
+      },
+      "submodels": {
         "input": {
           "class": "VectorFit",
           "params": {
@@ -128,8 +112,6 @@ as $f^{\mathbf{y}_c}(\cdot)$ and $f^{\mathbf{h}}(\cdot)$.
             "residues": [...]
           }
         },
-        "tau": [...],
-        "fmax": ...,
         "output": {
           "class": "VectorFit",
           "params": {

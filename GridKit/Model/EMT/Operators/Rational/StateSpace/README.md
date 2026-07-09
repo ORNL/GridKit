@@ -1,10 +1,13 @@
 # StateSpace Model
 
-`StateSpace` represents a vector-fitted matrix rational approximation with
-complex poles and factorized residues.
+`StateSpace` represents a vector-fitted matrix rational approximation with real
+or complex poles and factorized residues.
 
-Notes:
-- This cannot be used in general to replace `VectorFit`, as that model can support full-rank residuals, while this only supports rank-1 residuals.
+> [!NOTE]
+> Each pole contribution has residue
+> $\mathbf{R}_q = \mathbf{C}_{:,q}\mathbf{B}_{q,:}$, whose rank is at most one.
+> `StateSpace` therefore cannot replace `VectorFit` when full-rank residues are
+> required.
 
 The rational approximation is represented in state-space form:
 
@@ -13,47 +16,71 @@ The rational approximation is represented in state-space form:
   + \mathbf{C}(s\mathbf{I} - \mathbf{P})^{-1}\mathbf{B}
 ```
 The Laplace domain representation of this model is:
+
 ```math
 \mathbf{Y}(s) = \mathbf{H}(s)\mathbf{U}(s)
 ```
 
 The time domain operator form is:
+
 ```math
 \mathbf{y}(t) = f^{\mathbf{h}}(\mathbf{u})(t)
 ```
 
 ## Block Diagram
 
-![](../../../../../../docs/Figures/EMT/StateSpace/diagram.png)
+![StateSpace rational-operator block diagram](../../../../../../docs/Figures/EMT/StateSpace/diagram.png)
 
 Figure 1: StateSpace rational approximation model
 
 ## Model Parameters
 
-For output dimension $N$, input dimension $K$, and pole count $Q$:
+For output dimension $N$, input dimension $K$, pole count $Q$, input units
+$[u]$, and output units $[y]$:
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\mathbf{D}$ | [-] | `D` | Constant coefficient | $\mathbf{D}\in\mathbb{R}^{N\times K}$
-$\mathbf{E}$ | [s] | `E` | Linear coefficient | $\mathbf{E}\in\mathbb{R}^{N\times K}$
-$\mathbf{p}$ | [1/s] | `poles` | Poles | $\mathbf{p}\in\mathbb{C}^Q$
-$\mathbf{C}$ | [-] | `C` | Output matrix | $\mathbf{C}\in\mathbb{C}^{N\times Q}$
-$\mathbf{B}$ | [1/s] | `B` | Input matrix | $\mathbf{B}\in\mathbb{C}^{Q\times K}$
+$\mathbf{D}$ | $[y]/[u]$ | `D` | Constant coefficient | $\mathbf{D} \in \mathbb{R}^{N \times K}$
+$\mathbf{E}$ | $\mathrm{s}[y]/[u]$ | `E` | Linear coefficient | $\mathbf{E} \in \mathbb{R}^{N \times K}$
+$\mathbf{p}$ | [1/s] | `poles` | Poles | $\mathbf{p} \in \mathbb{C}^Q$
+$\mathbf{C}$ | $[y]/[u]$ | `C` | Output matrix | $\mathbf{C} \in \mathbb{C}^{N \times Q}$
+$\mathbf{B}$ | [1/s] | `B` | Input matrix | $\mathbf{B} \in \mathbb{C}^{Q \times K}$
 
 ### Parameter Validation
 
-Complex-valued poles and factors must be ordered as adjacent conjugate pairs. For
+The dimensions and pole count satisfy
+
+```math
+\begin{aligned}
+N &> 0 \\
+K &> 0 \\
+Q &> 0
+\end{aligned}
+```
+
+Every pole must be nonzero. Real poles have real factor rows and columns:
+
+```math
+\begin{aligned}
+p_q &\ne 0,
+  \quad q \in \{1,\ldots,Q\} \\
+p_q \in \mathbb{R}
+  &\Longrightarrow
+  \mathbf{C}_{:,q} \in \mathbb{R}^{N},
+  \quad \mathbf{B}_{q,:} \in \mathbb{R}^{K}
+\end{aligned}
+```
+
+Complex-valued poles and factors are ordered as adjacent conjugate pairs. For
 each pair, with $q$ the first index:
 
 ```math
 \begin{aligned}
-p_q &\ne 0 \\
-p_q &= (p_{q+1})^{\ast}
+p_{q+1} &= p_q^{\ast} \\
+\mathbf{C}_{:,q+1} &= \mathbf{C}_{:,q}^{\ast} \\
+\mathbf{B}_{q+1,:} &= \mathbf{B}_{q,:}^{\ast}
 \end{aligned}
 ```
-
-The corresponding columns of $\mathbf{C}$ and rows of $\mathbf{B}$ must follow
-the same conjugate-pair ordering.
 
 ### Derived Parameters
 
@@ -87,14 +114,14 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{w}$ | [-] | Real memory states | $\mathbf{w}\in\mathbb{R}^Q$
-$\mathbf{v}$ | [-] | Imaginary memory states | $\mathbf{v}\in\mathbb{R}^Q$
+$\mathbf{w}$ | $[u]$ | Real memory states | $\mathbf{w} \in \mathbb{R}^Q$
+$\mathbf{v}$ | $[u]$ | Imaginary memory states | $\mathbf{v} \in \mathbb{R}^Q$
 
 #### Algebraic
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Output contribution | $\mathbf{y}\in\mathbb{R}^N$
+$\mathbf{y}$ | $[y]$ | Output contribution | $\mathbf{y} \in \mathbb{R}^N$
 
 ### External Variables
 
@@ -102,7 +129,7 @@ $\mathbf{y}$ | [-] | Output contribution | $\mathbf{y}\in\mathbb{R}^N$
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{u}$ | [-] | Input vector | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^K$
 
 #### Algebraic
 
@@ -112,8 +139,8 @@ None.
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$\mathbf{u}$ | `input` | Input | [-] | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
-$\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
+$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^K$
+$\mathbf{y}$ | `out` | Output | $[y]$ | Output contribution port | $\mathbf{y} \in \mathbb{R}^N$
 
 ## Model Equations
 
@@ -121,11 +148,11 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 
 ```math
 \begin{aligned}
-0 &= -\dot{\mathbf{w}}
+0 &= -\dfrac{\mathrm{d}\mathbf{w}}{\mathrm{d}t}
      + \mathbf{A}\mathbf{w}
      - \boldsymbol{\Omega}\mathbf{v}
      + \mathbf{B}_{\mathrm{r}}\mathbf{u} \\
-0 &= -\dot{\mathbf{v}}
+0 &= -\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
      + \boldsymbol{\Omega}\mathbf{w}
      + \mathbf{A}\mathbf{v}
      + \mathbf{B}_{\mathrm{i}}\mathbf{u}
@@ -138,7 +165,7 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 \begin{aligned}
 0 &= -\mathbf{y}
      + \mathbf{D}\mathbf{u}
-     + \mathbf{E}\dot{\mathbf{u}}
+     + \mathbf{E}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
      + \mathbf{C}_{\mathrm{r}}\mathbf{w}
      - \mathbf{C}_{\mathrm{i}}\mathbf{v}
 \end{aligned}
@@ -154,38 +181,62 @@ None.
 
 ```math
 \begin{aligned}
-\mathbf{u},\dot{\mathbf{u}}
+\mathbf{u},\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
   &\leftarrow \text{affine input trajectory start}
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-Initialization is performed by evaluating the affine-input residuals in
-dependency order:
+Using complex memory variable $\mathbf{x}$ with real part $\mathbf{w}$ and
+imaginary part $\mathbf{v}$, the memory states use the zero-transient particular
+trajectory for the affine input:
 
 ```math
 \begin{aligned}
 \mathbf{x}
   &\leftarrow
   -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}
-  - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}} \\
+  - \mathbf{P}^{-2}\mathbf{B}
+    \dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t} \\
 \mathbf{w}
   &\leftarrow \mathrm{Re}(\mathbf{x}) \\
 \mathbf{v}
-  &\leftarrow \mathrm{Im}(\mathbf{x})
+  &\leftarrow \mathrm{Im}(\mathbf{x}) \\
+\dfrac{\mathrm{d}\mathbf{w}}{\mathrm{d}t}
+  &\leftarrow
+  \mathbf{A}\mathbf{w}
+  - \boldsymbol{\Omega}\mathbf{v}
+  + \mathbf{B}_{\mathrm{r}}\mathbf{u} \\
+\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
+  &\leftarrow
+  \boldsymbol{\Omega}\mathbf{w}
+  + \mathbf{A}\mathbf{v}
+  + \mathbf{B}_{\mathrm{i}}\mathbf{u}
 \end{aligned}
 ```
 
 ### Output Initialization
 
+The affine input has zero second derivative, so the initialized output
+trajectory is
+
 ```math
+\begin{aligned}
 \mathbf{y}
-  \leftarrow
+  &\leftarrow
   \mathbf{D}\mathbf{u}
-  + \mathbf{E}\dot{\mathbf{u}}
+  + \mathbf{E}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
   + \mathbf{C}_{\mathrm{r}}\mathbf{w}
-  - \mathbf{C}_{\mathrm{i}}\mathbf{v}
+  - \mathbf{C}_{\mathrm{i}}\mathbf{v} \\
+\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
+  &\leftarrow
+  \mathbf{D}\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
+  + \mathbf{C}_{\mathrm{r}}
+    \dfrac{\mathrm{d}\mathbf{w}}{\mathrm{d}t}
+  - \mathbf{C}_{\mathrm{i}}
+    \dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
+\end{aligned}
 ```
 
 ## Monitors
