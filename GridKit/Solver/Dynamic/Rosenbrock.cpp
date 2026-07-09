@@ -32,18 +32,18 @@ namespace Integrator
    *
    */
   template <class ScalarT, typename IdxT>
-  std::string Rosenbrock<ScalarT, IdxT>::StepInfo::csv_report() const
+  std::string Rosenbrock<ScalarT, IdxT>::StepInfo::csvReport() const
   {
     std::stringstream out;
     out << std::scientific << std::setprecision(20)
-        << sim_time << ','
-        << step_size << ','
-        << next_step_size << ','
-        << err_est << ','
-        << step_no << ','
-        << skip_lu << ','
-        << skip_f << ','
-        << accepted;
+        << sim_time_ << ','
+        << step_size_ << ','
+        << next_step_size_ << ','
+        << err_est_ << ','
+        << step_no_ << ','
+        << skip_lu_ << ','
+        << skip_f_ << ','
+        << accepted_;
 
     return out.str();
   }
@@ -59,14 +59,14 @@ namespace Integrator
   {
     std::stringstream out;
     out << std::scientific << std::setprecision(20)
-        << "Simulation Time: " << sim_time << '\n'
-        << "Step Size:       " << step_size << '\n'
-        << "Next Step Size:  " << next_step_size << '\n'
-        << "Error Estimate:  " << err_est << '\n'
-        << "Step Number:     " << step_no << '\n'
-        << "Skip LU:         " << skip_lu << '\n'
-        << "Skip F:          " << skip_f << '\n'
-        << "Accepted:        " << accepted;
+        << "Simulation Time: " << sim_time_ << '\n'
+        << "Step Size:       " << step_size_ << '\n'
+        << "Next Step Size:  " << next_step_size_ << '\n'
+        << "Error Estimate:  " << err_est_ << '\n'
+        << "Step Number:     " << step_no_ << '\n'
+        << "Skip LU:         " << skip_lu_ << '\n'
+        << "Skip F:          " << skip_f_ << '\n'
+        << "Accepted:        " << accepted_;
 
     return out.str();
   }
@@ -81,15 +81,15 @@ namespace Integrator
   std::string Rosenbrock<ScalarT, IdxT>::Stats::report() const
   {
     std::stringstream out;
-    out << "Rejections: " << rejections.size()
-        << "\nSteps: " << num_steps
-        << "\nSkip LU Steps: " << skip_lu_steps.size()
-        << "\nMin Step: " << min_step
-        << "\nMax Step: " << max_step
-        << "\nRHS Function Evals: " << f_evals
-        << "\nRHS Function Skipped: " << f_skipped
-        << "\nJacobian Evals: " << jac_evals
-        << "\nLinear Solves: " << decomp_solves;
+    out << "Rejections: " << rejections_.size()
+        << "\nSteps: " << num_steps_
+        << "\nSkip LU Steps: " << skip_lu_steps_.size()
+        << "\nMin Step: " << min_step_
+        << "\nMax Step: " << max_step_
+        << "\nRHS Function Evals: " << f_evals_
+        << "\nRHS Function Skipped: " << f_skipped_
+        << "\nJacobian Evals: " << jac_evals_
+        << "\nLinear Solves: " << decomp_solves_;
 
     return out.str();
   }
@@ -105,17 +105,17 @@ namespace Integrator
   template <class ScalarT, typename IdxT>
   typename Rosenbrock<ScalarT, IdxT>::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
   {
-    rejections.insert(rejections.end(), other.rejections.begin(), other.rejections.end());
-    skip_lu_steps.insert(skip_lu_steps.end(), other.skip_lu_steps.begin(), other.skip_lu_steps.end());
+    rejections_.insert(rejections_.end(), other.rejections_.begin(), other.rejections_.end());
+    skip_lu_steps_.insert(skip_lu_steps_.end(), other.skip_lu_steps_.begin(), other.skip_lu_steps_.end());
 
-    num_steps     += other.num_steps;
-    f_evals       += other.f_evals;
-    f_skipped     += other.f_skipped;
-    jac_evals     += other.jac_evals;
-    decomp_solves += other.decomp_solves;
+    num_steps_     += other.num_steps_;
+    f_evals_       += other.f_evals_;
+    f_skipped_     += other.f_skipped_;
+    jac_evals_     += other.jac_evals_;
+    decomp_solves_ += other.decomp_solves_;
 
-    min_step = std::min(min_step, other.min_step);
-    max_step = std::max(max_step, other.max_step);
+    min_step_ = std::min(min_step_, other.min_step_);
+    max_step_ = std::max(max_step_, other.max_step_);
 
     return *this;
   }
@@ -134,9 +134,9 @@ namespace Integrator
    * @param stage The stage being checked.
    */
   template <class ScalarT, typename IdxT>
-  constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::can_reuse_asum(size_t stage) const
+  constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::canReuseAsum(size_t stage) const
   {
-    assert(stage < num_stages);
+    assert(stage < num_stages_);
 
     if (stage == 0)
       return false;
@@ -166,14 +166,14 @@ namespace Integrator
    *
    */
   template <class ScalarT, typename IdxT>
-  constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::can_reuse_asum_for_out() const
+  constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::canReuseAsumForOut() const
   {
-    if (num_stages == 1)
+    if (num_stages_ == 1)
       return false;
 
-    for (size_t j = 0; j < num_stages - 1; j++)
+    for (size_t j = 0; j < num_stages_ - 1; j++)
     {
-      if (getA(num_stages - 1, j) != m[j])
+      if (getA(num_stages_ - 1, j) != m_[j])
       {
         return false;
       }
@@ -193,18 +193,18 @@ namespace Integrator
    * are included in this tableau.
    */
   template <class ScalarT, typename IdxT>
-  constexpr std::optional<size_t> Rosenbrock<ScalarT, IdxT>::Tableau::error_estimator_stage() const
+  constexpr std::optional<size_t> Rosenbrock<ScalarT, IdxT>::Tableau::errorEstimatorStage() const
   {
-    assert(e);
+    assert(e_);
 
     std::optional<size_t> re;
-    for (size_t j = 0; j < num_stages; j++)
+    for (size_t j = 0; j < num_stages_; j++)
     {
-      if (e[j] == 1.0 && !re)
+      if (e_[j] == 1.0 && !re)
       {
         re = j;
       }
-      else if (e[j] != 0.0)
+      else if (e_[j] != 0.0)
       {
         return {};
       }
@@ -282,9 +282,9 @@ namespace Integrator
     BUBBLE_FAIL(workspace_.dFdt_->allocate(memspace_));
     BUBBLE_FAIL(workspace_.mass_->allocate(memspace_));
 
-    if (tab_.e)
+    if (tab_.e_)
     {
-      std::optional<size_t> err_est_stage = tab_.error_estimator_stage();
+      std::optional<size_t> err_est_stage = tab_.errorEstimatorStage();
       if (!err_est_stage)
       {
         workspace_.err_est_ = std::make_unique<State>(size);
@@ -292,18 +292,18 @@ namespace Integrator
       }
     }
 
-    workspace_.stages_ = std::make_unique<std::unique_ptr<State>[]>(tab_.num_stages);
-    for (size_t i = 0; i < tab_.num_stages; i++)
+    workspace_.stages_ = std::make_unique<std::unique_ptr<State>[]>(tab_.num_stages_);
+    for (size_t i = 0; i < tab_.num_stages_; i++)
     {
       workspace_.stages_[i] = std::make_unique<State>(size);
       BUBBLE_FAIL(workspace_.stages_[i]->allocate(memspace_));
       workspace_.stages_[i]->setToZero(memspace_);
     }
 
-    if (tab_.order > 2)
+    if (tab_.order_ > 2)
     {
-      dense_coeff_ = std::make_unique<std::unique_ptr<State>[]>(tab_.order - 2);
-      for (size_t i = 0; i < static_cast<size_t>(tab_.order - 2); i++)
+      dense_coeff_ = std::make_unique<std::unique_ptr<State>[]>(tab_.order_ - 2);
+      for (size_t i = 0; i < static_cast<size_t>(tab_.order_ - 2); i++)
       {
         dense_coeff_[i] = std::make_unique<State>(size);
         BUBBLE_FAIL(dense_coeff_[i]->allocate(memspace_));
@@ -316,7 +316,7 @@ namespace Integrator
   }
 
   /**
-   * @brief Initializes the simulation. Must be called before \ref integrate() or \ref time_step(). Must also be called after
+   * @brief Initializes the simulation. Must be called before \ref integrate() or \ref timeStep(). Must also be called after
    * discrete events.
    *
    * - Sets the simulation time to `t0` and copies the initial condition from \ref model_.
@@ -372,7 +372,7 @@ namespace Integrator
    * @brief Simulate the given model, producing output at the given output times.
    *
    * Implements a simple time stepping algorithm and facilitates output.
-   * 1. Calls \ref time_step() to move the simulation forward by \ref step_size_ (starting at `params.starting_step`).
+   * 1. Calls \ref timeStep() to move the simulation forward by \ref step_size_ (starting at `params.starting_step`).
    * 2. Consults the `step_controller` to see if the step is accepted, and what the next \ref step_size_ should be.
    * 3. If accepted, advance simulation by adding \ref step_size_ to \ref current_time_ using Kahan summation and shifting
    * \ref y_new_ -> \ref y_cur_ -> \ref y_prev_.
@@ -422,7 +422,7 @@ namespace Integrator
     skip_f_  = false;
 
     bool prev_accept = true;
-    step_size_       = params.starting_step;
+    step_size_       = params.starting_step_;
 
     double next_step_size;
 
@@ -433,9 +433,9 @@ namespace Integrator
     // Generate output for each output time
     for (double out_time : out_times)
     {
-      while (current_time_ < out_time && stats_.num_steps < params.max_steps)
+      while (current_time_ < out_time && stats_.num_steps_ < params.max_steps_)
       {
-        BUBBLE_FAIL(time_step(current_time_, step_size_));
+        BUBBLE_FAIL(timeStep(current_time_, step_size_));
 
         double err = 0;
 
@@ -448,18 +448,18 @@ namespace Integrator
             return -1;
           }
 
-          State& err_vec = error_estimate();
+          State& err_vec = errorEstimate();
           err            = err_norm_->errorNorm(err_vec, *y_new_, *y_cur_, vector_handler_, memspace_);
         }
 
         StepControl next_step = step_controller.nextStep(err,
                                                          StepControl{
-                                                             .accept    = prev_accept,
-                                                             .step_size = step_size_,
+                                                             .accept_    = prev_accept,
+                                                             .step_size_ = step_size_,
                                                          },
-                                                         tab_.order);
-        prev_accept           = next_step.accept;
-        next_step_size        = next_step.step_size;
+                                                         tab_.order_);
+        prev_accept           = next_step.accept_;
+        next_step_size        = next_step.step_size_;
 
         if (prev_accept)
         {
@@ -476,22 +476,22 @@ namespace Integrator
           skip_f_                   = false;
           dense_coefficients_valid_ = false;
 
-          stats_.num_steps++;
+          stats_.num_steps_++;
           if (skip_lu_)
           {
-            stats_.skip_lu_steps.push_back(StepInfo{
-                .sim_time       = current_time_,
-                .step_size      = step_size_,
-                .next_step_size = next_step_size,
-                .err_est        = err,
-                .step_no        = stats_.num_steps,
-                .skip_lu        = skip_lu_,
-                .skip_f         = skip_f_,
-                .accepted       = prev_accept,
+            stats_.skip_lu_steps_.push_back(StepInfo{
+                .sim_time_       = current_time_,
+                .step_size_      = step_size_,
+                .next_step_size_ = next_step_size,
+                .err_est_        = err,
+                .step_no_        = stats_.num_steps_,
+                .skip_lu_        = skip_lu_,
+                .skip_f_         = skip_f_,
+                .accepted_       = prev_accept,
             });
           }
-          stats_.min_step = std::min(stats_.min_step, step_size_);
-          stats_.max_step = std::max(stats_.max_step, step_size_);
+          stats_.min_step_ = std::min(stats_.min_step_, step_size_);
+          stats_.max_step_ = std::max(stats_.max_step_, step_size_);
 
           std::swap(y_prev_, y_cur_);
           std::swap(y_cur_, y_new_);
@@ -500,15 +500,15 @@ namespace Integrator
         {
           skip_f_ = true;
 
-          stats_.rejections.push_back(StepInfo{
-              .sim_time       = current_time_,
-              .step_size      = step_size_,
-              .next_step_size = next_step_size,
-              .err_est        = err,
-              .step_no        = stats_.num_steps,
-              .skip_lu        = skip_lu_,
-              .skip_f         = skip_f_,
-              .accepted       = prev_accept,
+          stats_.rejections_.push_back(StepInfo{
+              .sim_time_       = current_time_,
+              .step_size_      = step_size_,
+              .next_step_size_ = next_step_size,
+              .err_est_        = err,
+              .step_no_        = stats_.num_steps_,
+              .skip_lu_        = skip_lu_,
+              .skip_f_         = skip_f_,
+              .accepted_       = prev_accept,
           });
         }
 
@@ -516,7 +516,7 @@ namespace Integrator
         // instead keep the step size the same and use time-delay Jacobian.
         // TODO: configure upper bound here
         double step_gain = next_step_size / step_size_;
-        if (params.skip_lu && step_gain >= 1 && step_gain <= 1.2)
+        if (params.skip_lu_ && step_gain >= 1 && step_gain <= 1.2)
         {
           skip_lu_ = true;
         }
@@ -534,14 +534,14 @@ namespace Integrator
           model_->updateTime(current_time_, 0.0);
 
           (*step_cb)(StepInfo{
-              .sim_time       = current_time_,
-              .step_size      = step_size_,
-              .next_step_size = next_step_size,
-              .err_est        = err,
-              .step_no        = stats_.num_steps,
-              .skip_lu        = skip_lu_,
-              .skip_f         = skip_f_,
-              .accepted       = prev_accept,
+              .sim_time_       = current_time_,
+              .step_size_      = step_size_,
+              .next_step_size_ = next_step_size,
+              .err_est_        = err,
+              .step_no_        = stats_.num_steps_,
+              .skip_lu_        = skip_lu_,
+              .skip_f_         = skip_f_,
+              .accepted_       = prev_accept,
           });
         }
       }
@@ -559,11 +559,11 @@ namespace Integrator
         {
           if (!dense_coefficients_valid_)
           {
-            BUBBLE_FAIL(calc_dense_coeff());
+            BUBBLE_FAIL(calcDenseCoeff());
             dense_coefficients_valid_ = true;
           }
 
-          BUBBLE_FAIL(interp_dense(theta));
+          BUBBLE_FAIL(interpDense(theta));
         }
         else
         {
@@ -605,7 +605,7 @@ namespace Integrator
    *
    * where the coefficients \f(\gamma, \alpha_i, a_{ij}, c_{ij}, m_j\f) come from the tableau, and the mass matrix \f(M\f) and Jacobian \f(J\f) come from the model.
    *
-   * This method uses some state which is maintained between calls for future calls to `time_step()` and to communicate with \ref integrate():
+   * This method uses some state which is maintained between calls for future calls to `timeStep()` and to communicate with \ref integrate():
    * - \ref y_cur_ is used as \f(y_0\f) and \ref y_new_ is used as \f(y_1\f)
    * - \ref asum_ is used as \f(y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\f) for every stage except the first. Often, \f(a_{ij} = a_{i-1,j}\f), so this variable
    * can be re-used between stages to save computation. Similarly, often \f(a_{ij} = m_j\f), so this variable can be re-used for computing \ref y_new_.
@@ -615,13 +615,13 @@ namespace Integrator
    * for the stage value \f(u_i\f).
    * - \ref RHS_first_stage_ is used as a special \ref RHS_ for the first stage, since it may need to be saved for the next step for the \ref skip_f_ flag.
    * Since \f(\alpha_1 = 0\f) always, this will have a value of \f(f \left(t_0, y_0\right)\f).
-   * - \ref stages_ stores all of the stages \f(u_i\f). These stages are necessary to be used in future calls to \ref error_estimate() and \ref calc_dense_coeff().
+   * - \ref stages_ stores all of the stages \f(u_i\f). These stages are necessary to be used in future calls to \ref errorEstimate() and \ref calcDenseCoeff().
    * - \ref skip_lu_ is used as a flag set by \ref integrate() to indicate that it is appropriate to use a time-delay Jacobian by re-using the factorization
    * of the last step.
-   * - \ref skip_f_ is used as a flag set by \ref integrate() to indicate that \f(t_0, y_0\f) have not changed since the last time `time_step()` was called,
+   * - \ref skip_f_ is used as a flag set by \ref integrate() to indicate that \f(t_0, y_0\f) have not changed since the last time `timeStep()` was called,
    * so \ref RHS_first_stage_ can be re-used from the previous step. This will only happen when a step was rejected, so \ref skip_lu_ should always be false,
    * and the entire first stage can't be re-used.
-   * - \ref jacobian_analyzed_ keeps track of whether the Jacobian has been factored in a previous call to `time_step()`. If so, then it can be re-factored
+   * - \ref jacobian_analyzed_ keeps track of whether the Jacobian has been factored in a previous call to `timeStep()`. If so, then it can be re-factored
    * in a faster way. The first factor must be done on actual data, so it cannot be performed pre-simulation.
    *
    * @pre Must call \ref initializeSimulation() beforehand.
@@ -645,7 +645,7 @@ namespace Integrator
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::time_step(double t0, double dt)
+  int Rosenbrock<ScalarT, IdxT>::timeStep(double t0, double dt)
   {
     // A flag to keep track of if y0 (stored in y_cur_) has been copied in to the model already, to avoid double-copying
     // for evaluating the Jacobian and residual on stage 1 (both evaluated at y0).
@@ -654,14 +654,14 @@ namespace Integrator
     // Form the left-hand side of the system. This is constant between stages.
     // Can sometimes be skipped if the method allows for time-delay Jacobians (such as w-methods).
     [[likely]]
-    if (!tab_.is_w || !skip_lu_)
+    if (!tab_.is_w_ || !skip_lu_)
     {
       BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
       y0_copied = true;
 
       // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
       // so we need a negative here since df/dy' = M.
-      model_->updateTime(t0, -1.0 / (dt * tab_.gamma));
+      model_->updateTime(t0, -1.0 / (dt * tab_.gamma_));
       BUBBLE_FAIL(model_->evaluateJacobian());
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
 
@@ -684,14 +684,14 @@ namespace Integrator
         workspace_.jacobian_analyzed_ = true;
       }
 
-      stats_.jac_evals++;
+      stats_.jac_evals_++;
     }
 
     // First stage
     [[unlikely]]
     if (skip_f_)
     {
-      stats_.f_skipped++;
+      stats_.f_skipped_++;
     }
     else
     {
@@ -706,22 +706,22 @@ namespace Integrator
       BUBBLE_FAIL(workspace_.RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
       vector_handler_.scal(-1, workspace_.RHS_first_stage_.get(), memspace_);
 
-      stats_.f_evals++;
+      stats_.f_evals_++;
     }
     resolve_rhs_->setData(workspace_.RHS_first_stage_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
     resolve_lhs_->setData(workspace_.stages_[0]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
     BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
-    stats_.decomp_solves++;
+    stats_.decomp_solves_++;
 
     // Rest of stages
-    for (size_t i = 1; i < tab_.num_stages; i++)
+    for (size_t i = 1; i < tab_.num_stages_; i++)
     {
       // Calculate asum
       // We can sometimes reuse asum from the previous stage
-      if (i > 1 && tab_.can_reuse_asum(i))
+      if (i > 1 && tab_.canReuseAsum(i))
       {
-        if (tab_.A[tab_.num_stages * i + i - 1] != 0.0)
-          vector_handler_.axpy(tab_.A[tab_.num_stages * i + i - 1], workspace_.stages_[i - 1].get(), workspace_.asum_.get(), memspace_);
+        if (tab_.A_[tab_.num_stages_ * i + i - 1] != 0.0)
+          vector_handler_.axpy(tab_.A_[tab_.num_stages_ * i + i - 1], workspace_.stages_[i - 1].get(), workspace_.asum_.get(), memspace_);
       }
       else
       {
@@ -729,8 +729,8 @@ namespace Integrator
 
         for (size_t j = 0; j < i; j++)
         {
-          if (tab_.A[tab_.num_stages * i + j] != 0.0)
-            vector_handler_.axpy(tab_.A[tab_.num_stages * i + j], workspace_.stages_[j].get(), workspace_.asum_.get(), memspace_);
+          if (tab_.A_[tab_.num_stages_ * i + j] != 0.0)
+            vector_handler_.axpy(tab_.A_[tab_.num_stages_ * i + j], workspace_.stages_[j].get(), workspace_.asum_.get(), memspace_);
         }
       }
 
@@ -739,15 +739,15 @@ namespace Integrator
       BUBBLE_FAIL(workspace_.csum_->setToZero(memspace_));
       for (size_t j = 0; j < i; j++)
       {
-        if (tab_.C[i * tab_.num_stages + j] != 0.0)
+        if (tab_.C_[i * tab_.num_stages_ + j] != 0.0)
         {
-          vector_handler_.axpy(tab_.C[i * tab_.num_stages + j] / dt, workspace_.stages_[j].get(), workspace_.csum_.get(), memspace_);
+          vector_handler_.axpy(tab_.C_[i * tab_.num_stages_ + j] / dt, workspace_.stages_[j].get(), workspace_.csum_.get(), memspace_);
         }
       }
 
       // TODO: non-autonomous model
       BUBBLE_FAIL(workspace_.asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
-      model_->updateTime(t0 + tab_.alpha_sum[i] * dt, 0.0);
+      model_->updateTime(t0 + tab_.alpha_sum_[i] * dt, 0.0);
       BUBBLE_FAIL(model_->evaluateResidual());
       workspace_.RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
 
@@ -759,27 +759,27 @@ namespace Integrator
       resolve_rhs_->setData(workspace_.RHS_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
       resolve_lhs_->setData(workspace_.stages_[i]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
       BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
-      stats_.f_evals++;
-      stats_.decomp_solves++;
+      stats_.f_evals_++;
+      stats_.decomp_solves_++;
     }
 
     // Compute the solution at time t + dt
     // It happens often where the solution is just asum of the last stage
     // plus some multiple of the last stage. In that case we can avoid a matmul
-    if (tab_.can_reuse_asum_for_out())
+    if (tab_.canReuseAsumForOut())
     {
       std::swap(workspace_.asum_, y_new_);
-      vector_handler_.axpy(tab_.m[tab_.num_stages - 1], workspace_.stages_[tab_.num_stages - 1].get(), y_new_.get(), memspace_);
+      vector_handler_.axpy(tab_.m_[tab_.num_stages_ - 1], workspace_.stages_[tab_.num_stages_ - 1].get(), y_new_.get(), memspace_);
     }
     else
     {
       BUBBLE_FAIL(y_new_->copyFromExternal(*y_cur_, memspace_, memspace_));
 
-      for (size_t j = 0; j < tab_.num_stages; j++)
+      for (size_t j = 0; j < tab_.num_stages_; j++)
       {
-        if (tab_.m[j] != 0.0)
+        if (tab_.m_[j] != 0.0)
         {
-          vector_handler_.axpy(tab_.m[j], workspace_.stages_[j].get(), y_new_.get(), memspace_);
+          vector_handler_.axpy(tab_.m_[j], workspace_.stages_[j].get(), y_new_.get(), memspace_);
         }
       }
     }
@@ -788,18 +788,18 @@ namespace Integrator
   }
 
   /**
-   * @brief Calculates an estimation of the error produced by the last call to \ref time_step() which can be used as the
+   * @brief Calculates an estimation of the error produced by the last call to \ref timeStep() which can be used as the
    * `err` argument for \ref ErrorNorm::errorNorm().
    *
    * Calculate the embedded error as
    *
    * \f[\hat{e} = \sum_{j = 1}^s e_j u_j,\f]
    *
-   * where \f(e_j\f) are tableau coefficients and \f(u_j\f) are stages computed by \ref time_step(). It happens often that
+   * where \f(e_j\f) are tableau coefficients and \f(u_j\f) are stages computed by \ref timeStep(). It happens often that
    * \f(e_j = 0\f) for all but one stage, where \f(e_j = 1\f). In that case, the stage itself is used as the error estimate,
    * and extra calculation can be avoided. For this reason, a reference to the estimate is returned to avoid an unnecessary copy.
    *
-   * @pre Must call \ref time_step(), and tableau must have coefficients for an embedded error estimator.
+   * @pre Must call \ref timeStep(), and tableau must have coefficients for an embedded error estimator.
    * @note This method can fail.
    *
    * @todo This function is fallible, but the return type makes it difficult to return an error code. Right now it will throw an
@@ -808,11 +808,11 @@ namespace Integrator
    * @return A reference to the estimated error.
    */
   template <class ScalarT, typename IdxT>
-  Rosenbrock<ScalarT, IdxT>::State& Rosenbrock<ScalarT, IdxT>::error_estimate() const
+  Rosenbrock<ScalarT, IdxT>::State& Rosenbrock<ScalarT, IdxT>::errorEstimate() const
   {
     // Test to see if the tableau allows us to use a stage as the error estimate,
     // avoiding extra computation.
-    std::optional<size_t> err_stage = tab_.error_estimator_stage();
+    std::optional<size_t> err_stage = tab_.errorEstimatorStage();
 
     if (err_stage)
     {
@@ -828,12 +828,12 @@ namespace Integrator
         throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
       }
 
-      vector_handler_.scal(tab_.e[0], workspace_.err_est_.get(), memspace_);
-      for (size_t j = 1; j < tab_.num_stages; j++)
+      vector_handler_.scal(tab_.e_[0], workspace_.err_est_.get(), memspace_);
+      for (size_t j = 1; j < tab_.num_stages_; j++)
       {
-        if (tab_.e[j] != 0.0)
+        if (tab_.e_[j] != 0.0)
         {
-          vector_handler_.axpy(tab_.e[j], workspace_.stages_[j].get(), workspace_.err_est_.get(), memspace_);
+          vector_handler_.axpy(tab_.e_[j], workspace_.stages_[j].get(), workspace_.err_est_.get(), memspace_);
         }
       }
 
@@ -842,32 +842,32 @@ namespace Integrator
   }
 
   /**
-   * @brief Calculate the interpolation nodes used by \ref interp_dense() based on \ref stages_ computed by
-   * the last call to \ref time_step(). Nodes are stored in \ref dense_coeff_. Only needs to be called once,
-   * but can be invalidated by future calls to \ref time_step(). \ref integrate() keeps track of \ref dense_coefficients_valid_,
+   * @brief Calculate the interpolation nodes used by \ref interpDense() based on \ref stages_ computed by
+   * the last call to \ref timeStep(). Nodes are stored in \ref dense_coeff_. Only needs to be called once,
+   * but can be invalidated by future calls to \ref timeStep(). \ref integrate() keeps track of \ref dense_coefficients_valid_,
    * which tells you if this function is needed to be called.
    *
-   * @pre Must call \ref time_step() first.
+   * @pre Must call \ref timeStep() first.
    *
    * @note This method can fail.
    *
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::calc_dense_coeff()
+  int Rosenbrock<ScalarT, IdxT>::calcDenseCoeff()
   {
-    if (tab_.order > 2)
+    if (tab_.order_ > 2)
     {
-      for (size_t j = 0; j < static_cast<size_t>(tab_.order - 2); j++)
+      for (size_t j = 0; j < static_cast<size_t>(tab_.order_ - 2); j++)
       {
         BUBBLE_FAIL(dense_coeff_[j]->setToZero(memspace_));
       }
 
-      for (size_t i = 0; i < tab_.num_stages; i++)
+      for (size_t i = 0; i < tab_.num_stages_; i++)
       {
-        for (size_t j = 0; j < static_cast<size_t>(tab_.order - 2); j++)
+        for (size_t j = 0; j < static_cast<size_t>(tab_.order_ - 2); j++)
         {
-          vector_handler_.axpy(tab_.H[j * tab_.num_stages + i], workspace_.stages_[i].get(), dense_coeff_[j].get(), memspace_);
+          vector_handler_.axpy(tab_.H_[j * tab_.num_stages_ + i], workspace_.stages_[i].get(), dense_coeff_[j].get(), memspace_);
         }
       }
     }
@@ -878,7 +878,7 @@ namespace Integrator
   /**
    * @brief Calculate an interpolated state at \f(\theta = \frac{t - t_0}{h}\f) between the initial state
    * \f(y_0\f) and final state \f(y_1\f) of the last step taken using dense interpolation nodes calculated
-   * by \ref calc_dense_coeff().
+   * by \ref calcDenseCoeff().
    *
    * For a valid interpolation of appropriate order, \f(\theta\f) must be in \f([0, 1]\f), although values
    * beyond 1 can be used for extrapolation if desired.
@@ -890,10 +890,10 @@ namespace Integrator
    *
    * \f[y(\theta) = (1 - \theta) y_0 + \theta \left(y_1 + (1 - \theta) \sum_{i = 1}^{p-2} \theta^{i-1} \hat{y}_i\right),\f]
    *
-   * where \f(\hat{y}_i\f) are the dense interpolation nodes calculated in \ref calc_dense_coeff() and \f(p\f) is the order of the method.
+   * where \f(\hat{y}_i\f) are the dense interpolation nodes calculated in \ref calcDenseCoeff() and \f(p\f) is the order of the method.
    * This calculation is carried out using synthetic division.
    *
-   * @pre Must call \ref calc_dense_coeff() first.
+   * @pre Must call \ref calcDenseCoeff() first.
    *
    * @note This method can fail.
    *
@@ -904,16 +904,16 @@ namespace Integrator
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::interp_dense(double theta)
+  int Rosenbrock<ScalarT, IdxT>::interpDense(double theta)
   {
-    if (tab_.order > 2)
+    if (tab_.order_ > 2)
     {
-      BUBBLE_FAIL(y_interp_->copyFromExternal(*dense_coeff_[tab_.order - 3], memspace_, memspace_));
+      BUBBLE_FAIL(y_interp_->copyFromExternal(*dense_coeff_[tab_.order_ - 3], memspace_, memspace_));
 
-      for (size_t i = 1; i < static_cast<size_t>(tab_.order - 2); i++)
+      for (size_t i = 1; i < static_cast<size_t>(tab_.order_ - 2); i++)
       {
         vector_handler_.scal(theta, y_interp_.get(), memspace_);
-        vector_handler_.axpy(1.0, dense_coeff_[tab_.order - 3 - i].get(), y_interp_.get(), memspace_);
+        vector_handler_.axpy(1.0, dense_coeff_[tab_.order_ - 3 - i].get(), y_interp_.get(), memspace_);
       }
 
       // TODO: This scal can be removed and absorbed into the next axpy, except that it currently isn't possible to put a scalar
@@ -942,10 +942,10 @@ namespace Integrator
   {
     StepControl next_step = prev_step;
 
-    double h_mult = std::min(params_.facmax, std::max(params_.facscale * std::pow(err, -1.0 / method_order), params_.facmin));
+    double h_mult = std::min(params_.fac_max_, std::max(params_.fac_scale_ * std::pow(err, -1.0 / method_order), params_.fac_min_));
 
-    next_step.accept     = err <= 1;
-    next_step.step_size *= h_mult;
+    next_step.accept_     = err <= 1;
+    next_step.step_size_ *= h_mult;
 
     return next_step;
   }
@@ -957,8 +957,8 @@ namespace Integrator
   StepControl FixedStep::nextStep([[maybe_unused]] double err, StepControl prev_step, [[maybe_unused]] uint8_t method_order)
   {
     return StepControl{
-        .accept    = true,
-        .step_size = prev_step.step_size,
+        .accept_    = true,
+        .step_size_ = prev_step.step_size_,
     };
   }
 
@@ -975,7 +975,7 @@ namespace Integrator
    * @param yprev \f(y_0\f) in the above formula.
    * @param handler The handler to be used for performing linear algebra operations.
    * @param memspace The memory space to be used for performing linear lagebra operations.
-   * @see `Rosenbrock::error_estimate()`
+   * @see `Rosenbrock::errorEstimate()`
    */
   template <class ScalarT, typename IdxT>
   double InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const
@@ -999,8 +999,8 @@ namespace Integrator
 
     // TODO: This scal shouldn't be necessary, but axpy doesn't support scaling the y parameter. In the future,
     // the scaling should be able to be put on the next axpy.
-    handler.scal(params_.rtol, workspace_.scale_.get(), memspace);
-    handler.axpy(1.0, params_.atol.get(), workspace_.scale_.get(), memspace);
+    handler.scal(params_.rel_tol_, workspace_.scale_.get(), memspace);
+    handler.axpy(1.0, params_.abs_tol_.get(), workspace_.scale_.get(), memspace);
     handler.diagSolve(workspace_.scale_.get(), workspace_.out_.get(), memspace);
 
     return handler.amax(workspace_.out_.get(), memspace);

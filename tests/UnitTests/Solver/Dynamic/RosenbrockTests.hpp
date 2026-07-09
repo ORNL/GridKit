@@ -339,7 +339,7 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        uint8_t expected_order = tab.order;
+        uint8_t expected_order = tab.order_;
 
         Model::TrigonometricDaeEvaluator<ScalarT, IdxT> model;
         model.allocate();
@@ -399,8 +399,8 @@ namespace GridKit
           }
 
           typename Rosenbrock::Parameters params;
-          params.starting_step = step_size;
-          params.max_steps     = static_cast<size_t>(ceil((final_time - 0.5) / step_size)) + 10;
+          params.starting_step_ = step_size;
+          params.max_steps_     = static_cast<size_t>(ceil((final_time - 0.5) / step_size)) + 10;
           if (integrator.integrate(out_times, step_controller, params, out_cb))
           {
             success = false;
