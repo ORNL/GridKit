@@ -95,7 +95,7 @@ namespace GridKit
       bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
       bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
 
-      MemoryHandler mem_; ///< Device memory manager object
+      MemoryManager mem_; ///< Device memory manager object
     };
   } // namespace LinearAlgebra
 } // namespace GridKit

@@ -84,7 +84,7 @@ namespace GridKit
       IdxT* map_to_sorted_ = {nullptr}; ///< map from orginal to sorted
       IdxT* map_to_dedup_  = {nullptr}; ///< map from sorted to deduplicated
 
-      MemoryHandler mem_; ///< Device memory manager object
+      MemoryManager mem_; ///< Device memory manager object
     };
   } // namespace LinearAlgebra
 } // namespace GridKit

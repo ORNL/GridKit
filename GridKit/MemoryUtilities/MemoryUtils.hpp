@@ -155,10 +155,8 @@ namespace GridKit
 // Check if GPU support is enabled in GridKit and set appropriate device memory manager.
 #if defined GridKit_ENABLE_CUDA
 #include <GridKit/LinearAlgebra/cuda/CudaMemory.hpp>
-using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Cuda>;
 #elif defined GridKit_ENABLE_HIP
 #include <GridKit/LinearAlgebra/hip/HipMemory.hpp>
-using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Hip>;
 #else
 #error Unrecognized device, probably bug in CMake configuration
 #endif
@@ -167,6 +165,18 @@ using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Hip>;
 
 // If no GPU support is present, set device memory manager to a dummy object.
 #include <GridKit/MemoryUtilities/cpu/CpuMemory.hpp>
-using MemoryHandler = GridKit::MemoryUtils<GridKit::memory::Cpu>;
 
 #endif
+
+namespace GridKit
+{
+#ifdef GridKit_ENABLE_GPU
+#if defined GridKit_ENABLE_CUDA
+  using MemoryManager = MemoryUtils<memory::Cuda>;
+#elif defined GridKit_ENABLE_HIP
+  using MemoryManager = MemoryUtils<memory::Hip>;
+#endif
+#else
+  using MemoryManager = MemoryUtils<memory::Cpu>;
+#endif
+} // namespace GridKit
