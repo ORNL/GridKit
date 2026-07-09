@@ -4,7 +4,7 @@
 The model maps input signal $u$ to delayed output $y_{\mathrm{out}}$.
 
 Note:
-- This is exact with forward Euler when the integration step satisfies $h=T$.
+- This is exact with forward Euler when the integration step satisfies $\Delta t=T$.
 - For other integration methods or time steps, this is a smooth approximation only.
 
 ## Block Diagram
@@ -29,14 +29,22 @@ f_{\max} &> 0
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
 ```math
 \begin{aligned}
-N &= \text{ceil}(f_{\max}\tau) \\
-T &= \dfrac{\tau}{N}
+J &= \mathrm{ceil}(f_{\max}\tau) \\
+T &= \dfrac{\tau}{J}
 \end{aligned}
 ```
+
+## Submodels
+
+None.
+
+### Submodel Validation
+
+None.
 
 ## Model Variables
 
@@ -46,7 +54,7 @@ T &= \dfrac{\tau}{N}
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$\mathbf{y}$ | [-] | Section differential states | $\mathbf{y}\in\mathbb{R}^N$
+$\mathbf{y}$ | [-] | Section differential states | $\mathbf{y}\in\mathbb{R}^J$
 
 #### Algebraic
 
@@ -69,7 +77,7 @@ None.
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
 $u$ | `input` | Input | [-] | Input signal port | $u\in\mathbb{R}$
-$y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{out}} = y_{N-1}$
+$y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{out}} = y_{J-1}$
 
 ## Model Equations
 
@@ -78,7 +86,8 @@ $y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{ou
 ```math
 \begin{aligned}
 0 &= -T\dot{y}_0 - y_0 + u \\
-0 &= -T\dot{y}_n - y_n + y_{n-1}
+0 &= -T\dot{y}_n - y_n + y_{n-1},
+     \quad n\in\{1,\ldots,J-1\}
 \end{aligned}
 ```
 
@@ -86,16 +95,43 @@ $y_{\mathrm{out}}$ | `out` | Output | [-] | Delayed output port | $y_{\mathrm{ou
 
 None.
 
+### Wiring
+
+None.
+
 ## Initialization
 
-For an affine initial input trajectory, let subscript $0$ denote initial values:
+### Input Initialization
 
 ```math
 \begin{aligned}
-y_{n,0} &= u_0 - (n+1)T\dot{u}_0 \\
-\dot{y}_{n,0} &= \dot{u}_0 \\
-y_{\mathrm{out},0} &= u_0 - \tau\dot{u}_0
+u,\dot{u}
+  &\leftarrow \text{affine input trajectory start}
 \end{aligned}
+```
+
+### Internal Initialization
+
+Initialization is performed by evaluating the affine-input residuals in
+dependency order:
+
+```math
+\begin{aligned}
+y_n
+  &\leftarrow
+  u - (n+1)T\dot{u},
+     \quad n\in\{0,\ldots,J-1\} \\
+\dot{y}_n
+  &\leftarrow
+  \dot{u},
+     \quad n\in\{0,\ldots,J-1\}
+\end{aligned}
+```
+
+### Output Initialization
+
+```math
+y_{\mathrm{out}} \leftarrow u - \tau\dot{u}
 ```
 
 ## Monitors

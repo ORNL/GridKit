@@ -5,7 +5,7 @@
 :titlesonly:
 :hidden:
 
-LoadRL <LoadRL/README>
+LoadZ <LoadZ/README>
 ```
 
 ```{include} ../../../../../../GridKit/Model/EMT/Component/Load/README.md

@@ -1,3 +1,3 @@
 # Load Models
 
-- `LoadRL` (See [LoadRL](LoadRL/README.md))
+- `LoadZ` (See [LoadZ](LoadZ/README.md))

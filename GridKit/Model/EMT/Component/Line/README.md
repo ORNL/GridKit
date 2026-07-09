@@ -1,7 +1,7 @@
 # Line Model
 
-EMT line models represent network connections between buses in instantaneous
-phase coordinates.
+EMT line models represent $N$-phase network connections between buses in
+instantaneous phase coordinates.
 
 ## Types
 
@@ -76,8 +76,8 @@ $\mathbf{D}=\mathbf{G}'$ and $\mathbf{E}=\mathbf{C}'$.
 ### Bergeron Model
 
 The constant parameter case uses constant characteristic admittance
-$\mathbf{y}_c=\mathbf{Y}_0$ and a lossless transport delay
-$\mathbf{H}(s)=e^{-s\tau}$.
+$f^{\mathbf{y}_c}=\mathbf{Y}_0$ and a lossless transport delay
+$f^{\mathbf{h}}(s)=e^{-s\tau}$.
 
 ```js
 {
@@ -99,7 +99,8 @@ $\mathbf{H}(s)=e^{-s\tau}$.
 ### Universal Line Model
 
 The ULM is the general case with characteristic admittance `Yc` and
-current-form propagation function `H`.
+current-form propagation function `H`. In equations these operators are written
+as $f^{\mathbf{y}_c}(\cdot)$ and $f^{\mathbf{h}}(\cdot)$.
 
 ```js
 {

@@ -26,11 +26,15 @@ N &> 0 \\
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
 None.
 
-### Submodels
+## Submodels
+
+None.
+
+### Submodel Validation
 
 None.
 
@@ -86,14 +90,29 @@ None.
 
 ## Initialization
 
-The initial bus voltage is given by the parameter vector $\mathbf{v}_0$:
+### Input Initialization
 
 ```math
-\mathbf{v}(0)=\mathbf{v}_0
+\begin{aligned}
+\mathbf{i}^{\mathrm{inj}}_m
+  &\leftarrow \text{connected-device current starts},
+     \quad m\in\{1,\ldots,M\}
+\end{aligned}
 ```
 
-Only $\mathbf{v}(0)$ is initialized. The solver computes the initial
-bus-voltage derivative from the differential residual.
+### Internal Initialization
+
+Initialization assigns the parameterized bus-voltage start:
+
+```math
+\mathbf{v} \leftarrow \text{parameterized bus-voltage start}
+```
+
+The differential residual determines the initial bus-voltage derivative.
+
+### Output Initialization
+
+None.
 
 ## Monitors
 

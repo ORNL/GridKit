@@ -1,32 +1,31 @@
 # Propagation Model
 
 `Propagation` represents the current-form EMT propagation operator used by
-`LineDistributed`. It composes two fitted `VectorFit` factors with scalar
-`Delay` blocks, one per propagation mode.
+`LineDistributed`. It composes fitted input and output factors with one scalar
+delay per mode.
 
 ```math
-\mathbf{H}_i(s)
+\mathbf{y}
 =
-\mathbf{F}_{\mathrm{out}}(s)
-\boldsymbol{\Delta}_{\tau}(s)
-\mathbf{F}_{\mathrm{in}}(s)
+f^{\mathbf{h}_{\mathrm{out}}}\left(
+  \boldsymbol{\delta}_{\tau}\left(
+    f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u})
+  \right)
+\right)
 ```
 
-where
+where, in the frequency domain,
 
 ```math
 \begin{aligned}
-\mathbf{F}_{\mathrm{in}}(s) &\approx
+f^{\mathbf{h}_{\mathrm{in}}}(s) &\approx
 \widehat{\mathbf{H}}^{\mathrm{mps}}(s)\mathbf{T}_v(s)^{\mathsf H} \\
-\boldsymbol{\Delta}_{\tau}(s) &=
-\operatorname{diag}\left(e^{-s\tau_1},\ldots,e^{-s\tau_M}\right) \\
-\mathbf{F}_{\mathrm{out}}(s) &\approx
+\boldsymbol{\delta}_{\tau}(s) &=
+\mathrm{diag}\left(e^{-s\tau_1},\ldots,e^{-s\tau_M}\right) \\
+f^{\mathbf{h}_{\mathrm{out}}}(s) &\approx
 \mathbf{T}_i(s).
 \end{aligned}
 ```
-
-The fitted factors are [`VectorFit`](../../Rational/VectorFit/README.md)
-operators.
 
 ## Block Diagram
 
@@ -36,36 +35,52 @@ Figure 1: Propagation model
 
 ## Model Parameters
 
-For conductor count $K$ and modal count $M$:
-
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\mathbf{F}_{\mathrm{in}}$ | [-] | `input` | Input-side fitted factor | `VectorFit`, $M\times K$
+$K$ | [-] | `K` | Number of conductors | Required, positive integer
 $\boldsymbol{\tau}$ | [s] | `tau` | Modal propagation delays | $\boldsymbol{\tau}\in\mathbb{R}^M$
-$f_{\max}$ | [Hz] | `fmax` | Delay highest frequency of interest | passed to each scalar `Delay`
-$\mathbf{F}_{\mathrm{out}}$ | [-] | `output` | Output-side fitted factor | `VectorFit`, $K\times M$
+$f_{\max}$ | [Hz] | `fmax` | Delay highest frequency of interest | Required, positive
 
 ### Parameter Validation
 
 ```math
 \begin{aligned}
-\mathbf{F}_{\mathrm{in}} &: M \times K \\
+K &> 0 \\
 \boldsymbol{\tau} &\in \mathbb{R}^M \\
-\mathbf{F}_{\mathrm{out}} &: K \times M
+\tau_m &> 0,\quad m\in\{1,\ldots,M\} \\
+f_{\max} &> 0
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
-None.
+```math
+\begin{aligned}
+J_m &= \mathrm{ceil}(f_{\max}\tau_m),\quad m\in\{1,\ldots,M\} \\
+Q_{\mathbf{h}} &=
+  Q_{\mathbf{h}_{\mathrm{in}}}
+  + \sum_{m=1}^{M}J_m
+  + Q_{\mathbf{h}_{\mathrm{out}}}
+\end{aligned}
+```
 
-### Submodels
+## Submodels
 
-Submodel | Inputs | Parameters | Outputs
--------- | ------ | ---------- | -------
-[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{in}}$ | $\mathbf{u}\in\mathbb{R}^K$ | `input` | $\mathbf{w}\in\mathbb{R}^M$
-[`Delay`](../Delay/README.md) $\boldsymbol{\delta}_{\tau}$ | $\mathbf{w}\in\mathbb{R}^M$ | `tau`, `fmax` | $\mathbf{z}\in\mathbb{R}^M$
-[`VectorFit`](../../Rational/VectorFit/README.md) $\mathbf{F}_{\mathrm{out}}$ | $\mathbf{z}\in\mathbb{R}^M$ | `output` | $\mathbf{y}\in\mathbb{R}^K$
+Submodel | Type | Order | Inputs | Outputs
+-------- | ---- | ----- | ------ | -------
+Input factor $f^{\mathbf{h}_{\mathrm{in}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{in}}}$ | $\mathbf{u}\in\mathbb{R}^K$ | $\mathbf{w}\in\mathbb{R}^M$
+Modal delay $\delta_{\tau_m}$ | [`Delay`](../Delay/README.md) | $J_m$ | $w_m\in\mathbb{R}$ | $z_m\in\mathbb{R}$
+Output factor $f^{\mathbf{h}_{\mathrm{out}}}$ | [`VectorFit`](../../Rational/VectorFit/README.md) | $Q_{\mathbf{h}_{\mathrm{out}}}$ | $\mathbf{z}\in\mathbb{R}^M$ | $\mathbf{y}\in\mathbb{R}^K$
+
+### Submodel Validation
+
+```math
+\begin{aligned}
+f^{\mathbf{h}_{\mathrm{in}}} &: \mathbb{R}^K \rightarrow \mathbb{R}^M \\
+\delta_{\tau_m} &: \mathbb{R} \rightarrow \mathbb{R},\quad m\in\{1,\ldots,M\} \\
+f^{\mathbf{h}_{\mathrm{out}}} &: \mathbb{R}^M \rightarrow \mathbb{R}^K
+\end{aligned}
+```
 
 ## Model Variables
 
@@ -112,15 +127,46 @@ None.
 
 ```math
 \begin{aligned}
-\mathbf{w} &= \mathbf{f}_{\mathrm{in}} * \mathbf{u} \\
-\mathbf{z} &= \boldsymbol{\delta}_{\tau} * \mathbf{w} \\
-\mathbf{y} &= \mathbf{f}_{\mathrm{out}} * \mathbf{z}.
+\mathbf{w} &= f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u}) \\
+z_m &= \delta_{\tau_m}(w_m),
+     \quad m\in\{1,\ldots,M\} \\
+\mathbf{z} &= \boldsymbol{\delta}_{\tau}(\mathbf{w}) \\
+\mathbf{y} &= f^{\mathbf{h}_{\mathrm{out}}}(\mathbf{z}).
 \end{aligned}
 ```
 
 ## Initialization
 
-None.
+### Input Initialization
+
+```math
+\begin{aligned}
+\mathbf{u}
+  &\leftarrow \text{input vector start}
+\end{aligned}
+```
+
+### Internal Initialization
+
+Initialization is performed by evaluating the submodels in dependency order.
+
+```math
+\begin{aligned}
+\mathbf{w}
+  &\leftarrow f^{\mathbf{h}_{\mathrm{in}}}(\mathbf{u}) \\
+z_m
+  &\leftarrow \delta_{\tau_m}(w_m),
+     \quad m\in\{1,\ldots,M\} \\
+\mathbf{z}
+  &\leftarrow \boldsymbol{\delta}_{\tau}(\mathbf{w})
+\end{aligned}
+```
+
+### Output Initialization
+
+```math
+\mathbf{y} \leftarrow f^{\mathbf{h}_{\mathrm{out}}}(\mathbf{z})
+```
 
 ## Monitors
 

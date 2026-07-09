@@ -13,7 +13,6 @@ A model README should include:
 
 ## Directories
 
-- `Bus` (See [Bus](Bus/README.md))
 - `Line` (See [Line](Line/README.md))
 - `Load` (See [Load](Load/README.md))
 - `Source` (See [Source](Source/README.md))

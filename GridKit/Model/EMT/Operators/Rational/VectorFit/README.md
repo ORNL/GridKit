@@ -15,9 +15,9 @@ The Laplace domain representation of this model is:
 \mathbf{Y}(s) = \mathbf{H}(s)\mathbf{U}(s)
 ```
 
-The time domain representation of this model is:
+The time domain operator form is:
 ```math
-\mathbf{y}(t) = (\mathbf{h}*\mathbf{u})(t)
+\mathbf{y}(t) = f^{\mathbf{h}}(\mathbf{u})(t)
 ```
 
 ## Block Diagram
@@ -44,21 +44,29 @@ For each pair, with $q$ the first index:
 
 ```math
 \begin{aligned}
-p_q &= (p_{q+1})^* &
-\mathbf{R}_q &= (\mathbf{R}_{q+1})^*
+p_q &= (p_{q+1})^{\ast} &
+\mathbf{R}_q &= (\mathbf{R}_{q+1})^{\ast}
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
 ```math
 \begin{aligned}
-\mathbf{a} &= \text{Re}(\mathbf{p}) \\
-\boldsymbol{\omega} &= \text{Im}(\mathbf{p}) \\
-\mathbf{A} &= \text{Re}(\mathbf{R}) \\
-\mathbf{B} &= \text{Im}(\mathbf{R})
+\mathbf{a} &= \mathrm{Re}(\mathbf{p}) \\
+\boldsymbol{\omega} &= \mathrm{Im}(\mathbf{p}) \\
+\mathbf{A} &= \mathrm{Re}(\mathbf{R}) \\
+\mathbf{B} &= \mathrm{Im}(\mathbf{R})
 \end{aligned}
 ```
+
+## Submodels
+
+None.
+
+### Submodel Validation
+
+None.
 
 ## Model Variables
 
@@ -73,7 +81,9 @@ $\mathbf{v}_q$ | [-] | Imaginary memory states | $\mathbf{v}_q\in\mathbb{R}^K$
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{y}$ | [-] | Output contribution | $\mathbf{y}\in\mathbb{R}^N$
 
 ### External Variables
 
@@ -112,29 +122,64 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 
 ### Algebraic Equations
 
-None.
+```math
+\begin{aligned}
+0 &= -\mathbf{y}
+     + \mathbf{D}\mathbf{u}
+     + \mathbf{E}\dot{\mathbf{u}}
+     + \sum_{q=1}^{Q}
+       \left(
+         \mathbf{A}_q\mathbf{w}_q
+         - \mathbf{B}_q\mathbf{v}_q
+       \right)
+\end{aligned}
+```
 
 ### Wiring
 
-```math
-\mathbf{y} = \mathbf{D}\mathbf{u} + \mathbf{E}\dot{\mathbf{u}}
-  + \sum_{q=1}^{Q}
-    \left(
-      \mathbf{A}_q\mathbf{w}_q
-      - \mathbf{B}_q\mathbf{v}_q
-    \right)
-```
+None.
 
 ## Initialization
 
-For an affine initial input trajectory, let subscript $0$ denote initial values:
+### Input Initialization
 
 ```math
 \begin{aligned}
-\mathbf{w}_{q,0} &= -\frac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}_0 - \frac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}_0 \\
-\mathbf{v}_{q,0} &= \frac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}_0 + \frac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}_0 \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \sum_{q=1}^{Q}\left(\mathbf{A}_q\mathbf{w}_{q,0} - \mathbf{B}_q\mathbf{v}_{q,0}\right)
+\mathbf{u},\dot{\mathbf{u}}
+  &\leftarrow \text{affine input trajectory start}
 \end{aligned}
+```
+
+### Internal Initialization
+
+Initialization is performed by evaluating the affine-input residuals in
+dependency order:
+
+```math
+\begin{aligned}
+\mathbf{w}_{q}
+  &\leftarrow
+  -\frac{a_q}{a_q^2 + \omega_q^2}\mathbf{u}
+  - \frac{a_q^2 - \omega_q^2}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}} \\
+\mathbf{v}_{q}
+  &\leftarrow
+  \frac{\omega_q}{a_q^2 + \omega_q^2}\mathbf{u}
+  + \frac{2a_q\omega_q}{(a_q^2 + \omega_q^2)^2}\dot{\mathbf{u}}
+\end{aligned}
+```
+
+### Output Initialization
+
+```math
+\mathbf{y}
+  \leftarrow
+  \mathbf{D}\mathbf{u}
+  + \mathbf{E}\dot{\mathbf{u}}
+  + \sum_{q\in\{1,\ldots,Q\}}
+    \left(
+      \mathbf{A}_q\mathbf{w}_{q}
+      - \mathbf{B}_q\mathbf{v}_{q}
+    \right)
 ```
 
 ## Monitors

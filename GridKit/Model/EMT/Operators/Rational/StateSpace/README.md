@@ -17,9 +17,9 @@ The Laplace domain representation of this model is:
 \mathbf{Y}(s) = \mathbf{H}(s)\mathbf{U}(s)
 ```
 
-The time domain representation of this model is:
+The time domain operator form is:
 ```math
-\mathbf{y}(t) = (\mathbf{h}*\mathbf{u})(t)
+\mathbf{y}(t) = f^{\mathbf{h}}(\mathbf{u})(t)
 ```
 
 ## Block Diagram
@@ -48,28 +48,36 @@ each pair, with $q$ the first index:
 ```math
 \begin{aligned}
 p_q &\ne 0 \\
-p_q &= (p_{q+1})^*
+p_q &= (p_{q+1})^{\ast}
 \end{aligned}
 ```
 
 The corresponding columns of $\mathbf{C}$ and rows of $\mathbf{B}$ must follow
 the same conjugate-pair ordering.
 
-### Model Derived Parameters
+### Derived Parameters
 
 ```math
 \begin{aligned}
-\mathbf{P} &= \text{diag}(p_1,\dots,p_Q) \\
-\mathbf{a} &= \text{Re}(\mathbf{p}) \\
-\boldsymbol{\omega} &= \text{Im}(\mathbf{p}) \\
-\mathbf{A} &= \text{diag}(a_1,\dots,a_Q) \\
-\boldsymbol{\Omega} &= \text{diag}(\omega_1,\dots,\omega_Q) \\
-\mathbf{C}_{\mathrm{r}} &= \text{Re}(\mathbf{C}) \\
-\mathbf{C}_{\mathrm{i}} &= \text{Im}(\mathbf{C}) \\
-\mathbf{B}_{\mathrm{r}} &= \text{Re}(\mathbf{B}) \\
-\mathbf{B}_{\mathrm{i}} &= \text{Im}(\mathbf{B})
+\mathbf{P} &= \mathrm{diag}(p_1,\ldots,p_Q) \\
+\mathbf{a} &= \mathrm{Re}(\mathbf{p}) \\
+\boldsymbol{\omega} &= \mathrm{Im}(\mathbf{p}) \\
+\mathbf{A} &= \mathrm{diag}(a_1,\ldots,a_Q) \\
+\boldsymbol{\Omega} &= \mathrm{diag}(\omega_1,\ldots,\omega_Q) \\
+\mathbf{C}_{\mathrm{r}} &= \mathrm{Re}(\mathbf{C}) \\
+\mathbf{C}_{\mathrm{i}} &= \mathrm{Im}(\mathbf{C}) \\
+\mathbf{B}_{\mathrm{r}} &= \mathrm{Re}(\mathbf{B}) \\
+\mathbf{B}_{\mathrm{i}} &= \mathrm{Im}(\mathbf{B})
 \end{aligned}
 ```
+
+## Submodels
+
+None.
+
+### Submodel Validation
+
+None.
 
 ## Model Variables
 
@@ -84,7 +92,9 @@ $\mathbf{v}$ | [-] | Imaginary memory states | $\mathbf{v}\in\mathbb{R}^Q$
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{y}$ | [-] | Output contribution | $\mathbf{y}\in\mathbb{R}^N$
 
 ### External Variables
 
@@ -124,29 +134,58 @@ $\mathbf{y}$ | `out` | Output | [-] | Output contribution port | $\mathbf{y} \in
 
 ### Algebraic Equations
 
-None.
+```math
+\begin{aligned}
+0 &= -\mathbf{y}
+     + \mathbf{D}\mathbf{u}
+     + \mathbf{E}\dot{\mathbf{u}}
+     + \mathbf{C}_{\mathrm{r}}\mathbf{w}
+     - \mathbf{C}_{\mathrm{i}}\mathbf{v}
+\end{aligned}
+```
 
 ### Wiring
 
-```math
-\mathbf{y}
-= \mathbf{D}\mathbf{u}
-  + \mathbf{E}\dot{\mathbf{u}}
-  + \mathbf{C}_{\mathrm{r}}\mathbf{w}
-  - \mathbf{C}_{\mathrm{i}}\mathbf{v}
-```
+None.
 
 ## Initialization
 
-For an affine initial input trajectory, let subscript $0$ denote initial values:
+### Input Initialization
 
 ```math
 \begin{aligned}
-\mathbf{x}_0 &= -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}_0 - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}}_0 \\
-\mathbf{w}_0 &= \text{Re}(\mathbf{x}_0) \\
-\mathbf{v}_0 &= \text{Im}(\mathbf{x}_0) \\
-\mathbf{y}_0 &= \mathbf{D}\mathbf{u}_0 + \mathbf{E}\dot{\mathbf{u}}_0 + \mathbf{C}_{\mathrm{r}}\mathbf{w}_0 - \mathbf{C}_{\mathrm{i}}\mathbf{v}_0
+\mathbf{u},\dot{\mathbf{u}}
+  &\leftarrow \text{affine input trajectory start}
 \end{aligned}
+```
+
+### Internal Initialization
+
+Initialization is performed by evaluating the affine-input residuals in
+dependency order:
+
+```math
+\begin{aligned}
+\mathbf{x}
+  &\leftarrow
+  -\mathbf{P}^{-1}\mathbf{B}\mathbf{u}
+  - \mathbf{P}^{-2}\mathbf{B}\dot{\mathbf{u}} \\
+\mathbf{w}
+  &\leftarrow \mathrm{Re}(\mathbf{x}) \\
+\mathbf{v}
+  &\leftarrow \mathrm{Im}(\mathbf{x})
+\end{aligned}
+```
+
+### Output Initialization
+
+```math
+\mathbf{y}
+  \leftarrow
+  \mathbf{D}\mathbf{u}
+  + \mathbf{E}\dot{\mathbf{u}}
+  + \mathbf{C}_{\mathrm{r}}\mathbf{w}
+  - \mathbf{C}_{\mathrm{i}}\mathbf{v}
 ```
 
 ## Monitors

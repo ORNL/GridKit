@@ -1,33 +1,49 @@
 # VoltageSource Model
 
-`VoltageSource` represents a sinusoidal EMT voltage source in instantaneous
-phase coordinates. The source voltage vector is connected to the EMT bus
-through terminal conductance $\mathbf{g}_{\mathrm{s}}$.
+`VoltageSource` represents an $N$-phase sinusoidal EMT voltage source connected
+to the EMT bus through terminal admittance.
+
+## Block Diagram
+
+None.
 
 ## Model Parameters
 
-For phase count $N$:
-
-Symbol                         | Units   | JSON     | Description                       | Note
--------------------------------|---------|----------|-----------------------------------|-----
+Symbol | Units | JSON | Description | Note
+------ | ----- | ---- | ----------- | ----
+$N$ | [-] | `N` | Number of phases | Required, positive integer
 $\mathbf{E}$                   | [V]     | `E`      | Source voltage magnitudes         | $\mathbf{E}\in\mathbb{R}^N$, RMS
 $\boldsymbol{\phi}$            | [rad]   | `phi`    | Source phase offsets              | $\boldsymbol{\phi}\in\mathbb{R}^N$
 $\omega$                       | [rad/s] | `omega`  | Source angular frequency          |
-$\mathbf{g}_{\mathrm{s}}$      | [S]     | `G`      | Terminal conductance              | $\mathbf{g}_{\mathrm{s}}\in\mathbb{R}^N$
 
 ### Parameter Validation
 
 ```math
 \begin{aligned}
+N &> 0 \\
 \mathbf{E} &\ge \mathbf{0} \\
-\omega &> 0 \\
-\mathbf{g}_{\mathrm{s}} &> \mathbf{0}
+\boldsymbol{\phi} &\in \mathbb{R}^N \\
+\omega &> 0
 \end{aligned}
 ```
 
-### Model Derived Parameters
+### Derived Parameters
 
-The phase count $N$ is the length of $\mathbf{E}$.
+None.
+
+## Submodels
+
+Submodel | Type | Order | Inputs | Outputs
+-------- | ---- | ----- | ------ | -------
+Terminal admittance $f^{\mathbf{y}}$ | [`VectorFit`](../../../Operators/Rational/VectorFit/README.md) | $Q_{\mathbf{y}}$ | $\mathbf{v}-\mathbf{e}\in\mathbb{R}^N$ | $f^{\mathbf{y}}(\mathbf{v}-\mathbf{e})\in\mathbb{R}^N$
+
+### Submodel Validation
+
+```math
+\begin{aligned}
+f^{\mathbf{y}} &: \mathbb{R}^N \rightarrow \mathbb{R}^N
+\end{aligned}
+```
 
 ## Model Variables
 
@@ -35,11 +51,15 @@ The phase count $N$ is the length of $\mathbf{E}$.
 
 #### Differential
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{i}$ | [A] | Current injection from source into EMT bus | $\mathbf{i}\in\mathbb{R}^N$
 
 #### Algebraic
 
-None.
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
+$\mathbf{e}$ | [V] | Source voltage vector | $\mathbf{e}\in\mathbb{R}^N$
 
 ### External Variables
 
@@ -47,8 +67,8 @@ External variables are owned by the EMT bus.
 
 #### Differential
 
-Symbol           | Units | Description                                  | Note
------------------|-------|----------------------------------------------|---------------------------------
+Symbol | Units | Description | Note
+------ | ----- | ----------- | ----
 $\mathbf{v}$     | [V]   | Bus voltage vector                          | $\mathbf{v} \in \mathbb{R}^N$
 
 #### Algebraic
@@ -65,34 +85,62 @@ $\mathbf{i}^{\mathrm{inj}}$ | `i` | Output | [A] | Current injection at source p
 
 ### Differential Equations
 
-None.
+```math
+0 = \mathbf{i} + f^{\mathbf{y}}(\mathbf{v}-\mathbf{e})
+```
 
 ### Algebraic Equations
 
-None.
+```math
+0
+=
+e_n
+-
+\sqrt{2}E_n\cos\left(\omega t + \phi_n\right),
+\quad n\in\{0,1,\ldots,N-1\}
+```
 
 ### Wiring
 
 ```math
-i^{\mathrm{inj}}_n
+\mathbf{i}^{\mathrm{inj}}
 =
-g_{\mathrm{s},n}
-\left(
-\sqrt{2}E_n\cos\left(\omega t + \phi_n\right) - v_n
-\right)
+\mathbf{i}
 ```
 
 ## Initialization
 
-No internal state is initialized. Initial values satisfy the wiring equations:
+### Input Initialization
 
 ```math
-i^{\mathrm{inj}}_{n,0}
-=
-g_{\mathrm{s},n}
-\left(
-\sqrt{2}E_n\cos\left(\phi_n\right) - v_{n,0}
-\right)
+\begin{aligned}
+\mathbf{v}
+  &\leftarrow \text{initialized bus voltage}
+\end{aligned}
+```
+
+### Internal Initialization
+
+Initialization is performed by evaluating the source assignments in dependency
+order:
+
+```math
+\begin{aligned}
+e_n
+  &\leftarrow
+  \sqrt{2}E_n\cos\left(\phi_n\right),
+  \quad n\in\{0,1,\ldots,N-1\} \\
+\mathbf{i}
+  &\leftarrow \text{source-current start} \\
+\mathbf{i} + f^{\mathbf{y}}(\mathbf{v}-\mathbf{e})
+  &\leftarrow \mathbf{0}
+\end{aligned}
+```
+
+### Output Initialization
+
+```math
+\mathbf{i}^{\mathrm{inj}} \leftarrow \mathbf{i}
 ```
 
 ## Monitors
