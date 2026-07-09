@@ -348,6 +348,7 @@ namespace GridKit
 
     // Available template instantiations
     template class VectorHandler<double, size_t>;
+    template class VectorHandler<double, int>;
 
   } // namespace LinearAlgebra
 } // namespace GridKit
