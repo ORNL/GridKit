@@ -7,6 +7,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <type_traits>
@@ -68,6 +69,11 @@ namespace GridKit
       BusType bus_type{BusType::INVALID}; ///< The kind of bus this data is for
 
       std::map<Parameters, ParameterValue> parameters; ///< Mapping of parameters to parameter values
+
+      // TODO: Bus-level freq_base and va_base are parsed but not applied.
+      // Prefer removing them as bus parameters in a future cleanup.
+      std::optional<RealT> freq_base; ///< Override for the system-wide base frequency
+      std::optional<RealT> va_base;   ///< Override for the system-wide power base
 
       /// Alias
       using MonitorableVariables = BusMonitorableVariables;
