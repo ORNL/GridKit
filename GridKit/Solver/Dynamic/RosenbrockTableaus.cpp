@@ -1,5 +1,3 @@
-#include <sundials/sundials_types.h>
-
 #include "Rosenbrock.hpp"
 
 namespace Integrator
@@ -200,5 +198,5 @@ namespace Integrator
     return re;
   }
 
-  template class Rosenbrock<sunrealtype, int>;
+  template class Rosenbrock<double, int>;
 } // namespace Integrator
