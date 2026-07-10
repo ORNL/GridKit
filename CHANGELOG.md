@@ -70,6 +70,7 @@
 - Added portable `Vector` class and policy-based memory utilities.
 - Add new `LinearSolver` interface for linear solvers.
 - Added new `Rosenbrock` integrator.
+- Clarified naming conventions for macros.
 
 ## v0.1
 
