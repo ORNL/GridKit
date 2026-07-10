@@ -19,6 +19,7 @@ class Gridkit(CMakePackage):
     variant("enzyme", default=False, description="Enable/Disable Enzyme")
     variant("ipopt", default=False, description="Enable/Disable Ipopt")
     variant("klu", default=False, description="Enable/Disable KLU")
+    variant("resolve", default=False, description="Enable/Disable Re::Solve")
     variant("sundials", default=False, description="Enable/Disable SUNDIALS")
     variant("ubsan", default=False, description="Enable/Disable undefined behavior sanitizer")
 
@@ -30,6 +31,8 @@ class Gridkit(CMakePackage):
 
     depends_on("enzyme", when="+enzyme")
     depends_on("ipopt", when="+ipopt")
+    depends_on("resolve@develop+klu", when="+resolve+klu")
+    depends_on("resolve@develop~klu", when="+resolve~klu")
     depends_on("sundials@develop+klu~mpi", when="+sundials+klu")
     depends_on("sundials@develop~klu~mpi", when="+sundials~klu")
 
@@ -39,10 +42,11 @@ class Gridkit(CMakePackage):
 
         args.extend(
             [
-                self.define_from_variant("GRIDKIT_ENABLE_IPOPT", "ipopt"),
-                self.define_from_variant("GRIDKIT_ENABLE_SUNDIALS", "sundials"),
-                self.define_from_variant("GRIDKIT_ENABLE_ENZYME", "enzyme"),
                 self.define_from_variant("GRIDKIT_ENABLE_ASAN", "asan"),
+                self.define_from_variant("GRIDKIT_ENABLE_ENZYME", "enzyme"),
+                self.define_from_variant("GRIDKIT_ENABLE_IPOPT", "ipopt"),
+                self.define_from_variant("GRIDKIT_ENABLE_SUNDIALS", "resolve"),
+                self.define_from_variant("GRIDKIT_ENABLE_SUNDIALS", "sundials"),
                 self.define_from_variant("GRIDKIT_ENABLE_UBSAN", "ubsan"),
             ]
         )
