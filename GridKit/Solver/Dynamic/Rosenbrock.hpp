@@ -25,6 +25,7 @@ namespace Integrator
    * @brief Define control flow for `StepController`s to be able to control the step size of a `Rosenbrock` integrator.
    *
    */
+  template <typename RealT>
   struct StepControl
   {
     /**
@@ -32,12 +33,12 @@ namespace Integrator
      *        the next state and re-step with the new `step_size`.
      *
      */
-    bool   accept_;
+    bool  accept_;
     /**
      * @brief The step size the next step should take.
      *
      */
-    double step_size_;
+    RealT step_size_;
   };
 
   /**
@@ -46,6 +47,7 @@ namespace Integrator
    *
    * @todo It may be best to have \ref usesError() return a reference to the \ref ErrorNorm that should be used.
    */
+  template <typename RealT>
   class StepController
   {
   public:
@@ -58,12 +60,12 @@ namespace Integrator
      * @param method_order The order of the method being used.
      * @return StepControl
      */
-    virtual StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) = 0;
+    virtual StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) = 0;
     /**
      * @brief Return whether or not the `nextStep` method implementation uses the `err` parameter. If `false`, this parameter is not calculated.
      *
      */
-    virtual bool        usesError() const                                                 = 0;
+    virtual bool               usesError() const                                                       = 0;
   };
 
   /**
@@ -74,6 +76,7 @@ namespace Integrator
   class ErrorNorm
   {
     using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+    using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
   public:
     /**
@@ -85,11 +88,11 @@ namespace Integrator
      * @param yprev The state from the previous step. Can be used for proper relative error normalization.
      * @param handler A vector handler which can be used to facilitate vector operations.
      * @param memspace The memory space which vector operations should be performed in/.
-     * @return double The error.
+     * @return The error.
      *
      * @todo Allow this method to fail, since it will likely involve linear algebra calls.
      */
-    virtual double errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const = 0;
+    virtual RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const = 0;
   };
 
   /**
@@ -116,22 +119,22 @@ namespace Integrator
        * @brief The simulation time at the beginning of the step
        *
        */
-      double sim_time_;
+      RealT  sim_time_;
       /**
        * @brief The size of the step.
        *
        */
-      double step_size_;
+      RealT  step_size_;
       /**
        * @brief The size of the next step, as governed by the current `StepController` in use.
        *
        */
-      double next_step_size_;
+      RealT  next_step_size_;
       /**
        * @brief The estimated error made by the step, as calculated by the current `ErrorNorm` in use.
        *
        */
-      double err_est_;
+      RealT  err_est_;
       /**
        * @brief The step number, starting at 1.
        *
@@ -202,12 +205,12 @@ namespace Integrator
        * @brief Minimum step size.
        *
        */
-      double                min_step_      = INFINITY;
+      RealT                 min_step_      = INFINITY;
       /**
        * @brief Maximum step size.
        *
        */
-      double                max_step_      = 0;
+      RealT                 max_step_      = 0;
 
       std::string report() const;
       Stats&      operator+=(const Stats& other);
@@ -224,7 +227,7 @@ namespace Integrator
        *
        * @todo Consider adding a starting step size selector to select this automatically.
        */
-      double starting_step_ = 1e-5;
+      RealT  starting_step_ = 1e-5;
       /**
        * @brief The maximum number of steps the integrator should take. If the integrator has not reached the final time before
        *        taking this many steps, then integration is stopped. For more details, see `integrate()`.
@@ -372,13 +375,13 @@ namespace Integrator
      *        the initial step after resuming.
      *
      */
-    double step_size_                = 0;
+    RealT step_size_                = 0;
     /**
      * @brief The step size of the previous step. Used for operations which need to be done on the current step, but step size
      *        control for the next step has already been performed.
      *
      */
-    double prev_step_size_           = 0;
+    RealT prev_step_size_           = 0;
     /**
      * @brief Whether or not the integrator should attempt to skip Jacobian decomposition on the next step. Controlled by the
      *        time stepping algorithm in \link integrate() \endlink . Generally, this should only be set if we suspect the Jacobian for the
@@ -387,21 +390,21 @@ namespace Integrator
      *        as the previous step.
      *
      */
-    bool   skip_lu_                  = false;
+    bool  skip_lu_                  = false;
     /**
      * @brief Whether or not the integrator should attempt to skip the residual function evaluation of the first stage on the
      *        next step. This should only be used when a step is rejected and the residual function is evaluated at the exact
      *        same arguments as the previous step. Then \ref RHS_first_stage_ can be re-used rather than re-calculated.
      *
      */
-    bool   skip_f_                   = false;
+    bool  skip_f_                   = false;
     /**
      * @brief Keeps track of whether or not the integrator currently has valid dense coefficients.
      *        i.e. they have been computed and haven't been invalidated by taking another step. This can be used to avoid
      *        re-computing dense coefficients when interpolating states multiple times in one step.
      *
      */
-    bool   dense_coefficients_valid_ = false;
+    bool  dense_coefficients_valid_ = false;
 
     /**
      * @brief The tableau of Rosenbrock coefficients currently being used by the integrator.
@@ -441,7 +444,7 @@ namespace Integrator
      * @brief The current simulation time.
      *
      */
-    double current_time_;
+    RealT current_time_;
 
     /**
      * @brief The state from last step.
@@ -504,10 +507,10 @@ namespace Integrator
     int initializeSimulation(RealT t0);
 
     [[nodiscard("May fail. Check error code.")]]
-    int integrate(const std::vector<double>&                          out_times,
-                  StepController&                                     step_controller,
+    int integrate(const std::vector<RealT>&                           out_times,
+                  StepController<RealT>&                              step_controller,
                   Parameters                                          params  = {},
-                  std::optional<std::function<void(double)>>          out_cb  = {},
+                  std::optional<std::function<void(RealT)>>           out_cb  = {},
                   std::optional<std::function<void(const StepInfo&)>> step_cb = {});
 
   private:
@@ -593,7 +596,7 @@ namespace Integrator
 
   public:
     [[nodiscard("May fail. Check error code.")]]
-    int timeStep(double t0, double dt);
+    int timeStep(RealT t0, RealT dt);
 
     State& errorEstimate() const;
 
@@ -601,7 +604,7 @@ namespace Integrator
     int calcDenseCoeff();
 
     [[nodiscard("May fail. Check error code.")]]
-    int interpDense(double theta);
+    int interpDense(RealT theta);
   };
 
   /**
@@ -609,7 +612,8 @@ namespace Integrator
    *        based on an error estimate.
    *
    */
-  class AdaptiveStep : public StepController
+  template <typename RealT>
+  class AdaptiveStep : public StepController<RealT>
   {
     /**
      * @brief Parameters for the step controller.
@@ -625,7 +629,7 @@ namespace Integrator
        * @note Should be between 0 and 1.
        *
        */
-      double fac_min_   = 0.2;
+      RealT fac_min_   = 0.2;
       /**
        * @brief The maximum multiple by which the step size can be multiplied to obtain the new step size.
        *        Decreasing this will make the integrator more conservative in selecting the step size -
@@ -634,7 +638,7 @@ namespace Integrator
        * @note Should be greater than 1.
        *
        */
-      double fac_max_   = 5.0;
+      RealT fac_max_   = 5.0;
       /**
        * @brief A "fudge factor" introduced to decrease risk of failing a step. The larger the fudge factor,
        *        the more likely steps will fail, but fewer steps will be taken.
@@ -642,7 +646,7 @@ namespace Integrator
        * @note Should be between 0 and 1.
        *
        */
-      double fac_scale_ = 0.9;
+      RealT fac_scale_ = 0.9;
     } params_;
 
   public:
@@ -651,7 +655,7 @@ namespace Integrator
     {
     }
 
-    StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) final;
+    StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) final;
 
     /**
      * @brief This controller uses error estimates.
@@ -673,9 +677,10 @@ namespace Integrator
    *        To set the fixed size, set the `Rosenbrock::Parameters::starting_step` parameter.
    *
    */
-  class FixedStep : public StepController
+  template <typename RealT>
+  class FixedStep : public StepController<RealT>
   {
-    StepControl nextStep(double err, StepControl prev_step, uint8_t method_order) final;
+    StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) final;
 
     /**
      * @brief This controller does not use error estimates.
@@ -698,6 +703,7 @@ namespace Integrator
   class InfNorm : public ErrorNorm<ScalarT, IdxT>
   {
     using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+    using RealT = ErrorNorm<ScalarT, IdxT>::RealT;
 
     /**
      * @brief A workspace for the linear algebra operations required to calculate the norm.
@@ -741,7 +747,7 @@ namespace Integrator
        *        the solution's maximum element than this.
        *
        */
-      double rel_tol_;
+      RealT rel_tol_;
     } params_;
 
     InfNorm(Parameters&& params)
@@ -749,6 +755,6 @@ namespace Integrator
     {
     }
 
-    double errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const final;
+    RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const final;
   };
 } // namespace Integrator

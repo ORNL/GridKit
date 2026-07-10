@@ -333,6 +333,7 @@ namespace GridKit
     class RosenbrockTests
     {
       using Rosenbrock = Integrator::Rosenbrock<ScalarT, IdxT>;
+      using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
       TestOutcome test_order(Rosenbrock::Tableau&& tab, double step_exponent_lower, double step_exponent_upper)
@@ -358,7 +359,7 @@ namespace GridKit
           return success.report(__func__);
         }
 
-        Integrator::FixedStep step_controller;
+        Integrator::FixedStep<RealT> step_controller;
 
         double              final_time = 2.0;
         std::vector<double> out_times  = {final_time};
