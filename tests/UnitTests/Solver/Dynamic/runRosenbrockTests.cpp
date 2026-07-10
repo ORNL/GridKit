@@ -1,4 +1,5 @@
-#include "GridKit/Solver/Dynamic/Rosenbrock.hpp"
+#include <GridKit/Solver/Dynamic/Rosenbrock.hpp>
+
 #include "RosenbrockTests.hpp"
 
 int main()
