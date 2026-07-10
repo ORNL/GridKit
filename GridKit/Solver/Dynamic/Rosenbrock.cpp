@@ -599,7 +599,7 @@ namespace Integrator
    *
    * Apply the Rosenbrock scheme using the stored tableau. Each stage \f(u_i\f) is calculated as
    *
-   * \f(\left(J - \frac{1}{h\gamma} M\right)u_i = -f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) - M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j,\f]
+   * \f[\left(J - \frac{1}{h\gamma} M\right)u_i = -f \left(t_0 + \alpha_ih, y_0 + \sum_{j = 1}^{i - 1} a_{ij}u_j\right) - M \sum_{j=1}^{i-1} \left(\frac{c_{ij}}{h}\right)u_j,\f]
    *
    * and the next state \f(y_1\f) is calculated as
    *
