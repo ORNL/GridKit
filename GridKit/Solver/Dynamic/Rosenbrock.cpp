@@ -347,7 +347,11 @@ namespace Integrator
         GridKit::memory::memorySpaceAsResolve(memspace_)));
     BUBBLE_FAIL(lin_solver_.setMatrix(workspace_.jacobian_.get()));
     BUBBLE_FAIL(lin_solver_.analyze());
-    BUBBLE_FAIL(lin_solver_.preconditionerSetup());
+
+    // TODO: This function needs to be called to properly use a preconditioner in ReSolve (if there is any), but currently will error
+    // if there is no preconditioner configured. Once we can detect if a preconditioner is configured, we can restore this functionality.
+    // Also, we will always want to use *right* preconditioning.
+    // BUBBLE_FAIL(lin_solver_.preconditionerSetup("right"));
 
     if (model_->tag().size() != static_cast<size_t>(model_->size()))
     {
@@ -454,14 +458,14 @@ namespace Integrator
           err            = err_norm_->errorNorm(err_vec, *y_new_, *y_cur_, vector_handler_, memspace_);
         }
 
-        StepControl next_step = step_controller.nextStep(err,
-                                                         StepControl{
-                                                             .accept_    = prev_accept,
-                                                             .step_size_ = step_size_,
-                                                         },
-                                                         tab_.order_);
-        prev_accept           = next_step.accept_;
-        next_step_size        = next_step.step_size_;
+        StepControl<RealT> next_step = step_controller.nextStep(err,
+                                                                StepControl<RealT>{
+                                                                    .accept_    = prev_accept,
+                                                                    .step_size_ = step_size_,
+                                                                },
+                                                                tab_.order_);
+        prev_accept                  = next_step.accept_;
+        next_step_size               = next_step.step_size_;
 
         if (prev_accept)
         {
