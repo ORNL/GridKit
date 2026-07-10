@@ -6,6 +6,7 @@
 
 #include <sundials/sundials_types.h>
 
+#include <GridKit/Constants.hpp>
 #include <GridKit/MemoryUtilities/ResolveMemoryUtils.hpp>
 
 /**
@@ -200,11 +201,11 @@ namespace Integrator
     std::optional<size_t> re;
     for (size_t j = 0; j < num_stages_; j++)
     {
-      if (e_[j] == 1.0 && !re)
+      if (e_[j] == GridKit::ONE<RealT> && !re)
       {
         re = j;
       }
-      else if (e_[j] != 0.0)
+      else if (e_[j] != GridKit::ZERO<RealT>)
       {
         return {};
       }
@@ -359,7 +360,7 @@ namespace Integrator
     std::unique_ptr<RealT[]> mass = std::make_unique<RealT[]>(model_->tag().size());
     for (size_t i = 0; i < static_cast<size_t>(model_->size()); i++)
     {
-      mass[i] = model_->tag()[i] ? 1.0 : 0.0;
+      mass[i] = model_->tag()[i] ? GridKit::ONE<RealT> : GridKit::ZERO<RealT>;
     }
     BUBBLE_FAIL(workspace_.mass_->copyFromExternal(mass.get(), memspace_, memspace_));
 
@@ -412,12 +413,15 @@ namespace Integrator
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<double>&                          out_times,
-                                           StepController&                                     step_controller,
+  int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<RealT>&                           out_times,
+                                           StepController<RealT>&                              step_controller,
                                            Parameters                                          params,
-                                           std::optional<std::function<void(double)>>          out_cb,
+                                           std::optional<std::function<void(RealT)>>           out_cb,
                                            std::optional<std::function<void(const StepInfo&)>> step_cb)
   {
+    constexpr RealT ONE  = GridKit::ONE<RealT>;
+    constexpr RealT ZERO = GridKit::ZERO<RealT>;
+
     skip_lu_ = false;
     skip_f_  = false;
 
@@ -518,7 +522,7 @@ namespace Integrator
         // instead keep the step size the same and use time-delay Jacobian.
         // TODO: configure upper bound here
         double step_gain = next_step_size / step_size_;
-        if (params.skip_lu_ && step_gain >= 1 && step_gain <= 1.2)
+        if (params.skip_lu_ && step_gain >= ONE && step_gain <= 1.2)
         {
           skip_lu_ = true;
         }
@@ -533,7 +537,7 @@ namespace Integrator
         if (step_cb)
         {
           BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
-          model_->updateTime(current_time_, 0.0);
+          model_->updateTime(current_time_, ZERO);
 
           (*step_cb)(StepInfo{
               .sim_time_       = current_time_,
@@ -554,7 +558,7 @@ namespace Integrator
       {
         // Theta = (t - t0) / h = (t - t1) / h + 1
         // current_time_ is t1 here
-        double theta = (out_time - current_time_) / prev_step_size_ + 1;
+        RealT theta = (out_time - current_time_) / prev_step_size_ + ONE;
 
         // Generate output at the appropriate time.
         if (tab_.hasDenseOutput())
@@ -579,7 +583,7 @@ namespace Integrator
         if (out_cb)
         {
           BUBBLE_FAIL(y_interp_->copyToExternal(model_->y().data(), memspace_, memspace_));
-          model_->updateTime(out_time, 0.0);
+          model_->updateTime(out_time, ZERO);
 
           (*out_cb)(out_time);
         }
@@ -647,8 +651,11 @@ namespace Integrator
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::timeStep(double t0, double dt)
+  int Rosenbrock<ScalarT, IdxT>::timeStep(RealT t0, RealT dt)
   {
+    constexpr RealT ZERO      = GridKit::ZERO<RealT>;
+    constexpr RealT MINUS_ONE = GridKit::MINUS_ONE<RealT>;
+
     // A flag to keep track of if y0 (stored in y_cur_) has been copied in to the model already, to avoid double-copying
     // for evaluating the Jacobian and residual on stage 1 (both evaluated at y0).
     bool y0_copied = false;
@@ -663,7 +670,7 @@ namespace Integrator
 
       // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
       // so we need a negative here since df/dy' = M.
-      model_->updateTime(t0, -1.0 / (dt * tab_.gamma_));
+      model_->updateTime(t0, MINUS_ONE / (dt * tab_.gamma_));
       BUBBLE_FAIL(model_->evaluateJacobian());
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
 
@@ -703,7 +710,7 @@ namespace Integrator
         BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
         y0_copied = true;
       }
-      model_->updateTime(t0, 0.0);
+      model_->updateTime(t0, ZERO);
       BUBBLE_FAIL(model_->evaluateResidual());
       BUBBLE_FAIL(workspace_.RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
       vector_handler_.scal(-1, workspace_.RHS_first_stage_.get(), memspace_);
@@ -722,7 +729,7 @@ namespace Integrator
       // We can sometimes reuse asum from the previous stage
       if (i > 1 && tab_.canReuseAsum(i))
       {
-        if (tab_.A_[tab_.num_stages_ * i + i - 1] != 0.0)
+        if (tab_.A_[tab_.num_stages_ * i + i - 1] != ZERO)
           vector_handler_.axpy(tab_.A_[tab_.num_stages_ * i + i - 1], workspace_.stages_[i - 1].get(), workspace_.asum_.get(), memspace_);
       }
       else
@@ -731,7 +738,7 @@ namespace Integrator
 
         for (size_t j = 0; j < i; j++)
         {
-          if (tab_.A_[tab_.num_stages_ * i + j] != 0.0)
+          if (tab_.A_[tab_.num_stages_ * i + j] != ZERO)
             vector_handler_.axpy(tab_.A_[tab_.num_stages_ * i + j], workspace_.stages_[j].get(), workspace_.asum_.get(), memspace_);
         }
       }
@@ -741,7 +748,7 @@ namespace Integrator
       BUBBLE_FAIL(workspace_.csum_->setToZero(memspace_));
       for (size_t j = 0; j < i; j++)
       {
-        if (tab_.C_[i * tab_.num_stages_ + j] != 0.0)
+        if (tab_.C_[i * tab_.num_stages_ + j] != ZERO)
         {
           vector_handler_.axpy(tab_.C_[i * tab_.num_stages_ + j] / dt, workspace_.stages_[j].get(), workspace_.csum_.get(), memspace_);
         }
@@ -749,14 +756,13 @@ namespace Integrator
 
       // TODO: non-autonomous model
       BUBBLE_FAIL(workspace_.asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
-      model_->updateTime(t0 + tab_.alpha_sum_[i] * dt, 0.0);
+      model_->updateTime(t0 + tab_.alpha_sum_[i] * dt, ZERO);
       BUBBLE_FAIL(model_->evaluateResidual());
       workspace_.RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
 
-      // TODO: examine if this -1 is correct
-      vector_handler_.scal(-1, workspace_.RHS_.get(), memspace_);
+      vector_handler_.scal(MINUS_ONE, workspace_.RHS_.get(), memspace_);
       vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);
-      vector_handler_.axpy(-1, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
+      vector_handler_.axpy(MINUS_ONE, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
 
       resolve_rhs_->setData(workspace_.RHS_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
       resolve_lhs_->setData(workspace_.stages_[i]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
@@ -779,7 +785,7 @@ namespace Integrator
 
       for (size_t j = 0; j < tab_.num_stages_; j++)
       {
-        if (tab_.m_[j] != 0.0)
+        if (tab_.m_[j] != ZERO)
         {
           vector_handler_.axpy(tab_.m_[j], workspace_.stages_[j].get(), y_new_.get(), memspace_);
         }
@@ -833,7 +839,7 @@ namespace Integrator
       vector_handler_.scal(tab_.e_[0], workspace_.err_est_.get(), memspace_);
       for (size_t j = 1; j < tab_.num_stages_; j++)
       {
-        if (tab_.e_[j] != 0.0)
+        if (tab_.e_[j] != GridKit::ZERO<RealT>)
         {
           vector_handler_.axpy(tab_.e_[j], workspace_.stages_[j].get(), workspace_.err_est_.get(), memspace_);
         }
@@ -906,8 +912,10 @@ namespace Integrator
    * @return An error code, with 0 as success.
    */
   template <class ScalarT, typename IdxT>
-  int Rosenbrock<ScalarT, IdxT>::interpDense(double theta)
+  int Rosenbrock<ScalarT, IdxT>::interpDense(RealT theta)
   {
+    constexpr RealT ONE = GridKit::ONE<RealT>;
+
     if (tab_.order_ > 2)
     {
       BUBBLE_FAIL(y_interp_->copyFromExternal(*dense_coeff_[tab_.order_ - 3], memspace_, memspace_));
@@ -915,21 +923,21 @@ namespace Integrator
       for (size_t i = 1; i < static_cast<size_t>(tab_.order_ - 2); i++)
       {
         vector_handler_.scal(theta, y_interp_.get(), memspace_);
-        vector_handler_.axpy(1.0, dense_coeff_[tab_.order_ - 3 - i].get(), y_interp_.get(), memspace_);
+        vector_handler_.axpy(ONE, dense_coeff_[tab_.order_ - 3 - i].get(), y_interp_.get(), memspace_);
       }
 
       // TODO: This scal can be removed and absorbed into the next axpy, except that it currently isn't possible to put a scalar
       // multiple on the y term.
-      vector_handler_.scal(1 - theta, y_interp_.get(), memspace_);
+      vector_handler_.scal(ONE - theta, y_interp_.get(), memspace_);
     }
     else
     {
       BUBBLE_FAIL(y_interp_->setToZero(memspace_));
     }
 
-    vector_handler_.axpy(1.0, y_cur_.get(), y_interp_.get(), memspace_);
+    vector_handler_.axpy(ONE, y_cur_.get(), y_interp_.get(), memspace_);
     vector_handler_.scal(theta, y_interp_.get(), memspace_);
-    vector_handler_.axpy(1 - theta, y_prev_.get(), y_interp_.get(), memspace_);
+    vector_handler_.axpy(ONE - theta, y_prev_.get(), y_interp_.get(), memspace_);
 
     return 0;
   }
@@ -940,11 +948,12 @@ namespace Integrator
    * \f[h_{new} = h * \min \left\{fac_{max}, \max\left\{fac_{min}, fac_{scale} \cdot e ^{-1/p}\right\}\right\}.\f]
    *
    */
-  StepControl AdaptiveStep::nextStep(double err, StepControl prev_step, uint8_t method_order)
+  template <typename RealT>
+  StepControl<RealT> AdaptiveStep<RealT>::nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order)
   {
-    StepControl next_step = prev_step;
+    StepControl<RealT> next_step = prev_step;
 
-    double h_mult = std::min(params_.fac_max_, std::max(params_.fac_scale_ * std::pow(err, -1.0 / method_order), params_.fac_min_));
+    double h_mult = std::min(params_.fac_max_, std::max(params_.fac_scale_ * std::pow(err, GridKit::MINUS_ONE<RealT> / method_order), params_.fac_min_));
 
     next_step.accept_     = err <= 1;
     next_step.step_size_ *= h_mult;
@@ -956,9 +965,10 @@ namespace Integrator
    * @brief Fixed step - accept every step, no matter the error, and keep the step size the same.
    *
    */
-  StepControl FixedStep::nextStep([[maybe_unused]] double err, StepControl prev_step, [[maybe_unused]] uint8_t method_order)
+  template <typename RealT>
+  StepControl<RealT> FixedStep<RealT>::nextStep([[maybe_unused]] RealT err, StepControl<RealT> prev_step, [[maybe_unused]] uint8_t method_order)
   {
-    return StepControl{
+    return StepControl<RealT>{
         .accept_    = true,
         .step_size_ = prev_step.step_size_,
     };
@@ -980,7 +990,7 @@ namespace Integrator
    * @see `Rosenbrock::errorEstimate()`
    */
   template <class ScalarT, typename IdxT>
-  double InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const
+  InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const
   {
     if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
     {
@@ -1002,11 +1012,15 @@ namespace Integrator
     // TODO: This scal shouldn't be necessary, but axpy doesn't support scaling the y parameter. In the future,
     // the scaling should be able to be put on the next axpy.
     handler.scal(params_.rel_tol_, workspace_.scale_.get(), memspace);
-    handler.axpy(1.0, params_.abs_tol_.get(), workspace_.scale_.get(), memspace);
+    handler.axpy(GridKit::ONE<RealT>, params_.abs_tol_.get(), workspace_.scale_.get(), memspace);
     handler.diagSolve(workspace_.scale_.get(), workspace_.out_.get(), memspace);
 
     return handler.amax(workspace_.out_.get(), memspace);
   }
 
   template class Rosenbrock<sunrealtype, int>;
+
+  template class FixedStep<sunrealtype>;
+
+  template class AdaptiveStep<sunrealtype>;
 } // namespace Integrator
