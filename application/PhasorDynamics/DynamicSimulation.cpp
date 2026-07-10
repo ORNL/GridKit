@@ -30,6 +30,7 @@ int main(int argc, const char* argv[])
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
   ida.setTolerance(study.rel_tol, study.abs_tol);
+  ida.setFixedStep(study.fixed_dt);
   ida.configureSimulation();
 
   // Start timer
