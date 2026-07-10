@@ -45,7 +45,7 @@ class Gridkit(CMakePackage):
                 self.define_from_variant("GRIDKIT_ENABLE_ASAN", "asan"),
                 self.define_from_variant("GRIDKIT_ENABLE_ENZYME", "enzyme"),
                 self.define_from_variant("GRIDKIT_ENABLE_IPOPT", "ipopt"),
-                self.define_from_variant("GRIDKIT_ENABLE_SUNDIALS", "resolve"),
+                self.define_from_variant("GRIDKIT_ENABLE_RESOLVE", "resolve"),
                 self.define_from_variant("GRIDKIT_ENABLE_SUNDIALS", "sundials"),
                 self.define_from_variant("GRIDKIT_ENABLE_UBSAN", "ubsan"),
             ]
