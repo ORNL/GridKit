@@ -36,7 +36,7 @@ TestStatus runStudy(StudyData study_data)
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(1e-7, 1e-9);
+  ida.setTolerance(study_data.rel_tol, study_data.abs_tol);
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;

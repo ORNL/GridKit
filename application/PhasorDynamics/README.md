@@ -7,6 +7,8 @@
   `system_model_file` | Path to the system model file[^1]
   `dt`                | A floating-point value for time step size
   `tmax`              | A floating-point value for max time
+  `rel_tol`           | Relative solver tolerance (default: 1.0e-7)
+  `abs_tol`           | Absolute solver tolerance override (default: 1.0e-9)
   `events`            | An array of event groups (see [Events](#events) below)
   `output_file`       | Path to output (CSV) file (optional)
   `reference_file`    | A string containing the name of the case (optional)
