@@ -69,6 +69,7 @@
 - Removed `COO_Matrix` class.
 - Added portable `Vector` class and policy-based memory utilities.
 - Added new `Rosenbrock` integrator.
+- Clarified naming conventions for macros.
 
 ## v0.1
 
