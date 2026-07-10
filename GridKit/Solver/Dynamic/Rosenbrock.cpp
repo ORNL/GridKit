@@ -4,8 +4,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include <sundials/sundials_types.h>
-
 #include <GridKit/Constants.hpp>
 #include <GridKit/MemoryUtilities/ResolveMemoryUtils.hpp>
 
@@ -1018,9 +1016,9 @@ namespace Integrator
     return handler.amax(workspace_.out_.get(), memspace);
   }
 
-  template class Rosenbrock<sunrealtype, int>;
+  template class Rosenbrock<double, int>;
 
-  template class FixedStep<sunrealtype>;
+  template class FixedStep<double>;
 
-  template class AdaptiveStep<sunrealtype>;
+  template class AdaptiveStep<double>;
 } // namespace Integrator
