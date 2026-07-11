@@ -9,7 +9,7 @@
   `tmax`              | A floating-point value for max time
   `rel_tol`           | Relative solver tolerance (default: 1.0e-7)
   `abs_tol`           | Absolute solver tolerance override (default: 1.0e-9)
-  `fixed_dt`          | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
+  `dt_fixed`          | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `events`            | An array of event groups (see [Events](#events) below)
   `output_file`       | Path to output (CSV) file (optional)
   `reference_file`    | A string containing the name of the case (optional)

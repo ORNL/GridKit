@@ -59,7 +59,7 @@ namespace GridKit
       /// absolute tolerance for the solver
       double                   abs_tol;
       /// fixed solver time step size, or 0 for adaptive stepping
-      double                   fixed_dt;
+      double                   dt_fixed;
       /// set of system events
       std::vector<SystemEvent> events;
       /// path to output file
@@ -94,7 +94,7 @@ namespace GridKit
       j.at("tmax").get_to(c.tmax);
       c.rel_tol  = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
       c.abs_tol  = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
-      c.fixed_dt = j.value("fixed_dt", 0.0);
+      c.dt_fixed = j.value("dt_fixed", 0.0);
 
       for (auto& raw_event : j.at("events"))
       {
