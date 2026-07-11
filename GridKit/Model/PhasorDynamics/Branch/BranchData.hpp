@@ -17,8 +17,10 @@ namespace GridKit
     {
       R,     ///< Line series resistance
       X,     ///< Line series reactance
-      G,     ///< Total shunt conductance
-      B,     ///< Total shunt susceptance
+      G,     ///< Total line shunt conductance
+      B,     ///< Total line shunt susceptance
+      Gmag,  ///< Magnetizing shunt conductance at bus 1 (from bus, tapped side)
+      Bmag,  ///< Magnetizing shunt susceptance at bus 1 (from bus, tapped side)
       tap,   ///< Off-nominal tap magnitude on bus1 side
       phase, ///< Phase shift angle in radians
     };
