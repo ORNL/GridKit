@@ -75,12 +75,116 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome zeroTrUsesMinimum()
+      TestOutcome zeroTimeConstantsAndDisabledSaturation()
       {
         TestStatus success = true;
 
-        auto data                                                      = makeTestData();
-        data.parameters[PhasorDynamics::Exciter::Ieeet1Parameters::Tr] = 0.0;
+        using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
+
+        auto data                    = makeTestData();
+        data.parameters[Params::Tr]  = 0.0;
+        data.parameters[Params::Ta]  = 0.0;
+        data.parameters[Params::Ke]  = 0.0;
+        data.parameters[Params::Te]  = 0.0;
+        data.parameters[Params::Kf]  = 0.0;
+        data.parameters[Params::Tf]  = 0.0;
+        data.parameters[Params::E1]  = 0.0;
+        data.parameters[Params::E2]  = 0.0;
+        data.parameters[Params::Se1] = 0.0;
+        data.parameters[Params::Se2] = 0.0;
+
+        PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
+        PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
+        PhasorDynamics::SignalNode<ScalarT, IdxT>      efd_node;
+        ScalarT                                        efd_value{0.0};
+        IdxT                                           efd_index = INVALID_INDEX<IdxT>;
+
+        efd_node.set(&efd_value, &efd_index);
+        exciter.getSignals()
+            .template assignSignalNode<PhasorDynamics::Exciter::Ieeet1InternalVariables::EFD>(&efd_node);
+
+        bus.allocate();
+        exciter.allocate();
+
+        bus.initialize();
+        efd_node.init(1.2);
+        success *= (exciter.initialize() == 0);
+        exciter.tagDifferentiable();
+
+        success *= (exciter.tag()[0]);
+        success *= (exciter.tag()[1]);
+        success *= (exciter.tag()[2]);
+        success *= (exciter.tag()[3]);
+
+        auto*       y  = exciter.y().getData();
+        auto*       yp = exciter.yp().getData();
+        const auto* f  = exciter.getResidual().getData();
+
+        success *= isEqual(y[2], static_cast<ScalarT>(1.2));
+        success *= isEqual(y[6], static_cast<ScalarT>(0.0));
+        success *= isEqual(y[7], static_cast<ScalarT>(1.2));
+        success *= isEqual(y[8], static_cast<ScalarT>(0.0));
+
+        for (IdxT i = 0; i < exciter.y().getSize(); ++i)
+        {
+          success *= std::isfinite(y[i]);
+        }
+
+        exciter.evaluateResidual();
+        for (IdxT i = 0; i < exciter.getResidual().getSize(); ++i)
+        {
+          success *= std::isfinite(f[i]);
+          success *= isEqual(f[i], static_cast<ScalarT>(0.0));
+        }
+
+        y[2] = 4.0;
+        exciter.y().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[8], static_cast<ScalarT>(0.0));
+        y[2] = 1.2;
+
+        yp[0] = 123.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[0], static_cast<ScalarT>(-123.0));
+        yp[0] = 0.0;
+
+        y[0] = 4.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
+
+        y[0] = 5.0;
+        y[4] = 0.02;
+        exciter.y().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[1], static_cast<ScalarT>(1.0e3));
+
+        y[4] = 0.0;
+        y[1] = 1.0;
+        exciter.y().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[2], static_cast<ScalarT>(1.0e3));
+
+        y[1] = 0.0;
+        y[5] = 1.0;
+        exciter.y().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[3], static_cast<ScalarT>(1.0e3));
+
+        return success.report(__func__);
+      }
+
+      TestOutcome invalidSaturationParameters()
+      {
+        TestStatus success = true;
+
+        using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
+
+        auto data                    = makeTestData();
+        data.parameters[Params::Se1] = 0.0;
 
         PhasorDynamics::Bus<ScalarT, IdxT>             bus(3.0, 4.0);
         PhasorDynamics::Exciter::Ieeet1<ScalarT, IdxT> exciter(&bus, data);
@@ -88,27 +192,7 @@ namespace GridKit
         bus.allocate();
         exciter.allocate();
 
-        bus.initialize();
-        exciter.initialize();
-        exciter.tagDifferentiable();
-
-        success *= (exciter.tag()[0]);
-
-        auto* y  = exciter.y().getData();
-        auto* yp = exciter.yp().getData();
-
-        yp[0] = 123.0;
-        exciter.yp().setDataUpdated();
-        exciter.evaluateResidual();
-        const auto* f  = exciter.getResidual().getData();
-        success       *= isEqual(f[0], static_cast<ScalarT>(-123.0));
-
-        yp[0] = 0.0;
-        y[0]  = 4.0;
-        exciter.y().setDataUpdated();
-        exciter.yp().setDataUpdated();
-        exciter.evaluateResidual();
-        success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
+        success *= (exciter.verify() != 0);
 
         return success.report(__func__);
       }

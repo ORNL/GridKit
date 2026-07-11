@@ -7,6 +7,7 @@
  *
  */
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -29,9 +30,8 @@ namespace GridKit
        */
       template <typename scalar_type, typename index_type>
       Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
-        : bus_(bus)
+        : Ieeet1(bus, ModelDataT{})
       {
-        size_ = 9;
       }
 
       /**
@@ -46,7 +46,6 @@ namespace GridKit
         : bus_(bus),
           monitor_(std::make_unique<MonitorT>(data))
       {
-
         // Parse data struct into model
         this->initModelParams(data);
 
@@ -119,7 +118,7 @@ namespace GridKit
       }
 
       /**
-       * @brief verify method checks that attached signals are also linked
+       * @brief Verify parameter values and attached signal links
        */
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::verify() const
@@ -128,6 +127,33 @@ namespace GridKit
         static constexpr auto VS    = Ieeet1ExternalVariables::VS;
 
         int ret = 0;
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Ieeet1: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        check(Ka_ > ZERO<RealT>, "Ka must be positive");
+        check(Vrmin_ <= Vrmax_, "Vrmin must be less than or equal to Vrmax");
+        check(Ispdlim_ == ZERO<RealT> || Ispdlim_ == ONE<RealT>,
+              "Ispdlim must be 0 or 1");
+
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+
+        if (!saturation_disabled)
+        {
+          check(E1_ > ZERO<RealT>, "E1 must be positive when saturation is enabled");
+          check(E2_ > ZERO<RealT>, "E2 must be positive when saturation is enabled");
+          check(Se1_ > ZERO<RealT>, "Se1 must be positive when saturation is enabled");
+          check(Se2_ > ZERO<RealT>, "Se2 must be positive when saturation is enabled");
+          check(E1_ != E2_, "E1 and E2 must differ when saturation is enabled");
+          check(Se1_ != Se2_, "Se1 and Se2 must differ when saturation is enabled");
+        }
 
         if (signals_.template isAttached<OMEGA>())
         {
@@ -161,7 +187,7 @@ namespace GridKit
        *   - Bus voltage, used to form the sensed terminal voltage magnitude.
        *   - Attached external signals (omega, V_S)
        *
-       * Saturation is included via ksat computed from efdp and SA, SB.
+       * Enabled saturation is included via ksat computed from efdp and SA, SB.
        */
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::initialize()
@@ -373,14 +399,9 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        Tr_ = TR_MINIMUM;
         if (data.parameters.contains(Parameter::Tr))
         {
           Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (Tr_ < TR_MINIMUM)
-        {
-          Tr_ = TR_MINIMUM;
         }
         if (data.parameters.contains(Parameter::Ka))
         {
@@ -435,12 +456,33 @@ namespace GridKit
           Ispdlim_ = std::get<RealT>(data.parameters.at(Parameter::Ispdlim));
         }
 
-        // Derived Parameters
-        RealT SR = std::sqrt(Se2_ / Se1_);
+        Tr_ = std::max(Tr_, TIME_CONSTANT_MINIMUM);
+        Ta_ = std::max(Ta_, TIME_CONSTANT_MINIMUM);
+        Te_ = std::max(Te_, TIME_CONSTANT_MINIMUM);
+        Tf_ = std::max(Tf_, TIME_CONSTANT_MINIMUM);
+
+        SA_ = ZERO<RealT>;
+        SB_ = ZERO<RealT>;
+
+        const bool saturation_disabled =
+            Se1_ == ZERO<RealT> && Se2_ == ZERO<RealT>;
+
+        if (saturation_disabled)
+        {
+          return;
+        }
+
+        if (E1_ <= ZERO<RealT> || E2_ <= ZERO<RealT> || E1_ == E2_
+            || Se1_ <= ZERO<RealT> || Se2_ <= ZERO<RealT> || Se1_ == Se2_)
+        {
+          return;
+        }
+
+        const RealT C = std::sqrt(Se2_ / Se1_);
 
         // Solution 1 (Aligned with PW)
-        SA_ = (SR * E1_ - E2_) / (SR - 1);
-        SB_ = Se1_ / (E1_ - SA_) / (E1_ - SA_);
+        SA_ = (C * E1_ - E2_) / (C - ONE<RealT>);
+        SB_ = Se1_ / ((E1_ - SA_) * (E1_ - SA_));
       }
 
       template <typename scalar_type, typename index_type>
