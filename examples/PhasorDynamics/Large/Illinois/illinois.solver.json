@@ -1,6 +1,6 @@
 {
     "system_model_file": "illinois.json",
-    "dt": 0.00416666666666,
+    "dt_monitor": 0.00416666666666,
     "tmax": 20.0,
     "events": [
         { "time": 10.0, "type": "fault_on", "element_id": 0 },

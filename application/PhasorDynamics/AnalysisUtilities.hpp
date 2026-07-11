@@ -50,8 +50,8 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                 system_model_file;
-      /// time step size
-      double                   dt;
+      /// monitor output time step size
+      double                   dt_monitor;
       /// max time
       double                   tmax;
       /// relative tolerance for the solver
@@ -90,7 +90,7 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
-      j.at("dt").get_to(c.dt);
+      j.at("dt_monitor").get_to(c.dt_monitor);
       j.at("tmax").get_to(c.tmax);
       c.rel_tol  = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
       c.abs_tol  = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);

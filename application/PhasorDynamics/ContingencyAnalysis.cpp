@@ -43,7 +43,7 @@ TestStatus runStudy(StudyData study_data)
   using EventType = SystemEvent::Type;
 
   // Initilize simultation for first run
-  real_type dt         = study_data.dt;
+  real_type dt_monitor = study_data.dt_monitor;
   real_type final_time = study_data.tmax;
   real_type curr_time  = 0.0;
   ida.initializeSimulation(0.0, false);
@@ -51,7 +51,7 @@ TestStatus runStudy(StudyData study_data)
   for (const auto& event : study_data.events)
   {
     // Run to event time
-    int nout = static_cast<int>(std::round((event.time - curr_time) / dt));
+    int nout = static_cast<int>(std::round((event.time - curr_time) / dt_monitor));
     ida.runSimulation(event.time, nout);
 
     // Set up run for event (to start at event time)
@@ -71,7 +71,7 @@ TestStatus runStudy(StudyData study_data)
   }
 
   // Run to final time
-  int nout = static_cast<int>(std::round((final_time - curr_time) / dt));
+  int nout = static_cast<int>(std::round((final_time - curr_time) / dt_monitor));
   ida.runSimulation(final_time, nout);
 
   // Stop the variable monitor
