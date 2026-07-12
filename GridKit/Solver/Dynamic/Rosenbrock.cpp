@@ -992,19 +992,19 @@ namespace Integrator
    * @see `Rosenbrock::errorEstimate()`
    */
   template <class ScalarT, typename IdxT>
-  InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const
+  InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
   {
     if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
     {
-      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+      throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
     }
     if (int err_code = workspace_.scale_->copyFromExternal(&y, memspace, memspace))
     {
-      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+      throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
     }
     if (int err_code = workspace_.yprev_abs_->copyFromExternal(&yprev, memspace, memspace))
     {
-      throw std::format("ReSolve::vector::Vector::copyFromExternal failed with error code {}", err_code);
+      throw std::format("GridKit::LinearAlgebra::Vector::copyFromExternal failed with error code {}", err_code);
     }
 
     handler.abs(workspace_.scale_.get(), workspace_.scale_.get(), memspace);

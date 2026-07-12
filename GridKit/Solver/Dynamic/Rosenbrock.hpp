@@ -755,6 +755,6 @@ namespace Integrator
     {
     }
 
-    RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, ReSolve::memory::MemorySpace memspace) const final;
+    RealT errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const final;
   };
 } // namespace Integrator
