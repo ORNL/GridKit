@@ -610,6 +610,13 @@ def attach_json_ids(case_data, json_path) -> None:
 
     case_data.gen["json_gen_id"] = json_gen_id_col
 
+    # --- gen: also store the JSON bus "number" for each gen (== GEN_BUS == BUS_I) ---
+    # Only set when the gen is present in JSON; None for offline/absent gens.
+    case_data.gen["json_gen_bus_number"] = [
+        int(row.GEN_BUS) if gid is not None else None
+        for row, gid in zip(gen_df.itertuples(), json_gen_id_col)
+    ]
+
     # --- branches: derive json_branch_id from (F_BUS, T_BUS) rank ---
     parallel_count: dict[tuple, int] = {}
     json_branch_id_col = []
