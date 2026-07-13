@@ -22,7 +22,8 @@ namespace GridKit
         if (int err_code = NodeBase<ScalarT, IdxT>::initialize())
           return err_code;
 
-        y()[0] = voltage_;
+        auto* y_data = y().getData();
+        y_data[0]    = voltage_;
 
         return 0;
       }

@@ -235,36 +235,40 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   if (debug_output)
   {
-    std::cout << sys_model->y().size() << std::endl;
+    std::cout << sys_model->y().getSize() << std::endl;
   }
+
+  auto* y  = sys_model->y().getData();
+  auto* yp = sys_model->yp().getData();
 
   // Create initial points for states. Every state is to specified to the zero intially
   for (index_type i = 0; i < sys_model->size(); i++)
   {
-    sys_model->y()[i]  = 0.0;
-    sys_model->yp()[i] = 0.0;
+    y[i]  = 0.0;
+    yp[i] = 0.0;
   }
 
   // Create initial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * Nsize; i++)
   {
-    sys_model->yp()[13 * i - 1 + 2] = DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 4] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sys_model->yp()[13 * i - 1 + 6] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    yp[13 * i - 1 + 2] = DGParams_list[i].Vn_;
+    yp[13 * i - 1 + 4] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    yp[13 * i - 1 + 6] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
-  sys_model->y()[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
+  y[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model->initialize();
   sys_model->evaluateResidual();
-  std::vector<real_type>& fres = sys_model->getResidual();
+  auto& fres      = sys_model->getResidual();
+  auto* fres_data = fres.getData();
   if (debug_output)
   {
     std::cout << "Verify initial resisdual is zero: {\n";
-    for (index_type i = 0; i < fres.size(); i++)
+    for (index_type i = 0; i < fres.getSize(); i++)
     {
-      std::cout << i << " : " << fres[i] << "\n";
+      std::cout << i << " : " << fres_data[i] << "\n";
     }
     std::cout << "}\n";
   }
@@ -290,14 +294,15 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   idas->runSimulation(t_final);
 
-  std::vector<real_type>& yfinal = sys_model->y();
+  auto& yfinal      = sys_model->y();
+  auto* yfinal_data = yfinal.getData();
 
   if (debug_output)
   {
     std::cout << "Final Vector y\n";
-    for (index_type i = 0; i < yfinal.size(); i++)
+    for (index_type i = 0; i < yfinal.getSize(); i++)
     {
-      std::cout << i << " : " << yfinal[i] << "\n";
+      std::cout << i << " : " << yfinal_data[i] << "\n";
     }
   }
 
@@ -312,9 +317,9 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   {
     // Print the Elementwise Relative Error
     if (debug_output)
-      std::cout << i << " : " << abs(true_vec->at(i) - yfinal[i]) / abs(true_vec->at(i)) << "\n";
+      std::cout << i << " : " << abs(true_vec->at(i) - yfinal_data[i]) / abs(true_vec->at(i)) << "\n";
 
-    sum_top    += (true_vec->at(i) - yfinal[i]) * (true_vec->at(i) - yfinal[i]);
+    sum_top    += (true_vec->at(i) - yfinal_data[i]) * (true_vec->at(i) - yfinal_data[i]);
     sum_bottom += (true_vec->at(i) * true_vec->at(i));
   }
 

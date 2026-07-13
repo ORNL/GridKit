@@ -101,9 +101,11 @@ namespace GridKit
     ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
     ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    f_int_[0] = (-2.0 / 3.0) * (y_[0] * cos1 + y_[1] * cos23m + y_[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + y_[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
-    f_int_[1] = (-2.0 / 3.0) * (y_[0] * sin1 - y_[1] * sin23m - y_[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - y_[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
-    f_int_[2] = (-1.0 / 3.0) * (y_[0] + y_[1] + y_[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
+    auto* y = y_.getData();
+
+    f_int_[0] = (-2.0 / 3.0) * (y[0] * cos1 + y[1] * cos23m + y[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + y[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
+    f_int_[1] = (-2.0 / 3.0) * (y[0] * sin1 - y[1] * sin23m - y[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - y[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
+    f_int_[2] = (-1.0 / 3.0) * (y[0] + y[1] + y[2]) + Rs_ * y_int_[3] + Lls_ * yp_int_[3];
     f_int_[3] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
     f_int_[4] = rkq1 * y_int_[4] + (llkq1 + Lmq_) * yp_int_[4] + Lmq_ * yp_int_[1] + Lmq_ * yp_int_[5];
     return 0;
@@ -122,11 +124,15 @@ namespace GridKit
     ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
     ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    f_[0] = y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
-    f_[1] = y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
-    f_[2] = y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
-    f_[3] = RJ_ * yp_[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + y_[0]));
-    f_[4] = yp_int_[0] - y_[4];
+    auto* y  = y_.getData();
+    auto* yp = yp_.getData();
+    auto* f  = f_.getData();
+
+    f[0] = y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
+    f[1] = y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
+    f[2] = y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
+    f[3] = RJ_ * yp[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + y[0]));
+    f[4] = yp_int_[0] - y[4];
     return 0;
   }
 

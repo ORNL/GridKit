@@ -73,13 +73,14 @@ namespace GridKit
         stab.initialize();
         stab.evaluateResidual();
 
-        auto        tol = 10 * std::numeric_limits<RealT>::epsilon();
-        const auto& f   = stab.getResidual();
-        for (size_t i = 0; i < f.size(); ++i)
+        auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
+        const auto& f      = stab.getResidual();
+        auto*       f_data = f.getData();
+        for (size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f[i], 0.0, tol))
+          if (!isEqual(f_data[i], 0.0, tol))
           {
-            std::cout << "Non-zero residual at index " << i << ": " << f[i] << "\n";
+            std::cout << "Non-zero residual at index " << i << ": " << f_data[i] << "\n";
             success = false;
           }
         }
@@ -140,16 +141,17 @@ namespace GridKit
         };
 
         // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
-        const auto loose_tol = static_cast<RealT>(1.0e-4);
-        auto&      residual  = stab.getResidual();
+        const auto loose_tol     = static_cast<RealT>(1.0e-4);
+        auto&      residual      = stab.getResidual();
+        auto*      residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
           auto test_tol = (i == 11) ? loose_tol : static_cast<RealT>(10 * std::numeric_limits<ScalarT>::epsilon());
-          if (!isEqual(residual[i], res_answer[i], test_tol))
+          if (!isEqual(residual_data[i], res_answer[i], test_tol))
           {
             std::cout << "Incorrect result for residual " << i << ": "
-                      << std::setprecision(15) << residual[i]
+                      << std::setprecision(15) << residual_data[i]
                       << " != " << res_answer[i] << "\n";
             success = false;
           }
@@ -212,9 +214,10 @@ namespace GridKit
         stab.initialize();
 
         // --- d/dy: tag internal variables as independent ---
+        auto* y = stab.y().getData();
         for (size_t i = 0; i < stab.size(); ++i)
         {
-          stab.y()[i].setVariableNumber(i);
+          y[i].setVariableNumber(i);
         }
         // Tag external signal u as an additional independent variable
         u_value.setVariableNumber(stab.size());
@@ -223,20 +226,23 @@ namespace GridKit
         setStatePointDep(stab);
 
         stab.evaluateResidual();
-        std::vector<DepVar> residual_y = stab.getResidual();
+        auto&               residual_y_view = stab.getResidual();
+        std::vector<DepVar> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // --- d/dy': tag derivatives as independent ---
         stab.initialize();
+        auto* yp = stab.yp().getData();
         for (size_t i = 0; i < stab.size(); ++i)
         {
-          stab.yp()[i].setVariableNumber(i);
+          yp[i].setVariableNumber(i);
         }
 
         u_value = 0.5;
         setStatePointDep(stab);
 
         stab.evaluateResidual();
-        std::vector<DepVar> residual_yp = stab.getResidual();
+        auto&               residual_yp_view = stab.getResidual();
+        std::vector<DepVar> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print dependencies for debugging
         for (size_t i = 0; i < residual_y.size(); ++i)
@@ -360,26 +366,29 @@ namespace GridKit
        */
       void setStatePoint(PhasorDynamics::Stabilizer::Ieeest<ScalarT, IdxT>& stab)
       {
-        stab.y()[0]  = 0.1;  // x1
-        stab.y()[1]  = 0.2;  // x2
-        stab.y()[2]  = 0.3;  // x3
-        stab.y()[3]  = 0.4;  // x4
-        stab.y()[4]  = 0.5;  // x5
-        stab.y()[5]  = 0.6;  // x6
-        stab.y()[6]  = 0.7;  // x7
-        stab.y()[7]  = 0.8;  // v4
-        stab.y()[8]  = 0.9;  // v5
-        stab.y()[9]  = 1.0;  // v6
-        stab.y()[10] = 0.05; // v7  (within limiter range)
-        stab.y()[11] = 0.05; // Vss (model output)
+        auto* y  = stab.y().getData();
+        auto* yp = stab.yp().getData();
 
-        stab.yp()[0] = 0.01; // x1_dot
-        stab.yp()[1] = 0.02; // x2_dot
-        stab.yp()[2] = 0.03; // x3_dot
-        stab.yp()[3] = 0.04; // x4_dot
-        stab.yp()[4] = 0.05; // x5_dot
-        stab.yp()[5] = 0.06; // x6_dot
-        stab.yp()[6] = 0.07; // x7_dot
+        y[0]  = 0.1;  // x1
+        y[1]  = 0.2;  // x2
+        y[2]  = 0.3;  // x3
+        y[3]  = 0.4;  // x4
+        y[4]  = 0.5;  // x5
+        y[5]  = 0.6;  // x6
+        y[6]  = 0.7;  // x7
+        y[7]  = 0.8;  // v4
+        y[8]  = 0.9;  // v5
+        y[9]  = 1.0;  // v6
+        y[10] = 0.05; // v7  (within limiter range)
+        y[11] = 0.05; // Vss (model output)
+
+        yp[0] = 0.01; // x1_dot
+        yp[1] = 0.02; // x2_dot
+        yp[2] = 0.03; // x3_dot
+        yp[3] = 0.04; // x4_dot
+        yp[4] = 0.05; // x5_dot
+        yp[5] = 0.06; // x6_dot
+        yp[6] = 0.07; // x7_dot
       }
 
       /**
@@ -388,26 +397,29 @@ namespace GridKit
        */
       void setStatePointDep(PhasorDynamics::Stabilizer::Ieeest<DependencyTracking::Variable, IdxT>& stab)
       {
-        stab.y()[0].setValue(0.1);
-        stab.y()[1].setValue(0.2);
-        stab.y()[2].setValue(0.3);
-        stab.y()[3].setValue(0.4);
-        stab.y()[4].setValue(0.5);
-        stab.y()[5].setValue(0.6);
-        stab.y()[6].setValue(0.7);
-        stab.y()[7].setValue(0.8);
-        stab.y()[8].setValue(0.9);
-        stab.y()[9].setValue(1.0);
-        stab.y()[10].setValue(0.05);
-        stab.y()[11].setValue(0.05);
+        auto* y  = stab.y().getData();
+        auto* yp = stab.yp().getData();
 
-        stab.yp()[0].setValue(0.01);
-        stab.yp()[1].setValue(0.02);
-        stab.yp()[2].setValue(0.03);
-        stab.yp()[3].setValue(0.04);
-        stab.yp()[4].setValue(0.05);
-        stab.yp()[5].setValue(0.06);
-        stab.yp()[6].setValue(0.07);
+        y[0].setValue(0.1);
+        y[1].setValue(0.2);
+        y[2].setValue(0.3);
+        y[3].setValue(0.4);
+        y[4].setValue(0.5);
+        y[5].setValue(0.6);
+        y[6].setValue(0.7);
+        y[7].setValue(0.8);
+        y[8].setValue(0.9);
+        y[9].setValue(1.0);
+        y[10].setValue(0.05);
+        y[11].setValue(0.05);
+
+        yp[0].setValue(0.01);
+        yp[1].setValue(0.02);
+        yp[2].setValue(0.03);
+        yp[3].setValue(0.04);
+        yp[4].setValue(0.05);
+        yp[5].setValue(0.06);
+        yp[6].setValue(0.07);
       }
     }; // class StabilizerIeeestTests
 

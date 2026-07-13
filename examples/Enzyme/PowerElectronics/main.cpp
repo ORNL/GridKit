@@ -187,10 +187,12 @@ int main()
   dg->evaluateResidual();
   dg->evaluateJacobian();
 
+  auto* y_data        = dg->y().getData();
+  auto* residual_data = dg->getResidual().getData();
   for (size_t i = 0; i < dg->getExternSize(); i++)
   {
-    y[i]   = dg->y()[i];
-    res[i] = dg->getResidual()[i];
+    y[i]   = y_data[i];
+    res[i] = residual_data[i];
   }
 
   DenseMatrix jac_ref_dense(dg->size(), dg->size());

@@ -67,7 +67,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
     return 0;
   }
 
@@ -84,10 +84,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Resistor<ScalarT, IdxT>::evaluateExternalResidual()
   {
+    auto* y = y_.getData();
+    auto* f = f_.getData();
+
     // input
-    f_[0] = (y_[0] - y_[1]) / R_;
+    f[0] = (y[0] - y[1]) / R_;
     // ouput
-    f_[1] = (y_[1] - y_[0]) / R_;
+    f[1] = (y[1] - y[0]) / R_;
     return 0;
   }
 

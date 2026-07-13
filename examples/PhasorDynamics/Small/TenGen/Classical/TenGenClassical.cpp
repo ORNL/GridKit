@@ -123,7 +123,7 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    std::vector<real_type>& yval = sys.y();
+    auto* yval = sys.y().getData();
 
     // Output time
     out << t << ",";

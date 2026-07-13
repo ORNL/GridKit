@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include <GridKit/Model/Evaluator.hpp>
 
 namespace GridKit
@@ -16,10 +14,13 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+    using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
 
     ModelEvaluatorImpl()
       : size_(0),
+        nnz_(0),
         size_quad_(0),
         size_opt_(0)
     {
@@ -27,43 +28,59 @@ namespace GridKit
 
     ModelEvaluatorImpl(IdxT size, IdxT size_quad, IdxT size_opt)
       : size_(size),
+        nnz_(0),
         size_quad_(size_quad),
         size_opt_(size_opt),
-        y_(static_cast<size_t>(size_)),
-        yp_(static_cast<size_t>(size_)),
-        f_(static_cast<size_t>(size_)),
-        g_(static_cast<size_t>(size_quad_)),
-        yB_(static_cast<size_t>(size_)),
-        ypB_(static_cast<size_t>(size_)),
-        fB_(static_cast<size_t>(size_)),
-        gB_(static_cast<size_t>(size_opt_)),
-        param_(static_cast<size_t>(size_opt_)),
-        param_up_(static_cast<size_t>(size_opt_)),
-        param_lo_(static_cast<size_t>(size_opt_))
+        y_(size_),
+        yp_(size_),
+        tag_(size_),
+        abs_tol_(size_),
+        f_(size_),
+        g_(size_quad_),
+        yB_(size_),
+        ypB_(size_),
+        fB_(size_),
+        gB_(size_opt_),
+        param_(size_opt_),
+        param_up_(size_opt_),
+        param_lo_(size_opt_)
     {
+      allocateHost(y_);
+      allocateHost(yp_);
+      allocateHost(tag_);
+      allocateHost(abs_tol_);
+      allocateHost(f_);
+      allocateHost(g_);
+      allocateHost(yB_);
+      allocateHost(ypB_);
+      allocateHost(fB_);
+      allocateHost(gB_);
+      allocateHost(param_);
+      allocateHost(param_up_);
+      allocateHost(param_lo_);
     }
 
-    virtual IdxT size()
+    IdxT size() override
     {
       return size_;
     }
 
-    virtual IdxT nnz()
+    IdxT nnz() override
     {
       return nnz_;
     }
 
-    virtual bool hasJacobian()
+    bool hasJacobian() override
     {
       return false;
     }
 
-    virtual IdxT sizeQuadrature()
+    IdxT sizeQuadrature() override
     {
       return size_quad_;
     }
 
-    virtual IdxT sizeParams()
+    IdxT sizeParams() override
     {
       return size_opt_;
     }
@@ -80,132 +97,132 @@ namespace GridKit
       msa = max_steps_;
     }
 
-    std::vector<ScalarT>& y()
+    VectorT& y() override
     {
       return y_;
     }
 
-    const std::vector<ScalarT>& y() const
+    const VectorT& y() const override
     {
       return y_;
     }
 
-    std::vector<ScalarT>& yp()
+    VectorT& yp() override
     {
       return yp_;
     }
 
-    const std::vector<ScalarT>& yp() const
+    const VectorT& yp() const override
     {
       return yp_;
     }
 
-    std::vector<bool>& tag()
+    TagVectorT& tag() override
     {
       return tag_;
     }
 
-    const std::vector<bool>& tag() const
+    const TagVectorT& tag() const override
     {
       return tag_;
     }
 
-    std::vector<ScalarT>& absoluteTolerance()
+    VectorT& absoluteTolerance() override
     {
       return abs_tol_;
     }
 
-    const std::vector<ScalarT>& absoluteTolerance() const
+    const VectorT& absoluteTolerance() const override
     {
       return abs_tol_;
     }
 
-    std::vector<ScalarT>& yB()
+    VectorT& yB() override
     {
       return yB_;
     }
 
-    const std::vector<ScalarT>& yB() const
+    const VectorT& yB() const override
     {
       return yB_;
     }
 
-    std::vector<ScalarT>& ypB()
+    VectorT& ypB() override
     {
       return ypB_;
     }
 
-    const std::vector<ScalarT>& ypB() const
+    const VectorT& ypB() const override
     {
       return ypB_;
     }
 
-    std::vector<ScalarT>& param()
+    VectorT& param() override
     {
       return param_;
     }
 
-    const std::vector<ScalarT>& param() const
+    const VectorT& param() const override
     {
       return param_;
     }
 
-    std::vector<ScalarT>& param_up()
+    VectorT& param_up() override
     {
       return param_up_;
     }
 
-    const std::vector<ScalarT>& param_up() const
+    const VectorT& param_up() const override
     {
       return param_up_;
     }
 
-    std::vector<ScalarT>& param_lo()
+    VectorT& param_lo() override
     {
       return param_lo_;
     }
 
-    const std::vector<ScalarT>& param_lo() const
+    const VectorT& param_lo() const override
     {
       return param_lo_;
     }
 
-    std::vector<ScalarT>& getResidual()
+    VectorT& getResidual() override
     {
       return f_;
     }
 
-    const std::vector<ScalarT>& getResidual() const
+    const VectorT& getResidual() const override
     {
       return f_;
     }
 
-    std::vector<ScalarT>& getIntegrand()
+    VectorT& getIntegrand() override
     {
       return g_;
     }
 
-    const std::vector<ScalarT>& getIntegrand() const
+    const VectorT& getIntegrand() const override
     {
       return g_;
     }
 
-    std::vector<ScalarT>& getAdjointResidual()
+    VectorT& getAdjointResidual() override
     {
       return fB_;
     }
 
-    const std::vector<ScalarT>& getAdjointResidual() const
+    const VectorT& getAdjointResidual() const override
     {
       return fB_;
     }
 
-    std::vector<ScalarT>& getAdjointIntegrand()
+    VectorT& getAdjointIntegrand() override
     {
       return gB_;
     }
 
-    const std::vector<ScalarT>& getAdjointIntegrand() const
+    const VectorT& getAdjointIntegrand() const override
     {
       return gB_;
     }
@@ -217,26 +234,35 @@ namespace GridKit
     }
 
   protected:
+    void allocateVectors(IdxT size)
+    {
+      resizeAndAllocateHost(y_, size);
+      resizeAndAllocateHost(yp_, size);
+      resizeAndAllocateHost(tag_, size);
+      resizeAndAllocateHost(abs_tol_, size);
+      resizeAndAllocateHost(f_, size);
+    }
+
     IdxT size_;
     IdxT nnz_;
     IdxT size_quad_;
     IdxT size_opt_;
 
-    std::vector<ScalarT> y_;
-    std::vector<ScalarT> yp_;
-    std::vector<bool>    tag_;
-    std::vector<ScalarT> abs_tol_;
-    std::vector<ScalarT> f_;
-    std::vector<ScalarT> g_;
+    VectorT    y_;
+    VectorT    yp_;
+    TagVectorT tag_;
+    VectorT    abs_tol_;
+    VectorT    f_;
+    VectorT    g_;
 
-    std::vector<ScalarT> yB_;
-    std::vector<ScalarT> ypB_;
-    std::vector<ScalarT> fB_;
-    std::vector<ScalarT> gB_;
+    VectorT yB_;
+    VectorT ypB_;
+    VectorT fB_;
+    VectorT gB_;
 
-    std::vector<ScalarT> param_;
-    std::vector<ScalarT> param_up_;
-    std::vector<ScalarT> param_lo_;
+    VectorT param_;
+    VectorT param_up_;
+    VectorT param_lo_;
 
     RealT time_;
     RealT alpha_;
@@ -244,6 +270,21 @@ namespace GridKit
     IdxT max_steps_;
 
     IdxT idc_;
+
+  private:
+    template <typename ValueT>
+    static void allocateHost(GridKit::LinearAlgebra::Vector<ValueT, IdxT>& vector)
+    {
+      vector.allocate(memory::HOST);
+      vector.setToZero(memory::HOST);
+    }
+
+    template <typename ValueT>
+    static void resizeAndAllocateHost(GridKit::LinearAlgebra::Vector<ValueT, IdxT>& vector, IdxT size)
+    {
+      vector.resize(size);
+      allocateHost(vector);
+    }
   };
 
 } // namespace GridKit

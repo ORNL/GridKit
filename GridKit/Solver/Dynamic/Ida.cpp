@@ -87,7 +87,7 @@ namespace AnalysisManager
       tag_ = N_VClone(yy_);
       checkAllocation((void*) tag_, "N_VClone");
       model_->tagDifferentiable();
-      copyVec(model_->tag(), tag_);
+      copyTagVec(model_->tag(), tag_);
 
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
@@ -728,8 +728,7 @@ namespace AnalysisManager
       model->updateTime(tres, 0.0);
 
       model->evaluateResidual();
-      const std::vector<ScalarT>& f = model->getResidual();
-      copyVec(f, rr);
+      copyVec(model->getResidual(), rr);
 
       return 0;
     }
@@ -794,8 +793,7 @@ namespace AnalysisManager
       model->updateTime(tt, 0.0);
 
       model->evaluateIntegrand();
-      const std::vector<ScalarT>& g = model->getIntegrand();
-      copyVec(g, rhsQ);
+      copyVec(model->getIntegrand(), rhsQ);
 
       return 0;
     }
@@ -818,8 +816,7 @@ namespace AnalysisManager
       model->updateTime(tt, 0.0);
 
       model->evaluateAdjointResidual();
-      const std::vector<ScalarT>& fB = model->getAdjointResidual();
-      copyVec(fB, rrB);
+      copyVec(model->getAdjointResidual(), rrB);
 
       return 0;
     }
@@ -842,73 +839,82 @@ namespace AnalysisManager
       model->updateTime(tt, 0.0);
 
       model->evaluateAdjointIntegrand();
-      const std::vector<ScalarT>& gB = model->getAdjointIntegrand();
-      copyVec(gB, rhsQB);
+      copyVec(model->getAdjointIntegrand(), rhsQB);
 
       return 0;
     }
 
     /**
-     * @brief Copy SUNDIALS N_Vector to std::vector
+     * @brief Copy SUNDIALS N_Vector to Vector
      *
      * @tparam ScalarT
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, std::vector<ScalarT>& y)
+    void Ida<ScalarT, IdxT>::copyVec(const N_Vector x, VectorT& y)
     {
       const auto xsize = static_cast<size_t>(N_VGetLength(x));
-      if (xsize != y.size())
+      const auto ysize = static_cast<size_t>(y.getSize());
+      if (xsize != ysize)
       {
-        std::cerr << "\nN_Vector size (" << xsize << ") does not match std::vector size ("
-                  << y.size() << ").\n\n";
+        std::cerr << "\nN_Vector size (" << xsize << ") does not match vector size ("
+                  << y.getSize() << ").\n\n";
         throw SundialsException();
       }
 
       const ScalarT* xdata = N_VGetArrayPointer(x);
-      std::copy_n(xdata, y.size(), y.begin());
+      std::copy_n(xdata, ysize, y.getData());
     }
 
     /**
-     * @brief Copy std::vector to SUNDIALS N_Vector
+     * @brief Copy Vector to SUNDIALS N_Vector
      *
      * @tparam ScalarT
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector<ScalarT>& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(const VectorT& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
-      if (x.size() != ysize)
+      const auto xsize = static_cast<size_t>(x.getSize());
+      if (xsize != ysize)
       {
-        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+        std::cerr << "\nvector size (" << x.getSize() << ") does not match N_Vector size ("
                   << ysize << ").\n\n";
         throw SundialsException();
       }
 
       ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy(x.cbegin(), x.cend(), ydata);
+      std::copy_n(x.getData(), xsize, ydata);
     }
 
     /**
-     * @brief Copy std::vector to SUNDIALS N_Vector
+     * @brief Copy boolean differential tags to a SUNDIALS scalar vector.
+     *
+     * IDA represents its differential/algebraic ID vector with floating-point
+     * entries, so perform the model-metadata conversion explicitly here.
      *
      * @tparam ScalarT
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyTagVec(const TagVectorT& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
-      if (x.size() != ysize)
+      const auto xsize = static_cast<size_t>(x.getSize());
+      if (xsize != ysize)
       {
-        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
+        std::cerr << "\ntag vector size (" << x.getSize() << ") does not match N_Vector size ("
                   << ysize << ").\n\n";
         throw SundialsException();
       }
 
-      ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy(x.cbegin(), x.cend(), ydata);
+      const bool* xdata = x.getData();
+      RealT*      ydata = N_VGetArrayPointer(y);
+      for (size_t i = 0; i < xsize; ++i)
+      {
+        ydata[i] = xdata[i] ? RealT{1} : RealT{0};
+      }
     }
 
     /**

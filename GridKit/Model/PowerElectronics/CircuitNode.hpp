@@ -1,9 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <map>
-#include <string>
-#include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
 
@@ -15,7 +14,9 @@ namespace GridKit
   template <typename ScalarT, typename IdxT>
   class CircuitNode : public Model::Evaluator<ScalarT, IdxT>
   {
-    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+    using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
 
   public:
     CircuitNode()
@@ -45,35 +46,32 @@ namespace GridKit
     // Voltage accessor
     ScalarT& V()
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     const ScalarT& V() const
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     // KCL residual accessor
     ScalarT& I()
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     const ScalarT& I() const
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     // Allocate storage for a single-node voltage and KCL residual
     int allocate()
     {
-      size_t size = static_cast<size_t>(size_);
-
-      y_.resize(size);
-      yp_.resize(size);
-      f_.resize(size);
-      tag_.resize(size);
-      abs_tol_.resize(size);
+      if (!allocated_)
+      {
+        allocateVectors(size_);
+      }
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -86,8 +84,11 @@ namespace GridKit
      */
     int initialize()
     {
-      y_[0]  = V0_;
-      yp_[0] = 0.0;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = V0_;
+      yp[0] = 0.0;
 
       return 0;
     }
@@ -97,7 +98,9 @@ namespace GridKit
      */
     int tagDifferentiable()
     {
-      tag_[0] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
 
       return 0;
     }
@@ -116,7 +119,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 
@@ -129,7 +132,9 @@ namespace GridKit
      */
     int evaluateResidual()
     {
-      f_[0] = 0.0;
+      auto* f = f_.getData();
+
+      f[0] = 0.0;
 
       return 0;
     }
@@ -178,26 +183,28 @@ namespace GridKit
     std::map<IdxT, IdxT> variable_indices_;
     std::map<IdxT, IdxT> residual_indices_;
 
-    std::vector<ScalarT> y_;
-    std::vector<ScalarT> yp_;
-    std::vector<bool>    tag_;
-    std::vector<ScalarT> abs_tol_;
-    std::vector<ScalarT> f_;
+    VectorT    y_;
+    VectorT    yp_;
+    VectorT    f_;
+    TagVectorT tag_;
+    VectorT    abs_tol_;
 
-    std::vector<ScalarT> g_{};
-    std::vector<ScalarT> param_{};
-    std::vector<ScalarT> param_up_{};
-    std::vector<ScalarT> param_lo_{};
+    VectorT g_{};
+    VectorT param_{};
+    VectorT param_up_{};
+    VectorT param_lo_{};
 
-    std::vector<ScalarT> yB_{};
-    std::vector<ScalarT> ypB_{};
-    std::vector<ScalarT> fB_{};
-    std::vector<ScalarT> gB_{};
+    VectorT yB_{};
+    VectorT ypB_{};
+    VectorT fB_{};
+    VectorT gB_{};
 
     RealT time_{0};
     RealT alpha_{0};
 
     IdxT max_steps_{0};
+
+    bool allocated_{false};
 
   public:
     IdxT size() final
@@ -225,134 +232,160 @@ namespace GridKit
       // No time to update in node models
     }
 
-    std::vector<ScalarT>& y() final
+    VectorT& y() final
     {
       return y_;
     }
 
-    const std::vector<ScalarT>& y() const final
+    const VectorT& y() const final
     {
       return y_;
     }
 
-    std::vector<ScalarT>& yp() final
+    VectorT& yp() final
     {
       return yp_;
     }
 
-    const std::vector<ScalarT>& yp() const final
+    const VectorT& yp() const final
     {
       return yp_;
     }
 
-    std::vector<bool>& tag() final
+    TagVectorT& tag() final
     {
       return tag_;
     }
 
-    const std::vector<bool>& tag() const final
+    const TagVectorT& tag() const final
     {
       return tag_;
     }
 
-    std::vector<ScalarT>& absoluteTolerance() final
+    VectorT& absoluteTolerance() final
     {
       return abs_tol_;
     }
 
-    const std::vector<ScalarT>& absoluteTolerance() const final
+    const VectorT& absoluteTolerance() const final
     {
       return abs_tol_;
     }
 
-    std::vector<ScalarT>& yB() final
+    VectorT& yB() final
     {
       return yB_;
     }
 
-    const std::vector<ScalarT>& yB() const final
+    const VectorT& yB() const final
     {
       return yB_;
     }
 
-    std::vector<ScalarT>& ypB() final
+    VectorT& ypB() final
     {
       return ypB_;
     }
 
-    const std::vector<ScalarT>& ypB() const final
+    const VectorT& ypB() const final
     {
       return ypB_;
     }
 
-    std::vector<ScalarT>& param() final
+    VectorT& param() final
     {
       return param_;
     }
 
-    const std::vector<ScalarT>& param() const final
+    const VectorT& param() const final
     {
       return param_;
     }
 
-    std::vector<ScalarT>& param_up() final
+    VectorT& param_up() final
     {
       return param_up_;
     }
 
-    const std::vector<ScalarT>& param_up() const final
+    const VectorT& param_up() const final
     {
       return param_up_;
     }
 
-    std::vector<ScalarT>& param_lo() final
+    VectorT& param_lo() final
     {
       return param_lo_;
     }
 
-    const std::vector<ScalarT>& param_lo() const final
+    const VectorT& param_lo() const final
     {
       return param_lo_;
     }
 
-    std::vector<ScalarT>& getResidual() final
+    VectorT& getResidual() final
     {
       return f_;
     }
 
-    const std::vector<ScalarT>& getResidual() const final
+    const VectorT& getResidual() const final
     {
       return f_;
     }
 
-    std::vector<ScalarT>& getIntegrand() final
+    VectorT& getIntegrand() final
     {
       return g_;
     }
 
-    const std::vector<ScalarT>& getIntegrand() const final
+    const VectorT& getIntegrand() const final
     {
       return g_;
     }
 
-    std::vector<ScalarT>& getAdjointResidual() final
+    VectorT& getAdjointResidual() final
     {
       return fB_;
     }
 
-    const std::vector<ScalarT>& getAdjointResidual() const final
+    const VectorT& getAdjointResidual() const final
     {
       return fB_;
     }
 
-    std::vector<ScalarT>& getAdjointIntegrand() final
+    VectorT& getAdjointIntegrand() final
     {
       return gB_;
     }
 
-    const std::vector<ScalarT>& getAdjointIntegrand() const final
+    const VectorT& getAdjointIntegrand() const final
     {
       return gB_;
+    }
+
+  private:
+    void allocateVectors(IdxT n)
+    {
+      y_.resize(n);
+      y_.allocate(memory::HOST);
+      y_.setToZero(memory::HOST);
+
+      yp_.resize(n);
+      yp_.allocate(memory::HOST);
+      yp_.setToZero(memory::HOST);
+
+      f_.resize(n);
+      f_.allocate(memory::HOST);
+      f_.setToZero(memory::HOST);
+
+      tag_.resize(n);
+      tag_.allocate(memory::HOST);
+      tag_.setToZero(memory::HOST);
+
+      abs_tol_.resize(n);
+      abs_tol_.allocate(memory::HOST);
+      abs_tol_.setToZero(memory::HOST);
+
+      allocated_ = true;
     }
   };
 } // namespace GridKit

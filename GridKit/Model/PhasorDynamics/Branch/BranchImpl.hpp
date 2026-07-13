@@ -119,6 +119,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::allocate()
     {
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
+      auto size = static_cast<std::size_t>(size_);
+
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(f_.getSize() == size);
+      assert(this->tag_.getSize() == size);
+      assert(this->abs_tol_.getSize() == size);
+
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
       wb_.resize(2);
       h_.resize(2);
 

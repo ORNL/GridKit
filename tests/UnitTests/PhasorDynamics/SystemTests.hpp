@@ -232,28 +232,30 @@ namespace GridKit
         system.initialize();
 
         // Set independent variables
+        auto* y = system.y().getData();
         for (size_t i = 0; i < system.size(); ++i)
         {
-          system.y()[i].setVariableNumber(i);
+          y[i].setVariableNumber(i);
         }
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residual = system.getResidual();
+        auto& residual      = system.getResidual();
+        auto* residual_data = residual.getData();
 
         // Print the dependencies
-        for (size_t i = 0; i < residual.size(); ++i)
+        for (size_t i = 0; i < residual.getSize(); ++i)
         {
           std::cout << i << "th residual: ";
-          (residual[i]).print(std::cout);
+          residual_data[i].print(std::cout);
           std::cout << "\n";
         }
 
         // Extract the dependencies
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.size());
-        for (IdxT i = 0; i < residual.size(); ++i)
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
+        for (IdxT i = 0; i < residual.getSize(); ++i)
         {
-          dependencies[i] = (residual[i]).getDependencies();
+          dependencies[i] = residual_data[i].getDependencies();
         }
 
         return dependencies;

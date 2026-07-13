@@ -462,11 +462,10 @@ namespace GridKit
       }
 
       // Allocate global vectors
-      y_.resize(size_);
-      yp_.resize(size_);
-      f_.resize(size_);
-      tag_.resize(size_);
-      abs_tol_.resize(size_);
+      if (!this->allocated_)
+      {
+        this->allocateVectors(size_);
+      }
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
@@ -579,6 +578,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
       for (const auto& bus : buses_)
       {
         bus->initialize();
@@ -586,10 +588,12 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
+        const auto* bus_y  = bus->y().getData();
+        const auto* bus_yp = bus->yp().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          y_[bus->getVariableIndex(j)]  = bus->y()[j];
-          yp_[bus->getVariableIndex(j)] = bus->yp()[j];
+          y[bus->getVariableIndex(j)]  = bus_y[j];
+          yp[bus->getVariableIndex(j)] = bus_yp[j];
         }
       }
 
@@ -601,10 +605,12 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
+        const auto* component_y  = component->y().getData();
+        const auto* component_yp = component->yp().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          y_[component->getVariableIndex(j)]  = component->y()[j];
-          yp_[component->getVariableIndex(j)] = component->yp()[j];
+          y[component->getVariableIndex(j)]  = component_y[j];
+          yp[component->getVariableIndex(j)] = component_yp[j];
         }
       }
 
@@ -670,22 +676,26 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
+      auto* tag = tag_.getData();
+
       // Set initial values for global solution vectors
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
+        const auto* bus_tag = bus->tag().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          tag_[bus->getVariableIndex(j)] = bus->tag()[j];
+          tag[bus->getVariableIndex(j)] = bus_tag[j];
         }
       }
 
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
+        const auto* component_tag = component->tag().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          tag_[component->getVariableIndex(j)] = component->tag()[j];
+          tag[component->getVariableIndex(j)] = component_tag[j];
         }
       }
 
@@ -705,13 +715,15 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      IdxT offset = 0;
+      auto* abs_tol = abs_tol_.getData();
+      IdxT  offset  = 0;
       for (const auto& bus : buses_)
       {
         bus->setAbsoluteTolerance(rel_tol);
+        const auto* bus_abs_tol = bus->absoluteTolerance().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
+          abs_tol[offset + j] = bus_abs_tol[j];
         }
         offset += bus->size();
       }
@@ -719,9 +731,10 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
+        const auto* component_abs_tol = component->absoluteTolerance().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          abs_tol_[offset + j] = component->absoluteTolerance()[j];
+          abs_tol[offset + j] = component_abs_tol[j];
         }
         offset += component->size();
       }
@@ -752,6 +765,8 @@ namespace GridKit
     {
       updateVariables();
 
+      auto* f = f_.getData();
+
       for (const auto& bus : buses_)
       {
         bus->evaluateResidual();
@@ -765,17 +780,19 @@ namespace GridKit
       // Update residual vector
       for (const auto& bus : buses_)
       {
+        const auto* bus_f = bus->getResidual().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          f_[bus->getResidualIndex(j)] = bus->getResidual()[j];
+          f[bus->getResidualIndex(j)] = bus_f[j];
         }
       }
 
       for (const auto& component : components_)
       {
+        const auto* component_f = component->getResidual().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          f_[component->getResidualIndex(j)] = component->getResidual()[j];
+          f[component->getResidualIndex(j)] = component_f[j];
         }
       }
 
@@ -983,20 +1000,27 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     void SystemModel<scalar_type, index_type>::updateVariables()
     {
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+
       for (const auto& bus : buses_)
       {
+        auto* bus_y  = bus->y().getData();
+        auto* bus_yp = bus->yp().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          bus->y()[j]  = y_[bus->getVariableIndex(j)];
-          bus->yp()[j] = yp_[bus->getVariableIndex(j)];
+          bus_y[j]  = y[bus->getVariableIndex(j)];
+          bus_yp[j] = yp[bus->getVariableIndex(j)];
         }
       }
       for (const auto& component : components_)
       {
+        auto* component_y  = component->y().getData();
+        auto* component_yp = component->yp().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          component->y()[j]  = y_[component->getVariableIndex(j)];
-          component->yp()[j] = yp_[component->getVariableIndex(j)];
+          component_y[j]  = y[component->getVariableIndex(j)];
+          component_yp[j] = yp[component->getVariableIndex(j)];
         }
       }
     }

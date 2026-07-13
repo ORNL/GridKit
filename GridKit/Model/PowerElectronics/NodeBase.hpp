@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
+#include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
 
@@ -12,7 +14,9 @@ namespace GridKit
     class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
 
       NodeBase(size_t n_intern, size_t n_extern)
         : n_intern_(n_intern), n_extern_(n_extern)
@@ -48,42 +52,42 @@ namespace GridKit
       {
       }
 
-      std::vector<ScalarT>& y() final
+      VectorT& y() final
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const final
+      const VectorT& y() const final
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() final
+      VectorT& yp() final
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const final
+      const VectorT& yp() const final
       {
         return yp_;
       }
 
-      std::vector<bool>& tag() final
+      TagVectorT& tag() final
       {
         return tag_;
       }
 
-      const std::vector<bool>& tag() const final
+      const TagVectorT& tag() const final
       {
         return tag_;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() final
+      VectorT& absoluteTolerance() final
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const final
+      const VectorT& absoluteTolerance() const final
       {
         return abs_tol_;
       }
@@ -127,15 +131,13 @@ namespace GridKit
 
       int allocate() override
       {
-        // Temporary while we use std::vector in the code
         size_t size = static_cast<size_t>(n_intern_ + n_extern_);
 
-        // Resize component model data
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
-        abs_tol_.resize(size);
+        if (!allocated_)
+        {
+          allocateVectors(static_cast<IdxT>(size));
+        }
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -163,7 +165,7 @@ namespace GridKit
        */
       int setAbsoluteTolerance(RealT rel_tol) final
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
         return 0;
       }
 
@@ -193,11 +195,11 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> abs_tol_;
-      std::vector<ScalarT> f_;
+      VectorT    y_;
+      VectorT    yp_;
+      VectorT    f_;
+      TagVectorT tag_;
+      VectorT    abs_tol_;
 
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
@@ -207,17 +209,19 @@ namespace GridKit
       // Adjoint sensitivity members
       //
 
-      std::vector<ScalarT> g_{};
-      std::vector<ScalarT> yB_{};
-      std::vector<ScalarT> ypB_{};
-      std::vector<ScalarT> fB_{};
-      std::vector<ScalarT> gB_{};
+      VectorT g_{};
+      VectorT yB_{};
+      VectorT ypB_{};
+      VectorT fB_{};
+      VectorT gB_{};
 
-      std::vector<ScalarT> param_{};
-      std::vector<ScalarT> param_up_{};
-      std::vector<ScalarT> param_lo_{};
+      VectorT param_{};
+      VectorT param_up_{};
+      VectorT param_lo_{};
 
       std::unique_ptr<IdxT[]> connection_nodes_;
+
+      bool allocated_{false};
 
     public:
       virtual IdxT sizeQuadrature() final
@@ -232,61 +236,61 @@ namespace GridKit
         return 0;
       }
 
-      std::vector<ScalarT>& yB() final
+      VectorT& yB() final
       {
         throw "ERROR: Method not implemented!\n";
         return yB_;
       }
 
-      const std::vector<ScalarT>& yB() const final
+      const VectorT& yB() const final
       {
         throw "ERROR: Method not implemented!\n";
         return yB_;
       }
 
-      std::vector<ScalarT>& ypB() final
+      VectorT& ypB() final
       {
         throw "ERROR: Method not implemented!\n";
         return ypB_;
       }
 
-      const std::vector<ScalarT>& ypB() const final
+      const VectorT& ypB() const final
       {
         throw "ERROR: Method not implemented!\n";
         return ypB_;
       }
 
-      std::vector<ScalarT>& param() final
+      VectorT& param() final
       {
         throw "ERROR: Method not implemented!\n";
         return param_;
       }
 
-      const std::vector<ScalarT>& param() const final
+      const VectorT& param() const final
       {
         throw "ERROR: Method not implemented!\n";
         return param_;
       }
 
-      std::vector<ScalarT>& param_up() final
+      VectorT& param_up() final
       {
         throw "ERROR: Method not implemented!\n";
         return param_up_;
       }
 
-      const std::vector<ScalarT>& param_up() const final
+      const VectorT& param_up() const final
       {
         throw "ERROR: Method not implemented!\n";
         return param_up_;
       }
 
-      std::vector<ScalarT>& param_lo() final
+      VectorT& param_lo() final
       {
         throw "ERROR: Method not implemented!\n";
         return param_lo_;
       }
 
-      const std::vector<ScalarT>& param_lo() const final
+      const VectorT& param_lo() const final
       {
         throw "ERROR: Method not implemented!\n";
         return param_lo_;
@@ -316,50 +320,76 @@ namespace GridKit
         return 1;
       }
 
-      std::vector<ScalarT>& getResidual() final
+      VectorT& getResidual() final
       {
         return f_;
       }
 
-      const std::vector<ScalarT>& getResidual() const final
+      const VectorT& getResidual() const final
       {
         return f_;
       }
 
-      std::vector<ScalarT>& getIntegrand() final
+      VectorT& getIntegrand() final
       {
         throw "ERROR: Method not implemented!\n";
         return g_;
       }
 
-      const std::vector<ScalarT>& getIntegrand() const final
+      const VectorT& getIntegrand() const final
       {
         throw "ERROR: Method not implemented!\n";
         return g_;
       }
 
-      std::vector<ScalarT>& getAdjointResidual() final
+      VectorT& getAdjointResidual() final
       {
         throw "ERROR: Method not implemented!\n";
         return fB_;
       }
 
-      const std::vector<ScalarT>& getAdjointResidual() const final
+      const VectorT& getAdjointResidual() const final
       {
         throw "ERROR: Method not implemented!\n";
         return fB_;
       }
 
-      std::vector<ScalarT>& getAdjointIntegrand() final
+      VectorT& getAdjointIntegrand() final
       {
         throw "ERROR: Method not implemented!\n";
         return gB_;
       }
 
-      const std::vector<ScalarT>& getAdjointIntegrand() const final
+      const VectorT& getAdjointIntegrand() const final
       {
         throw "ERROR: Method not implemented!\n";
         return gB_;
+      }
+
+    private:
+      void allocateVectors(IdxT n)
+      {
+        y_.resize(n);
+        y_.allocate(memory::HOST);
+        y_.setToZero(memory::HOST);
+
+        yp_.resize(n);
+        yp_.allocate(memory::HOST);
+        yp_.setToZero(memory::HOST);
+
+        f_.resize(n);
+        f_.allocate(memory::HOST);
+        f_.setToZero(memory::HOST);
+
+        tag_.resize(n);
+        tag_.allocate(memory::HOST);
+        tag_.setToZero(memory::HOST);
+
+        abs_tol_.resize(n);
+        abs_tol_.allocate(memory::HOST);
+        abs_tol_.setToZero(memory::HOST);
+
+        allocated_ = true;
       }
     };
   } // namespace PowerElectronics

@@ -57,14 +57,25 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::allocate()
       {
+        if (!this->allocated_)
+        {
+          this->allocateVectors(this->size_);
+        }
         auto size = static_cast<size_t>(size_);
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
-        abs_tol_.resize(size);
+
+        assert(y_.getSize() == size);
+        assert(yp_.getSize() == size);
+        assert(f_.getSize() == size);
+        assert(tag_.getSize() == size);
+        assert(abs_tol_.getSize() == size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          variable_indices_[static_cast<std::size_t>(j)] = j;
+          residual_indices_[static_cast<std::size_t>(j)] = j;
+        }
 
         wb_.resize(2);
 
@@ -73,16 +84,11 @@ namespace GridKit
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
 
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          this->setVariableIndex(j, j);
-          this->setResidualIndex(j, j);
-        }
-
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
         {
+          auto* y = y_.getData();
           signals_.template getSignalNode<SexsPtiInternalVariables::EFD>()->set(
-              &y_[1], &(this->getVariableIndex(1)));
+              &y[1], &(this->getVariableIndex(1)));
         }
 
         return 0;
@@ -146,9 +152,12 @@ namespace GridKit
       int SexsPti<scalar_type, index_type>::initialize()
       {
         ScalarT efd0{0.0};
+        auto*   y  = y_.getData();
+        auto*   yp = yp_.getData();
+
         if (signals_.template isAssigned<SexsPtiInternalVariables::EFD>())
         {
-          efd0 = y_[1];
+          efd0 = y[1];
         }
 
         ScalarT vreal = bus_->Vr();
@@ -159,13 +168,13 @@ namespace GridKit
 
         vref_ = Ec + vtr;
 
-        y_[0] = vr;
-        y_[1] = efd0;
-        y_[2] = vtr;
+        y[0] = vr;
+        y[1] = efd0;
+        y[2] = vtr;
 
         for (IdxT i = 0; i < size_; ++i)
         {
-          yp_[static_cast<size_t>(i)] = 0.0;
+          yp[static_cast<size_t>(i)] = 0.0;
         }
 
         return 0;
@@ -174,9 +183,11 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0] = true;
-        tag_[1] = true;
-        tag_[2] = false;
+        auto* tag = tag_.getData();
+
+        tag[0] = true;
+        tag[1] = true;
+        tag[2] = false;
 
         return 0;
       }
@@ -196,7 +207,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
         return 0;
       }
 
@@ -240,7 +251,10 @@ namespace GridKit
         wb_[0] = bus_->Vr();
         wb_[1] = bus_->Vi();
 
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+        auto* f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
 
         return 0;
       }
@@ -284,7 +298,9 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return y_[1]; });
+                      {
+                        auto* y = y_.getData();
+                        return y[1]; });
       }
 
     } // namespace Exciter

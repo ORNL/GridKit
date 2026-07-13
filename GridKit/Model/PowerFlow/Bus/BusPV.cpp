@@ -67,16 +67,20 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate PV bus ..." << std::endl;
-    f_.resize(static_cast<size_t>(size_));
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    tag_.resize(static_cast<size_t>(size_));
-    abs_tol_.resize(static_cast<size_t>(size_));
+    using VectorT             = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
+    auto allocate_host_vector = [](VectorT& vector, IdxT n)
+    {
+      vector.resize(n);
+      vector.allocate(memory::HOST);
+      vector.setToZero(memory::HOST);
+    };
 
-    fB_.resize(static_cast<size_t>(size_));
-    yB_.resize(static_cast<size_t>(size_));
-    ypB_.resize(static_cast<size_t>(size_));
+    // std::cout << "Allocate PV bus ..." << std::endl;
+    this->allocateVectors(size_);
+
+    allocate_host_vector(fB_, size_);
+    allocate_host_vector(yB_, size_);
+    allocate_host_vector(ypB_, size_);
 
     return 0;
   }
@@ -84,7 +88,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::tagDifferentiable()
   {
-    tag_[0] = false;
+    auto* tag = tag_.getData();
+    tag[0]    = false;
     return 0;
   }
 
@@ -103,7 +108,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
     return 0;
   }
 
@@ -114,8 +119,9 @@ namespace GridKit
   int BusPV<ScalarT, IdxT>::initialize()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
-    theta() = theta0_;
-    yp_[0]  = 0.0;
+    theta()  = theta0_;
+    auto* yp = yp_.getData();
+    yp[0]    = 0.0;
 
     return 0;
   }
@@ -144,8 +150,10 @@ namespace GridKit
   int BusPV<ScalarT, IdxT>::initializeAdjoint()
   {
     // std::cout << "Initialize BusPV..." << std::endl;
-    yB_[0]  = 0.0;
-    ypB_[0] = 0.0;
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+    yB[0]     = 0.0;
+    ypB[0]    = 0.0;
 
     return 0;
   }
@@ -153,7 +161,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    fB_[0] = 0.0;
+    auto* fB = fB_.getData();
+    fB[0]    = 0.0;
 
     return 0;
   }

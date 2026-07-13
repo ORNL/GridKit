@@ -83,10 +83,11 @@ int main()
 
   // Compute gradient of the objective function numerically
   std::vector<double> dGdp(model->sizeParams());
+  auto*               param = model->param().getData();
 
   for (unsigned i = 0; i < model->sizeParams(); ++i)
   {
-    model->param()[i] += eps;
+    param[i] += eps;
     idas->getSavedInitialCondition();
     idas->initializeSimulation(t_init);
     idas->initializeQuadrature();
@@ -98,7 +99,7 @@ int main()
     double g2 = Q[0];
 
     // restore parameter to original value
-    model->param()[i] -= eps;
+    param[i] -= eps;
 
     // Evaluate dG/dp numerically
     dGdp[i] = (g2 - g1) / eps;

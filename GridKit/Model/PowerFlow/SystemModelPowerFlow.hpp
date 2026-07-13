@@ -148,10 +148,7 @@ namespace GridKit
       }
 
       // Allocate global vectors
-      y_.resize(size_);
-      f_.resize(size_);
-      tag_.resize(size_);
-      abs_tol_.resize(size_);
+      this->allocateVectors(size_);
 
       return 0;
     }
@@ -174,7 +171,8 @@ namespace GridKit
     int initialize()
     {
       // Set initial values for global solution vectors
-      IdxT varOffset = 0;
+      IdxT  varOffset = 0;
+      auto* y         = y_.getData();
 
       for (const auto& bus : buses_)
       {
@@ -183,9 +181,14 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->size() > 0)
         {
-          y_[varOffset + j] = bus->y()[j];
+          auto* bus_y = bus->y().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            y[varOffset + j] = bus_y[j];
+          }
         }
         varOffset += bus->size();
       }
@@ -198,9 +201,14 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->size() > 0)
         {
-          y_[varOffset + j] = component->y()[j];
+          auto* component_y = component->y().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            y[varOffset + j] = component_y[j];
+          }
         }
         varOffset += component->size();
       }
@@ -233,7 +241,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(rel_tol);
       return 0;
     }
 
@@ -258,12 +266,20 @@ namespace GridKit
     int evaluateResidual()
     {
       // Update variables
-      IdxT varOffset = 0;
+      IdxT  varOffset = 0;
+      auto* y         = y_.getData();
+      auto* f         = f_.getData();
+
       for (const auto& bus : buses_)
       {
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->size() > 0)
         {
-          bus->y()[j] = y_[varOffset + j];
+          auto* bus_y = bus->y().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            bus_y[j] = y[varOffset + j];
+          }
         }
         varOffset += bus->size();
         bus->evaluateResidual();
@@ -271,9 +287,14 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->size() > 0)
         {
-          component->y()[j] = y_[varOffset + j];
+          auto* component_y = component->y().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            component_y[j] = y[varOffset + j];
+          }
         }
         varOffset += component->size();
         component->evaluateResidual();
@@ -283,18 +304,28 @@ namespace GridKit
       IdxT resOffset = 0;
       for (const auto& bus : buses_)
       {
-        for (IdxT j = 0; j < bus->size(); ++j)
+        if (bus->size() > 0)
         {
-          f_[resOffset + j] = bus->getResidual()[j];
+          auto* bus_f = bus->getResidual().getData();
+
+          for (IdxT j = 0; j < bus->size(); ++j)
+          {
+            f[resOffset + j] = bus_f[j];
+          }
         }
         resOffset += bus->size();
       }
 
       for (const auto& component : components_)
       {
-        for (IdxT j = 0; j < component->size(); ++j)
+        if (component->size() > 0)
         {
-          f_[resOffset + j] = component->getResidual()[j];
+          auto* component_f = component->getResidual().getData();
+
+          for (IdxT j = 0; j < component->size(); ++j)
+          {
+            f[resOffset + j] = component_f[j];
+          }
         }
         resOffset += component->size();
       }

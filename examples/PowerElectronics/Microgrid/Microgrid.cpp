@@ -162,32 +162,35 @@ int main(int /* argc */, char const** /* argv */)
 
   sysmodel->allocate();
 
-  std::cout << sysmodel->y().size() << std::endl;
+  std::cout << sysmodel->y().getSize() << std::endl;
+
+  auto* y  = sysmodel->y().getData();
+  auto* yp = sysmodel->yp().getData();
 
   // Create initial points for states
   for (size_t i = 0; i < sysmodel->size(); i++)
   {
-    sysmodel->y()[i]  = 0.0;
-    sysmodel->yp()[i] = 0.0;
+    y[i]  = 0.0;
+    yp[i] = 0.0;
   }
 
   // Create initial derivatives specifics generated in MATLAB
   // DGs 1
-  sysmodel->yp()[2]      = parms1.Vn_;
-  sysmodel->yp()[4]      = parms1.Kpv_ * parms1.Vn_;
-  sysmodel->yp()[6]      = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
-  sysmodel->yp()[12 + 2] = parms1.Vn_;
-  sysmodel->yp()[12 + 4] = parms1.Kpv_ * parms1.Vn_;
-  sysmodel->yp()[12 + 6] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
+  yp[2]      = parms1.Vn_;
+  yp[4]      = parms1.Kpv_ * parms1.Vn_;
+  yp[6]      = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
+  yp[12 + 2] = parms1.Vn_;
+  yp[12 + 4] = parms1.Kpv_ * parms1.Vn_;
+  yp[12 + 6] = (parms1.Kpc_ * parms1.Kpv_ * parms1.Vn_) / parms1.Lf_;
   for (size_t i = 2; i < 4; i++)
   {
-    sysmodel->yp()[13 * i - 1 + 2] = parms2.Vn_;
-    sysmodel->yp()[13 * i - 1 + 4] = parms2.Kpv_ * parms2.Vn_;
-    sysmodel->yp()[13 * i - 1 + 6] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
+    yp[13 * i - 1 + 2] = parms2.Vn_;
+    yp[13 * i - 1 + 4] = parms2.Kpv_ * parms2.Vn_;
+    yp[13 * i - 1 + 6] = (parms2.Kpc_ * parms2.Kpv_ * parms2.Vn_) / parms2.Lf_;
   }
 
   // since the intial P_com = 0
-  sysmodel->y()[dg_signal.getNodeConnection(0)] = parms1.wb_;
+  y[dg_signal.getNodeConnection(0)] = parms1.wb_;
 
   sysmodel->initialize();
   sysmodel->evaluateResidual();
@@ -195,11 +198,12 @@ int main(int /* argc */, char const** /* argv */)
   // Optional debuging output
   if (debug_output)
   {
-    std::vector<double>& fres = sysmodel->getResidual();
+    auto& fres      = sysmodel->getResidual();
+    auto* fres_data = fres.getData();
     std::cout << "Verify initial resisdual is zero: {\n";
-    for (size_t i = 0; i < fres.size(); i++)
+    for (size_t i = 0; i < fres.getSize(); i++)
     {
-      std::cout << i << " :" << fres[i] << "\n";
+      std::cout << i << " :" << fres_data[i] << "\n";
     }
     std::cout << "}\n";
   }
@@ -229,15 +233,16 @@ int main(int /* argc */, char const** /* argv */)
 
   idas->runSimulation(t_final);
 
-  std::vector<double>& yfinial = sysmodel->y();
+  auto& yfinial      = sysmodel->y();
+  auto* yfinial_data = yfinial.getData();
 
   // Optional debugging output
   if (debug_output)
   {
     std::cout << "Final vector y\n";
-    for (size_t i = 0; i < yfinial.size(); i++)
+    for (size_t i = 0; i < yfinial.getSize(); i++)
     {
-      std::cout << yfinial[i] << "\n";
+      std::cout << yfinial_data[i] << "\n";
     }
   }
 
@@ -319,7 +324,7 @@ int main(int /* argc */, char const** /* argv */)
   double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - yfinial[i]) / std::abs(1.0 + true_vec[i]);
+    double error = std::abs(true_vec[i] - yfinial_data[i]) / std::abs(1.0 + true_vec[i]);
     if (error > max_error)
       max_error = error;
     if (error > error_allowed)

@@ -101,28 +101,29 @@ namespace GridKit
     }
 
     /*!
-     * @brief allocate method resizes local solution and residual vectors.
+     * @brief Allocate bus storage and index maps.
      */
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::allocate()
     {
-      // Temporary while we use std::vector in the code
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
       size_t size = static_cast<size_t>(size_);
 
-      // Resize component model data
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      tag_.resize(size);
-      abs_tol_.resize(size);
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(f_.getSize() == size);
+      assert(tag_.getSize() == size);
+      assert(abs_tol_.getSize() == size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-
-      // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
+        variable_indices_[static_cast<std::size_t>(j)] = j;
+        residual_indices_[static_cast<std::size_t>(j)] = j;
       }
 
       return 0;
@@ -144,8 +145,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
+      tag[1] = false;
       return 0;
     }
 
@@ -164,7 +167,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 
@@ -175,10 +178,13 @@ namespace GridKit
     int Bus<scalar_type, index_type>::initialize()
     {
       // std::cout << "Initialize Bus..." << std::endl;
-      y_[0]  = Vr0_;
-      y_[1]  = Vi0_;
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = Vr0_;
+      y[1]  = Vi0_;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
 
       return 0;
     }
@@ -194,8 +200,10 @@ namespace GridKit
     int Bus<scalar_type, index_type>::evaluateResidual()
     {
       // std::cout << "Evaluating residual of a PQ bus ...\n";
-      f_[0] = 0.0;
-      f_[1] = 0.0;
+      auto* f = f_.getData();
+
+      f[0] = 0.0;
+      f[1] = 0.0;
       return 0;
     }
   } // namespace PhasorDynamics

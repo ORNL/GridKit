@@ -83,25 +83,31 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::allocate()
     {
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
+      // std::cout << "Allocate Load..." << std::endl;
+
       auto size = static_cast<size_t>(size_); // avoid compiler warnings
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      abs_tol_.resize(size);
-      tag_.resize(size);
+
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(f_.getSize() == size);
+      assert(tag_.getSize() == size);
+      assert(abs_tol_.getSize() == size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        variable_indices_[static_cast<std::size_t>(j)] = j;
+        residual_indices_[static_cast<std::size_t>(j)] = j;
+      }
 
       // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
-
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
 
       return 0;
     }
@@ -118,11 +124,13 @@ namespace GridKit
       ScalarT ir = -(g_ * vr - b_ * vi);
       ScalarT ii = -(b_ * vr + g_ * vi);
 
-      y_[0] = ir;
-      y_[1] = ii;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
 
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      y[0]  = ir;
+      y[1]  = ii;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
 
       return 0;
     }
@@ -133,8 +141,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
+      tag[1] = false;
 
       return 0;
     }
@@ -154,7 +164,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 
@@ -205,10 +215,13 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0] = Vr();
-      wb_[1] = Vi();
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
-      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
+      wb_[0]   = Vr();
+      wb_[1]   = Vi();
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      auto* f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
 
@@ -238,9 +251,13 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
 
       monitor_->set(Variable::p, [this]
-                    { return Vr() * y_[0] + Vi() * y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return Vr() * y[0] + Vi() * y[1]; });
       monitor_->set(Variable::q, [this]
-                    { return Vi() * y_[0] - Vr() * y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return Vi() * y[0] - Vr() * y[1]; });
     }
 
   } // namespace PhasorDynamics

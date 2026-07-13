@@ -84,9 +84,13 @@ namespace GridKit
       monitor_->set(Variable::state, [this]
                     { return status_; });
       monitor_->set(Variable::ir, [this]
-                    { return y_[0]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[0]; });
       monitor_->set(Variable::ii, [this]
-                    { return y_[1]; });
+                    {
+                      auto* y = y_.getData();
+                      return y[1]; });
 
       size_ = 2;
       setDerivedParams();
@@ -113,22 +117,27 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::allocate()
     {
+      if (!this->allocated_)
+      {
+        this->allocateVectors(this->size_);
+      }
       // std::cout << "Allocate BusFault..." << std::endl;
+      auto size = static_cast<std::size_t>(size_);
 
-      auto size = static_cast<size_t>(size_); // avoid compiler warnings
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
-      abs_tol_.resize(size);
-      tag_.resize(size);
-      variable_indices_.resize(size);
-      residual_indices_.resize(size);
+      assert(y_.getSize() == size);
+      assert(yp_.getSize() == size);
+      assert(this->f_.getSize() == size);
+      assert(tag_.getSize() == size);
+      assert(this->abs_tol_.getSize() == size);
+
+      this->variable_indices_.resize(size);
+      this->residual_indices_.resize(size);
 
       // Resize coupling data
       wb_.resize(2);
       h_.resize(2);
 
-      // Default variable and residual index mapping to local index
+      // Default variable and residual index mapping to local indices
       for (IdxT j = 0; j < size_; ++j)
       {
         this->setVariableIndex(j, j);
@@ -145,23 +154,26 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::initialize()
     {
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
       if (status_)
       {
         ScalarT vr = Vr();
         ScalarT vi = Vi();
         ScalarT ir = -(vr * G_ - vi * B_);
         ScalarT ii = -(vr * B_ + vi * G_);
-        y_[0]      = ir;
-        y_[1]      = ii;
+        y[0]       = ir;
+        y[1]       = ii;
       }
       else
       {
-        y_[0] = 0.0;
-        y_[1] = 0.0;
+        y[0] = 0.0;
+        y[1] = 0.0;
       }
 
-      yp_[0] = 0.0;
-      yp_[1] = 0.0;
+      yp[0] = 0.0;
+      yp[1] = 0.0;
 
       return 0;
     }
@@ -172,8 +184,10 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::tagDifferentiable()
     {
-      tag_[0] = false;
-      tag_[1] = false;
+      auto* tag = tag_.getData();
+
+      tag[0] = false;
+      tag[1] = false;
 
       return 0;
     }
@@ -193,7 +207,7 @@ namespace GridKit
     template <class scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
       return 0;
     }
 
@@ -247,18 +261,24 @@ namespace GridKit
     {
       if (status_)
       {
-        wb_[0] = Vr();
-        wb_[1] = Vi();
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
-        evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
+        wb_[0]   = Vr();
+        wb_[1]   = Vi();
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+        auto* f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), f);
+        evaluateBusResidual(y, yp, wb_.data(), h_.data());
         Ir() += h_[0];
         Ii() += h_[1];
       }
       else
       {
-        wb_[0] = 0.0;
-        wb_[1] = 0.0;
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
+        wb_[0]   = 0.0;
+        wb_[1]   = 0.0;
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+        auto* f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), f);
       }
 
       return 0;

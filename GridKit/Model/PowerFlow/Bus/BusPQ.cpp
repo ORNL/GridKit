@@ -69,16 +69,20 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::allocate()
   {
-    // std::cout << "Allocate PQ bus ..." << std::endl;
-    f_.resize(static_cast<size_t>(size_));
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    tag_.resize(static_cast<size_t>(size_));
-    abs_tol_.resize(static_cast<size_t>(size_));
+    using VectorT             = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
+    auto allocate_host_vector = [](VectorT& vector, IdxT n)
+    {
+      vector.resize(n);
+      vector.allocate(memory::HOST);
+      vector.setToZero(memory::HOST);
+    };
 
-    fB_.resize(static_cast<size_t>(size_));
-    yB_.resize(static_cast<size_t>(size_));
-    ypB_.resize(static_cast<size_t>(size_));
+    // std::cout << "Allocate PQ bus ..." << std::endl;
+    this->allocateVectors(size_);
+
+    allocate_host_vector(fB_, size_);
+    allocate_host_vector(yB_, size_);
+    allocate_host_vector(ypB_, size_);
 
     return 0;
   }
@@ -86,8 +90,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::tagDifferentiable()
   {
-    tag_[0] = false;
-    tag_[1] = false;
+    auto* tag = tag_.getData();
+    tag[0]    = false;
+    tag[1]    = false;
     return 0;
   }
 
@@ -106,7 +111,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
     return 0;
   }
 
@@ -117,10 +122,12 @@ namespace GridKit
   int BusPQ<ScalarT, IdxT>::initialize()
   {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    y_[0]  = V0_;
-    y_[1]  = theta0_;
-    yp_[0] = 0.0;
-    yp_[1] = 0.0;
+    auto* y  = y_.getData();
+    auto* yp = yp_.getData();
+    y[0]     = V0_;
+    y[1]     = theta0_;
+    yp[0]    = 0.0;
+    yp[1]    = 0.0;
 
     return 0;
   }
@@ -136,8 +143,9 @@ namespace GridKit
   int BusPQ<ScalarT, IdxT>::evaluateResidual()
   {
     // std::cout << "Evaluating residual of a PQ bus ...\n";
-    f_[0] = 0.0;
-    f_[1] = 0.0;
+    auto* f = f_.getData();
+    f[0]    = 0.0;
+    f[1]    = 0.0;
     return 0;
   }
 
@@ -148,10 +156,12 @@ namespace GridKit
   int BusPQ<ScalarT, IdxT>::initializeAdjoint()
   {
     // std::cout << "Initialize BusPQ..." << std::endl;
-    yB_[0]  = 0.0;
-    yB_[1]  = 0.0;
-    ypB_[0] = 0.0;
-    ypB_[1] = 0.0;
+    auto* yB  = yB_.getData();
+    auto* ypB = ypB_.getData();
+    yB[0]     = 0.0;
+    yB[1]     = 0.0;
+    ypB[0]    = 0.0;
+    ypB[1]    = 0.0;
 
     return 0;
   }
@@ -159,8 +169,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    fB_[0] = 0.0;
-    fB_[1] = 0.0;
+    auto* fB = fB_.getData();
+    fB[0]    = 0.0;
+    fB[1]    = 0.0;
 
     return 0;
   }

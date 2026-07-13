@@ -157,30 +157,36 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::allocate()
       {
+        if (!this->allocated_)
+        {
+          this->allocateVectors(this->size_);
+        }
         auto size = static_cast<size_t>(size_);
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
-        tag_.resize(size);
-        abs_tol_.resize(size);
+
+        assert(y_.getSize() == size);
+        assert(yp_.getSize() == size);
+        assert(f_.getSize() == size);
+        assert(tag_.getSize() == size);
+        assert(abs_tol_.getSize() == size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          variable_indices_[static_cast<std::size_t>(j)] = j;
+          residual_indices_[static_cast<std::size_t>(j)] = j;
+        }
 
         ws_.resize(1);
         ws_indices_.resize(1);
         ws_[0]         = 0.0;
         ws_indices_[0] = INVALID_INDEX<IdxT>;
 
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          this->setVariableIndex(j, j);
-          this->setResidualIndex(j, j);
-        }
-
         if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
         {
+          auto* y = y_.getData();
           signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
-              &y_[11], &(this->getVariableIndex(11)));
+              &y[11], &(this->getVariableIndex(11)));
         }
 
         return 0;
@@ -217,10 +223,13 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
         for (IdxT i = 0; i < size_; ++i)
         {
-          y_[static_cast<size_t>(i)]  = 0.0;
-          yp_[static_cast<size_t>(i)] = 0.0;
+          y[static_cast<size_t>(i)]  = 0.0;
+          yp[static_cast<size_t>(i)] = 0.0;
         }
 
         return 0;
@@ -229,18 +238,20 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::tagDifferentiable()
       {
-        tag_[0]  = true;
-        tag_[1]  = true;
-        tag_[2]  = true;
-        tag_[3]  = true;
-        tag_[4]  = (T2_ != 0.0);
-        tag_[5]  = (T4_ != 0.0);
-        tag_[6]  = (T6_ != 0.0);
-        tag_[7]  = false;
-        tag_[8]  = false;
-        tag_[9]  = false;
-        tag_[10] = false;
-        tag_[11] = false;
+        auto* tag = tag_.getData();
+
+        tag[0]  = true;
+        tag[1]  = true;
+        tag[2]  = true;
+        tag[3]  = true;
+        tag[4]  = (T2_ != 0.0);
+        tag[5]  = (T4_ != 0.0);
+        tag[6]  = (T6_ != 0.0);
+        tag[7]  = false;
+        tag[8]  = false;
+        tag[9]  = false;
+        tag[10] = false;
+        tag[11] = false;
 
         return 0;
       }
@@ -260,7 +271,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
         return 0;
       }
 
@@ -322,7 +333,10 @@ namespace GridKit
           ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
 
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+        auto* f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
 
         return 0;
       }
@@ -338,7 +352,7 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::vss, [this]
-                      { return y_[11]; });
+                      { return y_.getData()[11]; });
       }
 
     } // namespace Stabilizer
