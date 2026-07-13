@@ -103,7 +103,8 @@ jobs:
           - gridkit@develop ~asan~enzyme~ipopt~klu~resolve+sundials~ubsan
           - gridkit@develop ~asan+enzyme+ipopt+klu+resolve+sundials~ubsan build_type=RelWithDebInfo
             ^enzyme@0.0.206
-          - gridkit@develop +asan~enzyme+ipopt+klu+resolve+sundials+ubsan
+          - gridkit@develop +asan~enzyme+ipopt+klu+resolve+sundials+ubsan build_type=RelWithDebInfo
+            ^resolve build_type=RelWithDebInfo
 
     steps:
       - name: Add LLVM
