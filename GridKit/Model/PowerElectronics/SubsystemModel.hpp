@@ -3,6 +3,8 @@
 #pragma once
 
 #include <cassert>
+#include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,6 +17,7 @@
 
 namespace GridKit
 {
+
   template <class ScalarT, typename IdxT>
   class SubsystemModel : public CircuitComponent<ScalarT, IdxT>
   {
@@ -23,6 +26,8 @@ namespace GridKit
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
+    using ForcingData    = std::pair<std::vector<ScalarT>, std::vector<ScalarT>>;
+    using TimeFunction   = std::function<ForcingData(ScalarT)>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
@@ -47,7 +52,7 @@ namespace GridKit
      * @post System model parameters set as default
      */
 
-    SubsystemModel(bool root = true)
+    SubsystemModel()
     {
       // Set system model parameters as default
       rel_tol_         = 1e-4;
@@ -55,7 +60,6 @@ namespace GridKit
       this->max_steps_ = 2000;
       // By default don't use the jacobian
       use_jac_         = false;
-      root_            = root;
     }
 
     virtual ~SubsystemModel()
@@ -93,6 +97,7 @@ namespace GridKit
       y_.resize(n_intern_);
       yp_.resize(n_intern_);
       f_.resize(n_intern_);
+      neumaier_compensation.resize(n_intern_);
 
       // Allocate subsystem vectors.
       y_ext_.resize(n_extern_);
@@ -112,105 +117,117 @@ namespace GridKit
         external_indices_[local_idx - n_intern_] = global_idx;
       }
 
-      
-        size_t component_internal_idx = 0;
-        for (component_type* comp : components_)
+      size_t component_internal_idx = 0;
+      for (component_type* comp : components_)
+      {
+
+        comp->setInternalPointer(&y_[component_internal_idx]);
+        comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
+        comp->setInternalResidualPointer(&f_[component_internal_idx]);
+
+        component_internal_idx += comp->getInternalSize();
+      }
+
+      // Evaluate component Jacobians to get sparsity
+      distributeVectors();
+      for (component_type* component : components_)
+      {
+        component->evaluateJacobian();
+      }
+
+      auto isValidEntry = [this](IdxT row, IdxT col)
+      {
+        if (row == neg1_ || col == neg1_)
         {
-
-          comp->setInternalPointer(&y_[component_internal_idx]);
-          comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
-          comp->setInternalResidualPointer(&f_[component_internal_idx]);
-
-          component_internal_idx += comp->getInternalSize();
+          return false;
         }
-      
 
-      // // Evaluate component Jacobians to get sparsity
-      // distributeVectors();
-      // for (component_type* component : components_)
-      // {
-      //   component->evaluateJacobian();
-      // }
+        const bool row_is_internal = row < this->getInternalSize();
+        const bool col_is_internal = col < this->getInternalSize();
 
-      // // Count the number of non-zeros
-      // IdxT nnz_dup = 0;
-      // for (const component_type* component : components_)
-      // {
-      //   const IdxT* r   = component->jacobianCooRows();
-      //   const IdxT* c   = component->jacobianCooCols();
-      //   IdxT        nnz = component->nnz();
+        return (row_is_internal && col_is_internal);
+      };
 
-      //   for (IdxT i = 0; i < nnz; ++i)
-      //   {
-      //     if(component->getNodeConnection(r[i])>= this->getInternalSize() && component->getNodeConnection(c[i])>= this->getInternalSize())
-      //     {
-      //       continue;
-      //     }
-      //     if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
-      //     {
-      //       ++nnz_dup;
-      //     }
-      //   }
-      // }
+      IdxT nnz_dup = 0;
 
-      // // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
-      // IdxT*  rows_dup = new IdxT[nnz_dup];
-      // IdxT*  cols_dup = new IdxT[nnz_dup];
-      // RealT* vals_dup = new RealT[nnz_dup];
+      for (const component_type* component : components_)
+      {
+        const IdxT* r   = component->jacobianCooRows();
+        const IdxT* c   = component->jacobianCooCols();
+        const IdxT  nnz = component->nnz();
 
-      // IdxT counter = 0;
-      // for (const auto& component : components_)
-      // {
-      //   const IdxT*  r   = component->jacobianCooRows();
-      //   const IdxT*  c   = component->jacobianCooCols();
-      //   const RealT* v   = component->jacobianCooValues();
-      //   IdxT         nnz = component->nnz();
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          const IdxT row = component->getNodeConnection(r[i]);
+          const IdxT col = component->getNodeConnection(c[i]);
 
-      //   for (IdxT i = 0; i < nnz; ++i)
-      //   {
-      //     if(component->getNodeConnection(r[i])>= this->getInternalSize() && component->getNodeConnection(c[i])>= this->getInternalSize())
-      //     {
-      //       continue;
-      //     }
+          if (isValidEntry(row, col))
+          {
+            ++nnz_dup;
+          }
+        }
+      }
 
-      //     if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
-      //     {
-      //       rows_dup[counter] = component->getNodeConnection(r[i]);
-      //       cols_dup[counter] = component->getNodeConnection(c[i]);
-      //       vals_dup[counter] = v[i];
-      //       counter++;
-      //     }
-      //   }
-      // }
+      // Allocate COO triplet arrays (we own these until we hand off to CsrMatrix)
+      IdxT*  rows_dup = new IdxT[nnz_dup];
+      IdxT*  cols_dup = new IdxT[nnz_dup];
+      RealT* vals_dup = new RealT[nnz_dup];
 
-      // // Build the system COO Jacobian
-      // LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
+      IdxT counter = 0;
 
-      // // Populate CSR data with sort and deduplicate
-      // IdxT* row_ptrs = jac.getCsrRowData();
+      for (const component_type* component : components_)
+      {
+        const IdxT*  r   = component->jacobianCooRows();
+        const IdxT*  c   = component->jacobianCooCols();
+        const RealT* v   = component->jacobianCooValues();
+        const IdxT   nnz = component->nnz();
 
-      // // Deduplicated nnz
-      // nnz_ = jac.getNnz();
+        for (IdxT i = 0; i < nnz; ++i)
+        {
+          const IdxT row = component->getNodeConnection(r[i]);
+          const IdxT col = component->getNodeConnection(c[i]);
 
-      // // Allocate cols/vals with deduplicated nnz
-      // IdxT*  cols = new IdxT[nnz_];
-      // RealT* vals = new RealT[nnz_];
+          if (!isValidEntry(row, col))
+          {
+            continue;
+          }
 
-      // std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
-      // std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+          rows_dup[counter] = row;
+          cols_dup[counter] = col;
+          vals_dup[counter] = v[i];
 
-      // // Create the CSR Jacobian
-      // csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+          ++counter;
+        }
+      }
 
-      // const IdxT* map_to_sorted = jac.getMapToSorted();
-      // const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+      // Build the system COO Jacobian
+      LinearAlgebra::CooMatrix<RealT, IdxT> jac(size_, size_, nnz_dup, &rows_dup, &cols_dup, &vals_dup);
 
-      // // Build a mappping from original COO index to CSR index
-      // map_to_csr_ = new IdxT[nnz_dup];
-      // for (IdxT i = 0; i < nnz_dup; ++i)
-      // {
-      //   map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
-      // }
+      // Populate CSR data with sort and deduplicate
+      IdxT* row_ptrs = jac.getCsrRowData();
+
+      // Deduplicated nnz
+      nnz_ = jac.getNnz();
+
+      // Allocate cols/vals with deduplicated nnz
+      IdxT*  cols = new IdxT[nnz_];
+      RealT* vals = new RealT[nnz_];
+
+      std::copy(jac.getColData(), jac.getColData() + nnz_, cols);
+      std::copy(jac.getValues(), jac.getValues() + nnz_, vals);
+
+      // Create the CSR Jacobian
+      csr_jac_ = new CsrMatrixT(size_, size_, nnz_, &row_ptrs, &cols, &vals);
+
+      const IdxT* map_to_sorted = jac.getMapToSorted();
+      const IdxT* map_to_dedup  = jac.getMapToDeduplicated();
+
+      // Build a mappping from original COO index to CSR index
+      map_to_csr_ = new IdxT[nnz_dup];
+      for (IdxT i = 0; i < nnz_dup; ++i)
+      {
+        map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
+      }
 
       return 0;
     }
@@ -241,6 +258,21 @@ namespace GridKit
      */
     int distributeVectors()
     {
+
+      if (forcing_function_)
+      {
+        const auto forcing = (*forcing_function_)(time_);
+
+        const auto& y_forcing  = forcing.first;
+        const auto& yp_forcing = forcing.second;
+
+        assert(y_forcing.size() == y_ext_.size());
+        assert(yp_forcing.size() == yp_ext_.size());
+
+        std::copy(y_forcing.begin(), y_forcing.end(), y_ext_.begin());
+        std::copy(yp_forcing.begin(), yp_forcing.end(), yp_ext_.begin());
+      }
+
       for (component_type* component : components_)
       {
         std::vector<ScalarT>&   y         = component->y();
@@ -249,20 +281,22 @@ namespace GridKit
 
         for (size_t j : externals)
         {
-          if (component->getNodeConnection(j) == neg1_)
+          IdxT local_idx = component->getNodeConnection(j);
+
+          if (local_idx == neg1_)
           {
             y[j]  = 0.0;
             yp[j] = 0.0;
           }
-          else if (component->getNodeConnection(j) < this->getInternalSize())
+          else if (local_idx < this->getInternalSize())
           {
-            y[j]  = y_[component->getNodeConnection(j)];
-            yp[j] = yp_[component->getNodeConnection(j)];
+            y[j]  = y_[local_idx];
+            yp[j] = yp_[local_idx];
           }
           else
           {
-            y[j]  = y_ext_[component->getNodeConnection(j) - this->getInternalSize()];
-            yp[j] = yp_ext_[component->getNodeConnection(j) - this->getInternalSize()];
+            y[j]  = y_ext_[local_idx - this->getInternalSize()];
+            yp[j] = yp_ext_[local_idx - this->getInternalSize()];
           }
         }
       }
@@ -284,6 +318,9 @@ namespace GridKit
       for (IdxT i = 0; i < this->getInternalSize(); i++)
       {
         f_[i] = 0.0;
+
+        if (use_neumaier_sum)
+          neumaier_compensation[i] = 0.0;
       }
 
       this->distributeVectors();
@@ -311,10 +348,19 @@ namespace GridKit
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_ && component->getNodeConnection(j) < this->getInternalSize())
           {
-            f_[component->getNodeConnection(j)] += residual[j];
+            if (!use_neumaier_sum)
+            {
+              f_[component->getNodeConnection(j)] += residual[j];
+            }
+            else
+            {
+              getNeumaierCompensation(f_[component->getNodeConnection(j)], residual[j], component->getNodeConnection(j));
+            }
           }
         }
       }
+      if (use_neumaier_sum)
+        addNeumaierCompensation(f_);
       return 0;
     }
 
@@ -358,16 +404,18 @@ namespace GridKit
         for (IdxT i = 0; i < nnz; ++i)
         {
 
-          if(component->getNodeConnection(r[i]) >= this->getInternalSize() && component->getNodeConnection(c[i]) >= this->getInternalSize())
+          const IdxT row = component->getNodeConnection(r[i]);
+          const IdxT col = component->getNodeConnection(c[i]);
+
+          const bool is_internal_entry = row != neg1_ && col != neg1_ && row < n_intern_ && col < n_intern_;
+
+          if (!is_internal_entry)
           {
             continue;
           }
 
-          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
-          {
-            vals[map_to_csr_[counter]] += v[i];
-            ++counter;
-          }
+          vals[map_to_csr_[counter]] += v[i];
+          ++counter;
         }
       }
 
@@ -429,27 +477,6 @@ namespace GridKit
       }
       time_  = t;
       alpha_ = a;
-    }
-
-    /**
-     * @brief print the system residual in COO format
-     *
-     * @param[in] filename
-     * @param[in] title
-     */
-    void printResidualMatrixMarket(std::string filename, std::string title)
-    {
-      writeVectorToMatrixMarket(f_, filename, title);
-    }
-
-    /**
-     * @brief print the system Jacobian in COO format
-     *
-     * @param[in] filename
-     * @param[in] title
-     */
-    void printJacobianMatrixMarket(std::string filename, std::string title)
-    {
     }
 
     CsrMatrixT* getCsrJacobian() const override
@@ -589,6 +616,43 @@ namespace GridKit
       return f_ext_;
     }
 
+    void setTimeFunction(TimeFunction function)
+    {
+      forcing_function_ = std::move(function);
+    }
+
+    void getNeumaierCompensation(ScalarT& sum, const ScalarT& x, const IdxT& index)
+    {
+      ScalarT t = sum + x;
+      if (std::abs(sum) >= std::abs(x))
+      {
+        neumaier_compensation[index] += (sum - t) + x;
+      }
+      else
+      {
+        neumaier_compensation[index] += (x - t) + sum;
+      }
+      sum = t;
+    }
+
+    void addNeumaierCompensation(std::vector<ScalarT>& f)
+    {
+      for (IdxT i = 0; i < this->f_.size(); i++)
+      {
+        f[i] += neumaier_compensation[i];
+      }
+    }
+
+    std::unordered_map<IdxT, IdxT>& getInternalMap()
+    {
+      return internal_map_;
+    }
+
+    std::unordered_map<IdxT, IdxT>& getExternalMap()
+    {
+      return external_map_;
+    }
+
   private:
     static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
 
@@ -597,10 +661,15 @@ namespace GridKit
     std::unordered_map<IdxT, IdxT> internal_map_;
     std::unordered_map<IdxT, IdxT> external_map_;
     std::vector<IdxT>              external_indices_;
-    bool                           root_;
-    std::vector<ScalarT>           y_ext_;
-    std::vector<ScalarT>           yp_ext_;
-    std::vector<ScalarT>           f_ext_;
+
+    bool use_neumaier_sum{false};
+
+    std::vector<ScalarT> neumaier_compensation;
+    std::vector<ScalarT> y_ext_;
+    std::vector<ScalarT> yp_ext_;
+    std::vector<ScalarT> f_ext_;
+
+    std::optional<TimeFunction> forcing_function_;
 
     IdxT*       map_to_csr_{nullptr};
     CsrMatrixT* csr_jac_{nullptr};

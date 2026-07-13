@@ -1,8 +1,8 @@
-#include <algorithm>
+
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
-#include <string>
+#include <limits>
 #include <vector>
 
 #define _USE_MATH_DEFINES
@@ -21,6 +21,8 @@
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 
+#include "jac_test_helper.hpp"
+
 int main()
 {
   /// @todo Needs to be modified. Some components are small relative to others thus
@@ -29,7 +31,6 @@ int main()
   double rel_tol         = 1.0e-8;
   size_t max_step_number = 3000;
   bool   use_jac         = true;
-  bool   debug_output    = true;
 
   // Create model
   auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
@@ -191,7 +192,6 @@ int main()
   partition2->addComponent(dg4);
   partition2->addComponent(l2);
   partition2->addComponent(l3);
-
   partition2->addComponent(load2);
   partition2->addComponent(bus_para_4);
   partition2->addComponent(bus_para_3);
@@ -213,60 +213,51 @@ int main()
     sysmodel->yp()[i] = yp[i];
   }
 
+  sysmodel->updateTime(2, 5);
   sysmodel->evaluateResidual();
-  std::vector<double> f_sysmodel = sysmodel->getResidual();
+  sysmodel->evaluateJacobian();
 
-  partition1->allocate();
-  partition2->allocate();
+  auto full_jac = sysmodel->getCsrJacobian();
+
+  std::vector<double> f_sysmodel = sysmodel->getResidual();
 
   std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2};
 
   // Distribute externals to partition 1
   for (auto* partition : partitions)
   {
+    partition->allocate();
+
+    partition->updateTime(2, 5);
+
     for (size_t i = 0; i < partition->getExternSize(); i++)
     {
       partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
       partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
     }
-  }
 
-  for (auto* partition : partitions)
-  {
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
       partition->y()[i]  = y[partition->getNodeConnection(i)];
       partition->yp()[i] = yp[partition->getNodeConnection(i)];
     }
-  }
 
-  for (auto* partition : partitions)
-  {
     partition->evaluateResidual();
+    partition->evaluateJacobian();
   }
 
-  auto printTitle = [](std::string msg) -> void
-  {
-    std::cout << "\n--------------- " << msg << " -------------" << std::endl;
-    printf("%-12s  ----------  %12s\n", "Res Values", "Comp. Index");
-  };
+  auto partition1_jac = partition1->getCsrJacobian();
+  auto partition2_jac = partition2->getCsrJacobian();
 
-  // Print Residuals from partition 1
-  int counter = 1;
-  for (auto* partition : partitions)
-  {
-    printTitle("Partition " + std::to_string(counter++));
-    for (size_t i = 0; i < partition->getInternalSize(); i++)
-    {
-      auto com_index = partition->getNodeConnection(static_cast<size_t>(i));
-      printf("%-12.5g  ----------  %7zu\n", partition->getResidual()[i], com_index);
-    }
-  }
+  bool jac_matched_1 = GridKit::Testing::verifySubsystemJacobian(*full_jac, *partition1_jac, *partition1);
+  bool jac_matched_2 = GridKit::Testing::verifySubsystemJacobian(*full_jac, *partition2_jac, *partition2);
 
-  printTitle("Reference Solution");
-  for (size_t i = 0; i < sysmodel->size(); i++)
+  std::cout << "Jacobian Matched: " << jac_matched_1 * jac_matched_2 << std::endl;
+
+  if (!jac_matched_1 || !jac_matched_2)
   {
-    printf("%-12.5g  ----------  %7zu\n", sysmodel->getResidual()[i], i);
+    std::cout << "ERROR: At least one subsystem Jacobian is incorrect!" << std::endl;
+    return 1;
   }
 
   std::vector<double> f(sysmodel->size(), 0.0);
@@ -281,24 +272,27 @@ int main()
     }
   }
 
-  for (size_t i = 0; i < sysmodel->size(); i++)
-  {
-    error[i] = f_sysmodel[i] - f[i];
-    std::cout << error[i] << std::endl;
-  }
-
   double max_error = 0;
   for (size_t i = 0; i < sysmodel->size(); i++)
   {
+    error[i] = (f_sysmodel[i] - f[i]) / f_sysmodel[i];
     if (max_error < std::abs(error[i]))
     {
       max_error = std::abs(error[i]);
     }
   }
 
+  if (max_error > std::numeric_limits<double>::epsilon())
+  {
+    std::cout << "ERROR: Max Error too high!" << std::endl;
+    return 1;
+  }
+
   std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
 
   delete sysmodel;
+  delete partition1;
+  delete partition2;
 
   return 0;
 }

@@ -40,7 +40,6 @@ namespace GridKit
       extern_indices_.insert(i);
     }
 
-
     const IdxT* cooRow = component_.jacobianCooRows();
     const IdxT* cooCol = component_.jacobianCooCols();
 
@@ -111,7 +110,6 @@ namespace GridKit
       assert(false);
     }
 
-    
     const auto n = component_.getInternalSize();
 
     y_ptr  = std::make_unique<ScalarT[]>(n);
@@ -206,16 +204,15 @@ namespace GridKit
 
     component_.evaluateJacobian();
 
-    const IdxT*  cooRows   = component_.jacobianCooRows();
-    const IdxT*  cooCols   = component_.jacobianCooCols();
-    const RealT* cooVals  = component_.jacobianCooValues();
+    const IdxT*  cooRows = component_.jacobianCooRows();
+    const IdxT*  cooCols = component_.jacobianCooCols();
+    const RealT* cooVals = component_.jacobianCooValues();
 
-    std::vector<IdxT> r = {};
-    std::vector<IdxT> c = {};
+    std::vector<IdxT>  r = {};
+    std::vector<IdxT>  c = {};
     std::vector<RealT> v = {};
 
-
-    for(const auto& index: jac_map_)
+    for (const auto& index : jac_map_)
     {
       r.push_back(cooRows[index]);
       c.push_back(cooCols[index]);

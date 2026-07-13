@@ -4,7 +4,9 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
+#include <iomanip>
 #include <iostream>
+#include <string>
 
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/Bus/SignalNode.hpp>
@@ -18,6 +20,8 @@
 #include <GridKit/Solver/Dynamic/DynamicSolver.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
+
+#include "jac_test_helper.hpp"
 
 /******************************************************************************
  * Partitioned Residual Evaluation
@@ -44,11 +48,13 @@ using real_type  = double;
 
 struct RunResult
 {
-  index_type num_partitions;
-  real_type  partition_time;  // seconds
-  real_type  monolithic_time; // seconds
-  real_type  speedup;         // monolithic / partition
-  real_type  max_error;
+  bool        success = true;
+  index_type  num_partitions;
+  real_type   partition_time;  // seconds
+  real_type   monolithic_time; // seconds
+  real_type   speedup;         // monolithic / partition
+  real_type   max_error;
+  std::string subsys_jac;
 };
 
 RunResult printMicrogridSystems(index_type N_size, index_type num_partitions);
@@ -64,14 +70,15 @@ int main()
 {
   index_type N_size = 5000;
 
-  std::cout << std::format("{:<16}{:>16}{:>18}{:>12}{:>14}\n",
+  std::cout << std::format("{:<16}{:>16}{:>18}{:>12}{:>14}{:>16}\n",
                            "num_partitions",
                            "partition_time",
                            "monolithic_time",
                            "speedup",
-                           "error");
+                           "error",
+                           "Jacobians");
 
-  std::cout << std::string(76, '-') << "\n";
+  std::cout << std::string(93, '-') << "\n";
 
   for (index_type p : {10, 48, 100, 500, 1000, 2000, 5000})
   {
@@ -79,12 +86,18 @@ int main()
 
     RunResult r = printMicrogridSystems(N_size, p);
 
-    std::cout << std::format("{:<16d}{:>14.4f} s{:>16.4f} s{:>11.2f}x{:>14.3e}\n",
+    if (!r.success)
+    {
+      return 1;
+    }
+
+    std::cout << std::format("{:<16d}{:>14.4f} s{:>16.4f} s{:>11.2f}x{:>14.3e} {:>16s}\n",
                              r.num_partitions,
                              r.partition_time,
                              r.monolithic_time,
                              r.speedup,
-                             r.max_error);
+                             r.max_error,
+                             r.subsys_jac);
   }
 
   return 0;
@@ -319,12 +332,16 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     sys_model_control->yp()[i] = yp[i];
   }
 
+  sys_model_control->updateTime(2, 5);
   sys_model_control->evaluateResidual();
 
   auto end_time        = std::chrono::high_resolution_clock::now();
   auto monolithic_time = std::chrono::duration<real_type>(end_time - start_time);
 
+  sys_model_control->evaluateJacobian();
+
   auto& f_sysmodel_control = sys_model_control->getResidual();
+  auto* full_jac           = sys_model_control->getCsrJacobian();
 
   //---------------------------------------------------------------
   // Partition the monolithic network into independent subsystem
@@ -343,7 +360,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   index_type index = 0;
   for (index_type j = 0; j < num_partitions; j++)
   {
-    auto* partition = new SubsystemModel<real_type, index_type>(false);
+    auto* partition = new SubsystemModel<real_type, index_type>();
 
     // add Reference rotor to the first partition
     if (j == 0)
@@ -404,6 +421,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   for (auto* partition : subsystems)
   {
     partition->allocate();
+    partition->updateTime(2, 5);
   }
 
   start_time = std::chrono::high_resolution_clock::now();
@@ -447,6 +465,18 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   // roundoff.
   //---------------------------------------------------------------
 
+  bool matched = true;
+
+  for (auto* partition : subsystems)
+  {
+    partition->evaluateJacobian();
+
+    matched &= GridKit::Testing::verifySubsystemJacobian(
+        *full_jac,
+        *partition->getCsrJacobian(),
+        *partition);
+  }
+
   real_type max_error = 0;
   for (size_t i = 0; i < sys_model_control->size(); i++)
   {
@@ -464,6 +494,19 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   result.monolithic_time = monolithic_time.count();
   result.speedup         = monolithic_time.count() / partition_time.count();
   result.max_error       = max_error;
+  result.subsys_jac      = matched ? "Correct" : "Wrong";
+
+  if (!matched)
+  {
+    std::cout << "ERROR: At least one subsystem Jacobian is incorrect!" << std::endl;
+    result.success = false;
+  }
+
+  if (max_error > std::numeric_limits<double>::epsilon())
+  {
+    std::cout << "ERROR: Max Error too high!" << std::endl;
+    result.success = false;
+  }
 
   for (auto* linescpy : linesCopies)
     delete linescpy;

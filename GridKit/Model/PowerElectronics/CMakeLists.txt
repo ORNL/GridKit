@@ -32,4 +32,3 @@ install(
         ExternalConnection.hpp
         SubsystemModel.hpp
   DESTINATION include/GridKit/Model/PowerElectronics)
-
