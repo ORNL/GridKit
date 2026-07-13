@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include <GridKit/LinearAlgebra/Solver/LinearSolver.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/LinearAlgebra/Vector/VectorHandler.hpp>
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
@@ -15,11 +16,6 @@
 #include <GridKit/ScalarTraits.hpp>
 #include <GridKit/Solver/Dynamic/ErrorNorm.hpp>
 #include <GridKit/Solver/Dynamic/StepController.hpp>
-
-#include <resolve/Common.hpp>
-#include <resolve/SystemSolver.hpp>
-#include <resolve/matrix/Csr.hpp>
-#include <resolve/vector/Vector.hpp>
 
 namespace Integrator
 {
@@ -348,7 +344,7 @@ namespace Integrator
      * @brief The linear solver to be used during integration in \link timeStep() \endlink.
      *
      */
-    ReSolve::SystemSolver&                                lin_solver_;
+    GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver_;
     /**
      * @brief The vector handler to be used for vector operations by the integrator.
      *
@@ -396,19 +392,6 @@ namespace Integrator
     std::unique_ptr<State> y_interp_;
 
     /**
-     * @brief Re::Solve vector used for the right hand side of a linear solve. No allocation is done -
-     * the vector simply has its data pointer updated to point at the correct GridKit vector before the
-     * solve operation is called.
-     *
-     */
-    std::unique_ptr<ReSolve::vector::Vector> resolve_rhs_;
-    /**
-     * @brief Re::Solve vector used for the left hand side of a linear solve. \see resolve_rhs_
-     *
-     */
-    std::unique_ptr<ReSolve::vector::Vector> resolve_lhs_;
-
-    /**
      * @brief Configured parameters for the integrator.
      *
      */
@@ -423,7 +406,7 @@ namespace Integrator
   public:
     Rosenbrock(Tableau&&                                             tab,
                GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
-               ReSolve::SystemSolver&                                lin_solver,
+               GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
                GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
                const ErrorNorm<ScalarT, IdxT>*                       err_norm,
                GridKit::memory::MemorySpace                          memspace = GridKit::memory::HOST);
@@ -488,12 +471,6 @@ namespace Integrator
        *
        */
       std::unique_ptr<State> err_est_;
-
-      /**
-       * @brief Jacobian matrix
-       *
-       */
-      std::unique_ptr<ReSolve::matrix::Csr> jacobian_;
 
       /**
        * @brief Whether or not the Jacobian has been factorized. Initial factorization is required,

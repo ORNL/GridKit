@@ -16,6 +16,7 @@ if(GRIDKIT_ENABLE_RESOLVE)
     GridKit::rosenbrock
     GridKit::testing
     GridKit::fixed_step
+    GridKit::resolve_system_solver
     ReSolve::ReSolve)
   add_test(NAME RosenbrockTest COMMAND $<TARGET_FILE:test_rosenbrock>)
 

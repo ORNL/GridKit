@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include <GridKit/Constants.hpp>
+#include <GridKit/LinearAlgebra/Solver/LinearSolver.hpp>
 #include <GridKit/MemoryUtilities/ResolveMemoryUtils.hpp>
 
 /**
@@ -228,7 +229,7 @@ namespace Integrator
   template <class ScalarT, typename IdxT>
   Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                             tab,
                                         GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
-                                        ReSolve::SystemSolver&                                lin_solver,
+                                        GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
                                         GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
                                         const ErrorNorm<ScalarT, IdxT>*                       err_norm,
                                         GridKit::memory::MemorySpace                          memspace)
@@ -266,9 +267,6 @@ namespace Integrator
     workspace_.RHS_first_stage_ = std::make_unique<State>(size);
     workspace_.dFdt_            = std::make_unique<State>(size);
     workspace_.mass_            = std::make_unique<State>(size);
-
-    resolve_rhs_ = std::make_unique<ReSolve::vector::Vector>(size);
-    resolve_lhs_ = std::make_unique<ReSolve::vector::Vector>(size);
 
     BUBBLE_FAIL(y_prev_->allocate(memspace_));
     BUBBLE_FAIL(y_cur_->allocate(memspace_));
@@ -309,8 +307,6 @@ namespace Integrator
       }
     }
 
-    workspace_.jacobian_ = std::make_unique<ReSolve::matrix::Csr>(size, size, model_->getCsrJacobian()->getNnz());
-
     return 0;
   }
 
@@ -339,19 +335,7 @@ namespace Integrator
     BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().data(), memspace_, memspace_));
     workspace_.jacobian_analyzed_ = false;
 
-    GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-    BUBBLE_FAIL(workspace_.jacobian_->setDataPointers(
-        model_jacobian->getRowData(),
-        model_jacobian->getColData(),
-        model_jacobian->getValues(),
-        GridKit::memory::memorySpaceAsResolve(memspace_)));
-    BUBBLE_FAIL(lin_solver_.setMatrix(workspace_.jacobian_.get()));
-    BUBBLE_FAIL(lin_solver_.analyze());
-
-    // TODO: This function needs to be called to properly use a preconditioner in ReSolve (if there is any), but currently will error
-    // if there is no preconditioner configured. Once we can detect if a preconditioner is configured, we can restore this functionality.
-    // Also, we will always want to use *right* preconditioning.
-    // BUBBLE_FAIL(lin_solver_.preconditionerSetup("right"));
+    BUBBLE_FAIL(lin_solver_.configureSolver(*model_->getCsrJacobian()));
 
     if (model_->tag().size() != static_cast<size_t>(model_->size()))
     {
@@ -674,26 +658,8 @@ namespace Integrator
       // so we need a negative here since df/dy' = M.
       model_->updateTime(t0, MINUS_ONE / (dt * tab_.gamma_));
       BUBBLE_FAIL(model_->evaluateJacobian());
-      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* model_jacobian = model_->getCsrJacobian();
-
-      // TODO: This can likely be moved to allocate? These pointers should be consistent throughout the simulation
-      BUBBLE_FAIL(workspace_.jacobian_->setDataPointers(
-          model_jacobian->getRowData(),
-          model_jacobian->getColData(),
-          model_jacobian->getValues(),
-          GridKit::memory::memorySpaceAsResolve(memspace_)));
-
-      // We must factorize first (slower) and then can re-factorize (faster) on later steps
-      [[likely]]
-      if (workspace_.jacobian_analyzed_)
-      {
-        BUBBLE_FAIL(lin_solver_.refactorize());
-      }
-      else
-      {
-        BUBBLE_FAIL(lin_solver_.factorize());
-        workspace_.jacobian_analyzed_ = true;
-      }
+      BUBBLE_FAIL(lin_solver_.setupSolver(workspace_.jacobian_analyzed_));
+      workspace_.jacobian_analyzed_ = true;
 
       stats_.jac_evals_++;
     }
@@ -719,9 +685,7 @@ namespace Integrator
 
       stats_.f_evals_++;
     }
-    resolve_rhs_->setData(workspace_.RHS_first_stage_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
-    resolve_lhs_->setData(workspace_.stages_[0]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
-    BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
+    BUBBLE_FAIL(lin_solver_.solve(*workspace_.RHS_first_stage_, *workspace_.stages_[0]));
     stats_.decomp_solves_++;
 
     // Rest of stages
@@ -766,9 +730,7 @@ namespace Integrator
       vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);
       vector_handler_.axpy(MINUS_ONE, workspace_.csum_.get(), workspace_.RHS_.get(), memspace_);
 
-      resolve_rhs_->setData(workspace_.RHS_->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
-      resolve_lhs_->setData(workspace_.stages_[i]->getData(), GridKit::memory::memorySpaceAsResolve(memspace_));
-      BUBBLE_FAIL(lin_solver_.solve(resolve_rhs_.get(), resolve_lhs_.get()));
+      BUBBLE_FAIL(lin_solver_.solve(*workspace_.RHS_, *workspace_.stages_[i]));
       stats_.f_evals_++;
       stats_.decomp_solves_++;
     }

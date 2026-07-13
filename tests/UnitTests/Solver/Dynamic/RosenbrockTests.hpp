@@ -4,6 +4,7 @@
 #include <ios>
 #include <memory>
 
+#include <GridKit/LinearAlgebra/Solver/ResolveSystemSolver.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/FixedStep.hpp>
@@ -11,6 +12,7 @@
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
+#include <resolve/SystemSolver.hpp>
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
@@ -347,11 +349,12 @@ namespace GridKit
         model.allocate();
         model.initialize();
 
-        ReSolve::LinAlgWorkspaceCpu                          linear_workspace;
-        ReSolve::SystemSolver                                lin_solver(&linear_workspace, "klu", "klu", "klu");
-        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT> vec_handler;
+        ReSolve::LinAlgWorkspaceCpu                                linear_workspace;
+        ReSolve::SystemSolver                                      resolve_solver(&linear_workspace, "klu", "klu", "klu");
+        GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>       vec_handler;
+        GridKit::LinearAlgebra::ResolveSystemSolver<ScalarT, IdxT> lin_solver(resolve_solver);
 
-        lin_solver.initialize();
+        resolve_solver.initialize();
 
         Rosenbrock integrator(std::move(tab), &model, lin_solver, vec_handler, nullptr);
         if (integrator.allocate())
