@@ -25,7 +25,8 @@ namespace GridKit
     }
 
     template <class ScalarT, typename IdxT>
-    ResolveSystemSolver<ScalarT, IdxT>::ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace) : lin_solver_(lin_solver), memspace_(memorySpaceAsResolve(memspace))
+    ResolveSystemSolver<ScalarT, IdxT>::ResolveSystemSolver(ReSolve::SystemSolver& lin_solver, GridKit::memory::MemorySpace memspace)
+      : lin_solver_(lin_solver), memspace_(memorySpaceAsResolve(memspace))
     {
     }
 
