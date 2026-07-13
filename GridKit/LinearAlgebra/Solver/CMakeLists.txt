@@ -3,8 +3,5 @@ if(GRIDKIT_ENABLE_RESOLVE)
     resolve_system_solver
     SOURCES ResolveSystemSolver.cpp
     HEADERS ResolveSystemSolver.hpp
-    LINK_LIBRARIES
-      PRIVATE
-      ReSolve::ReSolve
-    )
+    LINK_LIBRARIES PRIVATE ReSolve::ReSolve)
 endif()
