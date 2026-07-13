@@ -9,7 +9,7 @@ if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
-    HEADERS Ida.hpp
+    HEADERS Ida.hpp DynamicSolver.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
@@ -27,7 +27,7 @@ else()
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
-    HEADERS Ida.hpp
+    HEADERS Ida.hpp DynamicSolver.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
