@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <GridKit/Model/Evaluator.hpp>
 
 namespace GridKit
@@ -19,7 +21,6 @@ namespace GridKit
 
     ModelEvaluatorImpl()
       : size_(0),
-        nnz_(0),
         size_quad_(0),
         size_opt_(0)
     {
@@ -27,7 +28,6 @@ namespace GridKit
 
     ModelEvaluatorImpl(IdxT size, IdxT size_quad, IdxT size_opt)
       : size_(size),
-        nnz_(0),
         size_quad_(size_quad),
         size_opt_(size_opt),
         y_(size_),
@@ -57,27 +57,27 @@ namespace GridKit
       allocateHost(param_lo_);
     }
 
-    IdxT size() override
+    virtual IdxT size()
     {
       return size_;
     }
 
-    IdxT nnz() override
+    virtual IdxT nnz()
     {
       return nnz_;
     }
 
-    bool hasJacobian() override
+    virtual bool hasJacobian()
     {
       return false;
     }
 
-    IdxT sizeQuadrature() override
+    virtual IdxT sizeQuadrature()
     {
       return size_quad_;
     }
 
-    IdxT sizeParams() override
+    virtual IdxT sizeParams()
     {
       return size_opt_;
     }
@@ -94,132 +94,132 @@ namespace GridKit
       msa = max_steps_;
     }
 
-    VectorT& y() override
+    VectorT& y()
     {
       return y_;
     }
 
-    const VectorT& y() const override
+    const VectorT& y() const
     {
       return y_;
     }
 
-    VectorT& yp() override
+    VectorT& yp()
     {
       return yp_;
     }
 
-    const VectorT& yp() const override
+    const VectorT& yp() const
     {
       return yp_;
     }
 
-    std::vector<bool>& tag() override
+    std::vector<bool>& tag()
     {
       return tag_;
     }
 
-    const std::vector<bool>& tag() const override
+    const std::vector<bool>& tag() const
     {
       return tag_;
     }
 
-    VectorT& absoluteTolerance() override
+    VectorT& absoluteTolerance()
     {
       return abs_tol_;
     }
 
-    const VectorT& absoluteTolerance() const override
+    const VectorT& absoluteTolerance() const
     {
       return abs_tol_;
     }
 
-    VectorT& yB() override
+    VectorT& yB()
     {
       return yB_;
     }
 
-    const VectorT& yB() const override
+    const VectorT& yB() const
     {
       return yB_;
     }
 
-    VectorT& ypB() override
+    VectorT& ypB()
     {
       return ypB_;
     }
 
-    const VectorT& ypB() const override
+    const VectorT& ypB() const
     {
       return ypB_;
     }
 
-    VectorT& param() override
+    VectorT& param()
     {
       return param_;
     }
 
-    const VectorT& param() const override
+    const VectorT& param() const
     {
       return param_;
     }
 
-    VectorT& param_up() override
+    VectorT& param_up()
     {
       return param_up_;
     }
 
-    const VectorT& param_up() const override
+    const VectorT& param_up() const
     {
       return param_up_;
     }
 
-    VectorT& param_lo() override
+    VectorT& param_lo()
     {
       return param_lo_;
     }
 
-    const VectorT& param_lo() const override
+    const VectorT& param_lo() const
     {
       return param_lo_;
     }
 
-    VectorT& getResidual() override
+    VectorT& getResidual()
     {
       return f_;
     }
 
-    const VectorT& getResidual() const override
+    const VectorT& getResidual() const
     {
       return f_;
     }
 
-    VectorT& getIntegrand() override
+    VectorT& getIntegrand()
     {
       return g_;
     }
 
-    const VectorT& getIntegrand() const override
+    const VectorT& getIntegrand() const
     {
       return g_;
     }
 
-    VectorT& getAdjointResidual() override
+    VectorT& getAdjointResidual()
     {
       return fB_;
     }
 
-    const VectorT& getAdjointResidual() const override
+    const VectorT& getAdjointResidual() const
     {
       return fB_;
     }
 
-    VectorT& getAdjointIntegrand() override
+    VectorT& getAdjointIntegrand()
     {
       return gB_;
     }
 
-    const VectorT& getAdjointIntegrand() const override
+    const VectorT& getAdjointIntegrand() const
     {
       return gB_;
     }
@@ -268,15 +268,13 @@ namespace GridKit
     IdxT idc_;
 
   private:
-    template <typename ValueT>
-    static void allocateHost(GridKit::LinearAlgebra::Vector<ValueT, IdxT>& vector)
+    static void allocateHost(VectorT& vector)
     {
       vector.allocate(memory::HOST);
       vector.setToZero(memory::HOST);
     }
 
-    template <typename ValueT>
-    static void resizeAndAllocateHost(GridKit::LinearAlgebra::Vector<ValueT, IdxT>& vector, IdxT size)
+    static void resizeAndAllocateHost(VectorT& vector, IdxT size)
     {
       vector.resize(size);
       allocateHost(vector);

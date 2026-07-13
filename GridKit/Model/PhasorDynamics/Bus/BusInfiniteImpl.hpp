@@ -110,11 +110,6 @@ namespace GridKit
       }
       auto size = static_cast<std::size_t>(size_);
 
-      assert(y_.getSize() == size);
-      assert(yp_.getSize() == size);
-      assert(f_.getSize() == size);
-      assert(this->abs_tol_.getSize() == size);
-
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 

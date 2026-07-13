@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <memory>
 #include <set>
 #include <vector>
@@ -188,7 +187,6 @@ namespace GridKit
        */
       void allocateVectors(IdxT n)
       {
-        assert(!allocated_);
 
         y_.resize(n);
         y_.allocate();
@@ -231,8 +229,6 @@ namespace GridKit
       //
       // Adjoint sensitivity members
       //
-
-      /// @todo Migrate unused adjoint and parameter storage to VectorT when implemented.
 
       std::vector<ScalarT> yB_{};
       std::vector<ScalarT> ypB_{};

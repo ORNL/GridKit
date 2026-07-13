@@ -163,18 +163,14 @@ namespace GridKit
         }
         auto size = static_cast<size_t>(size_);
 
-        assert(y_.getSize() == size);
-        assert(yp_.getSize() == size);
-        assert(f_.getSize() == size);
         tag_.resize(size);
-        assert(abs_tol_.getSize() == size);
 
         variable_indices_.resize(size);
         residual_indices_.resize(size);
         for (IdxT j = 0; j < size_; ++j)
         {
-          variable_indices_[static_cast<std::size_t>(j)] = j;
-          residual_indices_[static_cast<std::size_t>(j)] = j;
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
         }
 
         ws_.resize(1);
@@ -269,7 +265,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 

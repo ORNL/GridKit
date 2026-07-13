@@ -81,49 +81,9 @@ namespace GridKit
         return 0;
       }
 
-      VectorT& y() override
-      {
-        return y_;
-      }
-
-      const VectorT& y() const override
-      {
-        return y_;
-      }
-
-      VectorT& yp() override
-      {
-        return yp_;
-      }
-
-      const VectorT& yp() const override
-      {
-        return yp_;
-      }
-
-      std::vector<bool>& tag() override
-      {
-        return tag_;
-      }
-
-      const std::vector<bool>& tag() const override
-      {
-        return tag_;
-      }
-
-      VectorT& absoluteTolerance() override
-      {
-        return abs_tol_;
-      }
-
-      const VectorT& absoluteTolerance() const override
-      {
-        return abs_tol_;
-      }
-
       int setAbsoluteTolerance(RealT rel_tol) override
       {
-        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -162,6 +122,46 @@ namespace GridKit
 
       void updateTime([[maybe_unused]] RealT t, [[maybe_unused]] RealT a) override
       {
+      }
+
+      VectorT& y() override
+      {
+        return y_;
+      }
+
+      const VectorT& y() const override
+      {
+        return y_;
+      }
+
+      VectorT& yp() override
+      {
+        return yp_;
+      }
+
+      const VectorT& yp() const override
+      {
+        return yp_;
+      }
+
+      std::vector<bool>& tag() override
+      {
+        return tag_;
+      }
+
+      const std::vector<bool>& tag() const override
+      {
+        return tag_;
+      }
+
+      VectorT& absoluteTolerance() override
+      {
+        return abs_tol_;
+      }
+
+      const VectorT& absoluteTolerance() const override
+      {
+        return abs_tol_;
       }
 
       VectorT& yB() override
@@ -226,7 +226,7 @@ namespace GridKit
 
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* getCsrJacobian() const override
       {
-        return nullptr;
+        return csr_jac_;
       }
 
       VectorT& getIntegrand() override
@@ -288,21 +288,23 @@ namespace GridKit
 
       VectorT           y_;
       VectorT           yp_;
-      VectorT           f_;
       std::vector<bool> tag_;
       VectorT           abs_tol_;
-      bool              allocated_{false};
-
-      VectorT g_;
+      VectorT           f_;
+      VectorT           g_;
 
       VectorT yB_;
       VectorT ypB_;
       VectorT fB_;
       VectorT gB_;
 
+      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
+
       VectorT param_;
       VectorT param_up_;
       VectorT param_lo_;
+
+      bool allocated_{false};
     };
 
     template <class ScalarT, typename IdxT>

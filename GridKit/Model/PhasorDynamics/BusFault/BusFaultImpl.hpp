@@ -84,13 +84,9 @@ namespace GridKit
       monitor_->set(Variable::state, [this]
                     { return status_; });
       monitor_->set(Variable::ir, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[0]; });
+                    { return y_.getData()[0]; });
       monitor_->set(Variable::ii, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[1]; });
+                    { return y_.getData()[1]; });
 
       size_ = 2;
       setDerivedParams();
@@ -124,11 +120,7 @@ namespace GridKit
       // std::cout << "Allocate BusFault..." << std::endl;
       auto size = static_cast<std::size_t>(size_);
 
-      assert(y_.getSize() == size);
-      assert(yp_.getSize() == size);
-      assert(this->f_.getSize() == size);
       tag_.resize(size);
-      assert(this->abs_tol_.getSize() == size);
 
       this->variable_indices_.resize(size);
       this->residual_indices_.resize(size);
@@ -137,7 +129,7 @@ namespace GridKit
       wb_.resize(2);
       h_.resize(2);
 
-      // Default variable and residual index mapping to local indices
+      // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
         this->setVariableIndex(j, j);
@@ -205,7 +197,7 @@ namespace GridKit
     template <class scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

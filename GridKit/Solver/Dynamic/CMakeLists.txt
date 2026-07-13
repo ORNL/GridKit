@@ -25,7 +25,6 @@ if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
       GridKit::utilities_logger
       PUBLIC
       GridKit::sparse_matrix
-      PUBLIC
       GridKit::dense_vector)
 else()
   gridkit_add_library(
@@ -43,6 +42,5 @@ else()
       GridKit::utilities_logger
       PUBLIC
       GridKit::sparse_matrix
-      PUBLIC
       GridKit::dense_vector)
 endif()

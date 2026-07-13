@@ -149,69 +149,37 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    {
-                      auto* y = y_.getData();
-                      return toSystemBase(y[12]); });
+                    { return toSystemBase(y_.getData()[12]); });
       monitor_->set(Variable::ii, [this]
-                    {
-                      auto* y = y_.getData();
-                      return toSystemBase(y[13]); });
+                    { return toSystemBase(y_.getData()[13]); });
       monitor_->set(Variable::p, [this]
-                    {
-                      auto* y = y_.getData();
-                      return toSystemBase(Vr() * y[12] + Vi() * y[13]); });
+                    { return toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
       monitor_->set(Variable::q, [this]
-                    {
-                      auto* y = y_.getData();
-                      return toSystemBase(Vi() * y[12] - Vr() * y[13]); });
+                    { return toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
       monitor_->set(Variable::delta, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[0]; });
+                    { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[1]; });
+                    { return y_.getData()[1]; });
       monitor_->set(Variable::speed, [this]
-                    {
-                      auto* y = y_.getData();
-                      return 1.0 + y[1]; });
+                    { return 1.0 + y_.getData()[1]; });
       monitor_->set(Variable::Eqp, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[2]; });
+                    { return y_.getData()[2]; });
       monitor_->set(Variable::psidp, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[3]; });
+                    { return y_.getData()[3]; });
       monitor_->set(Variable::psiqpp, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[4]; });
+                    { return y_.getData()[4]; });
       monitor_->set(Variable::psidpp, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[5]; });
+                    { return y_.getData()[5]; });
       monitor_->set(Variable::vd, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[7]; });
+                    { return y_.getData()[7]; });
       monitor_->set(Variable::vq, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[8]; });
+                    { return y_.getData()[8]; });
       monitor_->set(Variable::te, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[9]; });
+                    { return y_.getData()[9]; });
       monitor_->set(Variable::id, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[10]; });
+                    { return y_.getData()[10]; });
       monitor_->set(Variable::iq, [this]
-                    {
-                      auto* y = y_.getData();
-                      return y[11]; });
+                    { return y_.getData()[11]; });
     }
 
     /**
@@ -236,18 +204,14 @@ namespace GridKit
       }
       auto size = static_cast<size_t>(size_);
 
-      assert(y_.getSize() == size);
-      assert(yp_.getSize() == size);
-      assert(f_.getSize() == size);
       tag_.resize(size);
-      assert(abs_tol_.getSize() == size);
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
       for (IdxT j = 0; j < size_; ++j)
       {
-        variable_indices_[static_cast<std::size_t>(j)] = j;
-        residual_indices_[static_cast<std::size_t>(j)] = j;
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
       }
 
       // Resize bus data
@@ -406,7 +370,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -165,7 +164,7 @@ namespace GridKit
        */
       int setAbsoluteTolerance(RealT rel_tol) final
       {
-        std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 

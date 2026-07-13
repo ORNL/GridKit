@@ -1,8 +1,8 @@
 #pragma once
 
-#include <algorithm>
 #include <cstddef>
 #include <map>
+#include <string>
 #include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
@@ -121,7 +121,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.getData(), abs_tol_.getData() + abs_tol_.getSize(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
