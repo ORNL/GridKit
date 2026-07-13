@@ -25,8 +25,20 @@ namespace GridKit
       int solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs) final;
 
     private:
+      /**
+       * @brief The ReSolve matrix used for the linear solve. Its data pointers should just point to a \ref GridKit::LinearAlgebra::CsrMatrix.
+       *
+       */
       std::unique_ptr<ReSolve::matrix::Csr> matrix_;
+      /**
+       * @brief The ReSolve linear solver to use.
+       *
+       */
       ReSolve::SystemSolver&                lin_solver_;
+      /**
+       * @brief The memspace the data is stored in.
+       *
+       */
       ReSolve::memory::MemorySpace          memspace_;
     };
   } // namespace LinearAlgebra
