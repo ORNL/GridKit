@@ -171,8 +171,8 @@ jobs:
       - name: Concretize
         run: spack -e . concretize
 
-      - name: Uninstall Re::Solve
-        run: spack -e . uninstall --yes-to-all --dependents resolve
+      - name: Uninstall Re::Solve installed
+        run: spack -e . find resolve &>/dev/null && spack -e . uninstall --yes-to-all --dependents resolve || true
 
       - name: Install dependencies
         run: spack -e . install --no-check-signature --only dependencies
