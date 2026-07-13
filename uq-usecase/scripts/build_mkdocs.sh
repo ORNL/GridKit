@@ -232,7 +232,7 @@ echo "./rsync_and_open_mkdocs.sh"
 
 # Generate Copilot context prompt file listing all GridKit .md files.
 # Re-generated each build so it stays current as docs are added/removed.
-PROMPT_FILE=/home/isatkaus/.github/prompts/gridkit_docs.prompt.md
+PROMPT_FILE=$GRIDKIT_DIR/uq-usecase/context/gridkit_docs.prompt.md
 mkdir -p "$(dirname "$PROMPT_FILE")"
 {
   echo "---"

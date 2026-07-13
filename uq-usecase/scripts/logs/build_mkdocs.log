@@ -18,12 +18,12 @@
 INFO    -  Cleaning site directory
 INFO    -  Building documentation to directory: /home/isatkaus/gridkit/uq-usecase/mkdocs-site
 WARNING -  Excluding 'GridKit/docs/README.md' from the site because it conflicts with 'GridKit/docs/index.md'.
-INFO    -  Documentation built in 3.23 seconds
+INFO    -  Documentation built in 3.96 seconds
 
 Docs built at: /home/isatkaus/gridkit/uq-usecase/mkdocs-site/index.html
 
 To rsync to local (e.g. Mac), run from your local machine:
 cd /Users/isatkaus/projects/scidac/gridkit/
 ./rsync_and_open_mkdocs.sh
-Copilot context prompt written to: /home/isatkaus/.github/prompts/gridkit_docs.prompt.md
-  184 .md files listed.
+Copilot context prompt written to: /home/isatkaus/gridkit/uq-usecase/context/gridkit_docs.prompt.md
+  185 .md files listed.

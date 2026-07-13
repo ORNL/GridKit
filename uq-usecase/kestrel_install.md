@@ -109,8 +109,8 @@ cd ~/gridkit/uq-usecase/scripts/
 bash rebuild_if_updated.sh 2>&1 | tee logs/rebuild.log
 
 # Then on local machine — sync docs and open in browser:
-rsync -avz --delete kestrel:~/gridkit/mkdocs-site/ ~/projects/scidac/gridkit/mkdocs-site/ \
-  && open ~/projects/scidac/gridkit/mkdocs-site/index.html
+rsync -avz --delete kestrel:~/gridkit/uq-usecase/mkdocs-site/ ~/projects/scidac/gridkit/gridkit-mkdocs/ \
+  && open ~/projects/scidac/gridkit/gridkit-mkdocs/index.html
 ```
 
 To force a rebuild even without new commits:
@@ -122,6 +122,56 @@ To rebuild only the docs:
 ```bash
 bash build_mkdocs.sh 2>&1 | tee logs/build_mkdocs.log
 ```
+
+After each mkdocs build (including via `rebuild_if_updated.sh`), a Copilot context prompt is
+auto-generated at `uq-usecase/context/gridkit_docs.prompt.md`. It lists all GridKit `.md` files
+and can be attached in a chat session to give the agent full documentation context.
+
+## Saving Work-in-Progress to Fork
+
+Stage and push all changes under `uq-usecase/` to `origin/isatkaus/uq-usecase`:
+```bash
+bash ~/gridkit/uq-usecase/scripts/wip.sh "your commit message"
+# default message is "wip" if omitted
+bash ~/gridkit/uq-usecase/scripts/wip.sh
+```
+
+Only files under `uq-usecase/` and `.gitignore` are staged — upstream GridKit files are never touched.
+
+## Selective PRs to Upstream (ORNL/GridKit)
+
+The goal is to contribute specific fixes or features from `isatkaus/uq-usecase` upstream without including personal workflow files.
+
+**Step 1: Create a focused branch from upstream develop**
+```bash
+cd ~/gridkit
+git fetch upstream
+git checkout -b pr/my-fix upstream/develop
+```
+
+**Step 2: Cherry-pick only the commits you want to contribute**
+```bash
+# Find commit hashes on your branch
+git log --oneline isatkaus/uq-usecase
+
+# Cherry-pick individual commits (not wip commits, only clean targeted ones)
+git cherry-pick <commit-hash>
+```
+
+**Step 3: Or copy just the changed files manually**
+```bash
+# If commits are mixed with wip noise, copy only the specific file(s)
+git checkout isatkaus/uq-usecase -- GridKit/SomeFile.cpp
+git commit -m "Fix: description of fix"
+```
+
+**Step 4: Push to fork and open PR against ORNL/GridKit**
+```bash
+git push origin pr/my-fix
+# Then open PR on GitHub: isatkaus/GridKit pr/my-fix -> ORNL/GridKit develop
+```
+
+**Key rule:** never open a PR from `isatkaus/uq-usecase` directly — it contains personal scripts and notebooks that should not go upstream.
 
 ---
 

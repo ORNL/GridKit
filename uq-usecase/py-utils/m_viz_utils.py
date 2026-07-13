@@ -394,6 +394,7 @@ def attach_geo_to_case(
     split_radius: float = 0.006,
     gen_fanout: bool = False,
     gen_fanout_radius: float = 0.003,
+    gen_fanout_singles: bool = False,
 ) -> GeoPrepResult:
     """Attach geo lat/lon to bus/gen/branch tables, optionally applying split-points."""
 
@@ -426,7 +427,9 @@ def attach_geo_to_case(
     gen_df["lat"] = gen_df["bus_lat"]
     gen_df["lon"] = gen_df["bus_lon"]
     if gen_fanout:
-        gen_df = split_generator_points(gen_df, radius=gen_fanout_radius)
+        gen_df = split_generator_points(
+            gen_df, radius=gen_fanout_radius, fan_singles=gen_fanout_singles
+        )
 
     branch_df = case_data.branch.copy()
     bus_lat = bus_df.set_index("BUS_I")["lat"]
@@ -505,6 +508,7 @@ def plot_grid(
     n_hover_points: int = 10,
     show_loading: bool = True,
     show_gen_connectors: bool = False,
+    marker_scale: float = 1.0,
 ) -> go.Figure:
     """Geo plot: branches, buses (PD), generators (fuel-colored when available).
 
@@ -616,7 +620,7 @@ def plot_grid(
                     cmin=0,
                     cmax=1,
                     colorbar=dict(
-                        title="Line loading",
+                        title=dict(text="Line<br>loading"),
                         thickness=15,
                         tickvals=tickvals,
                         ticktext=ticktext,
@@ -648,7 +652,7 @@ def plot_grid(
 
     # buses
     bus_sizes = (
-        np.sqrt(case_data.bus["PD"].clip(lower=0.01).values) * 2.2 + 3
+        (np.sqrt(case_data.bus["PD"].clip(lower=0.01).values) * 2.2 + 3) * marker_scale
     ).tolist()
     has_bus_name = "bus_name" in case_data.bus.columns
     has_json_bus = "json_bus_number" in case_data.bus.columns
@@ -672,7 +676,12 @@ def plot_grid(
             marker=dict(
                 color=case_data.bus["PD"].values,
                 colorscale="Blues",
-                colorbar=dict(title="PD (MW)", x=1.02, thickness=15, outlinewidth=0),
+                colorbar=dict(
+                    title=dict(text="Load<br>(PD in MW)"),
+                    x=1.02,
+                    thickness=15,
+                    outlinewidth=0,
+                ),
                 size=bus_sizes,
                 opacity=0.85,
             ),
@@ -711,25 +720,49 @@ def plot_grid(
         "#bcbd22",
         "#17becf",
     ]
+    fuel_color_map = {
+        "coal": "#222222",
+        "nuclear": "#a50026",
+        "hydro": "#4393c3",
+        "wind": "#4dac26",
+        "solar": "#f4a582",
+        "ng": "#fd8d3c",
+        "gas": "#fd8d3c",
+        "oil": "#8c6d31",
+        "geothermal": "#762a83",
+        "biomass": "#74c476",
+        "other": "#969696",
+        "sync_cond": "#d4b9da",
+    }
     if case_data.genfuel is not None and len(case_data.genfuel) == len(case_data.gen):
         gen_plot_df = case_data.gen.copy()
         gen_plot_df["genfuel"] = case_data.genfuel.values
+        palette_fuels = [
+            f
+            for f in sorted(gen_plot_df["genfuel"].unique())
+            if f not in fuel_color_map
+        ]
         for i, fuel in enumerate(sorted(gen_plot_df["genfuel"].unique())):
             gdf = gen_plot_df[gen_plot_df["genfuel"] == fuel]
-            color = palette[i % len(palette)]
+            color = (
+                fuel_color_map[fuel]
+                if fuel in fuel_color_map
+                else palette[palette_fuels.index(fuel) % len(palette)]
+            )
             gen_sizes = (
-                np.sqrt(gdf["PG"].clip(lower=0.01).values) * 1.8 + 4
+                (np.sqrt(gdf["PG"].clip(lower=0.01).values) * 1.8 + 4) * marker_scale
                 if "PG" in gdf.columns
-                else np.full(len(gdf), 6.0)
+                else np.full(len(gdf), 6.0 * marker_scale)
             )
             _has_json_gen = "json_gen_id" in gdf.columns
+            _has_json_gen_bus = "json_gen_bus_number" in gdf.columns
             gen_hover = [
                 f"<b>GEN_BUS: {row.GEN_BUS}</b><br>"
                 f"gen_row: {getattr(row, 'gen_row', 'n/a')}<br>"
                 f"PG: {row.PG:.2f} MW<br>QG: {row.QG:.2f} MVAr<br>Fuel: {fuel}"
                 + (
                     (
-                        f"<br>json_id: {row.json_gen_id}"
+                        f"<br>json: number={getattr(row, 'json_gen_bus_number', row.GEN_BUS)}, device_id={row.json_gen_id}"
                         if row.json_gen_id is not None
                         else "<br><b>\u26a0 offline \u2014 not in JSON (GEN_STATUS=0)</b>"
                     )
@@ -766,7 +799,7 @@ def plot_grid(
                         )
                         + (
                             (
-                                f"<br>json_id: {row.json_gen_id}"
+                                f"<br>json: number={getattr(row, 'json_gen_bus_number', row.GEN_BUS)}, device_id={row.json_gen_id}"
                                 if row.json_gen_id is not None
                                 else "<br><b>\u26a0 offline \u2014 not in JSON (GEN_STATUS=0)</b>"
                             )
@@ -777,7 +810,7 @@ def plot_grid(
                     for row in case_data.gen.itertuples()
                 ],
                 hoverinfo="text",
-                marker=dict(size=6, color="#d62728", opacity=0.9),
+                marker=dict(size=6 * marker_scale, color="#d62728", opacity=0.9),
                 showlegend=True,
             )
         )
@@ -898,7 +931,11 @@ def _find_aux_table_header(lines: list[str], table_name: str) -> int:
     )
 
 
-def split_generator_points(gen_df: pd.DataFrame, radius: float = 0.003) -> pd.DataFrame:
+def split_generator_points(
+    gen_df: pd.DataFrame,
+    radius: float = 0.003,
+    fan_singles: bool = False,
+) -> pd.DataFrame:
     """Spread generators on the same bus around the bus center for visibility."""
 
     out_df = gen_df.copy()
@@ -915,9 +952,10 @@ def split_generator_points(gen_df: pd.DataFrame, radius: float = 0.003) -> pd.Da
 
         center_lat = float(out_df.loc[row_idx[0], "lat"])
         center_lon = float(out_df.loc[row_idx[0], "lon"])
-        # single generator: offset at angle 0 (east) so bus marker underneath is visible
+        # single generator: optionally offset east so bus marker underneath is visible
         if n_gen == 1:
-            out_df.loc[row_idx[0], "lon"] = center_lon + radius
+            if fan_singles:
+                out_df.loc[row_idx[0], "lon"] = center_lon + radius
             continue
 
         theta = 2 * np.pi / n_gen
@@ -1008,7 +1046,7 @@ def _branch_hover_detail(
     if has_branch_row:
         parts.append(f"branch_row: {row.branch_row}")
     if has_json_branch:
-        parts.append(f"json_id: {row.json_branch_id}")
+        parts.append(f"json: device_id={row.json_branch_id}")
     if has_loading and not pd.isna(row.loading_pct):
         parts.append(f"Loading: {row.loading_pct:.1f}%")
         pf = getattr(row, "PF", None)
@@ -1069,7 +1107,9 @@ def _build_branch_line_arrays(
         lon_vals.extend([row.from_lon, row.to_lon, None])
 
         branch_id = f"<br>branch_row: {row.branch_row}" if has_branch_row else ""
-        json_bid = f"<br>json_id: {row.json_branch_id}" if has_json_branch else ""
+        json_bid = (
+            f"<br>json: device_id={row.json_branch_id}" if has_json_branch else ""
+        )
         if has_loading and not pd.isna(row.loading_pct):
             rate_a = getattr(row, "RATE_A", None)
             pf = getattr(row, "PF", None)
