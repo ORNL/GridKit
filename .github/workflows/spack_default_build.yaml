@@ -171,11 +171,11 @@ jobs:
       - name: Concretize
         run: spack -e . concretize
 
-      - name: Install dependencies
-        run: spack -e . install --no-check-signature --only dependencies --exclude resolve
+      - name: Uninstall Re::Solve
+        run: spack -e . uninstall --yes-to-all --dependents resolve
 
-      - name: Install Re::Solve (fresh)
-        run: spack -e . install --no-check-signature --only resolve --fresh
+      - name: Install dependencies
+        run: spack -e . install --no-check-signature --only dependencies
 
       - name: Install package
         run: spack -e . install --keep-stage --no-check-signature --no-cache --fresh
