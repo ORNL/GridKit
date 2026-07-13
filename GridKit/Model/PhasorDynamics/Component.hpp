@@ -123,6 +123,67 @@ namespace GridKit
         return f_;
       }
 
+      /**
+       * @brief Bind this component's state and residual vectors to the slice
+       * [offset, offset + size()) of the system vectors.
+       *
+       * After binding, the component reads and writes system storage directly
+       * and allocate() will not allocate local vector data. Rebinding is
+       * allowed and refreshes the aliases, e.g. after system storage is
+       * reallocated when the topology changes.
+       *
+       * Only HOST data is aliased; HOST/DEVICE update flags are not shared
+       * with the system vectors, and DEVICE access while bound is unsupported.
+       *
+       * @param[in] y       - System state vector
+       * @param[in] yp      - System state derivative vector
+       * @param[in] f       - System residual vector
+       * @param[in] abs_tol - System absolute tolerance vector
+       * @param[in] offset  - Position of this component's slice in the system vectors
+       *
+       * @pre System vectors hold current HOST data of at least offset + size()
+       * elements. This component's vectors are unallocated or already bound.
+       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system storage.
+       *
+       * @return 0 if successful, non-zero otherwise.
+       */
+      int bind(VectorT& y, VectorT& yp, VectorT& f, VectorT& abs_tol, IdxT offset)
+      {
+        if (y.getSize() < offset + size_
+            || yp.getSize() < offset + size_
+            || f.getSize() < offset + size_
+            || abs_tol.getSize() < offset + size_)
+        {
+          Log::error() << "Component::bind - system vectors are smaller than "
+                       << "offset + size = " << offset + size_ << "\n";
+          return 1;
+        }
+
+        auto* y_data       = y.getData(memory::HOST);
+        auto* yp_data      = yp.getData(memory::HOST);
+        auto* f_data       = f.getData(memory::HOST);
+        auto* abs_tol_data = abs_tol.getData(memory::HOST);
+
+        if (y_data == nullptr || yp_data == nullptr
+            || f_data == nullptr || abs_tol_data == nullptr)
+        {
+          Log::error() << "Component::bind - system vector data is null or stale\n";
+          return 1;
+        }
+
+        if (y_.setData(y_data + offset, size_, memory::HOST) != 0
+            || yp_.setData(yp_data + offset, size_, memory::HOST) != 0
+            || f_.setData(f_data + offset, size_, memory::HOST) != 0
+            || abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST) != 0)
+        {
+          Log::error() << "Component::bind - failed to bind vectors to system storage\n";
+          return 1;
+        }
+
+        allocated_ = true;
+        return 0;
+      }
+
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;

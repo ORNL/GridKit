@@ -412,8 +412,8 @@ namespace GridKit
     /**
      * @brief Set component ID
      *
-     * @note Should default to 0. The system model could be used as a
-     * component in a larger system that would need to set this value.
+     * @note Should default to 0. Nested system models are not currently
+     * supported.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
@@ -423,41 +423,25 @@ namespace GridKit
     }
 
     /**
-     * @brief Allocate buses, components, and system objects.
+     * @brief Allocate system storage and bind buses and components to it.
      *
-     * This method first allocates bus objects, then component objects,
-     * and computes system size (number of unknowns). Once the size is
-     * computed, system global objects are allocated.
+     * @pre Buses and components with nonzero size are unallocated or already
+     * bound to external system storage.
      *
-     * @post size_ >= 1
-     *
+     * @note System model composition is flat; nested systems are not supported.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
     {
       size_ = 0;
 
-      // Allocate all buses
       for (const auto& bus : buses_)
       {
-        bus->allocate();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          bus->setVariableIndex(j, size_ + j);
-          bus->setResidualIndex(j, size_ + j);
-        }
         size_ += bus->size();
       }
 
-      // Allocate all components
       for (const auto& component : components_)
       {
-        component->allocate();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          component->setVariableIndex(j, size_ + j);
-          component->setResidualIndex(j, size_ + j);
-        }
         size_ += component->size();
       }
 
@@ -474,15 +458,78 @@ namespace GridKit
         nnz_ = 0;
         this->allocateVectors(size_);
       }
+
+      if (y_.getSize() != size_
+          || yp_.getSize() != size_
+          || f_.getSize() != size_
+          || abs_tol_.getSize() != size_)
+      {
+        Log::error() << "SystemModel vector sizes do not match the system size\n";
+        return 1;
+      }
+
       tag_.resize(size_);
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
-      // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
         this->setVariableIndex(j, j);
         this->setResidualIndex(j, j);
+      }
+
+      IdxT offset = 0;
+
+      for (const auto& bus : buses_)
+      {
+        if (bus->bind(y_, yp_, f_, abs_tol_, offset) != 0)
+        {
+          Log::error() << "Failed to bind bus vectors to system storage\n";
+          return 1;
+        }
+
+        if (bus->allocate() != 0)
+        {
+          Log::error() << "Failed to allocate bus data\n";
+          return 1;
+        }
+
+        for (IdxT j = 0; j < bus->size(); ++j)
+        {
+          bus->setVariableIndex(j, offset + j);
+          bus->setResidualIndex(j, offset + j);
+        }
+
+        offset += bus->size();
+      }
+
+      for (const auto& component : components_)
+      {
+        if (component->bind(y_, yp_, f_, abs_tol_, offset) != 0)
+        {
+          Log::error() << "Failed to bind component vectors to system storage\n";
+          return 1;
+        }
+
+        if (component->allocate() != 0)
+        {
+          Log::error() << "Failed to allocate component data\n";
+          return 1;
+        }
+
+        for (IdxT j = 0; j < component->size(); ++j)
+        {
+          component->setVariableIndex(j, offset + j);
+          component->setResidualIndex(j, offset + j);
+        }
+
+        offset += component->size();
+      }
+
+      if (offset != size_)
+      {
+        Log::error() << "Bound vector sizes do not match the system size\n";
+        return 1;
       }
 
       // Verify component configuration
@@ -580,7 +627,7 @@ namespace GridKit
      * Also, generators may write to control devices (e.g. governors,
      * exciters, etc.) during the initialization.
      *
-     * @todo Implement writting to system vectors in a thread-safe way.
+     * @todo Implement writing to system vectors in a thread-safe way.
      *
      * @note Currently assuming each component stores variables contiguously in memory and
      * that these are simply concateneted in the global system.
@@ -588,40 +635,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::initialize()
     {
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-
       for (const auto& bus : buses_)
       {
         bus->initialize();
       }
 
-      for (const auto& bus : buses_)
-      {
-        const auto* bus_y  = bus->y().getData();
-        const auto* bus_yp = bus->yp().getData();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          y[bus->getVariableIndex(j)]  = bus_y[j];
-          yp[bus->getVariableIndex(j)] = bus_yp[j];
-        }
-      }
-
-      // Initialize components
       for (const auto& component : components_)
       {
         component->initialize();
-      }
-
-      for (const auto& component : components_)
-      {
-        const auto* component_y  = component->y().getData();
-        const auto* component_yp = component->yp().getData();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          y[component->getVariableIndex(j)]  = component_y[j];
-          yp[component->getVariableIndex(j)] = component_yp[j];
-        }
       }
 
       y_.setDataUpdated();
@@ -724,28 +745,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      auto* abs_tol = abs_tol_.getData();
-      IdxT  offset  = 0;
       for (const auto& bus : buses_)
       {
         bus->setAbsoluteTolerance(rel_tol);
-        const auto* bus_abs_tol = bus->absoluteTolerance().getData();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          abs_tol[offset + j] = bus_abs_tol[j];
-        }
-        offset += bus->size();
       }
 
       for (const auto& component : components_)
       {
         component->setAbsoluteTolerance(rel_tol);
-        const auto* component_abs_tol = component->absoluteTolerance().getData();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          abs_tol[offset + j] = component_abs_tol[j];
-        }
-        offset += component->size();
       }
 
       abs_tol_.setDataUpdated();
@@ -756,9 +763,8 @@ namespace GridKit
     /**
      * @brief Compute system residual vector
      *
-     * First, update bus and component variables from the system solution
-     * vector. Next, evaluate residuals in buses and components, and
-     * then copy values to the global residual vector.
+     * Buses and components read and write their bound system-vector slices
+     * directly.
      *
      * @warning Residuals must be computed for buses, before component
      * residuals are computed. Buses own residuals for currents
@@ -766,18 +772,10 @@ namespace GridKit
      * from components. Buses assign their residual values, while components
      * add to those values by in-place adition. This is why (for now) bus
      * residuals need to be computed first.
-     *
-     * @todo Here, components write to local values, which are then copied
-     * to global system vectors. Make components write to the system
-     * vectors directly.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
-      updateVariables();
-
-      auto* f = f_.getData();
-
       for (const auto& bus : buses_)
       {
         bus->evaluateResidual();
@@ -786,25 +784,6 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->evaluateResidual();
-      }
-
-      // Update residual vector
-      for (const auto& bus : buses_)
-      {
-        const auto* bus_f = bus->getResidual().getData();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          f[bus->getResidualIndex(j)] = bus_f[j];
-        }
-      }
-
-      for (const auto& component : components_)
-      {
-        const auto* component_f = component->getResidual().getData();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          f[component->getResidualIndex(j)] = component_f[j];
-        }
       }
 
       f_.setDataUpdated();
@@ -1000,41 +979,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Update variables in buses and components
-     */
-    template <typename scalar_type, typename index_type>
-    void SystemModel<scalar_type, index_type>::updateVariables()
-    {
-      const auto* y  = y_.getData();
-      const auto* yp = yp_.getData();
-
-      for (const auto& bus : buses_)
-      {
-        auto* bus_y  = bus->y().getData();
-        auto* bus_yp = bus->yp().getData();
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          bus_y[j]  = y[bus->getVariableIndex(j)];
-          bus_yp[j] = yp[bus->getVariableIndex(j)];
-        }
-        bus->y().setDataUpdated();
-        bus->yp().setDataUpdated();
-      }
-      for (const auto& component : components_)
-      {
-        auto* component_y  = component->y().getData();
-        auto* component_yp = component->yp().getData();
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          component_y[j]  = y[component->getVariableIndex(j)];
-          component_yp[j] = yp[component->getVariableIndex(j)];
-        }
-        component->y().setDataUpdated();
-        component->yp().setDataUpdated();
-      }
-    }
-
-    /**
      * @brief Update time
      *
      */
@@ -1047,8 +991,6 @@ namespace GridKit
       {
         component->updateTime(t, a);
       }
-
-      updateVariables();
     }
 
     /**
