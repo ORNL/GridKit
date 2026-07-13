@@ -4,12 +4,13 @@
 #include <ios>
 #include <memory>
 
+#include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/Evaluator.hpp>
+#include <GridKit/Solver/Dynamic/FixedStep.hpp>
 #include <GridKit/Solver/Dynamic/Rosenbrock.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp"
 #include <resolve/vector/Vector.hpp>
 #include <resolve/vector/VectorHandler.hpp>
 #include <resolve/workspace/LinAlgWorkspaceCpu.hpp>
