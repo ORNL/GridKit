@@ -5,13 +5,11 @@
 #    - Cameron Rutherford <cameron.rutherford@pnnl.gov>
 #]]
 
-set(_install_headers DynamicSolver.hpp Ida.hpp Rosenbrock.hpp)
-
 if(GRIDKIT_ENABLE_SUNDIALS_SPARSE)
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
-    HEADERS ${_install_headers}
+    HEADERS Ida.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
@@ -29,7 +27,7 @@ else()
   gridkit_add_library(
     solvers_dyn
     SOURCES Ida.cpp
-    HEADERS ${_install_headers}
+    HEADERS Ida.hpp
     LINK_LIBRARIES
       PUBLIC
       SUNDIALS::nvecserial
@@ -47,9 +45,9 @@ if(GRIDKIT_ENABLE_RESOLVE)
   gridkit_add_library(
     rosenbrock
     SOURCES Rosenbrock.cpp RosenbrockTableaus.cpp
-    HEADERS ${_install_headers}
+    HEADERS Rosenbrock.hpp
     LINK_LIBRARIES
-      PUBLIC
+      PRIVATE
       ReSolve::ReSolve
       PUBLIC
       GridKit::dense_vector
@@ -59,4 +57,27 @@ if(GRIDKIT_ENABLE_RESOLVE)
       GridKit::utilities_logger
       PUBLIC
       GridKit::sparse_matrix)
+
+  gridkit_add_library(
+    inf_norm
+    SOURCES InfNorm.cpp
+    HEADERS InfNorm.hpp
+    LINK_LIBRARIES
+      PRIVATE
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::dense_vector
+  )
 endif()
+
+gridkit_add_library(
+  adaptive_step
+  SOURCES AdaptiveStep.cpp
+  HEADERS AdaptiveStep.hpp
+)
+
+gridkit_add_library(
+  fixed_step
+  SOURCES FixedStep.cpp
+  HEADERS FixedStep.hpp
+)
