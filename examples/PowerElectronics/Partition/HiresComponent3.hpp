@@ -21,15 +21,17 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
     using CircuitComponent<ScalarT, IdxT>::yB_;
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -45,6 +47,7 @@ namespace GridKit
       n_extern_       = 2;
       extern_indices_ = {0, 1};
       idc_            = id;
+      nnz_            = 15;
     }
 
     ~HiresComponent3()
@@ -53,9 +56,7 @@ namespace GridKit
 
     int allocate()
     {
-      y_.resize(static_cast<size_t>(size_));
-      yp_.resize(static_cast<size_t>(size_));
-      f_.resize(static_cast<size_t>(size_));
+      CircuitComponent<ScalarT, IdxT>::allocate();
 
       return 0;
     }
@@ -70,22 +71,57 @@ namespace GridKit
       return 0;
     }
 
-    int evaluateResidual()
+    int evaluateInternalResidual()
     {
-      // Outputs
-      f_[0] = 0.02 * y_[0];
-      f_[1] = 0.045 * y_[1] - 0.43 * y_[2] - 0.43 * y_[3];
-
       // Internals
-      f_[2] = yp_[2] + 280 * y_[2] * y_[4] - 0.69 * y_[0] - 1.71 * y_[1] + 0.43 * y_[2] - 0.69 * y_[3];
-      f_[3] = yp_[3] - 280 * y_[2] * y_[4] + 1.81 * y_[3];
-      f_[4] = yp_[4] + 280 * y_[2] * y_[4] - 1.81 * y_[3];
+      f_int_[0] = -yp_int_[0] - 280 * y_int_[0] * y_int_[2] + 0.69 * y_[0] + 1.71 * y_[1] - 0.43 * y_int_[0] + 0.69 * y_int_[1];
+      f_int_[1] = -yp_int_[1] + 280 * y_int_[0] * y_int_[2] - 1.81 * y_int_[1];
+      f_int_[2] = -yp_int_[2] - 280 * y_int_[0] * y_int_[2] + 1.81 * y_int_[1];
+
+      return 0;
+    }
+
+    int evaluateExternalResidual()
+    {
+      // Externals
+      f_[0] = -0.02 * y_[0];
+      f_[1] = -0.045 * y_[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
 
       return 0;
     }
 
     int evaluateJacobian()
     {
+      this->zeroJacMatrix();
+
+      // Internal Jacobian Entries [row 1]
+      std::vector<IdxT>  row = {2, 2, 2, 2, 2};
+      std::vector<IdxT>  col = {2, 3, 4, 0, 1};
+      std::vector<RealT> val = {-280 * y_int_[2] - 0.43 - alpha_, 0.69, -280 * y_int_[0], 0.69, 1.71};
+
+      this->setJacValues(row, col, val);
+
+      // Internal Jacobian Entries [row 2]
+      row = {3, 3, 3};
+      col = {2, 3, 4};
+      val = {280 * y_int_[2], -1.81 - alpha_, 280 * y_int_[0]};
+
+      this->setJacValues(row, col, val);
+
+      // Internal Jacobian Entries [row 3]
+      row = {4, 4, 4};
+      col = {2, 3, 4};
+      val = {-280 * y_int_[2], 1.81, -280 * y_int_[0] - alpha_};
+
+      this->setJacValues(row, col, val);
+
+      // External Jacobian Entries
+      row = {0, 1, 1, 1};
+      col = {0, 2, 3, 1};
+      val = {-0.02, 0.43, 0.43, -0.045};
+
+      this->setJacValues(row, col, val);
+
       return 0;
     }
 

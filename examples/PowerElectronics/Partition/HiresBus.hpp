@@ -19,15 +19,17 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::time_;
     using CircuitComponent<ScalarT, IdxT>::alpha_;
     using CircuitComponent<ScalarT, IdxT>::y_;
+    using CircuitComponent<ScalarT, IdxT>::y_int_;
     using CircuitComponent<ScalarT, IdxT>::yp_;
+    using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::f_;
+    using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
     using CircuitComponent<ScalarT, IdxT>::yB_;
     using CircuitComponent<ScalarT, IdxT>::ypB_;
     using CircuitComponent<ScalarT, IdxT>::fB_;
     using CircuitComponent<ScalarT, IdxT>::gB_;
-    using CircuitComponent<ScalarT, IdxT>::jac_;
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
@@ -39,10 +41,11 @@ namespace GridKit
     HiresBus(IdxT id)
     {
       size_           = 2;
-      n_intern_       = 2;
-      n_extern_       = 0;
-      extern_indices_ = {};
+      n_intern_       = 0;
+      n_extern_       = 2;
+      extern_indices_ = {0, 1};
       idc_            = id;
+      nnz_            = 2;
     }
 
     ~HiresBus()
@@ -51,9 +54,7 @@ namespace GridKit
 
     int allocate()
     {
-      y_.resize(static_cast<size_t>(size_));
-      yp_.resize(static_cast<size_t>(size_));
-      f_.resize(static_cast<size_t>(size_));
+      CircuitComponent<ScalarT, IdxT>::allocate();
 
       return 0;
     }
@@ -68,16 +69,28 @@ namespace GridKit
       return 0;
     }
 
-    int evaluateResidual()
+    int evaluateInternalResidual()
     {
-      f_[0] = yp_[0] + y_[0];
-      f_[1] = yp_[1] + y_[1];
+      return 0;
+    }
 
+    int evaluateExternalResidual()
+    {
+      f_[0] = -yp_[0] - y_[0];
+      f_[1] = -yp_[1] - y_[1];
       return 0;
     }
 
     int evaluateJacobian()
     {
+      this->zeroJacMatrix();
+
+      std::vector<IdxT>  row = {0, 1};
+      std::vector<IdxT>  col = {0, 1};
+      std::vector<RealT> val = {-alpha_ - 1.0, -alpha_ - 1.0};
+
+      this->setJacValues(row, col, val);
+
       return 0;
     }
 
