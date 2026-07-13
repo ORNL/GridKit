@@ -7,6 +7,10 @@ namespace GridKit
 {
   namespace LinearAlgebra
   {
+    /**
+     * @brief Helper function to convert GridKit `MemorySpace` into ReSolve `MemorySpace`.
+     *
+     */
     ReSolve::memory::MemorySpace memorySpaceAsResolve(memory::MemorySpace memspace)
     {
       switch (memspace)
@@ -25,6 +29,13 @@ namespace GridKit
     {
     }
 
+    /**
+     * @brief Creates a new ReSolve matrix with the dimensions of the given matrix, then sets its data pointers to those of the given matrix.
+     * Sets up the linear solver to use this new ReSolve matrix.
+     *
+     * @todo Right now preconditioning doesn't work. There should be a ReSolve PR soon for this.
+     *
+     */
     template <class ScalarT, typename IdxT>
     int ResolveSystemSolver<ScalarT, IdxT>::configureSolver(GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>& matrix)
     {
@@ -64,6 +75,12 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Perform the solver by creating two new ReSolve vectors and setting their data to point to their GridKit counterparts.
+     * Then ask ReSolve to perform the solve. Since the matrix should be pointing at the correct GridKit buffers and the vectors
+     * as well, this solve should correctly fill `lhs`'s data buffer.
+     *
+     */
     template <class ScalarT, typename IdxT>
     int ResolveSystemSolver<ScalarT, IdxT>::solve(GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& rhs, GridKit::LinearAlgebra::Vector<ScalarT, IdxT>& lhs)
     {
