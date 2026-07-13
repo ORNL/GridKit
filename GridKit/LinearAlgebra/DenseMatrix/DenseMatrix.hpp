@@ -6,18 +6,18 @@
 #include <limits>
 #include <vector>
 
-/**
- * @brief Class to provide dense matrices.
- *
- * @deprecated This class is deprecated. Use Vector(n, k) instead.
- *
- * This is intended for small matrices that store model Jacobians to be subsequently copied
- * into large sparse matrices.
- */
 namespace GridKit
 {
   namespace LinearAlgebra
   {
+    /**
+     * @brief Class to provide dense matrices.
+     *
+     * @deprecated This class is deprecated. Use Vector(n, k) instead.
+     *
+     * This is intended for small matrices that store model Jacobians to be subsequently copied
+     * into large sparse matrices.
+     */
     template <typename RealT, typename IdxT>
     class DenseMatrix
     {
