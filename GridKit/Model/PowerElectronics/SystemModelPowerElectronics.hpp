@@ -142,6 +142,8 @@ namespace GridKit
         allocateVectors(static_cast<IdxT>(size_));
       }
 
+      tag_.resize(size_);
+
       { // Start node internal indexing after all component internals for proper KLU ordering
         size_t node_internal_idx = component_internal_size;
         for (node_type* node : nodes_)
@@ -319,7 +321,6 @@ namespace GridKit
 
     int tagDifferentiable() final
     {
-      std::fill(tag_.getData(), tag_.getData() + tag_.getSize(), false);
       return 0;
     }
 

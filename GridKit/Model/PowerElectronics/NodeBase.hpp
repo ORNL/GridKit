@@ -14,9 +14,8 @@ namespace GridKit
     class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-      using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       NodeBase(size_t n_intern, size_t n_extern)
         : n_intern_(n_intern), n_extern_(n_extern)
@@ -72,12 +71,12 @@ namespace GridKit
         return yp_;
       }
 
-      TagVectorT& tag() final
+      std::vector<bool>& tag() final
       {
         return tag_;
       }
 
-      const TagVectorT& tag() const final
+      const std::vector<bool>& tag() const final
       {
         return tag_;
       }
@@ -138,6 +137,7 @@ namespace GridKit
           allocateVectors(static_cast<IdxT>(size));
         }
 
+        tag_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -195,11 +195,11 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      VectorT    y_;
-      VectorT    yp_;
-      VectorT    f_;
-      TagVectorT tag_;
-      VectorT    abs_tol_;
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      VectorT           f_;
 
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
@@ -380,10 +380,6 @@ namespace GridKit
         f_.resize(n);
         f_.allocate(memory::HOST);
         f_.setToZero(memory::HOST);
-
-        tag_.resize(n);
-        tag_.allocate(memory::HOST);
-        tag_.setToZero(memory::HOST);
 
         abs_tol_.resize(n);
         abs_tol_.allocate(memory::HOST);

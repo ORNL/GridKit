@@ -166,7 +166,7 @@ namespace GridKit
         assert(y_.getSize() == size);
         assert(yp_.getSize() == size);
         assert(f_.getSize() == size);
-        assert(tag_.getSize() == size);
+        tag_.resize(size);
         assert(abs_tol_.getSize() == size);
 
         variable_indices_.resize(size);
@@ -238,20 +238,18 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::tagDifferentiable()
       {
-        auto* tag = tag_.getData();
-
-        tag[0]  = true;
-        tag[1]  = true;
-        tag[2]  = true;
-        tag[3]  = true;
-        tag[4]  = (T2_ != 0.0);
-        tag[5]  = (T4_ != 0.0);
-        tag[6]  = (T6_ != 0.0);
-        tag[7]  = false;
-        tag[8]  = false;
-        tag[9]  = false;
-        tag[10] = false;
-        tag[11] = false;
+        tag_[0]  = true;
+        tag_[1]  = true;
+        tag_[2]  = true;
+        tag_[3]  = true;
+        tag_[4]  = (T2_ != 0.0);
+        tag_[5]  = (T4_ != 0.0);
+        tag_[6]  = (T6_ != 0.0);
+        tag_[7]  = false;
+        tag_[8]  = false;
+        tag_[9]  = false;
+        tag_[10] = false;
+        tag_[11] = false;
 
         return 0;
       }

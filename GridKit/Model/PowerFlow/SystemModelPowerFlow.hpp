@@ -149,6 +149,7 @@ namespace GridKit
 
       // Allocate global vectors
       this->allocateVectors(size_);
+      tag_.resize(size_);
 
       return 0;
     }

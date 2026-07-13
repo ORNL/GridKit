@@ -466,6 +466,7 @@ namespace GridKit
       {
         this->allocateVectors(size_);
       }
+      tag_.resize(size_);
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
@@ -676,26 +677,22 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::tagDifferentiable()
     {
-      auto* tag = tag_.getData();
-
       // Set initial values for global solution vectors
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
-        const auto* bus_tag = bus->tag().getData();
         for (IdxT j = 0; j < bus->size(); ++j)
         {
-          tag[bus->getVariableIndex(j)] = bus_tag[j];
+          tag_[bus->getVariableIndex(j)] = bus->tag()[j];
         }
       }
 
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
-        const auto* component_tag = component->tag().getData();
         for (IdxT j = 0; j < component->size(); ++j)
         {
-          tag[component->getVariableIndex(j)] = component_tag[j];
+          tag_[component->getVariableIndex(j)] = component->tag()[j];
         }
       }
 

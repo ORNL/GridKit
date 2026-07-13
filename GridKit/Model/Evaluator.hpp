@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
@@ -25,7 +27,6 @@ namespace GridKit
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
       using VectorT    = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-      using TagVectorT = GridKit::LinearAlgebra::Vector<bool, IdxT>;
 
       Evaluator()
       {
@@ -143,14 +144,8 @@ namespace GridKit
       virtual VectorT&       yp()       = 0;
       virtual const VectorT& yp() const = 0;
 
-      /**
-       * @brief Get the differential/algebraic tag for each variable.
-       *
-       * Entries are boolean model metadata. Solver adapters are responsible
-       * for converting them to the solver's scalar representation.
-       */
-      virtual TagVectorT&       tag()       = 0;
-      virtual const TagVectorT& tag() const = 0;
+      virtual std::vector<bool>&       tag()       = 0;
+      virtual const std::vector<bool>& tag() const = 0;
 
       virtual VectorT&       yB()       = 0;
       virtual const VectorT& yB() const = 0;

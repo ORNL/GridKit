@@ -49,16 +49,15 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::allocate()
   {
+    tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::tagDifferentiable()
   {
-    auto* tag = tag_.getData();
-
-    tag[0] = true;
-    tag[1] = true;
+    tag_[0] = true;
+    tag_[1] = true;
     return 0;
   }
 

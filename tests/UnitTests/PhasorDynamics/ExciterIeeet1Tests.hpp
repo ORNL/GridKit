@@ -92,10 +92,10 @@ namespace GridKit
         exciter.initialize();
         exciter.tagDifferentiable();
 
-        const auto* tag  = exciter.tag().getData();
-        auto*       y    = exciter.y().getData();
-        auto*       yp   = exciter.yp().getData();
-        success         *= tag[0];
+        success *= (exciter.tag()[0]);
+
+        auto* y  = exciter.y().getData();
+        auto* yp = exciter.yp().getData();
 
         yp[0] = 123.0;
         exciter.evaluateResidual();

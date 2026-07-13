@@ -14,9 +14,8 @@ namespace GridKit
   class ModelEvaluatorImpl : public Model::Evaluator<ScalarT, IdxT>
   {
   public:
-    using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-    using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
+    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
     ModelEvaluatorImpl()
       : size_(0),
@@ -33,7 +32,6 @@ namespace GridKit
         size_opt_(size_opt),
         y_(size_),
         yp_(size_),
-        tag_(size_),
         abs_tol_(size_),
         f_(size_),
         g_(size_quad_),
@@ -47,7 +45,6 @@ namespace GridKit
     {
       allocateHost(y_);
       allocateHost(yp_);
-      allocateHost(tag_);
       allocateHost(abs_tol_);
       allocateHost(f_);
       allocateHost(g_);
@@ -117,12 +114,12 @@ namespace GridKit
       return yp_;
     }
 
-    TagVectorT& tag() override
+    std::vector<bool>& tag() override
     {
       return tag_;
     }
 
-    const TagVectorT& tag() const override
+    const std::vector<bool>& tag() const override
     {
       return tag_;
     }
@@ -238,7 +235,6 @@ namespace GridKit
     {
       resizeAndAllocateHost(y_, size);
       resizeAndAllocateHost(yp_, size);
-      resizeAndAllocateHost(tag_, size);
       resizeAndAllocateHost(abs_tol_, size);
       resizeAndAllocateHost(f_, size);
     }
@@ -248,12 +244,12 @@ namespace GridKit
     IdxT size_quad_;
     IdxT size_opt_;
 
-    VectorT    y_;
-    VectorT    yp_;
-    TagVectorT tag_;
-    VectorT    abs_tol_;
-    VectorT    f_;
-    VectorT    g_;
+    VectorT           y_;
+    VectorT           yp_;
+    std::vector<bool> tag_;
+    VectorT           abs_tol_;
+    VectorT           f_;
+    VectorT           g_;
 
     VectorT yB_;
     VectorT ypB_;

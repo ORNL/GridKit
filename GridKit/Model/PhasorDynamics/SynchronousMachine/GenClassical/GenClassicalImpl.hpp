@@ -197,7 +197,7 @@ namespace GridKit
       assert(y_.getSize() == size);
       assert(yp_.getSize() == size);
       assert(f_.getSize() == size);
-      assert(tag_.getSize() == size);
+      tag_.resize(size);
       assert(abs_tol_.getSize() == size);
 
       variable_indices_.resize(size);
@@ -258,11 +258,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::tagDifferentiable()
     {
-      auto* tag = tag_.getData();
-
       for (IdxT i = 0; i < size_; ++i)
       {
-        tag[static_cast<size_t>(i)] = i < 2;
+        tag_[static_cast<size_t>(i)] = i < 2;
       }
       return 0;
     }

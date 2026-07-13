@@ -79,6 +79,7 @@ namespace GridKit
 
     // std::cout << "Allocate PQ bus ..." << std::endl;
     this->allocateVectors(size_);
+    tag_.resize(static_cast<size_t>(size_));
 
     allocate_host_vector(fB_, size_);
     allocate_host_vector(yB_, size_);
@@ -90,9 +91,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPQ<ScalarT, IdxT>::tagDifferentiable()
   {
-    auto* tag = tag_.getData();
-    tag[0]    = false;
-    tag[1]    = false;
+    tag_[0] = false;
+    tag_[1] = false;
     return 0;
   }
 

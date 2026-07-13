@@ -67,6 +67,7 @@ namespace GridKit
   int Generator4Governor<ScalarT, IdxT>::allocate()
   {
     // std::cout << "Allocate Gen2..." << std::endl;
+    tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
 
@@ -158,19 +159,17 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::tagDifferentiable()
   {
-    // std::cout << "size of tag vector is " << tag_.getSize() << "\n";
-    auto* tag = tag_.getData();
+    // std::cout << "size of tag vector is " << tag_.size() << "\n";
+    tag_[static_cast<size_t>(offsetGen_ + 0)] = true;
+    tag_[static_cast<size_t>(offsetGen_ + 1)] = true;
+    tag_[static_cast<size_t>(offsetGen_ + 2)] = true;
+    tag_[static_cast<size_t>(offsetGen_ + 3)] = true;
+    tag_[static_cast<size_t>(offsetGen_ + 4)] = false;
+    tag_[static_cast<size_t>(offsetGen_ + 5)] = false;
 
-    tag[static_cast<size_t>(offsetGen_ + 0)] = true;
-    tag[static_cast<size_t>(offsetGen_ + 1)] = true;
-    tag[static_cast<size_t>(offsetGen_ + 2)] = true;
-    tag[static_cast<size_t>(offsetGen_ + 3)] = true;
-    tag[static_cast<size_t>(offsetGen_ + 4)] = false;
-    tag[static_cast<size_t>(offsetGen_ + 5)] = false;
-
-    tag[static_cast<size_t>(offsetGov_ + 0)] = true;
-    tag[static_cast<size_t>(offsetGov_ + 1)] = true;
-    tag[static_cast<size_t>(offsetGov_ + 2)] = false;
+    tag_[static_cast<size_t>(offsetGov_ + 0)] = true;
+    tag_[static_cast<size_t>(offsetGov_ + 1)] = true;
+    tag_[static_cast<size_t>(offsetGov_ + 2)] = false;
 
     return 0;
   }

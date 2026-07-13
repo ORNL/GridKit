@@ -48,7 +48,6 @@ namespace AnalysisManager
       using EvaluatorT = GridKit::Model::Evaluator<ScalarT, IdxT>;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using VectorT    = typename EvaluatorT::VectorT;
-      using TagVectorT = typename EvaluatorT::TagVectorT;
 
     public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
@@ -240,7 +239,7 @@ namespace AnalysisManager
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, VectorT& y);
       static void copyVec(const VectorT& x, N_Vector y);
-      static void copyTagVec(const TagVectorT& x, N_Vector y);
+      static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static void checkAllocation(void* v, const char* functionName);

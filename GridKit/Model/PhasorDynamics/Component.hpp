@@ -28,7 +28,6 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-      using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
 
       Component() = default;
 
@@ -95,12 +94,12 @@ namespace GridKit
         return yp_;
       }
 
-      TagVectorT& tag() override
+      std::vector<bool>& tag() override
       {
         return tag_;
       }
 
-      const TagVectorT& tag() const override
+      const std::vector<bool>& tag() const override
       {
         return tag_;
       }
@@ -243,10 +242,6 @@ namespace GridKit
         f_.allocate();
         f_.setToZero();
 
-        tag_.resize(n);
-        tag_.allocate();
-        tag_.setToZero();
-
         abs_tol_.resize(n);
         abs_tol_.allocate();
         abs_tol_.setToZero();
@@ -285,12 +280,12 @@ namespace GridKit
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
 
-      VectorT    y_;
-      VectorT    yp_;
-      TagVectorT tag_;
-      VectorT    abs_tol_;
-      VectorT    f_;
-      bool       allocated_{false};
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      VectorT           f_;
+      bool              allocated_{false};
 
       std::vector<ScalarT> g_;
 

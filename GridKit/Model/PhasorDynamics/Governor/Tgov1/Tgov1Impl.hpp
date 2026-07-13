@@ -176,7 +176,7 @@ namespace GridKit
         assert(y_.getSize() == size);
         assert(yp_.getSize() == size);
         assert(f_.getSize() == size);
-        assert(tag_.getSize() == size);
+        tag_.resize(size);
         assert(abs_tol_.getSize() == size);
 
         variable_indices_.resize(size);
@@ -265,11 +265,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::tagDifferentiable()
       {
-        auto* tag = tag_.getData();
-
-        tag[0] = true;  // Pv
-        tag[1] = true;  // Ptx
-        tag[2] = false; // Pmech
+        tag_[0] = true;  // Pv
+        tag_[1] = true;  // Ptx
+        tag_[2] = false; // Pmech
 
         return 0;
       }

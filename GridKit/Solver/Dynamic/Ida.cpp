@@ -87,7 +87,7 @@ namespace AnalysisManager
       tag_ = N_VClone(yy_);
       checkAllocation((void*) tag_, "N_VClone");
       model_->tagDifferentiable();
-      copyTagVec(model_->tag(), tag_);
+      copyVec(model_->tag(), tag_);
 
       retval = IDASetId(solver_, tag_);
       checkOutput(retval, "IDASetId");
@@ -889,32 +889,24 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Copy boolean differential tags to a SUNDIALS scalar vector.
-     *
-     * IDA represents its differential/algebraic ID vector with floating-point
-     * entries, so perform the model-metadata conversion explicitly here.
+     * @brief Copy std::vector to SUNDIALS N_Vector
      *
      * @tparam ScalarT
      * @tparam IdxT
      */
     template <class ScalarT, typename IdxT>
-    void Ida<ScalarT, IdxT>::copyTagVec(const TagVectorT& x, N_Vector y)
+    void Ida<ScalarT, IdxT>::copyVec(const std::vector<bool>& x, N_Vector y)
     {
       const auto ysize = static_cast<size_t>(N_VGetLength(y));
-      const auto xsize = static_cast<size_t>(x.getSize());
-      if (xsize != ysize)
+      if (x.size() != ysize)
       {
-        std::cerr << "\ntag vector size (" << x.getSize() << ") does not match N_Vector size ("
+        std::cerr << "\nstd::vector size (" << x.size() << ") does not match N_Vector size ("
                   << ysize << ").\n\n";
         throw SundialsException();
       }
 
-      const bool* xdata = x.getData();
-      RealT*      ydata = N_VGetArrayPointer(y);
-      for (size_t i = 0; i < xsize; ++i)
-      {
-        ydata[i] = xdata[i] ? RealT{1} : RealT{0};
-      }
+      ScalarT* ydata = N_VGetArrayPointer(y);
+      std::copy(x.cbegin(), x.cend(), ydata);
     }
 
     /**

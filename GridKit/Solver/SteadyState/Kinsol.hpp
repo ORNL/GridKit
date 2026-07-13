@@ -143,6 +143,7 @@ namespace AnalysisManager
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
       static void copyVec(const N_Vector x, VectorT& y);
       static void copyVec(const VectorT& x, N_Vector y);
+      static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);
       static inline void checkAllocation(void* v, const char* functionName);

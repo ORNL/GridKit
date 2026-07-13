@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <map>
+#include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
 
@@ -14,9 +15,8 @@ namespace GridKit
   template <typename ScalarT, typename IdxT>
   class CircuitNode : public Model::Evaluator<ScalarT, IdxT>
   {
-    using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-    using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
+    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
   public:
     CircuitNode()
@@ -68,10 +68,14 @@ namespace GridKit
     // Allocate storage for a single-node voltage and KCL residual
     int allocate()
     {
+      size_t size = static_cast<size_t>(size_);
+
       if (!allocated_)
       {
         allocateVectors(size_);
       }
+
+      tag_.resize(size);
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -98,9 +102,7 @@ namespace GridKit
      */
     int tagDifferentiable()
     {
-      auto* tag = tag_.getData();
-
-      tag[0] = false;
+      tag_[0] = false;
 
       return 0;
     }
@@ -183,11 +185,11 @@ namespace GridKit
     std::map<IdxT, IdxT> variable_indices_;
     std::map<IdxT, IdxT> residual_indices_;
 
-    VectorT    y_;
-    VectorT    yp_;
-    VectorT    f_;
-    TagVectorT tag_;
-    VectorT    abs_tol_;
+    VectorT           y_;
+    VectorT           yp_;
+    std::vector<bool> tag_;
+    VectorT           abs_tol_;
+    VectorT           f_;
 
     VectorT g_{};
     VectorT param_{};
@@ -252,12 +254,12 @@ namespace GridKit
       return yp_;
     }
 
-    TagVectorT& tag() final
+    std::vector<bool>& tag() final
     {
       return tag_;
     }
 
-    const TagVectorT& tag() const final
+    const std::vector<bool>& tag() const final
     {
       return tag_;
     }
@@ -376,10 +378,6 @@ namespace GridKit
       f_.resize(n);
       f_.allocate(memory::HOST);
       f_.setToZero(memory::HOST);
-
-      tag_.resize(n);
-      tag_.allocate(memory::HOST);
-      tag_.setToZero(memory::HOST);
 
       abs_tol_.resize(n);
       abs_tol_.allocate(memory::HOST);

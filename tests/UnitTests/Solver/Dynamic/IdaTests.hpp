@@ -15,9 +15,8 @@ namespace GridKit
     class NullEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-      using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       NullEvaluator()
       {
@@ -41,13 +40,12 @@ namespace GridKit
 
         auto* y       = y_.getData();
         auto* yp      = yp_.getData();
-        auto* tag     = tag_.getData();
         auto* abs_tol = abs_tol_.getData();
         auto* f       = f_.getData();
 
         y[0]       = 0.0;
         yp[0]      = 0.0;
-        tag[0]     = false;
+        tag_       = {false};
         abs_tol[0] = 0.0;
         f[0]       = 0.0;
         return 0;
@@ -103,12 +101,12 @@ namespace GridKit
         return yp_;
       }
 
-      TagVectorT& tag() override
+      std::vector<bool>& tag() override
       {
         return tag_;
       }
 
-      const TagVectorT& tag() const override
+      const std::vector<bool>& tag() const override
       {
         return tag_;
       }
@@ -281,10 +279,6 @@ namespace GridKit
         f_.allocate(memory::HOST);
         f_.setToZero(memory::HOST);
 
-        tag_.resize(n);
-        tag_.allocate(memory::HOST);
-        tag_.setToConst(false, memory::HOST);
-
         abs_tol_.resize(n);
         abs_tol_.allocate(memory::HOST);
         abs_tol_.setToZero(memory::HOST);
@@ -292,12 +286,12 @@ namespace GridKit
         allocated_ = true;
       }
 
-      VectorT    y_;
-      VectorT    yp_;
-      VectorT    f_;
-      TagVectorT tag_;
-      VectorT    abs_tol_;
-      bool       allocated_{false};
+      VectorT           y_;
+      VectorT           yp_;
+      VectorT           f_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      bool              allocated_{false};
 
       VectorT g_;
 
@@ -326,7 +320,6 @@ namespace GridKit
 
         auto* y       = this->y_.getData();
         auto* yp      = this->yp_.getData();
-        auto* tag     = this->tag_.getData();
         auto* abs_tol = this->abs_tol_.getData();
         auto* f       = this->f_.getData();
 
@@ -334,8 +327,7 @@ namespace GridKit
         y[1]       = 0.0;
         yp[0]      = 0.0;
         yp[1]      = 0.0;
-        tag[0]     = true;
-        tag[1]     = false;
+        this->tag_ = {true, false};
         abs_tol[0] = 0.0;
         abs_tol[1] = 0.0;
         f[0]       = 0.0;

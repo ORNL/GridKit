@@ -66,7 +66,7 @@ namespace GridKit
         assert(y_.getSize() == size);
         assert(yp_.getSize() == size);
         assert(f_.getSize() == size);
-        assert(tag_.getSize() == size);
+        tag_.resize(size);
         assert(abs_tol_.getSize() == size);
 
         variable_indices_.resize(size);
@@ -183,11 +183,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int SexsPti<scalar_type, index_type>::tagDifferentiable()
       {
-        auto* tag = tag_.getData();
-
-        tag[0] = true;
-        tag[1] = true;
-        tag[2] = false;
+        tag_[0] = true;
+        tag_[1] = true;
+        tag_[2] = false;
 
         return 0;
       }

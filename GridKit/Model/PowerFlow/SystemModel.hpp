@@ -103,6 +103,7 @@ namespace GridKit
 
       // Allocate global vectors
       this->allocateVectors(size_);
+      tag_.resize(size_);
 
       auto allocate_host_vector = [](VectorT& vector, IdxT n)
       {
@@ -255,19 +256,14 @@ namespace GridKit
     int tagDifferentiable()
     {
       // Set initial values for global solution vectors
-      IdxT  offset = 0;
-      auto* tag    = tag_.getData();
+      IdxT offset = 0;
 
       for (const auto& bus : buses_)
       {
         bus->tagDifferentiable();
-        if (bus->size() > 0)
+        for (IdxT j = 0; j < bus->size(); ++j)
         {
-          auto* bus_tag = bus->tag().getData();
-          for (IdxT j = 0; j < bus->size(); ++j)
-          {
-            tag[offset + j] = bus_tag[j];
-          }
+          tag_[offset + j] = bus->tag()[j];
         }
         offset += bus->size();
       }
@@ -275,13 +271,9 @@ namespace GridKit
       for (const auto& component : components_)
       {
         component->tagDifferentiable();
-        if (component->size() > 0)
+        for (IdxT j = 0; j < component->size(); ++j)
         {
-          auto* component_tag = component->tag().getData();
-          for (IdxT j = 0; j < component->size(); ++j)
-          {
-            tag[offset + j] = component_tag[j];
-          }
+          tag_[offset + j] = component->tag()[j];
         }
         offset += component->size();
       }

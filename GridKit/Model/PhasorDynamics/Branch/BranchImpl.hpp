@@ -128,7 +128,6 @@ namespace GridKit
       assert(y_.getSize() == size);
       assert(yp_.getSize() == size);
       assert(f_.getSize() == size);
-      assert(this->tag_.getSize() == size);
       assert(this->abs_tol_.getSize() == size);
 
       variable_indices_.resize(size);

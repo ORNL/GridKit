@@ -23,7 +23,6 @@ namespace GridKit
     using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
     using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
     using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
-    using TagVectorT = typename Model::Evaluator<ScalarT, IdxT>::TagVectorT;
 
     CircuitComponent() = default;
 
@@ -283,12 +282,12 @@ namespace GridKit
       return yp_;
     }
 
-    TagVectorT& tag() final
+    std::vector<bool>& tag() final
     {
       return tag_;
     }
 
-    const TagVectorT& tag() const final
+    const std::vector<bool>& tag() const final
     {
       return tag_;
     }
@@ -417,10 +416,6 @@ namespace GridKit
       f_.allocate(memory::HOST);
       f_.setToZero(memory::HOST);
 
-      tag_.resize(n);
-      tag_.allocate(memory::HOST);
-      tag_.setToZero(memory::HOST);
-
       abs_tol_.resize(n);
       abs_tol_.allocate(memory::HOST);
       abs_tol_.setToZero(memory::HOST);
@@ -455,11 +450,11 @@ namespace GridKit
     /// @brief A pointer to the internal residuals of this component
     ScalarT*       f_int_;
 
-    VectorT    y_;
-    VectorT    yp_;
-    VectorT    f_;
-    TagVectorT tag_;
-    VectorT    abs_tol_;
+    VectorT           y_;
+    VectorT           yp_;
+    std::vector<bool> tag_;
+    VectorT           abs_tol_;
+    VectorT           f_;
 
     VectorT g_;
 

@@ -94,7 +94,7 @@ namespace GridKit
       assert(y_.getSize() == size);
       assert(yp_.getSize() == size);
       assert(f_.getSize() == size);
-      assert(tag_.getSize() == size);
+      tag_.resize(size);
       assert(abs_tol_.getSize() == size);
 
       variable_indices_.resize(size);
@@ -141,10 +141,8 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZ<scalar_type, index_type>::tagDifferentiable()
     {
-      auto* tag = tag_.getData();
-
-      tag[0] = false;
-      tag[1] = false;
+      tag_[0] = false;
+      tag_[1] = false;
 
       return 0;
     }

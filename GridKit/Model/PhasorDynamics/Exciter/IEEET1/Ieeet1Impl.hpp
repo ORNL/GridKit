@@ -87,7 +87,7 @@ namespace GridKit
         assert(y_.getSize() == size);
         assert(yp_.getSize() == size);
         assert(f_.getSize() == size);
-        assert(tag_.getSize() == size);
+        tag_.resize(size);
         assert(abs_tol_.getSize() == size);
 
         variable_indices_.resize(size);
@@ -236,17 +236,15 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::tagDifferentiable()
       {
-        auto* tag = tag_.getData();
-
-        tag[0] = true;  // y0 - vts  - Sensed term volt
-        tag[1] = true;  // y1 - vr   - Voltage reg
-        tag[2] = true;  // y2 - efdp - Efd pre mult
-        tag[3] = true;  // y3 - vfx  - Exciter feedback
-        tag[4] = false; // y4 - vtr  - Term Volt Err
-        tag[5] = false; // y5 - vf   - Feedback volt
-        tag[6] = false; // y6 - ve   - Excit. Cntrl Volt
-        tag[7] = false; // y7 - efd  - Efd
-        tag[8] = false; // y8 - ksat - Saturation
+        tag_[0] = true;  // y0 - vts  - Sensed term volt
+        tag_[1] = true;  // y1 - vr   - Voltage reg
+        tag_[2] = true;  // y2 - efdp - Efd pre mult
+        tag_[3] = true;  // y3 - vfx  - Exciter feedback
+        tag_[4] = false; // y4 - vtr  - Term Volt Err
+        tag_[5] = false; // y5 - vf   - Feedback volt
+        tag_[6] = false; // y6 - ve   - Excit. Cntrl Volt
+        tag_[7] = false; // y7 - efd  - Efd
+        tag_[8] = false; // y8 - ksat - Saturation
 
         return 0;
       }

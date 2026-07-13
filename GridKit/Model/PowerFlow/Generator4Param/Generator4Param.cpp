@@ -54,6 +54,7 @@ namespace GridKit
   int Generator4Param<ScalarT, IdxT>::allocate()
   {
     // std::cout << "Allocate Generator4Param..." << std::endl;
+    tag_.resize(static_cast<size_t>(size_));
     return 0;
   }
 
@@ -134,16 +135,14 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::tagDifferentiable()
   {
-    auto* tag = tag_.getData();
-
-    tag[0] = true;
-    tag[1] = true;
-    tag[2] = true;
-    tag[3] = true;
+    tag_[0] = true;
+    tag_[1] = true;
+    tag_[2] = true;
+    tag_[3] = true;
 
     for (IdxT i = 4; i < size_; ++i)
     {
-      tag[static_cast<size_t>(i)] = false;
+      tag_[static_cast<size_t>(i)] = false;
     }
 
     return 0;
