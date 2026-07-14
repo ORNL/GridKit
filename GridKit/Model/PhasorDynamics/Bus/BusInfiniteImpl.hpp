@@ -104,16 +104,16 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusInfinite<scalar_type, index_type>::allocate()
     {
-      if (!this->allocated_)
+      if (!allocated_)
       {
-        this->allocateVectors(this->size_);
+        this->allocateVectors(size_);
       }
       auto size = static_cast<std::size_t>(size_);
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 

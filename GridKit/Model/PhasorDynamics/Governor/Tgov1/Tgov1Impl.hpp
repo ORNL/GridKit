@@ -166,9 +166,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::allocate()
       {
-        if (!this->allocated_)
+        if (!allocated_)
         {
-          this->allocateVectors(this->size_);
+          this->allocateVectors(size_);
         }
         // Allocate local component data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
@@ -198,7 +198,7 @@ namespace GridKit
           signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y[2], &(this->getVariableIndex(2)));
         }
 
-        this->allocated_ = true;
+        allocated_ = true;
         return 0;
       }
 

@@ -303,35 +303,43 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
+    protected:
+      using NullEvaluator<ScalarT, IdxT>::allocated_;
+      using NullEvaluator<ScalarT, IdxT>::y_;
+      using NullEvaluator<ScalarT, IdxT>::yp_;
+      using NullEvaluator<ScalarT, IdxT>::abs_tol_;
+      using NullEvaluator<ScalarT, IdxT>::tag_;
+      using NullEvaluator<ScalarT, IdxT>::f_;
+
     public:
       using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
 
       int initialize() override
       {
-        if (!this->allocated_)
+        if (!allocated_)
         {
           this->allocate();
         }
 
-        auto* y       = this->y_.getData();
-        auto* yp      = this->yp_.getData();
-        auto* abs_tol = this->abs_tol_.getData();
-        auto* f       = this->f_.getData();
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
 
         y[0]       = 0.0;
         y[1]       = 0.0;
         yp[0]      = 0.0;
         yp[1]      = 0.0;
-        this->tag_ = {true, false};
+        tag_       = {true, false};
         abs_tol[0] = 0.0;
         abs_tol[1] = 0.0;
         f[0]       = 0.0;
         f[1]       = 0.0;
         t_         = 0.0;
-        this->y_.setDataUpdated();
-        this->yp_.setDataUpdated();
-        this->abs_tol_.setDataUpdated();
-        this->f_.setDataUpdated();
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        abs_tol_.setDataUpdated();
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -343,13 +351,13 @@ namespace GridKit
       int evaluateResidual() override
       {
         static constexpr RealT OMEGA = 100.0;
-        auto*                  f     = this->f_.getData();
-        const auto*            y     = this->y_.getData();
-        const auto*            yp    = this->yp_.getData();
+        auto*                  f     = f_.getData();
+        const auto*            y     = y_.getData();
+        const auto*            yp    = yp_.getData();
 
         f[0] = yp[0];
         f[1] = y[1] - std::sin(OMEGA * t_);
-        this->f_.setDataUpdated();
+        f_.setDataUpdated();
         return 0;
       }
 

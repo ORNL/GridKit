@@ -30,6 +30,7 @@ namespace GridKit
       using BusBase<scalar_type, index_type>::residual_indices_;
       using BusBase<scalar_type, index_type>::coo_jac_;
       using BusBase<scalar_type, index_type>::monitor_;
+      using BusBase<scalar_type, index_type>::allocated_;
 
     public:
       using ScalarT    = scalar_type;

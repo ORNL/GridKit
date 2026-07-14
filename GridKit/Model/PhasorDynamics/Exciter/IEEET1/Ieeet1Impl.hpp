@@ -78,9 +78,9 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::allocate()
       {
-        if (!this->allocated_)
+        if (!allocated_)
         {
-          this->allocateVectors(this->size_);
+          this->allocateVectors(size_);
         }
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
@@ -114,7 +114,7 @@ namespace GridKit
           signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y[7], &(this->getVariableIndex(7)));
         }
 
-        this->allocated_ = true;
+        allocated_ = true;
         return 0;
       }
 

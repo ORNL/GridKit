@@ -176,9 +176,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::allocate()
     {
-      if (!this->allocated_)
+      if (!allocated_)
       {
-        this->allocateVectors(this->size_);
+        this->allocateVectors(size_);
       }
       auto size = static_cast<size_t>(size_);
 
@@ -196,7 +196,7 @@ namespace GridKit
       wb_.resize(2);
       h_.resize(2);
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 

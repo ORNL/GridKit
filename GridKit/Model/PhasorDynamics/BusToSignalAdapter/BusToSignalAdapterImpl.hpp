@@ -52,14 +52,14 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusToSignalAdapter<scalar_type, index_type>::allocate()
     {
-      if (!this->allocated_)
+      if (!allocated_)
       {
-        this->allocateVectors(this->size_);
+        this->allocateVectors(size_);
       }
       auto size = static_cast<std::size_t>(size_);
 
-      this->variable_indices_.resize(size);
-      this->residual_indices_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
 
       static constexpr auto VREAL = BusToSignalAdapterInternalVariables::VREAL;
       static constexpr auto VIMAG = BusToSignalAdapterInternalVariables::VIMAG;
@@ -76,7 +76,7 @@ namespace GridKit
         signals_.template getSignalNode<VIMAG>()->set(&bus_->Vi(), &vi_index_);
       }
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 

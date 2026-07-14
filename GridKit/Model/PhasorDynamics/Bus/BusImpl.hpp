@@ -106,9 +106,9 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::allocate()
     {
-      if (!this->allocated_)
+      if (!allocated_)
       {
-        this->allocateVectors(this->size_);
+        this->allocateVectors(size_);
       }
       size_t size = static_cast<size_t>(size_);
 
@@ -124,7 +124,7 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 

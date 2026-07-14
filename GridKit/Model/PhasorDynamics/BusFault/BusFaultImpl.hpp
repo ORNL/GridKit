@@ -113,17 +113,17 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int BusFault<scalar_type, index_type>::allocate()
     {
-      if (!this->allocated_)
+      if (!allocated_)
       {
-        this->allocateVectors(this->size_);
+        this->allocateVectors(size_);
       }
       // std::cout << "Allocate BusFault..." << std::endl;
       auto size = static_cast<std::size_t>(size_);
 
       tag_.resize(size);
 
-      this->variable_indices_.resize(size);
-      this->residual_indices_.resize(size);
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
 
       // Resize coupling data
       wb_.resize(2);
@@ -136,7 +136,7 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 

@@ -368,7 +368,7 @@ namespace GridKit
     {
       auto* f = f_.getData();
 
-      for (IdxT i = 0; i < this->f_.getSize(); i++)
+      for (IdxT i = 0; i < f_.getSize(); i++)
       {
         f[i] = 0.0;
       }

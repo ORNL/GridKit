@@ -462,7 +462,7 @@ namespace GridKit
       }
 
       // Allocate global vectors
-      if (!this->allocated_)
+      if (!allocated_)
       {
         // Topology changes invalidate the Jacobian sparsity pattern and COO-to-CSR map.
         delete csr_jac_;
@@ -508,7 +508,7 @@ namespace GridKit
         evaluateJacobian();
       }
 
-      this->allocated_ = true;
+      allocated_ = true;
       return 0;
     }
 
@@ -1071,7 +1071,7 @@ namespace GridKit
       IdxT gridkit_bus_id                = static_cast<IdxT>(buses_.size());
       gridkit_bus_indices_[bus->busID()] = gridkit_bus_id;
       buses_.push_back(bus);
-      this->allocated_ = false;
+      allocated_ = false;
     }
 
     /**
@@ -1106,7 +1106,7 @@ namespace GridKit
       component->setSystemBase(this->freq_system_base_,
                                this->va_system_base_);
       components_.push_back(component);
-      this->allocated_ = false;
+      allocated_ = false;
     }
 
     /**
