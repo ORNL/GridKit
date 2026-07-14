@@ -338,6 +338,8 @@ namespace GridKit
         offset += component->size();
       }
 
+      abs_tol_.setDataUpdated();
+
       return 0;
     }
 
