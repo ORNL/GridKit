@@ -7,7 +7,7 @@
 #include <GridKit/LinearAlgebra/Solver/ResolveSystemSolver.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
 #include <GridKit/Model/Evaluator.hpp>
-#include <GridKit/Solver/Dynamic/FixedStep.hpp>
+#include <GridKit/Solver/Dynamic/Native/FixedStep.hpp>
 #include <GridKit/Solver/Dynamic/Rosenbrock.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>

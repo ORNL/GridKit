@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include <GridKit/Solver/Dynamic/StepControl.hpp>
+#include <GridKit/Solver/Dynamic/Native/StepControl.hpp>
 
 namespace Integrator
 {

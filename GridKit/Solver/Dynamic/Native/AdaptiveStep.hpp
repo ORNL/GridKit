@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GridKit/Solver/Dynamic/StepController.hpp>
+#include <GridKit/Solver/Dynamic/Native/StepController.hpp>
 
 namespace Integrator
 {

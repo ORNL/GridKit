@@ -3,7 +3,7 @@
 #include <memory>
 
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
-#include <GridKit/Solver/Dynamic/ErrorNorm.hpp>
+#include <GridKit/Solver/Dynamic/Native/ErrorNorm.hpp>
 
 namespace Integrator
 {

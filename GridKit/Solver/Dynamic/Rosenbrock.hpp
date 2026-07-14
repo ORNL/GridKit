@@ -14,8 +14,8 @@
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/ScalarTraits.hpp>
-#include <GridKit/Solver/Dynamic/ErrorNorm.hpp>
-#include <GridKit/Solver/Dynamic/StepController.hpp>
+#include <GridKit/Solver/Dynamic/Native/ErrorNorm.hpp>
+#include <GridKit/Solver/Dynamic/Native/StepController.hpp>
 
 namespace Integrator
 {
