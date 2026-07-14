@@ -864,6 +864,7 @@ namespace AnalysisManager
 
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, ysize, y.getData());
+      y.setDataUpdated();
     }
 
     /**

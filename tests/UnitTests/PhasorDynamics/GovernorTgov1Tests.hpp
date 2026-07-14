@@ -345,8 +345,8 @@ namespace GridKit
         gen.evaluateResidual();
         gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
                                 // the dependencies
-        auto&                                     residual_yp_view = gov.getResidual();
-        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
+        auto&       residual_yp      = gov.getResidual();
+        const auto* residual_yp_data = residual_yp.getData();
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)
@@ -355,7 +355,7 @@ namespace GridKit
           (residual_y[i]).print(std::cout);
           std::cout << "\n";
           std::cout << i << "th residual, yp: ";
-          (residual_yp[i]).print(std::cout);
+          residual_yp_data[i].print(std::cout);
           std::cout << "\n";
         }
 
@@ -364,7 +364,7 @@ namespace GridKit
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
           DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
-          DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
+          DependencyTracking::Variable::DependencyMap dependency_yp = residual_yp_data[i].getDependencies();
 
           for (const auto& pair_y : dependency_y)
           {
