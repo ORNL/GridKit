@@ -40,7 +40,7 @@ The environment installs to `~/flash-w-dom/conda-envs/h-py312-basic/`
 |---|---|
 | `gridkit_helper.ipynb` | GridKit run setup and result parsing helpers |
 | `gridkit_viz.ipynb` | GridKit result visualization |
-| `m_viz.ipynb` | Geovisualization of MATPOWER `.m` cases with optional GridKit JSON ID augmentation (Illinois, Hawaii) |
+| `m_viz.ipynb` | Geovisualization of MATPOWER `.m` cases with optional GridKit JSON ID augmentation |
 
 ### m_viz notebook
 
@@ -49,23 +49,28 @@ DataFrames (bus, gen, branch) and produces interactive Plotly geo maps. Geograph
 come from a `.gic` or `.AUX` file. Generator fuel labels and multi-circuit branch data are read
 directly from the `.m` file.
 
-Optionally, a corresponding GridKit JSON case file can be supplied to attach GridKit-assigned IDs
-to hover labels, linking map markers back to GridKit index numbering. Set `CASE_JSON_PATH = None`
-to skip this augmentation.
+The map visualizes the solution stored in the `.m` file: bus loads (PD), dispatched generation
+(marker size proportional to MW, fuel-colored), and branch loading percentage (viridis color
+scale, requires PF/QF/PT/QT/RATE_A columns).
+
+Optionally, set `GRIDKIT_REPO` to the root of a local GridKit repository clone to augment hover
+labels with GridKit-assigned bus and branch IDs. JSON case files are read from
+`GRIDKIT_REPO/examples/PhasorDynamics/`. Set `GRIDKIT_REPO = None` to skip this augmentation.
 
 Key processing steps:
 
 - **Colocated bus splitting**: buses sharing identical lat/lon are spread on a small circle so
   each bus is individually hoverable on the map.
-- **Generator fan-out** (Hawaii only): when multiple generators share a bus, their markers are
-  spread radially around the bus point. Thin connector lines link each marker back to its bus
-  (visual only, no physical meaning).
-- **Fault bus overlay**: optionally highlights a faulted bus with a red marker (Hawaii default:
-  ALOHA138).
-- **Branch loading coloring**: branches can be colored by loading percentage when flow data is
-  available.
+- **Generator fan-out**: when a bus has multiple generators, their markers are spread radially
+  so each is individually hoverable. Thin connector lines link markers back to the bus (visual
+  only). Optionally, single-generator buses can also be offset (`FAN_SINGLE_GEN = True`) to
+  keep the bus marker visible underneath.
+- **Fault bus overlay**: optionally highlights a faulted bus with a red marker.
+- **Branch loading coloring**: branches colored by loading percentage (viridis) when flow data
+  is available.
 
-Currently supported cases: **Illinois (ACTIVSg200)** and **Hawaii (Hawaii40)**.
+Currently supported cases: **Hawaii40**, **Illinois (ACTIVSg200)**, **Texas (ACTIVSg2000)**,
+**WECC (ACTIVSg10k)**.
 
 ## Supporting Files
 
