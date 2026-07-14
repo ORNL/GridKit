@@ -6,7 +6,6 @@
 
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/Solver/LinearSolver.hpp>
-#include <GridKit/MemoryUtilities/ResolveMemoryUtils.hpp>
 
 /**
  * @brief A small helper macro to "bubble" errors. The Rosenbrock implementations call many
