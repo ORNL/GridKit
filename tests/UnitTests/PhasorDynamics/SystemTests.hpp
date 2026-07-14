@@ -237,6 +237,7 @@ namespace GridKit
         {
           y[i].setVariableNumber(i);
         }
+        system.y().setDataUpdated();
 
         // Evaluate and get the system residuals
         system.evaluateResidual();

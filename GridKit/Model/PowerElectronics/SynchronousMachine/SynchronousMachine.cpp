@@ -133,6 +133,7 @@ namespace GridKit
     f[2] = y_int_[1] * cos23p + y_int_[2] * sin23p + y_int_[3];
     f[3] = RJ_ * yp[4] - (3.0 / 4.0) * P_ * (Lmd_ * y_int_[1] * (y_int_[2] + y_int_[6] + y_int_[7]) - Lmq_ * y_int_[2] * (y_int_[1] + y_int_[4] + y[0]));
     f[4] = yp_int_[0] - y[4];
+    f_.setDataUpdated();
     return 0;
   }
 

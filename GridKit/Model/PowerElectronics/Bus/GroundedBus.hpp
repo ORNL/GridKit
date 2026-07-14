@@ -24,6 +24,7 @@ namespace GridKit
 
         auto* y_data = y().getData();
         y_data[0]    = voltage_;
+        y().setDataUpdated();
 
         return 0;
       }

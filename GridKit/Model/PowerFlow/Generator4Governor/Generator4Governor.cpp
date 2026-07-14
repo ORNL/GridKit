@@ -150,6 +150,12 @@ namespace GridKit
     param_up[0] = 5.5;
     param_lo[0] = 0.1;
 
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
+    param_.setDataUpdated();
+    param_up_.setDataUpdated();
+    param_lo_.setDataUpdated();
+
     return 0;
   }
 
@@ -235,11 +241,17 @@ namespace GridKit
     // Bus equations
     P() += Pg();
     Q() += Qg();
+    if (bus_->size() > 0)
+    {
+      bus_->getResidual().setDataUpdated();
+    }
 
     // Governor equations
     f[static_cast<size_t>(offsetGov_ + 0)] = yp[static_cast<size_t>(offsetGov_ + 0)] - Ln(y[static_cast<size_t>(offsetGov_ + 2)]);
     f[static_cast<size_t>(offsetGov_ + 1)] = T1() * yp[static_cast<size_t>(offsetGov_ + 1)] + y[static_cast<size_t>(offsetGov_ + 1)] - (1.0 - T2() / T1()) * (omega() - omega_s_);
     f[static_cast<size_t>(offsetGov_ + 2)] = T3() * y[static_cast<size_t>(offsetGov_ + 2)] - Pm0_ + Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + K() * y[static_cast<size_t>(offsetGov_ + 1)] + K() * T2() / T1() * (omega() - omega_s_);
+
+    f_.setDataUpdated();
 
     return 0;
   }
@@ -264,6 +276,7 @@ namespace GridKit
     auto* g = g_.getData();
 
     g[0] = frequencyPenalty(omega());
+    g_.setDataUpdated();
     return 0;
   }
 
@@ -280,6 +293,9 @@ namespace GridKit
       ypB[static_cast<size_t>(i)] = 0.0;
     }
     ypB[static_cast<size_t>(offsetGen_ + 1)] = frequencyPenaltyDer(omega());
+
+    yB_.setDataUpdated();
+    ypB_.setDataUpdated();
 
     return 0;
   }
@@ -339,11 +355,17 @@ namespace GridKit
     // Bus adjoint
     PB() += (-yB[static_cast<size_t>(offsetGen_ + 4)] * sinPhi - yB[static_cast<size_t>(offsetGen_ + 5)] * cosPhi);
     QB() += (yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi - yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi);
+    if (bus_->size() > 0)
+    {
+      bus_->getAdjointResidual().setDataUpdated();
+    }
 
     // Governor adjoint
     fB[static_cast<size_t>(offsetGov_ + 0)] = ypB[static_cast<size_t>(offsetGov_ + 0)] - yB[static_cast<size_t>(offsetGov_ + 2)] * dLm(y[static_cast<size_t>(offsetGov_ + 0)]) + yB[static_cast<size_t>(offsetGen_ + 1)] * dLm(y[static_cast<size_t>(offsetGov_ + 0)]);
     fB[static_cast<size_t>(offsetGov_ + 1)] = ypB[static_cast<size_t>(offsetGov_ + 1)] * T1() - yB[static_cast<size_t>(offsetGov_ + 1)] - yB[static_cast<size_t>(offsetGov_ + 2)] * K();
     fB[static_cast<size_t>(offsetGov_ + 2)] = yB[static_cast<size_t>(offsetGov_ + 0)] * dLn(y[static_cast<size_t>(offsetGov_ + 2)]) - yB[static_cast<size_t>(offsetGov_ + 2)] * T3();
+
+    fB_.setDataUpdated();
 
     return 0;
   }
@@ -369,6 +391,8 @@ namespace GridKit
 
     // T2 adjoint
     gB[0] = -yB[static_cast<size_t>(offsetGov_ + 1)] * (omega() - omega_s_) / T1() - yB[static_cast<size_t>(offsetGov_ + 2)] * K() / T1() * (omega() - omega_s_);
+
+    gB_.setDataUpdated();
 
     return 0;
   }

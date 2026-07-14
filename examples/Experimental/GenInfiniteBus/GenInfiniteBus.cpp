@@ -105,6 +105,7 @@ int main()
   // Initialize the problem
   param[0] = Pm;
   param[1] = Ef;
+  model.param().setDataUpdated();
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);

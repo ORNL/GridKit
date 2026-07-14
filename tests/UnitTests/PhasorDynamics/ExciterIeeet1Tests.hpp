@@ -98,12 +98,15 @@ namespace GridKit
         auto* yp = exciter.yp().getData();
 
         yp[0] = 123.0;
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
         const auto* f  = exciter.getResidual().getData();
         success       *= isEqual(f[0], static_cast<ScalarT>(-123.0));
 
         yp[0] = 0.0;
         y[0]  = 4.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
 
@@ -157,11 +160,13 @@ namespace GridKit
         {
           exciter_y[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + exciter.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
@@ -178,6 +183,7 @@ namespace GridKit
         {
           exciter_yp[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.yp().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

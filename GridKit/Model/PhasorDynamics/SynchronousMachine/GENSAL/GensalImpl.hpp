@@ -339,6 +339,9 @@ namespace GridKit
         yp[static_cast<size_t>(i)] = 0.0;
       }
 
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
       return 0;
     }
 
@@ -503,6 +506,12 @@ namespace GridKit
       // Gensal contribution to bus algebraic equations
       Ir() += h_[0];
       Ii() += h_[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+      f_.setDataUpdated();
 
       return 0;
     }

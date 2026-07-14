@@ -132,6 +132,8 @@ namespace GridKit
         yp[3] = 0;
         yp[4] = 0;
 
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
         gen.evaluateResidual();
         auto&       residual      = gen.getResidual();
         const auto* residual_data = residual.getData();
@@ -352,11 +354,13 @@ namespace GridKit
         {
           gen_y[i].setVariableNumber(i); ///< Generator independent variables
         }
+        gen.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + gen.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
@@ -373,6 +377,7 @@ namespace GridKit
         {
           gen_yp[i].setVariableNumber(i); ///< Generator independent variables
         }
+        gen.yp().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

@@ -149,6 +149,7 @@ namespace AnalysisManager
     {
       const ScalarT* xdata = N_VGetArrayPointer(x);
       std::copy_n(xdata, static_cast<size_t>(y.getSize()), y.getData());
+      y.setDataUpdated();
     }
 
     template <class ScalarT, typename IdxT>

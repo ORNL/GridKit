@@ -153,6 +153,8 @@ namespace GridKit
         y[0] = -1.0;
         y[1] = 10.0;
         y[2] = 1.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
         const auto* f  = exciter.getResidual().getData();
         success       *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
@@ -162,6 +164,7 @@ namespace GridKit
         y[0] = 1.0;
         y[1] = 10.0;
         y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[1], static_cast<ScalarT>(-37.5), kTol);
 
@@ -170,6 +173,7 @@ namespace GridKit
         y[0] = 1.0;
         y[1] = -10.0;
         y[2] = -1.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
 
@@ -178,6 +182,7 @@ namespace GridKit
         y[0] = -1.0;
         y[1] = -10.0;
         y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[1], static_cast<ScalarT>(37.5), kTol);
 
@@ -188,6 +193,7 @@ namespace GridKit
         y[0] = -0.2575;
         y[1] = 5.05;
         y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= (std::abs(f[1]) < static_cast<ScalarT>(0.1));
 
@@ -297,13 +303,14 @@ namespace GridKit
         success *= (system.allocate() == 0);
         success *= (system.initialize() == 0);
 
-        constexpr IdxT consumer_vtr_residual  = 4;
-        constexpr IdxT source_efd_variable    = 6;
-        auto*          y                      = system.y().getData();
-        y[source_efd_variable]                = 0.75;
-        success                              *= (system.evaluateResidual() == 0);
-        const auto* f                         = system.getResidual().getData();
-        success                              *= isEqual(f[consumer_vtr_residual],
+        constexpr IdxT consumer_vtr_residual = 4;
+        constexpr IdxT source_efd_variable   = 6;
+        auto*          y                     = system.y().getData();
+        y[source_efd_variable]               = 0.75;
+        system.y().setDataUpdated();
+        success       *= (system.evaluateResidual() == 0);
+        const auto* f  = system.getResidual().getData();
+        success       *= isEqual(f[consumer_vtr_residual],
                            static_cast<ScalarT>(0.75),
                            kTol);
 
@@ -357,11 +364,13 @@ namespace GridKit
         {
           exciter_y[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + exciter.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
@@ -378,6 +387,7 @@ namespace GridKit
         {
           exciter_yp[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.yp().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

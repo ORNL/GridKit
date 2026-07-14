@@ -77,6 +77,9 @@ int main(int /* argc */, char const** /* argv */)
   std::copy(t2.begin(), t2.end(), dg.y().getData());
   std::copy(t1.begin(), t1.end(), dg.yp().getData());
   std::copy(res.begin(), res.end(), dg.getResidual().getData());
+  dg.y().setDataUpdated();
+  dg.yp().setDataUpdated();
+  dg.getResidual().setDataUpdated();
   auto* dg_res = dg.getResidual().getData();
   dg.setInternalPointer(&t2[dg.getExternSize()]);
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);

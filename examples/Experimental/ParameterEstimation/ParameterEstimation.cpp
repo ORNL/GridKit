@@ -86,6 +86,7 @@ int main()
 
   // Guess value of inertia coefficient
   param[0] = 3.0;
+  model.param().setDataUpdated();
 
   // Create an instance of the IpoptApplication
   Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();

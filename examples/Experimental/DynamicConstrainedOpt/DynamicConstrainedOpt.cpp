@@ -98,6 +98,7 @@ int main()
 
   // Initialize problem
   param[0] = Pm;
+  model.param().setDataUpdated();
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);

@@ -48,6 +48,10 @@ namespace GridKit
         tag_       = {false};
         abs_tol[0] = 0.0;
         f[0]       = 0.0;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        abs_tol_.setDataUpdated();
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -92,6 +96,7 @@ namespace GridKit
         auto*       f = f_.getData();
         const auto* y = y_.getData();
         f[0]          = y[0];
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -335,6 +340,10 @@ namespace GridKit
         f[0]       = 0.0;
         f[1]       = 0.0;
         t_         = 0.0;
+        this->y_.setDataUpdated();
+        this->yp_.setDataUpdated();
+        this->abs_tol_.setDataUpdated();
+        this->f_.setDataUpdated();
         return 0;
       }
 
@@ -352,6 +361,7 @@ namespace GridKit
 
         f[0] = yp[0];
         f[1] = y[1] - std::sin(OMEGA * t_);
+        this->f_.setDataUpdated();
         return 0;
       }
 

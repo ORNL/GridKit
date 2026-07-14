@@ -109,11 +109,13 @@ namespace GridKit
         {
           load_y[i].setVariableNumber(i); ///< load independent variables
         }
+        load.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + load.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

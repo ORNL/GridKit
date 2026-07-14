@@ -88,6 +88,7 @@ namespace GridKit
         success  *= isEqual(bus.Ir(), Ir);
         bus.Ii()  = Ii;
         success  *= isEqual(bus.Ii(), Ii);
+        bus.getResidual().setDataUpdated();
 
         bus.evaluateResidual();
         success *= isEqual(bus.Ir(), 0.0);

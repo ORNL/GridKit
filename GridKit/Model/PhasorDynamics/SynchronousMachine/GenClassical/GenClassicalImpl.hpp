@@ -233,6 +233,9 @@ namespace GridKit
       for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
         yp[i] = 0.0;
 
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
       return 0;
     }
 
@@ -346,6 +349,12 @@ namespace GridKit
 
       Ir() += h_[0];
       Ii() += h_[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+      f_.setDataUpdated();
 
       return 0;
     }

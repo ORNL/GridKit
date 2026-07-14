@@ -130,11 +130,13 @@ namespace GridKit
         {
           fault_y[i].setVariableNumber(i); ///< fault independent variables
         }
+        fault.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + fault.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         fault.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
@@ -153,6 +155,7 @@ namespace GridKit
         {
           fault_yp[i].setVariableNumber(i); ///< fault independent variables
         }
+        fault.yp().setDataUpdated();
 
         bus.evaluateResidual();
         fault.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

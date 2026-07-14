@@ -69,6 +69,10 @@ namespace GridKit
     // std::cout << "Evaluating load residual ...\n";
     bus_->P() += P_;
     bus_->Q() += Q_;
+    if (bus_->size() > 0)
+    {
+      bus_->getResidual().setDataUpdated();
+    }
     return 0;
   }
 

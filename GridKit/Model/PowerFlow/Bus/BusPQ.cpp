@@ -129,6 +129,9 @@ namespace GridKit
     yp[0]    = 0.0;
     yp[1]    = 0.0;
 
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
+
     return 0;
   }
 
@@ -146,6 +149,7 @@ namespace GridKit
     auto* f = f_.getData();
     f[0]    = 0.0;
     f[1]    = 0.0;
+    f_.setDataUpdated();
     return 0;
   }
 
@@ -163,6 +167,9 @@ namespace GridKit
     ypB[0]    = 0.0;
     ypB[1]    = 0.0;
 
+    yB_.setDataUpdated();
+    ypB_.setDataUpdated();
+
     return 0;
   }
 
@@ -172,6 +179,8 @@ namespace GridKit
     auto* fB = fB_.getData();
     fB[0]    = 0.0;
     fB[1]    = 0.0;
+
+    fB_.setDataUpdated();
 
     return 0;
   }

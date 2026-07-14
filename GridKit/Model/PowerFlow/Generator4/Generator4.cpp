@@ -133,6 +133,12 @@ namespace GridKit
     param_up[1] = 1.7;
     param_lo[1] = 0.0;
 
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
+    param_.setDataUpdated();
+    param_up_.setDataUpdated();
+    param_lo_.setDataUpdated();
+
     return 0;
   }
 
@@ -219,6 +225,12 @@ namespace GridKit
     P() += Pg();
     Q() += Qg();
 
+    if (bus_->size() > 0)
+    {
+      bus_->getResidual().setDataUpdated();
+    }
+    f_.setDataUpdated();
+
     return 0;
   }
 
@@ -238,6 +250,7 @@ namespace GridKit
     auto*       g = g_.getData();
 
     g[0] = frequencyPenalty(y[1]);
+    g_.setDataUpdated();
     return 0;
   }
 
@@ -255,6 +268,9 @@ namespace GridKit
       ypB[static_cast<size_t>(i)] = 0.0;
     }
     ypB[1] = frequencyPenaltyDer(y[1]);
+
+    yB_.setDataUpdated();
+    ypB_.setDataUpdated();
 
     return 0;
   }
@@ -292,6 +308,8 @@ namespace GridKit
     fB[4] = -yB[1] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB[3] * (Xd_ - Xdp_) - yB[4] * Rs_ - yB[5] * Xdp_;
     fB[5] = -yB[1] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB[2] * (Xq_ - Xqp_) + yB[4] * Xqp_ - yB[5] * Rs_;
 
+    fB_.setDataUpdated();
+
     return 0;
   }
 
@@ -312,6 +330,8 @@ namespace GridKit
 
     gB[0] = yB[1];
     gB[1] = yB[3];
+
+    gB_.setDataUpdated();
 
     return 0;
   }

@@ -106,6 +106,7 @@ namespace AnalysisManager
       auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
         param[static_cast<size_t>(i)] = x[i];
+      model_->param().setDataUpdated();
 
       // Evaluate objective function
       integrator_->getSavedInitialCondition();
@@ -130,6 +131,7 @@ namespace AnalysisManager
       auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
         param[static_cast<size_t>(i)] = x[i];
+      model_->param().setDataUpdated();
 
       // evaluate the gradient of the objective function grad_{x} f(x)
       // This is creating and deleting adjoint system for each iteration!

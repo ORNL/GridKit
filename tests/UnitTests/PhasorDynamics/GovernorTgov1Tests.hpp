@@ -131,6 +131,8 @@ namespace GridKit
         yp[0] = static_cast<ScalarT>(8.0) / static_cast<ScalarT>(15.0); // ptx_dot
         yp[1] = 2.0;                                                    // pv_dot
 
+        gov.y().setDataUpdated();
+        gov.yp().setDataUpdated();
         gov.evaluateResidual();
         auto&       residual      = gov.getResidual();
         const auto* residual_data = residual.getData();
@@ -320,8 +322,10 @@ namespace GridKit
         {
           gov_y[i].setVariableNumber(i); // Governor independent variables
         }
+        gov.y().setDataUpdated();
         auto* gen_y = gen.y().getData();
         gen_y[1].setVariableNumber(gov.size()); // omega as an additional independent variable
+        gen.y().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();
@@ -340,6 +344,7 @@ namespace GridKit
         {
           gov_yp[i].setVariableNumber(i); ///< Governor independent variables
         }
+        gov.yp().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();

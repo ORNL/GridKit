@@ -78,6 +78,9 @@ int main(int /* argc */, char const** /* argv */)
   yp[2] = 0.0;            // v'_1
   yp[3] = 0.0;            // v'_2
 
+  sysmodel.y().setDataUpdated();
+  sysmodel.yp().setDataUpdated();
+
   sysmodel.initialize();
   sysmodel.evaluateResidual();
 

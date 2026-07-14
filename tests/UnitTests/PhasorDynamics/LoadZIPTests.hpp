@@ -93,6 +93,7 @@ namespace GridKit
 
         bus.Vr() = 0.9;
         bus.Vi() = 1.2;
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual();
@@ -189,11 +190,13 @@ namespace GridKit
         {
           load_y[i].setVariableNumber(i);
         }
+        load.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + load.size());
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
@@ -209,6 +212,7 @@ namespace GridKit
         {
           load_yp[i].setVariableNumber(i);
         }
+        load.yp().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking

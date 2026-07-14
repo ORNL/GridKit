@@ -88,6 +88,7 @@ int main()
   for (unsigned i = 0; i < model->sizeParams(); ++i)
   {
     param[i] += eps;
+    model->param().setDataUpdated();
     idas->getSavedInitialCondition();
     idas->initializeSimulation(t_init);
     idas->initializeQuadrature();
@@ -100,6 +101,7 @@ int main()
 
     // restore parameter to original value
     param[i] -= eps;
+    model->param().setDataUpdated();
 
     // Evaluate dG/dp numerically
     dGdp[i] = (g2 - g1) / eps;

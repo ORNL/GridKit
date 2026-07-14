@@ -151,6 +151,8 @@ namespace GridKit
       y[1]  = -(G_ * vi - B_ * vr) * zip;
       yp[0] = 0.0;
       yp[1] = 0.0;
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
       return 0;
     }
 
@@ -219,6 +221,11 @@ namespace GridKit
       evaluateBusResidual(y, yp, wb_.data(), h_.data());
       Ir() += h_[0];
       Ii() += h_[1];
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+      f_.setDataUpdated();
 
       return 0;
     }

@@ -213,6 +213,7 @@ namespace GridKit
         }
         varOffset += component->size();
       }
+      y_.setDataUpdated();
       return 0;
     }
 
@@ -281,6 +282,7 @@ namespace GridKit
           {
             bus_y[j] = y[varOffset + j];
           }
+          bus->y().setDataUpdated();
         }
         varOffset += bus->size();
         bus->evaluateResidual();
@@ -296,6 +298,7 @@ namespace GridKit
           {
             component_y[j] = y[varOffset + j];
           }
+          component->y().setDataUpdated();
         }
         varOffset += component->size();
         component->evaluateResidual();
@@ -330,6 +333,8 @@ namespace GridKit
         }
         resOffset += component->size();
       }
+
+      f_.setDataUpdated();
 
       return 0;
     }

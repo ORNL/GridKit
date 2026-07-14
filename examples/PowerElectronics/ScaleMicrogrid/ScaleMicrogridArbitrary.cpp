@@ -245,6 +245,9 @@ int printMicrogridSystems(index_type N_size)
   // since the initial P_com = 0, set the initial vector to the reference frame
   y[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
 
+  sys_model.y().setDataUpdated();
+  sys_model.yp().setDataUpdated();
+
   sys_model.initialize();
   sys_model.evaluateResidual();
 

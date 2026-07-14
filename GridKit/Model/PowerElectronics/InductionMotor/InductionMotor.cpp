@@ -92,6 +92,7 @@ namespace GridKit
     f[2] = (-1.0 / 2.0) * y_int_[0] + (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];
     f[3] = RJ_ * yp[3] - (3.0 / 4.0) * P_ * Lms_ * (y[5] * y_int_[4] - y_int_[1] * y_int_[3]);
     f[4] = yp[4] - y[3];
+    f_.setDataUpdated();
     return 0;
   }
 

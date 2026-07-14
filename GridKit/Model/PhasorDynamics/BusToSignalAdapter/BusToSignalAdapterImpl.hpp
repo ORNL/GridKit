@@ -159,10 +159,18 @@ namespace GridKit
       if (signals_.template isAttached<IREAL>())
       {
         bus_->Ir() += signals_.template readExternalVariable<IREAL>();
+        if (bus_->size() > 0)
+        {
+          bus_->getResidual().setDataUpdated();
+        }
       }
       if (signals_.template isAttached<IIMAG>())
       {
         bus_->Ii() += signals_.template readExternalVariable<IIMAG>();
+        if (bus_->size() > 0)
+        {
+          bus_->getResidual().setDataUpdated();
+        }
       }
 
       return 0;

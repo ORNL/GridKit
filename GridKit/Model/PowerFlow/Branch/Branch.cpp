@@ -133,6 +133,15 @@ namespace GridKit
     P2() -= (g + 0.5 * G_) * V2() * V2() + V1() * V2() * (-g * cos(dtheta) + b * sin(dtheta));
     Q2() -= (-b - 0.5 * B_) * V2() * V2() + V1() * V2() * (g * sin(dtheta) + b * cos(dtheta));
 
+    if (bus1_->size() > 0)
+    {
+      bus1_->getResidual().setDataUpdated();
+    }
+    if (bus2_->size() > 0)
+    {
+      bus2_->getResidual().setDataUpdated();
+    }
+
     return 0;
   }
 

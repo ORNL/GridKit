@@ -243,6 +243,15 @@ namespace GridKit
         optOffset += component->sizeParams();
       }
 
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+      if (this->sizeParams() > 0)
+      {
+        param_.setDataUpdated();
+        param_lo_.setDataUpdated();
+        param_up_.setDataUpdated();
+      }
+
       return 0;
     }
 
@@ -277,6 +286,8 @@ namespace GridKit
         }
         offset += component->size();
       }
+
+      abs_tol_.setDataUpdated();
 
       return 0;
     }
@@ -375,6 +386,8 @@ namespace GridKit
             bus_y[j]  = y[varOffset + j];
             bus_yp[j] = yp[varOffset + j];
           }
+          bus->y().setDataUpdated();
+          bus->yp().setDataUpdated();
         }
         varOffset += bus->size();
 
@@ -385,6 +398,7 @@ namespace GridKit
           {
             bus_param[j] = param[optOffset + j];
           }
+          bus->param().setDataUpdated();
         }
         optOffset += bus->sizeParams();
 
@@ -403,6 +417,8 @@ namespace GridKit
             component_y[j]  = y[varOffset + j];
             component_yp[j] = yp[varOffset + j];
           }
+          component->y().setDataUpdated();
+          component->yp().setDataUpdated();
         }
         varOffset += component->size();
 
@@ -413,6 +429,7 @@ namespace GridKit
           {
             component_param[j] = param[optOffset + j];
           }
+          component->param().setDataUpdated();
         }
         optOffset += component->sizeParams();
 
@@ -446,6 +463,8 @@ namespace GridKit
         }
         resOffset += component->size();
       }
+
+      f_.setDataUpdated();
 
       return 0;
     }
@@ -497,6 +516,8 @@ namespace GridKit
             bus_y[j]  = y[varOffset + j];
             bus_yp[j] = yp[varOffset + j];
           }
+          bus->y().setDataUpdated();
+          bus->yp().setDataUpdated();
         }
         varOffset += bus->size();
 
@@ -507,6 +528,7 @@ namespace GridKit
           {
             bus_param[j] = param[optOffset + j];
           }
+          bus->param().setDataUpdated();
         }
         optOffset += bus->sizeParams();
 
@@ -525,6 +547,8 @@ namespace GridKit
             component_y[j]  = y[varOffset + j];
             component_yp[j] = yp[varOffset + j];
           }
+          component->y().setDataUpdated();
+          component->yp().setDataUpdated();
         }
         varOffset += component->size();
 
@@ -535,6 +559,7 @@ namespace GridKit
           {
             component_param[j] = param[optOffset + j];
           }
+          component->param().setDataUpdated();
         }
         optOffset += component->sizeParams();
 
@@ -567,6 +592,11 @@ namespace GridKit
           }
         }
         intOffset += component->sizeQuadrature();
+      }
+
+      if (this->sizeQuadrature() > 0)
+      {
+        g_.setDataUpdated();
       }
 
       return 0;
@@ -606,6 +636,8 @@ namespace GridKit
             bus_y[j]  = y[offset + j];
             bus_yp[j] = yp[offset + j];
           }
+          bus->y().setDataUpdated();
+          bus->yp().setDataUpdated();
         }
         offset += bus->size();
 
@@ -616,6 +648,7 @@ namespace GridKit
           {
             bus_param[j] = param[optOffset + j];
           }
+          bus->param().setDataUpdated();
         }
         optOffset += bus->sizeParams();
       }
@@ -633,6 +666,8 @@ namespace GridKit
             component_y[j]  = y[offset + j];
             component_yp[j] = yp[offset + j];
           }
+          component->y().setDataUpdated();
+          component->yp().setDataUpdated();
         }
         offset += component->size();
 
@@ -643,6 +678,7 @@ namespace GridKit
           {
             component_param[j] = param[optOffset + j];
           }
+          component->param().setDataUpdated();
         }
         optOffset += component->sizeParams();
       }
@@ -685,6 +721,9 @@ namespace GridKit
         }
         offset += component->size();
       }
+
+      yB_.setDataUpdated();
+      ypB_.setDataUpdated();
 
       return 0;
     }
@@ -729,6 +768,10 @@ namespace GridKit
             bus_yB[j]  = yB[varOffset + j];
             bus_ypB[j] = ypB[varOffset + j];
           }
+          bus->y().setDataUpdated();
+          bus->yp().setDataUpdated();
+          bus->yB().setDataUpdated();
+          bus->ypB().setDataUpdated();
         }
         varOffset += bus->size();
 
@@ -739,6 +782,7 @@ namespace GridKit
           {
             bus_param[j] = param[optOffset + j];
           }
+          bus->param().setDataUpdated();
         }
         optOffset += bus->sizeParams();
       }
@@ -759,6 +803,10 @@ namespace GridKit
             component_yB[j]  = yB[varOffset + j];
             component_ypB[j] = ypB[varOffset + j];
           }
+          component->y().setDataUpdated();
+          component->yp().setDataUpdated();
+          component->yB().setDataUpdated();
+          component->ypB().setDataUpdated();
         }
         varOffset += component->size();
 
@@ -769,6 +817,7 @@ namespace GridKit
           {
             component_param[j] = param[optOffset + j];
           }
+          component->param().setDataUpdated();
         }
         optOffset += component->sizeParams();
       }
@@ -810,6 +859,8 @@ namespace GridKit
         }
         resOffset += component->size();
       }
+
+      fB_.setDataUpdated();
 
       return 0;
     }
@@ -860,6 +911,10 @@ namespace GridKit
             bus_yB[j]  = yB[varOffset + j];
             bus_ypB[j] = ypB[varOffset + j];
           }
+          bus->y().setDataUpdated();
+          bus->yp().setDataUpdated();
+          bus->yB().setDataUpdated();
+          bus->ypB().setDataUpdated();
         }
         varOffset += bus->size();
 
@@ -870,6 +925,7 @@ namespace GridKit
           {
             bus_param[j] = param[optOffset + j];
           }
+          bus->param().setDataUpdated();
         }
         optOffset += bus->sizeParams();
       }
@@ -890,6 +946,10 @@ namespace GridKit
             component_yB[j]  = yB[varOffset + j];
             component_ypB[j] = ypB[varOffset + j];
           }
+          component->y().setDataUpdated();
+          component->yp().setDataUpdated();
+          component->yB().setDataUpdated();
+          component->ypB().setDataUpdated();
         }
         varOffset += component->size();
 
@@ -900,6 +960,7 @@ namespace GridKit
           {
             component_param[j] = param[optOffset + j];
           }
+          component->param().setDataUpdated();
         }
         optOffset += component->sizeParams();
       }
@@ -920,6 +981,10 @@ namespace GridKit
           }
           break;
         }
+      }
+      if (this->sizeQuadrature() > 0 && this->sizeParams() > 0)
+      {
+        gB_.setDataUpdated();
       }
       return 0;
     }

@@ -176,6 +176,8 @@ namespace GridKit
         y[1]     = 1.0;
         yp[0]    = TWO<RealT> * M_PI * 50.0;
 
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
         gen.evaluateResidual();
 
         const auto* f  = gen.getResidual().getData();
@@ -314,6 +316,8 @@ namespace GridKit
         yp[3] = -0.7;            // psidp_dot
         yp[4] = 0.9;             // psiqpp_dot
 
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
         gen.evaluateResidual();
         auto&       residual      = gen.getResidual();
         const auto* residual_data = residual.getData();
@@ -373,11 +377,13 @@ namespace GridKit
         {
           gen_y[i].setVariableNumber(i);
         }
+        gen.y().setDataUpdated();
         auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
           bus_y[i].setVariableNumber(i + gen.size());
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();
@@ -392,6 +398,7 @@ namespace GridKit
         {
           gen_yp[i].setVariableNumber(i);
         }
+        gen.yp().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();

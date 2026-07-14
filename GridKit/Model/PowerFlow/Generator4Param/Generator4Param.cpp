@@ -126,6 +126,12 @@ namespace GridKit
     param_up[0] = 10.0;
     param_lo[0] = 2.0;
 
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
+    param_.setDataUpdated();
+    param_up_.setDataUpdated();
+    param_lo_.setDataUpdated();
+
     return 0;
   }
 
@@ -200,7 +206,13 @@ namespace GridKit
     P() += Pg();
     Q() += Qg();
 
+    if (bus_->size() > 0)
+    {
+      bus_->getResidual().setDataUpdated();
+    }
     // std::cout << "Residual: t = " << time_ << std::endl;
+
+    f_.setDataUpdated();
 
     return 0;
   }
@@ -220,6 +232,7 @@ namespace GridKit
     auto* g = g_.getData();
 
     g[0] = trajectoryPenalty(time_);
+    g_.setDataUpdated();
     return 0;
   }
 
@@ -237,6 +250,9 @@ namespace GridKit
     }
     ypB[2] = -trajectoryPenaltyDerEdp(time_) / Tq0p_;
     ypB[3] = -trajectoryPenaltyDerEqp(time_) / Td0p_;
+
+    yB_.setDataUpdated();
+    ypB_.setDataUpdated();
 
     return 0;
   }
@@ -274,6 +290,8 @@ namespace GridKit
     fB[4] = -yB[1] * (Edp() + (Xqp_ - Xdp_) * Iq()) - yB[3] * (Xd_ - Xdp_) - yB[4] * Rs_ - yB[5] * Xdp_;
     fB[5] = -yB[1] * (Eqp() + (Xqp_ - Xdp_) * Id()) + yB[2] * (Xq_ - Xqp_) + yB[4] * Xqp_ - yB[5] * Rs_;
 
+    fB_.setDataUpdated();
+
     return 0;
   }
 
@@ -293,6 +311,8 @@ namespace GridKit
     auto*       gB = gB_.getData();
 
     gB[0] = -2.0 * yB[1] * dotOmega() / omega_s_;
+
+    gB_.setDataUpdated();
 
     return 0;
   }

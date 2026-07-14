@@ -279,6 +279,8 @@ namespace GridKit
       {
         component->initialize();
       }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
       this->distributeVectors();
 
       return 0;
@@ -315,6 +317,8 @@ namespace GridKit
             yp[j] = 0.0;
           }
         }
+        component->y().setDataUpdated();
+        component->yp().setDataUpdated();
       }
       return 0;
     }
@@ -384,6 +388,8 @@ namespace GridKit
           }
         }
       }
+
+      f_.setDataUpdated();
 
       return 0;
     }

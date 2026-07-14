@@ -389,6 +389,9 @@ namespace GridKit
         yp[4] = 0.05; // x5_dot
         yp[5] = 0.06; // x6_dot
         yp[6] = 0.07; // x7_dot
+
+        stab.y().setDataUpdated();
+        stab.yp().setDataUpdated();
       }
 
       /**
@@ -420,6 +423,9 @@ namespace GridKit
         yp[4].setValue(0.05);
         yp[5].setValue(0.06);
         yp[6].setValue(0.07);
+
+        stab.y().setDataUpdated();
+        stab.yp().setDataUpdated();
       }
     }; // class StabilizerIeeestTests
 

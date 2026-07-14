@@ -615,6 +615,9 @@ namespace GridKit
         }
       }
 
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
+
       return 0;
     }
 
@@ -736,6 +739,8 @@ namespace GridKit
         offset += component->size();
       }
 
+      abs_tol_.setDataUpdated();
+
       return 0;
     }
 
@@ -792,6 +797,8 @@ namespace GridKit
           f[component->getResidualIndex(j)] = component_f[j];
         }
       }
+
+      f_.setDataUpdated();
 
       return 0;
     }
@@ -1009,6 +1016,8 @@ namespace GridKit
           bus_y[j]  = y[bus->getVariableIndex(j)];
           bus_yp[j] = yp[bus->getVariableIndex(j)];
         }
+        bus->y().setDataUpdated();
+        bus->yp().setDataUpdated();
       }
       for (const auto& component : components_)
       {
@@ -1019,6 +1028,8 @@ namespace GridKit
           component_y[j]  = y[component->getVariableIndex(j)];
           component_yp[j] = yp[component->getVariableIndex(j)];
         }
+        component->y().setDataUpdated();
+        component->yp().setDataUpdated();
       }
     }
 

@@ -228,6 +228,9 @@ namespace GridKit
           yp[static_cast<size_t>(i)] = 0.0;
         }
 
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+
         return 0;
       }
 
@@ -331,6 +334,7 @@ namespace GridKit
         const auto* yp = yp_.getData();
         auto*       f  = f_.getData();
         evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        f_.setDataUpdated();
 
         return 0;
       }

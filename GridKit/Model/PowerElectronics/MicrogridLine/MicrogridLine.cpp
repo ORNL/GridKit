@@ -115,6 +115,8 @@ namespace GridKit
     f[3] = y_int_[0];
     f[4] = y_int_[1];
 
+    f_.setDataUpdated();
+
     return 0;
   }
 

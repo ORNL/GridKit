@@ -91,6 +91,7 @@ namespace GridKit
     f[0] = (y[0] - y[1]) / R_;
     // ouput
     f[1] = (y[1] - y[0]) / R_;
+    f_.setDataUpdated();
     return 0;
   }
 

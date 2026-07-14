@@ -122,6 +122,8 @@ namespace GridKit
     f[6] = -y_int_[2];
     f[7] = -y_int_[3];
 
+    f_.setDataUpdated();
+
     return 0;
   }
 

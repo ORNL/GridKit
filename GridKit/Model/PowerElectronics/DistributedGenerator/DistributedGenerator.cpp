@@ -173,6 +173,7 @@ namespace GridKit
     // current transformed to common frame
     f[1] = std::cos(delta) * y_int_[10] - std::sin(delta) * y_int_[11];
     f[2] = std::sin(delta) * y_int_[10] + std::cos(delta) * y_int_[11];
+    f_.setDataUpdated();
     return 0;
   }
 

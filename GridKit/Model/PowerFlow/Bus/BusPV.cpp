@@ -123,6 +123,9 @@ namespace GridKit
     auto* yp = yp_.getData();
     yp[0]    = 0.0;
 
+    y_.setDataUpdated();
+    yp_.setDataUpdated();
+
     return 0;
   }
 
@@ -140,6 +143,8 @@ namespace GridKit
     P() = 0.0; // <-- Residual P
     Q() = 0.0; // <-- Output Qg, the reactive power generator needs to supply
 
+    f_.setDataUpdated();
+
     return 0;
   }
 
@@ -155,6 +160,9 @@ namespace GridKit
     yB[0]     = 0.0;
     ypB[0]    = 0.0;
 
+    yB_.setDataUpdated();
+    ypB_.setDataUpdated();
+
     return 0;
   }
 
@@ -163,6 +171,8 @@ namespace GridKit
   {
     auto* fB = fB_.getData();
     fB[0]    = 0.0;
+
+    fB_.setDataUpdated();
 
     return 0;
   }
