@@ -61,8 +61,8 @@ namespace AnalysisManager
       assert(m == 0);
 
       // Get boundaries for the optimization parameters
-      auto* param_lo = model_->param_lo().getData();
-      auto* param_up = model_->param_up().getData();
+      const auto* param_lo = model_->param_lo().getData();
+      const auto* param_up = model_->param_up().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
         x_l[i] = param_lo[static_cast<size_t>(i)];
@@ -89,7 +89,7 @@ namespace AnalysisManager
       assert(init_lambda == false);
 
       // Initialize optimization parameters x
-      auto* param = model_->param().getData();
+      const auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
         x[i] = param[static_cast<size_t>(i)];
 

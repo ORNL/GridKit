@@ -234,8 +234,8 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateIntegrand()
   {
     // std::cout << "Evaluate Integrand for Generator4..." << std::endl;
-    auto* y = y_.getData();
-    auto* g = g_.getData();
+    const auto* y = y_.getData();
+    auto*       g = g_.getData();
 
     g[0] = frequencyPenalty(y[1]);
     return 0;
@@ -245,9 +245,9 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::initializeAdjoint()
   {
     // std::cout << "Initialize adjoint for Generator4..." << std::endl;
-    auto* y   = y_.getData();
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
+    const auto* y   = y_.getData();
+    auto*       yB  = yB_.getData();
+    auto*       ypB = ypB_.getData();
 
     for (IdxT i = 0; i < size_; ++i)
     {
@@ -280,9 +280,9 @@ namespace GridKit
     ScalarT sinPhi = sin(delta() - theta());
     ScalarT cosPhi = cos(delta() - theta());
 
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
-    auto* fB  = fB_.getData();
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
 
     // Generator adjoint
     fB[0] = ypB[0] - yB[4] * V() * cosPhi + yB[5] * V() * sinPhi;
@@ -307,8 +307,8 @@ namespace GridKit
   int Generator4<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Generator4..." << std::endl;
-    auto* yB = yB_.getData();
-    auto* gB = gB_.getData();
+    const auto* yB = yB_.getData();
+    auto*       gB = gB_.getData();
 
     gB[0] = yB[1];
     gB[1] = yB[3];
@@ -329,7 +329,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4<ScalarT, IdxT>::Pg()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
     return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
   }
 
@@ -341,7 +341,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4<ScalarT, IdxT>::Qg()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
     return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
   }
 

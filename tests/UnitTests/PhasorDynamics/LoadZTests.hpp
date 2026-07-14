@@ -120,7 +120,7 @@ namespace GridKit
                                  ///< the dependencies
 
         auto&                                                    residuals     = load.getResidual();
-        auto*                                                    residual_data = residuals.getData();
+        const auto*                                              residual_data = residuals.getData();
         std::vector<DependencyTracking::Variable::DependencyMap> ref           = analyticalJacobian(R, X);
 
         /// Compare dependencies computed automatically to the ones computed analytically

@@ -187,8 +187,8 @@ int main()
   dg->evaluateResidual();
   dg->evaluateJacobian();
 
-  auto* y_data        = dg->y().getData();
-  auto* residual_data = dg->getResidual().getData();
+  const auto* y_data        = dg->y().getData();
+  const auto* residual_data = dg->getResidual().getData();
   for (size_t i = 0; i < dg->getExternSize(); i++)
   {
     y[i]   = y_data[i];

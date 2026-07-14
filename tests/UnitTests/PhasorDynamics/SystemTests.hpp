@@ -240,8 +240,8 @@ namespace GridKit
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        auto& residual      = system.getResidual();
-        auto* residual_data = residual.getData();
+        auto&       residual      = system.getResidual();
+        const auto* residual_data = residual.getData();
 
         // Print the dependencies
         for (size_t i = 0; i < residual.getSize(); ++i)

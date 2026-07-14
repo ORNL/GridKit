@@ -261,8 +261,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   sys_model->initialize();
   sys_model->evaluateResidual();
-  auto& fres      = sys_model->getResidual();
-  auto* fres_data = fres.getData();
+  auto&       fres      = sys_model->getResidual();
+  const auto* fres_data = fres.getData();
   if (debug_output)
   {
     std::cout << "Verify initial resisdual is zero: {\n";
@@ -294,8 +294,8 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
 
   idas->runSimulation(t_final);
 
-  auto& yfinal      = sys_model->y();
-  auto* yfinal_data = yfinal.getData();
+  auto&       yfinal      = sys_model->y();
+  const auto* yfinal_data = yfinal.getData();
 
   if (debug_output)
   {

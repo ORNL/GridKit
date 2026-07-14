@@ -93,10 +93,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateResidual()
   {
-    auto* y     = y_.getData();
-    auto* yp    = yp_.getData();
-    auto* f     = f_.getData();
-    auto* param = param_.getData();
+    const auto* y     = y_.getData();
+    const auto* yp    = yp_.getData();
+    auto*       f     = f_.getData();
+    const auto* param = param_.getData();
 
     f[0] = -yp[0] + omega_b_ * (y[1] - omega_s_);
     f[1] = -yp[1] + omega_s_ / (2.0 * H_) * (param[0] - Eqp_ / Xdp_ * V() * sin(y[0] - theta()) - D_ * (y[1] - omega_s_));
@@ -114,8 +114,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateIntegrand()
   {
-    auto* y = y_.getData();
-    auto* g = g_.getData();
+    const auto* y = y_.getData();
+    auto*       g = g_.getData();
 
     g[0] = frequencyPenalty(y[1]);
     return 0;
@@ -124,9 +124,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::initializeAdjoint()
   {
-    auto* y   = y_.getData();
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
+    const auto* y   = y_.getData();
+    auto*       yB  = yB_.getData();
+    auto*       ypB = ypB_.getData();
 
     yB[0]  = 0.0;
     yB[1]  = 0.0;
@@ -139,10 +139,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator2<ScalarT, IdxT>::evaluateAdjointResidual()
   {
-    auto* y   = y_.getData();
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
-    auto* fB  = fB_.getData();
+    const auto* y   = y_.getData();
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
 
     fB[0] = -ypB[0] + omega_s_ / (2.0 * H_) * Eqp_ / Xdp_ * V() * cos(y[0] - theta()) * yB[1];
     fB[1] = -ypB[1] + omega_s_ / (2.0 * H_) * D_ * yB[1] - omega_b_ * yB[0] + frequencyPenaltyDer(y[1]);
@@ -161,8 +161,8 @@ namespace GridKit
   int Generator2<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
-    auto* yB = yB_.getData();
-    auto* gB = gB_.getData();
+    const auto* yB = yB_.getData();
+    auto*       gB = gB_.getData();
 
     gB[0] = -omega_s_ / (2.0 * H_) * yB[1];
     return 0;

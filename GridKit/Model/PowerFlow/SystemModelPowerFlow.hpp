@@ -184,7 +184,7 @@ namespace GridKit
       {
         if (bus->size() > 0)
         {
-          auto* bus_y = bus->y().getData();
+          const auto* bus_y = bus->y().getData();
 
           for (IdxT j = 0; j < bus->size(); ++j)
           {
@@ -204,7 +204,7 @@ namespace GridKit
       {
         if (component->size() > 0)
         {
-          auto* component_y = component->y().getData();
+          const auto* component_y = component->y().getData();
 
           for (IdxT j = 0; j < component->size(); ++j)
           {
@@ -267,9 +267,9 @@ namespace GridKit
     int evaluateResidual()
     {
       // Update variables
-      IdxT  varOffset = 0;
-      auto* y         = y_.getData();
-      auto* f         = f_.getData();
+      IdxT        varOffset = 0;
+      const auto* y         = y_.getData();
+      auto*       f         = f_.getData();
 
       for (const auto& bus : buses_)
       {
@@ -307,7 +307,7 @@ namespace GridKit
       {
         if (bus->size() > 0)
         {
-          auto* bus_f = bus->getResidual().getData();
+          const auto* bus_f = bus->getResidual().getData();
 
           for (IdxT j = 0; j < bus->size(); ++j)
           {
@@ -321,7 +321,7 @@ namespace GridKit
       {
         if (component->size() > 0)
         {
-          auto* component_f = component->getResidual().getData();
+          const auto* component_f = component->getResidual().getData();
 
           for (IdxT j = 0; j < component->size(); ++j)
           {

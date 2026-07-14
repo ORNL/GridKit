@@ -198,8 +198,8 @@ int main(int /* argc */, char const** /* argv */)
   // Optional debuging output
   if (debug_output)
   {
-    auto& fres      = sysmodel->getResidual();
-    auto* fres_data = fres.getData();
+    auto&       fres      = sysmodel->getResidual();
+    const auto* fres_data = fres.getData();
     std::cout << "Verify initial resisdual is zero: {\n";
     for (size_t i = 0; i < fres.getSize(); i++)
     {
@@ -233,8 +233,8 @@ int main(int /* argc */, char const** /* argv */)
 
   idas->runSimulation(t_final);
 
-  auto& yfinial      = sysmodel->y();
-  auto* yfinial_data = yfinial.getData();
+  auto&       yfinial      = sysmodel->y();
+  const auto* yfinial_data = yfinial.getData();
 
   // Optional debugging output
   if (debug_output)

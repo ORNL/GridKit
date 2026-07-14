@@ -210,7 +210,7 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    auto* y_val = sys.y().getData();
+    const auto* y_val = sys.y().getData();
 
     // Bus 1 -> +2
     // Bus 2 -> +2

@@ -884,8 +884,9 @@ namespace AnalysisManager
         throw SundialsException();
       }
 
-      ScalarT* ydata = N_VGetArrayPointer(y);
-      std::copy_n(x.getData(), xsize, ydata);
+      const auto* xdata = x.getData();
+      auto*       ydata = N_VGetArrayPointer(y);
+      std::copy_n(xdata, xsize, ydata);
     }
 
     /**

@@ -86,7 +86,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLoad<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
 
     f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + y[0] * y_int_[1] + y[1] / L_;
     f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - y[0] * y_int_[0] + y[2] / L_;
@@ -133,7 +133,7 @@ namespace GridKit
 
     std::vector<IdxT>  rcord(ccord.size(), 3);
     std::vector<RealT> vals{};
-    auto*              y = y_.getData();
+    const auto*        y = y_.getData();
     vals                 = {static_cast<RealT>(y_int_[1]), (1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y[0])};
     this->setJacValues(rcord, ccord, vals);
 

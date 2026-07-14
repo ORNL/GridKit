@@ -132,8 +132,8 @@ namespace GridKit
         yp[1] = 2.0;                                                    // pv_dot
 
         gov.evaluateResidual();
-        auto& residual      = gov.getResidual();
-        auto* residual_data = residual.getData();
+        auto&       residual      = gov.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {

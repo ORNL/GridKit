@@ -179,8 +179,8 @@ namespace GridKit
       {
         if (bus->size() > 0)
         {
-          auto* bus_y  = bus->y().getData();
-          auto* bus_yp = bus->yp().getData();
+          const auto* bus_y  = bus->y().getData();
+          const auto* bus_yp = bus->yp().getData();
 
           for (IdxT j = 0; j < bus->size(); ++j)
           {
@@ -192,9 +192,9 @@ namespace GridKit
 
         if (bus->sizeParams() > 0)
         {
-          auto* bus_param    = bus->param().getData();
-          auto* bus_param_lo = bus->param_lo().getData();
-          auto* bus_param_up = bus->param_up().getData();
+          const auto* bus_param    = bus->param().getData();
+          const auto* bus_param_lo = bus->param_lo().getData();
+          const auto* bus_param_up = bus->param_up().getData();
 
           for (IdxT j = 0; j < bus->sizeParams(); ++j)
           {
@@ -216,8 +216,8 @@ namespace GridKit
       {
         if (component->size() > 0)
         {
-          auto* component_y  = component->y().getData();
-          auto* component_yp = component->yp().getData();
+          const auto* component_y  = component->y().getData();
+          const auto* component_yp = component->yp().getData();
 
           for (IdxT j = 0; j < component->size(); ++j)
           {
@@ -229,9 +229,9 @@ namespace GridKit
 
         if (component->sizeParams() > 0)
         {
-          auto* component_param    = component->param().getData();
-          auto* component_param_lo = component->param_lo().getData();
-          auto* component_param_up = component->param_up().getData();
+          const auto* component_param    = component->param().getData();
+          const auto* component_param_lo = component->param_lo().getData();
+          const auto* component_param_up = component->param_up().getData();
 
           for (IdxT j = 0; j < component->sizeParams(); ++j)
           {
@@ -304,7 +304,7 @@ namespace GridKit
         bus->setAbsoluteTolerance(rel_tol);
         if (bus->size() > 0)
         {
-          auto* bus_abs_tol = bus->absoluteTolerance().getData();
+          const auto* bus_abs_tol = bus->absoluteTolerance().getData();
           for (IdxT j = 0; j < bus->size(); ++j)
           {
             abs_tol[offset + j] = bus_abs_tol[j];
@@ -318,7 +318,7 @@ namespace GridKit
         component->setAbsoluteTolerance(rel_tol);
         if (component->size() > 0)
         {
-          auto* component_abs_tol = component->absoluteTolerance().getData();
+          const auto* component_abs_tol = component->absoluteTolerance().getData();
           for (IdxT j = 0; j < component->size(); ++j)
           {
             abs_tol[offset + j] = component_abs_tol[j];
@@ -351,12 +351,12 @@ namespace GridKit
     int evaluateResidual()
     {
       // Update variables
-      IdxT     varOffset = 0;
-      IdxT     optOffset = 0;
-      auto*    y         = y_.getData();
-      auto*    yp        = yp_.getData();
-      auto*    f         = f_.getData();
-      ScalarT* param     = nullptr;
+      IdxT           varOffset = 0;
+      IdxT           optOffset = 0;
+      const auto*    y         = y_.getData();
+      const auto*    yp        = yp_.getData();
+      auto*          f         = f_.getData();
+      const ScalarT* param     = nullptr;
 
       if (this->sizeParams() > 0)
       {
@@ -425,7 +425,7 @@ namespace GridKit
       {
         if (bus->size() > 0)
         {
-          auto* bus_f = bus->getResidual().getData();
+          const auto* bus_f = bus->getResidual().getData();
           for (IdxT j = 0; j < bus->size(); ++j)
           {
             f[resOffset + j] = bus_f[j];
@@ -438,7 +438,7 @@ namespace GridKit
       {
         if (component->size() > 0)
         {
-          auto* component_f = component->getResidual().getData();
+          const auto* component_f = component->getResidual().getData();
           for (IdxT j = 0; j < component->size(); ++j)
           {
             f[resOffset + j] = component_f[j];
@@ -469,12 +469,12 @@ namespace GridKit
     int evaluateIntegrand()
     {
       // Update variables
-      IdxT     varOffset = 0;
-      IdxT     optOffset = 0;
-      auto*    y         = y_.getData();
-      auto*    yp        = yp_.getData();
-      ScalarT* param     = nullptr;
-      ScalarT* g         = nullptr;
+      IdxT           varOffset = 0;
+      IdxT           optOffset = 0;
+      const auto*    y         = y_.getData();
+      const auto*    yp        = yp_.getData();
+      const ScalarT* param     = nullptr;
+      ScalarT*       g         = nullptr;
 
       if (this->sizeParams() > 0)
       {
@@ -547,7 +547,7 @@ namespace GridKit
       {
         if (bus->sizeQuadrature() > 0)
         {
-          auto* bus_g = bus->getIntegrand().getData();
+          const auto* bus_g = bus->getIntegrand().getData();
           for (IdxT j = 0; j < bus->sizeQuadrature(); ++j)
           {
             g[intOffset + j] = bus_g[j];
@@ -560,7 +560,7 @@ namespace GridKit
       {
         if (component->sizeQuadrature() > 0)
         {
-          auto* component_g = component->getIntegrand().getData();
+          const auto* component_g = component->getIntegrand().getData();
           for (IdxT j = 0; j < component->sizeQuadrature(); ++j)
           {
             g[intOffset + j] = component_g[j];
@@ -580,13 +580,13 @@ namespace GridKit
      */
     int initializeAdjoint()
     {
-      IdxT     offset    = 0;
-      IdxT     optOffset = 0;
-      auto*    y         = y_.getData();
-      auto*    yp        = yp_.getData();
-      auto*    yB        = yB_.getData();
-      auto*    ypB       = ypB_.getData();
-      ScalarT* param     = nullptr;
+      IdxT           offset    = 0;
+      IdxT           optOffset = 0;
+      const auto*    y         = y_.getData();
+      const auto*    yp        = yp_.getData();
+      auto*          yB        = yB_.getData();
+      auto*          ypB       = ypB_.getData();
+      const ScalarT* param     = nullptr;
 
       if (this->sizeParams() > 0)
       {
@@ -656,8 +656,8 @@ namespace GridKit
         bus->initializeAdjoint();
         if (bus->size() > 0)
         {
-          auto* bus_yB  = bus->yB().getData();
-          auto* bus_ypB = bus->ypB().getData();
+          const auto* bus_yB  = bus->yB().getData();
+          const auto* bus_ypB = bus->ypB().getData();
 
           for (IdxT j = 0; j < bus->size(); ++j)
           {
@@ -674,8 +674,8 @@ namespace GridKit
         component->initializeAdjoint();
         if (component->size() > 0)
         {
-          auto* component_yB  = component->yB().getData();
-          auto* component_ypB = component->ypB().getData();
+          const auto* component_yB  = component->yB().getData();
+          const auto* component_ypB = component->ypB().getData();
 
           for (IdxT j = 0; j < component->size(); ++j)
           {
@@ -698,14 +698,14 @@ namespace GridKit
      */
     int evaluateAdjointResidual()
     {
-      IdxT     varOffset = 0;
-      IdxT     optOffset = 0;
-      auto*    y         = y_.getData();
-      auto*    yp        = yp_.getData();
-      auto*    yB        = yB_.getData();
-      auto*    ypB       = ypB_.getData();
-      auto*    fB        = fB_.getData();
-      ScalarT* param     = nullptr;
+      IdxT           varOffset = 0;
+      IdxT           optOffset = 0;
+      const auto*    y         = y_.getData();
+      const auto*    yp        = yp_.getData();
+      const auto*    yB        = yB_.getData();
+      const auto*    ypB       = ypB_.getData();
+      auto*          fB        = fB_.getData();
+      const ScalarT* param     = nullptr;
 
       if (this->sizeParams() > 0)
       {
@@ -789,7 +789,7 @@ namespace GridKit
       {
         if (bus->size() > 0)
         {
-          auto* bus_fB = bus->getAdjointResidual().getData();
+          const auto* bus_fB = bus->getAdjointResidual().getData();
           for (IdxT j = 0; j < bus->size(); ++j)
           {
             fB[resOffset + j] = bus_fB[j];
@@ -802,7 +802,7 @@ namespace GridKit
       {
         if (component->size() > 0)
         {
-          auto* component_fB = component->getAdjointResidual().getData();
+          const auto* component_fB = component->getAdjointResidual().getData();
           for (IdxT j = 0; j < component->size(); ++j)
           {
             fB[resOffset + j] = component_fB[j];
@@ -826,14 +826,14 @@ namespace GridKit
     int evaluateAdjointIntegrand()
     {
       // First, update variables
-      IdxT     varOffset = 0;
-      IdxT     optOffset = 0;
-      auto*    y         = y_.getData();
-      auto*    yp        = yp_.getData();
-      auto*    yB        = yB_.getData();
-      auto*    ypB       = ypB_.getData();
-      ScalarT* param     = nullptr;
-      ScalarT* gB        = nullptr;
+      IdxT           varOffset = 0;
+      IdxT           optOffset = 0;
+      const auto*    y         = y_.getData();
+      const auto*    yp        = yp_.getData();
+      const auto*    yB        = yB_.getData();
+      const auto*    ypB       = ypB_.getData();
+      const ScalarT* param     = nullptr;
+      ScalarT*       gB        = nullptr;
 
       if (this->sizeParams() > 0)
       {
@@ -912,7 +912,7 @@ namespace GridKit
           component->evaluateAdjointIntegrand();
           if (component->sizeParams() > 0)
           {
-            auto* component_gB = component->getAdjointIntegrand().getData();
+            const auto* component_gB = component->getAdjointIntegrand().getData();
             for (IdxT j = 0; j < size_opt_; ++j)
             {
               gB[j] = component_gB[j];

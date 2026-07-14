@@ -70,7 +70,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int InductionMotor<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
 
     f_int_[0] = (1.0 / 3.0) * (2.0 * y[0] - y[1] - y[2]) - Rs_ * y_int_[0] - (Lls_ + Lms_) * yp_int_[0] - Lms_ * yp_int_[1];
     f_int_[1] = (1.0 / std::sqrt(3.0)) * (-y[1] + y[2]) - Rs_ * y_int_[1] - (Lls_ + Lms_) * yp_int_[1] - Lms_ * yp_int_[0];
@@ -83,9 +83,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int InductionMotor<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    auto* y  = y_.getData();
-    auto* yp = yp_.getData();
-    auto* f  = f_.getData();
+    const auto* y  = y_.getData();
+    const auto* yp = yp_.getData();
+    auto*       f  = f_.getData();
 
     f[0] = y_int_[0] + y_int_[2];
     f[1] = (-1.0 / 2.0) * y_int_[0] - (std::sqrt(3.0) / 2.0) * y_int_[1] + y_int_[2];

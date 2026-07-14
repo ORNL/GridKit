@@ -220,9 +220,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::evaluateResidual()
   {
-    auto* y  = y_.getData();
-    auto* yp = yp_.getData();
-    auto* f  = f_.getData();
+    const auto* y  = y_.getData();
+    const auto* yp = yp_.getData();
+    auto*       f  = f_.getData();
 
     // Generator equations
     f[static_cast<size_t>(offsetGen_ + 0)] = dotDelta() - omega_b_ * (omega() - omega_s_);
@@ -318,10 +318,10 @@ namespace GridKit
     ScalarT sinPhi = sin(delta() - theta());
     ScalarT cosPhi = cos(delta() - theta());
 
-    auto* y   = y_.getData();
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
-    auto* fB  = fB_.getData();
+    const auto* y   = y_.getData();
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
 
     // Generator adjoint
     fB[static_cast<size_t>(offsetGen_ + 0)] = ypB[static_cast<size_t>(offsetGen_ + 0)] - yB[static_cast<size_t>(offsetGen_ + 4)] * V() * cosPhi + yB[static_cast<size_t>(offsetGen_ + 5)] * V() * sinPhi;
@@ -360,9 +360,9 @@ namespace GridKit
   int Generator4Governor<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Gen2..." << std::endl;
-    auto* y  = y_.getData();
-    auto* yB = yB_.getData();
-    auto* gB = gB_.getData();
+    const auto* y  = y_.getData();
+    const auto* yB = yB_.getData();
+    auto*       gB = gB_.getData();
 
     // K adjoint
     gB[1] = -yB[static_cast<size_t>(offsetGov_ + 2)] * (y[static_cast<size_t>(offsetGov_ + 1)] + T2() / T1() * (omega() - omega_s_));

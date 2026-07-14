@@ -315,8 +315,8 @@ namespace GridKit
         yp[4] = 0.9;             // psiqpp_dot
 
         gen.evaluateResidual();
-        auto& residual      = gen.getResidual();
-        auto* residual_data = residual.getData();
+        auto&       residual      = gen.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {

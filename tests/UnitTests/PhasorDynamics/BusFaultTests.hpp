@@ -64,9 +64,9 @@ namespace GridKit
         fault.allocate();
         fault.initialize();
         fault.evaluateResidual();
-        auto& res      = fault.getResidual();
-        auto* res_data = res.getData();
-        auto* yp       = fault.yp().getData();
+        auto&       res      = fault.getResidual();
+        const auto* res_data = res.getData();
+        const auto* yp       = fault.yp().getData();
 
         for (size_t i = 0; i < res.getSize(); ++i)
         {

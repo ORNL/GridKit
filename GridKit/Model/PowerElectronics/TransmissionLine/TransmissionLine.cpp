@@ -84,7 +84,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int TransmissionLine<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
 
     // Voltage drop accross terminals
     ScalarT V1re = y[0] - y[4];

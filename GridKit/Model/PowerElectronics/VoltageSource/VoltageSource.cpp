@@ -78,7 +78,7 @@ namespace GridKit
   int VoltageSource<ScalarT, IdxT>::evaluateInternalResidual()
   {
     // internal
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
 
     f_int_[0] = y[1] - y[0] - V_;
     return 0;

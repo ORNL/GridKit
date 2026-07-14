@@ -123,7 +123,7 @@ int main()
 
   auto output_cb = [&](real_type t)
   {
-    auto* yval = sys.y().getData();
+    const auto* yval = sys.y().getData();
 
     // Output time
     out << t << ",";

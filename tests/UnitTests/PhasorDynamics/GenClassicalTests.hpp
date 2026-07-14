@@ -133,8 +133,8 @@ namespace GridKit
         yp[4] = 0;
 
         gen.evaluateResidual();
-        auto& residual      = gen.getResidual();
-        auto* residual_data = residual.getData();
+        auto&       residual      = gen.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
@@ -283,9 +283,9 @@ namespace GridKit
         gen.allocate();
         gen.initialize();
         gen.evaluateResidual();
-        auto& res      = gen.getResidual();
-        auto* res_data = res.getData();
-        auto* yp       = gen.yp().getData();
+        auto&       res      = gen.getResidual();
+        const auto* res_data = res.getData();
+        const auto* yp       = gen.yp().getData();
 
         for (size_t i = 0; i < res.getSize(); ++i)
         {

@@ -327,9 +327,9 @@ namespace GridKit
           ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
 
-        auto* y  = y_.getData();
-        auto* yp = yp_.getData();
-        auto* f  = f_.getData();
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
         evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
 
         return 0;

@@ -75,7 +75,7 @@ namespace GridKit
 
         auto        tol    = 10 * std::numeric_limits<RealT>::epsilon();
         const auto& f      = stab.getResidual();
-        auto*       f_data = f.getData();
+        const auto* f_data = f.getData();
         for (size_t i = 0; i < f.getSize(); ++i)
         {
           if (!isEqual(f_data[i], 0.0, tol))
@@ -141,9 +141,9 @@ namespace GridKit
         };
 
         // Looser tolerance for f[11] — Math::clamp is a smooth ramp approximation.
-        const auto loose_tol     = static_cast<RealT>(1.0e-4);
-        auto&      residual      = stab.getResidual();
-        auto*      residual_data = residual.getData();
+        const auto  loose_tol     = static_cast<RealT>(1.0e-4);
+        auto&       residual      = stab.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {

@@ -262,9 +262,9 @@ namespace GridKit
     ScalarT sinPhi = sin(delta() - theta());
     ScalarT cosPhi = cos(delta() - theta());
 
-    auto* yB  = yB_.getData();
-    auto* ypB = ypB_.getData();
-    auto* fB  = fB_.getData();
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
 
     // Generator adjoint
     fB[0] = ypB[0] - yB[4] * V() * cosPhi + yB[5] * V() * sinPhi;
@@ -289,8 +289,8 @@ namespace GridKit
   int Generator4Param<ScalarT, IdxT>::evaluateAdjointIntegrand()
   {
     // std::cout << "Evaluate adjoint Integrand for Generator4Param..." << std::endl;
-    auto* yB = yB_.getData();
-    auto* gB = gB_.getData();
+    const auto* yB = yB_.getData();
+    auto*       gB = gB_.getData();
 
     gB[0] = -2.0 * yB[1] * dotOmega() / omega_s_;
 
@@ -310,7 +310,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Param<ScalarT, IdxT>::Pg()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
     return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
   }
 
@@ -322,7 +322,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   ScalarT Generator4Param<ScalarT, IdxT>::Qg()
   {
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
     return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
   }
 

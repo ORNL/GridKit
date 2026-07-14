@@ -108,8 +108,8 @@ int main(int /* argc */, char const** /* argv */)
 
   idas.runSimulation(t_final);
 
-  auto& yfinial      = sysmodel.y();
-  auto* yfinial_data = yfinial.getData();
+  auto&       yfinial      = sysmodel.y();
+  const auto* yfinial_data = yfinial.getData();
 
   std::cout << "Final vector y\n";
   for (size_t i = 0; i < yfinial.getSize(); i++)

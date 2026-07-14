@@ -671,9 +671,9 @@ namespace GridKit
       wb_[1] = Vi();
 
       // Residual evaluation
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-      auto* f  = f_.getData();
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
       evaluateBusResidual(y, yp, wb_.data(), h_.data());
 

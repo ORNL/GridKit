@@ -293,8 +293,8 @@ namespace GridKit
      */
     int distributeVectors()
     {
-      auto* y_system  = y_.getData();
-      auto* yp_system = yp_.getData();
+      const auto* y_system  = y_.getData();
+      const auto* yp_system = yp_.getData();
 
       for (component_type* component : components_)
       {
@@ -372,7 +372,7 @@ namespace GridKit
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
 
-        auto*                   residual  = component->getResidual().getData();
+        const auto*             residual  = component->getResidual().getData();
         const std::set<size_t>& externals = component->getExternIndices();
 
         for (size_t j : externals)

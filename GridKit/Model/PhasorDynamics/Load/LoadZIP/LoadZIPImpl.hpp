@@ -210,11 +210,11 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int LoadZIP<scalar_type, index_type>::evaluateResidual()
     {
-      wb_[0]   = Vr();
-      wb_[1]   = Vi();
-      auto* y  = y_.getData();
-      auto* yp = yp_.getData();
-      auto* f  = f_.getData();
+      wb_[0]         = Vr();
+      wb_[1]         = Vi();
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
       evaluateInternalResidual(y, yp, wb_.data(), f);
       evaluateBusResidual(y, yp, wb_.data(), h_.data());
       Ir() += h_[0];

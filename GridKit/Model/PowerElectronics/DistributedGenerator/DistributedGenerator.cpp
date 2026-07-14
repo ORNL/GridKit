@@ -103,9 +103,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    ScalarT omega = wb_ - mp_ * y_int_[0];
-    ScalarT delta = refframe_ ? ScalarT(0.0) : y_int_[12];
-    auto*   y     = y_.getData();
+    ScalarT     omega = wb_ - mp_ * y_int_[0];
+    ScalarT     delta = refframe_ ? ScalarT(0.0) : y_int_[12];
+    const auto* y     = y_.getData();
 
     // Take incoming voltages to current rotator reference frame
     ScalarT vbd_in = std::cos(delta) * y[1] + std::sin(delta) * y[2];
@@ -154,10 +154,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int DistributedGenerator<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    ScalarT omega = wb_ - mp_ * y_int_[0];
-    ScalarT delta = refframe_ ? ScalarT(0.0) : y_int_[12];
-    auto*   y     = y_.getData();
-    auto*   f     = f_.getData();
+    ScalarT     omega = wb_ - mp_ * y_int_[0];
+    ScalarT     delta = refframe_ ? ScalarT(0.0) : y_int_[12];
+    const auto* y     = y_.getData();
+    auto*       f     = f_.getData();
 
     // ref common ref motor angle
     if (refframe_)
@@ -382,7 +382,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      auto* y = y_.getData();
+      const auto* y = y_.getData();
       valtemp.push_back((1.0 / Lc_) * (sin(delta) * static_cast<RealT>(y[1]) - cos(delta) * static_cast<RealT>(y[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);
@@ -404,7 +404,7 @@ namespace GridKit
     };
     if (!refframe_)
     {
-      auto* y = y_.getData();
+      const auto* y = y_.getData();
       valtemp.push_back((1.0 / Lc_) * (cos(delta) * static_cast<RealT>(y[1]) + sin(delta) * static_cast<RealT>(y[2])));
     }
     this->setJacValues(rtemp, ctemp, valtemp);

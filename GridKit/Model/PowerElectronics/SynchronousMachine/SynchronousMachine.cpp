@@ -101,7 +101,7 @@ namespace GridKit
     ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
     ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    auto* y = y_.getData();
+    const auto* y = y_.getData();
 
     f_int_[0] = (-2.0 / 3.0) * (y[0] * cos1 + y[1] * cos23m + y[2] * cos23p) + Rs_ * y_int_[1] + (Lls_ + Lmq_) * yp_int_[1] + Lmq_ * yp_int_[4] + Lmq_ * yp_int_[5] + y[4] * (P_ / 2.0) * ((Lls_ + Lmd_) * y_int_[2] + Lmd_ * y_int_[6] + Lmd_ * y_int_[7]);
     f_int_[1] = (-2.0 / 3.0) * (y[0] * sin1 - y[1] * sin23m - y[2] * sin23p) + Rs_ * y_int_[2] + (Lls_ + Lmd_) * yp_int_[2] + Lmd_ * yp_int_[6] + Lmd_ * yp_int_[7] - y[4] * (P_ / 2.0) * ((Lls_ + Lmq_) * y_int_[1] + Lmq_ * y_int_[4] + Lmq_ * y_int_[5]);
@@ -124,9 +124,9 @@ namespace GridKit
     ScalarT cos23p = std::cos((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
     ScalarT sin23p = std::sin((P_ / 2.0) * y_int_[0] + (2.0 / 3.0) * M_PI);
 
-    auto* y  = y_.getData();
-    auto* yp = yp_.getData();
-    auto* f  = f_.getData();
+    const auto* y  = y_.getData();
+    const auto* yp = yp_.getData();
+    auto*       f  = f_.getData();
 
     f[0] = y_int_[1] * cos1 + y_int_[2] * sin1 + y_int_[3];
     f[1] = y_int_[1] * cos23m + y_int_[2] * sin23m + y_int_[3];
