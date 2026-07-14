@@ -236,16 +236,16 @@ int main(int /* argc */, char const** /* argv */)
 
   idas->runSimulation(t_final);
 
-  auto&       yfinial      = sysmodel->y();
-  const auto* yfinial_data = yfinial.getData();
+  auto&       yfinal      = sysmodel->y();
+  const auto* yfinal_data = yfinal.getData();
 
   // Optional debugging output
   if (debug_output)
   {
     std::cout << "Final vector y\n";
-    for (size_t i = 0; i < yfinial.getSize(); i++)
+    for (size_t i = 0; i < yfinal.getSize(); i++)
     {
-      std::cout << yfinial_data[i] << "\n";
+      std::cout << yfinal_data[i] << "\n";
     }
   }
 
@@ -327,7 +327,7 @@ int main(int /* argc */, char const** /* argv */)
   double max_error     = 0.0;
   for (size_t i = 0; i < true_vec.size(); i++)
   {
-    double error = std::abs(true_vec[i] - yfinial_data[i]) / std::abs(1.0 + true_vec[i]);
+    double error = std::abs(true_vec[i] - yfinal_data[i]) / std::abs(1.0 + true_vec[i]);
     if (error > max_error)
       max_error = error;
     if (error > error_allowed)

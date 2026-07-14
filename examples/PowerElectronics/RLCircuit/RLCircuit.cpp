@@ -111,13 +111,13 @@ int main(int /* argc */, char const** /* argv */)
 
   idas.runSimulation(t_final);
 
-  auto&       yfinial      = sysmodel.y();
-  const auto* yfinial_data = yfinial.getData();
+  auto&       yfinal      = sysmodel.y();
+  const auto* yfinal_data = yfinal.getData();
 
   std::cout << "Final vector y\n";
-  for (size_t i = 0; i < yfinial.getSize(); i++)
+  for (size_t i = 0; i < yfinal.getSize(); i++)
   {
-    std::cout << yfinial_data[i] << "\n";
+    std::cout << yfinal_data[i] << "\n";
   }
 
   std::vector<double> yexact(4);
@@ -129,9 +129,9 @@ int main(int /* argc */, char const** /* argv */)
   yexact[3] = vinit + rinit * yexact[0];
 
   std::cout << "Element-wise relative error at t=" << t_final << "\n";
-  for (size_t i = 0; i < yfinial.getSize(); i++)
+  for (size_t i = 0; i < yfinal.getSize(); i++)
   {
-    std::cout << abs((yfinial_data[i] - yexact[i]) / yexact[i]) << "\n";
+    std::cout << abs((yfinal_data[i] - yexact[i]) / yexact[i]) << "\n";
   }
 
   std::cerr << idas.getStats().report() << '\n';
