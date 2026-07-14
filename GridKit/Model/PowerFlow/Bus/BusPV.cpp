@@ -67,21 +67,13 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int BusPV<ScalarT, IdxT>::allocate()
   {
-    using VectorT             = typename ModelEvaluatorImpl<ScalarT, IdxT>::VectorT;
-    auto allocate_host_vector = [](VectorT& vector, IdxT n)
-    {
-      vector.resize(n);
-      vector.allocate(memory::HOST);
-      vector.setToZero(memory::HOST);
-    };
-
     // std::cout << "Allocate PV bus ..." << std::endl;
     this->allocateVectors(size_);
     tag_.resize(static_cast<size_t>(size_));
 
-    allocate_host_vector(fB_, size_);
-    allocate_host_vector(yB_, size_);
-    allocate_host_vector(ypB_, size_);
+    fB_.resize(size_);
+    yB_.resize(size_);
+    ypB_.resize(size_);
 
     return 0;
   }

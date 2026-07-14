@@ -105,21 +105,14 @@ namespace GridKit
       this->allocateVectors(size_);
       tag_.resize(size_);
 
-      auto allocate_host_vector = [](VectorT& vector, IdxT n)
-      {
-        vector.resize(n);
-        vector.allocate(memory::HOST);
-        vector.setToZero(memory::HOST);
-      };
-
-      allocate_host_vector(yB_, size_);
-      allocate_host_vector(ypB_, size_);
-      allocate_host_vector(fB_, size_);
-      allocate_host_vector(g_, size_quad_);
-      allocate_host_vector(gB_, size_quad_ * size_opt_);
-      allocate_host_vector(param_, size_opt_);
-      allocate_host_vector(param_lo_, size_opt_);
-      allocate_host_vector(param_up_, size_opt_);
+      yB_.resize(size_);
+      ypB_.resize(size_);
+      fB_.resize(size_);
+      g_.resize(size_quad_);
+      gB_.resize(size_quad_ * size_opt_);
+      param_.resize(size_opt_);
+      param_lo_.resize(size_opt_);
+      param_up_.resize(size_opt_);
 
       assert(size_quad_ == 1 or size_quad_ == 0);
 

@@ -43,18 +43,18 @@ namespace GridKit
         param_up_(size_opt_),
         param_lo_(size_opt_)
     {
-      allocateHost(y_);
-      allocateHost(yp_);
-      allocateHost(abs_tol_);
-      allocateHost(f_);
-      allocateHost(g_);
-      allocateHost(yB_);
-      allocateHost(ypB_);
-      allocateHost(fB_);
-      allocateHost(gB_);
-      allocateHost(param_);
-      allocateHost(param_up_);
-      allocateHost(param_lo_);
+      y_.resize(size_);
+      yp_.resize(size_);
+      abs_tol_.resize(size_);
+      f_.resize(size_);
+      g_.resize(size_quad_);
+      yB_.resize(size_);
+      ypB_.resize(size_);
+      fB_.resize(size_);
+      gB_.resize(size_opt_);
+      param_.resize(size_opt_);
+      param_up_.resize(size_opt_);
+      param_lo_.resize(size_opt_);
     }
 
     virtual IdxT size()
@@ -233,10 +233,10 @@ namespace GridKit
   protected:
     void allocateVectors(IdxT size)
     {
-      resizeAndAllocateHost(y_, size);
-      resizeAndAllocateHost(yp_, size);
-      resizeAndAllocateHost(abs_tol_, size);
-      resizeAndAllocateHost(f_, size);
+      y_.resize(size);
+      yp_.resize(size);
+      abs_tol_.resize(size);
+      f_.resize(size);
     }
 
     IdxT size_;
@@ -266,19 +266,6 @@ namespace GridKit
     IdxT max_steps_;
 
     IdxT idc_;
-
-  private:
-    static void allocateHost(VectorT& vector)
-    {
-      vector.allocate(memory::HOST);
-      vector.setToZero(memory::HOST);
-    }
-
-    static void resizeAndAllocateHost(VectorT& vector, IdxT size)
-    {
-      vector.resize(size);
-      allocateHost(vector);
-    }
   };
 
 } // namespace GridKit

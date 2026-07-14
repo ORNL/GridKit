@@ -370,20 +370,9 @@ namespace GridKit
       void allocateVectors(IdxT n)
       {
         y_.resize(n);
-        y_.allocate(memory::HOST);
-        y_.setToZero(memory::HOST);
-
         yp_.resize(n);
-        yp_.allocate(memory::HOST);
-        yp_.setToZero(memory::HOST);
-
         f_.resize(n);
-        f_.allocate(memory::HOST);
-        f_.setToZero(memory::HOST);
-
         abs_tol_.resize(n);
-        abs_tol_.allocate(memory::HOST);
-        abs_tol_.setToZero(memory::HOST);
       }
     };
   } // namespace PowerElectronics

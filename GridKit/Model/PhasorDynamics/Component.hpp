@@ -229,20 +229,9 @@ namespace GridKit
       {
 
         y_.resize(n);
-        y_.allocate();
-        y_.setToZero();
-
         yp_.resize(n);
-        yp_.allocate();
-        yp_.setToZero();
-
         f_.resize(n);
-        f_.allocate();
-        f_.setToZero();
-
         abs_tol_.resize(n);
-        abs_tol_.allocate();
-        abs_tol_.setToZero();
       }
 
       int constructCoo()

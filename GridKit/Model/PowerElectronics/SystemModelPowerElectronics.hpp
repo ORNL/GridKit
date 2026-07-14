@@ -147,6 +147,11 @@ namespace GridKit
       if (!allocated_)
       {
         allocateVectors(static_cast<IdxT>(size_));
+        // Component and node offsets can change when topology is modified.
+        y_.setToZero(memory::HOST);
+        yp_.setToZero(memory::HOST);
+        f_.setToZero(memory::HOST);
+        abs_tol_.setToZero(memory::HOST);
       }
 
       tag_.resize(size_);
