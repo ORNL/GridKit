@@ -21,6 +21,14 @@ namespace GridKit
 {
   namespace Model
   {
+    /**
+     * @brief A test DAE (referred to as the "trigonometric DAE") that is useful for evaluating order
+     * of DAE integrators. The system is 2-dimensional, with one differential variable and one algebraic variable.
+     * The DAE is index 1 and the derivatives of the model are non-vanishing.
+     *
+     * The valid simulation time interval is \f([0.5,2]\f) and the model is initialized at \f(t = 0.5\f).
+     *
+     */
     template <class ScalarT, typename IdxT>
     class TrigonometricDaeEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
@@ -339,12 +347,26 @@ namespace GridKit
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
+      /**
+       * @brief Test a Rosenbrock tableau by verifying its order empirically. Empirical order is calculated
+       * by running a convergence test on the problem modeled in \ref Model::TrigonometricDaeEvaluator. 21
+       * simulations are run on the problem with a fixed-step step size controller with a number of steps
+       * logarithmically distributed in \f(\left[10^a, 10^b\right]\f) where \f(a\f) is `step_exponent_lower`
+       * and \f(b\f) is `step_exponent_upper`. The average slope between pairs of simulations is taken to be
+       * the empirical order. The test succeeds if the empirical order is at least 85% of the expected theoretical order.
+       *
+       * @param tab The tableau to test
+       * @param step_exponent_lower The exponent describing the smallest number of steps to take during a simulation.
+       * @param step_exponent_upper The exponent describing the largest number of steps to take during a simulation.
+       */
       TestOutcome test_order(Rosenbrock::Tableau&& tab, double step_exponent_lower, double step_exponent_upper)
       {
         TestStatus success = true;
 
+        // Tableaus keep track of their theoretical order. We will attempt to match the empirical order to this.
         uint8_t expected_order = tab.order_;
 
+        // Setup the model, linear solver, and integrator
         Model::TrigonometricDaeEvaluator<ScalarT, IdxT> model;
         model.allocate();
         model.initialize();
@@ -365,32 +387,44 @@ namespace GridKit
 
         AnalysisManager::NativeDynamicSolver::FixedStep<RealT> step_controller;
 
-        double              final_time = 2.0;
-        std::vector<double> out_times  = {final_time};
-
+        // The number of simulations to run to calculate empirical order. Must be at least 2,
+        // since empirical order is calculated pairwise between simulations.
         size_t num_samples = 21;
 
+        // Output vectors to keep track of data used to calculate empirical order.
+        // Each simulation will record its step size and final error.
         std::vector<double> step_sizes;
         std::vector<double> errors;
 
-        auto out_cb = [&]([[maybe_unused]] double t)
+        // An output callback to populate step_sizes and errors. Each simulation will call this callback
+        // at the end of the simulation (final_time). It will then calculate the final error by comparing the
+        // solution of the simulation to the true answer.
+        double              final_time = 2.0;
+        std::vector<double> out_times  = {final_time};
+        auto                out_cb     = [&]([[maybe_unused]] double t)
         {
           double error    = 0.0;
           double sol_norm = 0.0;
 
+          // The final solution of the simulation
           const std::vector<double>& state = model.y();
 
+          // The difference from the simulated solution to the true solution
           error += std::pow(state[0] - sinh(final_time), 2);
           error += std::pow(state[1] - tanh(final_time), 2);
 
           sol_norm += std::pow(sinh(final_time), 2);
           sol_norm += std::pow(tanh(final_time), 2);
 
+          // Error relative to the true solution
           errors.push_back(std::sqrt(error) / std::sqrt(sol_norm));
         };
 
+        // Perform all of the simulations and populate step_sizes and errors using out_cb
         for (size_t i = 0; i < num_samples; i++)
         {
+          // Logarithmically distribute step_size based on step_exponent_lower and step_exponent_upper.
+          // Round it to ensure num_steps is integral (do not invoke the dense output, which can add additional errors).
           double step_size = std::pow(10, step_exponent_lower + static_cast<double>(i) * (step_exponent_upper - step_exponent_lower) / static_cast<double>(num_samples - 1));
           double num_steps = round((final_time - 0.5) / step_size);
           step_size        = (final_time - 0.5) / num_steps;
@@ -413,6 +447,7 @@ namespace GridKit
           }
         }
 
+        // Print output data
         std::cerr << "Step sizes\n";
         for (double step_size : step_sizes)
         {
@@ -426,6 +461,7 @@ namespace GridKit
         }
         std::cerr << "\n\n";
 
+        // Calculate empirical order. Each pairwise order is calculated, then averaged.
         std::vector<double> pairwise_orders;
         double              empirical_order = 0.0;
         for (size_t i = 1; i < num_samples; i++)
@@ -435,6 +471,7 @@ namespace GridKit
         }
         empirical_order /= static_cast<double>(num_samples - 1);
 
+        // Print test result - observed empirical order and the expected order.
         std::cerr << "Empirical order: " << std::fixed << std::setprecision(5) << empirical_order << " v.s. expected " << static_cast<unsigned>(expected_order) << '\n';
         success *= empirical_order > expected_order * 0.85;
 
