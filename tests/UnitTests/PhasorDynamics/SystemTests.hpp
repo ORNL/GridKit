@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -149,6 +150,56 @@ namespace GridKit
         success *= isEqual(bus1.Ii(), Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome reallocateAfterTopologyChange()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
+        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus1);
+
+        system.addBus(&bus1);
+        system.addComponent(&fault);
+        success                    *= system.allocate() == 0;
+        const IdxT size_before_bus  = system.size();
+
+        system.addBus(&bus2);
+        success *= system.allocate() == 0;
+        success *= system.size() == size_before_bus + bus2.size();
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        const auto* jacobian  = system.getCsrJacobian();
+        success              *= jacobian != nullptr;
+
+        IdxT nnz_without_branch = 0;
+        if (jacobian != nullptr)
+        {
+          success            *= jacobian->getNumRows() == system.size();
+          success            *= jacobian->getNumColumns() == system.size();
+          nnz_without_branch  = jacobian->getNnz();
+        }
+#endif
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        system.addComponent(&branch);
+        success *= system.allocate() == 0;
+        success *= system.evaluateJacobian() == 0;
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        jacobian  = system.getCsrJacobian();
+        success  *= jacobian != nullptr;
+        if (jacobian != nullptr)
+        {
+          success *= jacobian->getNumRows() == system.size();
+          success *= jacobian->getNumColumns() == system.size();
+          success *= jacobian->getNnz() > nnz_without_branch;
+        }
+#endif
 
         return success.report(__func__);
       }

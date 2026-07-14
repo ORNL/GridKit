@@ -464,6 +464,14 @@ namespace GridKit
       // Allocate global vectors
       if (!this->allocated_)
       {
+        // Topology changes invalidate the Jacobian sparsity pattern and COO-to-CSR map.
+        delete csr_jac_;
+        csr_jac_ = nullptr;
+
+        delete[] map_to_csr_;
+        map_to_csr_ = nullptr;
+
+        nnz_ = 0;
         this->allocateVectors(size_);
       }
       tag_.resize(size_);

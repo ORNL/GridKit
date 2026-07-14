@@ -137,6 +137,13 @@ namespace GridKit
       n_extern_ = 0;
       size_     = n_intern_ + n_extern_;
 
+      // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
+      delete csr_jac_;
+      csr_jac_ = nullptr;
+
+      delete[] map_to_csr_;
+      map_to_csr_ = nullptr;
+
       if (!allocated_)
       {
         allocateVectors(static_cast<IdxT>(size_));
