@@ -114,6 +114,7 @@ namespace GridKit
           signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y[7], &(this->getVariableIndex(7)));
         }
 
+        this->allocated_ = true;
         return 0;
       }
 

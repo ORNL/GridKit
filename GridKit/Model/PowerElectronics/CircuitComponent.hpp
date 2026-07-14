@@ -104,6 +104,7 @@ namespace GridKit
         allocateVectors(size_);
       }
 
+      allocated_ = true;
       return 0;
     }
 
@@ -419,8 +420,6 @@ namespace GridKit
       abs_tol_.resize(n);
       abs_tol_.allocate(memory::HOST);
       abs_tol_.setToZero(memory::HOST);
-
-      allocated_ = true;
     }
 
     size_t                  n_extern_;

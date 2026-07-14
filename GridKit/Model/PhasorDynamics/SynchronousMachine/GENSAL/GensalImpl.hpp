@@ -231,6 +231,7 @@ namespace GridKit
         signals_.template getSignalNode<GensalInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
       }
 
+      this->allocated_ = true;
       return 0;
     }
 

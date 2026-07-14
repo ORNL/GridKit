@@ -264,6 +264,7 @@ namespace GridKit
         map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
       }
 
+      allocated_ = true;
       return 0;
     }
 
@@ -509,11 +510,13 @@ namespace GridKit
     void addComponent(component_type* component)
     {
       components_.push_back(component);
+      allocated_ = false;
     }
 
     void addNode(node_type* node)
     {
       nodes_.push_back(node);
+      allocated_ = false;
     }
 
   private:

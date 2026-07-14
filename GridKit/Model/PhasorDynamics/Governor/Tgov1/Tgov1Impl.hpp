@@ -198,6 +198,7 @@ namespace GridKit
           signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y[2], &(this->getVariableIndex(2)));
         }
 
+        this->allocated_ = true;
         return 0;
       }
 

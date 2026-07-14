@@ -131,6 +131,7 @@ namespace GridKit
       wb_.resize(2);
       h_.resize(2);
 
+      this->allocated_ = true;
       return 0;
     }
 

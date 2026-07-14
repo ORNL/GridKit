@@ -243,8 +243,6 @@ namespace GridKit
         abs_tol_.resize(n);
         abs_tol_.allocate();
         abs_tol_.setToZero();
-
-        allocated_ = true;
       }
 
       int constructCoo()

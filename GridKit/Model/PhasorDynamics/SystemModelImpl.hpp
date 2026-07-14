@@ -500,6 +500,7 @@ namespace GridKit
         evaluateJacobian();
       }
 
+      this->allocated_ = true;
       return 0;
     }
 

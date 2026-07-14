@@ -76,6 +76,7 @@ namespace GridKit
         signals_.template getSignalNode<VIMAG>()->set(&bus_->Vi(), &vi_index_);
       }
 
+      this->allocated_ = true;
       return 0;
     }
 

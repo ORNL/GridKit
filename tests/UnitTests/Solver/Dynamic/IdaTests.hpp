@@ -27,6 +27,7 @@ namespace GridKit
         if (!allocated_)
         {
           allocateVectors(size());
+          allocated_ = true;
         }
         return 0;
       }
@@ -287,8 +288,6 @@ namespace GridKit
         abs_tol_.resize(n);
         abs_tol_.allocate(memory::HOST);
         abs_tol_.setToZero(memory::HOST);
-
-        allocated_ = true;
       }
 
       VectorT           y_;

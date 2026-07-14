@@ -89,6 +89,7 @@ namespace GridKit
               &y[1], &(this->getVariableIndex(1)));
         }
 
+        this->allocated_ = true;
         return 0;
       }
 

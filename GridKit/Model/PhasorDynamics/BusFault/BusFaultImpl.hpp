@@ -136,6 +136,7 @@ namespace GridKit
         this->setResidualIndex(j, j);
       }
 
+      this->allocated_ = true;
       return 0;
     }
 

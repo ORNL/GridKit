@@ -185,6 +185,7 @@ namespace GridKit
               &y[11], &(this->getVariableIndex(11)));
         }
 
+        this->allocated_ = true;
         return 0;
       }
 

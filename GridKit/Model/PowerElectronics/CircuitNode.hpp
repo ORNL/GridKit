@@ -80,6 +80,7 @@ namespace GridKit
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
 
+      allocated_ = true;
       return 0;
     }
 
@@ -387,8 +388,6 @@ namespace GridKit
       abs_tol_.resize(n);
       abs_tol_.allocate(memory::HOST);
       abs_tol_.setToZero(memory::HOST);
-
-      allocated_ = true;
     }
   };
 } // namespace GridKit

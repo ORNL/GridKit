@@ -113,6 +113,7 @@ namespace GridKit
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
+      this->allocated_ = true;
       return 0;
     }
 
