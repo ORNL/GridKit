@@ -335,7 +335,7 @@ namespace GridKit
     template <class ScalarT, typename IdxT>
     class RosenbrockTests
     {
-      using Rosenbrock = Integrator::Rosenbrock<ScalarT, IdxT>;
+      using Rosenbrock = AnalysisManager::NativeDynamicSolver::Rosenbrock<ScalarT, IdxT>;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
 
     public:
@@ -363,7 +363,7 @@ namespace GridKit
           return success.report(__func__);
         }
 
-        Integrator::FixedStep<RealT> step_controller;
+        AnalysisManager::NativeDynamicSolver::FixedStep<RealT> step_controller;
 
         double              final_time = 2.0;
         std::vector<double> out_times  = {final_time};
