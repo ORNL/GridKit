@@ -315,6 +315,42 @@ namespace GridKit
         addComponent(gov);
       }
 
+      // Add HYGOV governors
+      for (const auto& govdata : data.hygov)
+      {
+        auto* gov = new Hygov<ScalarT, IdxT>(govdata);
+
+        if (govdata.signal_inputs.contains(HygovSignalInputs::speed))
+        {
+          IdxT           speed = govdata.signal_inputs.at(HygovSignalInputs::speed);
+          constexpr auto OMEGA = HygovExternalVariables::OMEGA;
+          gov->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (govdata.signal_outputs.contains(HygovSignalOutputs::pmech))
+        {
+          IdxT           pmech = govdata.signal_outputs.at(HygovSignalOutputs::pmech);
+          constexpr auto PMECH = HygovInternalVariables::PMECH;
+          gov->getSignals().template assignSignalNode<PMECH>(getSignal(pmech));
+        }
+
+        if (govdata.signal_inputs.contains(HygovSignalInputs::pref))
+        {
+          IdxT           pref = govdata.signal_inputs.at(HygovSignalInputs::pref);
+          constexpr auto PREF = HygovExternalVariables::PREF;
+          gov->getSignals().template attachSignalNode<PREF>(getSignal(pref));
+        }
+
+        if (govdata.signal_inputs.contains(HygovSignalInputs::paux))
+        {
+          IdxT           paux = govdata.signal_inputs.at(HygovSignalInputs::paux);
+          constexpr auto PAUX = HygovExternalVariables::PAUX;
+          gov->getSignals().template attachSignalNode<PAUX>(getSignal(paux));
+        }
+
+        addComponent(gov);
+      }
+
       for (const auto& excitedata : data.exciter)
       {
         IdxT bus_index = 0;

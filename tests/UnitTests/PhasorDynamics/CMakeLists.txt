@@ -88,6 +88,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_governor_hygov runGovernorHygovTests.cpp)
+target_link_libraries(
+  test_phasor_governor_hygov
+  GridKit::definitions
+  GridKit::phasor_dynamics_systemmodel
+  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_exciter_ieeet1 runExciterIeeet1Tests.cpp)
 target_link_libraries(
   test_phasor_exciter_ieeet1
@@ -173,6 +181,7 @@ add_test(NAME PhasorDynamicsBusToSignalAdapterTest COMMAND test_phasor_bustosign
 add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
+add_test(NAME PhasorDynamicsGovernorHygovTest COMMAND test_phasor_governor_hygov)
 add_test(NAME PhasorDynamicsExciterIeeet1Test COMMAND test_phasor_exciter_ieeet1)
 add_test(NAME PhasorDynamicsExciterEsdc1aTest COMMAND test_phasor_exciter_esdc1a)
 add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
@@ -198,6 +207,7 @@ install(
           test_phasor_loadzip
           test_phasor_genrou
           test_phasor_governor_tgov1
+          test_phasor_governor_hygov
           test_phasor_exciter_ieeet1
           test_phasor_exciter_esdc1a
           test_phasor_gensal
