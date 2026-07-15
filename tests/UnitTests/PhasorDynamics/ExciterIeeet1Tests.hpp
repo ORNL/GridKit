@@ -141,14 +141,14 @@ namespace GridKit
         exciter.y().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[8], static_cast<ScalarT>(0.0));
-        y[2] = 1.2;
+        y[2]     = 1.2;
 
         yp[0] = 123.0;
         exciter.y().setDataUpdated();
         exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
         success *= isEqual(f[0], static_cast<ScalarT>(-123.0));
-        yp[0] = 0.0;
+        yp[0]    = 0.0;
 
         y[0] = 4.0;
         exciter.y().setDataUpdated();
