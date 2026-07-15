@@ -68,10 +68,12 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
-        success *= isEqual(load.y()[0], static_cast<ScalarT>(-3.2), tol_);
-        success *= isEqual(load.y()[1], static_cast<ScalarT>(-2.6), tol_);
-        success *= isEqual(load.yp()[0], static_cast<ScalarT>(0.0), tol_);
-        success *= isEqual(load.yp()[1], static_cast<ScalarT>(0.0), tol_);
+        const auto* y   = load.y().getData();
+        const auto* yp  = load.yp().getData();
+        success        *= isEqual(y[0], static_cast<ScalarT>(-3.2), tol_);
+        success        *= isEqual(y[1], static_cast<ScalarT>(-2.6), tol_);
+        success        *= isEqual(yp[0], static_cast<ScalarT>(0.0), tol_);
+        success        *= isEqual(yp[1], static_cast<ScalarT>(0.0), tol_);
 
         return success.report(__func__);
       }
@@ -91,14 +93,16 @@ namespace GridKit
 
         bus.Vr() = 0.9;
         bus.Vi() = 1.2;
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         load.evaluateResidual();
 
-        success *= isEqual(load.getResidual()[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
-        success *= isEqual(load.getResidual()[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
-        success *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
-        success *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
+        const auto* f  = load.getResidual().getData();
+        success       *= isEqual(f[0], static_cast<ScalarT>(128.0 / 75.0), tol_);
+        success       *= isEqual(f[1], static_cast<ScalarT>(104.0 / 75.0), tol_);
+        success       *= isEqual(bus.Ir(), static_cast<ScalarT>(-3.2), tol_);
+        success       *= isEqual(bus.Ii(), static_cast<ScalarT>(-2.6), tol_);
 
         return success.report(__func__);
       }
@@ -181,30 +185,40 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
+        auto* load_y = load.y().getData();
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load.y()[i].setVariableNumber(i);
+          load_y[i].setVariableNumber(i);
         }
+        load.y().setDataUpdated();
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + load.size());
+          bus_y[i].setVariableNumber(i + load.size());
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
-        load.evaluateResidual();
-        auto residual_y = load.getResidual();
+        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
+                                 ///< the dependencies
+        auto&                                     residual_y_view = load.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         bus.initialize();
         load.initialize();
 
+        auto* load_yp = load.yp().getData();
         for (size_t i = 0; i < load.size(); ++i)
         {
-          load.yp()[i].setVariableNumber(i);
+          load_yp[i].setVariableNumber(i);
         }
+        load.yp().setDataUpdated();
 
         bus.evaluateResidual();
-        load.evaluateResidual();
-        auto residual_yp = load.getResidual();
+        load.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
+                                 ///< the dependencies
+        auto&                                     residual_yp_view = load.getResidual();
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual_y.size());
         for (IdxT i = 0; i < residual_y.size(); ++i)

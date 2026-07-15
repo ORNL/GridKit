@@ -61,12 +61,13 @@ namespace GridKit
 
         exciter.evaluateResidual();
 
-        const auto& residual = exciter.getResidual();
-        for (size_t i = 0; i < residual.size(); ++i)
+        const auto& residual      = exciter.getResidual();
+        const auto* residual_data = residual.getData();
+        for (size_t i = 0; i < residual.getSize(); ++i)
         {
-          if (!isEqual(residual[i], static_cast<ScalarT>(0.0)))
+          if (!isEqual(residual_data[i], static_cast<ScalarT>(0.0)))
           {
-            std::cout << "Non-zero Ieeet1 residual at index " << i << ": " << residual[i] << "\n";
+            std::cout << "Non-zero Ieeet1 residual at index " << i << ": " << residual_data[i] << "\n";
             success = false;
           }
         }
@@ -93,14 +94,21 @@ namespace GridKit
 
         success *= (exciter.tag()[0]);
 
-        exciter.yp()[0] = 123.0;
-        exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(-123.0));
+        auto* y  = exciter.y().getData();
+        auto* yp = exciter.yp().getData();
 
-        exciter.yp()[0] = 0.0;
-        exciter.y()[0]  = 4.0;
+        yp[0] = 123.0;
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(1.0e3));
+        const auto* f  = exciter.getResidual().getData();
+        success       *= isEqual(f[0], static_cast<ScalarT>(-123.0));
+
+        yp[0] = 0.0;
+        y[0]  = 4.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
 
         return success.report(__func__);
       }
@@ -147,33 +155,41 @@ namespace GridKit
         bus.initialize();
         exciter.initialize();
 
+        auto* exciter_y = exciter.y().getData();
         for (size_t i = 0; i < exciter.size(); ++i)
         {
-          exciter.y()[i].setVariableNumber(i); ///< Exciter independent variables
+          exciter_y[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.y().setDataUpdated();
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + exciter.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i + exciter.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_y = exciter.getResidual();
+        auto&                                     residual_y_view = exciter.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
         exciter.initialize();
 
+        auto* exciter_yp = exciter.yp().getData();
         for (size_t i = 0; i < exciter.size(); ++i)
         {
-          exciter.yp()[i].setVariableNumber(i); ///< Exciter independent variables
+          exciter_yp[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.yp().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_yp = exciter.getResidual();
+        auto&                                     residual_yp_view = exciter.getResidual();
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

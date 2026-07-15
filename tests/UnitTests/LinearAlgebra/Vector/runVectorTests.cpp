@@ -21,6 +21,7 @@ int main(int, char**)
     // result += test.copyToExternal(50);
 
     result += test.resize(100, 50);
+    result += test.resizeEmpty(5);
 
     result += test.setToConst(50);
     result += test.setToConst(50);

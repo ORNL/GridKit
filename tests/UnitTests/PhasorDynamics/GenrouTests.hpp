@@ -126,10 +126,11 @@ namespace GridKit
         // Require results to be within machine precision
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
-        const std::vector<ScalarT>& f = gen.getResidual();
-        for (const auto& f_val : f)
+        const auto& f      = gen.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f_val, 0.0, tol))
+          if (!isEqual(f_data[i], 0.0, tol))
             success = false;
         }
 
@@ -250,43 +251,49 @@ namespace GridKit
         // but this needs to be better handled in the model implementation.
 
         // Set variable values matching the answer key
-        gen.y()[0]  = M_PI; // delta
-        gen.y()[1]  = 2.0;  // omega
-        gen.y()[2]  = 2.0;  // Eqp
-        gen.y()[3]  = .1;   // psidp
-        gen.y()[4]  = .01;  // psiqp
-        gen.y()[5]  = .6;   // Edp
-        gen.y()[6]  = .2;   // psiqp
-        gen.y()[7]  = .03;  // psidpp
-        gen.y()[8]  = .01;  // psipp
-        gen.y()[9]  = 2;    // ksat
-        gen.y()[10] = .8;   // vd
-        gen.y()[11] = .4;   // vq
-        gen.y()[12] = 2;    // telec
-        gen.y()[13] = 1.1;  // id
-        gen.y()[14] = .3;   // iq
-        gen.y()[15] = .9;   // ir
-        gen.y()[16] = .25;  // ii
-        gen.y()[17] = .3;   // inr
-        gen.y()[18] = .15;  // ini
+        auto* y  = gen.y().getData();
+        auto* yp = gen.yp().getData();
+
+        y[0]  = M_PI; // delta
+        y[1]  = 2.0;  // omega
+        y[2]  = 2.0;  // Eqp
+        y[3]  = .1;   // psidp
+        y[4]  = .01;  // psiqp
+        y[5]  = .6;   // Edp
+        y[6]  = .2;   // psiqp
+        y[7]  = .03;  // psidpp
+        y[8]  = .01;  // psipp
+        y[9]  = 2;    // ksat
+        y[10] = .8;   // vd
+        y[11] = .4;   // vq
+        y[12] = 2;    // telec
+        y[13] = 1.1;  // id
+        y[14] = .3;   // iq
+        y[15] = .9;   // ir
+        y[16] = .25;  // ii
+        y[17] = .3;   // inr
+        y[18] = .15;  // ini
 
         // Set derivative values matching the answer key
-        gen.yp()[0] = 2 * M_PI * 60.0; // delta_dot
-        gen.yp()[1] = -1.5;            // omega_dot
-        gen.yp()[2] = 1;               // Eqp_dot
-        gen.yp()[3] = 1;               // psidp_dot
-        gen.yp()[4] = 1;               // psiqp_dot
-        gen.yp()[5] = 1;               // Edp_dot
+        yp[0] = 2 * M_PI * 60.0; // delta_dot
+        yp[1] = -1.5;            // omega_dot
+        yp[2] = 1;               // Eqp_dot
+        yp[3] = 1;               // psidp_dot
+        yp[4] = 1;               // psiqp_dot
+        yp[5] = 1;               // Edp_dot
 
+        gen.y().setDataUpdated();
+        gen.yp().setDataUpdated();
         gen.evaluateResidual();
-        std::vector<ScalarT>& residual = gen.getResidual();
+        auto&       residual      = gen.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          if (!isEqual(residual[i], res_answer[i], tol_))
+          if (!isEqual(residual_data[i], res_answer[i], tol_))
           {
             std::cout << "Incorrect result for residual " << i << ": "
-                      << residual[i] << " != " << res_answer[i] << "\n";
+                      << residual_data[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
           }
@@ -361,33 +368,41 @@ namespace GridKit
         bus.initialize();
         gen.initialize();
 
+        auto* gen_y = gen.y().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen.y()[i].setVariableNumber(i); ///< Generator independent variables
+          gen_y[i].setVariableNumber(i); ///< Generator independent variables
         }
+        gen.y().setDataUpdated();
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + gen.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i + gen.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_y = gen.getResidual();
+        auto&                                     residual_y_view = gen.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
         gen.initialize();
 
+        auto* gen_yp = gen.yp().getData();
         for (size_t i = 0; i < gen.size(); ++i)
         {
-          gen.yp()[i].setVariableNumber(i); ///< Generator independent variables
+          gen_yp[i].setVariableNumber(i); ///< Generator independent variables
         }
+        gen.yp().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                 ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_yp = gen.getResidual();
+        auto&                                     residual_yp_view = gen.getResidual();
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

@@ -109,6 +109,27 @@ namespace GridKit
       }
 
       /**
+       * @brief Test that resizing an empty vector allocates initialized HOST data.
+       */
+      TestOutcome resizeEmpty(IdxT N)
+      {
+        TestStatus status = true;
+
+        Vector<ScalarT, IdxT> x;
+        status *= x.resize(N) == 0;
+
+        const auto* data  = x.getData();
+        status           *= data != nullptr;
+        if (data != nullptr)
+        {
+          for (IdxT i = 0; i < N; ++i)
+            status *= isEqual(data[i], ScalarT{});
+        }
+
+        return status.report(__func__);
+      }
+
+      /**
        * @brief Test setting data in a vector from array.
        *
        * @param[in] N Number of elements in the vector.
