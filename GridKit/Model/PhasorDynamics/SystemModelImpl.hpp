@@ -349,6 +349,54 @@ namespace GridKit
         addComponent(exciter);
       }
 
+      for (const auto& excitedata : data.esdc1a)
+      {
+        IdxT bus_index = 0;
+        if (excitedata.buses.contains(Esdc1aBuses::bus))
+        {
+          bus_index = excitedata.buses.at(Esdc1aBuses::bus);
+        }
+
+        auto* exciter = new Esdc1a<ScalarT, IdxT>(getBus(bus_index), excitedata);
+
+        if (excitedata.signal_inputs.contains(Esdc1aSignalInputs::speed))
+        {
+          IdxT           speed = excitedata.signal_inputs.at(Esdc1aSignalInputs::speed);
+          constexpr auto OMEGA = Esdc1aExternalVariables::OMEGA;
+          exciter->getSignals().template attachSignalNode<OMEGA>(getSignal(speed));
+        }
+
+        if (excitedata.signal_inputs.contains(Esdc1aSignalInputs::vref))
+        {
+          IdxT           vref = excitedata.signal_inputs.at(Esdc1aSignalInputs::vref);
+          constexpr auto VREF = Esdc1aExternalVariables::VREF;
+          exciter->getSignals().template attachSignalNode<VREF>(getSignal(vref));
+        }
+
+        if (excitedata.signal_outputs.contains(Esdc1aSignalOutputs::efd))
+        {
+          IdxT           efd = excitedata.signal_outputs.at(Esdc1aSignalOutputs::efd);
+          constexpr auto EFD = Esdc1aInternalVariables::EFD;
+          exciter->getSignals().template assignSignalNode<EFD>(getSignal(efd));
+        }
+
+        if (excitedata.signal_inputs.contains(Esdc1aSignalInputs::vs))
+        {
+          IdxT           vs = excitedata.signal_inputs.at(Esdc1aSignalInputs::vs);
+          constexpr auto VS = Esdc1aExternalVariables::VS;
+          exciter->getSignals().template attachSignalNode<VS>(getSignal(vs));
+        }
+
+        if (excitedata.signal_inputs.contains(Esdc1aSignalInputs::vuel))
+        {
+          IdxT           vuel = excitedata.signal_inputs.at(Esdc1aSignalInputs::vuel);
+          constexpr auto VUEL = Esdc1aExternalVariables::VUEL;
+          exciter->getSignals().template attachSignalNode<VUEL>(getSignal(vuel));
+        }
+
+        addComponent(exciter);
+      }
+
       for (const auto& excitedata : data.sexspti)
       {
         IdxT bus_index = 0;

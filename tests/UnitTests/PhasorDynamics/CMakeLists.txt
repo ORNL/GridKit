@@ -96,6 +96,14 @@ target_link_libraries(
   GridKit::phasor_dynamics_components_dependency_tracking
   GridKit::testing)
 
+add_executable(test_phasor_exciter_esdc1a runExciterEsdc1aTests.cpp)
+target_link_libraries(
+  test_phasor_exciter_esdc1a
+  GridKit::definitions
+  GridKit::phasor_dynamics_components
+  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::testing)
+
 add_executable(test_phasor_exciter_sexspti runExciterSexsPtiTests.cpp)
 target_link_libraries(
   test_phasor_exciter_sexspti
@@ -157,6 +165,7 @@ add_test(NAME PhasorDynamicsBranchTest COMMAND test_phasor_branch)
 add_test(NAME PhasorDynamicsGenrouTest COMMAND test_phasor_genrou)
 add_test(NAME PhasorDynamicsGovernorTgov1Test COMMAND test_phasor_governor_tgov1)
 add_test(NAME PhasorDynamicsExciterIeeet1Test COMMAND test_phasor_exciter_ieeet1)
+add_test(NAME PhasorDynamicsExciterEsdc1aTest COMMAND test_phasor_exciter_esdc1a)
 add_test(NAME PhasorDynamicsGensalTest COMMAND test_phasor_gensal)
 add_test(NAME PhasorDynamicsExciterSexsPtiTest COMMAND test_phasor_exciter_sexspti)
 add_test(NAME PhasorDynamicsConverterRegcaTest COMMAND test_phasor_converter_regca)
@@ -180,6 +189,7 @@ install(
           test_phasor_genrou
           test_phasor_governor_tgov1
           test_phasor_exciter_ieeet1
+          test_phasor_exciter_esdc1a
           test_phasor_gensal
           test_phasor_exciter_sexspti
           test_phasor_converter_regca
