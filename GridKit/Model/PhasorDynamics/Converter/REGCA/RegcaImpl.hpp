@@ -1,0 +1,577 @@
+/**
+ * @file RegcaImpl.hpp
+ * @author Luke Lowery (lukel@tamu.edu)
+ * @brief Definition of the REGCA phasor-dynamics converter model.
+ */
+
+#pragma once
+
+#include <algorithm>
+#include <cmath>
+#include <variant>
+
+#include <GridKit/Model/PhasorDynamics/BusBase.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
+#include <GridKit/Model/VariableMonitorImpl.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
+
+namespace GridKit
+{
+  namespace PhasorDynamics
+  {
+    namespace Converter
+    {
+      using Log = ::GridKit::Utilities::Logger;
+
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::Regca(BusT* bus)
+        : bus_(bus)
+      {
+        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+      }
+
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::Regca(BusT* bus, const ModelDataT& data)
+        : bus_(bus),
+          monitor_(std::make_unique<MonitorT>(data))
+      {
+        initializeParameters(data);
+        initializeMonitor();
+        size_ = static_cast<IdxT>(RegcaInternalVariables::MAXIMUM);
+      }
+
+      template <typename scalar_type, typename index_type>
+      Regca<scalar_type, index_type>::~Regca()
+      {
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::setDerivedParameters()
+      {
+        Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
+        TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
+        Mp_          = static_cast<RealT>(100.0) * Rpmax_;
+        use_lvpl_    = ZERO<RealT>;
+        bypass_lvpl_ = ONE<RealT>;
+        if (sL_)
+        {
+          use_lvpl_    = ONE<RealT>;
+          bypass_lvpl_ = ZERO<RealT>;
+        }
+        iq_use_upper_      = ZERO<RealT>;
+        iq_use_lower_      = ONE<RealT>;
+        va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
+      }
+
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::lpTarget(scalar_type ip) const
+      {
+        return -Rpmax_ - (Mp_ - Rpmax_) * Math::sigmoid(ip);
+      }
+
+      template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::upTarget(
+          scalar_type ip,
+          scalar_type il) const
+      {
+        const ScalarT sigma_ip = Math::sigmoid(ip);
+        return Mp_ * (ONE<RealT> - sigma_ip)
+               + Rpmax_ * sigma_ip * (bypass_lvpl_ + use_lvpl_ * Math::sigmoid(il - ip));
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
+      {
+        using Params = typename ModelDataT::Parameters;
+        using Buses  = typename ModelDataT::Buses;
+
+        parameter_error_count_ = 0;
+
+        auto load_required_real = [&](auto key, RealT& target, const char* name)
+        {
+          if (!data.parameters.contains(key))
+          {
+            Log::error() << "Regca: missing required parameter '" << name << "'\n";
+            ++parameter_error_count_;
+            return;
+          }
+
+          const auto& value = data.parameters.at(key);
+          if (const auto* real_value = std::get_if<RealT>(&value))
+          {
+            target = *real_value;
+          }
+          else if (const auto* index_value = std::get_if<IdxT>(&value))
+          {
+            target = static_cast<RealT>(*index_value);
+          }
+          else
+          {
+            Log::error() << "Regca: parameter '" << name << "' must be numeric\n";
+            ++parameter_error_count_;
+          }
+        };
+
+        auto load_required_switch = [&](auto key, bool& target, const char* name)
+        {
+          if (!data.parameters.contains(key))
+          {
+            Log::error() << "Regca: missing required parameter '" << name << "'\n";
+            ++parameter_error_count_;
+            return;
+          }
+
+          const auto& value = data.parameters.at(key);
+          if (const auto* bool_value = std::get_if<bool>(&value))
+          {
+            target = *bool_value;
+          }
+          else if (const auto* index_value = std::get_if<IdxT>(&value);
+                   index_value && (*index_value == 0 || *index_value == 1))
+          {
+            target = (*index_value == 1);
+          }
+          else
+          {
+            Log::error() << "Regca: parameter '" << name << "' must be bool or 0/1\n";
+            ++parameter_error_count_;
+          }
+        };
+
+        load_required_real(Params::P0, P0_, "P0");
+        load_required_real(Params::Q0, Q0_, "Q0");
+        load_required_real(Params::mva, mva_base_, "mva");
+        load_required_real(Params::Tg, Tg_, "Tg");
+        load_required_real(Params::TM, TM_, "TM");
+        load_required_real(Params::Rqmax, Rqmax_, "Rqmax");
+        load_required_real(Params::Rqmin, Rqmin_, "Rqmin");
+        load_required_real(Params::Rpmax, Rpmax_, "Rpmax");
+        load_required_switch(Params::sL, sL_, "sL");
+        load_required_real(Params::IL1, IL1_, "IL1");
+        load_required_real(Params::VL0, VL0_, "VL0");
+        load_required_real(Params::VL1, VL1_, "VL1");
+        load_required_real(Params::VA0, VA0_, "VA0");
+        load_required_real(Params::VA1, VA1_, "VA1");
+        load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
+
+        if (data.buses.contains(Buses::bus))
+        {
+          bus_id_ = data.buses.at(Buses::bus);
+        }
+
+        setDerivedParameters();
+      }
+
+      template <typename scalar_type, typename index_type>
+      const Model::VariableMonitorBase* Regca<scalar_type, index_type>::getMonitor() const
+      {
+        return monitor_.get();
+      }
+
+      template <typename scalar_type, typename index_type>
+      void Regca<scalar_type, index_type>::initializeMonitor()
+      {
+        using Variable = typename ModelDataT::MonitorableVariables;
+        auto index     = [](RegcaInternalVariables variable)
+        {
+          return static_cast<size_t>(variable);
+        };
+
+        monitor_->set(Variable::ir, [this, index]
+                      { return y_.getData()[index(RegcaInternalVariables::IR)]; });
+        monitor_->set(Variable::ii, [this, index]
+                      { return y_.getData()[index(RegcaInternalVariables::II)]; });
+        monitor_->set(Variable::p, [this, index]
+                      { return y_.getData()[index(RegcaInternalVariables::PBR)]; });
+        monitor_->set(Variable::q, [this, index]
+                      { return y_.getData()[index(RegcaInternalVariables::QBR)]; });
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::setGridKitComponentID(IdxT component_id)
+      {
+        gridkit_component_id_ = component_id;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::allocate()
+      {
+        if (!allocated_)
+        {
+          this->allocateVectors(size_);
+        }
+        auto size = static_cast<size_t>(size_);
+
+        tag_.assign(size, false);
+        variable_indices_.resize(size);
+        residual_indices_.resize(size);
+
+        wb_.assign(2, ScalarT{0});
+        h_.assign(2, ScalarT{0});
+
+        auto signal_size = static_cast<size_t>(RegcaExternalVariables::MAXIMUM);
+        ws_.assign(signal_size, ScalarT{0});
+        ws_indices_.assign(signal_size, INVALID_INDEX<IdxT>);
+
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
+
+        auto* y = y_.getData();
+
+        if (signals_.template isAssigned<RegcaInternalVariables::IR>())
+        {
+          signals_.template getSignalNode<RegcaInternalVariables::IR>()->set(
+              &y[static_cast<size_t>(RegcaInternalVariables::IR)],
+              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::IR))));
+        }
+
+        if (signals_.template isAssigned<RegcaInternalVariables::II>())
+        {
+          signals_.template getSignalNode<RegcaInternalVariables::II>()->set(
+              &y[static_cast<size_t>(RegcaInternalVariables::II)],
+              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::II))));
+        }
+
+        if (signals_.template isAssigned<RegcaInternalVariables::PBR>())
+        {
+          signals_.template getSignalNode<RegcaInternalVariables::PBR>()->set(
+              &y[static_cast<size_t>(RegcaInternalVariables::PBR)],
+              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::PBR))));
+        }
+
+        if (signals_.template isAssigned<RegcaInternalVariables::QBR>())
+        {
+          signals_.template getSignalNode<RegcaInternalVariables::QBR>()->set(
+              &y[static_cast<size_t>(RegcaInternalVariables::QBR)],
+              &(this->getVariableIndex(static_cast<IdxT>(RegcaInternalVariables::QBR))));
+        }
+
+        allocated_ = true;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::verify() const
+      {
+        int ret = static_cast<int>(parameter_error_count_);
+
+        auto check = [&](bool condition, const char* message)
+        {
+          if (!condition)
+          {
+            Log::error() << "Regca: " << message << '\n';
+            ret += 1;
+          }
+        };
+
+        if (bus_ == nullptr)
+        {
+          Log::error() << "Regca: bus pointer is null\n";
+          ret += 1;
+        }
+
+        check(mva_base_ > ZERO<RealT>, "mva must be positive");
+        check(Rpmax_ > ZERO<RealT>, "Rpmax must be positive");
+        check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
+        check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
+        check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
+        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_, "VA0/VA1 must satisfy 0 <= VA0 < VA1");
+        check(Vhvmax_ > ZERO<RealT>, "Vhvmax must be positive");
+
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        {
+          if (!signals_.template isLinked<RegcaExternalVariables::IPCMD>())
+          {
+            Log::error() << "Regca: ipcmd signal attached with no linked source\n";
+            ret += 1;
+          }
+        }
+
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        {
+          if (!signals_.template isLinked<RegcaExternalVariables::IQCMD>())
+          {
+            Log::error() << "Regca: iqcmd signal attached with no linked source\n";
+            ret += 1;
+          }
+        }
+
+        return ret;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::initialize()
+      {
+        if (bus_ == nullptr)
+        {
+          Log::error() << "Regca: cannot initialize with null bus\n";
+          return 1;
+        }
+
+        if (parameter_error_count_ > 0 || mva_base_ <= ZERO<RealT> || Rpmax_ <= ZERO<RealT>
+            || !(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_)
+            || IL1_ < ZERO<RealT> || !(ZERO<RealT> <= VL0_ && VL0_ < VL1_)
+            || !(ZERO<RealT> <= VA0_ && VA0_ < VA1_) || Vhvmax_ <= ZERO<RealT>)
+        {
+          Log::error() << "Regca: cannot initialize with invalid parameters\n";
+          return 1;
+        }
+
+        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
+        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
+        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
+        auto*      y       = y_.getData();
+
+        const ScalarT vr = Vr();
+        const ScalarT vi = Vi();
+        const ScalarT vt = std::sqrt(vr * vr + vi * vi);
+
+        if (vt <= ZERO<RealT>)
+        {
+          Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
+          return 1;
+        }
+        if (vt >= Vhvmax_)
+        {
+          Log::error()
+              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
+          return 1;
+        }
+
+        // REGCA owns the network terminal and establishes the initial
+        // converter operating point from the power-flow injection. Controller
+        // command ports may not have been initialized yet, so initialization
+        // resolves the commands from P0/Q0 and publishes them on the system
+        // base to attached ports below. P0/Q0 are given on the system base;
+        // toComponentBase converts them to the converter base the internal
+        // states use.
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+
+        if (P0_ != ZERO<RealT> && (vt <= VA0_ || lvacm <= ZERO<RealT>) )
+        {
+          Log::error() << "Regca: LVACM gain is zero with nonzero initial active power\n";
+          return 1;
+        }
+
+        ScalarT ipcmd0{ZERO<RealT>};
+        if (P0_ != ZERO<RealT>)
+        {
+          ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
+        }
+        const ScalarT iqcmd0 = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
+
+        const ScalarT iqextra0{ZERO<RealT>};
+        const ScalarT qnet0 = iqcmd0 - iqextra0;
+        const ScalarT ir0   = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
+        const ScalarT ii0   = (-vr * qnet0 + vi * ipcmd0 * lvacm) / vt;
+
+        y[VM]      = vt;
+        y[VT]      = vt;
+        y[IP]      = ipcmd0;
+        y[IQ]      = iqcmd0;
+        y[IQEXTRA] = iqextra0;
+        y[IL]      = Math::linseg(vt, VL0_, VL1_, IL1_);
+        y[IR]      = toSystemBase(ir0);
+        y[II]      = toSystemBase(ii0);
+        y[LP]      = lpTarget(y[IP]);
+        y[UP]      = upTarget(y[IP], y[IL]);
+        y[PBR]     = vr * y[IR] + vi * y[II];
+        y[QBR]     = vi * y[IR] - vr * y[II];
+
+        // Retain the resolved commands as the constant source used during
+        // residual evaluation when no controller drives the command ports, and
+        // select the reactive-current rate-limit branch from the command sign.
+        ipcmd_set_    = toSystemBase(ipcmd0);
+        iqcmd_set_    = toSystemBase(iqcmd0);
+        iq_use_upper_ = ZERO<RealT>;
+        iq_use_lower_ = ONE<RealT>;
+        if (static_cast<RealT>(iqcmd0) > ZERO<RealT>)
+        {
+          iq_use_upper_ = ONE<RealT>;
+          iq_use_lower_ = ZERO<RealT>;
+        }
+
+        // Seed attached command nodes with the steady-state values. Controller
+        // initialization can use these signal values, and unattached ports fall
+        // back to the constants stored above.
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd_set_);
+        }
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        {
+          signals_.template writeExternalVariable<RegcaExternalVariables::IQCMD>(iqcmd_set_);
+        }
+
+        y_.setDataUpdated();
+        yp_.setToConst(static_cast<ScalarT>(ZERO<RealT>));
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::tagDifferentiable()
+      {
+        std::fill(tag_.begin(), tag_.end(), false);
+        tag_[static_cast<size_t>(RegcaInternalVariables::VM)] = true;
+        tag_[static_cast<size_t>(RegcaInternalVariables::IQ)] = true;
+        tag_[static_cast<size_t>(RegcaInternalVariables::IP)] = true;
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
+      {
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int
+      Regca<scalar_type, index_type>::evaluateInternalResidual(
+          const ScalarT* y,
+          const ScalarT* yp,
+          const ScalarT* wb,
+          const ScalarT* ws,
+          ScalarT*       f)
+      {
+        const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
+        const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
+        const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
+        const auto VT      = static_cast<size_t>(RegcaInternalVariables::VT);
+        const auto IR      = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
+        const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
+        const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
+        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
+        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
+        const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
+        const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
+
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        const ScalarT vm      = y[VM];
+        const ScalarT iq      = y[IQ];
+        const ScalarT ip      = y[IP];
+        const ScalarT vt      = y[VT];
+        const ScalarT ir      = y[IR];
+        const ScalarT ii      = y[II];
+        const ScalarT iqextra = y[IQEXTRA];
+        const ScalarT il      = y[IL];
+        const ScalarT lp      = y[LP];
+        const ScalarT up      = y[UP];
+        const ScalarT pbr     = y[PBR];
+        const ScalarT qbr     = y[QBR];
+
+        const ScalarT vm_dot = yp[VM];
+        const ScalarT iq_dot = yp[IQ];
+        const ScalarT ip_dot = yp[IP];
+
+        const ScalarT vr = wb[0];
+        const ScalarT vi = wb[1];
+
+        const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
+        const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
+
+        const ScalarT iq_error = iqcmd - iq;
+        const ScalarT ip_error = ipcmd - ip;
+
+        const ScalarT iq_ramp =
+            -iq_use_upper_ * Math::ramp(iq_error - Tg_ * Rqmax_)
+            + iq_use_lower_ * Math::ramp(Tg_ * Rqmin_ - iq_error);
+
+        const ScalarT lp_ramp = Math::ramp(ip_error - Tg_ * lp);
+        const ScalarT up_ramp = Math::ramp(ip_error - Tg_ * up);
+        const ScalarT lvacm   = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT qnet    = iq - iqextra;
+
+        f[VM]      = -vm_dot + (vt - vm) / TM_;
+        f[IQ]      = -iq_dot + iq_error / Tg_ + iq_ramp / Tg_;
+        f[IP]      = -ip_dot + lp + lp_ramp / Tg_ - up_ramp / Tg_;
+        f[VT]      = -vt * vt + vr * vr + vi * vi;
+        f[IR]      = -vt * ir + toSystemBase(vi * qnet + vr * ip * lvacm);
+        f[II]      = -vt * ii + toSystemBase(-vr * qnet + vi * ip * lvacm);
+        f[IQEXTRA] = -iqextra + Math::ramp(vt - Vhvmax_);
+        f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
+        f[LP]      = -lp + lpTarget(ip);
+        f[UP]      = -up + upTarget(ip, il);
+        f[PBR]     = -pbr + vr * ir + vi * ii;
+        f[QBR]     = -qbr + vi * ir - vr * ii;
+
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
+          const ScalarT*                  y,
+          [[maybe_unused]] const ScalarT* yp,
+          [[maybe_unused]] const ScalarT* wb,
+          ScalarT*                        h)
+      {
+        const auto IR = static_cast<size_t>(RegcaInternalVariables::IR);
+        const auto II = static_cast<size_t>(RegcaInternalVariables::II);
+
+        h[0] = y[IR];
+        h[1] = y[II];
+        return 0;
+      }
+
+      template <typename scalar_type, typename index_type>
+      int Regca<scalar_type, index_type>::evaluateResidual()
+      {
+        const auto IPCMD = static_cast<size_t>(RegcaExternalVariables::IPCMD);
+        const auto IQCMD = static_cast<size_t>(RegcaExternalVariables::IQCMD);
+
+        ws_[IPCMD] = ipcmd_set_;
+        ws_[IQCMD] = iqcmd_set_;
+        std::fill(ws_indices_.begin(), ws_indices_.end(), INVALID_INDEX<IdxT>);
+
+        if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
+        {
+          ws_[IPCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IPCMD>();
+          ws_indices_[IPCMD] =
+              signals_.template readExternalVariableIndex<RegcaExternalVariables::IPCMD>();
+        }
+
+        if (signals_.template isAttached<RegcaExternalVariables::IQCMD>())
+        {
+          ws_[IQCMD] = signals_.template readExternalVariable<RegcaExternalVariables::IQCMD>();
+          ws_indices_[IQCMD] =
+              signals_.template readExternalVariableIndex<RegcaExternalVariables::IQCMD>();
+        }
+
+        wb_[0] = Vr();
+        wb_[1] = Vi();
+
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        evaluateBusResidual(y, yp, wb_.data(), h_.data());
+        f_.setDataUpdated();
+
+        Ir() += h_[0];
+        Ii() += h_[1];
+        bus_->getResidual().setDataUpdated();
+
+        return 0;
+      }
+    } // namespace Converter
+  } // namespace PhasorDynamics
+} // namespace GridKit
