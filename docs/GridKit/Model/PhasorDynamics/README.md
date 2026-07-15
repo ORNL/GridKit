@@ -17,6 +17,7 @@ SignalNode <SignalNode/README>
 SignalSource <SignalSource/README>
 Stabilizer <Stabilizer/README>
 SynchronousMachine <SynchronousMachine/README>
+Wind <Wind/README>
 ```
 
 ```{include} ../../../../GridKit/Model/PhasorDynamics/README.md
