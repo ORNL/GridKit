@@ -339,7 +339,8 @@ namespace GridKit
      * @brief Smooth anti-windup indicator for a limited state variable
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam LowerT - data type of the lower limit
+     * @tparam UpperT - data type of the upper limit
      *
      * @param[in] x - State variable
      * @param[in] f - Pre-limit derivative of the state variable
@@ -347,14 +348,19 @@ namespace GridKit
      * @param[in] limit_max - Maximum limit
      * @return Scalar value in [0, 1]: 1 when dynamics should pass through,
      *         0 when integration should be blocked.
+     *
+     * @note The limit types intentionally may differ from the scalar type so
+     * that constant Real limits and algebraic-variable limits both work.
      */
-    template <class ScalarT, typename RealT>
+    template <class ScalarT, typename LowerT, typename UpperT>
     __attribute__((always_inline)) inline ScalarT indicator(
         const ScalarT x,
         const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+        const LowerT  limit_min,
+        const UpperT  limit_max)
     {
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
       assert(limit_min <= limit_max);
 
       ScalarT above_min = above(x, limit_min);
@@ -374,20 +380,24 @@ namespace GridKit
      * and blocks motion that would push further into saturation.
      *
      * @tparam ScalarT - Scalar data type
-     * @tparam RealT - Real data type (see GridKit::ScalarTraits<ScalarT>::RealT)
+     * @tparam LowerT - data type of the lower limit
+     * @tparam UpperT - data type of the upper limit
      *
      * @param[in] x - Limited state or limited output signal
      * @param[in] f - Pre-limit derivative
      * @param[in] limit_min - Minimum limit
      * @param[in] limit_max - Maximum limit
      * @return Smooth anti-windup limited derivative
+     *
+     * @note The limit types intentionally may differ from the scalar type so
+     * that constant Real limits and algebraic-variable limits both work.
      */
-    template <class ScalarT, typename RealT>
+    template <class ScalarT, typename LowerT, typename UpperT>
     __attribute__((always_inline)) inline ScalarT antiwindup(
         const ScalarT x,
         const ScalarT f,
-        const RealT   limit_min,
-        const RealT   limit_max)
+        const LowerT  limit_min,
+        const UpperT  limit_max)
     {
       return indicator(x, f, limit_min, limit_max) * f;
     }

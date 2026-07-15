@@ -13,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Controller/REECB/ReecbData.hpp>
 #include <GridKit/Model/PhasorDynamics/Controller/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REECA/ReecaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -48,6 +49,7 @@ namespace GridKit
       using BusToSignalAdapterDataT = BusToSignalAdapterData<RealT, IdxT>;
       using BusFaultDataT           = BusFaultData<RealT, IdxT>;
       using RegcaDataT              = Converter::RegcaData<RealT, IdxT>;
+      using ReecaDataT              = Converter::ReecaData<RealT, IdxT>;
       using ReecbDataT              = Controller::ReecbData<RealT, IdxT>;
       using RepcaDataT              = Controller::RepcaData<RealT, IdxT>;
       using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
@@ -108,6 +110,7 @@ namespace GridKit
       std::vector<BranchDataT>             branch;          ///< Branches within the model
       std::vector<BusFaultDataT>           bus_fault;       ///< Bus faults within the model
       std::vector<RegcaDataT>              regca;           ///< REGCA converter instances within the model
+      std::vector<ReecaDataT>              reeca;           ///< REECA electrical controllers within the model
       std::vector<ReecbDataT>              reecb;           ///< REECB electrical controllers within the model
       std::vector<RepcaDataT>              repca;           ///< REPCA plant controllers within the model
       std::vector<GenrouDataT>             genrou;          ///< GENROU instances within the model

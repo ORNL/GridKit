@@ -152,6 +152,7 @@ are specified:
   [Gensal](SynchronousMachine/GENSAL/README.md) | 5th order salient-pole machine model
   [GenClassical](SynchronousMachine/GenClassical/README.md) | the classical machine model
   [Regca](Converter/REGCA/README.md) | WECC REGCA renewable generator/converter model
+  [Reeca](Converter/REECA/README.md) | the REECA renewable electrical-control model
   [Reecb](Controller/REECB/README.md) | WECC REECB renewable electrical-control model
   [Repca](Controller/REPCA/README.md) | the REPCA renewable plant-control model
   [GastPti](Governor/GASTPTI/README.md) | the GASTPTI gas turbine-governor model
@@ -162,6 +163,9 @@ are specified:
   [SexsPti](Exciter/SEXS-PTI/README.md) | the SEXS-PTI simplified exciter model
   [Ieeest](Stabilizer/IEEEST/README.md) | the IEEEST stabilizer model
   [ConstantSignalSource](SignalSource/README.md) | Constant complex signal source
+
+For `Reeca`, `pe` and `qgen` must either both be provided or both be omitted;
+the `omegag` port is required when `PFlag` is `1`.
 
 ## Example File for a 2-Bus System
 

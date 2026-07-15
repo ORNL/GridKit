@@ -76,6 +76,7 @@
 - Added `dt_fixed`, `rel_tol`, `abs_tol`, and `max_steps` options to phasor dynamics solver JSON files and renamed the `dt` option to `dt_monitor`.
 - Added EMT model and operator documentation.
 - Added `REGCA` converter model implementation for PhasorDynamics.
+- Added `REECA` converter model implementation for PhasorDynamics.
 - Remove unnecessary data copying while evaluating `PowerElectronics` models, speeding up large simulations by up to 3x
 - Added `HYGOV` governor model implementation for PhasorDynamics.
 - Added `REPCA` controller model implementation for PhasorDynamics.
