@@ -113,7 +113,7 @@ int main(int argc, const char* argv[])
   // push it into output, which is updated outside the callback.
   auto output_cb = [&](real_type t)
   {
-    std::vector<scalar_type>& y_val = sys.y();
+    const auto* y_val = sys.y().getData();
 
     // Note Omega of gen is at state index 5! (Each added signal shifted by 1)
     // Bus              -> 2 States

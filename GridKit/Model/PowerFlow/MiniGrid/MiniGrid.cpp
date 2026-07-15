@@ -56,6 +56,7 @@ namespace GridKit
     th2() = 0.0; // th2
     V2()  = 1.0; // V2
     th3() = 0.0; // th3
+    y_.setDataUpdated();
     return 0;
   }
 
@@ -67,9 +68,12 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MiniGrid<ScalarT, IdxT>::evaluateResidual()
   {
-    f_[0] = -Pl2_ - V2() * (V1_ * B12_ * sin(th2() - th1_) + V3_ * B23_ * sin(th2() - th3()));
-    f_[1] = -Ql2_ + V2() * (V1_ * B12_ * cos(th2() - th1_) + B22_ * V2() + V3_ * B23_ * cos(th2() - th3()));
-    f_[2] = Pg3_ - V3_ * (V1_ * B13_ * sin(th3() - th1_) + V2() * B23_ * sin(th3() - th2()));
+    auto* f = f_.getData();
+    f[0]    = -Pl2_ - V2() * (V1_ * B12_ * sin(th2() - th1_) + V3_ * B23_ * sin(th2() - th3()));
+    f[1]    = -Ql2_ + V2() * (V1_ * B12_ * cos(th2() - th1_) + B22_ * V2() + V3_ * B23_ * cos(th2() - th3()));
+    f[2]    = Pg3_ - V3_ * (V1_ * B13_ * sin(th3() - th1_) + V2() * B23_ * sin(th3() - th2()));
+
+    f_.setDataUpdated();
 
     return 0;
   }

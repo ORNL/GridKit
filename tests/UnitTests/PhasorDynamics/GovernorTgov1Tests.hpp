@@ -120,23 +120,29 @@ namespace GridKit
         gov.evaluateResidual();
 
         // Set variable values matching the answer key
-        gov.y()[0] = 1.0;                                                     // Ptx
-        gov.y()[1] = 1.0;                                                     // Pv
-        gov.y()[2] = static_cast<ScalarT>(10.0) / static_cast<ScalarT>(15.0); // Pmech
+        auto* y  = gov.y().getData();
+        auto* yp = gov.yp().getData();
+
+        y[0] = 1.0;                                                     // Ptx
+        y[1] = 1.0;                                                     // Pv
+        y[2] = static_cast<ScalarT>(10.0) / static_cast<ScalarT>(15.0); // Pmech
 
         // Set derivative values matching the answer key
-        gov.yp()[0] = static_cast<ScalarT>(8.0) / static_cast<ScalarT>(15.0); // ptx_dot
-        gov.yp()[1] = 2.0;                                                    // pv_dot
+        yp[0] = static_cast<ScalarT>(8.0) / static_cast<ScalarT>(15.0); // ptx_dot
+        yp[1] = 2.0;                                                    // pv_dot
 
+        gov.y().setDataUpdated();
+        gov.yp().setDataUpdated();
         gov.evaluateResidual();
-        std::vector<ScalarT>& residual = gov.getResidual();
+        auto&       residual      = gov.getResidual();
+        const auto* residual_data = residual.getData();
 
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          if (!isEqual(residual[i], res_answer[i], tol_))
+          if (!isEqual(residual_data[i], res_answer[i], tol_))
           {
             std::cout << "Incorrect result for residual " << i << ": "
-                      << residual[i] << " != " << res_answer[i] << "\n";
+                      << residual_data[i] << " != " << res_answer[i] << "\n";
             success = false;
             break;
           }
@@ -215,10 +221,11 @@ namespace GridKit
         // Require results to be within machine precision
         auto tol = 10 * std::numeric_limits<RealT>::epsilon();
 
-        const std::vector<ScalarT>& f = gov.getResidual();
-        for (const auto& f_val : f)
+        const auto& f      = gov.getResidual();
+        const auto* f_data = f.getData();
+        for (std::size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f_val, 0.0, tol))
+          if (!isEqual(f_data[i], 0.0, tol))
             success = false;
         }
 
@@ -310,33 +317,41 @@ namespace GridKit
         gen.initialize();
         gov.initialize();
 
+        auto* gov_y = gov.y().getData();
         for (size_t i = 0; i < gov.size(); ++i)
         {
-          gov.y()[i].setVariableNumber(i); // Governor independent variables
+          gov_y[i].setVariableNumber(i); // Governor independent variables
         }
-        gen.y()[1].setVariableNumber(gov.size()); // omega as an additional independent variable
+        gov.y().setDataUpdated();
+        auto* gen_y = gen.y().getData();
+        gen_y[1].setVariableNumber(gov.size()); // omega as an additional independent variable
+        gen.y().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();
         gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
                                 // the dependencies
-        std::vector<DependencyTracking::Variable> residual_y = gov.getResidual();
+        auto&                                     residual_y_view = gov.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
         gen.initialize();
         gov.initialize();
 
+        auto* gov_yp = gov.yp().getData();
         for (size_t i = 0; i < gov.size(); ++i)
         {
-          gov.yp()[i].setVariableNumber(i); ///< Governor independent variables
+          gov_yp[i].setVariableNumber(i); ///< Governor independent variables
         }
+        gov.yp().setDataUpdated();
 
         bus.evaluateResidual();
         gen.evaluateResidual();
         gov.evaluateResidual(); // Computes the residual and the Jacobian values by tracking
                                 // the dependencies
-        std::vector<DependencyTracking::Variable> residual_yp = gov.getResidual();
+        auto&       residual_yp      = gov.getResidual();
+        const auto* residual_yp_data = residual_yp.getData();
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)
@@ -345,7 +360,7 @@ namespace GridKit
           (residual_y[i]).print(std::cout);
           std::cout << "\n";
           std::cout << i << "th residual, yp: ";
-          (residual_yp[i]).print(std::cout);
+          residual_yp_data[i].print(std::cout);
           std::cout << "\n";
         }
 
@@ -354,7 +369,7 @@ namespace GridKit
         for (IdxT i = 0; i < residual_y.size(); ++i)
         {
           DependencyTracking::Variable::DependencyMap dependency_y  = (residual_y[i]).getDependencies();
-          DependencyTracking::Variable::DependencyMap dependency_yp = (residual_yp[i]).getDependencies();
+          DependencyTracking::Variable::DependencyMap dependency_yp = residual_yp_data[i].getDependencies();
 
           for (const auto& pair_y : dependency_y)
           {

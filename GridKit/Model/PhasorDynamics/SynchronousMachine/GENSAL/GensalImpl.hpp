@@ -149,37 +149,37 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_[12]); });
+                    { return toSystemBase(y_.getData()[12]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_[13]); });
+                    { return toSystemBase(y_.getData()[13]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_[12] + Vi() * y_[13]); });
+                    { return toSystemBase(Vr() * y_.getData()[12] + Vi() * y_.getData()[13]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_[12] - Vr() * y_[13]); });
+                    { return toSystemBase(Vi() * y_.getData()[12] - Vr() * y_.getData()[13]); });
       monitor_->set(Variable::delta, [this]
-                    { return y_[0]; });
+                    { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
-                    { return y_[1]; });
+                    { return y_.getData()[1]; });
       monitor_->set(Variable::speed, [this]
-                    { return 1.0 + y_[1]; });
+                    { return 1.0 + y_.getData()[1]; });
       monitor_->set(Variable::Eqp, [this]
-                    { return y_[2]; });
+                    { return y_.getData()[2]; });
       monitor_->set(Variable::psidp, [this]
-                    { return y_[3]; });
+                    { return y_.getData()[3]; });
       monitor_->set(Variable::psiqpp, [this]
-                    { return y_[4]; });
+                    { return y_.getData()[4]; });
       monitor_->set(Variable::psidpp, [this]
-                    { return y_[5]; });
+                    { return y_.getData()[5]; });
       monitor_->set(Variable::vd, [this]
-                    { return y_[7]; });
+                    { return y_.getData()[7]; });
       monitor_->set(Variable::vq, [this]
-                    { return y_[8]; });
+                    { return y_.getData()[8]; });
       monitor_->set(Variable::te, [this]
-                    { return y_[9]; });
+                    { return y_.getData()[9]; });
       monitor_->set(Variable::id, [this]
-                    { return y_[10]; });
+                    { return y_.getData()[10]; });
       monitor_->set(Variable::iq, [this]
-                    { return y_[11]; });
+                    { return y_.getData()[11]; });
     }
 
     /**
@@ -198,15 +198,21 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::allocate()
     {
-      // Resize component model data
+      if (!allocated_)
+      {
+        this->allocateVectors(size_);
+      }
       auto size = static_cast<size_t>(size_);
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
+
       tag_.resize(size);
-      abs_tol_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
 
       // Resize bus data
       wb_.resize(2);
@@ -218,19 +224,14 @@ namespace GridKit
       ws_indices_[0] = INVALID_INDEX<IdxT>;
       ws_indices_[1] = INVALID_INDEX<IdxT>;
 
-      // Default variable and residual index mapping to local index
-      for (IdxT j = 0; j < size_; ++j)
-      {
-        this->setVariableIndex(j, j);
-        this->setResidualIndex(j, j);
-      }
-
       // Set output signals
       if (signals_.template isAssigned<GensalInternalVariables::OMEGA>())
       {
-        signals_.template getSignalNode<GensalInternalVariables::OMEGA>()->set(&y_[1], &(this->getVariableIndex(1)));
+        auto* y = y_.getData();
+        signals_.template getSignalNode<GensalInternalVariables::OMEGA>()->set(&y[1], &(this->getVariableIndex(1)));
       }
 
+      allocated_ = true;
       return 0;
     }
 
@@ -299,24 +300,27 @@ namespace GridKit
       ScalarT ksat    = SB_ * Eqp_sat * Eqp_sat * Math::sigmoid(Eqp_sat);
       ScalarT Te      = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
 
-      y_[0]  = delta;
-      y_[1]  = omega;
-      y_[2]  = Eqp;
-      y_[3]  = psidp;
-      y_[4]  = psiqpp;
-      y_[5]  = psidpp;
-      y_[6]  = ksat;
-      y_[7]  = vd;
-      y_[8]  = vq;
-      y_[9]  = Te;
-      y_[10] = id;
-      y_[11] = iq;
-      y_[12] = ir;
-      y_[13] = ii;
-      y_[14] = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
-      y_[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
-               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]  = delta;
+      y[1]  = omega;
+      y[2]  = Eqp;
+      y[3]  = psidp;
+      y[4]  = psiqpp;
+      y[5]  = psidpp;
+      y[6]  = ksat;
+      y[7]  = vd;
+      y[8]  = vq;
+      y[9]  = Te;
+      y[10] = id;
+      y[11] = iq;
+      y[12] = ir;
+      y[13] = ii;
+      y[14] = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
@@ -333,8 +337,11 @@ namespace GridKit
 
       for (IdxT i = 0; i < size_; ++i)
       {
-        yp_[static_cast<size_t>(i)] = 0.0;
+        yp[static_cast<size_t>(i)] = 0.0;
       }
+
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
 
       return 0;
     }
@@ -367,7 +374,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
@@ -491,12 +498,21 @@ namespace GridKit
       wb_[1] = Vi();
 
       // Residual evaluation
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
-      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
 
       // Gensal contribution to bus algebraic equations
       Ir() += h_[0];
       Ii() += h_[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+      f_.setDataUpdated();
 
       return 0;
     }

@@ -78,15 +78,23 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::allocate()
       {
-        // Resize component model data
+        if (!allocated_)
+        {
+          this->allocateVectors(size_);
+        }
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
+
         tag_.resize(size);
-        abs_tol_.resize(size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
+
+        // Default variable and residual index mapping to local index
+        for (IdxT j = 0; j < size_; ++j)
+        {
+          this->setVariableIndex(j, j);
+          this->setResidualIndex(j, j);
+        }
 
         // Resize bus data
         wb_.resize(2);
@@ -99,19 +107,14 @@ namespace GridKit
         ws_[1]         = 0.0;
         ws_indices_[1] = INVALID_INDEX<IdxT>;
 
-        // Default variable and residual index mapping to local index
-        for (IdxT j = 0; j < size_; ++j)
-        {
-          this->setVariableIndex(j, j);
-          this->setResidualIndex(j, j);
-        }
-
         // Set output signals
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y_[7], &(this->getVariableIndex(7)));
+          auto* y = y_.getData();
+          signals_.template getSignalNode<Ieeet1InternalVariables::EFD>()->set(&y[7], &(this->getVariableIndex(7)));
         }
 
+        allocated_ = true;
         return 0;
       }
 
@@ -154,7 +157,7 @@ namespace GridKit
        * F(y, yp=0, t=0) = 0 exactly for every residual equation.
        *
        * Inputs:
-       *   - EFD assigned by the generator (read from y_[7]).
+       *   - EFD assigned by the generator.
        *   - Bus voltage, used to form the sensed terminal voltage magnitude.
        *   - Attached external signals (omega, V_S)
        *
@@ -166,6 +169,8 @@ namespace GridKit
 
         // External Variables
         ScalarT efd0{0};
+        auto*   y  = y_.getData();
+        auto*   yp = yp_.getData();
 
         // Initial Efd set by generator
         // The exciter object has no way of knowing if the generator
@@ -175,7 +180,7 @@ namespace GridKit
         // other variables.
         if (signals_.template isAssigned<Ieeet1InternalVariables::EFD>())
         {
-          efd0 = y_[7]; ///<- generator needs to be initialized first
+          efd0 = y[7]; ///<- generator needs to be initialized first
         }
 
         ScalarT omega{0};
@@ -204,20 +209,23 @@ namespace GridKit
 
         vref_ = Ec + vtr + vf - vUEL_ - vOEL_ - vs;
 
-        y_[0] = Ec;   // y0 - vts  - Sensed term volt
-        y_[1] = vr;   // y1 - vr   - Voltage reg
-        y_[2] = efdp; // y2 - efdp - Efd pre mult
-        y_[3] = vfx;  // y3 - vfx  - Exciter feedback
-        y_[4] = vtr;  // y4 - vtr  - Term Volt Err
-        y_[5] = vf;   // y5 - vf   - Feedback volt
-        y_[6] = ve;   // y6 - ve   - Excit. Cntrl Volt
-        y_[7] = efd0; // y7 - efd  - Efd
-        y_[8] = ksat; // y8 - ksat - Saturation
+        y[0] = Ec;   // y0 - vts  - Sensed term volt
+        y[1] = vr;   // y1 - vr   - Voltage reg
+        y[2] = efdp; // y2 - efdp - Efd pre mult
+        y[3] = vfx;  // y3 - vfx  - Exciter feedback
+        y[4] = vtr;  // y4 - vtr  - Term Volt Err
+        y[5] = vf;   // y5 - vf   - Feedback volt
+        y[6] = ve;   // y6 - ve   - Excit. Cntrl Volt
+        y[7] = efd0; // y7 - efd  - Efd
+        y[8] = ksat; // y8 - ksat - Saturation
 
-        for (size_t i = 0; i < yp_.size(); ++i)
+        for (IdxT i = 0; i < yp_.getSize(); ++i)
         {
-          yp_[i] = 0.0;
+          yp[i] = 0.0;
         }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
 
         return 0;
       }
@@ -258,7 +266,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -347,7 +355,12 @@ namespace GridKit
         wb_[1] = bus_->Vi();
 
         // Residual evaluation
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+
+        f_.setDataUpdated();
 
         return 0;
       }
@@ -441,9 +454,9 @@ namespace GridKit
       {
         using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return y_[7]; });
+                      { return y_.getData()[7]; });
         monitor_->set(Variable::ksat, [this]
-                      { return SB_ * Math::qramp(y_[2] - SA_); });
+                      { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
       }
     } // namespace Exciter
   } // namespace PhasorDynamics

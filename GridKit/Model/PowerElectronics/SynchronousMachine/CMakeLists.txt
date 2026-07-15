@@ -1,4 +1,5 @@
 gridkit_add_library(
   power_elec_synmachine
   SOURCES SynchronousMachine.cpp
-  HEADERS SynchronousMachine.hpp)
+  HEADERS SynchronousMachine.hpp
+  LINK_LIBRARIES GridKit::dense_vector)

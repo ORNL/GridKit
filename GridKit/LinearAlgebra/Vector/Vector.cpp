@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstring>
 
+#include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 
@@ -878,13 +879,13 @@ namespace GridKit
      * @brief Resize vector to `new_n_size`.
      *
      * Use for vectors and multivectors that change size throughout computation.
-     * If `new_n_size` is within the current capacity, this simply adjusts
-     * `n_size_`. If `new_n_size` exceeds the current capacity, the vector
-     * reallocates - in whichever memory spaces (HOST and/or DEVICE) are
+     * If the vector has no allocated data, zero-initialized HOST data is
+     * allocated. If `new_n_size` is within the current capacity, this simply
+     * adjusts `n_size_`. If `new_n_size` exceeds the current capacity, the
+     * vector reallocates - in whichever memory spaces (HOST and/or DEVICE) are
      * currently allocated - to a buffer sized for `new_n_size`, copies over
      * the existing per-column data, and adopts `new_n_size` as the new
-     * capacity. Data beyond the previous size is left uninitialized, same
-     * as freshly allocated data.
+     * capacity. Data beyond the previous size is left uninitialized.
      *
      * @warning This method is not to be used in vectors who do not own their
      * data.
@@ -893,13 +894,23 @@ namespace GridKit
      *
      * @return 0 if successful, 1 otherwise.
      *
-     * @todo Decide if we need to preserve data when resizing.
      */
     template <typename ScalarT, typename IdxT>
     int Vector<ScalarT, IdxT>::resize(IdxT new_n_size)
     {
       assert(owns_cpu_data_ && owns_gpu_data_
              && "Cannot resize if vector is not owning the data.");
+
+      if (h_data_ == nullptr && d_data_ == nullptr)
+      {
+        if (new_n_size > n_capacity_)
+          n_capacity_ = new_n_size;
+        n_size_ = new_n_size;
+
+        if (allocate(memory::HOST) != 0)
+          return 1;
+        return setToZero(memory::HOST);
+      }
 
       if (new_n_size <= n_capacity_)
       {
@@ -1089,9 +1100,11 @@ namespace GridKit
       std::fill(gpu_updated_, gpu_updated_ + k_, is_updated);
     }
 
-    // template class Vector<double, long int>;
+    template class Vector<double, long int>;
     template class Vector<double, size_t>;
     template class Vector<double, int>;
+    template class Vector<DependencyTracking::Variable, long int>;
+    template class Vector<DependencyTracking::Variable, size_t>;
 
   } // namespace LinearAlgebra
 } // namespace GridKit

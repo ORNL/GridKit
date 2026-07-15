@@ -12,4 +12,5 @@ gridkit_add_library(
           BusFactory.hpp
           BusPQ.hpp
           BusPV.hpp
-          BusSlack.hpp)
+          BusSlack.hpp
+  LINK_LIBRARIES GridKit::dense_vector)

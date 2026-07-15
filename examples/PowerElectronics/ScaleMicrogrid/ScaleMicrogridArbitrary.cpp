@@ -224,23 +224,29 @@ int printMicrogridSystems(index_type N_size)
   // allocate all the initial conditions
   sys_model.allocate();
 
+  auto* y  = sys_model.y().getData();
+  auto* yp = sys_model.yp().getData();
+
   // Create Initial points for states. Every state is set to zero initially
   for (index_type i = 0; i < sys_model.size(); i++)
   {
-    sys_model.y()[i]  = 0.0;
-    sys_model.yp()[i] = 0.0;
+    y[i]  = 0.0;
+    yp[i] = 0.0;
   }
 
   // Create Initial derivatives specifics generated in MATLAB
   for (index_type i = 0; i < 2 * N_size; i++)
   {
-    sys_model.yp()[13 * i - 1 + 3] = DGParams_list[i].Vn_;
-    sys_model.yp()[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
-    sys_model.yp()[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
+    yp[13 * i - 1 + 3] = DGParams_list[i].Vn_;
+    yp[13 * i - 1 + 5] = DGParams_list[i].Kpv_ * DGParams_list[i].Vn_;
+    yp[13 * i - 1 + 7] = (DGParams_list[i].Kpc_ * DGParams_list[i].Kpv_ * DGParams_list[i].Vn_) / DGParams_list[i].Lf_;
   }
 
   // since the initial P_com = 0, set the initial vector to the reference frame
-  sys_model.y()[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
+  y[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
+
+  sys_model.y().setDataUpdated();
+  sys_model.yp().setDataUpdated();
 
   sys_model.initialize();
   sys_model.evaluateResidual();

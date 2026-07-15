@@ -2,6 +2,9 @@ add_library(power_electronics_circuit_node INTERFACE)
 target_include_directories(
   power_electronics_circuit_node
   INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+target_link_libraries(
+  power_electronics_circuit_node
+  INTERFACE GridKit::dense_vector)
 
 add_library(GridKit::power_electronics_circuit_node ALIAS power_electronics_circuit_node)
 

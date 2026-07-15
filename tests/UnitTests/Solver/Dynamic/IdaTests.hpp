@@ -15,7 +15,8 @@ namespace GridKit
     class NullEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       NullEvaluator()
       {
@@ -23,19 +24,35 @@ namespace GridKit
 
       int allocate() override
       {
+        if (!allocated_)
+        {
+          allocateVectors(size());
+          allocated_ = true;
+        }
         return 0;
       }
 
       int initialize() override
       {
-        y_  = {0};
-        yp_ = {0};
+        if (!allocated_)
+        {
+          allocate();
+        }
 
-        tag_     = {false};
-        abs_tol_ = {0};
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
 
-        f_ = {0};
-        g_ = {0};
+        y[0]       = 0.0;
+        yp[0]      = 0.0;
+        tag_       = {false};
+        abs_tol[0] = 0.0;
+        f[0]       = 0.0;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        abs_tol_.setDataUpdated();
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -71,13 +88,16 @@ namespace GridKit
 
       int setAbsoluteTolerance(RealT rel_tol) override
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
       int evaluateResidual() override
       {
-        f_ = y_;
+        auto*       f = f_.getData();
+        const auto* y = y_.getData();
+        f[0]          = y[0];
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -110,22 +130,22 @@ namespace GridKit
       {
       }
 
-      std::vector<ScalarT>& y() override
+      VectorT& y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override
+      const VectorT& y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override
+      VectorT& yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override
+      const VectorT& yp() const override
       {
         return yp_;
       }
@@ -140,72 +160,72 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() override
+      VectorT& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const override
+      const VectorT& absoluteTolerance() const override
       {
         return abs_tol_;
       }
 
-      std::vector<ScalarT>& yB() override
+      VectorT& yB() override
       {
         return yB_;
       }
 
-      const std::vector<ScalarT>& yB() const override
+      const VectorT& yB() const override
       {
         return yB_;
       }
 
-      std::vector<ScalarT>& ypB() override
+      VectorT& ypB() override
       {
         return ypB_;
       }
 
-      const std::vector<ScalarT>& ypB() const override
+      const VectorT& ypB() const override
       {
         return ypB_;
       }
 
-      std::vector<ScalarT>& param() override
+      VectorT& param() override
       {
         return param_;
       }
 
-      const std::vector<ScalarT>& param() const override
+      const VectorT& param() const override
       {
         return param_;
       }
 
-      std::vector<ScalarT>& param_up() override
+      VectorT& param_up() override
       {
         return param_up_;
       }
 
-      const std::vector<ScalarT>& param_up() const override
+      const VectorT& param_up() const override
       {
         return param_up_;
       }
 
-      std::vector<ScalarT>& param_lo() override
+      VectorT& param_lo() override
       {
         return param_lo_;
       }
 
-      const std::vector<ScalarT>& param_lo() const override
+      const VectorT& param_lo() const override
       {
         return param_lo_;
       }
 
-      std::vector<ScalarT>& getResidual() override
+      VectorT& getResidual() override
       {
         return f_;
       }
 
-      const std::vector<ScalarT>& getResidual() const override
+      const VectorT& getResidual() const override
       {
         return f_;
       }
@@ -215,32 +235,32 @@ namespace GridKit
         return csr_jac_;
       }
 
-      std::vector<ScalarT>& getIntegrand() override
+      VectorT& getIntegrand() override
       {
         return g_;
       }
 
-      const std::vector<ScalarT>& getIntegrand() const override
+      const VectorT& getIntegrand() const override
       {
         return g_;
       }
 
-      std::vector<ScalarT>& getAdjointResidual() override
+      VectorT& getAdjointResidual() override
       {
         return fB_;
       }
 
-      const std::vector<ScalarT>& getAdjointResidual() const override
+      const VectorT& getAdjointResidual() const override
       {
         return fB_;
       }
 
-      std::vector<ScalarT>& getAdjointIntegrand() override
+      VectorT& getAdjointIntegrand() override
       {
         return gB_;
       }
 
-      const std::vector<ScalarT>& getAdjointIntegrand() const override
+      const VectorT& getAdjointIntegrand() const override
       {
         return gB_;
       }
@@ -251,40 +271,75 @@ namespace GridKit
       }
 
     protected:
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> abs_tol_;
-      std::vector<ScalarT> f_;
-      std::vector<ScalarT> g_;
+      void allocateVectors(IdxT n)
+      {
+        y_.resize(n);
+        yp_.resize(n);
+        f_.resize(n);
+        abs_tol_.resize(n);
+      }
 
-      std::vector<ScalarT> yB_;
-      std::vector<ScalarT> ypB_;
-      std::vector<ScalarT> fB_;
-      std::vector<ScalarT> gB_;
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      VectorT           f_;
+      VectorT           g_;
+
+      VectorT yB_;
+      VectorT ypB_;
+      VectorT fB_;
+      VectorT gB_;
 
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
-      std::vector<ScalarT> param_;
-      std::vector<ScalarT> param_up_;
-      std::vector<ScalarT> param_lo_;
+      VectorT param_;
+      VectorT param_up_;
+      VectorT param_lo_;
+
+      bool allocated_{false};
     };
 
     template <class ScalarT, typename IdxT>
     class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
     {
+    protected:
+      using NullEvaluator<ScalarT, IdxT>::allocated_;
+      using NullEvaluator<ScalarT, IdxT>::y_;
+      using NullEvaluator<ScalarT, IdxT>::yp_;
+      using NullEvaluator<ScalarT, IdxT>::abs_tol_;
+      using NullEvaluator<ScalarT, IdxT>::tag_;
+      using NullEvaluator<ScalarT, IdxT>::f_;
+
     public:
       using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
 
       int initialize() override
       {
-        this->y_       = {0, 0};
-        this->yp_      = {0, 0};
-        this->tag_     = {true, false};
-        this->abs_tol_ = {0, 0};
-        this->f_       = {0, 0};
-        this->g_       = {0};
-        t_             = 0;
+        if (!allocated_)
+        {
+          this->allocate();
+        }
+
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
+
+        y[0]       = 0.0;
+        y[1]       = 0.0;
+        yp[0]      = 0.0;
+        yp[1]      = 0.0;
+        tag_       = {true, false};
+        abs_tol[0] = 0.0;
+        abs_tol[1] = 0.0;
+        f[0]       = 0.0;
+        f[1]       = 0.0;
+        t_         = 0.0;
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        abs_tol_.setDataUpdated();
+        f_.setDataUpdated();
         return 0;
       }
 
@@ -296,8 +351,13 @@ namespace GridKit
       int evaluateResidual() override
       {
         static constexpr RealT OMEGA = 100.0;
-        this->f_[0]                  = this->yp_[0];
-        this->f_[1]                  = this->y_[1] - std::sin(OMEGA * t_);
+        auto*                  f     = f_.getData();
+        const auto*            y     = y_.getData();
+        const auto*            yp    = yp_.getData();
+
+        f[0] = yp[0];
+        f[1] = y[1] - std::sin(OMEGA * t_);
+        f_.setDataUpdated();
         return 0;
       }
 

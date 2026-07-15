@@ -10,4 +10,5 @@ gridkit_add_library(
           GeneratorFactory.hpp
           GeneratorPQ.hpp
           GeneratorPV.hpp
-          GeneratorSlack.hpp)
+          GeneratorSlack.hpp
+  LINK_LIBRARIES GridKit::dense_vector)

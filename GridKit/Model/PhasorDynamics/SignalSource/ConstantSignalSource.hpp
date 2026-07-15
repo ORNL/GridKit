@@ -36,6 +36,7 @@ namespace GridKit
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::size_;
+      using Component<scalar_type, index_type>::allocated_;
 
     public:
       using ScalarT    = scalar_type;

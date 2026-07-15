@@ -6,4 +6,5 @@
 gridkit_add_library(
   generator2
   SOURCES Generator2.cpp
-  HEADERS Generator2.hpp)
+  HEADERS Generator2.hpp
+  LINK_LIBRARIES GridKit::dense_vector)

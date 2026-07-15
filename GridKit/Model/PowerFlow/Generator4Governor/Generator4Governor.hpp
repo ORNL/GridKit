@@ -152,57 +152,57 @@ namespace GridKit
 
     const ScalarT dotDelta() const
     {
-      return yp_[static_cast<size_t>(offsetGen_ + 0)];
+      return yp_.getData()[static_cast<size_t>(offsetGen_ + 0)];
     }
 
     const ScalarT dotOmega() const
     {
-      return yp_[static_cast<size_t>(offsetGen_ + 1)];
+      return yp_.getData()[static_cast<size_t>(offsetGen_ + 1)];
     }
 
     const ScalarT dotEdp() const
     {
-      return yp_[static_cast<size_t>(offsetGen_ + 2)];
+      return yp_.getData()[static_cast<size_t>(offsetGen_ + 2)];
     }
 
     const ScalarT dotEqp() const
     {
-      return yp_[static_cast<size_t>(offsetGen_ + 3)];
+      return yp_.getData()[static_cast<size_t>(offsetGen_ + 3)];
     }
 
     const ScalarT delta() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 0)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 0)];
     }
 
     const ScalarT omega() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 1)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 1)];
     }
 
     const ScalarT Edp() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 2)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 2)];
     }
 
     const ScalarT Eqp() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 3)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 3)];
     }
 
     const ScalarT Id() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 4)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 4)];
     }
 
     const ScalarT Iq() const
     {
-      return y_[static_cast<size_t>(offsetGen_ + 5)];
+      return y_.getData()[static_cast<size_t>(offsetGen_ + 5)];
     }
 
     const ScalarT K() const
     {
-      return param_[1];
+      return param_.getData()[1];
     }
 
     const ScalarT T1() const
@@ -212,7 +212,7 @@ namespace GridKit
 
     const ScalarT T2() const
     {
-      return param_[0];
+      return param_.getData()[0];
     }
 
     const ScalarT T3() const

@@ -88,9 +88,12 @@ int main()
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
       new IpoptInterface::DynamicObjective<double, size_t>(idas);
 
+  auto* param = model->param().getData();
+
   // Initialize problem
-  model->param()[0] = T2;
-  model->param()[1] = K;
+  param[0] = T2;
+  param[1] = K;
+  model->param().setDataUpdated();
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
@@ -102,9 +105,9 @@ int main()
               << ipoptApp->Statistics()->IterationCount()
               << " iterations!\n";
     std::cout << "Optimal value: T2 = "
-              << model->param()[0]
+              << param[0]
               << ", K = "
-              << model->param()[1] << "\n";
+              << param[1] << "\n";
     std::cout << "The final value of the objective function G(T2,K) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }

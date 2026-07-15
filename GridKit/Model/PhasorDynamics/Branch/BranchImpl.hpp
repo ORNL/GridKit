@@ -119,9 +119,19 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Branch<scalar_type, index_type>::allocate()
     {
+      if (!allocated_)
+      {
+        this->allocateVectors(size_);
+      }
+      auto size = static_cast<std::size_t>(size_);
+
+      variable_indices_.resize(size);
+      residual_indices_.resize(size);
+
       wb_.resize(2);
       h_.resize(2);
 
+      allocated_ = true;
       return 0;
     }
 
@@ -301,6 +311,15 @@ namespace GridKit
       Ii1() += ii1;
       Ir2() += ir2;
       Ii2() += ii2;
+
+      if (bus1_->size() > 0)
+      {
+        bus1_->getResidual().setDataUpdated();
+      }
+      if (bus2_->size() > 0)
+      {
+        bus2_->getResidual().setDataUpdated();
+      }
 
       return 0;
     }

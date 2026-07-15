@@ -69,32 +69,32 @@ namespace GridKit
     // const accessors are public
     ScalarT const& th2() const
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     ScalarT const& V2() const
     {
-      return y_[1];
+      return y_.getData()[1];
     }
 
     ScalarT const& th3() const
     {
-      return y_[2];
+      return y_.getData()[2];
     }
 
     ScalarT& th2()
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     ScalarT& V2()
     {
-      return y_[1];
+      return y_.getData()[1];
     }
 
     ScalarT& th3()
     {
-      return y_[2];
+      return y_.getData()[2];
     }
 
   private:

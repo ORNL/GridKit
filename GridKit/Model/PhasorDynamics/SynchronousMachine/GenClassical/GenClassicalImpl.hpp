@@ -147,17 +147,17 @@ namespace GridKit
     {
       using Variable = typename ModelDataT::MonitorableVariables;
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_[3]); });
+                    { return toSystemBase(y_.getData()[3]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_[4]); });
+                    { return toSystemBase(y_.getData()[4]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_[3] + Vi() * y_[4]); });
+                    { return toSystemBase(Vr() * y_.getData()[3] + Vi() * y_.getData()[4]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_[3] - Vr() * y_[4]); });
+                    { return toSystemBase(Vi() * y_.getData()[3] - Vr() * y_.getData()[4]); });
       monitor_->set(Variable::delta, [this]
-                    { return y_[0]; });
+                    { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
-                    { return y_[1]; });
+                    { return y_.getData()[1]; });
     }
 
     /**
@@ -176,27 +176,27 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::allocate()
     {
-      // Resize component model data
+      if (!allocated_)
+      {
+        this->allocateVectors(size_);
+      }
       auto size = static_cast<size_t>(size_);
-      f_.resize(size);
-      y_.resize(size);
-      yp_.resize(size);
+
       tag_.resize(size);
-      abs_tol_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-
-      // Resize coupling data
-      wb_.resize(2);
-      h_.resize(2);
-
-      // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
         this->setVariableIndex(j, j);
         this->setResidualIndex(j, j);
       }
 
+      // Resize coupling data
+      wb_.resize(2);
+      h_.resize(2);
+
+      allocated_ = true;
       return 0;
     }
 
@@ -220,16 +220,22 @@ namespace GridKit
       ScalarT Ep    = std::sqrt(Er * Er + Ei * Ei);
       ScalarT Te    = G_ * Ep * Ep - Ep * ((G_ * vr - B_ * vi) * std::cos(delta) + (B_ * vr + G_ * vi) * std::sin(delta));
 
-      y_[0]      = delta;
-      y_[1]      = omega;
-      y_[2]      = Te;
-      y_[3]      = ir;
-      y_[4]      = ii;
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+
+      y[0]       = delta;
+      y[1]       = omega;
+      y[2]       = Te;
+      y[3]       = ir;
+      y[4]       = ii;
       pmech_set_ = Te;
       ep_set_    = Ep;
 
       for (size_t i = 0; i < static_cast<size_t>(size_); ++i)
-        yp_[i] = 0.0;
+        yp[i] = 0.0;
+
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
 
       return 0;
     }
@@ -262,7 +268,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
@@ -336,11 +342,20 @@ namespace GridKit
       wb_[0] = Vr();
       wb_[1] = Vi();
 
-      evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), f_.data());
-      evaluateBusResidual(y_.data(), yp_.data(), wb_.data(), h_.data());
+      const auto* y  = y_.getData();
+      const auto* yp = yp_.getData();
+      auto*       f  = f_.getData();
+      evaluateInternalResidual(y, yp, wb_.data(), f);
+      evaluateBusResidual(y, yp, wb_.data(), h_.data());
 
       Ir() += h_[0];
       Ii() += h_[1];
+
+      if (bus_->size() > 0)
+      {
+        bus_->getResidual().setDataUpdated();
+      }
+      f_.setDataUpdated();
 
       return 0;
     }

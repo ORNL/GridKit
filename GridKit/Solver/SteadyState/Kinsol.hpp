@@ -29,7 +29,8 @@ namespace AnalysisManager
     {
       using SteadyStateSolver<ScalarT, IdxT>::model_;
 
-      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using VectorT = typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       static_assert(std::is_same_v<RealT, sunrealtype>, "RealT must be the same type as sunrealtype");
 
@@ -140,8 +141,8 @@ namespace AnalysisManager
 
     private:
       // static void copyMat(Model::Evaluator::Mat& J, SlsMat Jida);
-      static void copyVec(const N_Vector x, std::vector<ScalarT>& y);
-      static void copyVec(const std::vector<ScalarT>& x, N_Vector y);
+      static void copyVec(const N_Vector x, VectorT& y);
+      static void copyVec(const VectorT& x, N_Vector y);
       static void copyVec(const std::vector<bool>& x, N_Vector y);
 
       // int check_flag(void *flagvalue, const char *funcname, int opt);

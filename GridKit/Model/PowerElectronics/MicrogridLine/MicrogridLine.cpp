@@ -80,7 +80,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
   }
 
@@ -91,8 +91,10 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + y_[0] * y_int_[1] + (y_[1] - y_[3]) / L_;
-    f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - y_[0] * y_int_[0] + (y_[2] - y_[4]) / L_;
+    const auto* y = y_.getData();
+
+    f_int_[0] = -yp_int_[0] - (R_ / L_) * y_int_[0] + y[0] * y_int_[1] + (y[1] - y[3]) / L_;
+    f_int_[1] = -yp_int_[1] - (R_ / L_) * y_int_[1] - y[0] * y_int_[0] + (y[2] - y[4]) / L_;
 
     return 0;
   }
@@ -100,16 +102,20 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int MicrogridLine<ScalarT, IdxT>::evaluateExternalResidual()
   {
+    auto* f = f_.getData();
+
     // ref motor
-    f_[0] = 0.0;
+    f[0] = 0.0;
 
     // Port 1
-    f_[1] = -y_int_[0];
-    f_[2] = -y_int_[1];
+    f[1] = -y_int_[0];
+    f[2] = -y_int_[1];
 
     // Port 2
-    f_[3] = y_int_[0];
-    f_[4] = y_int_[1];
+    f[3] = y_int_[0];
+    f[4] = y_int_[1];
+
+    f_.setDataUpdated();
 
     return 0;
   }
@@ -136,12 +142,13 @@ namespace GridKit
 
     std::vector<IdxT>  rcord(ccord.size(), 5);
     std::vector<RealT> vals{};
-    vals = {static_cast<RealT>(y_int_[1]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y_[0])};
+    const auto*        y = y_.getData();
+    vals                 = {static_cast<RealT>(y_int_[1]), (1.0 / L_), -(1.0 / L_), -(R_ / L_) - alpha_, static_cast<RealT>(y[0])};
     this->setJacValues(rcord, ccord, vals);
 
     std::vector<IdxT> ccor2{0, 2, 4, 5, 6};
     std::fill(rcord.begin(), rcord.end(), 6);
-    vals = {-static_cast<RealT>(y_int_[0]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y_[0]), -(R_ / L_) - alpha_};
+    vals = {-static_cast<RealT>(y_int_[0]), (1.0 / L_), -(1.0 / L_), -static_cast<RealT>(y[0]), -(R_ / L_) - alpha_};
     this->setJacValues(rcord, ccor2, vals);
 
     return 0;

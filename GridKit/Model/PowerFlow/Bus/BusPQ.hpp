@@ -46,82 +46,82 @@ namespace GridKit
 
     virtual ScalarT& V()
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     virtual const ScalarT& V() const
     {
-      return y_[0];
+      return y_.getData()[0];
     }
 
     virtual ScalarT& theta()
     {
-      return y_[1];
+      return y_.getData()[1];
     }
 
     virtual const ScalarT& theta() const
     {
-      return y_[1];
+      return y_.getData()[1];
     }
 
     virtual ScalarT& P()
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     virtual const ScalarT& P() const
     {
-      return f_[0];
+      return f_.getData()[0];
     }
 
     virtual ScalarT& Q()
     {
-      return f_[1];
+      return f_.getData()[1];
     }
 
     virtual const ScalarT& Q() const
     {
-      return f_[1];
+      return f_.getData()[1];
     }
 
     virtual ScalarT& lambdaP()
     {
-      return yB_[0];
+      return yB_.getData()[0];
     }
 
     virtual const ScalarT& lambdaP() const
     {
-      return yB_[0];
+      return yB_.getData()[0];
     }
 
     virtual ScalarT& lambdaQ()
     {
-      return yB_[1];
+      return yB_.getData()[1];
     }
 
     virtual const ScalarT& lambdaQ() const
     {
-      return yB_[1];
+      return yB_.getData()[1];
     }
 
     virtual ScalarT& PB()
     {
-      return fB_[0];
+      return fB_.getData()[0];
     }
 
     virtual const ScalarT& PB() const
     {
-      return fB_[0];
+      return fB_.getData()[0];
     }
 
     virtual ScalarT& QB()
     {
-      return fB_[1];
+      return fB_.getData()[1];
     }
 
     virtual const ScalarT& QB() const
     {
-      return fB_[1];
+      return fB_.getData()[1];
     }
 
     virtual int BusType() const

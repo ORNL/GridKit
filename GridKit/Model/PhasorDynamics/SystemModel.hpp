@@ -55,6 +55,7 @@ namespace GridKit
       using Component<scalar_type, index_type>::residual_indices_;
       using Component<scalar_type, index_type>::csr_jac_;
       using Component<scalar_type, index_type>::map_to_csr_;
+      using Component<scalar_type, index_type>::allocated_;
 
     public:
       using ScalarT    = scalar_type;

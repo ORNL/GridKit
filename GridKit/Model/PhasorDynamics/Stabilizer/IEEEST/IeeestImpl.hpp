@@ -157,32 +157,35 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::allocate()
       {
+        if (!allocated_)
+        {
+          this->allocateVectors(size_);
+        }
         auto size = static_cast<size_t>(size_);
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
+
         tag_.resize(size);
-        abs_tol_.resize(size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
-
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
-
         for (IdxT j = 0; j < size_; ++j)
         {
           this->setVariableIndex(j, j);
           this->setResidualIndex(j, j);
         }
 
+        ws_.resize(1);
+        ws_indices_.resize(1);
+        ws_[0]         = 0.0;
+        ws_indices_[0] = INVALID_INDEX<IdxT>;
+
         if (signals_.template isAssigned<IeeestInternalVariables::VSS>())
         {
+          auto* y = y_.getData();
           signals_.template getSignalNode<IeeestInternalVariables::VSS>()->set(
-              &y_[11], &(this->getVariableIndex(11)));
+              &y[11], &(this->getVariableIndex(11)));
         }
 
+        allocated_ = true;
         return 0;
       }
 
@@ -217,11 +220,17 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::initialize()
       {
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+
         for (IdxT i = 0; i < size_; ++i)
         {
-          y_[static_cast<size_t>(i)]  = 0.0;
-          yp_[static_cast<size_t>(i)] = 0.0;
+          y[static_cast<size_t>(i)]  = 0.0;
+          yp[static_cast<size_t>(i)] = 0.0;
         }
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
 
         return 0;
       }
@@ -260,7 +269,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeest<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -322,7 +331,11 @@ namespace GridKit
           ws_indices_[0] = signals_.template readExternalVariableIndex<IeeestExternalVariables::U>();
         }
 
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+        f_.setDataUpdated();
 
         return 0;
       }
@@ -338,7 +351,7 @@ namespace GridKit
       {
         using Variable = typename ModelDataT::MonitorableVariables;
         monitor_->set(Variable::vss, [this]
-                      { return y_[11]; });
+                      { return y_.getData()[11]; });
       }
 
     } // namespace Stabilizer
