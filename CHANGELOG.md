@@ -77,6 +77,7 @@
 - Added `REGCA` converter model implementation for PhasorDynamics.
 - Remove unnecessary data copying while evaluating `PowerElectronics` models, speeding up large simulations by up to 3x
 - Added `HYGOV` governor model implementation for PhasorDynamics.
+- Added `REPCA` converter model implementation for PhasorDynamics.
 
 ## v0.1
 

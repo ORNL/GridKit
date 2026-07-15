@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFaultData.hpp>
 #include <GridKit/Model/PhasorDynamics/BusToSignalAdapter/BusToSignalAdapterData.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
+#include <GridKit/Model/PhasorDynamics/Converter/REPCA/RepcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/ESDC1A/Esdc1aData.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/IEEET1/Ieeet1Data.hpp>
 #include <GridKit/Model/PhasorDynamics/Exciter/SEXS-PTI/SexsPtiData.hpp>
@@ -45,6 +46,7 @@ namespace GridKit
       using BusToSignalAdapterDataT = BusToSignalAdapterData<RealT, IdxT>;
       using BusFaultDataT           = BusFaultData<RealT, IdxT>;
       using RegcaDataT              = Converter::RegcaData<RealT, IdxT>;
+      using RepcaDataT              = Converter::RepcaData<RealT, IdxT>;
       using Tgov1DataT              = Governor::Tgov1Data<RealT, IdxT>;
       using Esdc1aDataT             = Exciter::Esdc1aData<RealT, IdxT>;
       using HygovDataT              = Governor::HygovData<RealT, IdxT>;
@@ -102,6 +104,7 @@ namespace GridKit
       std::vector<BranchDataT>             branch;          ///< Branches within the model
       std::vector<BusFaultDataT>           bus_fault;       ///< Bus faults within the model
       std::vector<RegcaDataT>              regca;           ///< REGCA converter instances within the model
+      std::vector<RepcaDataT>              repca;           ///< REPCA plant controllers within the model
       std::vector<GenrouDataT>             genrou;          ///< GENROU instances within the model
       std::vector<GensalDataT>             gensal;          ///< GENSAL instances within the model
       std::vector<GenClassicalDataT>       genclassical;    ///< Classical generator instances within the model
