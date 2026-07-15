@@ -159,8 +159,6 @@ namespace GridKit
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
                     { return y_.getData()[1]; });
-      monitor_->set(Variable::speed, [this]
-                    { return 1.0 + y_.getData()[1]; });
     }
 
     /**
@@ -186,7 +184,7 @@ namespace GridKit
       auto size = static_cast<size_t>(size_);
 
       tag_.resize(size);
-      abs_tol_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
       for (IdxT j = 0; j < size_; ++j)
@@ -271,7 +269,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int GenClassical<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

@@ -203,7 +203,7 @@ namespace GridKit
       auto size = static_cast<size_t>(size_);
 
       tag_.resize(size);
-      abs_tol_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
       for (IdxT j = 0; j < size_; ++j)
@@ -301,6 +301,25 @@ namespace GridKit
       auto* y  = y_.getData();
       auto* yp = yp_.getData();
 
+      y[0]  = delta;
+      y[1]  = omega;
+      y[2]  = Eqp;
+      y[3]  = psidp;
+      y[4]  = psiqpp;
+      y[5]  = psidpp;
+      y[6]  = ksat;
+      y[7]  = vd;
+      y[8]  = vq;
+      y[9]  = Te;
+      y[10] = id;
+      y[11] = iq;
+      y[12] = ir;
+      y[13] = ii;
+      y[14] = G_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              - B_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+      y[15] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
+              + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
+
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GensalExternalVariables::PM>())
@@ -353,7 +372,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Gensal<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

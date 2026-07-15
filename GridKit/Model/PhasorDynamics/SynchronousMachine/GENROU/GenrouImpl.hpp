@@ -331,7 +331,11 @@ namespace GridKit
 
       variable_indices_.resize(size);
       residual_indices_.resize(size);
-      abs_tol_.resize(size);
+      for (IdxT j = 0; j < size_; ++j)
+      {
+        this->setVariableIndex(j, j);
+        this->setResidualIndex(j, j);
+      }
 
       // Resize bus data
       wb_.resize(2);
@@ -485,7 +489,7 @@ namespace GridKit
       y[18] = B_ * (vd * std::sin(delta) + vq * std::cos(delta))
               + G_ * (vd * -std::cos(delta) + vq * std::sin(delta));
 
-      ScalarT Te = y_[12];
+      ScalarT Te = y[12];
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
@@ -538,7 +542,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Genrou<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

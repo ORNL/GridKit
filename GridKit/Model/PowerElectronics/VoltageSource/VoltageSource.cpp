@@ -67,7 +67,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
   }
 
@@ -77,17 +77,23 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    f_int_[0] = *y_ext_[1] - *y_ext_[0] - V_;
+    // internal
+    const auto* y = y_.getData();
+
+    f_int_[0] = y[1] - y[0] - V_;
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int VoltageSource<ScalarT, IdxT>::evaluateExternalResidual()
   {
+    auto* f = f_.getData();
+
     // input
-    *f_ext_[0] += -y_int_[0];
+    f[0] = -y_int_[0];
     // ouput
-    *f_ext_[1] += y_int_[0];
+    f[1] = y_int_[0];
+    f_.setDataUpdated();
     return 0;
   }
 

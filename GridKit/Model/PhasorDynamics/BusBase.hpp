@@ -32,6 +32,7 @@ namespace GridKit
       using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
+      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
       using BusTypeT   = typename BusData<RealT, IdxT>::BusType;
       using MonitorT   = Model::VariableMonitor<BusBase, BusData>;
 
@@ -54,7 +55,7 @@ namespace GridKit
         return nnz_;
       }
 
-      std::vector<ScalarT>& y() override
+      VectorT& y() override
       {
         return y_;
       }
@@ -84,17 +85,17 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() override
+      VectorT& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const override
+      const VectorT& absoluteTolerance() const override
       {
         return abs_tol_;
       }
 
-      std::vector<ScalarT>& getResidual() override
+      VectorT& getResidual() override
       {
         return f_;
       }
@@ -200,11 +201,13 @@ namespace GridKit
       /// Global (system-level) residual indices
       std::vector<IdxT> residual_indices_;
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> abs_tol_;
-      std::vector<ScalarT> f_;
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      VectorT           f_;
+      bool              allocated_{false};
+
       std::vector<ScalarT> g_;
 
       CsrMatrixT* csr_jac_{nullptr};

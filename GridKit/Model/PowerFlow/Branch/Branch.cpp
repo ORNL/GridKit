@@ -142,6 +142,15 @@ namespace GridKit
       bus2_->getResidual().setDataUpdated();
     }
 
+    if (bus1_->size() > 0)
+    {
+      bus1_->getResidual().setDataUpdated();
+    }
+    if (bus2_->size() > 0)
+    {
+      bus2_->getResidual().setDataUpdated();
+    }
+
     return 0;
   }
 

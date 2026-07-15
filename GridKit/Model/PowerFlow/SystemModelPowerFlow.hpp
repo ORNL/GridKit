@@ -153,10 +153,8 @@ namespace GridKit
       }
 
       // Allocate global vectors
-      y_.resize(size_);
-      f_.resize(size_);
+      this->allocateVectors(size_);
       tag_.resize(size_);
-      abs_tol_.resize(size_);
 
       return 0;
     }
@@ -250,7 +248,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

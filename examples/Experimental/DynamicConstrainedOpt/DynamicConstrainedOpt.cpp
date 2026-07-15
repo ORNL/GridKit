@@ -96,6 +96,8 @@ int main()
 
   auto* param = model.param().getData();
 
+  auto* param = model.param().getData();
+
   // Initialize problem
   param[0] = Pm;
   model.param().setDataUpdated();

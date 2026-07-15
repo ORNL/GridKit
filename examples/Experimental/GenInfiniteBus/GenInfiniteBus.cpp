@@ -102,6 +102,8 @@ int main()
 
   auto* param = model.param().getData();
 
+  auto* param = model.param().getData();
+
   // Initialize the problem
   param[0] = Pm;
   param[1] = Ef;

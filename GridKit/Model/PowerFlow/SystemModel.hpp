@@ -104,7 +104,6 @@ namespace GridKit
       // Allocate global vectors
       this->allocateVectors(size_);
       tag_.resize(size_);
-      abs_tol_.resize(size_);
 
       yB_.resize(size_);
       ypB_.resize(size_);
@@ -333,45 +332,6 @@ namespace GridKit
       }
 
       abs_tol_.setDataUpdated();
-
-      return 0;
-    }
-
-    /**
-     * @brief Compute the absolute tolerance for each variable in the model
-     *
-     * @param rel_tol The relative tolerance which can be used to pick the
-     *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     * @return int 0 if successful, non-zero otherwise.
-     *
-     * This represents a "noise" level close to zero for which pure relative
-     * error cannot be used.
-     */
-    int setAbsoluteTolerance(RealT rel_tol)
-    {
-      // Set initial values for global solution vectors
-      IdxT offset = 0;
-      for (const auto& bus : buses_)
-      {
-        bus->setAbsoluteTolerance(rel_tol);
-        for (IdxT j = 0; j < bus->size(); ++j)
-        {
-          abs_tol_[offset + j] = bus->absoluteTolerance()[j];
-        }
-        offset += bus->size();
-      }
-
-      for (const auto& component : components_)
-      {
-        component->setAbsoluteTolerance(rel_tol);
-        for (IdxT j = 0; j < component->size(); ++j)
-        {
-          abs_tol_[offset + j] = component->absoluteTolerance()[j];
-        }
-        offset += component->size();
-      }
 
       return 0;
     }

@@ -112,7 +112,7 @@ namespace GridKit
       size_t size = static_cast<size_t>(size_);
 
       tag_.resize(size);
-      abs_tol_.resize(size);
+
       variable_indices_.resize(size);
       residual_indices_.resize(size);
 
@@ -163,7 +163,7 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int Bus<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 

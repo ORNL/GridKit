@@ -15,7 +15,8 @@ namespace GridKit
   template <typename ScalarT, typename IdxT>
   class CircuitNode : public Model::Evaluator<ScalarT, IdxT>
   {
-    using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+    using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
   public:
     CircuitNode()
@@ -75,7 +76,6 @@ namespace GridKit
       }
 
       tag_.resize(size);
-      abs_tol_.resize(size);
 
       variable_indices_[0] = 0;
       residual_indices_[0] = 0;
@@ -125,7 +125,7 @@ namespace GridKit
      */
     int setAbsoluteTolerance(RealT rel_tol)
     {
-      std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
@@ -191,21 +191,21 @@ namespace GridKit
     std::map<IdxT, IdxT> variable_indices_;
     std::map<IdxT, IdxT> residual_indices_;
 
-    std::vector<ScalarT> y_;
-    std::vector<ScalarT> yp_;
-    std::vector<bool>    tag_;
-    std::vector<ScalarT> abs_tol_;
-    std::vector<ScalarT> f_;
+    VectorT           y_;
+    VectorT           yp_;
+    std::vector<bool> tag_;
+    VectorT           abs_tol_;
+    VectorT           f_;
 
-    std::vector<ScalarT> g_{};
-    std::vector<ScalarT> param_{};
-    std::vector<ScalarT> param_up_{};
-    std::vector<ScalarT> param_lo_{};
+    VectorT g_{};
+    VectorT param_{};
+    VectorT param_up_{};
+    VectorT param_lo_{};
 
-    std::vector<ScalarT> yB_{};
-    std::vector<ScalarT> ypB_{};
-    std::vector<ScalarT> fB_{};
-    std::vector<ScalarT> gB_{};
+    VectorT yB_{};
+    VectorT ypB_{};
+    VectorT fB_{};
+    VectorT gB_{};
 
     RealT time_{0};
     RealT alpha_{0};
@@ -240,7 +240,7 @@ namespace GridKit
       // No time to update in node models
     }
 
-    std::vector<ScalarT>& y() final
+    VectorT& y() final
     {
       return y_;
     }
@@ -270,17 +270,17 @@ namespace GridKit
       return tag_;
     }
 
-    std::vector<ScalarT>& absoluteTolerance() final
+    VectorT& absoluteTolerance() final
     {
       return abs_tol_;
     }
 
-    const std::vector<ScalarT>& absoluteTolerance() const final
+    const VectorT& absoluteTolerance() const final
     {
       return abs_tol_;
     }
 
-    std::vector<ScalarT>& yB() final
+    VectorT& yB() final
     {
       return yB_;
     }
@@ -340,7 +340,7 @@ namespace GridKit
       return f_;
     }
 
-    std::vector<ScalarT>& getIntegrand() final
+    VectorT& getIntegrand() final
     {
       return g_;
     }

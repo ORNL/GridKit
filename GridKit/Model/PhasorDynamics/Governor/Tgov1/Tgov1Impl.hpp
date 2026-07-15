@@ -196,7 +196,7 @@ namespace GridKit
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
         tag_.resize(size);
-        abs_tol_.resize(size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -261,16 +261,16 @@ namespace GridKit
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           // System base -> governor base for governor initialization.
-          p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
+          p0 = toComponentBase(y[2]); ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
 
         // Internal States
-        y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
-        y_[1] = p0;               // y1 - Pv  (Valve Position)
-        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
+        y[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
+        y[1] = p0;               // y1 - Pv  (Valve Position)
+        y[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
 
         // D.V. Derivative
         yp[0] = 0.0; // Ptx
@@ -311,7 +311,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 

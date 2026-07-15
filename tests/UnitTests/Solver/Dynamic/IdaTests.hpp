@@ -39,8 +39,10 @@ namespace GridKit
           allocate();
         }
 
-        tag_     = {false};
-        abs_tol_ = {0};
+        auto* y       = y_.getData();
+        auto* yp      = yp_.getData();
+        auto* abs_tol = abs_tol_.getData();
+        auto* f       = f_.getData();
 
         y[0]       = 0.0;
         yp[0]      = 0.0;
@@ -86,7 +88,7 @@ namespace GridKit
 
       int setAbsoluteTolerance(RealT rel_tol) override
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -158,17 +160,17 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() override
+      VectorT& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const override
+      const VectorT& absoluteTolerance() const override
       {
         return abs_tol_;
       }
 
-      std::vector<ScalarT>& yB() override
+      VectorT& yB() override
       {
         return yB_;
       }
@@ -233,7 +235,7 @@ namespace GridKit
         return csr_jac_;
       }
 
-      std::vector<ScalarT>& getIntegrand() override
+      VectorT& getIntegrand() override
       {
         return g_;
       }
@@ -269,12 +271,13 @@ namespace GridKit
       }
 
     protected:
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> abs_tol_;
-      std::vector<ScalarT> f_;
-      std::vector<ScalarT> g_;
+      void allocateVectors(IdxT n)
+      {
+        y_.resize(n);
+        yp_.resize(n);
+        f_.resize(n);
+        abs_tol_.resize(n);
+      }
 
       VectorT           y_;
       VectorT           yp_;
@@ -283,7 +286,10 @@ namespace GridKit
       VectorT           f_;
       VectorT           g_;
 
-      GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
+      VectorT yB_;
+      VectorT ypB_;
+      VectorT fB_;
+      VectorT gB_;
 
       GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>* csr_jac_;
 
@@ -352,46 +358,6 @@ namespace GridKit
         f[0] = yp[0];
         f[1] = y[1] - std::sin(OMEGA * t_);
         f_.setDataUpdated();
-        return 0;
-      }
-
-      void updateTime(RealT t, [[maybe_unused]] RealT a) override
-      {
-        t_ = t;
-      }
-
-    private:
-      RealT t_{};
-    };
-
-    template <class ScalarT, typename IdxT>
-    class AlgebraicErrorControlEvaluator : public NullEvaluator<ScalarT, IdxT>
-    {
-    public:
-      using RealT = typename NullEvaluator<ScalarT, IdxT>::RealT;
-
-      int initialize() override
-      {
-        this->y_       = {0, 0};
-        this->yp_      = {0, 0};
-        this->tag_     = {true, false};
-        this->abs_tol_ = {0, 0};
-        this->f_       = {0, 0};
-        this->g_       = {0};
-        t_             = 0;
-        return 0;
-      }
-
-      IdxT size() override
-      {
-        return 2;
-      }
-
-      int evaluateResidual() override
-      {
-        static constexpr RealT OMEGA = 100.0;
-        this->f_[0]                  = this->yp_[0];
-        this->f_[1]                  = this->y_[1] - std::sin(OMEGA * t_);
         return 0;
       }
 

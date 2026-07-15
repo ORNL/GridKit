@@ -84,6 +84,8 @@ int main()
 
   auto* param = model.param().getData();
 
+  auto* param = model.param().getData();
+
   // Guess value of inertia coefficient
   param[0] = 3.0;
   model.param().setDataUpdated();

@@ -14,7 +14,8 @@ namespace GridKit
     class NodeBase : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       NodeBase(size_t n_intern, size_t n_extern)
         : n_intern_(n_intern), n_extern_(n_extern)
@@ -50,7 +51,7 @@ namespace GridKit
       {
       }
 
-      std::vector<ScalarT>& y() final
+      VectorT& y() final
       {
         return y_;
       }
@@ -80,12 +81,12 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() final
+      VectorT& absoluteTolerance() final
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const final
+      const VectorT& absoluteTolerance() const final
       {
         return abs_tol_;
       }
@@ -145,7 +146,6 @@ namespace GridKit
         }
 
         tag_.resize(size);
-        abs_tol_.resize(size);
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -177,7 +177,7 @@ namespace GridKit
        */
       int setAbsoluteTolerance(RealT rel_tol) final
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -207,11 +207,11 @@ namespace GridKit
       std::vector<IdxT> variable_indices_; ///< Global (system-level) variable indices
       std::vector<IdxT> residual_indices_; ///< Global (system-level) residual indices
 
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> abs_tol_;
-      std::vector<ScalarT> f_;
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           abs_tol_;
+      VectorT           f_;
 
       IdxT*  J_rows_buffer_{nullptr};
       IdxT*  J_cols_buffer_{nullptr};
@@ -234,11 +234,6 @@ namespace GridKit
       std::unique_ptr<IdxT[]> connection_nodes_;
 
       bool allocated_{false};
-
-    private:
-      VectorT y_;
-      VectorT yp_;
-      VectorT f_;
 
     public:
       virtual IdxT
@@ -387,6 +382,9 @@ namespace GridKit
     private:
       void allocateVectors(IdxT n)
       {
+        y_.resize(n);
+        yp_.resize(n);
+        f_.resize(n);
         abs_tol_.resize(n);
       }
     };

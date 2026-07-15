@@ -137,10 +137,10 @@ namespace GridKit
       f_ext_            = std::make_unique<ScalarT*[]>(static_cast<size_t>(size_));
       connection_nodes_ = std::make_unique<IdxT[]>(static_cast<size_t>(size_));
 
-      y_.resize(static_cast<size_t>(size_));
-      yp_.resize(static_cast<size_t>(size_));
-      abs_tol_.resize(static_cast<size_t>(size_));
-      f_.resize(static_cast<size_t>(size_));
+      if (!allocated_)
+      {
+        allocateVectors(size_);
+      }
 
       allocated_ = true;
       return 0;
@@ -303,7 +303,7 @@ namespace GridKit
       return size_opt_;
     }
 
-    std::vector<ScalarT>& y() final
+    VectorT& y() final
     {
       return y_;
     }
@@ -333,17 +333,17 @@ namespace GridKit
       return tag_;
     }
 
-    std::vector<ScalarT>& absoluteTolerance() final
+    VectorT& absoluteTolerance() final
     {
       return abs_tol_;
     }
 
-    const std::vector<ScalarT>& absoluteTolerance() const final
+    const VectorT& absoluteTolerance() const final
     {
       return abs_tol_;
     }
 
-    std::vector<ScalarT>& yB() final
+    VectorT& yB() final
     {
       return yB_;
     }
@@ -403,7 +403,7 @@ namespace GridKit
       return f_;
     }
 
-    std::vector<ScalarT>& getIntegrand() final
+    VectorT& getIntegrand() final
     {
       return g_;
     }
@@ -442,36 +442,15 @@ namespace GridKit
   protected:
     /**
      * @brief Allocate state and residual storage owned by this component.
-     *
-     * Most components do not need state and residual storages. The most notable exception
-     * is currently the system, so a separate flag is provided for the system.
-     * Systems still can't directly access `y_`, `yp_`, and `f_`, so they need
-     * their corresponding `y_int_`, `yp_int_`, and `f_int_` set, since there isn't
-     * another system above them to set it.
-     *
-     * @todo This is a weird exception specifically for systems - and in a hierarchical setting
-     * will only be needed by the *topmost* system - subsystems shouldn't allocate and should have their
-     * internal pointers set by the system above them. Ideally we can remove this exception by having
-     * the integrator allocate these buffers instead of the system and set the internal pointers for the
-     * topmost system.
      */
-    void allocateVectors(IdxT n, bool system = false)
+    void allocateVectors(IdxT n)
     {
+      y_.resize(n);
+      yp_.resize(n);
+      f_.resize(n);
       abs_tol_.resize(n);
-
-      if (system)
-      {
-        y_.resize(n);
-        yp_.resize(n);
-        f_.resize(n);
-
-        y_int_  = y_.getData();
-        yp_int_ = yp_.getData();
-        f_int_  = f_.getData();
-      }
     }
 
-    /// Number of external variables in this component - ones which are referenced but not owned by this component.
     size_t                  n_extern_;
     /// Number of internal variables in this component - ones which are only referenced by this component.
     size_t                  n_intern_;
@@ -512,15 +491,11 @@ namespace GridKit
     /// @brief A pointer to the internal residuals of this component
     ScalarT*       f_int_;
 
-    std::vector<ScalarT> y_;
-    std::vector<ScalarT> yp_;
-    std::vector<bool>    tag_;
-    std::vector<ScalarT> abs_tol_;
-    std::vector<ScalarT> f_;
-    std::vector<ScalarT> g_;
-
+    VectorT           y_;
+    VectorT           yp_;
     std::vector<bool> tag_;
     VectorT           abs_tol_;
+    VectorT           f_;
 
     VectorT g_;
 
@@ -541,29 +516,6 @@ namespace GridKit
     IdxT idc_;
 
     bool allocated_{false};
-
-  private:
-    /**
-     * The internal buffer for state for the component. For most components, it will be empty and shouldn't be accessed.
-     * Instead use \ref y_int_ for an internal variable or \ref y_ext_ for an external variable, respectively.
-     * For components which want an internal buffer (such as a system), make sure that \ref y_int_ points here.
-     * \see allocateVectors()
-     */
-    VectorT y_;
-    /**
-     * The internal buffer for derivatives for the component. For most components, it will be empty and shouldn't be accessed.
-     * Instead use \ref yp_int_ for an internal variable or \ref yp_ext_ for an external variable, respectively.
-     * For components which want an internal buffer (such as a system), make sure that \ref yp_int_ points here.
-     * \see allocateVectors()
-     */
-    VectorT yp_;
-    /**
-     * The internal buffer for state for the component. For most components, it will be empty and shouldn't be accessed.
-     * Instead use \ref f_int_ for an internal variable or \ref f_ext_ for an external variable, respectively.
-     * For components which want an internal buffer (such as a system), make sure that \ref f_int_ points here.
-     * \see allocateVectors()
-     */
-    VectorT f_;
   };
 
 } // namespace GridKit

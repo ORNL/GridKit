@@ -26,6 +26,7 @@ namespace GridKit
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
+      using VectorT    = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
 
       Evaluator()
       {
@@ -127,23 +128,6 @@ namespace GridKit
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
-      virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
-      /**
-       * @brief Get the absolute tolerance for each variable in the model
-       *
-       * @return a const reference to the absolute tolerance vector.
-       *
-       * @pre `setAbsoluteTolerance` must have been called first.
-       */
-      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
-
-      /**
-       * @brief Get the absolute tolerance for each variable in the model
-       *
-       * @return a reference to the absolute tolerance vector.
-       *
-       * @pre `setAbsoluteTolerance` must have been called first.
-       */
       virtual VectorT&       absoluteTolerance()       = 0;
       /**
        * @brief Get the absolute tolerance for each variable in the model
@@ -181,8 +165,11 @@ namespace GridKit
       virtual VectorT&       getResidual()       = 0;
       virtual const VectorT& getResidual() const = 0;
 
-      virtual std::vector<ScalarT>&       getIntegrand()       = 0;
-      virtual const std::vector<ScalarT>& getIntegrand() const = 0;
+      virtual VectorT&       getIntegrand()       = 0;
+      virtual const VectorT& getIntegrand() const = 0;
+
+      virtual VectorT&       getAdjointResidual()       = 0;
+      virtual const VectorT& getAdjointResidual() const = 0;
 
       virtual VectorT&       getAdjointIntegrand()       = 0;
       virtual const VectorT& getAdjointIntegrand() const = 0;

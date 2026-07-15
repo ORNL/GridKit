@@ -68,8 +68,6 @@ namespace GridKit
   {
     // std::cout << "Allocate Gen2..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
-    abs_tol_.resize(static_cast<size_t>(size_));
-
     return 0;
   }
 
@@ -111,6 +109,9 @@ namespace GridKit
     const ScalarT Iq  = std::sqrt(P0_ * P0_ + Q0_ * Q0_) / V() * std::cos(phi);
     const ScalarT Edp = V() * std::sin(delta - theta()) + Rs_ * Id - Xqp_ * Iq;
     const ScalarT Eqp = V() * std::cos(delta - theta()) + Rs_ * Iq + Xdp_ * Id;
+
+    auto* y  = y_.getData();
+    auto* yp = yp_.getData();
 
     auto* y  = y_.getData();
     auto* yp = yp_.getData();
@@ -185,7 +186,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Governor<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
   }
 
@@ -237,8 +238,8 @@ namespace GridKit
     f[static_cast<size_t>(offsetGen_ + 1)] = (2.0 * H_) / omega_s_ * dotOmega() - Lm(y[static_cast<size_t>(offsetGov_ + 0)]) + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
     f[static_cast<size_t>(offsetGen_ + 2)] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
     f[static_cast<size_t>(offsetGen_ + 3)] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef0_;
-    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
-    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
+    f[static_cast<size_t>(offsetGen_ + 4)] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
+    f[static_cast<size_t>(offsetGen_ + 5)] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
 
     // Bus equations
     P() += Pg();
@@ -335,6 +336,11 @@ namespace GridKit
     // std::cout << "Evaluate adjoint residual for Gen2..." << std::endl;
     ScalarT sinPhi = std::sin(delta() - theta());
     ScalarT cosPhi = std::cos(delta() - theta());
+
+    const auto* y   = y_.getData();
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
 
     const auto* y   = y_.getData();
     const auto* yB  = yB_.getData();

@@ -84,7 +84,7 @@ namespace GridKit
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
 
         tag_.resize(size);
-        abs_tol_.resize(size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
@@ -183,7 +183,7 @@ namespace GridKit
        * F(y, yp=0, t=0) = 0 exactly for every residual equation.
        *
        * Inputs:
-       *   - EFD assigned by the generator (read from y_[7]).
+       *   - EFD assigned by the generator.
        *   - Bus voltage, used to form the sensed terminal voltage magnitude.
        *   - Attached external signals (omega, V_S)
        *
@@ -292,7 +292,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Ieeet1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -501,7 +501,7 @@ namespace GridKit
       {
         using Variable = ModelDataT::MonitorableVariables;
         monitor_->set(Variable::efd, [this]
-                      { return y_[7]; });
+                      { return y_.getData()[7]; });
         monitor_->set(Variable::ksat, [this]
                       { return SB_ * Math::qramp(y_.getData()[2] - SA_); });
       }

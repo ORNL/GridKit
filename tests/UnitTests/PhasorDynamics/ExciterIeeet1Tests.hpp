@@ -94,14 +94,21 @@ namespace GridKit
 
         success *= (exciter.tag()[0]);
 
-        exciter.yp()[0] = 123.0;
-        exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(-123.0));
+        auto* y  = exciter.y().getData();
+        auto* yp = exciter.yp().getData();
 
-        exciter.yp()[0] = 0.0;
-        exciter.y()[0]  = 4.0;
+        yp[0] = 123.0;
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[0], static_cast<ScalarT>(1.0e3));
+        const auto* f  = exciter.getResidual().getData();
+        success       *= isEqual(f[0], static_cast<ScalarT>(-123.0));
+
+        yp[0] = 0.0;
+        y[0]  = 4.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
+        exciter.evaluateResidual();
+        success *= isEqual(f[0], static_cast<ScalarT>(1.0e3));
 
         return success.report(__func__);
       }

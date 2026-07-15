@@ -171,7 +171,7 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
         y[1]     = 1.0;
-        yp[0]    = TWO<RealT> * std::numbers::pi_v<RealT> * 50.0;
+        yp[0]    = TWO<RealT> * M_PI * 50.0;
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();
@@ -290,9 +290,7 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
 
-        static constexpr auto pi = std::numbers::pi_v<RealT>;
-
-        y[0]  = pi;    // delta
+        y[0]  = M_PI;  // delta
         y[1]  = 1.0;   // omega
         y[2]  = 2.0;   // Eqp
         y[3]  = 0.5;   // psidp
@@ -309,7 +307,7 @@ namespace GridKit
         y[14] = 0.1;   // inr
         y[15] = -0.2;  // ini
 
-        yp[0] = 2.0 * pi * 60.0; // delta_dot
+        yp[0] = 2 * M_PI * 60.0; // delta_dot
         yp[1] = -1.0;            // omega_dot
         yp[2] = 0.3;             // Eqp_dot
         yp[3] = -0.7;            // psidp_dot
@@ -403,17 +401,6 @@ namespace GridKit
         gen.evaluateResidual();
         auto&                                     residual_yp_view = gen.getResidual();
         std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
-
-        // Print the dependencies
-        for (size_t i = 0; i < residual_y.size(); ++i)
-        {
-          std::cout << i << "th residual, y: ";
-          (residual_y[i]).print(std::cout);
-          std::cout << "\n";
-          std::cout << i << "th residual, yp: ";
-          (residual_yp[i]).print(std::cout);
-          std::cout << "\n";
-        }
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

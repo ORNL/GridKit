@@ -71,16 +71,21 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int LinearTransformer<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    f_int_[0] = *y_ext_[0] - R0_ * y_int_[0] - L0_ * yp_int_[0] - M_ * yp_int_[1];
-    f_int_[1] = *y_ext_[1] - R1_ * y_int_[1] - M_ * yp_int_[0] - L1_ * yp_int_[1];
+    const auto* y = y_.getData();
+
+    f_int_[0] = y[0] - R0_ * y_int_[0] - L0_ * yp_int_[0] - M_ * yp_int_[1];
+    f_int_[1] = y[1] - R1_ * y_int_[1] - M_ * yp_int_[0] - L1_ * yp_int_[1];
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int LinearTransformer<ScalarT, IdxT>::evaluateExternalResidual()
   {
-    *f_ext_[0] += y_int_[0];
-    *f_ext_[1] += y_int_[1];
+    auto* f = f_.getData();
+
+    f[0] = y_int_[0];
+    f[1] = y_int_[1];
+    f_.setDataUpdated();
     return 0;
   }
 

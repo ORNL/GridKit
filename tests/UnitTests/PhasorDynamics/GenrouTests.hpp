@@ -254,35 +254,33 @@ namespace GridKit
         auto* y  = gen.y().getData();
         auto* yp = gen.yp().getData();
 
-        static constexpr auto pi = std::numbers::pi_v<RealT>;
-
-        y[0]  = pi;  // delta
-        y[1]  = 2.0; // omega
-        y[2]  = 2.0; // Eqp
-        y[3]  = .1;  // psidp
-        y[4]  = .01; // psiqp
-        y[5]  = .6;  // Edp
-        y[6]  = .2;  // psiqp
-        y[7]  = .03; // psidpp
-        y[8]  = .01; // psipp
-        y[9]  = 2.0; // ksat
-        y[10] = .8;  // vd
-        y[11] = .4;  // vq
-        y[12] = 2.0; // telec
-        y[13] = 1.1; // id
-        y[14] = .3;  // iq
-        y[15] = .9;  // ir
-        y[16] = .25; // ii
-        y[17] = .3;  // inr
-        y[18] = .15; // ini
+        y[0]  = M_PI; // delta
+        y[1]  = 2.0;  // omega
+        y[2]  = 2.0;  // Eqp
+        y[3]  = .1;   // psidp
+        y[4]  = .01;  // psiqp
+        y[5]  = .6;   // Edp
+        y[6]  = .2;   // psiqp
+        y[7]  = .03;  // psidpp
+        y[8]  = .01;  // psipp
+        y[9]  = 2;    // ksat
+        y[10] = .8;   // vd
+        y[11] = .4;   // vq
+        y[12] = 2;    // telec
+        y[13] = 1.1;  // id
+        y[14] = .3;   // iq
+        y[15] = .9;   // ir
+        y[16] = .25;  // ii
+        y[17] = .3;   // inr
+        y[18] = .15;  // ini
 
         // Set derivative values matching the answer key
-        yp[0] = 2.0 * pi * 60.0; // delta_dot
+        yp[0] = 2 * M_PI * 60.0; // delta_dot
         yp[1] = -1.5;            // omega_dot
-        yp[2] = 1.0;             // Eqp_dot
-        yp[3] = 1.0;             // psidp_dot
-        yp[4] = 1.0;             // psiqp_dot
-        yp[5] = 1.0;             // Edp_dot
+        yp[2] = 1;               // Eqp_dot
+        yp[3] = 1;               // psidp_dot
+        yp[4] = 1;               // psiqp_dot
+        yp[5] = 1;               // Edp_dot
 
         gen.y().setDataUpdated();
         gen.yp().setDataUpdated();

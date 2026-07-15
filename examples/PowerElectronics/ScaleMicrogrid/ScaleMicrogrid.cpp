@@ -259,14 +259,15 @@ int test(index_type Nsize, real_type error_tol, bool debug_output)
   }
 
   // since the intial P_com = 0, the set the intial vector to the reference frame
-  y[dg_signal.getNodeConnection(0).idx_] = DG_parms1.wb_;
+  y[dg_signal.getNodeConnection(0)] = DG_parms1.wb_;
 
   sys_model->y().setDataUpdated();
   sys_model->yp().setDataUpdated();
 
   sys_model->initialize();
   sys_model->evaluateResidual();
-  std::vector<real_type>& fres = sys_model->getResidual();
+  auto&       fres      = sys_model->getResidual();
+  const auto* fres_data = fres.getData();
   if (debug_output)
   {
     std::cout << "Verify initial resisdual is zero: {\n";

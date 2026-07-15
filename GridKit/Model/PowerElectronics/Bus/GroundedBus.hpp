@@ -19,6 +19,18 @@ namespace GridKit
       {
       }
 
+      int initialize() final
+      {
+        if (int err_code = NodeBase<ScalarT, IdxT>::initialize())
+          return err_code;
+
+        auto* y_data = y().getData();
+        y_data[0]    = voltage_;
+        y().setDataUpdated();
+
+        return 0;
+      }
+
       int allocate() final
       {
         if (int err_code = NodeBase<ScalarT, IdxT>::allocate())

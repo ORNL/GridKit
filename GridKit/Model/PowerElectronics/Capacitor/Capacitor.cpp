@@ -59,17 +59,22 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Capacitor<ScalarT, IdxT>::evaluateInternalResidual()
   {
-    f_int_[0] = -C_ * yp_int_[0] + *y_ext_[0] - *y_ext_[1] - y_int_[0];
+    const auto* y = y_.getData();
+
+    f_int_[0] = -C_ * yp_int_[0] + y[0] - y[1] - y_int_[0];
     return 0;
   }
 
   template <class ScalarT, typename IdxT>
   int Capacitor<ScalarT, IdxT>::evaluateExternalResidual()
   {
+    auto* f = f_.getData();
+
     // input
-    *f_ext_[0] += C_ * yp_int_[0];
+    f[0] = C_ * yp_int_[0];
     // output
-    *f_ext_[1] += -C_ * yp_int_[0];
+    f[1] = -C_ * yp_int_[0];
+    f_.setDataUpdated();
     return 0;
   }
 

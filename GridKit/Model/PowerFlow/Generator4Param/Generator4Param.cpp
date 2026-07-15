@@ -55,8 +55,6 @@ namespace GridKit
   {
     // std::cout << "Allocate Generator4Param..." << std::endl;
     tag_.resize(static_cast<size_t>(size_));
-    abs_tol_.resize(static_cast<size_t>(size_));
-
     return 0;
   }
 
@@ -159,7 +157,7 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   int Generator4Param<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
   {
-    std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
     return 0;
   }
 
@@ -201,8 +199,8 @@ namespace GridKit
     f[1] = (2.0 * H()) / omega_s_ * dotOmega() - Pm() + Eqp() * Iq() + Edp() * Id() + (-Xdp_ + Xqp_) * Id() * Iq() + D_ * (omega() - omega_s_);
     f[2] = Tq0p_ * dotEdp() + Edp() - (Xq_ - Xqp_) * Iq();
     f[3] = Td0p_ * dotEqp() + Eqp() + (Xd_ - Xdp_) * Id() - Ef();
-    f[4] = Rs_ * Id() - Xqp_ * Iq() + V() * std::sin(delta() - theta()) - Edp();
-    f[5] = Xdp_ * Id() + Rs_ * Iq() + V() * std::cos(delta() - theta()) - Eqp();
+    f[4] = Rs_ * Id() - Xqp_ * Iq() + V() * sin(delta() - theta()) - Edp();
+    f[5] = Xdp_ * Id() + Rs_ * Iq() + V() * cos(delta() - theta()) - Eqp();
 
     // Compute active and reactive load provided by the infinite bus.
     P() += Pg();
@@ -284,6 +282,10 @@ namespace GridKit
     const auto* ypB = ypB_.getData();
     auto*       fB  = fB_.getData();
 
+    const auto* yB  = yB_.getData();
+    const auto* ypB = ypB_.getData();
+    auto*       fB  = fB_.getData();
+
     // Generator adjoint
     fB[0] = ypB[0] - yB[4] * V() * cosPhi + yB[5] * V() * sinPhi;
     fB[1] = 2.0 * H() / omega_s_ * ypB[1] + yB[0] * omega_b_ - yB[1] * D_; //+ frequencyPenaltyDer(omega());
@@ -333,7 +335,7 @@ namespace GridKit
   ScalarT Generator4Param<ScalarT, IdxT>::Pg()
   {
     const auto* y = y_.getData();
-    return y[5] * V() * std::cos(theta() - y[0]) + y[4] * V() * std::sin(theta() - y[0]);
+    return y[5] * V() * cos(theta() - y[0]) + y[4] * V() * sin(theta() - y[0]);
   }
 
   /**
@@ -345,7 +347,7 @@ namespace GridKit
   ScalarT Generator4Param<ScalarT, IdxT>::Qg()
   {
     const auto* y = y_.getData();
-    return y[5] * V() * std::sin(theta() - y[0]) - y[4] * V() * std::cos(theta() - y[0]);
+    return y[5] * V() * sin(theta() - y[0]) - y[4] * V() * cos(theta() - y[0]);
   }
 
   /**

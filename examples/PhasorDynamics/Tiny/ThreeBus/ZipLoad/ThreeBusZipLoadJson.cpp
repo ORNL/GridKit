@@ -1,11 +1,9 @@
 /**
  * @file ThreeBusClassical.cpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
- * @author Slaven Peles (peless@ornl.gov)
- * @brief Example running a 3-bus system
+ * @brief Example running a 3-bus system with Zip load model
  *
- * Simulates a 3-bus system with two Genrou 6th order generator models and
- * compares results with data generated for the same system by Poweworld.
+ * Simulates a 3-bus system with classical generators and ZIP loads.
  *
  */
 #include <ctime>
@@ -19,7 +17,7 @@
 #include <GridKit/Solver/Dynamic/Ida.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
-#include "ThreeBusClassical.hpp"
+#include "ThreeBusZipLoad.hpp"
 
 using scalar_type = double;
 using real_type   = double;
@@ -83,9 +81,9 @@ int main(int argc, const char* argv[])
   std::filesystem::path input_file;
   if (argc < 2)
   {
-    if (std::filesystem::exists("ThreeBusClassical.json"))
+    if (std::filesystem::exists("ThreeBusZipLoad.json"))
     {
-      input_file = std::filesystem::current_path() / "ThreeBusClassical.json";
+      input_file = std::filesystem::current_path() / "ThreeBusZipLoad.json";
     }
     else
     {
@@ -93,12 +91,12 @@ int main(int argc, const char* argv[])
                    "ERROR: No input file found or provided.\n"
                    "\n"
                    "Usage:\n"
-                   "       ThreeBusClassical <json-input-file>\n"
+                   "       ThreeBusZipLoad <json-input-file>\n"
                    "\n"
                    "Please provide a JSON input file as a positional command-line \n"
                    "argument.\n"
                    "\n"
-                   "By default this example will look for \"ThreeBusClassical.json\" in the \n"
+                   "By default this example will look for \"ThreeBusZipLoad.json\" in the \n"
                    "current working directory and use that if found.\n"
                    "\n";
       exit(1);
@@ -109,7 +107,7 @@ int main(int argc, const char* argv[])
     input_file = argv[1];
   }
 
-  std::cout << "Example: ThreeBusClassicalJson\n";
+  std::cout << "Example: ThreeBusZipLoadJson\n";
   std::cout << "Input file: " << input_file << '\n';
 
   //
@@ -149,7 +147,7 @@ int main(int argc, const char* argv[])
 
   // Run simulation, output each `dt` interval
   real_type start = static_cast<real_type>(clock());
-  ida.initializeSimulation(0.0);
+  ida.initializeSimulation(0.0, false);
 
   // Run for 1s
   int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
@@ -157,13 +155,13 @@ int main(int argc, const char* argv[])
 
   // Introduce fault to ground and run for 0.1s
   fault->setStatus(true);
-  ida.initializeSimulation(1.0);
+  ida.initializeSimulation(1.0, false);
   nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
   ida.runSimulation(1.1, nout, output_cb);
 
   // Clear fault and run until t = 10s.
   fault->setStatus(false);
-  ida.initializeSimulation(1.1);
+  ida.initializeSimulation(1.1, false);
   nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
   ida.runSimulation(10.0, nout, output_cb);
   real_type stop = static_cast<real_type>(clock());
@@ -172,13 +170,13 @@ int main(int argc, const char* argv[])
   real_type worst_error      = 0;
   real_type worst_error_time = 0;
 
-  std::ostream  nullout(nullptr);
-  std::ostream& out = nullout;
+  std::ostream nullout(nullptr);
+  // std::ostream& out = nullout;
 
-  // // Uncomment code below to print output to a file:
-  // std::ofstream fileout;
-  // fileout.open("Example_ThreeBus_Classical_results.csv");
-  // std::ostream& out = fileout;
+  // Uncomment code below to print output to a file:
+  std::ofstream fileout;
+  fileout.open("Example_ThreeBus_ZipLoad_results.csv");
+  std::ostream& out = fileout;
 
   out << "Time,gen2speed,gen3speed,v2mag,v3mag\n";
   out << 0. << "," << 1. << "," << 1. << "," << 1. << "," << 1. << "\n";
@@ -201,7 +199,7 @@ int main(int argc, const char* argv[])
       worst_error_time = out_data.t;
     }
   }
-  // fileout.close();
+  fileout.close();
 
   std::cout << "Max error " << worst_error
             << " at time t = " << worst_error_time << "\n";

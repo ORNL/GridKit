@@ -81,6 +81,44 @@ int main(int argc, const char* argv[])
   // Set time step to 1/4 of a 60Hz cycle
   real_type dt = 1.0 / 4.0 / 60.0;
 
+  // A data structure to keep track of the data we want to
+  // compare to the reference solution. Rather than keeping
+  // the entire solution vector at every time step around,
+  // we instead narrow down exactly what we want to keep.
+  //
+  // Since this struct is "simple" enough (no constructors or
+  // assignment operators, and "simple" members), it is a POD
+  // (plain ol' data), which have some benefits in C++.
+  struct OutputData
+  {
+    // Output variables are time, real and imaginary voltage and
+    // frequency deviation
+    real_type ti, Vr, Vi, dw;
+  };
+
+  // A list of output for each time step.
+  std::vector<OutputData> output;
+
+  // A callback which will be called by the integrator after
+  // each time step. It will be told the time of the current
+  // state, and it is allowed to access the up-to-date state
+  // of the components, which are captured by a closure
+  // due to the [&] notation (every variable that is referenced
+  // by the callback that is external to the callback itself -
+  // here output, bus1, and gen - will be considered a
+  // reference to that variable inside the callback). We select
+  // the subset of the output we're interested in recording and
+  // push it into output, which is updated outside the callback.
+  auto output_cb = [&](real_type t)
+  {
+    const auto* y_val = sys.y().getData();
+
+    output.push_back(OutputData{t,
+                                static_cast<real_type>(y_val[0]),
+                                static_cast<real_type>(y_val[1]),
+                                static_cast<real_type>(y_val[3])});
+  };
+
   // Set up simulation
   Ida<scalar_type, size_t> ida(&sys);
   ida.configureSimulation();
