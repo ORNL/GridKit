@@ -5,6 +5,7 @@
 #include <GridKit/Constants.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CooMatrix.hpp>
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
+#include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/Model/VariableMonitor.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
@@ -25,6 +26,7 @@ namespace GridKit
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       using CooMatrixT = GridKit::LinearAlgebra::CooMatrix<RealT, IdxT>;
+      using VectorT    = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
 
       Evaluator()
       {
@@ -126,7 +128,7 @@ namespace GridKit
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
-      virtual std::vector<ScalarT>&       absoluteTolerance()       = 0;
+      virtual VectorT&       absoluteTolerance()       = 0;
       /**
        * @brief Get the absolute tolerance for each variable in the model
        *
@@ -134,43 +136,43 @@ namespace GridKit
        *
        * @pre `setAbsoluteTolerance` must have been called first.
        */
-      virtual const std::vector<ScalarT>& absoluteTolerance() const = 0;
+      virtual const VectorT& absoluteTolerance() const = 0;
 
-      virtual std::vector<ScalarT>&       y()       = 0;
-      virtual const std::vector<ScalarT>& y() const = 0;
+      virtual VectorT&       y()       = 0;
+      virtual const VectorT& y() const = 0;
 
-      virtual std::vector<ScalarT>&       yp()       = 0;
-      virtual const std::vector<ScalarT>& yp() const = 0;
+      virtual VectorT&       yp()       = 0;
+      virtual const VectorT& yp() const = 0;
 
       virtual std::vector<bool>&       tag()       = 0;
       virtual const std::vector<bool>& tag() const = 0;
 
-      virtual std::vector<ScalarT>&       yB()       = 0;
-      virtual const std::vector<ScalarT>& yB() const = 0;
+      virtual VectorT&       yB()       = 0;
+      virtual const VectorT& yB() const = 0;
 
-      virtual std::vector<ScalarT>&       ypB()       = 0;
-      virtual const std::vector<ScalarT>& ypB() const = 0;
+      virtual VectorT&       ypB()       = 0;
+      virtual const VectorT& ypB() const = 0;
 
-      virtual std::vector<ScalarT>&       param()       = 0;
-      virtual const std::vector<ScalarT>& param() const = 0;
+      virtual VectorT&       param()       = 0;
+      virtual const VectorT& param() const = 0;
 
-      virtual std::vector<ScalarT>&       param_up()       = 0;
-      virtual const std::vector<ScalarT>& param_up() const = 0;
+      virtual VectorT&       param_up()       = 0;
+      virtual const VectorT& param_up() const = 0;
 
-      virtual std::vector<ScalarT>&       param_lo()       = 0;
-      virtual const std::vector<ScalarT>& param_lo() const = 0;
+      virtual VectorT&       param_lo()       = 0;
+      virtual const VectorT& param_lo() const = 0;
 
-      virtual std::vector<ScalarT>&       getResidual()       = 0;
-      virtual const std::vector<ScalarT>& getResidual() const = 0;
+      virtual VectorT&       getResidual()       = 0;
+      virtual const VectorT& getResidual() const = 0;
 
-      virtual std::vector<ScalarT>&       getIntegrand()       = 0;
-      virtual const std::vector<ScalarT>& getIntegrand() const = 0;
+      virtual VectorT&       getIntegrand()       = 0;
+      virtual const VectorT& getIntegrand() const = 0;
 
-      virtual std::vector<ScalarT>&       getAdjointResidual()       = 0;
-      virtual const std::vector<ScalarT>& getAdjointResidual() const = 0;
+      virtual VectorT&       getAdjointResidual()       = 0;
+      virtual const VectorT& getAdjointResidual() const = 0;
 
-      virtual std::vector<ScalarT>&       getAdjointIntegrand()       = 0;
-      virtual const std::vector<ScalarT>& getAdjointIntegrand() const = 0;
+      virtual VectorT&       getAdjointIntegrand()       = 0;
+      virtual const VectorT& getAdjointIntegrand() const = 0;
     };
 
   } // namespace Model

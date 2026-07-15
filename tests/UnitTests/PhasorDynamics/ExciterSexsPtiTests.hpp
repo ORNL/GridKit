@@ -73,19 +73,21 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
-        success *= efd_node.linked();
-        success *= (efd_node.getVariableIndex() == 1);
-        success *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), kTol);
-        success *= isEqual(exciter.y()[0], static_cast<ScalarT>(-0.048), kTol);
-        success *= isEqual(exciter.y()[1], static_cast<ScalarT>(1.2), kTol);
-        success *= isEqual(exciter.y()[2], static_cast<ScalarT>(0.12), kTol);
+        success       *= efd_node.linked();
+        success       *= (efd_node.getVariableIndex() == 1);
+        success       *= isEqual(efd_node.read(), static_cast<ScalarT>(1.2), kTol);
+        const auto* y  = exciter.y().getData();
+        success       *= isEqual(y[0], static_cast<ScalarT>(-0.048), kTol);
+        success       *= isEqual(y[1], static_cast<ScalarT>(1.2), kTol);
+        success       *= isEqual(y[2], static_cast<ScalarT>(0.12), kTol);
 
-        const auto& f = exciter.getResidual();
-        for (size_t i = 0; i < f.size(); ++i)
+        const auto& f      = exciter.getResidual();
+        const auto* f_data = f.getData();
+        for (size_t i = 0; i < f.getSize(); ++i)
         {
-          if (!isEqual(f[i], static_cast<ScalarT>(0.0), kTol))
+          if (!isEqual(f_data[i], static_cast<ScalarT>(0.0), kTol))
           {
-            std::cout << "Non-zero SEXS-PTI residual at index " << i << ": " << f[i] << "\n";
+            std::cout << "Non-zero SEXS-PTI residual at index " << i << ": " << f_data[i] << "\n";
             success = false;
           }
         }
@@ -121,7 +123,8 @@ namespace GridKit
         exciter.initialize();
         exciter.evaluateResidual();
 
-        success *= isEqual(exciter.getResidual()[2], vs_value, kTol);
+        const auto* f  = exciter.getResidual().getData();
+        success       *= isEqual(f[2], vs_value, kTol);
 
         return success.report(__func__);
       }
@@ -138,51 +141,61 @@ namespace GridKit
         PhasorDynamics::Exciter::SexsPti<ScalarT, IdxT> exciter(&bus, data);
         exciter.allocate();
         exciter.initialize();
-        exciter.yp()[0] = 0.0;
-        exciter.yp()[1] = 0.0;
+        auto* y  = exciter.y().getData();
+        auto* yp = exciter.yp().getData();
+
+        yp[0] = 0.0;
+        yp[1] = 0.0;
 
         // Windup: Efd = 10 is far above Efdmax = 5 and the pre-limit
         // derivative f = +15 drives further past the limit. The indicator
         // saturates to 0, so residual[1] = 0 exactly.
-        exciter.y()[0] = -1.0;
-        exciter.y()[1] = 10.0;
-        exciter.y()[2] = 1.0;
+        y[0] = -1.0;
+        y[1] = 10.0;
+        y[2] = 1.0;
+        exciter.y().setDataUpdated();
+        exciter.yp().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(0.0), kTol);
+        const auto* f  = exciter.getResidual().getData();
+        success       *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
 
         // Release: same over-limit Efd, but f = -37.5 < 0 restores toward
         // the interior. The indicator saturates to 1, so residual[1] = f.
-        exciter.y()[0] = 1.0;
-        exciter.y()[1] = 10.0;
-        exciter.y()[2] = 0.0;
+        y[0] = 1.0;
+        y[1] = 10.0;
+        y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(-37.5), kTol);
+        success *= isEqual(f[1], static_cast<ScalarT>(-37.5), kTol);
 
         // Mirror (windup below Efdmin): Efd = -10 with f = -15 drives further
         // past the lower limit. Indicator saturates to 0, residual[1] = 0.
-        exciter.y()[0] = 1.0;
-        exciter.y()[1] = -10.0;
-        exciter.y()[2] = -1.0;
+        y[0] = 1.0;
+        y[1] = -10.0;
+        y[2] = -1.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(0.0), kTol);
+        success *= isEqual(f[1], static_cast<ScalarT>(0.0), kTol);
 
         // Mirror (release above Efdmin): Efd = -10 with f = +37.5 pulls back
         // toward the interior. Indicator saturates to 1, residual[1] = f.
-        exciter.y()[0] = -1.0;
-        exciter.y()[1] = -10.0;
-        exciter.y()[2] = 0.0;
+        y[0] = -1.0;
+        y[1] = -10.0;
+        y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= isEqual(exciter.getResidual()[1], static_cast<ScalarT>(37.5), kTol);
+        success *= isEqual(f[1], static_cast<ScalarT>(37.5), kTol);
 
         // Regression guard: Efd barely above Efdmax with a small positive f.
         // Here the sigmoid is not fully saturated, so the residual is small
         // but not exactly zero; it should still be orders of magnitude below
         // f = 0.125 itself.
-        exciter.y()[0] = -0.2575;
-        exciter.y()[1] = 5.05;
-        exciter.y()[2] = 0.0;
+        y[0] = -0.2575;
+        y[1] = 5.05;
+        y[2] = 0.0;
+        exciter.y().setDataUpdated();
         exciter.evaluateResidual();
-        success *= (std::abs(exciter.getResidual()[1]) < static_cast<ScalarT>(0.1));
+        success *= (std::abs(f[1]) < static_cast<ScalarT>(0.1));
 
         return success.report(__func__);
       }
@@ -290,11 +303,14 @@ namespace GridKit
         success *= (system.allocate() == 0);
         success *= (system.initialize() == 0);
 
-        constexpr IdxT consumer_vtr_residual  = 4;
-        constexpr IdxT source_efd_variable    = 6;
-        system.y()[source_efd_variable]       = 0.75;
-        success                              *= (system.evaluateResidual() == 0);
-        success                              *= isEqual(system.getResidual()[consumer_vtr_residual],
+        constexpr IdxT consumer_vtr_residual = 4;
+        constexpr IdxT source_efd_variable   = 6;
+        auto*          y                     = system.y().getData();
+        y[source_efd_variable]               = 0.75;
+        system.y().setDataUpdated();
+        success       *= (system.evaluateResidual() == 0);
+        const auto* f  = system.getResidual().getData();
+        success       *= isEqual(f[consumer_vtr_residual],
                            static_cast<ScalarT>(0.75),
                            kTol);
 
@@ -343,33 +359,41 @@ namespace GridKit
         bus.initialize();
         exciter.initialize();
 
+        auto* exciter_y = exciter.y().getData();
         for (size_t i = 0; i < exciter.size(); ++i)
         {
-          exciter.y()[i].setVariableNumber(i); ///< Exciter independent variables
+          exciter_y[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.y().setDataUpdated();
+        auto* bus_y = bus.y().getData();
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.y()[i].setVariableNumber(i + exciter.size()); // Bus independent variables
+          bus_y[i].setVariableNumber(i + exciter.size()); // Bus independent variables
         }
+        bus.y().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_y = exciter.getResidual();
+        auto&                                     residual_y_view = exciter.getResidual();
+        std::vector<DependencyTracking::Variable> residual_y(residual_y_view.getData(), residual_y_view.getData() + residual_y_view.getSize());
 
         // Get d/dy'
         bus.initialize();
         exciter.initialize();
 
+        auto* exciter_yp = exciter.yp().getData();
         for (size_t i = 0; i < exciter.size(); ++i)
         {
-          exciter.yp()[i].setVariableNumber(i); ///< Exciter independent variables
+          exciter_yp[i].setVariableNumber(i); ///< Exciter independent variables
         }
+        exciter.yp().setDataUpdated();
 
         bus.evaluateResidual();
         exciter.evaluateResidual(); ///< Computes the residual and the Jacobian values by tracking
                                     ///< the dependencies
-        std::vector<DependencyTracking::Variable> residual_yp = exciter.getResidual();
+        auto&                                     residual_yp_view = exciter.getResidual();
+        std::vector<DependencyTracking::Variable> residual_yp(residual_yp_view.getData(), residual_yp_view.getData() + residual_yp_view.getSize());
 
         // Print the dependencies
         for (size_t i = 0; i < residual_y.size(); ++i)

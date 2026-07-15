@@ -11,6 +11,7 @@
 #include <GridKit/Model/PhasorDynamics/Branch/BranchData.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
+#include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -153,6 +154,56 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome reallocateAfterTopologyChange()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus2(1.0, 0.0);
+        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus1);
+
+        system.addBus(&bus1);
+        system.addComponent(&fault);
+        success                    *= system.allocate() == 0;
+        const IdxT size_before_bus  = system.size();
+
+        system.addBus(&bus2);
+        success *= system.allocate() == 0;
+        success *= system.size() == size_before_bus + bus2.size();
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        const auto* jacobian  = system.getCsrJacobian();
+        success              *= jacobian != nullptr;
+
+        IdxT nnz_without_branch = 0;
+        if (jacobian != nullptr)
+        {
+          success            *= jacobian->getNumRows() == system.size();
+          success            *= jacobian->getNumColumns() == system.size();
+          nnz_without_branch  = jacobian->getNnz();
+        }
+#endif
+
+        PhasorDynamics::Branch<ScalarT, IdxT> branch(&bus1, &bus2);
+        system.addComponent(&branch);
+        success *= system.allocate() == 0;
+        success *= system.evaluateJacobian() == 0;
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+        jacobian  = system.getCsrJacobian();
+        success  *= jacobian != nullptr;
+        if (jacobian != nullptr)
+        {
+          success *= jacobian->getNumRows() == system.size();
+          success *= jacobian->getNumColumns() == system.size();
+          success *= jacobian->getNnz() > nnz_without_branch;
+        }
+#endif
+
+        return success.report(__func__);
+      }
+
       /**
        * @brief Test for exception when signals are incorrectly configured
        */
@@ -232,28 +283,31 @@ namespace GridKit
         system.initialize();
 
         // Set independent variables
+        auto* y = system.y().getData();
         for (size_t i = 0; i < system.size(); ++i)
         {
-          system.y()[i].setVariableNumber(i);
+          y[i].setVariableNumber(i);
         }
+        system.y().setDataUpdated();
 
         // Evaluate and get the system residuals
         system.evaluateResidual();
-        std::vector<DependencyTracking::Variable> residual = system.getResidual();
+        auto&       residual      = system.getResidual();
+        const auto* residual_data = residual.getData();
 
         // Print the dependencies
-        for (size_t i = 0; i < residual.size(); ++i)
+        for (size_t i = 0; i < residual.getSize(); ++i)
         {
           std::cout << i << "th residual: ";
-          (residual[i]).print(std::cout);
+          residual_data[i].print(std::cout);
           std::cout << "\n";
         }
 
         // Extract the dependencies
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.size());
-        for (IdxT i = 0; i < residual.size(); ++i)
+        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(residual.getSize());
+        for (IdxT i = 0; i < residual.getSize(); ++i)
         {
-          dependencies[i] = (residual[i]).getDependencies();
+          dependencies[i] = residual_data[i].getDependencies();
         }
 
         return dependencies;

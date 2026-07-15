@@ -61,10 +61,12 @@ namespace AnalysisManager
       assert(m == 0);
 
       // Get boundaries for the optimization parameters
+      const auto* param_lo = model_->param_lo().getData();
+      const auto* param_up = model_->param_up().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
       {
-        x_l[i] = model_->param_lo()[static_cast<size_t>(i)];
-        x_u[i] = model_->param_up()[static_cast<size_t>(i)];
+        x_l[i] = param_lo[static_cast<size_t>(i)];
+        x_u[i] = param_up[static_cast<size_t>(i)];
       }
 
       return true;
@@ -87,8 +89,9 @@ namespace AnalysisManager
       assert(init_lambda == false);
 
       // Initialize optimization parameters x
+      const auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        x[i] = model_->param()[static_cast<size_t>(i)];
+        x[i] = param[static_cast<size_t>(i)];
 
       return true;
     }
@@ -100,8 +103,10 @@ namespace AnalysisManager
                                                  Number&                obj_value)
     {
       // Update optimization parameters
+      auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        model_->param()[static_cast<size_t>(i)] = x[i];
+        param[static_cast<size_t>(i)] = x[i];
+      model_->param().setDataUpdated();
 
       // Evaluate objective function
       integrator_->getSavedInitialCondition();
@@ -123,8 +128,10 @@ namespace AnalysisManager
     {
       assert(model_->sizeParams() == static_cast<IdxT>(n));
       // Update optimization parameters
+      auto* param = model_->param().getData();
       for (IdxT i = 0; i < model_->sizeParams(); ++i)
-        model_->param()[static_cast<size_t>(i)] = x[i];
+        param[static_cast<size_t>(i)] = x[i];
+      model_->param().setDataUpdated();
 
       // evaluate the gradient of the objective function grad_{x} f(x)
       // This is creating and deleting adjoint system for each iteration!

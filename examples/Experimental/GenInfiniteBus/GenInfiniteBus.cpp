@@ -100,9 +100,12 @@ int main()
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
       new IpoptInterface::DynamicObjective<double, size_t>(&idas);
 
+  auto* param = model.param().getData();
+
   // Initialize the problem
-  model.param()[0] = Pm;
-  model.param()[1] = Ef;
+  param[0] = Pm;
+  param[1] = Ef;
+  model.param().setDataUpdated();
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicObjectiveInterface);
@@ -113,8 +116,8 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of Pm = " << model.param()[0] << "\n"
-              << " Optimal value of Ef = " << model.param()[1] << "\n"
+              << " Optimal value of Pm = " << param[0] << "\n"
+              << " Optimal value of Ef = " << param[1] << "\n"
               << " The final value of the objective function G(Pm,Ef) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
@@ -127,12 +130,12 @@ int main()
   double* results = new double[model.sizeParams()];
   for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    results[i] = model.param()[i];
+    results[i] = param[i];
   }
 
   // Initialize the problem
-  model.param()[0] = Pm;
-  model.param()[1] = Ef;
+  param[0] = Pm;
+  param[1] = Ef;
 
   // Solve the problem
   status = ipoptApp->OptimizeTNLP(ipoptDynamicConstraintInterface);
@@ -143,8 +146,8 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of Pm = " << model.param()[0] << "\n"
-              << " Optimal value of Ef = " << model.param()[1] << "\n"
+              << " Optimal value of Pm = " << param[0] << "\n"
+              << " Optimal value of Ef = " << param[1] << "\n"
               << " The final value of the objective function G(Pm,Ef) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
@@ -153,7 +156,7 @@ int main()
   int retval = 0;
   for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    if (!isEqual(results[i], model.param()[i], 100 * tol))
+    if (!isEqual(results[i], param[i], 100 * tol))
       --retval;
   }
 

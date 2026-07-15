@@ -82,8 +82,11 @@ int main()
   // Set integration time for dynamic constrained optimization
   idas.setIntegrationTime(t_init, t_final, 100);
 
+  auto* param = model.param().getData();
+
   // Guess value of inertia coefficient
-  model.param()[0] = 3.0;
+  param[0] = 3.0;
+  model.param().setDataUpdated();
 
   // Create an instance of the IpoptApplication
   Ipopt::SmartPtr<Ipopt::IpoptApplication> ipoptApp = IpoptApplicationFactory();
@@ -115,7 +118,7 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of H = " << model.param()[0] << "\n"
+              << " Optimal value of H = " << param[0] << "\n"
               << " The final value of the objective function G(H) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
@@ -124,11 +127,11 @@ int main()
   double* results = new double[model.sizeParams()];
   for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    results[i] = model.param()[i];
+    results[i] = param[i];
   }
 
   // Guess value of inertia coefficient
-  model.param()[0] = 3.0;
+  param[0] = 3.0;
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
@@ -143,7 +146,7 @@ int main()
     // Print result
     std::cout << "\nSucess:\n The problem solved in "
               << ipoptApp->Statistics()->IterationCount() << " iterations!\n"
-              << " Optimal value of H = " << model.param()[0] << "\n"
+              << " Optimal value of H = " << param[0] << "\n"
               << " The final value of the objective function G(H) = "
               << ipoptApp->Statistics()->FinalObjective() << "\n\n";
   }
@@ -152,7 +155,7 @@ int main()
   int retval = 0;
   for (unsigned i = 0; i < model.sizeParams(); ++i)
   {
-    if (!isEqual(results[i], model.param()[i], 100 * tol))
+    if (!isEqual(results[i], param[i], 100 * tol))
       --retval;
   }
 

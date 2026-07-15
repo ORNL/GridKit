@@ -166,21 +166,17 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::allocate()
       {
+        if (!allocated_)
+        {
+          this->allocateVectors(size_);
+        }
         // Allocate local component data
         auto size = static_cast<size_t>(size_); // avoid compiler warnings
-        f_.resize(size);
-        y_.resize(size);
-        yp_.resize(size);
+
         tag_.resize(size);
-        abs_tol_.resize(size);
+
         variable_indices_.resize(size);
         residual_indices_.resize(size);
-
-        // Resize signal variable data
-        ws_.resize(1);
-        ws_indices_.resize(1);
-        ws_[0]         = 0.0;
-        ws_indices_[0] = INVALID_INDEX<IdxT>;
 
         // Default variable and residual index mapping to local index
         for (IdxT j = 0; j < size_; ++j)
@@ -189,12 +185,20 @@ namespace GridKit
           this->setResidualIndex(j, j);
         }
 
+        // Resize signal variable data
+        ws_.resize(1);
+        ws_indices_.resize(1);
+        ws_[0]         = 0.0;
+        ws_indices_[0] = INVALID_INDEX<IdxT>;
+
         // Set output signals
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
-          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y_[2], &(this->getVariableIndex(2)));
+          auto* y = y_.getData();
+          signals_.template getSignalNode<Tgov1InternalVariables::PM>()->set(&y[2], &(this->getVariableIndex(2)));
         }
 
+        allocated_ = true;
         return 0;
       }
 
@@ -230,24 +234,29 @@ namespace GridKit
         ScalarT p0{0};
 
         // Initial mechanical = initial electric torque
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
         if (signals_.template isAssigned<Tgov1InternalVariables::PM>())
         {
           // System base -> governor base for governor initialization.
-          p0 = toComponentBase(y_[2]); ///<- generator needs to be initialized first
+          p0 = toComponentBase(y[2]); ///<- generator needs to be initialized first
         }
 
         // Input Variables (Parameter for now)
         pref_ = R_ * p0;
 
         // Internal States
-        y_[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
-        y_[1] = p0;               // y1 - Pv  (Valve Position)
-        y_[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
+        y[0] = (T3_ - T2_) * p0; // y0 - Ptx (Turbine Power )
+        y[1] = p0;               // y1 - Pv  (Valve Position)
+        y[2] = toSystemBase(p0); // y2 - Pm  (Mech Power, System Base)
 
         // D.V. Derivative
-        yp_[0] = 0.0; // Ptx
-        yp_[1] = 0.0; // Pv
-        yp_[2] = 0.0; // Pm
+        yp[0] = 0.0; // Ptx
+        yp[1] = 0.0; // Pv
+        yp[2] = 0.0; // Pm
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
 
         return 0;
       }
@@ -258,7 +267,6 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::tagDifferentiable()
       {
-
         tag_[0] = true;  // Pv
         tag_[1] = true;  // Ptx
         tag_[2] = false; // Pmech
@@ -281,7 +289,7 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Tgov1<scalar_type, index_type>::setAbsoluteTolerance(RealT rel_tol)
       {
-        std::fill(abs_tol_.begin(), abs_tol_.end(), rel_tol);
+        abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
         return 0;
       }
 
@@ -337,7 +345,12 @@ namespace GridKit
           ws_indices_[0] = signals_.template readExternalVariableIndex<Tgov1ExternalVariables::DELTAOMEGA>();
         }
 
-        evaluateInternalResidual(y_.data(), yp_.data(), wb_.data(), ws_.data(), f_.data());
+        const auto* y  = y_.getData();
+        const auto* yp = yp_.getData();
+        auto*       f  = f_.getData();
+        evaluateInternalResidual(y, yp, wb_.data(), ws_.data(), f);
+
+        f_.setDataUpdated();
 
         return 0;
       }
