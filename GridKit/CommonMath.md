@@ -44,6 +44,8 @@ The sigmoid is also known as the logistic function. The equivalent `tanh` form i
 
 ![](../docs/Figures/CommonMath/ramp.svg)
 
+`iramp` is the exact inverse $\rho^{-1}(y) = y + \ln(1 - e^{-\mu y})/\mu$ on $y \gt 0$, used to seat initialization states behind smooth selectors; it does not appear in residuals.
+
 ### $q$ - `qramp`
 
 *Note*: the implementation of the quadratic ramp `q(x)` could be optimized with Enzyme features down the road so that we don't need the smooth approximation.

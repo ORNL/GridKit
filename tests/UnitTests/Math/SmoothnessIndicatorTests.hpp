@@ -235,6 +235,28 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome inverseRamp()
+      {
+        TestStatus success = true;
+
+        const ScalarT roundoff = scalar(kRoundoffTolerance);
+
+        for (const RealT v : {1.0e-4, 1.0e-3, 1.0e-2, 0.1, 0.25, 1.0, 4.0})
+        {
+          const ScalarT x  = Math::iramp(scalar(v));
+          success         *= std::isfinite(x);
+          success         *= (x <= scalar(v));
+          success         *= (std::abs(Math::ramp(x) - scalar(v)) < roundoff);
+        }
+
+        // The inverse is negative below ramp(0) = ln(2)/mu and matches the
+        // identity once the correction term underflows.
+        success *= (Math::iramp(scalar(1.0e-4)) < scalar(0.0));
+        success *= (std::abs(Math::iramp(scalar(4.0)) - scalar(4.0)) < roundoff);
+
+        return success.report(__func__);
+      }
+
       TestOutcome minMax()
       {
         TestStatus success = true;

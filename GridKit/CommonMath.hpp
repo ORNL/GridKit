@@ -62,6 +62,29 @@ namespace GridKit
     }
 
     /**
+     * @brief Exact inverse of the smooth ramp on its positive range
+     *
+     * Solves ramp(x) = v for v > 0 in a numerically stable form. An
+     * initialization helper for seating states behind smooth selectors;
+     * not for use in residual functions.
+     *
+     * @tparam ScalarT - scalar data type
+     *
+     * @param[in] v - value of the smooth ramp, must be positive
+     * @return x such that ramp(x) equals v
+     */
+    template <class ScalarT>
+    __attribute__((always_inline)) inline ScalarT iramp(const ScalarT v)
+    {
+      using RealT = typename GridKit::ScalarTraits<ScalarT>::RealT;
+
+      assert(v > ZERO<RealT>);
+
+      RealT mu = MU<RealT>;
+      return v + std::log(-std::expm1(-mu * v)) / mu;
+    }
+
+    /**
      * @brief Smooth one-sided quadratic ramp
      *
      * Smooth approximation to max(x, 0)^2 via a sigmoid-gated quadratic.
