@@ -1,13 +1,14 @@
-# Stabilizer Model
+# **Stabilizer Models**
 
 ## Introduction
 
-A stabilizer models the control system that is designed to damp or prevent oscillations.
-Stabilizers can be used to improve the stability and response of the exciter, governor, etc.
+Stabilizer models represent supplemental controls that damp electromechanical
+oscillations in the phasor dynamics model.
 
 ## Types
 
-The GridKit implemented stabilizers include:
+The GridKit stabilizer documentation includes:
 
-- IEEEST (See [IEEEST](IEEEST/README.md))
-- PSS1A (See [PSS1A](PSS1A/README.md))
+- IEEE Stabilizer Model IEEEST (See [IEEEST](IEEEST/README.md))
+- IEEE Type PSS1A Power System Stabilizer Model PSS1A (See [PSS1A](PSS1A/README.md))
+- IEEE Type PSS2A Power System Stabilizer Model PSS2A (See [PSS2A](PSS2A/README.md))
