@@ -45,18 +45,12 @@ macro(gridkit_example_add_file _filename)
   install(FILES ${_filename} DESTINATION ${_ex_install_path})
 endmacro()
 
-add_subdirectory(LinearAlgebra)
-
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
 add_subdirectory(Experimental)
 
 if(TARGET SUNDIALS::idas)
   add_subdirectory(PhasorDynamics)
-endif()
-
-if(GRIDKIT_ENABLE_ENZYME)
-  add_subdirectory(Enzyme)
 endif()
 
 add_subdirectory(Consumer)
