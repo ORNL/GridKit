@@ -45,8 +45,6 @@ macro(gridkit_example_add_file _filename)
   install(FILES ${_filename} DESTINATION ${_ex_install_path})
 endmacro()
 
-add_subdirectory(LinearAlgebra)
-
 add_subdirectory(PowerFlow)
 add_subdirectory(PowerElectronics)
 add_subdirectory(Experimental)
