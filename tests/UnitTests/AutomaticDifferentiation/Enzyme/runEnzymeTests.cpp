@@ -14,7 +14,8 @@ int main()
   GridKit::Testing::TestingResults              result;
   GridKit::Testing::EnzymeTests<double, size_t> test;
 
-  result += test.scalar_square();
+  result += test.scalarFunction();
+  result += test.vectorFunctionSparse();
 
   return result.summary();
 }
