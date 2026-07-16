@@ -182,8 +182,8 @@ namespace GridKit
       {
         TestStatus status = true;
 
-        std::vector<ScalarT> first(static_cast<std::size_t>(N), ScalarT{1.0});
-        std::vector<ScalarT> second(static_cast<std::size_t>(N), ScalarT{2.0});
+        std::vector<ScalarT>  first(static_cast<std::size_t>(N), ScalarT{1.0});
+        std::vector<ScalarT>  second(static_cast<std::size_t>(N), ScalarT{2.0});
         Vector<ScalarT, IdxT> x;
 
         status *= x.setData(first.data(), N, memory::HOST) == 0;
@@ -197,10 +197,10 @@ namespace GridKit
         status *= second.front() == ScalarT{3.0};
 
         Vector<ScalarT, IdxT> owned(N);
-        status                  *= owned.allocate(memory::HOST) == 0;
-        auto* const owned_data   = owned.getData(memory::HOST);
-        status                  *= owned.setData(first.data(), N, memory::HOST) != 0;
-        status                  *= owned.getData(memory::HOST) == owned_data;
+        status                 *= owned.allocate(memory::HOST) == 0;
+        auto* const owned_data  = owned.getData(memory::HOST);
+        status                 *= owned.setData(first.data(), N, memory::HOST) != 0;
+        status                 *= owned.getData(memory::HOST) == owned_data;
 
         return status.report(__func__);
       }
