@@ -64,7 +64,7 @@ namespace GridKit
       int setDataUpdated(memory::MemorySpace memspace = memory::HOST);
       int setDataUpdated(IdxT j, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
-      int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace);
+      int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST);
       int allocate(memory::MemorySpace memspace = memory::HOST);
       int setToZero(memory::MemorySpace memspace = memory::HOST);
       int setToZero(IdxT i, memory::MemorySpace memspace = memory::HOST);
