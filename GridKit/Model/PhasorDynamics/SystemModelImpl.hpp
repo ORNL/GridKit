@@ -425,6 +425,9 @@ namespace GridKit
     /**
      * @brief Allocate system storage and bind buses and components to it.
      *
+     * First sum the bus and component sizes, then allocate the system vectors
+     * and bind each bus and component to its portion of those vectors.
+     *
      * @pre Buses and components with nonzero size are unallocated or already
      * bound to external system storage.
      *
@@ -472,6 +475,7 @@ namespace GridKit
       variable_indices_.resize(size_);
       residual_indices_.resize(size_);
 
+      // Default variable and residual index mapping to local index
       for (IdxT j = 0; j < size_; ++j)
       {
         this->setVariableIndex(j, j);
