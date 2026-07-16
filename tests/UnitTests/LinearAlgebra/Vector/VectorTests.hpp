@@ -4,7 +4,6 @@
 #include <iterator>
 #include <sstream>
 #include <string>
-#include <vector>
 
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
@@ -182,26 +181,34 @@ namespace GridKit
       {
         TestStatus status = true;
 
-        std::vector<ScalarT>  first(static_cast<std::size_t>(N), ScalarT{1.0});
-        std::vector<ScalarT>  second(static_cast<std::size_t>(N), ScalarT{2.0});
+        ScalarT* initial_storage     = new ScalarT[N];
+        ScalarT* replacement_storage = new ScalarT[N];
+        std::fill_n(initial_storage, N, ScalarT{1.0});
+        std::fill_n(replacement_storage, N, ScalarT{2.0});
+
         Vector<ScalarT, IdxT> x;
 
-        status *= x.setData(first.data(), N, memory::HOST) == 0;
-        status *= x.getData(memory::HOST) == first.data();
+        // Bind to external storage and verify the pointer and extent.
+        status *= x.setData(initial_storage, N, memory::HOST) == 0;
+        status *= x.getData(memory::HOST) == initial_storage;
         status *= x.getSize() == N;
         status *= x.getCapacity() == N;
 
-        status *= x.setData(second.data(), N, memory::HOST) == 0;
-        status *= x.getData(memory::HOST) == second.data();
+        // Rebind to different storage and verify that operations use it.
+        status *= x.setData(replacement_storage, N, memory::HOST) == 0;
+        status *= x.getData(memory::HOST) == replacement_storage;
         status *= x.setToConst(ScalarT{3.0}, memory::HOST) == 0;
-        status *= second.front() == ScalarT{3.0};
+        status *= replacement_storage[0] == ScalarT{3.0};
 
+        // Owned vector storage must not be replaced by external storage.
         Vector<ScalarT, IdxT> owned(N);
         status                 *= owned.allocate(memory::HOST) == 0;
         auto* const owned_data  = owned.getData(memory::HOST);
-        status                 *= owned.setData(first.data(), N, memory::HOST) != 0;
+        status                 *= owned.setData(initial_storage, N, memory::HOST) != 0;
         status                 *= owned.getData(memory::HOST) == owned_data;
 
+        delete[] initial_storage;
+        delete[] replacement_storage;
         return status.report(__func__);
       }
 
