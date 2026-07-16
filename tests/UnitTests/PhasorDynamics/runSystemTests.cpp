@@ -16,6 +16,7 @@ int main()
   result += test.jacobian();
 #endif
 
+  result += test.allocationError();
   result += test.signalError();
 
   return result.summary();

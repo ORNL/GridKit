@@ -310,6 +310,26 @@ namespace GridKit
         return status.report(__func__);
       }
 
+      /**
+       * @brief Test for exception when a child cannot bind to system storage
+       */
+      TestOutcome allocationError()
+      {
+        using namespace GridKit::PhasorDynamics;
+
+        TestStatus                 status{true};
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+
+        status *= bus.allocate() == 0;
+        system.addBus(&bus);
+        status *= throws<std::runtime_error>(
+            [&]()
+            { system.allocate(); });
+
+        return status.report(__func__);
+      }
+
 #ifdef GRIDKIT_ENABLE_ENZYME
       TestOutcome jacobian()
       {

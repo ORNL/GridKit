@@ -432,6 +432,9 @@ namespace GridKit
      * bound to external system storage.
      *
      * @note System model composition is flat; nested systems are not supported.
+     *
+     * @throws std::runtime_error if storage allocation, child binding, or
+     * model verification fails.
      */
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::allocate()
@@ -468,7 +471,7 @@ namespace GridKit
           || abs_tol_.getSize() != size_)
       {
         Log::error() << "SystemModel vector sizes do not match the system size\n";
-        return 1;
+        throw std::runtime_error("SystemModel allocation failed");
       }
 
       tag_.resize(size_);
@@ -490,13 +493,13 @@ namespace GridKit
         if (bind_status != 0)
         {
           Log::error() << "Failed to bind bus vectors to system storage\n";
-          return 1;
+          throw std::runtime_error("SystemModel allocation failed");
         }
 
         if (bus->allocate() != 0)
         {
           Log::error() << "Failed to allocate bus data\n";
-          return 1;
+          throw std::runtime_error("SystemModel allocation failed");
         }
 
         for (IdxT j = 0; j < bus->size(); ++j)
@@ -514,13 +517,13 @@ namespace GridKit
         if (bind_status != 0)
         {
           Log::error() << "Failed to bind component vectors to system storage\n";
-          return 1;
+          throw std::runtime_error("SystemModel allocation failed");
         }
 
         if (component->allocate() != 0)
         {
           Log::error() << "Failed to allocate component data\n";
-          return 1;
+          throw std::runtime_error("SystemModel allocation failed");
         }
 
         for (IdxT j = 0; j < component->size(); ++j)
@@ -535,7 +538,7 @@ namespace GridKit
       if (offset != size_)
       {
         Log::error() << "Bound vector sizes do not match the system size\n";
-        return 1;
+        throw std::runtime_error("SystemModel allocation failed");
       }
 
       // Verify component configuration
