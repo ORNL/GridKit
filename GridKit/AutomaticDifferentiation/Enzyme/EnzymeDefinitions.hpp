@@ -40,7 +40,7 @@ namespace GridKit
        * @brief Enzyme fwddiff template for GridKit models
        *
        * @details This is a core templated intrinsic that the Enzyme pass will
-       * use to perform automatic differenciation. We define the template here
+       * use to perform automatic differentiation. We define the template here
        * so it can later be used in different places.
        *
        * @tparam T - return type

@@ -76,20 +76,20 @@ namespace GridKit
         // Input initialization to [0.0, 1.0, 2.0, ...]
         for (IdxT i = 0; i < N; ++i)
         {
-          x[i] = static_cast<ScalarT>(N);
+          x[i] = static_cast<ScalarT>(i);
         }
 
         // Output function evaluation
         vectorFunction(N, x, y);
 
         // Enzyme Jacobian
-        SparseMatrix* jac_enzyme = vectorFunctionEnzymeJacobian(N, x);
+        SparseMatrix* jac_enzyme = vectorFunctionSparseEnzymeJacobian(N, x);
 
         // Reference Jacobian
-        SparseMatrix* jac_ref = vectorFunctionReferenceJacobian(N, x);
+        SparseMatrix* jac_ref = vectorFunctionSparseReferenceJacobian(N, x);
 
         // Compare the Jacobians
-        success *= checkVectorFunctionJacobian(jac_ref, jac_enzyme);
+        success *= checkVectorFunctionSparseJacobian(jac_ref, jac_enzyme);
 
         if (!success)
         {
@@ -130,7 +130,7 @@ namespace GridKit
         }
       }
 
-      SparseMatrix* vectorFunctionEnzymeJacobian(const IdxT N, const ScalarT* x)
+      SparseMatrix* vectorFunctionSparseEnzymeJacobian(const IdxT N, const ScalarT* x)
       {
         using namespace GridKit::Enzyme::Sparse;
 
@@ -185,12 +185,12 @@ namespace GridKit
         delete[] rows_buffer;
         delete[] cols_buffer;
         delete[] vals_buffer;
-        
+
         // Hijacking constructor sets rows, cols and vals to nullptr
         return new SparseMatrix(N, N, current_nnz, &rows, &cols, &vals);
       }
 
-      SparseMatrix* vectorFunctionReferenceJacobian(const IdxT N, const ScalarT* x)
+      SparseMatrix* vectorFunctionSparseReferenceJacobian(const IdxT N, const ScalarT* x)
       {
         IdxT     nnz         = N * (N + 1) / 2; // lower triangular matrix
         IdxT*    rows        = new IdxT[static_cast<size_t>(nnz)];
@@ -216,8 +216,8 @@ namespace GridKit
       }
 
       // @todo move to a common location if this needs to be reused
-      TestStatus checkVectorFunctionJacobian(SparseMatrix* matrix_1,
-                                             SparseMatrix* matrix_2)
+      TestStatus checkVectorFunctionSparseJacobian(SparseMatrix* matrix_1,
+                                                   SparseMatrix* matrix_2)
       {
         TestStatus success = true;
 
