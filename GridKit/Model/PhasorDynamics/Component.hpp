@@ -171,10 +171,12 @@ namespace GridKit
           return 1;
         }
 
-        if (y_.setData(y_data + offset, size_, memory::HOST) != 0
-            || yp_.setData(yp_data + offset, size_, memory::HOST) != 0
-            || f_.setData(f_data + offset, size_, memory::HOST) != 0
-            || abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST) != 0)
+        const int y_status       = y_.setData(y_data + offset, size_, memory::HOST);
+        const int yp_status      = yp_.setData(yp_data + offset, size_, memory::HOST);
+        const int f_status       = f_.setData(f_data + offset, size_, memory::HOST);
+        const int abs_tol_status = abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
+
+        if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
         {
           Log::error() << "Component::bind - failed to bind vectors to system storage\n";
           return 1;

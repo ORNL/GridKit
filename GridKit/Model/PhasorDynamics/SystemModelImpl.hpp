@@ -486,7 +486,8 @@ namespace GridKit
 
       for (const auto& bus : buses_)
       {
-        if (bus->bind(y_, yp_, f_, abs_tol_, offset) != 0)
+        const int bind_status = bus->bind(y_, yp_, f_, abs_tol_, offset);
+        if (bind_status != 0)
         {
           Log::error() << "Failed to bind bus vectors to system storage\n";
           return 1;
@@ -509,7 +510,8 @@ namespace GridKit
 
       for (const auto& component : components_)
       {
-        if (component->bind(y_, yp_, f_, abs_tol_, offset) != 0)
+        const int bind_status = component->bind(y_, yp_, f_, abs_tol_, offset);
+        if (bind_status != 0)
         {
           Log::error() << "Failed to bind component vectors to system storage\n";
           return 1;
