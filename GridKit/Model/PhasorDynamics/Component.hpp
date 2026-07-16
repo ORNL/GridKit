@@ -132,8 +132,10 @@ namespace GridKit
        * allowed and refreshes the aliases, e.g. after system storage is
        * reallocated when the topology changes.
        *
-       * Only HOST data is aliased; HOST/DEVICE update flags are not shared
-       * with the system vectors, and DEVICE access while bound is unsupported.
+       * Only HOST data is bound because PhasorDynamics currently evaluates
+       * models on the CPU. Supporting DEVICE data would also require sharing
+       * the matching DEVICE pointer and keeping the HOST and DEVICE copies in
+       * sync. This bind operation does neither, so DEVICE access is unsupported.
        *
        * @param[in] y       - System state vector
        * @param[in] yp      - System state derivative vector
