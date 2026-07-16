@@ -1120,10 +1120,6 @@ namespace GridKit
               counter++;
             }
           }
-          else
-          {
-            Log::warning() << "A component has returned a nullptr Jacobian.\n";
-          }
         }
 
         for (const auto& bus : buses_)
@@ -1138,10 +1134,6 @@ namespace GridKit
               vals[map_to_csr_[counter]] += values[i];
               counter++;
             }
-          }
-          else
-          {
-            Log::warning() << "A bus has returned a nullptr Jacobian.\n";
           }
         }
       }
