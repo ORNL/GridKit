@@ -1,5 +1,6 @@
 #include "AdaptiveStep.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 #include <GridKit/Constants.hpp>
