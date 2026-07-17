@@ -90,8 +90,6 @@ int main()
 
   auto* param = model->param().getData();
 
-  auto* param = model->param().getData();
-
   // Initialize problem
   param[0] = T2;
   param[1] = K;

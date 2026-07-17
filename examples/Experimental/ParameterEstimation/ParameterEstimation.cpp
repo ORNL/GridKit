@@ -74,15 +74,13 @@ int main()
     idas.getSavedInitialCondition();
     gen.V() = 0.0;
     idas.initializeSimulation(t_init);
-    idas.runSimulation(t_clear, 20);
+    idas.runSimulation(t_clear, (t_clear - t_init) / 20.0);
     gen.V() = 1.0;
     idas.saveInitialCondition();
   }
 
   // Set monitoring interval for dynamic constrained optimization
   double dt_monitor = (t_final - t_init) / 100.0;
-
-  auto* param = model.param().getData();
 
   auto* param = model.param().getData();
 

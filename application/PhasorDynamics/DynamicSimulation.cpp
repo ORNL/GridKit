@@ -29,7 +29,8 @@ int main(int argc, const char* argv[])
 
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
-  ida.setTolerance(1e-7, 1e-9);
+  ida.setTolerance(study.rel_tol, study.abs_tol);
+  ida.setFixedStep(study.dt_fixed);
   ida.configureSimulation();
 
   // Start timer
@@ -40,7 +41,6 @@ int main(int argc, const char* argv[])
   // Initilize simultation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
-  real_type curr_time  = 0.0;
   ida.initializeSimulation(0.0);
   for (const auto& event : study.events)
   {
@@ -60,7 +60,6 @@ int main(int argc, const char* argv[])
 
     // Re-initialize simulation at event time
     ida.initializeSimulation(event.time);
-    curr_time = event.time;
   }
 
   // Run to final time

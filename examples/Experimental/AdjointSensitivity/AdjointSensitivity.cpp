@@ -61,7 +61,7 @@ int main()
     idas->getSavedInitialCondition();
     gen->V() = 0.0;
     idas->initializeSimulation(t_init);
-    idas->runSimulation(0.1, 20);
+    idas->runSimulation(0.1, 0.005);
     gen->V() = 1.0;
     idas->saveInitialCondition();
   }
