@@ -50,10 +50,16 @@ namespace GridKit
     {
       /// path to system model JSON file
       fs::path                 system_model_file;
-      /// time step size
-      double                   dt;
+      /// monitor output time step size, or 0 for no intermediate monitoring
+      double                   dt_monitor;
       /// max time
       double                   tmax;
+      /// relative tolerance for the solver
+      double                   rel_tol;
+      /// absolute tolerance for the solver
+      double                   abs_tol;
+      /// fixed solver time step size, or 0 for adaptive stepping
+      double                   dt_fixed;
       /// set of system events
       std::vector<SystemEvent> events;
       /// path to output file
@@ -73,6 +79,9 @@ namespace GridKit
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
+    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-7;
+    inline constexpr double DEFAULT_SOLVER_ABS_TOL = 1.0e-9;
+
     /**
      * @brief JSON parser implemntation for `StudyData`
      */
@@ -81,8 +90,11 @@ namespace GridKit
       using namespace magic_enum;
 
       j.at("system_model_file").get_to(c.system_model_file);
-      j.at("dt").get_to(c.dt);
+      c.dt_monitor = j.value("dt_monitor", 0.0);
       j.at("tmax").get_to(c.tmax);
+      c.rel_tol  = j.value("rel_tol", DEFAULT_SOLVER_REL_TOL);
+      c.abs_tol  = j.value("abs_tol", DEFAULT_SOLVER_ABS_TOL);
+      c.dt_fixed = j.value("dt_fixed", 0.0);
 
       for (auto& raw_event : j.at("events"))
       {

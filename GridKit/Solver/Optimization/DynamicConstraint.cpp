@@ -10,11 +10,14 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    DynamicConstraint<ScalarT, IdxT>::DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator)
+    DynamicConstraint<ScalarT, IdxT>::DynamicConstraint(Sundials::Ida<ScalarT, IdxT>* integrator,
+                                                        RealT                         t_init,
+                                                        RealT                         t_final,
+                                                        RealT                         dt_monitor)
       : OptimizationSolver<ScalarT, IdxT>(integrator),
-        t_init_(integrator_->getInitialTime()),
-        t_final_(integrator_->getFinalTime()),
-        nout_(integrator_->getNumberOutputTimes())
+        t_init_(t_init),
+        t_final_(t_final),
+        dt_monitor_(dt_monitor)
     {
       model_ = integrator_->getModel();
     }
@@ -157,7 +160,7 @@ namespace AnalysisManager
       integrator_->initializeQuadrature();
 
       int status = 0;
-      status     = integrator_->runSimulationQuadrature(t_final_, nout_);
+      status     = integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
       if (status)
       {
         std::cerr << "Integration failed when using Pm = " << x[0] << "\n";
@@ -210,7 +213,7 @@ namespace AnalysisManager
         integrator_->initializeQuadrature();
 
         int status = 0;
-        status     = integrator_->runForwardSimulation(t_final_, nout_);
+        status     = integrator_->runForwardSimulation(t_final_, dt_monitor_);
         if (status)
         {
           std::cerr << "Forward integration for adjoint solution failed when using Pm = " << x[0] << "\n";

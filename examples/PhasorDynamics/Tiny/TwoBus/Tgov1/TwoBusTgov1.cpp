@@ -173,20 +173,17 @@ int main()
 
   // Run for 1s
   ida.initializeSimulation(0.0, false);
-  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout, output_cb);
+  ida.runSimulation(1.0, dt, output_cb);
 
   // Introduce fault and run for the next 0.1s
   fault->setStatus(true);
   ida.initializeSimulation(1.0);
-  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
-  ida.runSimulation(1.1, nout, output_cb);
+  ida.runSimulation(1.1, dt, output_cb);
 
   // Clear the fault and run until t = 10s.
   fault->setStatus(false);
   ida.initializeSimulation(1.1);
-  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
-  ida.runSimulation(10.0, nout, output_cb);
+  ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
   real_type error_V = 0.0; // error in |V|

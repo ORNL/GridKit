@@ -53,7 +53,7 @@ int main()
   idas->configureQuadrature();
   idas->initializeQuadrature();
 
-  idas->runSimulation(0.1, 2);
+  idas->runSimulation(0.1, 0.05);
   idas->saveInitialCondition();
 
   // create initial condition after a fault
@@ -61,7 +61,7 @@ int main()
     idas->getSavedInitialCondition();
     gen->V() = 0.0;
     idas->initializeSimulation(t_init);
-    idas->runSimulation(0.1, 20);
+    idas->runSimulation(0.1, 0.005);
     gen->V() = 1.0;
     idas->saveInitialCondition();
   }
@@ -73,7 +73,7 @@ int main()
   idas->getSavedInitialCondition();
   idas->initializeSimulation(t_init);
   idas->initializeQuadrature();
-  idas->runSimulationQuadrature(t_final, 100);
+  idas->runSimulationQuadrature(t_final, (t_final - t_init) / 100.0);
 
   std::cout << "\n\nCost of computing objective function:\n\n";
   idas->printFinalStats();
@@ -92,7 +92,7 @@ int main()
     idas->getSavedInitialCondition();
     idas->initializeSimulation(t_init);
     idas->initializeQuadrature();
-    idas->runSimulationQuadrature(t_final, 100);
+    idas->runSimulationQuadrature(t_final, (t_final - t_init) / 100.0);
 
     std::cout << "\n\nCost of computing derivative with respect to parameter "
               << i << ":\n\n";
@@ -112,7 +112,7 @@ int main()
   idas->getSavedInitialCondition();
   idas->initializeSimulation(t_init);
   idas->initializeQuadrature();
-  idas->runForwardSimulation(t_final, 100);
+  idas->runForwardSimulation(t_final, (t_final - t_init) / 100.0);
 
   std::cout << "\n\nCost of forward simulation for adjoint\n"
             << "sensitivity analysis:\n\n";
