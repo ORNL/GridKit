@@ -235,20 +235,17 @@ int main()
   ida.initializeSimulation(0.0);
 
   // Run for 1s
-  int nout = static_cast<int>(std::round((1.0 - 0.0) / dt));
-  ida.runSimulation(1.0, nout, output_cb);
+  ida.runSimulation(1.0, dt, output_cb);
 
   // Introduce fault to ground and run for 0.1s
   fault->setStatus(true);
   ida.initializeSimulation(1.0);
-  nout = static_cast<int>(std::round((1.1 - 1.0) / dt));
-  ida.runSimulation(1.1, nout, output_cb);
+  ida.runSimulation(1.1, dt, output_cb);
 
   // Clear fault and run until t = 10s.
   fault->setStatus(false);
   ida.initializeSimulation(1.1);
-  nout = static_cast<int>(std::round((10.0 - 1.1) / dt));
-  ida.runSimulation(10.0, nout, output_cb);
+  ida.runSimulation(10.0, dt, output_cb);
   real_type stop = static_cast<real_type>(clock());
 
   /* Check worst-case error */

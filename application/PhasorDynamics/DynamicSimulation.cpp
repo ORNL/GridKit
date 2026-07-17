@@ -39,15 +39,13 @@ int main(int argc, const char* argv[])
   using EventType = SystemEvent::Type;
 
   // Initilize simultation for first run
-  real_type dt_monitor = study.dt_monitor;
+  auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
-  real_type curr_time  = 0.0;
   ida.initializeSimulation(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
-    int nout = static_cast<int>(std::round((event.time - curr_time) / dt_monitor));
-    ida.runSimulation(event.time, nout);
+    ida.runSimulation(event.time, dt_monitor);
 
     // Set up run for event (to start at event time)
     switch (event.type)
@@ -62,12 +60,10 @@ int main(int argc, const char* argv[])
 
     // Re-initialize simulation at event time
     ida.initializeSimulation(event.time);
-    curr_time = event.time;
   }
 
   // Run to final time
-  int nout = static_cast<int>(std::round((final_time - curr_time) / dt_monitor));
-  ida.runSimulation(final_time, nout);
+  ida.runSimulation(final_time, dt_monitor);
 
   real_type stop = static_cast<real_type>(clock());
 

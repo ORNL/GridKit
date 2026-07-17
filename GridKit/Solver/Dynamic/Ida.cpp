@@ -1,8 +1,11 @@
 
 #include "Ida.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <idas/idas.h>
@@ -215,21 +218,6 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Set integration time
-     *
-     * @tparam ScalarT
-     * @tparam IdxT
-     */
-    template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::setIntegrationTime(RealT t_init, RealT t_final, int nout)
-    {
-      t_init_  = t_init;
-      t_final_ = t_final;
-      nout_    = nout;
-      return 0;
-    }
-
-    /**
      * @brief Initialize the simulation
      *
      * @tparam ScalarT
@@ -268,40 +256,64 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Run the IDA solver on the given model and produce a solution at
-     * the given final time.
+     * @brief Compute the number of monitor targets needed to reach `tf`.
      *
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Matrix and vector index data type
-     * @param tf The final simulation time.
-     * @param nout The number of integration segmentstimes.
-     * @param step_callback An optional callback which, if provided, will be
-     * called after each time the IDA solver has been invoked with the value
-     * of `t` that IDA has calculated the last step at. The provided model will
-     * be updated with the latest values of `y` and `yp` before the callback is
-     * invoked.
-     * @return int zero if successful, error code otherwise.
-     *
-     * @note The actual time of the final IDA solution should be somewhat
-     * close to `tf`, however due to rounding error the precise final time may
-     * be before or after `tf`.
-     *
-     * @todo Consider adding initial time as the function argument, as well.
+     * When `dt_monitor` is nonpositive, only the final time is targeted. When
+     * the final interval is epsilon-sized, it is folded into the previous
+     * monitor step.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, int nout, const std::optional<std::function<void(RealT)>> step_callback)
+    int Ida<ScalarT, IdxT>::getMonitorStepCount(RealT tf, RealT dt_monitor) const
     {
-      int   retval = 0;
-      int   iout   = 0;
-      RealT tret;
-      RealT dt   = (tf - t_init_) / static_cast<RealT>(nout);
-      RealT tout = t_init_ + dt;
-
-      // In loop, call IDASolve, print results, and test for error.
-      //  Break out of loop when NOUT preset output times have been reached.
-      // printOutput(0.0);
-      while (nout > iout)
+      if (dt_monitor <= 0.0)
       {
+        return 1;
+      }
+
+      const RealT duration = tf - t_init_;
+      const RealT epsilon  = std::numeric_limits<RealT>::epsilon() * std::max(duration, RealT(1.0));
+      return static_cast<int>(std::ceil((duration - epsilon) / dt_monitor));
+    }
+
+    /**
+     * @brief Return the requested monitor target time for a one-based step.
+     *
+     * The final monitor target is pinned exactly to `tf` to avoid roundoff in
+     * repeated time-step arithmetic.
+     */
+    template <class ScalarT, typename IdxT>
+    typename Ida<ScalarT, IdxT>::RealT Ida<ScalarT, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    {
+      return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
+    }
+
+    /**
+     * @brief Copy the current IDA solution vectors into the model and set time.
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::updateModelState(RealT t)
+    {
+      copyVec(yy_, model_->y());
+      copyVec(yp_, model_->yp());
+      model_->updateTime(t, 0.0);
+    }
+
+    /**
+     * @brief Run the IDA solver and optionally produce monitor output every `dt_monitor`.
+     *
+     * When `dt_monitor` is zero, the simulation runs directly to the final
+     * time. The final time is always solved and monitored.
+     */
+    template <class ScalarT, typename IdxT>
+    int Ida<ScalarT, IdxT>::runSimulation(RealT tf, RealT dt_monitor, const std::optional<std::function<void(RealT)>> step_callback)
+    {
+      int retval = 0;
+      int nsteps = getMonitorStepCount(tf, dt_monitor);
+
+      for (int i = 1; i <= nsteps; i++)
+      {
+        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        RealT tret;
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
 
@@ -310,9 +322,7 @@ namespace AnalysisManager
           // The callback may try to observe upated values in the model, so we
           // should update them here (At this point, the model's values are one
           // internal integrator step out of date)
-          copyVec(yy_, model_->y());
-          copyVec(yp_, model_->yp());
-          model_->updateTime(tret, 0.0);
+          updateModelState(tret);
 
           if (model_->monitoring())
           {
@@ -323,24 +333,10 @@ namespace AnalysisManager
             (*step_callback)(tret);
           }
         }
-
-        if (retval == IDA_SUCCESS)
-        {
-          ++iout;
-          tout += dt;
-        }
       }
 
-      // Final copy out. No guarantee last residual evaluation is final step.
-      copyVec(yy_, model_->y());
-      copyVec(yp_, model_->yp());
-      model_->updateTime(tf, 0.0);
-      // if (model_->monitoring())
-      // {
-      //   model_->printMonitoredVariables();
-      // }
+      updateModelState(tf);
 
-      // std::cout << "\n";
       return retval;
     }
 
@@ -415,43 +411,35 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Run simulation with quadrature
+     * @brief Run simulation with optional quadrature output every `dt_monitor`.
      *
-     * @tparam ScalarT
-     * @tparam IdxT
+     * When `dt_monitor` is zero, the simulation runs directly to the final
+     * time. The final time is always solved.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, int nout)
+    int Ida<ScalarT, IdxT>::runSimulationQuadrature(RealT tf, RealT dt_monitor)
     {
-      int   retval = 0;
-      RealT tret;
+      int retval = 0;
+      int nsteps = getMonitorStepCount(tf, dt_monitor);
 
-      // std::cout << "Forward integration for initial value problem ... \n";
-
-      RealT dt   = tf / static_cast<RealT>(nout);
-      RealT tout = dt;
-      // printOutput(0.0);
-      // printSpecial(0.0, yy_);
-      for (int i = 0; i < nout; ++i)
+      for (int i = 1; i <= nsteps; i++)
       {
+        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        RealT       tret;
         retval = IDASolve(solver_, tout, &tret, yy_, yp_, IDA_NORMAL);
         checkOutput(retval, "IDASolve");
-        // printSpecial(tout, yy_);
-        // printOutput(tout);
-
-        if (retval == IDA_SUCCESS)
-        {
-          tout += dt;
-        }
 
         retval = IDAGetQuad(solver_, &tret, q_);
         checkOutput(retval, "IDAGetQuad");
+
+        updateModelState(tret);
+        if (model_->monitoring())
+        {
+          model_->printMonitoredVariables();
+        }
       }
 
-      // Final copy out. No gaurentee last residual evaluation is final step.
-      copyVec(yy_, model_->y());
-      copyVec(yp_, model_->yp());
-      model_->updateTime(tf, 0.0);
+      updateModelState(tf);
 
       return retval;
     }
@@ -609,40 +597,36 @@ namespace AnalysisManager
     }
 
     /**
-     * @brief Run forward simulation
+     * @brief Run forward simulation for adjoint analysis with optional output every `dt_monitor`.
      *
-     * @tparam ScalarT
-     * @tparam IdxT
+     * When `dt_monitor` is zero, the simulation runs directly to the final
+     * time. The final time is always solved.
      */
     template <class ScalarT, typename IdxT>
-    int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, int nout)
+    int Ida<ScalarT, IdxT>::runForwardSimulation(RealT tf, RealT dt_monitor)
     {
-      int   retval = 0;
-      int   ncheck;
-      RealT time;
+      int retval = 0;
+      int ncheck;
+      int nsteps = getMonitorStepCount(tf, dt_monitor);
 
-      // std::cout << "Forward integration for adjoint analysis ... \n";
-
-      RealT dt   = tf / static_cast<RealT>(nout);
-      RealT tout = dt;
-      for (int i = 0; i < nout; ++i)
+      for (int i = 1; i <= nsteps; i++)
       {
-        retval = IDASolveF(solver_, tout, &time, yy_, yp_, IDA_NORMAL, &ncheck);
+        const RealT tout = getMonitorTime(tf, dt_monitor, i, nsteps);
+        RealT       tret;
+        retval = IDASolveF(solver_, tout, &tret, yy_, yp_, IDA_NORMAL, &ncheck);
         checkOutput(retval, "IDASolveF");
 
-        if (retval == IDA_SUCCESS)
-        {
-          tout += dt;
-        }
+        retval = IDAGetQuad(solver_, &tret, q_);
+        checkOutput(retval, "IDAGetQuad");
 
-        retval = IDAGetQuad(solver_, &time, q_);
-        checkOutput(retval, "IDASolve");
+        updateModelState(tret);
+        if (model_->monitoring())
+        {
+          model_->printMonitoredVariables();
+        }
       }
 
-      // Final copy out. No gaurentee last residual evaluation is final step.
-      copyVec(yy_, model_->y());
-      copyVec(yp_, model_->yp());
-      model_->updateTime(tf, 0.0);
+      updateModelState(tf);
 
       return retval;
     }
