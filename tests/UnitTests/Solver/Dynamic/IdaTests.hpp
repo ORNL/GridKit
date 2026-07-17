@@ -468,7 +468,7 @@ namespace GridKit
         ida.configureSimulation();
 
         ida.initializeSimulation(0.0, false);
-        ida.runSimulation(1.0, 1.0);
+        ida.runSimulation(1.0);
         auto stats = ida.getStats();
 
         success *= (stats.num_steps_ == n_steps);
@@ -491,7 +491,7 @@ namespace GridKit
           ida.configureSimulation();
 
           ida.initializeSimulation(0.0, false);
-          ida.runSimulation(1.0, 1.0);
+          ida.runSimulation(1.0);
 
           return ida.getStats().num_steps_;
         };
