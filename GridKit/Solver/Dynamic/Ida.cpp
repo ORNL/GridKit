@@ -270,8 +270,8 @@ namespace AnalysisManager
         return 1;
       }
 
-      const RealT n_est    = (tf - t_init_) / dt_monitor;
-      const RealT epsilon  = std::numeric_limits<RealT>::epsilon()
+      const RealT n_est   = (tf - t_init_) / dt_monitor;
+      const RealT epsilon = std::numeric_limits<RealT>::epsilon()
                             * std::max({std::abs(t_init_), std::abs(tf), RealT(1.0)})
                             / dt_monitor;
       return static_cast<int>(std::ceil(n_est - epsilon));
