@@ -31,8 +31,8 @@ class Gridkit(CMakePackage):
 
     depends_on("enzyme", when="+enzyme")
     depends_on("ipopt", when="+ipopt")
-    depends_on("resolve@develop+klu", when="+resolve+klu")
-    depends_on("resolve@develop~klu", when="+resolve~klu")
+    depends_on("resolve@gridkit-pinned+klu", when="+resolve+klu")
+    depends_on("resolve@gridkit-pinned~klu", when="+resolve~klu")
     depends_on("sundials@develop+klu~mpi", when="+sundials+klu")
     depends_on("sundials@develop~klu~mpi", when="+sundials~klu")
 
