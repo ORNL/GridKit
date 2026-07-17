@@ -60,22 +60,21 @@ namespace AnalysisManager
 #endif
       int configureLinearSolverDense();
       int getDefaultInitialCondition();
-      int setIntegrationTime(RealT t_init, RealT t_final, int nout);
       int initializeSimulation(RealT t0, bool findConsistent = true);
 
-      int runSimulation(RealT tf, int nout = 1, std::optional<std::function<void(RealT)>> step_callback = {});
+      int runSimulation(RealT tf, RealT dt_monitor = 0, std::optional<std::function<void(RealT)>> step_callback = {});
       int deleteSimulation();
 
       int configureQuadrature();
       int initializeQuadrature();
-      int runSimulationQuadrature(RealT tf, int nout = 1);
+      int runSimulationQuadrature(RealT tf, RealT dt_monitor = 0);
       int deleteQuadrature();
 
       int configureAdjoint();
       int configureLinearSolverBackward();
       int initializeAdjoint(IdxT steps = 100);
       int initializeBackwardSimulation(RealT tf);
-      int runForwardSimulation(RealT tf, int nout = 1);
+      int runForwardSimulation(RealT tf, RealT dt_monitor = 0);
       int runBackwardSimulation(RealT t0);
       int deleteAdjoint();
       int deleteBackwardSimulation();
@@ -97,16 +96,6 @@ namespace AnalysisManager
       RealT getInitialTime()
       {
         return t_init_;
-      }
-
-      RealT getFinalTime()
-      {
-        return t_final_;
-      }
-
-      int getNumberOutputTimes()
-      {
-        return nout_;
       }
 
       const RealT* getIntegral() const
@@ -189,6 +178,10 @@ namespace AnalysisManager
                                   N_Vector rhsQB,
                                   void*    user_data);
 
+      int   getMonitorStepCount(RealT tf, RealT dt_monitor) const;
+      RealT getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const;
+      void  updateModelState(RealT t);
+
     private:
       static constexpr ScalarT DEFAULT_REL_TOL = 1e-5;
 
@@ -200,8 +193,6 @@ namespace AnalysisManager
       SUNLinearSolver linearSolverB_{};
 
       RealT t_init_{};
-      RealT t_final_{};
-      int   nout_{}; ///< Number of integration outputs
 
       N_Vector yy_{};  ///< Solution vector
       N_Vector yp_{};  ///< Solution derivatives vector

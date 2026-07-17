@@ -10,11 +10,14 @@ namespace AnalysisManager
   {
 
     template <class ScalarT, typename IdxT>
-    DynamicObjective<ScalarT, IdxT>::DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator)
+    DynamicObjective<ScalarT, IdxT>::DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator,
+                                                      RealT                         t_init,
+                                                      RealT                         t_final,
+                                                      RealT                         dt_monitor)
       : OptimizationSolver<ScalarT, IdxT>(integrator),
-        t_init_(integrator_->getInitialTime()),
-        t_final_(integrator_->getFinalTime()),
-        nout_(integrator_->getNumberOutputTimes())
+        t_init_(t_init),
+        t_final_(t_final),
+        dt_monitor_(dt_monitor)
     {
       model_ = integrator_->getModel();
     }
@@ -112,7 +115,7 @@ namespace AnalysisManager
       integrator_->getSavedInitialCondition();
       integrator_->initializeSimulation(t_init_);
       integrator_->initializeQuadrature();
-      integrator_->runSimulationQuadrature(t_final_, nout_);
+      integrator_->runSimulationQuadrature(t_final_, dt_monitor_);
 
       // Assuming objective function is given as the integral (quadrature) 0
       obj_value = (integrator_->getIntegral())[0];
@@ -141,7 +144,7 @@ namespace AnalysisManager
       integrator_->getSavedInitialCondition();
       integrator_->initializeSimulation(t_init_);
       integrator_->initializeQuadrature();
-      integrator_->runForwardSimulation(t_final_, nout_);
+      integrator_->runForwardSimulation(t_final_, dt_monitor_);
 
       integrator_->initializeBackwardSimulation(t_final_);
       integrator_->runBackwardSimulation(t_init_);
