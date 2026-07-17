@@ -3,6 +3,4 @@
 #    - Slaven Peles <peless@ornl.gov>
 #]]
 
-if(TARGET SUNDIALS::idas)
-  add_subdirectory(Dynamic)
-endif()
+add_subdirectory(Dynamic)
