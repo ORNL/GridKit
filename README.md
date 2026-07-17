@@ -28,6 +28,7 @@ You should have all of the following installed before installing GridKit™
       that the use of Enzyme is experimental, and some versions of it have been found to break GridKit code.
         - [LLVM](https://github.com/llvm/llvm-project) >= 15.x. GridKit is
           currently tested with LLVM 16.
+    - [ReSolve](https://github.com/ORNL/ReSolve) >= 0.99.3 (optional)
 - [CMake](https://cmake.org/) >= 3.13
 - C++ 20 compliant compiler
 

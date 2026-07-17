@@ -68,6 +68,9 @@
 - Added IDA option to suppress algebraic variables in local error tests.
 - Removed `COO_Matrix` class.
 - Added portable `Vector` class and policy-based memory utilities.
+- Add new `LinearSolver` interface for linear solvers.
+- Added new `Rosenbrock` integrator.
+- Clarified naming conventions for macros.
 
 ## v0.1
 

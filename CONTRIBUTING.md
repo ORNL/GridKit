@@ -285,6 +285,10 @@ name. Use all caps (screaming snake case).
    constexpr double EXP = 2.7183      // Yes
 ```
 
+### Macros
+
+Macros should use all caps, same as constants.
+
 ### Enums (enumerated types)
 
 Always define `enum`s inside `GridKit` namespace. The `enum` name should
