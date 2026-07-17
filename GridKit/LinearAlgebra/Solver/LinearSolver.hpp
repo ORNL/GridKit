@@ -11,8 +11,7 @@ namespace GridKit
   {
 
     /**
-     * @brief Interface for linear solvers used by GridKit integrators, including
-     *        \ref AnalysisManager::NativeDynamicSolver::Rosenbrock "Rosenbrock".
+     * @brief An interface for linear solvers to be used in GridKit, such as in \ref Integrator::Rosenbrock.
      *
      */
     template <class ScalarT, typename IdxT>

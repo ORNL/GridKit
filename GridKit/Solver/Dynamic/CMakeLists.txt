@@ -43,4 +43,25 @@ else()
       GridKit::dense_vector)
 endif()
 
+if(GRIDKIT_ENABLE_RESOLVE)
+  gridkit_add_library(
+    rosenbrock
+    SOURCES Rosenbrock.cpp RosenbrockTableaus.cpp
+    HEADERS Rosenbrock.hpp
+            Native/ErrorNorm.hpp
+            Native/StepControl.hpp
+            Native/StepController.hpp
+    LINK_LIBRARIES
+      PRIVATE
+      ReSolve::ReSolve
+      PUBLIC
+      GridKit::dense_vector
+      PUBLIC
+      GridKit::definitions
+      PUBLIC
+      GridKit::utilities_logger
+      PUBLIC
+      GridKit::sparse_matrix)
+endif()
+
 add_subdirectory(Native)
