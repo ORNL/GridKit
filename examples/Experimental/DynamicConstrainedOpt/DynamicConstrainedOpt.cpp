@@ -54,18 +54,18 @@ int main()
 
   double t_fault = 0.02;
   double t_clear = 0.06;
-  idas.runSimulation(t_fault);
+  idas.runSimulation(t_fault, t_fault - t_init);
   // create initial condition after a fault
   {
     gen.V() = 0.0;
-    idas.runSimulation(t_clear, 2);
+    idas.runSimulation(t_clear, (t_clear - t_init) / 2.0);
     gen.V()     = 1.0;
     gen.theta() = -0.01;
     idas.saveInitialCondition();
   }
 
-  // Set integration time for dynamic constrained optimization
-  idas.setIntegrationTime(t_init, t_final, 100);
+  // Set monitoring interval for dynamic constrained optimization
+  double dt_monitor = (t_final - t_init) / 100.0;
 
   // Guess optimization parameter value
   double Pm = 0.7;
@@ -92,7 +92,7 @@ int main()
 
   // Create dynamic objective interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(&idas);
+      new IpoptInterface::DynamicObjective<double, size_t>(&idas, t_init, t_final, dt_monitor);
 
   auto* param = model.param().getData();
 
@@ -123,7 +123,7 @@ int main()
 
   // Create dynamic constraint interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicConstraintInterface =
-      new IpoptInterface::DynamicConstraint<double, size_t>(&idas);
+      new IpoptInterface::DynamicConstraint<double, size_t>(&idas, t_init, t_final, dt_monitor);
 
   // Initialize problem
   param[0] = Pm;

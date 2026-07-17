@@ -54,11 +54,11 @@ int main()
   idas->configureQuadrature();
   idas->initializeQuadrature();
 
-  idas->runSimulationQuadrature(0.1, 2);
+  idas->runSimulationQuadrature(0.1, 0.05);
   idas->saveInitialCondition();
 
-  // Set integration time for dynamic constrained optimization
-  idas->setIntegrationTime(t_init, t_final, 250);
+  // Set monitoring interval for dynamic constrained optimization
+  double dt_monitor = (t_final - t_init) / 250.0;
 
   // Guess optimization parameter values
   double T2 = 0.15;
@@ -86,7 +86,7 @@ int main()
 
   // Create interface to Ipopt solver
   Ipopt::SmartPtr<Ipopt::TNLP> ipoptDynamicObjectiveInterface =
-      new IpoptInterface::DynamicObjective<double, size_t>(idas);
+      new IpoptInterface::DynamicObjective<double, size_t>(idas, t_init, t_final, dt_monitor);
 
   auto* param = model->param().getData();
 

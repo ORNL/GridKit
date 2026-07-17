@@ -394,9 +394,63 @@ namespace GridKit
         };
 
         ida.initializeSimulation(0.0, false);
-        ida.runSimulation(1.0, n_steps, output_cb);
+        ida.runSimulation(1.0, 1.0 / n_steps, output_cb);
 
         success *= (observed_steps == n_steps);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome dtMonitorZero()
+      {
+        TestStatus success = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+
+        Ida<double, size_t> ida(&model);
+        ida.configureSimulation();
+
+        unsigned observed_steps = 0;
+        double   observed_t     = 0.0;
+        auto     output_cb      = [&](double t)
+        {
+          observed_steps++;
+          observed_t = t;
+        };
+
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(1.0, 0.0, output_cb);
+
+        success *= (observed_steps == 1);
+        success *= (observed_t == 1.0);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome dtMonitorSuppressesEpsilonFinalStep()
+      {
+        TestStatus success = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+
+        Ida<double, size_t> ida(&model);
+        ida.configureSimulation();
+
+        unsigned observed_steps = 0;
+        double   observed_t     = 0.0;
+        auto     output_cb      = [&](double t)
+        {
+          observed_steps++;
+          observed_t = t;
+        };
+
+        const double tf = std::nextafter(1.0, 2.0);
+
+        ida.initializeSimulation(0.0, false);
+        ida.runSimulation(tf, 0.25, output_cb);
+
+        success *= (observed_steps == 4);
+        success *= (observed_t == tf);
 
         return success.report(__func__);
       }

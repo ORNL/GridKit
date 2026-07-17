@@ -35,7 +35,10 @@ namespace AnalysisManager
       using IpoptData                 = Ipopt::IpoptData;
 
     public:
-      DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator);
+      DynamicObjective(Sundials::Ida<ScalarT, IdxT>* integrator,
+                       RealT                         t_init,
+                       RealT                         t_final,
+                       RealT                         dt_monitor = 0);
       virtual ~DynamicObjective();
 
       /// Returns sizes of the model components
@@ -78,7 +81,7 @@ namespace AnalysisManager
     private:
       RealT t_init_;
       RealT t_final_;
-      int   nout_;
+      RealT dt_monitor_;
     };
 
   } // namespace IpoptInterface
