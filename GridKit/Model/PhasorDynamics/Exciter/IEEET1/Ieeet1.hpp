@@ -124,26 +124,26 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        static constexpr RealT TR_MINIMUM = 1.0e-3;
+        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
         // Signal pointers
         BusT* bus_;
 
         // Model Input parameters
-        RealT Tr_;      ///< Time constant for voltage sensing
-        RealT Ka_;      ///< Coefficient for voltage regulation
-        RealT Ta_;      ///< Time constant for voltage regulation
-        RealT Ke_;      ///< Coefficient for excitation system
-        RealT Te_;      ///< Time constant for excitation system
-        RealT Kf_;      ///< Coefficient for feedback
-        RealT Tf_;      ///< Time constant for feedback
-        RealT Vrmin_;   ///< LL to voltage regulation
-        RealT Vrmax_;   ///< HH to voltage regulation
-        RealT E1_;      ///< Saturation parameter
-        RealT E2_;      ///< Saturation parameter
-        RealT Se1_;     ///< Saturation parameter
-        RealT Se2_;     ///< Saturation parameter
-        RealT Ispdlim_; ///< Speed limit flag indicator
+        RealT Tr_{0.0};      ///< Time constant for voltage sensing
+        RealT Ka_{50.0};     ///< Coefficient for voltage regulation
+        RealT Ta_{0.04};     ///< Time constant for voltage regulation
+        RealT Ke_{-0.06};    ///< Coefficient for excitation system
+        RealT Te_{0.6};      ///< Time constant for excitation system
+        RealT Kf_{0.09};     ///< Coefficient for feedback
+        RealT Tf_{1.46};     ///< Time constant for feedback
+        RealT Vrmin_{-1.0};  ///< LL to voltage regulation
+        RealT Vrmax_{1.0};   ///< HH to voltage regulation
+        RealT E1_{2.8};      ///< Saturation parameter
+        RealT E2_{3.73};     ///< Saturation parameter
+        RealT Se1_{0.04};    ///< Saturation parameter
+        RealT Se2_{0.33};    ///< Saturation parameter
+        RealT Ispdlim_{0.0}; ///< Speed limit flag indicator
 
         // Model Derived parameters
         // Saturation coefficients derived from E1, E2, Se1, and Se2.

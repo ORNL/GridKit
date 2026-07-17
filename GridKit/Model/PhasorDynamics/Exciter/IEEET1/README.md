@@ -31,11 +31,38 @@ $S_1$       | [p.u.] | Saturation Parameter                 | 0.04    |
 $S_2$       | [p.u.] | Saturation Parameter                 | 0.33    |
 $I_{\mathrm{spdlim}}$ | [binary] | Speed limit flag indicator       | 0       |
 
+### Parameter Validation
+
+Invalid IEEET1 parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+
+```math
+\begin{aligned}
+  T &\leftarrow \max\!\left(T, \epsilon_T\right)
+    \quad T \in \{T_R, T_A, T_E, T_F\} \\
+  K_A
+    &> 0 \\
+  V_R^{\min}
+    &\le V_R^{\max} \\
+  I_{\mathrm{spdlim}}
+    &\in \{0,1\} \\
+  \left(S_1, S_2\right)
+    &=(0,0)
+      \quad\text{or}\quad
+      \begin{gathered}
+        E_1, E_2, S_1, S_2 > 0 \\
+        E_1 \ne E_2 \\
+        S_1 \ne S_2
+      \end{gathered}
+\end{aligned}
+```
+
 ### Model Derived Parameters
 
-The relationship of the derived parameters is defined by the following quadratic model. The parameters are chosen so that the quadratic model represents
-the expected saturation near the operating region.
-``` math
+When saturation is disabled, $S_A=0$ and $S_B=0$. Otherwise,
+the parameters are chosen so that the following quadratic model represents the
+expected saturation near the operating region:
+
+```math
 \begin{aligned}
   S_1 &= S_B(E_1-S_A)^2 \\
   S_2 &= S_B(E_2-S_A)^2 \\
@@ -43,7 +70,8 @@ the expected saturation near the operating region.
 ```
 
 Generally, this system has two solutions. The non-extraneous solution is as follows.
-``` math
+
+```math
 \begin{aligned}
   C &=  \sqrt{
    \dfrac
@@ -147,7 +175,15 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 
 ## Initialization
 
-The implementation first applies $T_R \leftarrow \max(T_R, 10^{-3})$. The machine initializes $E_{fd}$ first. IEEET1 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and solves the steady-state algebraic chain so all residuals vanish with $\dot y = 0$. The sensed terminal voltage initializes from the positive bus-voltage magnitude. Saturation and the speed-limit flag are included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation with the current input values.
+The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
+$T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
+The machine initializes $E_{fd}$ first. IEEET1
+reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and
+solves the steady-state algebraic chain so all residuals vanish with
+$\dot y = 0$. The sensed terminal voltage initializes from the positive
+bus-voltage magnitude. Saturation is included when enabled, and the speed-limit
+flag is included directly; $V_\text{ref}$ is set to close the $V_{tr}$ equation
+with the current input values.
 
 ```math
 \begin{aligned}
