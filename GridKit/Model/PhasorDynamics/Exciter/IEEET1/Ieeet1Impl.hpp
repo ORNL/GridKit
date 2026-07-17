@@ -8,6 +8,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
@@ -31,7 +32,6 @@ namespace GridKit
       Ieeet1<scalar_type, index_type>::Ieeet1(BusT* bus)
         : Ieeet1(bus, ModelDataT{})
       {
-        size_ = 9;
       }
 
       /**
@@ -399,14 +399,9 @@ namespace GridKit
       {
         using Parameter = typename ModelDataT::Parameters;
 
-        Tr_ = TR_MINIMUM;
         if (data.parameters.contains(Parameter::Tr))
         {
           Tr_ = std::get<RealT>(data.parameters.at(Parameter::Tr));
-        }
-        if (Tr_ < TR_MINIMUM)
-        {
-          Tr_ = TR_MINIMUM;
         }
         if (data.parameters.contains(Parameter::Ka))
         {
