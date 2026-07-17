@@ -176,7 +176,8 @@ Here $q$ is GridKit's [Quadratic Ramp](../../../../CommonMath.md#primitives).
 ## Initialization
 
 The implementation first applies $T \leftarrow \max(T, 10^{-3})$ for
-$T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural tempalte change in the future. The machine initializes $E_{fd}$ first. IEEET1
+$T \in \{T_R, T_A, T_E, T_F\}$. This should be replaced with a structural template change in the future.
+The machine initializes $E_{fd}$ first. IEEET1
 reads that value as $E_{fd,0}$, along with any attached $\omega$ and $V_S$, and
 solves the steady-state algebraic chain so all residuals vanish with
 $\dot y = 0$. The sensed terminal voltage initializes from the positive
