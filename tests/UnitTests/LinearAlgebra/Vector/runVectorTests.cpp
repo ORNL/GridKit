@@ -16,6 +16,7 @@ int main(int, char**)
     result += test.vectorConstructor(50);
 
     result += test.setData(50);
+    result += test.setSizedExternalData(50);
 
     result += test.copyFromExternal(50);
     // result += test.copyToExternal(50);

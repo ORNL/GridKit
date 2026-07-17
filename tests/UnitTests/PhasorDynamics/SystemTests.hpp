@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -12,6 +13,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -204,6 +206,91 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      TestOutcome modelVectorsAliasSystemStorage()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus1(1.0, 2.0);
+        PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
+        PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
+        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+
+        system.addBus(&bus1);
+        system.addBus(&infinite_bus);
+        system.addBus(&bus2);
+        system.addComponent(&branch);
+        system.addComponent(&load);
+
+        if (system.allocate() != 0
+            || system.setAbsoluteTolerance(1e-4) != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        auto checkAlias = [&](auto& system_vector, auto& model_vector, IdxT offset)
+        {
+          auto*      system_data = system_vector.getData();
+          auto*      model_data  = model_vector.getData();
+          const auto first       = static_cast<std::size_t>(offset);
+
+          if (!system_data || model_data != system_data + first)
+          {
+            success = false;
+            return;
+          }
+
+          success *= system_vector.setToConst(ScalarT{3.0}) == 0;
+          success *= isEqual(model_data[0], ScalarT{3.0});
+
+          success *= model_vector.setToConst(ScalarT{4.0}) == 0;
+          success *= isEqual(system_data[first], ScalarT{4.0});
+        };
+
+        auto checkModel = [&](auto& model, IdxT offset)
+        {
+          success *= model.getVariableIndex(0) == offset;
+          success *= model.getResidualIndex(0) == offset;
+
+          checkAlias(system.y(), model.y(), offset);
+          checkAlias(system.yp(), model.yp(), offset);
+          checkAlias(system.getResidual(), model.getResidual(), offset);
+          checkAlias(system.absoluteTolerance(), model.absoluteTolerance(), offset);
+        };
+
+        const IdxT bus2_offset = bus1.size();
+        const IdxT load_offset = bus1.size() + bus2.size();
+        const auto bus2_first  = static_cast<std::size_t>(bus2_offset);
+
+        auto rebind = [&](auto& model, IdxT offset)
+        {
+          return model.bind(system.y(),
+                            system.yp(),
+                            system.getResidual(),
+                            system.absoluteTolerance(),
+                            offset);
+        };
+
+        // Rebinding the same slices is a no-op.
+        success *= rebind(bus2, bus2_offset) == 0;
+        success *= rebind(load, load_offset) == 0;
+
+        checkModel(bus2, bus2_offset);
+        checkModel(load, load_offset);
+
+        // Tags remain model-owned and are collected separately.
+        system.tag()[bus2_first]  = true;
+        success                  *= system.tagDifferentiable() == 0;
+        success                  *= !system.tag()[bus2_first];
+
+        bus2.tag()[0]  = true;
+        success       *= !system.tag()[bus2_first];
+
+        return success.report(__func__);
+      }
+
       /**
        * @brief Test for exception when signals are incorrectly configured
        */
@@ -219,6 +306,26 @@ namespace GridKit
         status *= throws<std::runtime_error>(
             [&]()
             { sys.allocate(); });
+
+        return status.report(__func__);
+      }
+
+      /**
+       * @brief Test for exception when a child cannot bind to system storage
+       */
+      TestOutcome allocationError()
+      {
+        using namespace GridKit::PhasorDynamics;
+
+        TestStatus                 status{true};
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus(ScalarT{1.0}, ScalarT{0.0});
+
+        status *= bus.allocate() == 0;
+        system.addBus(&bus);
+        status *= throws<std::runtime_error>(
+            [&]()
+            { system.allocate(); });
 
         return status.report(__func__);
       }

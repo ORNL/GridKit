@@ -93,7 +93,6 @@ namespace GridKit
       int evaluateResidual() override;
       int evaluateJacobian() override;
 
-      void updateVariables();
       void updateTime(RealT t, RealT a) override;
 
       void addBus(BusT* bus);

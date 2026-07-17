@@ -152,6 +152,72 @@ namespace GridKit
     }
 
     /**
+     * @brief Set the vector extent and bind it to external data.
+     *
+     * Unlike the two-argument overload, this overload can replace an existing
+     * non-owning pointer. It never replaces owned data. This allows non-owning
+     * vectors to be rebound after the external allocation moves.
+     *
+     * @param[in] data     Pointer to external data.
+     * @param[in] size     Number of elements in each vector.
+     * @param[in] memspace Memory space (HOST or DEVICE).
+     *
+     * @return 0 if successful, 1 otherwise.
+     */
+    template <typename ScalarT, typename IdxT>
+    int Vector<ScalarT, IdxT>::setData(ScalarT*            data,
+                                       IdxT                size,
+                                       memory::MemorySpace memspace)
+    {
+      if (data == nullptr && size != IdxT{})
+      {
+        out::error() << "Vector::setData - nonzero vector cannot use null data\n";
+        return 1;
+      }
+
+      using namespace memory;
+      switch (memspace)
+      {
+      case HOST:
+        if (h_data_ != nullptr && owns_cpu_data_)
+        {
+          out::error() << "Vector::setData - cannot replace owned host data\n";
+          return 1;
+        }
+        if (d_data_ != nullptr && size != n_size_)
+        {
+          out::error() << "Vector::setData - size conflicts with existing device data\n";
+          return 1;
+        }
+        h_data_        = data;
+        owns_cpu_data_ = false;
+        setHostUpdated(true);
+        setDeviceUpdated(false);
+        break;
+      case DEVICE:
+        if (d_data_ != nullptr && owns_gpu_data_)
+        {
+          out::error() << "Vector::setData - cannot replace owned device data\n";
+          return 1;
+        }
+        if (h_data_ != nullptr && size != n_size_)
+        {
+          out::error() << "Vector::setData - size conflicts with existing host data\n";
+          return 1;
+        }
+        d_data_        = data;
+        owns_gpu_data_ = false;
+        setHostUpdated(false);
+        setDeviceUpdated(true);
+        break;
+      }
+
+      n_capacity_ = size;
+      n_size_     = size;
+      return 0;
+    }
+
+    /**
      * @brief Set the flag to indicate that the data (HOST or DEVICE) has been
      * updated.
      *
