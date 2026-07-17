@@ -8,7 +8,8 @@ int main()
 
   result += test.constructor();
   result += test.zeroInitialResidual();
-  result += test.zeroTrUsesMinimum();
+  result += test.zeroTimeConstantsAndDisabledSaturation();
+  result += test.invalidSaturationParameters();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
