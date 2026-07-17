@@ -431,8 +431,8 @@ namespace GridKit
           RealT sol_norm = 0.0;
 
           // The final solution of the simulation
-          const VectorT& state = model.y();
-          const auto* state_data = state.getData();
+          const VectorT& state      = model.y();
+          const auto*    state_data = state.getData();
 
           // The difference from the simulated solution to the true solution
           error += std::pow(state_data[0] - sinh(final_time), 2);
