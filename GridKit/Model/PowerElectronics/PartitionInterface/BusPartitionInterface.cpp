@@ -76,11 +76,8 @@ namespace GridKit
 
     CircuitComponent<ScalarT, IdxT>::allocate();
 
-    y_.resize(static_cast<size_t>(size_));
-    yp_.resize(static_cast<size_t>(size_));
-    f_.resize(static_cast<size_t>(size_));
+    std::fill_n(f_.getData(), size_, 0);
 
-    std::fill(f_.begin(), f_.end(), 0);
     bool port_i_set = false;
     bool port_j_set = false;
 
@@ -123,6 +120,13 @@ namespace GridKit
     return 0;
   }
 
+  template <class ScalarT, typename IdxT>
+  int BusPartitionInterface<ScalarT, IdxT>::setAbsoluteTolerance(RealT rel_tol)
+  {
+    abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+    return 0;
+  }
+
   /**
    * Initialization of the grid model
    */
@@ -150,43 +154,48 @@ namespace GridKit
     return 0;
   }
 
-  /**
-   * @brief Eval Micro Load
-   */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateExternalResidual()
   {
-
     size_t internal = 0;
     size_t external = 0;
 
+    ScalarT* y  = y_.getData();
+    ScalarT* yp = yp_.getData();
+    ScalarT* f  = f_.getData();
+
+    ScalarT* component_y  = component_.y().getData();
+    ScalarT* component_yp = component_.yp().getData();
+
     const auto& extern_indices = component_.getExternIndices();
 
-    for (IdxT i = 0; i < component_.size(); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(component_.size()); ++i)
     {
-      const bool is_external = extern_indices.contains(i);
-
-      if (is_external)
+      if (extern_indices.contains(i))
       {
-        component_.y()[external]  = y_[i];
-        component_.yp()[external] = yp_[i];
+        component_y[external]  = y[i];
+        component_yp[external] = yp[i];
         ++external;
-        continue;
       }
-
-      y_ptr[internal]  = y_[i];
-      yp_ptr[internal] = yp_[i];
-      ++internal;
+      else
+      {
+        y_ptr[internal]  = y[i];
+        yp_ptr[internal] = yp[i];
+        ++internal;
+      }
     }
 
-    component_.evaluateExternalResidual();
+    component_.evaluateResidual();
 
-    auto f = component_.getResidual();
+    const auto* residual = component_.getResidual().getData();
 
     // TODO: This assumes that external variables are ordered after all internal
     // variables in the local indexing. To make this more robust, we need to get rid of this assumption.
-    f_[bus_port_i_] = f[bus_port_i_];
-    f_[bus_port_j_] = f[bus_port_j_];
+    f[bus_port_i_] = residual[bus_port_i_];
+    f[bus_port_j_] = residual[bus_port_j_];
+
+    f_.setDataUpdated();
+
     return 0;
   }
 

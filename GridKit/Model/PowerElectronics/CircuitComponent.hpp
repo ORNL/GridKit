@@ -27,6 +27,130 @@ namespace GridKit
 
     CircuitComponent() = default;
 
+    CircuitComponent(const CircuitComponent& other)
+      : n_extern_(other.n_extern_),
+        n_intern_(other.n_intern_),
+        extern_indices_(other.extern_indices_),
+        size_(other.size_),
+        nnz_(other.nnz_),
+        size_quad_(other.size_quad_),
+        size_opt_(other.size_opt_),
+        current_jac_size_(other.current_jac_size_),
+
+        // These pointers refer to storage supplied by a parent system.
+        // The copied component must be connected to its own storage later.
+        y_int_(nullptr),
+        yp_int_(nullptr),
+        f_int_(nullptr),
+
+        tag_(other.tag_),
+        time_(other.time_),
+        alpha_(other.alpha_),
+        max_steps_(other.max_steps_),
+        idc_(other.idc_),
+        allocated_(other.allocated_)
+    {
+      /*
+       * VectorT disables its normal copy constructor and copy-assignment
+       * operator. Use its provided copyFromExternal() operation to perform
+       * an independent copy of the vector data.
+       */
+      auto copyVector = [](VectorT& destination, const VectorT& source)
+      {
+        const IdxT source_size = source.getSize();
+
+        if (source_size == 0)
+        {
+          return;
+        }
+
+        destination.resize(source_size);
+
+        const int error_code = destination.copyFromExternal(source);
+        assert(error_code == 0);
+      };
+
+      /*
+       * Deep-copy the local-to-global connection mapping.
+       */
+      if (other.connection_nodes_)
+      {
+        connection_nodes_ =
+            std::make_unique<IdxT[]>(static_cast<size_t>(size_));
+
+        for (IdxT i = 0; i < size_; ++i)
+        {
+          connection_nodes_[static_cast<size_t>(i)] =
+              other.connection_nodes_[static_cast<size_t>(i)];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian row indices.
+       */
+      if (other.jacobian_coo_rows_)
+      {
+        jacobian_coo_rows_ =
+            std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+
+        for (IdxT i = 0; i < nnz_; ++i)
+        {
+          jacobian_coo_rows_[static_cast<size_t>(i)] =
+              other.jacobian_coo_rows_[static_cast<size_t>(i)];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian column indices.
+       */
+      if (other.jacobian_coo_cols_)
+      {
+        jacobian_coo_cols_ =
+            std::make_unique<IdxT[]>(static_cast<size_t>(nnz_));
+
+        for (IdxT i = 0; i < nnz_; ++i)
+        {
+          jacobian_coo_cols_[static_cast<size_t>(i)] =
+              other.jacobian_coo_cols_[static_cast<size_t>(i)];
+        }
+      }
+
+      /*
+       * Deep-copy the COO Jacobian values.
+       */
+      if (other.jacobian_coo_values_)
+      {
+        jacobian_coo_values_ =
+            std::make_unique<RealT[]>(static_cast<size_t>(nnz_));
+
+        for (IdxT i = 0; i < nnz_; ++i)
+        {
+          jacobian_coo_values_[static_cast<size_t>(i)] =
+              other.jacobian_coo_values_[static_cast<size_t>(i)];
+        }
+      }
+
+      // State, state derivative, residual, and absolute tolerance.
+      copyVector(y_, other.y_);
+      copyVector(yp_, other.yp_);
+      copyVector(f_, other.f_);
+      copyVector(abs_tol_, other.abs_tol_);
+
+      // Quadrature vector.
+      copyVector(g_, other.g_);
+
+      // Adjoint vectors.
+      copyVector(yB_, other.yB_);
+      copyVector(ypB_, other.ypB_);
+      copyVector(fB_, other.fB_);
+      copyVector(gB_, other.gB_);
+
+      // Parameter vectors.
+      copyVector(param_, other.param_);
+      copyVector(param_up_, other.param_up_);
+      copyVector(param_lo_, other.param_lo_);
+    }
+
     /**
      * @note Cannot be marked final, since it is overriden to recurse in the system model.
      */
@@ -51,7 +175,7 @@ namespace GridKit
       return this->n_intern_;
     }
 
-    std::set<size_t> getExternIndices()
+    std::set<IdxT> getExternIndices()
     {
       return this->extern_indices_;
     }

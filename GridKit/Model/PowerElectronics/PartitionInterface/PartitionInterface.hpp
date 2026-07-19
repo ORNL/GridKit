@@ -25,10 +25,6 @@ namespace GridKit
   class PartitionInterface : public CircuitComponent<ScalarT, IdxT>
   {
   public:
-    using RealT      = typename Model::Evaluator<ScalarT, IdxT>::RealT;
-    using MatrixT    = typename Model::Evaluator<ScalarT, IdxT>::MatrixT;
-    using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
-
     PartitionInterface() = default;
 
     ~PartitionInterface() = default;

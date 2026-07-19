@@ -27,13 +27,11 @@ int main()
 {
   /// @todo Needs to be modified. Some components are small relative to others thus
   /// there error is high (or could be matlab vector issue)
-  double abs_tol         = 1.0e-8;
-  double rel_tol         = 1.0e-8;
-  size_t max_step_number = 3000;
-  bool   use_jac         = true;
+
+  bool use_jac = true;
 
   // Create model
-  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(rel_tol, abs_tol, use_jac, max_step_number);
+  auto* sysmodel = new GridKit::PowerElectronicsModel<double, size_t>(use_jac);
 
   // Modeled after the problem in the paper
   double RN = 1.0e4;
@@ -207,11 +205,17 @@ int main()
     yp.push_back(static_cast<double>(i + 1));
   }
 
+  auto* system_y  = sysmodel->y().getData();
+  auto* system_yp = sysmodel->yp().getData();
+
   for (size_t i = 0; i < sysmodel->size(); i++)
   {
-    sysmodel->y()[i]  = y[i];
-    sysmodel->yp()[i] = yp[i];
+    system_y[i]  = y[i];
+    system_yp[i] = yp[i];
   }
+
+  sysmodel->y().setDataUpdated();
+  sysmodel->yp().setDataUpdated();
 
   sysmodel->updateTime(2, 5);
   sysmodel->evaluateResidual();
@@ -219,7 +223,7 @@ int main()
 
   auto full_jac = sysmodel->getCsrJacobian();
 
-  std::vector<double> f_sysmodel = sysmodel->getResidual();
+  auto* f_sysmodel = sysmodel->getResidual().getData();
 
   std::vector<GridKit::SubsystemModel<double, size_t>*> partitions = {partition1, partition2};
 
@@ -236,11 +240,17 @@ int main()
       partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
     }
 
+    auto* partition_y  = partition->y().getData();
+    auto* partition_yp = partition->yp().getData();
+
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
-      partition->y()[i]  = y[partition->getNodeConnection(i)];
-      partition->yp()[i] = yp[partition->getNodeConnection(i)];
+      partition_y[i]  = y[partition->getNodeConnection(i)];
+      partition_yp[i] = yp[partition->getNodeConnection(i)];
     }
+
+    partition->y().setDataUpdated();
+    partition->yp().setDataUpdated();
 
     partition->evaluateResidual();
     partition->evaluateJacobian();
@@ -266,29 +276,35 @@ int main()
   // Get internal residuals from partition 1
   for (auto* partition : partitions)
   {
+    const auto* residual = partition->getResidual().getData();
+
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
-      f[partition->getNodeConnection(i)] = partition->getResidual()[i];
+
+      f[partition->getNodeConnection(i)] = residual[i];
     }
+    std::cout << std::endl;
   }
 
   double max_error = 0;
   for (size_t i = 0; i < sysmodel->size(); i++)
   {
     error[i] = (f_sysmodel[i] - f[i]) / f_sysmodel[i];
+
+    std::cout << i << " " << f[i] << " " << f_sysmodel[i] << " " << error[i] << std::endl;
     if (max_error < std::abs(error[i]))
     {
       max_error = std::abs(error[i]);
     }
   }
 
+  std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
+
   if (max_error > std::numeric_limits<double>::epsilon())
   {
     std::cout << "ERROR: Max Error too high!" << std::endl;
     return 1;
   }
-
-  std::cout << "\nMax Error of Reference and Partition Evaluation: " << max_error << std::endl;
 
   delete sysmodel;
   delete partition1;

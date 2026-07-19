@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <GridKit/LinearAlgebra/SparseMatrix/CsrMatrix.hpp>
+#include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Model/PowerElectronics/SubsystemModel.hpp>
 
 namespace GridKit
@@ -20,12 +21,11 @@ namespace GridKit
         GridKit::SubsystemModel<RealT, IdxT>&           subsystem,
         RealT                                           tolerance = static_cast<RealT>(1e-12))
     {
-      constexpr auto host = GridKit::LinearAlgebra::memory::HOST;
-
+      constexpr auto host      = memory::HOST;
       // Full-system CSR data.
-      const IdxT*  full_rows = full_jac.getRowData(host);
-      const IdxT*  full_cols = full_jac.getColData(host);
-      const RealT* full_vals = full_jac.getValues(host);
+      const IdxT*    full_rows = full_jac.getRowData(host);
+      const IdxT*    full_cols = full_jac.getColData(host);
+      const RealT*   full_vals = full_jac.getValues(host);
 
       // Subsystem CSR data.
       const IdxT*  sub_rows = sub_jac.getRowData(host);

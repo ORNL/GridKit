@@ -32,6 +32,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
@@ -42,12 +43,12 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::param_;
     using CircuitComponent<ScalarT, IdxT>::idc_;
 
-    using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
-    using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
-
     using CircuitComponent<ScalarT, IdxT>::extern_indices_;
     using CircuitComponent<ScalarT, IdxT>::n_extern_;
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
+
+    using PartitionInterface<ScalarT, IdxT>::bus_port_i_;
+    using PartitionInterface<ScalarT, IdxT>::bus_port_j_;
 
   public:
     BusPartitionInterface(node_type& bus, component_type& component, IdxT id);
@@ -56,6 +57,7 @@ namespace GridKit
     int allocate();
     int initialize();
     int tagDifferentiable();
+    int setAbsoluteTolerance(RealT);
     int evaluateInternalResidual() final;
     int evaluateExternalResidual() final;
     int evaluateJacobian();

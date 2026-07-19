@@ -5,7 +5,6 @@
 #include <cassert>
 #include <functional>
 #include <optional>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -22,7 +21,6 @@ namespace GridKit
   class SubsystemModel : public CircuitComponent<ScalarT, IdxT>
   {
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using MatrixT        = typename CircuitComponent<ScalarT, IdxT>::MatrixT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
@@ -41,9 +39,10 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::rel_tol_;
+    using CircuitComponent<ScalarT, IdxT>::tag_;
     using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::extern_indices_;
+    using CircuitComponent<ScalarT, IdxT>::allocated_;
+    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
 
   public:
     /**
@@ -55,11 +54,7 @@ namespace GridKit
     SubsystemModel()
     {
       // Set system model parameters as default
-      rel_tol_         = 1e-4;
-      abs_tol_         = 1e-4;
-      this->max_steps_ = 2000;
-      // By default don't use the jacobian
-      use_jac_         = false;
+      use_jac_ = false;
     }
 
     virtual ~SubsystemModel()
@@ -94,15 +89,20 @@ namespace GridKit
 
       CircuitComponent<ScalarT, IdxT>::allocate();
 
-      y_.resize(n_intern_);
-      yp_.resize(n_intern_);
-      f_.resize(n_intern_);
-      neumaier_compensation.resize(n_intern_);
+      // Allocation always rebuilds the system Jacobian and its COO-to-CSR map.
+      delete csr_jac_;
+      csr_jac_ = nullptr;
+
+      delete[] map_to_csr_;
+      map_to_csr_ = nullptr;
+
+      tag_.resize(size_);
 
       // Allocate subsystem vectors.
       y_ext_.resize(n_extern_);
       yp_ext_.resize(n_extern_);
       f_ext_.resize(n_extern_);
+
       external_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
@@ -117,13 +117,16 @@ namespace GridKit
         external_indices_[local_idx - n_intern_] = global_idx;
       }
 
-      size_t component_internal_idx = 0;
+      size_t      component_internal_idx = 0;
+      const auto* y                      = y_.getData();
+      const auto* yp                     = yp_.getData();
+      auto*       f                      = f_.getData();
       for (component_type* comp : components_)
       {
 
-        comp->setInternalPointer(&y_[component_internal_idx]);
-        comp->setInternalDerivativePointer(&yp_[component_internal_idx]);
-        comp->setInternalResidualPointer(&f_[component_internal_idx]);
+        comp->setInternalPointer(&y[component_internal_idx]);
+        comp->setInternalDerivativePointer(&yp[component_internal_idx]);
+        comp->setInternalResidualPointer(&f[component_internal_idx]);
 
         component_internal_idx += comp->getInternalSize();
       }
@@ -229,6 +232,7 @@ namespace GridKit
         map_to_csr_[map_to_sorted[i]] = map_to_dedup[i];
       }
 
+      allocated_ = true;
       return 0;
     }
 
@@ -244,6 +248,8 @@ namespace GridKit
       {
         component->initialize();
       }
+      y_.setDataUpdated();
+      yp_.setDataUpdated();
       this->distributeVectors();
 
       return 0;
@@ -273,11 +279,14 @@ namespace GridKit
         std::copy(yp_forcing.begin(), yp_forcing.end(), yp_ext_.begin());
       }
 
+      const auto* y_system  = y_.getData();
+      const auto* yp_system = yp_.getData();
+
       for (component_type* component : components_)
       {
-        std::vector<ScalarT>&   y         = component->y();
-        std::vector<ScalarT>&   yp        = component->yp();
-        const std::set<size_t>& externals = component->getExternIndices();
+        auto*       y         = component->y().getData();
+        auto*       yp        = component->yp().getData();
+        const auto& externals = component->getExternIndices();
 
         for (size_t j : externals)
         {
@@ -290,8 +299,8 @@ namespace GridKit
           }
           else if (local_idx < this->getInternalSize())
           {
-            y[j]  = y_[local_idx];
-            yp[j] = yp_[local_idx];
+            y[j]  = y_system[local_idx];
+            yp[j] = yp_system[local_idx];
           }
           else
           {
@@ -299,6 +308,8 @@ namespace GridKit
             yp[j] = yp_ext_[local_idx - this->getInternalSize()];
           }
         }
+        component->y().setDataUpdated();
+        component->yp().setDataUpdated();
       }
       return 0;
     }
@@ -315,12 +326,16 @@ namespace GridKit
      */
     int evaluateInternalResidual() final
     {
+      auto* f = f_.getData();
+
       for (IdxT i = 0; i < this->getInternalSize(); i++)
       {
-        f_[i] = 0.0;
+        f[i] = 0.0;
 
-        if (use_neumaier_sum)
-          neumaier_compensation[i] = 0.0;
+        // if (use_neumaier_sum)
+        // {
+        //   neumaier_compensation[i] = 0.0;
+        // }
       }
 
       this->distributeVectors();
@@ -340,27 +355,33 @@ namespace GridKit
         if (int err_code = component->evaluateExternalResidual())
           return err_code;
 
-        const std::vector<ScalarT>& residual  = component->getResidual();
-        const std::set<size_t>&     externals = component->getExternIndices();
+        const auto* residual  = component->getResidual().getData();
+        const auto& externals = component->getExternIndices();
 
         for (size_t j : externals)
         {
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_ && component->getNodeConnection(j) < this->getInternalSize())
           {
-            if (!use_neumaier_sum)
-            {
-              f_[component->getNodeConnection(j)] += residual[j];
-            }
-            else
-            {
-              getNeumaierCompensation(f_[component->getNodeConnection(j)], residual[j], component->getNodeConnection(j));
-            }
+            // if (!use_neumaier_sum)
+            // {
+            f[component->getNodeConnection(j)] += residual[j];
+            // }
+            // else
+            // {
+            //   getNeumaierCompensation(f_[component->getNodeConnection(j)], residual[j], component->getNodeConnection(j));
+            // }
           }
         }
       }
-      if (use_neumaier_sum)
-        addNeumaierCompensation(f_);
+
+      // if (use_neumaier_sum)
+      // {
+      //   addNeumaierCompensation(f_);
+      // }
+
+      f_.setDataUpdated();
+
       return 0;
     }
 
@@ -420,7 +441,6 @@ namespace GridKit
       }
 
       jac_call_count_++;
-
       return 0;
     }
 
@@ -460,6 +480,24 @@ namespace GridKit
      */
     int evaluateAdjointIntegrand() final
     {
+      return 0;
+    }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol) final
+    {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
       return 0;
     }
 
@@ -621,27 +659,27 @@ namespace GridKit
       forcing_function_ = std::move(function);
     }
 
-    void getNeumaierCompensation(ScalarT& sum, const ScalarT& x, const IdxT& index)
-    {
-      ScalarT t = sum + x;
-      if (std::abs(sum) >= std::abs(x))
-      {
-        neumaier_compensation[index] += (sum - t) + x;
-      }
-      else
-      {
-        neumaier_compensation[index] += (x - t) + sum;
-      }
-      sum = t;
-    }
+    // void getNeumaierCompensation(ScalarT& sum, const ScalarT& x, const IdxT& index)
+    // {
+    //   ScalarT t = sum + x;
+    //   if (std::abs(sum) >= std::abs(x))
+    //   {
+    //     neumaier_compensation[index] += (sum - t) + x;
+    //   }
+    //   else
+    //   {
+    //     neumaier_compensation[index] += (x - t) + sum;
+    //   }
+    //   sum = t;
+    // }
 
-    void addNeumaierCompensation(std::vector<ScalarT>& f)
-    {
-      for (IdxT i = 0; i < this->f_.size(); i++)
-      {
-        f[i] += neumaier_compensation[i];
-      }
-    }
+    // void addNeumaierCompensation(VectorT f)
+    // {
+    //   for (IdxT i = 0; i < size_; i++)
+    //   {
+    //     f[i] += neumaier_compensation[i];
+    //   }
+    // }
 
     std::unordered_map<IdxT, IdxT>& getInternalMap()
     {

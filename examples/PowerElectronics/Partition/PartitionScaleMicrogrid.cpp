@@ -119,15 +119,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   bool use_jac = true;
 
-  real_type  rel_tol   = 1e-5;
-  real_type  abs_tol   = 1e-5;
-  index_type max_steps = 2000;
-
   // Create circuit model
-  auto* sys_model_control = new PowerElectronicsModel<real_type, index_type>(rel_tol,
-                                                                             abs_tol,
-                                                                             use_jac,
-                                                                             max_steps);
+  auto* sys_model_control = new PowerElectronicsModel<real_type, index_type>(use_jac);
 
   // Ensure minimum size requirement
   assert(N_size >= 1);
@@ -176,9 +169,13 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   // First two generators use parameters 1
   if (DGParams_list.size() >= 1)
+  {
     DGParams_list[0] = DG_parms1;
+  }
   if (DGParams_list.size() >= 2)
+  {
     DGParams_list[1] = DG_parms1;
+  }
 
   // line vector params
   // Every odd line has the same parameters and every even line has the same parameters
@@ -326,11 +323,17 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
+  auto* sys_model_y  = sys_model_control->y().getData();
+  auto* sys_model_yp = sys_model_control->yp().getData();
+
   for (size_t i = 0; i < sys_model_control->size(); i++)
   {
-    sys_model_control->y()[i]  = y[i];
-    sys_model_control->yp()[i] = yp[i];
+    sys_model_y[i]  = y[i];
+    sys_model_yp[i] = yp[i];
   }
+
+  sys_model_control->y().setDataUpdated();
+  sys_model_control->yp().setDataUpdated();
 
   sys_model_control->updateTime(2, 5);
   sys_model_control->evaluateResidual();
@@ -340,7 +343,7 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
 
   sys_model_control->evaluateJacobian();
 
-  auto& f_sysmodel_control = sys_model_control->getResidual();
+  auto* f_sysmodel_control = sys_model_control->getResidual().getData();
   auto* full_jac           = sys_model_control->getCsrJacobian();
 
   //---------------------------------------------------------------
@@ -437,20 +440,27 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
       partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
     }
 
+    auto* partition_y  = partition->y().getData();
+    auto* partition_yp = partition->yp().getData();
+
     // Distribute internal variables
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
-      partition->y()[i]  = y[partition->getNodeConnection(i)];
-      partition->yp()[i] = yp[partition->getNodeConnection(i)];
+      partition_y[i]  = y[partition->getNodeConnection(i)];
+      partition_yp[i] = yp[partition->getNodeConnection(i)];
     }
+
+    partition->y().setDataUpdated();
+    partition->yp().setDataUpdated();
 
     // Evaluate residual of this partition
     partition->evaluateResidual();
 
+    auto* residual = partition->getResidual().getData();
     // Reconstructs the monolithic residual from the partition residuals
     for (size_t i = 0; i < partition->getInternalSize(); i++)
     {
-      f[partition->getNodeConnection(i)] = partition->getResidual()[i];
+      f[partition->getNodeConnection(i)] = residual[i];
     }
   }
 
@@ -509,11 +519,17 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
   }
 
   for (auto* linescpy : linesCopies)
+  {
     delete linescpy;
+  }
   for (auto* partition : subsystems)
+  {
     delete partition;
+  }
   for (auto* part_interface : partitionInterface)
+  {
     delete part_interface;
+  }
   delete sys_model_control;
 
   return result;
