@@ -333,7 +333,7 @@ namespace AnalysisManager
     int Rosenbrock<ScalarT, IdxT>::initializeSimulation(RealT t0)
     {
       current_time_ = t0;
-      BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().data(), memspace_, memspace_));
+      BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().getData(), memspace_, memspace_));
       workspace_.jacobian_analyzed_ = false;
 
       BUBBLE_FAIL(lin_solver_.configureSolver(*model_->getCsrJacobian()));
@@ -523,7 +523,7 @@ namespace AnalysisManager
           // If there is a step_cb, update the model state and call it
           if (step_cb)
           {
-            BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
+            BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().getData(), memspace_, memspace_));
             model_->updateTime(current_time_, ZERO);
 
             (*step_cb)(StepInfo{
@@ -569,7 +569,7 @@ namespace AnalysisManager
           // Update model with output and call out_cb if it exists
           if (out_cb)
           {
-            BUBBLE_FAIL(y_interp_->copyToExternal(model_->y().data(), memspace_, memspace_));
+            BUBBLE_FAIL(y_interp_->copyToExternal(model_->y().getData(), memspace_, memspace_));
             model_->updateTime(out_time, ZERO);
 
             (*out_cb)(out_time);
@@ -652,7 +652,7 @@ namespace AnalysisManager
       [[likely]]
       if (!tab_.is_w_ || !skip_lu_)
       {
-        BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
+        BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().getData(), memspace_, memspace_));
         y0_copied = true;
 
         // GridKit, like IDA, expects to evaluate the Jacobian J = df/dy + alpha * df/dy',
@@ -676,12 +676,12 @@ namespace AnalysisManager
         // TODO: non-autonomous model
         if (!y0_copied)
         {
-          BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().data(), memspace_, memspace_));
+          BUBBLE_FAIL(y_cur_->copyToExternal(model_->y().getData(), memspace_, memspace_));
           y0_copied = true;
         }
         model_->updateTime(t0, ZERO);
         BUBBLE_FAIL(model_->evaluateResidual());
-        BUBBLE_FAIL(workspace_.RHS_first_stage_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_));
+        BUBBLE_FAIL(workspace_.RHS_first_stage_->copyFromExternal(model_->getResidual().getData(), memspace_, memspace_));
         vector_handler_.scal(-1, workspace_.RHS_first_stage_.get(), memspace_);
 
         stats_.f_evals_++;
@@ -722,10 +722,10 @@ namespace AnalysisManager
         }
 
         // TODO: non-autonomous model
-        BUBBLE_FAIL(workspace_.asum_->copyToExternal(model_->y().data(), memspace_, memspace_));
+        BUBBLE_FAIL(workspace_.asum_->copyToExternal(model_->y().getData(), memspace_, memspace_));
         model_->updateTime(t0 + tab_.alpha_sum_[i] * dt, ZERO);
         BUBBLE_FAIL(model_->evaluateResidual());
-        workspace_.RHS_->copyFromExternal(model_->getResidual().data(), memspace_, memspace_);
+        workspace_.RHS_->copyFromExternal(model_->getResidual().getData(), memspace_, memspace_);
 
         vector_handler_.scal(MINUS_ONE, workspace_.RHS_.get(), memspace_);
         vector_handler_.scal(workspace_.mass_.get(), workspace_.csum_.get(), memspace_);

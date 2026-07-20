@@ -33,7 +33,8 @@ namespace GridKit
     class TrigonometricDaeEvaluator : public Model::Evaluator<ScalarT, IdxT>
     {
     public:
-      using RealT = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
+      using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       constexpr static size_t SIZE = 2;
 
@@ -44,6 +45,10 @@ namespace GridKit
       int allocate() override
       {
         constexpr size_t NNZ = SIZE * SIZE;
+
+        y_.resize(SIZE);
+        yp_.resize(SIZE);
+        f_.resize(SIZE);
 
         IdxT*  row_ptrs = new IdxT[SIZE + 1];
         IdxT*  cols     = new IdxT[NNZ];
@@ -69,13 +74,24 @@ namespace GridKit
 
       int initialize() override
       {
-        y_  = {sinh(0.5), tanh(0.5)};
-        yp_ = {0.0, 0.0};
+        auto* y  = y_.getData();
+        auto* yp = yp_.getData();
+        auto* f  = f_.getData();
+
+        y[0]  = sinh(0.5);
+        y[1]  = tanh(0.5);
+        yp[0] = 0.0;
+        yp[1] = 0.0;
 
         tag_ = {true, false};
 
-        f_ = {0.0, 0.0};
-        g_ = {0.0, 0.0};
+        f[0] = 0.0;
+        f[1] = 0.0;
+
+        y_.setDataUpdated();
+        yp_.setDataUpdated();
+        f_.setDataUpdated();
+
         return 0;
       }
 
@@ -109,12 +125,12 @@ namespace GridKit
         return 0;
       }
 
-      std::vector<ScalarT>& absoluteTolerance() override
+      VectorT& absoluteTolerance() override
       {
         return abs_tol_;
       }
 
-      const std::vector<ScalarT>& absoluteTolerance() const override
+      const VectorT& absoluteTolerance() const override
       {
         return abs_tol_;
       }
@@ -126,11 +142,16 @@ namespace GridKit
 
       int evaluateResidual() override
       {
-        double y02 = y_[0] * y_[0];
-        double y12 = y_[1] * y_[1];
+        const auto* y = y_.getData();
+        auto*       f = f_.getData();
 
-        f_ = {y02 / (y_[1] * sqrt(std::pow(y_[0] / y_[1], 2) - 1)), //
-              y12 + 1 / (1 + y02) - (y02 / y12 - y02)};
+        ScalarT y02 = y[0] * y[0];
+        ScalarT y12 = y[1] * y[1];
+
+        f[0] = y02 / (y[1] * sqrt(std::pow(y[0] / y[1], 2) - 1));
+        f[1] = y12 + 1 / (1 + y02) - (y02 / y12 - y02);
+
+        f_.setDataUpdated();
 
         return 0;
       }
@@ -139,22 +160,24 @@ namespace GridKit
       {
         RealT* vals = csr_jac_->getValues();
 
-        double y1 = y_[0];
-        double y2 = y_[1];
+        const auto* y = y_.getData();
 
-        double y12 = y1 * y1;
-        double y13 = y12 * y1;
-        double y22 = y2 * y2;
-        double y23 = y22 * y2;
-        double y24 = y22 * y22;
+        ScalarT y1 = y[0];
+        ScalarT y2 = y[1];
 
-        double tmp  = std::pow(y12 / y22 - 1, 1.5);
-        double tmp2 = std::pow(y12 + 1, 2);
+        ScalarT y12 = y1 * y1;
+        ScalarT y13 = y12 * y1;
+        ScalarT y22 = y2 * y2;
+        ScalarT y23 = y22 * y2;
+        ScalarT y24 = y22 * y22;
 
-        vals[0] = alpha_ + -(-y13 + 2 * y1 * y22) / (y23 * tmp);
-        vals[1] = y12 / (y22 * tmp);
-        vals[2] = -2 * y1 * (1 / y22 - 1) - (2 * y1) / tmp2;
-        vals[3] = (2 * (y12 + y24)) / y23;
+        ScalarT tmp  = std::pow(y12 / y22 - 1, 1.5);
+        ScalarT tmp2 = std::pow(y12 + 1, 2);
+
+        vals[0] = static_cast<RealT>(alpha_ + -(-y13 + 2 * y1 * y22) / (y23 * tmp));
+        vals[1] = static_cast<RealT>(y12 / (y22 * tmp));
+        vals[2] = static_cast<RealT>(-2 * y1 * (1 / y22 - 1) - (2 * y1) / tmp2);
+        vals[3] = static_cast<RealT>((2 * (y12 + y24)) / y23);
 
         return 0;
       }
@@ -184,22 +207,22 @@ namespace GridKit
         alpha_ = a;
       }
 
-      std::vector<ScalarT>& y() override
+      VectorT& y() override
       {
         return y_;
       }
 
-      const std::vector<ScalarT>& y() const override
+      const VectorT& y() const override
       {
         return y_;
       }
 
-      std::vector<ScalarT>& yp() override
+      VectorT& yp() override
       {
         return yp_;
       }
 
-      const std::vector<ScalarT>& yp() const override
+      const VectorT& yp() const override
       {
         return yp_;
       }
@@ -214,92 +237,92 @@ namespace GridKit
         return tag_;
       }
 
-      std::vector<ScalarT>& yB() override
+      VectorT& yB() override
       {
         return yB_;
       }
 
-      const std::vector<ScalarT>& yB() const override
+      const VectorT& yB() const override
       {
         return yB_;
       }
 
-      std::vector<ScalarT>& ypB() override
+      VectorT& ypB() override
       {
         return ypB_;
       }
 
-      const std::vector<ScalarT>& ypB() const override
+      const VectorT& ypB() const override
       {
         return ypB_;
       }
 
-      std::vector<ScalarT>& param() override
+      VectorT& param() override
       {
         return param_;
       }
 
-      const std::vector<ScalarT>& param() const override
+      const VectorT& param() const override
       {
         return param_;
       }
 
-      std::vector<ScalarT>& param_up() override
+      VectorT& param_up() override
       {
         return param_up_;
       }
 
-      const std::vector<ScalarT>& param_up() const override
+      const VectorT& param_up() const override
       {
         return param_up_;
       }
 
-      std::vector<ScalarT>& param_lo() override
+      VectorT& param_lo() override
       {
         return param_lo_;
       }
 
-      const std::vector<ScalarT>& param_lo() const override
+      const VectorT& param_lo() const override
       {
         return param_lo_;
       }
 
-      std::vector<ScalarT>& getResidual() override
+      VectorT& getResidual() override
       {
         return f_;
       }
 
-      const std::vector<ScalarT>& getResidual() const override
+      const VectorT& getResidual() const override
       {
         return f_;
       }
 
-      std::vector<ScalarT>& getIntegrand() override
+      VectorT& getIntegrand() override
       {
         return g_;
       }
 
-      const std::vector<ScalarT>& getIntegrand() const override
+      const VectorT& getIntegrand() const override
       {
         return g_;
       }
 
-      std::vector<ScalarT>& getAdjointResidual() override
+      VectorT& getAdjointResidual() override
       {
         return fB_;
       }
 
-      const std::vector<ScalarT>& getAdjointResidual() const override
+      const VectorT& getAdjointResidual() const override
       {
         return fB_;
       }
 
-      std::vector<ScalarT>& getAdjointIntegrand() override
+      VectorT& getAdjointIntegrand() override
       {
         return gB_;
       }
 
-      const std::vector<ScalarT>& getAdjointIntegrand() const override
+      const VectorT& getAdjointIntegrand() const override
       {
         return gB_;
       }
@@ -315,26 +338,26 @@ namespace GridKit
       }
 
     protected:
-      std::vector<ScalarT> y_;
-      std::vector<ScalarT> yp_;
-      std::vector<bool>    tag_;
-      std::vector<ScalarT> f_;
-      std::vector<ScalarT> g_;
+      VectorT           y_;
+      VectorT           yp_;
+      std::vector<bool> tag_;
+      VectorT           f_;
+      VectorT           g_;
 
-      std::vector<ScalarT> yB_;
-      std::vector<ScalarT> ypB_;
-      std::vector<ScalarT> fB_;
-      std::vector<ScalarT> gB_;
+      VectorT yB_;
+      VectorT ypB_;
+      VectorT fB_;
+      VectorT gB_;
 
-      std::vector<ScalarT> abs_tol_;
+      VectorT abs_tol_;
 
       std::unique_ptr<GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>> csr_jac_;
 
       RealT alpha_;
 
-      std::vector<ScalarT> param_;
-      std::vector<ScalarT> param_up_;
-      std::vector<ScalarT> param_lo_;
+      VectorT param_;
+      VectorT param_up_;
+      VectorT param_lo_;
     };
   } // namespace Model
 
@@ -345,6 +368,7 @@ namespace GridKit
     {
       using Rosenbrock = AnalysisManager::NativeDynamicSolver::Rosenbrock<ScalarT, IdxT>;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
+      using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
     public:
       /**
@@ -359,7 +383,7 @@ namespace GridKit
        * @param step_exponent_lower The exponent describing the smallest number of steps to take during a simulation.
        * @param step_exponent_upper The exponent describing the largest number of steps to take during a simulation.
        */
-      TestOutcome test_order(Rosenbrock::Tableau&& tab, double step_exponent_lower, double step_exponent_upper)
+      TestOutcome test_order(Rosenbrock::Tableau&& tab, RealT step_exponent_lower, RealT step_exponent_upper)
       {
         TestStatus success = true;
 
@@ -393,25 +417,26 @@ namespace GridKit
 
         // Output vectors to keep track of data used to calculate empirical order.
         // Each simulation will record its step size and final error.
-        std::vector<double> step_sizes;
-        std::vector<double> errors;
+        std::vector<RealT> step_sizes;
+        std::vector<RealT> errors;
 
         // An output callback to populate step_sizes and errors. Each simulation will call this callback
         // at the end of the simulation (final_time). It will then calculate the final error by comparing the
         // solution of the simulation to the true answer.
-        double              final_time = 2.0;
-        std::vector<double> out_times  = {final_time};
-        auto                out_cb     = [&]([[maybe_unused]] double t)
+        RealT              final_time = 2.0;
+        std::vector<RealT> out_times  = {final_time};
+        auto               out_cb     = [&]([[maybe_unused]] RealT t)
         {
-          double error    = 0.0;
-          double sol_norm = 0.0;
+          RealT error    = 0.0;
+          RealT sol_norm = 0.0;
 
           // The final solution of the simulation
-          const std::vector<double>& state = model.y();
+          const VectorT& state      = model.y();
+          const auto*    state_data = state.getData();
 
           // The difference from the simulated solution to the true solution
-          error += std::pow(state[0] - sinh(final_time), 2);
-          error += std::pow(state[1] - tanh(final_time), 2);
+          error += std::pow(state_data[0] - sinh(final_time), 2);
+          error += std::pow(state_data[1] - tanh(final_time), 2);
 
           sol_norm += std::pow(sinh(final_time), 2);
           sol_norm += std::pow(tanh(final_time), 2);
@@ -425,9 +450,9 @@ namespace GridKit
         {
           // Logarithmically distribute step_size based on step_exponent_lower and step_exponent_upper.
           // Round it to ensure num_steps is integral (do not invoke the dense output, which can add additional errors).
-          double step_size = std::pow(10, step_exponent_lower + static_cast<double>(i) * (step_exponent_upper - step_exponent_lower) / static_cast<double>(num_samples - 1));
-          double num_steps = round((final_time - 0.5) / step_size);
-          step_size        = (final_time - 0.5) / num_steps;
+          RealT step_size = std::pow(10, step_exponent_lower + static_cast<RealT>(i) * (step_exponent_upper - step_exponent_lower) / static_cast<RealT>(num_samples - 1));
+          RealT num_steps = round((final_time - 0.5) / step_size);
+          step_size       = (final_time - 0.5) / num_steps;
           step_sizes.push_back(step_size);
 
           model.initialize();
@@ -448,31 +473,32 @@ namespace GridKit
         }
 
         // Print output data
-        std::cerr << "Step sizes\n";
-        for (double step_size : step_sizes)
+        std::cout << "Step sizes\n";
+        for (RealT step_size : step_sizes)
         {
-          std::cerr << std::scientific << std::setprecision(20) << step_size << ' ';
+          std::cout << std::scientific << std::setprecision(20) << step_size << "\n";
         }
 
-        std::cerr << "\n\nErrors\n";
-        for (double error : errors)
+        std::cout << "\nErrors\n";
+        for (RealT error : errors)
         {
-          std::cerr << std::scientific << std::setprecision(20) << error << ' ';
+          std::cout << std::scientific << std::setprecision(20) << error << "\n";
         }
-        std::cerr << "\n\n";
+        std::cout << "\n";
 
         // Calculate empirical order. Each pairwise order is calculated, then averaged.
-        std::vector<double> pairwise_orders;
-        double              empirical_order = 0.0;
+        std::vector<RealT> pairwise_orders;
+        RealT              empirical_order = 0.0;
         for (size_t i = 1; i < num_samples; i++)
         {
           pairwise_orders.push_back((log(errors[i]) - log(errors[i - 1])) / (log(step_sizes[i]) - log(step_sizes[i - 1])));
           empirical_order += pairwise_orders.back();
         }
-        empirical_order /= static_cast<double>(num_samples - 1);
+        empirical_order /= static_cast<RealT>(num_samples - 1);
 
         // Print test result - observed empirical order and the expected order.
-        std::cerr << "Empirical order: " << std::fixed << std::setprecision(5) << empirical_order << " v.s. expected " << static_cast<unsigned>(expected_order) << '\n';
+        std::cout << "Empirical order: " << std::fixed << std::setprecision(5) << empirical_order << "\n"
+                  << "Expected order: " << static_cast<unsigned>(expected_order) << "\n";
         success *= empirical_order > expected_order * 0.85;
 
         return success.report(__func__);
