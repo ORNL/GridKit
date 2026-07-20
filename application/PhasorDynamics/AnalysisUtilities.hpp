@@ -132,7 +132,6 @@ namespace GridKit
         else
         {
           tolj.get_to(c.error_tol.emplace_back());
-          // c.error_tol.push_back(j.value("error_tolerance", 1.0e-4));
         }
       }
       else
