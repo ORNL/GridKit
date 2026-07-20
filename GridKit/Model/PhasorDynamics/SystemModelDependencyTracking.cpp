@@ -7,7 +7,7 @@ namespace GridKit
     /**
      * @brief By default, Jacobians are not available
      *
-     * DependencyTracking::Variable stores the Jacobian as dependency maps. 
+     * DependencyTracking::Variable stores the Jacobian as dependency maps.
      * @todo Construct a Jacobian based on the dependency maps.
      */
     template <typename scalar_type, typename index_type>

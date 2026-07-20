@@ -47,7 +47,6 @@ add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS
             phasor_dynamics_components_dependency_tracking)
 
-
 if(GRIDKIT_ENABLE_ENZYME)
   set(_system_model_source SystemModelEnzyme.cpp)
 else()
