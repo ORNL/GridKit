@@ -331,11 +331,6 @@ namespace GridKit
       for (IdxT i = 0; i < this->getInternalSize(); i++)
       {
         f[i] = 0.0;
-
-        // if (use_neumaier_sum)
-        // {
-        //   neumaier_compensation[i] = 0.0;
-        // }
       }
 
       this->distributeVectors();
@@ -363,22 +358,10 @@ namespace GridKit
           //@todo should do a different grounding check
           if (component->getNodeConnection(j) != neg1_ && component->getNodeConnection(j) < this->getInternalSize())
           {
-            // if (!use_neumaier_sum)
-            // {
             f[component->getNodeConnection(j)] += residual[j];
-            // }
-            // else
-            // {
-            //   getNeumaierCompensation(f_[component->getNodeConnection(j)], residual[j], component->getNodeConnection(j));
-            // }
           }
         }
       }
-
-      // if (use_neumaier_sum)
-      // {
-      //   addNeumaierCompensation(f_);
-      // }
 
       f_.setDataUpdated();
 
@@ -659,28 +642,6 @@ namespace GridKit
       forcing_function_ = std::move(function);
     }
 
-    // void getNeumaierCompensation(ScalarT& sum, const ScalarT& x, const IdxT& index)
-    // {
-    //   ScalarT t = sum + x;
-    //   if (std::abs(sum) >= std::abs(x))
-    //   {
-    //     neumaier_compensation[index] += (sum - t) + x;
-    //   }
-    //   else
-    //   {
-    //     neumaier_compensation[index] += (x - t) + sum;
-    //   }
-    //   sum = t;
-    // }
-
-    // void addNeumaierCompensation(VectorT f)
-    // {
-    //   for (IdxT i = 0; i < size_; i++)
-    //   {
-    //     f[i] += neumaier_compensation[i];
-    //   }
-    // }
-
     std::unordered_map<IdxT, IdxT>& getInternalMap()
     {
       return internal_map_;
@@ -700,9 +661,6 @@ namespace GridKit
     std::unordered_map<IdxT, IdxT> external_map_;
     std::vector<IdxT>              external_indices_;
 
-    bool use_neumaier_sum{false};
-
-    std::vector<ScalarT> neumaier_compensation;
     std::vector<ScalarT> y_ext_;
     std::vector<ScalarT> yp_ext_;
     std::vector<ScalarT> f_ext_;
