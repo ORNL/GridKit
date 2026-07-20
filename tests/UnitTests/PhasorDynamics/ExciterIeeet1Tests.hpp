@@ -12,12 +12,15 @@
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <class ScalarT, typename IdxT>
     class ExciterIeeet1Tests
     {
@@ -181,8 +184,10 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        std::cout << "Testing that invalid saturation parameters are rejected. "
-                  << "Logged errors are are expected.\n";
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that invalid saturation parameters are rejected. "
+                    << "Logged errors are are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
