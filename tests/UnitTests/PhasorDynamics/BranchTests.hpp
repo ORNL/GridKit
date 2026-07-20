@@ -288,6 +288,9 @@ namespace GridKit
         // Verifies invalid branch parameters are rejected.
         TestStatus success = true;
 
+        std::cout << "Testing that invalid branch parameters are rejected. "
+                  << "Logged errors are are expected.\n";
+
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
 

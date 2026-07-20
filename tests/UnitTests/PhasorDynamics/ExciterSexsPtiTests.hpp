@@ -207,6 +207,9 @@ namespace GridKit
 
         TestStatus success = true;
 
+        std::cout << "Testing that invalid parameters are rejected. "
+                  << "Logged errors are are expected.\n";
+
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
 
         auto missing = makeTestData();
@@ -254,6 +257,8 @@ namespace GridKit
         success *= (system.evaluateResidual() == 0);
         success *= (system.size() == 5);
 
+        std::cout << "Testing that model with missing EFD data is rejected. "
+                  << "Logged errors are are expected.\n";
         auto missing_efd = data;
         missing_efd.sexspti[0].signal_outputs.erase(SignalOutput::efd);
         SystemModel<ScalarT, IdxT> missing_efd_system(missing_efd);

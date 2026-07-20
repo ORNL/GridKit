@@ -181,6 +181,9 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        std::cout << "Testing that invalid saturation parameters are rejected. "
+                  << "Logged errors are are expected.\n";
+
         using Params = PhasorDynamics::Exciter::Ieeet1Parameters;
 
         auto data                    = makeTestData();
