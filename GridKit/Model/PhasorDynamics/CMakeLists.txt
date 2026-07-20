@@ -47,9 +47,16 @@ add_library(GridKit::phasor_dynamics_components ALIAS phasor_dynamics_components
 add_library(GridKit::phasor_dynamics_components_dependency_tracking ALIAS
             phasor_dynamics_components_dependency_tracking)
 
+
+if(GRIDKIT_ENABLE_ENZYME)
+  set(_system_model_source SystemModelEnzyme.cpp)
+else()
+  set(_system_model_source SystemModel.cpp)
+endif()
+
 gridkit_add_library(
   phasor_dynamics_systemmodel
-  SOURCES SystemModel.cpp SystemModelData.cpp
+  SOURCES ${_system_model_source} SystemModelData.cpp
   HEADERS SystemModel.hpp SystemModelData.hpp
   LINK_LIBRARIES
     PUBLIC
