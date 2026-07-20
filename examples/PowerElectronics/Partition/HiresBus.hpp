@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 
 namespace GridKit
 {
@@ -11,8 +12,9 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class HiresBus : public CircuitComponent<ScalarT, IdxT>
   {
-    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
+
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -23,6 +25,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
@@ -38,7 +41,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    HiresBus(IdxT id)
+    HiresBus(NodeT* bus, IdxT id) : node_ref_(bus)
     {
       size_           = 2;
       n_intern_       = 0;
@@ -55,6 +58,9 @@ namespace GridKit
     int allocate()
     {
       CircuitComponent<ScalarT, IdxT>::allocate();
+
+      this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
+      this->setExternalConnectionNodes(1, node_ref_->getNodeConnection(1));
 
       return 0;
     }
@@ -76,8 +82,15 @@ namespace GridKit
 
     int evaluateExternalResidual()
     {
-      f_[0] = -yp_[0] - y_[0];
-      f_[1] = -yp_[1] - y_[1];
+      auto* y  = y_.getData();
+      auto* yp = yp_.getData();
+      auto* f  = f_.getData();
+
+      f[0] = -yp[0] - y[0];
+      f[1] = -yp[1] - y[1];
+
+      f_.setDataUpdated();
+
       return 0;
     }
 
@@ -113,5 +126,26 @@ namespace GridKit
     {
       return 0;
     }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol)
+    {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      return 0;
+    }
+
+  private:
+    NodeT* node_ref_;
   };
 } // namespace GridKit

@@ -1,8 +1,7 @@
-
-
 #pragma once
 
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 
 namespace GridKit
 {
@@ -13,8 +12,8 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class HiresComponent3 : public CircuitComponent<ScalarT, IdxT>
   {
-    using RealT   = typename CircuitComponent<ScalarT, IdxT>::RealT;
-    using MatrixT = typename CircuitComponent<RealT, IdxT>::MatrixT;
+    using RealT = typename CircuitComponent<ScalarT, IdxT>::RealT;
+    using NodeT = typename PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using CircuitComponent<ScalarT, IdxT>::size_;
     using CircuitComponent<ScalarT, IdxT>::nnz_;
@@ -25,6 +24,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::yp_;
     using CircuitComponent<ScalarT, IdxT>::yp_int_;
     using CircuitComponent<ScalarT, IdxT>::tag_;
+    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
     using CircuitComponent<ScalarT, IdxT>::f_;
     using CircuitComponent<ScalarT, IdxT>::f_int_;
     using CircuitComponent<ScalarT, IdxT>::g_;
@@ -40,7 +40,7 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    HiresComponent3(IdxT id)
+    HiresComponent3(NodeT* bus, IdxT id) : node_ref_(bus)
     {
       size_           = 5;
       n_intern_       = 3;
@@ -58,6 +58,9 @@ namespace GridKit
     {
       CircuitComponent<ScalarT, IdxT>::allocate();
 
+      this->setExternalConnectionNodes(0, node_ref_->getNodeConnection(0));
+      this->setExternalConnectionNodes(1, node_ref_->getNodeConnection(1));
+
       return 0;
     }
 
@@ -73,8 +76,10 @@ namespace GridKit
 
     int evaluateInternalResidual()
     {
+      auto* y = y_.getData();
+
       // Internals
-      f_int_[0] = -yp_int_[0] - 280 * y_int_[0] * y_int_[2] + 0.69 * y_[0] + 1.71 * y_[1] - 0.43 * y_int_[0] + 0.69 * y_int_[1];
+      f_int_[0] = -yp_int_[0] - 280 * y_int_[0] * y_int_[2] + 0.69 * y[0] + 1.71 * y[1] - 0.43 * y_int_[0] + 0.69 * y_int_[1];
       f_int_[1] = -yp_int_[1] + 280 * y_int_[0] * y_int_[2] - 1.81 * y_int_[1];
       f_int_[2] = -yp_int_[2] - 280 * y_int_[0] * y_int_[2] + 1.81 * y_int_[1];
 
@@ -83,9 +88,14 @@ namespace GridKit
 
     int evaluateExternalResidual()
     {
+      auto* y = y_.getData();
+      auto* f = f_.getData();
+
       // Externals
-      f_[0] = -0.02 * y_[0];
-      f_[1] = -0.045 * y_[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
+      f[0] = -0.02 * y[0];
+      f[1] = -0.045 * y[1] + 0.43 * y_int_[0] + 0.43 * y_int_[1];
+
+      f_.setDataUpdated();
 
       return 0;
     }
@@ -144,5 +154,26 @@ namespace GridKit
     {
       return 0;
     }
+
+    /**
+     * @brief Compute the absolute tolerance for each variable in the model
+     *
+     * @param rel_tol The relative tolerance which can be used to pick the
+     *        absolute tolerance.
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     * @return int 0 if successful, non-zero otherwise.
+     *
+     * This represents a "noise" level close to zero for which pure relative
+     * error cannot be used.
+     */
+    int setAbsoluteTolerance(RealT rel_tol)
+    {
+      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
+      return 0;
+    }
+
+  private:
+    NodeT* node_ref_;
   };
 } // namespace GridKit
