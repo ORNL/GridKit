@@ -40,7 +40,8 @@ namespace GridKit
     using CircuitComponent<ScalarT, IdxT>::n_intern_;
 
   public:
-    HiresComponent3(NodeT* bus, IdxT id) : node_ref_(bus)
+    HiresComponent3(NodeT* bus, IdxT id)
+      : node_ref_(bus)
     {
       size_           = 5;
       n_intern_       = 3;
