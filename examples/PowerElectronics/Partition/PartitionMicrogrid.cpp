@@ -283,7 +283,6 @@ int main()
 
       f[partition->getNodeConnection(i)] = residual[i];
     }
-    std::cout << std::endl;
   }
 
   double max_error = 0;
@@ -291,7 +290,6 @@ int main()
   {
     error[i] = (f_sysmodel[i] - f[i]) / f_sysmodel[i];
 
-    std::cout << i << " " << f[i] << " " << f_sysmodel[i] << " " << error[i] << std::endl;
     if (max_error < std::abs(error[i]))
     {
       max_error = std::abs(error[i]);
