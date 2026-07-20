@@ -303,6 +303,8 @@ namespace GridKit
         auto sys        = SystemModel<double, size_t>(data);
 
         TestStatus status{true};
+        std::cout << "Testing for exceptions when signals are incorrectly configured. "
+                  << "Logged errors are are expected.\n";
         status *= throws<std::runtime_error>(
             [&]()
             { sys.allocate(); });
@@ -323,6 +325,8 @@ namespace GridKit
 
         status *= bus.allocate() == 0;
         system.addBus(&bus);
+        std::cout << "Testing for exceptions when when a child cannot bind to system storage. "
+                  << "Logged errors are are expected.\n";
         status *= throws<std::runtime_error>(
             [&]()
             { system.allocate(); });
