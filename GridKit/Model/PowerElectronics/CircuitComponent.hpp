@@ -65,9 +65,7 @@ namespace GridKit
         }
 
         destination.resize(source_size);
-
-        const int error_code = destination.copyFromExternal(source);
-        assert(error_code == 0);
+        destination.copyFromExternal(source);
       };
 
       /*
