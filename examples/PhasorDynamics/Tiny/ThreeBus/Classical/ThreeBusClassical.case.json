@@ -122,9 +122,7 @@
                 "Ra": 0.0,
                 "Xdp": 0.17
             },
-            "mon": [
-                "speed"
-            ]
+            "mon": ["speed"]
         },
         {
             "class": "GenClassical",
@@ -140,9 +138,7 @@
                 "Ra": 0.0,
                 "Xdp": 0.2
             },
-            "mon": [
-                "speed"
-            ]
+            "mon": ["speed"]
         }
     ]
 }

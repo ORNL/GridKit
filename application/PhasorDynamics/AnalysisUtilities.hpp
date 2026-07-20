@@ -79,8 +79,9 @@ namespace GridKit
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
-    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-7;
-    inline constexpr double DEFAULT_SOLVER_ABS_TOL = 1.0e-9;
+    inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-7;
+    inline constexpr double DEFAULT_SOLVER_ABS_TOL   = 1.0e-9;
+    inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
 
     /**
      * @brief JSON parser implemntation for `StudyData`
@@ -136,7 +137,7 @@ namespace GridKit
       }
       else
       {
-        c.error_tol.push_back(1.0e-4);
+        c.error_tol.push_back(DEFAULT_VERIFICATION_TOL);
       }
 
       using ErrorType = Testing::ErrorType;
