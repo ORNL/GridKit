@@ -4,8 +4,8 @@ namespace AnalysisManager
 {
   namespace NativeDynamicSolver
   {
-    template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::linImplicitEuler()
+    template <typename scalar_type, typename index_type>
+    Rosenbrock<scalar_type, index_type>::Tableau Rosenbrock<scalar_type, index_type>::Tableau::linImplicitEuler()
     {
       constexpr size_t num_stages = 1;
 
@@ -43,8 +43,8 @@ namespace AnalysisManager
      *
      *
      */
-    template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Tableau Rosenbrock<ScalarT, IdxT>::Tableau::rodas5p()
+    template <typename scalar_type, typename index_type>
+    Rosenbrock<scalar_type, index_type>::Tableau Rosenbrock<scalar_type, index_type>::Tableau::rodas5p()
     {
       constexpr size_t num_stages = 8;
 

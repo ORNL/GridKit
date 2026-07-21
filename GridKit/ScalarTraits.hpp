@@ -3,7 +3,7 @@
 
 namespace GridKit
 {
-  template <class ScalarT>
+  template <typename scalar_type>
   class ScalarTraits
   {
   };

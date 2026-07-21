@@ -15,8 +15,8 @@ namespace AnalysisManager
      * \f[h_{new} = h * \min \left\{fac_{max}, \max\left\{fac_{min}, fac_{scale} \cdot e ^{-1/p}\right\}\right\}.\f]
      *
      */
-    template <typename RealT>
-    StepControl<RealT> AdaptiveStep<RealT>::nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order)
+    template <typename real_type>
+    StepControl<real_type> AdaptiveStep<real_type>::nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order)
     {
       StepControl<RealT> next_step = prev_step;
 

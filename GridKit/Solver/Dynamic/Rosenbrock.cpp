@@ -32,8 +32,8 @@ namespace AnalysisManager
      * Useful if you would like to plot step info.
      *
      */
-    template <class ScalarT, typename IdxT>
-    std::string Rosenbrock<ScalarT, IdxT>::StepInfo::csvReport() const
+    template <typename scalar_type, typename index_type>
+    std::string Rosenbrock<scalar_type, index_type>::StepInfo::csvReport() const
     {
       std::stringstream out;
       out << std::scientific << std::setprecision(20)
@@ -55,8 +55,8 @@ namespace AnalysisManager
      * Useful for debug dumps.
      *
      */
-    template <class ScalarT, typename IdxT>
-    std::string Rosenbrock<ScalarT, IdxT>::StepInfo::report() const
+    template <typename scalar_type, typename index_type>
+    std::string Rosenbrock<scalar_type, index_type>::StepInfo::report() const
     {
       std::stringstream out;
       out << std::scientific << std::setprecision(20)
@@ -78,8 +78,8 @@ namespace AnalysisManager
      * Useful for reporting at the end of a simulation.
      *
      */
-    template <class ScalarT, typename IdxT>
-    std::string Rosenbrock<ScalarT, IdxT>::Stats::report() const
+    template <typename scalar_type, typename index_type>
+    std::string Rosenbrock<scalar_type, index_type>::Stats::report() const
     {
       std::stringstream out;
       out << "Rejections: " << rejections_.size()
@@ -103,8 +103,8 @@ namespace AnalysisManager
      *
      * @todo Right now, the step numbers for \ref rejections_ and \ref skip_lu_steps_ are impossible to tell apart from the different simulations.
      */
-    template <class ScalarT, typename IdxT>
-    typename Rosenbrock<ScalarT, IdxT>::Stats& Rosenbrock<ScalarT, IdxT>::Stats::operator+=(const Stats& other)
+    template <typename scalar_type, typename index_type>
+    typename Rosenbrock<scalar_type, index_type>::Stats& Rosenbrock<scalar_type, index_type>::Stats::operator+=(const Stats& other)
     {
       rejections_.insert(rejections_.end(), other.rejections_.begin(), other.rejections_.end());
       skip_lu_steps_.insert(skip_lu_steps_.end(), other.skip_lu_steps_.begin(), other.skip_lu_steps_.end());
@@ -134,8 +134,8 @@ namespace AnalysisManager
      *
      * @param stage The stage being checked.
      */
-    template <class ScalarT, typename IdxT>
-    constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::canReuseAsum(size_t stage) const
+    template <typename scalar_type, typename index_type>
+    constexpr bool Rosenbrock<scalar_type, index_type>::Tableau::canReuseAsum(size_t stage) const
     {
       assert(stage < num_stages_);
 
@@ -166,8 +166,8 @@ namespace AnalysisManager
      * Therefore, this method will return `false`.
      *
      */
-    template <class ScalarT, typename IdxT>
-    constexpr bool Rosenbrock<ScalarT, IdxT>::Tableau::canReuseAsumForOut() const
+    template <typename scalar_type, typename index_type>
+    constexpr bool Rosenbrock<scalar_type, index_type>::Tableau::canReuseAsumForOut() const
     {
       if (num_stages_ == 1)
         return false;
@@ -193,8 +193,8 @@ namespace AnalysisManager
      * @pre This function is only valid to call if there is an embedded error estimator and its coefficients
      * are included in this tableau.
      */
-    template <class ScalarT, typename IdxT>
-    constexpr std::optional<size_t> Rosenbrock<ScalarT, IdxT>::Tableau::errorEstimatorStage() const
+    template <typename scalar_type, typename index_type>
+    constexpr std::optional<size_t> Rosenbrock<scalar_type, index_type>::Tableau::errorEstimatorStage() const
     {
       assert(e_);
 
@@ -227,8 +227,8 @@ namespace AnalysisManager
      * does not need error (such as `FixedStep`), so `nullptr` can be passed in that circumstance.
      * @param memspace The memory space that linear algebra operations should be performed in.
      */
-    template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::Rosenbrock(Tableau&&                                             tab,
+    template <typename scalar_type, typename index_type>
+    Rosenbrock<scalar_type, index_type>::Rosenbrock(Tableau&&                                             tab,
                                           GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
                                           GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
                                           GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
@@ -253,8 +253,8 @@ namespace AnalysisManager
      *
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::allocate()
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::allocate()
     {
       size_t size = static_cast<size_t>(model_->size());
 
@@ -329,8 +329,8 @@ namespace AnalysisManager
      * @param t0 The starting simulation time.
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::initializeSimulation(RealT t0)
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::initializeSimulation(RealT t0)
     {
       current_time_ = t0;
       BUBBLE_FAIL(y_cur_->copyFromExternal(model_->y().getData(), memspace_, memspace_));
@@ -399,8 +399,8 @@ namespace AnalysisManager
      * an can be queried separately by the callback if needed. Useful for debugging simulations.
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::integrate(const std::vector<RealT>&                           out_times,
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::integrate(const std::vector<RealT>&                           out_times,
                                              StepController<RealT>&                              step_controller,
                                              Parameters                                          params,
                                              std::optional<std::function<void(RealT)>>           out_cb,
@@ -637,8 +637,8 @@ namespace AnalysisManager
      * @param dt \f(h\f) in the above formula. The next state \f(y_1\f) will be an estimate of the state at \f(t_1 = t_0 + h\f).
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::timeStep(RealT t0, RealT dt)
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::timeStep(RealT t0, RealT dt)
     {
       constexpr RealT ZERO      = GridKit::ZERO<RealT>;
       constexpr RealT MINUS_ONE = GridKit::MINUS_ONE<RealT>;
@@ -780,8 +780,8 @@ namespace AnalysisManager
      *
      * @return A reference to the estimated error.
      */
-    template <class ScalarT, typename IdxT>
-    Rosenbrock<ScalarT, IdxT>::State& Rosenbrock<ScalarT, IdxT>::errorEstimate() const
+    template <typename scalar_type, typename index_type>
+    Rosenbrock<scalar_type, index_type>::State& Rosenbrock<ScalarT, IdxT>::errorEstimate() const
     {
       // Test to see if the tableau allows us to use a stage as the error estimate,
       // avoiding extra computation.
@@ -826,8 +826,8 @@ namespace AnalysisManager
      *
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::calcDenseCoeff()
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::calcDenseCoeff()
     {
       if (tab_.order_ > 2)
       {
@@ -876,8 +876,8 @@ namespace AnalysisManager
      * @param theta The fraction of time during the last step taken to calculate the interpolation at. \f(\theta = \frac{t - t_0}{h}\f)
      * @return An error code, with 0 as success.
      */
-    template <class ScalarT, typename IdxT>
-    int Rosenbrock<ScalarT, IdxT>::interpDense(RealT theta)
+    template <typename scalar_type, typename index_type>
+    int Rosenbrock<scalar_type, index_type>::interpDense(RealT theta)
     {
       constexpr RealT ONE = GridKit::ONE<RealT>;
 

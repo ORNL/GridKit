@@ -14,10 +14,12 @@ namespace AnalysisManager
      *
      * @todo It may be best to have \ref usesError() return a reference to the \ref ErrorNorm that should be used.
      */
-    template <typename RealT>
+    template <typename real_type>
     class StepController
     {
     public:
+      using RealT = real_type;
+
       /**
        * @brief Decide the control flow for the next step, based on information gathered by the integrator about the current step.
        *
@@ -28,11 +30,12 @@ namespace AnalysisManager
        * @return StepControl
        */
       virtual StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) = 0;
+
       /**
        * @brief Return whether or not the `nextStep` method implementation uses the `err` parameter. If `false`, this parameter is not calculated.
        *
        */
-      virtual bool               usesError() const                                                       = 0;
+      virtual bool usesError() const = 0;
     };
   } // namespace NativeDynamicSolver
 } // namespace AnalysisManager

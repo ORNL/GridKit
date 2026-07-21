@@ -14,8 +14,8 @@ namespace AnalysisManager
      *        To set the fixed size, set the `Rosenbrock::Parameters::starting_step` parameter.
      *
      */
-    template <typename RealT>
-    class FixedStep : public StepController<RealT>
+    template <typename real_type>
+    class FixedStep : public StepController<real_type>
     {
       StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) final;
 

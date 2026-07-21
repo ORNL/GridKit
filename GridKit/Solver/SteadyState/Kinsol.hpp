@@ -24,17 +24,19 @@ namespace AnalysisManager
 {
   namespace Sundials
   {
-    template <class ScalarT, typename IdxT>
-    class Kinsol : public SteadyStateSolver<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class Kinsol : public SteadyStateSolver<scalar_type, index_type>
     {
-      using SteadyStateSolver<ScalarT, IdxT>::model_;
+      using SteadyStateSolver<scalar_type, index_type>::model_;
 
+    public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
       using RealT   = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using VectorT = typename GridKit::Model::Evaluator<ScalarT, IdxT>::VectorT;
 
       static_assert(std::is_same_v<RealT, sunrealtype>, "RealT must be the same type as sunrealtype");
 
-    public:
       Kinsol(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Kinsol();
 

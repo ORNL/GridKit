@@ -15,12 +15,16 @@ namespace AnalysisManager
      *        to meet tolerance.
      *
      */
-    template <class ScalarT, typename IdxT>
-    class InfNorm : public ErrorNorm<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class InfNorm : public ErrorNorm<scalar_type, index_type>
     {
-      using State = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
-      using RealT = ErrorNorm<ScalarT, IdxT>::RealT;
+    public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using State   = GridKit::LinearAlgebra::Vector<ScalarT, IdxT>;
+      using RealT   = ErrorNorm<ScalarT, IdxT>::RealT;
 
+    private:
       /**
        * @brief A workspace for the linear algebra operations required to calculate the norm.
        *

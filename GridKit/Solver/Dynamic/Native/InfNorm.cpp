@@ -23,8 +23,9 @@ namespace AnalysisManager
      * @param memspace The memory space to be used for performing linear lagebra operations.
      * @see `Rosenbrock::errorEstimate()`
      */
-    template <class ScalarT, typename IdxT>
-    InfNorm<ScalarT, IdxT>::RealT InfNorm<ScalarT, IdxT>::errorNorm(State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
+    template <typename scalar_type, typename index_type>
+    InfNorm<scalar_type, index_type>::RealT InfNorm<scalar_type, index_type>::errorNorm(
+        State& err, State& y, State& yprev, GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& handler, GridKit::memory::MemorySpace memspace) const
     {
       if (int err_code = workspace_.out_->copyFromExternal(&err, memspace, memspace))
       {

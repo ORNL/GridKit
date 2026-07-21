@@ -21,7 +21,7 @@ namespace GridKit
    *
    * @todo needs to return int for file error codes
    *
-   * @tparam ScalarT
+   * @tparam scalar_type
    * @param[out] table object in memory where the data from the input stream is
    * @param[in] filename input stream to space and newline separated data
    * @param[out] ti initial time returned
@@ -32,11 +32,11 @@ namespace GridKit
    * first column of the data represents time and other columns time dependent
    * variables.
    */
-  template <typename ScalarT>
-  void setLookupTable(std::vector<std::vector<ScalarT>>& table,
+  template <typename scalar_type>
+  void setLookupTable(std::vector<std::vector<scalar_type>>& table,
                       std::istream&                      idata,
-                      ScalarT&                           ti,
-                      ScalarT&                           tf)
+                      scalar_type&                           ti,
+                      scalar_type&                           tf)
   {
     std::string line;
     int         oldwordcount = -1;
@@ -83,8 +83,8 @@ namespace GridKit
     }
   }
 
-  template <typename ScalarT>
-  void printLookupTable(std::vector<std::vector<ScalarT>> const& table)
+  template <typename scalar_type>
+  void printLookupTable(std::vector<std::vector<scalar_type>> const& table)
   {
     for (size_t i = 0; i < table.size(); ++i)
     {

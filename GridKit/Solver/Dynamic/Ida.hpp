@@ -40,16 +40,18 @@ namespace AnalysisManager
       std::string report() const;
     };
 
-    template <class ScalarT, typename IdxT>
-    class Ida : public DynamicSolver<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class Ida : public DynamicSolver<scalar_type, index_type>
     {
       using DynamicSolver<ScalarT, IdxT>::model_;
 
+    public:
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
       using EvaluatorT = GridKit::Model::Evaluator<ScalarT, IdxT>;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using VectorT    = typename EvaluatorT::VectorT;
 
-    public:
       Ida(GridKit::Model::Evaluator<ScalarT, IdxT>* model);
       ~Ida();
 

@@ -4,10 +4,13 @@
 
 namespace AnalysisManager
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class SteadyStateSolver
   {
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+
     SteadyStateSolver(GridKit::Model::Evaluator<ScalarT, IdxT>* model)
       : model_(model)
     {

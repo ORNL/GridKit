@@ -4,30 +4,30 @@
 
 namespace GridKit
 {
-  template <typename IdxT>
-  inline constexpr IdxT INVALID_INDEX = std::numeric_limits<IdxT>::max();
+  template <typename index_type>
+  inline constexpr index_type INVALID_INDEX = std::numeric_limits<index_type>::max();
 
-  template <typename RealT>
-  inline constexpr RealT ZERO = 0.0;
+  template <typename real_type>
+  inline constexpr real_type ZERO = 0.0;
 
-  template <typename RealT>
-  inline constexpr RealT ONE = 1.0;
+  template <typename real_type>
+  inline constexpr real_type ONE = 1.0;
 
-  template <typename RealT>
-  inline constexpr RealT TWO = 2.0;
+  template <typename real_type>
+  inline constexpr real_type TWO = 2.0;
 
-  template <typename RealT>
-  inline constexpr RealT THREE = 3.0;
+  template <typename real_type>
+  inline constexpr real_type THREE = 3.0;
 
-  template <typename RealT>
-  inline constexpr RealT FOUR = 4.0;
+  template <typename real_type>
+  inline constexpr real_type FOUR = 4.0;
 
-  template <typename RealT>
-  inline constexpr RealT HALF = 0.5;
+  template <typename real_type>
+  inline constexpr real_type HALF = 0.5;
 
-  template <typename RealT>
-  inline constexpr RealT QUARTER = 0.25;
+  template <typename real_type>
+  inline constexpr real_type QUARTER = 0.25;
 
-  template <typename RealT>
-  inline constexpr RealT MINUS_ONE = -1.0;
+  template <typename real_type>
+  inline constexpr real_type MINUS_ONE = -1.0;
 } // namespace GridKit

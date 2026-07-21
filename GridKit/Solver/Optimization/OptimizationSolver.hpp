@@ -6,13 +6,16 @@
 
 namespace AnalysisManager
 {
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class DynamicSolver;
 
-  template <class ScalarT, typename IdxT>
+  template <typename scalar_type, typename index_type>
   class OptimizationSolver
   {
   public:
+    using ScalarT = scalar_type;
+    using IdxT    = index_type;
+
     OptimizationSolver()
     {
     }
