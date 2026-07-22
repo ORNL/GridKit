@@ -8,12 +8,15 @@
 #include <GridKit/LinearAlgebra/Vector/Vector.hpp>
 #include <GridKit/MemoryUtilities/MemoryUtils.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
     using namespace LinearAlgebra;
+
+    using Log = ::GridKit::Utilities::Logger;
 
     /**
      * @class Tests for vector operations.
@@ -201,6 +204,10 @@ namespace GridKit
         status *= replacement_storage[0] == ScalarT{3.0};
 
         // Owned vector storage must not be replaced by external storage.
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that owned vector storage cannot be replaced by external storage. "
+                    << "Logged errors are are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
         Vector<ScalarT, IdxT> owned(N);
         status                 *= owned.allocate(memory::HOST) == 0;
         auto* const owned_data  = owned.getData(memory::HOST);

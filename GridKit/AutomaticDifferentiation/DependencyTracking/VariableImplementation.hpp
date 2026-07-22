@@ -52,23 +52,23 @@ namespace GridKit
     */
     void Variable::print(std::ostream& os) const
     {
-      os << value_;
+      os << "value " << value_;
 
       if (is_fixed_)
       {
-        os << " (fixed)";
+        os << ", (fixed)";
         return;
       }
 
       if (variable_number_ != INVALID_VAR_NUMBER)
       {
-        os << " (variable " << variable_number_ << ")";
+        os << ", (variable " << variable_number_ << ")";
         return;
       }
 
       if (!dependencies_.empty())
       {
-        os << " dependencies: [ ";
+        os << ", dependencies: [ ";
         for (auto& p : dependencies_)
           os << "(" << p.first << ", " << p.second << ") ";
         os << "]";

@@ -62,6 +62,9 @@ namespace GridKit
         status *= args["flag1"].as<bool>() == false;
 
         // bad: duplicate name
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Expect error because options cannot be duplicated\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
         status *= throws<std::runtime_error>(
             [&]()
             {
@@ -148,6 +151,9 @@ namespace GridKit
         status *=
             args.get<double, 3>("params") == args["params"].as<double, 3>();
 
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Expect error while testing that unrecognized options are rejected\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
         status *= throws<std::runtime_error>(
             [&]()
             { args.get("bad"); });

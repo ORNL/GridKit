@@ -10,11 +10,13 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
 
     template <class ScalarT, typename IdxT>
     class BranchTests
@@ -287,6 +289,11 @@ namespace GridKit
       {
         // Verifies invalid branch parameters are rejected.
         TestStatus success = true;
+
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that invalid branch parameters are rejected. "
+                    << "Logged errors are are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
         PhasorDynamics::Bus<ScalarT, IdxT> bus2(1.0, 0.0);
