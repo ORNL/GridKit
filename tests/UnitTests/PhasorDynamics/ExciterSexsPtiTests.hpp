@@ -12,6 +12,7 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
@@ -209,7 +210,7 @@ namespace GridKit
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that invalid parameters are rejected. "
-                    << "Logged errors are expected.\n";
+                    << "Logged errors are are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
@@ -261,7 +262,7 @@ namespace GridKit
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that model with missing EFD data is rejected. "
-                    << "Logged errors are expected.\n";
+                    << "Logged errors are are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
         auto missing_efd = data;
         missing_efd.sexspti[0].signal_outputs.erase(SignalOutput::efd);

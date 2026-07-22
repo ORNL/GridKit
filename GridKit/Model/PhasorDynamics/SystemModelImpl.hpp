@@ -693,41 +693,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Check components for Jacobian availability
-     *
-     * @return true
-     * @return false
-     */
-    template <typename scalar_type, typename index_type>
-    bool SystemModel<scalar_type, index_type>::hasJacobian()
-    {
-      bool has_jacobian = false;
-#ifdef GRIDKIT_ENABLE_ENZYME
-      has_jacobian = true;
-      for (const auto& component : components_)
-      {
-        has_jacobian = has_jacobian && component->hasJacobian();
-      }
-
-      for (const auto& bus : buses_)
-      {
-        has_jacobian = has_jacobian && bus->hasJacobian();
-      }
-
-      if (!has_jacobian)
-      {
-        Log::warning() << "GridKit was built with Enzyme, but some models "
-                          "don't have Jacobians available. "
-                          "Falling back to dense Jacobians in PhasorDynamics.\n";
-      }
-#else
-      Log::warning() << "GridKit was not built with Enzyme. "
-                     << "Falling back to dense Jacobians in PhasorDynamics.\n";
-#endif
-      return has_jacobian;
-    }
-
-    /**
      * @brief Initialize buses first, then all the other components.
      *
      * @pre All buses and components must be allocated at this point.

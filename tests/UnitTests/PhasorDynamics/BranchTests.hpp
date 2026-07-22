@@ -290,7 +290,7 @@ namespace GridKit
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that invalid branch parameters are rejected. "
-                    << "Logged errors are expected.\n";
+                    << "Logged errors are are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus1(1.0, 0.0);
