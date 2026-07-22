@@ -95,6 +95,7 @@ namespace GridKit
                          << raw_parameter.value()
                          << " (typed as \"" << raw_parameter.value().type_name()
                          << "\")." << error_context.str() << std::endl;
+            throw std::runtime_error("JSON parser failed");
           }
         }
         else
