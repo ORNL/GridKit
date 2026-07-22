@@ -25,7 +25,7 @@ namespace AnalysisManager
      *
      */
     template <typename scalar_type, typename index_type>
-    class DynamicConstraint : public Ipopt::TNLP, public OptimizationSolver<ScalarT, IdxT>
+    class DynamicConstraint : public Ipopt::TNLP, public OptimizationSolver<scalar_type, index_type>
     {
       using OptimizationSolver<scalar_type, index_type>::integrator_;
       using OptimizationSolver<scalar_type, index_type>::model_;

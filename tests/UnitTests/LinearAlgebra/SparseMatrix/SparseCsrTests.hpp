@@ -7,13 +7,14 @@ namespace GridKit
   {
     using namespace LinearAlgebra;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SparseTests
     {
-
+    public:
+      using ScalarT   = scalar_type;
+      using IdxT      = index_type;
       using CsrMatrix = LinearAlgebra::CsrMatrix<ScalarT, IdxT>;
 
-    public:
       SparseTests(memory::MemorySpace memspace = memory::HOST)
         : memspace_(memspace)
       {

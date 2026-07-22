@@ -229,11 +229,11 @@ namespace AnalysisManager
      */
     template <typename scalar_type, typename index_type>
     Rosenbrock<scalar_type, index_type>::Rosenbrock(Tableau&&                                             tab,
-                                          GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
-                                          GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
-                                          GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
-                                          const ErrorNorm<ScalarT, IdxT>*                       err_norm,
-                                          GridKit::memory::MemorySpace                          memspace)
+                                                    GridKit::Model::Evaluator<ScalarT, IdxT>*             model,
+                                                    GridKit::LinearAlgebra::LinearSolver<ScalarT, IdxT>&  lin_solver,
+                                                    GridKit::LinearAlgebra::VectorHandler<ScalarT, IdxT>& vector_handler,
+                                                    const ErrorNorm<ScalarT, IdxT>*                       err_norm,
+                                                    GridKit::memory::MemorySpace                          memspace)
       : tab_(std::move(tab)),
         model_(model),
         lin_solver_(lin_solver),
@@ -401,10 +401,10 @@ namespace AnalysisManager
      */
     template <typename scalar_type, typename index_type>
     int Rosenbrock<scalar_type, index_type>::integrate(const std::vector<RealT>&                           out_times,
-                                             StepController<RealT>&                              step_controller,
-                                             Parameters                                          params,
-                                             std::optional<std::function<void(RealT)>>           out_cb,
-                                             std::optional<std::function<void(const StepInfo&)>> step_cb)
+                                                       StepController<RealT>&                              step_controller,
+                                                       Parameters                                          params,
+                                                       std::optional<std::function<void(RealT)>>           out_cb,
+                                                       std::optional<std::function<void(const StepInfo&)>> step_cb)
     {
       constexpr RealT ONE  = GridKit::ONE<RealT>;
       constexpr RealT ZERO = GridKit::ZERO<RealT>;
@@ -781,7 +781,7 @@ namespace AnalysisManager
      * @return A reference to the estimated error.
      */
     template <typename scalar_type, typename index_type>
-    Rosenbrock<scalar_type, index_type>::State& Rosenbrock<ScalarT, IdxT>::errorEstimate() const
+    Rosenbrock<scalar_type, index_type>::State& Rosenbrock<scalar_type, index_type>::errorEstimate() const
     {
       // Test to see if the tableau allows us to use a stage as the error estimate,
       // avoiding extra computation.

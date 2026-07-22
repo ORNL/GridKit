@@ -21,11 +21,13 @@ namespace GridKit
   {
     using Log = ::GridKit::Utilities::Logger;
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class ExciterIeeet1Tests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
 
       ExciterIeeet1Tests()  = default;
       ~ExciterIeeet1Tests() = default;

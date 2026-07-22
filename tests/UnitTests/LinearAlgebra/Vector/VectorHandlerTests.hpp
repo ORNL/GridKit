@@ -17,10 +17,13 @@ namespace GridKit
     /**
      * @class Tests for the vector handler.
      */
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class VectorHandlerTests
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       VectorHandlerTests(VectorHandler<ScalarT, IdxT>& handler, memory::MemorySpace memspace = memory::HOST)
         : handler_(handler),
           memspace_(memspace)

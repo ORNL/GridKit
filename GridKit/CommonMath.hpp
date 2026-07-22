@@ -335,6 +335,7 @@ namespace GridKit
     {
       assert(limit_min <= limit_max);
       using ScalarT = scalar_type;
+      using RealT   = real_type;
 
       ScalarT above_min = above(x, limit_min);
       ScalarT below_max = below(x, limit_max);

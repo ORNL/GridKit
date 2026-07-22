@@ -9,10 +9,13 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class SparsityPatternTests
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+
       SparsityPatternTests()  = default;
       ~SparsityPatternTests() = default;
 

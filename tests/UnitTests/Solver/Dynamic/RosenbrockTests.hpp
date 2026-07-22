@@ -29,10 +29,12 @@ namespace GridKit
      * The valid simulation time interval is \f([0.5,2]\f) and the model is initialized at \f(t = 0.5\f).
      *
      */
-    template <class ScalarT, typename IdxT>
-    class TrigonometricDaeEvaluator : public Model::Evaluator<ScalarT, IdxT>
+    template <typename scalar_type, typename index_type>
+    class TrigonometricDaeEvaluator : public Model::Evaluator<scalar_type, index_type>
     {
     public:
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
       using RealT   = typename Model::Evaluator<ScalarT, IdxT>::RealT;
       using VectorT = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
@@ -363,9 +365,11 @@ namespace GridKit
 
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class RosenbrockTests
     {
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
       using Rosenbrock = AnalysisManager::NativeDynamicSolver::Rosenbrock<ScalarT, IdxT>;
       using RealT      = typename GridKit::ScalarTraits<ScalarT>::RealT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;

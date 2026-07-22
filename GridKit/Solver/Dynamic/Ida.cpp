@@ -266,7 +266,7 @@ namespace AnalysisManager
      * repeated time-step arithmetic.
      */
     template <typename scalar_type, typename index_type>
-    typename Ida<scalar_type, index_type>::RealT Ida<scalar_type, IdxT>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
+    typename Ida<scalar_type, index_type>::RealT Ida<scalar_type, index_type>::getMonitorTime(RealT tf, RealT dt_monitor, int step, int nsteps) const
     {
       return step == nsteps ? tf : std::fma((RealT) step, dt_monitor, t_init_);
     }

@@ -13,7 +13,7 @@ namespace GridKit
   namespace LinearAlgebra
   {
     template <typename scalar_type, typename index_type>
-    class ResolveSystemSolver : public LinearSolver<ScalarT, IdxT>
+    class ResolveSystemSolver : public LinearSolver<scalar_type, index_type>
     {
     public:
       using ScalarT = scalar_type;

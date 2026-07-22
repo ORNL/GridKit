@@ -43,7 +43,7 @@ namespace AnalysisManager
     template <typename scalar_type, typename index_type>
     class Ida : public DynamicSolver<scalar_type, index_type>
     {
-      using DynamicSolver<ScalarT, IdxT>::model_;
+      using DynamicSolver<scalar_type, index_type>::model_;
 
     public:
       using ScalarT    = scalar_type;

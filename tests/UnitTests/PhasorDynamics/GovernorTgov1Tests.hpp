@@ -21,10 +21,12 @@ namespace GridKit
   namespace Testing
   {
 
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class GovernorTgov1Tests
     {
     private:
+      using ScalarT                 = scalar_type;
+      using IdxT                    = index_type;
       using RealT                   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       using real_type               = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
       static constexpr ScalarT tol_ = 10 * std::numeric_limits<ScalarT>::epsilon();

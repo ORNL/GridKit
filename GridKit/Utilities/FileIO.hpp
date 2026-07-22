@@ -34,7 +34,7 @@ namespace GridKit
    */
   template <typename scalar_type>
   void setLookupTable(std::vector<std::vector<scalar_type>>& table,
-                      std::istream&                      idata,
+                      std::istream&                          idata,
                       scalar_type&                           ti,
                       scalar_type&                           tf)
   {

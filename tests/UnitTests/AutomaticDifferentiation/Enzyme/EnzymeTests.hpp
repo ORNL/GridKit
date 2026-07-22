@@ -18,10 +18,12 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class EnzymeTests
     {
     public:
+      using ScalarT      = scalar_type;
+      using IdxT         = index_type;
       using SparseMatrix = GridKit::LinearAlgebra::CooMatrix<ScalarT, IdxT>;
 
       EnzymeTests()  = default;

@@ -17,6 +17,8 @@ namespace AnalysisManager
     template <typename real_type>
     class FixedStep : public StepController<real_type>
     {
+      using RealT = real_type;
+
       StepControl<RealT> nextStep(RealT err, StepControl<RealT> prev_step, uint8_t method_order) final;
 
       /**

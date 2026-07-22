@@ -10,9 +10,12 @@ using namespace Testing;
  * @param[in] backend - name of the hardware backend
  * @param[out] result - test results
  */
-template <class ScalarT, typename IdxT>
+template <typename scalar_type, typename index_type>
 void runTests(const std::string& backend, memory::MemorySpace memspace, TestingResults& result)
 {
+  using ScalarT = scalar_type;
+  using IdxT    = index_type;
+
   std::cout << "Running tests on " << backend << ":\n";
 
   SparseTests<ScalarT, IdxT> test(memspace);

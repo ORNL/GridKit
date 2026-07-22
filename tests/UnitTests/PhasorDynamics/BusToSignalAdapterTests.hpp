@@ -12,10 +12,12 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class BusToSignalAdapterTests
     {
     public:
+      using ScalarT    = scalar_type;
+      using IdxT       = index_type;
       using AdapterT   = PhasorDynamics::BusToSignalAdapter<ScalarT, IdxT>;
       using RealT      = typename AdapterT::RealT;
       using BusT       = PhasorDynamics::Bus<ScalarT, IdxT>;

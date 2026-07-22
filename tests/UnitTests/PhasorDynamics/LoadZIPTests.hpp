@@ -19,12 +19,14 @@ namespace GridKit
 {
   namespace Testing
   {
-    template <class ScalarT, typename IdxT>
+    template <typename scalar_type, typename index_type>
     class LoadZIPTests
     {
     public:
-      using RealT = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using DataT = PhasorDynamics::LoadZIPData<RealT, IdxT>;
+      using ScalarT = scalar_type;
+      using IdxT    = index_type;
+      using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
+      using DataT   = PhasorDynamics::LoadZIPData<RealT, IdxT>;
 
       LoadZIPTests()  = default;
       ~LoadZIPTests() = default;

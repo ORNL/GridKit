@@ -22,8 +22,8 @@ namespace GridKit
     template <typename real_type, typename index_type>
     void from_json(const json& j, BusData<real_type, index_type>& bd)
     {
-      using RealT = real_type;
-      using IdxT  = index_type;
+      using RealT    = real_type;
+      using IdxT     = index_type;
       using BusDataT = BusData<RealT, IdxT>;
 
       j.at("name").get_to(bd.name);
