@@ -1,0 +1,30 @@
+\documentclass[tikz,border=12pt]{standalone}
+\input{../diagram-style.tex}
+
+\begin{document}
+\begin{tikzpicture}[emt diagram]
+
+% ================= Bus voltage node =================
+\draw[line] (0, -1.25) -- (0, 1.3);
+\node[signal, label={[sig]above:$\mathbf{v}$}] at (0, 1.3) {};
+
+% ================= Connected-device currents =================
+\coordinate (i1) at (-3.4, 0.8);
+\coordinate (i2) at (-3.4, 0.2);
+\coordinate (iE) at (-3.4, -0.9);
+
+\draw[->, line] (i1) -- (0, 0.8);
+\draw[->, line] (i2) -- (0, 0.2);
+\draw[->, line] (iE) -- (0, -0.9);
+
+\node[sig, anchor=east] at ($(i1)+(-0.2,0)$) {$\mathbf{i}_1$};
+\node[sig, anchor=east] at ($(i2)+(-0.2,0)$) {$\mathbf{i}_2$};
+\node[sig, anchor=east] at ($(iE)+(-0.2,0)$)
+    {$\mathbf{i}_{|\mathcal{E}|}$};
+\node at (-1.7, -0.35) {$\vdots$};
+
+% ================= Model enclosure =================
+\draw[enclosure] (-0.8, -1.65) rectangle (0.8, 1.9);
+
+\end{tikzpicture}
+\end{document}

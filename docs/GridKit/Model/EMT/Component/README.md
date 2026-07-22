@@ -1,13 +1,13 @@
-# Component
+# Component Models
 
 ```{toctree}
 :maxdepth: 4
 :titlesonly:
 :hidden:
 
-Branch <Branch/README>
-LoadRL <LoadRL/README>
-VoltageSource <VoltageSource/README>
+Line <Line/README>
+Load <Load/README>
+Source <Source/README>
 ```
 
 ```{include} ../../../../../GridKit/Model/EMT/Component/README.md
