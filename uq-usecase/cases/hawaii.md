@@ -267,7 +267,43 @@ Every generator in the Hawaii case is modeled as a triplet of three coupled devi
 
 The three are wired together via named ports: Genrou exposes `pmech` and `efd` input ports; Tgov1 and Ieeet1 write to those ports respectively. All 39 Genrou devices have a complete paired Tgov1 and Ieeet1 — no generators are modeled as infinite-bus or constant-parameter machines.
 
-### Example JSON pieces (bus 2, id `2_1`)
+### Port wiring and grid connection
+
+Each device has a `ports` block with two distinct kinds of entries:
+
+| Port key | Type | Value | Meaning |
+|----------|------|-------|---------|
+| `"bus"` | electrical | bus number (int) | connects the machine to that network bus — this is the only grid connection |
+| `"speed"` | signal | global index (int) | rotor speed signal, shared between Genrou and its Tgov1 and Ieeet1 |
+| `"pmech"` | signal | global index (int) | mechanical power signal, shared between Genrou and its Tgov1 |
+| `"efd"` | signal | global index (int) | field voltage signal, shared between Genrou and its Ieeet1 |
+
+Signal port indices are **globally unique across all devices** in the file. For each generator triplet, the three devices share the same `speed`, `pmech`, `efd` index values — that is how they are wired together. The `bus` port value is just the bus number; the bus itself lives in the `buses` array and is never modified when removing a generator.
+
+**Bus 2 has 4 generators.** Their signal port allocations show the pattern clearly:
+
+| id | class | bus | speed | pmech | efd |
+|----|-------|-----|-------|-------|-----|
+| `2_1` | Genrou | 2 | 0 | 1 | 78 |
+| `2_1_tgov1` | Tgov1 | 2 | 0 | 1 | — |
+| `2_1_ieeet1` | Ieeet1 | 2 | 0 | — | 78 |
+| `2_2` | Genrou | 2 | 2 | 3 | 79 |
+| `2_2_tgov1` | Tgov1 | 2 | 2 | 3 | — |
+| `2_2_ieeet1` | Ieeet1 | 2 | 2 | — | 79 |
+| `2_3` | Genrou | 2 | 4 | 5 | 80 |
+| `2_3_tgov1` | Tgov1 | 2 | 4 | 5 | — |
+| `2_3_ieeet1` | Ieeet1 | 2 | 4 | — | 80 |
+| `2_4` | Genrou | 2 | 6 | 7 | 81 |
+| `2_4_tgov1` | Tgov1 | 2 | 6 | 7 | — |
+| `2_4_ieeet1` | Ieeet1 | 2 | 6 | — | 81 |
+
+**Removing a generator** means removing all 3 devices (Genrou + Tgov1 + Ieeet1) from the `devices` array. The bus node itself is untouched. No separate "connection" device is involved. The signal port indices freed up by removal do not need to be re-numbered — GridKit resolves ports by matching index values within the device list, so gaps are fine as long as no other device references the removed indices.
+
+### Example JSON components (bus 2, id `2_1`)
+* machine Genrou
+* governor Tgov1
+* excitor Ieeet1
+
 
 Below are trimmed excerpts from `hawaii.json` showing the key:value structure, especially the `params` blocks.
 
@@ -356,14 +392,80 @@ Below are trimmed excerpts from `hawaii.json` showing the key:value structure, e
 ```
 
 ## UQ parameter selection 
-* v1 - 20 samples
-* v2 - 1K samples
 
 One generator per bus, 4 buses chosen for diverse H values:
 
-| id | bus # | bus name | H (nominal) | ±10% range |
-|----|-------|----------|-------------|------------|
-| `2_1`  | 2  | ALOHA69     | 3.69 | [3.321, 4.059] |
-| `23_1` | 23 | WAIPAHU69   | 6.15 | [5.535, 6.765] |
-| `34_1` | 34 | SCHOFIELD69 | 4.35 | [3.915, 4.785] |
-| `35_1` | 35 | KALAELOA138 | 5.22 | [4.698, 5.742] |
+| id | bus # | bus name | H (nominal) |
+|----|-------|----------|-------------|
+| `2_1`  | 2  | ALOHA69     | 3.69 |
+| `23_1` | 23 | WAIPAHU69   | 6.15 |
+| `34_1` | 34 | SCHOFIELD69 | 4.35 |
+| `35_1` | 35 | KALAELOA138 | 5.22 |
+
+### v1 (20 samples)
+
+- dist: uniform ±10% of nominal
+- method: LHS, seed=42
+- serialize: stacked (`results.parquet`)
+
+### v2 (1K samples)
+
+- dist: uniform ±10% of nominal
+- method: LHS, seed=42
+- serialize: per-run (`runs/run_NNN.parquet`)
+
+| id | H nominal | lo | hi |
+|----|-----------|----|----|
+| `2_1`  | 3.69 | 3.321 | 4.059 |
+| `23_1` | 6.15 | 5.535 | 6.765 |
+| `34_1` | 4.35 | 3.915 | 4.785 |
+| `35_1` | 5.22 | 4.698 | 5.742 |
+
+### v3 (1K samples) — epistemic UQ
+
+- dist: **Gaussian**, std = 12% of nominal (epistemic uncertainty in H)
+- method: LHS + normal ppf (scipy), seed=42
+- serialize: per-run (`runs/run_NNN.parquet`)
+- data path: `/kfs2/projects/scidac/scidac-data/gridkit-runs/hawaii-v3/`
+- metadata: `hawaii-v3/meta.yml`, samples: `hawaii-v3/samples.csv`
+
+| id | H nominal | mean | std (12%) |
+|----|-----------|------|-----------|
+| `2_1`  | 3.69 | 3.69 | 0.4428 |
+| `23_1` | 6.15 | 6.15 | 0.7380 |
+| `34_1` | 4.35 | 4.35 | 0.5220 |
+| `35_1` | 5.22 | 5.22 | 0.6264 |
+
+### v4 (4K samples) — epistemic UQ, 2 generators
+
+- dist: **Gaussian**, std = 12% of nominal (epistemic uncertainty in H)
+- method: LHS + normal ppf (scipy), seed=42
+- serialize: per-run (`runs/run_NNN.parquet`)
+- generators: `2_1` and `23_1` only (`34_1`, `35_1` excluded)
+- data path: `/kfs2/projects/scidac/scidac-data/gridkit-runs/hawaii-v4/`
+- metadata: `hawaii-v4/meta.yml`, samples: `hawaii-v4/samples.csv`
+
+| id | H nominal | mean | std (12%) |
+|----|-----------|------|-----------|
+| `2_1`  | 3.69 | 3.69 | 0.4428 |
+| `23_1` | 6.15 | 6.15 | 0.7380 |
+
+### v5 (16K samples) — epistemic UQ, 4 generators
+
+- dist: **Gaussian**, std = 12% of nominal (epistemic uncertainty in H)
+- method: LHS + normal ppf (scipy), seed=42
+- serialize: per-run (`runs/run_NNN.parquet`)
+- generators: all 4 (`2_1`, `23_1`, `34_1`, `35_1`)
+- solver overrides: none (base case hawaii.solver.json)
+- monitors: `Vm`, `Va` (buses, polar form of `Vr`/`Vi`); `delta`, `omega` (genrou)
+- data path: `/kfs2/projects/scidac/scidac-data/gridkit-runs/hawaii-v5/`
+- metadata: `hawaii-v5/meta.yml`, samples: `hawaii-v5/samples.csv`
+
+| id | bus | bus name | H nominal | mean | std (12%) |
+|----|-----|----------|-----------|------|-----------|
+| `2_1`  | 2  | ALOHA69     | 3.69 | 3.69 | 0.4428 |
+| `23_1` | 23 | WAIPAHU69   | 6.15 | 6.15 | 0.7380 |
+| `34_1` | 34 | SCHOFIELD69 | 4.35 | 4.35 | 0.5220 |
+| `35_1` | 35 | KALAELOA138 | 5.22 | 5.22 | 0.6264 |
+
+

@@ -756,15 +756,27 @@ def plot_grid(
             )
             _has_json_gen = "json_gen_id" in gdf.columns
             _has_json_gen_bus = "json_gen_bus_number" in gdf.columns
+            _has_json_pq = "json_p0" in gdf.columns
+            _has_gen_status = "GEN_STATUS" in gdf.columns
             gen_hover = [
                 f"<b>GEN_BUS: {row.GEN_BUS}</b><br>"
                 f"gen_row: {getattr(row, 'gen_row', 'n/a')}<br>"
                 f"PG: {row.PG:.2f} MW<br>QG: {row.QG:.2f} MVAr<br>Fuel: {fuel}"
                 + (
+                    "<br><b>offline (GEN_STATUS=0)</b>"
+                    if _has_gen_status and int(getattr(row, "GEN_STATUS", 1)) == 0
+                    else ""
+                )
+                + (
                     (
-                        f"<br>json: number={getattr(row, 'json_gen_bus_number', row.GEN_BUS)}, device_id={row.json_gen_id}"
-                        if row.json_gen_id is not None
-                        else "<br><b>\u26a0 offline \u2014 not in JSON (GEN_STATUS=0)</b>"
+                        f"<br>json: class=Genrou, id={row.json_gen_id}, ports.bus={int(getattr(row, 'json_gen_bus_number', row.GEN_BUS))}"
+                        + (
+                            f"<br>json: params.p0={row.json_p0:.4f}, params.q0={row.json_q0:.4f}"
+                            if _has_json_pq and pd.notna(row.json_p0)
+                            else ""
+                        )
+                        if pd.notna(row.json_gen_id)
+                        else "<br><b>\u26a0 not in JSON</b>"
                     )
                     if _has_json_gen
                     else ""
@@ -798,10 +810,22 @@ def plot_grid(
                             else f"GEN_BUS: {row.GEN_BUS}"
                         )
                         + (
+                            "<br><b>offline (GEN_STATUS=0)</b>"
+                            if "GEN_STATUS" in case_data.gen.columns
+                            and int(getattr(row, "GEN_STATUS", 1)) == 0
+                            else ""
+                        )
+                        + (
                             (
-                                f"<br>json: number={getattr(row, 'json_gen_bus_number', row.GEN_BUS)}, device_id={row.json_gen_id}"
-                                if row.json_gen_id is not None
-                                else "<br><b>\u26a0 offline \u2014 not in JSON (GEN_STATUS=0)</b>"
+                                f"<br>json: class=Genrou, id={row.json_gen_id}, ports.bus={int(getattr(row, 'json_gen_bus_number', row.GEN_BUS))}"
+                                + (
+                                    f"<br>json: params.p0={row.json_p0:.4f}, params.q0={row.json_q0:.4f}"
+                                    if "json_p0" in case_data.gen.columns
+                                    and pd.notna(row.json_p0)
+                                    else ""
+                                )
+                                if pd.notna(row.json_gen_id)
+                                else "<br><b>\u26a0 not in JSON</b>"
                             )
                             if "json_gen_id" in case_data.gen.columns
                             else ""

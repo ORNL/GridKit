@@ -140,38 +140,62 @@ Only files under `uq-usecase/` and `.gitignore` are staged — upstream GridKit 
 
 ## Selective PRs to Upstream (ORNL/GridKit)
 
-The goal is to contribute specific fixes or features from `isatkaus/uq-usecase` upstream without including personal workflow files.
+The goal is to contribute specific files from `isatkaus/uq-usecase` upstream without including
+personal workflow files (scripts, figs, personal paths, etc.).
 
-**Step 1: Create a focused branch from upstream develop**
+**Key rule:** never open a PR from `isatkaus/uq-usecase` directly — it contains personal scripts
+and notebooks that should not go upstream. Always create a clean branch first.
+
+### Example: m_viz PR (July 2026)
+
+Files contributed: `uq-usecase/notebooks/m_viz.ipynb`, `uq-usecase/notebooks/setup_env.md`,
+`uq-usecase/py-utils/m_viz_utils.py`, `uq-usecase/py-utils/gridkit_utils.py`
+
+**Step 1: Fetch upstream and create a clean branch from upstream/develop**
 ```bash
 cd ~/gridkit
 git fetch upstream
-git checkout -b pr/my-fix upstream/develop
+git checkout -b pr/m-viz upstream/develop
+# branch 'pr/m-viz' set up to track 'upstream/develop'
 ```
 
-**Step 2: Cherry-pick only the commits you want to contribute**
+**Step 2: Copy only the specific files you want to contribute**
 ```bash
-# Find commit hashes on your branch
-git log --oneline isatkaus/uq-usecase
-
-# Cherry-pick individual commits (not wip commits, only clean targeted ones)
-git cherry-pick <commit-hash>
+git checkout isatkaus/uq-usecase -- \
+    uq-usecase/notebooks/m_viz.ipynb \
+    uq-usecase/notebooks/setup_env.md \
+    uq-usecase/py-utils/m_viz_utils.py \
+    uq-usecase/py-utils/gridkit_utils.py
 ```
 
-**Step 3: Or copy just the changed files manually**
+Verify only the right files are staged (nothing else):
 ```bash
-# If commits are mixed with wip noise, copy only the specific file(s)
-git checkout isatkaus/uq-usecase -- GridKit/SomeFile.cpp
-git commit -m "Fix: description of fix"
+git status
+# Expected: 4 files under "Changes to be committed", nothing else
 ```
 
-**Step 4: Push to fork and open PR against ORNL/GridKit**
+**Step 3: Commit and push to your fork**
 ```bash
-git push origin pr/my-fix
-# Then open PR on GitHub: isatkaus/GridKit pr/my-fix -> ORNL/GridKit develop
+git commit -m "m_viz: geo visualization for all 4 cases, fuel colors, line loading, setup_env.md"
+git push origin pr/m-viz
 ```
 
-**Key rule:** never open a PR from `isatkaus/uq-usecase` directly — it contains personal scripts and notebooks that should not go upstream.
+**Step 4: Open the PR on GitHub**
+
+Go to: `https://github.com/isatkaus/GridKit/pull/new/pr/m-viz`
+
+- Base repository: `ORNL/GridKit`, base branch: `develop`
+- Head repository: `isatkaus/GridKit`, compare: `pr/m-viz`
+- Check "Able to merge" is green before proceeding
+- Fill in title and description using the PR template
+- Note: as a non-member of ORNL/GridKit, the Reviewers sidebar will not appear before
+  submitting. Click "Create pull request", then post a comment tagging reviewers:
+  `@lukelowry @nkoukpaizan @pelesh please review when you get a chance.`
+
+**Step 5: Switch back to your working branch**
+```bash
+git checkout isatkaus/uq-usecase
+```
 
 ---
 
