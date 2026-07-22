@@ -115,6 +115,7 @@ namespace GridKit
         Log::error() << "\n\tInvalid port mapping: \"" << raw_port.key()
                      << "\" has no value." << error_context.str()
                      << std::endl;
+        throw std::runtime_error("JSON parser failed");
       }
 
       if (j.contains("mon"))
