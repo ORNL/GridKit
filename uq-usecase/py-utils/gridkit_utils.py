@@ -366,6 +366,72 @@ def collect_and_save(run_root, samples_df, out_path, mon_fn="mon.csv", mode="sta
         raise ValueError(f"Unknown mode '{mode}': must be 'stacked' or 'per_run'")
 
 
+def collect_parallel(run_root, out_path, n_workers=32, mon_fn="mon.csv"):
+    """
+    Convert all run_NNN/mon.csv files to run_NNN.parquet in parallel using threads.
+
+    Reads the run index list from run_root/samples.csv.
+    I/O-bound: threads release the GIL during file reads/writes, so this scales
+    well up to the Lustre MDS concurrency limit (typically 32-64 from one client).
+
+    Parameters
+    ----------
+    run_root   : str, parent dir containing run_000/, run_001/, ... and samples.csv
+    out_path   : str, output directory for run_NNN.parquet files
+    n_workers  : int, number of parallel threads (default 32)
+    mon_fn     : str, monitor output filename (default "mon.csv")
+
+    Returns
+    -------
+    written : list of str, paths to written parquet files
+    missing : list of int, run indices where mon.csv was absent
+    """
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    samples_csv = os.path.join(run_root, "samples.csv")
+    if not os.path.exists(samples_csv):
+        raise FileNotFoundError(f"samples.csv not found in {run_root}")
+    samples_df = pd.read_csv(samples_csv, index_col=0)
+    indices = list(samples_df.index)
+    total = len(indices)
+
+    os.makedirs(out_path, exist_ok=True)
+
+    def _convert_one(i):
+        mon_path = os.path.join(run_root, f"run_{i:03d}", mon_fn)
+        if not os.path.exists(mon_path):
+            return i, None, "missing"
+        out_file = os.path.join(out_path, f"run_{i:03d}.parquet")
+        df = pd.read_csv(mon_path)
+        df = df.rename(columns={df.columns[0]: "time"})
+        pq.write_table(pa.Table.from_pandas(df, preserve_index=False), out_file)
+        return i, out_file, "ok"
+
+    written, missing = [], []
+    done = 0
+    with ThreadPoolExecutor(max_workers=n_workers) as pool:
+        futures = {pool.submit(_convert_one, i): i for i in indices}
+        for fut in as_completed(futures):
+            i, out_file, status = fut.result()
+            done += 1
+            if status == "ok":
+                written.append(out_file)
+            else:
+                missing.append(i)
+            if done % 500 == 0 or done == total:
+                print(
+                    f"  {done}/{total} processed, {len(written)} written, {len(missing)} missing"
+                )
+
+    written.sort()
+    print(f"Done. Written {len(written)} parquet files to {out_path}")
+    if missing:
+        print(f"WARNING: {len(missing)} runs had no {mon_fn}: {missing[:20]}")
+    return written, missing
+
+
 # ---------------------------------------------------------------------------
 # Dispatch editing helpers (aleatoric UQ prep)
 # ---------------------------------------------------------------------------
@@ -588,9 +654,18 @@ def attach_json_ids(case_data, json_path) -> None:
     # --- generators: derive json_gen_id from rank within GEN_BUS group ---
     # Build set of ids that actually exist in the JSON (for validation / offline marking)
     json_gen_ids = {d["id"] for d in case["devices"] if d.get("class") == "Genrou"}
+    json_gen_p0 = {
+        d["id"]: d["params"]["p0"]
+        for d in case["devices"]
+        if d.get("class") == "Genrou"
+    }
+    json_gen_q0 = {
+        d["id"]: d["params"]["q0"]
+        for d in case["devices"]
+        if d.get("class") == "Genrou"
+    }
 
     gen_df = case_data.gen
-    has_status = "GEN_STATUS" in gen_df.columns
 
     json_gen_id_col = []
     # rank counter per bus
@@ -599,14 +674,12 @@ def attach_json_ids(case_data, json_path) -> None:
         bus = int(row.GEN_BUS)
         rank[bus] = rank.get(bus, 0) + 1
         candidate = f"{bus}_{rank[bus]}"
-        # Mark as None if offline in .m (GEN_STATUS=0) or absent from JSON
-        if has_status and int(getattr(row, "GEN_STATUS", 1)) == 0:
-            json_gen_id_col.append(None)
-        elif candidate not in json_gen_ids:
-            # absent from JSON even though status=1 — mark None
-            json_gen_id_col.append(None)
-        else:
+        if candidate in json_gen_ids:
+            # present in JSON regardless of GEN_STATUS — use the id
             json_gen_id_col.append(candidate)
+        else:
+            # absent from JSON (offline and excluded, or simply not modelled)
+            json_gen_id_col.append(None)
 
     case_data.gen["json_gen_id"] = json_gen_id_col
 
@@ -616,6 +689,8 @@ def attach_json_ids(case_data, json_path) -> None:
         int(row.GEN_BUS) if gid is not None else None
         for row, gid in zip(gen_df.itertuples(), json_gen_id_col)
     ]
+    case_data.gen["json_p0"] = [json_gen_p0.get(gid) for gid in json_gen_id_col]
+    case_data.gen["json_q0"] = [json_gen_q0.get(gid) for gid in json_gen_id_col]
 
     # --- branches: derive json_branch_id from (F_BUS, T_BUS) rank ---
     parallel_count: dict[tuple, int] = {}

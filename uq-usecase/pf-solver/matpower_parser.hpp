@@ -1,0 +1,294 @@
+/**
+ * @file matpower_parser.hpp
+ *
+ * Standalone MATPOWER v2 .m file parser for use in pf-solver/.
+ * Kept separate from GridKit source so it can be modified freely without
+ * touching the GridKit tree. Reads only the fields needed for PF:
+ *   mpc.baseMVA, mpc.bus, mpc.gen, mpc.branch, mpc.gencost
+ * Unknown mpc.* fields (mpc.bus_name, mpc.gentype, mpc.genfuel, etc.) are
+ * silently skipped. Extra columns beyond the expected count are ignored.
+ *
+ * Output: populates GridKit::PowerFlowData::SystemModelData<RealT, IdxT>.
+ */
+#pragma once
+
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+#include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
+
+namespace UqPfSolver
+{
+  using namespace GridKit::PowerFlowData;
+
+  // Known mpc.* matrix fields that we parse.
+  static const std::string KNOWN_FIELDS[] = {"bus", "gen", "branch", "gencost"};
+
+  static inline void ltrim(std::string& s)
+  {
+    auto it = s.begin();
+    while (it != s.end() && std::isspace((unsigned char)*it)) ++it;
+    s.erase(s.begin(), it);
+  }
+
+  static inline void rtrim(std::string& s)
+  {
+    while (!s.empty() && std::isspace((unsigned char)s.back())) s.pop_back();
+  }
+
+  // Strip everything from '%' to end of line.
+  static inline void strip_comments(std::string& s)
+  {
+    auto pos = s.find('%');
+    if (pos != std::string::npos) s.erase(pos);
+  }
+
+  // Extract mpc.<field> name from a line like "mpc.bus = [" or "mpc.baseMVA = 100;".
+  // Returns empty string if line does not match.
+  static inline std::string get_mpc_field(const std::string& line)
+  {
+    auto dot = line.find("mpc.");
+    if (dot == std::string::npos) return "";
+    auto start = dot + 4;
+    auto end   = start;
+    while (end < line.size() &&
+           (std::isalnum((unsigned char)line[end]) || line[end] == '_'))
+      ++end;
+    return line.substr(start, end - start);
+  }
+
+  // Skip lines until the line containing "];" is consumed.
+  static inline void skip_matrix(std::istream& is)
+  {
+    std::string line;
+    while (std::getline(is, line))
+    {
+      strip_comments(line);
+      if (line.find("];") != std::string::npos) return;
+    }
+  }
+
+  // Parse baseMVA from "mpc.baseMVA = 100;" already trimmed.
+  template <typename RealT, typename IdxT>
+  static void parse_basemva(const std::string& line,
+                             SystemModelData<RealT, IdxT>& mp)
+  {
+    auto eq = line.find('=');
+    if (eq == std::string::npos) return;
+    std::string val = line.substr(eq + 1);
+    strip_comments(val);
+    ltrim(val); rtrim(val);
+    // Remove trailing semicolon
+    if (!val.empty() && val.back() == ';') val.pop_back();
+    mp.baseMVA = std::stod(val);
+  }
+
+  // Read bus matrix rows. MATPOWER bus columns (1-indexed):
+  //  1=bus_i 2=type 3=Pd 4=Qd 5=Gs 6=Bs 7=area 8=Vm 9=Va 10=baseKV 11=zone 12=Vmax 13=Vmin
+  // Extra columns are ignored.
+  template <typename RealT, typename IdxT>
+  static void parse_bus_matrix(std::istream& is,
+                                SystemModelData<RealT, IdxT>& mp)
+  {
+    std::string line;
+    while (std::getline(is, line))
+    {
+      strip_comments(line);
+      ltrim(line); rtrim(line);
+      if (line.empty()) continue;
+      if (line.find("];") != std::string::npos) return;
+
+      std::istringstream ss(line);
+      BusData<RealT, IdxT>  bd{};
+      LoadData<RealT, IdxT> ld{};
+      RealT dummy;
+      // cols: bus_i type Pd Qd Gs Bs area Vm Va baseKV zone Vmax Vmin
+      if (!(ss >> bd.bus_i >> bd.type >> ld.Pd >> ld.Qd
+               >> bd.Gs >> bd.Bs >> bd.area >> bd.Vm >> bd.Va
+               >> bd.baseKV >> bd.zone >> bd.Vmax >> bd.Vmin))
+        continue; // skip malformed or empty rows
+      // MATPOWER Va is in degrees; GridKit Bus residuals use radians internally
+      bd.Va *= M_PI / 180.0;
+      ld.bus_i = bd.bus_i;
+      // ignore any extra columns
+      mp.bus.push_back(std::move(bd));
+      mp.load.push_back(std::move(ld));
+    }
+  }
+
+  // Read gen matrix rows. MATPOWER gen columns (1-indexed):
+  //  1=bus 2=Pg 3=Qg 4=Qmax 5=Qmin 6=Vg 7=mBase 8=status 9=Pmax 10=Pmin
+  //  11=Pc1 12=Pc2 13=Qc1min 14=Qc1max 15=Qc2min 16=Qc2max 17=ramp_agc
+  //  18=ramp_10 19=ramp_30 20=ramp_q 21=apf
+  // Extended MATPOWER cases (e.g. ACTIVSg) add extra columns -- ignored.
+  template <typename RealT, typename IdxT>
+  static void parse_gen_matrix(std::istream& is,
+                                SystemModelData<RealT, IdxT>& mp)
+  {
+    std::string line;
+    while (std::getline(is, line))
+    {
+      strip_comments(line);
+      ltrim(line); rtrim(line);
+      if (line.empty()) continue;
+      if (line.find("];") != std::string::npos) return;
+
+      std::istringstream ss(line);
+      GenData<RealT, IdxT> gd{};
+      if (!(ss >> gd.bus >> gd.Pg >> gd.Qg >> gd.Qmax >> gd.Qmin
+               >> gd.Vg >> gd.mBase >> gd.status >> gd.Pmax >> gd.Pmin
+               >> gd.Pc1 >> gd.Pc2 >> gd.Qc1min >> gd.Qc1max
+               >> gd.Qc2min >> gd.Qc2max >> gd.ramp_agc >> gd.ramp_10
+               >> gd.ramp_30 >> gd.ramp_q >> gd.apf))
+        continue;
+      // ignore any extra columns
+      mp.gen.push_back(gd);
+    }
+  }
+
+  // Read branch matrix rows. MATPOWER branch columns (1-indexed):
+  //  1=fbus 2=tbus 3=r 4=x 5=b 6=rateA 7=rateB 8=rateC 9=ratio 10=angle
+  //  11=status 12=angmin 13=angmax
+  // Extended cases add extra columns -- ignored.
+  template <typename RealT, typename IdxT>
+  static void parse_branch_matrix(std::istream& is,
+                                   SystemModelData<RealT, IdxT>& mp)
+  {
+    std::string line;
+    while (std::getline(is, line))
+    {
+      strip_comments(line);
+      ltrim(line); rtrim(line);
+      if (line.empty()) continue;
+      if (line.find("];") != std::string::npos) return;
+
+      std::istringstream ss(line);
+      BranchData<RealT, IdxT> bd{};
+      if (!(ss >> bd.fbus >> bd.tbus >> bd.r >> bd.x >> bd.b
+               >> bd.rateA >> bd.rateB >> bd.rateC >> bd.ratio
+               >> bd.angle >> bd.status >> bd.angmin >> bd.angmax))
+        continue;
+      // ignore any extra columns
+      mp.branch.push_back(bd);
+    }
+  }
+
+  // Read gencost matrix rows (not used by KINSOL PF solve but parsed for
+  // completeness so the loop below can skip it cleanly).
+  template <typename RealT, typename IdxT>
+  static void parse_gencost_matrix(std::istream& is,
+                                    SystemModelData<RealT, IdxT>& mp)
+  {
+    std::string line;
+    while (std::getline(is, line))
+    {
+      strip_comments(line);
+      ltrim(line); rtrim(line);
+      if (line.empty()) continue;
+      if (line.find("];") != std::string::npos) return;
+
+      std::istringstream ss(line);
+      GenCostData<RealT, IdxT> gc{};
+      if (!(ss >> gc.kind >> gc.startup >> gc.shutdown >> gc.n))
+        continue;
+      RealT v;
+      while (ss >> v) gc.rest.push_back(v);
+      mp.gencost.push_back(gc);
+    }
+  }
+
+  /**
+   * Parse a MATPOWER v2 .m file into SystemModelData.
+   * Handles:
+   *   - fields with underscores (mpc.bus_name, mpc.gen_type, etc.) -- skipped
+   *   - extra columns in gen/branch rows (ACTIVSg extended format) -- ignored
+   *   - cell arrays ({ }) -- skipped
+   */
+  template <typename RealT = double, typename IdxT = size_t>
+  void readMatPowerFile(SystemModelData<RealT, IdxT>& mp,
+                        const std::string& filename)
+  {
+    std::ifstream ifs{filename};
+    if (!ifs)
+      throw std::runtime_error("cannot open: " + filename);
+
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+      strip_comments(line);
+      ltrim(line); rtrim(line);
+      if (line.empty()) continue;
+      if (line.find("function") != std::string::npos) continue;
+      if (line.find("mpc.") == std::string::npos) continue;
+
+      std::string field = get_mpc_field(line);
+      if (field.empty()) continue;
+
+      if (field == "baseMVA")
+      {
+        parse_basemva(line, mp);
+      }
+      else if (field == "version")
+      {
+        // parse version string -- not critical, skip
+      }
+      else if (field == "bus")
+      {
+        // line is "mpc.bus = [" -- matrix starts on next line
+        parse_bus_matrix(ifs, mp);
+      }
+      else if (field == "gen")
+      {
+        parse_gen_matrix(ifs, mp);
+      }
+      else if (field == "branch")
+      {
+        parse_branch_matrix(ifs, mp);
+      }
+      else if (field == "gencost")
+      {
+        parse_gencost_matrix(ifs, mp);
+      }
+      else
+      {
+        // Unknown field (bus_name, gentype, genfuel, ...).
+        // If it opens a matrix "[" or cell array "{", consume until "];" or "};"
+        if (line.find('[') != std::string::npos ||
+            line.find('{') != std::string::npos)
+        {
+          skip_matrix(ifs);
+        }
+        // scalar fields: nothing to consume beyond this line
+      }
+    }
+
+    // Normalize MW/MVAr quantities to per-unit.
+    // GridKit's PF model (Branch, Generator, Load) all work in pu;
+    // MATPOWER .m files store Pd/Qd/Pg/Qg in MW/MVAr.
+    const RealT inv_base = (mp.baseMVA > 0.0) ? 1.0 / mp.baseMVA : 1.0;
+    for (auto& ld : mp.load)
+    {
+      ld.Pd *= inv_base;
+      ld.Qd *= inv_base;
+    }
+    for (auto& gd : mp.gen)
+    {
+      gd.Pg  *= inv_base;
+      gd.Qg  *= inv_base;
+      gd.Qmax *= inv_base;
+      gd.Qmin *= inv_base;
+      gd.Pmax *= inv_base;
+      gd.Pmin *= inv_base;
+    }
+
+    std::cerr << "Parsed (local parser): baseMVA=" << mp.baseMVA
+              << "  buses=" << mp.bus.size()
+              << "  gens=" << mp.gen.size()
+              << "  branches=" << mp.branch.size() << "\n";
+  }
+
+} // namespace UqPfSolver
