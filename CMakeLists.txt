@@ -62,7 +62,8 @@ list(
   ASAN
   UBSAN
   OPENMP
-  THREADS)
+  THREADS
+  ZMQ)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})
