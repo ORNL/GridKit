@@ -48,6 +48,9 @@ option(GridKit_ENABLE_OPENMP "Enable OpenMP" OFF)
 # Enable Threads
 option(GridKit_ENABLE_THREADS "Enable THreads" OFF)
 
+# ZeroMQ support is disabled by default
+option(GridKit_ENABLE_ZMQ "Enable ZeroMQ support" OFF)
+
 # This allows use of "GRIDKIT_*" versions of the above options
 list(
   APPEND
@@ -59,7 +62,8 @@ list(
   ASAN
   UBSAN
   OPENMP
-  THREADS)
+  THREADS
+  ZMQ)
 foreach(_opt IN LISTS _gridkit_enable_options)
   if(NOT DEFINED GRIDKIT_ENABLE_${_opt})
     set(GRIDKIT_ENABLE_${_opt} ${GridKit_ENABLE_${_opt}})
@@ -125,6 +129,7 @@ if(GRIDKIT_ENABLE_IPOPT)
   include(FindIpopt)
   enable_language(Fortran) # Needed for linking to HSL
 endif()
+
 if(GRIDKIT_ENABLE_SUNDIALS)
   enable_language(C)
   find_package(
@@ -142,6 +147,10 @@ if(GRIDKIT_ENABLE_SUNDIALS)
         CACHE INTERNAL BOOL "Sparse solver enabled in SUNDIALS.")
     message(STATUS "KLU support enabled in SUNDIALS.")
   endif()
+endif()
+
+if(GRIDKIT_ENABLE_ZMQ)
+  find_package(ZMQ REQUIRED)
 endif()
 
 if(GRIDKIT_ENABLE_ENZYME)
