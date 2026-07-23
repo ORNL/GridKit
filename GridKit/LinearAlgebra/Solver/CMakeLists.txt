@@ -1,4 +1,3 @@
-
 if(GRIDKIT_ENABLE_RESOLVE)
   gridkit_add_library(
     resolve_system_solver
