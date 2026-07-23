@@ -29,17 +29,19 @@ The full modal basis has one mode per channel:
 ```math
 \begin{aligned}
 M &= K \\
-\mathcal{M} &= \{1,\ldots,M\} \\
 \boldsymbol{\tau} &= [\tau_1,\ldots,\tau_M]^\mathsf T
 \end{aligned}
 ```
+
+The modal delays are produced by the offline propagation fitting and enter
+through the delay bank's `delays` coefficient set.
 
 ## Submodels
 
 Symbol | Description | Type | Order | JSON | Inputs | Outputs
 ------ | ----------- | ---- | ----- | ---- | ------ | -------
 $\mathbf{g}_\mathrm{in}$ | Input factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{in}}$ | `input` | $\mathbb{R}^K$ | $\mathbb{R}^M$
-$d_m$, $m \in \mathcal{M}$ | Modal delay | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}$ | $\mathbb{R}$
+$\mathbf{d}$ | Modal delay bank | [Delay](../Delay/README.md) | History | `delays` | $\mathbb{R}^M$ | $\mathbb{R}^M$
 $\mathbf{g}_\mathrm{out}$ | Output factor | [VectorFit](../../Rational/VectorFit/README.md) | $KQ_{\mathbf{g}_\mathrm{out}}$ | `output` | $\mathbb{R}^M$ | $\mathbb{R}^K$
 
 The offline fitting targets and propagation factorization are
@@ -70,7 +72,7 @@ $\mathbf{T}_i^{-1}$ maps phase currents to modal coordinates.
 
 Both rational factors must have stable poles and no term linear in $s$. The
 input factor has algebraic input; the output factor has differential input
-from the modal delays.
+from the modal delay bank.
 
 ```math
 \mathbf{E}^\mathrm{in}=\mathbf{E}^\mathrm{out}=\mathbf{0}
@@ -122,8 +124,7 @@ None.
 ```math
 \begin{aligned}
 \mathbf{w} &\leftarrow \mathbf{g}_\mathrm{in}[\mathbf{u}] \\
-z_m &\leftarrow d_m[w_m] \\
-\mathbf{z} &\leftarrow [z_1,\ldots,z_M]^\mathsf T \\
+\mathbf{z} &\leftarrow \mathbf{d}[\mathbf{w}] \\
 \mathbf{y} &\leftarrow \mathbf{g}_\mathrm{out}[\mathbf{z}]
 \end{aligned}
 ```
@@ -152,9 +153,10 @@ The input-factor output phasor is
   = \mathbf{G}^\mathrm{in}(s_0)\widehat{\mathbf{u}}.
 ```
 
-The input factor initializes from $\widehat{\mathbf{u}}$. Each modal delay
-initializes from $\widehat{w}_m$ and provides $\widehat{z}_m$; the output
-factor initializes from $\widehat{\mathbf{z}}$.
+The input factor initializes from $\widehat{\mathbf{u}}$. The modal delay
+bank initializes from $\widehat{\mathbf{w}}$ and provides
+$\widehat{\mathbf{z}}$; the output factor initializes from
+$\widehat{\mathbf{z}}$.
 
 ### Output Initialization
 

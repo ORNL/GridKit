@@ -1,13 +1,15 @@
 # Delay Model
 
-For input units $[u]$, `Delay` maps scalar input $u$ to delayed output
-$y_{\mathrm{out}}$ through a chain of first-order lag sections.
+`Delay` applies a constant transport delay to each of $M$ input channels:
 
-> [!WARNING]
-> The lag chain is an exact sampled $J$-step delay under forward Euler when
-> $h = T$.
-> Otherwise it is an approximation. The `fmax` parameter controls section
-> density. It does not guarantee accuracy over a signal bandwidth.
+```math
+\mathbf{D}_{\boldsymbol{\tau}}(s)
+  = \mathrm{diag}\left(e^{-s\tau_1},\ldots,e^{-s\tau_M}\right).
+```
+
+At runtime, accepted-step input samples are reconstructed with cubic Hermite
+interpolation. `Delay` adds no DAE variables or residual rows. A scalar delay
+is the $M=1$ case.
 
 ## Block Diagram
 
@@ -19,26 +21,24 @@ Figure 1: Delay model
 
 Symbol | Units | JSON | Description | Note
 ------ | ----- | ---- | ----------- | ----
-$\tau$ | [s] | `tau` | Total delay | Required, positive
-$f_{\max}$ | [Hz] | `fmax` | Lag-chain section rate | Required, positive
+$M$ | [-] | `M` | Channel count | Required, positive integer
+$\boldsymbol{\tau}$ | [s] | `tau` | Channel delays | Required, each positive
 
 ### Parameter Validation
 
 ```math
 \begin{aligned}
-\tau &> 0 \\
-f_{\max} &> 0
+M &\in \mathbb{Z}_{>0} \\
+\tau_m &> 0
 \end{aligned}
 ```
 
 ### Derived Parameters
 
 ```math
-\begin{aligned}
-J &= \lceil f_{\max}\tau \rceil \\
-T &= \dfrac{\tau}{J} \\
-\mathcal{J} &= \{1,\ldots,J\}
-\end{aligned}
+\tau_{\min} = \min(\boldsymbol{\tau}),
+\qquad
+\tau_{\max} = \max(\boldsymbol{\tau})
 ```
 
 ## Submodels
@@ -51,13 +51,13 @@ None.
 
 ## Model Variables
 
+History samples are implementation data, not DAE variables or residual rows.
+
 ### Internal Variables
 
 #### Differential
 
-Symbol | Units | Description | Note
------- | ----- | ----------- | ----
-$\mathbf{y}$ | $[u]$ | Section differential states | $\mathbf{y} \in \mathbb{R}^J$
+None.
 
 #### Algebraic
 
@@ -73,26 +73,22 @@ None.
 
 Symbol | Units | Description | Note
 ------ | ----- | ----------- | ----
-$u$ | $[u]$ | Input signal | $u \in \mathbb{R}$
+$\mathbf{u}$ | $[u]$ | Input vector | $\mathbf{u} \in \mathbb{R}^M$
 
 ## Model Ports
 
 Symbol | Port | Type | Units | Description | Note
 ------ | ---- | ---- | ----- | ----------- | ----
-$u$ | `input` | Input | $[u]$ | Input signal port | $u \in \mathbb{R}$
-$y_{\mathrm{out}}$ | `out` | Output | $[u]$ | Delayed output port | $y_J$
+$\mathbf{u}$ | `input` | Input | $[u]$ | Input vector port | $\mathbf{u} \in \mathbb{R}^M$
+$\mathbf{y}$ | `out` | Output | $[u]$ | Delayed output port | $\mathbf{y} \in \mathbb{R}^M$
+
+The output provides both value and time derivative.
 
 ## Model Equations
 
 ### Differential Equations
 
-```math
-\begin{aligned}
-0 &= -T\dfrac{\mathrm{d}y_1}{\mathrm{d}t} - y_1 + u \\
-0 &= -T\dfrac{\mathrm{d}y_\ell}{\mathrm{d}t} - y_\ell + y_{\ell-1},
-     \quad \ell \in \mathcal{J} \setminus \{1\}
-\end{aligned}
-```
+None.
 
 ### Algebraic Equations
 
@@ -101,59 +97,110 @@ None.
 ### Wiring
 
 ```math
-y_{\mathrm{out}} \leftarrow y_J
+\mathbf{y}
+  \leftarrow \mathbf{u}(t-\boldsymbol{\tau}),
+\qquad
+\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
+  \leftarrow \dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}(t-\boldsymbol{\tau})
 ```
 
-## Initialization
+Each channel satisfies $y_m(t)=u_m(t-\tau_m)$. Arguments at or before zero use
+the prehistory defined under Initialization.
 
-The uppercase symbols $U$, $Y_\ell$, and $Y_\mathrm{out}$ denote RMS phasors
-of the corresponding lowercase variables.
+## History Realization
+
+### History Record
+
+Accepted input history is stored as the knot sequence
+
+```math
+(t_j,\ \mathbf{u}_j,\ \mathbf{u}'_j),
+\qquad 0 = t_0 < t_1 < \cdots < t_n,
+```
+
+where $\mathbf{u}_j$ and $\mathbf{u}'_j$ are the input value and derivative at
+$t_j$. The first knot holds the initialized values. Channels share knot times
+and read the record at $t-\tau_m$ independently.
+
+![Delay history record and per-channel taps](../../../../../../docs/Figures/EMT/DelayHistory/diagram.png)
+
+Figure 2: Delay history record and channel taps
+
+> [!WARNING]
+> Later knots are appended only at accepted steps, and the solver step size
+> must not exceed $\tau_{\min}$. These constraints keep every lookup at or
+> behind the accepted frontier; the realization must not extrapolate beyond
+> it.
+
+### Interpolation
+
+Suppressing the channel index, a lookup at $\xi \le 0$ uses the analytic
+prehistory. For $\xi \in (t_j,t_{j+1}]$, the bracketing knots define the cubic
+Hermite interpolant
+
+```math
+\begin{aligned}
+h_j &= t_{j+1}-t_j,
+\qquad
+\theta = \dfrac{\xi-t_j}{h_j} \\
+u(\xi)
+  &= (1-\theta)^2(1+2\theta)\,u_j
+   + \theta(1-\theta)^2\,h_j\,u'_j \\
+  &\quad
+   + \theta^2(3-2\theta)\,u_{j+1}
+   - \theta^2(1-\theta)\,h_j\,u'_{j+1},
+\end{aligned}
+```
+
+Its derivative comes from the same polynomial. For smooth input and exact
+knot data, the interpolant is $C^1$ with nominal fourth-order value accuracy
+and third-order derivative accuracy in the knot spacing.
+
+## Initialization
 
 ### Input Initialization
 
 ```math
 \begin{aligned}
-U
+\widehat{\mathbf{u}}
   &\leftarrow \text{RMS input phasor} \\
-u
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(U) \\
-\dfrac{\mathrm{d}u}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathrm{j}\omega_0U).
+\mathbf{u}
+  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{u}}) \\
+\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
+  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{u}}).
 \end{aligned}
 ```
 
 ### Internal Initialization
 
-```math
-\begin{aligned}
-Y_\ell
-  &= (1+\mathrm{j}\omega_0T)^{-\ell}U,
-  \quad \ell \in \mathcal{J}.
-\end{aligned}
-```
-
-At $t=0$,
+The analytic prehistory is
 
 ```math
 \begin{aligned}
-y_\ell
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(Y_\ell) \\
-\dfrac{\mathrm{d}y_\ell}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathrm{j}\omega_0Y_\ell),
-  \quad \ell \in \mathcal{J}.
+\mathbf{u}(t)
+  &= \sqrt{2}\,\mathrm{Re}
+     \left(\widehat{\mathbf{u}}e^{s_0t}\right) \\
+\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}(t)
+  &= \sqrt{2}\,\mathrm{Re}
+     \left(s_0\widehat{\mathbf{u}}e^{s_0t}\right),
+  \qquad t \le 0.
 \end{aligned}
 ```
+
+Only $t \in [-\tau_{\max},0]$ is needed. It matches the initialized input in
+value and slope at $t=0$, avoiding delay-induced startup transients under a
+consistent sinusoidal initialization.
 
 ### Output Initialization
 
 ```math
 \begin{aligned}
-Y_\mathrm{out}
-  &= Y_J \\
-y_{\mathrm{out}}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(Y_\mathrm{out}) \\
-\dfrac{\mathrm{d}y_{\mathrm{out}}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathrm{j}\omega_0Y_\mathrm{out}).
+\widehat{\mathbf{y}}
+  &= \mathbf{D}_{\boldsymbol{\tau}}(s_0)\,\widehat{\mathbf{u}} \\
+\mathbf{y}
+  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{y}}) \\
+\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
+  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{y}}).
 \end{aligned}
 ```
 

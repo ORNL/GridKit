@@ -4,31 +4,21 @@
 \begin{document}
 \begin{tikzpicture}[emt diagram]
 
-% Lag-block chain: u -> 1/(1+sT) -> ... -> y_J = y_out
-\node[block] (b0) {$\dfrac{1}{1 + sT}$};
-\node[block, right=1cm of b0] (b1) {$\dfrac{1}{1 + sT}$};
-\node[inner sep=1pt, right=1cm of b1] (dots) {$\cdots$};
-\node[block, right=1cm of dots] (bn) {$\dfrac{1}{1 + sT}$};
+\node[block, minimum width=2.6cm] (delay)
+    {$\mathbf{D}_{\boldsymbol{\tau}}(s)$};
 
-% Input node (owned externally) with port arrow into this model
-\node[signal, label={[sig]above:$u$}] (uin)
-    at ($(b0.west)+(-1.5, 0)$) {};
-\draw[->, line] ($(uin)+(-0.8, 0)$) -- (b0.west);
+\node[signal, label={[sig]above:$\mathbf{u}$}] (uin)
+    at ($(delay.west)+(-1.35,0)$) {};
+\draw[line] ($(uin)+(-0.8,0)$) -- (uin);
+\draw[->, line] (uin) -- (delay.west);
 
-% Inter-block connections
-\draw[->, line] (b0.east) -- (b1.west);
-\draw[->, line] (b1.east) -- (dots.west);
-\draw[->, line] (dots.east) -- (bn.west);
-
-% Output node (owned by this model) with port arrow out
-\node[signal, label={[sig]above:$y_{\mathrm{out}}$}, right=0.55cm of bn]
+\node[signal, label={[sig]above:$\mathbf{y}$}, right=0.55cm of delay]
     (yout) {};
-\draw[line] (bn.east) -- (yout);
-\draw[->, line] (yout) -- ++(1.55, 0);
+\draw[line] (delay.east) -- (yout);
+\draw[->, line] (yout) -- ++(1.35,0);
 
-% Model enclosure: fixed padding around model-owned blocks and output variable
 \begin{scope}[on background layer]
-    \node[operator enclosure, fit=(b0)(b1)(dots)(bn)(yout)] {};
+    \node[operator enclosure, fit=(delay)(yout)] {};
 \end{scope}
 
 \end{tikzpicture}
