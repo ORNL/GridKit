@@ -9,4 +9,6 @@ doxygen-docs/
 docs/_build/
 docs/api/reference/
 docs/xml/
+docs/js/node_modules/
+docs/_static/js/latkit.bundle.js
 __pycache__

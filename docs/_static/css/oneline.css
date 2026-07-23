@@ -1,0 +1,39 @@
+/* Containers produced by the `oneline` Sphinx directive (docs/_ext/oneline.py). */
+
+/* Hidden by default: the loader activates containers only when JavaScript
+   runs and WebGPU is present, so every other reader sees the page exactly
+   as it is today. */
+.oneline {
+    display: none;
+    position: relative;
+    margin: 1em 0 1.5em;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    background: #fdfdfd;
+    overflow: hidden;
+}
+
+.oneline--active {
+    display: block;
+}
+
+.oneline canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.oneline__caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #555;
+    background: rgba(255, 255, 255, 0.85);
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

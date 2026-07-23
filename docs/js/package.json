@@ -1,0 +1,15 @@
+{
+    "name": "gridkit-docs-assets",
+    "private": true,
+    "description": "Builds the latkit browser bundle for the interactive oneline diagrams in the documentation.",
+    "scripts": {
+        "bundle": "esbuild bundle-entry.js --bundle --format=esm --minify --target=es2022 --outfile=../_static/js/latkit.bundle.js"
+    },
+    "dependencies": {
+        "@latkit/colormaps": "0.0.1",
+        "@latkit/network": "0.1.0"
+    },
+    "devDependencies": {
+        "esbuild": "^0.28.1"
+    }
+}

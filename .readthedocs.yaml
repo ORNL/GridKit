@@ -4,11 +4,13 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.12"
+    nodejs: "24"
   apt_packages:
     - doxygen
   jobs:
     pre_build:
       - rm -rf docs/xml && cd docs && doxygen Doxyfile
+      - cd docs/js && npm ci && npm run bundle
 
 sphinx:
   configuration: docs/conf.py

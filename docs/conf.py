@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from exhale import utils as exhale_utils
@@ -6,8 +7,9 @@ project = "GridKit"
 author = "GridKit Developers"
 
 docs_dir = Path(__file__).parent.resolve()
+sys.path.append(str(docs_dir / "_ext"))
 
-extensions = ["breathe", "exhale", "myst_parser"]
+extensions = ["breathe", "exhale", "myst_parser", "oneline"]
 
 breathe_projects = {"GridKit": str(docs_dir / "xml")}
 breathe_default_project = "GridKit"
@@ -33,6 +35,8 @@ exhale_args = {
 
 primary_domain = "cpp"
 
+html_static_path = ["_static"]
+
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "collapse_navigation": True,
@@ -53,6 +57,7 @@ myst_heading_anchors = 5
 exclude_patterns = [
     "_build",
     "README.md",
+    "js/node_modules",
 ]
 
 # Breathe renders public nested types with their parent and Exhale also gives
