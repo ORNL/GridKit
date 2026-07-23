@@ -12,14 +12,17 @@
 #include <GridKit/Model/PowerElectronics/Bus/MicrogridBus.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/CircuitNode.hpp>
+#include <GridKit/Model/PowerElectronics/SystemModelPowerElectronics.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit
 {
 
   template <class ScalarT, typename IdxT>
-  class SubsystemModel : public CircuitComponent<ScalarT, IdxT>
+  class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
+
+    using SystemModel    = PowerElectronicsModel<ScalarT, IdxT>;
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
@@ -27,22 +30,30 @@ namespace GridKit
     using ForcingData    = std::pair<std::vector<ScalarT>, std::vector<ScalarT>>;
     using TimeFunction   = std::function<ForcingData(ScalarT)>;
 
-    using CircuitComponent<ScalarT, IdxT>::size_;
-    using CircuitComponent<ScalarT, IdxT>::n_intern_;
-    using CircuitComponent<ScalarT, IdxT>::n_extern_;
-    using CircuitComponent<ScalarT, IdxT>::nnz_;
-    using CircuitComponent<ScalarT, IdxT>::time_;
-    using CircuitComponent<ScalarT, IdxT>::alpha_;
-    using CircuitComponent<ScalarT, IdxT>::y_;
-    using CircuitComponent<ScalarT, IdxT>::y_int_;
-    using CircuitComponent<ScalarT, IdxT>::yp_;
-    using CircuitComponent<ScalarT, IdxT>::yp_int_;
-    using CircuitComponent<ScalarT, IdxT>::f_;
-    using CircuitComponent<ScalarT, IdxT>::f_int_;
-    using CircuitComponent<ScalarT, IdxT>::tag_;
-    using CircuitComponent<ScalarT, IdxT>::abs_tol_;
-    using CircuitComponent<ScalarT, IdxT>::allocated_;
-    using CircuitComponent<ScalarT, IdxT>::allocateVectors;
+    using SystemModel::abs_tol_;
+    using SystemModel::allocated_;
+    using SystemModel::allocateVectors;
+    using SystemModel::alpha_;
+    using SystemModel::f_;
+    using SystemModel::f_int_;
+    using SystemModel::n_extern_;
+    using SystemModel::n_intern_;
+    using SystemModel::nnz_;
+    using SystemModel::size_;
+    using SystemModel::tag_;
+    using SystemModel::time_;
+    using SystemModel::y_;
+    using SystemModel::y_int_;
+    using SystemModel::yp_;
+    using SystemModel::yp_int_;
+
+    using SystemModel::components_;
+    using SystemModel::csr_jac_;
+    using SystemModel::jac_call_count_;
+    using SystemModel::map_to_csr_;
+    using SystemModel::neg1_;
+    using SystemModel::nodes_;
+    using SystemModel::use_jac_;
 
   public:
     /**
@@ -51,29 +62,16 @@ namespace GridKit
      * @post System model parameters set as default
      */
 
-    SubsystemModel()
-    {
-      // Set system model parameters as default
-      use_jac_ = false;
-    }
-
-    virtual ~SubsystemModel()
+    SubsystemModel(bool use_jac = false) : SystemModel(use_jac)
     {
     }
 
-    bool hasJacobian() final
+    ~SubsystemModel() override
     {
-      if (!this->use_jac_)
-        return false;
-
-      for (const auto& component : components_)
-      {
-        if (!component->hasJacobian())
-        {
-          return false;
-        }
-      }
-      return true;
+      // SubsystemModel does not own components_/nodes_ — they belong to (and are
+      // deleted by) the parent system model.
+      components_.clear();
+      nodes_.clear();
     }
 
     int allocate() override
@@ -237,25 +235,6 @@ namespace GridKit
     }
 
     /**
-     * @brief Set intial y and y' of each component
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int initialize() final
-    {
-      // Initialize components
-      for (const auto& component : components_)
-      {
-        component->initialize();
-      }
-      y_.setDataUpdated();
-      yp_.setDataUpdated();
-      this->distributeVectors();
-
-      return 0;
-    }
-
-    /**
      * @brief Distribute y and y' to each component based of node connection graph
      *
      * @post Each component has y and y' set
@@ -312,207 +291,6 @@ namespace GridKit
         component->yp().setDataUpdated();
       }
       return 0;
-    }
-
-    int tagDifferentiable() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Evaluate Residuals at each component then collect them
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int evaluateInternalResidual() final
-    {
-      auto* f = f_.getData();
-
-      for (IdxT i = 0; i < this->getInternalSize(); i++)
-      {
-        f[i] = 0.0;
-      }
-
-      this->distributeVectors();
-
-      // Update system residual vector
-
-      // Evaluate component internal residuals - this is embarassingly parallel
-      for (component_type* component : components_)
-      {
-        if (int err_code = component->evaluateInternalResidual())
-          return err_code;
-      }
-
-      for (component_type* component : components_)
-      {
-
-        if (int err_code = component->evaluateExternalResidual())
-          return err_code;
-
-        const auto* residual  = component->getResidual().getData();
-        const auto& externals = component->getExternIndices();
-
-        for (size_t j : externals)
-        {
-          //@todo should do a different grounding check
-          if (component->getNodeConnection(j) != neg1_ && component->getNodeConnection(j) < this->getInternalSize())
-          {
-            f[component->getNodeConnection(j)] += residual[j];
-          }
-        }
-      }
-
-      f_.setDataUpdated();
-
-      return 0;
-    }
-
-    /**
-     * @todo implement this for nested systems
-     */
-    int evaluateExternalResidual() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Creates the system Jacobian representing \alpha dF/dy' + dF/dy
-     *
-     *
-     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
-     */
-    int evaluateJacobian() final
-    {
-
-      distributeVectors();
-
-      // Zero out values
-      RealT* vals = csr_jac_->getValues();
-      for (IdxT i = 0; i < csr_jac_->getNnz(); ++i)
-      {
-        vals[i] = 0.0;
-      }
-
-      // Update CSR values from component Jacobians
-      IdxT counter = 0;
-      for (const auto& component : components_)
-      {
-        component->evaluateJacobian();
-
-        const IdxT*  r   = component->jacobianCooRows();
-        const IdxT*  c   = component->jacobianCooCols();
-        const RealT* v   = component->jacobianCooValues();
-        IdxT         nnz = component->nnz();
-
-        for (IdxT i = 0; i < nnz; ++i)
-        {
-
-          const IdxT row = component->getNodeConnection(r[i]);
-          const IdxT col = component->getNodeConnection(c[i]);
-
-          const bool is_internal_entry = row != neg1_ && col != neg1_ && row < n_intern_ && col < n_intern_;
-
-          if (!is_internal_entry)
-          {
-            continue;
-          }
-
-          vals[map_to_csr_[counter]] += v[i];
-          ++counter;
-        }
-      }
-
-      jac_call_count_++;
-      return 0;
-    }
-
-    /**
-     * @brief Evaluate integrands for the system quadratures.
-     */
-    int evaluateIntegrand() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Initialize system adjoint.
-     *
-     * Updates variables and optimization parameters, then initializes
-     * adjoints locally and copies them to the system adjoint vector.
-     */
-    int initializeAdjoint() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Compute adjoint residual for the system model.
-     *
-     *
-     */
-    int evaluateAdjointResidual() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Evaluate adjoint integrand for the system model.
-     *
-     *
-     */
-    int evaluateAdjointIntegrand() final
-    {
-      return 0;
-    }
-
-    /**
-     * @brief Compute the absolute tolerance for each variable in the model
-     *
-     * @param rel_tol The relative tolerance which can be used to pick the
-     *        absolute tolerance.
-     * @tparam ScalarT Scalar data type
-     * @tparam IdxT Index data type
-     * @return int 0 if successful, non-zero otherwise.
-     *
-     * This represents a "noise" level close to zero for which pure relative
-     * error cannot be used.
-     */
-    int setAbsoluteTolerance(RealT rel_tol) final
-    {
-      abs_tol_.setToConst(static_cast<ScalarT>(rel_tol));
-      return 0;
-    }
-
-    /**
-     * @brief Distribute time and time scaling for each component
-     *
-     * @param t
-     * @param a
-     */
-    void updateTime(RealT t, RealT a) final
-    {
-      for (const auto& component : components_)
-      {
-        component->updateTime(t, a);
-      }
-      time_  = t;
-      alpha_ = a;
-    }
-
-    CsrMatrixT* getCsrJacobian() const override
-    {
-      return csr_jac_;
-    }
-
-    void addComponent(component_type* component)
-    {
-      components_.push_back(component);
-    }
-
-    void addNode(node_type* node)
-    {
-      nodes_.push_back(node);
     }
 
     int mapGlobalToLocal()
@@ -642,21 +420,17 @@ namespace GridKit
       forcing_function_ = std::move(function);
     }
 
-    std::unordered_map<IdxT, IdxT>& getInternalMap()
+    const std::unordered_map<IdxT, IdxT>& getInternalMap() const
     {
       return internal_map_;
     }
 
-    std::unordered_map<IdxT, IdxT>& getExternalMap()
+    const std::unordered_map<IdxT, IdxT>& getExternalMap() const
     {
       return external_map_;
     }
 
   private:
-    static constexpr IdxT neg1_ = INVALID_INDEX<IdxT>;
-
-    std::vector<component_type*>   components_;
-    std::vector<node_type*>        nodes_;
     std::unordered_map<IdxT, IdxT> internal_map_;
     std::unordered_map<IdxT, IdxT> external_map_;
     std::vector<IdxT>              external_indices_;
@@ -666,12 +440,6 @@ namespace GridKit
     std::vector<ScalarT> f_ext_;
 
     std::optional<TimeFunction> forcing_function_;
-
-    IdxT*       map_to_csr_{nullptr};
-    CsrMatrixT* csr_jac_{nullptr};
-
-    int  jac_call_count_{0};
-    bool use_jac_;
 
   }; // class SubsystemModel
 
