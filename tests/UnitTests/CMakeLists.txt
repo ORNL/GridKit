@@ -2,6 +2,7 @@
 add_subdirectory(AutomaticDifferentiation)
 add_subdirectory(LinearAlgebra)
 add_subdirectory(Math)
+add_subdirectory(Network)
 add_subdirectory(PhasorDynamics)
 add_subdirectory(PowerElectronics)
 add_subdirectory(Solver)
