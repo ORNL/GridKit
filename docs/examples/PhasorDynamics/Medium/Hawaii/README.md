@@ -1,6 +1,6 @@
 # Hawaii
 
-```{include} ../../../../../examples/PhasorDynamics/Medium/Hawaii/README.md
+```{include} ../../../../../cases/PhasorDynamics/hawaii/README.md
 :start-line: 1
 :relative-images:
 ```

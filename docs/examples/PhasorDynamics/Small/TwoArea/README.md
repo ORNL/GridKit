@@ -1,6 +1,6 @@
 # TwoArea
 
-```{include} ../../../../../examples/PhasorDynamics/Small/TwoArea/README.md
+```{include} ../../../../../cases/PhasorDynamics/twoarea/README.md
 :start-line: 1
 :relative-images:
 ```

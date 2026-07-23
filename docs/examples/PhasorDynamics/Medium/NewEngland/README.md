@@ -1,6 +1,6 @@
 # NewEngland
 
-```{include} ../../../../../examples/PhasorDynamics/Medium/NewEngland/README.md
+```{include} ../../../../../cases/PhasorDynamics/newengland/README.md
 :start-line: 1
 :relative-images:
 ```

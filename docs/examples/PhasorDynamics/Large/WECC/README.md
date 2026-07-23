@@ -1,6 +1,6 @@
 # WECC
 
-```{include} ../../../../../examples/PhasorDynamics/Large/WECC/README.md
+```{include} ../../../../../cases/PhasorDynamics/wecc/README.md
 :start-line: 1
 :relative-images:
 ```
