@@ -62,7 +62,8 @@ namespace GridKit
      * @post System model parameters set as default
      */
 
-    SubsystemModel(bool use_jac = false) : SystemModel(use_jac)
+    SubsystemModel(bool use_jac = false)
+      : SystemModel(use_jac)
     {
     }
 
