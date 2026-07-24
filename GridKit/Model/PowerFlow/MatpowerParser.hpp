@@ -1,9 +1,8 @@
 
 /**
- * @file FileIO.hpp
+ * @file MatpowerParser.hpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
- *
- * Contains definition of a utility for reading lookup tables.
+ * @brief Utilities for parsing MATPOWER case data.
  *
  */
 #pragma once
@@ -23,6 +22,7 @@ namespace GridKit
 {
   using namespace GridKit::PowerFlowData;
 
+  /// @cond DOXYGEN_INTERNAL
   static const std::string matlab_syntax_error{
       "Only a subset of Matlab syntax is supported."
       "\n\t'=' for assignment must be on the same line as the field, eg "
@@ -31,10 +31,12 @@ namespace GridKit
       "initialization."
       "\n\tEach row of a matrix must be terminated by a semicolon."};
 
-  std::ostream& logs()
+  /// @endcond
+
+  inline std::ostream& logs()
   {
 #ifndef NDEBUG
-    std::cerr << "[FileIO.hpp]: ";
+    std::cerr << "[MatpowerParser.hpp]: ";
     return std::cerr;
 #else
     static std::ofstream ofs;
@@ -43,19 +45,19 @@ namespace GridKit
 #endif
   }
 
-  void ltrim(std::string& s)
+  inline void ltrim(std::string& s)
   {
     const std::string nothing = "";
     s                         = std::regex_replace(s, std::regex("^\\s+"), nothing);
   }
 
-  void rtrim(std::string& s)
+  inline void rtrim(std::string& s)
   {
     const std::string nothing = "";
     s                         = std::regex_replace(s, std::regex("\\s+$"), nothing);
   }
 
-  void trim_matlab_comments(std::string& s)
+  inline void trim_matlab_comments(std::string& s)
   {
     const std::string nothing = "";
     s                         = std::regex_replace(s, std::regex("%.+"), nothing);
@@ -65,7 +67,7 @@ namespace GridKit
   //
   // For example, the string "   mpc.bus =  [ ... ] % Some comment" will
   // return the value "bus".
-  std::string getMatPowerComponent(const std::string& line)
+  inline std::string getMatPowerComponent(const std::string& line)
   {
     logs() << "Getting matpower component from line\n";
     std::regex  pat("mpc.([a-zA-Z]+)\\s*=.+");
@@ -86,7 +88,7 @@ namespace GridKit
 
   // Ensure that all of the given line has been consumed, and that the only
   // remaining non-whitespace character left in the line is a semicolon.
-  void checkEndOfMatrixRow(std::istream& is)
+  inline void checkEndOfMatrixRow(std::istream& is)
   {
     std::string rest;
     is >> rest;

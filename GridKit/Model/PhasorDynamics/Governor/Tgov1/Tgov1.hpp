@@ -41,17 +41,17 @@ namespace GridKit
       /// Internal variables of a `Tgov1`
       enum class Tgov1InternalVariables : size_t
       {
-        PTX, ///< $P_{tx}$
-        PV,  ///< $P_v$
-        PM,  ///< $P_m$
+        PTX, ///< \f$P_{tx}\f$
+        PV,  ///< \f$P_v\f$
+        PM,  ///< \f$P_m\f$
         MAXIMUM,
       };
 
       /// External variables of a `Tgov1`
       enum class Tgov1ExternalVariables : size_t
       {
-        DELTAOMEGA, ///< $\Delta_\omega$
-        PREF,       ///< $P_{ref}$
+        DELTAOMEGA, ///< \f$\Delta_\omega\f$
+        PREF,       ///< \f$P_{ref}\f$
         MAXIMUM,
       };
 

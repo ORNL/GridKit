@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file TestingCore.hpp
+ * @file Testing.hpp
  *
  * @author Slaven Peles <peless@ornl.gov>, ORNL
  *

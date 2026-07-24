@@ -155,7 +155,7 @@ The IEEET1 differential equations, as derived from the model diagram, are:
 \end{aligned}
 ```
 
-CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator) target and approximation.
+CommonMath defines the smooth [Anti-Windup](../../../../CommonMath.md#antiwindup) target and approximation.
 
 ### Algebraic Equations
 

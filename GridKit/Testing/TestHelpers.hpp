@@ -1,6 +1,6 @@
 
 /**
- * @file UnitTest.hpp
+ * @file TestHelpers.hpp
  *
  * @author Slaven Peles <peless@ornl.gov>, ORNL
  *

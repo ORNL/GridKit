@@ -41,6 +41,7 @@ html_theme_options = {
 }
 
 myst_enable_extensions = [
+    "alert",
     "amsmath",
     "dollarmath",
     "html_image",
@@ -53,3 +54,8 @@ exclude_patterns = [
     "_build",
     "README.md",
 ]
+
+# Breathe renders public nested types with their parent and Exhale also gives
+# those types standalone pages. Sphinx otherwise reports the intentional
+# duplicate declarations when both pages are read.
+suppress_warnings = ["duplicate_declaration.cpp"]
