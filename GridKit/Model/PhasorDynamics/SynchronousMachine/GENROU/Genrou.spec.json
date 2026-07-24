@@ -1,0 +1,44 @@
+{
+  "class": "Genrou",
+  "description": "6th-order round-rotor synchronous machine model.",
+  "ports": {
+    "inputs": {
+      "pmech": { "label": "Mechanical power", "symbol": "P_m", "unit": "pu", "description": "From the governor." },
+      "efd":   { "label": "Field voltage", "symbol": "E_{fd}", "unit": "pu", "description": "From the exciter." }
+    },
+    "outputs": {
+      "speed": { "label": "Speed deviation", "symbol": "\\Delta\\omega", "unit": "pu", "description": "To the governor." }
+    },
+    "buses": {
+      "bus": { "label": "Connecting bus" }
+    }
+  },
+  "parameters": {
+    "p0":    { "label": "Initial active power", "symbol": "P_0", "unit": "pu", "typical": 1.0 },
+    "q0":    { "label": "Initial reactive power", "symbol": "Q_0", "unit": "pu", "typical": 0.05 },
+    "H":     { "label": "Rotor inertia constant", "symbol": "H", "unit": "s", "typical": 3.0 },
+    "D":     { "label": "Damping coefficient", "symbol": "D", "unit": "pu", "typical": 0.0 },
+    "Ra":    { "label": "Winding resistance", "symbol": "R_a", "unit": "pu", "typical": 0.0 },
+    "Tdop":  { "label": "Open-circuit direct-axis transient time constant", "symbol": "T'_{d0}", "unit": "s", "typical": 7.0 },
+    "Tdopp": { "label": "Open-circuit direct-axis sub-transient time constant", "symbol": "T''_{d0}", "unit": "s", "typical": 0.04 },
+    "Tqop":  { "label": "Open-circuit quadrature-axis transient time constant", "symbol": "T'_{q0}", "unit": "s", "typical": 0.75 },
+    "Tqopp": { "label": "Open-circuit quadrature-axis sub-transient time constant", "symbol": "T''_{q0}", "unit": "s", "typical": 0.05 },
+    "Xd":    { "label": "Direct-axis synchronous reactance", "symbol": "X_d", "unit": "pu", "typical": 2.1 },
+    "Xdp":   { "label": "Direct-axis transient reactance", "symbol": "X'_d", "unit": "pu", "typical": 0.2 },
+    "Xdpp":  { "label": "Direct-axis sub-transient reactance", "symbol": "X''_d", "unit": "pu", "typical": 0.18 },
+    "Xq":    { "label": "Quadrature-axis synchronous reactance", "symbol": "X_q", "unit": "pu", "typical": 0.5 },
+    "Xqp":   { "label": "Quadrature-axis transient reactance", "symbol": "X'_q", "unit": "pu", "typical": 0.3 },
+    "Xqpp":  { "label": "Quadrature-axis sub-transient reactance", "symbol": "X''_q", "unit": "pu", "typical": 0.18 },
+    "Xl":    { "label": "Stator leakage reactance", "symbol": "X_l", "unit": "pu", "typical": 0.15 },
+    "S10":   { "label": "Saturation factor at 1.0 pu flux", "symbol": "S(1.0)", "typical": 0.0 },
+    "S12":   { "label": "Saturation factor at 1.2 pu flux", "symbol": "S(1.2)", "typical": 0.0 },
+    "mva":   { "label": "Machine MVA base", "symbol": "S_{base}", "unit": "MVA", "typical": 100.0 }
+  },
+  "monitors": {
+    "ir":    { "label": "Injected current, real part", "symbol": "I_r", "unit": "pu" },
+    "ii":    { "label": "Injected current, imaginary part", "symbol": "I_i", "unit": "pu" },
+    "p":     { "label": "Active power", "symbol": "P", "unit": "pu" },
+    "q":     { "label": "Reactive power", "symbol": "Q", "unit": "pu" },
+    "delta": { "label": "Rotor angle", "symbol": "\\delta", "unit": "rad" }
+  }
+}

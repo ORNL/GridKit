@@ -1,0 +1,23 @@
+{
+  "class": "LoadZIP",
+  "description": "ZIP load model: constant-impedance, constant-current, and constant-power fractions.",
+  "ports": {
+    "inputs": {},
+    "outputs": {},
+    "buses": {
+      "bus": { "label": "Connecting bus" }
+    }
+  },
+  "parameters": {
+    "Pnom":   { "label": "Nominal active power", "symbol": "P_{nom}", "unit": "pu", "typical": 1.0 },
+    "Qnom":   { "label": "Nominal reactive power", "symbol": "Q_{nom}", "unit": "pu", "typical": 0.2 },
+    "Vnom":   { "label": "Nominal voltage magnitude", "symbol": "V_{nom}", "unit": "pu", "typical": 1.0 },
+    "alphaI": { "label": "Constant-current load fraction", "symbol": "\\alpha_I", "typical": 0.2 },
+    "alphaP": { "label": "Constant-power load fraction", "symbol": "\\alpha_P", "typical": 0.3 }
+  },
+  "monitors": {
+    "im": { "label": "Load current magnitude", "symbol": "I_m", "unit": "pu" },
+    "p":  { "label": "Active power", "symbol": "P", "unit": "pu" },
+    "q":  { "label": "Reactive power", "symbol": "Q", "unit": "pu" }
+  }
+}

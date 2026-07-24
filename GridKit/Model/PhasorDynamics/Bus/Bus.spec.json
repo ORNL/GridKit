@@ -1,0 +1,28 @@
+{
+  "class": "Bus",
+  "description": "Positive-sequence, AC phasor-domain bus.",
+  "ports": {
+    "inputs": {
+      "ir": { "label": "Injected current, real part", "symbol": "I_r", "unit": "pu", "many": true,
+              "description": "Contributions from attached models sum." },
+      "ii": { "label": "Injected current, imaginary part", "symbol": "I_i", "unit": "pu", "many": true,
+              "description": "Contributions from attached models sum." }
+    },
+    "outputs": {
+      "vr": { "label": "Bus voltage, real part", "symbol": "V_r", "unit": "pu" },
+      "vi": { "label": "Bus voltage, imaginary part", "symbol": "V_i", "unit": "pu" }
+    },
+    "buses": {}
+  },
+  "parameters": {
+    "kv":        { "label": "Voltage base", "symbol": "V_{base}", "unit": "kV", "typical": 115.0 },
+    "longitude": { "label": "Longitude", "symbol": "\\lambda", "unit": "deg",
+                   "description": "Geographic longitude, positive east." },
+    "latitude":  { "label": "Latitude", "symbol": "\\phi", "unit": "deg",
+                   "description": "Geographic latitude, positive north." }
+  },
+  "monitors": {
+    "Vm": { "label": "Voltage magnitude", "symbol": "V_m", "unit": "pu" },
+    "Va": { "label": "Voltage angle", "symbol": "\\theta_V", "unit": "rad" }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "class": "Ieeest",
+  "description": "IEEEST stabilizer model.",
+  "ports": {
+    "inputs": {
+      "input": { "label": "Stabilizer input", "description": "Signal-dependent; commonly machine speed." }
+    },
+    "outputs": {
+      "output": { "label": "Stabilizer output, limited", "symbol": "V_{ss}", "unit": "pu" }
+    },
+    "buses": {}
+  },
+  "parameters": {
+    "A1":     { "label": "Notch filter denominator coefficient 1", "symbol": "A_1", "typical": 0.0 },
+    "A2":     { "label": "Notch filter denominator coefficient 2", "symbol": "A_2", "typical": 0.0 },
+    "A3":     { "label": "Notch filter denominator coefficient 3", "symbol": "A_3", "typical": 0.0 },
+    "A4":     { "label": "Notch filter denominator coefficient 4", "symbol": "A_4", "typical": 0.0 },
+    "A5":     { "label": "Notch filter numerator coefficient 5", "symbol": "A_5", "typical": 0.0 },
+    "A6":     { "label": "Notch filter numerator coefficient 6", "symbol": "A_6", "typical": 0.0 },
+    "T1":     { "label": "Lead-lag 1 numerator time constant", "symbol": "T_1", "unit": "s", "typical": 0.0 },
+    "T2":     { "label": "Lead-lag 1 denominator time constant", "symbol": "T_2", "unit": "s", "typical": 0.0 },
+    "T3":     { "label": "Lead-lag 2 numerator time constant", "symbol": "T_3", "unit": "s", "typical": 0.0 },
+    "T4":     { "label": "Lead-lag 2 denominator time constant", "symbol": "T_4", "unit": "s", "typical": 0.0 },
+    "T5":     { "label": "Washout numerator time constant", "symbol": "T_5", "unit": "s", "typical": 1.5 },
+    "T6":     { "label": "Washout denominator time constant", "symbol": "T_6", "unit": "s", "typical": 1.5 },
+    "Ks":     { "label": "Stabilizer gain", "symbol": "K_s", "typical": 20.0 },
+    "Lsmin":  { "label": "Minimum stabilizer output limit", "symbol": "L_{s,min}", "unit": "pu", "typical": -0.1 },
+    "Lsmax":  { "label": "Maximum stabilizer output limit", "symbol": "L_{s,max}", "unit": "pu", "typical": 0.1 },
+    "Vcl":    { "label": "Lower input cutout threshold (not modeled)", "symbol": "V_{cl}", "unit": "pu", "typical": 0.0 },
+    "Vcu":    { "label": "Upper input cutout threshold (not modeled)", "symbol": "V_{cu}", "unit": "pu", "typical": 0.0 },
+    "Tdelay": { "label": "Input time delay (not modeled)", "symbol": "T_{delay}", "unit": "s", "typical": 0.0 }
+  },
+  "monitors": {}
+}

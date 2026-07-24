@@ -1,0 +1,35 @@
+{
+  "class": "Ieeet1",
+  "description": "IEEET1 exciter model.",
+  "ports": {
+    "inputs": {
+      "speed": { "label": "Speed deviation", "symbol": "\\Delta\\omega", "unit": "pu", "description": "From the machine." },
+      "vs":    { "label": "Stabilizer input", "symbol": "V_s", "unit": "pu" }
+    },
+    "outputs": {
+      "efd": { "label": "Field voltage", "symbol": "E_{fd}", "unit": "pu", "description": "To the machine." }
+    },
+    "buses": {
+      "bus": { "label": "Sensed bus" }
+    }
+  },
+  "parameters": {
+    "Tr":      { "label": "Voltage sensing time constant", "symbol": "T_r", "unit": "s", "typical": 0.0 },
+    "Ka":      { "label": "Voltage regulator gain", "symbol": "K_a", "typical": 50.0 },
+    "Ta":      { "label": "Voltage regulator time constant", "symbol": "T_a", "unit": "s", "typical": 0.04 },
+    "Ke":      { "label": "Excitation system coefficient", "symbol": "K_e", "typical": -0.06 },
+    "Te":      { "label": "Excitation system time constant", "symbol": "T_e", "unit": "s", "typical": 0.6 },
+    "Kf":      { "label": "Feedback coefficient", "symbol": "K_f", "typical": 0.09 },
+    "Tf":      { "label": "Feedback time constant", "symbol": "T_f", "unit": "s", "typical": 1.46 },
+    "Vrmin":   { "label": "Minimum voltage regulator output", "symbol": "V_{r,min}", "unit": "pu", "typical": -1.0 },
+    "Vrmax":   { "label": "Maximum voltage regulator output", "symbol": "V_{r,max}", "unit": "pu", "typical": 1.0 },
+    "E1":      { "label": "Saturation test voltage 1", "symbol": "E_1", "unit": "pu", "typical": 2.8 },
+    "E2":      { "label": "Saturation test voltage 2", "symbol": "E_2", "unit": "pu", "typical": 3.373 },
+    "Se1":     { "label": "Saturation factor at E1", "symbol": "S_e(E_1)", "typical": 0.04 },
+    "Se2":     { "label": "Saturation factor at E2", "symbol": "S_e(E_2)", "typical": 0.33 },
+    "Ispdlim": { "label": "Speed limit flag indicator", "type": "int", "typical": 0 }
+  },
+  "monitors": {
+    "ksat": { "label": "Saturation factor", "symbol": "K_{sat}" }
+  }
+}

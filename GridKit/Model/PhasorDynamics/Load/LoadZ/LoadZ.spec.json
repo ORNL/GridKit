@@ -1,0 +1,19 @@
+{
+  "class": "LoadZ",
+  "description": "Constant-impedance load model.",
+  "ports": {
+    "inputs": {},
+    "outputs": {},
+    "buses": {
+      "bus": { "label": "Connecting bus" }
+    }
+  },
+  "parameters": {
+    "R": { "label": "Load resistance", "symbol": "R", "unit": "pu", "typical": 2.0 },
+    "X": { "label": "Load reactance", "symbol": "X", "unit": "pu", "typical": 0.5 }
+  },
+  "monitors": {
+    "p": { "label": "Active power", "symbol": "P", "unit": "pu" },
+    "q": { "label": "Reactive power", "symbol": "Q", "unit": "pu" }
+  }
+}

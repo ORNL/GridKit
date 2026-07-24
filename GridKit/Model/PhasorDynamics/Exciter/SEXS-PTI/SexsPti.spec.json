@@ -1,0 +1,24 @@
+{
+  "class": "SexsPti",
+  "description": "SEXS-PTI simplified exciter model.",
+  "ports": {
+    "inputs": {
+      "vs": { "label": "Stabilizer input", "symbol": "V_s", "unit": "pu" }
+    },
+    "outputs": {
+      "efd": { "label": "Field voltage", "symbol": "E_{fd}", "unit": "pu", "description": "To the machine." }
+    },
+    "buses": {
+      "bus": { "label": "Sensed bus" }
+    }
+  },
+  "parameters": {
+    "Ta":     { "label": "Lag-lead numerator time constant", "symbol": "T_a", "unit": "s", "typical": 0.1 },
+    "Tb":     { "label": "Lag-lead denominator time constant", "symbol": "T_b", "unit": "s", "typical": 10.0 },
+    "Te":     { "label": "Exciter field time constant", "symbol": "T_e", "unit": "s", "typical": 0.1 },
+    "K":      { "label": "Voltage regulator gain", "symbol": "K", "typical": 100.0 },
+    "Efdmax": { "label": "Maximum excitation output", "symbol": "E_{fd,max}", "unit": "pu", "typical": 5.0 },
+    "Efdmin": { "label": "Minimum excitation output", "symbol": "E_{fd,min}", "unit": "pu", "typical": -5.0 }
+  },
+  "monitors": {}
+}

@@ -1,0 +1,32 @@
+{
+  "class": "GenClassical",
+  "description": "Classical synchronous machine model.",
+  "ports": {
+    "inputs": {
+      "pmech": { "label": "Mechanical power", "symbol": "P_m", "unit": "pu", "description": "From the governor." },
+      "efd":   { "label": "Field voltage", "symbol": "E_{fd}", "unit": "pu", "description": "From the exciter." }
+    },
+    "outputs": {
+      "speed": { "label": "Speed deviation", "symbol": "\\Delta\\omega", "unit": "pu", "description": "To the governor." }
+    },
+    "buses": {
+      "bus": { "label": "Connecting bus" }
+    }
+  },
+  "parameters": {
+    "p0":  { "label": "Initial active power", "symbol": "P_0", "unit": "pu", "typical": 1.0 },
+    "q0":  { "label": "Initial reactive power", "symbol": "Q_0", "unit": "pu", "typical": 0.05 },
+    "H":   { "label": "Rotor inertia constant", "symbol": "H", "unit": "s", "typical": 3.0 },
+    "D":   { "label": "Damping coefficient", "symbol": "D", "unit": "pu", "typical": 0.0 },
+    "Ra":  { "label": "Winding resistance", "symbol": "R_a", "unit": "pu", "typical": 0.0 },
+    "Xdp": { "label": "Direct-axis transient reactance", "symbol": "X'_d", "unit": "pu", "typical": 0.2 },
+    "mva": { "label": "Machine MVA base", "symbol": "S_{base}", "unit": "MVA", "typical": 100.0 }
+  },
+  "monitors": {
+    "ir":    { "label": "Injected current, real part", "symbol": "I_r", "unit": "pu" },
+    "ii":    { "label": "Injected current, imaginary part", "symbol": "I_i", "unit": "pu" },
+    "p":     { "label": "Active power", "symbol": "P", "unit": "pu" },
+    "q":     { "label": "Reactive power", "symbol": "Q", "unit": "pu" },
+    "delta": { "label": "Rotor angle", "symbol": "\\delta", "unit": "rad" }
+  }
+}

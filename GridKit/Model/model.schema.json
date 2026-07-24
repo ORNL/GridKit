@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/LLNL/GridKit/Model/model.schema.json",
+  "title": "GridKit model spec",
+  "description": "Structure of every *.spec.json under GridKit/Model. A spec describes one model class: its external variables, bus terminals, parameters, and derived monitorable quantities. Every section is present in every spec — an empty section is an explicit statement (a bus has no bus terminals). Specs describe classes only — cases instantiate and wire them (case.schema.json).",
+  "type": "object",
+  "properties": {
+    "class": {
+      "$ref": "#/$defs/name",
+      "description": "C++ class name of the model. Equals the file name stem."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One sentence describing the model."
+    },
+    "ports": {
+      "type": "object",
+      "description": "The model's connection surface: external variables under inputs and outputs, bus terminals under buses. All port names share one namespace.",
+      "properties": {
+        "inputs": {
+          "$ref": "#/$defs/variables",
+          "description": "External variables this model consumes. Each input takes at most one wire unless many; an unwired input is held constant."
+        },
+        "outputs": {
+          "$ref": "#/$defs/variables",
+          "description": "External variables this model produces. An output may feed any number of inputs."
+        },
+        "buses": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "$ref": "#/$defs/terminal" },
+          "description": "Bus terminals: name to terminal. Attaching a terminal to a bus exchanges the model's electrical variables with that bus; which variables flow is internal to the model."
+        }
+      },
+      "required": ["inputs", "outputs", "buses"],
+      "additionalProperties": false
+    },
+    "parameters": {
+      "$ref": "#/$defs/quantities",
+      "description": "Model parameters: name to quantity. An omitted parameter assumes its typical value; without one, it is absent."
+    },
+    "monitors": {
+      "$ref": "#/$defs/quantities",
+      "description": "Derived monitorable quantities: name to quantity. Every input and output variable is monitorable by its own name; monitors lists only quantities that are not ports."
+    }
+  },
+  "required": ["class", "description", "ports", "parameters", "monitors"],
+  "additionalProperties": false,
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "unit": {
+      "enum": ["pu", "s", "rad", "deg", "Hz", "kV", "MVA", "VA"],
+      "description": "The closed unit vocabulary; new units are added here."
+    },
+    "variable": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "LaTeX symbol."
+        },
+        "unit": {
+          "$ref": "#/$defs/unit",
+          "description": "Unit of this variable. Omit for dimensionless or signal-dependent variables."
+        },
+        "description": {
+          "type": "string",
+          "description": "What this variable is and where it goes."
+        },
+        "many": {
+          "type": "boolean",
+          "default": false,
+          "description": "Accepts any number of wires; contributions sum (flow semantics, e.g. currents into a bus)."
+        }
+      },
+      "required": ["label"],
+      "additionalProperties": false
+    },
+    "variables": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/variable" }
+    },
+    "terminal": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name."
+        },
+        "description": {
+          "type": "string",
+          "description": "What attaches here and any convention (e.g. tap side)."
+        }
+      },
+      "required": ["label"],
+      "additionalProperties": false
+    },
+    "quantity": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable name."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "LaTeX symbol."
+        },
+        "unit": {
+          "$ref": "#/$defs/unit",
+          "description": "Unit. Omit for dimensionless quantities."
+        },
+        "type": {
+          "enum": ["real", "int", "bool", "string"],
+          "default": "real",
+          "description": "Value type; mirrors the C++ parameter variant."
+        },
+        "description": {
+          "type": "string",
+          "description": "One sentence of meaning or convention (e.g. which base)."
+        },
+        "typical": {
+          "type": ["number", "boolean", "string"],
+          "description": "Typical value: assumed when a case omits this quantity, and used by tooling to synthesize cases. A quantity without a typical value is absent when omitted (e.g. coordinates)."
+        }
+      },
+      "required": ["label"],
+      "additionalProperties": false
+    },
+    "quantities": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/quantity" }
+    }
+  }
+}

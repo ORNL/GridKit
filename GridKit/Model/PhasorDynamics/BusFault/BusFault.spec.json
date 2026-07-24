@@ -1,0 +1,24 @@
+{
+  "class": "BusFault",
+  "description": "Short-to-ground fault at a bus.",
+  "ports": {
+    "inputs": {
+      "control_signal": { "label": "Fault control signal", "description": "Turns the fault on and off; unwired, the state stays state0." }
+    },
+    "outputs": {},
+    "buses": {
+      "bus": { "label": "Faulted bus" }
+    }
+  },
+  "parameters": {
+    "state0": { "label": "Initial fault state", "type": "bool", "typical": false,
+                "description": "True when the fault is applied at the start of the simulation." },
+    "R":      { "label": "Short-to-ground resistance", "symbol": "R", "unit": "pu", "typical": 0.0 },
+    "X":      { "label": "Short-to-ground reactance", "symbol": "X", "unit": "pu", "typical": 0.001 }
+  },
+  "monitors": {
+    "state": { "label": "Fault state", "type": "bool" },
+    "ir":    { "label": "Fault current, real part", "symbol": "I_r", "unit": "pu" },
+    "ii":    { "label": "Fault current, imaginary part", "symbol": "I_i", "unit": "pu" }
+  }
+}

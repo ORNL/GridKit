@@ -1,0 +1,32 @@
+{
+  "class": "Branch",
+  "description": "Algebraic pi model for a line or off-nominal transformer branch.",
+  "ports": {
+    "inputs": {},
+    "outputs": {},
+    "buses": {
+      "bus1": { "label": "Terminal bus 1", "description": "Tap side for off-nominal transformer branches." },
+      "bus2": { "label": "Terminal bus 2" }
+    }
+  },
+  "parameters": {
+    "R":     { "label": "Series resistance", "symbol": "R", "unit": "pu", "typical": 0.01 },
+    "X":     { "label": "Series reactance", "symbol": "X", "unit": "pu", "typical": 0.1 },
+    "G":     { "label": "Total shunt conductance", "symbol": "G", "unit": "pu", "typical": 0.0 },
+    "B":     { "label": "Total shunt susceptance", "symbol": "B", "unit": "pu", "typical": 0.0 },
+    "tap":   { "label": "Off-nominal tap magnitude", "symbol": "t", "unit": "pu", "typical": 1.0 },
+    "phase": { "label": "Phase shift angle", "symbol": "\\theta", "unit": "rad", "typical": 0.0 }
+  },
+  "monitors": {
+    "ir1": { "label": "Current into bus1, real part", "symbol": "I_{r1}", "unit": "pu" },
+    "ii1": { "label": "Current into bus1, imaginary part", "symbol": "I_{i1}", "unit": "pu" },
+    "im1": { "label": "Current magnitude at bus1", "symbol": "I_{m1}", "unit": "pu" },
+    "p1":  { "label": "Active power at bus1", "symbol": "P_1", "unit": "pu" },
+    "q1":  { "label": "Reactive power at bus1", "symbol": "Q_1", "unit": "pu" },
+    "ir2": { "label": "Current into bus2, real part", "symbol": "I_{r2}", "unit": "pu" },
+    "ii2": { "label": "Current into bus2, imaginary part", "symbol": "I_{i2}", "unit": "pu" },
+    "im2": { "label": "Current magnitude at bus2", "symbol": "I_{m2}", "unit": "pu" },
+    "p2":  { "label": "Active power at bus2", "symbol": "P_2", "unit": "pu" },
+    "q2":  { "label": "Reactive power at bus2", "symbol": "Q_2", "unit": "pu" }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "class": "ConstantSignalSource",
+  "description": "Constant complex signal source.",
+  "ports": {
+    "inputs": {},
+    "outputs": {
+      "sr": { "label": "Constant signal, real part", "symbol": "S_r" },
+      "si": { "label": "Constant signal, imaginary part", "symbol": "S_i" }
+    },
+    "buses": {}
+  },
+  "parameters": {
+    "Sr": { "label": "Signal value, real part", "symbol": "S_r", "typical": 1.0 },
+    "Si": { "label": "Signal value, imaginary part", "symbol": "S_i", "typical": 0.0 }
+  },
+  "monitors": {}
+}

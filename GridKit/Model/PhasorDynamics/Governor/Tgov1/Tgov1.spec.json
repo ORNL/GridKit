@@ -1,0 +1,24 @@
+{
+  "class": "Tgov1",
+  "description": "TGOV1 governor model.",
+  "ports": {
+    "inputs": {
+      "speed": { "label": "Speed deviation", "symbol": "\\Delta\\omega", "unit": "pu", "description": "From the machine." }
+    },
+    "outputs": {
+      "pmech": { "label": "Mechanical power", "symbol": "P_m", "unit": "pu", "description": "To the machine." }
+    },
+    "buses": {}
+  },
+  "parameters": {
+    "Trate": { "label": "Turbine-rating power base", "symbol": "T_{rate}", "unit": "MVA", "typical": 100.0 },
+    "R":     { "label": "Droop constant", "symbol": "R", "unit": "pu", "typical": 0.05 },
+    "T1":    { "label": "Valve time delay", "symbol": "T_1", "unit": "s", "typical": 0.5 },
+    "T2":    { "label": "Turbine numerator time constant", "symbol": "T_2", "unit": "s", "typical": 2.5 },
+    "T3":    { "label": "Turbine delay", "symbol": "T_3", "unit": "s", "typical": 7.5 },
+    "Pvmax": { "label": "Maximum valve power", "symbol": "P_{v,max}", "unit": "pu", "typical": 1.0 },
+    "Pvmin": { "label": "Minimum valve power", "symbol": "P_{v,min}", "unit": "pu", "typical": 0.0 },
+    "Dt":    { "label": "Damping coefficient", "symbol": "D_t", "unit": "pu", "typical": 0.0 }
+  },
+  "monitors": {}
+}
