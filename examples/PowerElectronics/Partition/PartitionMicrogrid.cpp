@@ -326,6 +326,7 @@ int main()
   delete sysmodel;
   delete partition1;
   delete partition2;
+  delete busInterface1;
 
   return 0;
 }
