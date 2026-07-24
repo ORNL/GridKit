@@ -73,6 +73,7 @@ namespace GridKit
        * If `spec.file_name` is empty, `std::cout` is used.
        *
        * @param spec Specifies details for the sink.
+       * @param os Output stream used when `spec.file_name` is empty.
        */
       void addSink(const SinkSpec& spec, std::ostream& os = std::cout)
       {

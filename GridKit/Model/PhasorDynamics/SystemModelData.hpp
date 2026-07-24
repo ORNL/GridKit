@@ -111,14 +111,12 @@ namespace GridKit
       std::vector<MonitorSinkSpec> monitor_sink;
     };
 
-    ///@{
     /**
      * @brief Generate system model data from a JSON input file
      */
-    SystemModelData<double, size_t> parseSystemModelData(std::istream&);
-    SystemModelData<double, size_t> parseSystemModelData(std::istream&&);
-    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path&);
-    SystemModelData<double, size_t> parseSystemModelData(const std::string&);
-    ///@}
+    SystemModelData<double, size_t> parseSystemModelData(std::istream& stream);
+    SystemModelData<double, size_t> parseSystemModelData(std::istream&& stream);
+    SystemModelData<double, size_t> parseSystemModelData(const std::filesystem::path& filePath);
+    SystemModelData<double, size_t> parseSystemModelData(const std::string& fileName);
   } // namespace PhasorDynamics
 } // namespace GridKit
