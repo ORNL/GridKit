@@ -149,9 +149,9 @@ namespace GridKit
         variable_indices_.resize(size);
         residual_indices_.resize(size);
 
-        y_ext_            = std::make_unique<const ScalarT*[]>(n_extern_);
-        yp_ext_           = std::make_unique<const ScalarT*[]>(n_extern_);
-        f_ext_            = std::make_unique<ScalarT*[]>(n_extern_);
+        y_ext_            = std::make_unique<const ScalarT*[]>(size);
+        yp_ext_           = std::make_unique<const ScalarT*[]>(size);
+        f_ext_            = std::make_unique<ScalarT*[]>(size);
         connection_nodes_ = std::make_unique<size_t[]>(size);
 
         allocated_ = true;
