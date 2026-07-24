@@ -21,6 +21,7 @@ rm -rf ${INSTALL_BUILD_CONSUME}/build/* &&
 cmake -B ${INSTALL_BUILD_CONSUME}/build \
     -S ${INSTALL_BUILD_CONSUME} \
     -DCMAKE_CXX_COMPILER=${COMPILER} \
+    -DCMAKE_CXX_FLAGS="${@:3}" \
     -DGridKit_DIR=${GridKit_DIR} &&
 
 # Build and install

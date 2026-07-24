@@ -8,6 +8,12 @@
         "freq_base": 60.0,
         "va_base": 100e6
     },
+    "monitors": [
+        {
+            "file_name": "mon.csv",
+            "format": "csv"
+        }
+    ],
     "buses": [
         { 
             "number": 0,
@@ -18,7 +24,7 @@
                 "Vi":0.09999703952427966
             },
             "params": {"kv": 115.0},
-            "mon": ["Vr", "Vi"]
+            "mon": ["Vm"]
         },
         { 
             "number": 1,
@@ -68,7 +74,7 @@
                 "S12":0.0,
                 "mva": 100.0
             },
-            "mon": ["delta", "omega"]
+            "mon": ["speed"]
         },
         {
             "class": "Tgov1",
@@ -104,7 +110,8 @@
                 "Se1":0.04,
                 "Se2":0.33,
                 "Ispdlim":0.0
-            }
+            },
+            "mon": ["efd"]
         },
         { 
             "class": "BusFault",
