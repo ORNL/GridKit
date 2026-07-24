@@ -19,6 +19,15 @@ namespace GridKit
       return str;
     }
 
+    std::string strip(std::string str)
+    {
+      auto notspace = [](char c)
+      { return !std::isspace(c); };
+      str.erase(begin(str), std::find_if(begin(str), end(str), notspace));
+      str.erase(std::find_if(rbegin(str), rend(str), notspace).base(), end(str));
+      return str;
+    }
+
     /**
      * @brief Attempt to parse a string to the given type
      *
@@ -31,7 +40,7 @@ namespace GridKit
 
       T ret;
 
-      auto ss = std::stringstream(str);
+      auto ss = std::stringstream(strip(str));
       ss >> ret;
 
       if (ss.fail() || !ss.eof())
