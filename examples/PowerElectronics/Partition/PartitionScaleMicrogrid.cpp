@@ -436,8 +436,8 @@ RunResult printMicrogridSystems(index_type N_size, index_type num_partitions)
     // Distribute external variables
     for (size_t i = 0; i < partition->getExternSize(); i++)
     {
-      partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
-      partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
+      partition->getExternalDataY()[i]  = y[partition->getExternalDataIndices()[i]];
+      partition->getExternalDataYP()[i] = yp[partition->getExternalDataIndices()[i]];
     }
 
     auto* partition_y  = partition->y().getData();

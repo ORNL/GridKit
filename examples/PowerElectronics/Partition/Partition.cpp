@@ -75,8 +75,8 @@ int main(int /* argc */, char const** /* argv */)
 
     for (size_t i = 0; i < partition->getExternSize(); i++)
     {
-      partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
-      partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
+      partition->getExternalDataY()[i]  = y[partition->getExternalDataIndices()[i]];
+      partition->getExternalDataYP()[i] = yp[partition->getExternalDataIndices()[i]];
     }
 
     auto* partition_y  = partition->y().getData();

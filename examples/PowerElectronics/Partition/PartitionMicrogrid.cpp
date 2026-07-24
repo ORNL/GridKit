@@ -90,6 +90,8 @@ int main()
   double Lload2 = 1.0 / (2.0 * M_PI * 50.0);
 
   using SignalNode = GridKit::PowerElectronics::SignalNode<double, size_t>;
+  using Subsystem  = GridKit::SubsystemModel<double, size_t>;
+
   SignalNode dg_signal;
 
   sysmodel->addNode(&dg_signal);
@@ -167,8 +169,8 @@ int main()
 
   sysmodel->allocate();
 
-  GridKit::SubsystemModel<double, size_t>* partition1 = new GridKit::SubsystemModel<double, size_t>();
-  GridKit::SubsystemModel<double, size_t>* partition2 = new GridKit::SubsystemModel<double, size_t>();
+  Subsystem* partition1 = new Subsystem();
+  Subsystem* partition2 = new Subsystem();
 
   GridKit::MicrogridLine<double, size_t>          l2copy(*l2);
   GridKit::BusPartitionInterface<double, size_t>* busInterface1 = new GridKit::BusPartitionInterface<double, size_t>(bus2, l2copy, 14);
@@ -232,13 +234,30 @@ int main()
   {
     partition->allocate();
 
+    // test hold and release methods
+    partition->release();
+    partition->hold();
+
     partition->updateTime(2, 5);
 
-    for (size_t i = 0; i < partition->getExternSize(); i++)
+    // Test setTimeFunction function
+    auto forcing = [&]([[maybe_unused]] double t) -> Subsystem::ForcingData
     {
-      partition->getExternalDataY()[i]  = y[partition->getExternalIndices()[i]];
-      partition->getExternalDataYP()[i] = yp[partition->getExternalIndices()[i]];
-    }
+      auto ext_size = partition->getExternSize();
+
+      std::vector<double> y_ext(ext_size);
+      std::vector<double> yp_ext(ext_size);
+
+      for (size_t i = 0; i < partition->getExternSize(); i++)
+      {
+        y_ext[i]  = y[partition->getExternalDataIndices()[i]];
+        yp_ext[i] = yp[partition->getExternalDataIndices()[i]];
+      }
+
+      return {y_ext, yp_ext};
+    };
+
+    partition->setTimeFunction(forcing);
 
     auto* partition_y  = partition->y().getData();
     auto* partition_yp = partition->yp().getData();
