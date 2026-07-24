@@ -2,7 +2,7 @@
     "header": {
         "format_version": 0.1,
         "format_revision": 1,
-        "case_name": "ThreeBusExample_Classical",
+        "case_name": "ThreeBusExample_ZipLoad",
         "case_description": "None",
         "case_comments": "None",
         "freq_base": 60.0,
@@ -17,11 +17,7 @@
                 "Vr": 1.06,
                 "Vi": 0.0
             },
-            "params": {"kv": 138.0},
-            "mon": [
-                "Vr",
-                "Vi"
-            ]
+            "params": {"kv": 138.0}
         },
         {
             "number": 1,
@@ -32,10 +28,7 @@
                 "Vi": -0.009675621941024773
             },
             "params": {"kv": 138.0},
-            "mon": [
-                "Vr",
-                "Vi"
-            ]
+            "mon": ["Vm"]
         },
         {
             "number": 2,
@@ -46,10 +39,7 @@
                 "Vi": -0.13122476630506485
             },
             "params": {"kv": 138.0},
-            "mon": [
-                "Vr",
-                "Vi"
-            ]
+            "mon": ["Vm"]
         }
     ],
     "devices": [
@@ -135,10 +125,7 @@
                 "Ra": 0.0,
                 "Xdp": 0.17
             },
-            "mon": [
-                "delta",
-                "omega"
-            ]
+            "mon": ["speed"]
         },
         {
             "class": "GenClassical",
@@ -154,10 +141,7 @@
                 "Ra": 0.0,
                 "Xdp": 0.2
             },
-            "mon": [
-                "delta",
-                "omega"
-            ]
+            "mon": ["speed"]
         }
     ]
 }

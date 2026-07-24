@@ -68,7 +68,7 @@ namespace GridKit
       /// path to reference file for validation
       fs::path                 reference_file;
       /// Error tolerance (between output file and reference file)
-      double                   error_tol;
+      std::vector<double>      error_tol;
       /// Type of total error (relative or absolute)
       Testing::ErrorType       error_type;
       /// Smallest value at which to scale for relative error
@@ -80,8 +80,9 @@ namespace GridKit
     using json = ::nlohmann::json;
     using Log  = ::GridKit::Utilities::Logger;
 
-    inline constexpr double DEFAULT_SOLVER_REL_TOL = 1.0e-7;
-    inline constexpr double DEFAULT_SOLVER_ABS_TOL = 1.0e-9;
+    inline constexpr double DEFAULT_SOLVER_REL_TOL   = 1.0e-7;
+    inline constexpr double DEFAULT_SOLVER_ABS_TOL   = 1.0e-9;
+    inline constexpr double DEFAULT_VERIFICATION_TOL = 1.0e-4;
 
     /**
      * @brief JSON parser implemntation for `StudyData`
@@ -123,7 +124,22 @@ namespace GridKit
         j.at("reference_file").get_to(c.reference_file);
       }
 
-      c.error_tol = j.value("error_tolerance", 1.0e-4);
+      if (j.contains("error_tolerance"))
+      {
+        auto& tolj = j.at("error_tolerance");
+        if (tolj.is_array())
+        {
+          tolj.get_to(c.error_tol);
+        }
+        else
+        {
+          tolj.get_to(c.error_tol.emplace_back());
+        }
+      }
+      else
+      {
+        c.error_tol.push_back(DEFAULT_VERIFICATION_TOL);
+      }
 
       using ErrorType = Testing::ErrorType;
       if (j.contains("error_type"))
@@ -271,7 +287,18 @@ namespace GridKit
         }
 
         // Check against specified tolerance
-        status *= errorSet->total_error.max_value < study_data.error_tol;
+        if (study_data.error_tol.size() > 1)
+        {
+          status *= study_data.error_tol.size() == errorSet->var_errors.size();
+          for (std::size_t i = 0; i < study_data.error_tol.size(); ++i)
+          {
+            status *= errorSet->var_errors[i].max_value < study_data.error_tol[i];
+          }
+        }
+        else
+        {
+          status *= errorSet->total_error.max_value < study_data.error_tol[0];
+        }
 
         if (print_results)
         {
