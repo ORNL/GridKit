@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/LLNL/GridKit/cases/PhasorDynamics/schema/case.schema.json",
+  "title": "GridKit case",
+  "description": "A case: document header, system model parameters, a flat set of model instances with their wiring, the operating point, and output sinks. This schema owns the envelope; class-specific rules (port, parameter, and monitor names and types) come from the model specs (model.schema.json).",
+  "type": "object",
+  "properties": {
+    "header": {
+      "type": "object",
+      "description": "Document metadata only; nothing physical.",
+      "properties": {
+        "format_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Case format version this document is written against."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Case name."
+        },
+        "date_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime associated with the case."
+        },
+        "description": {
+          "type": "string",
+          "description": "What is modeled in the case."
+        },
+        "comments": {
+          "type": "string",
+          "description": "Additional notes."
+        }
+      },
+      "required": ["format_version", "name"],
+      "additionalProperties": false
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Parameters of the system model.",
+      "properties": {
+        "freq_base": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 60.0,
+          "description": "System frequency base [Hz]."
+        },
+        "va_base": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 100e6,
+          "description": "System power base [VA]."
+        }
+      },
+      "additionalProperties": false
+    },
+    "models": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/name" },
+      "additionalProperties": { "$ref": "#/$defs/instance" },
+      "description": "Model instances: name to instance. Map keys are the identities wiring and init refer to, so names are unique by construction."
+    },
+    "init": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_]*/[A-Za-z][A-Za-z0-9_]*$" },
+      "additionalProperties": { "type": "number" },
+      "description": "Operating point: instance/port to initial value (b1/vr). The models are structure; init is state — swap operating points without touching the models."
+    },
+    "output": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sink" },
+      "description": "Output sinks for monitored variables. Omitted means default CSV to stdout."
+    }
+  },
+  "required": ["header", "models"],
+  "additionalProperties": false,
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(/[A-Za-z][A-Za-z0-9_]*)?$",
+      "description": "An instance (b1) or an instance's port (gen/speed)."
+    },
+    "instance": {
+      "type": "object",
+      "description": "One use of a model class.",
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/name",
+          "description": "Registered model class to instantiate."
+        },
+        "wiring": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "$ref": "#/$defs/ref" },
+          "description": "Own port to its source: a bus terminal takes a bus instance (bus: b1), an input takes another instance's output (pmech: gov/pmech). Keys are own inputs and bus terminals, so every input has one source by construction; an omitted input is held constant."
+        },
+        "parameters": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "type": ["number", "boolean", "string"] },
+          "description": "Parameter values; names and types per the class's spec. An omitted parameter assumes its typical value."
+        },
+        "monitors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true,
+          "description": "What to record: input and output variables and derived monitors of this class, by name."
+        }
+      },
+      "required": ["class"],
+      "additionalProperties": false
+    },
+    "sink": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Output file; omitted means stdout."
+        },
+        "format": {
+          "enum": ["CSV", "JSON", "YAML"]
+        },
+        "delim": {
+          "type": "string",
+          "description": "CSV delimiter; default ','."
+        }
+      },
+      "required": ["format"],
+      "additionalProperties": false
+    }
+  }
+}
