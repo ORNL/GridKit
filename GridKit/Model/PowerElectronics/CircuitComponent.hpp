@@ -494,10 +494,6 @@ namespace GridKit
     std::unique_ptr<const ScalarT*[]> yp_ext_;
     std::unique_ptr<ScalarT*[]>       f_ext_;
 
-    VectorT y_;
-    VectorT yp_;
-    VectorT f_;
-
     std::vector<bool> tag_;
     VectorT           abs_tol_;
 
@@ -520,6 +516,11 @@ namespace GridKit
     IdxT idc_;
 
     bool allocated_{false};
+
+  private:
+    VectorT y_;
+    VectorT yp_;
+    VectorT f_;
   };
 
 } // namespace GridKit
