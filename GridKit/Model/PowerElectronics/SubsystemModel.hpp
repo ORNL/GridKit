@@ -5,6 +5,7 @@
 #include <cassert>
 #include <functional>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -21,14 +22,16 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class SubsystemModel : public PowerElectronicsModel<ScalarT, IdxT>
   {
+  public:
+    using ForcingData  = std::tuple<std::vector<ScalarT>, std::vector<ScalarT>>;
+    using TimeFunction = std::function<ForcingData(ScalarT)>;
 
+  protected:
     using SystemModel    = PowerElectronicsModel<ScalarT, IdxT>;
     using RealT          = typename CircuitComponent<ScalarT, IdxT>::RealT;
     using CsrMatrixT     = typename CircuitComponent<ScalarT, IdxT>::CsrMatrixT;
     using component_type = CircuitComponent<ScalarT, IdxT>;
     using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
-    using ForcingData    = std::pair<std::vector<ScalarT>, std::vector<ScalarT>>;
-    using TimeFunction   = std::function<ForcingData(ScalarT)>;
 
     using SystemModel::abs_tol_;
     using SystemModel::allocated_;
@@ -78,9 +81,7 @@ namespace GridKit
     int allocate() override
     {
 
-      this->createGlobalToInternalMap();
-
-      this->mapGlobalToLocal();
+      hold();
 
       n_intern_ = internal_map_.size();
       n_extern_ = external_map_.size();
@@ -102,7 +103,7 @@ namespace GridKit
       yp_ext_.resize(n_extern_);
       f_ext_.resize(n_extern_);
 
-      external_indices_.resize(n_extern_);
+      external_data_indices_.resize(n_extern_);
 
       // Store the mapping from local subsystem indices back to their global system indices
       for (const auto [global_idx, local_idx] : internal_map_)
@@ -113,7 +114,7 @@ namespace GridKit
       // Store the global indices of all external coupling variables.
       for (const auto [global_idx, local_idx] : external_map_)
       {
-        external_indices_[local_idx - n_intern_] = global_idx;
+        external_data_indices_[local_idx - n_intern_] = global_idx;
       }
 
       size_t      component_internal_idx = 0;
@@ -242,15 +243,12 @@ namespace GridKit
      *
      * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
      */
-    int distributeVectors()
+    int distributeVectors() override
     {
 
       if (forcing_function_)
       {
-        const auto forcing = (*forcing_function_)(time_);
-
-        const auto& y_forcing  = forcing.first;
-        const auto& yp_forcing = forcing.second;
+        const auto [y_forcing, yp_forcing] = (*forcing_function_)(time_);
 
         assert(y_forcing.size() == y_ext_.size());
         assert(yp_forcing.size() == yp_ext_.size());
@@ -294,8 +292,232 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief Add a component to the subsystem.
+     *
+     * Rejected while connections are in the local-indexed state, since the
+     * component's stored connection indices would otherwise be interpreted
+     * inconsistently with the rest of the subsystem. Call release() first.
+     *
+     * @param[in] component Component to add.
+     */
+    void addComponent(component_type* component)
+    {
+      if (is_comp_in_local_state)
+      {
+        std::cerr << "SubsystemModel::addComponent: cannot add component while "
+                     "in local-indexed state. Call release() first.\n";
+        return;
+      }
+
+      SystemModel::addComponent(component);
+    }
+
+    /**
+     * @brief Add a node to the subsystem.
+     *
+     * Rejected while connections are in the local-indexed state, since the
+     * node's stored connection indices would otherwise be interpreted
+     * inconsistently with the rest of the subsystem. Call release() first.
+     *
+     * @param[in] node Node to add.
+     */
+    void addNode(node_type* node)
+    {
+      if (is_comp_in_local_state)
+      {
+        std::cerr << "SubsystemModel::addNode: cannot add node while in "
+                     "local-indexed state. Call release() first.\n";
+        return;
+      }
+
+      SystemModel::addNode(node);
+    }
+
+    /**
+     * @brief Acquire the subsystem's global-to-local index mappings.
+     *
+     * Builds the internal/external index maps via buildIndexMappings(),
+     * then converts component/node connections from global to local
+     * indices via mapGlobalToLocal().
+     *
+     * Call this after modifying subsystem topology (adding or removing
+     * components/nodes) and before allocate(), to (re)establish local
+     * indexing. Pairs with release(), which undoes this.
+     *
+     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     */
+    int hold()
+    {
+      buildIndexMappings();
+
+      if (int err_code = mapGlobalToLocal())
+      {
+        return err_code;
+      }
+
+      return 0;
+    }
+
+    /**
+     * @brief Release the subsystem's global-to-local index mappings.
+     *
+     * If components/nodes currently hold local indices, they are first
+     * converted back to their original global indices via
+     * mapLocalToGlobal(). The internal/external index maps built by
+     * buildIndexMappings() are then cleared, and the model is marked as
+     * not allocated.
+     *
+     *
+     * Call this before modifying subsystem topology (adding or removing
+     * components/nodes), so stale local indices aren't left dangling.
+     *
+     * @return int 0 if successful, positive if there's a recoverable error, negative if unrecoverable
+     */
+    int release()
+    {
+      if (int err_code = mapLocalToGlobal())
+      {
+        return err_code;
+      }
+
+      internal_map_.clear();
+      external_map_.clear();
+
+      allocated_ = false;
+
+      return 0;
+    }
+
+    const std::vector<IdxT>& getExternalDataIndices()
+    {
+      return external_data_indices_;
+    }
+
+    std::vector<ScalarT>& getExternalDataY()
+    {
+      return y_ext_;
+    }
+
+    std::vector<ScalarT>& getExternalDataYP()
+    {
+      return yp_ext_;
+    }
+
+    std::vector<ScalarT>& getExternalDataF()
+    {
+      return f_ext_;
+    }
+
+    void setTimeFunction(TimeFunction function)
+    {
+      forcing_function_ = std::move(function);
+    }
+
+    const std::unordered_map<IdxT, IdxT>& getInternalMap() const
+    {
+      return internal_map_;
+    }
+
+    const std::unordered_map<IdxT, IdxT>& getExternalMap() const
+    {
+      return external_map_;
+    }
+
+  private:
+    /**
+     * @brief Replace local subsystem connection indices with their original global indices
+     * for every component and node.
+     *
+     * Inverse of mapGlobalToLocal(). Internal connections (index < internal
+     * size) are mapped back through this subsystem's own node-connection
+     * table; external connections are mapped back through
+     * @c external_data_indices_. Entries equal to @c neg1_ represent no
+     * connection and are left unchanged.
+     *
+     * @return Always returns 0.
+     */
+    int mapLocalToGlobal()
+    {
+      if (!is_comp_in_local_state)
+      {
+        return 0;
+      }
+
+      for (auto* component : components_)
+      {
+
+        for (IdxT i = 0; i < component->size(); i++)
+        {
+          IdxT index = component->getNodeConnection(i);
+
+          if (index == neg1_)
+          {
+            continue;
+          }
+          else if (index < this->getInternalSize())
+          {
+            component->setExternalConnectionNodes(i, this->getNodeConnection(index));
+          }
+          else
+          {
+            component->setExternalConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
+          }
+        }
+      }
+
+      for (auto* node : nodes_)
+      {
+
+        for (IdxT i = 0; i < node->size(); i++)
+        {
+          IdxT index = node->getNodeConnection(i);
+
+          if (index == neg1_)
+          {
+            continue;
+          }
+          else if (index < this->getInternalSize())
+          {
+            node->setExternalConnectionNodes(i, this->getNodeConnection(index));
+          }
+          else
+          {
+            node->setExternalConnectionNodes(i, external_data_indices_[index - this->getInternalSize()]);
+          }
+        }
+      }
+
+      is_comp_in_local_state = false;
+
+      return 0;
+    }
+
+    /**
+     * @brief Replace global connection indices with local subsystem indices for every component
+     * and node.
+     *
+     * After the internal and external maps have been constructed, each component
+     * and node still stores the original global connection indices. This function
+     * traverses every connection and replaces each global index with its
+     * corresponding local subsystem index.
+     *
+     * Internal connections are mapped using @c internal_map_, while connections
+     * that reference variables outside the subsystem are mapped using
+     * @c external_map_. Entries equal to @c neg1_ represent no connection and
+     * are left unchanged.
+     *
+     * @return Always returns 0.
+     */
+
     int mapGlobalToLocal()
     {
+
+      if (is_comp_in_local_state)
+      {
+        return 0;
+      }
+
       for (auto* component : components_)
       {
 
@@ -340,11 +562,33 @@ namespace GridKit
         }
       }
 
+      is_comp_in_local_state = true;
+
       return 0;
     }
 
-    void createGlobalToInternalMap()
+    /**
+     * @brief Construct the mappings from global variable indices to local
+     * subsystem indices.
+     *
+     * The subsystem stores its variables in a contiguous local ordering. This
+     * function assigns each global variable index a corresponding local index and
+     * separates them into internal and external variables.
+     *
+     * Internal variables are those owned by this subsystem, while external
+     * variables are owned by neighboring subsystems but are required for residual
+     * and Jacobian evaluation.
+     */
+    void buildIndexMappings()
     {
+
+      if (is_comp_in_local_state)
+      {
+        return;
+      }
+
+      internal_map_.clear();
+      external_map_.clear();
 
       size_t component_internal_idx = 0;
       // First pass: Map global component indices to local subsystem indices.
@@ -396,51 +640,17 @@ namespace GridKit
       }
     }
 
-    std::vector<IdxT>& getExternalIndices()
-    {
-      return external_indices_;
-    }
-
-    std::vector<ScalarT>& getExternalDataY()
-    {
-      return y_ext_;
-    }
-
-    std::vector<ScalarT>& getExternalDataYP()
-    {
-      return yp_ext_;
-    }
-
-    std::vector<ScalarT>& getExternalDataF()
-    {
-      return f_ext_;
-    }
-
-    void setTimeFunction(TimeFunction function)
-    {
-      forcing_function_ = std::move(function);
-    }
-
-    const std::unordered_map<IdxT, IdxT>& getInternalMap() const
-    {
-      return internal_map_;
-    }
-
-    const std::unordered_map<IdxT, IdxT>& getExternalMap() const
-    {
-      return external_map_;
-    }
-
-  private:
     std::unordered_map<IdxT, IdxT> internal_map_;
     std::unordered_map<IdxT, IdxT> external_map_;
-    std::vector<IdxT>              external_indices_;
+    std::vector<IdxT>              external_data_indices_;
 
     std::vector<ScalarT> y_ext_;
     std::vector<ScalarT> yp_ext_;
     std::vector<ScalarT> f_ext_;
 
     std::optional<TimeFunction> forcing_function_;
+
+    bool is_comp_in_local_state{false};
 
   }; // class SubsystemModel
 

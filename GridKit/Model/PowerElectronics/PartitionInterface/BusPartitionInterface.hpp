@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <cstddef>
-
 #include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
 #include <GridKit/Model/PowerElectronics/NodeBase.hpp>
 

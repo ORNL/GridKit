@@ -46,6 +46,7 @@ namespace GridKit
     const IdxT bus_i = bus.getNodeConnection(0);
     const IdxT bus_j = bus.getNodeConnection(1);
 
+    nnz_ = 0;
     for (IdxT k = 0; k < component_.nnz(); ++k)
     {
       const IdxT row_node = component_.getNodeConnection(cooRow[k]);
@@ -104,7 +105,7 @@ namespace GridKit
                 << "), Component(ID=" << component_.getIDcomponent()
                 << "). Please verify connection-node mappings and internal/external index assignments."
                 << std::endl;
-      assert(false);
+      return 1;
     }
 
     const auto n = component_.getInternalSize();
@@ -146,7 +147,7 @@ namespace GridKit
   }
 
   /**
-   * @brief Eval Micro Load
+   * @brief Eval Internal Residual
    */
   template <class ScalarT, typename IdxT>
   int BusPartitionInterface<ScalarT, IdxT>::evaluateInternalResidual()
@@ -171,7 +172,7 @@ namespace GridKit
 
     for (size_t i = 0; i < static_cast<size_t>(component_.size()); ++i)
     {
-      if (extern_indices.contains(i))
+      if (extern_indices.contains(static_cast<IdxT>(i)))
       {
         component_y[external]  = y[i];
         component_yp[external] = yp[i];
@@ -185,12 +186,16 @@ namespace GridKit
       }
     }
 
+    component_.y().setDataUpdated();
+    component_.y().setDataUpdated();
+
     component_.evaluateResidual();
 
     const auto* residual = component_.getResidual().getData();
 
     // TODO: This assumes that external variables are ordered after all internal
-    // variables in the local indexing. To make this more robust, we need to get rid of this assumption.
+    // variables in the indexing. To make this more robust, we need to get rid of this assumption
+    // (although true for all components that we have in GridKit).
     f[bus_port_i_] = residual[bus_port_i_];
     f[bus_port_j_] = residual[bus_port_j_];
 
@@ -200,7 +205,7 @@ namespace GridKit
   }
 
   /**
-   * @brief Generate Jacobian for Micro Load
+   * @brief Generate Jacobian for
    *
    * @tparam ScalarT
    * @tparam IdxT
