@@ -1,0 +1,12 @@
+{
+    "system_model_file": "ThreeBusClassical.case.json",
+    "dt_monitor": 0.004166666666666667,
+    "tmax":  10,
+    "events": [
+        {"time": 1, "type": "fault_on", "element_id": 0},
+        {"time": 1.1, "type": "fault_off", "element_id": 0}
+    ],
+    "output_file": "ThreeBus_six_cycle_fault_bus1.csv",
+    "reference_file": "ThreeBusClassical.ref.csv",
+    "error_tolerance":  3e-3
+}

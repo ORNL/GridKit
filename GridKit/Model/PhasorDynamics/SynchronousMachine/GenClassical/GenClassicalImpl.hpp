@@ -158,6 +158,8 @@ namespace GridKit
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
                     { return y_.getData()[1]; });
+      monitor_->set(Variable::speed, [this]
+                    { return 1.0 + y_.getData()[1]; });
     }
 
     /**

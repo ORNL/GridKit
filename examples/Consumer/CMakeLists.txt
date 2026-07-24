@@ -12,8 +12,7 @@ if(GRIDKIT_ENABLE_SUNDIALS)
     FILES ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasicJson.cpp
     DESTINATION ${_rel_consumer_path}
     RENAME consumer.cpp)
-  install(FILES ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.hpp
-                ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.case.json
+  install(FILES ${_examples_dir}/PhasorDynamics/Tiny/TwoBus/Basic/TwoBusBasic.case.json
           DESTINATION ${_rel_consumer_path})
   list(
     APPEND
@@ -41,4 +40,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/GridKitConsumer/CMakeLists.txt
 
 # Add target to build and test the example project after install
 add_custom_target(
-  test_install COMMAND ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER})
+  test_install
+  COMMAND
+    ${_abs_consumer_path}/test.sh ${CMAKE_INSTALL_PREFIX} ${CMAKE_CXX_COMPILER}
+    "${CMAKE_CXX_FLAGS}")
