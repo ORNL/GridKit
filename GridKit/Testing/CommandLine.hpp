@@ -10,8 +10,6 @@ namespace GridKit
 
     /**
      * @brief Conveniently create a command-line string
-     *
-     * \example[33] CliOptionsTests.cpp
      */
     template <int NArgs>
     struct CommandLine

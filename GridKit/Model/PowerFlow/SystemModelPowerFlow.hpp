@@ -1,6 +1,6 @@
 
 /**
- * @file SystemSteadyStaeModel.hpp
+ * @file SystemModelPowerFlow.hpp
  * @author Slaven Peles <slaven.peles@pnnl.gov>
  *
  * Contains definition of power flow analysis class.
@@ -12,7 +12,12 @@
 #include <iostream>
 #include <vector>
 
+#include <GridKit/Model/PowerFlow/Branch/Branch.hpp>
+#include <GridKit/Model/PowerFlow/Bus/BusFactory.hpp>
+#include <GridKit/Model/PowerFlow/Generator/GeneratorFactory.hpp>
+#include <GridKit/Model/PowerFlow/Load/Load.hpp>
 #include <GridKit/Model/PowerFlow/ModelEvaluatorImpl.hpp>
+#include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
 #include <GridKit/ScalarTraits.hpp>
 
 namespace GridKit

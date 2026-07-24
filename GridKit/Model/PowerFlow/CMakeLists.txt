@@ -15,6 +15,7 @@ add_subdirectory(MiniGrid)
 
 install(
   FILES MatpowerParser.hpp
+        ModelEvaluatorImpl.hpp
         PowerFlowData.hpp
         SystemModel.hpp
         SystemModelPowerFlow.hpp

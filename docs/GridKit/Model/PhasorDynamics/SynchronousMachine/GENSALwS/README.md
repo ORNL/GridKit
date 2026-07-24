@@ -1,6 +1,6 @@
 # GENSAL
 
-```{include} ../../../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENSALwS/README.md
+```{include} ../../../../../../GridKit/Model/PhasorDynamics/SynchronousMachine/GENSAL/README.md
 :start-line: 1
 :relative-images:
 ```

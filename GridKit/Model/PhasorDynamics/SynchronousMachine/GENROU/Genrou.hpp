@@ -1,5 +1,5 @@
 /**
- * @file Genrou.cpp
+ * @file Genrou.hpp
  * @author Adam Birchfield (abirchfield@tamu.edu)
  * @author Slaven Peles (peless@ornl.gov)
  * @brief Declaration of a GENROU generator model.
@@ -36,33 +36,33 @@ namespace GridKit
     /// Internal variables of a `Genrou`
     enum class GenrouInternalVariables : size_t
     {
-      DELTA,  ///< $\delta$
-      OMEGA,  ///< $\omega$
-      PSIPD,  ///< $\psi'_d$
-      PSIPQ,  ///< $\psi'_q$
-      EPD,    ///< $E'_d$
-      EPQ,    ///< $E'_q$
-      VD,     ///< $V_d$
-      VQ,     ///< $V_q$
-      ID,     ///< $I_d$
-      IQ,     ///< $I_q$
-      IR,     ///< $I_r$
-      II,     ///< $I_i$
-      PSIPPQ, ///< $\psi''_q$
-      PSIPPD, ///< $\psi''_d$
-      PSIPP,  ///< $\psi''$
-      TE,     ///< $T_e$
-      KSAT,   ///< $k_{sat}$
+      DELTA,  ///< \f$\delta\f$
+      OMEGA,  ///< \f$\omega\f$
+      PSIPD,  ///< \f$\psi'_d\f$
+      PSIPQ,  ///< \f$\psi'_q\f$
+      EPD,    ///< \f$E'_d\f$
+      EPQ,    ///< \f$E'_q\f$
+      VD,     ///< \f$V_d\f$
+      VQ,     ///< \f$V_q\f$
+      ID,     ///< \f$I_d\f$
+      IQ,     ///< \f$I_q\f$
+      IR,     ///< \f$I_r\f$
+      II,     ///< \f$I_i\f$
+      PSIPPQ, ///< \f$\psi''_q\f$
+      PSIPPD, ///< \f$\psi''_d\f$
+      PSIPP,  ///< \f$\psi''\f$
+      TE,     ///< \f$T_e\f$
+      KSAT,   ///< \f$k_{sat}\f$
       MAXIMUM,
     };
 
     /// External variables of a `Genrou`
     enum class GenrouExternalVariables : size_t
     {
-      VR,  ///< $V_r$
-      VI,  ///< $V_i$
-      PM,  ///< $P_m$
-      EFD, ///< $E_{fd}$
+      VR,  ///< \f$V_r\f$
+      VI,  ///< \f$V_i\f$
+      PM,  ///< \f$P_m\f$
+      EFD, ///< \f$E_{fd}\f$
       MAXIMUM,
     };
 

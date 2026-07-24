@@ -23,7 +23,7 @@ namespace GridKit
    *
    * @tparam ScalarT
    * @param[out] table object in memory where the data from the input stream is
-   * @param[in] filename input stream to space and newline separated data
+   * @param[in] idata input stream containing space- and newline-separated data
    * @param[out] ti initial time returned
    * @param[out] tf final time returned
    *

@@ -108,9 +108,7 @@ namespace GridKit
     /**
      * @brief Allocate system vectors and construct the system CSR Jacobian
      *
-     * @param[in] s size of the vector (total number of unknowns)
-     *
-     * @post System model vectors allocated with size s
+     * @post System model vectors allocated with the computed total number of unknowns
      * @post CSR Jacobian sparsity pattern is computed
      * @post COO->CSR mapping is computed
      * @post Every component's \ref CircuitComponent::y_int_, \ref CircuitComponent::yp_int_, and \ref CircuitComponent::f_int_ pointers
@@ -416,7 +414,7 @@ namespace GridKit
     }
 
     /**
-     * @brief Creates the system Jacobian representing \alpha dF/dy' + dF/dy
+     * @brief Creates the system Jacobian representing \f$\alpha dF/dy' + dF/dy\f$
      *
      * Updates the CSR Jacobian values using the per-component mappings
      * computed during allocate().
