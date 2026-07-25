@@ -5,8 +5,5 @@
 :titlesonly:
 :hidden:
 
-Large <Large/README>
-Medium <Medium/README>
-Small <Small/README>
 Tiny <Tiny/README>
 ```
