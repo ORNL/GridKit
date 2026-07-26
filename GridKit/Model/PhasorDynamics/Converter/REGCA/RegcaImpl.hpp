@@ -73,26 +73,24 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type Regca<scalar_type, index_type>::lpTarget(scalar_type ip) const
       {
-        return -Rpmax_ - (Mp_ - Rpmax_) * Math::sigmoid(ip);
+        const ScalarT sigma_ip = Math::sigmoid(ip);
+        return -Rpmax_ * (ONE<RealT> - sigma_ip) - Mp_ * sigma_ip;
       }
 
       template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::upTarget(
-          scalar_type ip,
-          scalar_type il) const
+      scalar_type Regca<scalar_type, index_type>::upTarget(scalar_type ip) const
       {
         const ScalarT sigma_ip = Math::sigmoid(ip);
-        return Mp_ * (ONE<RealT> - sigma_ip)
-               + Rpmax_ * sigma_ip * (bypass_lvpl_ + use_lvpl_ * Math::sigmoid(il - ip));
+        return Mp_ * (ONE<RealT> - sigma_ip) + Rpmax_ * sigma_ip;
       }
 
       template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::solveInitialHvrcmCurrent(
-          scalar_type voltage_margin) const
+      scalar_type Regca<scalar_type, index_type>::smoothConstraintCorrection(
+          scalar_type margin) const
       {
         static constexpr RealT log_two = static_cast<RealT>(0.6931471805599453);
 
-        const ScalarT scaled_margin = Math::MU<RealT> * voltage_margin;
+        const ScalarT scaled_margin = Math::MU<RealT> * margin;
 
         // q = ramp(q - m) gives q = -log(1 - exp(-mu * m)) / mu.
         // Evaluate log(1 - exp(-x)) without cancellation.
@@ -346,14 +344,16 @@ namespace GridKit
        * All differential states are initialized with zero derivative.
        *
        * The initial terminal-voltage magnitude must be at least VA1 and below
-       * Vhvmax.
+       * Vhvmax. With LVPL enabled, the initial active current must be below the
+       * LVPL ceiling.
        *
        * @pre allocate() has completed.
        * @pre verify() has reported no configuration errors.
        * @pre The terminal bus has been initialized.
        *
        * @return int 0 on success; nonzero when the terminal voltage is
-       *             non-positive, below VA1, or not below Vhvmax.
+       *             non-positive, below VA1, or not below Vhvmax, or when the
+       *             initial active current is not below the LVPL ceiling.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
@@ -395,29 +395,44 @@ namespace GridKit
         }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
-        // active-current command through the LVACM network-interface gain.
-        const ScalarT lvacm  = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
+        // active current through the LVACM network-interface gain.
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT ip0   = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
+        const ScalarT il0   = Math::linseg(vt, VL0_, VL1_, IL1_);
+
+        // The smooth LVPL target has a finite inverse only below the ceiling.
+        ScalarT ipcmd0 = ip0;
+        if (sL_)
+        {
+          const ScalarT current_margin = il0 - ip0;
+          if (current_margin <= ZERO<RealT>)
+          {
+            Log::error() << "Regca: initial active current must be below the LVPL "
+                         << "ceiling at initialization\n";
+            return 1;
+          }
+          ipcmd0 += smoothConstraintCorrection(current_margin);
+        }
 
         // Solve the smooth HVRCM constraint and preserve the requested Q0. The
         // Vhvmax check above keeps the voltage margin strictly positive, so the
         // solve is always finite.
-        const ScalarT iqextra0 = solveInitialHvrcmCurrent(Vhvmax_ - vt);
+        const ScalarT iqextra0 = smoothConstraintCorrection(Vhvmax_ - vt);
         const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
-        const ScalarT ir0      = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
-        const ScalarT ii0      = (-vr * qnet0 + vi * ipcmd0 * lvacm) / vt;
+        const ScalarT ir0      = (vi * qnet0 + vr * ip0 * lvacm) / vt;
+        const ScalarT ii0      = (-vr * qnet0 + vi * ip0 * lvacm) / vt;
 
         y[VM]      = vt;
         y[VT]      = vt;
-        y[IP]      = ipcmd0;
+        y[IP]      = ip0;
         y[IQ]      = iqcmd0;
         y[IQEXTRA] = iqextra0;
-        y[IL]      = Math::linseg(vt, VL0_, VL1_, IL1_);
+        y[IL]      = il0;
         y[IR]      = toSystemBase(ir0);
         y[II]      = toSystemBase(ii0);
         y[LP]      = lpTarget(y[IP]);
-        y[UP]      = upTarget(y[IP], y[IL]);
+        y[UP]      = upTarget(y[IP]);
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
@@ -516,10 +531,15 @@ namespace GridKit
         const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
 
+        // GridKit realizes the moving LVPL ceiling as a smooth current target,
+        // so a falling ceiling pulls Ip down without modifying Rup.
+        const ScalarT ip_target = bypass_lvpl_ * ipcmd
+                                  + use_lvpl_ * Math::min(ipcmd, il);
+
         // Form the unconstrained current derivatives, then apply the REGCA
         // recovery rate limits in p.u./s.
         const ScalarT fq = (iqcmd - iq) / Tg_;
-        const ScalarT fp = (ipcmd - ip) / Tg_;
+        const ScalarT fp = (ip_target - ip) / Tg_;
 
         const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
                                    + iq_use_lower_ * Math::max(fq, Rqmin_);
@@ -537,7 +557,7 @@ namespace GridKit
         f[IQEXTRA] = -iqextra + Math::ramp(iqextra - voltage_margin);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
         f[LP]      = -lp + lpTarget(ip);
-        f[UP]      = -up + upTarget(ip, il);
+        f[UP]      = -up + upTarget(ip);
         f[PBR]     = -pbr + vr * ir + vi * ii;
         f[QBR]     = -qbr + vi * ir - vr * ii;
 

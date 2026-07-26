@@ -19,6 +19,7 @@ GridKit uses the differentiable form shown in the algebraic equations below.
 - Internal current states and limiter quantities are on component base.
 - Signal ports, monitor outputs, branch currents, and branch powers are on system base.
 - LVACM uses $V_T$; LVPL uses $V_M$.
+- GridKit realizes LVPL as a smooth upper limit on the active-current target.
 - PowerWorld fields `Qmin`, `Khv`, and `Xe` are not parameters of this GridKit implementation.
 
 ## Block Diagram
@@ -128,7 +129,7 @@ $I_\mathrm{i}$             | [p.u.]   | Branch-current imaginary component      
 $I_q^\mathrm{extra}$       | [p.u.]   | Extra inductive current from high-voltage reactive current management | Component base
 $I_L$                      | [p.u.]   | LVPL upper-limit current curve                              | Component base; function of $V_M$
 $\ell_p$                   | [p.u./s] | Smooth active-current lower rate bound                      | Component base; equivalent to diagram `Rdown`
-$u_p$                      | [p.u./s] | Smooth active-current upper rate bound                      | Component base; effective `Rup`
+$u_p$                      | [p.u./s] | Smooth active-current upper rate bound                      | Component base; equivalent to diagram `Rup`
 $P^\mathrm{br}$            | [p.u.]   | Branch active power                                         | System base
 $Q^\mathrm{br}$            | [p.u.]   | Branch reactive power                                       | System base
 
@@ -148,14 +149,22 @@ $I_q^\mathrm{cmd}$              | [p.u.] | Unknown | Reactive-current command in
 
 ## Model Equations
 
-Define the pre-limit current derivatives:
+Define the LVPL-limited active-current target and the pre-limit current
+derivatives:
 
 ```math
 \begin{aligned}
+  I_p^\mathrm{tgt} &= s_L^\mathrm{off} k_\mathrm{base} I_p^\mathrm{cmd}
+                    + s_L\,\text{min}(k_\mathrm{base} I_p^\mathrm{cmd}, I_L) \\
   f_\mathrm{q} &= \dfrac{1}{T_\mathrm{g}} (k_\mathrm{base} I_q^\mathrm{cmd} - I_q) \\
-  f_\mathrm{p} &= \dfrac{1}{T_\mathrm{g}} (k_\mathrm{base} I_p^\mathrm{cmd} - I_p)
+  f_\mathrm{p} &= \dfrac{1}{T_\mathrm{g}} (I_p^\mathrm{tgt} - I_p)
 \end{aligned}
 ```
+
+Figure 1 places LVPL on the active-current integrator ceiling. GridKit's
+differentiable realization limits the target of the $T_\mathrm{g}$ state, so a
+falling ceiling drives $I_p$ down while the rate bounds $\ell_p$ and $u_p$
+remain functions only of the $R_p^{\max}$ sign rule.
 
 ### Differential Equations
 
@@ -191,12 +200,11 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1}) \\
   0 &= -\ell_p
-       - R_p^{\max}
-       - (M_p - R_p^{\max})\sigma(I_p) \\
+       - R_p^{\max}(1-\sigma(I_p))
+       - M_p\sigma(I_p) \\
   0 &= -u_p
        + M_p(1-\sigma(I_p))
-       + R_p^{\max}\sigma(I_p)
-         (s_L^\mathrm{off} + s_L\sigma(I_L - I_p)) \\
+       + R_p^{\max}\sigma(I_p) \\
   0 &= -P^\mathrm{br}
        + V_\mathrm{r} I_\mathrm{r} + V_\mathrm{i} I_\mathrm{i} \\
   0 &= -Q^\mathrm{br}
@@ -236,6 +244,11 @@ places the initial point on the upper LVACM plateau. The strict upper bound is
 required because the smooth HVRCM constraint has no finite root at or above the
 voltage limit.
 
+With LVPL enabled, REGCA additionally requires $I_{p,0} < I_{L,0}$. The strict
+inequality is required because the smooth LVPL target has no finite inverse at
+the ceiling. Initialization rejects an operating point that violates either
+requirement.
+
 Subscript $0$ denotes initial values; all internal derivatives are initialized
 to zero:
 
@@ -247,6 +260,20 @@ to zero:
     &= V_{T,0} \\
   A_0^\mathrm{LVACM}
     &= \text{linseg}(V_{T,0}; V_{A0}, V_{A1}, 1) \\
+  I_{L,0}
+    &= \text{linseg}(V_{T,0}; V_{L0}, V_{L1}, I_{L1}) \\
+  I_{p,0}
+    &= \dfrac{k_\mathrm{base}P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
+  \delta_{p,0}
+    &= 0, \qquad s_L=0 \\
+  \delta_{p,0}
+    &\leftarrow \text{nonnegative solution of }
+       \delta_{p,0}
+       = \text{ramp}\!\left(
+           \delta_{p,0}-(I_{L,0}-I_{p,0})
+         \right), \qquad s_L=1 \\
+  k_\mathrm{base} I_{p,0}^\mathrm{cmd}
+    &= I_{p,0}+\delta_{p,0} \\
   I_{q,0}^\mathrm{extra}
     &\leftarrow \text{nonnegative solution of }
        0 = -I_{q,0}^\mathrm{extra}
@@ -254,13 +281,9 @@ to zero:
            I_{q,0}^\mathrm{extra}
            - (V_\mathrm{hv}^{\max} - V_{T,0})
          \right) \\
-  I_{p,0}^\mathrm{cmd}
-    &= \dfrac{P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
   I_{q,0}^\mathrm{cmd}
     &= \dfrac{Q_0}{V_{T,0}}
        + \dfrac{I_{q,0}^\mathrm{extra}}{k_\mathrm{base}} \\
-  I_{p,0}
-    &= k_\mathrm{base} I_{p,0}^\mathrm{cmd} \\
   I_{q,0}
     &= k_\mathrm{base} I_{q,0}^\mathrm{cmd}
 \end{aligned}
@@ -270,15 +293,12 @@ The remaining algebraic quantities are then initialized as follows:
 
 ```math
 \begin{aligned}
-  I_{L,0}
-    &= \text{linseg}(V_{T,0}; V_{L0}, V_{L1}, I_{L1}) \\
   \ell_{p,0}
-    &= -R_p^{\max}
-       - (M_p - R_p^{\max})\sigma(I_{p,0}) \\
+    &= -R_p^{\max}(1-\sigma(I_{p,0}))
+       - M_p\sigma(I_{p,0}) \\
   u_{p,0}
     &= M_p(1-\sigma(I_{p,0}))
-       + R_p^{\max}\sigma(I_{p,0})
-         (s_L^\mathrm{off} + s_L\sigma(I_{L,0} - I_{p,0})) \\
+       + R_p^{\max}\sigma(I_{p,0}) \\
   I_{\mathrm{r},0}
     &= \dfrac{V_{\mathrm{r},0}P_0 + V_{\mathrm{i},0}Q_0}{V_{T,0}^2} \\
   I_{\mathrm{i},0}

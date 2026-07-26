@@ -13,6 +13,7 @@ int main()
   result += test.initializesNearHighVoltageLimit();
   result += test.rejectsInitializationAtOrAboveHighVoltageLimit();
   result += test.rejectsInitializationBelowLvacmBreakpoint();
+  result += test.rejectsInitializationAtOrAboveLvplCeiling();
   result += test.rejectsInitializationWithActiveLvacm();
   result += test.initializesAtLvacmUpperBreakpoint();
   result += test.rejectsZeroTerminalVoltage();
@@ -22,8 +23,9 @@ int main()
   result += test.residualEquations();
   result += test.highVoltageReactiveCurrentConstraint();
   result += test.highVoltageReactiveCurrentJacobian();
+  result += test.lvplCeilingJacobian();
   result += test.positiveInitialReactivePowerSelectsUpperIqRateLimit();
-  result += test.disabledLvplRemovesIlDependence();
+  result += test.lvplCeilingDrivesActiveCurrentDown();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

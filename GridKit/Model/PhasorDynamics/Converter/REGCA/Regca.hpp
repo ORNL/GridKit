@@ -134,13 +134,15 @@ namespace GridKit
           return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
         }
 
+        /// Effective diagram `Rdown`: -Rpmax for Ip <= 0, inactive (-Mp) for Ip > 0
         ScalarT lpTarget(ScalarT ip) const;
-        ScalarT upTarget(ScalarT ip, ScalarT il) const;
 
-        /// Solve the smooth HVRCM constraint for a voltage margin. The root is
-        /// finite for every strictly positive margin and diverges as the margin
-        /// approaches zero.
-        ScalarT solveInitialHvrcmCurrent(ScalarT voltage_margin) const;
+        /// Effective diagram `Rup`: +Rpmax for Ip >= 0, inactive (+Mp) for Ip < 0
+        ScalarT upTarget(ScalarT ip) const;
+
+        /// Solve the smooth constraint correction for a positive margin. The
+        /// correction diverges as the margin approaches zero.
+        ScalarT smoothConstraintCorrection(ScalarT margin) const;
 
         ScalarT& Vr()
         {

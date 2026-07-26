@@ -321,6 +321,85 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      // Verifies the smooth LVPL target has a consistent initialization only
+      // when the active current is strictly below the enabled ceiling.
+      TestOutcome rejectsInitializationAtOrAboveLvplCeiling()
+      {
+        TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing initialization at and above the LVPL ceiling. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
+
+        const std::array<RealT, 2> invalid_ceilings{{
+            static_cast<RealT>(0.6),
+            static_cast<RealT>(0.2),
+        }};
+
+        for (const RealT ceiling : invalid_ceilings)
+        {
+          auto data                    = makeData();
+          data.parameters[Params::p0]  = static_cast<RealT>(0.6);
+          data.parameters[Params::IL1] = ceiling;
+
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
+
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+          success *= (regca.allocate() == 0);
+          success *= (regca.verify() == 0);
+
+          auto* y = regca.y().getData();
+          std::fill(y,
+                    y + static_cast<size_t>(regca.size()),
+                    static_cast<ScalarT>(0.25));
+          regca.y().setDataUpdated();
+
+          success *= (regca.initialize() > 0);
+          for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
+          {
+            success *= isEqual(y[i], static_cast<ScalarT>(0.25), kTol);
+          }
+        }
+
+        // A nearby valid ceiling exercises the inverse smooth minimum and must
+        // preserve both the requested power and a zero-residual initial state.
+        auto data                    = makeData();
+        data.parameters[Params::p0]  = static_cast<RealT>(0.6);
+        data.parameters[Params::IL1] = static_cast<RealT>(0.61);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success       *= (regca.allocate() == 0);
+        success       *= (regca.verify() == 0);
+        success       *= (regca.initialize() == 0);
+        success       *= (regca.evaluateResidual() == 0);
+        const auto* y  = regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::IP)],
+                                 static_cast<ScalarT>(0.6),
+                                 "IP below the LVPL ceiling");
+        success       *= scalarMatches(y[index(Vars::PBR)],
+                                 static_cast<ScalarT>(0.6),
+                                 "PBR below the LVPL ceiling");
+        success       *= allResidualsZero(regca);
+
+        // Bypassing LVPL removes the constraint entirely.
+        data.parameters[Params::IL1] = static_cast<RealT>(0.2);
+        data.parameters[Params::sL]  = false;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bypassed(&bus, data);
+        success *= (bypassed.allocate() == 0);
+        success *= (bypassed.verify() == 0);
+        success *= (bypassed.initialize() == 0);
+
+        return success.report(__func__);
+      }
+
       // Verifies initialization rejects an operating point on the LVACM ramp.
       // VA0 is 0.4 and VA1 is 0.9 in makeData.
       TestOutcome rejectsInitializationWithActiveLvacm()
@@ -533,14 +612,14 @@ namespace GridKit
         const std::vector<ScalarT> res_answer = {
             0.865,  // f[0]:  -VM' + (VT - VM) / TM
             1.52,   // f[1]:  -IQ' + max(fq, Rqmin)
-            0.22,   // f[2]:  -IP' + clamp(fp, LP, UP)
+            -0.43,  // f[2]:  -IP' + clamp(fp, LP, UP), fp from min(IPCMD, IL)
             -0.035, // f[3]:  -VT^2 + Vr^2 + Vi^2
             0.25,   // f[4]:  -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
             0.251,  // f[5]:  -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
             -0.03,  // f[6]:  smooth HVRCM constraint
             0.35,   // f[7]:  -IL + linseg(VM, VL0, VL1, IL1)
-            -69.6,  // f[8]:  -LP - Rpmax - (Mp - Rpmax)*sigmoid(IP)
-            -0.5,   // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)*sigmoid(IL - IP)
+            -69.6,  // f[8]:  -LP - Rpmax*(1 - sigmoid(IP)) - Mp*sigmoid(IP)
+            0.2,    // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)
             0.0,    // f[10]: -PBR + Vr*IR + Vi*II
             0.0,    // f[11]: -QBR + Vi*IR - Vr*II
         };
@@ -649,6 +728,85 @@ namespace GridKit
         return success.report(__func__);
       }
 
+      // Checks the LVPL sensitivity of f[IP] at an interior rate-clamp point:
+      // with LVPL active the rate follows IL, and with LVPL bypassed it follows
+      // IPCMD instead.
+      TestOutcome lvplCeilingJacobian()
+      {
+        using DepVar = DependencyTracking::Variable;
+
+        TestStatus success = true;
+
+        const std::array<bool, 2> lvpl_settings{{true, false}};
+
+        for (const bool lvpl_enabled : lvpl_settings)
+        {
+          auto data                   = makeDynamicData();
+          data.parameters[Params::sL] = lvpl_enabled;
+
+          PhasorDynamics::Bus<DepVar, IdxT> bus(DepVar{1.0}, DepVar{0.0});
+          bus.allocate();
+          bus.initialize();
+
+          PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, data);
+
+          DepVar ipcmd_value{0.7};
+          IdxT   ipcmd_index = regca.size() + bus.size();
+
+          PhasorDynamics::SignalNode<DepVar, IdxT> ipcmd_node;
+          ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+
+          success *= (regca.allocate() == 0);
+          success *= (regca.verify() == 0);
+          success *= (regca.initialize() == 0);
+
+          ipcmd_value.setValue(static_cast<RealT>(0.7));
+
+          // Both enabled and bypassed rates are interior to the initialized
+          // rate bounds, so no derived limiter values are patched here.
+          auto* y  = regca.y().getData();
+          auto* yp = regca.yp().getData();
+          y[index(Vars::IP)].setValue(static_cast<RealT>(0.6));
+          y[index(Vars::IL)].setValue(static_cast<RealT>(0.5));
+          for (IdxT i = 0; i < regca.size(); ++i)
+          {
+            y[static_cast<size_t>(i)].setVariableNumber(i);
+            yp[static_cast<size_t>(i)].setVariableNumber(i);
+          }
+          ipcmd_value.setVariableNumber(ipcmd_index);
+          regca.y().setDataUpdated();
+          regca.yp().setDataUpdated();
+
+          bus.evaluateResidual();
+          success *= (regca.evaluateResidual() == 0);
+
+          // d f[IP]/d(binding input) = 1 / Tg = 5; the other input drops out.
+          // A structurally absent column is a zero derivative, so read it that
+          // way rather than through at(), which would abort the whole runner if
+          // the coupling ever disappeared.
+          const auto& dependencies =
+              regca.getResidual().getData()[index(Vars::IP)].getDependencies();
+          auto sensitivity = [&dependencies](size_t column)
+          {
+            const auto entry = dependencies.find(column);
+            return entry == dependencies.end() ? ZERO<RealT> : entry->second;
+          };
+
+          const RealT il_sensitivity    = lvpl_enabled ? static_cast<RealT>(5.0) : ZERO<RealT>;
+          const RealT ipcmd_sensitivity = lvpl_enabled ? ZERO<RealT> : static_cast<RealT>(5.0);
+
+          success *= isEqual(sensitivity(index(Vars::IL)),
+                             il_sensitivity,
+                             static_cast<RealT>(1.0e-10));
+          success *= isEqual(sensitivity(static_cast<size_t>(ipcmd_index)),
+                             ipcmd_sensitivity,
+                             static_cast<RealT>(1.0e-10));
+        }
+
+        return success.report(__func__);
+      }
+
       // Positive initial reactive power selects the upper IQ recovery-rate limit.
       TestOutcome positiveInitialReactivePowerSelectsUpperIqRateLimit()
       {
@@ -686,35 +844,58 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      // Disabling LVPL removes IL from the active-current upper rate bound.
-      TestOutcome disabledLvplRemovesIlDependence()
+      // With LVPL enabled a ceiling below the present IP drives the active
+      // current down; with LVPL bypassed the command alone governs.
+      TestOutcome lvplCeilingDrivesActiveCurrentDown()
       {
         TestStatus success = true;
 
-        auto data                   = makeDynamicData();
-        data.parameters[Params::sL] = false;
+        const std::array<bool, 2> lvpl_settings{{true, false}};
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
+        for (const bool lvpl_enabled : lvpl_settings)
+        {
+          auto data                   = makeDynamicData();
+          data.parameters[Params::sL] = lvpl_enabled;
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.initialize() == 0);
+          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+          bus.allocate();
+          bus.initialize();
 
-        auto* y            = regca.y().getData();
-        y[index(Vars::IP)] = static_cast<ScalarT>(0.5);
-        y[index(Vars::IL)] = static_cast<ScalarT>(0.1);
-        y[index(Vars::UP)] = static_cast<ScalarT>(0.0);
-        regca.y().setDataUpdated();
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
 
-        bus.evaluateResidual();
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* f  = regca.getResidual().getData();
+          ScalarT ipcmd_value{0.7};
+          IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
 
-        success *= scalarMatches(f[index(Vars::UP)],
-                                 static_cast<ScalarT>(0.7),
-                                 "UP target with LVPL disabled");
+          PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
+          ipcmd_node.set(&ipcmd_value, &ipcmd_index);
+          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+
+          success *= (regca.allocate() == 0);
+          success *= (regca.verify() == 0);
+          success *= (regca.initialize() == 0);
+
+          // initialize() publishes the steady-state command. Drive the signal
+          // to the independent dynamic-test value.
+          ipcmd_value = static_cast<ScalarT>(0.7);
+
+          // Collapse the LVPL ceiling below IP. The initialized LP and UP remain
+          // untouched; both expected rates lie inside those bounds.
+          auto* y            = regca.y().getData();
+          y[index(Vars::IP)] = static_cast<ScalarT>(0.6);
+          y[index(Vars::IL)] = static_cast<ScalarT>(0.5);
+          regca.y().setDataUpdated();
+
+          bus.evaluateResidual();
+          success *= (regca.evaluateResidual() == 0);
+
+          // fp is -0.5 with LVPL and +0.5 when bypassed.
+          const auto*   f         = regca.getResidual().getData();
+          const ScalarT expected  = lvpl_enabled ? static_cast<ScalarT>(-0.5)
+                                                 : static_cast<ScalarT>(0.5);
+          const char*   label     = lvpl_enabled ? "IP rate with LVPL enabled"
+                                                 : "IP rate with LVPL bypassed";
+          success                *= scalarMatches(f[index(Vars::IP)], expected, label);
+        }
 
         return success.report(__func__);
       }
