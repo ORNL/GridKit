@@ -235,6 +235,10 @@ The bus receives the REGCA branch-current variables directly:
 
 ### Internal Initialization
 
+REGCA requires $V_{T,0} \ge V_{A1}$ so low-voltage active-current management
+is inactive at the initial power-flow operating point. Initialization rejects
+an operating point below this voltage.
+
 Initialization is performed by evaluating the steady-state residuals in
 dependency order. Let subscript $0$ denote initial values and set all internal
 derivatives to zero:

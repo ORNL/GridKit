@@ -361,11 +361,16 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      // Verifies the initial point is residual-consistent below VA0, where the
-      // LVACM gain collapses. VA0 is 0.4 in makeData.
-      TestOutcome initializesBelowLvacmBreakpoint()
+      // Verifies initialization rejects an operating point below VA0. VA0 is
+      // 0.4 and VA1 is 0.9 in makeData.
+      TestOutcome rejectsInitializationBelowLvacmBreakpoint()
       {
         TestStatus success = true;
+
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing initialization below the LVACM breakpoint. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         auto data                   = makeData();
         data.parameters[Params::Q0] = static_cast<RealT>(0.1);
@@ -377,25 +382,21 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
         success *= (regca.allocate() == 0);
         success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-        success *= (regca.evaluateResidual() == 0);
-        success *= allResidualsZero(regca);
-
-        // P0 is zero, so the collapsed LVACM gain still resolves IP to zero.
-        success *= scalarMatches(regca.y().getData()[index(Vars::IP)],
-                                 static_cast<ScalarT>(0.0),
-                                 "IP with no initial active power");
+        success *= (regca.initialize() > 0);
 
         return success.report(__func__);
       }
 
-      // Verifies the initial point is residual-consistent on the LVACM ramp
-      // with active power flowing. VA0 is 0.4 and VA1 is 0.9 in makeData, so
-      // the gain is 0.5 at a terminal voltage of 0.65 and IP carries P0 divided
-      // by that gain.
-      TestOutcome initializesOnLvacmRampWithActivePower()
+      // Verifies initialization rejects an operating point on the LVACM ramp.
+      // VA0 is 0.4 and VA1 is 0.9 in makeData.
+      TestOutcome rejectsInitializationWithActiveLvacm()
       {
         TestStatus success = true;
+
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing initialization with active LVACM. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         const ScalarT p0{0.13};
 
@@ -409,14 +410,38 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
         success *= (regca.allocate() == 0);
         success *= (regca.verify() == 0);
+        success *= (regca.initialize() > 0);
+
+        return success.report(__func__);
+      }
+
+      // Verifies VA1 itself is an admissible initialization boundary and the
+      // resulting operating point reproduces the P0/Q0 injection.
+      TestOutcome initializesAtLvacmUpperBreakpoint()
+      {
+        TestStatus success = true;
+
+        const ScalarT p0{0.2};
+        const ScalarT q0{0.1};
+
+        auto data                   = makeData();
+        data.parameters[Params::P0] = static_cast<RealT>(p0);
+        data.parameters[Params::Q0] = static_cast<RealT>(q0);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.9, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
         success *= (regca.initialize() == 0);
         success *= (regca.evaluateResidual() == 0);
         success *= allResidualsZero(regca);
 
         const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.4), "IP");
-        success       *= scalarMatches(y[index(Vars::IL)], static_cast<ScalarT>(0.55), "IL");
-        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
+        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0", kInitTol);
+        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR holds Q0", kInitTol);
 
         return success.report(__func__);
       }
@@ -429,7 +454,7 @@ namespace GridKit
 
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that a zero terminal voltage is rejected. "
-                    << "Logged errors are are expected.\n";
+                    << "Logged errors are expected.\n";
         Log::setVerbosity(Log::Verbosity::WARNINGS);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(0.0, 0.0);

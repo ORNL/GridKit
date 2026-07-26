@@ -13,8 +13,9 @@ int main()
   result += test.unconnectedCommandsRemainConstant();
   result += test.externalCommandsDriveRuntimeResidual();
   result += test.initializesAboveHighVoltageLimit();
-  result += test.initializesBelowLvacmBreakpoint();
-  result += test.initializesOnLvacmRampWithActivePower();
+  result += test.rejectsInitializationBelowLvacmBreakpoint();
+  result += test.rejectsInitializationWithActiveLvacm();
+  result += test.initializesAtLvacmUpperBreakpoint();
   result += test.rejectsZeroTerminalVoltage();
   result += test.signalVerification();
   result += test.nullBusVerification();

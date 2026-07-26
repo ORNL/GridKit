@@ -322,14 +322,16 @@ namespace GridKit
        * initialized terminal-bus voltage and the system-base P0/Q0 injections.
        * All differential states are initialized with zero derivative.
        *
+       * Initialization requires the low-voltage active-current-management block
+       * to be inactive, so the initial terminal-voltage magnitude must be at
+       * least VA1.
+       *
        * @pre allocate() has completed.
        * @pre verify() has reported no configuration errors.
        * @pre The terminal bus has been initialized.
-       * @pre The initial terminal-voltage magnitude is at least VA1, so the
-       *      low-voltage active-current-management block is inactive.
        *
-       * @return int 0 on success; nonzero when the operating point cannot be
-       *             initialized consistently.
+       * @return int 0 on success; nonzero when the terminal voltage is
+       *             non-positive or below VA1.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
@@ -355,6 +357,12 @@ namespace GridKit
         if (vt <= ZERO<RealT>)
         {
           Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
+          return 1;
+        }
+        if (vt < VA1_)
+        {
+          Log::error()
+              << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
           return 1;
         }
 
