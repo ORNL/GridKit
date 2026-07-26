@@ -24,8 +24,8 @@ Figure 1: Generator/Converter REGCA model. Figure courtesy of [PowerWorld](https
 
 Symbol                           | Units    | JSON     | Description                                           | Typical Value | Note
 ---------------------------------|----------|----------|-------------------------------------------------------|---------------|------
-$P_0$                            | [p.u.]   | `P0`     | Initial active power injection                        | 1.0           | System base; required initialization source
-$Q_0$                            | [p.u.]   | `Q0`     | Initial reactive power injection                      | 0.0           | System base; required initialization source
+$P_0$                            | [p.u.]   | `p0`     | Initial active power injection                        | 1.0           | System base; required initialization source
+$Q_0$                            | [p.u.]   | `q0`     | Initial reactive power injection                      | 0.0           | System base; required initialization source
 $S^\mathrm{base}$                | [MVA]    | `mva`    | REGCA component power base                            | 100.0         |
 $T_{\mathrm{g}}$                 | [sec]    | `Tg`     | Converter current-control lag time constant           | 0.02          | Block name: `Tg`
 $T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
@@ -43,6 +43,8 @@ $V_{\mathrm{hv}}^{\max}$          | [p.u.]   | `Vhvmax` | Terminal-voltage ceili
 ### Parameter Validation
 
 Invalid REGCA parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+Time constants below $\epsilon_T$ are raised to $\epsilon_T$ and logged as a warning,
+every other condition is a configuration error.
 
 ```math
 \begin{aligned}
@@ -135,7 +137,7 @@ $V_{\mathrm{i}}$                | [p.u.] | Known   | Terminal voltage, imaginary
 $I_p^\mathrm{cmd}$              | [p.u.] | Unknown | Active-current command in the terminal-voltage reference frame   | Optional signal port `ipcmd`; system base
 $I_q^\mathrm{cmd}$              | [p.u.] | Unknown | Reactive-current command in the terminal-voltage reference frame | Optional signal port `iqcmd`; system base
 
-REGCA initializes the current-command ports from the required `P0`/`Q0`
+REGCA initializes the current-command ports from the required `p0`/`q0`
 power-flow injection. If no controller is connected, the resolved initialization
 commands are held constant during residual evaluation.
 

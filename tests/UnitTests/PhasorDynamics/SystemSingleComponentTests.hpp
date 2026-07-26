@@ -270,8 +270,8 @@ namespace GridKit
         data.device_class               = "Regca";
         data.disambiguation_string      = "regca_test";
         data.buses[Buses::bus]          = static_cast<IdxT>(1);
-        data.parameters[Params::P0]     = static_cast<RealT>(1.0);
-        data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
+        data.parameters[Params::p0]     = static_cast<RealT>(1.0);
+        data.parameters[Params::q0]     = static_cast<RealT>(0.0);
         data.parameters[Params::mva]    = static_cast<RealT>(100.0);
         data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
         data.parameters[Params::TM]     = static_cast<RealT>(0.02);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -71,7 +72,7 @@ namespace GridKit
         const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing invalid and missing REGCA parameters. "
-                    << "Logged errors are expected.\n";
+                    << "Logged errors and time-constant warnings are expected.\n";
         Log::setVerbosity(previous_verbosity);
 
         auto missing = makeData();
@@ -80,12 +81,12 @@ namespace GridKit
         success *= (missing_model.verify() > 0);
 
         auto missing_p0 = makeData();
-        missing_p0.parameters.erase(Params::P0);
+        missing_p0.parameters.erase(Params::p0);
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_p0_model(&bus, missing_p0);
         success *= (missing_p0_model.verify() > 0);
 
         auto missing_q0 = makeData();
-        missing_q0.parameters.erase(Params::Q0);
+        missing_q0.parameters.erase(Params::q0);
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_q0_model(&bus, missing_q0);
         success *= (missing_q0_model.verify() > 0);
 
@@ -135,8 +136,8 @@ namespace GridKit
 
         auto data                    = makeData();
         data.parameters[Params::mva] = mva;
-        data.parameters[Params::P0]  = static_cast<RealT>(p0);
-        data.parameters[Params::Q0]  = static_cast<RealT>(q0);
+        data.parameters[Params::p0]  = static_cast<RealT>(p0);
+        data.parameters[Params::q0]  = static_cast<RealT>(q0);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
 
@@ -193,8 +194,8 @@ namespace GridKit
         TestStatus success = true;
 
         auto data                   = makeData();
-        data.parameters[Params::P0] = static_cast<RealT>(0.6);
-        data.parameters[Params::Q0] = static_cast<RealT>(0.2);
+        data.parameters[Params::p0] = static_cast<RealT>(0.6);
+        data.parameters[Params::q0] = static_cast<RealT>(0.2);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
         bus.allocate();
@@ -224,7 +225,7 @@ namespace GridKit
         const ScalarT q0{0.1};
 
         auto data                   = makeData();
-        data.parameters[Params::Q0] = static_cast<RealT>(q0);
+        data.parameters[Params::q0] = static_cast<RealT>(q0);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.3, 0.0);
         bus.allocate();
@@ -263,7 +264,7 @@ namespace GridKit
         Log::setVerbosity(previous_verbosity);
 
         auto data                   = makeData();
-        data.parameters[Params::Q0] = static_cast<RealT>(0.1);
+        data.parameters[Params::q0] = static_cast<RealT>(0.1);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
         bus.allocate();
@@ -292,7 +293,7 @@ namespace GridKit
         const ScalarT p0{0.13};
 
         auto data                   = makeData();
-        data.parameters[Params::P0] = static_cast<RealT>(p0);
+        data.parameters[Params::p0] = static_cast<RealT>(p0);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(0.65, 0.0);
         bus.allocate();
@@ -316,8 +317,8 @@ namespace GridKit
         const ScalarT q0{0.1};
 
         auto data                   = makeData();
-        data.parameters[Params::P0] = static_cast<RealT>(p0);
-        data.parameters[Params::Q0] = static_cast<RealT>(q0);
+        data.parameters[Params::p0] = static_cast<RealT>(p0);
+        data.parameters[Params::q0] = static_cast<RealT>(q0);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(0.9, 0.0);
         bus.allocate();
@@ -428,8 +429,8 @@ namespace GridKit
 
         auto data                    = makeData();
         data.parameters[Params::mva] = mva;
-        data.parameters[Params::P0]  = static_cast<RealT>(p0);
-        data.parameters[Params::Q0]  = static_cast<RealT>(q0);
+        data.parameters[Params::p0]  = static_cast<RealT>(p0);
+        data.parameters[Params::q0]  = static_cast<RealT>(q0);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
         success *= (regca.allocate() == 0);
@@ -452,14 +453,14 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.95, 0.25);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(kStateVr, kStateVi);
         bus.allocate();
         bus.initialize();
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeDynamicData());
 
-        ScalarT ipcmd_value{0.9};
-        ScalarT iqcmd_value{0.1};
+        ScalarT ipcmd_value{0.0};
+        ScalarT iqcmd_value{0.0};
         IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
         IdxT    iqcmd_index = ipcmd_index + 1;
 
@@ -472,12 +473,13 @@ namespace GridKit
         regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
 
         success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
         success *= (regca.initialize() == 0);
 
-        // initialize() seeds the attached command nodes from P0 and Q0. Drive
+        // initialize() seeds the attached command nodes from p0 and q0. Drive
         // them to the values the answer key assumes.
-        ipcmd_value = static_cast<ScalarT>(0.9);
-        iqcmd_value = static_cast<ScalarT>(0.1);
+        ipcmd_value = static_cast<ScalarT>(kStateIpcmd);
+        iqcmd_value = static_cast<ScalarT>(kStateIqcmd);
 
         setResidualState(regca);
         bus.evaluateResidual();
@@ -555,7 +557,7 @@ namespace GridKit
         TestStatus success = true;
 
         auto data                   = makeDynamicData();
-        data.parameters[Params::Q0] = static_cast<RealT>(0.2);
+        data.parameters[Params::q0] = static_cast<RealT>(0.2);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
         bus.allocate();
@@ -651,6 +653,36 @@ namespace GridKit
         return static_cast<size_t>(variable);
       }
 
+      // Operating point shared by the residual answer key and both Jacobian
+      // paths, so the scalar and dependency-tracking states cannot drift apart.
+      static constexpr RealT kStateVr    = static_cast<RealT>(0.95);
+      static constexpr RealT kStateVi    = static_cast<RealT>(0.25);
+      static constexpr RealT kStateIpcmd = static_cast<RealT>(0.9);
+      static constexpr RealT kStateIqcmd = static_cast<RealT>(0.1);
+
+      /// Internal variables in `RegcaInternalVariables` order.
+      static constexpr std::array<RealT, static_cast<size_t>(Vars::MAXIMUM)> kStateY = {
+          static_cast<RealT>(0.65),   // VM
+          static_cast<RealT>(-0.2),   // IQ
+          static_cast<RealT>(0.85),   // IP
+          static_cast<RealT>(1.0),    // VT
+          static_cast<RealT>(0.5),    // IR
+          static_cast<RealT>(0.18),   // II
+          static_cast<RealT>(0.03),   // IQEXTRA
+          static_cast<RealT>(0.2),    // IL
+          static_cast<RealT>(-0.4),   // LP
+          static_cast<RealT>(0.5),    // UP
+          static_cast<RealT>(0.52),   // PBR
+          static_cast<RealT>(-0.046), // QBR
+      };
+
+      /// Derivatives of the three differential states, which lead the enum.
+      static constexpr std::array<RealT, 3> kStateYp = {
+          static_cast<RealT>(0.01),  // VM
+          static_cast<RealT>(-0.02), // IQ
+          static_cast<RealT>(0.03),  // IP
+      };
+
       auto makeData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {
         using Buses = PhasorDynamics::Converter::RegcaBuses;
@@ -665,8 +697,8 @@ namespace GridKit
         data.monitored_variables.insert(Mon::p);
         data.monitored_variables.insert(Mon::q);
 
-        data.parameters[Params::P0]     = static_cast<RealT>(0.0);
-        data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
+        data.parameters[Params::p0]     = static_cast<RealT>(0.0);
+        data.parameters[Params::q0]     = static_cast<RealT>(0.0);
         data.parameters[Params::mva]    = static_cast<RealT>(100.0);
         data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
         data.parameters[Params::TM]     = static_cast<RealT>(0.02);
@@ -687,14 +719,13 @@ namespace GridKit
       auto makeDynamicData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {
         auto data                       = makeData();
-        data.parameters[Params::P0]     = static_cast<RealT>(0.6);
-        data.parameters[Params::Q0]     = static_cast<RealT>(-0.2);
+        data.parameters[Params::p0]     = static_cast<RealT>(0.6);
+        data.parameters[Params::q0]     = static_cast<RealT>(-0.2);
         data.parameters[Params::Tg]     = static_cast<RealT>(0.2);
         data.parameters[Params::TM]     = static_cast<RealT>(0.4);
         data.parameters[Params::Rqmax]  = static_cast<RealT>(0.5);
         data.parameters[Params::Rqmin]  = static_cast<RealT>(-0.6);
         data.parameters[Params::Rpmax]  = static_cast<RealT>(0.7);
-        data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
         data.parameters[Params::Vhvmax] = static_cast<RealT>(1.3);
         return data;
       }
@@ -747,22 +778,14 @@ namespace GridKit
         auto* y  = regca.y().getData();
         auto* yp = regca.yp().getData();
 
-        y[index(Vars::VM)]      = static_cast<ScalarT>(0.65);
-        y[index(Vars::IQ)]      = static_cast<ScalarT>(-0.2);
-        y[index(Vars::IP)]      = static_cast<ScalarT>(0.85);
-        y[index(Vars::VT)]      = static_cast<ScalarT>(1.0);
-        y[index(Vars::IR)]      = static_cast<ScalarT>(0.5);
-        y[index(Vars::II)]      = static_cast<ScalarT>(0.18);
-        y[index(Vars::IQEXTRA)] = static_cast<ScalarT>(0.03);
-        y[index(Vars::IL)]      = static_cast<ScalarT>(0.2);
-        y[index(Vars::LP)]      = static_cast<ScalarT>(-0.4);
-        y[index(Vars::UP)]      = static_cast<ScalarT>(0.5);
-        y[index(Vars::PBR)]     = static_cast<ScalarT>(0.52);
-        y[index(Vars::QBR)]     = static_cast<ScalarT>(-0.046);
-
-        yp[index(Vars::VM)] = static_cast<ScalarT>(0.01);
-        yp[index(Vars::IQ)] = static_cast<ScalarT>(-0.02);
-        yp[index(Vars::IP)] = static_cast<ScalarT>(0.03);
+        for (size_t i = 0; i < kStateY.size(); ++i)
+        {
+          y[i] = static_cast<ScalarT>(kStateY[i]);
+        }
+        for (size_t i = 0; i < kStateYp.size(); ++i)
+        {
+          yp[i] = static_cast<ScalarT>(kStateYp[i]);
+        }
 
         regca.y().setDataUpdated();
         regca.yp().setDataUpdated();
@@ -777,25 +800,17 @@ namespace GridKit
         auto* y     = regca.y().getData();
         auto* yp    = regca.yp().getData();
 
-        bus_y[0].setValue(0.95);
-        bus_y[1].setValue(0.25);
+        bus_y[0].setValue(kStateVr);
+        bus_y[1].setValue(kStateVi);
 
-        y[index(Vars::VM)].setValue(0.65);
-        y[index(Vars::IQ)].setValue(-0.2);
-        y[index(Vars::IP)].setValue(0.85);
-        y[index(Vars::VT)].setValue(1.0);
-        y[index(Vars::IR)].setValue(0.5);
-        y[index(Vars::II)].setValue(0.18);
-        y[index(Vars::IQEXTRA)].setValue(0.03);
-        y[index(Vars::IL)].setValue(0.2);
-        y[index(Vars::LP)].setValue(-0.4);
-        y[index(Vars::UP)].setValue(0.5);
-        y[index(Vars::PBR)].setValue(0.52);
-        y[index(Vars::QBR)].setValue(-0.046);
-
-        yp[index(Vars::VM)].setValue(0.01);
-        yp[index(Vars::IQ)].setValue(-0.02);
-        yp[index(Vars::IP)].setValue(0.03);
+        for (size_t i = 0; i < kStateY.size(); ++i)
+        {
+          y[i].setValue(kStateY[i]);
+        }
+        for (size_t i = 0; i < kStateYp.size(); ++i)
+        {
+          yp[i].setValue(kStateYp[i]);
+        }
 
         bus.y().setDataUpdated();
         regca.y().setDataUpdated();
@@ -809,13 +824,13 @@ namespace GridKit
         auto data                    = makeDynamicData();
         data.parameters[Params::mva] = static_cast<RealT>(50.0);
 
-        PhasorDynamics::Bus<DepVar, IdxT>              bus(DepVar{0.95}, DepVar{0.25});
+        PhasorDynamics::Bus<DepVar, IdxT>              bus(DepVar{kStateVr}, DepVar{kStateVi});
         PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, data);
 
         PhasorDynamics::SignalNode<DepVar, IdxT> ipcmd_node;
         PhasorDynamics::SignalNode<DepVar, IdxT> iqcmd_node;
-        DepVar                                   ipcmd_value{0.9};
-        DepVar                                   iqcmd_value{0.1};
+        DepVar                                   ipcmd_value{kStateIpcmd};
+        DepVar                                   iqcmd_value{kStateIqcmd};
         IdxT                                     ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
         IdxT                                     iqcmd_index = ipcmd_index + 1;
 
@@ -869,13 +884,13 @@ namespace GridKit
         auto data                    = makeDynamicData();
         data.parameters[Params::mva] = static_cast<RealT>(50.0);
 
-        PhasorDynamics::Bus<ScalarT, IdxT>              bus(0.95, 0.25);
+        PhasorDynamics::Bus<ScalarT, IdxT>              bus(kStateVr, kStateVi);
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        ScalarT                                   ipcmd_value{0.9};
-        ScalarT                                   iqcmd_value{0.1};
+        ScalarT                                   ipcmd_value{kStateIpcmd};
+        ScalarT                                   iqcmd_value{kStateIqcmd};
         IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
         IdxT                                      iqcmd_index = ipcmd_index + 1;
 

@@ -50,9 +50,16 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
       {
+        if (Tg_ < TIME_CONSTANT_MINIMUM || TM_ < TIME_CONSTANT_MINIMUM)
+        {
+          Log::warning() << "Regca: Tg and TM below " << TIME_CONSTANT_MINIMUM
+                         << " s are raised to that floor to keep the current-control "
+                         << "and voltage-sensor lags well posed\n";
+        }
+
         Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
         TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
-        Mp_          = static_cast<RealT>(100.0) * Rpmax_;
+        Mp_          = INACTIVE_RATE_LIMIT_FACTOR * Rpmax_;
         use_lvpl_    = ZERO<RealT>;
         bypass_lvpl_ = ONE<RealT>;
         if (sL_)
@@ -83,7 +90,6 @@ namespace GridKit
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;
-        using Buses  = typename ModelDataT::Buses;
 
         parameter_error_count_ = 0;
 
@@ -138,8 +144,8 @@ namespace GridKit
           }
         };
 
-        load_required_real(Params::P0, P0_, "P0");
-        load_required_real(Params::Q0, Q0_, "Q0");
+        load_required_real(Params::p0, p0_, "p0");
+        load_required_real(Params::q0, q0_, "q0");
         load_required_real(Params::mva, mva_base_, "mva");
         load_required_real(Params::Tg, Tg_, "Tg");
         load_required_real(Params::TM, TM_, "TM");
@@ -153,11 +159,6 @@ namespace GridKit
         load_required_real(Params::VA0, VA0_, "VA0");
         load_required_real(Params::VA1, VA1_, "VA1");
         load_required_real(Params::Vhvmax, Vhvmax_, "Vhvmax");
-
-        if (data.buses.contains(Buses::bus))
-        {
-          bus_id_ = data.buses.at(Buses::bus);
-        }
 
         setDerivedParameters();
       }
@@ -367,13 +368,13 @@ namespace GridKit
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active-current command through the LVACM network-interface gain.
         const ScalarT lvacm  = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
+        const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
 
         // Seed the HVRCM algebraic current from its residual. Add the same
         // current to IQCMD so the net network current, IQ - IQEXTRA, still
         // reproduces Q0.
         const ScalarT iqextra0 = Math::ramp(vt - Vhvmax_);
-        const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
+        const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
         const ScalarT ii0      = (-vr * qnet0 + vi * ipcmd0 * lvacm) / vt;
@@ -398,7 +399,7 @@ namespace GridKit
         iqcmd_set_    = toSystemBase(iqcmd0);
         iq_use_upper_ = ZERO<RealT>;
         iq_use_lower_ = ONE<RealT>;
-        if (Q0_ > ZERO<RealT>)
+        if (q0_ > ZERO<RealT>)
         {
           iq_use_upper_ = ONE<RealT>;
           iq_use_lower_ = ZERO<RealT>;

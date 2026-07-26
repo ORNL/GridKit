@@ -17,8 +17,8 @@ namespace GridKit
       /// Parameter keys for the REGCA converter model.
       enum class RegcaParameters
       {
-        P0,    ///< Initial active power on system base
-        Q0,    ///< Initial reactive power on system base
+        p0,    ///< Initial active power on system base
+        q0,    ///< Initial reactive power on system base
         mva,   ///< MVA base of the REGCA model
         Tg,    ///< Converter current-control lag time constant
         TM,    ///< Terminal voltage sensor time constant

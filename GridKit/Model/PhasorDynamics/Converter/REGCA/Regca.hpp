@@ -75,7 +75,6 @@ namespace GridKit
         using Component<scalar_type, index_type>::residual_indices_;
         using Component<scalar_type, index_type>::size_;
         using Component<scalar_type, index_type>::tag_;
-        using Component<scalar_type, index_type>::time_;
         using Component<scalar_type, index_type>::va_system_base_;
         using Component<scalar_type, index_type>::variable_indices_;
         using Component<scalar_type, index_type>::wb_;
@@ -160,10 +159,13 @@ namespace GridKit
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
+        /// Multiple of Rpmax standing in for an inactive active-current rate limit
+        static constexpr RealT INACTIVE_RATE_LIMIT_FACTOR = static_cast<RealT>(100.0);
+
         BusT* bus_{nullptr};
 
-        RealT P0_{0};
-        RealT Q0_{0};
+        RealT p0_{0};
+        RealT q0_{0};
         RealT mva_base_{0};
         RealT Tg_{0};
         RealT TM_{0};
@@ -177,7 +179,6 @@ namespace GridKit
         RealT VA0_{0};
         RealT VA1_{0};
         RealT Vhvmax_{0};
-        IdxT  bus_id_{0};
 
         IdxT  parameter_error_count_{0};
         RealT Mp_{0};

@@ -69,7 +69,7 @@ namespace GridKit
                    { "class": "Gensal", "ports": {"bus":1}, "id": "2", "params": {"p0":1.0, "q0":0.05013, "H":3.0, "D":0.0, "Ra":0.0, "Tdop":7.0, "Tdopp":0.04, "Tqopp":0.05,
                           "Xd":2.1, "Xdp":0.2, "Xdpp":0.18, "Xq":0.5, "Xl":0.15, "S10":0.0, "S12":0.0}, "mon": ["delta", "omega"] },
                    { "class": "BusFault", "ports": {"bus":1}, "id": "1", "params": {"state0": false, "R":0.0, "X":1e-3} },
-                   { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"P0":0.0, "Q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] }
+                   { "class": "Regca", "ports": {"bus":1}, "id": "CV1", "params": {"p0":0.0, "q0":0.0, "mva":100, "Tg":0.02, "TM":0.02, "Rqmax":999.0, "Rqmin":-999.0, "Rpmax":999.0, "sL":true, "IL1":1.1, "VL0":0.4, "VL1":0.9, "VA0":0.4, "VA1":0.9, "Vhvmax":1.2}, "mon": ["ir", "ii", "p", "q"] }
                ]
             })";
 
@@ -157,8 +157,8 @@ namespace GridKit
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::delta);
         success *= result.gensal[0].monitored_variables.contains(GensalMonitorableVariables::omega);
 
-        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::P0]) == 0.0;
-        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::Q0]) == 0.0;
+        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::p0]) == 0.0;
+        success *= std::get<RealT>(result.regca[0].parameters[RegcaData::Parameters::q0]) == 0.0;
         success *= std::get<IdxT>(result.regca[0].parameters[RegcaData::Parameters::mva]) == 100;
         success *= std::get<bool>(result.regca[0].parameters[RegcaData::Parameters::sL]);
         success *= result.regca[0].buses[RegcaData::Buses::bus] == 1;
