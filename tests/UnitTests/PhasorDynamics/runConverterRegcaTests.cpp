@@ -10,7 +10,8 @@ int main()
   result += test.parameterValidation();
   result += test.initializesFromPowerFlowAndPublishesSignals();
   result += test.unconnectedCommandsRemainConstant();
-  result += test.initializesAboveHighVoltageLimit();
+  result += test.initializesNearHighVoltageLimit();
+  result += test.rejectsInitializationAtOrAboveHighVoltageLimit();
   result += test.rejectsInitializationBelowLvacmBreakpoint();
   result += test.rejectsInitializationWithActiveLvacm();
   result += test.initializesAtLvacmUpperBreakpoint();
@@ -19,7 +20,8 @@ int main()
   result += test.nullBusVerification();
   result += test.busInjectionUsesSystemBase();
   result += test.residualEquations();
-  result += test.highVoltageReactiveCurrentRoot();
+  result += test.highVoltageReactiveCurrentConstraint();
+  result += test.highVoltageReactiveCurrentJacobian();
   result += test.positiveInitialReactivePowerSelectsUpperIqRateLimit();
   result += test.disabledLvplRemovesIlDependence();
 #ifdef GRIDKIT_ENABLE_ENZYME

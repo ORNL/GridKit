@@ -87,6 +87,30 @@ namespace GridKit
       }
 
       template <typename scalar_type, typename index_type>
+      scalar_type Regca<scalar_type, index_type>::solveInitialHvrcmCurrent(
+          scalar_type voltage_margin) const
+      {
+        static constexpr RealT log_two = static_cast<RealT>(0.6931471805599453);
+
+        const ScalarT scaled_margin = Math::MU<RealT> * voltage_margin;
+
+        // q = ramp(q - m) gives q = -log(1 - exp(-mu * m)) / mu.
+        // Evaluate log(1 - exp(-x)) without cancellation.
+        ScalarT log_one_minus_exp;
+        if (scaled_margin < log_two)
+        {
+          log_one_minus_exp = log_two - HALF<RealT> * scaled_margin
+                              + std::log(std::sinh(HALF<RealT> * scaled_margin));
+        }
+        else
+        {
+          log_one_minus_exp = std::log1p(-std::exp(-scaled_margin));
+        }
+
+        return -log_one_minus_exp / Math::MU<RealT>;
+      }
+
+      template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
         using Params = typename ModelDataT::Parameters;
@@ -321,16 +345,15 @@ namespace GridKit
        * initialized terminal-bus voltage and the system-base P0/Q0 injections.
        * All differential states are initialized with zero derivative.
        *
-       * Initialization requires the low-voltage active-current-management block
-       * to be inactive, so the initial terminal-voltage magnitude must be at
-       * least VA1.
+       * The initial terminal-voltage magnitude must be at least VA1 and below
+       * Vhvmax.
        *
        * @pre allocate() has completed.
        * @pre verify() has reported no configuration errors.
        * @pre The terminal bus has been initialized.
        *
        * @return int 0 on success; nonzero when the terminal voltage is
-       *             non-positive or below VA1.
+       *             non-positive, below VA1, or not below Vhvmax.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
@@ -364,16 +387,22 @@ namespace GridKit
               << "Regca: terminal voltage magnitude must be at least VA1 at initialization\n";
           return 1;
         }
+        if (vt >= Vhvmax_)
+        {
+          Log::error()
+              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
+          return 1;
+        }
 
         // P0 is a system-base power-flow injection. Resolve the component-base
         // active-current command through the LVACM network-interface gain.
         const ScalarT lvacm  = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(p0_) / vt) / lvacm;
 
-        // Seed the HVRCM algebraic current from its residual. Add the same
-        // current to IQCMD so the net network current, IQ - IQEXTRA, still
-        // reproduces Q0.
-        const ScalarT iqextra0 = Math::ramp(vt - Vhvmax_);
+        // Solve the smooth HVRCM constraint and preserve the requested Q0. The
+        // Vhvmax check above keeps the voltage margin strictly positive, so the
+        // solve is always finite.
+        const ScalarT iqextra0 = solveInitialHvrcmCurrent(Vhvmax_ - vt);
         const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
         const ScalarT ir0      = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
@@ -495,8 +524,9 @@ namespace GridKit
         const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
                                    + iq_use_lower_ * Math::max(fq, Rqmin_);
 
-        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT qnet  = iq - iqextra;
+        const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT qnet           = iq - iqextra;
+        const ScalarT voltage_margin = Vhvmax_ - vt;
 
         f[VM]      = -vm_dot + (vt - vm) / TM_;
         f[IQ]      = -iq_dot + iq_limited;
@@ -504,7 +534,7 @@ namespace GridKit
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
-        f[IQEXTRA] = -iqextra + Math::ramp(vt - Vhvmax_);
+        f[IQEXTRA] = -iqextra + Math::ramp(iqextra - voltage_margin);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
         f[LP]      = -lp + lpTarget(ip);
         f[UP]      = -up + upTarget(ip, il);

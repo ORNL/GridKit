@@ -137,6 +137,11 @@ namespace GridKit
         ScalarT lpTarget(ScalarT ip) const;
         ScalarT upTarget(ScalarT ip, ScalarT il) const;
 
+        /// Solve the smooth HVRCM constraint for a voltage margin. The root is
+        /// finite for every strictly positive margin and diverges as the margin
+        /// approaches zero.
+        ScalarT solveInitialHvrcmCurrent(ScalarT voltage_margin) const;
+
         ScalarT& Vr()
         {
           return bus_->Vr();

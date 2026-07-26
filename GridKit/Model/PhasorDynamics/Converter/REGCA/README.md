@@ -3,12 +3,22 @@
 REGCA is a first-generation WECC renewable generator/converter model for
 inverter-coupled resources.
 
+The network equations solve $I_q^\mathrm{extra}$ for whatever nonnegative
+current is needed to keep $V_T$ at or below $V_\mathrm{hv}^{\max}$. It is
+approximately zero when the limit is inactive:
+
+```math
+0 \le I_q^\mathrm{extra}
+  \perp \left(V_\mathrm{hv}^{\max} - V_T\right) \ge 0.
+```
+
+GridKit uses the differentiable form shown in the algebraic equations below.
+
 ## Notes
 
 - Internal current states and limiter quantities are on component base.
 - Signal ports, monitor outputs, branch currents, and branch powers are on system base.
 - LVACM uses $V_T$; LVPL uses $V_M$.
-- HVRCM is represented by algebraic current $I_q^\mathrm{extra}$.
 - PowerWorld fields `Qmin`, `Khv`, and `Xe` are not parameters of this GridKit implementation.
 
 ## Block Diagram
@@ -129,7 +139,7 @@ None.
 
 #### Algebraic
 
-Symbol                          | Units  | Type    | Description                                                      | Note
+Symbol                          | Units  | Init    | Description                                                      | Note
 --------------------------------|--------|---------|------------------------------------------------------------------|------
 $V_\mathrm{r}$                  | [p.u.] | Known   | Terminal voltage, real component                                 | Bus input
 $V_\mathrm{i}$                  | [p.u.] | Known   | Terminal voltage, imaginary component                            | Bus input
@@ -175,7 +185,9 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
        - V_\mathrm{r}(I_q - I_q^\mathrm{extra})
        + V_\mathrm{i} I_p\,\text{linseg}(V_T; V_{A0}, V_{A1}, 1) \\
   0 &= -I_q^\mathrm{extra}
-       + \text{ramp}(V_T - V_\mathrm{hv}^{\max}) \\
+       + \text{ramp}\!\left(
+           I_q^\mathrm{extra} - (V_\mathrm{hv}^{\max} - V_T)
+         \right) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1}) \\
   0 &= -\ell_p
@@ -219,9 +231,10 @@ and the [ramp and step primitives](../../../../CommonMath.md#primitives) used ab
 
 ### Internal Initialization
 
-REGCA requires $V_{T,0} \ge V_{A1}$, so low-voltage active-current management
-is inactive and $A_0^\mathrm{LVACM}=1$ at the initial power-flow operating
-point. Initialization rejects an operating point below this voltage.
+REGCA requires $V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}$. The lower bound
+places the initial point on the upper LVACM plateau. The strict upper bound is
+required because the smooth HVRCM constraint has no finite root at or above the
+voltage limit.
 
 Subscript $0$ denotes initial values; all internal derivatives are initialized
 to zero:
@@ -232,10 +245,17 @@ to zero:
     &= \sqrt{V_{\mathrm{r},0}^2 + V_{\mathrm{i},0}^2} \\
   V_{M,0}
     &= V_{T,0} \\
+  A_0^\mathrm{LVACM}
+    &= \text{linseg}(V_{T,0}; V_{A0}, V_{A1}, 1) \\
   I_{q,0}^\mathrm{extra}
-    &= \text{ramp}(V_{T,0} - V_\mathrm{hv}^{\max}) \\
+    &\leftarrow \text{nonnegative solution of }
+       0 = -I_{q,0}^\mathrm{extra}
+       + \text{ramp}\!\left(
+           I_{q,0}^\mathrm{extra}
+           - (V_\mathrm{hv}^{\max} - V_{T,0})
+         \right) \\
   I_{p,0}^\mathrm{cmd}
-    &= \dfrac{P_0}{V_{T,0}} \\
+    &= \dfrac{P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
   I_{q,0}^\mathrm{cmd}
     &= \dfrac{Q_0}{V_{T,0}}
        + \dfrac{I_{q,0}^\mathrm{extra}}{k_\mathrm{base}} \\
