@@ -60,8 +60,6 @@ namespace GridKit
           use_lvpl_    = ONE<RealT>;
           bypass_lvpl_ = ZERO<RealT>;
         }
-        iq_use_upper_      = ZERO<RealT>;
-        iq_use_lower_      = ONE<RealT>;
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
       }
 

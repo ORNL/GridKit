@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -52,6 +51,12 @@ namespace GridKit
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> minimal(&bus);
         success *= (minimal.size() == static_cast<IdxT>(Vars::MAXIMUM));
         success *= (minimal.getMonitor() == nullptr);
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing incomplete REGCA configuration. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
         success *= (minimal.verify() > 0);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
@@ -67,6 +72,12 @@ namespace GridKit
         TestStatus success = true;
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing invalid and missing REGCA parameters. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
 
         auto missing = makeData();
         missing.parameters.erase(Params::Tg);
@@ -103,6 +114,12 @@ namespace GridKit
             &bus,
             zero_time_constants);
         success *= (zero_time_model.verify() == 0);
+        success *= (bus.allocate() == 0);
+        success *= (bus.initialize() == 0);
+        success *= (zero_time_model.allocate() == 0);
+        success *= (zero_time_model.initialize() == 0);
+        success *= (zero_time_model.evaluateResidual() == 0);
+        success *= allResidualsZero(zero_time_model);
 
         return success.report(__func__);
       }
@@ -130,8 +147,8 @@ namespace GridKit
 
         ScalarT ipcmd_value{-1.0};
         ScalarT iqcmd_value{1.0};
-        IdxT    ipcmd_index = 20;
-        IdxT    iqcmd_index = 21;
+        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT    iqcmd_index = ipcmd_index + 1;
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
@@ -154,98 +171,25 @@ namespace GridKit
         success *= (regca.initialize() == 0);
         success *= (regca.evaluateResidual() == 0);
 
-        const ScalarT vt = std::sqrt(vr * vr + vi * vi);
-        const ScalarT lvacm =
-            Math::linseg(vt, static_cast<RealT>(0.4), static_cast<RealT>(0.9), ONE<RealT>);
-        const ScalarT ipcmd0       = toComponentBase(p0 / vt, mva) / lvacm;
-        const ScalarT iqcmd0       = toComponentBase(q0 / vt, mva);
-        const ScalarT qnet0        = iqcmd0;
-        const ScalarT ir0          = (vr * ipcmd0 * lvacm + vi * qnet0) / vt;
-        const ScalarT ii0          = (vi * ipcmd0 * lvacm - vr * qnet0) / vt;
-        const ScalarT ipcmd_signal = toSystemBase(ipcmd0, mva);
-        const ScalarT iqcmd_signal = toSystemBase(iqcmd0, mva);
-        const ScalarT ir_signal    = toSystemBase(ir0, mva);
-        const ScalarT ii_signal    = toSystemBase(ii0, mva);
-        const auto*   y            = regca.y().getData();
-
-        success *= scalarMatches(y[index(Vars::VM)], vt, "VM");
-        success *= scalarMatches(y[index(Vars::VT)], vt, "VT");
-        success *= scalarMatches(y[index(Vars::IP)], ipcmd0, "IP");
-        success *= scalarMatches(y[index(Vars::IQ)], iqcmd0, "IQ");
-        success *= scalarMatches(y[index(Vars::IR)], ir_signal, "IR");
-        success *= scalarMatches(y[index(Vars::II)], ii_signal, "II");
-        success *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
-        success *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-        success *= scalarMatches(ipcmd_node.read(), ipcmd_signal, "ipcmd signal");
-        success *= scalarMatches(iqcmd_node.read(), iqcmd_signal, "iqcmd signal");
-        success *= scalarMatches(ir_node.read(), ir_signal, "ir signal");
-        success *= scalarMatches(ii_node.read(), ii_signal, "ii signal");
-        success *= scalarMatches(pbranch_node.read(), p0, "pbranch signal");
-        success *= scalarMatches(qbranch_node.read(), q0, "qbranch signal");
-
-        success *= allResidualsZero(regca);
-        return success.report(__func__);
-      }
-
-      TestOutcome baseSignals()
-      {
-        TestStatus success = true;
-
-        const ScalarT p0{0.4};
-        const ScalarT q0{-0.1};
-        const RealT   mva{50.0};
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        auto data                    = makeData();
-        data.parameters[Params::mva] = mva;
-        data.parameters[Params::P0]  = static_cast<RealT>(p0);
-        data.parameters[Params::Q0]  = static_cast<RealT>(q0);
-
-        ScalarT ipcmd_value{99.0};
-        ScalarT iqcmd_value{99.0};
-        IdxT    ipcmd_index = 30;
-        IdxT    iqcmd_index = 31;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ir_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ii_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> qbranch_node;
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-        regca.getSignals().template assignSignalNode<Vars::IR>(&ir_node);
-        regca.getSignals().template assignSignalNode<Vars::II>(&ii_node);
-        regca.getSignals().template assignSignalNode<Vars::PBR>(&pbranch_node);
-        regca.getSignals().template assignSignalNode<Vars::QBR>(&qbranch_node);
-
-        success       *= (regca.allocate() == 0);
-        success       *= (regca.verify() == 0);
-        success       *= (regca.initialize() == 0);
-        success       *= (regca.evaluateResidual() == 0);
+        // Fixed answer key for Vr = 0.8, Vi = 0.6, P0 = 0.4, Q0 = -0.1,
+        // and a 50 MVA component base on the 100 MVA system base.
         const auto* y  = regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::VM)], static_cast<ScalarT>(1.0), "VM");
+        success       *= scalarMatches(y[index(Vars::VT)], static_cast<ScalarT>(1.0), "VT");
+        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP", kInitTol);
+        success       *= scalarMatches(y[index(Vars::IQ)], static_cast<ScalarT>(-0.2), "IQ");
+        success       *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.26), "IR", kInitTol);
+        success       *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.32), "II", kInitTol);
+        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
+        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
+        success       *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal", kInitTol);
+        success       *= scalarMatches(iqcmd_node.read(), q0, "iqcmd signal");
+        success       *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.26), "ir signal", kInitTol);
+        success       *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.32), "ii signal", kInitTol);
+        success       *= scalarMatches(pbranch_node.read(), p0, "pbranch signal");
+        success       *= scalarMatches(qbranch_node.read(), q0, "qbranch signal");
 
-        success *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP", kInitTol);
-        success *= scalarMatches(y[index(Vars::IQ)], static_cast<ScalarT>(-0.2), "IQ");
-        success *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.4), "IR");
-        success *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.1), "II");
-        success *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
-        success *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-        success *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal", kInitTol);
-        success *= scalarMatches(iqcmd_node.read(), q0, "iqcmd signal");
-        success *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.4), "ir signal");
-        success *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.1), "ii signal");
-        success *= scalarMatches(pbranch_node.read(), p0, "pbranch signal");
-        success *= scalarMatches(qbranch_node.read(), q0, "qbranch signal");
         success *= allResidualsZero(regca);
-
         return success.report(__func__);
       }
 
@@ -288,17 +232,18 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+
         ScalarT ipcmd_value{0.0};
         ScalarT iqcmd_value{0.0};
-        IdxT    ipcmd_index = 22;
-        IdxT    iqcmd_index = 23;
+        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT    iqcmd_index = ipcmd_index + 1;
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
         ipcmd_node.set(&ipcmd_value, &ipcmd_index);
         iqcmd_node.set(&iqcmd_value, &iqcmd_index);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
         regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
         regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
 
@@ -363,10 +308,11 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing initialization below the LVACM breakpoint. "
                     << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
 
         auto data                   = makeData();
         data.parameters[Params::Q0] = static_cast<RealT>(0.1);
@@ -389,10 +335,11 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing initialization with active LVACM. "
                     << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
 
         const ScalarT p0{0.13};
 
@@ -448,10 +395,11 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        const auto previous_verbosity = Log::verbosity();
         Log::setVerbosity(Log::Verbosity::EVERYTHING);
         Log::misc() << "Testing that a zero terminal voltage is rejected. "
                     << "Logged errors are expected.\n";
-        Log::setVerbosity(Log::Verbosity::WARNINGS);
+        Log::setVerbosity(previous_verbosity);
 
         PhasorDynamics::Bus<ScalarT, IdxT> bus(0.0, 0.0);
         bus.allocate();
@@ -469,6 +417,12 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing REGCA command signal verification. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
+
         PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
 
@@ -476,8 +430,8 @@ namespace GridKit
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
         ScalarT                                   ipcmd_value{0.25};
         ScalarT                                   iqcmd_value{-0.10};
-        IdxT                                      ipcmd_index = 24;
-        IdxT                                      iqcmd_index = 25;
+        IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT                                      iqcmd_index = ipcmd_index + 1;
 
         regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
         success *= (regca.verify() > 0);
@@ -497,6 +451,12 @@ namespace GridKit
       TestOutcome nullBusVerification()
       {
         TestStatus success = true;
+
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing REGCA verification without a bus. "
+                    << "Logged errors are expected.\n";
+        Log::setVerbosity(previous_verbosity);
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(nullptr, makeData());
         success *= (regca.verify() > 0);
@@ -548,17 +508,18 @@ namespace GridKit
         bus.allocate();
         bus.initialize();
 
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeDynamicData());
+
         ScalarT ipcmd_value{0.9};
         ScalarT iqcmd_value{0.1};
-        IdxT    ipcmd_index = 26;
-        IdxT    iqcmd_index = 27;
+        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        IdxT    iqcmd_index = ipcmd_index + 1;
 
         PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
         PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
         ipcmd_node.set(&ipcmd_value, &ipcmd_index);
         iqcmd_node.set(&iqcmd_value, &iqcmd_index);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeDynamicData());
         regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
         regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
 
@@ -657,73 +618,72 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome limiterBranchCoverage()
+      // Positive initial reactive power selects the upper IQ recovery-rate limit.
+      TestOutcome positiveInitialReactivePowerSelectsUpperIqRateLimit()
       {
         TestStatus success = true;
 
-        {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::Q0] = static_cast<RealT>(0.2);
+        auto data                   = makeDynamicData();
+        data.parameters[Params::Q0] = static_cast<RealT>(0.2);
 
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-          bus.allocate();
-          bus.initialize();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        bus.allocate();
+        bus.initialize();
 
-          ScalarT                                   iqcmd_value{0.2};
-          IdxT                                      iqcmd_index = 28;
-          PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-          iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
 
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-          regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+        ScalarT                                   iqcmd_value{0.2};
+        IdxT                                      iqcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
+        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
 
-          success *= (regca.allocate() == 0);
-          success *= (regca.verify() == 0);
-          success *= (regca.initialize() == 0);
+        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
 
-          iqcmd_value = static_cast<ScalarT>(0.4);
-          bus.evaluateResidual();
-          success       *= (regca.evaluateResidual() == 0);
-          const auto* y  = regca.y().getData();
-          const auto* f  = regca.getResidual().getData();
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
+        success *= (regca.initialize() == 0);
 
-          const ScalarT tg       = static_cast<RealT>(0.2);
-          const ScalarT fq       = (iqcmd_value - y[index(Vars::IQ)]) / tg;
-          const ScalarT expected = Math::min(fq, static_cast<RealT>(0.5));
+        iqcmd_value = static_cast<ScalarT>(0.4);
+        bus.evaluateResidual();
+        success       *= (regca.evaluateResidual() == 0);
+        const auto* f  = regca.getResidual().getData();
 
-          success *= scalarMatches(f[index(Vars::IQ)],
-                                   expected,
-                                   "positive IQ branch");
-        }
+        success *= scalarMatches(f[index(Vars::IQ)],
+                                 static_cast<ScalarT>(0.5),
+                                 "upper IQ rate limit");
 
-        {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::sL] = false;
+        return success.report(__func__);
+      }
 
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-          bus.allocate();
-          bus.initialize();
+      // Disabling LVPL removes IL from the active-current upper rate bound.
+      TestOutcome disabledLvplRemovesIlDependence()
+      {
+        TestStatus success = true;
 
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.initialize() == 0);
+        auto data                   = makeDynamicData();
+        data.parameters[Params::sL] = false;
 
-          bus.evaluateResidual();
-          success       *= (regca.evaluateResidual() == 0);
-          const auto* y  = regca.y().getData();
-          const auto* f  = regca.getResidual().getData();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
+        bus.allocate();
+        bus.initialize();
 
-          const ScalarT ip       = y[index(Vars::IP)];
-          const ScalarT sigma_ip = Math::sigmoid(ip);
-          const RealT   rpmax    = static_cast<RealT>(0.7);
-          const RealT   mp       = static_cast<RealT>(100.0) * rpmax;
-          const ScalarT expected = mp * (ONE<RealT> - sigma_ip) + rpmax * sigma_ip;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success *= (regca.allocate() == 0);
+        success *= (regca.initialize() == 0);
 
-          success *= scalarMatches(y[index(Vars::UP)], expected, "UP without LVPL");
-          success *= scalarMatches(f[index(Vars::UP)],
-                                   static_cast<ScalarT>(0.0),
-                                   "UP residual without LVPL");
-        }
+        auto* y            = regca.y().getData();
+        y[index(Vars::IP)] = static_cast<ScalarT>(0.5);
+        y[index(Vars::IL)] = static_cast<ScalarT>(0.1);
+        y[index(Vars::UP)] = static_cast<ScalarT>(0.0);
+        regca.y().setDataUpdated();
+
+        bus.evaluateResidual();
+        success       *= (regca.evaluateResidual() == 0);
+        const auto* f  = regca.getResidual().getData();
+
+        success *= scalarMatches(f[index(Vars::UP)],
+                                 static_cast<ScalarT>(0.7),
+                                 "UP target with LVPL disabled");
 
         return success.report(__func__);
       }
@@ -738,6 +698,10 @@ namespace GridKit
 
         success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
         const auto nrows  = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
+
+        // Both differentiate the same residual, but through different operation
+        // orders, so entries reaching O(1e4) through the Mp-scaled sigmoid
+        // chains agree only to roundoff amplified well above kTol.
         for (size_t i = 0; i < nrows; ++i)
         {
           success *= isEqual(dependency_tracking_jacobian[i],
@@ -813,16 +777,6 @@ namespace GridKit
         data.parameters[param] = value;
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> model(&bus, data);
         return model.verify() > 0;
-      }
-
-      ScalarT toComponentBase(ScalarT value, RealT mva) const
-      {
-        return value * static_cast<RealT>(100.0) / mva;
-      }
-
-      ScalarT toSystemBase(ScalarT value, RealT mva) const
-      {
-        return value * mva / static_cast<RealT>(100.0);
       }
 
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const
@@ -935,7 +889,7 @@ namespace GridKit
         DepVar                                   ipcmd_value{0.9};
         DepVar                                   iqcmd_value{0.1};
         IdxT                                     ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT                                     iqcmd_index = static_cast<IdxT>(regca.size() + bus.size() + 1);
+        IdxT                                     iqcmd_index = ipcmd_index + 1;
 
         bus.allocate();
         regca.allocate();
@@ -995,7 +949,7 @@ namespace GridKit
         ScalarT                                   ipcmd_value{0.9};
         ScalarT                                   iqcmd_value{0.1};
         IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT                                      iqcmd_index = static_cast<IdxT>(regca.size() + bus.size() + 1);
+        IdxT                                      iqcmd_index = ipcmd_index + 1;
 
         bus.allocate();
         regca.allocate();

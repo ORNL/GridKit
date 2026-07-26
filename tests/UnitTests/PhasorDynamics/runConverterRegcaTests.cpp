@@ -9,7 +9,6 @@ int main()
   result += test.constructionAndValidation();
   result += test.parameterValidation();
   result += test.initializesFromPowerFlowAndPublishesSignals();
-  result += test.baseSignals();
   result += test.unconnectedCommandsRemainConstant();
   result += test.externalCommandsDriveRuntimeResidual();
   result += test.initializesAboveHighVoltageLimit();
@@ -22,7 +21,8 @@ int main()
   result += test.busInjectionUsesSystemBase();
   result += test.residualEquations();
   result += test.highVoltageReactiveCurrentRoot();
-  result += test.limiterBranchCoverage();
+  result += test.positiveInitialReactivePowerSelectsUpperIqRateLimit();
+  result += test.disabledLvplRemovesIlDependence();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif

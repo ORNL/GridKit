@@ -191,35 +191,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-    private:
-      auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
-      {
-        using Params = PhasorDynamics::Converter::RegcaParameters;
-        using Buses  = PhasorDynamics::Converter::RegcaBuses;
-
-        PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
-        data.device_class               = "Regca";
-        data.disambiguation_string      = "regca_test";
-        data.buses[Buses::bus]          = static_cast<IdxT>(1);
-        data.parameters[Params::P0]     = static_cast<RealT>(1.0);
-        data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
-        data.parameters[Params::mva]    = static_cast<RealT>(100.0);
-        data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
-        data.parameters[Params::TM]     = static_cast<RealT>(0.02);
-        data.parameters[Params::Rqmax]  = static_cast<RealT>(999.0);
-        data.parameters[Params::Rqmin]  = static_cast<RealT>(-999.0);
-        data.parameters[Params::Rpmax]  = static_cast<RealT>(999.0);
-        data.parameters[Params::sL]     = true;
-        data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
-        data.parameters[Params::VL0]    = static_cast<RealT>(0.4);
-        data.parameters[Params::VL1]    = static_cast<RealT>(0.9);
-        data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
-        data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
-        data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
-        return data;
-      }
-
-    public:
       TestOutcome genrou()
       {
         TestStatus success = true;
@@ -287,6 +258,34 @@ namespace GridKit
         system = nullptr;
 
         return success.report(__func__);
+      }
+
+    private:
+      auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
+      {
+        using Params = PhasorDynamics::Converter::RegcaParameters;
+        using Buses  = PhasorDynamics::Converter::RegcaBuses;
+
+        PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
+        data.device_class               = "Regca";
+        data.disambiguation_string      = "regca_test";
+        data.buses[Buses::bus]          = static_cast<IdxT>(1);
+        data.parameters[Params::P0]     = static_cast<RealT>(1.0);
+        data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
+        data.parameters[Params::mva]    = static_cast<RealT>(100.0);
+        data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
+        data.parameters[Params::TM]     = static_cast<RealT>(0.02);
+        data.parameters[Params::Rqmax]  = static_cast<RealT>(999.0);
+        data.parameters[Params::Rqmin]  = static_cast<RealT>(-999.0);
+        data.parameters[Params::Rpmax]  = static_cast<RealT>(999.0);
+        data.parameters[Params::sL]     = true;
+        data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
+        data.parameters[Params::VL0]    = static_cast<RealT>(0.4);
+        data.parameters[Params::VL1]    = static_cast<RealT>(0.9);
+        data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
+        data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
+        data.parameters[Params::Vhvmax] = static_cast<RealT>(1.2);
+        return data;
       }
     };
 
