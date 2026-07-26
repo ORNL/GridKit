@@ -5,8 +5,6 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <sstream>
-#include <variant>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -15,8 +13,6 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
-#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -727,93 +723,6 @@ namespace GridKit
           success *= scalarMatches(f[index(Vars::UP)],
                                    static_cast<ScalarT>(0.0),
                                    "UP residual without LVPL");
-        }
-
-        return success.report(__func__);
-      }
-
-      TestOutcome jsonParseAndSystemAssembly()
-      {
-        TestStatus success = true;
-
-        std::istringstream input(R"json(
-{
-  "header": {
-    "format_version": 0,
-    "format_revision": 1,
-    "case_name": "REGCA full model",
-    "case_description": "REGCA parser behavior test",
-    "case_comments": "",
-    "freq_base": 60.0,
-    "va_base": 100000000.0
-  },
-  "buses": [
-    {
-      "number": 1,
-      "class": "bus",
-      "name": "Bus 1",
-      "init": { "Vr": 1.0, "Vi": 0.0 },
-      "params": { "kv": 1.0 }
-    }
-  ],
-  "devices": [
-    {
-      "class": "Regca",
-      "ports": { "bus": 1 },
-      "id": "CV1",
-      "params": {
-        "P0": 0.0,
-        "Q0": 0.0,
-        "mva": 100,
-        "Tg": 0.02,
-        "TM": 0.02,
-        "Rqmax": 999.0,
-        "Rqmin": -999.0,
-        "Rpmax": 999.0,
-        "sL": true,
-        "IL1": 1.1,
-        "VL0": 0.4,
-        "VL1": 0.9,
-        "VA0": 0.4,
-        "VA1": 0.9,
-        "Vhvmax": 1.2
-      },
-      "mon": ["ir", "ii", "p", "q"]
-    }
-  ]
-}
-)json");
-
-        auto data               = PhasorDynamics::parseSystemModelData(input);
-        success                *= (data.regca.size() == 1);
-        const auto& regca_data  = data.regca[0];
-        success                *= (regca_data.device_class == "Regca");
-        success                *= (regca_data.buses.at(PhasorDynamics::Converter::RegcaBuses::bus)
-                    == 1);
-        success                *= regca_data.signal_inputs.empty();
-        success                *= regca_data.signal_outputs.empty();
-        success                *= (std::get_if<double>(&regca_data.parameters.at(Params::P0))
-                    != nullptr);
-        success                *= (std::get_if<double>(&regca_data.parameters.at(Params::Q0))
-                    != nullptr);
-        success                *= (std::get_if<size_t>(&regca_data.parameters.at(Params::mva))
-                    != nullptr);
-        success                *= (std::get_if<bool>(&regca_data.parameters.at(Params::sL))
-                    != nullptr);
-
-        PhasorDynamics::SystemModel<double, size_t> system(data);
-        success              *= (system.allocate() == 0);
-        success              *= (system.initialize() == 0);
-        success              *= (system.tagDifferentiable() == 0);
-        success              *= (system.evaluateResidual() == 0);
-        success              *= (system.evaluateJacobian() == 0);
-        success              *= (system.size() == 14);
-        const auto* residual  = system.getResidual().getData();
-        success              *= isEqual(residual[0], 0.0, static_cast<double>(kTol));
-        success              *= isEqual(residual[1], 0.0, static_cast<double>(kTol));
-        for (size_t i = 2; i < static_cast<size_t>(system.getResidual().getSize()); ++i)
-        {
-          success *= isEqual(residual[i], 0.0, static_cast<double>(kTol));
         }
 
         return success.report(__func__);

@@ -3,6 +3,7 @@
 
 #include <GridKit/Model/PhasorDynamics/ComponentLibrary.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
+#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 
@@ -169,22 +170,23 @@ namespace GridKit
       {
         TestStatus success = true;
 
-        PhasorDynamics::SystemModel<ScalarT, IdxT>* system = new PhasorDynamics::SystemModel<ScalarT, IdxT>();
+        PhasorDynamics::SystemModelData<RealT, IdxT> data;
+        data.bus.resize(1);
+        data.bus[0].bus_id   = static_cast<IdxT>(1);
+        data.bus[0].bus_type = PhasorDynamics::BusData<RealT, IdxT>::BusType::SLACK;
+        data.bus[0].Vr0      = static_cast<RealT>(1.0);
+        data.bus[0].Vi0      = static_cast<RealT>(0.0);
+        data.regca.push_back(makeRegcaData());
 
-        PhasorDynamics::BusInfinite<ScalarT, IdxT> bus(1.0, 0.0);
-        system->addBus(&bus);
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeRegcaData());
-        system->addComponent(&regca);
-
-        success *= system->allocate() == 0;
-        success *= system->initialize() == 0;
-        success *= system->evaluateResidual() == 0;
-        success *= system->evaluateJacobian() == 0;
-        success *= system->size() == regca.size();
-
-        delete system;
-        system = nullptr;
+        success *= system.allocate() == 0;
+        success *= system.initialize() == 0;
+        success *= system.tagDifferentiable() == 0;
+        success *= system.evaluateResidual() == 0;
+        success *= system.evaluateJacobian() == 0;
+        success *= system.size()
+                   == static_cast<IdxT>(PhasorDynamics::Converter::RegcaInternalVariables::MAXIMUM);
 
         return success.report(__func__);
       }
@@ -193,10 +195,12 @@ namespace GridKit
       auto makeRegcaData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
       {
         using Params = PhasorDynamics::Converter::RegcaParameters;
+        using Buses  = PhasorDynamics::Converter::RegcaBuses;
 
         PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
         data.device_class               = "Regca";
         data.disambiguation_string      = "regca_test";
+        data.buses[Buses::bus]          = static_cast<IdxT>(1);
         data.parameters[Params::P0]     = static_cast<RealT>(1.0);
         data.parameters[Params::Q0]     = static_cast<RealT>(0.0);
         data.parameters[Params::mva]    = static_cast<RealT>(100.0);

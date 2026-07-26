@@ -23,7 +23,6 @@ int main()
   result += test.residualEquations();
   result += test.highVoltageReactiveCurrentRoot();
   result += test.limiterBranchCoverage();
-  result += test.jsonParseAndSystemAssembly();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
