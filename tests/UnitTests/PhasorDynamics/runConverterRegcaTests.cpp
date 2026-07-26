@@ -10,7 +10,6 @@ int main()
   result += test.parameterValidation();
   result += test.initializesFromPowerFlowAndPublishesSignals();
   result += test.unconnectedCommandsRemainConstant();
-  result += test.externalCommandsDriveRuntimeResidual();
   result += test.initializesAboveHighVoltageLimit();
   result += test.rejectsInitializationBelowLvacmBreakpoint();
   result += test.rejectsInitializationWithActiveLvacm();

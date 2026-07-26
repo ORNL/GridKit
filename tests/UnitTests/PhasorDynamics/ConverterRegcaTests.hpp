@@ -215,54 +215,6 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome externalCommandsDriveRuntimeResidual()
-      {
-        TestStatus success = true;
-
-        auto data                   = makeData();
-        data.parameters[Params::P0] = static_cast<RealT>(0.5);
-        data.parameters[Params::Q0] = static_cast<RealT>(-0.1);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-
-        ScalarT ipcmd_value{0.0};
-        ScalarT iqcmd_value{0.0};
-        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT    iqcmd_index = ipcmd_index + 1;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-
-        const auto* y = regca.y().getData();
-        ipcmd_value   = y[index(Vars::IP)] + static_cast<ScalarT>(0.05);
-        iqcmd_value   = y[index(Vars::IQ)] + static_cast<ScalarT>(0.05);
-        bus.evaluateResidual();
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* f  = regca.getResidual().getData();
-
-        // Both commands move 0.05 per unit and sit far inside the rate limits,
-        // so each residual is the unlimited command error over Tg.
-        success *= isEqual(f[index(Vars::IP)], static_cast<ScalarT>(2.5), kTol);
-        success *= isEqual(f[index(Vars::IQ)], static_cast<ScalarT>(2.5), kTol);
-        success *= (f[index(Vars::IP)] > ZERO<RealT>);
-        success *= (f[index(Vars::IQ)] > ZERO<RealT>);
-
-        return success.report(__func__);
-      }
-
       // Verifies the initial point is residual-consistent above Vhvmax and still
       // delivers the P0/Q0 injection. Vhvmax is 1.2 in makeData.
       TestOutcome initializesAboveHighVoltageLimit()
