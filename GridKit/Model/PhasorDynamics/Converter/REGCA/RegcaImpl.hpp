@@ -257,9 +257,14 @@ namespace GridKit
       }
 
       /**
-       * @brief verify method checks parameters, the terminal bus, and signals
+       * @brief Validate the REGCA configuration
        *
-       * @return int number of configuration errors, zero when the model is valid
+       * Checks required parameters, terminal-bus association, and attached
+       * command ports. Operating-point-dependent constraints are part of
+       * initialize()'s documented preconditions.
+       *
+       * @return int Number of configuration errors; zero when the configuration
+       *             is valid.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::verify() const
@@ -311,10 +316,20 @@ namespace GridKit
       }
 
       /**
-       * @brief Compute a residual-consistent initial operating point
+       * @brief Initialize REGCA from the power-flow operating point
        *
-       * @pre verify() reported no errors and the terminal bus is initialized.
-       * @return int 0, or 1 when the terminal voltage magnitude is zero
+       * Resolves the internal states and current-command signals from the
+       * initialized terminal-bus voltage and the system-base P0/Q0 injections.
+       * All differential states are initialized with zero derivative.
+       *
+       * @pre allocate() has completed.
+       * @pre verify() has reported no configuration errors.
+       * @pre The terminal bus has been initialized.
+       * @pre The initial terminal-voltage magnitude is at least VA1, so the
+       *      low-voltage active-current-management block is inactive.
+       *
+       * @return int 0 on success; nonzero when the operating point cannot be
+       *             initialized consistently.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
@@ -343,19 +358,14 @@ namespace GridKit
           return 1;
         }
 
-        // REGCA owns the network terminal and establishes the initial
-        // converter operating point from the power-flow injection. Controller
-        // command ports may not have been initialized yet, so initialization
-        // resolves the commands from P0/Q0 and publishes them on the system
-        // base to attached ports below. P0/Q0 are given on the system base;
-        // toComponentBase converts them to the converter base the internal
-        // states use.
+        // P0 is a system-base power-flow injection. Resolve the component-base
+        // active-current command through the LVACM network-interface gain.
         const ScalarT lvacm  = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
 
-        // The HVRCM ramp is nonzero at every terminal voltage. Seed IQEXTRA from
-        // it and raise the command by the same amount so the net reactive
-        // current still delivers the Q0 injection.
+        // Seed the HVRCM algebraic current from its residual. Add the same
+        // current to IQCMD so the net network current, IQ - IQEXTRA, still
+        // reproduces Q0.
         const ScalarT iqextra0 = Math::ramp(vt - Vhvmax_);
         const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
         const ScalarT iqcmd0   = qnet0 + iqextra0;
@@ -375,9 +385,9 @@ namespace GridKit
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
-        // Retain the resolved commands as the constant source used during
-        // residual evaluation when no controller drives the command ports, and
-        // select the reactive-current rate-limit branch from the sign of Q0.
+        // The WECC REGCA definition selects the reactive-current recovery
+        // limiter from the sign of the initial reactive-power injection, not
+        // from IQCMD after HVRCM compensation.
         ipcmd_set_    = toSystemBase(ipcmd0);
         iqcmd_set_    = toSystemBase(iqcmd0);
         iq_use_upper_ = ZERO<RealT>;
@@ -388,9 +398,9 @@ namespace GridKit
           iq_use_lower_ = ZERO<RealT>;
         }
 
-        // Seed attached command nodes with the steady-state values. Controller
-        // initialization can use these signal values, and unattached ports fall
-        // back to the constants stored above.
+        // Publish the resolved system-base commands for downstream controller
+        // initialization. Unattached ports retain these values as constant
+        // commands.
         if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
         {
           signals_.template writeExternalVariable<RegcaExternalVariables::IPCMD>(ipcmd_set_);
@@ -470,7 +480,8 @@ namespace GridKit
         const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
 
-        // Pre-limit current derivatives.
+        // Form the unconstrained current derivatives, then apply the REGCA
+        // recovery rate limits in p.u./s.
         const ScalarT fq = (iqcmd - iq) / Tg_;
         const ScalarT fp = (ipcmd - ip) / Tg_;
 

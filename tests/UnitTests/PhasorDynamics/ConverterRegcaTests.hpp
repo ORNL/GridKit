@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <variant>
 #include <vector>
@@ -33,12 +35,17 @@ namespace GridKit
       using ScalarT = scalar_type;
       using IdxT    = index_type;
       using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using VectorT = typename PhasorDynamics::Component<ScalarT, IdxT>::VectorT;
 
       ConverterRegcaTests()  = default;
       ~ConverterRegcaTests() = default;
 
-      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-9);
+      // Tolerance for values the model computes without a smooth approximation.
+      static constexpr ScalarT kTol = std::numeric_limits<ScalarT>::epsilon();
+
+      // initialize() divides by linseg(VT, VA0, VA1, 1). Above VA1 that value is
+      // short of one by 3e-13, and the residue reaches every state seeded from
+      // P0. Comparisons against exact power-flow values carry it.
+      static constexpr ScalarT kInitTol = static_cast<ScalarT>(1.0e-9);
 
       TestOutcome constructionAndValidation()
       {
@@ -229,13 +236,13 @@ namespace GridKit
         success       *= (regca.evaluateResidual() == 0);
         const auto* y  = regca.y().getData();
 
-        success *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP");
+        success *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP", kInitTol);
         success *= scalarMatches(y[index(Vars::IQ)], static_cast<ScalarT>(-0.2), "IQ");
         success *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.4), "IR");
         success *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.1), "II");
         success *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
         success *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-        success *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal");
+        success *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal", kInitTol);
         success *= scalarMatches(iqcmd_node.read(), q0, "iqcmd signal");
         success *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.4), "ir signal");
         success *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.1), "ii signal");
@@ -266,7 +273,7 @@ namespace GridKit
         success       *= (regca.evaluateResidual() == 0);
         const auto* y  = regca.y().getData();
 
-        success *= isEqual(y[index(Vars::IP)], static_cast<ScalarT>(0.6), kTol);
+        success *= isEqual(y[index(Vars::IP)], static_cast<ScalarT>(0.6), kInitTol);
         success *= isEqual(y[index(Vars::IQ)], static_cast<ScalarT>(0.2), kTol);
         success *= allResidualsZero(regca);
 
@@ -307,22 +314,12 @@ namespace GridKit
         iqcmd_value = static_cast<ScalarT>(-0.05);
         bus.evaluateResidual();
         success       *= (regca.evaluateResidual() == 0);
-        const auto* y  = regca.y().getData();
         const auto* f  = regca.getResidual().getData();
 
-        const ScalarT tg       = static_cast<RealT>(0.02);
-        const ScalarT ip_error = ipcmd_value - y[index(Vars::IP)];
-        const ScalarT iq_error = iqcmd_value - y[index(Vars::IQ)];
-
-        const ScalarT expected_ip_residual =
-            y[index(Vars::LP)]
-            + Math::ramp(ip_error - tg * y[index(Vars::LP)]) / tg
-            - Math::ramp(ip_error - tg * y[index(Vars::UP)]) / tg;
-        const ScalarT expected_iq_residual =
-            iq_error / tg + Math::ramp(tg * static_cast<RealT>(-999.0) - iq_error) / tg;
-
-        success *= isEqual(f[index(Vars::IP)], expected_ip_residual, kTol);
-        success *= isEqual(f[index(Vars::IQ)], expected_iq_residual, kTol);
+        // Both commands move 0.05 per unit and sit far inside the rate limits,
+        // so each residual is the unlimited command error over Tg.
+        success *= isEqual(f[index(Vars::IP)], static_cast<ScalarT>(2.5), kInitTol);
+        success *= isEqual(f[index(Vars::IQ)], static_cast<ScalarT>(2.5), kTol);
         success *= (f[index(Vars::IP)] > ZERO<RealT>);
         success *= (f[index(Vars::IQ)] > ZERO<RealT>);
 
@@ -392,19 +389,20 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      // Below VA0 the collapsed LVACM gain drives IP to a very large value. The
-      // gain cancels out of the injection, so the state stays finite and still
-      // delivers P0.
-      TestOutcome initializesBelowLvacmBreakpointWithActivePower()
+      // Verifies the initial point is residual-consistent on the LVACM ramp
+      // with active power flowing. VA0 is 0.4 and VA1 is 0.9 in makeData, so
+      // the gain is 0.5 at a terminal voltage of 0.65 and IP carries P0 divided
+      // by that gain.
+      TestOutcome initializesOnLvacmRampWithActivePower()
       {
         TestStatus success = true;
 
-        const ScalarT p0{0.5};
+        const ScalarT p0{0.13};
 
         auto data                   = makeData();
         data.parameters[Params::P0] = static_cast<RealT>(p0);
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.65, 0.0);
         bus.allocate();
         bus.initialize();
 
@@ -412,17 +410,13 @@ namespace GridKit
         success *= (regca.allocate() == 0);
         success *= (regca.verify() == 0);
         success *= (regca.initialize() == 0);
+        success *= (regca.evaluateResidual() == 0);
+        success *= allResidualsZero(regca);
 
-        const auto* y = regca.y().getData();
-        for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
-        {
-          if (!std::isfinite(y[i]))
-          {
-            std::cout << "REGCA initial state row " << i << " is not finite\n";
-            success = false;
-          }
-        }
-        success *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
+        const auto* y  = regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.4), "IP");
+        success       *= scalarMatches(y[index(Vars::IL)], static_cast<ScalarT>(0.55), "IL");
+        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
 
         return success.report(__func__);
       }
@@ -520,6 +514,7 @@ namespace GridKit
         success *= isEqual(bus.Ii(), y[index(Vars::II)], kTol);
         success *= isEqual(bus.Ir(), static_cast<ScalarT>(0.26), kTol);
         success *= isEqual(bus.Ii(), static_cast<ScalarT>(0.32), kTol);
+        success *= allResidualsZero(regca);
 
         return success.report(__func__);
       }
@@ -549,12 +544,64 @@ namespace GridKit
         success *= (regca.allocate() == 0);
         success *= (regca.initialize() == 0);
 
+        // initialize() seeds the attached command nodes from P0 and Q0. Drive
+        // them to the values the answer key assumes.
+        ipcmd_value = static_cast<ScalarT>(0.9);
+        iqcmd_value = static_cast<ScalarT>(0.1);
+
         setResidualState(regca);
         bus.evaluateResidual();
         success *= (regca.evaluateResidual() == 0);
 
-        const auto expected  = expectedResidualForState(ipcmd_value, iqcmd_value);
-        success             *= vectorMatches(regca.getResidual(), expected, "REGCA residual");
+        // Answer key for the state set by setResidualState() with the commands
+        // above. Each entry is the exact piecewise value of the named equation
+        // in README.md.
+        const std::vector<ScalarT> res_answer = {
+            0.29,   // f[0]:  -VM' + (VT - VM) / TM
+            1.52,   // f[1]:  -IQ' + max(fq, Rqmin)
+            0.22,   // f[2]:  -IP' + clamp(fp, LP, UP)
+            0.0046, // f[3]:  -VT^2 + Vr^2 + Vi^2
+            0.26,   // f[4]:  -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
+            0.2546, // f[5]:  -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
+            -0.03,  // f[6]:  -IQEXTRA + ramp(VT - Vhvmax)
+            0.292,  // f[7]:  -IL + linseg(VM, VL0, VL1, IL1)
+            -69.6,  // f[8]:  -LP - Rpmax - (Mp - Rpmax)*sigmoid(IP)
+            -0.3,   // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)*sigmoid(IL - IP)
+            0.0,    // f[10]: -PBR + Vr*IR + Vi*II
+            0.0,    // f[11]: -QBR + Vi*IR - Vr*II
+        };
+
+        // Rows 2, 4, 5, 7, and 9 evaluate a CommonMath approximation within one
+        // smoothing width of a breakpoint, so they miss the exact piecewise
+        // answer. Row 7 is the largest at 4.8e-7.
+        const auto                 smooth_tol = static_cast<ScalarT>(1.0e-6);
+        const std::vector<ScalarT> res_tol    = {kTol,
+                                                 kTol,
+                                                 smooth_tol,
+                                                 kTol,
+                                                 smooth_tol,
+                                                 smooth_tol,
+                                                 kTol,
+                                                 smooth_tol,
+                                                 kTol,
+                                                 smooth_tol,
+                                                 kTol,
+                                                 kTol};
+
+        const auto& residual  = regca.getResidual();
+        success              *= (static_cast<size_t>(residual.getSize()) == res_answer.size());
+
+        const auto* f = residual.getData();
+        for (size_t i = 0; i < res_answer.size(); ++i)
+        {
+          if (!isEqual(f[i], res_answer[i], res_tol[i]))
+          {
+            std::cout << "Incorrect result for residual " << i << ": "
+                      << std::setprecision(15) << f[i] << " != " << res_answer[i]
+                      << "\n";
+            success = false;
+          }
+        }
 
         return success.report(__func__);
       }
@@ -844,24 +891,6 @@ namespace GridKit
         return value * mva / static_cast<RealT>(100.0);
       }
 
-      ScalarT activeLower(ScalarT ip, RealT rpmax) const
-      {
-        const RealT mp = static_cast<RealT>(100.0) * rpmax;
-        return -rpmax - (mp - rpmax) * Math::sigmoid(ip);
-      }
-
-      ScalarT activeUpper(ScalarT ip, ScalarT il, RealT rpmax, bool use_lvpl) const
-      {
-        const RealT   mp       = static_cast<RealT>(100.0) * rpmax;
-        const ScalarT sigma_ip = Math::sigmoid(ip);
-        ScalarT       output   = mp * (ONE<RealT> - sigma_ip) + rpmax * sigma_ip;
-        if (use_lvpl)
-        {
-          output = mp * (ONE<RealT> - sigma_ip) + rpmax * sigma_ip * Math::sigmoid(il - ip);
-        }
-        return output;
-      }
-
       bool allResidualsZero(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca) const
       {
         bool        success = true;
@@ -883,29 +912,12 @@ namespace GridKit
         return success;
       }
 
-      bool vectorMatches(const VectorT&              actual,
-                         const std::vector<ScalarT>& expected,
-                         const char*                 label) const
+      bool scalarMatches(ScalarT     actual,
+                         ScalarT     expected,
+                         const char* label,
+                         ScalarT     tol = kTol) const
       {
-        const auto* data    = actual.getData();
-        const auto  size    = static_cast<size_t>(actual.getSize());
-        bool        success = (size == expected.size());
-        const auto  n       = std::min(size, expected.size());
-        for (size_t i = 0; i < n; ++i)
-        {
-          if (!isEqual(data[i], expected[i], kTol))
-          {
-            std::cout << label << " mismatch at row " << i << ": "
-                      << data[i] << " != " << expected[i] << "\n";
-            success = false;
-          }
-        }
-        return success;
-      }
-
-      bool scalarMatches(ScalarT actual, ScalarT expected, const char* label) const
-      {
-        if (isEqual(actual, expected, kTol))
+        if (isEqual(actual, expected, tol))
         {
           return true;
         }
@@ -938,57 +950,6 @@ namespace GridKit
 
         regca.y().setDataUpdated();
         regca.yp().setDataUpdated();
-      }
-
-      std::vector<ScalarT> expectedResidualForState(ScalarT ipcmd, ScalarT iqcmd) const
-      {
-        constexpr RealT   tg    = static_cast<RealT>(0.2);
-        constexpr RealT   tm    = static_cast<RealT>(0.4);
-        constexpr RealT   rqmin = static_cast<RealT>(-0.6);
-        constexpr RealT   rpmax = static_cast<RealT>(0.7);
-        constexpr RealT   vl0   = static_cast<RealT>(0.4);
-        constexpr RealT   vl1   = static_cast<RealT>(0.9);
-        constexpr RealT   va0   = static_cast<RealT>(0.4);
-        constexpr RealT   va1   = static_cast<RealT>(0.9);
-        constexpr RealT   il1   = static_cast<RealT>(1.1);
-        constexpr ScalarT vr    = static_cast<ScalarT>(0.95);
-        constexpr ScalarT vi    = static_cast<ScalarT>(0.25);
-        constexpr ScalarT vm    = static_cast<ScalarT>(0.86);
-        constexpr ScalarT iq    = static_cast<ScalarT>(-0.2);
-        constexpr ScalarT ip    = static_cast<ScalarT>(0.85);
-        constexpr ScalarT vt    = static_cast<ScalarT>(0.98);
-        constexpr ScalarT ii    = static_cast<ScalarT>(0.18);
-        constexpr ScalarT iqext = static_cast<ScalarT>(0.03);
-        constexpr ScalarT il    = static_cast<ScalarT>(0.72);
-        constexpr ScalarT ir    = static_cast<ScalarT>(0.5);
-        constexpr ScalarT lp    = static_cast<ScalarT>(-0.4);
-        constexpr ScalarT up    = static_cast<ScalarT>(0.3);
-        constexpr ScalarT pbr   = static_cast<ScalarT>(0.52);
-        constexpr ScalarT qbr   = static_cast<ScalarT>(-0.046);
-        constexpr ScalarT vmdot = static_cast<ScalarT>(0.01);
-        constexpr ScalarT iqdot = static_cast<ScalarT>(-0.02);
-        constexpr ScalarT ipdot = static_cast<ScalarT>(0.03);
-
-        const ScalarT fq    = (iqcmd - iq) / tg;
-        const ScalarT fp    = (ipcmd - ip) / tg;
-        const ScalarT lvacm = Math::linseg(vt, va0, va1, ONE<RealT>);
-        const ScalarT qnet  = iq - iqext;
-
-        std::vector<ScalarT> expected(static_cast<size_t>(Vars::MAXIMUM),
-                                      static_cast<ScalarT>(0.0));
-        expected[index(Vars::VM)]      = -vmdot + (vt - vm) / tm;
-        expected[index(Vars::IQ)]      = -iqdot + Math::max(fq, rqmin);
-        expected[index(Vars::IP)]      = -ipdot + Math::clamp(fp, lp, up);
-        expected[index(Vars::VT)]      = -vt * vt + vr * vr + vi * vi;
-        expected[index(Vars::IR)]      = -vt * ir + vr * ip * lvacm + vi * qnet;
-        expected[index(Vars::II)]      = -vt * ii + vi * ip * lvacm - vr * qnet;
-        expected[index(Vars::IQEXTRA)] = -iqext + Math::ramp(vt - static_cast<RealT>(1.3));
-        expected[index(Vars::IL)]      = -il + Math::linseg(vm, vl0, vl1, il1);
-        expected[index(Vars::LP)]      = -lp + activeLower(ip, rpmax);
-        expected[index(Vars::UP)]      = -up + activeUpper(ip, il, rpmax, true);
-        expected[index(Vars::PBR)]     = -pbr + vr * ir + vi * ii;
-        expected[index(Vars::QBR)]     = -qbr + vi * ir - vr * ii;
-        return expected;
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
