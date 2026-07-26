@@ -502,8 +502,8 @@ namespace GridKit
         f[IQ]      = -iq_dot + iq_limited;
         f[IP]      = -ip_dot + Math::clamp(fp, lp, up);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
-        f[IR]      = -vt * ir + toSystemBase(vi * qnet + vr * ip * lvacm);
-        f[II]      = -vt * ii + toSystemBase(-vr * qnet + vi * ip * lvacm);
+        f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
+        f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -iqextra + Math::ramp(vt - Vhvmax_);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
         f[LP]      = -lp + lpTarget(ip);
