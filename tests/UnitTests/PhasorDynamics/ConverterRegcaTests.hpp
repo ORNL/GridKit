@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
@@ -34,13 +33,9 @@ namespace GridKit
       ConverterRegcaTests()  = default;
       ~ConverterRegcaTests() = default;
 
-      // Tolerance for values the model computes without a smooth approximation.
-      static constexpr ScalarT kTol = std::numeric_limits<ScalarT>::epsilon();
-
-      // initialize() divides by linseg(VT, VA0, VA1, 1). Above VA1 that value is
-      // short of one by 3e-13, and the residue reaches every state seeded from
-      // P0. Comparisons against exact power-flow values carry it.
-      static constexpr ScalarT kInitTol = static_cast<ScalarT>(1.0e-9);
+      // At nominal voltage, the CommonMath LVACM approximation differs from
+      // its piecewise plateau by O(1e-13).
+      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-12);
 
       TestOutcome constructionAndValidation()
       {
@@ -176,16 +171,16 @@ namespace GridKit
         const auto* y  = regca.y().getData();
         success       *= scalarMatches(y[index(Vars::VM)], static_cast<ScalarT>(1.0), "VM");
         success       *= scalarMatches(y[index(Vars::VT)], static_cast<ScalarT>(1.0), "VT");
-        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP", kInitTol);
+        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP");
         success       *= scalarMatches(y[index(Vars::IQ)], static_cast<ScalarT>(-0.2), "IQ");
-        success       *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.26), "IR", kInitTol);
-        success       *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.32), "II", kInitTol);
+        success       *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.26), "IR");
+        success       *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.32), "II");
         success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
         success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-        success       *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal", kInitTol);
+        success       *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal");
         success       *= scalarMatches(iqcmd_node.read(), q0, "iqcmd signal");
-        success       *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.26), "ir signal", kInitTol);
-        success       *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.32), "ii signal", kInitTol);
+        success       *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.26), "ir signal");
+        success       *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.32), "ii signal");
         success       *= scalarMatches(pbranch_node.read(), p0, "pbranch signal");
         success       *= scalarMatches(qbranch_node.read(), q0, "qbranch signal");
 
@@ -213,7 +208,7 @@ namespace GridKit
         success       *= (regca.evaluateResidual() == 0);
         const auto* y  = regca.y().getData();
 
-        success *= isEqual(y[index(Vars::IP)], static_cast<ScalarT>(0.6), kInitTol);
+        success *= isEqual(y[index(Vars::IP)], static_cast<ScalarT>(0.6), kTol);
         success *= isEqual(y[index(Vars::IQ)], static_cast<ScalarT>(0.2), kTol);
         success *= allResidualsZero(regca);
 
@@ -251,15 +246,16 @@ namespace GridKit
         success *= (regca.verify() == 0);
         success *= (regca.initialize() == 0);
 
-        ipcmd_value = static_cast<ScalarT>(0.55);
-        iqcmd_value = static_cast<ScalarT>(-0.05);
+        const auto* y = regca.y().getData();
+        ipcmd_value   = y[index(Vars::IP)] + static_cast<ScalarT>(0.05);
+        iqcmd_value   = y[index(Vars::IQ)] + static_cast<ScalarT>(0.05);
         bus.evaluateResidual();
         success       *= (regca.evaluateResidual() == 0);
         const auto* f  = regca.getResidual().getData();
 
         // Both commands move 0.05 per unit and sit far inside the rate limits,
         // so each residual is the unlimited command error over Tg.
-        success *= isEqual(f[index(Vars::IP)], static_cast<ScalarT>(2.5), kInitTol);
+        success *= isEqual(f[index(Vars::IP)], static_cast<ScalarT>(2.5), kTol);
         success *= isEqual(f[index(Vars::IQ)], static_cast<ScalarT>(2.5), kTol);
         success *= (f[index(Vars::IP)] > ZERO<RealT>);
         success *= (f[index(Vars::IQ)] > ZERO<RealT>);
@@ -383,8 +379,8 @@ namespace GridKit
         success *= allResidualsZero(regca);
 
         const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0", kInitTol);
-        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR holds Q0", kInitTol);
+        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
+        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR holds Q0");
 
         return success.report(__func__);
       }
@@ -539,36 +535,19 @@ namespace GridKit
         // above. Each entry is the exact piecewise value of the named equation
         // in README.md.
         const std::vector<ScalarT> res_answer = {
-            0.29,   // f[0]:  -VM' + (VT - VM) / TM
+            0.865,  // f[0]:  -VM' + (VT - VM) / TM
             1.52,   // f[1]:  -IQ' + max(fq, Rqmin)
             0.22,   // f[2]:  -IP' + clamp(fp, LP, UP)
-            0.0046, // f[3]:  -VT^2 + Vr^2 + Vi^2
-            0.26,   // f[4]:  -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
-            0.2546, // f[5]:  -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
+            -0.035, // f[3]:  -VT^2 + Vr^2 + Vi^2
+            0.25,   // f[4]:  -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
+            0.251,  // f[5]:  -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
             -0.03,  // f[6]:  -IQEXTRA + ramp(VT - Vhvmax)
-            0.292,  // f[7]:  -IL + linseg(VM, VL0, VL1, IL1)
+            0.35,   // f[7]:  -IL + linseg(VM, VL0, VL1, IL1)
             -69.6,  // f[8]:  -LP - Rpmax - (Mp - Rpmax)*sigmoid(IP)
-            -0.3,   // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)*sigmoid(IL - IP)
+            -0.5,   // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)*sigmoid(IL - IP)
             0.0,    // f[10]: -PBR + Vr*IR + Vi*II
             0.0,    // f[11]: -QBR + Vi*IR - Vr*II
         };
-
-        // Rows 2, 4, 5, 7, and 9 evaluate a CommonMath approximation within one
-        // smoothing width of a breakpoint, so they miss the exact piecewise
-        // answer. Row 7 is the largest at 4.8e-7.
-        const auto                 smooth_tol = static_cast<ScalarT>(1.0e-6);
-        const std::vector<ScalarT> res_tol    = {kTol,
-                                                 kTol,
-                                                 smooth_tol,
-                                                 kTol,
-                                                 smooth_tol,
-                                                 smooth_tol,
-                                                 kTol,
-                                                 smooth_tol,
-                                                 kTol,
-                                                 smooth_tol,
-                                                 kTol,
-                                                 kTol};
 
         const auto& residual  = regca.getResidual();
         success              *= (static_cast<size_t>(residual.getSize()) == res_answer.size());
@@ -576,7 +555,7 @@ namespace GridKit
         const auto* f = residual.getData();
         for (size_t i = 0; i < res_answer.size(); ++i)
         {
-          if (!isEqual(f[i], res_answer[i], res_tol[i]))
+          if (!isEqual(f[i], res_answer[i], kTol))
           {
             std::cout << "Incorrect result for residual " << i << ": "
                       << std::setprecision(15) << f[i] << " != " << res_answer[i]
@@ -699,14 +678,11 @@ namespace GridKit
         success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
         const auto nrows  = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
 
-        // Both differentiate the same residual, but through different operation
-        // orders, so entries reaching O(1e4) through the Mp-scaled sigmoid
-        // chains agree only to roundoff amplified well above kTol.
         for (size_t i = 0; i < nrows; ++i)
         {
           success *= isEqual(dependency_tracking_jacobian[i],
                              enzyme_jacobian[i],
-                             static_cast<RealT>(1.0e-8));
+                             static_cast<RealT>(kTol));
         }
 
         return success.report(__func__);
@@ -819,16 +795,16 @@ namespace GridKit
         auto* y  = regca.y().getData();
         auto* yp = regca.yp().getData();
 
-        y[index(Vars::VM)]      = static_cast<ScalarT>(0.86);
+        y[index(Vars::VM)]      = static_cast<ScalarT>(0.65);
         y[index(Vars::IQ)]      = static_cast<ScalarT>(-0.2);
         y[index(Vars::IP)]      = static_cast<ScalarT>(0.85);
-        y[index(Vars::VT)]      = static_cast<ScalarT>(0.98);
+        y[index(Vars::VT)]      = static_cast<ScalarT>(1.0);
         y[index(Vars::IR)]      = static_cast<ScalarT>(0.5);
         y[index(Vars::II)]      = static_cast<ScalarT>(0.18);
         y[index(Vars::IQEXTRA)] = static_cast<ScalarT>(0.03);
-        y[index(Vars::IL)]      = static_cast<ScalarT>(0.72);
+        y[index(Vars::IL)]      = static_cast<ScalarT>(0.2);
         y[index(Vars::LP)]      = static_cast<ScalarT>(-0.4);
-        y[index(Vars::UP)]      = static_cast<ScalarT>(0.3);
+        y[index(Vars::UP)]      = static_cast<ScalarT>(0.5);
         y[index(Vars::PBR)]     = static_cast<ScalarT>(0.52);
         y[index(Vars::QBR)]     = static_cast<ScalarT>(-0.046);
 
@@ -852,16 +828,16 @@ namespace GridKit
         bus_y[0].setValue(0.95);
         bus_y[1].setValue(0.25);
 
-        y[index(Vars::VM)].setValue(0.86);
+        y[index(Vars::VM)].setValue(0.65);
         y[index(Vars::IQ)].setValue(-0.2);
         y[index(Vars::IP)].setValue(0.85);
-        y[index(Vars::VT)].setValue(0.98);
+        y[index(Vars::VT)].setValue(1.0);
         y[index(Vars::IR)].setValue(0.5);
         y[index(Vars::II)].setValue(0.18);
         y[index(Vars::IQEXTRA)].setValue(0.03);
-        y[index(Vars::IL)].setValue(0.72);
+        y[index(Vars::IL)].setValue(0.2);
         y[index(Vars::LP)].setValue(-0.4);
-        y[index(Vars::UP)].setValue(0.3);
+        y[index(Vars::UP)].setValue(0.5);
         y[index(Vars::PBR)].setValue(0.52);
         y[index(Vars::QBR)].setValue(-0.046);
 
