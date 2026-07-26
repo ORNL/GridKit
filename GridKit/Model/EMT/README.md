@@ -26,34 +26,20 @@ and reusable operators in instantaneous phase coordinates.
 - Equation headings follow the assembled DAE row classification; connected
   models may add derivative terms to a residual that contains none locally.
 
+## Assembly
+
+Bus voltage is algebraic unless a connected model contributes a voltage
+derivative to the bus current-balance.
+
 ## Initialization
 
-For sinusoidal steady-state initialization at angular frequency $\omega_0$,
-define $s_0 = \mathrm{j}\omega_0$. Bold uppercase $\mathbf{V}$ and $\mathbf{I}$
-denote physical RMS voltage and current phasors; hats denote RMS phasors
-of other quantities. In particular,
+EMT models are initialized using real-valued, instantaneous phase-coordinate
+quantities in $\mathbb{R}^N$. RMS or phasor calculations, when used by an
+upstream initialization workflow, are outside the EMT model specification.
 
-```math
-\mathbf{v}(t)
-  = \sqrt{2}\,\mathrm{Re}
-    \left(\mathbf{V}e^{s_0t}\right),
-\qquad \mathbf{V} \in \mathbb{C}^N.
-```
-
-The assembled phase-domain network is first solved at $s=s_0$. Each dynamic
-submodel then initializes its internal states from its solved input phasor. At
-$t=0$,
-
-```math
-\begin{aligned}
-\mathbf{v}(0)
-  &=
-  \sqrt{2}\,\mathrm{Re}(\mathbf{V}) \\
-\left.\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}\right|_{t=0}
-  &=
-  \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}).
-\end{aligned}
-```
+Initial differential states, algebraic variables, derivatives, and discrete
+inputs must be consistent with the assembled EMT equations at $t_0$. Models
+that require additional history document that requirement locally.
 
 ## Contents
 

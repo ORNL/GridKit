@@ -8,6 +8,7 @@
 Line <Line/README>
 Load <Load/README>
 Source <Source/README>
+Switch <Switch/README>
 ```
 
 ```{include} ../../../../../GridKit/Model/EMT/Component/README.md

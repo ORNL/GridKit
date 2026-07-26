@@ -148,70 +148,7 @@ $\mathbf{i}_2$ | `i2` | Output | [A] | Current injection at terminal 2 | $\mathb
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\begin{aligned}
-\mathbf{V}_r
-  &\leftarrow \text{solved terminal RMS voltage phasor} \\
-\mathbf{v}_r
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}_r) \\
-\dfrac{\mathrm{d}\mathbf{v}_r}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}_r),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
-
-### Internal Initialization
-
-The current phasors satisfy
-
-```math
-\begin{aligned}
-\mathbf{0}
-  &= \Delta x\,\mathbf{Z}(s_0)\mathbf{I}_{12}
-     + \mathbf{P}_\phi^\mathsf T(\mathbf{V}_2-\mathbf{V}_1) \\
-\mathbf{I}_r^\mathrm{sh}
-  &= -\dfrac{\Delta x}{2}\mathbf{Y}(s_0)
-     \mathbf{P}_\phi^\mathsf T\mathbf{V}_r,
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
-
-Initialization requires $\mathbf{Z}(s_0)$ to be nonsingular. The series-
-impedance submodel initializes from $\mathbf{I}_{12}$, and each shunt-
-admittance submodel initializes from
-$\mathbf{P}_\phi^\mathsf T\mathbf{V}_r$. At $t=0$,
-
-```math
-\begin{aligned}
-\mathbf{i}_{12}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}_{12}) \\
-\dfrac{\mathrm{d}\mathbf{i}_{12}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}_{12}) \\
-\mathbf{i}_r^\mathrm{sh}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}_r^\mathrm{sh}) \\
-\dfrac{\mathrm{d}\mathbf{i}_r^\mathrm{sh}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}_r^\mathrm{sh}),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
-
-### Output Initialization
-
-```math
-\begin{aligned}
-\mathbf{I}_1
-  &= \mathbf{P}_\phi(\mathbf{I}_1^\mathrm{sh}-\mathbf{I}_{12}) \\
-\mathbf{I}_2
-  &= \mathbf{P}_\phi(\mathbf{I}_2^\mathrm{sh}+\mathbf{I}_{12}) \\
-\mathbf{i}_r
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}_r) \\
-\dfrac{\mathrm{d}\mathbf{i}_r}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}_r),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
+None beyond the EMT initialization contract.
 
 ## Monitors
 

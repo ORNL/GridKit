@@ -101,53 +101,7 @@ None.
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\begin{aligned}
-\mathbf{V}
-  &\leftarrow \text{solved terminal RMS voltage phasor} \\
-\mathbf{v}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}) \\
-\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}).
-\end{aligned}
-```
-
-### Internal Initialization
-
-Sinusoidal steady-state initialization requires $\omega=\omega_0$. Define the
-source-voltage phasor by
-
-```math
-V_n^\mathrm{s}=E_ne^{\mathrm{j}\phi_n},
-\quad n \in \mathcal{N}.
-```
-
-The terminal-admittance submodel initializes from
-$\mathbf{V}^\mathrm{s}-\mathbf{V}$. At $t=0$,
-
-```math
-\begin{aligned}
-\mathbf{e}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}^\mathrm{s}) \\
-\dfrac{\mathrm{d}\mathbf{e}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}^\mathrm{s}).
-\end{aligned}
-```
-
-### Output Initialization
-
-```math
-\begin{aligned}
-\mathbf{I}
-  &= \mathbf{Y}(s_0)(\mathbf{V}^\mathrm{s}-\mathbf{V}) \\
-\mathbf{i}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}) \\
-\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}).
-\end{aligned}
-```
+None beyond the EMT initialization contract.
 
 ## Monitors
 

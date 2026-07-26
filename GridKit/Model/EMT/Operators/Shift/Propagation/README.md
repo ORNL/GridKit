@@ -131,45 +131,7 @@ None.
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\begin{aligned}
-\widehat{\mathbf{u}}
-  &\leftarrow \text{RMS input phasor} \\
-\mathbf{u}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{u}}) \\
-\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{u}}).
-\end{aligned}
-```
-
-### Internal Initialization
-
-The input-factor output phasor is
-
-```math
-\widehat{\mathbf{w}}
-  = \mathbf{G}^\mathrm{in}(s_0)\widehat{\mathbf{u}}.
-```
-
-The input factor initializes from $\widehat{\mathbf{u}}$. The modal delay
-bank initializes from $\widehat{\mathbf{w}}$ and provides
-$\widehat{\mathbf{z}}$; the output factor initializes from
-$\widehat{\mathbf{z}}$.
-
-### Output Initialization
-
-```math
-\begin{aligned}
-\widehat{\mathbf{y}}
-  &= \mathbf{G}^\mathrm{out}(s_0)\widehat{\mathbf{z}} \\
-\mathbf{y}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{y}}) \\
-\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{y}}).
-\end{aligned}
-```
+TBD
 
 ## Monitors
 

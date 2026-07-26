@@ -193,72 +193,7 @@ None.
 
 ## Initialization
 
-Initialization requires $s_0 \ne p_q$ for $q \in \mathcal{Q}$.
-
-### Input Initialization
-
-```math
-\begin{aligned}
-\widehat{\mathbf{u}}
-  &\leftarrow \text{RMS input phasor} \\
-\mathbf{u}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{u}}) \\
-\dfrac{\mathrm{d}\mathbf{u}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{u}}).
-\end{aligned}
-```
-
-### Internal Initialization
-
-```math
-\begin{aligned}
-s_0\widehat{w}_q
-  &= a_q\widehat{w}_q+\mathbf{B}_{q,:}\widehat{\mathbf{u}},
-  \quad q \in \mathcal{Q}_\mathrm{r} \\
-s_0\widehat{w}_q
-  &= a_q\widehat{w}_q-\omega_q\widehat{v}_q
-  + (\mathbf{B}_{\mathrm{r}})_{q,:}\widehat{\mathbf{u}} \\
-s_0\widehat{v}_q
-  &= \omega_q\widehat{w}_q+a_q\widehat{v}_q
-  + (\mathbf{B}_{\mathrm{i}})_{q,:}\widehat{\mathbf{u}},
-  \quad q \in \mathcal{Q}_\mathrm{c}.
-\end{aligned}
-```
-
-At $t=0$,
-
-```math
-\begin{aligned}
-w_q
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{w}_q) \\
-\dfrac{\mathrm{d}w_q}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{w}_q),
-  \quad q \in \mathcal{Q}_\mathrm{r} \cup \mathcal{Q}_\mathrm{c} \\
-v_q
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{v}_q) \\
-\dfrac{\mathrm{d}v_q}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{v}_q),
-  \quad q \in \mathcal{Q}_\mathrm{c}.
-\end{aligned}
-```
-
-### Output Initialization
-
-```math
-\begin{aligned}
-\widehat{\mathbf{y}}
-  &= (\mathbf{D}+s_0\mathbf{E})\widehat{\mathbf{u}}
-  + \sum_{q \in \mathcal{Q}_\mathrm{r}}
-    \mathbf{C}_{:,q}\widehat{w}_q
-  + 2\sum_{q \in \mathcal{Q}_\mathrm{c}}
-    ((\mathbf{C}_{\mathrm{r}})_{:,q}\widehat{w}_q
-    -(\mathbf{C}_{\mathrm{i}})_{:,q}\widehat{v}_q) \\
-\mathbf{y}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\widehat{\mathbf{y}}) \\
-\dfrac{\mathrm{d}\mathbf{y}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\widehat{\mathbf{y}}).
-\end{aligned}
-```
+None beyond the EMT initialization contract.
 
 ## Monitors
 

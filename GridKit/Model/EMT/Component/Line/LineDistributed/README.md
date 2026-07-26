@@ -154,79 +154,9 @@ The residuals use the wiring signals defined below.
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\begin{aligned}
-\mathbf{V}_r
-  &\leftarrow \text{solved terminal RMS voltage phasor} \\
-\mathbf{v}_r
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}_r) \\
-\dfrac{\mathrm{d}\mathbf{v}_r}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}_r),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
-
-### Internal Initialization
-
-The internal current phasors satisfy
-
-```math
-\begin{aligned}
-\mathbf{I}_r^\mathrm{c}
-  &= \mathbf{Y}_r^\mathrm{c}(s_0)
-     \mathbf{P}_\phi^\mathsf T\mathbf{V}_r,
-  \quad r \in \{1,2\} \\
-\begin{bmatrix}
-\mathbf{I}_K & \mathbf{H}_{21}(s_0) \\
-\mathbf{H}_{12}(s_0) & \mathbf{I}_K
-\end{bmatrix}
-\begin{bmatrix}
-\mathbf{I}_1^\mathrm{ref} \\
-\mathbf{I}_2^\mathrm{ref}
-\end{bmatrix}
-  &= 2
-\begin{bmatrix}
-\mathbf{I}_1^\mathrm{c} \\
-\mathbf{I}_2^\mathrm{c}
-\end{bmatrix} \\
-\mathbf{I}_1^\mathrm{inc}
-  &= \mathbf{H}_{21}(s_0)\mathbf{I}_2^\mathrm{ref} \\
-\mathbf{I}_2^\mathrm{inc}
-  &= \mathbf{H}_{12}(s_0)\mathbf{I}_1^\mathrm{ref}.
-\end{aligned}
-```
-
-The block matrix must be nonsingular. The characteristic-admittance submodels
-initialize from $\mathbf{P}_\phi^\mathsf T\mathbf{V}_r$; $\mathbf{h}_{21}$ and
-$\mathbf{h}_{12}$ initialize from $\mathbf{I}_2^\mathrm{ref}$ and
-$\mathbf{I}_1^\mathrm{ref}$, respectively. At $t=0$, the reflected currents
-initialize as
-
-```math
-\begin{aligned}
-\mathbf{i}_r^\mathrm{ref}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}_r^\mathrm{ref}) \\
-\dfrac{\mathrm{d}\mathbf{i}_r^\mathrm{ref}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}_r^\mathrm{ref}),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
-
-### Output Initialization
-
-```math
-\begin{aligned}
-\mathbf{I}_r
-  &= \mathbf{P}_\phi(\mathbf{I}_r^\mathrm{inc}-\mathbf{I}_r^\mathrm{c}) \\
-\mathbf{i}_r
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}_r) \\
-\dfrac{\mathrm{d}\mathbf{i}_r}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}_r),
-  \quad r \in \{1,2\}.
-\end{aligned}
-```
+The characteristic-admittance and propagation submodels initialize according
+to their own specifications. There is no additional line-level initialization
+procedure.
 
 ## Monitors
 

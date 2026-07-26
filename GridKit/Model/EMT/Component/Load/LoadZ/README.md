@@ -98,41 +98,7 @@ None.
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\begin{aligned}
-\mathbf{V}
-  &\leftarrow \text{solved terminal RMS voltage phasor} \\
-\mathbf{v}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}) \\
-\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}).
-\end{aligned}
-```
-
-### Internal Initialization
-
-```math
-\mathbf{0}=\mathbf{Z}(s_0)\mathbf{I}+\mathbf{V}.
-```
-
-Initialization requires $\mathbf{Z}(s_0)$ to be nonsingular. The impedance
-submodel initializes from $\mathbf{I}$. For either current classification, at
-$t=0$,
-
-```math
-\begin{aligned}
-\mathbf{i}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{I}) \\
-\dfrac{\mathrm{d}\mathbf{i}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{I}).
-\end{aligned}
-```
-
-### Output Initialization
-
-None.
+None beyond the EMT initialization contract.
 
 ## Monitors
 

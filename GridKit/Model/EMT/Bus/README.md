@@ -83,39 +83,7 @@ None.
 
 ## Initialization
 
-### Input Initialization
-
-```math
-\mathbf{I}_e
-  \leftarrow \text{connected-device RMS current phasor},
-  \quad e \in \mathcal{E}.
-```
-
-### Internal Initialization
-
-The assembled harmonic network provides the bus-voltage phasor and satisfies
-current balance:
-
-```math
-\mathbf{V} \leftarrow \text{solved bus RMS voltage phasor},
-\qquad
-\sum_{e \in \mathcal{E}}\mathbf{I}_e=\mathbf{0}.
-```
-
-At $t=0$,
-
-```math
-\begin{aligned}
-\mathbf{v}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(\mathbf{V}) \\
-\dfrac{\mathrm{d}\mathbf{v}}{\mathrm{d}t}
-  &\leftarrow \sqrt{2}\,\mathrm{Re}(s_0\mathbf{V}).
-\end{aligned}
-```
-
-### Output Initialization
-
-None.
+None beyond the EMT initialization contract.
 
 ## Monitors
 
