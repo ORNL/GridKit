@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
+#include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Bus/Bus.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -16,12 +17,15 @@
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
+#include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
 
 namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <typename scalar_type, typename index_type>
     class ConverterRegcaTests
     {
@@ -325,58 +329,123 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      TestOutcome invalidInitialization()
+      // Verifies the initial point is residual-consistent above Vhvmax and still
+      // delivers the P0/Q0 injection. Vhvmax is 1.2 in makeData.
+      TestOutcome initializesAboveHighVoltageLimit()
       {
         TestStatus success = true;
 
-        auto data = makeData();
+        const ScalarT q0{0.1};
 
+        auto data                   = makeData();
+        data.parameters[Params::Q0] = static_cast<RealT>(q0);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.3, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
+        success *= (regca.initialize() == 0);
+        success *= (regca.evaluateResidual() == 0);
+        success *= allResidualsZero(regca);
+
+        const auto* y  = regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::IQEXTRA)],
+                                 Math::ramp(y[index(Vars::VT)] - static_cast<RealT>(1.2)),
+                                 "IQEXTRA seeded from the HVRCM ramp");
+
+        // The command absorbs the HVRCM current, so the injection still matches
+        // the power-flow values.
+        success *= scalarMatches(y[index(Vars::PBR)], static_cast<ScalarT>(0.0), "PBR holds P0");
+        success *= scalarMatches(y[index(Vars::QBR)], q0, "QBR holds Q0");
+
+        return success.report(__func__);
+      }
+
+      // Verifies the initial point is residual-consistent below VA0, where the
+      // LVACM gain collapses. VA0 is 0.4 in makeData.
+      TestOutcome initializesBelowLvacmBreakpoint()
+      {
+        TestStatus success = true;
+
+        auto data                   = makeData();
+        data.parameters[Params::Q0] = static_cast<RealT>(0.1);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
+        success *= (regca.initialize() == 0);
+        success *= (regca.evaluateResidual() == 0);
+        success *= allResidualsZero(regca);
+
+        // P0 is zero, so the collapsed LVACM gain still resolves IP to zero.
+        success *= scalarMatches(regca.y().getData()[index(Vars::IP)],
+                                 static_cast<ScalarT>(0.0),
+                                 "IP with no initial active power");
+
+        return success.report(__func__);
+      }
+
+      // Below VA0 the collapsed LVACM gain drives IP to a very large value. The
+      // gain cancels out of the injection, so the state stays finite and still
+      // delivers P0.
+      TestOutcome initializesBelowLvacmBreakpointWithActivePower()
+      {
+        TestStatus success = true;
+
+        const ScalarT p0{0.5};
+
+        auto data                   = makeData();
+        data.parameters[Params::P0] = static_cast<RealT>(p0);
+
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
+        bus.allocate();
+        bus.initialize();
+
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
+        success *= (regca.initialize() == 0);
+
+        const auto* y = regca.y().getData();
+        for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
         {
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.3, 0.0);
-          bus.allocate();
-          bus.initialize();
-
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.initialize() > 0);
+          if (!std::isfinite(y[i]))
+          {
+            std::cout << "REGCA initial state row " << i << " is not finite\n";
+            success = false;
+          }
         }
+        success *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
 
-        {
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(0.0, 0.0);
-          bus.allocate();
-          bus.initialize();
+        return success.report(__func__);
+      }
 
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.initialize() > 0);
-        }
+      // Verifies a degenerate terminal voltage is rejected before any state is
+      // written, since every current command divides by the voltage magnitude.
+      TestOutcome rejectsZeroTerminalVoltage()
+      {
+        TestStatus success = true;
 
-        {
-          auto low_voltage_data                   = data;
-          low_voltage_data.parameters[Params::P0] = static_cast<RealT>(0.5);
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << "Testing that a zero terminal voltage is rejected. "
+                    << "Logged errors are are expected.\n";
+        Log::setVerbosity(Log::Verbosity::WARNINGS);
 
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
-          bus.allocate();
-          bus.initialize();
+        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.0, 0.0);
+        bus.allocate();
+        bus.initialize();
 
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, low_voltage_data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.initialize() > 0);
-        }
-
-        {
-          auto low_voltage_data                   = data;
-          low_voltage_data.parameters[Params::P0] = static_cast<RealT>(0.0);
-          low_voltage_data.parameters[Params::Q0] = static_cast<RealT>(0.1);
-
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
-          bus.allocate();
-          bus.initialize();
-
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, low_voltage_data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.initialize() == 0);
-        }
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
+        success *= (regca.allocate() == 0);
+        success *= (regca.verify() == 0);
+        success *= (regca.initialize() > 0);
 
         return success.report(__func__);
       }
@@ -416,7 +485,6 @@ namespace GridKit
 
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(nullptr, makeData());
         success *= (regca.verify() > 0);
-        success *= (regca.initialize() > 0);
 
         return success.report(__func__);
       }
@@ -552,9 +620,8 @@ namespace GridKit
           const auto* f  = regca.getResidual().getData();
 
           const ScalarT tg       = static_cast<RealT>(0.2);
-          const ScalarT iq_error = iqcmd_value - y[index(Vars::IQ)];
-          const ScalarT expected =
-              iq_error / tg - Math::ramp(iq_error - tg * static_cast<RealT>(0.5)) / tg;
+          const ScalarT fq       = (iqcmd_value - y[index(Vars::IQ)]) / tg;
+          const ScalarT expected = Math::min(fq, static_cast<RealT>(0.5));
 
           success *= scalarMatches(f[index(Vars::IQ)],
                                    expected,
@@ -902,19 +969,16 @@ namespace GridKit
         constexpr ScalarT iqdot = static_cast<ScalarT>(-0.02);
         constexpr ScalarT ipdot = static_cast<ScalarT>(0.03);
 
-        const ScalarT iq_error = iqcmd - iq;
-        const ScalarT ip_error = ipcmd - ip;
-        const ScalarT lvacm    = Math::linseg(vt, va0, va1, ONE<RealT>);
-        const ScalarT qnet     = iq - iqext;
+        const ScalarT fq    = (iqcmd - iq) / tg;
+        const ScalarT fp    = (ipcmd - ip) / tg;
+        const ScalarT lvacm = Math::linseg(vt, va0, va1, ONE<RealT>);
+        const ScalarT qnet  = iq - iqext;
 
         std::vector<ScalarT> expected(static_cast<size_t>(Vars::MAXIMUM),
                                       static_cast<ScalarT>(0.0));
-        expected[index(Vars::VM)] = -vmdot + (vt - vm) / tm;
-        expected[index(Vars::IQ)] =
-            -iqdot + iq_error / tg + Math::ramp(tg * rqmin - iq_error) / tg;
-        expected[index(Vars::IP)] =
-            -ipdot + lp + Math::ramp(ip_error - tg * lp) / tg
-            - Math::ramp(ip_error - tg * up) / tg;
+        expected[index(Vars::VM)]      = -vmdot + (vt - vm) / tm;
+        expected[index(Vars::IQ)]      = -iqdot + Math::max(fq, rqmin);
+        expected[index(Vars::IP)]      = -ipdot + Math::clamp(fp, lp, up);
         expected[index(Vars::VT)]      = -vt * vt + vr * vr + vi * vi;
         expected[index(Vars::IR)]      = -vt * ir + vr * ip * lvacm + vi * qnet;
         expected[index(Vars::II)]      = -vt * ii + vi * ip * lvacm - vr * qnet;

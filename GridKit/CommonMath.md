@@ -58,9 +58,9 @@ q(x)=x^2\,\sigma(x)
 
 | Name | Description | Usage |
 |------|-------------|-------|
-| `max` | Smooth binary maximum | `REECA`, `REECB` |
-| `min` | Smooth binary minimum | `REECA` |
-| `clamp` | Bounded saturation | `IEEEST`, `REECA`, `REECB`, `REPCA` |
+| `max` | Smooth binary maximum | `REGCA`, `REECA`, `REECB` |
+| `min` | Smooth binary minimum | `REGCA`, `REECA` |
+| `clamp` | Bounded saturation | `IEEEST`, `REGCA`, `REECA`, `REECB`, `REPCA` |
 | `deadband1` | Type 1 no-offset signed two-sided deadband | - |
 | `deadband2` | Type 2 offset signed two-sided deadband | `REECA`, `REECB`, `REPCA` |
 | `slew` | Symmetric slew-rate limiter | - |

@@ -12,7 +12,10 @@ int main()
   result += test.baseSignals();
   result += test.unconnectedCommandsRemainConstant();
   result += test.externalCommandsDriveRuntimeResidual();
-  result += test.invalidInitialization();
+  result += test.initializesAboveHighVoltageLimit();
+  result += test.initializesBelowLvacmBreakpoint();
+  result += test.initializesBelowLvacmBreakpointWithActivePower();
+  result += test.rejectsZeroTerminalVoltage();
   result += test.signalVerification();
   result += test.nullBusVerification();
   result += test.busInjectionUsesSystemBase();

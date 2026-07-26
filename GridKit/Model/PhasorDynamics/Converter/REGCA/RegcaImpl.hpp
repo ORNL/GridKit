@@ -256,6 +256,11 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief verify method checks parameters, the terminal bus, and signals
+       *
+       * @return int number of configuration errors, zero when the model is valid
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::verify() const
       {
@@ -305,24 +310,15 @@ namespace GridKit
         return ret;
       }
 
+      /**
+       * @brief Compute a residual-consistent initial operating point
+       *
+       * @pre verify() reported no errors and the terminal bus is initialized.
+       * @return int 0, or 1 when the terminal voltage magnitude is zero
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::initialize()
       {
-        if (bus_ == nullptr)
-        {
-          Log::error() << "Regca: cannot initialize with null bus\n";
-          return 1;
-        }
-
-        if (parameter_error_count_ > 0 || mva_base_ <= ZERO<RealT> || Rpmax_ <= ZERO<RealT>
-            || !(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_)
-            || IL1_ < ZERO<RealT> || !(ZERO<RealT> <= VL0_ && VL0_ < VL1_)
-            || !(ZERO<RealT> <= VA0_ && VA0_ < VA1_) || Vhvmax_ <= ZERO<RealT>)
-        {
-          Log::error() << "Regca: cannot initialize with invalid parameters\n";
-          return 1;
-        }
-
         const auto VM      = static_cast<size_t>(RegcaInternalVariables::VM);
         const auto IQ      = static_cast<size_t>(RegcaInternalVariables::IQ);
         const auto IP      = static_cast<size_t>(RegcaInternalVariables::IP);
@@ -346,12 +342,6 @@ namespace GridKit
           Log::error() << "Regca: terminal voltage magnitude must be positive at initialization\n";
           return 1;
         }
-        if (vt >= Vhvmax_)
-        {
-          Log::error()
-              << "Regca: terminal voltage magnitude must be below Vhvmax at initialization\n";
-          return 1;
-        }
 
         // REGCA owns the network terminal and establishes the initial
         // converter operating point from the power-flow injection. Controller
@@ -360,25 +350,17 @@ namespace GridKit
         // base to attached ports below. P0/Q0 are given on the system base;
         // toComponentBase converts them to the converter base the internal
         // states use.
-        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT lvacm  = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
 
-        if (P0_ != ZERO<RealT> && (vt <= VA0_ || lvacm <= ZERO<RealT>) )
-        {
-          Log::error() << "Regca: LVACM gain is zero with nonzero initial active power\n";
-          return 1;
-        }
-
-        ScalarT ipcmd0{ZERO<RealT>};
-        if (P0_ != ZERO<RealT>)
-        {
-          ipcmd0 = toComponentBase(static_cast<ScalarT>(P0_) / vt) / lvacm;
-        }
-        const ScalarT iqcmd0 = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
-
-        const ScalarT iqextra0{ZERO<RealT>};
-        const ScalarT qnet0 = iqcmd0 - iqextra0;
-        const ScalarT ir0   = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
-        const ScalarT ii0   = (-vr * qnet0 + vi * ipcmd0 * lvacm) / vt;
+        // The HVRCM ramp is nonzero at every terminal voltage. Seed IQEXTRA from
+        // it and raise the command by the same amount so the net reactive
+        // current still delivers the Q0 injection.
+        const ScalarT iqextra0 = Math::ramp(vt - Vhvmax_);
+        const ScalarT qnet0    = toComponentBase(static_cast<ScalarT>(Q0_) / vt);
+        const ScalarT iqcmd0   = qnet0 + iqextra0;
+        const ScalarT ir0      = (vi * qnet0 + vr * ipcmd0 * lvacm) / vt;
+        const ScalarT ii0      = (-vr * qnet0 + vi * ipcmd0 * lvacm) / vt;
 
         y[VM]      = vt;
         y[VT]      = vt;
@@ -395,12 +377,12 @@ namespace GridKit
 
         // Retain the resolved commands as the constant source used during
         // residual evaluation when no controller drives the command ports, and
-        // select the reactive-current rate-limit branch from the command sign.
+        // select the reactive-current rate-limit branch from the sign of Q0.
         ipcmd_set_    = toSystemBase(ipcmd0);
         iqcmd_set_    = toSystemBase(iqcmd0);
         iq_use_upper_ = ZERO<RealT>;
         iq_use_lower_ = ONE<RealT>;
-        if (static_cast<RealT>(iqcmd0) > ZERO<RealT>)
+        if (Q0_ > ZERO<RealT>)
         {
           iq_use_upper_ = ONE<RealT>;
           iq_use_lower_ = ZERO<RealT>;
@@ -488,21 +470,19 @@ namespace GridKit
         const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
 
-        const ScalarT iq_error = iqcmd - iq;
-        const ScalarT ip_error = ipcmd - ip;
+        // Pre-limit current derivatives.
+        const ScalarT fq = (iqcmd - iq) / Tg_;
+        const ScalarT fp = (ipcmd - ip) / Tg_;
 
-        const ScalarT iq_ramp =
-            -iq_use_upper_ * Math::ramp(iq_error - Tg_ * Rqmax_)
-            + iq_use_lower_ * Math::ramp(Tg_ * Rqmin_ - iq_error);
+        const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
+                                   + iq_use_lower_ * Math::max(fq, Rqmin_);
 
-        const ScalarT lp_ramp = Math::ramp(ip_error - Tg_ * lp);
-        const ScalarT up_ramp = Math::ramp(ip_error - Tg_ * up);
-        const ScalarT lvacm   = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
-        const ScalarT qnet    = iq - iqextra;
+        const ScalarT lvacm = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
+        const ScalarT qnet  = iq - iqextra;
 
         f[VM]      = -vm_dot + (vt - vm) / TM_;
-        f[IQ]      = -iq_dot + iq_error / Tg_ + iq_ramp / Tg_;
-        f[IP]      = -ip_dot + lp + lp_ramp / Tg_ - up_ramp / Tg_;
+        f[IQ]      = -iq_dot + iq_limited;
+        f[IP]      = -ip_dot + Math::clamp(fp, lp, up);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -vt * ir + toSystemBase(vi * qnet + vr * ip * lvacm);
         f[II]      = -vt * ii + toSystemBase(-vr * qnet + vi * ip * lvacm);

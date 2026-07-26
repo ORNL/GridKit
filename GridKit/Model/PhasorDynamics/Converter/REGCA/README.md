@@ -141,33 +141,33 @@ commands are held constant during residual evaluation.
 
 ## Model Equations
 
+Define the pre-limit current derivatives:
+
+```math
+\begin{aligned}
+  f_{\mathrm{q}} &= \dfrac{1}{T_{\mathrm{g}}}\left(k_{\mathrm{base}}I_q^\mathrm{cmd} - I_q\right) \\
+  f_{\mathrm{p}} &= \dfrac{1}{T_{\mathrm{g}}}\left(k_{\mathrm{base}}I_p^\mathrm{cmd} - I_p\right)
+\end{aligned}
+```
+
 ### Differential Equations
 
-The state equations use CommonMath helper notation. The $I_q$
-limiter branch is selected by the initialized reactive-current command.
+The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
 
 ```math
 \begin{aligned}
   0 &= -\dot V_M + \dfrac{1}{T_M}\left(V_T - V_M\right) \\
-  0 &= -\dot I_q
-       + \dfrac{1}{T_{\mathrm{g}}}\left(k_{\mathrm{base}}I_q^\mathrm{cmd} - I_q\right)
-       + \dfrac{1}{T_{\mathrm{g}}}
-         \begin{cases}
-           -\rho\left(k_{\mathrm{base}}I_q^\mathrm{cmd} - I_q - T_{\mathrm{g}}R_q^{\max}\right)
-             & I_{q,0}^\mathrm{cmd} > 0 \\
-           \rho\left(T_{\mathrm{g}}R_q^{\min} - \left(k_{\mathrm{base}}I_q^\mathrm{cmd} - I_q\right)\right)
-             & I_{q,0}^\mathrm{cmd} \le 0
-         \end{cases} \\
-  0 &= -\dot I_p
-       + \ell_p
-       + \dfrac{1}{T_{\mathrm{g}}}
-         \rho\left(k_{\mathrm{base}}I_p^\mathrm{cmd} - I_p - T_{\mathrm{g}}\ell_p\right)
-       - \dfrac{1}{T_{\mathrm{g}}}
-         \rho\left(k_{\mathrm{base}}I_p^\mathrm{cmd} - I_p - T_{\mathrm{g}}u_p\right)
+  0 &= -\dot I_q +
+    \begin{cases}
+      \text{min}\left(f_{\mathrm{q}},\ R_q^{\max}\right) & Q_0 > 0 \\
+      \text{max}\left(f_{\mathrm{q}},\ R_q^{\min}\right) & Q_0 \le 0
+    \end{cases} \\
+  0 &= -\dot I_p + \text{clamp}\left(f_{\mathrm{p}},\ \ell_p,\ u_p\right)
 \end{aligned}
 ```
 
-Here $\rho$ is GridKit's [ramp](../../../../CommonMath.md#primitives).
+CommonMath defines the [min, max, and clamp](../../../../CommonMath.md#derived-functions)
+targets and smooth approximations.
 
 ### Algebraic Equations
 
@@ -187,7 +187,7 @@ Here $\rho$ is GridKit's [ramp](../../../../CommonMath.md#primitives).
            + V_{\mathrm{i}}I_p\text{linseg}(V_T;\ V_{A0},\ V_{A1},\ 1)
          \right] \\
   0 &= -I_q^\mathrm{extra}
-       + \rho(V_T - V_{\mathrm{hv}}^{\max}) \\
+       + \text{ramp}(V_T - V_{\mathrm{hv}}^{\max}) \\
   0 &= -I_L
        + \text{linseg}(V_M;\ V_{L0},\ V_{L1},\ I_{L1}) \\
   0 &= -\ell_p
@@ -204,8 +204,8 @@ Here $\rho$ is GridKit's [ramp](../../../../CommonMath.md#primitives).
 \end{aligned}
 ```
 
-Here $\text{linseg}$ is GridKit's
-[linear segment](../../../../CommonMath.md#derived-functions), $\rho$ is the
+Here $\text{linseg}$ and $\text{ramp}$ are the CommonMath
+[linear segment](../../../../CommonMath.md#derived-functions) and
 [ramp](../../../../CommonMath.md#primitives), and $\sigma$ is the
 [step function](../../../../CommonMath.md#primitives).
 
@@ -247,20 +247,17 @@ derivatives to zero:
     &= V_{T,0} \\
   A_0^\mathrm{LVACM}
     &= \text{linseg}\left(V_{T,0};\ V_{A0},\ V_{A1},\ 1\right) \\
+  I_{q,0}^\mathrm{extra}
+    &= \text{ramp}\left(V_{T,0} - V_{\mathrm{hv}}^{\max}\right) \\
   I_{p,0}^\mathrm{cmd}
-    &=
-      \begin{cases}
-        \dfrac{P_0}{V_{T,0}A_0^\mathrm{LVACM}} & P_0 \ne 0 \\
-        0 & P_0 = 0
-      \end{cases} \\
+    &= \dfrac{P_0}{V_{T,0}A_0^\mathrm{LVACM}} \\
   I_{q,0}^\mathrm{cmd}
-    &= \dfrac{Q_0}{V_{T,0}} \\
+    &= \dfrac{Q_0}{V_{T,0}}
+       + \dfrac{I_{q,0}^\mathrm{extra}}{k_{\mathrm{base}}} \\
   I_{p,0}
     &= k_{\mathrm{base}}I_{p,0}^\mathrm{cmd} \\
   I_{q,0}
     &= k_{\mathrm{base}}I_{q,0}^\mathrm{cmd} \\
-  I_{q,0}^\mathrm{extra}
-    &= 0 \\
   I_{L,0}
     &= \text{linseg}\left(V_{T,0};\ V_{L0},\ V_{L1},\ I_{L1}\right) \\
   \ell_{p,0}
@@ -289,9 +286,10 @@ derivatives to zero:
 \end{aligned}
 ```
 
-Here $\text{linseg}$ is GridKit's
-[linear segment](../../../../CommonMath.md#derived-functions), and $\sigma$ is
-the [step function](../../../../CommonMath.md#primitives).
+Here $\text{linseg}$ and $\text{ramp}$ are the CommonMath
+[linear segment](../../../../CommonMath.md#derived-functions) and
+[ramp](../../../../CommonMath.md#primitives), and $\sigma$ is the
+[step function](../../../../CommonMath.md#primitives).
 
 ### Output Initialization
 
