@@ -1,8 +1,7 @@
 # **Renewable Energy Generator/Converter Model (REGCA)**
 
 REGCA is a first-generation WECC renewable generator/converter model for
-inverter-coupled resources. In GridKit it is represented as a controlled
-current source at the network interface.
+inverter-coupled resources.
 
 ## Notes
 
@@ -37,6 +36,8 @@ $V_{L1}$                         | [p.u.]   | `VL1`    | LVPL upper breakpoint v
 $V_{A0}$                         | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                        | 0.4           | Block name: `LVPnt0`
 $V_{A1}$                         | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                        | 0.9           | Block name: `LVPnt1`
 $V_\mathrm{hv}^{\max}$            | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling for HV reactive management   | 1.2           | Block name: `VLim`
+
+All listed JSON parameters are required.
 
 ### Parameter Validation
 

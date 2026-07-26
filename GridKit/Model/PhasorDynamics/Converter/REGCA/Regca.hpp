@@ -40,14 +40,14 @@ namespace GridKit
         IQ,      ///< Reactive-current state
         IP,      ///< Active-current state
         VT,      ///< Terminal voltage magnitude
-        IR,      ///< Real injected current on system base
-        II,      ///< Imaginary injected current on system base
-        IQEXTRA, ///< HVRCM extra reactive current
-        IL,      ///< LVPL upper-limit current curve
-        LP,      ///< Active-current lower rate bound
-        UP,      ///< Active-current upper rate bound
-        PBR,     ///< Active-power output on system base
-        QBR,     ///< Reactive-power output on system base
+        IR,      ///< Branch-current real component on system base
+        II,      ///< Branch-current imaginary component on system base
+        IQEXTRA, ///< HVRCM extra reactive current on component base
+        IL,      ///< LVPL upper-limit current curve on component base
+        LP,      ///< Active-current lower rate bound on component base
+        UP,      ///< Active-current upper rate bound on component base
+        PBR,     ///< Branch active power on system base
+        QBR,     ///< Branch reactive power on system base
         MAXIMUM,
       };
 

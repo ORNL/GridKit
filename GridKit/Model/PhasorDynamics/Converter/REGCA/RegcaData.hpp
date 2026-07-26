@@ -17,8 +17,8 @@ namespace GridKit
       /// Parameter keys for the REGCA converter model.
       enum class RegcaParameters
       {
-        p0,    ///< Initial active power on system base
-        q0,    ///< Initial reactive power on system base
+        p0,    ///< Initial active power injection on system base
+        q0,    ///< Initial reactive power injection on system base
         mva,   ///< MVA base of the REGCA model
         Tg,    ///< Converter current-control lag time constant
         TM,    ///< Terminal voltage sensor time constant
@@ -52,20 +52,20 @@ namespace GridKit
       /// Signal outputs for the REGCA converter model.
       enum class RegcaSignalOutputs : size_t
       {
-        ibranchr, ///< Optional real current measurement output signal ID
-        ibranchi, ///< Optional imaginary current measurement output signal ID
-        pbranch,  ///< Optional active-power measurement output signal ID
-        qbranch,  ///< Optional reactive-power measurement output signal ID
+        ibranchr, ///< Optional branch-current real-component output signal ID
+        ibranchi, ///< Optional branch-current imaginary-component output signal ID
+        pbranch,  ///< Optional branch active-power output signal ID
+        qbranch,  ///< Optional branch reactive-power output signal ID
         SIZE
       };
 
       /// Variables available through the monitor interface.
       enum class RegcaMonitorableVariables
       {
-        ir, ///< Real current injection on system base
-        ii, ///< Imaginary current injection on system base
-        p,  ///< Active power injection on system base
-        q   ///< Reactive power injection on system base
+        ir, ///< Branch-current real component on system base
+        ii, ///< Branch-current imaginary component on system base
+        p,  ///< Branch active power on system base
+        q   ///< Branch reactive power on system base
       };
 
       template <typename real_type, typename index_type>
