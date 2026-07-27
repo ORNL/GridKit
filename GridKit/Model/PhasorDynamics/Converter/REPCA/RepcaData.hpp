@@ -1,7 +1,7 @@
 /**
  * @file RepcaData.hpp
  * @author Luke Lowery (lukel@tamu.edu)
- * @brief Modeling data for the REPCA converter plant-control model.
+ * @brief Modeling data for the REPCA plant-control model.
  */
 
 #pragma once
@@ -22,7 +22,7 @@ namespace GridKit
         RefFlag,   ///< Reactive-loop reference flag
         Freqflag,  ///< Active-power control output flag
         Tfltr,     ///< Voltage and reactive-power measurement filter time constant
-        Vfrz,      ///< Reactive-PI freeze voltage threshold
+        Vfrz,      ///< Reactive-power PI freeze voltage threshold
         Rc,        ///< Line-drop compensation resistance
         Xc,        ///< Line-drop compensation reactance
         Kc,        ///< Reactive-current compensation gain
@@ -60,23 +60,23 @@ namespace GridKit
       /// Signal inputs for the REPCA plant-control model.
       enum class RepcaSignalInputs : size_t
       {
-        ibranchr,  ///< Branch current real-component signal ID
-        ibranchi,  ///< Branch current imaginary-component signal ID
-        pbranch,   ///< Branch active-power signal ID
-        qbranch,   ///< Branch reactive-power signal ID
-        freq,      ///< Frequency input signal ID
-        freqref,   ///< Frequency-reference signal ID
-        vref,      ///< Voltage-reference signal ID
-        qref,      ///< Reactive-power reference signal ID
-        pplantref, ///< Plant active-power reference signal ID
+        ibranchr,  ///< Required branch-current real component signal ID
+        ibranchi,  ///< Required branch-current imaginary component signal ID
+        pbranch,   ///< Required branch active-power signal ID
+        qbranch,   ///< Required branch reactive-power signal ID
+        freq,      ///< Required frequency input signal ID
+        freqref,   ///< Optional frequency-reference signal ID
+        vref,      ///< Optional voltage-reference signal ID
+        qref,      ///< Optional reactive-power reference signal ID
+        pplantref, ///< Optional plant active-power reference signal ID
         SIZE
       };
 
       /// Signal outputs for the REPCA plant-control model.
       enum class RepcaSignalOutputs : size_t
       {
-        qext, ///< Reactive-power command output signal ID
-        pext, ///< Active-power command output signal ID
+        qext, ///< Optional reactive-power command output signal ID
+        pext, ///< Optional active-power command output signal ID
         SIZE
       };
 

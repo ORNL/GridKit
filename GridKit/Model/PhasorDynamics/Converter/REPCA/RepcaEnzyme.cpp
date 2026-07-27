@@ -17,31 +17,32 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       int Repca<scalar_type, index_type>::evaluateJacobian()
       {
-        Log::misc() << "Evaluate Jacobian for Repca..." << std::endl;
-        Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
+        Log::misc() << "Evaluate Jacobian for Repca...\n";
+        Log::misc() << "Jacobian evaluation is experimental!\n";
 
         if (J_rows_buffer_ == nullptr)
         {
-          auto size        = static_cast<size_t>(size_);
-          auto bus_size    = static_cast<size_t>(bus_->size());
-          auto signal_size = static_cast<size_t>(ws_.size());
-          auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
-          J_rows_buffer_   = new IdxT[buffer_size];
-          J_cols_buffer_   = new IdxT[buffer_size];
-          J_vals_buffer_   = new RealT[buffer_size];
+          const auto size        = static_cast<size_t>(size_);
+          const auto bus_size    = static_cast<size_t>(bus_->size());
+          const auto signal_size = ws_.size();
+          const auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
+
+          J_rows_buffer_ = new IdxT[buffer_size];
+          J_cols_buffer_ = new IdxT[buffer_size];
+          J_vals_buffer_ = new RealT[buffer_size];
         }
 
-        using RepcaT = GridKit::PhasorDynamics::Converter::Repca<ScalarT, IdxT>;
+        using ModelT = GridKit::PhasorDynamics::Converter::Repca<scalar_type, index_type>;
         using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
 
-        GridKit::Enzyme::Sparse::DfDy<RepcaT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDy<ModelT, Fn::InternalResidualWithSignal>::eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(y_.getSize()),
-            (this->getResidualIndices()).data(),
-            (this->getVariableIndices()).data(),
+            this->getResidualIndices().data(),
+            this->getVariableIndices().data(),
             y_.getData(),
             yp_.getData(),
             wb_.data(),
@@ -51,12 +52,12 @@ namespace GridKit
             J_vals_buffer_,
             nnz_);
 
-        GridKit::Enzyme::Sparse::DfDyp<RepcaT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDyp<ModelT, Fn::InternalResidualWithSignal>::eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(y_.getSize()),
-            (this->getResidualIndices()).data(),
-            (this->getVariableIndices()).data(),
+            this->getResidualIndices().data(),
+            this->getVariableIndices().data(),
             y_.getData(),
             yp_.getData(),
             wb_.data(),
@@ -67,12 +68,12 @@ namespace GridKit
             J_vals_buffer_,
             nnz_);
 
-        GridKit::Enzyme::Sparse::DfDwb<RepcaT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDwb<ModelT, Fn::InternalResidualWithSignal>::eval(
             this,
             static_cast<size_t>(f_.getSize()),
             static_cast<size_t>(bus_->size()),
-            (this->getResidualIndices()).data(),
-            (bus_->getVariableIndices()).data(),
+            this->getResidualIndices().data(),
+            bus_->getVariableIndices().data(),
             y_.getData(),
             yp_.getData(),
             wb_.data(),
@@ -82,11 +83,11 @@ namespace GridKit
             J_vals_buffer_,
             nnz_);
 
-        GridKit::Enzyme::Sparse::DfDws<RepcaT, Fn::InternalResidualWithSignal>::eval(
+        GridKit::Enzyme::Sparse::DfDws<ModelT, Fn::InternalResidualWithSignal>::eval(
             this,
             static_cast<size_t>(f_.getSize()),
             ws_.size(),
-            (this->getResidualIndices()).data(),
+            this->getResidualIndices().data(),
             ws_indices_.data(),
             y_.getData(),
             yp_.getData(),
@@ -96,7 +97,6 @@ namespace GridKit
             J_cols_buffer_,
             J_vals_buffer_,
             nnz_);
-
         this->constructCoo();
 
         return 0;

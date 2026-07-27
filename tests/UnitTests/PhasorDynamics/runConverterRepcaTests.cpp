@@ -6,14 +6,14 @@ int main()
 
   GridKit::Testing::ConverterRepcaTests<double, size_t> test;
 
-  result += test.constructionAndValidation();
-  result += test.signalVerification();
-  result += test.initializationAndResidual();
+  result += test.validation();
+  result += test.initializationAndSignals();
+  result += test.initializationDomain();
   result += test.residualEquations();
-  result += test.jsonParseAndSystemAssembly();
-#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.reactiveControl();
+  result += test.activePowerControl();
+  result += test.derivatives();
   result += test.jacobian();
-#endif
 
   return result.summary();
 }
