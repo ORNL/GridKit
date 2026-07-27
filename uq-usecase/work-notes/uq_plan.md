@@ -91,26 +91,97 @@ capturing how the system dynamic response varies with real operating conditions.
 ### Data
 - `.m` solution files: `/kfs2/projects/scidac/scidac-data/pcm-runs/ACTIVSg200_wind_demand/matpower/ACTIVSg200_sol_hour_*.m`
 - 8760 files (one per hour), sorted by hour index
-- Each file: `mpc.bus` (Vm, Va per bus) + `mpc.gen` (PG, QG per gen)
+- Each file is a full MATPOWER case with a converged AC PF solution: `mpc.bus` (Vm, Va per bus), `mpc.gen` (PG, QG per gen), branches, etc.
+- The PCM dataset is `ACTIVSg200_wind_demand`: both load and wind generation vary across hours.
+
+### What the PCM `.m` solution files contain
+
+Each `.m` file stores the result of a PCM dispatch plus an AC PF solve for one operating
+hour. The fields relevant to GridKit initialization are:
+
+| MATPOWER field | Column | Units | Meaning |
+|---|---|---|---|
+| `mpc.bus` | `VM` (col 8) | pu | Voltage magnitude at each bus |
+| `mpc.bus` | `VA` (col 9) | degrees | Voltage angle at each bus |
+| `mpc.bus` | `PD` (col 3) | MW | Active load at each bus |
+| `mpc.bus` | `QD` (col 4) | MVAr | Reactive load at each bus |
+| `mpc.gen` | `PG` (col 2) | MW | Active power output per generator |
+| `mpc.gen` | `QG` (col 3) | MVAr | Reactive power output per generator |
+| `mpc.gen` | `GEN_STATUS` (col 8) | 0/1 | Generator online/offline |
+
+### How a MATPOWER `.m` solution maps to a GridKit `case.json`
+
+GridKit's `case.json` has two per-scenario fields that must be updated from the `.m` file:
+
+**1. Bus initial conditions (`init.Vr`, `init.Vi`)**
+
+Each bus entry in `case.json` has:
+```json
+{ "number": 42, "class": "bus", "init": {"Vr": 1.02, "Vi": -0.12}, ... }
+```
+`Vr` and `Vi` are the rectangular components of the bus voltage phasor. They come from
+the polar form in the `.m` file:
+```
+Vr = Vm * cos(Va_rad)
+Vi = Vm * sin(Va_rad)     where Va_rad = Va_deg * pi / 180
+```
+The `number` field in `case.json` equals `BUS_I` in `mpc.bus` (confirmed by `attach_json_ids`).
+
+**2. Generator initial dispatch (`params.p0`, `params.q0`)**
+
+Each Genrou device entry in `case.json` has:
+```json
+{ "class": "Genrou", "id": "126_1", "params": {"p0": 0.39, "q0": 0.04, ...} }
+```
+`p0` and `q0` are in per-unit on the system MVA base (100 MVA for ACTIVSg200):
+```
+p0 = PG / baseMVA
+q0 = QG / baseMVA
+```
+The Genrou `id` is `"{bus}_{rank}"` where `rank` is the 1-based position of that generator
+among all generators at that bus in the `mpc.gen` matrix (same convention as `attach_json_ids`).
+
+**3. Load (NOT yet patched)**
+
+The `case.json` contains `LoadZIP` devices with constant-power parameters (`P0`, `Q0`). The
+PCM `.m` file has per-hour `PD`/`QD` values per bus in `mpc.bus`. Currently `m_to_case.py` does
+**not** patch load parameters. For Track 1, whether load variation is needed depends on
+whether the dynamic simulation is sensitive to the load model (likely yes for longer sims).
+This is an open question — see [Open Questions](#open-questions), item 4.
+
+### What is and is not changing across PCM scenarios
+
+The 8760 scenarios differ in:
+- **Wind generation**: wind PG varies hour by hour (total wind 0–536 MW range in ACTIVSg200)
+- **Load**: total PD and its distribution across buses varies with time of day and season
+- **Generator commitment**: which ng generators are online varies (GEN_STATUS per hour)
+- **Bus voltages**: the AC PF solution (Vm, Va) is unique to each dispatch point
+
+The 8760 scenarios share (held constant in the base `illinois.json`):
+- Network topology (branches, their R/X/B parameters)
+- Generator dynamic parameters (H, D, Xd, Td', ...)
+- Fault specification in `solver.json`
 
 ### Implementation
 
-1. **`m_to_case.py`** (DONE) in `py-utils/`:
-   - `patch_case_from_m(base_case, m_path, output_path)` patches:
-     - Bus init: Vr = Vm * cos(Va_rad), Vi = Vm * sin(Va_rad)
-     - Genrou p0 = PG / baseMVA, q0 = QG / baseMVA
-   - `patch_cases_from_m_list(base_case, m_paths, output_dir)` for batch processing
-   - `scenario_summary(paths)` for sanity checks
+**`m_to_case.py`** (DONE) in `py-utils/`:
+- `patch_case_from_m(base_case_json, m_path, output_path)`:
+  - Patches bus `init.Vr` / `init.Vi` from `mpc.bus` VM/VA columns
+  - Patches Genrou `params.p0` / `params.q0` from `mpc.gen` PG/QG columns
+  - Does NOT patch load, dynamic params, or solver settings
+- `patch_cases_from_m_list(base_case_json, m_paths, output_dir)`: batch version
+- `scenario_summary(paths)`: returns DataFrame of (scenario, gen_id, p0, q0) for sanity checks
 
-2. **`uq_setup.ipynb`** (TODO):
-   - Select subset or all 8760 scenarios
-   - Generate scenario case JSONs via `patch_cases_from_m_list`
-   - For each scenario: `run_sample(scenario_dir, runner, solver_fn)`
-   - `collect_and_save` with extra `scenario_id` column
+**`uq_setup.ipynb`** (TODO):
+- Select subset or all 8760 scenarios
+- Generate scenario case JSONs via `patch_cases_from_m_list`
+- For each scenario: `run_sample(scenario_dir, runner, solver_fn)`
+- `collect_and_save` with extra `scenario_id` column
 
-### Key mapping
-- MATPOWER BUS_I == GridKit bus `number` field (confirmed by `attach_json_ids`)
-- GridKit Genrou id = `"{bus}_{rank}"` (rank = 1-based position of gen at that bus in the .m gen matrix)
+### Key ID mapping
+- `MATPOWER BUS_I` == GridKit bus `number` field (confirmed by `attach_json_ids`)
+- GridKit Genrou `id` = `"{bus}_{rank}"` (rank = 1-based position among generators at that bus in `mpc.gen`)
+- baseMVA = 100 MVA for ACTIVSg200 (stored in each `.m` file header)
 
 ---
 
