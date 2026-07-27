@@ -149,6 +149,57 @@ PCM `.m` file has per-hour `PD`/`QD` values per bus in `mpc.bus`. Currently `m_t
 whether the dynamic simulation is sensitive to the load model (likely yes for longer sims).
 This is an open question — see [Open Questions](#open-questions), item 4.
 
+**GridKit load models (for reference):**
+
+GridKit has two static load types. Illinois.json uses **LoadZIP** exclusively (164 devices).
+
+`LoadZ` (`R`, `X` in p.u.): pure constant-impedance shunt. Derived admittance:
+`G = R/(R²+X²)`, `B = -X/(R²+X²)`.
+
+`LoadZIP` (`Pnom`, `Qnom`, `Vnom`, `alphaI`, `alphaP` in p.u.): ZIP mixture. Derived admittance:
+`G = Pnom/Vnom²`, `B = Qnom/Vnom²`. Load fraction `alphaZ = 1 - alphaI - alphaP`.
+Power consumed at voltage V:
+`P = G V² * [alphaZ + alphaI*(Vnom/V) + alphaP*(Vnom/V)²]`.
+
+In illinois.json **all** LoadZIP devices have `alphaI=0, alphaP=0`, so `alphaZ=1` everywhere:
+they are all pure constant-impedance loads. The model reduces to `P = G V²`.
+Four devices have `Pnom=0, Qnom<0` (`id: shunt_*_1`) and represent capacitive shunts.
+
+**Plan for patching LoadZIP to scenario PD/QD:**
+
+Since all LoadZIPs in illinois.json are pure constant-Z (`alphaZ=1`), the only free parameter
+per load bus is the conductance `G = Pnom/Vnom²`. For a scenario with per-bus PD (MW) and
+QD (MVAr) from `mpc.bus`, and the converged bus voltage Vm (p.u.) from the same `mpc.bus`:
+
+```
+G_new = PD / (baseMVA * Vm²)      [p.u. S]
+B_new = QD / (baseMVA * Vm²)      [p.u. S]
+```
+
+This ensures that at initialization (when bus voltage = Vm from the PF solution),
+the load consumes exactly P = G_new * Vm² = PD/baseMVA p.u. as required.
+
+To encode this back into LoadZIP params, two equivalent choices:
+
+- **Option A** (keep Vnom=1.0): `Pnom = G_new`, `Qnom = B_new`, `Vnom = 1.0`
+- **Option B** (keep Pnom=PD/baseMVA): `Pnom = PD/baseMVA`, `Qnom = QD/baseMVA`, `Vnom = Vm`
+
+Both produce the same G and B; Option B is more readable because `Pnom` directly equals the
+load power in p.u. at the operating point.
+
+The four pure-shunt devices (`shunt_*_1`, `Pnom=0`) have no `PD` counterpart in `mpc.bus`
+(bus 15 has PD=0 in the base case). Their `Qnom` and `Vnom` encode a fixed shunt susceptance
+from the network data — they should not be updated from PCM scenario files.
+
+The 56 LoadZIP buses in illinois.json that have no PD>0 entry in the base `.m` correspond to
+buses that were given a LoadZIP in the JSON for network model completeness but carry zero or
+near-zero load in the base case. In PCM scenarios those buses may still have PD=0; if PD>0
+appears, the same formula applies.
+
+**What this does NOT do**: changing `alphaZ` from 1 to something else (e.g. adding constant-P
+or constant-current fractions) would require a deliberate model choice beyond what the base
+illinois.json encodes. For now the plan is to keep `alphaZ=1` and only update G and B.
+
 ### What is and is not changing across PCM scenarios
 
 The 8760 scenarios differ in:
