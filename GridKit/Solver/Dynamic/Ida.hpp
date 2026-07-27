@@ -31,6 +31,7 @@ namespace AnalysisManager
     {
       long int num_steps_                       = 0;
       long int num_residual_evals_              = 0;
+      long int num_jacobian_evals_              = 0;
       long int num_linear_decompositions_       = 0;
       long int num_error_test_fails_            = 0;
       long int num_nonlinear_iters_             = 0;
@@ -127,6 +128,7 @@ namespace AnalysisManager
       void printOutput(RealT t) const;
       void printSpecial(RealT t, N_Vector x) const;
       void printFinalStats() const;
+      void printPerformanceStats() const;
 
       void setFixedStep(ScalarT time_step);
       void setBackwardFixedStep(ScalarT time_step);
