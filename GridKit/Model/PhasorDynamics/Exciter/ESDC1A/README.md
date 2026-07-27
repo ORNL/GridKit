@@ -6,7 +6,8 @@ and publishes field voltage.
 
 ## Notes
 
-- Internal voltage signals are on model base unless otherwise stated.
+- Internal voltage signals are on ESDC1A component base unless otherwise
+  stated.
 - The connected bus supplies $E_C=\sqrt{V_{\mathrm{r}}^2+V_{\mathrm{i}}^2}$.
 - The source diagram labels the optional multiplier input as `Speed`; GridKit
   uses machine speed deviation, so the enabled multiplier is $1+\omega$.
@@ -18,43 +19,44 @@ and publishes field voltage.
 
 ## Block Diagram
 
-Standard ESDC1A block diagram.
+![ESDC1A exciter block diagram](../../../../../docs/Figures/PhasorDynamics/ESDC1A/diagram.png)
 
-![](../../../../../docs/Figures/PhasorDynamics/ESDC1A/diagram.png)
-
-Figure 1: ESDC1A block diagram. Figure courtesy of [PowerWorld](https://www.powerworld.com/WebHelp/)
+Figure 1: ESDC1A exciter model. Figure courtesy of the
+[PowerWorld ESDC1A model reference](https://www.powerworld.com/WebHelp/Content/TransientModels_HTML/Exciter%20ESDC1A.htm).
 
 ## Model Parameters
 
 Symbol                              | Units     | JSON      | Description                                      | Typical Value | Note
 ------------------------------------|-----------|-----------|--------------------------------------------------|---------------|------
-$T_R$                               | [sec]     | `Tr`      | Transducer time constant                         | 0.0           | State 2
+$T_R$                               | [sec]     | `Tr`      | Transducer time constant                         | 0.0           | State 2; raised to the minimum-time floor
 $K_A$                               | [p.u.]    | `Ka`      | Voltage-regulator gain                           | 40.0          |
 $T_A$                               | [sec]     | `Ta`      | Voltage-regulator time constant                  | 0.1           | State 3
-$T_B$                               | [sec]     | `Tb`      | Lead-lag denominator time constant               | 0.0           | State 5
+$T_B$                               | [sec]     | `Tb`      | Lead-lag denominator time constant               | 0.0           | State 5; raised to the minimum-time floor
 $T_C$                               | [sec]     | `Tc`      | Lead-lag numerator time constant                 | 0.0           |
 $V_R^{\max}$                        | [p.u.]    | `Vrmax`   | Maximum voltage-regulator output                 | 1.0           |
 $V_R^{\min}$                        | [p.u.]    | `Vrmin`   | Minimum voltage-regulator output                 | -1.0          |
 $K_E$                               | [p.u.]    | `Ke`      | Exciter field-resistance line-slope margin       | 0.1           |
 $T_E$                               | [sec]     | `Te`      | Exciter field time constant                      | 0.5           | State 1
 $K_F$                               | [p.u.]    | `Kf`      | Stabilizing feedback gain                        | 0.05          |
-$T_{F1}$                            | [sec]     | `Tf1`     | Feedback lead time constant                      | 0.7           | State 4
-$s_{\mathrm{spd}}$                  | [binary]  | `Spdmlt`  | Speed multiplier flag                            | 0.0           | 1 enables the speed multiplier
+$T_{F1}$                            | [sec]     | `Tf1`     | Feedback lead time constant                      | 0.7           | State 4; raised to the minimum-time floor
+$s_{\mathrm{spd}}$                  | [binary]  | `Spdmlt`  | Speed multiplier flag                            | 0             | 1 enables the speed multiplier
 $E_1$                               | [p.u.]    | `E1`      | First saturation voltage point                   | 2.8           |
 $S_E(E_1)$                          | [p.u.]    | `Se1`     | Saturation value at $E_1$                        | 0.08          |
 $E_2$                               | [p.u.]    | `E2`      | Second saturation voltage point                  | 3.7           |
 $S_E(E_2)$                          | [p.u.]    | `Se2`     | Saturation value at $E_2$                        | 0.33          |
 $I_{\mathrm{UEL}}$                  | [integer] | `UEL`     | Under-excitation limiter input-location selector | 0             | 0/1 = high-value gate, 2/3 = input-error summing junction
-$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter feedback lower-limit flag                | 1.0           | 1 enables the zero lower limit on $V_{\mathrm{FE}}$
+$s_{\mathrm{lim}}$                  | [binary]  | `exclim`  | Exciter feedback lower-limit flag                | 1             | 1 enables the zero lower limit on $V_{\mathrm{FE}}$
 
 ### Parameter Validation
 
-Invalid ESDC1A parameter sets are rejected by the following checks. Let $\epsilon_T=10^{-3}$.
+Invalid ESDC1A parameter sets are rejected by the following checks:
 
 ```math
 \begin{aligned}
-  T &\leftarrow \max\!\left(T, \epsilon_T\right)
-    \quad T\in\{T_R,T_B,T_{F1}\} \\
+  s_{\mathrm{spd}}, s_{\mathrm{lim}}
+    &\in \{0,1\} \\
+  T_R, T_B, T_{F1}
+    &\ge 0 \\
   K_A
     &> 0 \\
   T_A, T_E
@@ -63,8 +65,6 @@ Invalid ESDC1A parameter sets are rejected by the following checks. Let $\epsilo
     &\ge 0 \\
   V_R^{\min}
     &\le V_R^{\max} \\
-  s_{\mathrm{spd}}, s_{\mathrm{lim}}
-    &\in \{0,1\} \\
   I_{\mathrm{UEL}}
     &\in \{0,1,2,3\} \\
   \left(S_E(E_1), S_E(E_2)\right)
@@ -80,8 +80,14 @@ Invalid ESDC1A parameter sets are rejected by the following checks. Let $\epsilo
 
 ### Model Derived Parameters
 
+Let $\epsilon_T=10^{-3}\ \mathrm{s}$. A time constant below $\epsilon_T$ is
+raised to that floor in place, so every equation below uses the raised value:
+
 ```math
 \begin{aligned}
+  T_x
+    &\leftarrow \max\!\left(T_x,\epsilon_T\right),
+       \quad x\in\{R,B,F1\} \\
   s_{\mathrm{UEL}}
     &=
       \begin{cases}
@@ -116,6 +122,10 @@ Name    | Port   | Init    | Description
 `vuel`  | Input  | Known   | Under-excitation limiter input
 `efd`   | Output | Known   | Field-voltage output
 
+`Known` ports are seeded before `initialize()` and preserved by it. `Unknown`
+inputs are resolved during initialization and written to attached signal
+storage, or retained as constant inputs when the port is unattached.
+
 ## Model Variables
 
 ### Internal Variables
@@ -149,14 +159,14 @@ None.
 
 #### Algebraic
 
-Symbol                              | Units  | Type    | Description                         | Note
+Symbol                              | Units  | Init    | Description                         | Note
 ------------------------------------|--------|---------|-------------------------------------|------
 $V_{\mathrm{r}}$                    | [p.u.] | Known   | Terminal-bus voltage, real component | Bus input
 $V_{\mathrm{i}}$                    | [p.u.] | Known   | Terminal-bus voltage, imaginary component | Bus input
 $\omega$                            | [p.u.] | Known   | Machine speed deviation             | Optional signal port `speed`; required when $s_{\mathrm{spd}}=1$
+$V_{\mathrm{ref}}$                  | [p.u.] | Unknown | Voltage-control reference           | Optional signal port `vref`; initialized constant setpoint; source label: `VREF`
 $V_S$                               | [p.u.] | Known   | Stabilizer input signal             | Optional signal port `vs`; defaults to zero
 $V_{\mathrm{UEL}}$                  | [p.u.] | Known   | Under-excitation limiter input      | Optional signal port `vuel`; defaults to zero
-$V_{\mathrm{ref}}$                  | [p.u.] | Unknown | Voltage-control reference           | Optional signal port `vref`; initialized constant setpoint; source label: `VREF`
 
 ## Model Equations
 
@@ -199,7 +209,7 @@ $V_{\mathrm{ref}}$                  | [p.u.] | Unknown | Voltage-control referen
 \end{aligned}
 ```
 
-CommonMath defines the [Anti-Windup](../../../../CommonMath.md#anti-windup-indicator)
+CommonMath defines the [`antiwindup`](../../../../CommonMath.md#antiwindup)
 target and smooth approximation.
 
 ### Algebraic Equations
@@ -261,11 +271,15 @@ $\rho$, and the [quadratic ramp](../../../../CommonMath.md#primitives) $q$.
 \end{aligned}
 ```
 
+Initialization never replaces the seeded value held in $E_{\mathrm{fd}}$.
+
 ### Internal Initialization
 
 Initialization is performed by evaluating the steady-state residuals in
-dependency order. Let subscript $0$ denote initial values and set all internal
-derivatives to zero:
+dependency order. The high-value gate uses the smooth CommonMath
+[ramp](../../../../CommonMath.md#primitives) $\rho$, so an inactive gate is
+seeded with the gate *input* through the ramp inverse $\rho^{-1}$. Let
+subscript $0$ denote initial values and set all internal derivatives to zero:
 
 ```math
 \begin{aligned}
@@ -310,9 +324,13 @@ derivatives to zero:
 \end{aligned}
 ```
 
-Initialization rejects $d_0=0$, $V_{R,0}$ outside
-$[V_R^{\min},V_R^{\max}]$, and high-value-gate active starts with
-$s_{\mathrm{UEL}}=0$ and $V_{\mathrm{HV},0}\le V_{\mathrm{UEL},0}$.
+Initialization rejects a non-finite bus voltage or field-voltage seed,
+$d_0=0$, $V_{R,0}$ outside $[V_R^{\min},V_R^{\max}]$, and high-value-gate
+active starts with $s_{\mathrm{UEL}}=0$ and
+$V_{\mathrm{HV},0}\le V_{\mathrm{UEL},0}$.
+
+Every check resolves before any storage is written, so a rejected
+initialization leaves state, the `efd` seed, and external signals unchanged.
 
 ### Output Initialization
 

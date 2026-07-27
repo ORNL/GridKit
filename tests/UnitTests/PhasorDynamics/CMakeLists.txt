@@ -100,8 +100,10 @@ add_executable(test_phasor_exciter_esdc1a runExciterEsdc1aTests.cpp)
 target_link_libraries(
   test_phasor_exciter_esdc1a
   GridKit::definitions
-  GridKit::phasor_dynamics_components
-  GridKit::phasor_dynamics_components_dependency_tracking
+  GridKit::phasor_dynamics_exciter_esdc1a
+  GridKit::phasor_dynamics_exciter_esdc1a_dependency_tracking
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
 add_executable(test_phasor_exciter_sexspti runExciterSexsPtiTests.cpp)

@@ -6,12 +6,14 @@ int main()
 
   GridKit::Testing::ExciterEsdc1aTests<double, size_t> test;
 
-  result += test.constructor();
-  result += test.zeroInitialResidual();
-  result += test.blockDiagramSemantics();
-  result += test.parameterValidation();
+  result += test.validation();
+  result += test.initializationAndSignals();
+  result += test.initializationDomain();
+  result += test.residualEquations();
+  result += test.voltageRegulation();
+  result += test.excitationLimits();
 #ifdef GRIDKIT_ENABLE_ENZYME
-  result += test.jacobianStructureAndValues();
+  result += test.jacobian();
 #endif
 
   return result.summary();

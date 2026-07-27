@@ -1,7 +1,7 @@
 # **Exciter Models**
 
 > [!NOTE]
-> EXDC1 is not currently implemented.
+> IEEET1, SEXS-PTI, and ESDC1A exciters are currently implemented.
 
 
 ## Introduction

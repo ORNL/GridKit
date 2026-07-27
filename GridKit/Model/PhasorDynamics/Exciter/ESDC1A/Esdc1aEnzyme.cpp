@@ -14,8 +14,8 @@ namespace GridKit
   {
     namespace Exciter
     {
-      template <class ScalarT, typename IdxT>
-      int Esdc1a<ScalarT, IdxT>::evaluateJacobian()
+      template <typename scalar_type, typename index_type>
+      int Esdc1a<scalar_type, index_type>::evaluateJacobian()
       {
         Log::misc() << "Evaluate Jacobian for Esdc1a..." << std::endl;
         Log::misc() << "Jacobian evaluation is experimental!" << std::endl;
@@ -24,14 +24,14 @@ namespace GridKit
         {
           auto size        = static_cast<size_t>(size_);
           auto bus_size    = static_cast<size_t>(bus_->size());
-          auto signal_size = static_cast<size_t>(ws_.size());
+          auto signal_size = ws_.size();
           auto buffer_size = 2 * size * size + size * bus_size + size * signal_size;
           J_rows_buffer_   = new IdxT[buffer_size];
           J_cols_buffer_   = new IdxT[buffer_size];
           J_vals_buffer_   = new RealT[buffer_size];
         }
 
-        using ModelT = GridKit::PhasorDynamics::Exciter::Esdc1a<ScalarT, IdxT>;
+        using ModelT = GridKit::PhasorDynamics::Exciter::Esdc1a<scalar_type, index_type>;
         using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
@@ -92,7 +92,6 @@ namespace GridKit
                                                                                      J_cols_buffer_,
                                                                                      J_vals_buffer_,
                                                                                      nnz_);
-
         this->constructCoo();
 
         return 0;

@@ -40,24 +40,24 @@ namespace GridKit
       /// Buses for the ESDC1A exciter model.
       enum class Esdc1aBuses : size_t
       {
-        bus, ///< Unique ID of the terminal bus
+        bus, ///< Terminal bus ID
         SIZE
       };
 
       /// Signal inputs for the ESDC1A exciter model.
       enum class Esdc1aSignalInputs : size_t
       {
-        speed, ///< Unique ID of the generator speed-deviation signal
-        vref,  ///< Unique ID of the voltage-reference signal
-        vs,    ///< Unique ID of the optional stabilizer input signal
-        vuel,  ///< Unique ID of the optional UEL input signal
+        speed, ///< Machine speed-deviation signal ID
+        vref,  ///< Optional voltage-reference signal ID
+        vs,    ///< Optional stabilizer input signal ID
+        vuel,  ///< Optional UEL input signal ID
         SIZE
       };
 
       /// Signal outputs for the ESDC1A exciter model.
       enum class Esdc1aSignalOutputs : size_t
       {
-        efd, ///< Unique ID of the output EFD signal
+        efd, ///< Field-voltage output signal ID
         SIZE
       };
 
@@ -67,14 +67,14 @@ namespace GridKit
         efd, ///< Field-voltage output
         vc,  ///< Sensed compensated voltage
         vr,  ///< Voltage-regulator output
-        vf,  ///< Stabilizing feedback state
+        vf,  ///< Stabilizing feedback output
         se,  ///< Saturation coefficient
         vfe  ///< Exciter feedback signal
       };
 
-      template <typename RealT, typename IdxT>
-      struct Esdc1aData : public ComponentData<RealT,
-                                               IdxT,
+      template <typename real_type, typename index_type>
+      struct Esdc1aData : public ComponentData<real_type,
+                                               index_type,
                                                Esdc1aParameters,
                                                Esdc1aBuses,
                                                Esdc1aSignalInputs,
