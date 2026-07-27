@@ -19,7 +19,7 @@ GridKit uses the smooth HVRCM form shown in the algebraic equations below.
 - Internal current states and limiter quantities are on component base.
 - Signal ports, monitor outputs, branch currents, and branch powers are on system base.
 - LVACM uses $V_T$; LVPL uses $V_M$.
-- PowerWorld fields `Qmin`, `Khv`, and `Xe` are not parameters of this GridKit implementation.
+- PowerWorld fields `Qmin`, `Khv`, and `Xe` are accepted as optional DYD compatibility fields and are not used by the equations below.
 
 ## Block Diagram
 
@@ -36,18 +36,21 @@ $Q_0$                            | [p.u.]   | `q0`     | Initial reactive power 
 $S^\mathrm{base}$                | [MVA]    | `mva`    | REGCA component power base                            | 100.0         |
 $T_\mathrm{g}$                   | [sec]    | `Tg`     | Converter current-control lag time constant           | 0.02          | Block name: `Tg`
 $T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
-$R_q^{\max}$                      | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`
-$R_q^{\min}$                      | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`
-$R_p^{\max}$                      | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
+$R_q^{\max}$                     | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`
+$R_q^{\min}$                     | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`
+$R_p^{\max}$                     | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
 $s_L$                            | [binary] | `sL`     | LVPL switch                                           | 1             | Block name: `LPVLSW`
 $I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`
 $V_{L0}$                         | [p.u.]   | `VL0`    | LVPL zero-crossing voltage                            | 0.4           | Block name: `zerox`
 $V_{L1}$                         | [p.u.]   | `VL1`    | LVPL upper breakpoint voltage                         | 0.9           | Block name: `brkpt`
 $V_{A0}$                         | [p.u.]   | `VA0`    | LVACM lower breakpoint voltage                        | 0.4           | Block name: `LVPnt0`
 $V_{A1}$                         | [p.u.]   | `VA1`    | LVACM upper breakpoint voltage                        | 0.9           | Block name: `LVPnt1`
-$V_\mathrm{hv}^{\max}$            | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling for HV reactive management   | 1.2           | Block name: `VLim`
+$V_\mathrm{hv}^{\max}$           | [p.u.]   | `Vhvmax` | Terminal-voltage ceiling for HV reactive management   | 1.2           | Block name: `VLim`
+$Q^{\min}$                       | [p.u.]   | `Qmin`   | Unused compatibility field                            |               | Optional
+$K_\mathrm{hv}$                  | [p.u.]   | `Khv`    | Unused compatibility field                            |               | Optional
+$X_\mathrm{e}$                   | [p.u.]   | `Xe`     | Unused compatibility field                            |               | Optional
 
-All listed JSON parameters are required.
+All listed JSON parameters are required unless marked optional.
 
 ### Parameter Validation
 
@@ -118,17 +121,17 @@ $I_p$                 | [p.u.] | Active-current state      | State 2 in Fig. 1; 
 
 #### Algebraic
 
-Symbol                     | Units    | Description                                                 | Note
----------------------------|----------|-------------------------------------------------------------|------
-$V_T$                      | [p.u.]   | Terminal voltage magnitude                                  |
-$I_\mathrm{r}$             | [p.u.]   | Branch-current real component                               | System base
-$I_\mathrm{i}$             | [p.u.]   | Branch-current imaginary component                         | System base
+Symbol                     | Units    | Description                                                           | Note
+---------------------------|----------|-----------------------------------------------------------------------|------
+$V_T$                      | [p.u.]   | Terminal voltage magnitude                                            |
+$I_\mathrm{r}$             | [p.u.]   | Branch-current real component                                         | System base
+$I_\mathrm{i}$             | [p.u.]   | Branch-current imaginary component                                    | System base
 $I_q^\mathrm{extra}$       | [p.u.]   | Extra inductive current from high-voltage reactive current management | Component base
-$I_L$                      | [p.u.]   | LVPL upper-limit current curve                              | Component base; function of $V_M$
-$\ell_p$                   | [p.u./s] | Active-current lower rate bound                             | Component base; finite realization of diagram `Rdown`
-$u_p$                      | [p.u./s] | Active-current upper rate bound                             | Component base; finite realization of diagram `Rup`
-$P^\mathrm{br}$            | [p.u.]   | Branch active power                                         | System base
-$Q^\mathrm{br}$            | [p.u.]   | Branch reactive power                                       | System base
+$I_L$                      | [p.u.]   | LVPL upper-limit current curve                                        | Component base; function of $V_M$
+$\ell_p$                   | [p.u./s] | Active-current lower rate bound                                       | Component base; finite realization of diagram `Rdown`
+$u_p$                      | [p.u./s] | Active-current upper rate bound                                       | Component base; finite realization of diagram `Rup`
+$P^\mathrm{br}$            | [p.u.]   | Branch active power                                                   | System base
+$Q^\mathrm{br}$            | [p.u.]   | Branch reactive power                                                 | System base
 
 ### External Variables
 

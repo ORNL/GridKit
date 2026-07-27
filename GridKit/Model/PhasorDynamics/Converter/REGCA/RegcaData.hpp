@@ -17,21 +17,26 @@ namespace GridKit
       /// Parameter keys for the REGCA converter model.
       enum class RegcaParameters
       {
-        p0,    ///< Initial active power injection on system base
-        q0,    ///< Initial reactive power injection on system base
-        mva,   ///< MVA base of the REGCA model
-        Tg,    ///< Converter current-control lag time constant
-        TM,    ///< Terminal voltage sensor time constant
-        Rqmax, ///< Reactive-current recovery positive rate limit
-        Rqmin, ///< Reactive-current recovery negative rate limit
-        Rpmax, ///< Active-current magnitude recovery rate limit
-        sL,    ///< LVPL switch
-        IL1,   ///< LVPL upper-current ceiling
-        VL0,   ///< LVPL zero-crossing voltage
-        VL1,   ///< LVPL upper breakpoint voltage
-        VA0,   ///< LVACM lower breakpoint voltage
-        VA1,   ///< LVACM upper breakpoint voltage
-        Vhvmax ///< Terminal-voltage ceiling for HV reactive management
+        p0,     ///< Initial active power injection on system base
+        q0,     ///< Initial reactive power injection on system base
+        mva,    ///< MVA base of the REGCA model
+        Tg,     ///< Converter current-control lag time constant
+        TM,     ///< Terminal voltage sensor time constant
+        Rqmax,  ///< Reactive-current recovery positive rate limit
+        Rqmin,  ///< Reactive-current recovery negative rate limit
+        Rpmax,  ///< Active-current magnitude recovery rate limit
+        sL,     ///< LVPL switch
+        IL1,    ///< LVPL upper-current ceiling
+        VL0,    ///< LVPL zero-crossing voltage
+        VL1,    ///< LVPL upper breakpoint voltage
+        VA0,    ///< LVACM lower breakpoint voltage
+        VA1,    ///< LVACM upper breakpoint voltage
+        Vhvmax, ///< Terminal-voltage ceiling for HV reactive management
+
+        // Optional PowerWorld compatibility fields, accepted and unused.
+        Qmin, ///< Unused compatibility field
+        Khv,  ///< Unused compatibility field
+        Xe    ///< Unused compatibility field
       };
 
       /// Buses for the REGCA converter model.
