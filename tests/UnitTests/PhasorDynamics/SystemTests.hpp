@@ -17,7 +17,6 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
-#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -368,13 +367,13 @@ namespace GridKit
         PhasorDynamics::BusInfinite<ScalarT, IdxT> infinite_bus;
         PhasorDynamics::Bus<ScalarT, IdxT>         bus2(3.0, 4.0);
         PhasorDynamics::Branch<ScalarT, IdxT>      branch(&bus1, &bus2);
-        PhasorDynamics::LoadZ<ScalarT, IdxT>       load(&bus2, 1.0, 1.0);
+        PhasorDynamics::BusFault<ScalarT, IdxT>    fault(&bus2);
 
         system.addBus(&bus1);
         system.addBus(&infinite_bus);
         system.addBus(&bus2);
         system.addComponent(&branch);
-        system.addComponent(&load);
+        system.addComponent(&fault);
 
         if (system.allocate() != 0
             || system.setAbsoluteTolerance(1e-4) != 0)
@@ -413,9 +412,9 @@ namespace GridKit
           checkAlias(system.absoluteTolerance(), model.absoluteTolerance(), offset);
         };
 
-        const IdxT bus2_offset = bus1.size();
-        const IdxT load_offset = bus1.size() + bus2.size();
-        const auto bus2_first  = static_cast<std::size_t>(bus2_offset);
+        const IdxT bus2_offset  = bus1.size();
+        const IdxT fault_offset = bus1.size() + bus2.size();
+        const auto bus2_first   = static_cast<std::size_t>(bus2_offset);
 
         auto rebind = [&](auto& model, IdxT offset)
         {
@@ -438,10 +437,10 @@ namespace GridKit
         success *= &bus2.Ir() == system.getResidual().getData() + bus2_offset;
 
         // Rebinding the remaining model to the same slice is a no-op.
-        success *= rebind(load, load_offset) == 0;
+        success *= rebind(fault, fault_offset) == 0;
 
         checkModel(bus2, bus2_offset);
-        checkModel(load, load_offset);
+        checkModel(fault, fault_offset);
 
         // Tags remain model-owned and are collected separately.
         system.tag()[bus2_first]  = true;
