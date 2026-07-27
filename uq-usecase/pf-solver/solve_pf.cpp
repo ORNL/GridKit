@@ -10,14 +10,20 @@
  * Exit code 0 = converged, non-zero = solver failure.
  *
  * Usage:
- *   solve_pf <path/to/case.m>
+ *   solve_pf <path/to/case.m> [--output-m <path/to/solved.m>]
+ *
+ * If --output-m is given and the solve converges, a new .m file is written
+ * with Vm/Va in mpc.bus replaced by the PF solution. Everything else
+ * (mpc.gen, mpc.branch, gencost, comments) is copied through unchanged.
  */
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <map>
 #include <string>
+#include <utility>
 
 #include <GridKit/Model/PowerFlow/Branch/Branch.hpp>
 #include <GridKit/Model/PowerFlow/Bus/BusFactory.hpp>
@@ -36,11 +42,20 @@ using namespace AnalysisManager;
 int main(int argc, char* argv[])
 {
   if (argc < 2) {
-    std::cerr << "Usage: solve_pf <path/to/case.m>\n";
+    std::cerr << "Usage: solve_pf <path/to/case.m> [--output-m <path>] [--flat-start]\n";
     return 1;
   }
 
   std::string m_path = argv[1];
+  std::string out_m_path;
+  bool flat_start = false;
+  for (int i = 2; i < argc; ++i) {
+    if (std::string(argv[i]) == "--output-m" && i + 1 < argc) {
+      out_m_path = argv[++i];
+    } else if (std::string(argv[i]) == "--flat-start") {
+      flat_start = true;
+    }
+  }
   std::cerr << "Reading: " << m_path << "\n";
 
   // --- parse ---
@@ -57,6 +72,15 @@ int main(int argc, char* argv[])
   std::cerr << "Parsed: " << mp.bus.size() << " buses, "
             << mp.gen.size() << " gens, "
             << mp.branch.size() << " branches\n";
+
+  // Flat start: override parsed Vm/Va with Vm=1.0, Va=0.0 for all buses.
+  if (flat_start) {
+    for (auto& bd : mp.bus) {
+      bd.Vm = 1.0;
+      bd.Va = 0.0;  // already stored in radians by local parser
+    }
+    std::cerr << "Flat start: Vm=1.0 Va=0.0 for all buses\n";
+  }
 
   // --- assemble ---
   auto* sys = new SystemSteadyStateModel<double, size_t>(mp);
@@ -100,12 +124,23 @@ int main(int argc, char* argv[])
   // --- print per-bus results (machine-parseable on stdout) ---
   // Only print if converged; otherwise the state is meaningless.
   if (converged) {
+    std::map<size_t, std::pair<double, double>> bus_solution;
     for (const auto& bd : mp.bus) {
       auto* bus = sys->getBus(bd.bus_i);
       double v   = bus->V();
       double deg = bus->theta() * 180.0 / M_PI;
+      bus_solution[bd.bus_i] = {v, deg};
       printf("bus %zu  V=%.8f  theta_deg=%.8f  type=%d\n",
              (size_t)bd.bus_i, v, deg, (int)bd.type);
+    }
+
+    // --- write solved .m if --output-m was given ---
+    if (!out_m_path.empty()) {
+      try {
+        UqPfSolver::write_solved_m(m_path, out_m_path, bus_solution);
+      } catch (const std::exception& e) {
+        std::cerr << "write_solved_m error: " << e.what() << "\n";
+      }
     }
   }
 

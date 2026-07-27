@@ -1,5 +1,7 @@
 # Illinois case — MATPOWER .m file
 
+Full parsed MATPOWER tables (mpc.bus, mpc.branch, mpc.gen, mpc.gencost): [`illinois_m_tables.md`](illinois_m_tables.md).
+
 ## Geo plot
 
 Interactive Plotly map — branch loading (viridis), buses sized by PD, generators colored by fuel type.  
@@ -457,3 +459,7 @@ Same as v1 with N increased to 4000 for better coverage of the 4D input space.
 | `135_1` | 135 | 3.23290 | 3.23290 | 0.38795 |
 | `115_1` | 115 | 2.72678 | 2.72678 | 0.32721 |
 | `189_1` | 189 | 3.40165 | 3.40165 | 0.40820 |
+
+
+---
+
