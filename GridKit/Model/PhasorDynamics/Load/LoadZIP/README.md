@@ -1,8 +1,9 @@
 # LoadZIP
 
 Static ZIP load model with constant impedance, constant current, and constant
-power fractions. `LoadZIP` owns terminal current states and adds their current
-contribution to the connected bus residual.
+power fractions. `LoadZIP` has no solver-owned variables; it computes terminal
+current contributions from the connected bus voltage and adds them directly to
+the bus current-balance residuals.
 
 ## Model Parameters
 
@@ -23,9 +24,9 @@ $V_\text{nom}$ is the initial voltage magnitude of the respective bus.
 
 ```math
 \begin{aligned}
-G &= \frac{P_\text{nom}}{V_\text{nom}^2} \\
-B &= \frac{Q_\text{nom}}{V_\text{nom}^2} \\
-\alpha_Z &= 1 - \alpha_I - \alpha_P
+G &= \frac{P_{\mathrm{nom}}}{V_{\mathrm{nom}}^2} \\
+B &= \frac{Q_{\mathrm{nom}}}{V_{\mathrm{nom}}^2} \\
+\alpha_{Z} &= 1 - \alpha_{I} - \alpha_{P}
 \end{aligned}
 ```
 
@@ -39,10 +40,7 @@ None.
 
 #### Algebraic
 
-Symbol | Units  | Description                              | Note
--------|--------|------------------------------------------|------
-$I_r$  | [p.u.] | Terminal current, real component         | Added to connected bus residual
-$I_i$  | [p.u.] | Terminal current, imaginary component    | Added to connected bus residual
+None.
 
 ### External Variables
 
@@ -54,8 +52,8 @@ None.
 
 Symbol | Units  | Description                              | Note
 -------|--------|------------------------------------------|------
-$V_r$  | [p.u.] | Terminal voltage, real component         | Owned by connected bus
-$V_i$  | [p.u.] | Terminal voltage, imaginary component    | Owned by connected bus
+$V_{\mathrm{r}}$ | [p.u.] | Terminal voltage, real component      | Owned by connected bus
+$V_{\mathrm{i}}$ | [p.u.] | Terminal voltage, imaginary component | Owned by connected bus
 
 ## Wiring
 
@@ -65,7 +63,7 @@ Port  | Type | Description
 
 ## Model Equations
 
-Let $V = \sqrt{V_r^2 + V_i^2}$.
+Let $V = \sqrt{V_{\mathrm{r}}^2 + V_{\mathrm{i}}^2}$.
 
 ### Differential Equations
 
@@ -73,33 +71,44 @@ None.
 
 ### Algebraic Equations
 
+None.
+
+### Bus Current-Balance Contributions
+
+Let $I_{\mathrm{r}}^{\mathrm{LoadZIP}}$ and
+$I_{\mathrm{i}}^{\mathrm{LoadZIP}}$ denote the model contributions to the real
+and imaginary current-balance residuals of the connected bus. Positive current
+is oriented entering the bus.
+
 ```math
 \begin{aligned}
-0 &= I_r + (G V_r + B V_i)
+I_{\mathrm{r}}^{\mathrm{LoadZIP}}
+  &= -(G V_{\mathrm{r}} + B V_{\mathrm{i}})
 \left[
-\alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V}
-+ \alpha_P \frac{V_\text{nom}^2}{V^2}
+\alpha_{Z}
++ \alpha_{I} \frac{V_{\mathrm{nom}}}{V}
++ \alpha_{P} \frac{V_{\mathrm{nom}}^2}{V^2}
 \right] \\
-0 &= I_i + (G V_i - B V_r)
+I_{\mathrm{i}}^{\mathrm{LoadZIP}}
+  &= -(G V_{\mathrm{i}} - B V_{\mathrm{r}})
 \left[
-\alpha_Z
-+ \alpha_I \frac{V_\text{nom}}{V}
-+ \alpha_P \frac{V_\text{nom}^2}{V^2}
+\alpha_{Z}
++ \alpha_{I} \frac{V_{\mathrm{nom}}}{V}
++ \alpha_{P} \frac{V_{\mathrm{nom}}^2}{V^2}
 \right]
 \end{aligned}
 ```
 
+These contributions are accumulated directly into the bus-owned residuals.
+
 ## Initialization
 
 ```math
-\begin{aligned}
-    I_r &\leftarrow -G V_{r} - B V_{i} \\
-    I_i &\leftarrow -G V_{i} + B V_{r} 
-\end{aligned}
+V_\text{nom} \leftarrow \sqrt{V_\mathrm{r}^2 + V_\mathrm{i}^2}
 ```
 
-The derivative vector entries initialize to zero.
+The nominal-voltage anchor and derived admittance parameters are recomputed
+from the initialized bus voltage. The model has no internal state to initialize.
 
 ## Monitors
 
