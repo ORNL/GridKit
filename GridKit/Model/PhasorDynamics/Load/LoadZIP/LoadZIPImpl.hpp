@@ -225,10 +225,6 @@ namespace GridKit
       evaluateBusResidual(y, yp, wb, h);
       Ir() += h[0];
       Ii() += h[1];
-      if (bus_->size() > 0)
-      {
-        bus_->getResidual().setDataUpdated();
-      }
       f_.setDataUpdated();
 
       return 0;

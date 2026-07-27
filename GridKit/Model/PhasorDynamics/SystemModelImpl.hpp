@@ -1157,6 +1157,10 @@ namespace GridKit
     {
       using ProfileClock = std::chrono::steady_clock;
 
+      // Ordering invariant: every bus clears Ir and Ii before any component
+      // accumulates terminal-current contributions. Finite buses also establish
+      // HOST-current state for their bound residual slices during this sweep.
+      // Do not reorder the bus and component loops.
       const auto bus_start = ProfileClock::now();
       for (const auto& bus : buses_)
       {
@@ -1180,6 +1184,7 @@ namespace GridKit
         components_[i]->evaluateResidual();
       }
 
+      // Components have finished writing the shared HOST residual storage.
       f_.setDataUpdated();
       ++profile_residual_calls_;
 
