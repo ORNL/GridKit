@@ -339,8 +339,18 @@ namespace GridKit
                             offset);
         };
 
-        // Rebinding the same slices is a no-op.
+        // Rebinding to a different slice refreshes the bus terminal aliases.
+        auto* const original_Vr  = &bus2.Vr();
+        success                 *= rebind(bus2, IdxT{0}) == 0;
+        success                 *= &bus2.Vr() == system.y().getData();
+        success                 *= &bus2.Ir() == system.getResidual().getData();
+        success                 *= &bus2.Vr() != original_Vr;
+
         success *= rebind(bus2, bus2_offset) == 0;
+        success *= &bus2.Vr() == system.y().getData() + bus2_offset;
+        success *= &bus2.Ir() == system.getResidual().getData() + bus2_offset;
+
+        // Rebinding the remaining model to the same slice is a no-op.
         success *= rebind(load, load_offset) == 0;
 
         checkModel(bus2, bus2_offset);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <set>
 #include <vector>
@@ -127,7 +128,8 @@ namespace GridKit
        *
        * @pre System vectors hold current HOST data of at least offset + size()
        * elements. This bus's vectors are unallocated or already bound.
-       * @post allocated_ is true and y_, yp_, f_, abs_tol_ alias system storage.
+       * @post allocated_ is true; y_, yp_, f_, and abs_tol_ alias system
+       * storage; terminal accessors reference the newly bound storage.
        *
        * @return 0 if successful, non-zero otherwise.
        */
@@ -163,6 +165,12 @@ namespace GridKit
         if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
         {
           Log::error() << "BusBase::bind - failed to bind vectors to system storage\n";
+          return 1;
+        }
+
+        if (refreshTerminals() != 0)
+        {
+          Log::error() << "BusBase::bind - failed to refresh terminal storage\n";
           return 1;
         }
 
@@ -228,14 +236,57 @@ namespace GridKit
         // No time to update in bus models
       }
 
-      virtual ScalarT&       Vr()       = 0;
-      virtual const ScalarT& Vr() const = 0;
-      virtual ScalarT&       Vi()       = 0;
-      virtual const ScalarT& Vi() const = 0;
-      virtual ScalarT&       Ir()       = 0;
-      virtual const ScalarT& Ir() const = 0;
-      virtual ScalarT&       Ii()       = 0;
-      virtual const ScalarT& Ii() const = 0;
+      /**
+       * @pre Terminal storage has been established by Bus::allocate(),
+       * BusBase::bind(), or the BusInfinite constructor.
+       */
+      ScalarT& Vr()
+      {
+        assert(Vr_ptr_ != nullptr);
+        return *Vr_ptr_;
+      }
+
+      const ScalarT& Vr() const
+      {
+        assert(Vr_ptr_ != nullptr);
+        return *Vr_ptr_;
+      }
+
+      ScalarT& Vi()
+      {
+        assert(Vi_ptr_ != nullptr);
+        return *Vi_ptr_;
+      }
+
+      const ScalarT& Vi() const
+      {
+        assert(Vi_ptr_ != nullptr);
+        return *Vi_ptr_;
+      }
+
+      ScalarT& Ir()
+      {
+        assert(Ir_ptr_ != nullptr);
+        return *Ir_ptr_;
+      }
+
+      const ScalarT& Ir() const
+      {
+        assert(Ir_ptr_ != nullptr);
+        return *Ir_ptr_;
+      }
+
+      ScalarT& Ii()
+      {
+        assert(Ii_ptr_ != nullptr);
+        return *Ii_ptr_;
+      }
+
+      const ScalarT& Ii() const
+      {
+        assert(Ii_ptr_ != nullptr);
+        return *Ii_ptr_;
+      }
 
       virtual int setBusID(IdxT) = 0;
 
@@ -247,6 +298,19 @@ namespace GridKit
       const Model::VariableMonitorBase* getMonitor() const override;
 
     protected:
+      /**
+       * @brief Refresh cached HOST terminal pointers after allocation or rebinding.
+       */
+      virtual int refreshTerminals() = 0;
+
+      void setTerminals(ScalarT* Vr, ScalarT* Vi, ScalarT* Ir, ScalarT* Ii)
+      {
+        Vr_ptr_ = Vr;
+        Vi_ptr_ = Vi;
+        Ir_ptr_ = Ir;
+        Ii_ptr_ = Ii;
+      }
+
       /**
        * @brief Allocate this bus's state and residual vectors.
        */
@@ -272,6 +336,11 @@ namespace GridKit
       VectorT           abs_tol_;
       VectorT           f_;
       bool              allocated_{false};
+
+      ScalarT* Vr_ptr_{nullptr};
+      ScalarT* Vi_ptr_{nullptr};
+      ScalarT* Ir_ptr_{nullptr};
+      ScalarT* Ii_ptr_{nullptr};
 
       std::vector<ScalarT> g_;
 
