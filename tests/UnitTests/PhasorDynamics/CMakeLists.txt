@@ -92,8 +92,8 @@ add_executable(test_phasor_governor_hygov runGovernorHygovTests.cpp)
 target_link_libraries(
   test_phasor_governor_hygov
   GridKit::definitions
-  GridKit::phasor_dynamics_systemmodel
-  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::phasor_dynamics_governor_hygov
+  GridKit::phasor_dynamics_governor_hygov_dependency_tracking
   GridKit::testing)
 
 add_executable(test_phasor_exciter_ieeet1 runExciterIeeet1Tests.cpp)

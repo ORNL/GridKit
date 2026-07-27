@@ -52,12 +52,39 @@ namespace GridKit
         MAXIMUM,
       };
 
+      /// Indices into the HYGOV state, derivative, and residual vectors.
+      struct HygovIdx
+      {
+        static constexpr size_t XN      = static_cast<size_t>(HygovInternalVariables::XN);
+        static constexpr size_t XF      = static_cast<size_t>(HygovInternalVariables::XF);
+        static constexpr size_t C       = static_cast<size_t>(HygovInternalVariables::C);
+        static constexpr size_t G       = static_cast<size_t>(HygovInternalVariables::G);
+        static constexpr size_t Q       = static_cast<size_t>(HygovInternalVariables::Q);
+        static constexpr size_t OMEGADB = static_cast<size_t>(HygovInternalVariables::OMEGADB);
+        static constexpr size_t EF      = static_cast<size_t>(HygovInternalVariables::EF);
+        static constexpr size_t FC      = static_cast<size_t>(HygovInternalVariables::FC);
+        static constexpr size_t RC      = static_cast<size_t>(HygovInternalVariables::RC);
+        static constexpr size_t PGV     = static_cast<size_t>(HygovInternalVariables::PGV);
+        static constexpr size_t H       = static_cast<size_t>(HygovInternalVariables::H);
+        static constexpr size_t PMECH   = static_cast<size_t>(HygovInternalVariables::PMECH);
+        static constexpr size_t MAXIMUM = static_cast<size_t>(HygovInternalVariables::MAXIMUM);
+      };
+
+      /// Indices into the HYGOV external-signal buffers.
+      struct HygovExt
+      {
+        static constexpr size_t OMEGA   = static_cast<size_t>(HygovExternalVariables::OMEGA);
+        static constexpr size_t PREF    = static_cast<size_t>(HygovExternalVariables::PREF);
+        static constexpr size_t PAUX    = static_cast<size_t>(HygovExternalVariables::PAUX);
+        static constexpr size_t MAXIMUM = static_cast<size_t>(HygovExternalVariables::MAXIMUM);
+      };
+
       template <typename scalar_type, typename index_type>
       class Hygov : public Component<scalar_type, index_type>
       {
-        using Component<scalar_type, index_type>::alpha_;
         using Component<scalar_type, index_type>::abs_tol_;
         using Component<scalar_type, index_type>::allocated_;
+        using Component<scalar_type, index_type>::alpha_;
         using Component<scalar_type, index_type>::f_;
         using Component<scalar_type, index_type>::gridkit_component_id_;
         using Component<scalar_type, index_type>::J_cols_buffer_;
@@ -82,8 +109,8 @@ namespace GridKit
         using MonitorT   = Model::VariableMonitor<Hygov, HygovData>;
 
         Hygov();
-        Hygov(const ModelDataT& data);
-        ~Hygov() override;
+        explicit Hygov(const ModelDataT& data);
+        ~Hygov();
 
         int setGridKitComponentID(IdxT) override final;
         int allocate() override final;
@@ -109,42 +136,53 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        void initModelParams(const ModelDataT& data);
+        void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
 
+        /// Evaluate the nonlinear gate-to-power curve as a fixed sum of
+        /// smooth linear segments.
         ScalarT gatePower(ScalarT gate) const;
-        RealT   invertGatePower(RealT pgv) const;
+
+        /// Analytic slope of the smooth gate-to-power curve, used to stamp
+        /// the Jacobian entry the Enzyme auto-sparsity pass drops.
+        RealT gatePowerDerivative(RealT gate) const;
+
+        /// Solve the steady gate position that reproduces a seeded
+        /// component-base mechanical power at an initial speed deviation.
+        RealT solveInitialGate(RealT pmech, RealT omega) const;
+
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
+        static constexpr RealT TIME_CONSTANT_MINIMUM    = static_cast<RealT>(1.0e-3);
+        static constexpr RealT INITIALIZATION_TOLERANCE = static_cast<RealT>(1.0e-10);
 
-        RealT                Trate_{0};
-        RealT                Rperm_{0};
-        RealT                Rtemp_{0};
-        RealT                Tr_{0};
-        RealT                Tf_{0};
-        RealT                Tg_{0};
-        RealT                Velm_{0};
-        RealT                Gmax_{0};
-        RealT                Gmin_{0};
-        RealT                Tw_{0};
-        RealT                At_{0};
-        RealT                Dturb_{0};
-        RealT                Qnl_{0};
-        RealT                Tn_{0};
-        RealT                Tnp_{0};
-        RealT                leadlag_gain_{0};
-        RealT                db1_{0};
-        RealT                db2_{0};
-        RealT                Hdam_{1};
+        RealT                Trate_{ZERO<RealT>};
+        RealT                Rperm_{static_cast<RealT>(0.04)};
+        RealT                Rtemp_{static_cast<RealT>(0.3)};
+        RealT                Tr_{static_cast<RealT>(5.0)};
+        RealT                Tf_{static_cast<RealT>(0.05)};
+        RealT                Tg_{static_cast<RealT>(0.5)};
+        RealT                Velm_{static_cast<RealT>(0.2)};
+        RealT                Gmax_{ONE<RealT>};
+        RealT                Gmin_{ZERO<RealT>};
+        RealT                Tw_{ONE<RealT>};
+        RealT                At_{static_cast<RealT>(1.2)};
+        RealT                Dturb_{static_cast<RealT>(0.5)};
+        RealT                Qnl_{static_cast<RealT>(0.05)};
+        RealT                Tn_{ZERO<RealT>};
+        RealT                Tnp_{ZERO<RealT>};
+        RealT                db1_{ZERO<RealT>};
+        RealT                db2_{ZERO<RealT>};
+        RealT                Hdam_{ONE<RealT>};
         std::array<RealT, 6> Gv_{};
         std::array<RealT, 6> Pgv_{};
 
-        RealT va_component_base_{0};
+        RealT va_component_base_{ZERO<RealT>};
+        RealT leadlag_gain_{ZERO<RealT>};
 
-        int parameter_error_count_{0};
+        IdxT parameter_error_count_{0};
 
         ScalarT pref_set_{0};
         ScalarT paux_set_{0};

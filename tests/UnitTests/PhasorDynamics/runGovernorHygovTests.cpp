@@ -6,17 +6,15 @@ int main()
 
   GridKit::Testing::GovernorHygovTests<double, size_t> test;
 
-  result += test.constructionAndValidation();
-  result += test.signals();
-  result += test.sourceDefault();
-  result += test.zeroTimeConstants();
-  result += test.baseConversion();
-  result += test.absoluteTolerance();
-  result += test.prefSignal();
-  result += test.prefSignalBaseConversion();
-  result += test.parameterValidation();
-  result += test.signalValidation();
-  result += test.jsonParseAndSystemAssembly();
+  result += test.validation();
+  result += test.initializationAndSignals();
+  result += test.initializationDomain();
+  result += test.residualEquations();
+  result += test.governorControl();
+  result += test.turbineDynamics();
+#ifdef GRIDKIT_ENABLE_ENZYME
+  result += test.jacobian();
+#endif
 
   return result.summary();
 }
