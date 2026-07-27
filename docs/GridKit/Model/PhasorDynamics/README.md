@@ -5,7 +5,7 @@
 :titlesonly:
 :hidden:
 
-Input Format <INPUT_FORMAT>
+Case Format <INPUT_FORMAT>
 Branch <Branch/README>
 Bus <Bus/README>
 BusFault <BusFault/README>

@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gridkit.readthedocs.io/en/schema/case.schema.json",
+  "$comment": "Hand-maintained case structure. Model definitions are inserted by the GridKit Sphinx schema extension.",
+  "title": "Phasor Dynamics Case",
+  "description": "A GridKit phasor-dynamics case containing system metadata, buses, optional signals and monitor sinks, and model-specific devices.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "title": "Case schema URL",
+      "description": "URI of the JSON Schema used to validate this case file.",
+      "type": "string",
+      "format": "uri",
+      "examples": [
+        "https://gridkit.readthedocs.io/en/schema/case.schema.json"
+      ]
+    },
+    "header": {
+      "title": "Case header",
+      "description": "Format identification, case metadata, and system-wide base quantities.",
+      "$ref": "#/$defs/header"
+    },
+    "monitors": {
+      "title": "Monitor sinks",
+      "description": "Output destinations for monitored variables. If omitted, GridKit uses its default CSV output to standard output.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/monitor_sink"
+      }
+    },
+    "buses": {
+      "title": "Buses",
+      "description": "Electrical buses in the case. Bus numbers are unique nonnegative integer identifiers.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/bus"
+      }
+    },
+    "signals": {
+      "title": "Signals",
+      "description": "Named signals used to connect device signal inputs and outputs. Signal IDs are unique nonnegative integers.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/signal"
+      }
+    },
+    "devices": {
+      "title": "Devices",
+      "description": "Model instances connected to buses and signals through class-specific ports.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/device"
+      }
+    }
+  },
+  "required": [
+    "header",
+    "buses",
+    "devices"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "nonnegative_id": {
+      "title": "Nonnegative identifier",
+      "description": "A bus, signal, or port-reference identifier. Identifiers start at 0.",
+      "type": "integer",
+      "minimum": 0,
+      "examples": [
+        0
+      ]
+    },
+    "header": {
+      "title": "Header",
+      "description": "Identifies the case-format version and provides descriptive metadata and system-wide base quantities.",
+      "type": "object",
+      "properties": {
+        "format_version": {
+          "title": "Format version",
+          "description": "Integer major version of the GridKit case format.",
+          "type": "integer",
+          "minimum": 0,
+          "examples": [
+            0
+          ]
+        },
+        "format_revision": {
+          "title": "Format revision",
+          "description": "Integer revision within the selected GridKit case-format version.",
+          "type": "integer",
+          "minimum": 0,
+          "examples": [
+            1
+          ]
+        },
+        "case_name": {
+          "title": "Case name",
+          "description": "Human-readable name identifying the case.",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "Two-bus test case"
+          ]
+        },
+        "case_date_time": {
+          "title": "Case date and time",
+          "description": "ISO 8601 date or timestamp associated with the case. Include a UTC offset when a time is provided.",
+          "type": "string",
+          "anyOf": [
+            {
+              "format": "date"
+            },
+            {
+              "format": "date-time"
+            }
+          ],
+          "examples": [
+            "2026-07-27",
+            "2026-07-27T12:00:00Z"
+          ]
+        },
+        "case_description": {
+          "title": "Case description",
+          "description": "Description of the system and scenario represented by the case.",
+          "type": "string"
+        },
+        "case_comments": {
+          "title": "Case comments",
+          "description": "Additional notes, provenance, assumptions, or usage guidance for the case.",
+          "type": "string"
+        },
+        "freq_base": {
+          "title": "System frequency base",
+          "description": "System-wide nominal frequency in hertz.",
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-gridkit-units": "Hz",
+          "examples": [
+            60.0
+          ]
+        },
+        "va_base": {
+          "title": "System power base",
+          "description": "System-wide apparent-power base in volt-amperes.",
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "x-gridkit-units": "VA",
+          "examples": [
+            100000000.0
+          ]
+        }
+      },
+      "required": [
+        "format_version",
+        "format_revision",
+        "case_name",
+        "case_description",
+        "case_comments",
+        "freq_base",
+        "va_base"
+      ],
+      "additionalProperties": false
+    },
+    "monitor_sink": {
+      "title": "Monitor output",
+      "description": "Configuration for one destination receiving the case's monitored variables.",
+      "type": "object",
+      "properties": {
+        "file_name": {
+          "title": "Output file name",
+          "description": "Output file path. If omitted or empty, the monitor is written to standard output.",
+          "type": "string",
+          "default": "",
+          "examples": [
+            "monitor.csv"
+          ]
+        },
+        "format": {
+          "title": "Output format",
+          "description": "Serialization format for the monitor output. GridKit matches this value case-insensitively.",
+          "type": "string",
+          "enum": [
+            "csv",
+            "json",
+            "yaml"
+          ]
+        },
+        "delim": {
+          "title": "CSV delimiter",
+          "description": "Delimiter used for CSV output. This value is ignored for JSON and YAML output.",
+          "type": "string",
+          "minLength": 1,
+          "default": ",",
+          "examples": [
+            ",",
+            "\t"
+          ]
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "additionalProperties": false
+    },
+    "signal": {
+      "title": "Signal",
+      "description": "A named connection point used by device signal-input and signal-output ports.",
+      "type": "object",
+      "properties": {
+        "signal_id": {
+          "title": "Signal identifier",
+          "description": "Unique nonnegative integer identifying this signal within the case.",
+          "$ref": "#/$defs/nonnegative_id"
+        },
+        "name": {
+          "title": "Signal name",
+          "description": "Human-readable signal name or description. Names need not be unique.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "signal_id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "bus_init": {
+      "title": "Bus initialization",
+      "description": "Optional initial rectangular voltage components. Omitted components use their documented defaults.",
+      "type": "object",
+      "properties": {
+        "Vr": {
+          "title": "Initial real voltage",
+          "description": "Initial real component of bus voltage in per unit.",
+          "type": "number",
+          "default": 1.0,
+          "x-gridkit-units": "p.u.",
+          "examples": [
+            1.0
+          ]
+        },
+        "Vi": {
+          "title": "Initial imaginary voltage",
+          "description": "Initial imaginary component of bus voltage in per unit.",
+          "type": "number",
+          "default": 0.0,
+          "x-gridkit-units": "p.u.",
+          "examples": [
+            0.0
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "bus": {
+      "title": "Bus model",
+      "description": "Placeholder replaced during schema generation by the supported bus-model alternatives.",
+      "$comment": "Generated from bus models."
+    },
+    "device": {
+      "title": "Device model",
+      "description": "Placeholder replaced during schema generation by the supported device-model alternatives.",
+      "$comment": "Generated from component models."
+    }
+  }
+}
