@@ -48,11 +48,13 @@ int runApplication(int argc, const char* argv[])
   // Initialize simulation for first run
   auto      dt_monitor = study.dt_monitor;
   real_type final_time = study.tmax;
+  IdaStats  stats;
   ida.initializeSimulation(0.0);
   for (const auto& event : study.events)
   {
     // Run to event time
     ida.runSimulation(event.time, dt_monitor);
+    stats += ida.getStats();
 
     // Set up run for event (to start at event time)
     switch (event.type)
@@ -71,6 +73,7 @@ int runApplication(int argc, const char* argv[])
 
   // Run to final time
   ida.runSimulation(final_time, dt_monitor);
+  stats += ida.getStats();
 
   real_type stop = static_cast<real_type>(clock());
 
@@ -82,6 +85,10 @@ int runApplication(int argc, const char* argv[])
 
   // Report run time
   Log::summary() << "Complete in " << (stop - start) / CLOCKS_PER_SEC << " seconds\n";
+  std::cout << '\n'
+            << stats.report() << '\n';
+  ida.printPerformanceStats();
+  sys.printResidualPerformanceStats();
 
   return status.get();
 }
