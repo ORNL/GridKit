@@ -180,6 +180,7 @@ GridKit documentation and source READMEs. Read them to answer questions accurate
 - [README.md](/home/isatkaus/gridkit/README.md)
 - [uq-usecase/cases/hawaii.md](/home/isatkaus/gridkit/uq-usecase/cases/hawaii.md)
 - [uq-usecase/cases/illinois.md](/home/isatkaus/gridkit/uq-usecase/cases/illinois.md)
+- [uq-usecase/cases/illinois_m_tables.md](/home/isatkaus/gridkit/uq-usecase/cases/illinois_m_tables.md)
 - [uq-usecase/context/chat_context_2026-06-18.md](/home/isatkaus/gridkit/uq-usecase/context/chat_context_2026-06-18.md)
 - [uq-usecase/context/gridkit_docs.prompt.md](/home/isatkaus/gridkit/uq-usecase/context/gridkit_docs.prompt.md)
 - [uq-usecase/kestrel_install.md](/home/isatkaus/gridkit/uq-usecase/kestrel_install.md)
@@ -189,7 +190,10 @@ GridKit documentation and source READMEs. Read them to answer questions accurate
 - [uq-usecase/mkdocs/docs/GridKit/README.md](/home/isatkaus/gridkit/uq-usecase/mkdocs/docs/GridKit/README.md)
 - [uq-usecase/mkdocs/docs/GridKit/uq-usecase/kestrel_install.md](/home/isatkaus/gridkit/uq-usecase/mkdocs/docs/GridKit/uq-usecase/kestrel_install.md)
 - [uq-usecase/mkdocs/docs/index.md](/home/isatkaus/gridkit/uq-usecase/mkdocs/docs/index.md)
+- [uq-usecase/notebooks/setup_env.md](/home/isatkaus/gridkit/uq-usecase/notebooks/setup_env.md)
 - [uq-usecase/notebooks/setup.md](/home/isatkaus/gridkit/uq-usecase/notebooks/setup.md)
 - [uq-usecase/work-notes/notes_1.md](/home/isatkaus/gridkit/uq-usecase/work-notes/notes_1.md)
+- [uq-usecase/work-notes/pf_helper.md](/home/isatkaus/gridkit/uq-usecase/work-notes/pf_helper.md)
+- [uq-usecase/work-notes/uq_plan.md](/home/isatkaus/gridkit/uq-usecase/work-notes/uq_plan.md)
 
 User Question: ${input}

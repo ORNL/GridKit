@@ -566,6 +566,70 @@ See Section 14 for the full investigation. Summary:
 
 ---
 
+## 13. Cross-section finding: angle-only response across all perturbation types
+
+Sections 10, 11, and 12 together show a striking and consistent pattern: across every
+perturbation tested on ACTIVSg200, the PF solution changes almost entirely through angle
+shifts while voltage magnitudes barely move.
+
+All numbers below come directly from notebook cell outputs (pf_helper.ipynb, Section 6
+and 7, executed 2026-07-23/26). Magnitude column values are computed from
+`illinois_m_tables.md` (mpc.gen and mpc.bus tables).
+
+| Section | Perturbation | Magnitude | max\|dV\| (pu) | max\|dTheta\| (deg) |
+|---------|-------------|-----------|----------------|---------------------|
+| 10 | load ±5%  | total load 1475.69 MW, ±5% per bus | 0.000640 | 0.138612 |
+| 10 | load ±80% | total load 1475.69 MW, ±80% per bus | 0.009726 | 2.193222 |
+| 11 | wind curtailment up to 40% | 40% of 536.2 MW total wind | 0.000815 | 5.156084 |
+| 11 | wind curtailment up to 80% | 80% of 536.2 MW total wind | 0.002328 | 10.344126 |
+| 12 | 1 gen offline (bus 147) | 92.4 MW (from mpc.gen PG) | 0.002758 | 10.841606 |
+| 12 | 10 gens offline (seed=99) | 306.3 MW (from mpc.gen PG sum) | 0.004528 | 16.482293 |
+
+Even at the extremes — 306 MW of generation lost, or ±80% load perturbation — the maximum
+voltage magnitude change across all 200 buses is less than 0.01 pu.
+
+### Why is this surprising?
+
+In standard PF intuition, significant real power imbalances should produce noticeable
+voltage changes, especially far from the slack bus. A 306 MW loss on a system with
+1488.3 MW total online generation (from mpc.gen, status=1 rows) is a ~21% dispatch
+change; one might expect voltage depressions of 0.05 pu or more at buses electrically
+distant from the slack.
+
+### Working hypothesis: strong PV bus voltage regulation
+
+ACTIVSg200 has 48 PV buses (BUS_TYPE=2 in mpc.bus, verified by parsing) and 1 slack bus,
+out of 200 total. Only 151 buses are pure PQ (no local voltage control). This is a high
+ratio of regulated buses. **Working hypothesis**: when this many buses have fixed voltage
+setpoints, real power imbalances propagate almost entirely as angle shifts, with reactive
+power redistribution absorbing whatever is needed to keep voltages near setpoints. The
+slack bus picks up the MW through angle; the PV buses suppress voltage deviations locally.
+
+Supporting evidence: the load perturbation results (Section 10) show a perfectly linear
+angle response — consistent with a network operating in a strongly regulated, near-linear
+regime. The 48/200 PV bus fraction for ACTIVSg200 was read directly from `mpc.bus`
+(`BUS_TYPE=2` count).
+
+Potential falsifiers:
+- If PowerModels.jl (same network, same dispatch change) shows substantially larger dV,
+  then GridKit is missing reactive coupling — the hypothesis is wrong and the model is
+  suspect.
+- If PowerModels.jl agrees with GridKit (small dV), the hypothesis is confirmed for
+  this network.
+- If the same experiment is run on a network with fewer PV buses (more PQ buses), larger
+  dV would be expected — this would provide further evidence for the PV regulation mechanism.
+
+### Why this matters for UQ
+
+If voltage magnitudes are nearly insensitive to the perturbations we are sampling, the
+useful quantity for UQ is bus angle (or equivalently, active power flows), not voltage
+magnitude. This has implications for which outputs to monitor and which to use as QoI
+for the UQ study.
+
+**This is an open question pending PowerModels.jl cross-validation.**
+
+---
+
 ## 14. Stagnation investigation: flat start vs warm start (2026-07-23, ACTIVSg200)
 
 **Motivation**: Section 12 raised concern that warm-start solutions in Section 6 might

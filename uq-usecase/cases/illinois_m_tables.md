@@ -2,8 +2,29 @@
 
 Parsed via `read_matpower_case` from `matpowercaseframes`. Values are as stored in the
 `.m` file: powers in MW/MVAr, angles in degrees, voltages in pu or kV.
-All 245 branches have `TAP=0` or `TAP=1` and `SHIFT=0` — no off-nominal tap transformers
-and no phase-shifting transformers. All 245 branches have `BR_STATUS=1` (in-service).
+All 245 branches have `TAP=0` or `TAP=1` and `SHIFT=0` (no off-nominal tap transformers,
+no phase shifters). All 245 branches have `BR_STATUS=1` (in-service).
+
+All summary numbers below are computed by parsing the tables in this file.
+
+## Summary statistics
+
+| Quantity | Value |
+| :--- | :--- |
+| **Buses** | 200 total: 151 PQ (type 1), 48 PV (type 2), 1 slack (type 3) |
+| **Load buses** (PD > 0) | 108 buses |
+| **Total PD** | 1475.69 MW |
+| **Total QD** | 420.55 MVAr |
+| **Base-case V range** | [1.010, 1.056] pu (warm-start solution from `solve_pf`) |
+| **Branches** | 245 (all in-service) |
+| **Generators total** | 49: 38 online, 11 offline |
+| **Offline gens** | 11 ng units (GEN_STATUS=0) |
+| **Online fuel mix** | 25 coal, 6 wind, 6 ng, 1 nuclear (38 total) |
+| **Total PG (online)** | 1488.26 MW |
+| **Total QG (online)** | 105.76 MVAr |
+| **Total PMAX (online)** | 2997.59 MW |
+| **Wind PG** | 536.20 MW (6 wind generators) |
+| **Power imbalance PG - PD** | 12.57 MW (losses + slack dispatch) |
 
 ## mpc.bus (200 buses)
 
