@@ -4,8 +4,6 @@
  *
  */
 
-#include <GridKit/AutomaticDifferentiation/Enzyme/SparseJacobians.hpp>
-
 #include "LoadZImpl.hpp"
 
 namespace GridKit
@@ -25,60 +23,33 @@ namespace GridKit
 
       if (J_rows_buffer_ == nullptr)
       {
-        // Reserve space for the dense blocks.
-        // The size of the buffer is the sum of maximum capacities of the blocks.
-        // Enyme will compute the appropriate nnz from sparsification.
-        auto size        = static_cast<size_t>(size_);
-        auto bus_size    = static_cast<size_t>(bus_->size());
-        auto buffer_size = size * size + 2 * size * bus_size;
-        J_rows_buffer_   = new IdxT[buffer_size];
-        J_cols_buffer_   = new IdxT[buffer_size];
-        J_vals_buffer_   = new RealT[buffer_size];
+        const auto bus_size = static_cast<size_t>(bus_->size());
+        J_rows_buffer_      = new IdxT[bus_size * bus_size];
+        J_cols_buffer_      = new IdxT[bus_size * bus_size];
+        J_vals_buffer_      = new RealT[bus_size * bus_size];
       }
 
       nnz_ = 0;
 
-      GridKit::Enzyme::Sparse::DfDy<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
-                                    GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
-                                                                                                      static_cast<size_t>(f_.getSize()),
-                                                                                                      static_cast<size_t>(y_.getSize()),
-                                                                                                      (this->getResidualIndices()).data(),
-                                                                                                      (this->getVariableIndices()).data(),
-                                                                                                      y_.getData(),
-                                                                                                      yp_.getData(),
-                                                                                                      wb_.getData(),
-                                                                                                      J_rows_buffer_,
-                                                                                                      J_cols_buffer_,
-                                                                                                      J_vals_buffer_,
-                                                                                                      nnz_);
+      if (bus_->size() > IdxT{0})
+      {
+        J_rows_buffer_[0] = bus_->getResidualIndex(0);
+        J_rows_buffer_[1] = bus_->getResidualIndex(0);
+        J_rows_buffer_[2] = bus_->getResidualIndex(1);
+        J_rows_buffer_[3] = bus_->getResidualIndex(1);
 
-      GridKit::Enzyme::Sparse::DfDwb<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
-                                     GridKit::Enzyme::Sparse::MemberFunctions::InternalResidual>::eval(this,
-                                                                                                       static_cast<size_t>(f_.getSize()),
-                                                                                                       static_cast<size_t>(bus_->size()),
-                                                                                                       (this->getResidualIndices()).data(),
-                                                                                                       (bus_->getVariableIndices()).data(),
-                                                                                                       y_.getData(),
-                                                                                                       yp_.getData(),
-                                                                                                       bus_->y().getData(),
-                                                                                                       J_rows_buffer_,
-                                                                                                       J_cols_buffer_,
-                                                                                                       J_vals_buffer_,
-                                                                                                       nnz_);
+        J_cols_buffer_[0] = bus_->getVariableIndex(0);
+        J_cols_buffer_[1] = bus_->getVariableIndex(1);
+        J_cols_buffer_[2] = bus_->getVariableIndex(0);
+        J_cols_buffer_[3] = bus_->getVariableIndex(1);
 
-      GridKit::Enzyme::Sparse::DhDy<GridKit::PhasorDynamics::LoadZ<ScalarT, IdxT>,
-                                    GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
-                                                                                                 static_cast<size_t>(bus_->size()),
-                                                                                                 static_cast<size_t>(y_.getSize()),
-                                                                                                 (bus_->getResidualIndices()).data(),
-                                                                                                 (this->getVariableIndices()).data(),
-                                                                                                 y_.getData(),
-                                                                                                 yp_.getData(),
-                                                                                                 wb_.getData(),
-                                                                                                 J_rows_buffer_,
-                                                                                                 J_cols_buffer_,
-                                                                                                 J_vals_buffer_,
-                                                                                                 nnz_);
+        J_vals_buffer_[0] = -g_;
+        J_vals_buffer_[1] = b_;
+        J_vals_buffer_[2] = -b_;
+        J_vals_buffer_[3] = -g_;
+
+        nnz_ = 4;
+      }
 
       this->constructCoo();
 
