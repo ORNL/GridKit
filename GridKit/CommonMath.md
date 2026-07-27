@@ -8,7 +8,7 @@ The scale $\mu=4\cdot f_{\text{sync}}=240$ is chosen so $\sigma$ behaves like a 
 
 | Name | Description | Usage |
 |------|-------------|-------|
-| `sigmoid` | Step function | `GENSAL`, `GENROU`, `REGCA`, `REECA` |
+| `sigmoid` | Step function | `GENSAL`, `GENROU`, `REECA` |
 | `ramp` | Smooth one-sided ramp | `REGCA`, `REECA`, `REPCA` |
 | `qramp` | Exact one-sided quadratic ramp | `IEEET1` |
 

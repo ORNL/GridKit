@@ -12,14 +12,13 @@ approximately zero when the limit is inactive:
   \perp \left(V_\mathrm{hv}^{\max} - V_T\right) \ge 0.
 ```
 
-GridKit uses the differentiable form shown in the algebraic equations below.
+GridKit uses the smooth HVRCM form shown in the algebraic equations below.
 
 ## Notes
 
 - Internal current states and limiter quantities are on component base.
 - Signal ports, monitor outputs, branch currents, and branch powers are on system base.
 - LVACM uses $V_T$; LVPL uses $V_M$.
-- GridKit realizes LVPL as a smooth upper limit on the active-current target.
 - PowerWorld fields `Qmin`, `Khv`, and `Xe` are not parameters of this GridKit implementation.
 
 ## Block Diagram
@@ -37,8 +36,8 @@ $Q_0$                            | [p.u.]   | `q0`     | Initial reactive power 
 $S^\mathrm{base}$                | [MVA]    | `mva`    | REGCA component power base                            | 100.0         |
 $T_\mathrm{g}$                   | [sec]    | `Tg`     | Converter current-control lag time constant           | 0.02          | Block name: `Tg`
 $T_M$                            | [sec]    | `TM`     | Terminal voltage sensor time constant                 | 0.02          | Block name: `Tfltr`
-$R_q^{\max}$                      | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`; GridKit requires $R_q^{\max} > 0$
-$R_q^{\min}$                      | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`; GridKit requires $R_q^{\min} < 0$
+$R_q^{\max}$                      | [p.u./s] | `Rqmax`  | Reactive-current recovery positive rate limit         | 999.0         | Block name: `Iqrmax`
+$R_q^{\min}$                      | [p.u./s] | `Rqmin`  | Reactive-current recovery negative rate limit         | -999.0        | Block name: `Iqrmin`
 $R_p^{\max}$                      | [p.u./s] | `Rpmax`  | Active-current magnitude recovery rate limit          | 999.0         | Block name: `rrpwr`
 $s_L$                            | [binary] | `sL`     | LVPL switch                                           | 1             | Block name: `LPVLSW`
 $I_{L1}$                         | [p.u.]   | `IL1`    | LVPL upper-current ceiling                            | 1.1           | Block name: `LVPL1`
@@ -73,9 +72,7 @@ every other condition is a configuration error.
   0
     &\le V_{L0} < V_{L1} \\
   0
-    &\le V_{A0} < V_{A1} \\
-  V_\mathrm{hv}^{\max}
-    &> 0
+    &\le V_{A0} < V_{A1} < V_\mathrm{hv}^{\max}
 \end{aligned}
 ```
 
@@ -128,8 +125,8 @@ $I_\mathrm{r}$             | [p.u.]   | Branch-current real component           
 $I_\mathrm{i}$             | [p.u.]   | Branch-current imaginary component                         | System base
 $I_q^\mathrm{extra}$       | [p.u.]   | Extra inductive current from high-voltage reactive current management | Component base
 $I_L$                      | [p.u.]   | LVPL upper-limit current curve                              | Component base; function of $V_M$
-$\ell_p$                   | [p.u./s] | Smooth active-current lower rate bound                      | Component base; equivalent to diagram `Rdown`
-$u_p$                      | [p.u./s] | Smooth active-current upper rate bound                      | Component base; equivalent to diagram `Rup`
+$\ell_p$                   | [p.u./s] | Active-current lower rate bound                             | Component base; finite realization of diagram `Rdown`
+$u_p$                      | [p.u./s] | Active-current upper rate bound                             | Component base; finite realization of diagram `Rup`
 $P^\mathrm{br}$            | [p.u.]   | Branch active power                                         | System base
 $Q^\mathrm{br}$            | [p.u.]   | Branch reactive power                                       | System base
 
@@ -161,10 +158,30 @@ derivatives:
 \end{aligned}
 ```
 
+The finite rate-bound targets are
+
+```math
+\begin{aligned}
+  L_p(x) &=
+    \begin{cases}
+      -R_p^{\max} & x \le 0 \\
+      -M_p         & x > 0
+    \end{cases} \\
+  U_p(x) &=
+    \begin{cases}
+      M_p          & x < 0 \\
+      R_p^{\max}   & x \ge 0
+    \end{cases}
+\end{aligned}
+```
+
+Each target selects $R_p^{\max}$ on the side that increases $|I_p|$ and the
+surrogate $M_p$ on the side that decreases it.
+
 Figure 1 places LVPL on the active-current integrator ceiling. GridKit's
-differentiable realization limits the target of the $T_\mathrm{g}$ state, so a
+smooth realization limits the target of the $T_\mathrm{g}$ state, so a
 falling ceiling drives $I_p$ down while the rate bounds $\ell_p$ and $u_p$
-remain functions only of the $R_p^{\max}$ sign rule.
+remain governed only by the $I_p$-sign recovery rule.
 
 ### Differential Equations
 
@@ -199,12 +216,8 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
          \right) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1}) \\
-  0 &= -\ell_p
-       - R_p^{\max}(1-\sigma(I_p))
-       - M_p\sigma(I_p) \\
-  0 &= -u_p
-       + M_p(1-\sigma(I_p))
-       + R_p^{\max}\sigma(I_p) \\
+  0 &= -\ell_p + L_p(I_p) \\
+  0 &= -u_p + U_p(I_p) \\
   0 &= -P^\mathrm{br}
        + V_\mathrm{r} I_\mathrm{r} + V_\mathrm{i} I_\mathrm{i} \\
   0 &= -Q^\mathrm{br}
@@ -213,7 +226,7 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
 ```
 
 CommonMath defines the [derived limiter and linear-segment functions](../../../../CommonMath.md#derived-functions)
-and the [ramp and step primitives](../../../../CommonMath.md#primitives) used above.
+and the [ramp primitive](../../../../CommonMath.md#primitives) used above.
 
 ## Network Interface
 
@@ -240,9 +253,9 @@ and the [ramp and step primitives](../../../../CommonMath.md#primitives) used ab
 ### Internal Initialization
 
 REGCA requires $V_{A1} \le V_{T,0} < V_\mathrm{hv}^{\max}$. The lower bound
-places the initial point on the upper LVACM plateau. The strict upper bound is
-required because the smooth HVRCM constraint has no finite root at or above the
-voltage limit.
+excludes initialization below the nominal upper LVACM breakpoint. The strict
+upper bound is required because the smooth HVRCM constraint has no finite root
+at or above the voltage limit.
 
 With LVPL enabled, REGCA additionally requires $I_{p,0} < I_{L,0}$. The strict
 inequality is required because the smooth LVPL target has no finite inverse at
@@ -294,11 +307,9 @@ The remaining algebraic quantities are then initialized as follows:
 ```math
 \begin{aligned}
   \ell_{p,0}
-    &= -R_p^{\max}(1-\sigma(I_{p,0}))
-       - M_p\sigma(I_{p,0}) \\
+    &= L_p(I_{p,0}) \\
   u_{p,0}
-    &= M_p(1-\sigma(I_{p,0}))
-       + R_p^{\max}\sigma(I_{p,0}) \\
+    &= U_p(I_{p,0}) \\
   I_{\mathrm{r},0}
     &= \dfrac{V_{\mathrm{r},0}P_0 + V_{\mathrm{i},0}Q_0}{V_{T,0}^2} \\
   I_{\mathrm{i},0}

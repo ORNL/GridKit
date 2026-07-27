@@ -12,7 +12,6 @@
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/Regca.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
 #include <GridKit/Utilities/MapFromCsr.hpp>
@@ -36,9 +35,13 @@ namespace GridKit
 
       // At nominal voltage, the CommonMath LVACM approximation differs from
       // its piecewise plateau by O(1e-13).
-      static constexpr ScalarT kTol = static_cast<ScalarT>(1.0e-12);
+      static constexpr ScalarT kTol = 1.0e-12;
 
-      TestOutcome constructionAndValidation()
+      static constexpr RealT kJacobianTol = 1.0e-10;
+
+      /// Construction, the monitor, and every verify() error class: missing
+      /// and invalid parameters, a null bus, and an unlinked command port.
+      TestOutcome validation()
       {
         TestStatus success = true;
 
@@ -48,874 +51,529 @@ namespace GridKit
         success *= (minimal.size() == static_cast<IdxT>(Vars::MAXIMUM));
         success *= (minimal.getMonitor() == nullptr);
 
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing incomplete REGCA configuration. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-        success *= (minimal.verify() > 0);
-
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> configured(&bus, makeData());
         success *= (configured.size() == static_cast<IdxT>(Vars::MAXIMUM));
         success *= (configured.getMonitor() != nullptr);
         success *= (configured.verify() == 0);
 
-        return success.report(__func__);
-      }
+        noteExpectedLogs("Testing invalid REGCA configurations. "
+                         "Logged errors and time-constant warnings are expected.");
+        success *= (minimal.verify() > 0);
 
-      TestOutcome parameterValidation()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing invalid and missing REGCA parameters. "
-                    << "Logged errors and time-constant warnings are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        auto missing = makeData();
-        missing.parameters.erase(Params::Tg);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_model(&bus, missing);
-        success *= (missing_model.verify() > 0);
-
-        auto missing_p0 = makeData();
-        missing_p0.parameters.erase(Params::p0);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_p0_model(&bus, missing_p0);
-        success *= (missing_p0_model.verify() > 0);
-
-        auto missing_q0 = makeData();
-        missing_q0.parameters.erase(Params::q0);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing_q0_model(&bus, missing_q0);
-        success *= (missing_q0_model.verify() > 0);
+        for (const Params parameter : {Params::Tg, Params::p0, Params::q0})
+        {
+          auto data = makeData();
+          data.parameters.erase(parameter);
+          PhasorDynamics::Converter::Regca<ScalarT, IdxT> missing(&bus, data);
+          success *= (missing.verify() > 0);
+        }
 
         auto bad_switch                   = makeData();
         bad_switch.parameters[Params::sL] = static_cast<IdxT>(2);
         PhasorDynamics::Converter::Regca<ScalarT, IdxT> bad_switch_model(&bus, bad_switch);
         success *= (bad_switch_model.verify() > 0);
 
-        success *= invalidParameterCase(bus, Params::mva, static_cast<RealT>(0.0));
-        success *= invalidParameterCase(bus, Params::Rpmax, static_cast<RealT>(0.0));
-        success *= invalidParameterCase(bus, Params::Rqmin, static_cast<RealT>(0.0));
-        success *= invalidParameterCase(bus, Params::IL1, static_cast<RealT>(-0.1));
-        success *= invalidParameterCase(bus, Params::VL1, static_cast<RealT>(0.3));
-        success *= invalidParameterCase(bus, Params::VA1, static_cast<RealT>(0.3));
-        success *= invalidParameterCase(bus, Params::Vhvmax, static_cast<RealT>(0.0));
+        success *= invalidParameterCase(bus, Params::mva, 0.0);
+        success *= invalidParameterCase(bus, Params::Rpmax, 0.0);
+        success *= invalidParameterCase(bus, Params::Rqmin, 0.0);
+        success *= invalidParameterCase(bus, Params::IL1, -0.1);
+        success *= invalidParameterCase(bus, Params::VL1, 0.3);
+        success *= invalidParameterCase(bus, Params::VA1, 0.3);
 
-        auto zero_time_constants                   = makeData();
-        zero_time_constants.parameters[Params::Tg] = static_cast<RealT>(0.0);
-        zero_time_constants.parameters[Params::TM] = static_cast<RealT>(0.0);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> zero_time_model(
-            &bus,
-            zero_time_constants);
-        success *= (zero_time_model.verify() == 0);
-        success *= (bus.allocate() == 0);
-        success *= (bus.initialize() == 0);
-        success *= (zero_time_model.allocate() == 0);
-        success *= (zero_time_model.initialize() == 0);
-        success *= (zero_time_model.evaluateResidual() == 0);
-        success *= allResidualsZero(zero_time_model);
+        // Vhvmax must lie strictly above VA1: rejected at VA1 and just below.
+        success *= invalidParameterCase(bus, Params::Vhvmax, kVa1);
+        success *= invalidParameterCase(bus, Params::Vhvmax, kJustBelowVa1);
+
+        // A null bus and an attached command with no linked source count as
+        // configuration errors on the same footing as bad parameters.
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> busless(nullptr, makeData());
+        success *= (busless.verify() > 0);
+
+        PhasorDynamics::SignalNode<ScalarT, IdxT>       unlinked_node;
+        PhasorDynamics::Converter::Regca<ScalarT, IdxT> unlinked(&bus, makeData());
+        unlinked.getSignals().template attachSignalNode<Ext::IPCMD>(&unlinked_node);
+        success *= (unlinked.verify() > 0);
+
+        // Zero time constants are raised to the well-posedness floor with a
+        // warning, and the raised model still initializes to zero residuals.
+        auto zero_time                   = makeData();
+        zero_time.parameters[Params::Tg] = 0.0;
+        zero_time.parameters[Params::TM] = 0.0;
+
+        Fixture<ScalarT> fixture(zero_time);
+        success *= fixture.initialize();
+        success *= (fixture.evaluate() == 0);
+        success *= allResidualsZero(fixture.regca);
 
         return success.report(__func__);
       }
 
-      TestOutcome initializesFromPowerFlowAndPublishesSignals()
+      /// Power-flow initialization with every port exercised, then the
+      /// fallback contract: unattached commands latch the initialization
+      /// values as constant setpoints.
+      TestOutcome initializationAndSignals()
       {
         TestStatus success = true;
 
-        const ScalarT vr{0.8};
-        const ScalarT vi{0.6};
-        const ScalarT p0{0.4};
-        const ScalarT q0{-0.1};
-        const RealT   mva{50.0};
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(vr, vi);
-        bus.allocate();
-        bus.initialize();
-
+        // A 50 MVA converter on the 100 MVA system base at a (0.8, 0.6)
+        // terminal. The command values are sentinels; initialize() must
+        // publish the resolved steady-state commands over them.
         auto data                    = makeData();
-        data.parameters[Params::mva] = mva;
-        data.parameters[Params::p0]  = static_cast<RealT>(p0);
-        data.parameters[Params::q0]  = static_cast<RealT>(q0);
+        data.parameters[Params::mva] = 50.0;
+        data.parameters[Params::p0]  = 0.4;
+        data.parameters[Params::q0]  = -0.1;
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        Fixture<ScalarT> fixture(data, 0.8, 0.6);
+        fixture.attachIpcmd(-1.0);
+        fixture.attachIqcmd(1.0);
 
-        ScalarT ipcmd_value{-1.0};
-        ScalarT iqcmd_value{1.0};
-        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT    iqcmd_index = ipcmd_index + 1;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ir_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ii_node;
+        // Outputs alias y directly, so one published port pins the wiring.
         PhasorDynamics::SignalNode<ScalarT, IdxT> pbranch_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> qbranch_node;
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+        fixture.regca.getSignals().template assignSignalNode<Vars::PBR>(&pbranch_node);
 
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-        regca.getSignals().template assignSignalNode<Vars::IR>(&ir_node);
-        regca.getSignals().template assignSignalNode<Vars::II>(&ii_node);
-        regca.getSignals().template assignSignalNode<Vars::PBR>(&pbranch_node);
-        regca.getSignals().template assignSignalNode<Vars::QBR>(&qbranch_node);
+        success *= fixture.initialize();
+        success *= (fixture.evaluate() == 0);
 
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-        success *= (regca.evaluateResidual() == 0);
+        // Fixed answer key for Vr = 0.8, Vi = 0.6, P0 = 0.4, Q0 = -0.1, and
+        // a 50 MVA component base: IP = 2 P0 / VT and IQ = 2 Q0 / VT on the
+        // component base, with IR and II returned to the system base.
+        const auto* y  = fixture.regca.y().getData();
+        success       *= scalarMatches(y[index(Vars::VM)], 1.0, "VM");
+        success       *= scalarMatches(y[index(Vars::VT)], 1.0, "VT");
+        success       *= scalarMatches(y[index(Vars::IP)], 0.8, "IP");
+        success       *= scalarMatches(y[index(Vars::IQ)], -0.2, "IQ");
+        success       *= scalarMatches(y[index(Vars::IR)], 0.26, "IR");
+        success       *= scalarMatches(y[index(Vars::II)], 0.32, "II");
+        success       *= scalarMatches(y[index(Vars::PBR)], 0.4, "PBR");
+        success       *= scalarMatches(y[index(Vars::QBR)], -0.1, "QBR");
 
-        // Fixed answer key for Vr = 0.8, Vi = 0.6, P0 = 0.4, Q0 = -0.1,
-        // and a 50 MVA component base on the 100 MVA system base.
-        const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::VM)], static_cast<ScalarT>(1.0), "VM");
-        success       *= scalarMatches(y[index(Vars::VT)], static_cast<ScalarT>(1.0), "VT");
-        success       *= scalarMatches(y[index(Vars::IP)], static_cast<ScalarT>(0.8), "IP");
-        success       *= scalarMatches(y[index(Vars::IQ)], static_cast<ScalarT>(-0.2), "IQ");
-        success       *= scalarMatches(y[index(Vars::IR)], static_cast<ScalarT>(0.26), "IR");
-        success       *= scalarMatches(y[index(Vars::II)], static_cast<ScalarT>(0.32), "II");
-        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR");
-        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-        success       *= scalarMatches(ipcmd_node.read(), p0, "ipcmd signal");
-        success       *= scalarMatches(iqcmd_node.read(), q0, "iqcmd signal");
-        success       *= scalarMatches(ir_node.read(), static_cast<ScalarT>(0.26), "ir signal");
-        success       *= scalarMatches(ii_node.read(), static_cast<ScalarT>(0.32), "ii signal");
-        success       *= scalarMatches(pbranch_node.read(), p0, "pbranch signal");
-        success       *= scalarMatches(qbranch_node.read(), q0, "qbranch signal");
+        success *= scalarMatches(fixture.ipcmd, 0.4, "published ipcmd");
+        success *= scalarMatches(fixture.iqcmd, -0.1, "published iqcmd");
+        success *= scalarMatches(pbranch_node.read(), 0.4, "pbranch signal");
 
-        success *= allResidualsZero(regca);
-        return success.report(__func__);
-      }
+        // The accumulated bus injection is the system-base branch current.
+        success *= scalarMatches(fixture.bus.Ir(), 0.26, "bus real injection");
+        success *= scalarMatches(fixture.bus.Ii(), 0.32, "bus imaginary injection");
 
-      TestOutcome unconnectedCommandsRemainConstant()
-      {
-        TestStatus success = true;
+        success *= allResidualsZero(fixture.regca);
 
-        auto data                   = makeData();
-        data.parameters[Params::p0] = static_cast<RealT>(0.6);
-        data.parameters[Params::q0] = static_cast<RealT>(0.2);
+        // Without attached ports the commands latch p0 and q0. Displace the
+        // current states by different amounts; the latched commands pull
+        // both back at the interior first-order rates.
+        auto latch_data                   = makeDynamicData();
+        latch_data.parameters[Params::q0] = 0.2;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
+        Fixture<ScalarT> latched(latch_data);
+        success *= latched.initialize();
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        auto* latched_y  = latched.regca.y().getData();
+        success         *= scalarMatches(latched_y[index(Vars::IP)], 0.6, "initialized IP");
+        success         *= scalarMatches(latched_y[index(Vars::IQ)], 0.2, "initialized IQ");
 
-        success       *= (regca.allocate() == 0);
-        success       *= (regca.verify() == 0);
-        success       *= (regca.initialize() == 0);
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* y  = regca.y().getData();
+        latched_y[index(Vars::IP)] = 0.5;
+        latched_y[index(Vars::IQ)] = 0.14;
+        latched.regca.y().setDataUpdated();
+        success *= (latched.evaluate() == 0);
 
-        success *= isEqual(y[index(Vars::IP)], static_cast<ScalarT>(0.6), kTol);
-        success *= isEqual(y[index(Vars::IQ)], static_cast<ScalarT>(0.2), kTol);
-        success *= allResidualsZero(regca);
+        // f[IP] = (0.6 - 0.5) / Tg and f[IQ] = (0.2 - 0.14) / Tg with
+        // Tg = 0.2; both rates sit inside every limiter.
+        const auto* f  = latched.regca.getResidual().getData();
+        success       *= scalarMatches(f[index(Vars::IP)], 0.5, "latched active-current rate");
+        success       *= scalarMatches(f[index(Vars::IQ)], 0.3, "latched reactive-current rate");
 
         return success.report(__func__);
       }
 
-      TestOutcome initializesNearHighVoltageLimit()
+      /// The admissible initialization domain: every rejected operating
+      /// point, then the accepted boundaries next to them.
+      TestOutcome initializationDomain()
       {
         TestStatus success = true;
 
-        // Half the transition margin keeps the root distinct from the margin, so
-        // a swapped-argument HVRCM residual cannot satisfy this answer key.
-        const RealT   voltage_margin = HALF<RealT> * kHvrcmTransition;
-        const ScalarT terminal_voltage{kHvrcmVoltageLimit - voltage_margin};
-        const ScalarT expected_extra_current{kHvrcmHalfTransitionCurrent};
-        const ScalarT q0{0.1};
+        noteExpectedLogs("Testing inadmissible REGCA initialization points. "
+                         "Logged errors are expected.");
 
-        auto data                   = makeData();
-        data.parameters[Params::q0] = static_cast<RealT>(q0);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(terminal_voltage, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-        success *= (regca.evaluateResidual() == 0);
-        success *= allResidualsZero(regca);
-
-        const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::IQEXTRA)],
-                                 expected_extra_current,
-                                 "IQEXTRA smooth-constraint root");
-        success       *= scalarMatches(y[index(Vars::IQ)],
-                                 q0 / terminal_voltage + expected_extra_current,
-                                 "IQ preserves Q0 after HVRCM compensation");
-        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR");
-
-        return success.report(__func__);
-      }
-
-      TestOutcome rejectsInitializationAtOrAboveHighVoltageLimit()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing initialization at and above Vhvmax. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        const std::array<RealT, 2> terminal_voltages{{
-            kHvrcmVoltageLimit,
-            kHvrcmVoltageLimit + static_cast<RealT>(0.1),
-        }};
-
-        for (const RealT terminal_voltage : terminal_voltages)
+        struct RejectionCase
         {
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(terminal_voltage, 0.0);
-          bus.allocate();
-          bus.initialize();
-
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
-          success *= (regca.allocate() == 0);
-          success *= (regca.verify() == 0);
-
-          auto* y = regca.y().getData();
-          std::fill(y,
-                    y + static_cast<size_t>(regca.size()),
-                    static_cast<ScalarT>(0.25));
-          regca.y().setDataUpdated();
-
-          success *= (regca.initialize() != 0);
-          for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
-          {
-            success *= isEqual(y[i], static_cast<ScalarT>(0.25), kTol);
-          }
-        }
-
-        return success.report(__func__);
-      }
-
-      // Verifies initialization rejects an operating point below VA0. VA0 is
-      // 0.4 and VA1 is 0.9 in makeData.
-      TestOutcome rejectsInitializationBelowLvacmBreakpoint()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing initialization below the LVACM breakpoint. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        auto data                   = makeData();
-        data.parameters[Params::q0] = static_cast<RealT>(0.1);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.2, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() > 0);
-
-        return success.report(__func__);
-      }
-
-      // Verifies the smooth LVPL target has a consistent initialization only
-      // when the active current is strictly below the enabled ceiling.
-      TestOutcome rejectsInitializationAtOrAboveLvplCeiling()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing initialization at and above the LVPL ceiling. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        const std::array<RealT, 2> invalid_ceilings{{
-            static_cast<RealT>(0.6),
-            static_cast<RealT>(0.2),
-        }};
-
-        for (const RealT ceiling : invalid_ceilings)
-        {
-          auto data                    = makeData();
-          data.parameters[Params::p0]  = static_cast<RealT>(0.6);
-          data.parameters[Params::IL1] = ceiling;
-
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-          bus.allocate();
-          bus.initialize();
-
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-          success *= (regca.allocate() == 0);
-          success *= (regca.verify() == 0);
-
-          auto* y = regca.y().getData();
-          std::fill(y,
-                    y + static_cast<size_t>(regca.size()),
-                    static_cast<ScalarT>(0.25));
-          regca.y().setDataUpdated();
-
-          success *= (regca.initialize() > 0);
-          for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
-          {
-            success *= isEqual(y[i], static_cast<ScalarT>(0.25), kTol);
-          }
-        }
-
-        // A nearby valid ceiling exercises the inverse smooth minimum and must
-        // preserve both the requested power and a zero-residual initial state.
-        auto data                    = makeData();
-        data.parameters[Params::p0]  = static_cast<RealT>(0.6);
-        data.parameters[Params::IL1] = static_cast<RealT>(0.61);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success       *= (regca.allocate() == 0);
-        success       *= (regca.verify() == 0);
-        success       *= (regca.initialize() == 0);
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::IP)],
-                                 static_cast<ScalarT>(0.6),
-                                 "IP below the LVPL ceiling");
-        success       *= scalarMatches(y[index(Vars::PBR)],
-                                 static_cast<ScalarT>(0.6),
-                                 "PBR below the LVPL ceiling");
-        success       *= allResidualsZero(regca);
-
-        // Bypassing LVPL removes the constraint entirely.
-        data.parameters[Params::IL1] = static_cast<RealT>(0.2);
-        data.parameters[Params::sL]  = false;
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> bypassed(&bus, data);
-        success *= (bypassed.allocate() == 0);
-        success *= (bypassed.verify() == 0);
-        success *= (bypassed.initialize() == 0);
-
-        return success.report(__func__);
-      }
-
-      // Verifies initialization rejects an operating point on the LVACM ramp.
-      // VA0 is 0.4 and VA1 is 0.9 in makeData.
-      TestOutcome rejectsInitializationWithActiveLvacm()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing initialization with active LVACM. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        const ScalarT p0{0.13};
-
-        auto data                   = makeData();
-        data.parameters[Params::p0] = static_cast<RealT>(p0);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.65, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() > 0);
-
-        return success.report(__func__);
-      }
-
-      // Verifies VA1 itself is an admissible initialization boundary and the
-      // resulting operating point reproduces the P0/Q0 injection.
-      TestOutcome initializesAtLvacmUpperBreakpoint()
-      {
-        TestStatus success = true;
-
-        const ScalarT p0{0.2};
-        const ScalarT q0{0.1};
-
-        auto data                   = makeData();
-        data.parameters[Params::p0] = static_cast<RealT>(p0);
-        data.parameters[Params::q0] = static_cast<RealT>(q0);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.9, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-        success *= (regca.evaluateResidual() == 0);
-        success *= allResidualsZero(regca);
-
-        const auto* y  = regca.y().getData();
-        success       *= scalarMatches(y[index(Vars::PBR)], p0, "PBR holds P0");
-        success       *= scalarMatches(y[index(Vars::QBR)], q0, "QBR holds Q0");
-
-        return success.report(__func__);
-      }
-
-      // Verifies a degenerate terminal voltage is rejected before any state is
-      // written, since every current command divides by the voltage magnitude.
-      TestOutcome rejectsZeroTerminalVoltage()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing that a zero terminal voltage is rejected. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(0.0, 0.0);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() > 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome signalVerification()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing REGCA command signal verification. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        PhasorDynamics::Bus<ScalarT, IdxT>              bus(1.0, 0.0);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        ScalarT                                   ipcmd_value{0.25};
-        ScalarT                                   iqcmd_value{-0.10};
-        IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT                                      iqcmd_index = ipcmd_index + 1;
-
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        success *= (regca.verify() > 0);
-
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        success *= (regca.verify() == 0);
-
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-        success *= (regca.verify() > 0);
-
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-        success *= (regca.verify() == 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome nullBusVerification()
-      {
-        TestStatus success = true;
-
-        const auto previous_verbosity = Log::verbosity();
-        Log::setVerbosity(Log::Verbosity::EVERYTHING);
-        Log::misc() << "Testing REGCA verification without a bus. "
-                    << "Logged errors are expected.\n";
-        Log::setVerbosity(previous_verbosity);
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(nullptr, makeData());
-        success *= (regca.verify() > 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome busInjectionUsesSystemBase()
-      {
-        TestStatus success = true;
-
-        const ScalarT vr{0.8};
-        const ScalarT vi{0.6};
-        const ScalarT p0{0.4};
-        const ScalarT q0{-0.1};
-        const RealT   mva{50.0};
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(vr, vi);
-        bus.allocate();
-        bus.initialize();
-
-        auto data                    = makeData();
-        data.parameters[Params::mva] = mva;
-        data.parameters[Params::p0]  = static_cast<RealT>(p0);
-        data.parameters[Params::q0]  = static_cast<RealT>(q0);
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-        success *= (regca.allocate() == 0);
-        success *= (regca.initialize() == 0);
-
-        bus.evaluateResidual();
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* y  = regca.y().getData();
-
-        success *= isEqual(bus.Ir(), y[index(Vars::IR)], kTol);
-        success *= isEqual(bus.Ii(), y[index(Vars::II)], kTol);
-        success *= isEqual(bus.Ir(), static_cast<ScalarT>(0.26), kTol);
-        success *= isEqual(bus.Ii(), static_cast<ScalarT>(0.32), kTol);
-        success *= allResidualsZero(regca);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome residualEquations()
-      {
-        TestStatus success = true;
-
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(kStateVr, kStateVi);
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeDynamicData());
-
-        ScalarT ipcmd_value{0.0};
-        ScalarT iqcmd_value{0.0};
-        IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT    iqcmd_index = ipcmd_index + 1;
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-
-        // initialize() seeds the attached command nodes from p0 and q0. Drive
-        // them to the values the answer key assumes.
-        ipcmd_value = static_cast<ScalarT>(kStateIpcmd);
-        iqcmd_value = static_cast<ScalarT>(kStateIqcmd);
-
-        setResidualState(regca);
-        bus.evaluateResidual();
-        success *= (regca.evaluateResidual() == 0);
-
-        // Answer key for the state set by setResidualState() with the commands
-        // above. Each entry is the expected value of the named README equation.
-        const std::vector<ScalarT> res_answer = {
-            0.865,  // f[0]:  -VM' + (VT - VM) / TM
-            1.52,   // f[1]:  -IQ' + max(fq, Rqmin)
-            -0.43,  // f[2]:  -IP' + clamp(fp, LP, UP), fp from min(IPCMD, IL)
-            -0.035, // f[3]:  -VT^2 + Vr^2 + Vi^2
-            0.25,   // f[4]:  -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
-            0.251,  // f[5]:  -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
-            -0.03,  // f[6]:  smooth HVRCM constraint
-            0.35,   // f[7]:  -IL + linseg(VM, VL0, VL1, IL1)
-            -69.6,  // f[8]:  -LP - Rpmax*(1 - sigmoid(IP)) - Mp*sigmoid(IP)
-            0.2,    // f[9]:  -UP + Mp*(1 - sigmoid(IP)) + Rpmax*sigmoid(IP)
-            0.0,    // f[10]: -PBR + Vr*IR + Vi*II
-            0.0,    // f[11]: -QBR + Vi*IR - Vr*II
+          const char* label;
+          RealT       vr;
+          RealT       p0;
+          RealT       il1;
         };
 
-        const auto& residual  = regca.getResidual();
-        success              *= (static_cast<size_t>(residual.getSize()) == res_answer.size());
+        // P0 and IL1 default to the makeData() values; each row breaks
+        // exactly one initialize() guard.
+        const std::array<RejectionCase, 6> rejected{{
+            {"terminal voltage at Vhvmax", kHvrcmVoltageLimit, 0.0, 1.1},
+            {"terminal voltage above Vhvmax", kHvrcmVoltageLimit + 0.1, 0.0, 1.1},
+            {"terminal voltage just below VA1", kJustBelowVa1, 0.0, 1.1},
+            {"LVPL ceiling at the active current", 1.0, 0.6, 0.6},
+            {"LVPL ceiling below the active current", 1.0, 0.6, 0.2},
+            {"zero terminal voltage", 0.0, 0.0, 1.1},
+        }};
 
-        const auto* f = residual.getData();
-        for (size_t i = 0; i < res_answer.size(); ++i)
+        for (const auto& test_case : rejected)
         {
-          if (!isEqual(f[i], res_answer[i], kTol))
+          auto data                    = makeData();
+          data.parameters[Params::p0]  = test_case.p0;
+          data.parameters[Params::IL1] = test_case.il1;
+
+          Fixture<ScalarT> fixture(data, test_case.vr);
+          success *= fixture.prepare();
+          if (fixture.regca.initialize() == 0)
           {
-            std::cout << "Incorrect result for residual " << i << ": "
-                      << std::setprecision(15) << f[i] << " != " << res_answer[i]
-                      << "\n";
+            std::cout << "Expected rejection: " << test_case.label << "\n";
             success = false;
           }
         }
 
+        // VA1 itself is an admissible LVACM boundary and the operating
+        // point reproduces the P0/Q0 injection.
+        {
+          auto data                   = makeData();
+          data.parameters[Params::p0] = 0.2;
+          data.parameters[Params::q0] = 0.1;
+
+          Fixture<ScalarT> fixture(data, kVa1);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::PBR)], 0.2, "PBR at the LVACM upper breakpoint");
+          success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR at the LVACM upper breakpoint");
+        }
+
+        // A ceiling just above the requested current exercises the inverse
+        // smooth minimum near its divergence.
+        {
+          auto data                    = makeData();
+          data.parameters[Params::p0]  = 0.6;
+          data.parameters[Params::IL1] = 0.61;
+
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IP)], 0.6, "IP below the LVPL ceiling");
+          success       *= scalarMatches(y[index(Vars::PBR)], 0.6, "PBR below the LVPL ceiling");
+        }
+
+        // With LVPL bypassed a collapsed ceiling does not constrain the
+        // initialization.
+        {
+          auto data                    = makeData();
+          data.parameters[Params::p0]  = 0.6;
+          data.parameters[Params::sL]  = false;
+          data.parameters[Params::IL1] = 0.2;
+
+          Fixture<ScalarT> fixture(data);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
+
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IP)], 0.6, "IP with LVPL bypassed");
+        }
+
         return success.report(__func__);
       }
 
-      TestOutcome highVoltageReactiveCurrentConstraint()
+      /// The complete equation answer key at a hand-computed state.
+      TestOutcome residualEquations()
       {
         TestStatus success = true;
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
+        Fixture<ScalarT> fixture(makeDynamicData(), kStateVr, kStateVi);
+        fixture.attachIpcmd(kStateIpcmd);
+        fixture.attachIqcmd(kStateIqcmd);
+        success *= fixture.initialize();
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, makeData());
-        success *= (regca.allocate() == 0);
-        success *= (regca.initialize() == 0);
+        // initialize() published steady-state commands over the attached
+        // values; restore the commands the answer key assumes.
+        fixture.ipcmd = kStateIpcmd;
+        fixture.iqcmd = kStateIqcmd;
 
-        struct HvrcmCase
+        setAnswerKeyState(fixture.regca);
+        success *= (fixture.evaluate() == 0);
+
+        struct ExpectedResidual
         {
-          RealT voltage;
-          RealT extra_current;
-          bool  is_root;
+          Vars        variable;
+          const char* name;
+          RealT       value;
         };
 
-        const std::array<HvrcmCase, 6> cases{{
-            {kHvrcmVoltageLimit - static_cast<RealT>(0.1), ZERO<RealT>, true},
-            {kHvrcmVoltageLimit - kHvrcmTransition, kHvrcmTransition, true},
-            {kHvrcmVoltageLimit - static_cast<RealT>(0.1), static_cast<RealT>(0.05), false},
-            {kHvrcmVoltageLimit - static_cast<RealT>(0.1), static_cast<RealT>(-0.05), false},
-            {kHvrcmVoltageLimit, ZERO<RealT>, false},
-            {kHvrcmVoltageLimit + static_cast<RealT>(0.1), static_cast<RealT>(0.1), false},
+        // Each entry is the expected value of the named README equation at
+        // the answer-key state.
+        const std::array<ExpectedResidual, 12> expected{{
+            {Vars::VM, "VM", 0.865},           // -VM' + (VT - VM) / TM
+            {Vars::IQ, "IQ", 1.52},            // -IQ' + max(fq, Rqmin)
+            {Vars::IP, "IP", -0.43},           // -IP' + clamp(fp, LP, UP)
+            {Vars::VT, "VT", -0.035},          // -VT^2 + Vr^2 + Vi^2
+            {Vars::IR, "IR", 0.25},            // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
+            {Vars::II, "II", 0.251},           // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
+            {Vars::IQEXTRA, "IQEXTRA", -0.03}, // smooth HVRCM constraint
+            {Vars::IL, "IL", 0.35},            // -IL + linseg(VM, VL0, VL1, IL1)
+            {Vars::LP, "LP", -69.6},           // -LP + Lp(IP)
+            {Vars::UP, "UP", 0.2},             // -UP + Up(IP)
+            {Vars::PBR, "PBR", 0.0},           // -PBR + Vr*IR + Vi*II
+            {Vars::QBR, "QBR", 0.0},           // -QBR + Vi*IR - Vr*II
         }};
 
-        auto* y = regca.y().getData();
-        for (const auto& test_case : cases)
+        const auto& residual  = fixture.regca.getResidual();
+        success              *= (static_cast<size_t>(residual.getSize()) == expected.size());
+
+        const auto* f = residual.getData();
+        for (const auto& row : expected)
         {
-          y[index(Vars::VT)]      = static_cast<ScalarT>(test_case.voltage);
-          y[index(Vars::IQEXTRA)] = static_cast<ScalarT>(test_case.extra_current);
-          regca.y().setDataUpdated();
-
-          bus.evaluateResidual();
-          success *= (regca.evaluateResidual() == 0);
-
-          const auto* f = regca.getResidual().getData();
-          const bool  at_root =
-              isEqual(f[index(Vars::IQEXTRA)], static_cast<ScalarT>(0.0), kTol);
-          success *= (at_root == test_case.is_root);
+          success *= scalarMatches(f[index(row.variable)], row.value, row.name);
         }
 
         return success.report(__func__);
       }
 
-      TestOutcome highVoltageReactiveCurrentJacobian()
+      /// Active-current control: the rate-bound targets follow the sign of
+      /// Ip, and the LVPL ceiling governs the current command only when
+      /// enabled.
+      TestOutcome activeCurrentControl()
       {
-        using DepVar = DependencyTracking::Variable;
-
         TestStatus success = true;
 
-        PhasorDynamics::Bus<DepVar, IdxT> bus(DepVar{1.0}, DepVar{0.0});
-        bus.allocate();
-        bus.initialize();
-
-        PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, makeData());
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-
-        const size_t voltage_index = index(Vars::VT);
-        const size_t current_index = index(Vars::IQEXTRA);
-        auto*        y             = regca.y().getData();
-        y[voltage_index].setValue(kHvrcmVoltageLimit - kHvrcmTransition);
-        y[voltage_index].setVariableNumber(voltage_index);
-        y[current_index].setValue(kHvrcmTransition);
-        y[current_index].setVariableNumber(current_index);
-        regca.y().setDataUpdated();
-
-        bus.evaluateResidual();
-        success *= (regca.evaluateResidual() == 0);
-        const auto& dependencies =
-            regca.getResidual().getData()[current_index].getDependencies();
-
-        success *= isEqual(dependencies.at(voltage_index),
-                           static_cast<RealT>(0.5),
-                           static_cast<RealT>(1.0e-10));
-        success *= isEqual(dependencies.at(current_index),
-                           static_cast<RealT>(-0.5),
-                           static_cast<RealT>(1.0e-10));
-
-        return success.report(__func__);
-      }
-
-      // Checks the LVPL sensitivity of f[IP] at an interior rate-clamp point:
-      // with LVPL active the rate follows IL, and with LVPL bypassed it follows
-      // IPCMD instead.
-      TestOutcome lvplCeilingJacobian()
-      {
-        using DepVar = DependencyTracking::Variable;
-
-        TestStatus success = true;
-
-        const std::array<bool, 2> lvpl_settings{{true, false}};
-
-        for (const bool lvpl_enabled : lvpl_settings)
+        // The rate-bound targets switch at Ip = 0 between the active limit
+        // Rpmax = 0.7 and the inactive bound Mp = 100 * Rpmax = 70.
         {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::sL] = lvpl_enabled;
+          Fixture<ScalarT> fixture(makeDynamicData());
+          success *= fixture.initialize();
 
-          PhasorDynamics::Bus<DepVar, IdxT> bus(DepVar{1.0}, DepVar{0.0});
-          bus.allocate();
-          bus.initialize();
-
-          PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, data);
-
-          DepVar ipcmd_value{0.7};
-          IdxT   ipcmd_index = regca.size() + bus.size();
-
-          PhasorDynamics::SignalNode<DepVar, IdxT> ipcmd_node;
-          ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-
-          success *= (regca.allocate() == 0);
-          success *= (regca.verify() == 0);
-          success *= (regca.initialize() == 0);
-
-          ipcmd_value.setValue(static_cast<RealT>(0.7));
-
-          // Both enabled and bypassed rates are interior to the initialized
-          // rate bounds, so no derived limiter values are patched here.
-          auto* y  = regca.y().getData();
-          auto* yp = regca.yp().getData();
-          y[index(Vars::IP)].setValue(static_cast<RealT>(0.6));
-          y[index(Vars::IL)].setValue(static_cast<RealT>(0.5));
-          for (IdxT i = 0; i < regca.size(); ++i)
+          struct RateBoundCase
           {
-            y[static_cast<size_t>(i)].setVariableNumber(i);
-            yp[static_cast<size_t>(i)].setVariableNumber(i);
-          }
-          ipcmd_value.setVariableNumber(ipcmd_index);
-          regca.y().setDataUpdated();
-          regca.yp().setDataUpdated();
-
-          bus.evaluateResidual();
-          success *= (regca.evaluateResidual() == 0);
-
-          // d f[IP]/d(binding input) = 1 / Tg = 5; the other input drops out.
-          // A structurally absent column is a zero derivative, so read it that
-          // way rather than through at(), which would abort the whole runner if
-          // the coupling ever disappeared.
-          const auto& dependencies =
-              regca.getResidual().getData()[index(Vars::IP)].getDependencies();
-          auto sensitivity = [&dependencies](size_t column)
-          {
-            const auto entry = dependencies.find(column);
-            return entry == dependencies.end() ? ZERO<RealT> : entry->second;
+            RealT current;
+            RealT lower;
+            RealT upper;
           };
 
-          const RealT il_sensitivity    = lvpl_enabled ? static_cast<RealT>(5.0) : ZERO<RealT>;
-          const RealT ipcmd_sensitivity = lvpl_enabled ? ZERO<RealT> : static_cast<RealT>(5.0);
+          const std::array<RateBoundCase, 3> cases{{
+              {-1.0e-6, -0.7, 70.0},
+              {0.0, -0.7, 0.7},
+              {1.0e-6, -70.0, 0.7},
+          }};
 
-          success *= isEqual(sensitivity(index(Vars::IL)),
-                             il_sensitivity,
-                             static_cast<RealT>(1.0e-10));
-          success *= isEqual(sensitivity(static_cast<size_t>(ipcmd_index)),
-                             ipcmd_sensitivity,
-                             static_cast<RealT>(1.0e-10));
+          auto* y = fixture.regca.y().getData();
+          for (const auto& test_case : cases)
+          {
+            y[index(Vars::IP)] = test_case.current;
+            y[index(Vars::LP)] = 0.0;
+            y[index(Vars::UP)] = 0.0;
+            fixture.regca.y().setDataUpdated();
+
+            success *= (fixture.evaluate() == 0);
+
+            const auto* f  = fixture.regca.getResidual().getData();
+            success       *= scalarMatches(f[index(Vars::LP)], test_case.lower, "lower rate bound");
+            success       *= scalarMatches(f[index(Vars::UP)], test_case.upper, "upper rate bound");
+          }
+        }
+
+        // With LVPL enabled a ceiling below the present IP drives the
+        // active current down; with LVPL bypassed the command alone governs.
+        for (const bool lvpl_enabled : {true, false})
+        {
+          auto data                   = makeDynamicData();
+          data.parameters[Params::sL] = lvpl_enabled;
+
+          Fixture<ScalarT> fixture(data);
+          fixture.attachIpcmd(0.7);
+          success *= fixture.initialize();
+
+          // initialize() published the steady-state command; restore the
+          // driven value, then collapse the ceiling below IP. The
+          // initialized LP and UP stay interior to both expected rates.
+          fixture.ipcmd = 0.7;
+
+          auto* y            = fixture.regca.y().getData();
+          y[index(Vars::IP)] = 0.6;
+          y[index(Vars::IL)] = 0.5;
+          fixture.regca.y().setDataUpdated();
+
+          success *= (fixture.evaluate() == 0);
+
+          // fp = (min(0.7, 0.5) - 0.6) / Tg enabled and (0.7 - 0.6) / Tg
+          // bypassed, with Tg = 0.2.
+          const RealT expected = lvpl_enabled ? -0.5 : 0.5;
+          const char* label    = lvpl_enabled ? "IP rate with LVPL enabled"
+                                              : "IP rate with LVPL bypassed";
+
+          const auto* f  = fixture.regca.getResidual().getData();
+          success       *= scalarMatches(f[index(Vars::IP)], expected, label);
         }
 
         return success.report(__func__);
       }
 
-      // Positive initial reactive power selects the upper IQ recovery-rate limit.
-      TestOutcome positiveInitialReactivePowerSelectsUpperIqRateLimit()
+      /// The recovery-rate limiter branch is chosen by the sign of Q0 at
+      /// initialization, not by the live command: positive Q0 caps rising
+      /// rates at Rqmax, non-positive Q0 floors falling rates at Rqmin.
+      TestOutcome reactiveCurrentControl()
       {
         TestStatus success = true;
 
-        auto data                   = makeDynamicData();
-        data.parameters[Params::q0] = static_cast<RealT>(0.2);
+        struct RecoveryCase
+        {
+          const char* label;
+          RealT       q0;
+          RealT       command;
+          RealT       expected_rate;
+        };
 
-        PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-        bus.allocate();
-        bus.initialize();
+        // The unlimited rate is (command - Q0) / Tg with Tg = 0.2. Q0 = 0
+        // selects the Rqmin branch, so its rising rate is unrestricted.
+        const std::array<RecoveryCase, 3> cases{{
+            {"upper recovery limit binds", 0.2, 0.4, 0.5},
+            {"lower recovery limit binds", -0.2, -0.4, -0.6},
+            {"zero Q0 leaves rising rates unrestricted", 0.0, 0.4, 2.0},
+        }};
 
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+        for (const auto& test_case : cases)
+        {
+          auto data                   = makeDynamicData();
+          data.parameters[Params::q0] = test_case.q0;
 
-        ScalarT                                   iqcmd_value{0.2};
-        IdxT                                      iqcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
+          Fixture<ScalarT> fixture(data);
+          fixture.attachIqcmd(test_case.q0);
+          success *= fixture.initialize();
 
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+          fixture.iqcmd  = test_case.command;
+          success       *= (fixture.evaluate() == 0);
 
-        success *= (regca.allocate() == 0);
-        success *= (regca.verify() == 0);
-        success *= (regca.initialize() == 0);
-
-        iqcmd_value = static_cast<ScalarT>(0.4);
-        bus.evaluateResidual();
-        success       *= (regca.evaluateResidual() == 0);
-        const auto* f  = regca.getResidual().getData();
-
-        success *= scalarMatches(f[index(Vars::IQ)],
-                                 static_cast<ScalarT>(0.5),
-                                 "upper IQ rate limit");
+          const auto* f  = fixture.regca.getResidual().getData();
+          success       *= scalarMatches(f[index(Vars::IQ)], test_case.expected_rate, test_case.label);
+        }
 
         return success.report(__func__);
       }
 
-      // With LVPL enabled a ceiling below the present IP drives the active
-      // current down; with LVPL bypassed the command alone governs.
-      TestOutcome lvplCeilingDrivesActiveCurrentDown()
+      /// High-voltage reactive current management: the initialization root,
+      /// the residual across the transition, and its local derivative.
+      TestOutcome highVoltageManagement()
       {
         TestStatus success = true;
 
-        const std::array<bool, 2> lvpl_settings{{true, false}};
-
-        for (const bool lvpl_enabled : lvpl_settings)
+        // Initialization near Vhvmax solves the smooth constraint for a
+        // nonzero IQEXTRA. Half the transition margin keeps the root
+        // distinct from the margin, so a swapped-argument residual cannot
+        // satisfy this answer key.
         {
-          auto data                   = makeDynamicData();
-          data.parameters[Params::sL] = lvpl_enabled;
+          const RealT terminal_voltage = kHvrcmVoltageLimit - 0.5 * kHvrcmTransition;
 
-          PhasorDynamics::Bus<ScalarT, IdxT> bus(1.0, 0.0);
-          bus.allocate();
-          bus.initialize();
+          auto data                   = makeData();
+          data.parameters[Params::q0] = 0.1;
 
-          PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
+          Fixture<ScalarT> fixture(data, terminal_voltage);
+          success *= fixture.initialize();
+          success *= (fixture.evaluate() == 0);
+          success *= allResidualsZero(fixture.regca);
 
-          ScalarT ipcmd_value{0.7};
-          IdxT    ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
+          const auto* y  = fixture.regca.y().getData();
+          success       *= scalarMatches(y[index(Vars::IQEXTRA)],
+                                   kHvrcmHalfTransitionCurrent,
+                                   "IQEXTRA smooth-constraint root");
+          success       *= scalarMatches(y[index(Vars::IQ)],
+                                   0.1 / terminal_voltage + kHvrcmHalfTransitionCurrent,
+                                   "IQ preserves Q0 after HVRCM compensation");
+          success       *= scalarMatches(y[index(Vars::QBR)], 0.1, "QBR");
+        }
 
-          PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-          ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+        // Numeric answer keys pin both sign and magnitude of the HVRCM row.
+        {
+          Fixture<ScalarT> fixture(makeData());
+          success *= fixture.initialize();
 
-          success *= (regca.allocate() == 0);
-          success *= (regca.verify() == 0);
-          success *= (regca.initialize() == 0);
+          struct HvrcmCase
+          {
+            RealT voltage;
+            RealT extra_current;
+            RealT expected_residual;
+          };
 
-          // initialize() publishes the steady-state command. Drive the signal
-          // to the independent dynamic-test value.
-          ipcmd_value = static_cast<ScalarT>(0.7);
+          const std::array<HvrcmCase, 5> cases{{
+              {kHvrcmVoltageLimit - kHvrcmTransition, kHvrcmTransition, 0.0},
+              {kHvrcmVoltageLimit - 0.1, 0.05, -0.049999974399193847},
+              {kHvrcmVoltageLimit - 0.1, -0.05, 0.05},
+              {kHvrcmVoltageLimit, 0.0, kHvrcmTransition},
+              {kHvrcmVoltageLimit + 0.1, 0.1, 0.1},
+          }};
 
-          // Collapse the LVPL ceiling below IP. The initialized LP and UP remain
-          // untouched; both expected rates lie inside those bounds.
-          auto* y            = regca.y().getData();
-          y[index(Vars::IP)] = static_cast<ScalarT>(0.6);
-          y[index(Vars::IL)] = static_cast<ScalarT>(0.5);
-          regca.y().setDataUpdated();
+          auto* y = fixture.regca.y().getData();
+          for (const auto& test_case : cases)
+          {
+            y[index(Vars::VT)]      = test_case.voltage;
+            y[index(Vars::IQEXTRA)] = test_case.extra_current;
+            fixture.regca.y().setDataUpdated();
 
-          bus.evaluateResidual();
-          success *= (regca.evaluateResidual() == 0);
+            success *= (fixture.evaluate() == 0);
 
-          // fp is -0.5 with LVPL and +0.5 when bypassed.
-          const auto*   f         = regca.getResidual().getData();
-          const ScalarT expected  = lvpl_enabled ? static_cast<ScalarT>(-0.5)
-                                                 : static_cast<ScalarT>(0.5);
-          const char*   label     = lvpl_enabled ? "IP rate with LVPL enabled"
-                                                 : "IP rate with LVPL bypassed";
-          success                *= scalarMatches(f[index(Vars::IP)], expected, label);
+            const auto* f  = fixture.regca.getResidual().getData();
+            success       *= scalarMatches(f[index(Vars::IQEXTRA)],
+                                     test_case.expected_residual,
+                                     "HVRCM residual");
+          }
+        }
+
+        // At the transition point both partial derivatives of the HVRCM row
+        // are exactly one half.
+        {
+          using DepVar = DependencyTracking::Variable;
+
+          Fixture<DepVar> fixture(makeData());
+          success *= fixture.initialize();
+
+          auto* y                 = fixture.regca.y().getData();
+          y[index(Vars::VT)]      = kHvrcmVoltageLimit - kHvrcmTransition;
+          y[index(Vars::IQEXTRA)] = kHvrcmTransition;
+          fixture.regca.y().setDataUpdated();
+          numberVariables(fixture);
+
+          success *= (fixture.evaluate() == 0);
+
+          const auto& dependencies =
+              fixture.regca.getResidual().getData()[index(Vars::IQEXTRA)].getDependencies();
+
+          const DepVar::DependencyMap expected{{
+              {index(Vars::VT), 0.5},
+              {index(Vars::IQEXTRA), -0.5},
+          }};
+          success *= isEqual(dependencies, expected, kJacobianTol);
         }
 
         return success.report(__func__);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      /// One data set drives both sensitivity paths, so the compared rows
+      /// cannot drift apart between hand-built fixtures.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        auto dependency_tracking_jacobian = dependencyTrackingJacobian();
-        auto enzyme_jacobian              = enzymeJacobian();
+        const auto data = makeJacobianData();
+
+        auto dependency_tracking_jacobian = dependencyTrackingJacobian(data, success);
+        auto enzyme_jacobian              = enzymeJacobian(data, success);
 
         success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
         const auto nrows  = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
 
         for (size_t i = 0; i < nrows; ++i)
         {
-          success *= isEqual(dependency_tracking_jacobian[i],
-                             enzyme_jacobian[i],
-                             static_cast<RealT>(kTol));
+          if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kJacobianTol))
+          {
+            std::cout << "Jacobian row " << i
+                      << " mismatch between dependency tracking and Enzyme\n";
+            success = false;
+          }
         }
 
         return success.report(__func__);
@@ -926,65 +584,123 @@ namespace GridKit
       using Params = PhasorDynamics::Converter::RegcaParameters;
       using Vars   = PhasorDynamics::Converter::RegcaInternalVariables;
       using Ext    = PhasorDynamics::Converter::RegcaExternalVariables;
+      using Data   = PhasorDynamics::Converter::RegcaData<RealT, IdxT>;
+
+      /// Owns a terminal bus, the model under test, and its two command
+      /// signals. Copying would dangle the bus pointer regca holds, so the
+      /// fixture is pinned.
+      template <typename T>
+      struct Fixture
+      {
+        explicit Fixture(const Data& data, RealT vr = 1.0, RealT vi = 0.0)
+          : bus(static_cast<T>(vr), static_cast<T>(vi)),
+            regca(&bus, data),
+            ipcmd_index(regca.size() + bus.size()),
+            iqcmd_index(ipcmd_index + 1)
+        {
+        }
+
+        Fixture(const Fixture&)            = delete;
+        Fixture& operator=(const Fixture&) = delete;
+
+        void attachIpcmd(RealT value)
+        {
+          ipcmd = value;
+          ipcmd_node.set(&ipcmd, &ipcmd_index);
+          regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
+        }
+
+        void attachIqcmd(RealT value)
+        {
+          iqcmd = value;
+          iqcmd_node.set(&iqcmd, &iqcmd_index);
+          regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+        }
+
+        /// Everything initialize() requires: allocation, verification, and
+        /// an initialized terminal bus.
+        bool prepare()
+        {
+          const bool success = (bus.allocate() == 0) && (regca.allocate() == 0)
+                               && (regca.verify() == 0) && (bus.initialize() == 0);
+          if (!success)
+          {
+            std::cout << "REGCA fixture preparation failed\n";
+          }
+          return success;
+        }
+
+        /// prepare() plus a successful model initialization.
+        bool initialize()
+        {
+          if (!prepare())
+          {
+            return false;
+          }
+          if (regca.initialize() != 0)
+          {
+            std::cout << "REGCA initialization failed\n";
+            return false;
+          }
+          return true;
+        }
+
+        /// Zeroes the bus injection, then accumulates regca into it. The
+        /// ordering the models require.
+        int evaluate()
+        {
+          const int bus_status = bus.evaluateResidual();
+          if (bus_status != 0)
+          {
+            return bus_status;
+          }
+          return regca.evaluateResidual();
+        }
+
+        PhasorDynamics::Bus<T, IdxT>              bus;
+        PhasorDynamics::Converter::Regca<T, IdxT> regca;
+
+        T    ipcmd{};
+        T    iqcmd{};
+        IdxT ipcmd_index;
+        IdxT iqcmd_index;
+
+        PhasorDynamics::SignalNode<T, IdxT> ipcmd_node;
+        PhasorDynamics::SignalNode<T, IdxT> iqcmd_node;
+      };
 
       static size_t index(Vars variable)
       {
         return static_cast<size_t>(variable);
       }
 
-      // Operating point shared by the residual answer key and both Jacobian
-      // paths, so the scalar and dependency-tracking states cannot drift apart.
-      static constexpr RealT kStateVr    = static_cast<RealT>(0.95);
-      static constexpr RealT kStateVi    = static_cast<RealT>(0.25);
-      static constexpr RealT kStateIpcmd = static_cast<RealT>(0.9);
-      static constexpr RealT kStateIqcmd = static_cast<RealT>(0.1);
+      // Bus and command values shared by the residual and Jacobian fixtures.
+      static constexpr RealT kStateVr    = 0.95;
+      static constexpr RealT kStateVi    = 0.25;
+      static constexpr RealT kStateIpcmd = 0.9;
+      static constexpr RealT kStateIqcmd = 0.1;
+
+      static constexpr RealT kVa1          = 0.9;
+      static constexpr RealT kJustBelowVa1 = kVa1 - 1.0e-6;
 
       /// Vhvmax in makeData() and in makeDynamicData().
-      static constexpr RealT kHvrcmVoltageLimit        = static_cast<RealT>(1.2);
-      static constexpr RealT kDynamicHvrcmVoltageLimit = static_cast<RealT>(1.3);
+      static constexpr RealT kHvrcmVoltageLimit        = 1.2;
+      static constexpr RealT kDynamicHvrcmVoltageLimit = 1.3;
 
-      /// log(2) / Math::MU. At this voltage margin the smooth HVRCM constraint
-      /// root equals the margin itself.
-      static constexpr RealT kHvrcmTransition = static_cast<RealT>(0.0028881132523331052);
+      /// log(2) / Math::MU. At this voltage margin the smooth HVRCM
+      /// constraint root equals the margin itself.
+      static constexpr RealT kHvrcmTransition = 0.0028881132523331052;
 
-      /// Constraint root at half the transition margin, where root and margin
-      /// differ. Held as a literal so the tests stay free of <cmath>.
-      static constexpr RealT kHvrcmHalfTransitionCurrent =
-          static_cast<RealT>(0.005116446572081316);
+      /// Constraint root at half the transition margin, where root and
+      /// margin differ. Held as a literal so the tests stay free of <cmath>.
+      static constexpr RealT kHvrcmHalfTransitionCurrent = 0.005116446572081316;
 
-      /// HVRCM transition operating point on the makeDynamicData() limit.
-      static constexpr RealT kHvrcmTransitionVoltage =
-          kDynamicHvrcmVoltageLimit - kHvrcmTransition;
-
-      /// Internal variables in `RegcaInternalVariables` order.
-      static constexpr std::array<RealT, static_cast<size_t>(Vars::MAXIMUM)> kStateY = {
-          static_cast<RealT>(0.65),   // VM
-          static_cast<RealT>(-0.2),   // IQ
-          static_cast<RealT>(0.85),   // IP
-          static_cast<RealT>(1.0),    // VT
-          static_cast<RealT>(0.5),    // IR
-          static_cast<RealT>(0.18),   // II
-          static_cast<RealT>(0.03),   // IQEXTRA
-          static_cast<RealT>(0.2),    // IL
-          static_cast<RealT>(-0.4),   // LP
-          static_cast<RealT>(0.5),    // UP
-          static_cast<RealT>(0.52),   // PBR
-          static_cast<RealT>(-0.046), // QBR
-      };
-
-      /// Derivatives of the three differential states, which lead the enum.
-      static constexpr std::array<RealT, 3> kStateYp = {
-          static_cast<RealT>(0.01),  // VM
-          static_cast<RealT>(-0.02), // IQ
-          static_cast<RealT>(0.03),  // IP
-      };
-
-      auto makeData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
+      Data makeData()
       {
         using Buses = PhasorDynamics::Converter::RegcaBuses;
         using Mon   = PhasorDynamics::Converter::RegcaMonitorableVariables;
 
-        PhasorDynamics::Converter::RegcaData<RealT, IdxT> data;
+        Data data;
         data.device_class          = "Regca";
         data.disambiguation_string = "regca_test";
         data.buses[Buses::bus]     = 1;
@@ -993,37 +709,110 @@ namespace GridKit
         data.monitored_variables.insert(Mon::p);
         data.monitored_variables.insert(Mon::q);
 
-        data.parameters[Params::p0]     = static_cast<RealT>(0.0);
-        data.parameters[Params::q0]     = static_cast<RealT>(0.0);
-        data.parameters[Params::mva]    = static_cast<RealT>(100.0);
-        data.parameters[Params::Tg]     = static_cast<RealT>(0.02);
-        data.parameters[Params::TM]     = static_cast<RealT>(0.02);
-        data.parameters[Params::Rqmax]  = static_cast<RealT>(999.0);
-        data.parameters[Params::Rqmin]  = static_cast<RealT>(-999.0);
-        data.parameters[Params::Rpmax]  = static_cast<RealT>(999.0);
+        data.parameters[Params::p0]     = 0.0;
+        data.parameters[Params::q0]     = 0.0;
+        data.parameters[Params::mva]    = 100.0;
+        data.parameters[Params::Tg]     = 0.02;
+        data.parameters[Params::TM]     = 0.02;
+        data.parameters[Params::Rqmax]  = 999.0;
+        data.parameters[Params::Rqmin]  = -999.0;
+        data.parameters[Params::Rpmax]  = 999.0;
         data.parameters[Params::sL]     = true;
-        data.parameters[Params::IL1]    = static_cast<RealT>(1.1);
-        data.parameters[Params::VL0]    = static_cast<RealT>(0.4);
-        data.parameters[Params::VL1]    = static_cast<RealT>(0.9);
-        data.parameters[Params::VA0]    = static_cast<RealT>(0.4);
-        data.parameters[Params::VA1]    = static_cast<RealT>(0.9);
+        data.parameters[Params::IL1]    = 1.1;
+        data.parameters[Params::VL0]    = 0.4;
+        data.parameters[Params::VL1]    = 0.9;
+        data.parameters[Params::VA0]    = 0.4;
+        data.parameters[Params::VA1]    = 0.9;
         data.parameters[Params::Vhvmax] = kHvrcmVoltageLimit;
 
         return data;
       }
 
-      auto makeDynamicData() -> PhasorDynamics::Converter::RegcaData<RealT, IdxT>
+      /// Dynamic-response parameters: slower lags and tight rate limits so
+      /// limiter selections show up in the residual rows.
+      Data makeDynamicData()
       {
         auto data                       = makeData();
-        data.parameters[Params::p0]     = static_cast<RealT>(0.6);
-        data.parameters[Params::q0]     = static_cast<RealT>(-0.2);
-        data.parameters[Params::Tg]     = static_cast<RealT>(0.2);
-        data.parameters[Params::TM]     = static_cast<RealT>(0.4);
-        data.parameters[Params::Rqmax]  = static_cast<RealT>(0.5);
-        data.parameters[Params::Rqmin]  = static_cast<RealT>(-0.6);
-        data.parameters[Params::Rpmax]  = static_cast<RealT>(0.7);
+        data.parameters[Params::p0]     = 0.6;
+        data.parameters[Params::q0]     = -0.2;
+        data.parameters[Params::Tg]     = 0.2;
+        data.parameters[Params::TM]     = 0.4;
+        data.parameters[Params::Rqmax]  = 0.5;
+        data.parameters[Params::Rqmin]  = -0.6;
+        data.parameters[Params::Rpmax]  = 0.7;
         data.parameters[Params::Vhvmax] = kDynamicHvrcmVoltageLimit;
         return data;
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      /// Jacobian data: dynamic parameters on a non-identity power base.
+      /// P0 = 0 keeps the reduced-base active current below the LVPL
+      /// ceiling at initialization.
+      Data makeJacobianData()
+      {
+        auto data                    = makeDynamicData();
+        data.parameters[Params::p0]  = 0.0;
+        data.parameters[Params::mva] = 50.0;
+        return data;
+      }
+#endif
+
+      /// Writes the answer-key state shared by the residual and Jacobian
+      /// tests. Values only; in the dependency-tracking fixture, number
+      /// variables after this call.
+      template <typename T>
+      void setAnswerKeyState(PhasorDynamics::Converter::Regca<T, IdxT>& regca)
+      {
+        auto* y                 = regca.y().getData();
+        y[index(Vars::VM)]      = 0.65;
+        y[index(Vars::IQ)]      = -0.2;
+        y[index(Vars::IP)]      = 0.85;
+        y[index(Vars::VT)]      = 1.0;
+        y[index(Vars::IR)]      = 0.5;
+        y[index(Vars::II)]      = 0.18;
+        y[index(Vars::IQEXTRA)] = 0.03;
+        y[index(Vars::IL)]      = 0.2;
+        y[index(Vars::LP)]      = -0.4;
+        y[index(Vars::UP)]      = 0.5;
+        y[index(Vars::PBR)]     = 0.52;
+        y[index(Vars::QBR)]     = -0.046;
+
+        auto* yp            = regca.yp().getData();
+        yp[index(Vars::VM)] = 0.01;
+        yp[index(Vars::IQ)] = -0.02;
+        yp[index(Vars::IP)] = 0.03;
+
+        regca.y().setDataUpdated();
+        regca.yp().setDataUpdated();
+      }
+
+      /// Numbers regca y and yp together, the bus after the regca block,
+      /// and the command signals at their port indices, matching the
+      /// Jacobian layout. Write state values first; numbering resets each
+      /// dependency map. Numbering an unattached command is a no-op for the
+      /// model.
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture)
+      {
+        auto* y     = fixture.regca.y().getData();
+        auto* yp    = fixture.regca.yp().getData();
+        auto* bus_y = fixture.bus.y().getData();
+
+        const auto regca_size = static_cast<size_t>(fixture.regca.size());
+        for (size_t i = 0; i < regca_size; ++i)
+        {
+          y[i].setVariableNumber(i);
+          yp[i].setVariableNumber(i);
+        }
+        for (size_t i = 0; i < static_cast<size_t>(fixture.bus.size()); ++i)
+        {
+          bus_y[i].setVariableNumber(i + regca_size);
+        }
+        fixture.ipcmd.setVariableNumber(fixture.ipcmd_index);
+        fixture.iqcmd.setVariableNumber(fixture.iqcmd_index);
+
+        fixture.regca.y().setDataUpdated();
+        fixture.regca.yp().setDataUpdated();
+        fixture.bus.y().setDataUpdated();
       }
 
       bool invalidParameterCase(PhasorDynamics::Bus<ScalarT, IdxT>& bus, Params param, RealT value)
@@ -1041,12 +830,12 @@ namespace GridKit
         const auto* yp      = regca.yp().getData();
         for (size_t i = 0; i < static_cast<size_t>(regca.size()); ++i)
         {
-          if (!isEqual(f[i], static_cast<ScalarT>(0.0), kTol))
+          if (!isEqual(f[i], 0.0, kTol))
           {
             std::cout << "REGCA residual row " << i << " is " << f[i] << "\n";
             success = false;
           }
-          if (!isEqual(yp[i], static_cast<ScalarT>(0.0), kTol))
+          if (!isEqual(yp[i], 0.0, kTol))
           {
             std::cout << "REGCA derivative row " << i << " is " << yp[i] << "\n";
             success = false;
@@ -1065,161 +854,96 @@ namespace GridKit
           return true;
         }
 
-        std::cout << label << " mismatch: " << actual << " != " << expected << "\n";
+        std::cout << label << " mismatch: " << std::setprecision(15) << actual
+                  << " != " << expected << "\n";
         return false;
       }
 
-      void setResidualState(PhasorDynamics::Converter::Regca<ScalarT, IdxT>& regca)
+      /// Raises verbosity just long enough to flag intentionally provoked
+      /// logs, so expected errors in the output are not mistaken for
+      /// failures.
+      void noteExpectedLogs(const char* message) const
       {
-        auto* y  = regca.y().getData();
-        auto* yp = regca.yp().getData();
-
-        for (size_t i = 0; i < kStateY.size(); ++i)
-        {
-          y[i] = static_cast<ScalarT>(kStateY[i]);
-        }
-        for (size_t i = 0; i < kStateYp.size(); ++i)
-        {
-          yp[i] = static_cast<ScalarT>(kStateYp[i]);
-        }
-
-        regca.y().setDataUpdated();
-        regca.yp().setDataUpdated();
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << message << "\n";
+        Log::setVerbosity(previous_verbosity);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      void setResidualStateDep(
-          PhasorDynamics::Converter::Regca<DependencyTracking::Variable, IdxT>& regca,
-          PhasorDynamics::Bus<DependencyTracking::Variable, IdxT>&              bus)
+      /// The answer-key state moved to the HVRCM transition point, where
+      /// the Jacobian has the richest structure.
+      template <typename T>
+      void setJacobianState(PhasorDynamics::Converter::Regca<T, IdxT>& regca)
       {
-        auto* bus_y = bus.y().getData();
-        auto* y     = regca.y().getData();
-        auto* yp    = regca.yp().getData();
-
-        bus_y[0].setValue(kStateVr);
-        bus_y[1].setValue(kStateVi);
-
-        for (size_t i = 0; i < kStateY.size(); ++i)
-        {
-          y[i].setValue(kStateY[i]);
-        }
-        for (size_t i = 0; i < kStateYp.size(); ++i)
-        {
-          yp[i].setValue(kStateYp[i]);
-        }
-
-        bus.y().setDataUpdated();
+        setAnswerKeyState(regca);
+        auto* y                 = regca.y().getData();
+        y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit - kHvrcmTransition;
+        y[index(Vars::IQEXTRA)] = kHvrcmTransition;
         regca.y().setDataUpdated();
-        regca.yp().setDataUpdated();
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
+          const Data& data,
+          TestStatus& success)
       {
         using DepVar = DependencyTracking::Variable;
 
-        auto data                    = makeDynamicData();
-        data.parameters[Params::mva] = static_cast<RealT>(50.0);
+        Fixture<DepVar> fixture(data, kStateVr, kStateVi);
+        fixture.attachIpcmd(kStateIpcmd);
+        fixture.attachIqcmd(kStateIqcmd);
+        success *= fixture.initialize();
 
-        PhasorDynamics::Bus<DepVar, IdxT>              bus(DepVar{kStateVr}, DepVar{kStateVi});
-        PhasorDynamics::Converter::Regca<DepVar, IdxT> regca(&bus, data);
+        fixture.ipcmd = kStateIpcmd;
+        fixture.iqcmd = kStateIqcmd;
+        setJacobianState(fixture.regca);
+        numberVariables(fixture);
 
-        PhasorDynamics::SignalNode<DepVar, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<DepVar, IdxT> iqcmd_node;
-        DepVar                                   ipcmd_value{kStateIpcmd};
-        DepVar                                   iqcmd_value{kStateIqcmd};
-        IdxT                                     ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT                                     iqcmd_index = ipcmd_index + 1;
+        success *= (fixture.evaluate() == 0);
 
-        bus.allocate();
-        regca.allocate();
-        bus.initialize();
-        setResidualStateDep(regca, bus);
-        auto* y     = regca.y().getData();
-        auto* yp    = regca.yp().getData();
-        auto* bus_y = bus.y().getData();
+        const auto  regca_size = static_cast<size_t>(fixture.regca.size());
+        const auto* f          = fixture.regca.getResidual().getData();
 
-        y[index(Vars::VT)].setValue(kHvrcmTransitionVoltage);
-        y[index(Vars::IQEXTRA)].setValue(kHvrcmTransition);
-
-        for (IdxT i = 0; i < regca.size(); ++i)
+        std::vector<DepVar::DependencyMap> dependencies(
+            regca_size + static_cast<size_t>(fixture.bus.size()));
+        for (size_t i = 0; i < regca_size; ++i)
         {
-          y[static_cast<size_t>(i)].setVariableNumber(i);
-          yp[static_cast<size_t>(i)].setVariableNumber(i);
+          dependencies[i] = f[i].getDependencies();
         }
-        for (IdxT i = 0; i < bus.size(); ++i)
-        {
-          bus_y[static_cast<size_t>(i)].setVariableNumber(i + regca.size());
-        }
-        regca.y().setDataUpdated();
-        regca.yp().setDataUpdated();
-        bus.y().setDataUpdated();
-        ipcmd_value.setVariableNumber(ipcmd_index);
-        iqcmd_value.setVariableNumber(iqcmd_index);
-
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
-
-        bus.evaluateResidual();
-        regca.evaluateResidual();
-
-        std::vector<DependencyTracking::Variable::DependencyMap> dependencies(
-            static_cast<size_t>(regca.size() + bus.size()));
-        const auto* f = regca.getResidual().getData();
-        for (IdxT i = 0; i < regca.size(); ++i)
-        {
-          dependencies[static_cast<size_t>(i)] =
-              f[static_cast<size_t>(i)].getDependencies();
-        }
-        dependencies[static_cast<size_t>(regca.size())]     = bus.Ir().getDependencies();
-        dependencies[static_cast<size_t>(regca.size() + 1)] = bus.Ii().getDependencies();
+        dependencies[regca_size]     = fixture.bus.Ir().getDependencies();
+        dependencies[regca_size + 1] = fixture.bus.Ii().getDependencies();
 
         return dependencies;
       }
 
-      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian()
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+          const Data& data,
+          TestStatus& success)
       {
-        auto data                    = makeDynamicData();
-        data.parameters[Params::mva] = static_cast<RealT>(50.0);
+        Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
+        fixture.attachIpcmd(kStateIpcmd);
+        fixture.attachIqcmd(kStateIqcmd);
+        success *= fixture.initialize();
 
-        PhasorDynamics::Bus<ScalarT, IdxT>              bus(kStateVr, kStateVi);
-        PhasorDynamics::Converter::Regca<ScalarT, IdxT> regca(&bus, data);
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> ipcmd_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> iqcmd_node;
-        ScalarT                                   ipcmd_value{kStateIpcmd};
-        ScalarT                                   iqcmd_value{kStateIqcmd};
-        IdxT                                      ipcmd_index = static_cast<IdxT>(regca.size() + bus.size());
-        IdxT                                      iqcmd_index = ipcmd_index + 1;
-
-        bus.allocate();
-        regca.allocate();
-        for (IdxT i = 0; i < bus.size(); ++i)
+        // Number the bus variables and residual rows after the regca block,
+        // matching the dependency-tracking layout. evaluateJacobian() reads
+        // these indices at call time, so assigning them after bring-up works.
+        for (IdxT i = 0; i < fixture.bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + regca.size());
-          bus.setResidualIndex(i, i + regca.size());
+          fixture.bus.setVariableIndex(i, i + fixture.regca.size());
+          fixture.bus.setResidualIndex(i, i + fixture.regca.size());
         }
 
-        bus.initialize();
-        setResidualState(regca);
-        auto* y                 = regca.y().getData();
-        y[index(Vars::VT)]      = static_cast<ScalarT>(kHvrcmTransitionVoltage);
-        y[index(Vars::IQEXTRA)] = static_cast<ScalarT>(kHvrcmTransition);
-        regca.y().setDataUpdated();
-        regca.updateTime(0.0, 1.0);
+        fixture.ipcmd = kStateIpcmd;
+        fixture.iqcmd = kStateIqcmd;
+        setJacobianState(fixture.regca);
+        fixture.regca.updateTime(0.0, 1.0);
 
-        ipcmd_node.set(&ipcmd_value, &ipcmd_index);
-        iqcmd_node.set(&iqcmd_value, &iqcmd_index);
-        regca.getSignals().template attachSignalNode<Ext::IPCMD>(&ipcmd_node);
-        regca.getSignals().template attachSignalNode<Ext::IQCMD>(&iqcmd_node);
+        success *= (fixture.evaluate() == 0);
+        success *= (fixture.regca.evaluateJacobian() == 0);
+        success *= (fixture.regca.constructCsr() == 0);
 
-        bus.evaluateResidual();
-        regca.evaluateResidual();
-        regca.evaluateJacobian();
-
-        regca.constructCsr();
-        return MapFromCsr(regca.getCsrJacobian());
+        return MapFromCsr(fixture.regca.getCsrJacobian());
       }
 #endif
     };

@@ -73,15 +73,21 @@ namespace GridKit
       template <typename scalar_type, typename index_type>
       scalar_type Regca<scalar_type, index_type>::lpTarget(scalar_type ip) const
       {
-        const ScalarT sigma_ip = Math::sigmoid(ip);
-        return -Rpmax_ * (ONE<RealT> - sigma_ip) - Mp_ * sigma_ip;
+        if (ip <= ZERO<RealT>)
+        {
+          return static_cast<ScalarT>(-Rpmax_);
+        }
+        return static_cast<ScalarT>(-Mp_);
       }
 
       template <typename scalar_type, typename index_type>
       scalar_type Regca<scalar_type, index_type>::upTarget(scalar_type ip) const
       {
-        const ScalarT sigma_ip = Math::sigmoid(ip);
-        return Mp_ * (ONE<RealT> - sigma_ip) + Rpmax_ * sigma_ip;
+        if (ip >= ZERO<RealT>)
+        {
+          return static_cast<ScalarT>(Rpmax_);
+        }
+        return static_cast<ScalarT>(Mp_);
       }
 
       template <typename scalar_type, typename index_type>
@@ -312,8 +318,8 @@ namespace GridKit
         check(Rqmin_ < ZERO<RealT> && ZERO<RealT> < Rqmax_, "Rqmin < 0 < Rqmax is required");
         check(IL1_ >= ZERO<RealT>, "IL1 must be non-negative");
         check(ZERO<RealT> <= VL0_ && VL0_ < VL1_, "VL0/VL1 must satisfy 0 <= VL0 < VL1");
-        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_, "VA0/VA1 must satisfy 0 <= VA0 < VA1");
-        check(Vhvmax_ > ZERO<RealT>, "Vhvmax must be positive");
+        check(ZERO<RealT> <= VA0_ && VA0_ < VA1_ && VA1_ < Vhvmax_,
+              "VA0/VA1/Vhvmax must satisfy 0 <= VA0 < VA1 < Vhvmax");
 
         if (signals_.template isAttached<RegcaExternalVariables::IPCMD>())
         {

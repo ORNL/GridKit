@@ -6,26 +6,13 @@ int main()
 
   GridKit::Testing::ConverterRegcaTests<double, size_t> test;
 
-  result += test.constructionAndValidation();
-  result += test.parameterValidation();
-  result += test.initializesFromPowerFlowAndPublishesSignals();
-  result += test.unconnectedCommandsRemainConstant();
-  result += test.initializesNearHighVoltageLimit();
-  result += test.rejectsInitializationAtOrAboveHighVoltageLimit();
-  result += test.rejectsInitializationBelowLvacmBreakpoint();
-  result += test.rejectsInitializationAtOrAboveLvplCeiling();
-  result += test.rejectsInitializationWithActiveLvacm();
-  result += test.initializesAtLvacmUpperBreakpoint();
-  result += test.rejectsZeroTerminalVoltage();
-  result += test.signalVerification();
-  result += test.nullBusVerification();
-  result += test.busInjectionUsesSystemBase();
+  result += test.validation();
+  result += test.initializationAndSignals();
+  result += test.initializationDomain();
   result += test.residualEquations();
-  result += test.highVoltageReactiveCurrentConstraint();
-  result += test.highVoltageReactiveCurrentJacobian();
-  result += test.lvplCeilingJacobian();
-  result += test.positiveInitialReactivePowerSelectsUpperIqRateLimit();
-  result += test.lvplCeilingDrivesActiveCurrentDown();
+  result += test.activeCurrentControl();
+  result += test.reactiveCurrentControl();
+  result += test.highVoltageManagement();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
