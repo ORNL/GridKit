@@ -1,4 +1,6 @@
 #include <cassert>
+#include <chrono>
+#include <iomanip>
 #include <iostream>
 
 #include <GridKit/Definitions.hpp>
@@ -736,6 +738,18 @@ namespace GridKit
         addFault(fault);
       }
 
+      IdxT profile_end           = 0;
+      profile_component_ends_[0] = profile_end += static_cast<IdxT>(data.adapter.size());
+      profile_component_ends_[1] = profile_end += static_cast<IdxT>(data.branch.size());
+      profile_component_ends_[2] = profile_end += static_cast<IdxT>(data.loadz.size() + data.loadzip.size());
+      profile_component_ends_[3] = profile_end += static_cast<IdxT>(data.genrou.size() + data.gensal.size() + data.genclassical.size());
+      profile_component_ends_[4] = profile_end += static_cast<IdxT>(data.regca.size() + data.reecb.size() + data.repca.size());
+      profile_component_ends_[5] = profile_end += static_cast<IdxT>(data.gov.size() + data.hygov.size() + data.gastpti.size());
+      profile_component_ends_[6] = profile_end += static_cast<IdxT>(data.stabilizer.size());
+      profile_component_ends_[7] = profile_end += static_cast<IdxT>(data.exciter.size() + data.esdc1a.size() + data.sexspti.size());
+      profile_component_ends_[8] = profile_end += static_cast<IdxT>(data.constant_source.size());
+      profile_component_ends_[9] = profile_end += static_cast<IdxT>(data.bus_fault.size());
+
       for (const auto& sink : data.monitor_sink)
       {
         monitor_->addSink(sink);
@@ -1119,19 +1133,67 @@ namespace GridKit
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
+      using ProfileClock = std::chrono::steady_clock;
+
+      const auto bus_start = ProfileClock::now();
       for (const auto& bus : buses_)
       {
         bus->evaluateResidual();
       }
+      profile_bus_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_start).count();
 
-      for (const auto& component : components_)
+      IdxT profile_begin = 0;
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
       {
-        component->evaluateResidual();
+        const auto group_start = ProfileClock::now();
+        for (IdxT i = profile_begin; i < profile_component_ends_[group]; ++i)
+        {
+          components_[i]->evaluateResidual();
+        }
+        profile_residual_seconds_[group] += std::chrono::duration<double>(ProfileClock::now() - group_start).count();
+        profile_begin                     = profile_component_ends_[group];
+      }
+      for (IdxT i = profile_begin; i < static_cast<IdxT>(components_.size()); ++i)
+      {
+        components_[i]->evaluateResidual();
       }
 
       f_.setDataUpdated();
+      ++profile_residual_calls_;
 
       return 0;
+    }
+
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::printResidualPerformanceStats() const
+    {
+      static constexpr std::array<const char*, profile_group_count_> labels = {
+          "adapter",
+          "branch",
+          "load",
+          "generator",
+          "converter",
+          "governor",
+          "stabilizer",
+          "exciter",
+          "source",
+          "fault"};
+
+      const auto flags     = std::cout.flags();
+      const auto precision = std::cout.precision();
+
+      std::cout << std::fixed << std::setprecision(6)
+                << "\nSYSTEM_RESIDUAL_PROFILE_BEGIN\n"
+                << "system_residual_calls=" << profile_residual_calls_ << '\n'
+                << "bus_residual_seconds=" << profile_bus_residual_seconds_ << '\n';
+      for (std::size_t group = 0; group < profile_group_count_; ++group)
+      {
+        std::cout << labels[group] << "_residual_seconds=" << profile_residual_seconds_[group] << '\n';
+      }
+      std::cout << "SYSTEM_RESIDUAL_PROFILE_END\n";
+
+      std::cout.flags(flags);
+      std::cout.precision(precision);
     }
 
     /**

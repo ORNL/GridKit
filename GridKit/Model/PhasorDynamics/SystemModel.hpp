@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <map>
 #include <memory>
 #include <vector>
@@ -88,10 +89,11 @@ namespace GridKit
       bool monitoring() const override;
       void printMonitoredVariables() const override;
 
-      int tagDifferentiable() override;
-      int setAbsoluteTolerance(RealT rel_tol) override;
-      int evaluateResidual() override;
-      int evaluateJacobian() override;
+      int  tagDifferentiable() override;
+      int  setAbsoluteTolerance(RealT rel_tol) override;
+      int  evaluateResidual() override;
+      int  evaluateJacobian() override;
+      void printResidualPerformanceStats() const;
 
       void updateTime(RealT t, RealT a) override;
 
@@ -120,6 +122,12 @@ namespace GridKit
 
       /// Variable monitor
       std::unique_ptr<MonitorT> monitor_;
+
+      static constexpr std::size_t             profile_group_count_ = 10;
+      std::array<IdxT, profile_group_count_>   profile_component_ends_{};
+      std::array<double, profile_group_count_> profile_residual_seconds_{};
+      double                                   profile_bus_residual_seconds_{};
+      long int                                 profile_residual_calls_{};
     }; // class SystemModel
 
   } // namespace PhasorDynamics
