@@ -163,18 +163,10 @@ namespace GridKit
       if (auto ir_port = ports_.in.template port<SignalIn::ir>())
       {
         bus_->Ir() += ir_port.readSignal();
-        if (bus_->size() > 0)
-        {
-          bus_->getResidual().setDataUpdated();
-        }
       }
       if (auto ii_port = ports_.in.template port<SignalIn::ii>())
       {
         bus_->Ii() += ii_port.readSignal();
-        if (bus_->size() > 0)
-        {
-          bus_->getResidual().setDataUpdated();
-        }
       }
 
       return 0;
