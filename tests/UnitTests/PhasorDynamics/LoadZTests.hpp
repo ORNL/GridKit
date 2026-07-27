@@ -44,6 +44,7 @@ namespace GridKit
 
         if (load)
         {
+          success *= (load->size() == 0);
           delete load;
         }
 
@@ -113,20 +114,24 @@ namespace GridKit
         bus.initialize();
         load.initialize();
 
+        auto* bus_y = bus.y().getData();
+        for (size_t i = 0; i < bus.size(); ++i)
+        {
+          bus_y[i].setVariableNumber(i);
+        }
+        bus.y().setDataUpdated();
+
         bus.evaluateResidual();
         load.evaluateResidual(); //< Tracks dependencies
-        load.evaluateJacobian(); //< Converts dependencies to CSR
-        auto* model_jacobian = load.getCsrJacobian();
-        auto& output_stream  = Log::misc();
-        output_stream << "Sparse Csr Matrix: Load DependencyTracking Jacobian\n";
-        model_jacobian->print(output_stream);
 
-        // Compare model Jacobian with dependencies computed analytically
-        auto ref                = analyticalJacobian(R, X);
-        auto model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
-        for (size_t i = 0; i < ref.size(); ++i)
+        auto&                                                    residuals     = bus.getResidual();
+        const auto*                                              residual_data = residuals.getData();
+        std::vector<DependencyTracking::Variable::DependencyMap> ref           = analyticalJacobian(R, X);
+
+        /// Compare dependencies computed automatically to the ones computed analytically
+        for (size_t i = 0; i < residuals.getSize(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
+          success *= (GridKit::Testing::isEqual(residual_data[i].getDependencies(), ref[i]));
         }
 
         return success.report(__func__);
@@ -188,8 +193,8 @@ namespace GridKit
 
         for (size_t i = 0; i < bus.size(); ++i)
         {
-          bus.setVariableIndex(i, i + load.size()); // Reset bus variable indices
-          bus.setResidualIndex(i, i + load.size()); // Reset bus residual indices
+          bus.setVariableIndex(i, i);
+          bus.setResidualIndex(i, i);
         }
 
         bus.initialize();
@@ -211,7 +216,7 @@ namespace GridKit
         std::vector<DependencyTracking::Variable::DependencyMap> model_dependencies = GridKit::Testing::MapFromCsr(model_jacobian);
         for (size_t i = 0; i < ref.size(); ++i)
         {
-          success *= (GridKit::Testing::isEqual(model_dependencies[i], ref[i]));
+          success *= (GridKit::Testing::isEqual(residual_data[i].getDependencies(), ref[i]));
         }
 
         return success.report(__func__);
@@ -246,8 +251,8 @@ namespace GridKit
         const RealT g = R / (R * R + X * X);
 
         std::vector<DependencyTracking::Variable::DependencyMap> dependencies(2);
-        dependencies[0] = {{0, 1.0}, {2, g}, {3, -b}};
-        dependencies[1] = {{1, 1.0}, {2, b}, {3, g}};
+        dependencies[0] = {{0, -g}, {1, b}};
+        dependencies[1] = {{0, -b}, {1, -g}};
 
         return dependencies;
       }
