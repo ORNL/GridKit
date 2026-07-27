@@ -1,20 +1,18 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <iomanip>
 #include <iostream>
-#include <limits>
 #include <sstream>
-#include <variant>
 #include <vector>
 
 #include <GridKit/AutomaticDifferentiation/DependencyTracking/Variable.hpp>
-#include <GridKit/CommonMath.hpp>
 #include <GridKit/Definitions.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPti.hpp>
 #include <GridKit/Model/PhasorDynamics/Governor/GASTPTI/GastPtiData.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNode.hpp>
-#include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
-#include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
+#include <GridKit/Model/VariableMonitorController.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
 #include <GridKit/Testing/Testing.hpp>
 #include <GridKit/Utilities/Logger/Logger.hpp>
@@ -24,6 +22,8 @@ namespace GridKit
 {
   namespace Testing
   {
+    using Log = ::GridKit::Utilities::Logger;
+
     template <typename scalar_type, typename index_type>
     class GovernorGastPtiTests
     {
@@ -31,770 +31,496 @@ namespace GridKit
       using ScalarT = scalar_type;
       using IdxT    = index_type;
       using RealT   = typename PhasorDynamics::Component<ScalarT, IdxT>::RealT;
-      using Gov     = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
-      using Data    = PhasorDynamics::Governor::GastPtiData<RealT, IdxT>;
-      using Var     = PhasorDynamics::Governor::GastPtiInternalVariables;
-      using Ext     = PhasorDynamics::Governor::GastPtiExternalVariables;
-      using Params  = PhasorDynamics::Governor::GastPtiParameters;
-      using Mon     = PhasorDynamics::Governor::GastPtiMonitorableVariables;
-      using Mode    = PhasorDynamics::Governor::ResponseMode;
 
       GovernorGastPtiTests()  = default;
       ~GovernorGastPtiTests() = default;
 
-      TestOutcome constructor()
+      // GASTPTI initialization seats the load demand behind the smooth LV
+      // gate through the exact inverse smooth ramp, so steady residuals rest
+      // at O(1e-15). Behavioral comparisons use a tolerance well above that
+      // gap and well below every pinned answer-key digit.
+      static constexpr RealT kBehaviorTol = 1.0e-9;
+
+      // Enzyme and dependency tracking traverse the same smooth expressions
+      // differently; their double-precision derivatives agree to O(1e-10).
+      static constexpr RealT kJacobianTol = 1.0e-9;
+
+      /// Construction and every verify() error class, including parameter
+      /// types, parameter relationships, the mode-dependent valve limits,
+      /// and signal linkage.
+      TestOutcome validation()
       {
         TestStatus success = true;
 
-        Gov model(makeTestData());
-
-        const auto* monitor  = model.getMonitor();
-        success             *= (model.size() == static_cast<IdxT>(Var::MAXIMUM));
-        success             *= (monitor != nullptr);
-        if (monitor != nullptr)
-        {
-          success *= (!monitor->empty());
-        }
-        success *= (model.verify() == 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome zeroInitialResidual()
-      {
-        TestStatus success = true;
-
-        Gov model(makeTestData());
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        const ScalarT                             pmech0 = scalar(kInitialPmech);
-        ScalarT                                   pmech_value{0.0};
-        ScalarT                                   omega_value = scalar(kInitialOmega);
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        pmech_node.set(&pmech_value, &pmech_index);
-        omega_node.set(&omega_value, &omega_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(pmech0);
-        success *= pmech_node.linked();
-        success *= (pmech_node.getVariableIndex() == static_cast<IdxT>(Var::PMECH));
-
-        success *= (model.verify() == 0);
-        success *= (model.initialize() == 0);
-        success *= (model.tagDifferentiable() == 0);
-        success *= (model.evaluateResidual() == 0);
-
-        const ScalarT xflow0 = pmech0 + scalar(kDturb) * omega_value;
-        const ScalarT vtemp0 = scalar(kAt) + scalar(kKt) * (scalar(kAt) - xflow0);
-
-        success *= isEqual(model.y().getData()[index(Var::XVALVE)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::XFLOW)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::XTEMP)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLOAD)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VTEMP)], vtemp0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLV)], xflow0, scalar(kTolerance));
-        success *= (model.tag()[index(Var::XVALVE)] == true);
-        success *= (model.tag()[index(Var::XFLOW)] == true);
-        success *= (model.tag()[index(Var::XTEMP)] == true);
-
-        checkZeroResidual(model, success);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome baseConversion()
-      {
-        TestStatus success = true;
-
-        auto data                      = makeTestData();
-        data.parameters[Params::Trate] = static_cast<RealT>(kConversionTrate);
-        Gov model(data);
-        model.setSystemBase(static_cast<RealT>(kSystemFrequency),
-                            static_cast<RealT>(kConversionSystemBase * 1.0e6));
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        const ScalarT                             pmech0 = scalar(kConversionInitialPmech);
-        ScalarT                                   pmech_value{0.0};
-        ScalarT                                   omega_value = scalar(kInitialOmega);
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        pmech_node.set(&pmech_value, &pmech_index);
-        omega_node.set(&omega_value, &omega_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(pmech0);
-        success *= (model.verify() == 0);
-        success *= (model.initialize() == 0);
-        success *= (model.evaluateResidual() == 0);
-
-        const ScalarT pmech_component =
-            pmech0 * scalar(kConversionSystemBase / kConversionTrate);
-        const ScalarT xflow0 = pmech_component + scalar(kDturb) * omega_value;
-        const ScalarT vtemp0 = scalar(kAt) + scalar(kKt) * (scalar(kAt) - xflow0);
-
-        success *= isEqual(model.y().getData()[index(Var::XVALVE)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::XFLOW)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::XTEMP)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLOAD)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VTEMP)], vtemp0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLV)], xflow0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::PMECH)], pmech0, scalar(kTolerance));
-
-        checkZeroResidual(model, success);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome absoluteTolerance()
-      {
-        TestStatus success = true;
-
-        Gov model(makeTestData());
-
-        success                        *= (model.allocate() == 0);
-        success                        *= (model.setAbsoluteTolerance(static_cast<RealT>(1.0e-7)) == 0);
-        const auto& absolute_tolerance  = model.absoluteTolerance();
-        success                        *= (absolute_tolerance.getSize() == static_cast<IdxT>(Var::MAXIMUM));
-
-        const auto* tolerances = absolute_tolerance.getData();
-        for (IdxT i = 0; i < absolute_tolerance.getSize(); ++i)
-        {
-          success *= isEqual(tolerances[i], scalar(1.0e-7), scalar(kTolerance));
-        }
-
-        return success.report(__func__);
-      }
-
-      TestOutcome prefSignal()
-      {
-        TestStatus success = true;
-
-        Gov model(makeTestData());
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        const ScalarT                             pmech0 = scalar(kInitialPmech);
-        ScalarT                                   pmech_value{0.0};
-        ScalarT                                   omega_value = scalar(kInitialOmega);
-        ScalarT                                   pref_value{0.0};
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        IdxT                                      pref_index  = omega_index + 1;
-        pmech_node.set(&pmech_value, &pmech_index);
-        omega_node.set(&omega_value, &omega_index);
-        pref_node.set(&pref_value, &pref_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(pmech0);
-        success *= (model.verify() == 0);
-        success *= (model.initialize() == 0);
-        success *= isEqual(pref_node.read(),
-                           prefForInitialPoint(pmech0, omega_value),
-                           scalar(kTolerance));
-        success *= (model.evaluateResidual() == 0);
-        checkZeroResidual(model, success);
-
-        pref_value += scalar(kPrefStep);
-        success    *= (model.evaluateResidual() == 0);
-        success    *= isEqual(model.getResidual().getData()[index(Var::VLOAD)],
-                           scalar(kR * kPrefStep),
-                           scalar(kTolerance));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome prefSignalBaseConversion()
-      {
-        TestStatus success = true;
-
-        auto data                      = makeTestData();
-        data.parameters[Params::Trate] = static_cast<RealT>(kConversionTrate);
-        Gov model(data);
-        model.setSystemBase(static_cast<RealT>(kSystemFrequency),
-                            static_cast<RealT>(kConversionSystemBase * 1.0e6));
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        const ScalarT                             pmech0 = scalar(kConversionInitialPmech);
-        ScalarT                                   pmech_value{0.0};
-        ScalarT                                   omega_value = scalar(kInitialOmega);
-        ScalarT                                   pref_value{0.0};
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        IdxT                                      pref_index  = omega_index + 1;
-        pmech_node.set(&pmech_value, &pmech_index);
-        omega_node.set(&omega_value, &omega_index);
-        pref_node.set(&pref_value, &pref_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(pmech0);
-        success *= (model.verify() == 0);
-        success *= (model.initialize() == 0);
-
-        const ScalarT pmech_component =
-            pmech0 * scalar(kConversionSystemBase / kConversionTrate);
-        const ScalarT xflow0         = pmech_component + scalar(kDturb) * omega_value;
-        const ScalarT pref_component = xflow0 + omega_value / scalar(kR);
-        const ScalarT pref_system =
-            pref_component * scalar(kConversionTrate / kConversionSystemBase);
-
-        success *= isEqual(pref_node.read(), pref_system, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLOAD)], xflow0, scalar(kTolerance));
-        success *= (model.evaluateResidual() == 0);
-        checkZeroResidual(model, success);
-
-        pref_value += scalar(kPrefStep);
-        success    *= (model.evaluateResidual() == 0);
-        success    *= isEqual(model.getResidual().getData()[index(Var::VLOAD)],
-                           scalar(kR * kConversionSystemBase / kConversionTrate * kPrefStep),
-                           scalar(kTolerance));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome residual()
-      {
-        TestStatus success = true;
-
-        Gov model(makeTestData());
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        ScalarT                                   omega_value = scalar(kResidualOmega);
-        ScalarT                                   pref_value  = scalar(kResidualPref);
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        IdxT                                      pref_index  = omega_index + 1;
-        omega_node.set(&omega_value, &omega_index);
-        pref_node.set(&pref_value, &pref_index);
-
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-
-        success *= (model.allocate() == 0);
-
-        const ScalarT xvalve     = scalar(kResidualXvalve);
-        const ScalarT xflow      = scalar(kResidualXflow);
-        const ScalarT xtemp      = scalar(kResidualXtemp);
-        const ScalarT vload      = scalar(kResidualVload);
-        const ScalarT vtemp      = scalar(kResidualVtemp);
-        const ScalarT vlv        = scalar(kResidualVlv);
-        const ScalarT pmech      = scalar(kResidualPmech);
-        const ScalarT xvalve_dot = scalar(kResidualXvalveDot);
-        const ScalarT xflow_dot  = scalar(kResidualXflowDot);
-        const ScalarT xtemp_dot  = scalar(kResidualXtempDot);
-
-        model.y().getData()[index(Var::XVALVE)] = xvalve;
-        model.y().getData()[index(Var::XFLOW)]  = xflow;
-        model.y().getData()[index(Var::XTEMP)]  = xtemp;
-        model.y().getData()[index(Var::VLOAD)]  = vload;
-        model.y().getData()[index(Var::VTEMP)]  = vtemp;
-        model.y().getData()[index(Var::VLV)]    = vlv;
-        model.y().getData()[index(Var::PMECH)]  = pmech;
-
-        model.yp().getData()[index(Var::XVALVE)] = xvalve_dot;
-        model.yp().getData()[index(Var::XFLOW)]  = xflow_dot;
-        model.yp().getData()[index(Var::XTEMP)]  = xtemp_dot;
-
-        model.y().setDataUpdated();
-        model.yp().setDataUpdated();
-
-        success *= (model.verify() == 0);
-        success *= (model.evaluateResidual() == 0);
-
-        const ScalarT              valve_target = vlv - xvalve;
-        const ScalarT              selected_vlv = vload;
-        const std::vector<ScalarT> expected     = {
-            -xvalve_dot + valve_target / scalar(kT1),
-            -xflow_dot + (-xflow + xvalve) / scalar(kT2),
-            -xtemp_dot + (-xtemp + xflow) / scalar(kT3),
-            -omega_value + scalar(kR) * (pref_value - vload),
-            -vtemp + scalar(kAt) + scalar(kKt) * (scalar(kAt) - xtemp),
-            -vlv + selected_vlv,
-            -pmech + xflow - scalar(kDturb) * omega_value,
-        };
-
-        checkResidual(model, expected, success);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome antiWindupLimiter()
-      {
-        TestStatus success = true;
-
-        Gov model(makeTestData());
-        success *= (model.allocate() == 0);
-
-        const RealT above_vmax = kVmax + kValveExcess;
-        const RealT below_vmin = kVmin - kValveExcess;
-
-        // Opening drive against the saturated upper limit is blocked.
-        checkValveResidual(model, above_vmax, above_vmax + kValveDrive, 0.0, success);
-        // Closing drive away from the saturated upper limit passes.
-        checkValveResidual(model, above_vmax, above_vmax - kValveDrive, -kValveDrive / kT1, success);
-        // Closing drive against the saturated lower limit is blocked.
-        checkValveResidual(model, below_vmin, below_vmin - kValveDrive, 0.0, success);
-        // Opening drive away from the saturated lower limit passes.
-        checkValveResidual(model, below_vmin, below_vmin + kValveDrive, kValveDrive / kT1, success);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome responseModes()
-      {
-        TestStatus success = true;
-
-        auto fixed_data                     = makeTestData();
-        fixed_data.parameters[Params::mode] = static_cast<IdxT>(Mode::Fixed);
-        fixed_data.parameters[Params::Vmin] = static_cast<RealT>(kResidualXvalve);
-        fixed_data.parameters[Params::Vmax] = static_cast<RealT>(kResidualXvalve);
-
-        Gov fixed_model(fixed_data);
-        success *= (fixed_model.verify() == 0);
-        success *= (fixed_model.allocate() == 0);
-        setDynamicProbe(fixed_model);
-        success *= (fixed_model.evaluateResidual() == 0);
-
-        success *= isEqual(fixed_model.getResidual().getData()[index(Var::XVALVE)],
-                           -scalar(kResidualXvalveDot),
-                           scalar(kTolerance));
-        success *= isEqual(fixed_model.getResidual().getData()[index(Var::XFLOW)],
-                           -scalar(kResidualXflowDot),
-                           scalar(kTolerance));
-        success *= isEqual(fixed_model.getResidual().getData()[index(Var::XTEMP)],
-                           -scalar(kResidualXtempDot),
-                           scalar(kTolerance));
-
-        auto down_only_data                     = makeTestData();
-        down_only_data.parameters[Params::mode] = static_cast<IdxT>(Mode::DownOnly);
-
-        Gov down_only_model(down_only_data);
-        success *= (down_only_model.verify() == 0);
-        success *= (down_only_model.allocate() == 0);
-        setDynamicProbe(down_only_model);
-        success *= (down_only_model.evaluateResidual() == 0);
-
-        success *= isEqual(down_only_model.getResidual().getData()[index(Var::XVALVE)],
-                           -scalar(kResidualXvalveDot)
-                               + scalar(kResidualVlv - kResidualXvalve) / scalar(kT1),
-                           scalar(kTolerance));
-        success *= isEqual(down_only_model.getResidual().getData()[index(Var::XFLOW)],
-                           -scalar(kResidualXflowDot)
-                               + scalar(-kResidualXflow + kResidualXvalve) / scalar(kT2),
-                           scalar(kTolerance));
-        success *= isEqual(down_only_model.getResidual().getData()[index(Var::XTEMP)],
-                           -scalar(kResidualXtempDot)
-                               + scalar(-kResidualXtemp + kResidualXflow) / scalar(kT3),
-                           scalar(kTolerance));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome narrowLimitWarning()
-      {
-        TestStatus success = true;
-
-        using Log = Utilities::Logger;
-
-        const auto         verbosity = Log::verbosity();
-        std::ostringstream messages;
-        Log::setOutput(messages);
-        Log::setVerbosity(Log::WARNINGS);
-
-        auto narrow_data                     = makeTestData();
-        narrow_data.parameters[Params::Vmax] = static_cast<RealT>(0.01);
-        Gov narrow_model(narrow_data);
-        success *= (narrow_model.verify() == 0);
-        success *= (messages.str().find("maximum anti-windup gate") != std::string::npos);
-
-        messages.str("");
-        messages.clear();
-        Gov wide_model(makeTestData());
-        success *= (wide_model.verify() == 0);
-        success *= (messages.str().find("maximum anti-windup gate") == std::string::npos);
-
-        messages.str("");
-        messages.clear();
-        auto fixed_data                     = narrow_data;
-        fixed_data.parameters[Params::mode] = static_cast<IdxT>(Mode::Fixed);
-        Gov fixed_model(fixed_data);
-        success *= (fixed_model.verify() == 0);
-        success *= (messages.str().find("maximum anti-windup gate") == std::string::npos);
-
-        Log::setOutput(std::cout);
-        Log::setVerbosity(verbosity);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome initializationValidation()
-      {
-        TestStatus success = true;
-
-        auto valve_limited_data                   = makeTestData();
-        // Keep the temperature margin open so only the valve limit is exercised.
-        valve_limited_data.parameters[Params::At] = static_cast<RealT>(kVmax + 2.0 * kValveExcess);
-        Gov valve_limited_model(valve_limited_data);
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> valve_limited_pmech_node;
-        ScalarT                                   valve_limited_pmech_value{0.0};
-        IdxT                                      valve_limited_pmech_index = INVALID_INDEX<IdxT>;
-        valve_limited_pmech_node.set(&valve_limited_pmech_value, &valve_limited_pmech_index);
-
-        valve_limited_model.getSignals().template assignSignalNode<Var::PMECH>(
-            &valve_limited_pmech_node);
-
-        success *= (valve_limited_model.allocate() == 0);
-        valve_limited_pmech_node.init(scalar(kVmax + kValveExcess));
-        // Over-rated dispatch warns but still initializes and evaluates.
-        success *= (valve_limited_model.initialize() == 0);
-        success *= (valve_limited_model.evaluateResidual() == 0);
-        checkZeroResidual(valve_limited_model, success);
-
-        auto temperature_limited_data                   = makeTestData();
-        temperature_limited_data.parameters[Params::At] = static_cast<RealT>(0.0);
-        Gov temperature_limited_model(temperature_limited_data);
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> temperature_limited_pmech_node;
-        ScalarT                                   temperature_limited_pmech_value{0.0};
-        IdxT                                      temperature_limited_pmech_index = INVALID_INDEX<IdxT>;
-        temperature_limited_pmech_node.set(&temperature_limited_pmech_value,
-                                           &temperature_limited_pmech_index);
-
-        temperature_limited_model.getSignals().template assignSignalNode<Var::PMECH>(
-            &temperature_limited_pmech_node);
-
-        success *= (temperature_limited_model.allocate() == 0);
-        temperature_limited_pmech_node.init(scalar(kInitialPmech));
-        success *= (temperature_limited_model.initialize() != 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome smoothMinimumInitialization()
-      {
-        TestStatus success = true;
-
-        const RealT at_value = kInitialPmech + kNearGateMargin / (1.0 + kKt);
-
-        auto data                   = makeTestData();
-        data.parameters[Params::At] = at_value;
-        Gov model(data);
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        ScalarT                                   pmech_value{0.0};
-        ScalarT                                   pref_value{0.0};
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        IdxT                                      pref_index  = static_cast<IdxT>(Var::MAXIMUM);
-        pmech_node.set(&pmech_value, &pmech_index);
-        pref_node.set(&pref_value, &pref_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(scalar(kInitialPmech));
-        success *= (model.initialize() == 0);
-        success *= (model.evaluateResidual() == 0);
-
-        const ScalarT xflow0 = scalar(kInitialPmech);
-        const ScalarT at     = scalar(at_value);
-        const ScalarT vtemp0 = at + scalar(kKt) * (at - xflow0);
-        const RealT   margin = static_cast<RealT>(vtemp0 - xflow0);
-        const ScalarT vload0 = vtemp0 - scalar(Math::iramp(margin));
-
-        success *= (margin > ZERO<RealT>);
-        success *= isEqual(margin, kNearGateMargin, kTolerance);
-        success *= (vload0 > vtemp0);
-        success *= isEqual(model.y().getData()[index(Var::VLOAD)], vload0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VTEMP)], vtemp0, scalar(kTolerance));
-        success *= isEqual(model.y().getData()[index(Var::VLV)], xflow0, scalar(kTolerance));
-        success *= isEqual(pref_node.read(), vload0, scalar(kTolerance));
-
-        checkZeroResidual(model, success);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome smoothMinimumEqualityRejected()
-      {
-        TestStatus success = true;
-
-        auto data                   = makeTestData();
-        data.parameters[Params::At] = static_cast<RealT>(kInitialPmech);
-        Gov model(data);
-
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pmech_node;
-        ScalarT                                   pmech_value{0.0};
-        IdxT                                      pmech_index = INVALID_INDEX<IdxT>;
-        pmech_node.set(&pmech_value, &pmech_index);
-
-        model.getSignals().template assignSignalNode<Var::PMECH>(&pmech_node);
-
-        success *= (model.allocate() == 0);
-        pmech_node.init(scalar(kInitialPmech));
-        success *= (model.initialize() != 0);
-
-        return success.report(__func__);
-      }
-
-      TestOutcome timeConstantMinimum()
-      {
-        TestStatus success = true;
-
-        auto data                   = makeTestData();
-        data.parameters[Params::T1] = static_cast<RealT>(0.0);
-        data.parameters[Params::T2] = static_cast<RealT>(0.0);
-        data.parameters[Params::T3] = static_cast<RealT>(0.0);
-
-        Gov model(data);
-        success *= (model.allocate() == 0);
-        success *= (model.tagDifferentiable() == 0);
-        success *= (model.tag()[index(Var::XVALVE)] == true);
-        success *= (model.tag()[index(Var::XFLOW)] == true);
-        success *= (model.tag()[index(Var::XTEMP)] == true);
-
-        const ScalarT xvalve    = scalar(kResidualXvalve);
-        const ScalarT xflow     = scalar(kResidualXflow);
-        const ScalarT xtemp     = scalar(kResidualXtemp);
-        const ScalarT vlv       = scalar(kResidualVlv);
-        const ScalarT xflow_dot = scalar(kResidualXflowDot);
-        const ScalarT probe_dot = scalar(kProbeDerivative);
-
-        model.y().getData()[index(Var::XVALVE)] = xvalve;
-        model.y().getData()[index(Var::XFLOW)]  = xflow;
-        model.y().getData()[index(Var::XTEMP)]  = xtemp;
-        model.y().getData()[index(Var::VLV)]    = vlv;
-
-        model.yp().getData()[index(Var::XVALVE)] = probe_dot;
-        model.yp().getData()[index(Var::XFLOW)]  = xflow_dot;
-        model.yp().getData()[index(Var::XTEMP)]  = probe_dot;
-
-        model.y().setDataUpdated();
-        model.yp().setDataUpdated();
-
-        success *= (model.evaluateResidual() == 0);
-        success *= isEqual(model.getResidual().getData()[index(Var::XVALVE)],
-                           -probe_dot + (vlv - xvalve) / scalar(kTimeConstantMinimum),
-                           scalar(kTolerance));
-        success *= isEqual(model.getResidual().getData()[index(Var::XFLOW)],
-                           -xflow_dot + (-xflow + xvalve) / scalar(kTimeConstantMinimum),
-                           scalar(kTolerance));
-        success *= isEqual(model.getResidual().getData()[index(Var::XTEMP)],
-                           -probe_dot + (-xtemp + xflow) / scalar(kTimeConstantMinimum),
-                           scalar(kTolerance));
-
-        return success.report(__func__);
-      }
-
-      TestOutcome parameterValidation()
-      {
-        TestStatus success = true;
-
-        Gov default_model{Data{}};
-        success *= (default_model.verify() == 0);
-
-        auto zero_droop                  = makeTestData();
-        zero_droop.parameters[Params::R] = ZERO<RealT>;
-        Gov zero_droop_model(zero_droop);
-        success *= (zero_droop_model.verify() > 0);
-
-        auto negative_load_limit                   = makeTestData();
-        negative_load_limit.parameters[Params::At] = static_cast<RealT>(-kAt);
-        Gov negative_load_limit_model(negative_load_limit);
-        success *= (negative_load_limit_model.verify() > 0);
-
-        auto negative_temperature_gain                   = makeTestData();
-        negative_temperature_gain.parameters[Params::Kt] = static_cast<RealT>(-kKt);
-        Gov negative_temperature_gain_model(negative_temperature_gain);
-        success *= (negative_temperature_gain_model.verify() > 0);
-
-        auto negative_damping                      = makeTestData();
-        negative_damping.parameters[Params::Dturb] = static_cast<RealT>(-kDturb);
-        Gov negative_damping_model(negative_damping);
-        success *= (negative_damping_model.verify() > 0);
-
-        auto swapped_limits                     = makeTestData();
-        swapped_limits.parameters[Params::Vmin] = static_cast<RealT>(kVmax);
-        swapped_limits.parameters[Params::Vmax] = static_cast<RealT>(kVmin);
-        Gov swapped_limits_model(swapped_limits);
-        success *= (swapped_limits_model.verify() > 0);
-
-        auto equal_normal_limits                     = makeTestData();
-        equal_normal_limits.parameters[Params::Vmin] = static_cast<RealT>(kVmax);
-        Gov equal_normal_limits_model(equal_normal_limits);
-        success *= (equal_normal_limits_model.verify() > 0);
-
-        auto invalid_mode                     = makeTestData();
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> empty;
+        success *= (empty.size() == static_cast<IdxT>(I::MAXIMUM));
+        success *= (empty.getMonitor() == nullptr);
+        success *= (empty.verify() == 0);
+
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> configured(makeData());
+        success *= (configured.size() == static_cast<IdxT>(I::MAXIMUM));
+        success *= (configured.getMonitor() != nullptr);
+        success *= (configured.verify() == 0);
+
+        noteExpectedLogs("Testing GASTPTI defaults and invalid configurations. "
+                         "Logged errors and mode/limit/time-constant warnings are expected.");
+
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> minimal(makeMinimalData());
+        success *= (minimal.verify() == 0);
+        success *= defaultsMatchDocumentedValues();
+
+        success *= invalidParameterCase(Params::R, 0.0);
+        success *= invalidParameterCase(Params::T1, -0.1);
+        success *= invalidParameterCase(Params::T2, -0.1);
+        success *= invalidParameterCase(Params::T3, -0.1);
+        success *= invalidParameterCase(Params::At, -0.1);
+        success *= invalidParameterCase(Params::Kt, -0.1);
+        success *= invalidParameterCase(Params::Vmin, 1.2); // equals Vmax in Normal mode
+        success *= invalidParameterCase(Params::Vmin, 2.0); // above Vmax
+        success *= invalidParameterCase(Params::Dturb, -0.1);
+        success *= invalidParameterCase(Params::Trate, 0.0);
+
+        // The response mode must be an integer inside {0, 1, 2}.
+        auto real_mode                     = makeData();
+        real_mode.parameters[Params::mode] = 2.0;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> real_mode_model(real_mode);
+        success *= (real_mode_model.verify() > 0);
+
+        auto invalid_mode                     = makeData();
         invalid_mode.parameters[Params::mode] = static_cast<IdxT>(3);
-        Gov invalid_mode_model(invalid_mode);
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> invalid_mode_model(invalid_mode);
         success *= (invalid_mode_model.verify() > 0);
 
-        auto zero_trate                      = makeTestData();
-        zero_trate.parameters[Params::Trate] = ZERO<RealT>;
-        Gov zero_trate_model(zero_trate);
-        success *= (zero_trate_model.verify() > 0);
+        // Down Only is accepted with a warning and simulated as Normal.
+        auto down_only                     = makeData();
+        down_only.parameters[Params::mode] = static_cast<IdxT>(Mode::DownOnly);
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> down_only_model(down_only);
+        success *= (down_only_model.verify() == 0);
+
+        // Fixed mode admits equal valve limits; Normal mode rejected them above.
+        auto fixed_equal                     = makeData();
+        fixed_equal.parameters[Params::mode] = static_cast<IdxT>(Mode::Fixed);
+        fixed_equal.parameters[Params::Vmin] = 0.5;
+        fixed_equal.parameters[Params::Vmax] = 0.5;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> fixed_equal_model(fixed_equal);
+        success *= (fixed_equal_model.verify() == 0);
+
+        // Narrow valve limits warn without failing verification.
+        auto narrow                     = makeData();
+        narrow.parameters[Params::Vmax] = 0.01;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> narrow_model(narrow);
+        success *= (narrow_model.verify() == 0);
+
+        // Integer JSON values are accepted for real parameters; booleans are
+        // not numeric.
+        auto integer_real                      = makeData();
+        integer_real.parameters[Params::Trate] = static_cast<IdxT>(100);
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> integer_real_model(integer_real);
+        success *= (integer_real_model.verify() == 0);
+
+        auto bad_numeric_type                   = makeData();
+        bad_numeric_type.parameters[Params::T1] = true;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> bad_numeric_model(bad_numeric_type);
+        success *= (bad_numeric_model.verify() > 0);
+
+        success *= unlinkedSignalRejected<Ext::OMEGA>();
+        success *= unlinkedSignalRejected<Ext::PREF>();
+
+        // All three zero time constants use the documented numerical floor
+        // and still admit a consistent steady-state initialization.
+        auto zero_time                   = makeData();
+        zero_time.parameters[Params::T1] = 0.0;
+        zero_time.parameters[Params::T2] = 0.0;
+        zero_time.parameters[Params::T3] = 0.0;
+
+        Fixture<ScalarT> fixture(zero_time);
+        success *= fixture.initialize(0.4);
+        success *= (fixture.evaluate() == 0);
+        success *= allResidualsZero(fixture.gastpti);
 
         return success.report(__func__);
       }
 
-      TestOutcome signalValidation()
+      /// A nonidentity power-base initialization with every port attached.
+      /// The machine-seeded pmech node must remain unchanged while GASTPTI
+      /// initializes and publishes its resolved load reference.
+      TestOutcome initializationAndSignals()
       {
         TestStatus success = true;
 
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        Gov                                       omega_model(makeTestData());
-        omega_model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        success *= (omega_model.verify() > 0);
+        auto data                      = makeData();
+        data.parameters[Params::Trate] = 50.0;
 
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        Gov                                       pref_model(makeTestData());
-        pref_model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-        success *= (pref_model.verify() > 0);
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        fixture.input(E::PREF)  = 99.0; // stale value the publication must replace
+        success                *= fixture.initialize(0.4);
+        success                *= (fixture.gastpti.tagDifferentiable() == 0);
+        success                *= (fixture.evaluate() == 0);
 
-        return success.report(__func__);
-      }
+        const auto* y  = fixture.gastpti.y().getData();
+        success       *= scalarMatches(y[I::XVALVE], 0.8, "XVALVE on component base");
+        success       *= scalarMatches(y[I::XFLOW], 0.8, "XFLOW on component base");
+        success       *= scalarMatches(y[I::XTEMP], 0.8, "XTEMP on component base");
+        success       *= scalarMatches(y[I::VLOAD], 0.8, "VLOAD behind the LV gate");
+        success       *= scalarMatches(y[I::VTEMP], 2.36, "VTEMP at the temperature limit");
+        success       *= scalarMatches(y[I::VLV], 0.8, "VLV at the fuel flow");
+        success       *= scalarMatches(fixture.pmech(), 0.4, "preserved pmech seed");
 
-      TestOutcome jsonParseAndSystemAssembly()
-      {
-        TestStatus success = true;
+        success *= scalarMatches(fixture.input(E::OMEGA), 0.0, "preserved omega input");
+        success *= scalarMatches(fixture.input(E::PREF), 0.4, "published pref");
 
-        std::istringstream input(R"json(
-{
-  "header": {
-    "format_version": 0,
-    "format_revision": 1,
-    "case_name": "gas-turbine governor",
-    "case_description": "GASTPTI parser and assembly test",
-    "case_comments": "",
-    "freq_base": 60.0,
-    "va_base": 100000000.0
-  },
-  "buses": [
-    {
-      "number": 1,
-      "class": "infinite_bus",
-      "name": "Bus 1",
-      "init": { "Vr": 1.0, "Vi": 0.0 },
-      "params": { "kv": 1.0 }
-    }
-  ],
-  "signals": [
-    { "signal_id": 10, "name": "Pmech" }
-  ],
-  "devices": [
-    {
-      "class": "Genrou",
-      "ports": { "bus": 1, "pmech": 10 },
-      "id": "GEN1",
-      "params": {
-        "p0": 0.3, "q0": 0.0, "H": 3.0, "D": 0.0, "Ra": 0.0,
-        "Tdop": 7.0, "Tdopp": 0.04, "Tqop": 0.75, "Tqopp": 0.05,
-        "Xd": 2.1, "Xdp": 0.2, "Xdpp": 0.18, "Xq": 0.5, "Xqp": 0.5,
-        "Xqpp": 0.18, "Xl": 0.15, "S10": 0.0, "S12": 0.0,
-        "mva": 100.0
-      }
-    },
-    {
-      "class": "GastPti",
-      "ports": { "pmech": 10 },
-      "id": "GAST1",
-      "params": {
-        "R": 0.05, "T1": 0.4, "T2": 0.5, "T3": 0.25,
-        "At": 2.0, "Kt": 0.3, "Vmax": 0.3, "Vmin": 0.3,
-        "Dturb": 0.1, "Trate": 100.0, "mode": 1
-      },
-      "mon": ["pmech", "xvalve"]
-    }
-  ]
-}
-)json");
+        RealT                                     time = 0.0;
+        Model::VariableMonitorController<ScalarT> monitor(time);
+        monitor.addMonitor(fixture.gastpti.getMonitor());
+        std::stringstream monitor_output;
+        monitor.addSink({Model::VariableMonitorFormat::CSV}, monitor_output);
+        monitor.start();
+        monitor.print();
+        monitor.stop();
 
-        auto data             = PhasorDynamics::parseSystemModelData(input);
-        success              *= (data.gastpti.size() == 1);
-        const auto& gov_data  = data.gastpti[0];
-        success              *= (gov_data.device_class == "GastPti");
-        success              *= gov_data.buses.empty();
-        success              *= gov_data.signal_inputs.empty();
-        success              *= (gov_data.signal_outputs.at(Data::SignalOutputs::pmech)
-                    == static_cast<IdxT>(10));
-        success              *= (std::get_if<double>(&gov_data.parameters.at(Params::R))
-                    != nullptr);
-        success              *= (std::get_if<double>(&gov_data.parameters.at(Params::Trate))
-                    != nullptr);
-        success              *= (std::get_if<IdxT>(&gov_data.parameters.at(Params::mode))
-                    != nullptr);
-        success              *= (std::get<IdxT>(gov_data.parameters.at(Params::mode))
-                    == static_cast<IdxT>(Mode::Fixed));
-        success              *= (gov_data.monitored_variables.count(Mon::pmech) == 1);
-        success              *= (gov_data.monitored_variables.count(Mon::xvalve) == 1);
-
-        PhasorDynamics::SystemModel<ScalarT, IdxT> system(data);
-        success *= (system.allocate() == 0);
-        success *= (system.initialize() == 0);
-
-        auto* governor  = dynamic_cast<Gov*>(system.getComponent(1));
-        success        *= (governor != nullptr);
-        if (governor != nullptr)
+        std::string monitor_header;
+        std::string monitor_values;
+        std::getline(monitor_output, monitor_header);
+        std::getline(monitor_output, monitor_values);
+        success              *= (monitor_header == "t,GastPti_gastpti_test_pmech,"
+                                                   "GastPti_gastpti_test_xvalve,"
+                                                   "GastPti_gastpti_test_xflow,"
+                                                   "GastPti_gastpti_test_xtemp,"
+                                                   "GastPti_gastpti_test_vload,"
+                                                   "GastPti_gastpti_test_vtemp");
+        const auto monitored  = Tokenizer<RealT>(monitor_values, ',')();
+        if (monitored.size() == 7)
         {
-          success *= isEqual(governor->y().getData()[index(Var::PMECH)],
-                             scalar(0.3),
-                             scalar(kSystemTolerance));
-          const auto* pmech =
-              governor->getSignals().template getSignalNode<Var::PMECH>();
-          success *= (pmech != nullptr);
-          if (pmech != nullptr)
+          success *= scalarMatches(monitored[1], 0.4, "monitored pmech");
+          success *= scalarMatches(monitored[2], 0.8, "monitored xvalve");
+          success *= scalarMatches(monitored[3], 0.8, "monitored xflow");
+          success *= scalarMatches(monitored[4], 0.8, "monitored xtemp");
+          success *= scalarMatches(monitored[5], 0.8, "monitored vload");
+          success *= scalarMatches(monitored[6], 2.36, "monitored vtemp");
+        }
+        else
+        {
+          std::cout << "GASTPTI monitor emitted " << monitored.size()
+                    << " values instead of 7\n";
+          success = false;
+        }
+
+        for (size_t i = 0; i < static_cast<size_t>(fixture.gastpti.size()); ++i)
+        {
+          const bool expected = i <= I::XTEMP;
+          if (fixture.gastpti.tag()[i] != expected)
           {
-            success *= pmech->linked();
+            std::cout << "GASTPTI differentiability tag " << i << " mismatch\n";
+            success = false;
           }
         }
+        success *= allResidualsZero(fixture.gastpti);
 
-        success              *= (system.tagDifferentiable() == 0);
-        success              *= (system.evaluateResidual() == 0);
-        const auto& residual  = system.getResidual();
-        for (size_t i = 0; i < residual.getSize(); ++i)
+        // A system-base reference step lands on the droop row scaled by the
+        // base ratio.
+        fixture.input(E::PREF)  = 0.5; // the published 0.4 plus a 0.1 step
+        success                *= (fixture.evaluate() == 0);
+        success                *= residualsMatch(fixture.gastpti,
+                                                 {{I::VLOAD, 0.01}},
+                                  "reference step on the component base");
+
+        // Unattached ports fall back to the reference latched by
+        // initialize(), so the same steady state holds without a controller.
+        Fixture<ScalarT> fallback(data);
+        success *= fallback.initialize(0.4);
+        success *= (fallback.evaluate() == 0);
+        success *= allResidualsZero(fallback.gastpti);
+
+        return success.report(__func__);
+      }
+
+      /// Temperature-gate and configuration initialization domains. Every
+      /// rejection is atomic; an over-rated dispatch, a Fixed-mode point
+      /// outside its limits, and a zero power seed remain admissible.
+      TestOutcome initializationDomain()
+      {
+        TestStatus success = true;
+
+        noteExpectedLogs("Testing inadmissible GASTPTI temperature-gate and "
+                         "configuration initialization points. Logged errors "
+                         "and rating warnings are expected.");
+
+        struct RejectionCase
         {
-          success *= isEqual(residual.getData()[i],
-                             scalar(0.0),
-                             scalar(kSystemTolerance));
+          const char* label;
+          RealT       at;
+          RealT       pmech;
+        };
+
+        // makeResidualData() halves the power base, so a 0.4 seed is a 0.8
+        // component-base fuel flow.
+        const std::array<RejectionCase, 2> rejected{{
+            {"temperature-gate margin at equality", 0.8, 0.4},
+            {"temperature-gate margin negative", 0.0, 0.4},
+        }};
+
+        for (const auto& test_case : rejected)
+        {
+          auto data                    = makeResidualData();
+          data.parameters[Params::At]  = test_case.at;
+          success                     *= initializationRejectedAtomically(
+              data, test_case.pmech, test_case.label);
         }
-        success *= (system.evaluateJacobian() == 0);
+
+        // An invalid configuration is rejected before any state is written.
+        auto invalid_data                  = makeResidualData();
+        invalid_data.parameters[Params::R] = 0.0;
+        Fixture<ScalarT> invalid_fixture(invalid_data);
+        invalid_fixture.attachAllInputs();
+        success *= (invalid_fixture.gastpti.allocate() == 0);
+        poisonState(invalid_fixture, 0.4);
+        const auto invalid_y  = copyVector(invalid_fixture.gastpti.y());
+        const auto invalid_yp = copyVector(invalid_fixture.gastpti.yp());
+        if (invalid_fixture.gastpti.initialize() == 0)
+        {
+          std::cout << "Expected initialization rejection: invalid configuration\n";
+          success = false;
+        }
+        success *= vectorUnchanged(invalid_fixture.gastpti.y(), invalid_y, "state");
+        success *= vectorUnchanged(invalid_fixture.gastpti.yp(), invalid_yp, "derivative");
+
+        // An over-rated Normal-mode dispatch warns but initializes at the
+        // dispatched value, resting against the saturated valve limit.
+        Fixture<ScalarT> over_rated(makeResidualData());
+        over_rated.attachAllInputs();
+        success *= over_rated.initialize(0.6); // fuel flow 1.2 above Vmax = 1.1
+        success *= stateMatches(over_rated.gastpti,
+                                {{I::XVALVE, 1.2}, {I::XFLOW, 1.2}, {I::VLV, 1.2}},
+                                "over-rated dispatch");
+        success *= scalarMatches(over_rated.pmech(), 0.6, "preserved over-rated pmech seed");
+        success *= (over_rated.evaluate() == 0);
+        success *= allResidualsZero(over_rated.gastpti);
+
+        // A Fixed-mode point outside its equal valve limits holds the
+        // dispatch with frozen turbine dynamics.
+        auto fixed_data                     = makeResidualData();
+        fixed_data.parameters[Params::mode] = static_cast<IdxT>(Mode::Fixed);
+        fixed_data.parameters[Params::Vmin] = 0.3;
+        fixed_data.parameters[Params::Vmax] = 0.3;
+        Fixture<ScalarT> fixed_fixture(fixed_data);
+        fixed_fixture.attachAllInputs();
+        success *= fixed_fixture.initialize(0.4);
+        success *= (fixed_fixture.evaluate() == 0);
+        success *= allResidualsZero(fixed_fixture.gastpti);
+
+        // A zero mechanical-power seed stays admissible.
+        Fixture<ScalarT> zero_seed(makeResidualData());
+        zero_seed.attachAllInputs();
+        success *= zero_seed.initialize(0.0);
+        success *= stateMatches(zero_seed.gastpti,
+                                {{I::XFLOW, 0.0}, {I::VTEMP, 2.52}},
+                                "zero seed");
+        success *= (zero_seed.evaluate() == 0);
+        success *= allResidualsZero(zero_seed.gastpti);
+
+        return success.report(__func__);
+      }
+
+      /// A fixed numerical answer key for all 7 GASTPTI residual rows. The
+      /// expected values are literals, not a second implementation of
+      /// GASTPTI.
+      TestOutcome residualEquations()
+      {
+        TestStatus success = true;
+
+        Fixture<ScalarT> fixture(makeResidualData());
+        fixture.attachAllInputs();
+        success *= fixture.initialize(0.4);
+        setAnswerKeyInputs(fixture);
+        setAnswerKeyState(fixture.gastpti);
+        success *= (fixture.evaluate() == 0);
+
+        // Values are pinned after an independent one-time evaluation of the
+        // documented equations at setAnswerKeyState()/setAnswerKeyInputs().
+        const std::array<Row, I::MAXIMUM> expected{{
+            {I::XVALVE, 0.24614285714285705},
+            {I::XFLOW, 0.17755555555555544},
+            {I::XTEMP, -0.001181818181818159},
+            {I::VLOAD, -0.0326},
+            {I::VTEMP, 0.978},
+            {I::VLV, 0.12},
+            {I::PMECH, -0.11239999999999999},
+        }};
+
+        success *= (static_cast<size_t>(fixture.gastpti.getResidual().getSize()) == expected.size());
+        success *= residualsMatch(fixture.gastpti, expected);
+
+        return success.report(__func__);
+      }
+
+      /// Valve anti-windup at every controller direction, speed deviation in
+      /// the droop and damping rows, and the Fixed and Down Only response
+      /// modes against the Normal-mode answer key.
+      TestOutcome governorControl()
+      {
+        TestStatus success = true;
+
+        Fixture<ScalarT> fixture(makeResidualData());
+        fixture.attachAllInputs();
+        success *= fixture.initialize(0.4);
+
+        // The valve anti-windup at three controller directions: both
+        // saturations block an outward rate and Vmax admits a restoring one.
+        struct AntiWindupCase
+        {
+          const char* label;
+          RealT       xvalve;
+          RealT       vlv;
+          RealT       expected;
+        };
+
+        for (const auto& test_case : std::array<AntiWindupCase, 3>{{
+                 {"Vmax blocks an outward valve rate", 1.6, 1.85, 0.0},
+                 {"Vmin blocks an outward valve rate", -0.45, -0.7, 0.0},
+                 {"Vmax admits a restoring valve rate", 1.6, 1.35, -0.7142857142857143},
+             }})
+        {
+          setState(fixture.gastpti,
+                   {{I::XVALVE, test_case.xvalve}, {I::VLV, test_case.vlv}});
+          setDerivative(fixture.gastpti, {{I::XVALVE, 0.0}});
+          success *= (fixture.evaluate() == 0);
+          success *= residualsMatch(fixture.gastpti,
+                                    {{I::XVALVE, test_case.expected}},
+                                    test_case.label);
+        }
+
+        // A speed deviation enters the droop and turbine-damping rows.
+        fixture.input(E::OMEGA)  = 0.05;
+        success                 *= (fixture.evaluate() == 0);
+        success                 *= residualsMatch(fixture.gastpti,
+                                                  {{I::VLOAD, -0.05}, {I::PMECH, -0.006}},
+                                  "speed deviation in the droop and damping rows");
+        fixture.input(E::OMEGA)  = 0.0;
+
+        // Fixed mode freezes the three turbine states at the answer-key
+        // point while the algebraic rows keep their Normal-mode values.
+        auto fixed_data                     = makeResidualData();
+        fixed_data.parameters[Params::mode] = static_cast<IdxT>(Mode::Fixed);
+        Fixture<ScalarT> fixed_fixture(fixed_data);
+        fixed_fixture.attachAllInputs();
+        success *= fixed_fixture.initialize(0.4);
+        setAnswerKeyInputs(fixed_fixture);
+        setAnswerKeyState(fixed_fixture.gastpti);
+        success *= (fixed_fixture.evaluate() == 0);
+        success *= residualsMatch(fixed_fixture.gastpti,
+                                  {{I::XVALVE, -0.011}, {I::XFLOW, 0.022}, {I::XTEMP, -0.033}},
+                                  "Fixed mode freezes the turbine states");
+
+        // Down Only warns and reproduces the Normal-mode answer key.
+        noteExpectedLogs("Testing the GASTPTI Down Only response mode. "
+                         "The logged mode warning is expected.");
+        auto down_only_data                     = makeResidualData();
+        down_only_data.parameters[Params::mode] = static_cast<IdxT>(Mode::DownOnly);
+        Fixture<ScalarT> down_only_fixture(down_only_data);
+        down_only_fixture.attachAllInputs();
+        success *= down_only_fixture.initialize(0.4);
+        setAnswerKeyInputs(down_only_fixture);
+        setAnswerKeyState(down_only_fixture.gastpti);
+        success *= (down_only_fixture.evaluate() == 0);
+        success *= residualsMatch(down_only_fixture.gastpti,
+                                  {{I::XVALVE, 0.24614285714285705},
+                                   {I::XFLOW, 0.17755555555555544},
+                                   {I::XTEMP, -0.001181818181818159}},
+                                  "Down Only simulated as Normal");
+
+        return success.report(__func__);
+      }
+
+      /// The smooth LV gate on both demand sides and at demand equality, the
+      /// exhaust-temperature feedback row, and initialization against a
+      /// near-closed temperature gate.
+      TestOutcome temperatureLimiting()
+      {
+        TestStatus success = true;
+
+        Fixture<ScalarT> fixture(makeResidualData());
+        fixture.attachAllInputs();
+        success *= fixture.initialize(0.4);
+
+        // The smooth LV gate with the load demand below, above, and equal to
+        // the temperature demand.
+        struct GateCase
+        {
+          const char* label;
+          RealT       vload;
+          RealT       vtemp;
+          RealT       expected;
+        };
+
+        for (const auto& test_case : std::array<GateCase, 3>{{
+                 {"the load demand wins the LV gate", 0.3, 1.5, 0.3},
+                 {"the temperature demand wins the LV gate", 1.5, 0.3, 0.30000000000000004},
+                 {"equal demands split the smooth LV gate", 0.9, 0.9, 0.897111886747667},
+             }})
+        {
+          setState(fixture.gastpti,
+                   {{I::VLOAD, test_case.vload},
+                    {I::VTEMP, test_case.vtemp},
+                    {I::VLV, 0.0}});
+          success *= (fixture.evaluate() == 0);
+          success *= residualsMatch(fixture.gastpti,
+                                    {{I::VLV, test_case.expected}},
+                                    test_case.label);
+        }
+
+        // The exhaust-temperature feedback drives the temperature demand.
+        setState(fixture.gastpti, {{I::XTEMP, 0.9}, {I::VTEMP, 1.1}});
+        success *= (fixture.evaluate() == 0);
+        success *= residualsMatch(fixture.gastpti,
+                                  {{I::VTEMP, 1.06}},
+                                  "temperature feedback");
+
+        // A 1e-4 temperature-gate margin seats the load demand above the
+        // temperature demand through the exact inverse smooth ramp, so the
+        // smooth LV gate still reproduces the seeded fuel flow.
+        auto near_gate_data                   = makeResidualData();
+        near_gate_data.parameters[Params::At] = 0.8 + 1.0e-4 / 1.4;
+        Fixture<ScalarT> near_gate(near_gate_data);
+        near_gate.attachAllInputs();
+        success *= near_gate.initialize(0.4);
+        success *= stateMatches(near_gate.gastpti,
+                                {{I::VLOAD, 0.8155903227031184},
+                                 {I::VTEMP, 0.8001000000000001},
+                                 {I::VLV, 0.8}},
+                                "near-gate initialization");
+        success *= scalarMatches(near_gate.input(E::PREF),
+                                 0.4077951613515592,
+                                 "near-gate published pref");
+        success *= (near_gate.evaluate() == 0);
+        success *= allResidualsZero(near_gate.gastpti);
 
         return success.report(__func__);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
+      /// A single rich state and both external inputs drive the two
+      /// sensitivity paths; every Enzyme CSR row must match dependency
+      /// tracking.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        auto dependency_tracking_jacobian = dependencyTrackingJacobian();
-        auto enzyme_jacobian              = enzymeJacobian();
+        const auto data = makeResidualData();
 
-        success *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
-        for (size_t i = 0; i < dependency_tracking_jacobian.size(); ++i)
+        const auto dependency_jacobian = dependencyTrackingJacobian(data, success);
+        const auto enzyme_jacobian     = enzymeJacobian(data, success);
+
+        success         *= (dependency_jacobian.size() == enzyme_jacobian.size());
+        const auto rows  = std::min(dependency_jacobian.size(), enzyme_jacobian.size());
+        for (size_t row = 0; row < rows; ++row)
         {
-          success *= isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kTolerance);
+          if (!isEqual(dependency_jacobian[row], enzyme_jacobian[row], kJacobianTol))
+          {
+            std::cout << "GASTPTI Jacobian row " << row
+                      << " mismatch between dependency tracking and Enzyme\n";
+            success = false;
+          }
         }
 
         return success.report(__func__);
@@ -802,256 +528,525 @@ namespace GridKit
 #endif
 
     private:
-      /// Component expectations computed in closed form match to machine precision.
-      static constexpr RealT kTolerance       = std::numeric_limits<RealT>::epsilon();
-      /// Smooth limiter and gate approximations only match their piecewise
-      /// targets to the CommonMath smoothness width away from transitions.
-      static constexpr RealT kSmoothTolerance = 1.0e-2;
-      /// System assembly couples machine and governor initialization, which
-      /// accumulates roundoff above machine precision.
-      static constexpr RealT kSystemTolerance = 100.0 * std::numeric_limits<RealT>::epsilon();
+      using Params = PhasorDynamics::Governor::GastPtiParameters;
+      using Vars   = PhasorDynamics::Governor::GastPtiInternalVariables;
+      using Ext    = PhasorDynamics::Governor::GastPtiExternalVariables;
+      using Mon    = PhasorDynamics::Governor::GastPtiMonitorableVariables;
+      using Mode   = PhasorDynamics::Governor::ResponseMode;
+      using Data   = PhasorDynamics::Governor::GastPtiData<RealT, IdxT>;
+      using I      = PhasorDynamics::Governor::GastPtiIdx;
+      using E      = PhasorDynamics::Governor::GastPtiExt;
 
-      static constexpr RealT kR                   = 0.05;
-      static constexpr RealT kT1                  = 0.4;
-      static constexpr RealT kT2                  = 0.5;
-      static constexpr RealT kT3                  = 0.25;
-      static constexpr RealT kTimeConstantMinimum = 1.0e-3;
-      static constexpr RealT kAt                  = 2.0;
-      static constexpr RealT kKt                  = 0.3;
-      static constexpr RealT kVmax                = 1.2;
-      static constexpr RealT kVmin                = 0.0;
-      static constexpr RealT kDturb               = 0.1;
-      static constexpr RealT kTrate               = 100.0;
+      /// A vector row paired with a value: either an input to write or an
+      /// expected result. Rows are `GastPtiIdx`/`GastPtiExt` constants, so a
+      /// failure report locates itself without any name string to maintain.
+      using Row      = std::pair<size_t, RealT>;
+      using Rows     = std::initializer_list<Row>;
+      using GastPtiT = PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
 
-      static constexpr RealT kInitialPmech   = 0.75;
-      static constexpr RealT kInitialOmega   = 0.02;
-      static constexpr RealT kNearGateMargin = 1.0e-4;
-      static constexpr RealT kPrefStep       = 0.1;
-
-      /// Distance outside the valve limits used to saturate the anti-windup.
-      static constexpr RealT kValveExcess     = 1.0;
-      /// Magnitude of the valve drive applied against a saturated limit.
-      static constexpr RealT kValveDrive      = 1.0;
-      /// Derivative value verifying floored lags keep their derivative terms.
-      static constexpr RealT kProbeDerivative = 5.0;
-
-      static constexpr RealT kSystemFrequency        = 60.0;
-      static constexpr RealT kConversionTrate        = 50.0;
-      static constexpr RealT kConversionSystemBase   = 100.0;
-      static constexpr RealT kConversionInitialPmech = 0.40;
-
-      static constexpr RealT kResidualOmega     = 0.02;
-      static constexpr RealT kResidualPref      = 1.25;
-      static constexpr RealT kResidualXvalve    = 0.7;
-      static constexpr RealT kResidualXflow     = 0.6;
-      static constexpr RealT kResidualXtemp     = 0.5;
-      static constexpr RealT kResidualVload     = 0.9;
-      static constexpr RealT kResidualVtemp     = 2.5;
-      static constexpr RealT kResidualVlv       = 0.8;
-      static constexpr RealT kResidualPmech     = 0.55;
-      static constexpr RealT kResidualXvalveDot = 0.05;
-      static constexpr RealT kResidualXflowDot  = -0.1;
-      static constexpr RealT kResidualXtempDot  = 0.2;
-
-      static ScalarT scalar(RealT value)
+      /// Owns the GASTPTI model, the assigned mechanical-power node, and the
+      /// attached input nodes. Signal storage is declared before the model so
+      /// every referenced node outlives GASTPTI. Copying would invalidate the
+      /// model and signal-node pointers.
+      template <typename T>
+      class Fixture
       {
-        return static_cast<ScalarT>(value);
-      }
+      private:
+        std::array<T, E::MAXIMUM>                                   input_values_{};
+        std::array<IdxT, E::MAXIMUM>                                input_indices_{};
+        std::array<PhasorDynamics::SignalNode<T, IdxT>, E::MAXIMUM> input_nodes_{};
 
-      template <typename value_type>
-      static value_type value(RealT value)
-      {
-        return value_type{value};
-      }
+        PhasorDynamics::SignalNode<T, IdxT> pmech_node_;
 
-      static size_t index(Var variable)
-      {
-        return static_cast<size_t>(variable);
-      }
-
-      template <typename value_type>
-      static value_type prefForInitialPoint(const value_type& pmech, const value_type& omega)
-      {
-        return pmech + value<value_type>(kDturb) * omega + omega / value<value_type>(kR);
-      }
-
-      void checkResidual(const Gov&                  model,
-                         const std::vector<ScalarT>& expected,
-                         TestStatus&                 success) const
-      {
-        const auto& residual = model.getResidual();
-        for (size_t i = 0; i < expected.size(); ++i)
+      public:
+        explicit Fixture(const Data& data, RealT system_va_base = 100.0e6)
+          : gastpti(data)
         {
-          if (!isEqual(residual.getData()[i], expected[i], scalar(kTolerance)))
-          {
-            std::cout << "Unexpected GASTPTI residual at index " << i << ": "
-                      << residual.getData()[i] << " != " << expected[i] << "\n";
-            success = false;
-          }
+          gastpti.setSystemBase(60.0, system_va_base);
+          gastpti.getSignals().template assignSignalNode<Vars::PMECH>(&pmech_node_);
         }
-      }
 
-      void checkValveResidual(Gov&        model,
-                              RealT       xvalve,
-                              RealT       vlv,
-                              RealT       expected,
-                              TestStatus& success) const
-      {
-        model.y().setToZero();
-        model.yp().setToZero();
-        model.y().getData()[index(Var::XVALVE)] = scalar(xvalve);
-        model.y().getData()[index(Var::VLV)]    = scalar(vlv);
-        model.y().setDataUpdated();
-        success *= (model.evaluateResidual() == 0);
-        success *= isEqual(model.getResidual().getData()[index(Var::XVALVE)],
-                           scalar(expected),
-                           scalar(kSmoothTolerance / kT1));
-      }
+        Fixture(const Fixture&)            = delete;
+        Fixture& operator=(const Fixture&) = delete;
 
-      void setDynamicProbe(Gov& model) const
-      {
-        model.y().setToZero();
-        model.yp().setToZero();
+        /// Attach fixture-owned storage to every external input.
+        void attachAllInputs(RealT initial_value = 0.0)
+        {
+          const IdxT external_index_base = gastpti.size();
 
-        model.y().getData()[index(Var::XVALVE)] = scalar(kResidualXvalve);
-        model.y().getData()[index(Var::XFLOW)]  = scalar(kResidualXflow);
-        model.y().getData()[index(Var::XTEMP)]  = scalar(kResidualXtemp);
-        model.y().getData()[index(Var::VLV)]    = scalar(kResidualVlv);
+          for (size_t port = 0; port < E::MAXIMUM; ++port)
+          {
+            input_values_[port]  = static_cast<T>(initial_value);
+            input_indices_[port] = external_index_base + static_cast<IdxT>(port);
+            input_nodes_[port].set(&input_values_[port], &input_indices_[port]);
+          }
 
-        model.yp().getData()[index(Var::XVALVE)] = scalar(kResidualXvalveDot);
-        model.yp().getData()[index(Var::XFLOW)]  = scalar(kResidualXflowDot);
-        model.yp().getData()[index(Var::XTEMP)]  = scalar(kResidualXtempDot);
+          auto& signals = gastpti.getSignals();
+          signals.template attachSignalNode<Ext::OMEGA>(&input_nodes_[E::OMEGA]);
+          signals.template attachSignalNode<Ext::PREF>(&input_nodes_[E::PREF]);
+        }
 
-        model.y().setDataUpdated();
-        model.yp().setDataUpdated();
-      }
+        /// Seed the assigned mechanical-power node on the system base.
+        void seedPmech(RealT pmech)
+        {
+          pmech_node_.init(static_cast<T>(pmech));
+        }
 
-      void checkZeroResidual(const Gov& model, TestStatus& success) const
-      {
-        std::vector<ScalarT> expected(static_cast<size_t>(Var::MAXIMUM), ScalarT{0});
-        checkResidual(model, expected, success);
-      }
+        /// Everything GASTPTI initialization requires: allocation,
+        /// verification, and a machine-seeded mechanical-power node.
+        bool prepare(RealT pmech)
+        {
+          const bool success = (gastpti.allocate() == 0) && (gastpti.verify() == 0);
+          if (!success)
+          {
+            std::cout << "GASTPTI fixture preparation failed\n";
+            return false;
+          }
 
-      Data makeTestData()
+          seedPmech(pmech);
+          return true;
+        }
+
+        /// prepare() plus successful GASTPTI initialization.
+        bool initialize(RealT pmech)
+        {
+          if (!prepare(pmech))
+          {
+            return false;
+          }
+          if (gastpti.initialize() != 0)
+          {
+            std::cout << "GASTPTI initialization failed\n";
+            return false;
+          }
+          return true;
+        }
+
+        int evaluate()
+        {
+          return gastpti.evaluateResidual();
+        }
+
+        T pmech() const
+        {
+          return pmech_node_.read();
+        }
+
+        T& input(size_t port)
+        {
+          return input_values_[port];
+        }
+
+        IdxT inputIndex(size_t port) const
+        {
+          return input_indices_[port];
+        }
+
+        PhasorDynamics::Governor::GastPti<T, IdxT> gastpti;
+      };
+
+      Data makeMinimalData() const
       {
         Data data;
         data.device_class          = "GastPti";
         data.disambiguation_string = "gastpti_test";
         data.monitored_variables.insert(Mon::pmech);
         data.monitored_variables.insert(Mon::xvalve);
-
-        data.parameters[Params::R]     = static_cast<RealT>(kR);
-        data.parameters[Params::T1]    = static_cast<RealT>(kT1);
-        data.parameters[Params::T2]    = static_cast<RealT>(kT2);
-        data.parameters[Params::T3]    = static_cast<RealT>(kT3);
-        data.parameters[Params::At]    = static_cast<RealT>(kAt);
-        data.parameters[Params::Kt]    = static_cast<RealT>(kKt);
-        data.parameters[Params::Vmax]  = static_cast<RealT>(kVmax);
-        data.parameters[Params::Vmin]  = static_cast<RealT>(kVmin);
-        data.parameters[Params::Dturb] = static_cast<RealT>(kDturb);
-        data.parameters[Params::Trate] = static_cast<RealT>(kTrate);
-        data.parameters[Params::mode]  = static_cast<IdxT>(Mode::Normal);
-
+        data.monitored_variables.insert(Mon::xflow);
+        data.monitored_variables.insert(Mon::xtemp);
+        data.monitored_variables.insert(Mon::vload);
+        data.monitored_variables.insert(Mon::vtemp);
         return data;
       }
 
-#ifdef GRIDKIT_ENABLE_ENZYME
-      using DependencyMap = DependencyTracking::Variable::DependencyMap;
-
-      std::vector<DependencyMap> dependencyTrackingJacobian()
+      Data makeExplicitDefaultData() const
       {
-        using ADScalarT = DependencyTracking::Variable;
-        using ADGov     = PhasorDynamics::Governor::GastPti<ADScalarT, IdxT>;
+        auto data = makeMinimalData();
 
-        ADGov model(makeTestData());
-
-        PhasorDynamics::SignalNode<ADScalarT, IdxT> omega_node;
-        PhasorDynamics::SignalNode<ADScalarT, IdxT> pref_node;
-        ADScalarT                                   omega_value{kResidualOmega};
-        ADScalarT                                   pref_value{kResidualPref};
-        IdxT                                        omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        IdxT                                        pref_index  = omega_index + 1;
-        omega_node.set(&omega_value, &omega_index);
-        pref_node.set(&pref_value, &pref_index);
-
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-        model.allocate();
-        model.updateTime(0.0, 1.0);
-
-        model.y().getData()[index(Var::XVALVE)] = ADScalarT{kResidualXvalve};
-        model.y().getData()[index(Var::XFLOW)]  = ADScalarT{kResidualXflow};
-        model.y().getData()[index(Var::XTEMP)]  = ADScalarT{kResidualXtemp};
-        model.y().getData()[index(Var::VLOAD)]  = ADScalarT{kResidualVload};
-        model.y().getData()[index(Var::VTEMP)]  = ADScalarT{kResidualVtemp};
-        model.y().getData()[index(Var::VLV)]    = ADScalarT{kResidualVlv};
-        model.y().getData()[index(Var::PMECH)]  = ADScalarT{kResidualPmech};
-
-        model.yp().getData()[index(Var::XVALVE)] = ADScalarT{kResidualXvalveDot};
-        model.yp().getData()[index(Var::XFLOW)]  = ADScalarT{kResidualXflowDot};
-        model.yp().getData()[index(Var::XTEMP)]  = ADScalarT{kResidualXtempDot};
-
-        for (size_t i = 0; i < model.y().getSize(); ++i)
-        {
-          model.y().getData()[i].setVariableNumber(i);
-          model.yp().getData()[i].setVariableNumber(i);
-        }
-        model.y().setDataUpdated();
-        model.yp().setDataUpdated();
-        omega_value.setVariableNumber(static_cast<size_t>(omega_index));
-        pref_value.setVariableNumber(static_cast<size_t>(pref_index));
-
-        model.evaluateResidual();
-
-        std::vector<DependencyMap> dependencies(model.getResidual().getSize());
-        for (size_t i = 0; i < dependencies.size(); ++i)
-        {
-          dependencies[i] = model.getResidual().getData()[i].getDependencies();
-        }
-
-        return dependencies;
+        // These are the documented defaults, spelled out parameter by
+        // parameter.
+        data.parameters[Params::R]     = 0.05;
+        data.parameters[Params::T1]    = 0.4;
+        data.parameters[Params::T2]    = 0.1;
+        data.parameters[Params::T3]    = 3.0;
+        data.parameters[Params::At]    = 1.0;
+        data.parameters[Params::Kt]    = 2.0;
+        data.parameters[Params::Vmax]  = 1.0;
+        data.parameters[Params::Vmin]  = 0.0;
+        data.parameters[Params::Dturb] = 0.0;
+        data.parameters[Params::Trate] = 100.0;
+        data.parameters[Params::mode]  = static_cast<IdxT>(Mode::Normal);
+        return data;
       }
 
-      std::vector<DependencyMap> enzymeJacobian()
+      Data makeData() const
       {
-        Gov model(makeTestData());
+        auto data = makeMinimalData();
 
-        PhasorDynamics::SignalNode<ScalarT, IdxT> omega_node;
-        PhasorDynamics::SignalNode<ScalarT, IdxT> pref_node;
-        ScalarT                                   omega_value = scalar(kResidualOmega);
-        ScalarT                                   pref_value  = scalar(kResidualPref);
-        IdxT                                      omega_index = static_cast<IdxT>(Var::MAXIMUM);
-        IdxT                                      pref_index  = omega_index + 1;
-        omega_node.set(&omega_value, &omega_index);
-        pref_node.set(&pref_value, &pref_index);
+        data.parameters[Params::R]     = 0.05;
+        data.parameters[Params::T1]    = 0.4;
+        data.parameters[Params::T2]    = 0.5;
+        data.parameters[Params::T3]    = 0.25;
+        data.parameters[Params::At]    = 2.0;
+        data.parameters[Params::Kt]    = 0.3;
+        data.parameters[Params::Vmax]  = 1.2;
+        data.parameters[Params::Vmin]  = 0.0;
+        data.parameters[Params::Dturb] = 0.1;
+        data.parameters[Params::Trate] = 100.0;
+        data.parameters[Params::mode]  = static_cast<IdxT>(Mode::Normal);
+        return data;
+      }
 
-        model.getSignals().template attachSignalNode<Ext::OMEGA>(&omega_node);
-        model.getSignals().template attachSignalNode<Ext::PREF>(&pref_node);
-        model.allocate();
-        model.updateTime(0.0, 1.0);
+      Data makeResidualData() const
+      {
+        auto data = makeData();
 
-        model.y().getData()[index(Var::XVALVE)] = scalar(kResidualXvalve);
-        model.y().getData()[index(Var::XFLOW)]  = scalar(kResidualXflow);
-        model.y().getData()[index(Var::XTEMP)]  = scalar(kResidualXtemp);
-        model.y().getData()[index(Var::VLOAD)]  = scalar(kResidualVload);
-        model.y().getData()[index(Var::VTEMP)]  = scalar(kResidualVtemp);
-        model.y().getData()[index(Var::VLV)]    = scalar(kResidualVlv);
-        model.y().getData()[index(Var::PMECH)]  = scalar(kResidualPmech);
+        data.parameters[Params::Trate] = 50.0;
+        data.parameters[Params::R]     = 0.06;
+        data.parameters[Params::T1]    = 0.35;
+        data.parameters[Params::T2]    = 0.45;
+        data.parameters[Params::T3]    = 2.2;
+        data.parameters[Params::At]    = 1.8;
+        data.parameters[Params::Kt]    = 0.4;
+        data.parameters[Params::Vmax]  = 1.1;
+        data.parameters[Params::Vmin]  = 0.05;
+        data.parameters[Params::Dturb] = 0.12;
+        return data;
+      }
 
-        model.yp().getData()[index(Var::XVALVE)] = scalar(kResidualXvalveDot);
-        model.yp().getData()[index(Var::XFLOW)]  = scalar(kResidualXflowDot);
-        model.yp().getData()[index(Var::XTEMP)]  = scalar(kResidualXtempDot);
+      /// The external inputs the residual answer key is evaluated against.
+      template <typename T>
+      void setAnswerKeyInputs(Fixture<T>& fixture) const
+      {
+        fixture.input(E::OMEGA) = static_cast<T>(0.02);
+        fixture.input(E::PREF)  = static_cast<T>(0.31);
+      }
 
-        model.y().setDataUpdated();
-        model.yp().setDataUpdated();
+      /// The rich state shared by the residual answer key and the Jacobian
+      /// comparison. Every row is distinct so a swapped index cannot pass.
+      template <typename T>
+      void setAnswerKeyState(PhasorDynamics::Governor::GastPti<T, IdxT>& gastpti) const
+      {
+        setState(gastpti,
+                 {{I::XVALVE, 0.62},
+                  {I::XFLOW, 0.55},
+                  {I::XTEMP, 0.48},
+                  {I::VLOAD, 0.83},
+                  {I::VTEMP, 1.35},
+                  {I::VLV, 0.71},
+                  {I::PMECH, 0.33}});
+        setDerivative(gastpti,
+                      {{I::XVALVE, 0.011},
+                       {I::XFLOW, -0.022},
+                       {I::XTEMP, 0.033}});
+      }
 
-        model.evaluateResidual();
-        model.evaluateJacobian();
+      /// Omitting every parameter must give exactly the model built from the
+      /// defaults the README documents, at rest and under load.
+      bool defaultsMatchDocumentedValues() const
+      {
+        Fixture<ScalarT> implicit_defaults(makeMinimalData());
+        Fixture<ScalarT> explicit_defaults(makeExplicitDefaultData());
+        implicit_defaults.attachAllInputs();
+        explicit_defaults.attachAllInputs();
 
-        model.constructCsr();
-        auto* model_jacobian = model.getCsrJacobian();
+        bool success = implicit_defaults.initialize(0.3)
+                       && explicit_defaults.initialize(0.3);
+        if (!success)
+        {
+          std::cout << "GASTPTI documented-default comparison failed to initialize\n";
+          return false;
+        }
 
-        return MapFromCsr(model_jacobian);
+        success *= (implicit_defaults.evaluate() == 0);
+        success *= (explicit_defaults.evaluate() == 0);
+        success *= vectorUnchanged(implicit_defaults.gastpti.y(),
+                                   copyVector(explicit_defaults.gastpti.y()),
+                                   "documented-default state");
+        success *= vectorUnchanged(implicit_defaults.gastpti.yp(),
+                                   copyVector(explicit_defaults.gastpti.yp()),
+                                   "documented-default derivative");
+        success *= vectorUnchanged(implicit_defaults.gastpti.getResidual(),
+                                   copyVector(explicit_defaults.gastpti.getResidual()),
+                                   "documented-default residual");
+
+        setAnswerKeyInputs(implicit_defaults);
+        setAnswerKeyInputs(explicit_defaults);
+        setAnswerKeyState(implicit_defaults.gastpti);
+        setAnswerKeyState(explicit_defaults.gastpti);
+        success *= (implicit_defaults.evaluate() == 0);
+        success *= (explicit_defaults.evaluate() == 0);
+        success *= vectorUnchanged(implicit_defaults.gastpti.getResidual(),
+                                   copyVector(explicit_defaults.gastpti.getResidual()),
+                                   "documented-default dynamic residual");
+        return success;
+      }
+
+      bool invalidParameterCase(Params parameter, RealT value) const
+      {
+        auto data                  = makeData();
+        data.parameters[parameter] = value;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(data);
+        return model.verify() > 0;
+      }
+
+      template <Ext variable>
+      bool unlinkedSignalRejected() const
+      {
+        PhasorDynamics::SignalNode<ScalarT, IdxT>        unlinked_node;
+        PhasorDynamics::Governor::GastPti<ScalarT, IdxT> model(makeData());
+        model.getSignals().template attachSignalNode<variable>(&unlinked_node);
+        return model.verify() > 0;
+      }
+
+      template <typename VectorT>
+      std::vector<RealT> copyVector(const VectorT& vector) const
+      {
+        const auto* values = vector.getData();
+        return std::vector<RealT>(values,
+                                  values + static_cast<size_t>(vector.getSize()));
+      }
+
+      /// Every row of a vector still holds its snapshot value.
+      template <typename VectorT>
+      bool vectorUnchanged(const VectorT&            vector,
+                           const std::vector<RealT>& snapshot,
+                           const char*               what) const
+      {
+        bool        success = true;
+        const auto* values  = vector.getData();
+        for (size_t i = 0; i < snapshot.size(); ++i)
+        {
+          success &= rowMatches(static_cast<RealT>(values[i]), snapshot[i], what, i, "changed");
+        }
+        return success;
+      }
+
+      /// Fill the state and derivative with a recognizable ramp, then re-seed
+      /// the aliased pmech entry, so any write by a rejected initialization
+      /// is visible.
+      void poisonState(Fixture<ScalarT>& fixture, RealT pmech) const
+      {
+        auto* y  = fixture.gastpti.y().getData();
+        auto* yp = fixture.gastpti.yp().getData();
+        for (size_t i = 0; i < static_cast<size_t>(fixture.gastpti.y().getSize()); ++i)
+        {
+          y[i]  = 0.125 + 0.01 * static_cast<RealT>(i);
+          yp[i] = -0.25 - 0.01 * static_cast<RealT>(i);
+        }
+        fixture.seedPmech(pmech);
+        fixture.gastpti.y().setDataUpdated();
+        fixture.gastpti.yp().setDataUpdated();
+      }
+
+      bool initializationRejectedAtomically(const Data& data,
+                                            RealT       pmech,
+                                            const char* label) const
+      {
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        fixture.input(E::PREF) = 77.0; // must stay untouched on rejection
+        if (!fixture.prepare(pmech))
+        {
+          return false;
+        }
+
+        poisonState(fixture, pmech);
+        const auto y_before  = copyVector(fixture.gastpti.y());
+        const auto yp_before = copyVector(fixture.gastpti.yp());
+
+        bool success = true;
+        if (fixture.gastpti.initialize() == 0)
+        {
+          std::cout << "Expected initialization rejection: " << label << "\n";
+          success = false;
+        }
+
+        success *= scalarMatches(fixture.pmech(), pmech, "rejected pmech seed preservation");
+        success *= scalarMatches(fixture.input(E::OMEGA), 0.0, "rejected omega preservation");
+        success *= scalarMatches(fixture.input(E::PREF), 77.0, "rejected pref preservation");
+        success *= vectorUnchanged(fixture.gastpti.y(), y_before, "state");
+        success *= vectorUnchanged(fixture.gastpti.yp(), yp_before, "derivative");
+        return success;
+      }
+
+      /// Write state rows and publish the update, folding in the
+      /// setDataUpdated() that a hand-written write block has to remember.
+      template <typename T>
+      void setState(PhasorDynamics::Governor::GastPti<T, IdxT>& gastpti, Rows rows) const
+      {
+        auto* y = gastpti.y().getData();
+        for (const auto& [row, value] : rows)
+        {
+          y[row] = static_cast<T>(value);
+        }
+        gastpti.y().setDataUpdated();
+      }
+
+      /// setState() for the derivative vector.
+      template <typename T>
+      void setDerivative(PhasorDynamics::Governor::GastPti<T, IdxT>& gastpti, Rows rows) const
+      {
+        auto* yp = gastpti.yp().getData();
+        for (const auto& [row, value] : rows)
+        {
+          yp[row] = static_cast<T>(value);
+        }
+        gastpti.yp().setDataUpdated();
+      }
+
+      /// Compare one vector row against its expected value. Every row check
+      /// in this suite reports through here, so failures share one format.
+      /// Rows are named by position, which is the `GastPtiIdx` constant the
+      /// expectation was written with, leaving no name string to maintain.
+      static bool rowMatches(RealT       actual,
+                             RealT       expected,
+                             const char* what,
+                             size_t      row,
+                             const char* context)
+      {
+        if (isEqual(actual, expected, kBehaviorTol))
+        {
+          return true;
+        }
+        std::cout << "GASTPTI " << what << " row " << row << ' ' << context
+                  << " mismatch: " << std::setprecision(16) << actual
+                  << " != " << expected << '\n';
+        return false;
+      }
+
+      /// Check selected rows of a model vector against expected values.
+      template <typename VectorT>
+      bool rowsMatch(const VectorT& vector,
+                     const Row*     rows,
+                     size_t         count,
+                     const char*    what,
+                     const char*    context) const
+      {
+        bool        success = true;
+        const auto* values  = vector.getData();
+        for (size_t i = 0; i < count; ++i)
+        {
+          const auto& [row, expected]  = rows[i];
+          success                     &= rowMatches(static_cast<RealT>(values[row]), expected, what, row, context);
+        }
+        return success;
+      }
+
+      bool residualsMatch(const GastPtiT& gastpti, Rows rows, const char* context = "") const
+      {
+        return rowsMatch(gastpti.getResidual(), rows.begin(), rows.size(), "residual", context);
+      }
+
+      template <size_t size>
+      bool residualsMatch(const GastPtiT&              gastpti,
+                          const std::array<Row, size>& rows,
+                          const char*                  context = "") const
+      {
+        return rowsMatch(gastpti.getResidual(), rows.data(), size, "residual", context);
+      }
+
+      bool stateMatches(const GastPtiT& gastpti, Rows rows, const char* context = "") const
+      {
+        return rowsMatch(gastpti.y(), rows.begin(), rows.size(), "state", context);
+      }
+
+      /// The model sits at a steady state: every residual and every
+      /// derivative is zero.
+      bool allResidualsZero(const GastPtiT& gastpti) const
+      {
+        bool        success = true;
+        const auto* f       = gastpti.getResidual().getData();
+        const auto* yp      = gastpti.yp().getData();
+        for (size_t row = 0; row < static_cast<size_t>(gastpti.getResidual().getSize()); ++row)
+        {
+          success &= rowMatches(static_cast<RealT>(f[row]), 0.0, "residual", row, "at rest");
+          success &= rowMatches(static_cast<RealT>(yp[row]), 0.0, "derivative", row, "at rest");
+        }
+        return success;
+      }
+
+      bool scalarMatches(ScalarT     actual,
+                         ScalarT     expected,
+                         const char* label,
+                         ScalarT     tolerance = kBehaviorTol) const
+      {
+        if (isEqual(actual, expected, tolerance))
+        {
+          return true;
+        }
+        std::cout << label << " mismatch: " << std::setprecision(16) << actual
+                  << " != " << expected << "\n";
+        return false;
+      }
+
+      void noteExpectedLogs(const char* message) const
+      {
+        const auto previous_verbosity = Log::verbosity();
+        Log::setVerbosity(Log::Verbosity::EVERYTHING);
+        Log::misc() << message << "\n";
+        Log::setVerbosity(previous_verbosity);
+      }
+
+#ifdef GRIDKIT_ENABLE_ENZYME
+      void numberVariables(Fixture<DependencyTracking::Variable>& fixture) const
+      {
+        auto* y  = fixture.gastpti.y().getData();
+        auto* yp = fixture.gastpti.yp().getData();
+
+        const auto model_size = static_cast<size_t>(fixture.gastpti.size());
+        for (size_t i = 0; i < model_size; ++i)
+        {
+          y[i].setVariableNumber(i);
+          yp[i].setVariableNumber(i);
+        }
+        for (size_t port = 0; port < E::MAXIMUM; ++port)
+        {
+          fixture.input(port).setVariableNumber(fixture.inputIndex(port));
+        }
+
+        fixture.gastpti.y().setDataUpdated();
+        fixture.gastpti.yp().setDataUpdated();
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
+          const Data& data,
+          TestStatus& success) const
+      {
+        using DepVar = DependencyTracking::Variable;
+
+        Fixture<DepVar> fixture(data);
+        fixture.attachAllInputs();
+        success *= fixture.initialize(0.4);
+        setAnswerKeyInputs(fixture);
+        setAnswerKeyState(fixture.gastpti);
+        numberVariables(fixture);
+        success *= (fixture.evaluate() == 0);
+
+        const auto                         model_size = static_cast<size_t>(fixture.gastpti.size());
+        std::vector<DepVar::DependencyMap> rows(model_size);
+        const auto*                        f = fixture.gastpti.getResidual().getData();
+        for (size_t i = 0; i < model_size; ++i)
+        {
+          rows[i] = f[i].getDependencies();
+        }
+        return rows;
+      }
+
+      std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
+          const Data& data,
+          TestStatus& success) const
+      {
+        Fixture<ScalarT> fixture(data);
+        fixture.attachAllInputs();
+        success *= fixture.initialize(0.4);
+        setAnswerKeyInputs(fixture);
+        setAnswerKeyState(fixture.gastpti);
+        fixture.gastpti.updateTime(0.0, 1.0);
+        success *= (fixture.evaluate() == 0);
+        success *= (fixture.gastpti.evaluateJacobian() == 0);
+        success *= (fixture.gastpti.constructCsr() == 0);
+        return MapFromCsr(fixture.gastpti.getCsrJacobian());
       }
 #endif
     };

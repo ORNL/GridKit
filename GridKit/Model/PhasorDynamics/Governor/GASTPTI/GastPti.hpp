@@ -45,6 +45,27 @@ namespace GridKit
         MAXIMUM,
       };
 
+      /// Indices into the GASTPTI state, derivative, and residual vectors.
+      struct GastPtiIdx
+      {
+        static constexpr size_t XVALVE  = static_cast<size_t>(GastPtiInternalVariables::XVALVE);
+        static constexpr size_t XFLOW   = static_cast<size_t>(GastPtiInternalVariables::XFLOW);
+        static constexpr size_t XTEMP   = static_cast<size_t>(GastPtiInternalVariables::XTEMP);
+        static constexpr size_t VLOAD   = static_cast<size_t>(GastPtiInternalVariables::VLOAD);
+        static constexpr size_t VTEMP   = static_cast<size_t>(GastPtiInternalVariables::VTEMP);
+        static constexpr size_t VLV     = static_cast<size_t>(GastPtiInternalVariables::VLV);
+        static constexpr size_t PMECH   = static_cast<size_t>(GastPtiInternalVariables::PMECH);
+        static constexpr size_t MAXIMUM = static_cast<size_t>(GastPtiInternalVariables::MAXIMUM);
+      };
+
+      /// Indices into the GASTPTI external-signal buffers.
+      struct GastPtiExt
+      {
+        static constexpr size_t OMEGA   = static_cast<size_t>(GastPtiExternalVariables::OMEGA);
+        static constexpr size_t PREF    = static_cast<size_t>(GastPtiExternalVariables::PREF);
+        static constexpr size_t MAXIMUM = static_cast<size_t>(GastPtiExternalVariables::MAXIMUM);
+      };
+
       template <typename scalar_type, typename index_type>
       class GastPti : public Component<scalar_type, index_type>
       {
@@ -70,13 +91,13 @@ namespace GridKit
         using ScalarT    = scalar_type;
         using IdxT       = index_type;
         using RealT      = typename Component<ScalarT, IdxT>::RealT;
-        using ModelDataT = GastPtiData<RealT, IdxT>;
         using SignalT    = SignalNode<ScalarT, IdxT>;
+        using ModelDataT = GastPtiData<RealT, IdxT>;
         using MonitorT   = Model::VariableMonitor<GastPti, GastPtiData>;
 
         GastPti();
-        GastPti(const ModelDataT& data);
-        ~GastPti() override;
+        explicit GastPti(const ModelDataT& data);
+        ~GastPti();
 
         int setGridKitComponentID(IdxT) override final;
         int allocate() override final;
@@ -102,29 +123,31 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        void    initModelParams(const ModelDataT& data);
-        void    setDerivedParameters();
-        void    initializeMonitor();
+        void initializeParameters(const ModelDataT& data);
+        void initializeMonitor();
+        void setDerivedParameters();
+
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
 
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
 
-        RealT        R_{0.05};                    ///< Permanent droop
-        RealT        T1_{0.4};                    ///< Fuel-valve time constant
-        RealT        T2_{0.1};                    ///< Fuel-flow time constant
-        RealT        T3_{3.0};                    ///< Exhaust-temperature time constant
-        RealT        At_{1.0};                    ///< Ambient-temperature load limit
-        RealT        Kt_{2.0};                    ///< Exhaust-temperature feedback gain
-        RealT        Vmax_{1.0};                  ///< Maximum fuel-valve/turbine-power limit
-        RealT        Vmin_{0.0};                  ///< Minimum fuel-valve/turbine-power limit
-        RealT        Dturb_{0.0};                 ///< Turbine damping coefficient
-        RealT        Trate_{100.0};               ///< Turbine-rating power base
-        ResponseMode mode_{ResponseMode::Normal}; ///< Governor response mode
+        RealT        R_{static_cast<RealT>(0.05)};
+        RealT        T1_{static_cast<RealT>(0.4)};
+        RealT        T2_{static_cast<RealT>(0.1)};
+        RealT        T3_{static_cast<RealT>(3.0)};
+        RealT        At_{ONE<RealT>};
+        RealT        Kt_{static_cast<RealT>(2.0)};
+        RealT        Vmax_{ONE<RealT>};
+        RealT        Vmin_{ZERO<RealT>};
+        RealT        Dturb_{ZERO<RealT>};
+        RealT        Trate_{static_cast<RealT>(100.0)};
+        ResponseMode mode_{ResponseMode::Normal};
 
-        // Derived parameters
-        RealT va_component_base_{0};
-        RealT sfix_{1.0}; ///< Fixed-mode dynamic selector
+        RealT va_component_base_{ZERO<RealT>};
+        RealT sfix_{ONE<RealT>};
+
+        IdxT parameter_error_count_{0};
 
         ScalarT pref_set_{0};
 

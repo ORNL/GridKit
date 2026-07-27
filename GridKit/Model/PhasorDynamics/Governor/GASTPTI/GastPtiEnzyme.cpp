@@ -30,7 +30,7 @@ namespace GridKit
           J_vals_buffer_   = new RealT[buffer_size];
         }
 
-        using ModelT = GridKit::PhasorDynamics::Governor::GastPti<ScalarT, IdxT>;
+        using ModelT = GridKit::PhasorDynamics::Governor::GastPti<scalar_type, index_type>;
         using Fn     = GridKit::Enzyme::Sparse::MemberFunctions;
 
         nnz_ = 0;
@@ -78,6 +78,7 @@ namespace GridKit
                                                                                      J_vals_buffer_,
                                                                                      nnz_);
         this->constructCoo();
+
         return 0;
       }
 

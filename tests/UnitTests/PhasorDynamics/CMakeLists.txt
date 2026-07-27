@@ -92,8 +92,8 @@ add_executable(test_phasor_governor_gastpti runGovernorGastPtiTests.cpp)
 target_link_libraries(
   test_phasor_governor_gastpti
   GridKit::definitions
-  GridKit::phasor_dynamics_systemmodel
-  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::phasor_dynamics_governor_gastpti
+  GridKit::phasor_dynamics_governor_gastpti_dependency_tracking
   GridKit::testing)
 
 add_executable(test_phasor_governor_hygov runGovernorHygovTests.cpp)

@@ -6,23 +6,12 @@ int main()
 
   GridKit::Testing::GovernorGastPtiTests<double, size_t> test;
 
-  result += test.constructor();
-  result += test.zeroInitialResidual();
-  result += test.baseConversion();
-  result += test.absoluteTolerance();
-  result += test.prefSignal();
-  result += test.prefSignalBaseConversion();
-  result += test.residual();
-  result += test.antiWindupLimiter();
-  result += test.responseModes();
-  result += test.narrowLimitWarning();
-  result += test.initializationValidation();
-  result += test.smoothMinimumInitialization();
-  result += test.smoothMinimumEqualityRejected();
-  result += test.timeConstantMinimum();
-  result += test.parameterValidation();
-  result += test.signalValidation();
-  result += test.jsonParseAndSystemAssembly();
+  result += test.validation();
+  result += test.initializationAndSignals();
+  result += test.initializationDomain();
+  result += test.residualEquations();
+  result += test.governorControl();
+  result += test.temperatureLimiting();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
