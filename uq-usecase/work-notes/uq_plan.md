@@ -141,64 +141,50 @@ q0 = QG / baseMVA
 The Genrou `id` is `"{bus}_{rank}"` where `rank` is the 1-based position of that generator
 among all generators at that bus in the `mpc.gen` matrix (same convention as `attach_json_ids`).
 
-**3. Load (NOT yet patched)**
+**3. Load (plan — not yet implemented in `m_to_case.py`)**
 
-The `case.json` contains `LoadZIP` devices with constant-power parameters (`P0`, `Q0`). The
-PCM `.m` file has per-hour `PD`/`QD` values per bus in `mpc.bus`. Currently `m_to_case.py` does
-**not** patch load parameters. For Track 1, whether load variation is needed depends on
-whether the dynamic simulation is sensitive to the load model (likely yes for longer sims).
-This is an open question — see [Open Questions](#open-questions), item 4.
+The `case.json` contains `LoadZIP` or `LoadZ` devices representing loads. The PCM `.m` file
+has per-hour `PD`/`QD` per bus in `mpc.bus`. Patching load is needed when the simulation is
+sensitive to load model parameters, which is expected for longer transient runs.
 
-**GridKit load models (for reference):**
-
-GridKit has two static load types. Illinois.json uses **LoadZIP** exclusively (164 devices).
+**GridKit load models:**
 
 `LoadZ` (`R`, `X` in p.u.): pure constant-impedance shunt. Derived admittance:
 `G = R/(R²+X²)`, `B = -X/(R²+X²)`.
 
-`LoadZIP` (`Pnom`, `Qnom`, `Vnom`, `alphaI`, `alphaP` in p.u.): ZIP mixture. Derived admittance:
-`G = Pnom/Vnom²`, `B = Qnom/Vnom²`. Load fraction `alphaZ = 1 - alphaI - alphaP`.
+`LoadZIP` (`Pnom`, `Qnom`, `Vnom`, `alphaI`, `alphaP` in p.u.): ZIP mixture with
+constant-impedance (Z), constant-current (I), and constant-power (P) fractions.
+Derived admittance: `G = Pnom/Vnom²`, `B = Qnom/Vnom²`.
+Load fraction `alphaZ = 1 - alphaI - alphaP`.
 Power consumed at voltage V:
 `P = G V² * [alphaZ + alphaI*(Vnom/V) + alphaP*(Vnom/V)²]`.
 
-In illinois.json **all** LoadZIP devices have `alphaI=0, alphaP=0`, so `alphaZ=1` everywhere:
-they are all pure constant-impedance loads. The model reduces to `P = G V²`.
-Four devices have `Pnom=0, Qnom<0` (`id: shunt_*_1`) and represent capacitive shunts.
+**Plan for patching `LoadZIP` to a scenario PD/QD:**
 
-**Plan for patching LoadZIP to scenario PD/QD:**
+Set `Pnom = PD/baseMVA`, `Qnom = QD/baseMVA`, `Vnom = Vm`, leaving `alphaI`/`alphaP`
+unchanged. This is consistent with the existing illinois.json convention (Option B in
+[cases/illinois.md — Load demand section](../cases/illinois.md)). At initialization, when
+bus voltage equals Vm, the load consumes P = PD/baseMVA p.u. as required by the PF solution.
 
-Since all LoadZIPs in illinois.json are pure constant-Z (`alphaZ=1`), the only free parameter
-per load bus is the conductance `G = Pnom/Vnom²`. For a scenario with per-bus PD (MW) and
-QD (MVAr) from `mpc.bus`, and the converged bus voltage Vm (p.u.) from the same `mpc.bus`:
+Three complications to handle in `m_to_case.py`:
 
-```
-G_new = PD / (baseMVA * Vm²)      [p.u. S]
-B_new = QD / (baseMVA * Vm²)      [p.u. S]
-```
+1. **Multi-ZIP buses**: some buses have multiple LoadZIP devices (e.g. two load classes).
+   Total `sum(Pnom)` across all devices at a bus must equal `PD/baseMVA`. Scale each device's
+   `Pnom`/`Qnom` proportionally: `Pnom_new_i = Pnom_old_i * (PD/baseMVA) / sum_Pnom_old`.
+   See illinois.md for the full per-bus breakdown.
 
-This ensures that at initialization (when bus voltage = Vm from the PF solution),
-the load consumes exactly P = G_new * Vm² = PD/baseMVA p.u. as required.
+2. **Shunt/capacitor devices**: some LoadZIP devices represent reactive compensation
+   (`Pnom=0`, `Qnom<0`). These should not be patched with PD/QD from the `.m` file.
+   Identify them by `Pnom=0` and `id` starting with `shunt_`.
 
-To encode this back into LoadZIP params, two equivalent choices:
+3. **Zero-load buses**: buses that have a LoadZIP in the JSON but `PD=0` in the `.m`
+   scenario. Set `Pnom=0`, `Qnom=0`, keep `Vnom=Vm`.
 
-- **Option A** (keep Vnom=1.0): `Pnom = G_new`, `Qnom = B_new`, `Vnom = 1.0`
-- **Option B** (keep Pnom=PD/baseMVA): `Pnom = PD/baseMVA`, `Qnom = QD/baseMVA`, `Vnom = Vm`
+For `LoadZ` devices (if a case uses them instead of LoadZIP): replace `R` and `X` using
+`R = G/(G²+B²)`, `X = -B/(G²+B²)` where `G = PD/(baseMVA * Vm²)`, `B = QD/(baseMVA * Vm²)`.
 
-Both produce the same G and B; Option B is more readable because `Pnom` directly equals the
-load power in p.u. at the operating point.
-
-The four pure-shunt devices (`shunt_*_1`, `Pnom=0`) have no `PD` counterpart in `mpc.bus`
-(bus 15 has PD=0 in the base case). Their `Qnom` and `Vnom` encode a fixed shunt susceptance
-from the network data — they should not be updated from PCM scenario files.
-
-The 56 LoadZIP buses in illinois.json that have no PD>0 entry in the base `.m` correspond to
-buses that were given a LoadZIP in the JSON for network model completeness but carry zero or
-near-zero load in the base case. In PCM scenarios those buses may still have PD=0; if PD>0
-appears, the same formula applies.
-
-**What this does NOT do**: changing `alphaZ` from 1 to something else (e.g. adding constant-P
-or constant-current fractions) would require a deliberate model choice beyond what the base
-illinois.json encodes. For now the plan is to keep `alphaZ=1` and only update G and B.
+Illinois-specific details (load bus count, multi-ZIP bus list, shunt device names):
+see [`cases/illinois.md` — Load demand section](../cases/illinois.md).
 
 ### What is and is not changing across PCM scenarios
 
