@@ -12,6 +12,14 @@ namespace GridKit
   {
     namespace Converter
     {
+      /**
+       * @brief Jacobian evaluation not implemented yet
+       *
+       * Dependency tracking recovers the sparsity pattern from the residual
+       * evaluation itself, so no separate Jacobian is assembled here.
+       *
+       * @return int - error code, 0 = success
+       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
       {

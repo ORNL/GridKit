@@ -103,6 +103,7 @@ namespace GridKit
         int evaluateResidual() override final;
         int evaluateJacobian() override final;
 
+        /// Get the `ComponentSignals` from this `Regca`
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
@@ -120,10 +121,12 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
+        // Parameter initialization functions
         void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
 
+        // System base <-> converter base conversions
         ScalarT toComponentBase(ScalarT value) const
         {
           return value * va_system_base_ / va_converter_base_;
@@ -134,16 +137,12 @@ namespace GridKit
           return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
         }
 
-        /// Effective diagram `Rdown`: -Rpmax for Ip <= 0, inactive (-Mp) for Ip > 0
+        // Active-current rate bounds and smooth-constraint inverse
         ScalarT lpTarget(ScalarT ip) const;
-
-        /// Effective diagram `Rup`: +Rpmax for Ip >= 0, inactive (+Mp) for Ip < 0
         ScalarT upTarget(ScalarT ip) const;
-
-        /// Solve the smooth constraint correction for a positive margin. The
-        /// correction diverges as the margin approaches zero.
         ScalarT smoothConstraintCorrection(ScalarT margin) const;
 
+        // Terminal-bus accessors
         ScalarT& Vr()
         {
           return bus_->Vr();
@@ -171,6 +170,7 @@ namespace GridKit
 
         BusT* bus_{nullptr};
 
+        // Input parameters
         RealT p0_{0};
         RealT q0_{0};
         RealT mva_base_{0};
@@ -187,7 +187,11 @@ namespace GridKit
         RealT VA1_{0};
         RealT Vhvmax_{0};
 
-        IdxT  parameter_error_count_{0};
+        IdxT parameter_error_count_{0};
+
+        // Derived parameters. The mask pairs are complementary and select
+        // the LVPL and reactive-recovery branches without branching in the
+        // residual.
         RealT Mp_{0};
         RealT va_converter_base_{0};
         RealT use_lvpl_{0};
@@ -195,12 +199,16 @@ namespace GridKit
         RealT iq_use_upper_{0};
         RealT iq_use_lower_{1};
 
+        // Command setpoints latched by initialize(), used when the matching
+        // signal port is unattached
         ScalarT ipcmd_set_{0};
         ScalarT iqcmd_set_{0};
 
+        /// Component signal extension
         ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;
 
+        /* Local copies of signal variables */
         std::vector<ScalarT> ws_;
         std::vector<IdxT>    ws_indices_;
       };
