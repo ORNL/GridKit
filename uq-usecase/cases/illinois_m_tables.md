@@ -15,7 +15,7 @@ All summary numbers below are computed by parsing the tables in this file.
 | **Load buses** (PD > 0) | 108 buses |
 | **Total PD** | 1475.69 MW |
 | **Total QD** | 420.55 MVAr |
-| **Base-case V range** | [1.010, 1.056] pu (warm-start solution from `solve_pf`) |
+| **Base-case V range** | [1.010, 1.056] pu (VM column from `mpc.bus` as stored in the .m file) |
 | **Branches** | 245 (all in-service) |
 | **Generators total** | 49: 38 online, 11 offline |
 | **Offline gens** | 11 ng units (GEN_STATUS=0) |
@@ -29,7 +29,7 @@ All summary numbers below are computed by parsing the tables in this file.
 ## mpc.bus (200 buses)
 
 `BUS_TYPE`: 1=PQ, 2=PV, 3=slack. `BASE_KV`: 13.8, 115, or 230 kV.
-`VM`/`VA`: base-case converged PF solution (warm-start values for solve_pf).
+`VM`/`VA`: pre-computed PF solution stored in the .m file by the case creator (ACTIVSg200).
 
 | BUS_I | BUS_TYPE | PD | QD | GS | BS | BUS_AREA | VM | VA | BASE_KV | ZONE | VMAX | VMIN | bus_name |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
