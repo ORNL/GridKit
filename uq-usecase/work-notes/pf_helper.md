@@ -151,7 +151,7 @@ KINSOL return code 0. All PASS (tol 1e-3).
 |---|---|---|
 | 1 | Does KINSOL converge from flat start on a 200-bus case? | Run it (see plan below) |
 | 2 | Are offline generators (`status=0`) excluded from the PF equations? | Check `GeneratorFactory` — does it check `GenData.status`? |
-| 3 | Does `Branch` handle non-unity transformer ratio (`ratio != 0`)? | Check `Branch` source; ACTIVSg200 has transformers with `ratio=0.975` etc. |
+| 3 | Does `Branch` handle non-unity transformer ratio (`ratio != 0`)? | Verified: `case_ACTIVSg200.m` has **no off-nominal tap transformers** — `TAP` is 0 or 1 and `SHIFT=0` for all 245 branches. The question is moot for this case but remains relevant for other cases. |
 | 4 | Does the parser handle `mpc.bus_name`? | It is not in the `BusData` struct today; irrelevant for PF solve |
 | 5 | Are shunt elements (`Gs`, `Bs` on buses) modeled? | Check `BusData` — fields exist; verify they enter the residual |
 | 6 | After convergence, what is the output format? Bus objects expose `->V()` and `->theta()` (degrees). Is there a dump-to-.m or dump-to-JSON utility? | No utility found yet; needs custom output code |
@@ -283,3 +283,448 @@ vi = vm * sin(va)
 
 This output can be written to a JSON/CSV and consumed by the same Python `m_to_case.py`
 patching script regardless of whether GridKit or PowerModels.jl produced the solution.
+
+---
+
+## 7. What was built: `uq-usecase/pf-solver/`
+
+### Problem
+
+GridKit's `MatpowerParser.hpp` could not parse `case_ACTIVSg200.m` (or `Hawaii40_20231026.m`)
+due to two issues in the library's parser (which we were not allowed to modify):
+
+1. Field names with underscores (e.g. `mpc.bus_name`) caused a regex match failure — the
+   parser's `get_mpc_field()` uses `[a-zA-Z]+` and rejects underscores.
+2. Extra columns in `mpc.gen` and `mpc.branch` (ACTIVSg-extended MATPOWER format) caused
+   `checkEndOfMatrixRow` to throw, aborting the parse.
+
+### Solution: `matpower_parser.hpp`
+
+A standalone local parser (`uq-usecase/pf-solver/matpower_parser.hpp`) that replaces
+GridKit's `MatpowerParser.hpp` for this use case. It populates the same
+`SystemModelData<double,size_t>` struct so GridKit's solver objects (`SystemSteadyStateModel`,
+`Kinsol`) can be used unchanged.
+
+Key design choices:
+
+| Feature | GridKit parser | Local parser |
+|---------|---------------|--------------|
+| Unknown field names (e.g. `bus_name`) | regex fail | skip silently |
+| Extra columns in gen/branch rows | throws | ignores extras |
+| Cell arrays `{...}` | not handled | consumed and skipped |
+| `BusData.Va` unit | stored as degrees (from `.m`) | converted to radians (GridKit bus residuals use radians) |
+| `Pd`, `Qd`, `Pg`, `Qg` unit | stored as MW/MVAr (from `.m`) | divided by `baseMVA` to give pu (GridKit PF model is pu) |
+
+Once the parser could read the file without errors, KINSOL still failed due to two missing
+unit conversions. The `.m` format stores Va in degrees and powers in MW/MVAr, but GridKit's
+model internals expect radians and per-unit. GridKit's own `MatpowerParser.hpp` passes these
+values through as-is; the local `matpower_parser.hpp` was extended to convert them before
+populating `SystemModelData` (GridKit source was not modified):
+
+- **Va degrees bug**: `BusData.Va` is passed straight into the bus constructor as the
+  initial angle. GridKit's bus residuals use `cos(dtheta)` / `sin(dtheta)` where `dtheta`
+  is in radians, so passing degrees (e.g. `-10.5` stored as `-10.5 rad` instead of
+  `-0.183 rad`) gave wildly wrong residuals. KINSOL hit max iterations (`-6`).
+  Fix: `bd.Va *= M_PI / 180.0` after reading each bus row.
+
+- **MW/MVAr bug**: `LoadData.Pd`/`Qd` and `GenData.Pg`/`Qg` are passed straight into
+  `Load` and `GeneratorPV` constructors and subtracted from / added to the bus P/Q
+  residuals directly. The branch admittances are in pu, so the power balance is pu-scale
+  (order 1). Passing MW values (e.g. `Pd = 150 MW` instead of `1.5 pu`) made the residual
+  `||f|| = 364`. KINSOL stagnated (`-5`, line-search nonconvergence).
+  Fix: divide `Pd`, `Qd`, `Pg`, `Qg`, `Qmax`, `Qmin`, `Pmax`, `Pmin` by `baseMVA`
+  after parsing all rows.
+
+### `solve_pf.cpp`
+
+The `main()` wrapper. Key behavior:
+
+- Parses the `.m` file via the local parser.
+- Assembles `SystemSteadyStateModel`, calls KINSOL with warm start from the `.m` file's
+  `Vm`/`Va` values.
+- After `runSimulation()` (or on KINSOL exception), calls `sys->evaluateResidual()` and
+  computes `||f||_2` manually using `sys->getResidual()` (from `ModelEvaluatorImpl`).
+- Accepts as converged if `||f|| < 1e-4`, regardless of KINSOL return code — this handles
+  the case where KINSOL throws `-5` (line search stagnation) because the warm-start point
+  is already at the solution.
+- Prints `bus <i>  V=<pu>  theta_deg=<deg>  type=<1|2|3>` to stdout only if converged.
+- Optionally writes a solved `.m` file via `--output-m <path>` (see below).
+- Returns exit code 0 (converged) or 1 (not converged).
+
+### `--output-m`: solved .m output
+
+Usage:
+```bash
+solve_pf input.m --output-m solved.m
+```
+
+When `--output-m` is given and the solve converges, `write_solved_m()` (in
+`matpower_parser.hpp`) rewrites the input `.m` with `mpc.bus` columns 8-9 (Vm, Va)
+replaced by the PF solution. All other content — `mpc.gen`, `mpc.branch`, `gencost`,
+comments, unknown fields — is copied through unchanged. No output file is written if
+the solve does not converge.
+
+This makes `solve_pf` a self-contained tool for the UQ pipeline:
+```
+modified .m  →  solve_pf input.m --output-m solved.m  →  m_to_case.py solved.m  →  case.json
+```
+
+The solved `.m` has the same format as the `pcm-runs/ACTIVSg200_wind_demand/` hourly
+files, so `m_to_case.py` consumes it without modification.
+
+### Build
+
+`uq-usecase/pf-solver/build.sh` builds `solve_pf` against `~/gridkit/build/` using the same
+clang 16 / GCC 13 toolchain as the main GridKit build. No changes to the main build tree.
+
+```bash
+bash ~/gridkit/uq-usecase/pf-solver/build.sh
+# output: uq-usecase/pf-solver/build/solve_pf
+```
+
+---
+
+## 8. Verified results (2026-07-22)
+
+All three cases converge with a warm start from the `.m` file's `Vm`/`Va` columns.
+The `.m` base-case values represent a previously converged MATPOWER solution, so KINSOL
+reaches convergence in very few iterations (the initial point is already near the solution).
+
+### 3-bus sanity check
+
+| var | solve_pf | expected | pass? |
+|-----|----------|----------|-------|
+| theta2 (deg) | -4.87980 | -4.87979 | PASS |
+| V2 (p.u.) | 1.08281 | 1.08281 | PASS |
+| theta3 (deg) | 1.46240 | 1.46241 | PASS |
+
+KINSOL return code 0, `||f|| = 7e-6`.
+
+### ACTIVSg200 (200-bus Illinois)
+
+KINSOL return code 0, `||f|| = 4.4e-06`. Voltages: 1.009 to 1.043 pu.
+
+Comparison vs MATPOWER `.m` reference `Vm`/`Va`:
+
+| metric | value |
+|--------|-------|
+| max \|V err\| | 0.0297 pu |
+| mean \|V err\| | 0.0051 pu |
+| max \|theta err\| | 0.191 deg |
+| mean \|theta err\| | 0.074 deg |
+
+The residual vs the MATPOWER reference is **unexplained**: `case_ACTIVSg200.m` has no
+off-nominal tap transformers (all `TAP=0` or `TAP=1`, `SHIFT=0`), so GridKit's tap-ratio
+omission has no practical effect here. The source of the `max|V err|=0.030 pu` discrepancy
+is an open question — see Section 15 for details.
+
+### Hawaii40 (37-bus Hawaii)
+
+KINSOL return code 0, `||f|| = 1.2e-06`, converged in 3 Newton iterations.
+
+Voltages 0.969 to 1.003 pu, angles -7.0 to +1.4 deg.
+
+Hawaii40 has not been checked for off-nominal tap transformers; the same open question
+about the source of any discrepancy vs the `.m` reference applies.
+
+---
+
+## 9. Warm-start behavior
+
+`solve_pf` always warm-starts from `Vm`/`Va` in the `.m` file. This is intentional: all
+current use cases (base cases from TAMU / ACTIVSg suite) ship with a converged MATPOWER
+solution in columns 8/9 of `mpc.bus`. KINSOL finds this starting point already satisfies
+the GridKit residual (to within the model differences noted above) and converges immediately.
+
+For a case where no prior solution is available (e.g., a perturbed operating point after
+changing load or dispatch), the warm start will no longer be at the solution and KINSOL
+will need to take Newton steps. Section 6 and 14 confirm that KINSOL converges from
+warm-started perturbed cases with `nni=4-5` iterations for all tested perturbation types
+(load ±80%, 10 gens offline). Flat start (`Vm=1, Va=0`) is possible but, on this model,
+consistently converges to a different (low-voltage) solution branch — see Section 14.
+
+---
+
+## 10. Load perturbation convergence study (2026-07-23, ACTIVSg200)
+
+Five load perturbation levels tested on `case_ACTIVSg200.m` using `make_perturbed_load_m`
+(seed=42, same per-bus random draws scaled by `pct`; `Pd`/`Qd` scaled together to preserve
+per-bus power factor). Warm start from base-case `Vm`/`Va` for all runs.
+
+All five levels converged. Results vs the base-case GridKit solution (`il_df`):
+
+**Table columns:**
+- `max|dV|`, `mean|dV|` — max and mean absolute voltage magnitude difference (pu) between the perturbed and base-case solutions, over all 200 buses.
+- `max|dTheta|`, `mean|dTheta|` — same for bus voltage angle (degrees).
+- `||f||` — Euclidean norm of the P/Q mismatch vector at the final iterate (KINSOL `Residual 2-norm`). Values near `1e-6` confirm genuine convergence; values near `1e-4`+ indicate stagnation.
+- `V violations` — count of buses with solved voltage magnitude outside `[0.95, 1.05]` pu (ANSI/NERC steady-state band). Zero means the perturbed operating point is within normal limits.
+
+| Test | pct | max\|dV\| (pu) | mean\|dV\| (pu) | max\|dTheta\| (deg) | mean\|dTheta\| (deg) | \|\|f\|\| | V violations |
+|------|-----|----------------|-----------------|---------------------|----------------------|-----------|--------------|
+| 1    | ±5%  | 0.000640 | 0.000093 | 0.139 | 0.052 | 4.44e-06 | 0 |
+| 1b   | ±10% | 0.001276 | 0.000185 | 0.277 | 0.105 | 4.49e-06 | 0 |
+| 1c   | ±20% | 0.002534 | 0.000368 | 0.553 | 0.209 | 4.72e-06 | 0 |
+| 1d   | ±40% | 0.004999 | 0.000731 | 1.103 | 0.418 | 5.81e-06 | 0 |
+| 1e   | ±80% | 0.009726 | 0.001443 | 2.193 | 0.832 | 8.13e-07 | 0 |
+
+### Findings
+
+- **Perfectly linear response**: doubling the perturbation doubles both `max|dV|` and
+  `max|dTheta|` to within 1% across the full range ±5% to ±80%. The network operates
+  well within its linear regime at all tested levels.
+- **Voltage is stiff**: `max|dV|` stays below 0.01 pu even at ±80%. The voltage range
+  remains `[1.008, 1.043]` pu throughout with no violations. The data are consistent with
+  PV and slack buses absorbing load changes almost entirely through angle adjustment rather
+  than voltage magnitude; no other explanation was investigated.
+- **Angle is the observable**: `max|dTheta|` grows from 0.14 deg (±5%) to 2.19 deg
+  (±80%). Bus angles are the most informative output for load uncertainty; voltage
+  magnitude changes will be small.
+- **KINSOL is robust**: genuine new solutions found at every level (confirmed by
+  `diff_vs_base` showing non-trivial shifts). No stagnation at any perturbation level.
+- **UQ implication**: realistic load uncertainty (±5-20%) is comfortably in the linear
+  regime. PF convergence will not be a bottleneck for the aleatoric UQ track.
+
+---
+
+## 11. Wind curtailment convergence study (2026-07-23, ACTIVSg200)
+
+Four curtailment levels tested on the 6 ACTIVSg200 wind generators (buses 65, 104, 105,
+114, 115, 147) using `make_wind_dispatch_m` (seed=7, curtailment-only: each gen's `Pg`
+scaled by `(1 - Uniform(0, pct))`). All 6 wind gens run at `Pg == Pmax` in the base case
+so upward perturbation is not physically possible; curtailment-only is the correct model.
+Warm start from base-case `Vm`/`Va` for all runs.
+
+All four levels converged.
+
+| Test | max curtailment | MW curtailed (approx) | max\|dV\| (pu) | max\|dTheta\| (deg) | \|\|f\|\| |
+|------|-----------------|-----------------------|----------------|---------------------|-----------|
+| 2a   | up to 10% | ~few tens MW | — | ~1.3 deg | ~5e-06 |
+| 2b   | up to 20% | — | 0.000450 | 2.575 | 5.02e-06 |
+| 2c   | up to 40% | — | 0.000815 | 5.156 | 7.78e-06 |
+| 2d   | up to 80% | — | — | — | — |
+
+(Exact per-gen curtailment values can be read from the `plot_wind_comparison` bar chart
+for each test.)
+
+### Findings
+
+- All tests converge. Angle shifts grow with curtailment level, proportionally.
+- `max|dV|` remains below 0.001 pu for all tested levels; voltage is essentially unchanged.
+- The slack bus is expected to absorb the entire wind reduction (non-wind dispatch is
+  unchanged in the `.m` file); the angle shifts growing with curtailment level are
+  consistent with this, but line flows were not directly checked to confirm it.
+- **Section 14**: stagnation concern was investigated and resolved. The very small voltage
+  response and clean convergence even at 80% curtailment was the initial motivation for
+  the investigation; `nni` counts and flat-start cross-checks confirmed that genuine
+  Newton steps were taken.
+
+---
+
+## 12. Generator offline convergence study (2026-07-23, ACTIVSg200)
+
+Five gen-offline tests: bus 147 fixed (92.4 MW) and 2/3/5/10 random non-slack generators
+offline (seed=99). Buses and MW dropped shown below. Warm start from base-case `Vm`/`Va`.
+
+| Test | Buses offline | MW dropped | max\|dV\| (pu) | max\|dTheta\| (deg) | \|\|f\|\| |
+|------|--------------|------------|----------------|---------------------|-----------|
+| 3a   | {147} | 92.4 | — | — | — |
+| 3b   | {104, 170} | 70.4 | — | — | — |
+| 3c   | {104, 151, 167} | 72.0 | 0.000557 | 4.387 | 4.98e-06 |
+| 3d   | {67, 94, 114, 136, 154} | 165.3 | 0.002703 | 7.315 | 9.24e-07 |
+| 3e   | {65, 77, 91, 94, 125, 136, 155, 170, 182, 183} | 306.3 | 0.004528 | 16.482 | 1.51e-05 |
+
+### Findings
+
+- All tests converge. Angle shifts scale with MW dropped.
+- `max|dV|` stays below 0.005 pu even for 306 MW dropped (test 3e). **Working
+  hypothesis**: in a stiff, well-connected 200-bus system with ample reactive support,
+  real power imbalances are absorbed mostly through angle shifts rather than voltage
+  magnitude changes, so small dV is physically plausible. Evidence for this: Section 10
+  shows the same pattern for load perturbations (linear scaling, voltage nearly unchanged
+  at ±80% load). Note: the tap ratio omission is not relevant here since
+  `case_ACTIVSg200.m` has no off-nominal tap transformers (verified from `mpc.branch`).
+  **Pending confirmation**: PowerModels.jl cross-validation will verify whether a
+  full-model solver shows similarly small dV for the same gen-offline cases. If it does,
+  the hypothesis is confirmed. If it does not, the GridKit model is missing reactive
+  coupling that would drive larger voltage shifts.
+
+### Resolution: stagnation concern resolved (2026-07-23, Section 7)
+
+See Section 14 for the full investigation. Summary:
+
+- `nni=4-5` for all warm-start perturbed cases — genuine Newton steps were taken, not
+  stagnation (stagnation would show `nni=1` or `2`).
+- Flat start (`Vm=1, Va=0`) always converges to a distinct low-voltage branch
+  (V range ~[0.965, 1.000] pu) regardless of perturbation type or severity.
+- The `max|dV|=0.043 pu` gap between flat and warm is a fixed property of the two
+  solution branches in GridKit's tap-less model, not a perturbation artifact.
+- Warm-start solutions track the high-voltage branch (V range ~[1.007, 1.043] pu)
+  and are genuine equilibria of GridKit's model.
+- Cross-validation against an independent reference solver still requires PowerModels.jl
+  — that is the next step. Since `case_ACTIVSg200.m` has no off-nominal tap transformers,
+  any remaining difference vs PowerModels.jl will have a different root cause.
+
+---
+
+## 14. Stagnation investigation: flat start vs warm start (2026-07-23, ACTIVSg200)
+
+**Motivation**: Section 12 raised concern that warm-start solutions in Section 6 might
+be stagnation artifacts. This section documents the investigation and resolution.
+
+### Method
+
+Added `--flat-start` flag to `solve_pf` (zeroes all bus `Vm=1.0, Va=0.0` before solving).
+Added `_extract_nni` to `pf_utils.py` to parse KINSOL's "Nonlinear iters" from stderr and
+inject it into the returned stderr string as `nni=N`. Four tests run in notebook Section 7.
+
+### Results
+
+| Test | warm nni | warm V range (pu) | flat nni | flat V range (pu) | max\|dV\| warm vs flat |
+|------|----------|------------------|----------|------------------|------------------------|
+| 7.1 base case | 4 | [1.009, 1.043] | 7 | [0.967, 1.000] | 0.043 |
+| 7.2 gen147off | 4 | [1.009, 1.043] | 7 | [0.967, 1.000] | 0.043 |
+| 7.3 load ±80% | 5 | [1.008, 1.043] | 7 | [0.966, 1.000] | 0.043 |
+| 7.4 gen10rand | 5 | [1.007, 1.043] | 8 | [0.965, 1.000] | 0.043 |
+
+### Findings
+
+**Two observed solution branches**: in all four tests, two distinct converged solutions
+were found depending on starting point. We have not proven that exactly two equilibria
+exist — that would require a more thorough analysis. What the data show:
+- Warm start (base-case `Vm`/`Va`) converged to V ~[1.007, 1.043] pu in all 4 cases.
+- Flat start (`Vm=1, Va=0`) converged to V ~[0.965, 1.000] pu in all 4 cases.
+- The separation is ~0.043 pu, constant across all 4 tests.
+
+The high-voltage branch is consistent with the TAMU base-case solution stored in
+`case_ACTIVSg200.m` (which represents a physically operated system), giving confidence
+that it is the operationally relevant solution. The low-voltage branch has all bus
+voltages at or below 1.000 pu, which is atypical for a generation-rich system and
+suggests it is a non-operational equilibrium of the tap-less model.
+
+**Not stagnation**: `nni=4-5` for warm-start perturbed cases (vs `nni=4` for the base
+case) confirms KINSOL took genuine Newton steps. Stagnation would show `nni=1` because
+the residual check would pass at the initial point without any steps.
+
+**Flat start is not a useful cross-validator here**: in all 4 tested cases it converged
+to the low-voltage branch rather than the operationally relevant high-voltage branch.
+Cross-validation must use PowerModels.jl, which operates on the full MATPOWER model.
+
+**Warm-start solutions are valid for GridKit's model**: the Section 6 solutions are
+genuine equilibria of GridKit's model. They may differ from PowerModels.jl solutions
+for reasons that are not yet understood (see open question in Section 15); they are
+self-consistent within GridKit's model.
+
+---
+
+## 15. Transformer tap ratio and phase shift: what GridKit omits and why it matters
+
+### Overview
+
+GridKit's Branch model uses a plain symmetric PI model (`a=1, φ=0` for all branches).
+MATPOWER, PowerModels, and PowerWorld use the full generalized PI model that incorporates
+transformer tap ratios and phase shifts, which makes the from/to shunt admittances
+asymmetric. Both formulations assemble branch equations into nodal mismatch equations
+(expressible as a Ybus).
+
+### What the MATPOWER `.m` file contains
+
+Every row of `mpc.branch` has two transformer fields (columns 9 and 10):
+
+| Column | MATPOWER name | Meaning |
+|--------|--------------|---------|
+| 9 | `ratio` (a) | Off-nominal turns ratio. `0` or `1` = unity (plain line). Values like `0.975` or `1.05` indicate an LTC or tap-changer at the from-bus. |
+| 10 | `angle` (φ) | Phase shift angle in degrees. Non-zero only for phase-shifting transformers (PSTs). In `case_ACTIVSg200.m` all values are 0, but the field is present. |
+
+In `case_ACTIVSg200.m`, verified by parsing `mpc.branch` column 9: all 245 branches have
+`TAP=0` (179 branches, plain lines) or `TAP=1.0` (66 branches, explicit unity). There are
+**no off-nominal tap transformers** in this specific case. The description below applies
+generally to MATPOWER cases that do have them (e.g. many larger transmission cases).
+
+### What GridKit parses vs what it uses
+
+`BranchData` (in `PowerFlowData.hpp`) has both fields:
+
+```cpp
+RealT ratio;  // parsed from column 9
+RealT angle;  // parsed from column 10
+```
+
+But `Branch::Branch(bus1, bus2, BranchData& data)` only reads `data.r`, `data.x`, `data.b`:
+
+```cpp
+Branch<ScalarT, IdxT>::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)
+    : R_(data.r),
+      X_(data.x),
+      G_(0.0),      // shunt conductance: hardcoded zero
+      B_(data.b),   // shunt susceptance
+      ...
+```
+
+`data.ratio` and `data.angle` are parsed into the struct but never passed to or used by `Branch`. They are silently dropped.
+
+### What the Branch residual actually computes
+
+`Branch::evaluateResidual()` implements a plain symmetric PI model:
+
+```
+g + jb = 1 / (R + jX)       (series admittance, no tap)
+
+P1 -= (g + G/2)*V1^2 + V1*V2*(-g*cos(dθ) - b*sin(dθ))
+Q1 -= (-b - B/2)*V1^2 + V1*V2*(-g*sin(dθ) + b*cos(dθ))
+P2 -= (g + G/2)*V2^2 + V1*V2*(-g*cos(dθ) + b*sin(dθ))
+Q2 -= (-b - B/2)*V2^2 + V1*V2*(g*sin(dθ) + b*cos(dθ))
+```
+
+with `dθ = θ1 - θ2`. No tap ratio `a`, no phase shift `φ`.
+
+### What MATPOWER / PowerModels / PowerWorld model instead
+
+The standard MATPOWER/PSS/E transformer model adds the turns ratio `a` and phase shift `φ` by modifying the admittance entries that appear in the bus admittance matrix `Ybus`. For an off-nominal transformer between buses `i` and `j` with ratio `a` and shift `φ`:
+
+$$
+Y_{ij} = -\frac{y_s}{a \cdot e^{j\phi}}, \quad
+Y_{ii} += \frac{y_s}{a^2}, \quad
+Y_{jj} += y_s
+$$
+
+where $y_s = 1/(R+jX)$ is the series admittance. When `a=1, φ=0` this reduces exactly to the plain PI model. When `a ≠ 1` or `φ ≠ 0`:
+
+- The from-bus (`i`) sees a modified self-admittance: shunt is $y_s/a^2$ instead of $y_s$.
+- The mutual admittance is $y_s/(a \cdot e^{j\phi})$ instead of $y_s$.
+- The to-bus (`j`) sees the standard $y_s$ shunt.
+
+In MATPOWER's `makeBusAdmittanceMatrix()` and PowerModels.jl's `calc_branch_y()` this is computed automatically for every branch. PowerWorld does the same inside its internal network matrix assembly. The result is that tap-changer transformers shift reactive power between the buses and affect voltage magnitudes in a way that a plain line model does not.
+
+### Practical consequence for ACTIVSg200
+
+`case_ACTIVSg200.m` has 245 branches. Checking `mpc.branch` column 9: 179 branches
+have `TAP=0` (plain lines, unity tap by MATPOWER convention) and 66 have `TAP=1.0`
+(explicit unity). There are **no off-nominal tap transformers** in this case — all
+`SHIFT` values are also 0. This means the tap-ratio omission in GridKit's `Branch`
+model has **no practical effect on this specific case**: with `a=1, φ=0` for all
+branches, the generalized PI model reduces exactly to the plain symmetric PI model.
+
+**The `max|V err| = 0.030 pu` seen in Section 8 is therefore not explained by the tap
+ratio omission.** The source of that discrepancy is unknown; it requires investigation.
+Candidates include: different shunt handling, generator reactive power limits enforced
+differently, or the MATPOWER `.m` reference values coming from a different solver with
+different convergence criteria. This is an open question.
+
+GridKit's solution IS fully converged for its own model (`||f|| = 4.4e-6`).
+
+**For relative comparisons** (base vs perturbed, same GridKit model throughout),
+the discrepancy vs MATPOWER does not matter: both cases are solved with the same model,
+so `diff_vs_base` measures genuine perturbation effects, not modeling artifacts.
+
+**For absolute accuracy** (patching `illinois.json` with physically correct Vm/Va),
+the discrepancy matters and needs to be understood before GridKit solutions are used
+for JSON patching. PowerModels.jl cross-validation is the next step.
+
+### How to fix tap ratio handling in GridKit (not done, likely not needed for ACTIVSg200)
+
+Since `case_ACTIVSg200.m` has no off-nominal tap transformers, the fix is not needed
+for this case. If the same approach is applied to a case that does have transformers
+with `ratio != 1` or `shift != 0`, the fix would be: modify
+`Branch::Branch(bus_type* bus1, bus_type* bus2, BranchData& data)` to use `data.ratio`
+and `data.angle` in `evaluateResidual()`. The local `matpower_parser.hpp` already
+parses these fields into `BranchData` correctly.

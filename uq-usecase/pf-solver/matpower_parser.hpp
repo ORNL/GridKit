@@ -15,9 +15,11 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <GridKit/Model/PowerFlow/PowerFlowData.hpp>
 
@@ -289,6 +291,141 @@ namespace UqPfSolver
               << "  buses=" << mp.bus.size()
               << "  gens=" << mp.gen.size()
               << "  branches=" << mp.branch.size() << "\n";
+  }
+
+  /**
+   * @brief Write a solved .m file by patching Vm/Va in mpc.bus of the source file.
+   *
+   * Reads the original .m text line by line. When inside the mpc.bus matrix,
+   * replaces columns 8 (Vm) and 9 (Va, degrees) in each data row with the
+   * converged PF solution stored in @p bus_solution (keyed by bus_i).
+   * Everything else (mpc.gen, mpc.branch, comments, other fields) is copied
+   * through unchanged.
+   *
+   * @param src_path   Path to the original (input) .m file.
+   * @param dst_path   Path to write the solved (output) .m file.
+   * @param bus_solution  Map from bus_i -> (Vm_pu, Va_deg) from the PF solution.
+   */
+  inline void write_solved_m(
+      const std::string& src_path,
+      const std::string& dst_path,
+      const std::map<size_t, std::pair<double, double>>& bus_solution)
+  {
+    std::ifstream ifs{src_path};
+    if (!ifs) throw std::runtime_error("write_solved_m: cannot open input: " + src_path);
+
+    std::ofstream ofs{dst_path};
+    if (!ofs) throw std::runtime_error("write_solved_m: cannot open output: " + dst_path);
+
+    bool in_bus_matrix = false;
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+      if (!in_bus_matrix)
+      {
+        // Detect start of mpc.bus matrix.
+        std::string stripped = line;
+        strip_comments(stripped);
+        ltrim(stripped); rtrim(stripped);
+        std::string field = get_mpc_field(stripped);
+        if (field == "bus" && stripped.find('[') != std::string::npos)
+        {
+          in_bus_matrix = true;
+          ofs << line << "\n";
+          continue;
+        }
+        ofs << line << "\n";
+      }
+      else
+      {
+        // Inside mpc.bus: patch or pass through each row.
+        std::string stripped = line;
+        strip_comments(stripped);
+        ltrim(stripped); rtrim(stripped);
+
+        // End of matrix.
+        if (stripped.find("];") != std::string::npos ||
+            stripped == "]")
+        {
+          in_bus_matrix = false;
+          ofs << line << "\n";
+          continue;
+        }
+
+        // Skip blank or comment-only lines.
+        if (stripped.empty())
+        {
+          ofs << line << "\n";
+          continue;
+        }
+
+        // Parse enough columns to get bus_i (col 0), then locate and replace
+        // cols 7 (Vm) and 8 (Va) by token position in the original line.
+        std::istringstream ss(stripped);
+        size_t bus_i = 0;
+        if (!(ss >> bus_i))
+        {
+          ofs << line << "\n";
+          continue;
+        }
+
+        auto it = bus_solution.find(bus_i);
+        if (it == bus_solution.end())
+        {
+          // Bus not in solution (e.g. isolated bus) — pass through unchanged.
+          ofs << line << "\n";
+          continue;
+        }
+
+        double vm_new = it->second.first;
+        double va_new = it->second.second;  // degrees
+
+        // Tokenize the original line to find and replace cols 7 and 8.
+        // Preserve the original whitespace structure by replacing tokens in-place.
+        // We work on the stripped (comment-removed) content but emit the original
+        // prefix whitespace.
+
+        // Find leading whitespace prefix from original line.
+        std::string prefix;
+        for (char c : line)
+        {
+          if (std::isspace((unsigned char)c)) prefix += c;
+          else break;
+        }
+
+        // Split stripped into tokens.
+        std::vector<std::string> tokens;
+        {
+          std::istringstream ts(stripped);
+          std::string tok;
+          while (ts >> tok) tokens.push_back(tok);
+        }
+
+        // Replace token[7] (Vm) and token[8] (Va).
+        if (tokens.size() > 8)
+        {
+          char buf[64];
+          std::snprintf(buf, sizeof(buf), "%.8f", vm_new);
+          tokens[7] = buf;
+          std::snprintf(buf, sizeof(buf), "%.8f", va_new);
+          tokens[8] = buf;
+        }
+
+        // Reassemble with single spaces and original indentation.
+        ofs << prefix;
+        for (size_t i = 0; i < tokens.size(); ++i)
+        {
+          if (i > 0) ofs << "\t";
+          ofs << tokens[i];
+        }
+        // Preserve trailing semicolon if the original had one.
+        if (line.find(';') != std::string::npos &&
+            (tokens.empty() || tokens.back() != ";"))
+          ofs << ";";
+        ofs << "\n";
+      }
+    }
+    std::cerr << "Wrote solved .m: " << dst_path << "\n";
   }
 
 } // namespace UqPfSolver

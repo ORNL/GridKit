@@ -106,14 +106,17 @@ def normalize_bus_df(bus_df: pd.DataFrame) -> pd.DataFrame:
 def normalize_gen_df(gen_df: pd.DataFrame) -> pd.DataFrame:
     """Return generator table with numeric GEN_BUS and a stable row index."""
 
-    df = gen_df.copy().reset_index(drop=False)
+    # Reset to integer index; if the index is named gen_row (already normalized),
+    # drop it to avoid the "cannot insert gen_row, already exists" error.
+    df = gen_df.copy().reset_index(drop=True)
     if "GEN_BUS" not in df.columns:
         raise ValueError(
             "MATPOWER generator table is missing required column 'GEN_BUS'"
         )
 
     df["GEN_BUS"] = _to_int_series(df["GEN_BUS"], "GEN_BUS")
-    df = df.rename(columns={df.columns[0]: "gen_row"})
+    if "gen_row" not in df.columns:
+        df.insert(0, "gen_row", df.index)
     # Name the GEN_STATUS column (col 8 in MATPOWER gen, index 7 after gen_row prepend)
     if "GEN_STATUS" not in df.columns and len(df.columns) > 8:
         df = df.rename(columns={df.columns[8]: "GEN_STATUS"})
@@ -1242,3 +1245,389 @@ def _coerce_optional_str(value: Any) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+def plot_gen_dispatch(
+    case_data: MatpowerCaseData,
+    title: str | None = None,
+    highlight_buses: list[int] | None = None,
+) -> go.Figure:
+    """Bar chart of online generator dispatch (PG > 0, GEN_STATUS == 1) by fuel type.
+
+    Each bar represents one generator row, sorted by PG descending within each fuel.
+    Offline generators (GEN_STATUS != 1 or PG == 0) are shown as a separate group
+    in light grey to give a sense of headroom.
+
+    Parameters
+    ----------
+    case_data:
+        Loaded MATPOWER case from ``read_matpower_case``.
+    title:
+        Plot title; defaults to ``case_data.case_name``.
+    highlight_buses:
+        List of GEN_BUS values to mark with a red border (for gen-offline scenarios).
+    """
+    gen = case_data.gen.copy()
+    status_col = "GEN_STATUS" if "GEN_STATUS" in gen.columns else None
+
+    # Attach fuel labels.
+    if case_data.genfuel is not None and len(case_data.genfuel) == len(gen):
+        gen["fuel"] = case_data.genfuel.values
+    else:
+        gen["fuel"] = "unknown"
+
+    gen["label"] = "bus " + gen["GEN_BUS"].astype(str)
+
+    # Split online vs offline.
+    if status_col:
+        mask_on = (gen[status_col] == 1) & (gen["PG"] > 0)
+    else:
+        mask_on = gen["PG"] > 0
+    on = gen[mask_on].copy()
+    off = gen[~mask_on].copy()
+
+    on = on.sort_values(["fuel", "PG"], ascending=[True, False])
+
+    highlight_set = set(highlight_buses) if highlight_buses else set()
+
+    fuel_colors = {
+        "ng": "#4C72B0",
+        "nuclear": "#DD8452",
+        "coal": "#55A868",
+        "wind": "#C44E52",
+        "hydro": "#8172B2",
+        "solar": "#937860",
+        "oil": "#DA8BC3",
+        "unknown": "#8C8C8C",
+        "other": "#8C8C8C",
+    }
+
+    fig = go.Figure()
+
+    # One trace per fuel for the legend.
+    for fuel, grp in on.groupby("fuel", sort=True):
+        color = fuel_colors.get(str(fuel).lower(), "#8C8C8C")
+        marker_line_colors = [
+            "red" if b in highlight_set else color for b in grp["GEN_BUS"]
+        ]
+        marker_line_widths = [3 if b in highlight_set else 0 for b in grp["GEN_BUS"]]
+        fig.add_trace(
+            go.Bar(
+                name=str(fuel),
+                x=grp["label"],
+                y=grp["PG"],
+                marker_color=color,
+                marker_line_color=marker_line_colors,
+                marker_line_width=marker_line_widths,
+                hovertemplate=(
+                    "bus %{x}<br>PG = %{y:.1f} MW<br>fuel = "
+                    + str(fuel)
+                    + "<extra></extra>"
+                ),
+            )
+        )
+
+    # Offline gens as a single grey trace.
+    if not off.empty:
+        pmax_col = "PMAX" if "PMAX" in off.columns else None
+        y_off = off[pmax_col] if pmax_col else pd.Series([0.0] * len(off))
+        fig.add_trace(
+            go.Bar(
+                name="offline",
+                x=off["label"],
+                y=y_off,
+                marker_color="rgba(180,180,180,0.35)",
+                marker_line_color="rgba(150,150,150,0.5)",
+                marker_line_width=1,
+                hovertemplate="bus %{x}<br>offline (Pmax = %{y:.1f} MW)<extra></extra>",
+            )
+        )
+
+    base_mva = case_data.base_mva or 100.0
+    total_mw = on["PG"].sum()
+    n_on = len(on)
+    n_off = len(off)
+
+    _ = fig.update_layout(
+        title=title or f"{case_data.case_name} — generator dispatch",
+        xaxis_title="Generator (bus)",
+        yaxis_title="PG (MW)",
+        barmode="relative",
+        legend_title="Fuel",
+        hovermode="x unified",
+        annotations=[
+            dict(
+                text=(
+                    f"Online: {n_on} gens, {total_mw:.0f} MW total"
+                    f"   |   Offline: {n_off} gens"
+                ),
+                xref="paper",
+                yref="paper",
+                x=0.01,
+                y=1.06,
+                showarrow=False,
+                font=dict(size=12),
+            )
+        ],
+    )
+    return fig
+
+
+def plot_load_profile(
+    case_data: MatpowerCaseData, title: str | None = None
+) -> go.Figure:
+    """Bar chart of Pd (MW) per loaded bus, ordered by bus number. Zero-load buses omitted."""
+    bus = normalize_bus_df(case_data.bus).reset_index(drop=True)
+    total_mw = bus["PD"].sum()
+    n_loaded = (bus["PD"] > 0).sum()
+    bus = bus[bus["PD"] > 0].sort_values("BUS_I").reset_index(drop=True)
+    bus["label"] = "bus " + bus["BUS_I"].astype(str)
+
+    fig = go.Figure(
+        go.Bar(
+            x=bus["label"],
+            y=bus["PD"],
+            marker_color="steelblue",
+            hovertemplate="bus %{x}<br>Pd = %{y:.2f} MW<extra></extra>",
+        )
+    )
+    _ = fig.update_layout(
+        title=title
+        or (
+            f"{case_data.case_name} — load profile"
+            f"  ({n_loaded} loaded buses, {total_mw:.0f} MW total)"
+        ),
+        xaxis_title="Bus number (zero-load buses omitted)",
+        yaxis_title="Pd (MW)",
+        xaxis_showticklabels=False,
+    )
+    return fig
+
+
+def plot_load_comparison(
+    base_m_path: str | Path,
+    perturbed_m_path: str | Path,
+    title: str | None = None,
+) -> go.Figure:
+    """Stacked bar chart: gray = retained Pd, blue delta stacked on top for increases,
+    red delta stacked on top for decreases.
+
+    All loaded buses in bus-number order. Three stacked traces per bus:
+      - gray:  min(base, pert)  — common lower portion
+      - blue:  delta if delta > 0 else 0  — increase stacked above gray
+      - red:   |delta| if delta < 0 else 0  — decrease layered above gray,
+               showing visually how much of the nominal bar was removed
+    """
+    base = read_matpower_case(base_m_path)
+    pert = read_matpower_case(perturbed_m_path)
+
+    base_pd = (
+        normalize_bus_df(base.bus)
+        .reset_index(drop=True)[["BUS_I", "PD"]]
+        .rename(columns={"PD": "PD_base"})
+    )
+    pert_pd = (
+        normalize_bus_df(pert.bus)
+        .reset_index(drop=True)[["BUS_I", "PD"]]
+        .rename(columns={"PD": "PD_pert"})
+    )
+
+    cmp = base_pd.merge(pert_pd, on="BUS_I")
+    cmp = cmp[cmp["PD_base"] > 0].sort_values("BUS_I").reset_index(drop=True)
+    cmp["delta"] = cmp["PD_pert"] - cmp["PD_base"]
+    cmp["label"] = "bus " + cmp["BUS_I"].astype(str)
+
+    # Bottom layer: retained (common) Pd
+    cmp["y_gray"] = cmp[["PD_base", "PD_pert"]].min(axis=1)
+    # Blue delta: only for increases
+    cmp["y_blue"] = cmp["delta"].clip(lower=0)
+    # Red delta: magnitude of decreases
+    cmp["y_red"] = (-cmp["delta"]).clip(lower=0)
+
+    n_up = (cmp["delta"] > 0).sum()
+    n_dn = (cmp["delta"] < 0).sum()
+
+    fig = go.Figure()
+
+    # Gray: common retained portion (all buses)
+    fig.add_trace(
+        go.Bar(
+            x=cmp["label"],
+            y=cmp["y_gray"],
+            name="base Pd (retained)",
+            marker_color="rgba(150,150,150,0.50)",
+            marker_line_width=0,
+            customdata=cmp[["PD_base", "PD_pert", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "base = %{customdata[0]:.2f} MW<br>"
+                "pert = %{customdata[1]:.2f} MW<br>"
+                "delta = %{customdata[2]:+.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    # Blue: increase delta stacked on top of gray
+    fig.add_trace(
+        go.Bar(
+            x=cmp["label"],
+            y=cmp["y_blue"],
+            name="load increased (delta)",
+            marker_color="rgba(31,119,180,0.80)",
+            marker_line_width=0,
+            customdata=cmp[["PD_base", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "delta = +%{customdata[1]:.2f} MW<br>"
+                "base = %{customdata[0]:.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    # Red: decrease delta stacked on top of gray (covers the "removed" portion)
+    fig.add_trace(
+        go.Bar(
+            x=cmp["label"],
+            y=cmp["y_red"],
+            name="load decreased (delta)",
+            marker_color="rgba(214,39,40,0.80)",
+            marker_line_width=0,
+            customdata=cmp[["PD_base", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "delta = %{customdata[1]:.2f} MW<br>"
+                "base = %{customdata[0]:.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    _ = fig.update_layout(
+        barmode="stack",
+        title=title
+        or f"{base.case_name} — load perturbation  ({n_up} up, {n_dn} down)",
+        xaxis_title="Bus number (zero-load buses omitted)",
+        yaxis_title="Pd (MW)",
+        xaxis_showticklabels=False,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
+
+
+def plot_wind_comparison(
+    base_case: MatpowerCaseData,
+    perturbed_m_path: str | Path,
+    title: str | None = None,
+) -> go.Figure:
+    """Stacked bar chart for wind generator dispatch perturbation.
+
+    Same visual logic as plot_load_comparison: gray = retained PG,
+    blue delta stacked on top for increases, red delta for decreases.
+    Generators ordered by bus number.
+    """
+    pert_case = read_matpower_case(perturbed_m_path)
+
+    fuels = base_case.genfuel if base_case.genfuel is not None else []
+    if len(fuels) == 0:
+        raise ValueError(
+            "base_case has no genfuel data; cannot identify wind generators"
+        )
+
+    base_gen = normalize_gen_df(base_case.gen).copy()
+    base_gen["fuel"] = [str(f).lower() if f else "" for f in fuels]
+    base_wind = (
+        base_gen[base_gen["fuel"] == "wind"][["GEN_BUS", "PG"]]
+        .reset_index(drop=True)
+        .sort_values("GEN_BUS")
+        .reset_index(drop=True)
+    )
+
+    pert_gen = normalize_gen_df(pert_case.gen).copy()
+    pert_pg = []
+    for bus in base_wind["GEN_BUS"]:
+        rows = pert_gen[pert_gen["GEN_BUS"] == bus]
+        pert_pg.append(rows["PG"].values[0] if not rows.empty else 0.0)
+
+    base_wind["PG_pert"] = pert_pg
+    base_wind["delta"] = base_wind["PG_pert"] - base_wind["PG"]
+    base_wind["label"] = "bus " + base_wind["GEN_BUS"].astype(str)
+
+    base_wind["y_gray"] = base_wind[["PG", "PG_pert"]].min(axis=1)
+    base_wind["y_blue"] = base_wind["delta"].clip(lower=0)
+    base_wind["y_red"] = (-base_wind["delta"]).clip(lower=0)
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Bar(
+            x=base_wind["label"],
+            y=base_wind["y_gray"],
+            name="base PG (retained)",
+            marker_color="rgba(150,150,150,0.50)",
+            marker_line_width=0,
+            customdata=base_wind[["PG", "PG_pert", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "base = %{customdata[0]:.2f} MW<br>"
+                "pert = %{customdata[1]:.2f} MW<br>"
+                "delta = %{customdata[2]:+.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    fig.add_trace(
+        go.Bar(
+            x=base_wind["label"],
+            y=base_wind["y_blue"],
+            name="dispatch increased (delta)",
+            marker_color="rgba(31,119,180,0.80)",
+            marker_line_width=0,
+            customdata=base_wind[["PG", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "delta = +%{customdata[1]:.2f} MW<br>"
+                "base = %{customdata[0]:.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    fig.add_trace(
+        go.Bar(
+            x=base_wind["label"],
+            y=base_wind["y_red"],
+            name="dispatch decreased (delta)",
+            marker_color="rgba(214,39,40,0.80)",
+            marker_line_width=0,
+            customdata=base_wind[["PG", "delta"]].values,
+            hovertemplate=(
+                "bus %{x}<br>"
+                "delta = %{customdata[1]:.2f} MW<br>"
+                "base = %{customdata[0]:.2f} MW<extra></extra>"
+            ),
+        )
+    )
+
+    # Annotate each bar with the signed % delta so small changes are legible
+    for _, row in base_wind.iterrows():
+        if row["PG"] > 0:
+            pct_str = f"{row['delta'] / row['PG'] * 100:+.1f}%"
+        else:
+            pct_str = f"{row['delta']:+.1f} MW"
+        y_top = max(row["PG"], row["PG_pert"])
+        color = "rgba(31,119,180,1)" if row["delta"] >= 0 else "rgba(214,39,40,1)"
+        fig.add_annotation(
+            x=row["label"],
+            y=y_top,
+            text=pct_str,
+            showarrow=False,
+            yanchor="bottom",
+            font=dict(size=11, color=color),
+        )
+
+    _ = fig.update_layout(
+        barmode="stack",
+        title=title or f"{base_case.case_name} — wind dispatch perturbation",
+        xaxis_title="Wind generator (bus number)",
+        yaxis_title="PG (MW)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    return fig
