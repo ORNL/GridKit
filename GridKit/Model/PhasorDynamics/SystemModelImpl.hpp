@@ -163,63 +163,6 @@ namespace GridKit
         addComponent(regca);
       }
 
-      // Add REECB electrical controllers
-      for (const auto& reecbdata : data.reecb)
-      {
-        IdxT bus_index = 0;
-        if (reecbdata.buses.contains(ReecbBuses::bus))
-        {
-          bus_index = reecbdata.buses.at(ReecbBuses::bus);
-        }
-
-        auto* reecb = new Reecb<ScalarT, IdxT>(getBus(bus_index), reecbdata);
-
-        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pe))
-        {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pe);
-          constexpr auto PE     = ReecbExternalVariables::PE;
-          reecb->getSignals().template attachSignalNode<PE>(getSignal(signal));
-        }
-        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qgen))
-        {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qgen);
-          constexpr auto QGEN   = ReecbExternalVariables::QGEN;
-          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(signal));
-        }
-        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qext))
-        {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qext);
-          constexpr auto QEXT   = ReecbExternalVariables::QEXT;
-          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(signal));
-        }
-        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pfaref))
-        {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pfaref);
-          constexpr auto PFAREF = ReecbExternalVariables::PFAREF;
-          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(signal));
-        }
-        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pref))
-        {
-          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pref);
-          constexpr auto PREF   = ReecbExternalVariables::PREF;
-          reecb->getSignals().template attachSignalNode<PREF>(getSignal(signal));
-        }
-        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::iqcmd))
-        {
-          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::iqcmd);
-          constexpr auto IQCMD  = ReecbInternalVariables::IQCMD;
-          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(signal));
-        }
-        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::ipcmd))
-        {
-          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::ipcmd);
-          constexpr auto IPCMD  = ReecbInternalVariables::IPCMD;
-          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(signal));
-        }
-
-        addComponent(reecb);
-      }
-
       // Add branches
       for (const auto& branchdata : data.branch)
       {
@@ -349,6 +292,69 @@ namespace GridKit
         }
         auto* gen = new GenClassical<ScalarT, IdxT>(getBus(bus_index), gendata);
         addComponent(gen);
+      }
+
+      // Add REECB electrical controllers
+      //
+      // Added after the machines and converters that drive them: a source
+      // publishes its resolved current commands into the assigned iqcmd/ipcmd
+      // nodes during its own initialize(), and REECB reads those seeds when it
+      // initializes. Components initialize in insertion order, so REECB must
+      // come after anything that seeds it.
+      for (const auto& reecbdata : data.reecb)
+      {
+        IdxT bus_index = 0;
+        if (reecbdata.buses.contains(ReecbBuses::bus))
+        {
+          bus_index = reecbdata.buses.at(ReecbBuses::bus);
+        }
+
+        auto* reecb = new Reecb<ScalarT, IdxT>(getBus(bus_index), reecbdata);
+
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pe))
+        {
+          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pe);
+          constexpr auto PE     = ReecbExternalVariables::PE;
+          reecb->getSignals().template attachSignalNode<PE>(getSignal(signal));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qgen))
+        {
+          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qgen);
+          constexpr auto QGEN   = ReecbExternalVariables::QGEN;
+          reecb->getSignals().template attachSignalNode<QGEN>(getSignal(signal));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::qext))
+        {
+          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::qext);
+          constexpr auto QEXT   = ReecbExternalVariables::QEXT;
+          reecb->getSignals().template attachSignalNode<QEXT>(getSignal(signal));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pfaref))
+        {
+          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pfaref);
+          constexpr auto PFAREF = ReecbExternalVariables::PFAREF;
+          reecb->getSignals().template attachSignalNode<PFAREF>(getSignal(signal));
+        }
+        if (reecbdata.signal_inputs.contains(ReecbSignalInputs::pref))
+        {
+          const IdxT     signal = reecbdata.signal_inputs.at(ReecbSignalInputs::pref);
+          constexpr auto PREF   = ReecbExternalVariables::PREF;
+          reecb->getSignals().template attachSignalNode<PREF>(getSignal(signal));
+        }
+        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::iqcmd))
+        {
+          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::iqcmd);
+          constexpr auto IQCMD  = ReecbInternalVariables::IQCMD;
+          reecb->getSignals().template assignSignalNode<IQCMD>(getSignal(signal));
+        }
+        if (reecbdata.signal_outputs.contains(ReecbSignalOutputs::ipcmd))
+        {
+          const IdxT     signal = reecbdata.signal_outputs.at(ReecbSignalOutputs::ipcmd);
+          constexpr auto IPCMD  = ReecbInternalVariables::IPCMD;
+          reecb->getSignals().template assignSignalNode<IPCMD>(getSignal(signal));
+        }
+
+        addComponent(reecb);
       }
 
       // Add Tgov1 governors

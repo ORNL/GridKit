@@ -144,8 +144,10 @@ add_executable(test_phasor_converter_reecb runConverterReecbTests.cpp)
 target_link_libraries(
   test_phasor_converter_reecb
   GridKit::definitions
-  GridKit::phasor_dynamics_systemmodel
-  GridKit::phasor_dynamics_systemmodel_dependency_tracking
+  GridKit::phasor_dynamics_converter_reecb
+  GridKit::phasor_dynamics_converter_reecb_dependency_tracking
+  GridKit::phasor_dynamics_bus
+  GridKit::phasor_dynamics_bus_dependency_tracking
   GridKit::testing)
 
 add_executable(test_phasor_controller_repca runControllerRepcaTests.cpp)

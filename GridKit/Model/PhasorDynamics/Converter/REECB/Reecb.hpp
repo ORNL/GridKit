@@ -69,6 +69,48 @@ namespace GridKit
         MAXIMUM,
       };
 
+      /// Indices into the REECB state, derivative, and residual vectors.
+      struct ReecbIdx
+      {
+        static constexpr size_t VMEAS     = static_cast<size_t>(ReecbInternalVariables::VMEAS);
+        static constexpr size_t PMEAS     = static_cast<size_t>(ReecbInternalVariables::PMEAS);
+        static constexpr size_t XPIQ      = static_cast<size_t>(ReecbInternalVariables::XPIQ);
+        static constexpr size_t XPIV      = static_cast<size_t>(ReecbInternalVariables::XPIV);
+        static constexpr size_t QV        = static_cast<size_t>(ReecbInternalVariables::QV);
+        static constexpr size_t PORD      = static_cast<size_t>(ReecbInternalVariables::PORD);
+        static constexpr size_t VT        = static_cast<size_t>(ReecbInternalVariables::VT);
+        static constexpr size_t VMEASSAFE = static_cast<size_t>(ReecbInternalVariables::VMEASSAFE);
+        static constexpr size_t SDIP      = static_cast<size_t>(ReecbInternalVariables::SDIP);
+        static constexpr size_t VERR      = static_cast<size_t>(ReecbInternalVariables::VERR);
+        static constexpr size_t IQV       = static_cast<size_t>(ReecbInternalVariables::IQV);
+        static constexpr size_t QREF      = static_cast<size_t>(ReecbInternalVariables::QREF);
+        static constexpr size_t EQ        = static_cast<size_t>(ReecbInternalVariables::EQ);
+        static constexpr size_t VPIQ      = static_cast<size_t>(ReecbInternalVariables::VPIQ);
+        static constexpr size_t EPIV      = static_cast<size_t>(ReecbInternalVariables::EPIV);
+        static constexpr size_t FPORD     = static_cast<size_t>(ReecbInternalVariables::FPORD);
+        static constexpr size_t RPORD     = static_cast<size_t>(ReecbInternalVariables::RPORD);
+        static constexpr size_t IQCIRC    = static_cast<size_t>(ReecbInternalVariables::IQCIRC);
+        static constexpr size_t IPCIRC    = static_cast<size_t>(ReecbInternalVariables::IPCIRC);
+        static constexpr size_t IQMAX     = static_cast<size_t>(ReecbInternalVariables::IQMAX);
+        static constexpr size_t IPMAX     = static_cast<size_t>(ReecbInternalVariables::IPMAX);
+        static constexpr size_t IQBASE    = static_cast<size_t>(ReecbInternalVariables::IQBASE);
+        static constexpr size_t IQRAW     = static_cast<size_t>(ReecbInternalVariables::IQRAW);
+        static constexpr size_t IQCMD     = static_cast<size_t>(ReecbInternalVariables::IQCMD);
+        static constexpr size_t IPCMD     = static_cast<size_t>(ReecbInternalVariables::IPCMD);
+        static constexpr size_t MAXIMUM   = static_cast<size_t>(ReecbInternalVariables::MAXIMUM);
+      };
+
+      /// Indices into the REECB external-signal buffers.
+      struct ReecbExt
+      {
+        static constexpr size_t PE      = static_cast<size_t>(ReecbExternalVariables::PE);
+        static constexpr size_t QGEN    = static_cast<size_t>(ReecbExternalVariables::QGEN);
+        static constexpr size_t QEXT    = static_cast<size_t>(ReecbExternalVariables::QEXT);
+        static constexpr size_t PFAREF  = static_cast<size_t>(ReecbExternalVariables::PFAREF);
+        static constexpr size_t PREF    = static_cast<size_t>(ReecbExternalVariables::PREF);
+        static constexpr size_t MAXIMUM = static_cast<size_t>(ReecbExternalVariables::MAXIMUM);
+      };
+
       template <typename scalar_type, typename index_type>
       class Reecb : public Component<scalar_type, index_type>
       {
@@ -127,9 +169,22 @@ namespace GridKit
             const ScalarT*, const ScalarT*, const ScalarT*, const ScalarT*, ScalarT*);
 
       private:
-        void initModelParams(const ModelDataT& data);
+        void initializeParameters(const ModelDataT& data);
         void initializeMonitor();
         void setDerivedParameters();
+
+        /// Solve the input required to produce a requested smooth-limiter output.
+        /// The limits may be constant Real parameters or algebraic variables.
+        template <typename LowerT, typename UpperT>
+        bool solveLimiterInput(ScalarT requested_output, LowerT lower_limit, UpperT upper_limit, ScalarT& limiter_input) const;
+
+        /// Select a limiter input that zeros an anti-windup rate to initialization tolerance.
+        /// The limits may be constant Real parameters or algebraic variables.
+        template <typename LowerT, typename UpperT>
+        ScalarT steadyAntiWindupInput(ScalarT nominal_input, ScalarT rate, LowerT lower_limit, UpperT upper_limit) const;
+
+        /// Evaluate log(1 - exp(-x)) without cancellation for positive x.
+        RealT logOneMinusExp(RealT x) const;
 
         ScalarT toComponentBase(ScalarT value) const;
         ScalarT toSystemBase(ScalarT value) const;
@@ -137,18 +192,18 @@ namespace GridKit
         ScalarT& Vr();
         ScalarT& Vi();
 
-        static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-        static constexpr RealT VMEAS_MINIMUM         = static_cast<RealT>(0.01);
-        static constexpr RealT INIT_TOL              = static_cast<RealT>(1.0e-10);
-        static constexpr RealT SAT_MARGIN            = static_cast<RealT>(0.1);
+        static constexpr RealT TIME_CONSTANT_MINIMUM       = static_cast<RealT>(1.0e-3);
+        static constexpr RealT VMEAS_MINIMUM               = static_cast<RealT>(0.01);
+        static constexpr RealT INITIALIZATION_TOLERANCE    = static_cast<RealT>(1.0e-10);
+        static constexpr RealT INITIALIZATION_LIMIT_OFFSET = static_cast<RealT>(0.1);
 
         BusT* bus_{nullptr};
 
-        RealT mva_base_{static_cast<RealT>(100.0)};
-        RealT PfFlag_{ZERO<RealT>};
-        RealT VFlag_{ZERO<RealT>};
-        RealT QFlag_{ZERO<RealT>};
-        RealT Pqflag_{ZERO<RealT>};
+        RealT mva_base_{ZERO<RealT>};
+        bool  PfFlag_{false};
+        bool  VFlag_{false};
+        bool  QFlag_{false};
+        bool  Pqflag_{false};
         RealT Trv_{static_cast<RealT>(0.02)};
         RealT Tp_{ZERO<RealT>};
         RealT Vref0_{ZERO<RealT>};
@@ -175,11 +230,14 @@ namespace GridKit
         RealT Pmin_{ZERO<RealT>};
         RealT Imax_{static_cast<RealT>(1.3)};
         RealT va_converter_base_{0};
-        RealT Trv_eff_{TIME_CONSTANT_MINIMUM};
-        RealT Tp_eff_{TIME_CONSTANT_MINIMUM};
+        RealT pf_on_{0};
         RealT pf_off_{1};
+        RealT v_on_{0};
         RealT v_off_{1};
+        RealT q_on_{0};
         RealT q_off_{1};
+        RealT p_priority_{0};
+        RealT q_priority_{1};
 
         bool Vref0_given_{false};
         IdxT parameter_error_count_{0};

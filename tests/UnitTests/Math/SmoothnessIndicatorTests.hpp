@@ -345,6 +345,53 @@ namespace GridKit
 
         return success.report(__func__);
       }
+
+      TestOutcome dynamicAntiWindupBounds()
+      {
+        TestStatus success = true;
+
+        using Variable = GridKit::DependencyTracking::Variable;
+
+        const Variable state{0.0, 0};
+        const Variable rate{0.03, 1};
+        const Variable lower{-0.05, 2};
+        const Variable upper{0.05, 3};
+
+        const auto gate    = Math::indicator(state, rate, lower, upper);
+        const auto limited = Math::antiwindup(state, rate, lower, upper);
+
+        static_assert(std::is_same<typename std::decay<decltype(gate)>::type,
+                                   Variable>::value,
+                      "Dynamic-bound indicator should retain dependency tracking.");
+        static_assert(std::is_same<typename std::decay<decltype(limited)>::type,
+                                   Variable>::value,
+                      "Dynamic-bound antiwindup should retain dependency tracking.");
+
+        success                          *= (gate.getValue() > kNearOne);
+        success                          *= within(limited.getValue(), rate.getValue(), kSmoothTolerance);
+        const auto& gate_dependencies     = gate.getDependencies();
+        const auto& limited_dependencies  = limited.getDependencies();
+        for (size_t variable = 0; variable < 4; ++variable)
+        {
+          success *= gate_dependencies.contains(variable);
+          success *= limited_dependencies.contains(variable);
+        }
+        for (const size_t bound : {size_t{2}, size_t{3}})
+        {
+          const auto gate_bound    = gate_dependencies.find(bound);
+          const auto limited_bound = limited_dependencies.find(bound);
+          if (gate_bound != gate_dependencies.end())
+          {
+            success *= std::abs(gate_bound->second) > 0.0;
+          }
+          if (limited_bound != limited_dependencies.end())
+          {
+            success *= std::abs(limited_bound->second) > 0.0;
+          }
+        }
+
+        return success.report(__func__);
+      }
     };
 
   } // namespace Testing
