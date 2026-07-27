@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -218,6 +220,91 @@ namespace GridKit
         success *= isEqual(bus1.Ii(), Ii1);
         success *= isEqual(bus2.Ir(), Ir2);
         success *= isEqual(bus2.Ii(), Ii2);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome residualAssemblyIsIdempotent()
+      {
+        using namespace PhasorDynamics;
+
+        TestStatus success = true;
+
+        SystemModel<ScalarT, IdxT> system;
+        Bus<ScalarT, IdxT>         bus1(ScalarT{10.0}, ScalarT{20.0});
+        Bus<ScalarT, IdxT>         bus2(ScalarT{30.0}, ScalarT{40.0});
+        Branch<ScalarT, IdxT>      branch(&bus1,
+                                     &bus2,
+                                     RealT{2.0},
+                                     RealT{4.0},
+                                     RealT{0.2},
+                                     RealT{1.2});
+
+        bus1.setBusID(IdxT{0});
+        bus2.setBusID(IdxT{1});
+        system.addBus(&bus1);
+        system.addBus(&bus2);
+        system.addComponent(&branch);
+
+        if (system.allocate() != 0 || system.initialize() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        const std::array<ScalarT, 4> expected{
+            ScalarT{17.0},
+            ScalarT{-10.0},
+            ScalarT{15.0},
+            ScalarT{-20.0}};
+
+        if (system.evaluateResidual() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        const auto* first_data = system.getResidual().getData(memory::HOST);
+        if (first_data == nullptr)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        std::array<ScalarT, 4> first{};
+        std::memcpy(first.data(), first_data, first.size() * sizeof(ScalarT));
+
+        if (system.evaluateResidual() != 0)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        const auto* second_data = system.getResidual().getData(memory::HOST);
+        if (second_data == nullptr)
+        {
+          success = false;
+          return success.report(__func__);
+        }
+
+        success *= std::memcmp(first.data(),
+                               second_data,
+                               first.size() * sizeof(ScalarT))
+                   == 0;
+        for (std::size_t i = 0; i < expected.size(); ++i)
+        {
+          success *= isEqual(second_data[i], expected[i]);
+        }
+
+        // System residual assembly restores HOST freshness at both alias levels.
+        system.getResidual().setDataUpdated(memory::DEVICE);
+        bus1.getResidual().setDataUpdated(memory::DEVICE);
+        bus2.getResidual().setDataUpdated(memory::DEVICE);
+
+        success *= system.evaluateResidual() == 0;
+        success *= system.getResidual().getData(memory::HOST) != nullptr;
+        success *= bus1.getResidual().getData(memory::HOST) != nullptr;
+        success *= bus2.getResidual().getData(memory::HOST) != nullptr;
 
         return success.report(__func__);
       }
