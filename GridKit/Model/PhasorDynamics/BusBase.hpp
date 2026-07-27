@@ -239,6 +239,12 @@ namespace GridKit
       /**
        * @pre Terminal storage has been established by Bus::allocate(),
        * BusBase::bind(), or the BusInfinite constructor.
+       *
+       * @note Vr(), Vi(), Ir(), and Ii() access cached HOST storage directly
+       * and therefore bypass Vector freshness checks. PhasorDynamics residual
+       * assembly establishes HOST-current state before using these accessors.
+       * DEVICE-backed PhasorDynamics evaluation is not supported by this
+       * interface.
        */
       ScalarT& Vr()
       {
