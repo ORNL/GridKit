@@ -12,7 +12,7 @@
   `dt_fixed`           | Fixed solver time step size, or 0 for adaptive stepping (default: 0)
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
-  `klu_ordering`       | KLU fill-reducing ordering; one of { "amd", "colamd", "natural" } (optional; defaults to the SUNDIALS setting)
+  `klu_ordering`       | KLU fill-reducing ordering; one of { "amd", "colamd", "natural" } (default: "amd")
   `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
   `reference_file`     | A string containing the name of the case (optional)
@@ -21,6 +21,9 @@
   `abs_err_threshold`  | A floating-point value for the smallest value at which to scale relative error (default: machine epsilon for double-precision)
 
 [^1]: See system model [case format](../../GridKit/Model/PhasorDynamics/INPUT_FORMAT.md)
+
+`"amd"` is the default for PhasorDynamics network Jacobians. Other KLU
+orderings remain available for controlled comparisons.
 
 ## Events
 

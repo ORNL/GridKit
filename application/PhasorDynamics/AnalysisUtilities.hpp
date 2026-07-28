@@ -68,7 +68,8 @@ namespace GridKit
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
       /// optional KLU fill-reducing ordering
-      std::optional<AnalysisManager::Sundials::KluOrdering> klu_ordering;
+      std::optional<AnalysisManager::Sundials::KluOrdering> klu_ordering{
+          AnalysisManager::Sundials::KluOrdering::AMD};
       /// set of system events
       std::vector<SystemEvent>                       events;
       /// path to output file
