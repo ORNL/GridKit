@@ -43,8 +43,6 @@ namespace GridKit
       using Component<scalar_type, index_type>::gridkit_component_id_;
       using Component<scalar_type, index_type>::size_;
       using Component<scalar_type, index_type>::nnz_;
-      using Component<scalar_type, index_type>::time_;
-      using Component<scalar_type, index_type>::alpha_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::tag_;

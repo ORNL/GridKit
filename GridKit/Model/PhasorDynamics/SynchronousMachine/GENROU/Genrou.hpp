@@ -70,13 +70,12 @@ namespace GridKit
     class Genrou : public Component<scalar_type, index_type>
     {
       using Component<scalar_type, index_type>::gridkit_component_id_;
-      using Component<scalar_type, index_type>::alpha_;
+      using Component<scalar_type, index_type>::alpha;
       using Component<scalar_type, index_type>::f_;
       using Component<scalar_type, index_type>::nnz_;
       using Component<scalar_type, index_type>::size_;
       using Component<scalar_type, index_type>::tag_;
       using Component<scalar_type, index_type>::abs_tol_;
-      using Component<scalar_type, index_type>::time_;
       using Component<scalar_type, index_type>::y_;
       using Component<scalar_type, index_type>::yp_;
       using Component<scalar_type, index_type>::wb_;

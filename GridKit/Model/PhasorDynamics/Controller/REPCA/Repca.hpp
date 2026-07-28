@@ -82,7 +82,7 @@ namespace GridKit
       {
         using Component<scalar_type, index_type>::abs_tol_;
         using Component<scalar_type, index_type>::allocated_;
-        using Component<scalar_type, index_type>::alpha_;
+        using Component<scalar_type, index_type>::alpha;
         using Component<scalar_type, index_type>::f_;
         using Component<scalar_type, index_type>::gridkit_component_id_;
         using Component<scalar_type, index_type>::J_cols_buffer_;

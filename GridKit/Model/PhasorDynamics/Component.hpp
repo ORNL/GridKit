@@ -28,6 +28,12 @@ namespace GridKit
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
 
+      struct EvaluationContext
+      {
+        RealT time{0.0};
+        RealT alpha{0.0};
+      };
+
       Component() = default;
 
       virtual ~Component()
@@ -188,6 +194,28 @@ namespace GridKit
         return 0;
       }
 
+      /**
+       * @brief Bind this component's vectors and evaluation context to system storage.
+       *
+       * @pre evaluation_context remains valid while this component is bound.
+       */
+      int bind(VectorT&           y,
+               VectorT&           yp,
+               VectorT&           f,
+               VectorT&           abs_tol,
+               IdxT               offset,
+               EvaluationContext& evaluation_context)
+      {
+        const int status = bind(y, yp, f, abs_tol, offset);
+        if (status != 0)
+        {
+          return status;
+        }
+
+        evaluation_context_ = &evaluation_context;
+        return 0;
+      }
+
       int setVariableIndex(IdxT local_index, IdxT global_index)
       {
         variable_indices_[static_cast<size_t>(local_index)] = global_index;
@@ -236,10 +264,10 @@ namespace GridKit
         return true;
       }
 
-      void updateTime(RealT t, RealT a) override
+      void updateTime(RealT t, RealT a) override final
       {
-        time_  = t;
-        alpha_ = a;
+        evaluation_context_->time  = t;
+        evaluation_context_->alpha = a;
       }
 
       /**
@@ -287,6 +315,21 @@ namespace GridKit
       }
 
     protected:
+      const RealT& time() const noexcept
+      {
+        return evaluation_context_->time;
+      }
+
+      const RealT& alpha() const noexcept
+      {
+        return evaluation_context_->alpha;
+      }
+
+      EvaluationContext& evaluationContext() noexcept
+      {
+        return *evaluation_context_;
+      }
+
       /**
        * @brief Allocate this component's state and residual vectors.
        */
@@ -370,8 +413,8 @@ namespace GridKit
       /// Global indices of attached external signals
       std::vector<IdxT> ws_indices_;
 
-      RealT time_;
-      RealT alpha_;
+      EvaluationContext  local_evaluation_context_{};
+      EvaluationContext* evaluation_context_{&local_evaluation_context_};
 
       RealT freq_system_base_{60.0};
       RealT va_system_base_{100.0e6};
