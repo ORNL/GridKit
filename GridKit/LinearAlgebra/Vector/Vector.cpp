@@ -58,8 +58,11 @@ namespace GridKit
         mem_.deleteOnHost(h_data_);
       if (owns_gpu_data_ && d_data_)
         mem_.deleteOnDevice(d_data_);
-      delete[] gpu_updated_;
-      delete[] cpu_updated_;
+      if (owns_update_flags_)
+      {
+        delete[] gpu_updated_;
+        delete[] cpu_updated_;
+      }
     }
 
     /**
@@ -214,6 +217,84 @@ namespace GridKit
 
       n_capacity_ = size;
       n_size_     = size;
+      return 0;
+    }
+
+    /**
+     * @brief Bind this vector as a view into a slice of another vector.
+     *
+     * The view shares the parent's storage *and* its update flags. Both
+     * describe the same bytes, so a freshness claim about one is a claim about
+     * the other; keeping separate flags would let a view report HOST-current
+     * data that the parent has already invalidated, or the reverse.
+     *
+     * @param[in] parent   - Vector owning the storage
+     * @param[in] offset   - First element of the slice within _parent_
+     * @param[in] size     - Number of elements in the slice
+     * @param[in] memspace - Memory space of the slice (HOST or DEVICE)
+     *
+     * @pre _parent_ has data allocated in _memspace_ and holds at least
+     * `offset + size` elements. This vector does not own data in _memspace_.
+     * @pre _parent_ outlives this view and does not reallocate its storage.
+     * Reallocation invalidates the view, which must then be rebound.
+     * @post This vector aliases the slice and reports _parent_'s freshness.
+     *
+     * @return 0 if successful, 1 otherwise.
+     */
+    template <typename ScalarT, typename IdxT>
+    int Vector<ScalarT, IdxT>::aliasOf(Vector<ScalarT, IdxT>& parent,
+                                       IdxT                   offset,
+                                       IdxT                   size,
+                                       memory::MemorySpace    memspace)
+    {
+      if (&parent == this)
+      {
+        out::error() << "Vector::aliasOf - a vector cannot alias itself\n";
+        return 1;
+      }
+
+      if (offset + size > parent.n_size_)
+      {
+        out::error() << "Vector::aliasOf - slice [" << offset << ", "
+                     << offset + size << ") is out of range for a parent of "
+                     << parent.n_size_ << " elements\n";
+        return 1;
+      }
+
+      if (k_ != parent.k_)
+      {
+        out::error() << "Vector::aliasOf - update flags are per multivector "
+                     << "column, so the view must have as many columns as the "
+                     << "parent\n";
+        return 1;
+      }
+
+      ScalarT* base = (memspace == memory::HOST) ? parent.h_data_ : parent.d_data_;
+      if (base == nullptr)
+      {
+        out::error() << "Vector::aliasOf - parent has no data in the requested "
+                     << "memory space\n";
+        return 1;
+      }
+
+      const int status = setData(base + offset, size, memspace);
+      if (status != 0)
+      {
+        return status;
+      }
+
+      // Adopt the parent's flags after setData, so the view inherits the
+      // parent's actual freshness rather than the claim setData just made
+      // about the flags this vector is giving up.
+      if (owns_update_flags_)
+      {
+        delete[] gpu_updated_;
+        delete[] cpu_updated_;
+      }
+      gpu_updated_       = parent.gpu_updated_;
+      cpu_updated_       = parent.cpu_updated_;
+      owns_update_flags_ = false;
+
       return 0;
     }
 

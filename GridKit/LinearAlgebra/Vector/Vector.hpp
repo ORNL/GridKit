@@ -65,6 +65,10 @@ namespace GridKit
       int setDataUpdated(IdxT j, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, memory::MemorySpace memspace = memory::HOST);
       int setData(ScalarT* data, IdxT size, memory::MemorySpace memspace = memory::HOST);
+      int aliasOf(Vector&             parent,
+                  IdxT                offset,
+                  IdxT                size,
+                  memory::MemorySpace memspace = memory::HOST);
       int allocate(memory::MemorySpace memspace = memory::HOST);
       int setToZero(memory::MemorySpace memspace = memory::HOST);
       int setToZero(IdxT i, memory::MemorySpace memspace = memory::HOST);
@@ -93,8 +97,9 @@ namespace GridKit
       bool*    gpu_updated_{nullptr}; ///< DEVICE data flags (updated or not)
       bool*    cpu_updated_{nullptr}; ///< HOST data flags (updated or not)
 
-      bool owns_gpu_data_{true}; ///< data owneship flag for DEVICE data
-      bool owns_cpu_data_{true}; ///< data ownership flag for HOST data
+      bool owns_gpu_data_{true};     ///< data owneship flag for DEVICE data
+      bool owns_cpu_data_{true};     ///< data ownership flag for HOST data
+      bool owns_update_flags_{true}; ///< ownership flag for the update flag arrays
 
       MemoryManager mem_; ///< Device memory manager object
     };
