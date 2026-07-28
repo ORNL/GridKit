@@ -27,6 +27,12 @@ int main(int argc, const char* argv[])
   SystemModel<scalar_type, index_type> sys(study.model_data);
   sys.allocate();
 
+  std::cout << "\nGRIDKIT_SYSTEM_BEGIN\n"
+            << "buses=" << study.model_data.bus.size() << '\n'
+            << "states=" << sys.size() << '\n'
+            << "jacobian_nnz=" << sys.nnz() << '\n'
+            << "GRIDKIT_SYSTEM_END\n";
+
   // Set up simulation
   Ida<scalar_type, index_type> ida(&sys);
   ida.setTolerance(study.rel_tol, study.abs_tol);
