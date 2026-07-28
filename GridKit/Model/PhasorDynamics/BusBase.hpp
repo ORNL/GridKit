@@ -129,7 +129,10 @@ namespace GridKit
        * @pre System vectors hold current HOST data of at least offset + size()
        * elements. This bus's vectors are unallocated or already bound.
        * @post allocated_ is true; y_, yp_, f_, and abs_tol_ alias system
-       * storage; terminal accessors reference the newly bound storage.
+       * storage; terminal accessors reference the newly bound storage. The
+       * aliases also share the system vectors' update flags, so the system
+       * marking its residual HOST-current marks this bus's residual current
+       * too.
        *
        * @return 0 if successful, non-zero otherwise.
        */
@@ -145,22 +148,10 @@ namespace GridKit
           return 1;
         }
 
-        auto* y_data       = y.getData(memory::HOST);
-        auto* yp_data      = yp.getData(memory::HOST);
-        auto* f_data       = f.getData(memory::HOST);
-        auto* abs_tol_data = abs_tol.getData(memory::HOST);
-
-        if (y_data == nullptr || yp_data == nullptr
-            || f_data == nullptr || abs_tol_data == nullptr)
-        {
-          Log::error() << "BusBase::bind - system vector data is null or stale\n";
-          return 1;
-        }
-
-        const int y_status       = y_.setData(y_data + offset, size_, memory::HOST);
-        const int yp_status      = yp_.setData(yp_data + offset, size_, memory::HOST);
-        const int f_status       = f_.setData(f_data + offset, size_, memory::HOST);
-        const int abs_tol_status = abs_tol_.setData(abs_tol_data + offset, size_, memory::HOST);
+        const int y_status       = y_.aliasOf(y, offset, size_, memory::HOST);
+        const int yp_status      = yp_.aliasOf(yp, offset, size_, memory::HOST);
+        const int f_status       = f_.aliasOf(f, offset, size_, memory::HOST);
+        const int abs_tol_status = abs_tol_.aliasOf(abs_tol, offset, size_, memory::HOST);
 
         if (y_status != 0 || yp_status != 0 || f_status != 0 || abs_tol_status != 0)
         {
