@@ -89,19 +89,17 @@ $\psi'_q$ | [p.u.] | Quadrature axis subtransient flux |
 $E'_d$    | [p.u.] | Direct axis transient flux        |
 
 #### Algebraic
-Symbol             | Units  | Description                                                      | Note
--------------------|--------|------------------------------------------------------------------|----------------------------------------------------------------
-$\psi''_q$         | [p.u.] | Total q-axis subtransient flux                                   |
-$\psi''_d$         | [p.u.] | Total d-axis subtransient flux                                   |
-$\psi''$           | [p.u.] | Machine total subtransient flux                                  |
-$k_{\mathrm{sat}}$ | [p.u.] | Saturation coefficient                                           |
-$V_d$              | [p.u.] | Machine internal voltage, d-axis                                 |
-$V_q$              | [p.u.] | Machine internal voltage, q-axis                                 |
-$T_\mathrm{e}$              | [p.u.] | Electrical torque                                                |
-$I_d$              | [p.u.] | Terminal current, d-axis                                         |
-$I_q$              | [p.u.] | Terminal current, q-axis                                         |
-$I_r$              | [p.u.] | Terminal current, real component on network reference frame      | Machine base
-$I_i$              | [p.u.] | Terminal current, imaginary component on network reference frame | Machine base
+Symbol      | Units  | Description                       | Note
+------------|--------|---------------------------------  | ------
+$V_d$       | [p.u.] | Machine internal voltage, d-axis  | 
+$V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
+$I_d$       | [p.u.] | Terminal current, d-axis          | 
+$I_q$       | [p.u.] | Terminal current, q-axis          | 
+$\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |
+$\psi''_d$  | [p.u.] | Total d-axis subtransient flux    |
+$\psi''$    | [p.u.] | Machine total subtransient flux   |
+$T_{e}$     | [p.u.] | Electrical torque                 |
+$k_{sat}$   | [p.u.] | Saturation coefficient            |
 
 ### External Variables
 
@@ -157,7 +155,14 @@ Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
   0 &= -V_q  +\psi''_{d}(1+\omega)\\
   0 &= -T_\mathrm{e} +(\psi''_{d} - I_dX''_d)I_q-(\psi''_{q} - I_qX''_d)I_d \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
-  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
+  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta)
+\end{aligned}
+```
+
+### Network Equations
+
+``` math
+\begin{aligned}
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
   0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
 \end{aligned}
