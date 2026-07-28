@@ -921,6 +921,10 @@ namespace GridKit
         throw std::runtime_error("SystemModel allocation failed");
       }
 
+      // Binding is complete, so global indices are final and the constant
+      // network can be folded out of the residual sweep.
+      assembleNetworkAdmittance();
+
       // Verify component configuration
       int errorCount = this->verify();
       if (errorCount > 0)
@@ -1135,15 +1139,89 @@ namespace GridKit
      * add to those values by in-place adition. This is why (for now) bus
      * residuals need to be computed first.
      */
+    /**
+     * @brief Pre-assemble the constant linear network and the residual sweep list.
+     *
+     * The linear part of the network is time invariant, so evaluating it element
+     * by element repeats known constants at every residual call. Components that
+     * report constant admittance stamps are folded into one sparse matrix here
+     * and dropped from the sweep; everything else is untouched.
+     *
+     * @pre All buses and components are bound, so global indices are final.
+     * @post network_, residual_components_, unmapped_buses_, and the cached
+     * HOST pointers are consistent with the current binding.
+     */
+    template <typename scalar_type, typename index_type>
+    void SystemModel<scalar_type, index_type>::assembleNetworkAdmittance()
+    {
+      network_y_data_ = y_.getData(memory::HOST);
+      network_f_data_ = f_.getData(memory::HOST);
+
+      // Rows are the buses that own a residual slice, ascending by bind offset.
+      // A bus without one, such as an infinite bus, is not a network row.
+      std::vector<IdxT> row_offset;
+      row_offset.reserve(buses_.size());
+      for (const auto& bus : buses_)
+      {
+        if (bus->size() > 0)
+        {
+          row_offset.push_back(bus->getResidualIndices()[0]);
+        }
+      }
+
+      std::vector<IdxT> stamp_count(components_.size(), IdxT{0});
+      IdxT              total_stamps = 0;
+      for (std::size_t i = 0; i < components_.size(); ++i)
+      {
+        stamp_count[i]  = components_[i]->admittanceStamps(nullptr);
+        total_stamps   += stamp_count[i];
+      }
+
+      std::vector<AdmittanceStamp<RealT, IdxT>> stamps(static_cast<std::size_t>(total_stamps));
+
+      // Collect the stamps and, in the same pass, project the profile group
+      // boundaries from components_ onto the reduced sweep list.
+      residual_components_.clear();
+      residual_components_.reserve(components_.size());
+
+      std::size_t written = 0;
+      std::size_t group   = 0;
+      for (std::size_t i = 0; i < components_.size(); ++i)
+      {
+        while (group < profile_group_count_
+               && i >= static_cast<std::size_t>(profile_component_ends_[group]))
+        {
+          profile_sweep_ends_[group] = static_cast<IdxT>(residual_components_.size());
+          ++group;
+        }
+
+        if (stamp_count[i] == 0)
+        {
+          residual_components_.push_back(components_[i]);
+          continue;
+        }
+
+        components_[i]->admittanceStamps(stamps.data() + written);
+        written += static_cast<std::size_t>(stamp_count[i]);
+      }
+      while (group < profile_group_count_)
+      {
+        profile_sweep_ends_[group] = static_cast<IdxT>(residual_components_.size());
+        ++group;
+      }
+
+      network_.assemble(stamps, std::move(row_offset));
+    }
+
     template <typename scalar_type, typename index_type>
     int SystemModel<scalar_type, index_type>::evaluateResidual()
     {
       using ProfileClock = std::chrono::steady_clock;
 
-      // Ordering invariant: every bus clears Ir and Ii before any component
-      // accumulates terminal-current contributions. Finite buses also establish
-      // HOST-current state for their bound residual slices during this sweep.
-      // Do not reorder the bus and component loops.
+      // Ordering invariant: every bus clears Ir and Ii before any contribution
+      // is accumulated, and finite buses establish HOST-current state for their
+      // bound residual slices during this sweep. Do not reorder the bus loop
+      // against the network product or the component sweep.
       const auto bus_start = ProfileClock::now();
       for (const auto& bus : buses_)
       {
@@ -1151,20 +1229,26 @@ namespace GridKit
       }
       profile_bus_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_start).count();
 
+      // The constant linear network, pre-assembled out of the component sweep.
+      // It writes the rows it owns, which the bus sweep just zeroed.
+      const auto network_start = ProfileClock::now();
+      network_.multiply(network_y_data_, network_f_data_);
+      profile_network_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - network_start).count();
+
       IdxT profile_begin = 0;
       for (std::size_t group = 0; group < profile_group_count_; ++group)
       {
         const auto group_start = ProfileClock::now();
-        for (IdxT i = profile_begin; i < profile_component_ends_[group]; ++i)
+        for (IdxT i = profile_begin; i < profile_sweep_ends_[group]; ++i)
         {
-          components_[i]->evaluateResidual();
+          residual_components_[i]->evaluateResidual();
         }
         profile_residual_seconds_[group] += std::chrono::duration<double>(ProfileClock::now() - group_start).count();
-        profile_begin                     = profile_component_ends_[group];
+        profile_begin                     = profile_sweep_ends_[group];
       }
-      for (IdxT i = profile_begin; i < static_cast<IdxT>(components_.size()); ++i)
+      for (IdxT i = profile_begin; i < static_cast<IdxT>(residual_components_.size()); ++i)
       {
-        components_[i]->evaluateResidual();
+        residual_components_[i]->evaluateResidual();
       }
 
       // Components have finished writing the shared HOST residual storage.
@@ -1195,7 +1279,10 @@ namespace GridKit
       std::cout << std::fixed << std::setprecision(6)
                 << "\nSYSTEM_RESIDUAL_PROFILE_BEGIN\n"
                 << "system_residual_calls=" << profile_residual_calls_ << '\n'
-                << "bus_residual_seconds=" << profile_bus_residual_seconds_ << '\n';
+                << "bus_residual_seconds=" << profile_bus_residual_seconds_ << '\n'
+                << "network_residual_seconds=" << profile_network_residual_seconds_ << '\n'
+                << "network_rows=" << network_.rowCount() << '\n'
+                << "network_nnz=" << network_.nnz() << '\n';
       for (std::size_t group = 0; group < profile_group_count_; ++group)
       {
         std::cout << labels[group] << "_residual_seconds=" << profile_residual_seconds_[group] << '\n';

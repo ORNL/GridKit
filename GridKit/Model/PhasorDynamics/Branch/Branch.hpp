@@ -85,6 +85,8 @@ namespace GridKit
       virtual int evaluateJacobian() override final;
       virtual int verify() const override final;
 
+      virtual IdxT admittanceStamps(typename Component<ScalarT, IdxT>::StampT* out) override final;
+
       void setR(RealT R)
       {
         R_ = R;

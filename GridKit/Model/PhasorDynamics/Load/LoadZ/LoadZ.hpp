@@ -60,6 +60,8 @@ namespace GridKit
       virtual int evaluateResidual() override final;
       virtual int evaluateJacobian() override final;
 
+      virtual IdxT admittanceStamps(typename Component<ScalarT, IdxT>::StampT* out) override final;
+
       virtual int verify() const override final
       {
         return 0;
