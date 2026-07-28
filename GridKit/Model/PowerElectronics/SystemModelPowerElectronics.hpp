@@ -159,7 +159,7 @@ namespace GridKit
 
           for (size_t i = 0; i < node->getInternalSize(); i++)
           {
-            ExternalConnection node_connection{
+            ExternalConnection<ScalarT, IdxT> node_connection{
                 .y_   = y_int_ + node_internal_idx,
                 .yp_  = yp_int_ + node_internal_idx,
                 .f_   = f_int_ + node_internal_idx,
