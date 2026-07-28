@@ -1051,7 +1051,7 @@ namespace AnalysisManager
     {
       if (retval < 0)
       {
-        char *msg = IDAGetReturnFlagName(retval);
+        char* msg = IDAGetReturnFlagName(retval);
         std::cerr << "\nERROR: Function " << functionName << " failed with flag " << msg << "!\n\n";
         std::free(msg);
         throw SundialsException();
