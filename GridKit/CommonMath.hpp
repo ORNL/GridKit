@@ -64,11 +64,55 @@ namespace GridKit
     /**
      * @brief Smooth one-sided quadratic ramp
      *
-     * Smooth approximation to max(x, 0)^2 via a sigmoid-gated quadratic.
-     * Used for IEEE-style quadratic saturation curves.
+     * Smooth approximation to max(x, 0)^2, used for IEEE-style quadratic
+     * saturation curves.
      *
-     * @note Eventually a enzyme specialization for an exact implementation
-     *       would be nice, since the piecewise definition is C^1 continuous
+     * ```
+     * q(x) = x^2 * sigmoid(x)
+     * ```
+     *
+     * @note Why not the exact piecewise definition? max(x, 0)^2 is already C^1
+     * -- factored as x * max(x, 0), its derivative max(x, 0) + x H(x) multiplies
+     * the undefined step H(0) by x = 0, so the derivative is uniquely zero at
+     * the kink. Newton has everything it needs. The second derivative, however,
+     * jumps from 0 to 2 there, and that jump is not free: on a 2000-bus case
+     * where many machines sit near their saturation knee, the exact form cost
+     * the BDF error estimator about 6% more steps and 19% more Jacobian
+     * evaluations, for roughly 8% more wall time. Each individual evaluation
+     * was cheaper; the integrator gave the saving back and more. The smooth
+     * form keeps the second derivative continuous and is therefore faster
+     * overall, at the price of being slightly unfaithful within a narrow band
+     * around the knee. The exact form is kept, commented out, immediately below
+     * this function as the baseline to compare against.
+     *
+     * @note The @c tanh gate is load-bearing and cheaper alternatives do not
+     * substitute for it. Because @c tanh saturates to exactly +/-1 in double,
+     * this expression returns exactly 0 below x = -0.159 and exactly x^2 above
+     * x = 0.154, so away from a narrow band it is not an approximation at all.
+     * Three things depend on that: GENROU and GENSAL initialize @c ksat with
+     * this same primitive and rely on the residual matching bit for bit; the
+     * golden residual vectors assume it; and both
+     * autodiff paths agree on a hard zero rather than having to round a
+     * negligible tail the same way. Algebraic smoothings have algebraic tails
+     * and satisfy none of these -- the square of a hyperbola-smoothed ramp,
+     * (x + sqrt(x^2 + eps^2))^2 / 4, is 4.6x cheaper at 1.65 ns against
+     * 7.51 ns, monotone, nonnegative, and has curvature 2.00 against 2.32, yet
+     * it still reads 1.9e-11 at x = -1, which is enough to break initialization
+     * consistency and to make DependencyTracking report a 1.0e-12 partial that
+     * Enzyme flushes to zero and drops. A softplus ramp squared decays faster
+     * but likewise never reaches exact zero. Do not swap the gate without
+     * re-checking those three invariants.
+     *
+     * @note The known defect of this form is that it is not monotone. Below the
+     * knee it rises to a spurious peak of 8.4e-6 near x = -0.0092 before
+     * falling again, so saturation is faintly nonzero with the wrong sign of
+     * slope where it should be identically zero. The peak scales as 0.54 / mu^2
+     * and the band where relative error exceeds 1% as 4.6 / mu, so both tighten
+     * quickly if mu is raised. Unlike @ref ramp, curvature here is independent
+     * of mu -- the x^2 prefactor cancels the sigmoid's spike, leaving max|q''|
+     * at 2.32 for every mu tested from 240 to 1e6 -- so mu may be raised for
+     * fidelity without introducing stiffness. That is untested against step
+     * count and is the first thing to try if the knee accuracy matters.
      *
      * @tparam ScalarT - scalar data type
      *
@@ -80,6 +124,34 @@ namespace GridKit
     {
       return x * x * sigmoid(x);
     }
+
+    /*
+     * Exact one-sided quadratic ramp -- deliberately kept, deliberately
+     * disabled. Swap this body into qramp() above to evaluate max(x, 0)^2 to
+     * the last bit. It is the reference the smooth form is judged against:
+     * running both isolates how much of a result depends on the smoothing
+     * rather than on the model. Keep it for saturation studies, and re-run the
+     * step-count comparison in qramp()'s notes whenever the integrator, the
+     * tolerances, or the case mix change -- that trade was measured, not
+     * derived, and it will not hold forever.
+     *
+     * Write the exact form with fmax, never with abs. Groupings built from
+     * x + |x| put x d|x|/dx next to |x| dx in the tangent, which LLVM fuses
+     * into a (1 + sign(x)) select; the resulting i1 either defeats Enzyme's
+     * sparsity solver outright ("No sparsification: not sparse solvable") or,
+     * in the groupings that do compile, silently yields a wrong partial below
+     * the knee. fmax keeps Enzyme and DependencyTracking in agreement, down to
+     * the structural zero at the knee -- which is why DependencyTracking
+     * carries an fmax rule that nothing else currently uses.
+     *
+     *   template <class ScalarT>
+     *   __attribute__((always_inline)) inline ScalarT qramp(const ScalarT x)
+     *   {
+     *     using RealT     = typename GridKit::ScalarTraits<ScalarT>::RealT;
+     *     const ScalarT r = std::fmax(x, ScalarT{ZERO<RealT>});
+     *     return r * r;
+     *   }
+     */
 
     /**
      * @brief Smooth binary maximum function

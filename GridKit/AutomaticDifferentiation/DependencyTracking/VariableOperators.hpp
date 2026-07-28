@@ -359,6 +359,22 @@ namespace GridKit
       return x > 0.0 ? 1.0 : -1.0;
     }
 
+    /// Derivative of binary maximum with respect to first argument
+    ///
+    /// The selected branch is inactive, so its partial derivative is zero.
+    /// Ties resolve to the second argument, matching the strict comparison
+    /// used by @ref abs_derivative.
+    inline double fmax_derivative1(double x, double y)
+    {
+      return x > y ? 1.0 : 0.0;
+    }
+
+    /// Derivative of binary maximum with respect to second argument
+    inline double fmax_derivative2(double x, double y)
+    {
+      return x > y ? 0.0 : 1.0;
+    }
+
   } // namespace DependencyTracking
 } // namespace GridKit
 
@@ -413,6 +429,11 @@ namespace std
   IMPL_FUN_1(abs, GridKit::DependencyTracking::abs_derivative)
 
   IMPL_FUN_2(atan2, GridKit::DependencyTracking::atan2_derivative1, GridKit::DependencyTracking::atan2_derivative2)
+
+  // fmax has no active caller. It is required by the exact quadratic ramp kept
+  // commented out in CommonMath.hpp, which cannot be validated against this
+  // Jacobian path without it. Do not remove as dead code.
+  IMPL_FUN_2(fmax, GridKit::DependencyTracking::fmax_derivative1, GridKit::DependencyTracking::fmax_derivative2)
 
 #undef IMPL_FUN_1
 #undef IMPL_FUN_2
