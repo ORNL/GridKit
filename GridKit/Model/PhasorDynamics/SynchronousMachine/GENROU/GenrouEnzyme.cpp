@@ -31,10 +31,11 @@ namespace GridKit
         auto size        = static_cast<size_t>(size_);
         auto bus_size    = static_cast<size_t>(bus_->size());
         auto signal_size = static_cast<size_t>(ws_.getSize());
-        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size;
-        J_rows_buffer_   = new IdxT[buffer_size];
-        J_cols_buffer_   = new IdxT[buffer_size];
-        J_vals_buffer_   = new RealT[buffer_size];
+        auto buffer_size = 2 * size * size + size * signal_size + 2 * size * bus_size
+                           + bus_size * bus_size;
+        J_rows_buffer_ = new IdxT[buffer_size];
+        J_cols_buffer_ = new IdxT[buffer_size];
+        J_vals_buffer_ = new RealT[buffer_size];
       }
 
       nnz_ = 0;
@@ -113,6 +114,22 @@ namespace GridKit
                                                                                                  J_cols_buffer_,
                                                                                                  J_vals_buffer_,
                                                                                                  nnz_);
+
+      // The terminal current is a Norton injection, so the bus residual depends
+      // on the bus voltage as well as on the machine states.
+      GridKit::Enzyme::Sparse::DhDwb<GridKit::PhasorDynamics::Genrou<ScalarT, IdxT>,
+                                     GridKit::Enzyme::Sparse::MemberFunctions::BusResidual>::eval(this,
+                                                                                                  static_cast<size_t>(bus_->size()),
+                                                                                                  static_cast<size_t>(bus_->size()),
+                                                                                                  (bus_->getResidualIndices()).data(),
+                                                                                                  (bus_->getVariableIndices()).data(),
+                                                                                                  y_.getData(),
+                                                                                                  yp_.getData(),
+                                                                                                  wb_.getData(),
+                                                                                                  J_rows_buffer_,
+                                                                                                  J_cols_buffer_,
+                                                                                                  J_vals_buffer_,
+                                                                                                  nnz_);
 
       this->constructCoo();
 
