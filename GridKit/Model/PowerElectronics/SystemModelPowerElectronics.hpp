@@ -213,7 +213,7 @@ namespace GridKit
 
         for (IdxT i = 0; i < nnz; ++i)
         {
-          if (component->getNodeConnection(r[i]).idx_ != neg1_ && component->getNodeConnection(c[i]).idx_ != neg1_)
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
             ++nnz_dup;
           }
@@ -226,7 +226,7 @@ namespace GridKit
       RealT* vals_dup = new RealT[nnz_dup];
 
       IdxT counter = 0;
-      for (const auto& component : components_)
+      for (const component_type* component : components_)
       {
         const IdxT*  r   = component->jacobianCooRows();
         const IdxT*  c   = component->jacobianCooCols();
@@ -235,10 +235,10 @@ namespace GridKit
 
         for (IdxT i = 0; i < nnz; ++i)
         {
-          if (component->getNodeConnection(r[i]).idx_ != neg1_ && component->getNodeConnection(c[i]).idx_ != neg1_)
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
-            rows_dup[counter] = component->getNodeConnection(r[i]).idx_;
-            cols_dup[counter] = component->getNodeConnection(c[i]).idx_;
+            rows_dup[counter] = component->getNodeConnection(r[i]);
+            cols_dup[counter] = component->getNodeConnection(c[i]);
             vals_dup[counter] = v[i];
             counter++;
           }
@@ -385,7 +385,7 @@ namespace GridKit
 
         for (IdxT i = 0; i < nnz; ++i)
         {
-          if (component->getNodeConnection(r[i]).idx_ != neg1_ && component->getNodeConnection(c[i]).idx_ != neg1_)
+          if (component->getNodeConnection(r[i]) != neg1_ && component->getNodeConnection(c[i]) != neg1_)
           {
             vals[map_to_csr_[counter]] += v[i];
             ++counter;

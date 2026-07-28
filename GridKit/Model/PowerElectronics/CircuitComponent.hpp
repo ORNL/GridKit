@@ -102,14 +102,9 @@ namespace GridKit
      * @param local_index index of local value in vector
      * @return size_t Index of the same value in the global vector
      */
-    ExternalConnection getNodeConnection(size_t local_index) const
+    IdxT getNodeConnection(size_t local_index) const
     {
-      return ExternalConnection{
-          .y_   = y_ext_[local_index],
-          .yp_  = yp_ext_[local_index],
-          .f_   = f_ext_[local_index],
-          .idx_ = connection_nodes_[local_index],
-      };
+      return connection_nodes_[local_index];
     }
 
     int initialize() override
