@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <GridKit/Model/Evaluator.hpp>
-#include <GridKit/Model/PowerElectronics/CircuitComponent.hpp>
+#include <GridKit/Model/PowerElectronics/ExternalConnection.hpp>
 
 namespace GridKit
 {
@@ -103,32 +103,32 @@ namespace GridKit
       }
 
       /**
-       * @brief Create the mappings from local to global indices
+       * @brief Create the mappings from local to global indices for a node variable (either internal or external),
+       * to be used from an attached component. \see CircuitComponent::setExternalConnectionNodes()
        *
-       * @param local_index
-       * @param global_index
-       * @return int
+       * @param local_index The index of the local variable
+       * @param connection The necessary connection information for the variable
+       *
+       * @pre `local_index` *must* be the index of an external variable. As of now, using this method
+       * to set information for a local variable will silently discard the unnecessary information, but
+       * this may change in the future.
        */
-      int setExternalConnectionNodes(IdxT local_index, CircuitComponent<ScalarT, IdxT>::ExternalConnection global_index)
+      int setExternalConnectionNodes(IdxT local_index, ExternalConnection<ScalarT, IdxT> connection)
       {
-        y_ext_[local_index]            = global_index.y_;
-        yp_ext_[local_index]           = global_index.yp_;
-        f_ext_[local_index]            = global_index.f_;
-        connection_nodes_[local_index] = global_index.idx_;
+        y_ext_[local_index]            = connection.y_;
+        yp_ext_[local_index]           = connection.yp_;
+        f_ext_[local_index]            = connection.f_;
+        connection_nodes_[local_index] = connection.idx_;
         return 0;
       }
 
       /**
-       * @brief Given the location of value in the local vector map to global index
-       *
-       * f(local_index) = global_index
-       *
-       * @param local_index index of local value in vector
-       * @return IdxT Index of the same value in the global vector
+       * @brief Get connection information for a particular variable, to be consumed by an attached
+       * component so they can properly access their externals.
        */
-      CircuitComponent<ScalarT, IdxT>::ExternalConnection getNodeConnection(size_t local_index) const
+      ExternalConnection<ScalarT, IdxT> getNodeConnection(size_t local_index) const
       {
-        return typename CircuitComponent<ScalarT, IdxT>::ExternalConnection{
+        return ExternalConnection{
             .y_   = y_ext_[local_index],
             .yp_  = yp_ext_[local_index],
             .f_   = f_ext_[local_index],

@@ -9,8 +9,6 @@ namespace GridKit
     template <typename ScalarT, typename IdxT>
     class GroundedBus : public NodeBase<ScalarT, IdxT>
     {
-      using ExternalConnection = typename CircuitComponent<ScalarT, IdxT>::ExternalConnection;
-
       using NodeBase<ScalarT, IdxT>::y_ext_;
       using NodeBase<ScalarT, IdxT>::yp_ext_;
       using NodeBase<ScalarT, IdxT>::f_ext_;

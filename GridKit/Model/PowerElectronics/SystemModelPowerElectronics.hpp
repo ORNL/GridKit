@@ -17,12 +17,11 @@ namespace GridKit
   template <class ScalarT, typename IdxT>
   class PowerElectronicsModel : public CircuitComponent<ScalarT, IdxT>
   {
-    using Base               = CircuitComponent<ScalarT, IdxT>;
-    using RealT              = Base::RealT;
-    using CsrMatrixT         = Base::CsrMatrixT;
-    using component_type     = CircuitComponent<ScalarT, IdxT>;
-    using node_type          = PowerElectronics::NodeBase<ScalarT, IdxT>;
-    using ExternalConnection = Base::ExternalConnection;
+    using Base           = CircuitComponent<ScalarT, IdxT>;
+    using RealT          = Base::RealT;
+    using CsrMatrixT     = Base::CsrMatrixT;
+    using component_type = CircuitComponent<ScalarT, IdxT>;
+    using node_type      = PowerElectronics::NodeBase<ScalarT, IdxT>;
 
     using Base::abs_tol_;
     using Base::allocated_;
