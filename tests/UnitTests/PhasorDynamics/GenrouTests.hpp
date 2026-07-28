@@ -236,8 +236,8 @@ namespace GridKit
             2.211,
             0.85,
             1.2,
-            -static_cast<ScalarT>(13.) / static_cast<ScalarT>(130.),
-            -static_cast<ScalarT>(143.) / static_cast<ScalarT>(52.)};
+            -static_cast<ScalarT>(1.) / static_cast<ScalarT>(10.),
+            -static_cast<ScalarT>(11.) / static_cast<ScalarT>(4.)};
 
         bus.allocate();
         bus.initialize();
