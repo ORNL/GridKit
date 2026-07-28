@@ -13,6 +13,7 @@ int main()
   result += test.residualAssemblyIsIdempotent();
   result += test.reallocateAfterTopologyChange();
   result += test.modelVectorsAliasSystemStorage();
+  result += test.componentsShareEvaluationContext();
 #ifdef GRIDKIT_ENABLE_ENZYME
   result += test.jacobian();
 #endif
