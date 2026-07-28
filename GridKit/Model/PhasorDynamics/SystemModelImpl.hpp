@@ -1158,14 +1158,20 @@ namespace GridKit
       network_f_data_ = f_.getData(memory::HOST);
 
       // Rows are the buses that own a residual slice, ascending by bind offset.
-      // A bus without one, such as an infinite bus, is not a network row.
+      // A bus without one, such as an infinite bus, is not a network row and so
+      // keeps clearing its own terminal currents.
       std::vector<IdxT> row_offset;
       row_offset.reserve(buses_.size());
+      unmapped_buses_.clear();
       for (const auto& bus : buses_)
       {
         if (bus->size() > 0)
         {
           row_offset.push_back(bus->getResidualIndices()[0]);
+        }
+        else
+        {
+          unmapped_buses_.push_back(bus);
         }
       }
 
@@ -1218,21 +1224,16 @@ namespace GridKit
     {
       using ProfileClock = std::chrono::steady_clock;
 
-      // Ordering invariant: every bus clears Ir and Ii before any contribution
-      // is accumulated, and finite buses establish HOST-current state for their
-      // bound residual slices during this sweep. Do not reorder the bus loop
-      // against the network product or the component sweep.
-      const auto bus_start = ProfileClock::now();
-      for (const auto& bus : buses_)
+      // Ordering invariant: the network product overwrites the current balance
+      // of every bus it owns a row for, which is what establishes the zero the
+      // components accumulate onto. Buses outside the network clear their own
+      // terminals. Do not reorder either against the component sweep.
+      const auto network_start = ProfileClock::now();
+      network_.multiply(network_y_data_, network_f_data_);
+      for (const auto& bus : unmapped_buses_)
       {
         bus->evaluateResidual();
       }
-      profile_bus_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - bus_start).count();
-
-      // The constant linear network, pre-assembled out of the component sweep.
-      // It writes the rows it owns, which the bus sweep just zeroed.
-      const auto network_start = ProfileClock::now();
-      network_.multiply(network_y_data_, network_f_data_);
       profile_network_residual_seconds_ += std::chrono::duration<double>(ProfileClock::now() - network_start).count();
 
       IdxT profile_begin = 0;
@@ -1279,7 +1280,6 @@ namespace GridKit
       std::cout << std::fixed << std::setprecision(6)
                 << "\nSYSTEM_RESIDUAL_PROFILE_BEGIN\n"
                 << "system_residual_calls=" << profile_residual_calls_ << '\n'
-                << "bus_residual_seconds=" << profile_bus_residual_seconds_ << '\n'
                 << "network_residual_seconds=" << profile_network_residual_seconds_ << '\n'
                 << "network_rows=" << network_.rowCount() << '\n'
                 << "network_nnz=" << network_.nnz() << '\n';

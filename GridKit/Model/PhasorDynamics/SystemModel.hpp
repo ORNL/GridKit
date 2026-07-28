@@ -118,6 +118,8 @@ namespace GridKit
       NetworkAdmittance<ScalarT, IdxT> network_;
       /// Components that evaluate their own residual, in components_ order
       std::vector<ComponentT*>         residual_components_;
+      /// Buses that own no network row and so still clear their own terminals
+      std::vector<BusT*>               unmapped_buses_;
       /// Cached HOST storage the network product reads and writes
       ScalarT*                         network_y_data_{nullptr};
       ScalarT*                         network_f_data_{nullptr};
@@ -137,7 +139,6 @@ namespace GridKit
       /// The same boundaries projected onto residual_components_
       std::array<IdxT, profile_group_count_>   profile_sweep_ends_{};
       std::array<double, profile_group_count_> profile_residual_seconds_{};
-      double                                   profile_bus_residual_seconds_{};
       double                                   profile_network_residual_seconds_{};
       long int                                 profile_residual_calls_{};
     }; // class SystemModel
