@@ -13,6 +13,7 @@
   `max_steps`          | Maximum number of solver time steps, 0 for the IDA default, or a negative number for unlimited steps (default: 0)
   `max_order`          | Maximum IDA integration method order from 1 to 5 (default: 5; fixed stepping is capped at 2)
   `consistent_ic_type` | IDA consistent initial condition calculation type; one of { "y", "ya_ydp" } (default: "ya_ydp")
+  `klu_ordering`       | KLU fill-reducing ordering; one of { "amd", "colamd", "natural" } (optional; defaults to the SUNDIALS setting)
   `events`             | An array of event groups (see [Events](#events) below)
   `output_file`        | Path to output (CSV) file (optional)
   `reference_file`     | A string containing the name of the case (optional)
