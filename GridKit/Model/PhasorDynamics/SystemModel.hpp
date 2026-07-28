@@ -107,8 +107,14 @@ namespace GridKit
       BusFault<ScalarT, IdxT>* getBusFault(IdxT fault_id);
 
     private:
-      /// Assemble the network admittance matrix and the residual sweep list.
+      /// Assemble the network admittance matrix and the evaluated sweep list.
       void assembleNetworkAdmittance();
+
+      /// Build the Jacobian sparsity pattern and the COO-to-CSR map.
+      void buildJacobianStructure();
+
+      /// Fold the invariant Jacobian contributions out of the per-call sweep.
+      void snapshotConstantJacobian();
 
       std::vector<BusT*>       buses_;
       std::vector<SignalT*>    signals_;
@@ -116,13 +122,27 @@ namespace GridKit
 
       /// The constant linear network, evaluated ahead of the residual sweep
       NetworkAdmittance<ScalarT, IdxT> network_;
-      /// Components that evaluate their own residual, in components_ order
-      std::vector<ComponentT*>         residual_components_;
+      /// Components that evaluate their own residual and Jacobian, in
+      /// components_ order. A component reporting admittance stamps is in
+      /// neither sweep: its residual is the pre-assembled network product and
+      /// its Jacobian is that same constant admittance.
+      std::vector<ComponentT*>         evaluated_components_;
       /// Buses that own no network row and so still clear their own terminals
       std::vector<BusT*>               unmapped_buses_;
       /// Cached HOST storage the network product reads and writes
       ScalarT*                         network_y_data_{nullptr};
       ScalarT*                         network_f_data_{nullptr};
+
+      /// System Jacobian values with every invariant contribution already
+      /// summed in. Copied over the CSR values at the head of an evaluation,
+      /// replacing the zero pass at the same cost.
+      std::vector<RealT>        constant_values_;
+      /// Destination CSR slot of each varying entry, in sweep order
+      std::vector<IdxT>         block_to_csr_;
+      /// Source of each varying entry, in the same order. Block value storage
+      /// is allocated on the first evaluation and never moves, so these stay
+      /// valid for the life of the sparsity pattern.
+      std::vector<const RealT*> block_source_;
 
       std::map<IdxT, IdxT> gridkit_bus_indices_;    ///< Map between gridkit_bus_id and bus_id
       std::map<IdxT, IdxT> gridkit_signal_indices_; ///< Map between gridkit_signal_id and signal_id
@@ -136,7 +156,7 @@ namespace GridKit
       static constexpr std::size_t             profile_group_count_ = 10;
       /// Group boundaries in components_, fixed at construction
       std::array<IdxT, profile_group_count_>   profile_component_ends_{};
-      /// The same boundaries projected onto residual_components_
+      /// The same boundaries projected onto evaluated_components_
       std::array<IdxT, profile_group_count_>   profile_sweep_ends_{};
       std::array<double, profile_group_count_> profile_residual_seconds_{};
       double                                   profile_network_residual_seconds_{};

@@ -36,7 +36,6 @@ namespace AnalysisManager
         double   jacobian_seconds           = 0.0;
         double   jacobian_input_seconds     = 0.0;
         double   jacobian_model_seconds     = 0.0;
-        double   jacobian_zero_seconds      = 0.0;
         double   jacobian_structure_seconds = 0.0;
         double   jacobian_values_seconds    = 0.0;
         double   linear_setup_seconds       = 0.0;
@@ -881,10 +880,8 @@ namespace AnalysisManager
       using CsrMatrixT = GridKit::LinearAlgebra::CsrMatrix<RealT, IdxT>;
       CsrMatrixT* Jac  = model->getCsrJacobian();
 
-      const auto zero_start = ProfileClock::now();
-      SUNMatZero(J);
-      profile.jacobian_zero_seconds += elapsedSeconds(zero_start);
-
+      // No zeroing pass: the copies below overwrite every index and every value
+      // the matrix holds, so anything left in it is dead before it is read.
       sunindextype* sun_row_ptrs = SUNSparseMatrix_IndexPointers(J);
       sunindextype* sun_cols     = SUNSparseMatrix_IndexValues(J);
       RealT*        sun_vals     = SUNSparseMatrix_Data(J);
@@ -1125,7 +1122,6 @@ namespace AnalysisManager
                 << "jacobian_seconds=" << profile.jacobian_seconds << '\n'
                 << "jacobian_input_seconds=" << profile.jacobian_input_seconds << '\n'
                 << "jacobian_model_seconds=" << profile.jacobian_model_seconds << '\n'
-                << "jacobian_zero_seconds=" << profile.jacobian_zero_seconds << '\n'
                 << "jacobian_structure_seconds=" << profile.jacobian_structure_seconds << '\n'
                 << "jacobian_values_seconds=" << profile.jacobian_values_seconds << '\n'
                 << "linear_setup_calls=" << profile.linear_setup_calls << '\n'
