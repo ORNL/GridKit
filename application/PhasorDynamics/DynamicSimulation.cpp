@@ -35,6 +35,10 @@ int runApplication(int argc, const char* argv[])
   ida.setMaxSteps(study.max_steps);
   ida.setMaxOrder(study.max_order);
   ida.setConsistentICType(study.consistent_ic_type);
+  if (study.klu_ordering.has_value())
+  {
+    ida.setKluOrdering(*study.klu_ordering);
+  }
   ida.configureSimulation();
 
   // Start timer
