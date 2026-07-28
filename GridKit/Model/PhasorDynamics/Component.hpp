@@ -15,6 +15,22 @@ namespace GridKit
     using Log = ::GridKit::Utilities::Logger;
 
     /**
+     * @brief One constant entry of the network admittance matrix.
+     *
+     * A stamp says "row bus draws (g + jb) times the voltage of column bus".
+     * Indices are global system indices of the real parts, so the imaginary
+     * parts live at `row + 1` and `col + 1`.
+     */
+    template <typename real_type, typename index_type>
+    struct AdmittanceStamp
+    {
+      index_type row; ///< Global residual index of the row bus Ir entry
+      index_type col; ///< Global variable index of the column bus Vr entry
+      real_type  g;   ///< Conductance
+      real_type  b;   ///< Susceptance
+    };
+
+    /**
      * @brief Component model implementation base class.
      */
     template <class scalar_type, typename index_type>
@@ -27,6 +43,7 @@ namespace GridKit
       using CsrMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CsrMatrixT;
       using CooMatrixT = typename Model::Evaluator<ScalarT, IdxT>::CooMatrixT;
       using VectorT    = typename Model::Evaluator<ScalarT, IdxT>::VectorT;
+      using StampT     = AdmittanceStamp<RealT, IdxT>;
 
       struct EvaluationContext
       {
@@ -68,6 +85,32 @@ namespace GridKit
       }
 
       virtual int verify() const = 0;
+
+      /**
+       * @brief Report this component's constant admittance stamps.
+       *
+       * A component whose entire residual contribution is a constant admittance
+       * on the bus equations reports it here instead of evaluating it. The
+       * system pre-assembles all such stamps into one network admittance matrix
+       * and excludes the reporting component from the residual sweep.
+       *
+       * The contract is all-or-nothing: a non-zero return means the stamps are
+       * the component's *complete* residual contribution. A component with any
+       * state-dependent or time-dependent contribution must return 0.
+       *
+       * @param[out] out - Buffer of at least the returned count, or nullptr to
+       *                   query the count only.
+       *
+       * @pre The component and its terminal buses are bound, so global variable
+       * and residual indices are final.
+       *
+       * @return Number of stamps; 0 if the component evaluates its own residual.
+       */
+      virtual IdxT admittanceStamps(StampT* out)
+      {
+        (void) out;
+        return 0;
+      }
 
       IdxT size() override final
       {
