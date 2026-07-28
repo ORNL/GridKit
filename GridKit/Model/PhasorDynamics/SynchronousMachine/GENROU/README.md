@@ -91,8 +91,6 @@ $E'_d$    | [p.u.] | Direct axis transient flux        |
 #### Algebraic
 Symbol      | Units  | Description                       | Note
 ------------|--------|---------------------------------  | ------
-$V_d$       | [p.u.] | Machine internal voltage, d-axis  | 
-$V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
 $I_d$       | [p.u.] | Terminal current, d-axis          | 
 $I_q$       | [p.u.] | Terminal current, q-axis          | 
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |
@@ -118,9 +116,17 @@ $E_{\mathrm{fd}}$ | [p.u.] | Field winding voltage from the excitation system   
 
 Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
 
-### Internal Equations
+For readability define
 
-#### Differential
+``` math
+\begin{aligned}
+  V^\mathrm{int}_r &= ( \psi''_d\cos\delta - \psi''_q \sin\delta)(1+\omega) \\
+  V^\mathrm{int}_i &= ( \psi''_q\cos\delta + \psi''_d \sin\delta)(1+\omega) \\
+\end{aligned}
+```
+
+
+### Differential Equations
 
 ```math
 \begin{aligned}
@@ -143,16 +149,13 @@ Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
 \end{aligned}
 ```
 
-#### Algebraic
-
-```math
+### Algebraic Equations
+``` math
 \begin{aligned}
   0 &= -\psi''_{q} -E'_{d}X_{q5} - \psi'_{q}X_{q4} \\
   0 &= -\psi''_{d} +E'_{q}X_{d5} + \psi'_{d}X_{d4}\\
   0 &= -\psi'' +\sqrt{(\psi''_{d})^2+(\psi''_{q})^2} \\
   0 &= -k_{\mathrm{sat}} + S_B q(\psi''-S_A) \\
-  0 &= -V_d -\psi''_{q}(1+\omega)\\
-  0 &= -V_q  +\psi''_{d}(1+\omega)\\
   0 &= -T_\mathrm{e} +(\psi''_{d} - I_dX''_d)I_q-(\psi''_{q} - I_qX''_d)I_d \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
   0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta)
@@ -163,8 +166,8 @@ Smooth functions: [$q$](../../../../CommonMath.md#quadratic-ramp).
 
 ``` math
 \begin{aligned}
-  0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (-V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
-  0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (-V_d \cos(\delta) + V_q \sin(\delta) - V_i)
+  0 &= -I_r + G(V^\mathrm{int}_r-V_r) - B(V^\mathrm{int}_i-V_i) \\
+  0 &= -I_i + B(V^\mathrm{int}_r-V_r) + G(V^\mathrm{int}_i-V_i)
 \end{aligned}
 ```
 
