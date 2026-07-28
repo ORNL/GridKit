@@ -1,4 +1,5 @@
 #include <cmath>
+#include <stdexcept>
 
 #include <GridKit/Model/Evaluator.hpp>
 #include <GridKit/Solver/Dynamic/Ida.hpp>
@@ -6,6 +7,7 @@
 #include <GridKit/Testing/Testing.hpp>
 
 using AnalysisManager::Sundials::Ida;
+using AnalysisManager::Sundials::KluOrdering;
 
 namespace GridKit
 {
@@ -540,6 +542,26 @@ namespace GridKit
         auto stats = ida.getStats();
 
         success *= (stats.num_steps_ == n_steps);
+
+        return success.report(__func__);
+      }
+
+      TestOutcome kluOrderingRequiresSparseJacobian()
+      {
+        TestStatus success = true;
+
+        Model::NullEvaluator<ScalarT, IdxT> model;
+        Ida<ScalarT, IdxT>                  ida(&model);
+        ida.setKluOrdering(KluOrdering::AMD);
+
+        try
+        {
+          ida.configureSimulation();
+          success = false;
+        }
+        catch (const std::invalid_argument&)
+        {
+        }
 
         return success.report(__func__);
       }

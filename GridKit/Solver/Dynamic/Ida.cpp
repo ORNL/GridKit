@@ -8,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 
 #include <idas/idas.h>
 #include <idas/idas_ls.h>
@@ -192,9 +193,17 @@ namespace AnalysisManager
       }
       else
       {
+        if (klu_ordering_.has_value())
+        {
+          throw std::invalid_argument("KLU ordering requires the KLU linear solver");
+        }
         this->configureLinearSolverDense();
       }
 #else
+      if (klu_ordering_.has_value())
+      {
+        throw std::invalid_argument("KLU ordering requires GridKit to be built with KLU support");
+      }
       /// Todo - Improve error handling capabilities and hasJacobian_ ownership
       if (model_->hasJacobian())
       {
@@ -233,6 +242,12 @@ namespace AnalysisManager
 
       linearSolver_ = SUNLinSol_KLU(yy_, JacobianMat_, context_);
       checkAllocation((void*) linearSolver_, "SUNLinSol_KLU");
+
+      if (klu_ordering_.has_value())
+      {
+        retval = SUNLinSol_KLUSetOrdering(linearSolver_, static_cast<int>(*klu_ordering_));
+        checkOutput(retval, "SUNLinSol_KLUSetOrdering");
+      }
 
       linearSolver_->ops->setup = profileKluSetup;
       linearSolver_->ops->solve = profileKluSolve;
@@ -1379,6 +1394,19 @@ namespace AnalysisManager
     void Ida<ScalarT, IdxT>::setConsistentICType(IdaConsistentICType consistent_ic_type)
     {
       consistent_ic_type_ = consistent_ic_type;
+    }
+
+    /**
+     * @brief Set the KLU fill-reducing ordering
+     *
+     * @param ordering KLU ordering used by the sparse linear solver
+     * @tparam ScalarT Scalar data type
+     * @tparam IdxT Index data type
+     */
+    template <class ScalarT, typename IdxT>
+    void Ida<ScalarT, IdxT>::setKluOrdering(KluOrdering ordering)
+    {
+      klu_ordering_ = ordering;
     }
 
     /**

@@ -47,6 +47,13 @@ namespace AnalysisManager
       YA_YDP
     };
 
+    enum class KluOrdering
+    {
+      AMD     = 0,
+      COLAMD  = 1,
+      NATURAL = 2
+    };
+
     template <class ScalarT, typename IdxT>
     class Ida : public DynamicSolver<ScalarT, IdxT>
     {
@@ -142,6 +149,7 @@ namespace AnalysisManager
       void setSuppressAlgebraicErrors(bool suppress);
       void setBackwardSuppressAlgebraicErrors(bool suppress);
       void setConsistentICType(IdaConsistentICType consistent_ic_type);
+      void setKluOrdering(KluOrdering ordering);
       void setMaxSteps(IdxT maxSteps) override;
       void setBackwardMaxSteps(IdxT maxSteps);
 
@@ -218,12 +226,13 @@ namespace AnalysisManager
 
       int backwardID_{};
 
-      RealT               time_step_{};
-      RealT               rel_tol_{DEFAULT_REL_TOL};
-      RealT               abs_tol_override_{};
-      IdxT                max_steps_{};
-      bool                suppress_alg_{false};
-      IdaConsistentICType consistent_ic_type_{IdaConsistentICType::YA_YDP};
+      RealT                      time_step_{};
+      RealT                      rel_tol_{DEFAULT_REL_TOL};
+      RealT                      abs_tol_override_{};
+      IdxT                       max_steps_{};
+      bool                       suppress_alg_{false};
+      IdaConsistentICType        consistent_ic_type_{IdaConsistentICType::YA_YDP};
+      std::optional<KluOrdering> klu_ordering_;
 
       RealT backward_time_step_{};
       RealT backward_rel_tol_{DEFAULT_REL_TOL};
