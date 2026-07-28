@@ -80,8 +80,6 @@ $V_d$       | [p.u.] | Machine internal voltage, d-axis  |
 $V_q$       | [p.u.] | Machine internal voltage, q-axis  | 
 $I_d$       | [p.u.] | Terminal current, d-axis          | 
 $I_q$       | [p.u.] | Terminal current, q-axis          | 
-$I_r$       | [p.u.] | Terminal current, real component on network reference frame      | Read by bus and optionally by controllers
-$I_i$       | [p.u.] | Terminal current, imaginary component on network reference frame | Read by bus and optionally by controllers
 $\psi''_q$  | [p.u.] | Total q-axis subtransient flux    |
 $\psi''_d$  | [p.u.] | Total d-axis subtransient flux    |
 $\psi''$    | [p.u.] | Machine total subtransient flux   |
@@ -138,7 +136,14 @@ Note that for implementation purposes, some of these equations may be simplified
   0 &= -T_{elec} +(\psi''_{d} - I_dX_d'')I_q-(\psi''_{q} - I_qX_d'')I_d \\
   0 &= -k_{sat} + S_B q(\psi''-S_A) \\
   0 &= -I_d + I_r \sin(\delta) - I_i \cos(\delta) \\
-  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta) \\
+  0 &= -I_q + I_r \cos(\delta) + I_i \sin(\delta)
+\end{aligned}
+```
+
+### Network Equations
+
+``` math
+\begin{aligned}
   0 &= -I_r + G (V_d \sin(\delta) + V_q \cos(\delta) - V_r) - B (V_d \cos(\delta) + V_q \sin(\delta) - V_i) \\
   0 &= -I_i + B (V_d \sin(\delta) + V_q \cos(\delta) - V_r) + G (V_d \cos(\delta) + V_q \sin(\delta) - V_i)
 \end{aligned}
