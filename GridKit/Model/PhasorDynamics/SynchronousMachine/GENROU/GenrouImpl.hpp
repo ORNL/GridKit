@@ -48,7 +48,7 @@ namespace GridKit
         S12_(0.),
         mva_base_(100.)
     {
-      size_ = 17;
+      size_ = 15;
       setDerivedParams();
     }
 
@@ -97,7 +97,7 @@ namespace GridKit
         S12_(S12),
         mva_base_(100.)
     {
-      size_ = 17;
+      size_ = 15;
       setDerivedParams();
     }
 
@@ -112,7 +112,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 15;
       setDerivedParams();
     }
 
@@ -129,7 +129,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 15;
       setDerivedParams();
     }
 
@@ -147,7 +147,7 @@ namespace GridKit
       initializeParameters(data);
       initializeMonitor();
 
-      size_ = 17;
+      size_ = 15;
       setDerivedParams();
     }
 
@@ -290,13 +290,13 @@ namespace GridKit
       using Variable = typename ModelDataT::MonitorableVariables;
       // Convert monitored terminal values to system base.
       monitor_->set(Variable::ir, [this]
-                    { return toSystemBase(y_.getData()[15]); });
+                    { return toSystemBase(y_.getData()[13]); });
       monitor_->set(Variable::ii, [this]
-                    { return toSystemBase(y_.getData()[16]); });
+                    { return toSystemBase(y_.getData()[14]); });
       monitor_->set(Variable::p, [this]
-                    { return toSystemBase(Vr() * y_.getData()[15] + Vi() * y_.getData()[16]); });
+                    { return toSystemBase(Vr() * y_.getData()[13] + Vi() * y_.getData()[14]); });
       monitor_->set(Variable::q, [this]
-                    { return toSystemBase(Vi() * y_.getData()[15] - Vr() * y_.getData()[16]); });
+                    { return toSystemBase(Vi() * y_.getData()[13] - Vr() * y_.getData()[14]); });
       monitor_->set(Variable::delta, [this]
                     { return y_.getData()[0]; });
       monitor_->set(Variable::omega, [this]
@@ -442,17 +442,13 @@ namespace GridKit
       y[7]           = psidpp;
       y[8] = psipp = std::sqrt(psiqpp * psiqpp + psidpp * psidpp);
       y[9] = ksat = SB_ * Math::qramp(psipp - SA_);
-      ScalarT vd  = -psiqpp * (ONE<RealT> + omega);
-      vq          = psidpp * (ONE<RealT> + omega);
-      y[10]       = vd;
-      y[11]       = vq;
-      y[12]       = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
-      y[13]       = id;
-      y[14]       = iq;
-      y[15]       = ir;
-      y[16]       = ii;
+      y[10]       = (psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id;
+      y[11]       = id;
+      y[12]       = iq;
+      y[13]       = ir;
+      y[14]       = ii;
 
-      ScalarT Te = y[12];
+      ScalarT Te = y[10];
       // Convert Te to system base for governor PM signal.
       pmech_set_ = toSystemBase(Te);
       if (signals_.template isAttached<GenrouExternalVariables::PM>())
@@ -532,13 +528,11 @@ namespace GridKit
       ScalarT psidpp = y[7];
       ScalarT psipp  = y[8];
       ScalarT ksat   = y[9];
-      ScalarT vd     = y[10];
-      ScalarT vq     = y[11];
-      ScalarT telec  = y[12];
-      ScalarT id     = y[13];
-      ScalarT iq     = y[14];
-      ScalarT ir     = y[15];
-      ScalarT ii     = y[16];
+      ScalarT telec  = y[10];
+      ScalarT id     = y[11];
+      ScalarT iq     = y[12];
+      ScalarT ir     = y[13];
+      ScalarT ii     = y[14];
 
       /* Read derivatives */
       ScalarT delta_dot = yp[0];
@@ -563,8 +557,8 @@ namespace GridKit
       const ScalarT cos_delta = std::cos(delta);
 
       // Internal Voltage
-      const ScalarT Vint_r = sin_delta * vd + cos_delta * vq;
-      const ScalarT Vint_i = -cos_delta * vd + sin_delta * vq;
+      const ScalarT Vint_r = (-sin_delta * psiqpp + cos_delta * psidpp) * (ONE<RealT> + omega);
+      const ScalarT Vint_i = (cos_delta * psiqpp + sin_delta * psidpp) * (ONE<RealT> + omega);
 
       /* 6 Genrou differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
@@ -574,20 +568,18 @@ namespace GridKit
       f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
-      /* 9 Genrou algebraic equations */
+      /* 7 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
       f[9]  = ksat - SB_ * Math::qramp(psipp - SA_);
-      f[10] = vd + psiqpp * (ONE<RealT> + omega);
-      f[11] = vq - psidpp * (ONE<RealT> + omega);
-      f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13] = id - (ir * sin_delta - ii * cos_delta);
-      f[14] = iq - (ir * cos_delta + ii * sin_delta);
+      f[10] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
+      f[11] = id - (ir * sin_delta - ii * cos_delta);
+      f[12] = iq - (ir * cos_delta + ii * sin_delta);
 
       /* 2 Genrou network equations */
-      f[15] = ir + G_ * vr - B_ * vi - (G_ * Vint_r - B_ * Vint_i);
-      f[16] = ii + B_ * vr + G_ * vi - (B_ * Vint_r + G_ * Vint_i);
+      f[13] = ir + G_ * vr - B_ * vi - (G_ * Vint_r - B_ * Vint_i);
+      f[14] = ii + B_ * vr + G_ * vi - (B_ * Vint_r + G_ * Vint_i);
 
       return 0;
     }
@@ -603,8 +595,8 @@ namespace GridKit
         [[maybe_unused]] const ScalarT* wb,
         ScalarT*                        h)
     {
-      ScalarT ir = y[15];
-      ScalarT ii = y[16];
+      ScalarT ir = y[13];
+      ScalarT ii = y[14];
 
       // Convert current injection to system base for the network.
       h[0] = toSystemBase(ir);

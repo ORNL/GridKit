@@ -46,8 +46,6 @@ namespace GridKit
       PSIPPD, ///< \f$\psi''_d\f$
       PSIPP,  ///< \f$\psi''\f$
       KSAT,   ///< \f$k_{sat}\f$
-      VD,     ///< \f$V_d\f$
-      VQ,     ///< \f$V_q\f$
       TE,     ///< \f$T_e\f$
       ID,     ///< \f$I_d\f$
       IQ,     ///< \f$I_q\f$
