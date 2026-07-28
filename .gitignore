@@ -10,3 +10,12 @@ docs/_build/
 docs/api/reference/
 docs/xml/
 __pycache__
+
+# Generated PhasorDynamics simulation figures
+examples/PhasorDynamics/**/*_delta.png
+examples/PhasorDynamics/**/*_omega.png
+examples/PhasorDynamics/**/*_voltage_magnitude.png
+examples/PhasorDynamics/**/*_ipcmd.png
+examples/PhasorDynamics/**/*_iqcmd.png
+examples/PhasorDynamics/**/*_lvpl_diagnostic.png
+examples/PhasorDynamics/**/*_comparison.png
