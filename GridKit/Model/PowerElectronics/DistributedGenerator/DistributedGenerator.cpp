@@ -161,10 +161,6 @@ namespace GridKit
     {
       *f_ext_[0] += omega - *y_ext_[0];
     }
-    else
-    {
-      *f_ext_[0] += 0.0;
-    }
 
     // output
     // current transformed to common frame
