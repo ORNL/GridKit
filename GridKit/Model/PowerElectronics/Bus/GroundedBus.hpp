@@ -24,7 +24,7 @@ namespace GridKit
         if (int err_code = NodeBase<ScalarT, IdxT>::allocate())
           return err_code;
 
-        this->setExternalConnectionNodes(0, ExternalConnection{.y_ = &voltage_, .yp_ = &dummy_, .f_ = &dummy_, .idx_ = INVALID_INDEX<IdxT>});
+        this->setExternalConnectionNodes(0, ExternalConnection<ScalarT, IdxT>{.y_ = &voltage_, .yp_ = &dummy_, .f_ = &dummy_, .idx_ = INVALID_INDEX<IdxT>});
 
         return 0;
       }
