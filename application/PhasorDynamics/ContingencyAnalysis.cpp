@@ -41,6 +41,10 @@ TestStatus runStudy(StudyData study_data)
   ida.setMaxSteps(study_data.max_steps);
   ida.setMaxOrder(study_data.max_order);
   ida.setConsistentICType(study_data.consistent_ic_type);
+  if (study_data.klu_ordering.has_value())
+  {
+    ida.setKluOrdering(*study_data.klu_ordering);
+  }
   ida.configureSimulation();
 
   using EventType = SystemEvent::Type;
