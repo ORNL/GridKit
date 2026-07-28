@@ -10,3 +10,5 @@ and plots belong under `build/` or `/tmp`, not in source control.
 Current benchmark families:
 
 - [`adaptive-step/`](adaptive-step/): PhasorDynamics adaptive-step simulation.
+- [`case-sweep/`](case-sweep/): canonical PhasorDynamics cases under identical
+  solver settings.
