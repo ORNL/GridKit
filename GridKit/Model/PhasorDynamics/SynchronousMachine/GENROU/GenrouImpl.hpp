@@ -558,6 +558,14 @@ namespace GridKit
 
       static constexpr auto pi = std::numbers::pi_v<RealT>;
 
+      // Set Rotor Angle commputation
+      const ScalarT sin_delta = std::sin(delta);
+      const ScalarT cos_delta = std::cos(delta);
+
+      // Internal Voltage
+      const ScalarT Vint_r = sin_delta * vd + cos_delta * vq;
+      const ScalarT Vint_i = -cos_delta * vd + sin_delta * vq;
+
       /* 6 Genrou differential equations */
       f[0] = delta_dot - omega * (TWO<RealT> * pi * freq_system_base_);
       f[1] = omega_dot - (ONE<RealT> / (TWO<RealT> * H_)) * ((pmech - D_ * omega) / (ONE<RealT> + omega) - telec);
@@ -566,7 +574,7 @@ namespace GridKit
       f[4] = psiqp_dot - (ONE<RealT> / Tqopp_) * (Edp - psiqp + Xq2_ * iq);
       f[5] = Edp_dot - (ONE<RealT> / Tqop_) * (-Edp + Xqd_ * psiqpp * ksat + Xq1_ * (iq - Xq3_ * (Edp + iq * Xq2_ - psiqp)));
 
-      /* 11 Genrou algebraic equations */
+      /* 9 Genrou algebraic equations */
       f[6]  = psiqpp - (-psiqp * Xq4_ - Edp * Xq5_);
       f[7]  = psidpp - (psidp * Xd4_ + Eqp * Xd5_);
       f[8]  = psipp - std::sqrt((psidpp * psidpp) + (psiqpp * psiqpp));
@@ -574,10 +582,12 @@ namespace GridKit
       f[10] = vd + psiqpp * (ONE<RealT> + omega);
       f[11] = vq - psidpp * (ONE<RealT> + omega);
       f[12] = telec - ((psidpp - id * Xdpp_) * iq - (psiqpp - iq * Xdpp_) * id);
-      f[13] = id - (ir * std::sin(delta) - ii * std::cos(delta));
-      f[14] = iq - (ir * std::cos(delta) + ii * std::sin(delta));
-      f[15] = ir - (G_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) - B_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
-      f[16] = ii - (B_ * (std::sin(delta) * vd + std::cos(delta) * vq - vr) + G_ * (-std::cos(delta) * vd + std::sin(delta) * vq - vi));
+      f[13] = id - (ir * sin_delta - ii * cos_delta);
+      f[14] = iq - (ir * cos_delta + ii * sin_delta);
+
+      /* 2 Genrou network equations */
+      f[15] = ir + G_ * vr - B_ * vi - (G_ * Vint_r - B_ * Vint_i);
+      f[16] = ii + B_ * vr + G_ * vi - (B_ * Vint_r + G_ * Vint_i);
 
       return 0;
     }
