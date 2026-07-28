@@ -79,11 +79,9 @@ int main(int /* argc */, char const** /* argv */)
   dg.setInternalDerivativePointer(&t1[dg.getExternSize()]);
   dg.setInternalResidualPointer(&res[dg.getExternSize()]);
 
-  using ExternalConnection = GridKit::CircuitComponent<double, size_t>::ExternalConnection;
-
   for (size_t idx : dg.getExternIndices())
   {
-    ExternalConnection connection{
+    GridKit::ExternalConnection<double, size_t> connection{
         .y_   = &t2[idx],
         .yp_  = &t1[idx],
         .f_   = &res[idx],
