@@ -6,6 +6,7 @@
 
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/SignalNode/SignalNodeSet.hpp>
+#include <GridKit/Model/PhasorDynamics/NetworkAdmittance.hpp>
 
 namespace GridKit
 {
@@ -105,13 +106,24 @@ namespace GridKit
       ComponentT*  getComponent(IdxT gridkit_component_id);
 
     private:
+      /// Assemble the network admittance matrix and the residual sweep list.
+      void assembleNetworkAdmittance();
+
       std::vector<BusT*>       buses_;
       SignalNodeSetT           signal_nodes_;
       std::vector<ComponentT*> components_;
       /// Non-owning sources whose outputs must be refreshed when time changes.
       std::vector<FunctionSignalSource<ScalarT, IdxT>*> function_sources_;
 
-      std::map<IdxT, IdxT> gridkit_bus_indices_; ///< Map between gridkit_bus_id and bus_id
+      /// The constant linear network, evaluated ahead of the residual sweep
+      NetworkAdmittance<ScalarT, IdxT> network_;
+      /// Components that evaluate their own residual, in components_ order
+      std::vector<ComponentT*>         residual_components_;
+      /// Cached HOST storage the network product reads and writes
+      ScalarT*                         network_y_data_{nullptr};
+      ScalarT*                         network_f_data_{nullptr};
+
+      std::map<IdxT, IdxT> gridkit_bus_indices_;   ///< Map between gridkit_bus_id and bus_id
 
       bool owns_components_{false};
 
@@ -119,9 +131,13 @@ namespace GridKit
       std::unique_ptr<MonitorT> monitor_;
 
       static constexpr std::size_t             profile_group_count_ = 10;
+      /// Group boundaries in components_, fixed at construction
       std::array<IdxT, profile_group_count_>   profile_component_ends_{};
+      /// The same boundaries projected onto residual_components_
+      std::array<IdxT, profile_group_count_>   profile_sweep_ends_{};
       std::array<double, profile_group_count_> profile_residual_seconds_{};
       double                                   profile_bus_residual_seconds_{};
+      double                                   profile_network_residual_seconds_{};
       long int                                 profile_residual_calls_{};
     }; // class SystemModel
 

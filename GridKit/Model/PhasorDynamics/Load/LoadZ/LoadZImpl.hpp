@@ -150,6 +150,31 @@ namespace GridKit
     }
 
     /**
+     * @brief A constant impedance load is one constant admittance stamp.
+     *
+     * The sign is negative because the load draws current from the bus, matching
+     * the subtraction in evaluateResidual().
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    index_type LoadZ<scalar_type, index_type>::admittanceStamps(
+        typename Component<ScalarT, IdxT>::StampT* out)
+    {
+      // See Branch::admittanceStamps for why an infinite bus terminal opts out.
+      if (bus_->size() == 0)
+      {
+        return 0;
+      }
+
+      if (out != nullptr)
+      {
+        out[0] = {bus_->getResidualIndices()[0], bus_->getVariableIndices()[0], -g_, -b_};
+      }
+
+      return 1;
+    }
+
+    /**
      * @brief Derived parameters
      *
      */

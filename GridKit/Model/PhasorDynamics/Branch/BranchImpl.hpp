@@ -316,6 +316,38 @@ namespace GridKit
       return 0;
     }
 
+    /**
+     * @brief The branch pi-model is four constant admittance stamps.
+     *
+     */
+    template <typename scalar_type, typename index_type>
+    index_type Branch<scalar_type, index_type>::admittanceStamps(
+        typename Component<ScalarT, IdxT>::StampT* out)
+    {
+      // An infinite bus owns no residual row and no bound voltage slice, so a
+      // branch incident to one cannot be expressed as matrix entries over the
+      // system vectors. Such a branch keeps evaluating its own residual.
+      if (bus1_->size() == 0 || bus2_->size() == 0)
+      {
+        return 0;
+      }
+
+      if (out != nullptr)
+      {
+        const IdxT row1 = bus1_->getResidualIndices()[0];
+        const IdxT row2 = bus2_->getResidualIndices()[0];
+        const IdxT col1 = bus1_->getVariableIndices()[0];
+        const IdxT col2 = bus2_->getVariableIndices()[0];
+
+        out[0] = {row1, col1, g11_, b11_};
+        out[1] = {row1, col2, g12_, b12_};
+        out[2] = {row2, col1, g21_, b21_};
+        out[3] = {row2, col2, g22_, b22_};
+      }
+
+      return 4;
+    }
+
     template <typename scalar_type, typename index_type>
     void Branch<scalar_type, index_type>::terminalCurrent1(ScalarT& Ir, ScalarT& Ii)
     {
