@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -66,6 +67,8 @@ namespace GridKit
       std::size_t                                    max_steps;
       /// IDA consistent initial condition calculation type
       AnalysisManager::Sundials::IdaConsistentICType consistent_ic_type;
+      /// optional KLU fill-reducing ordering
+      std::optional<AnalysisManager::Sundials::KluOrdering> klu_ordering;
       /// set of system events
       std::vector<SystemEvent>                       events;
       /// path to output file
@@ -120,6 +123,20 @@ namespace GridKit
           Log::error() << "Invalid IDA consistent initial condition type \""
                        << consistent_ic_type_str << "\"; "
                        << "must be either \"y\" or \"ya_ydp\"";
+        }
+      }
+      if (j.contains("klu_ordering"))
+      {
+        const auto ordering_str = j.at("klu_ordering").get<std::string>();
+        const auto ordering     = enum_cast<AnalysisManager::Sundials::KluOrdering>(ordering_str, case_insensitive);
+        if (!ordering.has_value())
+        {
+          Log::error() << "Invalid KLU ordering \"" << ordering_str
+                       << "\"; must be one of { \"amd\", \"colamd\", \"natural\" }";
+        }
+        else
+        {
+          c.klu_ordering = *ordering;
         }
       }
 
