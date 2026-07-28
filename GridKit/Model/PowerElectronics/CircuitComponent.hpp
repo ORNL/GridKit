@@ -481,7 +481,12 @@ namespace GridKit
      * @invariant Must have a size of n_extern_. Each element must be in the range [0, `size_` - 1]. Not currently verified anywhere.
      */
     std::set<IdxT>            extern_indices_;
-    /// A map from local variable indices to system (global) variable indices. Used for Jacobian construction in \ref PowerElectronicsModel::evaluateJacobian().
+    /**
+     * @brief A map from local variable indices to system (global) variable indices. Used for Jacobian construction in
+     * \ref PowerElectronicsModel::evaluateJacobian().
+     * @note If a variable does not map to a corresponding variable in the system (such as with reference nodes), a special
+     * sentinel value of \ref INVALID_INDEX is used. During Jacobian construction, such rows and columns will be pruned.
+     */
     std::unique_ptr<size_t[]> connection_nodes_;
 
   protected:
