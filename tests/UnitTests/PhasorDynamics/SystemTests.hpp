@@ -17,6 +17,7 @@
 #include <GridKit/Model/PhasorDynamics/Bus/BusInfinite.hpp>
 #include <GridKit/Model/PhasorDynamics/BusFault/BusFault.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
+#include <GridKit/Model/PhasorDynamics/Load/LoadZ/LoadZ.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModel.hpp>
 #include <GridKit/Model/PhasorDynamics/SystemModelData.hpp>
 #include <GridKit/Testing/TestHelpers.hpp>
@@ -97,6 +98,24 @@ namespace GridKit
         int evaluateJacobian() override final
         {
           return this->constructCoo();
+        }
+      };
+
+      class EvaluationContextProbe final : public PhasorDynamics::LoadZ<ScalarT, IdxT>
+      {
+        using BaseT = PhasorDynamics::LoadZ<ScalarT, IdxT>;
+
+      public:
+        using BaseT::BaseT;
+
+        const RealT& evaluationTime() const
+        {
+          return this->time();
+        }
+
+        const RealT& evaluationAlpha() const
+        {
+          return this->alpha();
         }
       };
 
@@ -449,6 +468,39 @@ namespace GridKit
 
         bus2.tag()[0]  = true;
         success       *= !system.tag()[bus2_first];
+
+        return success.report(__func__);
+      }
+
+      TestOutcome componentsShareEvaluationContext()
+      {
+        TestStatus success = true;
+
+        PhasorDynamics::SystemModel<ScalarT, IdxT> system;
+        PhasorDynamics::Bus<ScalarT, IdxT>         bus(1.0, 0.0);
+        EvaluationContextProbe                     load1(&bus, 1.0, 1.0);
+        EvaluationContextProbe                     load2(&bus, 1.0, 1.0);
+
+        load1.updateTime(0.25, 0.5);
+        success *= isEqual(load1.evaluationTime(), RealT{0.25});
+        success *= isEqual(load1.evaluationAlpha(), RealT{0.5});
+
+        system.addBus(&bus);
+        system.addComponent(&load1);
+        system.addComponent(&load2);
+        success *= system.allocate() == 0;
+
+        system.updateTime(1.25, 2.5);
+        success *= isEqual(load1.evaluationTime(), RealT{1.25});
+        success *= isEqual(load1.evaluationAlpha(), RealT{2.5});
+        success *= isEqual(load2.evaluationTime(), RealT{1.25});
+        success *= isEqual(load2.evaluationAlpha(), RealT{2.5});
+
+        system.updateTime(3.0, 4.0);
+        success *= isEqual(load1.evaluationTime(), RealT{3.0});
+        success *= isEqual(load1.evaluationAlpha(), RealT{4.0});
+        success *= isEqual(load2.evaluationTime(), RealT{3.0});
+        success *= isEqual(load2.evaluationAlpha(), RealT{4.0});
 
         return success.report(__func__);
       }
