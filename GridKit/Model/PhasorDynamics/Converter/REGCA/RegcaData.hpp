@@ -14,18 +14,19 @@ namespace GridKit
   {
     namespace Converter
     {
-      /// Parameter keys for the REGCA converter model.
+      /// Parameter keys for the REGCA converter model. All keys are
+      /// required except the optional PowerWorld compatibility fields.
       enum class RegcaParameters
       {
         p0,     ///< Initial active power injection on system base
         q0,     ///< Initial reactive power injection on system base
-        mva,    ///< MVA base of the REGCA model
+        mva,    ///< REGCA component power base
         Tg,     ///< Converter current-control lag time constant
         TM,     ///< Terminal voltage sensor time constant
         Rqmax,  ///< Reactive-current recovery positive rate limit
         Rqmin,  ///< Reactive-current recovery negative rate limit
         Rpmax,  ///< Active-current magnitude recovery rate limit
-        sL,     ///< LVPL switch
+        sL,     ///< LVPL switch, 0 or 1
         IL1,    ///< LVPL upper-current ceiling
         VL0,    ///< LVPL zero-crossing voltage
         VL1,    ///< LVPL upper breakpoint voltage
@@ -33,10 +34,9 @@ namespace GridKit
         VA1,    ///< LVACM upper breakpoint voltage
         Vhvmax, ///< Terminal-voltage ceiling for HV reactive management
 
-        // Optional PowerWorld compatibility fields, accepted and unused.
-        Qmin, ///< Unused compatibility field
-        Khv,  ///< Unused compatibility field
-        Xe    ///< Unused compatibility field
+        Qmin, ///< Optional PowerWorld compatibility field, accepted and unused
+        Khv,  ///< Optional PowerWorld compatibility field, accepted and unused
+        Xe    ///< Optional PowerWorld compatibility field, accepted and unused
       };
 
       /// Buses for the REGCA converter model.
@@ -73,6 +73,16 @@ namespace GridKit
         q   ///< Branch reactive power on system base
       };
 
+      /**
+       * @brief Model data for the REGCA converter: parameter values, the
+       *        terminal bus, optional command and output signals, and
+       *        monitored-variable selections.
+       *
+       * @tparam real_type Real parameter value type.
+       * @tparam index_type Integer index type.
+       *
+       * @see Regca
+       */
       template <typename real_type, typename index_type>
       struct RegcaData : public ComponentData<real_type,
                                               index_type,

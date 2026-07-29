@@ -21,7 +21,7 @@ namespace GridKit
        * blocks of the residual, then the bus-residual block, into the shared
        * coordinate buffers.
        *
-       * @return int - error code, 0 = success
+       * @return 0 on success.
        */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()

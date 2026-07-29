@@ -181,8 +181,12 @@ The finite rate-bound targets are
 Each target selects $R_p^{\max}$ on the side that increases $|I_p|$ and the
 surrogate $M_p$ on the side that decreases it.
 
-Figure 1 places LVPL on the active-current integrator ceiling. GridKit's
-smooth realization limits the target of the $T_\mathrm{g}$ state, so a
+The targets intentionally switch discontinuously at $I_p=0$. At zero, motion
+in either direction increases $|I_p|$, so both configured rate bounds apply.
+Each branch is constant in $I_p$; the targets have no derivative at the switch.
+
+Figure 1 places LVPL on the active-current integrator ceiling. GridKit's smooth
+LVPL realization limits the target of the $T_\mathrm{g}$ state, so a
 falling ceiling drives $I_p$ down while the rate bounds $\ell_p$ and $u_p$
 remain governed only by the $I_p$-sign recovery rule.
 

@@ -35,10 +35,9 @@ namespace GridKit
       ~ConverterRegcaTests() = default;
 
       // At nominal voltage, the CommonMath LVACM approximation differs from
-      // its piecewise plateau by O(1e-13).
+      // its piecewise plateau by O(1e-13). This tolerance also covers floating-
+      // point roundoff between DependencyTracking and Enzyme Jacobian values.
       static constexpr ScalarT kTol = 1.0e-12;
-
-      static constexpr RealT kJacobianTol = 1.0e-10;
 
       /// Construction, the monitor, and every verify() error class: missing
       /// and invalid parameters, a null bus, and an unlinked command port.
@@ -557,34 +556,44 @@ namespace GridKit
               {index(Vars::VT), 0.5},
               {index(Vars::IQEXTRA), -0.5},
           }};
-          success *= isEqual(dependencies, expected, kJacobianTol);
+          success *= isEqual(dependencies, expected, kTol);
         }
 
         return success.report(__func__);
       }
 
 #ifdef GRIDKIT_ENABLE_ENZYME
-      /// One data set drives both sensitivity paths, so the compared rows
-      /// cannot drift apart between hand-built fixtures.
+      /// Each LVPL configuration drives both sensitivity paths, so the
+      /// compared rows cannot drift apart between hand-built fixtures.
       TestOutcome jacobian()
       {
         TestStatus success = true;
 
-        const auto data = makeJacobianData();
-
-        auto dependency_tracking_jacobian = dependencyTrackingJacobian(data, success);
-        auto enzyme_jacobian              = enzymeJacobian(data, success);
-
-        success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
-        const auto nrows  = std::min(dependency_tracking_jacobian.size(), enzyme_jacobian.size());
-
-        for (size_t i = 0; i < nrows; ++i)
+        for (const bool lvpl_enabled : {false, true})
         {
-          if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kJacobianTol))
+          auto data                   = makeJacobianData();
+          data.parameters[Params::sL] = lvpl_enabled;
+
+          const auto dependency_tracking_jacobian = dependencyTrackingJacobian(data, success);
+          const auto enzyme_jacobian              = enzymeJacobian(data, success);
+
+          const auto ip_row  = index(Vars::IP);
+          const auto il_col  = index(Vars::IL);
+          success           *= dependency_tracking_jacobian[ip_row].contains(il_col);
+          success           *= enzyme_jacobian[ip_row].contains(il_col);
+
+          success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
+          const auto nrows  = std::min(dependency_tracking_jacobian.size(),
+                                      enzyme_jacobian.size());
+
+          for (size_t i = 0; i < nrows; ++i)
           {
-            std::cout << "Jacobian row " << i
-                      << " mismatch between dependency tracking and Enzyme\n";
-            success = false;
+            if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kTol))
+            {
+              std::cout << "Jacobian row " << i
+                        << " mismatch between dependency tracking and Enzyme\n";
+              success = false;
+            }
           }
         }
 
