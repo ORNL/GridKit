@@ -12,11 +12,6 @@ namespace GridKit
   {
     namespace Converter
     {
-      /**
-       * @brief Jacobian evaluation not implemented yet
-       *
-       * @return 0 on success.
-       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateJacobian()
       {

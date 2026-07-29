@@ -308,17 +308,15 @@ namespace GridKit
 
         // Each entry is the expected value of the named README equation at
         // the answer-key state.
-        const std::array<ExpectedResidual, 12> expected{{
+        const std::array<ExpectedResidual, 10> expected{{
             {Vars::VM, "VM", 0.865},           // -VM' + (VT - VM) / TM
             {Vars::IQ, "IQ", 1.52},            // -IQ' + max(fq, Rqmin)
-            {Vars::IP, "IP", -0.43},           // -IP' + clamp(fp, LP, UP)
+            {Vars::IP, "IP", -3.28},           // -IP' + fp_limited
             {Vars::VT, "VT", -0.035},          // -VT^2 + Vr^2 + Vi^2
             {Vars::IR, "IR", 0.25},            // -VT*IR + Vi*(IQ - IQEXTRA) + Vr*IP*linseg(VT)
             {Vars::II, "II", 0.251},           // -VT*II - Vr*(IQ - IQEXTRA) + Vi*IP*linseg(VT)
             {Vars::IQEXTRA, "IQEXTRA", -0.03}, // smooth HVRCM constraint
             {Vars::IL, "IL", 0.35},            // -IL + linseg(VM, VL0, VL1, IL1)
-            {Vars::LP, "LP", -69.6},           // -LP + Lp(IP)
-            {Vars::UP, "UP", 0.2},             // -UP + Up(IP)
             {Vars::PBR, "PBR", 0.0},           // -PBR + Vr*IR + Vi*II
             {Vars::QBR, "QBR", 0.0},           // -QBR + Vi*IR - Vr*II
         }};
@@ -335,45 +333,54 @@ namespace GridKit
         return success.report(__func__);
       }
 
-      /// Active-current control: the rate-bound targets follow the sign of
-      /// Ip, and the LVPL ceiling governs the current command only when
-      /// enabled.
+      /// Active-current control: rrpwr limits motion that increases |Ip|,
+      /// smoothly releases restoring motion, and the LVPL ceiling governs
+      /// the current command only when enabled.
       TestOutcome activeCurrentControl()
       {
         TestStatus success = true;
 
-        // The rate-bound targets switch at Ip = 0 between the active limit
-        // Rpmax = 0.7 and the inactive bound Mp = 100 * Rpmax = 70.
+        // With LVPL bypassed, select commands that drive Ip outward or toward
+        // zero. At Ip = 0, rrpwr applies the symmetric Rpmax = 0.7 limit in
+        // either direction.
         {
-          Fixture<ScalarT> fixture(makeDynamicData());
+          auto data                   = makeDynamicData();
+          data.parameters[Params::sL] = false;
+
+          Fixture<ScalarT> fixture(data);
+          fixture.attachIpcmd(0.0);
           success *= fixture.initialize();
 
-          struct RateBoundCase
+          struct RateCase
           {
-            RealT current;
-            RealT lower;
-            RealT upper;
+            const char* label;
+            RealT       current;
+            RealT       command;
+            RealT       expected_rate;
           };
 
-          const std::array<RateBoundCase, 3> cases{{
-              {-1.0e-6, -0.7, 70.0},
-              {0.0, -0.7, 0.7},
-              {1.0e-6, -70.0, 0.7},
+          const std::array<RateCase, 6> cases{{
+              {"negative outward rate", -0.5, -1.5, -0.7},
+              {"negative restoring rate", -0.5, 0.5, 5.0},
+              {"zero negative rate", 0.0, -0.5, -0.7},
+              {"zero positive rate", 0.0, 0.5, 0.7},
+              {"positive restoring rate", 0.5, -0.5, -5.0},
+              {"positive outward rate", 0.5, 1.5, 0.7},
           }};
 
           auto* y = fixture.regca.y().getData();
           for (const auto& test_case : cases)
           {
+            fixture.ipcmd      = test_case.command;
             y[index(Vars::IP)] = test_case.current;
-            y[index(Vars::LP)] = 0.0;
-            y[index(Vars::UP)] = 0.0;
             fixture.regca.y().setDataUpdated();
 
             success *= (fixture.evaluate() == 0);
 
             const auto* f  = fixture.regca.getResidual().getData();
-            success       *= scalarMatches(f[index(Vars::LP)], test_case.lower, "lower rate bound");
-            success       *= scalarMatches(f[index(Vars::UP)], test_case.upper, "upper rate bound");
+            success       *= scalarMatches(f[index(Vars::IP)],
+                                     test_case.expected_rate,
+                                     test_case.label);
           }
         }
 
@@ -389,8 +396,7 @@ namespace GridKit
           success *= fixture.initialize();
 
           // initialize() published the steady-state command; restore the
-          // driven value, then collapse the ceiling below IP. The
-          // initialized LP and UP stay interior to both expected rates.
+          // driven value, then collapse the ceiling below IP.
           fixture.ipcmd = 0.7;
 
           auto* y            = fixture.regca.y().getData();
@@ -569,30 +575,42 @@ namespace GridKit
       {
         TestStatus success = true;
 
+        const RealT                transition_current = 1.0 / Math::MU<RealT>;
+        const std::array<RealT, 3> currents{{
+            -transition_current,
+            0.0,
+            transition_current,
+        }};
+
         for (const bool lvpl_enabled : {false, true})
         {
           auto data                   = makeJacobianData();
           data.parameters[Params::sL] = lvpl_enabled;
 
-          const auto dependency_tracking_jacobian = dependencyTrackingJacobian(data, success);
-          const auto enzyme_jacobian              = enzymeJacobian(data, success);
-
-          const auto ip_row  = index(Vars::IP);
-          const auto il_col  = index(Vars::IL);
-          success           *= dependency_tracking_jacobian[ip_row].contains(il_col);
-          success           *= enzyme_jacobian[ip_row].contains(il_col);
-
-          success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
-          const auto nrows  = std::min(dependency_tracking_jacobian.size(),
-                                      enzyme_jacobian.size());
-
-          for (size_t i = 0; i < nrows; ++i)
+          for (const RealT current : currents)
           {
-            if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kTol))
+            const auto dependency_tracking_jacobian =
+                dependencyTrackingJacobian(data, current, success);
+            const auto enzyme_jacobian = enzymeJacobian(data, current, success);
+
+            const auto ip_row  = index(Vars::IP);
+            const auto il_col  = index(Vars::IL);
+            success           *= dependency_tracking_jacobian[ip_row].contains(il_col);
+            success           *= enzyme_jacobian[ip_row].contains(il_col);
+
+            success          *= (dependency_tracking_jacobian.size() == enzyme_jacobian.size());
+            const auto nrows  = std::min(dependency_tracking_jacobian.size(),
+                                        enzyme_jacobian.size());
+
+            for (size_t i = 0; i < nrows; ++i)
             {
-              std::cout << "Jacobian row " << i
-                        << " mismatch between dependency tracking and Enzyme\n";
-              success = false;
+              if (!isEqual(dependency_tracking_jacobian[i], enzyme_jacobian[i], kTol))
+              {
+                std::cout << "Jacobian row " << i
+                          << " mismatch between dependency tracking and Enzyme"
+                          << " at IP = " << current << "\n";
+                success = false;
+              }
             }
           }
         }
@@ -794,8 +812,6 @@ namespace GridKit
         y[index(Vars::II)]      = 0.18;
         y[index(Vars::IQEXTRA)] = 0.03;
         y[index(Vars::IL)]      = 0.2;
-        y[index(Vars::LP)]      = -0.4;
-        y[index(Vars::UP)]      = 0.5;
         y[index(Vars::PBR)]     = 0.52;
         y[index(Vars::QBR)]     = -0.046;
 
@@ -896,10 +912,13 @@ namespace GridKit
       /// The answer-key state moved to the HVRCM transition point, where
       /// the Jacobian has the richest structure.
       template <typename T>
-      void setJacobianState(PhasorDynamics::Converter::Regca<T, IdxT>& regca)
+      void setJacobianState(
+          PhasorDynamics::Converter::Regca<T, IdxT>& regca,
+          RealT                                      current)
       {
         setAnswerKeyState(regca);
         auto* y                 = regca.y().getData();
+        y[index(Vars::IP)]      = current;
         y[index(Vars::VT)]      = kDynamicHvrcmVoltageLimit - hvrcmTransition();
         y[index(Vars::IQEXTRA)] = hvrcmTransition();
         regca.y().setDataUpdated();
@@ -907,6 +926,7 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> dependencyTrackingJacobian(
           const Data& data,
+          RealT       current,
           TestStatus& success)
       {
         using DepVar = DependencyTracking::Variable;
@@ -918,7 +938,7 @@ namespace GridKit
 
         fixture.ipcmd = kStateIpcmd;
         fixture.iqcmd = kStateIqcmd;
-        setJacobianState(fixture.regca);
+        setJacobianState(fixture.regca, current);
         numberVariables(fixture);
 
         success *= (fixture.evaluate() == 0);
@@ -940,6 +960,7 @@ namespace GridKit
 
       std::vector<DependencyTracking::Variable::DependencyMap> enzymeJacobian(
           const Data& data,
+          RealT       current,
           TestStatus& success)
       {
         Fixture<ScalarT> fixture(data, kStateVr, kStateVi);
@@ -958,7 +979,7 @@ namespace GridKit
 
         fixture.ipcmd = kStateIpcmd;
         fixture.iqcmd = kStateIqcmd;
-        setJacobianState(fixture.regca);
+        setJacobianState(fixture.regca, current);
         fixture.regca.updateTime(0.0, 1.0);
 
         success *= (fixture.evaluate() == 0);

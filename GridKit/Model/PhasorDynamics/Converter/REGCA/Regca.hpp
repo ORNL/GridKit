@@ -6,10 +6,13 @@
 
 #pragma once
 
+#include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <vector>
 
+#include <GridKit/CommonMath.hpp>
 #include <GridKit/Model/PhasorDynamics/Component.hpp>
 #include <GridKit/Model/PhasorDynamics/ComponentSignals.hpp>
 #include <GridKit/Model/PhasorDynamics/Converter/REGCA/RegcaData.hpp>
@@ -44,8 +47,6 @@ namespace GridKit
         II,      ///< \f$I_\mathrm{i}\f$ Branch-current imaginary component on system base
         IQEXTRA, ///< \f$I_q^\mathrm{extra}\f$ Extra inductive current from HVRCM on component base
         IL,      ///< \f$I_L\f$ LVPL upper-limit current curve on component base
-        LP,      ///< \f$\ell_p\f$ Active-current lower rate bound on component base
-        UP,      ///< \f$u_p\f$ Active-current upper rate bound on component base
         PBR,     ///< \f$P^\mathrm{br}\f$ Branch active power on system base
         QBR,     ///< \f$Q^\mathrm{br}\f$ Branch reactive power on system base
         MAXIMUM,
@@ -112,12 +113,9 @@ namespace GridKit
         using ExternalVariablesT = RegcaExternalVariables;
 
         /**
-         * @brief Construct a sized but unconfigured REGCA converter.
+         * @brief Construct a REGCA converter without model data.
          *
          * @param[in] bus Terminal bus the converter injects into.
-         * @post Every parameter keeps its zero default and no monitor is
-         *       created, so verify() reports configuration errors until
-         *       the data constructor is used instead.
          */
         Regca(BusT* bus);
 
@@ -126,29 +124,15 @@ namespace GridKit
          *
          * @param[in] bus Terminal bus the converter injects into.
          * @param[in] data Parameters and monitored-variable selections.
-         * @post Parameters are loaded and the monitor is created. Data
-         *       errors are counted and reported by verify() rather than
-         *       thrown.
+         *
+         * Model-data errors are recorded for verify() rather than thrown.
          */
         Regca(BusT* bus, const ModelDataT& data);
         ~Regca();
 
-        /**
-         * @brief Set the component ID assigned by the system model.
-         * @return 0 on success.
-         */
         int setGridKitComponentID(IdxT component_id) override final;
 
-        /**
-         * @brief Allocate the model vectors and wire the output signals.
-         *
-         * @post State, residual, tolerance, and interface buffers are
-         *       sized, the identity index maps are seeded, and each
-         *       assigned output signal node aliases the internal state it
-         *       publishes.
-         * @note Repeated calls reuse the already-allocated vectors.
-         * @return 0 on success.
-         */
+        /// Allocate model storage and connect assigned output signals.
         int allocate() override final;
 
         /**
@@ -181,20 +165,13 @@ namespace GridKit
          */
         int initialize() override final;
 
-        /**
-         * @brief Tag VM, IQ, and IP differential and all others algebraic.
-         * @return 0 on success.
-         */
+        /// Tag VM, IQ, and IP as differential variables.
         int tagDifferentiable() override final;
 
         /**
-         * @brief Share the relative tolerance as every variable's absolute
-         *        floor.
+         * @brief Set every REGCA absolute tolerance to @p rel_tol.
          *
-         * @note All REGCA variables are per-unit currents, voltages, or
-         *       powers of the same order.
          * @param[in] rel_tol Solver relative tolerance.
-         * @return 0 on success.
          */
         int setAbsoluteTolerance(RealT rel_tol) override final;
 
@@ -203,22 +180,19 @@ namespace GridKit
          *        into the terminal bus.
          *
          * @pre The terminal-bus residual has been zeroed this evaluation.
-         * @return 0 on success.
          */
         int evaluateResidual() override final;
 
         /**
-         * @brief Assemble the sparse component Jacobian.
+         * @brief Assemble the sparse component Jacobian when built with Enzyme.
          *
-         * Implemented through Enzyme. The plain and dependency-tracking
-         * builds log that no Jacobian is assembled.
+         * Plain and dependency-tracking instantiations do not assemble a
+         * separate Jacobian.
          *
          * @pre evaluateResidual() has run at the current state.
-         * @return 0 on success.
          */
         int evaluateJacobian() override final;
 
-        /// Get the `ComponentSignals` from this `Regca`
         auto getSignals()
             -> ComponentSignals<ScalarT,
                                 IdxT,
@@ -239,18 +213,11 @@ namespace GridKit
          * @brief Internal residual: the README differential and algebraic
          *        equations in RegcaInternalVariables order.
          *
-         * @warning The body must stay free of branches and loops so sparse
-         *          automatic differentiation resolves one fixed structure.
-         * @invariant The limiter selections enter as complementary runtime
-         *            masks, so the sparsity pattern is independent of the
-         *            sL configuration.
-         *
          * @param[in] y Internal variables.
          * @param[in] yp Internal variable derivatives.
          * @param[in] wb Terminal-bus voltage components.
          * @param[in] ws Current-command signal values on system base.
          * @param[out] f Internal residuals.
-         * @return 0 on success.
          */
         __attribute__((always_inline)) inline int evaluateInternalResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, const ScalarT* ws, ScalarT* f);
@@ -263,17 +230,13 @@ namespace GridKit
          * @param[in] yp Internal variable derivatives, unused.
          * @param[in] wb Terminal-bus voltage components, unused.
          * @param[out] h Current injected into the terminal bus.
-         * @return 0 on success.
          */
         __attribute__((always_inline)) inline int evaluateBusResidual(
             const ScalarT* y, const ScalarT* yp, const ScalarT* wb, ScalarT* h);
 
       private:
-        /// Load the required parameters, counting errors for verify().
         void initializeParameters(const ModelDataT& data);
-        /// Bind the monitorable variables to their internal states.
         void initializeMonitor();
-        /// Resolve the derived constants and complementary limiter masks.
         void setDerivedParameters();
 
         /// Convert a system-base per-unit value to the component base.
@@ -288,16 +251,64 @@ namespace GridKit
           return value / toComponentBase(static_cast<ScalarT>(ONE<RealT>));
         }
 
-        /// Active-current lower rate bound \f$L_p(I_p)\f$, diagram `Rdown`.
-        ScalarT lpTarget(ScalarT ip) const;
-        /// Active-current upper rate bound \f$U_p(I_p)\f$, diagram `Rup`.
-        ScalarT upTarget(ScalarT ip) const;
         /**
-         * @brief Nonnegative root of \f$q = \mathrm{ramp}(q - m)\f$, the
-         *        correction holding a smooth constraint at margin @p margin.
-         * @pre margin > 0. The root diverges as the margin approaches zero,
-         *      so callers must reject a non-positive margin first.
+         * @brief Smooth approximation of the REGCA `rrpwr` rate limiter.
+         *
+         * Limits motion that increases \f$|x|\f$ while smoothly releasing
+         * restoring motion toward zero. At \f$x = 0\f$, the result is the
+         * symmetric smooth slew limit applied to @p f.
+         *
+         * @param[in] x State whose sign determines the limited direction.
+         * @param[in] f Unconstrained derivative.
+         * @param[in] rate Nonnegative symmetric rate limit.
+         * @return Rate-limited derivative.
+         *
+         * @todo Move this reusable limiter to CommonMath.
          */
+        static __attribute__((always_inline)) inline ScalarT rrpwr(
+            const ScalarT x,
+            const ScalarT f,
+            const RealT   rate)
+        {
+          assert(rate >= ZERO<RealT>);
+
+          const ScalarT t     = std::tanh(HALF<RealT> * Math::MU<RealT> * x);
+          const ScalarT abs_t = std::abs(t);
+          const ScalarT w_pos = HALF<RealT> * t * (t + abs_t);
+          const ScalarT w_neg = HALF<RealT> * t * (t - abs_t);
+
+          return f + (ONE<RealT> - w_pos) * Math::ramp(-f - rate)
+                 - (ONE<RealT> - w_neg) * Math::ramp(f - rate);
+        }
+
+        /**
+         * @brief Smooth upper-limit anti-windup derivative.
+         *
+         * Passes dynamics below the algebraic upper bound. At or above the
+         * bound, negative restoring motion passes while positive motion that
+         * increases the violation is smoothly blocked.
+         *
+         * @param[in] x Limited state.
+         * @param[in] f Unconstrained derivative.
+         * @param[in] limit_max Algebraic upper bound.
+         * @return Anti-windup-limited derivative.
+         *
+         * @todo Move this one-sided anti-windup helper to CommonMath.
+         */
+        static __attribute__((always_inline)) inline ScalarT awmax(
+            const ScalarT x,
+            const ScalarT f,
+            const ScalarT limit_max)
+        {
+          const ScalarT below = Math::sigmoid(limit_max - x);
+
+          return (below
+                  + (ONE<RealT> - below) * Math::sigmoid(-f))
+                 * f;
+        }
+
+        // Nonnegative root of q = ramp(q - margin). The root diverges as the
+        // positive margin approaches zero.
         ScalarT smoothConstraintCorrection(ScalarT margin) const;
 
         // Terminal-bus accessors. Ir() and Ii() are accumulation targets,
@@ -322,11 +333,8 @@ namespace GridKit
           return bus_->Ii();
         }
 
-        /// Well-posedness floor for the current-control and voltage-sensor lags
+        // Well-posedness floor for the current-control and voltage-sensor lags
         static constexpr RealT TIME_CONSTANT_MINIMUM = static_cast<RealT>(1.0e-3);
-
-        /// Multiple of Rpmax standing in for an inactive active-current rate limit
-        static constexpr RealT INACTIVE_RATE_LIMIT_FACTOR = static_cast<RealT>(100.0);
 
         BusT* bus_{nullptr}; ///< Terminal bus the converter injects into
 
@@ -352,7 +360,6 @@ namespace GridKit
         // Derived parameters. The complementary runtime LVPL masks keep a
         // configuration-independent Jacobian sparsity pattern: both AD paths
         // retain the IL expression even when its contribution is zero.
-        RealT Mp_{0};                ///< \f$M_p\f$ Finite surrogate for inactive rate limits
         RealT va_converter_base_{0}; ///< Component power base in VA
         RealT use_lvpl_{0};          ///< LVPL mask, complements bypass_lvpl_
         RealT bypass_lvpl_{1};       ///< LVPL bypass mask, complements use_lvpl_
@@ -364,7 +371,6 @@ namespace GridKit
         ScalarT ipcmd_set_{0}; ///< Active-current command setpoint on system base
         ScalarT iqcmd_set_{0}; ///< Reactive-current command setpoint on system base
 
-        /// Component signal extension
         ComponentSignals<ScalarT, IdxT, RegcaInternalVariables, RegcaExternalVariables> signals_;
         std::unique_ptr<MonitorT>                                                       monitor_;
 

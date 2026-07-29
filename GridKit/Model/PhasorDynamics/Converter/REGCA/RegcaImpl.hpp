@@ -48,19 +48,6 @@ namespace GridKit
       {
       }
 
-      /**
-       * @brief Resolve the parameter-derived constants and limiter branches
-       *
-       * Raises the current-control and voltage-sensor lags to the
-       * well-posedness floor, sizes the inactive active-current rate bound,
-       * and selects the LVPL and reactive-current recovery branches. Both
-       * selections are held as complementary multiplicative masks so the
-       * residual stays free of parameter-dependent control flow.
-       *
-       * The WECC REGCA definition selects the reactive-current recovery
-       * limiter from the sign of the initial reactive-power injection, not
-       * from IQCMD after HVRCM compensation.
-       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::setDerivedParameters()
       {
@@ -73,7 +60,6 @@ namespace GridKit
 
         Tg_          = std::max(Tg_, TIME_CONSTANT_MINIMUM);
         TM_          = std::max(TM_, TIME_CONSTANT_MINIMUM);
-        Mp_          = INACTIVE_RATE_LIMIT_FACTOR * Rpmax_;
         use_lvpl_    = ZERO<RealT>;
         bypass_lvpl_ = ONE<RealT>;
         if (sL_)
@@ -82,6 +68,8 @@ namespace GridKit
           bypass_lvpl_ = ZERO<RealT>;
         }
 
+        // REGCA selects the reactive-current recovery limiter from the sign of
+        // the initial reactive-power injection, before HVRCM compensation.
         iq_use_upper_ = ZERO<RealT>;
         iq_use_lower_ = ONE<RealT>;
         if (q0_ > ZERO<RealT>)
@@ -93,53 +81,6 @@ namespace GridKit
         va_converter_base_ = mva_base_ * static_cast<RealT>(1.0e6);
       }
 
-      /**
-       * @brief Active-current lower rate bound for the present current
-       *
-       * Realizes the diagram `Rdown` limit: the recovery rate applies on the
-       * side that increases the active-current magnitude, and the inactive
-       * surrogate applies on the side that decreases it.
-       *
-       * @note This target intentionally switches discontinuously at ip = 0.
-       * At zero, motion in either direction increases \f$\lvert I_p\rvert\f$,
-       * so both configured recovery-rate bounds are active. Each branch is
-       * constant with respect to ip; no derivative exists at the switching point.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::lpTarget(scalar_type ip) const
-      {
-        if (ip <= ZERO<RealT>)
-        {
-          return static_cast<ScalarT>(-Rpmax_);
-        }
-        return static_cast<ScalarT>(-Mp_);
-      }
-
-      /**
-       * @brief Active-current upper rate bound for the present current
-       *
-       * The `Rup` counterpart of lpTarget().
-       *
-       * @note This target intentionally switches discontinuously at ip = 0;
-       * see lpTarget() for the sign-selection semantics.
-       */
-      template <typename scalar_type, typename index_type>
-      scalar_type Regca<scalar_type, index_type>::upTarget(scalar_type ip) const
-      {
-        if (ip >= ZERO<RealT>)
-        {
-          return static_cast<ScalarT>(Rpmax_);
-        }
-        return static_cast<ScalarT>(Mp_);
-      }
-
-      /**
-       * @brief Invert a smooth one-sided constraint for a positive margin
-       *
-       * Solves \f$q = \mathrm{ramp}(q - m)\f$ for the nonnegative root
-       * \f$q\f$, the correction that holds a smooth constraint exactly at a
-       * margin \f$m\f$. The HVRCM and LVPL initializations both use it.
-       */
       template <typename scalar_type, typename index_type>
       scalar_type Regca<scalar_type, index_type>::smoothConstraintCorrection(
           scalar_type margin) const
@@ -164,14 +105,6 @@ namespace GridKit
         return -log_one_minus_exp / Math::MU<RealT>;
       }
 
-      /**
-       * @brief Read the required parameters out of the model data
-       *
-       * A missing key, a non-numeric value, or a switch outside {0, 1} is
-       * counted and reported by verify() rather than throwing. Integer JSON
-       * values are accepted for real parameters. The optional PowerWorld
-       * compatibility fields are not read.
-       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeParameters(const ModelDataT& data)
       {
@@ -255,12 +188,6 @@ namespace GridKit
         return monitor_.get();
       }
 
-      /**
-       * @brief Bind the monitorable variables to their internal states
-       *
-       * All four monitored quantities are already on the system base, so
-       * they are published without conversion.
-       */
       template <typename scalar_type, typename index_type>
       void Regca<scalar_type, index_type>::initializeMonitor()
       {
@@ -407,8 +334,6 @@ namespace GridKit
         const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
         const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
         const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
-        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
         const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
         const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
         auto*      y       = y_.getData();
@@ -472,8 +397,6 @@ namespace GridKit
         y[IL]      = il0;
         y[IR]      = toSystemBase(ir0);
         y[II]      = toSystemBase(ii0);
-        y[LP]      = lpTarget(y[IP]);
-        y[UP]      = upTarget(y[IP]);
         y[PBR]     = vr * y[IR] + vi * y[II];
         y[QBR]     = vi * y[IR] - vr * y[II];
 
@@ -514,15 +437,6 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief Internal residual
-       *
-       * Evaluates the three converter states and the nine algebraic rows
-       * documented in the model README. The body is kept free of branches
-       * and loops so that sparse automatic differentiation resolves a fixed
-       * structure; the limiter selections enter as the multiplicative masks
-       * set by setDerivedParameters().
-       */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int
       Regca<scalar_type, index_type>::evaluateInternalResidual(
@@ -540,8 +454,6 @@ namespace GridKit
         const auto II      = static_cast<size_t>(RegcaInternalVariables::II);
         const auto IQEXTRA = static_cast<size_t>(RegcaInternalVariables::IQEXTRA);
         const auto IL      = static_cast<size_t>(RegcaInternalVariables::IL);
-        const auto LP      = static_cast<size_t>(RegcaInternalVariables::LP);
-        const auto UP      = static_cast<size_t>(RegcaInternalVariables::UP);
         const auto PBR     = static_cast<size_t>(RegcaInternalVariables::PBR);
         const auto QBR     = static_cast<size_t>(RegcaInternalVariables::QBR);
 
@@ -556,8 +468,6 @@ namespace GridKit
         const ScalarT ii      = y[II];
         const ScalarT iqextra = y[IQEXTRA];
         const ScalarT il      = y[IL];
-        const ScalarT lp      = y[LP];
-        const ScalarT up      = y[UP];
         const ScalarT pbr     = y[PBR];
         const ScalarT qbr     = y[QBR];
 
@@ -571,8 +481,8 @@ namespace GridKit
         const ScalarT ipcmd = toComponentBase(ws[IPCMD]);
         const ScalarT iqcmd = toComponentBase(ws[IQCMD]);
 
-        // GridKit realizes the moving LVPL ceiling as a smooth current target,
-        // so a falling ceiling pulls Ip down without modifying Rup.
+        // GridKit realizes the moving LVPL ceiling as a smooth current target.
+        // rrpwr then applies the sign-dependent recovery limit to its rate.
         const ScalarT ip_target = bypass_lvpl_ * ipcmd
                                   + use_lvpl_ * Math::min(ipcmd, il);
 
@@ -583,33 +493,28 @@ namespace GridKit
 
         const ScalarT iq_limited = iq_use_upper_ * Math::min(fq, Rqmax_)
                                    + iq_use_lower_ * Math::max(fq, Rqmin_);
+        const ScalarT fp_limited = rrpwr(ip, fp, Rpmax_);
 
         const ScalarT lvacm          = Math::linseg(vt, VA0_, VA1_, ONE<RealT>);
         const ScalarT qnet           = iq - iqextra;
         const ScalarT voltage_margin = Vhvmax_ - vt;
 
-        f[VM]      = -vm_dot + (vt - vm) / TM_;
-        f[IQ]      = -iq_dot + iq_limited;
-        f[IP]      = -ip_dot + Math::clamp(fp, lp, up);
+        f[VM] = -vm_dot + (vt - vm) / TM_;
+        f[IQ] = -iq_dot + iq_limited;
+        f[IP] = -ip_dot
+                + bypass_lvpl_ * fp_limited
+                + use_lvpl_ * awmax(ip, fp_limited, il);
         f[VT]      = -vt * vt + vr * vr + vi * vi;
         f[IR]      = -toComponentBase(vt * ir) + vi * qnet + vr * ip * lvacm;
         f[II]      = -toComponentBase(vt * ii) - vr * qnet + vi * ip * lvacm;
         f[IQEXTRA] = -iqextra + Math::ramp(iqextra - voltage_margin);
         f[IL]      = -il + Math::linseg(vm, VL0_, VL1_, IL1_);
-        f[LP]      = -lp + lpTarget(ip);
-        f[UP]      = -up + upTarget(ip);
         f[PBR]     = -pbr + vr * ir + vi * ii;
         f[QBR]     = -qbr + vi * ir - vr * ii;
 
         return 0;
       }
 
-      /**
-       * @brief Bus residual
-       *
-       * The branch-current states are already on the system base, so the
-       * network injection is taken directly from them.
-       */
       template <typename scalar_type, typename index_type>
       __attribute__((always_inline)) inline int Regca<scalar_type, index_type>::evaluateBusResidual(
           const ScalarT*                  y,
@@ -625,14 +530,6 @@ namespace GridKit
         return 0;
       }
 
-      /**
-       * @brief Residuals of system equations
-       *
-       * Refreshes the bus and signal interface buffers, evaluates the
-       * internal and bus residuals, and accumulates the converter current
-       * into the terminal bus. An unattached command port falls back to the
-       * setpoint latched by initialize().
-       */
       template <typename scalar_type, typename index_type>
       int Regca<scalar_type, index_type>::evaluateResidual()
       {

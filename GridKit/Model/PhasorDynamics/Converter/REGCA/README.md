@@ -86,14 +86,9 @@ every other condition is a configuration error.
   s_L^\mathrm{off}
     &= 1 - s_L \\
   k_\mathrm{base}
-    &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}} \\
-  M_p
-    &= 100 R_p^{\max}
+    &= \dfrac{S^\mathrm{sys}}{S^\mathrm{base}}
 \end{aligned}
 ```
-
-$M_p$ is a finite surrogate for inactive active-current rate limits,
-not a physical REGCA parameter.
 
 ## Model Ports
 
@@ -128,8 +123,6 @@ $I_\mathrm{r}$             | [p.u.]   | Branch-current real component           
 $I_\mathrm{i}$             | [p.u.]   | Branch-current imaginary component                                    | System base
 $I_q^\mathrm{extra}$       | [p.u.]   | Extra inductive current from high-voltage reactive current management | Component base
 $I_L$                      | [p.u.]   | LVPL upper-limit current curve                                        | Component base; function of $V_M$
-$\ell_p$                   | [p.u./s] | Active-current lower rate bound                                       | Component base; finite realization of diagram `Rdown`
-$u_p$                      | [p.u./s] | Active-current upper rate bound                                       | Component base; finite realization of diagram `Rup`
 $P^\mathrm{br}$            | [p.u.]   | Branch active power                                                   | System base
 $Q^\mathrm{br}$            | [p.u.]   | Branch reactive power                                                 | System base
 
@@ -161,34 +154,18 @@ derivatives:
 \end{aligned}
 ```
 
-The finite rate-bound targets are
-
-```math
-\begin{aligned}
-  L_p(x) &=
-    \begin{cases}
-      -R_p^{\max} & x \le 0 \\
-      -M_p         & x > 0
-    \end{cases} \\
-  U_p(x) &=
-    \begin{cases}
-      M_p          & x < 0 \\
-      R_p^{\max}   & x \ge 0
-    \end{cases}
-\end{aligned}
-```
-
-Each target selects $R_p^{\max}$ on the side that increases $|I_p|$ and the
-surrogate $M_p$ on the side that decreases it.
-
-The targets intentionally switch discontinuously at $I_p=0$. At zero, motion
-in either direction increases $|I_p|$, so both configured rate bounds apply.
-Each branch is constant in $I_p$; the targets have no derivative at the switch.
-
 Figure 1 places LVPL on the active-current integrator ceiling. GridKit's smooth
 LVPL realization limits the target of the $T_\mathrm{g}$ state, so a
-falling ceiling drives $I_p$ down while the rate bounds $\ell_p$ and $u_p$
-remain governed only by the $I_p$-sign recovery rule.
+falling ceiling drives $I_p$ down. `rrpwr` then applies the active-current
+recovery rule according to the sign of $I_p$.
+
+The limited active-current integrator drive applies the recovery rate rule
+of [Appendix A](#appendix-a-rrpwr):
+
+```math
+f_\mathrm{p}^{\lim}
+  = \text{rrpwr}(I_p, f_\mathrm{p}; R_p^{\max}).
+```
 
 ### Differential Equations
 
@@ -202,9 +179,16 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
       \text{min}(f_\mathrm{q}, R_q^{\max}) & Q_0 > 0 \\
       \text{max}(f_\mathrm{q}, R_q^{\min}) & Q_0 \le 0
     \end{cases} \\
-  0 &= -\dot I_p + \text{clamp}(f_\mathrm{p}; \ell_p, u_p)
+  0 &= -\dot I_p +
+    \begin{cases}
+      f_\mathrm{p}^{\lim} & s_L = 0 \\
+      \text{awmax}(I_p, f_\mathrm{p}^{\lim}; I_L) & s_L = 1
+    \end{cases}
 \end{aligned}
 ```
+
+The upper-limit anti-windup gate of [Appendix B](#appendix-b-awmax)
+blocks integration of $I_p$ past the LVPL ceiling.
 
 ### Algebraic Equations
 
@@ -223,8 +207,6 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
          \right) \\
   0 &= -I_L
        + \text{linseg}(V_M; V_{L0}, V_{L1}, I_{L1}) \\
-  0 &= -\ell_p + L_p(I_p) \\
-  0 &= -u_p + U_p(I_p) \\
   0 &= -P^\mathrm{br}
        + V_\mathrm{r} I_\mathrm{r} + V_\mathrm{i} I_\mathrm{i} \\
   0 &= -Q^\mathrm{br}
@@ -232,8 +214,8 @@ The $I_q$ limiter branch is selected by the initial reactive power $Q_0$.
 \end{aligned}
 ```
 
-CommonMath defines the [derived limiter and linear-segment functions](../../../../CommonMath.md#derived-functions)
-and the [ramp primitive](../../../../CommonMath.md#primitives) used above.
+CommonMath defines the [primitives](../../../../CommonMath.md#primitives) and
+[derived functions](../../../../CommonMath.md#derived-functions) used above.
 
 ## Network Interface
 
@@ -313,10 +295,6 @@ The remaining algebraic quantities are then initialized as follows:
 
 ```math
 \begin{aligned}
-  \ell_{p,0}
-    &= L_p(I_{p,0}) \\
-  u_{p,0}
-    &= U_p(I_{p,0}) \\
   I_{\mathrm{r},0}
     &= \dfrac{V_{\mathrm{r},0}P_0 + V_{\mathrm{i},0}Q_0}{V_{T,0}^2} \\
   I_{\mathrm{i},0}
@@ -347,3 +325,58 @@ Output | Units  | Description                 | Note
 `ii`   | [p.u.] | Imaginary current injection | System base; exported through `ibranchi` when assigned
 `p`    | [p.u.] | Active-power output         | System base; exported through `pbranch` when assigned
 `q`    | [p.u.] | Reactive-power output       | System base; exported through `qbranch` when assigned
+
+## Appendix A: `rrpwr`
+
+The exact active-current rate-limit rule is
+
+```math
+\text{rrpwr}(x, f; r) =
+  \begin{cases}
+    \text{max}(f, -r) & x < 0 \\
+    \text{clamp}(f; -r, r) & x = 0 \\
+    \text{min}(f, r) & x > 0
+  \end{cases}
+```
+
+The model evaluates this rule with the following continuously differentiable
+($C^1$) approximation:
+
+```math
+\begin{aligned}
+  t(x) &= \tanh\!\left(\dfrac{\mu x}{2}\right)=2\sigma(x)-1 \\[0pt]
+  w_+(x) &= \dfrac{t(x)^2+t(x)\lvert t(x)\rvert}{2} \\[0pt]
+  w_-(x) &= \dfrac{t(x)^2-t(x)\lvert t(x)\rvert}{2} \\[0pt]
+  \text{rrpwr}(x,f;r)
+    &\approx f
+      +\left[1-w_+(x)\right]\text{ramp}(-f-r)
+      -\left[1-w_-(x)\right]\text{ramp}(f-r).
+\end{aligned}
+```
+
+The one-sided weights and their first derivatives vanish at $x=0$. The
+approximation therefore equals `slew` exactly at zero and preserves the
+outward rate limit for finite $\mu$ while gradually releasing restoring motion.
+
+## Appendix B: `awmax`
+
+The exact upper-limit anti-windup rule is
+
+```math
+\text{awmax}(x, f; u) =
+  \begin{cases}
+    f & x < u \\
+    f & x \ge u \ \land\ f < 0 \\
+    0 & \text{otherwise}
+  \end{cases}
+```
+
+The model evaluates this rule with the following smooth approximation:
+
+```math
+\text{awmax}(x, f; u)
+  \approx \left[\sigma(u-x)+\left(1-\sigma(u-x)\right)\sigma(-f)\right] f
+```
+
+This is the `antiwindup` of CommonMath restricted to its upper limit, which
+admits an algebraic bound $u$.
